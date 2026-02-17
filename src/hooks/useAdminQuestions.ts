@@ -33,81 +33,110 @@ export const useAdminQuestions = (categoryId?: string | null, searchTerm?: strin
     setLoading(true);
     try {
       const normalizedSearch = searchTerm?.trim();
-
-      // Build base query for count
-      let countQuery = supabase
-        .from('questions')
-        .select('*', { count: 'exact', head: true });
-      
-      if (categoryId) {
-        countQuery = countQuery.eq('category_id', categoryId);
-      }
-
-      if (normalizedSearch) {
-        countQuery = countQuery.or(
-          `question_text.ilike.%${normalizedSearch}%,correct_answer.ilike.%${normalizedSearch}%,incorrect_answers::text.ilike.%${normalizedSearch}%`
-        );
-      }
-      
-      const { count, error: countError } = await countQuery;
-      
-      if (countError) {
-        console.error('Error fetching count:', countError);
-        toast.error('კითხვების რაოდენობის ჩატვირთვა ვერ მოხერხდა');
-        setLoading(false);
-        return;
-      }
-      
-      setTotalCount(count || 0);
-      
-      // Fetch current page
       const offset = page * PAGE_SIZE;
-      let dataQuery = supabase
-        .from('questions')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .range(offset, offset + PAGE_SIZE - 1);
-      
-      if (categoryId) {
-        dataQuery = dataQuery.eq('category_id', categoryId);
-      }
 
       if (normalizedSearch) {
-        dataQuery = dataQuery.or(
-          `question_text.ilike.%${normalizedSearch}%,correct_answer.ilike.%${normalizedSearch}%,incorrect_answers::text.ilike.%${normalizedSearch}%`
-        );
+        // Use RPC for search (supports incorrect_answers::text casting)
+        const { data, error } = await supabase.rpc('search_questions', {
+          p_search: normalizedSearch,
+          p_category_id: categoryId || null,
+          p_limit: PAGE_SIZE,
+          p_offset: offset,
+        });
+
+        if (error) {
+          console.error('Error searching questions:', error);
+          toast.error('კითხვების ძიება ვერ მოხერხდა');
+          setLoading(false);
+          return;
+        }
+
+        const results = data || [];
+        setTotalCount(results.length > 0 ? Number((results[0] as any).total_count) : 0);
+
+        const formattedQuestions: AdminQuestion[] = results.map((q: any) => ({
+          id: q.id,
+          category_id: q.category_id,
+          question_text: q.question_text,
+          correct_answer: q.correct_answer,
+          incorrect_answers: Array.isArray(q.incorrect_answers) 
+            ? q.incorrect_answers as string[]
+            : [],
+          difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
+          level_number: q.level_number || 1,
+          is_active: q.is_active ?? true,
+          in_production: q.in_production ?? false,
+          icon_slug: q.icon_slug || undefined,
+          image_url: q.image_url || null,
+          video_url: q.video_url || null,
+          audio_url: q.audio_url || null,
+          created_at: q.created_at || '',
+          updated_at: q.updated_at || '',
+        }));
+
+        setQuestions(formattedQuestions);
+      } else {
+        // No search: use standard queries
+        let countQuery = supabase
+          .from('questions')
+          .select('*', { count: 'exact', head: true });
+        
+        if (categoryId) {
+          countQuery = countQuery.eq('category_id', categoryId);
+        }
+        
+        const { count, error: countError } = await countQuery;
+        
+        if (countError) {
+          console.error('Error fetching count:', countError);
+          toast.error('კითხვების რაოდენობის ჩატვირთვა ვერ მოხერხდა');
+          setLoading(false);
+          return;
+        }
+        
+        setTotalCount(count || 0);
+        
+        let dataQuery = supabase
+          .from('questions')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(offset, offset + PAGE_SIZE - 1);
+        
+        if (categoryId) {
+          dataQuery = dataQuery.eq('category_id', categoryId);
+        }
+        
+        const { data, error } = await dataQuery;
+        
+        if (error) {
+          console.error('Error fetching questions:', error);
+          toast.error('კითხვების ჩატვირთვა ვერ მოხერხდა');
+          setLoading(false);
+          return;
+        }
+        
+        const formattedQuestions: AdminQuestion[] = (data || []).map((q) => ({
+          id: q.id,
+          category_id: q.category_id,
+          question_text: q.question_text,
+          correct_answer: q.correct_answer,
+          incorrect_answers: Array.isArray(q.incorrect_answers) 
+            ? q.incorrect_answers as string[]
+            : [],
+          difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
+          level_number: q.level_number || 1,
+          is_active: q.is_active ?? true,
+          in_production: q.in_production ?? false,
+          icon_slug: q.icon_slug || undefined,
+          image_url: q.image_url || null,
+          video_url: q.video_url || null,
+          audio_url: q.audio_url || null,
+          created_at: q.created_at || '',
+          updated_at: q.updated_at || '',
+        }));
+        
+        setQuestions(formattedQuestions);
       }
-      
-      const { data, error } = await dataQuery;
-      
-      if (error) {
-        console.error('Error fetching questions:', error);
-        toast.error('კითხვების ჩატვირთვა ვერ მოხერხდა');
-        setLoading(false);
-        return;
-      }
-      
-      const formattedQuestions: AdminQuestion[] = (data || []).map((q) => ({
-        id: q.id,
-        category_id: q.category_id,
-        question_text: q.question_text,
-        correct_answer: q.correct_answer,
-        incorrect_answers: Array.isArray(q.incorrect_answers) 
-          ? q.incorrect_answers as string[]
-          : [],
-        difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
-        level_number: q.level_number || 1,
-        is_active: q.is_active ?? true,
-        in_production: q.in_production ?? false,
-        icon_slug: q.icon_slug || undefined,
-        image_url: q.image_url || null,
-        video_url: q.video_url || null,
-        audio_url: q.audio_url || null,
-        created_at: q.created_at || '',
-        updated_at: q.updated_at || '',
-      }));
-      
-      setQuestions(formattedQuestions);
     } catch (err) {
       console.error('Error in fetchQuestions:', err);
       toast.error('კითხვების ჩატვირთვა ვერ მოხერხდა');

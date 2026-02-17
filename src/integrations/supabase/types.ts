@@ -3786,6 +3786,32 @@ export type Database = {
         Args: { p_player_identifier: string; p_session_id: string }
         Returns: boolean
       }
+      search_questions: {
+        Args: {
+          p_category_id?: string
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+        }
+        Returns: {
+          audio_url: string
+          category_id: string
+          correct_answer: string
+          created_at: string
+          difficulty: string
+          icon_slug: string
+          id: string
+          image_url: string
+          in_production: boolean
+          incorrect_answers: Json
+          is_active: boolean
+          level_number: number
+          question_text: string
+          total_count: number
+          updated_at: string
+          video_url: string
+        }[]
+      }
       update_user_currency: {
         Args: {
           p_coins_delta?: number
