@@ -1,49 +1,37 @@
 
 
-## Fix: TV Results Screen Cropping Other Players
+## Fix: 50/50 Power-Up Shows Only Correct Answer
 
 ### Problem
 
-The results screen uses `min-h-screen` (allows growing beyond viewport) with `overflow-hidden` (clips anything that overflows). The podium section has `flex-1` which greedily takes available space, pushing "other players" below the viewport where they get clipped.
+The 50/50 power-up always tries to hide 2 wrong answers. On true/false questions (which only have 1 wrong answer), it hides that single wrong answer, leaving only the correct answer visible -- effectively giving away the answer for free.
 
-### Fix
+The same bug exists in two places:
+- `src/pages/CategoryQuizPage.tsx` (solo/category quiz)
+- `src/contexts/GameContext.tsx` (multiplayer/duel quiz)
 
-**File: `src/components/tv/TVResultsScreen.tsx`**
+### Solution
 
-1. Change the root container from `min-h-screen` to `h-screen` -- lock to exactly viewport height, never exceed it
-2. Change the podium section from `flex-1` (greedy) to `flex-shrink` -- let it share space but shrink if needed
-3. Wrap the "other players" grid in a scrollable container with `overflow-y-auto` and `min-h-0` so all players are accessible even with many participants
-4. Reduce some spacing/sizes slightly to maximize vertical space:
-   - Reduce podium block heights (`h-28` to `h-24`, `h-20` to `h-16`, `h-14` to `h-10`)
-   - Reduce header margin
-   - Reduce avatar/medal sizes slightly
+Two-part fix:
+
+1. **Disable 50/50 on true/false questions** -- Since true/false only has 2 answers, removing 1 wrong answer would still reveal the correct one. The 50/50 power-up should be grayed out/disabled for these questions.
+
+2. **Safety guard in the logic** -- Even for 4-answer questions, always keep at least 1 wrong answer visible. Change `slice(0, 2)` to `slice(0, Math.min(2, wrongAnswers.length - 1))` so there's always at least 1 wrong answer remaining.
 
 ### Technical Details
 
-**Root container (line 67):**
-```
-Before: min-h-screen ... overflow-hidden ... flex flex-col
-After:  h-screen ... overflow-hidden ... flex flex-col
-```
+**File: `src/pages/CategoryQuizPage.tsx`**
 
-**Podium section (line 119):**
-```
-Before: flex items-end justify-center gap-3 mb-4 flex-1
-After:  flex items-end justify-center gap-3 mb-2 flex-shrink-0
-```
+- In `powerUpsForUI` (line ~728): add a condition to disable the 50/50 button when the current question is true/false
+- In the 50/50 switch case (line ~686): change `slice(0, 2)` to `slice(0, Math.min(2, wrongAnswers.length - 1))` as a safety net
 
-**Podium block heights (line 168):**
-```
-Before: h-28 / h-20 / h-14
-After:  h-20 / h-14 / h-10
-```
+**File: `src/contexts/GameContext.tsx`**
 
-**Other players section (lines 177-203):**
-- Add `flex-1 min-h-0 overflow-y-auto` to the wrapper so it scrolls if needed rather than being clipped
-- Reduce gap from `gap-3` to `gap-2` and padding from `p-3` to `p-2`
+- In the "fifty-fifty" switch case (line ~300): same safety fix -- change `slice(0, 2)` to `slice(0, Math.min(2, shuffled.length - 1))`
 
-**Play again hint (line 207):**
-- Keep `flex-shrink-0` so it always stays visible at the bottom
+### Result
 
-This ensures all content fits within the TV viewport, and if there are many "other players", they scroll within their section rather than overflowing off-screen.
-
+- True/false questions: 50/50 button appears disabled (grayed out) -- users cannot waste a power-up on it
+- 4-answer questions: works as before (hides 2 wrong, leaves 1 wrong + 1 correct)
+- 3-answer questions (if any): hides 1 wrong, leaves 1 wrong + 1 correct
+- No scenario ever reveals only the correct answer
