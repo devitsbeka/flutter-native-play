@@ -14,6 +14,9 @@ export interface AdminQuestion {
   is_active: boolean;
   in_production?: boolean;
   icon_slug?: string;
+  image_url?: string | null;
+  video_url?: string | null;
+  audio_url?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -97,6 +100,9 @@ export const useAdminQuestions = (categoryId?: string | null, searchTerm?: strin
         is_active: q.is_active ?? true,
         in_production: q.in_production ?? false,
         icon_slug: q.icon_slug || undefined,
+        image_url: q.image_url || null,
+        video_url: q.video_url || null,
+        audio_url: q.audio_url || null,
         created_at: q.created_at || '',
         updated_at: q.updated_at || '',
       }));
@@ -151,6 +157,9 @@ export const useAdminQuestions = (categoryId?: string | null, searchTerm?: strin
                 is_active: newQ.is_active ?? true,
                 in_production: newQ.in_production ?? false,
                 icon_slug: newQ.icon_slug || undefined,
+                image_url: newQ.image_url || null,
+                video_url: newQ.video_url || null,
+                audio_url: newQ.audio_url || null,
                 created_at: newQ.created_at || '',
                 updated_at: newQ.updated_at || '',
               };
