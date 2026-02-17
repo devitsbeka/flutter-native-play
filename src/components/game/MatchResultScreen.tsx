@@ -237,7 +237,7 @@ export function MatchResultScreen() {
   const { playSound } = useSound();
   const { updateMissionProgress } = useMissions();
   const { t } = useLanguage();
-  const { awardWin, awardDraw, awardLose, netWinProfit, netLoss, stakeAmount } = useGameStake();
+  const { awardWin, awardDraw, awardLose, netWinProfit, netLoss } = useGameStake();
   const { exhaustionInfo } = useTrivia();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -330,16 +330,16 @@ export function MatchResultScreen() {
         const oldLevelInfo = calculateLevel(oldPoints);
         const newLevelInfo = calculateLevel(newPoints);
 
-        // Stake-based rewards: Winner takes all, loser already paid
+        // Post-game rewards: Win +500, Lose -500, Draw 0
         if (isWin) {
           await awardWin();
-          setCoinChange(netWinProfit); // +500 net profit
+          setCoinChange(netWinProfit); // +500
         } else if (isDraw) {
           await awardDraw();
-          setCoinChange(REWARDS.GAME_DRAW_REFUND - stakeAmount); // -250 net
+          setCoinChange(0); // no change
         } else {
-          awardLose();
-          setCoinChange(-netLoss); // -500 (already paid)
+          await awardLose();
+          setCoinChange(-netLoss); // -500
         }
 
         // === Correct-answer milestone level-up (every 20 correct answers) ===
