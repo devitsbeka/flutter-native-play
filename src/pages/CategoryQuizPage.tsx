@@ -50,15 +50,6 @@ import { useAIIconSlug } from "@/hooks/useAIIconSlug";
 import { trackQuizStarted, trackQuizQuestionAnswered, trackQuizCompleted, trackQuizAbandoned, trackPowerUpUsed } from "@/lib/analytics";
 import puzzleSphereIcon from "@/assets/icons/puzzle-sphere.png";
 
-// Import mascot avatars for opponent
-import mascotAvatar1 from "@/assets/avatars/mascot-avatar-1.png";
-import mascotAvatar2 from "@/assets/avatars/mascot-avatar-2.png";
-import mascotAvatar3 from "@/assets/avatars/mascot-avatar-3.png";
-import mascotAvatar4 from "@/assets/avatars/mascot-avatar-4.png";
-import mascotAvatar5 from "@/assets/avatars/mascot-avatar-5.png";
-import mascotAvatar6 from "@/assets/avatars/mascot-avatar-6.png";
-import mascotAvatar7 from "@/assets/avatars/mascot-avatar-7.png";
-import mascotAvatar8 from "@/assets/avatars/mascot-avatar-8.png";
 
 // Import reward icons
 import coinIcon from "@/assets/icons/icon-coin.png";
@@ -103,7 +94,7 @@ const SUCCESS_ICONS = [
 // Perfect score icon from icon library (Starfish Wizard)
 const PERFECT_SCORE_ICON = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/starfish-wizard.png";
 
-const BOT_AVATARS = [mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4, mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8];
+
 
 interface TriviaQuestion {
   id: string;
@@ -206,8 +197,6 @@ export default function CategoryQuizPage() {
       setTimerBonus(0);
       setTimerFrozen(false);
       setFreezeEndTime(null);
-      setOpponentScore(0);
-      setPlayerScore(0);
     }
   }, [levelId]);
 
@@ -225,33 +214,6 @@ export default function CategoryQuizPage() {
   const [dbCategory, setDbCategory] = useState<{ id: string; name: string; icon_slug: string | null; total_levels: number } | null>(null);
   const category = getCategoryById(categoryId || "");
   
-  // Mock opponent data
-  const opponent = useMemo(() => ({
-    name: "QuizBot",
-    avatar: BOT_AVATARS[Math.floor(Math.random() * BOT_AVATARS.length)],
-    score: 0,
-  }), []);
-  
-  const [opponentScore, setOpponentScore] = useState(0);
-  const [playerScore, setPlayerScore] = useState(0);
-  
-  // Simulate opponent answering
-  useEffect(() => {
-    if (isAnswered && !showResults) {
-      // Simulate opponent getting answer right ~60% of the time
-      const opponentCorrect = Math.random() > 0.4;
-      if (opponentCorrect) {
-        setOpponentScore(prev => prev + Math.floor(Math.random() * 30) + 20);
-      }
-    }
-  }, [isAnswered, currentQuestionIndex]);
-  
-  // Update player score when they answer correctly
-  useEffect(() => {
-    if (isAnswered && selectedAnswer === questions[currentQuestionIndex]?.correct_answer) {
-      setPlayerScore(prev => prev + Math.floor(Math.random() * 30) + 25);
-    }
-  }, [isAnswered]);
 
   const shuffleArray = <T,>(array: T[]): T[] => {
     const shuffled = [...array];
@@ -804,18 +766,30 @@ export default function CategoryQuizPage() {
     }
     return results;
   }, [questions.length, currentQuestionIndex, isAnswered, selectedAnswer, currentQuestion, score]);
+  // Shared reset function for replay
+  const resetQuiz = useCallback(() => {
+    hasFetched.current = false;
+    hasSaved.current = false;
+    setQuestions([]);
+    setCurrentQuestionIndex(0);
+    setScore(0);
+    setShowResults(false);
+    setLoading(true);
+    setSavedStars(0);
+    setPointsEarned(0);
+    setUnlockedLevel(null);
+    setQuestionIds([]);
+    setNewProfileLevel(0);
+    setPreviousProfileLevel(0);
+    setLevelUpRewardsCredited(false);
+    setHiddenAnswers([]);
+    setUsedPowerUpsThisQuestion(new Set());
+    setTimerBonus(0);
+    setTimerFrozen(false);
+    setFreezeEndTime(null);
+    setFreezeTimeRemaining(0);
+  }, []);
 
-  // Get player avatar state - MUST be before early returns
-  const getPlayerState = useCallback(() => {
-    if (!isAnswered) return "active";
-    return selectedAnswer === currentQuestion?.correct_answer ? "correct" : "wrong";
-  }, [isAnswered, selectedAnswer, currentQuestion]);
-
-  // Get opponent avatar state (simulated) - MUST be before early returns
-  const getOpponentState = useCallback(() => {
-    if (!isAnswered) return "default";
-    return Math.random() > 0.4 ? "correct" : "wrong";
-  }, [isAnswered, currentQuestionIndex]);
 
   if (loading) {
     return (
@@ -1043,22 +1017,7 @@ export default function CategoryQuizPage() {
                 <ChunkyButton 
                   variant="primary"
                   className="w-full"
-                  onClick={() => {
-                    hasFetched.current = false;
-                    hasSaved.current = false;
-                    setQuestions([]);
-                    setCurrentQuestionIndex(0);
-                    setScore(0);
-                    setShowResults(false);
-                    setLoading(true);
-                    setSavedStars(0);
-                    setPointsEarned(0);
-                    setUnlockedLevel(null);
-                    setQuestionIds([]);
-                    setNewProfileLevel(0);
-                    setPreviousProfileLevel(0);
-                    setLevelUpRewardsCredited(false);
-                  }}
+                  onClick={resetQuiz}
                 >
               სცადე თავიდან
               </ChunkyButton>
@@ -1069,22 +1028,7 @@ export default function CategoryQuizPage() {
                 <ChunkyButton 
                   variant="secondary" 
                   className="w-full"
-                  onClick={() => {
-                    hasFetched.current = false;
-                    hasSaved.current = false;
-                    setQuestions([]);
-                    setCurrentQuestionIndex(0);
-                    setScore(0);
-                    setShowResults(false);
-                    setLoading(true);
-                    setSavedStars(0);
-                    setPointsEarned(0);
-                    setUnlockedLevel(null);
-                    setQuestionIds([]);
-                    setNewProfileLevel(0);
-                    setPreviousProfileLevel(0);
-                    setLevelUpRewardsCredited(false);
-                  }}
+                  onClick={resetQuiz}
                 >
                   თავიდან თამაში
                 </ChunkyButton>

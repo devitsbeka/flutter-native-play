@@ -21,7 +21,7 @@ import { REWARDS } from "@/config/rewardConfig";
 
 import coinIcon from "@/assets/icons/icon-coin.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
-import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
+
 import mysteryBoxIcon from "@/assets/mystery-box.png";
 import mascotAvatar1 from "@/assets/avatars/mascot-avatar-1.png";
 import mascotAvatar2 from "@/assets/avatars/mascot-avatar-2.png";
@@ -233,7 +233,7 @@ export function VSScreen() {
 
   // Pre-fetch questions ref
   const prefetchedQuestionsRef = useRef<TriviaQuestion[] | null>(null);
-  const [prefetchReady, setPrefetchReady] = useState(false);
+  
   const { fetchQuestions: prefetchQuestions } = useTrivia();
 
   // Stage 4: Confetti, pre-fetch questions, and transition to ready
@@ -249,7 +249,6 @@ export function VSScreen() {
     });
 
     // Pre-fetch questions in background
-    setPrefetchReady(false);
     if (selectedCategory) {
       prefetchedQuestionsRef.current = null;
       prefetchQuestions(6, selectedCategory.id, 1, [], false)
@@ -257,11 +256,9 @@ export function VSScreen() {
           if (questions && questions.length > 0) {
             prefetchedQuestionsRef.current = questions;
           }
-          setPrefetchReady(true);
         })
         .catch(err => {
           console.warn("Pre-fetch failed, will fetch on play:", err);
-          setPrefetchReady(true); // Still allow start, beginPlaying will fetch
         });
     }
 
@@ -317,7 +314,7 @@ export function VSScreen() {
     setConnectionError(false);
     categoryPoolSetForStageRef.current = false;
     prefetchedQuestionsRef.current = null;
-    setPrefetchReady(false);
+    
     setIsStarting(false);
     
     // Shuffle category pool for new selection - includes Mixed Category
