@@ -123,8 +123,11 @@ ${questionList}
     const topics: string[] = JSON.parse(jsonMatch[0]);
     console.log(`Extracted ${topics.length} unique topics from ${questions.length} questions`);
 
+    // Also return existing answers for dedup in research phase
+    const existingAnswers = [...new Set(questions.map(q => q.correct_answer))];
+
     return new Response(
-      JSON.stringify({ topics, count: topics.length, questionsAnalyzed: questions.length }),
+      JSON.stringify({ topics, count: topics.length, questionsAnalyzed: questions.length, existingAnswers }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

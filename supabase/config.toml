@@ -132,6 +132,9 @@ verify_jwt = true
 [functions.extract-category-topics]
 verify_jwt = true
 
+[functions.research-category-facts]
+verify_jwt = true
+
 [functions.suggest-icons]
 verify_jwt = true
 

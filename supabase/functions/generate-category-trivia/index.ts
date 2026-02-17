@@ -145,7 +145,54 @@ const iconKeywordMappings = `
 ფრინველების შესახებ → bird, wing, feather, nature (არა კონკრეტული ფრინველი!)
 `;
 
+// Build a fact-based prompt when researched facts are available
+function buildFactBasedPrompt(
+  facts: Array<{ fact: string; source_hint?: string; suggested_answer?: string }>,
+  category: string,
+  categoryDescription: string | undefined,
+  difficulty: string,
+  difficultyEn: string,
+  excludedTopics: string[],
+  allowedTopics: string[],
+  topicExclusionSection: string
+): string {
+  const factsSection = facts
+    .map((f, i) => `${i + 1}. ფაქტი: ${f.fact}${f.suggested_answer ? ` (პასუხი: ${f.suggested_answer})` : ''}`)
+    .join('\n');
 
+  return `შენ ხარ ტრივია კითხვების შემქმნელი. შენ მოცემული გაქვს კონკრეტული ფაქტები და შენი ამოცანაა გადააკეთო ისინი ტრივია კითხვებად.
+
+📌 კატეგორია: "${category}"
+${categoryDescription ? `📝 კატეგორიის აღწერა: "${categoryDescription}"` : ''}
+სირთულე: ${difficulty}
+
+🎯 ქვემოთ მოცემულია ${facts.length} ფაქტი. თითოეული ფაქტი უნდა გახდეს ერთი ტრივია კითხვა:
+
+${factsSection}
+
+🚨 წესები:
+1. ყოველი ფაქტიდან შექმენი ზუსტად ერთი კითხვა
+2. კითხვა: მაქს 65 სიმბოლო (კითხვის ნიშნის ჩათვლით)
+3. სწორი პასუხი: მაქს 20 სიმბოლო
+4. 3 არასწორი პასუხი: მაქს 20 სიმბოლო თითოეული
+5. არასწორი პასუხები უნდა იყოს დამაჯერებელი მაგრამ არასწორი
+6. ყველა 4 პასუხი მსგავსი სიგრძის (5 სიმბოლოს ფარგლებში)
+7. კითხვა არ უნდა შეიცავდეს სწორ პასუხს
+8. ფაქტობრივად ზუსტი - არ შეცვალო ფაქტები!
+
+${iconKeywordMappings}
+
+დააბრუნე მხოლოდ JSON მასივი:
+[
+  {
+    "question": "კითხვა ქართულად? (მაქს 65 სიმბოლო)",
+    "correct_answer": "პასუხი (მაქს 20 სიმბოლო)",
+    "incorrect_answers": ["არასწორი 1", "არასწორი 2", "არასწორი 3"],
+    "difficulty": "${difficultyEn}",
+    "icon_keyword": "ინგლისურად keyword აიკონისთვის"
+  }
+]`;
+}
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -162,7 +209,8 @@ Deno.serve(async (req) => {
       level = 1, 
       count = 5, 
       topic,
-      coveredTopics = []
+      coveredTopics = [],
+      researchedFacts = []
     } = await req.json();
 
     if (!category || !categoryId) {
@@ -263,7 +311,10 @@ ${excludedTopics.map(t => `- ${t}`).join('\n')}
 `
       : '';
 
-    const prompt = `შექმენი ${count} უნიკალური ტრივია კითხვა ქართულ ენაზე.
+    // If researched facts are provided, use a completely different prompt strategy
+    const hasResearchedFacts = researchedFacts.length > 0;
+
+    const prompt = hasResearchedFacts ? buildFactBasedPrompt(researchedFacts, category, categoryDescription, difficulty, difficultyEn, excludedTopics, allowedTopics, topicExclusionSection) : `შექმენი ${count} უნიკალური ტრივია კითხვა ქართულ ენაზე.
 
 📌 კატეგორია: "${category}"
 ${categoryDescription ? `📝 კატეგორიის აღწერა: "${categoryDescription}"` : ''}
@@ -385,6 +436,9 @@ ${iconKeywordMappings}
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Use gemini-2.5-pro for better instruction following (especially with researched facts)
+    const modelToUse = hasResearchedFacts ? "google/gemini-2.5-pro" : "google/gemini-2.5-pro";
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -392,9 +446,9 @@ ${iconKeywordMappings}
         "Authorization": `Bearer ${LOVABLE_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: modelToUse,
         messages: [{ role: "user", content: prompt }],
-        temperature: coveredTopics.length > 0 ? 0.95 : 0.9,
+        temperature: hasResearchedFacts ? 0.5 : (coveredTopics.length > 0 ? 0.95 : 0.9),
       }),
     });
 
