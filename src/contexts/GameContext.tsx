@@ -297,7 +297,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           const wrongAnswers = currentQuestion.allAnswers
             .filter(a => a !== currentQuestion.correctAnswer);
           const shuffled = wrongAnswers.sort(() => Math.random() - 0.5);
-          updates.hiddenAnswers = shuffled.slice(0, 2);
+          updates.hiddenAnswers = shuffled.slice(0, Math.min(2, shuffled.length - 1));
           break;
         }
         case "freeze": {
