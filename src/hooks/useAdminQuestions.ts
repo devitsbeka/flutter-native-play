@@ -41,7 +41,9 @@ export const useAdminQuestions = (categoryId?: string | null, searchTerm?: strin
       }
 
       if (normalizedSearch) {
-        countQuery = countQuery.ilike('question_text', `%${normalizedSearch}%`);
+        countQuery = countQuery.or(
+          `question_text.ilike.%${normalizedSearch}%,correct_answer.ilike.%${normalizedSearch}%,incorrect_answers::text.ilike.%${normalizedSearch}%`
+        );
       }
       
       const { count, error: countError } = await countQuery;
@@ -68,7 +70,9 @@ export const useAdminQuestions = (categoryId?: string | null, searchTerm?: strin
       }
 
       if (normalizedSearch) {
-        dataQuery = dataQuery.ilike('question_text', `%${normalizedSearch}%`);
+        dataQuery = dataQuery.or(
+          `question_text.ilike.%${normalizedSearch}%,correct_answer.ilike.%${normalizedSearch}%,incorrect_answers::text.ilike.%${normalizedSearch}%`
+        );
       }
       
       const { data, error } = await dataQuery;
