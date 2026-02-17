@@ -1,33 +1,68 @@
 
 
-## Add Image Question Indicators in Content Manager
+## Fix: Answer-based Search Not Working in Content Manager
 
-### Problem
-When browsing questions in the Content Manager, there's no visual distinction between text questions and image questions. This makes it confusing for admins -- they don't know whether a question needs an icon or if it's an image question that already has its own visual.
+### Root Cause
+The `incorrect_answers::text` type casting syntax works in raw SQL but **does not work** in Supabase PostgREST's `.or()` filter. PostgREST silently ignores or fails the cast, so searching by incorrect answers never matches anything. This affects both the Content Manager (`useAdminQuestions.ts`) and the Question Studio (`useQuestionStudio.ts`).
 
-### Changes
+### Solution
+Create a database function (RPC) that performs the search in raw SQL where `::text` casting works properly, then call it from both hooks instead of using `.or()` filters.
 
-**1. Update `AdminQuestion` interface** (`src/hooks/useAdminQuestions.ts`)
-- Add `image_url`, `video_url`, and `audio_url` optional fields to the interface so the Content Manager can detect media questions.
+### Step 1: Create a database function
 
-**2. Question List (Column 2)** (`src/pages/admin/ContentManager.tsx`, lines 508-569)
-- For image questions: show a thumbnail + "suraTi" label instead of the question text, similar to what QuestionList.tsx already does.
-- Hide the DynamicIcon (3D icon) for image questions since they don't need one.
-- Add a small image/video/audio type badge next to the difficulty badge.
+A new SQL function `search_questions` that accepts a search term, optional category ID, pagination params, and returns matching questions plus a total count.
 
-**3. Question Detail Panel (Column 3)** (`src/pages/admin/ContentManager.tsx`, lines 662-724)
-- For image questions: replace the "Question Text" section with the image preview.
-- Hide the icon picker in the preview mockup for image questions (since they don't use icons).
-- Pass `imageUrl`, `hideQuestionText` props to `QuestionMockupPreview` if it supports them, or show the image inline.
-- Add a clear badge like "suraTiani kiTxva -- ar saWiroebs ikons" (Image question -- no icon needed).
+```sql
+CREATE OR REPLACE FUNCTION search_questions(
+  p_search text DEFAULT NULL,
+  p_category_id uuid DEFAULT NULL,
+  p_limit int DEFAULT 50,
+  p_offset int DEFAULT 0
+)
+RETURNS TABLE(
+  id uuid, category_id uuid, question_text text, correct_answer text,
+  incorrect_answers jsonb, difficulty text, level_number int,
+  is_active boolean, in_production boolean, icon_slug text,
+  image_url text, video_url text, audio_url text,
+  created_at timestamptz, updated_at timestamptz,
+  total_count bigint
+)
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path TO 'public'
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    q.id, q.category_id, q.question_text, q.correct_answer,
+    q.incorrect_answers, q.difficulty, q.level_number,
+    q.is_active, q.in_production, q.icon_slug,
+    q.image_url, q.video_url, q.audio_url,
+    q.created_at, q.updated_at,
+    COUNT(*) OVER() AS total_count
+  FROM questions q
+  WHERE
+    (p_category_id IS NULL OR q.category_id = p_category_id)
+    AND (
+      p_search IS NULL
+      OR q.question_text ILIKE '%' || p_search || '%'
+      OR q.correct_answer ILIKE '%' || p_search || '%'
+      OR q.incorrect_answers::text ILIKE '%' || p_search || '%'
+    )
+  ORDER BY q.created_at DESC
+  LIMIT p_limit OFFSET p_offset;
+END;
+$$;
+```
 
-### Technical Details
+### Step 2: Update `useAdminQuestions.ts`
 
-**File: `src/hooks/useAdminQuestions.ts`**
-- Add to `AdminQuestion` interface: `image_url?: string | null`, `video_url?: string | null`, `audio_url?: string | null`
+Replace the two separate queries (count + data) with a single `supabase.rpc('search_questions', {...})` call when a search term is present. When there's no search, keep the existing `.from('questions')` query for efficiency.
 
-**File: `src/pages/admin/ContentManager.tsx`**
-- Column 2 question items: wrap question text display in a conditional -- if `image_url` exists, show a thumbnail and "suraTi" label instead
-- Column 3 detail: conditionally show image preview, hide icon picker for image questions
-- Add `Image` icon import from lucide-react
+### Step 3: Update `useQuestionStudio.ts`
+
+Apply the same RPC-based search approach for consistency -- use `search_questions` when a search term is active.
+
+### Why This Works
+- Raw SQL inside a database function supports `::text` casting on JSONB columns
+- Single query instead of two (count + data) since `COUNT(*) OVER()` provides both
+- No change to the UI -- search input and behavior remain identical
 
