@@ -148,134 +148,194 @@ export const useQuestionStudio = () => {
     setLoadingQuestions(true);
     try {
       const inProd = productionStatus === 'production';
-      
-      // Build count query
-      let countQuery = supabase
-        .from('questions')
-        .select('*', { count: 'exact', head: true })
-        .eq('in_production', inProd);
-      
-      if (selectedCategoryId) {
-        countQuery = countQuery.eq('category_id', selectedCategoryId);
-      }
-      
-      if (questionSearch.trim()) {
-        const term = questionSearch.trim();
-        countQuery = countQuery.or(`question_text.ilike.%${term}%,correct_answer.ilike.%${term}%,incorrect_answers::text.ilike.%${term}%`);
-      }
-
-      // Apply type filter
-      if (filters.questionType) {
-        switch (filters.questionType) {
-          case 'video':
-            countQuery = countQuery.not('video_url', 'is', null);
-            break;
-          case 'audio':
-            countQuery = countQuery.not('audio_url', 'is', null).is('video_url', null);
-            break;
-          case 'image':
-            countQuery = countQuery.not('image_url', 'is', null).is('video_url', null).is('audio_url', null);
-            break;
-          case 'text':
-            countQuery = countQuery.is('image_url', null).is('video_url', null).is('audio_url', null);
-            break;
-        }
-      }
-
-      if (filters.difficulty) {
-        countQuery = countQuery.eq('difficulty', filters.difficulty);
-      }
-
-      if (filters.hasIcon === true) {
-        countQuery = countQuery.not('icon_slug', 'is', null);
-      } else if (filters.hasIcon === false) {
-        countQuery = countQuery.is('icon_slug', null);
-      }
-
-      const { count, error: countError } = await countQuery;
-      if (countError) throw countError;
-      setTotalCount(count || 0);
-
-      // Build data query
       const offset = page * PAGE_SIZE;
-      let dataQuery = supabase
-        .from('questions')
-        .select('id, category_id, question_text, correct_answer, incorrect_answers, difficulty, level_number, is_active, in_production, icon_slug, image_url, video_url, audio_url, created_at, updated_at')
-        .eq('in_production', inProd)
-        .range(offset, offset + PAGE_SIZE - 1);
+      const normalizedSearch = questionSearch.trim();
 
-      if (selectedCategoryId) {
-        dataQuery = dataQuery.eq('category_id', selectedCategoryId);
-      }
+      // When searching, use RPC for proper incorrect_answers search
+      if (normalizedSearch) {
+        const { data: rpcData, error: rpcError } = await supabase.rpc('search_questions', {
+          p_search: normalizedSearch,
+          p_category_id: selectedCategoryId || null,
+          p_limit: PAGE_SIZE,
+          p_offset: offset,
+        });
 
-      if (questionSearch.trim()) {
-        const term = questionSearch.trim();
-        dataQuery = dataQuery.or(`question_text.ilike.%${term}%,correct_answer.ilike.%${term}%,incorrect_answers::text.ilike.%${term}%`);
-      }
+        if (rpcError) throw rpcError;
 
-      // Apply type filter
-      if (filters.questionType) {
-        switch (filters.questionType) {
-          case 'video':
-            dataQuery = dataQuery.not('video_url', 'is', null);
-            break;
-          case 'audio':
-            dataQuery = dataQuery.not('audio_url', 'is', null).is('video_url', null);
-            break;
-          case 'image':
-            dataQuery = dataQuery.not('image_url', 'is', null).is('video_url', null).is('audio_url', null);
-            break;
-          case 'text':
-            dataQuery = dataQuery.is('image_url', null).is('video_url', null).is('audio_url', null);
-            break;
+        // Filter RPC results client-side for in_production and other filters
+        let results = (rpcData || []) as any[];
+        results = results.filter((q: any) => (q.in_production ?? false) === inProd);
+
+        // Apply type filter
+        if (filters.questionType) {
+          results = results.filter((q: any) => {
+            switch (filters.questionType) {
+              case 'video': return !!q.video_url;
+              case 'audio': return !!q.audio_url && !q.video_url;
+              case 'image': return !!q.image_url && !q.video_url && !q.audio_url;
+              case 'text': return !q.image_url && !q.video_url && !q.audio_url;
+              default: return true;
+            }
+          });
         }
+
+        if (filters.difficulty) {
+          results = results.filter((q: any) => q.difficulty === filters.difficulty);
+        }
+
+        if (filters.hasIcon === true) {
+          results = results.filter((q: any) => !!q.icon_slug);
+        } else if (filters.hasIcon === false) {
+          results = results.filter((q: any) => !q.icon_slug);
+        }
+
+        setTotalCount(results.length);
+
+        // Apply sorting
+        if (filters.sortBy === 'oldest') {
+          results.sort((a: any, b: any) => (a.created_at || '').localeCompare(b.created_at || ''));
+        } else if (filters.sortBy === 'alphabetical') {
+          results.sort((a: any, b: any) => (a.question_text || '').localeCompare(b.question_text || ''));
+        }
+
+        const formatted: StudioQuestion[] = results.map((q: any) => ({
+          id: q.id,
+          category_id: q.category_id,
+          question_text: q.question_text,
+          correct_answer: q.correct_answer,
+          incorrect_answers: Array.isArray(q.incorrect_answers) ? q.incorrect_answers as string[] : [],
+          difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
+          level_number: q.level_number || 1,
+          is_active: q.is_active ?? true,
+          in_production: q.in_production ?? false,
+          icon_slug: q.icon_slug,
+          image_url: q.image_url,
+          video_url: q.video_url,
+          audio_url: q.audio_url,
+          created_at: q.created_at || '',
+          updated_at: q.updated_at || '',
+        }));
+
+        setQuestions(formatted);
+        setPreviewIndex(0);
+      } else {
+        // No search: use standard queries
+        let countQuery = supabase
+          .from('questions')
+          .select('*', { count: 'exact', head: true })
+          .eq('in_production', inProd);
+        
+        if (selectedCategoryId) {
+          countQuery = countQuery.eq('category_id', selectedCategoryId);
+        }
+
+        // Apply type filter
+        if (filters.questionType) {
+          switch (filters.questionType) {
+            case 'video':
+              countQuery = countQuery.not('video_url', 'is', null);
+              break;
+            case 'audio':
+              countQuery = countQuery.not('audio_url', 'is', null).is('video_url', null);
+              break;
+            case 'image':
+              countQuery = countQuery.not('image_url', 'is', null).is('video_url', null).is('audio_url', null);
+              break;
+            case 'text':
+              countQuery = countQuery.is('image_url', null).is('video_url', null).is('audio_url', null);
+              break;
+          }
+        }
+
+        if (filters.difficulty) {
+          countQuery = countQuery.eq('difficulty', filters.difficulty);
+        }
+
+        if (filters.hasIcon === true) {
+          countQuery = countQuery.not('icon_slug', 'is', null);
+        } else if (filters.hasIcon === false) {
+          countQuery = countQuery.is('icon_slug', null);
+        }
+
+        const { count, error: countError } = await countQuery;
+        if (countError) throw countError;
+        setTotalCount(count || 0);
+
+        // Build data query
+        let dataQuery = supabase
+          .from('questions')
+          .select('id, category_id, question_text, correct_answer, incorrect_answers, difficulty, level_number, is_active, in_production, icon_slug, image_url, video_url, audio_url, created_at, updated_at')
+          .eq('in_production', inProd)
+          .range(offset, offset + PAGE_SIZE - 1);
+
+        if (selectedCategoryId) {
+          dataQuery = dataQuery.eq('category_id', selectedCategoryId);
+        }
+
+        // Apply type filter
+        if (filters.questionType) {
+          switch (filters.questionType) {
+            case 'video':
+              dataQuery = dataQuery.not('video_url', 'is', null);
+              break;
+            case 'audio':
+              dataQuery = dataQuery.not('audio_url', 'is', null).is('video_url', null);
+              break;
+            case 'image':
+              dataQuery = dataQuery.not('image_url', 'is', null).is('video_url', null).is('audio_url', null);
+              break;
+            case 'text':
+              dataQuery = dataQuery.is('image_url', null).is('video_url', null).is('audio_url', null);
+              break;
+          }
+        }
+
+        if (filters.difficulty) {
+          dataQuery = dataQuery.eq('difficulty', filters.difficulty);
+        }
+
+        if (filters.hasIcon === true) {
+          dataQuery = dataQuery.not('icon_slug', 'is', null);
+        } else if (filters.hasIcon === false) {
+          dataQuery = dataQuery.is('icon_slug', null);
+        }
+
+        // Apply sorting
+        switch (filters.sortBy) {
+          case 'oldest':
+            dataQuery = dataQuery.order('created_at', { ascending: true });
+            break;
+          case 'alphabetical':
+            dataQuery = dataQuery.order('question_text', { ascending: true });
+            break;
+          default:
+            dataQuery = dataQuery.order('created_at', { ascending: false });
+        }
+
+        const { data, error } = await dataQuery;
+        if (error) throw error;
+
+        const formatted: StudioQuestion[] = (data || []).map(q => ({
+          id: q.id,
+          category_id: q.category_id,
+          question_text: q.question_text,
+          correct_answer: q.correct_answer,
+          incorrect_answers: Array.isArray(q.incorrect_answers) ? q.incorrect_answers as string[] : [],
+          difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
+          level_number: q.level_number || 1,
+          is_active: q.is_active ?? true,
+          in_production: q.in_production ?? false,
+          icon_slug: q.icon_slug,
+          image_url: q.image_url,
+          video_url: q.video_url,
+          audio_url: q.audio_url,
+          created_at: q.created_at || '',
+          updated_at: q.updated_at || '',
+        }));
+
+        setQuestions(formatted);
+        setPreviewIndex(0);
       }
-
-      if (filters.difficulty) {
-        dataQuery = dataQuery.eq('difficulty', filters.difficulty);
-      }
-
-      if (filters.hasIcon === true) {
-        dataQuery = dataQuery.not('icon_slug', 'is', null);
-      } else if (filters.hasIcon === false) {
-        dataQuery = dataQuery.is('icon_slug', null);
-      }
-
-      // Apply sorting
-      switch (filters.sortBy) {
-        case 'oldest':
-          dataQuery = dataQuery.order('created_at', { ascending: true });
-          break;
-        case 'alphabetical':
-          dataQuery = dataQuery.order('question_text', { ascending: true });
-          break;
-        default:
-          dataQuery = dataQuery.order('created_at', { ascending: false });
-      }
-
-      const { data, error } = await dataQuery;
-      if (error) throw error;
-
-      const formatted: StudioQuestion[] = (data || []).map(q => ({
-        id: q.id,
-        category_id: q.category_id,
-        question_text: q.question_text,
-        correct_answer: q.correct_answer,
-        incorrect_answers: Array.isArray(q.incorrect_answers) ? q.incorrect_answers as string[] : [],
-        difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
-        level_number: q.level_number || 1,
-        is_active: q.is_active ?? true,
-        in_production: q.in_production ?? false,
-        icon_slug: q.icon_slug,
-        image_url: q.image_url,
-        video_url: q.video_url,
-        audio_url: q.audio_url,
-        created_at: q.created_at || '',
-        updated_at: q.updated_at || '',
-      }));
-
-      setQuestions(formatted);
-      setPreviewIndex(0);
     } catch (err) {
       console.error('Error fetching questions:', err);
       toast.error('კითხვების ჩატვირთვა ვერ მოხერხდა');
