@@ -162,7 +162,8 @@ Deno.serve(async (req) => {
       level = 1, 
       count = 5, 
       topic,
-      existingQuestions = [] 
+      existingQuestions = [],
+      coveredTopics = []
     } = await req.json();
 
     if (!category) {
@@ -172,7 +173,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Generating ${count} Georgian trivia questions for category: ${category} (${categoryId}), level: ${level}, topic: ${topic || 'none'}, excluding ${existingQuestions.length} existing questions`);
+    console.log(`Generating ${count} Georgian trivia questions for category: ${category} (${categoryId}), level: ${level}, topic: ${topic || 'none'}, excluding ${existingQuestions.length} existing questions, ${coveredTopics.length} covered topics`);
 
     const difficulty = level <= 5 ? "მარტივი" : level <= 15 ? "საშუალო" : "რთული";
     const difficultyEn = level <= 5 ? "easy" : level <= 15 ? "medium" : "hard";
@@ -184,9 +185,24 @@ Deno.serve(async (req) => {
     // Use provided topic or pick from allowed topics
     const focusArea = topic || allowedTopics[Math.floor(Math.random() * allowedTopics.length)];
 
-    // Build exclusion list for AI (limit to 50 most recent to keep prompt size manageable)
+    // Build topic-aware exclusion section (primary method)
+    const topicFingerprintSection = coveredTopics.length > 0
+      ? `
+🚫🚫🚫 უკვე დაფარული თემები - არ გაიმეორო!
+
+ამ კატეგორიაში უკვე ${coveredTopics.length} თემა/ფაქტი არის დაფარული:
+${coveredTopics.map((t: string, i: number) => `${i + 1}. ${t}`).join('\n')}
+
+⚠️⚠️⚠️ ყველა ზემოთ ჩამოთვლილი თემა უკვე არსებობს მონაცემთა ბაზაში!
+შექმენი კითხვები რომლებიც ეხება სრულიად ახალ ფაქტებს, პიროვნებებს, მოვლენებს ან თარიღებს!
+არ გაიმეორო იგივე თემები სხვა ფორმულირებით!
+იფიქრე ნაკლებად ცნობილ, უჩვეულო ფაქტებზე რომლებიც არ არის ზემოთ ჩამოთვლილ სიაში!
+`
+      : '';
+
+    // Fallback: raw question exclusion (only used when no topic fingerprint)
     const exclusionList = existingQuestions.slice(0, 50);
-    const exclusionSection = exclusionList.length > 0 
+    const exclusionSection = coveredTopics.length === 0 && exclusionList.length > 0 
       ? `
 🚫 უკვე არსებული კითხვები - არ გაიმეორო ან მსგავსი არ შექმნა!
 ${exclusionList.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}
@@ -243,6 +259,7 @@ ${topicExclusionSection}
 - იგივე მოვლენა სხვადასხვა ფორმულირებით
 - იგივე თარიღი სხვადასხვა კითხვით
 
+${topicFingerprintSection}
 ${exclusionSection}
 
 🚨🚨🚨 სავალდებულო სიგრძის ლიმიტები - კრიტიკულად მნიშვნელოვანი!
@@ -329,7 +346,7 @@ ${iconKeywordMappings}
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.9,
+        temperature: coveredTopics.length > 0 ? 0.95 : 0.9,
       }),
     });
 

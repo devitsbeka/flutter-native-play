@@ -96,14 +96,33 @@ export function AiGenerator() {
     setDuplicatesFound(0);
 
     try {
-      // Fetch existing questions for this category to check duplicates
+      // Step 1: Extract topic fingerprint from existing questions
+      toast({
+        title: 'თემების ანალიზი...',
+        description: 'არსებული კითხვების თემატიკა მუშავდება',
+      });
+
+      let coveredTopics: string[] = [];
+      try {
+        const { data: topicData, error: topicError } = await supabase.functions.invoke('extract-category-topics', {
+          body: { categoryId: selectedCategory },
+        });
+        if (!topicError && topicData?.topics) {
+          coveredTopics = topicData.topics;
+          console.log(`Extracted ${coveredTopics.length} covered topics from ${topicData.questionsAnalyzed} questions`);
+        }
+      } catch (topicErr) {
+        console.warn('Topic extraction failed, falling back to raw exclusion:', topicErr);
+      }
+
+      // Fetch existing questions for fallback duplicate checking
       const { data: existingQuestions } = await supabase
         .from('questions')
         .select('question_text')
         .eq('category_id', selectedCategory)
         .eq('is_active', true)
         .order('created_at', { ascending: false })
-        .limit(200); // Get last 200 questions for thorough duplicate checking
+        .limit(200);
 
       const existingTexts = (existingQuestions || []).map(q => q.question_text);
 
@@ -114,15 +133,15 @@ export function AiGenerator() {
       let totalDuplicates = 0;
 
       for (let i = 0; i < batches; i++) {
-        // Pass full category context to AI so it generates relevant questions
         const { data, error } = await supabase.functions.invoke('generate-category-trivia', {
           body: {
             category: selectedCategoryData.name,
-            categoryId: selectedCategoryData.category_id, // e.g. "georgian_history"
-            categoryDescription: selectedCategoryData.description, // Full description for context
+            categoryId: selectedCategoryData.category_id,
+            categoryDescription: selectedCategoryData.description,
             difficulty,
             topic: topic || undefined,
-            existingQuestions: existingTexts, // Send existing questions to AI
+            existingQuestions: existingTexts,
+            coveredTopics, // Pass topic fingerprint
           },
         });
 
