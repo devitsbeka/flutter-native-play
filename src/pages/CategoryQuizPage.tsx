@@ -683,7 +683,7 @@ export default function CategoryQuizPage() {
         const wrongAnswers = (currentQ.allAnswers || [])
           .filter(a => a !== currentQ.correct_answer)
           .filter(a => !hiddenAnswers.includes(a));
-        const toHide = wrongAnswers.sort(() => Math.random() - 0.5).slice(0, 2);
+        const toHide = wrongAnswers.sort(() => Math.random() - 0.5).slice(0, Math.min(2, wrongAnswers.length - 1));
         setHiddenAnswers(prev => [...prev, ...toHide]);
         break;
       }
@@ -725,12 +725,14 @@ export default function CategoryQuizPage() {
       replace: "replace",
       "time-drain": "hint",
     };
+    const currentQ = questions[currentQuestionIndex];
+    const isTF = currentQ?.allAnswers?.length === 2;
     return (Object.entries(powerUps) as [PowerUpType, number][]).map(([type, count]) => ({
       type: typeMap[type],
       count,
-      state: usedPowerUpsThisQuestion.has(type) ? ("disabled" as const) : ("default" as const),
+      state: usedPowerUpsThisQuestion.has(type) || (type === "5050" && isTF) ? ("disabled" as const) : ("default" as const),
     }));
-  }, [powerUps, usedPowerUpsThisQuestion]);
+  }, [powerUps, usedPowerUpsThisQuestion, questions, currentQuestionIndex]);
 
   const currentQuestion = questions[currentQuestionIndex];
   const starPercentage = (score / Math.max(questions.length, 1)) * 100;
