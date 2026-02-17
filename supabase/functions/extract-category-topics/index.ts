@@ -1,0 +1,129 @@
+/// <reference types="https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts" />
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { getCorsHeaders } from "../_shared/cors.ts";
+
+Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { categoryId } = await req.json();
+
+    if (!categoryId) {
+      return new Response(
+        JSON.stringify({ error: "categoryId is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Fetch ALL questions for this category (up to 500)
+    const { data: questions, error: dbError } = await supabase
+      .from("questions")
+      .select("question_text, correct_answer")
+      .eq("category_id", categoryId)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(500);
+
+    if (dbError) throw dbError;
+
+    if (!questions || questions.length === 0) {
+      return new Response(
+        JSON.stringify({ topics: [], count: 0 }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Extracting topics from ${questions.length} questions for category ${categoryId}`);
+
+    // Build a compact list of "question -> answer" pairs for AI summarization
+    const questionList = questions
+      .map((q, i) => `${i + 1}. ${q.question_text} → ${q.correct_answer}`)
+      .join("\n");
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
+    const prompt = `შემდეგი ტრივია კითხვებიდან ამოიღე ყველა უნიკალური თემა/ფაქტი რომელიც ტესტირდება.
+
+კითხვები:
+${questionList}
+
+დააბრუნე JSON მასივი სადაც თითოეული ელემენტი არის მოკლე თემის ლეიბელი (მაქსიმუმ 15 სიტყვა).
+თემა უნდა აღწეროს კონკრეტული ფაქტი, პიროვნება ან მოვლენა რომელიც ტესტირდება.
+
+მაგალითები:
+- "თბილისის დაარსება - ვახტანგ გორგასალი, 458 წ."
+- "ქართლის გაქრისტიანება - IV საუკუნე, წმ. ნინო"
+- "თამარ მეფე - პირველი ქალი მონარქი"
+- "ბაგრატიონთა დინასტია - სამეფო გვარი"
+
+ყველა თემა უნიკალური უნდა იყოს. მსგავსი თემები გააერთიანე ერთში.
+არ დაწერო ახსნა, მხოლოდ JSON მასივი.
+
+დააბრუნე: ["თემა 1", "თემა 2", ...]`;
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.3, // Low temperature for accurate extraction
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("AI API error:", errorText);
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded" }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      throw new Error(`AI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
+
+    // Parse JSON array from response
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      console.error("No JSON array found in topic extraction response:", content);
+      // Fallback: return empty topics rather than failing
+      return new Response(
+        JSON.stringify({ topics: [], count: 0, questionsAnalyzed: questions.length }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const topics: string[] = JSON.parse(jsonMatch[0]);
+    console.log(`Extracted ${topics.length} unique topics from ${questions.length} questions`);
+
+    return new Response(
+      JSON.stringify({ topics, count: topics.length, questionsAnalyzed: questions.length }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error extracting topics:", errorMessage);
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
