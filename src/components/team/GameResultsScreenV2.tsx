@@ -214,7 +214,13 @@ export function GameResultsScreenV2() {
   // Auto-open challenge share modal
   useEffect(() => {
     if (hasAutoOpenedChallenge.current || !currentRoom?.current_game_id || !user) return;
+    
+    // Check sessionStorage to only auto-open once per room session
+    const storageKey = `challenge_shown_${currentRoom.id}`;
+    if (sessionStorage.getItem(storageKey)) return;
+    
     hasAutoOpenedChallenge.current = true;
+    sessionStorage.setItem(storageKey, "1");
 
     const fetchAndOpen = async () => {
       // Fetch questions
