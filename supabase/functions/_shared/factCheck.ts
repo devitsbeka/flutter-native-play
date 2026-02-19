@@ -33,8 +33,9 @@ async function runSingleFactCheck(opts: {
   model: string;
   minConfidence: number;
   apiKey: string;
+  temperature?: number;
 }): Promise<FactCheckResult[]> {
-  const { items, context, model, minConfidence, apiKey } = opts;
+  const { items, context, model, minConfidence, apiKey, temperature } = opts;
 
   const systemPrompt = context.language === "ka"
     ? `შენ ხარ უკიდურესად მკაცრი ფაქტების შემმოწმებელი (fact-checker) ქართული ტრივიისთვის.
@@ -98,7 +99,7 @@ True/False rule:
         },
       ],
       response_format: { type: "json_object" },
-      temperature: 0,
+      ...(temperature !== undefined ? { temperature } : {}),
     }),
   });
 
@@ -162,6 +163,7 @@ export async function factCheckQuestions(opts: {
       model: PRIMARY_MODEL,
       minConfidence,
       apiKey: LOVABLE_API_KEY,
+      temperature: 0,
     }),
     runSingleFactCheck({
       items,
@@ -169,6 +171,7 @@ export async function factCheckQuestions(opts: {
       model: SECONDARY_MODEL,
       minConfidence,
       apiKey: LOVABLE_API_KEY,
+      // openai/gpt-5-mini only supports default temperature (1)
     }),
   ]);
 
