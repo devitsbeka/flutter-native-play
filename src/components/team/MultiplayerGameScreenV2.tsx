@@ -301,7 +301,7 @@ export function MultiplayerGameScreenV2() {
       )}>
         {/* Category Icon - only show when no media is present AND icon_slug exists */}
         {!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && (
-          <div className="absolute left-1/2 -translate-x-1/2 -top-14 z-20 w-28 h-28">
+          <div className="absolute left-1/2 -translate-x-1/2 -top-[41px] z-20 w-28 h-28">
             <DynamicIcon 
               slug={currentQuestion?.iconSlug || undefined}
               // Only use categoryId for fallback if we have an explicit iconSlug

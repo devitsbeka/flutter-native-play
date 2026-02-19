@@ -634,7 +634,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                   <div className="mt-10 mb-2 relative">
                     {currentQuestion?.icon_slug && (
                       <div
-                        className="absolute left-1/2 -translate-x-1/2 -top-12 z-20"
+                        className="absolute left-1/2 -translate-x-1/2 -top-[33px] z-20"
                         style={{ filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.25))" }}
                       >
                         <DynamicIcon slug={currentQuestion.icon_slug} size={84} hideIfEmpty={true} />

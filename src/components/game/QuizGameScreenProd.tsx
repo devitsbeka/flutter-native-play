@@ -367,7 +367,7 @@ export function QuizGameScreenProd() {
       <div className="px-4 flex-shrink-0 -mt-1 mb-0 [@media(max-height:700px)]:-mt-2 [@media(max-height:700px)]:mb-0 [@media(max-height:600px)]:-mt-3 relative">
         {/* Category Icon - overlaps card by 50% (hide if media question) */}
         {!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && (
-          <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
+          <div className="absolute left-1/2 -translate-x-1/2 -top-[33px] z-20">
             <DynamicIcon 
               slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
               // For mixed category: don't use category fallback - only show icon if question has explicit icon
