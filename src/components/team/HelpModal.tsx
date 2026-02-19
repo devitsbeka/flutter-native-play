@@ -4,10 +4,10 @@ import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 // 3D icons
-import iconParty from "@/assets/icons/icon-party.png";
 import iconCompass from "@/assets/icons/icon-compass.png";
 import iconOtherGames from "@/assets/icons/icon-other-games.png";
-import iconTrophy from "@/assets/icons/icon-trophy-3d.png";
+import iconParty from "@/assets/icons/icon-party.png";
+import retroTvIcon from "@/assets/retro-tv-colored.png";
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -73,7 +73,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
       description: t("help.playWithFriendsDesc"),
     },
     {
-      icon: iconTrophy,
+      icon: retroTvIcon,
       title: t("help.winning"),
       description: t("help.winningDesc"),
     },
