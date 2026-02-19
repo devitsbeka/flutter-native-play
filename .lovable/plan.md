@@ -1,53 +1,23 @@
 
 
-## Fix: Image Questions Showing as Text in Multiplayer Games
+## Fix: Show Challenge Share Modal Only After First Round
 
-### Root Cause
+### Problem
+The "Challenge Friends" modal auto-opens after every round in a multiplayer game. This is annoying for users playing multiple rounds in the same room.
 
-The `room_questions` database table is missing `image_url`, `video_url`, and `audio_url` columns. When multiplayer games store questions to sync between players, media URLs are silently dropped. When other players load these questions, there's no media data -- so image questions fall back to displaying text.
+### Cause
+The `hasAutoOpenedChallenge` ref in `GameResultsScreenV2` resets every time the component remounts (which happens after each round ends). So the modal pops up again and again.
 
-### What Needs to Change
+### Solution
+Use `sessionStorage` keyed by the room ID to track whether the modal has already been shown. This way it only auto-opens once per room session, but the user can still manually open it via the share button.
 
-#### 1. Database Migration -- Add media columns to `room_questions`
+### Technical Details
 
-Add three nullable text columns:
-- `image_url` (text, nullable)
-- `video_url` (text, nullable)  
-- `audio_url` (text, nullable)
+**File: `src/components/team/GameResultsScreenV2.tsx`**
 
-#### 2. `src/contexts/MultiplayerContextV2.tsx` -- 4 fixes
-
-**Fix A: Standard category question mapping (line ~1267)**
-Currently missing `imageUrl`, `videoUrl`, `audioUrl` when mapping fetched questions:
-```
-imageUrl: q.imageUrl || undefined,
-videoUrl: q.videoUrl || undefined,
-audioUrl: q.audioUrl || undefined,
-```
-
-**Fix B: `saveQuestionsAndStartGame` insert (line ~1326)**
-Add media fields when storing questions to `room_questions`:
-```
-image_url: q.imageUrl || null,
-video_url: q.videoUrl || null,
-audio_url: q.audioUrl || null,
-```
-
-**Fix C: Custom trivia insert (line ~1148)**
-Same fix -- add media fields when inserting custom trivia questions.
-
-**Fix D: Reading questions back in `joinRoom` (line ~914)**
-When mapping `room_questions` rows to `TriviaQuestion[]`, include:
-```
-imageUrl: q.image_url || undefined,
-videoUrl: q.video_url || undefined,
-audioUrl: q.audio_url || undefined,
-```
-
-### Files to Change
-- **Database migration**: Add 3 columns to `room_questions`
-- **`src/contexts/MultiplayerContextV2.tsx`**: 4 locations to pass through media URLs
-
-### Why This Fixes It
-The host fetches questions (with media URLs) from the database. Currently those URLs are discarded when syncing to other players via `room_questions`. After the fix, media URLs persist through the entire flow: fetch -> store -> read -> render.
+- In the auto-open `useEffect` (~line 215), before opening the modal, check `sessionStorage` for a key like `challenge_shown_{roomId}`.
+- If the key exists, skip auto-opening.
+- If not, set the key and proceed to auto-open.
+- Keep the `useRef` guard as well (prevents double-fire within same mount).
+- The manual "Share" button (~line 611) remains unaffected -- users can always open it manually.
 
