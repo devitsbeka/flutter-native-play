@@ -394,11 +394,11 @@ export function GameResultsScreenV2() {
       </div>
 
       {/* Top Section: Icon + Result */}
-      <div className="pt-2 text-center">
+      <div className="pt-0 text-center">
         <motion.img 
           src={trophyWinIcon} 
           alt="Trophy" 
-          className="w-16 h-16 object-contain mx-auto mb-2"
+          className="w-[54px] h-[54px] object-contain mx-auto mb-1"
           initial={{ scale: 0.5, y: -20 }}
           animate={{ 
             scale: 1, 
@@ -416,15 +416,6 @@ export function GameResultsScreenV2() {
             }
           }}
         />
-
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-3xl font-display font-bold text-white"
-        >
-          {result}
-        </motion.h1>
 
         {/* Stars for win */}
         {isWin && (
