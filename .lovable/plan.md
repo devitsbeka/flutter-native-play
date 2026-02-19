@@ -1,30 +1,53 @@
 
 
-## Decrease Gap Between Icon and Question Text by 15px
+## Fix: Image Questions Showing as Text in Multiplayer Games
 
-### What Changes
+### Root Cause
 
-Reduce the vertical space between the floating category icon and the question text on all game screens. This involves two adjustments:
+The `room_questions` database table is missing `image_url`, `video_url`, and `audio_url` columns. When multiplayer games store questions to sync between players, media URLs are silently dropped. When other players load these questions, there's no media data -- so image questions fall back to displaying text.
 
-1. **Move the icon closer to the card** -- reduce the negative top offset
-2. **Reduce the reserved top padding inside the card** -- so the text moves up accordingly
+### What Needs to Change
 
-### Files to Edit
+#### 1. Database Migration -- Add media columns to `room_questions`
 
-**`src/components/game/QuizGameScreenProd.tsx`** (Single-player + VS mode)
-- Change icon position from `-top-12` (48px) to `-top-[33px]` (33px, a 15px reduction)
+Add three nullable text columns:
+- `image_url` (text, nullable)
+- `video_url` (text, nullable)  
+- `audio_url` (text, nullable)
 
-**`src/components/team/MultiplayerGameScreenV2.tsx`** (Multiplayer mode)
-- Change icon position from `-top-14` (56px) to `-top-[41px]` (41px, a 15px reduction)
+#### 2. `src/contexts/MultiplayerContextV2.tsx` -- 4 fixes
 
-**`src/components/social/QuizPlayModal.tsx`** (Social quiz play)
-- Change icon position from `-top-12` to `-top-[33px]`
+**Fix A: Standard category question mapping (line ~1267)**
+Currently missing `imageUrl`, `videoUrl`, `audioUrl` when mapping fetched questions:
+```
+imageUrl: q.imageUrl || undefined,
+videoUrl: q.videoUrl || undefined,
+audioUrl: q.audioUrl || undefined,
+```
 
-**`src/components/ui/quiz-question-card.tsx`** (Shared question card)
-- Reduce `reserveTopSpace` padding from `pt-24` to `pt-20` (16px less, closest Tailwind step)
-- Adjust responsive variants proportionally: `pt-20` to `pt-16`, `pt-14` stays
+**Fix B: `saveQuestionsAndStartGame` insert (line ~1326)**
+Add media fields when storing questions to `room_questions`:
+```
+image_url: q.imageUrl || null,
+video_url: q.videoUrl || null,
+audio_url: q.audioUrl || null,
+```
 
-### Technical Detail
+**Fix C: Custom trivia insert (line ~1148)**
+Same fix -- add media fields when inserting custom trivia questions.
 
-The icon floats above the card using `absolute -top-X` positioning, while the card reserves internal padding (`pt-24` when `reserveTopSpace` is true) so text doesn't overlap the icon. Both values need to shrink together to close the gap by 15px.
+**Fix D: Reading questions back in `joinRoom` (line ~914)**
+When mapping `room_questions` rows to `TriviaQuestion[]`, include:
+```
+imageUrl: q.image_url || undefined,
+videoUrl: q.video_url || undefined,
+audioUrl: q.audio_url || undefined,
+```
+
+### Files to Change
+- **Database migration**: Add 3 columns to `room_questions`
+- **`src/contexts/MultiplayerContextV2.tsx`**: 4 locations to pass through media URLs
+
+### Why This Fixes It
+The host fetches questions (with media URLs) from the database. Currently those URLs are discarded when syncing to other players via `room_questions`. After the fix, media URLs persist through the entire flow: fetch -> store -> read -> render.
 
