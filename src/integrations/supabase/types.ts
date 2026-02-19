@@ -2155,43 +2155,52 @@ export type Database = {
       }
       room_questions: {
         Row: {
+          audio_url: string | null
           correct_answer: string
           created_at: string | null
           difficulty: string | null
           game_id: string | null
           icon_slug: string | null
           id: string
+          image_url: string | null
           incorrect_answers: Json
           question_index: number
           question_text: string
           room_id: string
           shuffled_answers: string[] | null
+          video_url: string | null
         }
         Insert: {
+          audio_url?: string | null
           correct_answer: string
           created_at?: string | null
           difficulty?: string | null
           game_id?: string | null
           icon_slug?: string | null
           id?: string
+          image_url?: string | null
           incorrect_answers: Json
           question_index: number
           question_text: string
           room_id: string
           shuffled_answers?: string[] | null
+          video_url?: string | null
         }
         Update: {
+          audio_url?: string | null
           correct_answer?: string
           created_at?: string | null
           difficulty?: string | null
           game_id?: string | null
           icon_slug?: string | null
           id?: string
+          image_url?: string | null
           incorrect_answers?: Json
           question_index?: number
           question_text?: string
           room_id?: string
           shuffled_answers?: string[] | null
+          video_url?: string | null
         }
         Relationships: [
           {

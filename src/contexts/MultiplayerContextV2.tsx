@@ -922,7 +922,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 : [...q.incorrect_answers, q.correct_answer],
               difficulty: q.difficulty || "medium",
               category: room.category_name || "General",
-              iconSlug: q.icon_slug || undefined, // Include icon for custom questions
+              iconSlug: q.icon_slug || undefined,
+              imageUrl: q.image_url || undefined,
+              videoUrl: q.video_url || undefined,
+              audioUrl: q.audio_url || undefined,
             }));
             
             // Get current progress from participant
@@ -1155,6 +1158,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             difficulty: q.difficulty,
             shuffled_answers: q.allAnswers,
             icon_slug: q.iconSlug || null,
+            image_url: q.imageUrl || null,
+            video_url: q.videoUrl || null,
+            audio_url: q.audioUrl || null,
             game_id: game?.id, // CRITICAL: Link to current game for non-host validation
           }).select()
         ));
@@ -1273,6 +1279,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         difficulty: q.difficulty,
         category: freshRoom.category_name || q.category || "General",
         iconSlug: q.iconSlug,
+        imageUrl: q.imageUrl,
+        videoUrl: q.videoUrl,
+        audioUrl: q.audioUrl,
       }));
       
       // Update used_question_ids on game_rooms
@@ -1332,6 +1341,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         shuffled_answers: q.allAnswers, // Store pre-shuffled order for all players
         difficulty: q.difficulty,
         icon_slug: q.iconSlug, // Store icon for display
+        image_url: q.imageUrl || null,
+        video_url: q.videoUrl || null,
+        audio_url: q.audioUrl || null,
         game_id: game?.id, // CRITICAL: Link to current game for non-host validation
       }).select()
     ));
