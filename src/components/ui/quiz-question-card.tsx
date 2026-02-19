@@ -225,8 +225,8 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             // Reduce top padding if we have media (no need for icon space)
             hasMedia && "pt-4",
             !hasMedia && hasTopBadges && !reserveTopSpace && "pt-16 [@media(max-height:700px)]:pt-14 [@media(max-height:600px)]:pt-12",
-            !hasMedia && hasTopBadges && reserveTopSpace && "pt-20 [@media(max-height:700px)]:pt-16 [@media(max-height:600px)]:pt-14",
-            !hasMedia && !hasTopBadges && reserveTopSpace && "pt-14 [@media(max-height:700px)]:pt-10 [@media(max-height:600px)]:pt-10"
+            !hasMedia && hasTopBadges && reserveTopSpace && "pt-[90px] [@media(max-height:700px)]:pt-[74px] [@media(max-height:600px)]:pt-[66px]",
+            !hasMedia && !hasTopBadges && reserveTopSpace && "pt-[66px] [@media(max-height:700px)]:pt-[50px] [@media(max-height:600px)]:pt-[50px]"
           )}>
             {isLoading ? (
               <div className="space-y-2 w-full">
