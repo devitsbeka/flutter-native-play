@@ -19,6 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { LeaderboardCardSkeleton, MobileLeaderboardSkeleton, DesktopLeaderboardsSkeleton } from "@/components/leaderboard/LeaderboardSkeleton";
 import { HeaderActions } from "@/components/shared/HeaderActions";
+import { useLeaderboardPrefetch } from "@/hooks/useLeaderboardPrefetch";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -69,6 +70,9 @@ export default function Leaderboards() {
   
   // Check if user is a guest
   const isGuest = !user;
+  
+  // Prefetch leaderboard data as soon as userTier is known
+  const { prefetchLeaderboard } = useLeaderboardPrefetch();
   
   // For mobile, we fetch one tier at a time
   const {
@@ -196,6 +200,13 @@ export default function Leaderboards() {
       carouselApi.off('select', onSelect);
     };
   }, [carouselApi, viewingTier]);
+
+  // Prefetch leaderboard data when userTier is known (before user clicks)
+  useEffect(() => {
+    if (userTier) {
+      prefetchLeaderboard(userTier);
+    }
+  }, [userTier, prefetchLeaderboard]);
 
   // Show auth modal for guests on mount
   useEffect(() => {
