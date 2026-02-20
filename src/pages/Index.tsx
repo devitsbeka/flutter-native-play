@@ -305,8 +305,8 @@ export default function Index() {
       
       // Check if user can play (lifetime limit for non-PRO, or regen play)
       if (!canPlay && !isVip) {
-        // Show PRO upgrade modal with regen info
-        setShowGuestMaxPlaysModal(true);
+        // Show invite modal first, then PRO upgrade on dismiss
+        setInviteModalVisible(true);
         return;
       }
 
@@ -563,7 +563,7 @@ export default function Index() {
           setShowLevelModal(false);
           // Check play limit before navigating (was previously bypassed)
           if (user && !canPlay && !isVip) {
-            setShowGuestMaxPlaysModal(true);
+            setInviteModalVisible(true);
             return;
           }
           navigate("/game");
@@ -679,7 +679,10 @@ export default function Index() {
         <InviteFriendsModal
           open={inviteModalVisible}
           onOpenChange={setInviteModalVisible}
-          onDismiss={dismissInvite}
+          onDismiss={() => {
+            dismissInvite();
+            setShowGuestMaxPlaysModal(true);
+          }}
         />
 
         {/* Friend Joined Modal */}
