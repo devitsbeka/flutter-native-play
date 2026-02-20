@@ -38,11 +38,13 @@ function useIdentifyUser() {
     // Don't set any properties until auth state is resolved
     if (loading) return;
 
+    const isRealEmail = user?.email && !user.email.endsWith('@mytrivia.local');
+
     if (user && profile && identifiedRef.current !== user.id) {
       // Full identify with all profile properties
       posthog.identify(user.id, {
         $name: profile.nickname,
-        $email: user.email ?? undefined,
+        $email: isRealEmail ? user.email : undefined,
         nickname: profile.nickname,
         country_code: profile.country_code,
         coins: profile.coins,
@@ -56,9 +58,11 @@ function useIdentifyUser() {
       identifiedRef.current = user.id;
       initialIdentifyDoneRef.current = true;
     } else if (user && !profile && !initialIdentifyDoneRef.current) {
-      // Early identify with just user ID — don't wait for profile
+      // Early identify with user ID + nickname from auth metadata
+      const metaNickname = (user.user_metadata as any)?.nickname;
       posthog.identify(user.id, {
-        $email: user.email ?? undefined,
+        $email: isRealEmail ? user.email : undefined,
+        $name: metaNickname ?? undefined,
         user_type: "registered",
       });
       posthog.register({ user_type: "registered" });
