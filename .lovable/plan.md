@@ -1,65 +1,39 @@
 
 
-## Show Invite Friends Gift Modal When Plays Are Exhausted
+## Beautify Invite Friends Modal with Blue/Pink/Purple Gradient
 
-### Problem
-When a user has 0 free plays and clicks "Play Again" after a game, they see the generic `PlayLimitModal` (PRO upgrade prompt). The new invite friends modal ("მოიწვიე მეგობრები") never appears in this flow. On the home page, the invite modal only fires once with a 3-second delay and is blocked if already dismissed in the current session.
-
-### Solution
-Show the **InviteFriendsModal** instead of (or before) the PlayLimitModal when the user has exhausted their free plays. This applies to:
-
-1. **MatchResultScreen** (PVP game results -- "კიდევ ითამაშე" button)
-2. **Index page** (home screen -- remove the 3s delay, show instantly)
-3. **PlayGuardContext** (central guard used by the play button on home)
-
-### Changes
-
-**File: `src/components/game/MatchResultScreen.tsx`**
-- Import `InviteFriendsModal` from `@/components/home/InviteFriendsModal`
-- Add state `showInviteModal` (boolean)
-- In `handlePlayAgain`: when plays are exhausted (`gamesPlayedAfterThisGame >= MAX_FREE_PLAYS`), show the InviteFriendsModal **first** instead of PlayLimitModal
-- Add `<InviteFriendsModal>` component to the JSX
-- On dismiss of InviteFriendsModal, then show PlayLimitModal (so user still sees the PRO upgrade option after)
+### Changes (single file)
 
 **File: `src/components/home/InviteFriendsModal.tsx`**
-- Remove the 3-second `setTimeout` delay -- show the modal instantly when conditions are met
-- This ensures it appears immediately when the user lands on the home page with 0 plays
 
-**File: `src/contexts/PlayGuardContext.tsx`**
-- Import `InviteFriendsModal`
-- Add state for showing the invite modal
-- In `guardPlay`: when user can't play, show InviteFriendsModal first, then PlayLimitModal on dismiss
-- This covers the main play button on the home screen
+1. **Background gradient**: Replace the current warm white/lavender gradient with a vibrant blue-to-pink-to-purple gradient:
+   - `linear-gradient(135deg, #667eea 0%, #a855f7 40%, #ec4899 100%)` on the main container
+   - Outer glow shadow in purple tones
+   - Border updated to semi-transparent white for glassmorphism
 
-### Flow After Changes
+2. **Text colors**: Switch from dark gray to white text throughout:
+   - Title: `text-white` (bold)
+   - Description: `text-white/80`
+   - "10 დღიანი PRO" highlight: bright yellow/gold (`text-yellow-300`)
 
-```text
-User has 0 plays -> clicks Play
-  |
-  v
-InviteFriendsModal appears instantly
-  ("Invite friends, get 10-day PRO!")
-  |
-  User dismisses or shares link
-  |
-  v
-PlayLimitModal appears
-  ("Become PRO" or wait for regen)
-```
+3. **Icon circle**: Keep the purple gradient but brighten it to stand out against the new background, add a stronger glow
 
-### Technical Details
+4. **PRO badge pill**: Change from lavender to a semi-transparent white glassmorphic style:
+   - `background: rgba(255,255,255,0.15)`, `backdrop-filter: blur(10px)`
+   - Text: `text-white`
 
-**MatchResultScreen changes:**
-- New state: `const [showInviteModal, setShowInviteModal] = useState(false)`
-- In `handlePlayAgain` at line 286-288: change to `setShowInviteModal(true)` instead of `setShowPlayLimitModal(true)`
-- Add onDismiss handler: when invite modal closes, show PlayLimitModal
-- Add `<InviteFriendsModal open={showInviteModal} onOpenChange={setShowInviteModal} onDismiss={() => setShowPlayLimitModal(true)} />`
+5. **Referral link box**: Semi-transparent dark overlay for contrast:
+   - `background: rgba(0,0,0,0.15)`, rounded, `text-white/70`
 
-**InviteFriendsModal hook change:**
-- Line 23: Change `setTimeout(() => setVisible(true), 3000)` to `setVisible(true)` (no delay)
+6. **Action buttons**: Use `ChunkyButton` with proper sizing:
+   - Copy button: `variant="white"` or custom white style for visibility on gradient
+   - Share button: `variant="outline"` with white border
+   - Both keep `size="md"` to fit within the modal width
+   - Ensure `flex-1` and no overflow
 
-**PlayGuardContext changes:**
-- Add `showInviteModal` state
-- In `guardPlay` callback: when `!canPlay`, set `showInviteModal = true` instead of `showModal`
-- On invite modal dismiss: set `showModal = true` (PlayLimitModal)
-- Add InviteFriendsModal to JSX output
+7. **"მოგვიანებით" dismiss link**: `text-white/50` with hover `text-white/80`
+
+8. **Decorative glow**: Update the radial glow at the top from amber to a pink/white glow for cohesion
+
+### Visual Result
+A rich, vibrant gradient card with white text, glassmorphic elements, and properly sized buttons that fit cleanly within the modal bounds -- matching the blue/pink/purple aesthetic the user requested.
