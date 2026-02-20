@@ -1,30 +1,42 @@
 
+## Show Floating Gift Button After Invite Modal Dismissed
 
-## InviteFriendsModal Text Adjustments
+When the user clicks "მოგვიანებით" (Later) on the invite modal, show a floating circular gift button on the main page (like `FloatingGiftButton`) so they can easily reopen the invite modal.
 
-Three small tweaks in `src/components/home/InviteFriendsModal.tsx`:
+### What Changes
 
-### 1. Title: move up 5px and increase size by 7%
-- Current: `fontSize: "1.44rem"`, `mb-2` class
-- New: `fontSize: "1.54rem"` (1.44 * 1.07), add `style` margin-top of `-5px`
+**1. Track dismissed state and show floating button (`src/pages/Index.tsx`)**
+- Add a state `inviteDismissedThisSession` that becomes `true` when the user dismisses the invite modal
+- Show `FloatingGiftButton` (with `AnimatePresence`) when:
+  - `inviteDismissedThisSession === true`
+  - `freeGamesExhausted === true`
+  - `!isVip`
+  - invite modal is NOT currently open
+- Clicking the floating button reopens the `InviteFriendsModal`
 
-### 2. Description: decrease size by 8% and change text
-- Current: `fontSize: "1.03rem"`
-- New: `fontSize: "0.95rem"` (1.03 * 0.92)
-- Replace text content with: "გაუზიარე ეს ლინკი მეგობრებს და მიიღეთ საჩუქრად 10 დღიანი PRO!"
+**2. Update the dismiss handler (`src/pages/Index.tsx`, around line 718-721)**
+- In the `onDismiss` callback, set `inviteDismissedThisSession = true`
+- Keep the existing `dismissInvite()` and `setShowGuestMaxPlaysModal(true)` calls
 
-### Technical Details
-
-**File:** `src/components/home/InviteFriendsModal.tsx`
-
-**Title h2 (around line 122-128):**
-- Change `style={{ fontSize: "1.44rem" }}` to `style={{ fontSize: "1.54rem", marginTop: "-5px" }}`
-
-**Description p (around line 130-142):**
-- Change `style={{ fontSize: "1.03rem" }}` to `style={{ fontSize: "0.95rem" }}`
-- Replace inner text with:
+**3. Render the FloatingGiftButton (`src/pages/Index.tsx`)**
+- Import `FloatingGiftButton` from `@/components/shared/FloatingGiftButton`
+- Render it conditionally with `AnimatePresence` near the other modals:
 ```
-გაუზიარე ეს ლინკი მეგობრებს და მიიღეთ საჩუქრად{" "}
-<span className="font-semibold text-yellow-300">10 დღიანი PRO</span>!
+{inviteDismissedThisSession && freeGamesExhausted && !isVip && !inviteModalVisible && (
+  <FloatingGiftButton onClick={() => setInviteModalVisible(true)} />
+)}
 ```
 
+### Files changed
+
+| File | Change |
+|------|--------|
+| `src/pages/Index.tsx` | Add `inviteDismissedThisSession` state, import `FloatingGiftButton`, render it conditionally, update dismiss handler |
+
+The existing `FloatingGiftButton` component already has the perfect design with:
+- Purple/green gradient circle
+- Bouncing gift icon animation
+- Pulsing glow ring
+- Red "1" notification badge
+
+No changes needed to the `FloatingGiftButton` component itself -- it matches what was previously shown.
