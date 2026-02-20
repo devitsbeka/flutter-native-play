@@ -1,53 +1,46 @@
 
 
-## Fix: PostHog Not Showing User Emails/Names
+## Fix Georgian Ergative Case ("-მ") in Notification Titles
 
-### Root Cause
+### Problem
+Notification titles show names without the Georgian ergative case suffix. For example, "Barbara მოიწონა შენი ტრივია" is grammatically incorrect -- it should be "Barbara-მ მოიწონა შენი ტრივია".
 
-The `useIdentifyUser` hook in `PostHogProvider.tsx` has an "early identify" path (line 58-65) that fires before the profile is loaded. This path only sets `$email`, which for username-only signups is a meaningless `@mytrivia.local` pseudo-email. The `$name` property is only set in the "full identify" path, which requires `profile` to be loaded.
+### Changes
 
-If the profile fetch is slow, fails, or the user navigates before it completes, PostHog never receives `$name` and falls back to showing the UUID.
+All 4 notification creation points need the nickname formatted with "-მ" suffix:
 
-Meanwhile, `user.user_metadata.nickname` (set during signup) is available immediately from the auth session but is never used.
-
-### Fix
-
-**File: `src/providers/PostHogProvider.tsx`**
-
-Update the early identify path (lines 58-65) to also set `$name` using `user.user_metadata?.nickname`:
-
+**1. `src/hooks/useSocialFeed.ts` -- Like notification (line 166)**
 ```
-} else if (user && !profile && !initialIdentifyDoneRef.current) {
-  const metaNickname = (user.user_metadata as any)?.nickname;
-  posthog.identify(user.id, {
-    $email: user.email ?? undefined,
-    $name: metaNickname ?? undefined,
-    user_type: "registered",
-  });
-  posthog.register({ user_type: "registered" });
-  initialIdentifyDoneRef.current = true;
-}
+Before: `${senderProfile?.nickname || "ვიღაცამ"} მოიწონა შენი ტრივია`
+After:  `${senderProfile?.nickname ? senderProfile.nickname + "-მ" : "ვიღაცამ"} მოიწონა შენი ტრივია`
 ```
 
-Also filter out pseudo-emails so PostHog doesn't store `@mytrivia.local` addresses as `$email`. In both identify paths, only set `$email` if it's a real email:
-
+**2. `src/hooks/useSocialFeed.ts` -- Save notification (line 227)**
 ```
-const isRealEmail = user.email && !user.email.endsWith('@mytrivia.local');
-// ...
-$email: isRealEmail ? user.email : undefined,
+Before: `${senderProfile?.nickname || "ვიღაცამ"} შეინახა შენი ტრივია`
+After:  `${senderProfile?.nickname ? senderProfile.nickname + "-მ" : "ვიღაცამ"} შეინახა შენი ტრივია`
 ```
 
-This ensures:
-- `$name` is set immediately from auth metadata, even before profile loads
-- Fake pseudo-emails are never sent to PostHog
-- The full identify path still enriches with profile data when available
+**3. `src/components/social/QuizPlayModal.tsx` -- Play notification (line 222)**
+```
+Before: `${senderProfile?.nickname || "ვიღაცამ"} ითამაშა შენი ტრივია`
+After:  `${senderProfile?.nickname ? senderProfile.nickname + "-მ" : "ვიღაცამ"} ითამაშა შენი ტრივია`
+```
 
-### Summary
+**4. `src/contexts/MultiplayerContextV2.tsx` -- Multiplayer play notification (line 38)**
+```
+Before: `${playerProfile?.nickname || "ვიღაცამ"} ითამაშა შენი ტრივია`
+After:  `${playerProfile?.nickname ? playerProfile.nickname + "-მ" : "ვიღაცამ"} ითამაშა შენი ტრივია`
+```
 
-| Change | Effect |
-|--------|--------|
-| Set `$name` from `user.user_metadata.nickname` in early identify | Users show by name immediately, no profile wait needed |
-| Filter out `@mytrivia.local` pseudo-emails | PostHog stops receiving meaningless email values |
+### Why this works
+- When a nickname exists, we append "-მ" (e.g., "Barbara-მ მოიწონა")
+- The fallback "ვიღაცამ" already has the ergative suffix built in, so no change needed there
+- This is the standard Georgian grammatical convention for foreign/Latin-script names acting as the subject of an action verb
 
-Single file change: `src/providers/PostHogProvider.tsx`
-
+### Files changed
+| File | Lines |
+|------|-------|
+| `src/hooks/useSocialFeed.ts` | 166, 227 |
+| `src/components/social/QuizPlayModal.tsx` | 222 |
+| `src/contexts/MultiplayerContextV2.tsx` | 38 |
