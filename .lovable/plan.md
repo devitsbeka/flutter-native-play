@@ -1,46 +1,42 @@
 
 
-## Remove Old Free PRO Gift Modals -- Keep Only Invite Friends Modal
+## Show Invite Friends Modal Only When Free Plays Are Exhausted
 
-### What's Changing
-The app currently has three ways users get free 10-day PRO without inviting anyone. These need to be removed so the only path to free PRO is through the invite-a-friend flow.
+### Current Behavior
+The invite modal shows for **every** logged-in non-VIP user after 3 seconds, regardless of how many plays they have left.
 
-### Modals to Remove
+### Desired Behavior
+Only show the modal when the user has **0 free plays remaining** (all 5 games played).
 
-1. **ProGiftModal** (the "10 day PRO gift after 5 games" modal)
-   - File: `src/pages/Index.tsx`
-   - Remove the import of `ProGiftModal` and `useProGiftEligibility` from `ProGiftBanner`
-   - Remove all related state variables (`proGiftModalOpen`, `proGiftDismissed`, `proGiftClaimed`, `proGiftEligible`)
-   - Remove the auto-open `useEffect` (lines 251-256)
-   - Remove the `<ProGiftModal>` JSX (lines 692-698)
-   - Remove the floating gift button tied to it (lines 714-721)
+### Changes
 
-2. **BetaGiftModal** (the "returning user" gift modal)
-   - File: `src/contexts/PlayerProfileContext.tsx`
-   - Remove the import of `BetaGiftModal` and `useReturnGiftEligibility`
-   - Remove the import of `FloatingGiftButton`
-   - Remove all related state and logic: `isEligible`, `giftModalOpen`, `pendingGift`, `giftClaimed`, handlers, auto-open effect
-   - Remove the `<BetaGiftModal>` and `<FloatingGiftButton>` from the JSX
-   - Keep the `PlayerProfileModal` and VIP auto-grant logic untouched
+**File: `src/components/home/InviteFriendsModal.tsx`**
 
-### What Stays
-- **`InviteFriendsModal`** in `Index.tsx` -- the new invite-to-earn-PRO modal (already implemented)
-- **`FriendJoinedModal`** in `Index.tsx` -- the congratulations modal when a friend joins
-- The referral flow in `Auth.tsx` that processes the reward
+Update the `useInviteModalVisibility` hook to accept play limit data and gate visibility:
 
-### Technical Details
+1. Add a new parameter `freeGamesExhausted: boolean` (from `usePlayLimit`)
+2. Only trigger the 3-second timer when `freeGamesExhausted` is true
+3. Keep existing guards: must be logged in, not VIP, not already dismissed this session
 
 **File: `src/pages/Index.tsx`**
-- Remove import: `import { ProGiftModal, useProGiftEligibility } from "@/components/home/ProGiftBanner"`
-- Remove import: `import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton"`
-- Remove state: `proGiftEligible`, `proGiftModalOpen`, `proGiftDismissed`, `proGiftClaimed`
-- Remove useEffect for auto-opening ProGiftModal
-- Remove `<ProGiftModal>` component from JSX
-- Remove `<AnimatePresence>` block with `<FloatingGiftButton>`
 
-**File: `src/contexts/PlayerProfileContext.tsx`**
-- Remove imports: `BetaGiftModal`, `useReturnGiftEligibility`, `FloatingGiftButton`, `AnimatePresence`
-- Remove all return-gift state variables and effects (lines 38-81)
-- Simplify the JSX to only render `PlayerProfileModal` and `{children}`
+Update the call site to pass the exhaustion flag:
 
-No database changes needed.
+1. The page already uses `usePlayLimit()` -- pass `freeGamesExhausted` to `useInviteModalVisibility`
+2. Change from: `useInviteModalVisibility(isVip, vipLoading)`
+3. Change to: `useInviteModalVisibility(isVip, vipLoading, freeGamesExhausted)`
+
+### Technical Detail
+
+Updated hook signature:
+```
+useInviteModalVisibility(isVip, vipLoading, freeGamesExhausted)
+```
+
+Updated condition inside the hook:
+```
+if (!user || vipLoading || isVip || !freeGamesExhausted) return;
+```
+
+This is a minimal 2-file change -- just adding one boolean guard to the existing visibility logic.
+
