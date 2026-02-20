@@ -11,18 +11,18 @@ import confettiGunIcon from "@/assets/icons/confetti-gun.png";
 
 const SESSION_KEY = "invite_modal_dismissed";
 
-export function useInviteModalVisibility(isVip: boolean, vipLoading: boolean) {
+export function useInviteModalVisibility(isVip: boolean, vipLoading: boolean, freeGamesExhausted: boolean) {
   const { user } = useAuth();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!user || vipLoading || isVip) return;
+    if (!user || vipLoading || isVip || !freeGamesExhausted) return;
     try {
       if (sessionStorage.getItem(SESSION_KEY)) return;
     } catch {}
     const timer = setTimeout(() => setVisible(true), 3000);
     return () => clearTimeout(timer);
-  }, [user, isVip, vipLoading]);
+  }, [user, isVip, vipLoading, freeGamesExhausted]);
 
   const dismiss = () => {
     setVisible(false);

@@ -178,7 +178,7 @@ export default function Index() {
   const { totalStars } = useTotalStars();
   const { canClaimDaily, canClaimChest } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
-  const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
+  const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, useRegenPlay, freeGamesExhausted } = usePlayLimit();
   const { subscription } = useVipStatus();
   const { unreadCount } = useNotifications();
   const { hasEnoughCoins, stakeAmount } = useGameStake();
@@ -207,7 +207,7 @@ export default function Index() {
 
 
   // Invite Friends Modal state
-  const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading);
+  const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading, freeGamesExhausted);
   const [friendJoinedModalOpen, setFriendJoinedModalOpen] = useState(false);
 
   // Check for newly accepted referrals
