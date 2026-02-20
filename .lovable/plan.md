@@ -1,33 +1,53 @@
 
 
-## Fix: Registered Users Showing as Guests in PostHog
+## Fix: Race Condition Causing Registered Users to Appear as Guests
 
-### Root Causes
+### Problem
 
-1. **`posthog.register()` does NOT set person properties** -- it only attaches super properties to future events. The PostHog persons list shows person properties, so guests (and even registered users on the persons page) don't display `user_type`. We need `posthog.setPersonProperties()` for this.
+On every app load, the `useIdentifyUser` hook runs immediately. At that point, `user` and `profile` are still `null` (auth is loading), so it hits the guest branch and calls:
+```
+posthog.setPersonProperties({ user_type: "guest" })
+```
 
-2. **Initialization timing issue** -- `initPostHog()` runs inside a `useEffect`, but `useIdentifyUser` also runs its own `useEffect` in the same render cycle. If `identify` or `register` fires before `init` completes, those calls are silently dropped.
+A moment later, auth resolves and `posthog.identify()` fires with `user_type: "registered"`. But PostHog has already stamped the anonymous person as "guest". During the identify/merge, properties can conflict or the "guest" value persists depending on timing.
 
-### Changes
+### Solution
+
+**Skip setting any person properties while auth is still loading.** Only set `user_type` once we know the actual auth state.
+
+### Technical Changes
 
 **File: `src/providers/PostHogProvider.tsx`**
 
-1. Move `initPostHog()` call to run **synchronously at module level** (outside of `useEffect`) so PostHog is guaranteed to be ready before any hooks fire.
+1. Import `loading` from `useAuth()` alongside `user` and `profile`
+2. Add an early return in `useIdentifyUser` when `loading` is `true` -- do nothing until auth state is resolved
+3. This ensures `user_type: "guest"` is only set for users who are genuinely not logged in, not for users whose auth state hasn't loaded yet
 
-2. In the registered-user branch (line 44-57):
-   - Keep the existing `posthog.identify()` call (this sets person properties correctly)
-   - Keep `posthog.register({ user_type: "registered" })` for super properties on events
+```
+function useIdentifyUser() {
+  const { user, profile, loading } = useAuth();
+  const identifiedRef = useRef<string | null>(null);
 
-3. In the guest branches (lines 58-64):
-   - Add `posthog.setPersonProperties({ user_type: "guest" })` so the persons list in PostHog shows `user_type`
-   - Keep `posthog.register({ user_type: "guest" })` for super properties on events
+  useEffect(() => {
+    // Don't set any properties until auth state is resolved
+    if (loading) return;
 
-4. In the logout/reset branch (line 58-61):
-   - After `posthog.reset()`, call both `posthog.register()` and `posthog.setPersonProperties()` with `user_type: "guest"`
+    if (user && profile && identifiedRef.current !== user.id) {
+      posthog.identify(user.id, { ... user_type: "registered" });
+      posthog.register({ user_type: "registered" });
+      identifiedRef.current = user.id;
+    } else if (!user && identifiedRef.current) {
+      posthog.reset();
+      posthog.register({ user_type: "guest" });
+      posthog.setPersonProperties({ user_type: "guest" });
+      identifiedRef.current = null;
+    } else if (!user && !identifiedRef.current) {
+      posthog.register({ user_type: "guest" });
+      posthog.setPersonProperties({ user_type: "guest" });
+    }
+  }, [user, profile, loading]);
+}
+```
 
-### Technical Detail
-
-- `posthog.register()` = super properties attached to every future event (event-level)
-- `posthog.setPersonProperties()` = updates the person record in PostHog (person-level, visible in persons list)
-- `posthog.identify(id, props)` = sets person properties for identified users (already correct for registered)
+This single change prevents the false "guest" stamp from being applied before auth has a chance to resolve.
 
