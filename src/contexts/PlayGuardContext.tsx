@@ -5,6 +5,7 @@ import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
 import { useCategoryPlayLimit } from "@/hooks/useCategoryPlayLimit";
 import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
+import { InviteFriendsModal } from "@/components/home/InviteFriendsModal";
 
 interface PlayGuardContextValue {
   /**
@@ -46,6 +47,7 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
   const { canPlayLevel } = useCategoryPlayLimit();
 
   const [showModal, setShowModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
   const onAllowRef = useRef<(() => void) | undefined>();
 
@@ -65,9 +67,9 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
         return true;
       }
 
-      // User can't play — show modal
+      // User can't play — show invite modal first, then play limit modal on dismiss
       onAllowRef.current = onAllow;
-      setShowModal(true);
+      setShowInviteModal(true);
       return false;
     },
     [user, canPlay, vipLoading, freeGamesExhausted, regenPlayAvailable, isVip, useRegenPlay],
@@ -108,6 +110,11 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
         regenPlayAvailable={regenPlayAvailable}
         timeUntilNextPlay={timeUntilNextPlay}
         onPlayWithRegen={handlePlayWithRegen}
+      />
+      <InviteFriendsModal
+        open={showInviteModal}
+        onOpenChange={setShowInviteModal}
+        onDismiss={() => setShowModal(true)}
       />
       <ProRequiredModal
         isOpen={showProModal}

@@ -20,8 +20,7 @@ export function useInviteModalVisibility(isVip: boolean, vipLoading: boolean, fr
     try {
       if (sessionStorage.getItem(SESSION_KEY)) return;
     } catch {}
-    const timer = setTimeout(() => setVisible(true), 3000);
-    return () => clearTimeout(timer);
+    setVisible(true);
   }, [user, isVip, vipLoading, freeGamesExhausted]);
 
   const dismiss = () => {
