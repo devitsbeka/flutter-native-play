@@ -46,12 +46,13 @@ posthog.init(POSTHOG_KEY, {
     : undefined,
 });
 
-// If bootstrapped, immediately set person properties so the first event has a name
+// If bootstrapped, immediately identify so the person profile is created with correct properties
 if (bootstrapIdentity) {
-  posthog.setPersonProperties({
+  posthog.identify(bootstrapIdentity.userId, {
     $name: bootstrapIdentity.displayName,
     user_type: "registered",
   });
+  posthog.register({ user_type: "registered" });
 }
 
 /** Tracks SPA route changes as $pageview events */
