@@ -1,17 +1,25 @@
 
 
-## Changes to Game Results Screen
+## Fix: Distinguish Registered vs Guest Users in PostHog
 
-### 1. Decrease trophy icon by 15%
-- **File: `src/components/team/GameResultsScreenV2.tsx`** (line 401)
-- Change `w-16 h-16` (64px) to approximately 54px: use `w-[54px] h-[54px]`
-- Reduce `mb-2` to `mb-1` to move content up
+### Problem
+All users appear as anonymous/guests in PostHog because:
+1. Registered users are identified, but there's no `user_type` property to filter by
+2. Guest users have zero person properties set — they're indistinguishable from any anonymous visitor
 
-### 2. Move top section up
-- Change `pt-2` (line 397) to `pt-0` on the top section container to reclaim vertical space
+### Solution
+Add a `user_type` person property to PostHog for both registered and guest users.
 
-### 3. Remove "მე-2 ადგილი" text
-- Remove the `<motion.h1>` block (lines 420-427) that displays `{result}` (the rank placement text like "მე-2 ადგილი!")
+### Technical Details
 
-These three changes will free up vertical space so more of the player list / podium is visible without scrolling.
+**File: `src/providers/PostHogProvider.tsx`**
+
+1. When a registered user is identified (line 44), add `user_type: "registered"` to the person properties
+2. When no user is present (guest), call `posthog.register({ user_type: "guest" })` to attach a super property to all subsequent events — this way every pageview and event from a guest is tagged
+3. On logout/reset (line 57), set `user_type` back to `"guest"`
+
+This lets you filter and segment in PostHog by `user_type = "registered"` vs `user_type = "guest"`.
+
+### File to Change
+- `src/providers/PostHogProvider.tsx` — update `useIdentifyUser` hook
 
