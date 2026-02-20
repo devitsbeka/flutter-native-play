@@ -1,46 +1,29 @@
 
 
-## Fix: Show Invite Friends Modal on Home Page When Plays Are Exhausted
+## Fix: Play Limit Check Must Run Before Coin Check
 
 ### Root Cause
+In `src/pages/Index.tsx`, the `handlePlayClick` function checks conditions in this order:
+1. Line 301: `hasEnoughCoins` -- opens "Not Enough Coins" modal and returns
+2. Line 307: `canPlay` -- opens Invite Friends modal (never reached!)
 
-The home page (`src/pages/Index.tsx`) has its own play-limit handling in `handlePlayClick` (line 307-310) that directly shows `PlayLimitModal` via `setShowGuestMaxPlaysModal(true)`. It **does not** use `guardPlay` from `PlayGuardContext`, so the `InviteFriendsModal` is never triggered.
-
-The same bypass also happens at line 564-567 (category quick-play flow).
+Since the user has 0 coins and the stake is 500, the coin modal always fires first, blocking the invite modal entirely.
 
 ### Fix
 
 **File: `src/pages/Index.tsx`**
 
-1. In `handlePlayClick` (line 307-310): When a logged-in user has 0 plays (`!canPlay && !isVip`), show the **InviteFriendsModal first** instead of going straight to PlayLimitModal.
-   - Change `setShowGuestMaxPlaysModal(true)` to `setInviteModalVisible(true)` (the invite modal state is already available from `useInviteModalVisibility`)
+Swap the order of the two checks so the play limit (invite modal) is evaluated **before** the coin balance:
 
-2. Same change at line 564-567 (category quick-play guard): replace `setShowGuestMaxPlaysModal(true)` with `setInviteModalVisible(true)`
+```
+// BEFORE (current):
+1. Check coins -> show NotEnoughCoinsModal
+2. Check play limit -> show InviteFriendsModal  (never reached)
 
-3. Update the `InviteFriendsModal` instance already rendered in Index.tsx to chain into `PlayLimitModal` on dismiss (set `onDismiss` to show the PlayLimitModal after the invite modal is closed)
-
-### Flow After Fix
-
-```text
-User has 0 plays -> taps Play button on home
-  |
-  v
-InviteFriendsModal appears instantly
-  ("Invite friends, get 10-day PRO!")
-  |
-  User dismisses
-  |
-  v
-PlayLimitModal appears
-  ("Become PRO" or wait for regen)
+// AFTER (fixed):
+1. Check play limit -> show InviteFriendsModal
+2. Check coins -> show NotEnoughCoinsModal
 ```
 
-### Technical Details
+Specifically, move lines 307-310 (`if (!canPlay && !isVip)`) above lines 301-303 (`if (!hasEnoughCoins)`). This is a 2-line block swap, no other changes needed.
 
-**Lines to change in `src/pages/Index.tsx`:**
-
-- Line 309: `setShowGuestMaxPlaysModal(true)` --> `setInviteModalVisible(true)` (for logged-in users only; guest flow stays the same)
-- Line 566: `setShowGuestMaxPlaysModal(true)` --> `setInviteModalVisible(true)`
-- Update the `<InviteFriendsModal>` JSX to add `onDismiss={() => setShowGuestMaxPlaysModal(true)}` so PlayLimitModal follows after dismiss
-
-No new files, no new dependencies -- just wiring the existing invite modal into the existing play-limit flow on the home page.
