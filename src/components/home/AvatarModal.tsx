@@ -1100,24 +1100,31 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     if (step === "preview" && generatedAvatar) {
       return (
         <div className="flex flex-col items-center gap-4">
-          <motion.div 
-            className="w-36 h-36 rounded-full overflow-hidden border-4 border-primary shadow-lg"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <img 
-              src={generatedAvatar} 
-              alt="Generated Avatar" 
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                // Fallback to uploaded image if generated URL fails to load
-                if (uploadedImage) {
-                  e.currentTarget.src = uploadedImage;
-                }
-              }}
-            />
-          </motion.div>
+          <div className="relative">
+            <motion.div 
+              className="w-36 h-36 rounded-full overflow-hidden border-4 border-primary shadow-lg bg-[#E9CCFF]"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <img 
+                src={generatedAvatar} 
+                alt="Generated Avatar" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  if (uploadedImage) {
+                    e.currentTarget.src = uploadedImage;
+                  }
+                  toast.error("ავატარი ვერ ჩაიტვირთა, სცადეთ თავიდან");
+                }}
+              />
+            </motion.div>
+            {uploadedImage && (
+              <div className="absolute -bottom-1 -right-1 w-11 h-11 rounded-full border-2 border-white shadow-md overflow-hidden">
+                <img src={uploadedImage} alt="Original" className="w-full h-full object-cover" />
+              </div>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground text-center">{t("avatar.avatarReady")}</p>
           <div className="flex flex-col gap-2 w-full">
             <ChunkyButton
