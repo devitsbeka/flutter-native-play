@@ -1,45 +1,41 @@
 
 
-## Fix: Registered Users Appearing as "Guest" in PostHog
+## Consolidate Gift Modals into One "Invite Friends" Flow
 
-### Problem
-PostHog shows active sessions as "Guest" while the admin dashboard correctly shows them as registered users (Kato, makom1976, Player5057, etc.). The same people appear in both systems but PostHog labels them wrong.
+### What Changes
 
-### Root Cause
-When Supabase refreshes authentication tokens (which happens periodically), the auth state briefly flickers to "no user" before resolving back to the logged-in user. During this flicker:
+Right now there are **two separate modals** that can both appear on the home screen:
+1. **ProGiftModal** -- gives 10 days PRO directly for free (claim button)
+2. **InviteFriendsModal** -- generates a referral link to share with friends
 
-1. `posthog.reset()` fires, destroying the identified person profile
-2. A new anonymous "Guest" person is created
-3. When auth resolves moments later, `identify` runs but the damage is done -- the session is now split
+We will **remove the ProGiftModal entirely** and keep only the **InviteFriendsModal** as the single entry point. The key behavior change: **PRO is no longer given as a direct gift.** It is only granted when an invited friend actually joins.
 
-### Solution
+### New User Flow
 
-**File: `src/providers/PostHogProvider.tsx`**
-
-1. **Remove `posthog.reset()` from the auth flicker path** -- Instead of immediately resetting when `user` becomes null, add a delay (e.g., 2-3 seconds) to allow token refreshes to complete. Only reset if the user is still null after the delay.
-
-2. **Stop eagerly labeling unknown state as "Guest"** -- Remove the `setPersonProperties({ name: "Guest" })` call from the initial/unknown state branch. Only label as "Guest" after confirming a true sign-out (after the delay).
-
-3. **Guard against re-identification loops** -- Keep `identifiedRef` but skip the reset path if the user was previously identified within the last few seconds.
+1. Eligible user (5+ games, non-VIP) lands on home screen
+2. The **InviteFriendsModal** ("მოიწვიე მეგობრები!") appears automatically
+3. When user shares/copies the link, a message is shown: **"როცა მოწვეული მეგობარი შემოგვიერთდება, შენ და შენი მეგობარი მიიღებთ 10 დღიან PRO-ს!"**
+4. If user clicks "მოგვიანებით" (Later), the **FloatingGiftButton** appears for easy return
+5. When the invited friend actually registers, **both users get 10 days PRO** (already handled by the existing `process_referral_reward` RPC)
 
 ### Technical Changes
 
-```
-useIdentifyUser() effect:
-- When user becomes null AND was previously identified:
-  - Start a 3-second timer instead of calling posthog.reset() immediately
-  - If user comes back (token refresh), cancel the timer -- no reset
-  - If user stays null after 3s, THEN call posthog.reset() and label as Guest
-  
-- When user is null and was never identified (true guest):
-  - Only set user_type super property via posthog.register()
-  - Do NOT call setPersonProperties with "Guest" name (this overwrites identified users during race conditions)
-  - The bootstrap identity from localStorage will handle returning users
-```
+**1. `src/pages/Index.tsx`**
+- Remove all `ProGiftModal` imports, state, effects, and rendering
+- Remove `useProGiftEligibility` import and usage
+- Remove `proGiftModalOpen`, `proGiftDismissedThisSession`, `proGiftClaimed` states
+- Remove the `pro-gift-claimed` event listener
+- Update the auto-show logic: use the existing `useInviteModalVisibility` hook but broaden its trigger -- show for eligible users (5+ games, non-VIP) instead of only when free games are exhausted
+- Update the `FloatingGiftButton` priority logic to only reference the invite modal flow
+- Remove `ProGiftModal` rendering from JSX
 
-### What This Fixes
-- Token refresh no longer destroys the identified person
-- Registered users will retain their real names (Kato, Eka K., etc.) in PostHog
-- True guests (never logged in) will still be tracked correctly
-- The bootstrap identity (line 36-59) will continue working as the first line of defense for returning users
+**2. `src/components/home/InviteFriendsModal.tsx`**
+- Update the `useInviteModalVisibility` hook: change condition from `freeGamesExhausted` to a broader eligibility check (user exists, not VIP, not dismissed)
+- Add a confirmation/info text after the user copies or shares the link: "როცა მოწვეული მეგობარი შემოგვიერთდება, შენ და შენი მეგობარი მიიღებთ 10 დღიან PRO-ს!"
+- Keep the existing glassmorphic design with the group-of-people icon
+
+**3. `src/components/home/ProGiftBanner.tsx`**
+- Keep the file but mark `useProGiftEligibility` and `ProGiftModal` as deprecated/unused, or remove them entirely since they are no longer referenced
+
+**4. No database changes needed** -- the existing `process_referral_reward` RPC already handles granting 10 days PRO to both inviter and invited friend upon successful referral signup.
 
