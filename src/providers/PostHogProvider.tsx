@@ -32,12 +32,14 @@ function usePageviewTracker() {
 function useIdentifyUser() {
   const { user, profile, loading } = useAuth();
   const identifiedRef = useRef<string | null>(null);
+  const initialIdentifyDoneRef = useRef(false);
 
   useEffect(() => {
     // Don't set any properties until auth state is resolved
     if (loading) return;
 
     if (user && profile && identifiedRef.current !== user.id) {
+      // Full identify with all profile properties
       posthog.identify(user.id, {
         $name: profile.nickname,
         $email: user.email ?? undefined,
@@ -52,11 +54,21 @@ function useIdentifyUser() {
       });
       posthog.register({ user_type: "registered" });
       identifiedRef.current = user.id;
-    } else if (!user && identifiedRef.current) {
+      initialIdentifyDoneRef.current = true;
+    } else if (user && !profile && !initialIdentifyDoneRef.current) {
+      // Early identify with just user ID — don't wait for profile
+      posthog.identify(user.id, {
+        $email: user.email ?? undefined,
+        user_type: "registered",
+      });
+      posthog.register({ user_type: "registered" });
+      initialIdentifyDoneRef.current = true;
+    } else if (!user && (identifiedRef.current || initialIdentifyDoneRef.current)) {
       posthog.reset();
       posthog.register({ user_type: "guest" });
       posthog.setPersonProperties({ user_type: "guest" });
       identifiedRef.current = null;
+      initialIdentifyDoneRef.current = false;
     } else if (!user && !identifiedRef.current) {
       posthog.register({ user_type: "guest" });
       posthog.setPersonProperties({ user_type: "guest" });
