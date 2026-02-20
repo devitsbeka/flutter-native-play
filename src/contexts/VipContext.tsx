@@ -113,9 +113,9 @@ export function VipProvider({ children }: { children: ReactNode }) {
           try { localStorage.setItem(VIP_CACHE_KEY, "false"); } catch {}
         }
       } catch (error) {
-        setSubscription(null);
-        setIsVip(false);
-        try { localStorage.setItem(VIP_CACHE_KEY, "false"); } catch {}
+        console.error("[VipContext] Error fetching VIP status:", error);
+        // On error, preserve cached value instead of resetting to false
+        // This prevents network hiccups from incorrectly removing PRO status
       } finally {
         setLoading(false);
       }
