@@ -1,39 +1,46 @@
 
 
-## Beautify Invite Friends Modal with Blue/Pink/Purple Gradient
+## Fix: Show Invite Friends Modal on Home Page When Plays Are Exhausted
 
-### Changes (single file)
+### Root Cause
 
-**File: `src/components/home/InviteFriendsModal.tsx`**
+The home page (`src/pages/Index.tsx`) has its own play-limit handling in `handlePlayClick` (line 307-310) that directly shows `PlayLimitModal` via `setShowGuestMaxPlaysModal(true)`. It **does not** use `guardPlay` from `PlayGuardContext`, so the `InviteFriendsModal` is never triggered.
 
-1. **Background gradient**: Replace the current warm white/lavender gradient with a vibrant blue-to-pink-to-purple gradient:
-   - `linear-gradient(135deg, #667eea 0%, #a855f7 40%, #ec4899 100%)` on the main container
-   - Outer glow shadow in purple tones
-   - Border updated to semi-transparent white for glassmorphism
+The same bypass also happens at line 564-567 (category quick-play flow).
 
-2. **Text colors**: Switch from dark gray to white text throughout:
-   - Title: `text-white` (bold)
-   - Description: `text-white/80`
-   - "10 დღიანი PRO" highlight: bright yellow/gold (`text-yellow-300`)
+### Fix
 
-3. **Icon circle**: Keep the purple gradient but brighten it to stand out against the new background, add a stronger glow
+**File: `src/pages/Index.tsx`**
 
-4. **PRO badge pill**: Change from lavender to a semi-transparent white glassmorphic style:
-   - `background: rgba(255,255,255,0.15)`, `backdrop-filter: blur(10px)`
-   - Text: `text-white`
+1. In `handlePlayClick` (line 307-310): When a logged-in user has 0 plays (`!canPlay && !isVip`), show the **InviteFriendsModal first** instead of going straight to PlayLimitModal.
+   - Change `setShowGuestMaxPlaysModal(true)` to `setInviteModalVisible(true)` (the invite modal state is already available from `useInviteModalVisibility`)
 
-5. **Referral link box**: Semi-transparent dark overlay for contrast:
-   - `background: rgba(0,0,0,0.15)`, rounded, `text-white/70`
+2. Same change at line 564-567 (category quick-play guard): replace `setShowGuestMaxPlaysModal(true)` with `setInviteModalVisible(true)`
 
-6. **Action buttons**: Use `ChunkyButton` with proper sizing:
-   - Copy button: `variant="white"` or custom white style for visibility on gradient
-   - Share button: `variant="outline"` with white border
-   - Both keep `size="md"` to fit within the modal width
-   - Ensure `flex-1` and no overflow
+3. Update the `InviteFriendsModal` instance already rendered in Index.tsx to chain into `PlayLimitModal` on dismiss (set `onDismiss` to show the PlayLimitModal after the invite modal is closed)
 
-7. **"მოგვიანებით" dismiss link**: `text-white/50` with hover `text-white/80`
+### Flow After Fix
 
-8. **Decorative glow**: Update the radial glow at the top from amber to a pink/white glow for cohesion
+```text
+User has 0 plays -> taps Play button on home
+  |
+  v
+InviteFriendsModal appears instantly
+  ("Invite friends, get 10-day PRO!")
+  |
+  User dismisses
+  |
+  v
+PlayLimitModal appears
+  ("Become PRO" or wait for regen)
+```
 
-### Visual Result
-A rich, vibrant gradient card with white text, glassmorphic elements, and properly sized buttons that fit cleanly within the modal bounds -- matching the blue/pink/purple aesthetic the user requested.
+### Technical Details
+
+**Lines to change in `src/pages/Index.tsx`:**
+
+- Line 309: `setShowGuestMaxPlaysModal(true)` --> `setInviteModalVisible(true)` (for logged-in users only; guest flow stays the same)
+- Line 566: `setShowGuestMaxPlaysModal(true)` --> `setInviteModalVisible(true)`
+- Update the `<InviteFriendsModal>` JSX to add `onDismiss={() => setShowGuestMaxPlaysModal(true)}` so PlayLimitModal follows after dismiss
+
+No new files, no new dependencies -- just wiring the existing invite modal into the existing play-limit flow on the home page.
