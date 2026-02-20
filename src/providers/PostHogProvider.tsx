@@ -25,7 +25,9 @@ function getBootstrapIdentity(): { userId: string; displayName: string | undefin
     const displayName = lastUserData?.nickname
       || meta?.nickname || meta?.full_name || meta?.name;
 
-    return { userId, displayName };
+    // Always return a fallback name - never undefined
+    const fallbackName = parsed?.user?.email?.split('@')[0] || 'Player';
+    return { userId, displayName: displayName || fallbackName };
   } catch {
     return null;
   }
@@ -49,6 +51,7 @@ posthog.init(POSTHOG_KEY, {
 // If bootstrapped, immediately identify so the person profile is created with correct properties
 if (bootstrapIdentity) {
   posthog.identify(bootstrapIdentity.userId, {
+    name: bootstrapIdentity.displayName,
     $name: bootstrapIdentity.displayName,
     user_type: "registered",
   });
@@ -82,6 +85,7 @@ function useIdentifyUser() {
     if (user && profile && identifiedRef.current !== user.id) {
       // Full identify with all profile properties
       posthog.identify(user.id, {
+        name: profile.nickname,
         $name: profile.nickname,
         $email: isRealEmail ? user.email : undefined,
         nickname: profile.nickname,
@@ -99,10 +103,11 @@ function useIdentifyUser() {
     } else if (user && !profile && !initialIdentifyDoneRef.current) {
       // Early identify with user ID + nickname from auth metadata
       const meta = user.user_metadata as any;
-      const metaNickname = meta?.nickname || meta?.full_name || meta?.name;
+      const metaNickname = meta?.nickname || meta?.full_name || meta?.name || user.email?.split('@')[0] || 'Player';
       posthog.identify(user.id, {
         $email: isRealEmail ? user.email : undefined,
-        $name: metaNickname ?? undefined,
+        name: metaNickname,
+        $name: metaNickname,
         user_type: "registered",
       });
       posthog.register({ user_type: "registered" });
@@ -111,6 +116,7 @@ function useIdentifyUser() {
       posthog.reset();
       posthog.register({ user_type: "guest" });
       posthog.setPersonProperties({
+        name: "Guest",
         $name: "Guest",
         user_type: "guest",
       });
@@ -119,6 +125,7 @@ function useIdentifyUser() {
     } else if (!user && !identifiedRef.current) {
       posthog.register({ user_type: "guest" });
       posthog.setPersonProperties({
+        name: "Guest",
         $name: "Guest",
         user_type: "guest",
       });
