@@ -35,7 +35,7 @@ const notifyTriviaCreator = async (userTriviaId: string, playerId: string) => {
     await createNotification(
       triviaPost.user_id,
       "trivia_played",
-      `${playerProfile?.nickname || "ვიღაცამ"} ითამაშა შენი ტრივია`,
+      `${playerProfile?.nickname ? playerProfile.nickname + "-მ" : "ვიღაცამ"} ითამაშა შენი ტრივია`,
       triviaPost.title || undefined,
       { post_id: userTriviaId, player_id: playerId }
     );

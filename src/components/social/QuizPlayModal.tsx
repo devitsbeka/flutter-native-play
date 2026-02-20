@@ -219,7 +219,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
             await createNotification(
               postData.user_id,
               "trivia_played",
-              `${senderProfile?.nickname || "ვიღაცამ"} ითამაშა შენი ტრივია`,
+              `${senderProfile?.nickname ? senderProfile.nickname + "-მ" : "ვიღაცამ"} ითამაშა შენი ტრივია`,
               postData.title || undefined,
               { post_id: postId, player_id: user.id }
             );

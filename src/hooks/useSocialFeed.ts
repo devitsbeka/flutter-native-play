@@ -163,7 +163,7 @@ export function useSocialFeed() {
           await createNotification(
             postData.user_id,
             "trivia_liked",
-            `${senderProfile?.nickname || "ვიღაცამ"} მოიწონა შენი ტრივია`,
+            `${senderProfile?.nickname ? senderProfile.nickname + "-მ" : "ვიღაცამ"} მოიწონა შენი ტრივია`,
             postData.title || undefined,
             { 
               post_id: postId, 
@@ -224,7 +224,7 @@ export function useSocialFeed() {
           await createNotification(
             postData.user_id,
             "trivia_saved",
-            `${senderProfile?.nickname || "ვიღაცამ"} შეინახა შენი ტრივია`,
+            `${senderProfile?.nickname ? senderProfile.nickname + "-მ" : "ვიღაცამ"} შეინახა შენი ტრივია`,
             postData.title || undefined,
             { 
               post_id: postId, 
