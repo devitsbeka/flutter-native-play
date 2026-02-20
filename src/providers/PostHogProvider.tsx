@@ -7,19 +7,14 @@ import { fbTrackPageView } from "@/lib/fbpixel";
 const POSTHOG_KEY = "phc_mJKmSyJCq92bAxkvo7NZmdP7UZP79zqmJ7AX9E5vFYA";
 const POSTHOG_HOST = "https://us.i.posthog.com";
 
-let initialized = false;
-
-function initPostHog() {
-  if (initialized) return;
-  posthog.init(POSTHOG_KEY, {
-    api_host: POSTHOG_HOST,
-    capture_pageview: false, // we handle SPA pageviews manually
-    capture_pageleave: true,
-    autocapture: true,
-    persistence: "localStorage+cookie",
-  });
-  initialized = true;
-}
+// Initialize synchronously at module level so it's ready before any hooks fire
+posthog.init(POSTHOG_KEY, {
+  api_host: POSTHOG_HOST,
+  capture_pageview: false,
+  capture_pageleave: true,
+  autocapture: true,
+  persistence: "localStorage+cookie",
+});
 
 /** Tracks SPA route changes as $pageview events */
 function usePageviewTracker() {
@@ -27,7 +22,6 @@ function usePageviewTracker() {
   const prevPath = useRef(location.pathname);
 
   useEffect(() => {
-    // fire on every route change (including first render)
     posthog.capture("$pageview", { $current_url: window.location.href });
     fbTrackPageView();
     prevPath.current = location.pathname;
@@ -58,18 +52,16 @@ function useIdentifyUser() {
     } else if (!user && identifiedRef.current) {
       posthog.reset();
       posthog.register({ user_type: "guest" });
+      posthog.setPersonProperties({ user_type: "guest" });
       identifiedRef.current = null;
     } else if (!user && !identifiedRef.current) {
       posthog.register({ user_type: "guest" });
+      posthog.setPersonProperties({ user_type: "guest" });
     }
   }, [user, profile]);
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    initPostHog();
-  }, []);
-
   usePageviewTracker();
   useIdentifyUser();
 
