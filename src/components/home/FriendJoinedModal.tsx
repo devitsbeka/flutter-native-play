@@ -9,9 +9,11 @@ import crownIcon from "@/assets/icons/icon-vip-crown.png";
 interface FriendJoinedModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  variant?: "inviter" | "invited";
+  inviterName?: string;
 }
 
-export function FriendJoinedModal({ open, onOpenChange }: FriendJoinedModalProps) {
+export function FriendJoinedModal({ open, onOpenChange, variant = "inviter", inviterName }: FriendJoinedModalProps) {
   useEffect(() => {
     if (open) {
       confetti({
@@ -30,10 +32,19 @@ export function FriendJoinedModal({ open, onOpenChange }: FriendJoinedModalProps
 
   if (!open) return null;
 
+  const bodyText = variant === "invited"
+    ? inviterName && inviterName !== "true"
+      ? <>მოგიწვია <span className="font-semibold text-purple-700">{inviterName}</span>-მ და მიიღე{" "}
+          <span className="font-semibold text-amber-600">10 დღიანი PRO</span> საჩუქრად!</>
+      : <>დარეგისტრირდი მოწვევით და მიიღე{" "}
+          <span className="font-semibold text-amber-600">10 დღიანი PRO</span> საჩუქრად!</>
+    : <>შენი მეგობარი შემოუერთდა MyTrivia LIVE-ს შენი ლინკით!{" "}
+        <span className="font-semibold text-amber-600">მიიღე 10 დღიანი PRO.</span></>;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[340px] p-0 overflow-hidden border-none bg-transparent shadow-none [&>button]:hidden">
-        <DialogTitle className="sr-only">მეგობარი შემოუერთდა</DialogTitle>
+        <DialogTitle className="sr-only">გილოცავთ</DialogTitle>
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -80,11 +91,7 @@ export function FriendJoinedModal({ open, onOpenChange }: FriendJoinedModalProps
               transition={{ delay: 0.15 }}
               className="text-gray-600 text-center text-sm leading-relaxed mb-6"
             >
-              თქვენი მეგობარი შემოუერთდა MyTrivia LIVE-ს თქვენი ლინკით!{" "}
-              <span className="font-semibold text-amber-600">
-                თქვენ და თქვენმა მეგობარმა მიიღეთ 10 დღიანი PRO.
-              </span>
-              {" "}სასიამოვნო გართობას გისურვებთ!
+              {bodyText}
             </motion.p>
 
             {/* PRO badge */}
