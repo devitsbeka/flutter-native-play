@@ -209,12 +209,26 @@ export default function Index() {
   // Invite Friends Modal state
   const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading, freeGamesExhausted);
   const [friendJoinedModalOpen, setFriendJoinedModalOpen] = useState(false);
+  const [friendModalVariant, setFriendModalVariant] = useState<"inviter" | "invited">("inviter");
+  const [friendModalInviterName, setFriendModalInviterName] = useState<string | undefined>();
 
-  // Check for newly accepted referrals
-  const lastAcceptedCheckRef = useRef<string | null>(null);
+  // Check for invited user referral welcome flag (set in Auth.tsx after signup via referral)
+  useEffect(() => {
+    const referralWelcome = sessionStorage.getItem("referral_welcome");
+    if (referralWelcome) {
+      sessionStorage.removeItem("referral_welcome");
+      setFriendModalVariant("invited");
+      setFriendModalInviterName(referralWelcome !== "true" ? referralWelcome : undefined);
+      setFriendJoinedModalOpen(true);
+    }
+  }, []);
+
+  // Realtime subscription for inviter: detect when a friend accepts the invite
   useEffect(() => {
     if (!user) return;
-    const checkAccepted = async () => {
+
+    // Initial check for any accepted invites not yet seen
+    const checkInitial = async () => {
       const { data } = await supabase
         .from('friend_invites')
         .select('id, accepted_at')
@@ -222,22 +236,44 @@ export default function Index() {
         .eq('status', 'accepted')
         .order('accepted_at', { ascending: false })
         .limit(1);
-      
+
       if (data && data.length > 0) {
         const latestAccepted = data[0].accepted_at;
         const lastSeen = sessionStorage.getItem(`friend_joined_seen_${user.id}`);
         if (latestAccepted && latestAccepted !== lastSeen) {
           sessionStorage.setItem(`friend_joined_seen_${user.id}`, latestAccepted);
-          if (lastSeen !== null) {
-            // Only show if we had a previous check (not first load)
-            setFriendJoinedModalOpen(true);
-          }
+          // Don't show on first load (lastSeen === null)
         }
       }
     };
-    checkAccepted();
-    const interval = setInterval(checkAccepted, 30000);
-    return () => clearInterval(interval);
+    checkInitial();
+
+    // Subscribe to realtime updates on friend_invites for this inviter
+    const channel = supabase
+      .channel(`friend-invites-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'friend_invites',
+          filter: `inviter_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newRow = payload.new as any;
+          if (newRow.status === 'accepted') {
+            sessionStorage.setItem(`friend_joined_seen_${user.id}`, newRow.accepted_at || new Date().toISOString());
+            setFriendModalVariant("inviter");
+            setFriendModalInviterName(undefined);
+            setFriendJoinedModalOpen(true);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   
@@ -689,6 +725,8 @@ export default function Index() {
         <FriendJoinedModal
           open={friendJoinedModalOpen}
           onOpenChange={setFriendJoinedModalOpen}
+          variant={friendModalVariant}
+          inviterName={friendModalInviterName}
         />
 
 

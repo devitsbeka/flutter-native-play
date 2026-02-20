@@ -125,11 +125,27 @@ export default function Auth() {
                 .single();
 
               if (invite) {
+                // Fetch inviter nickname before processing
+                let inviterNickname = "true";
+                try {
+                  const { data: inviterProfile } = await supabase
+                    .from('profiles')
+                    .select('nickname')
+                    .eq('user_id', invite.inviter_id)
+                    .single();
+                  if (inviterProfile?.nickname) {
+                    inviterNickname = inviterProfile.nickname;
+                  }
+                } catch {}
+
                 // Process referral reward via secure DB function
                 await supabase.rpc('process_referral_reward', {
                   p_invite_id: invite.id,
                   p_new_user_id: data.user.id,
                 });
+
+                // Store flag for the invited user modal on home page
+                sessionStorage.setItem("referral_welcome", inviterNickname);
 
                 notify.success("მოგესალმებით!", { 
                   description: "მიიღე 10 დღიანი PRO მეგობრის მოწვევით!", 
