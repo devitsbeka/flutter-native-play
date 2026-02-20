@@ -65,8 +65,6 @@ import { useRewardTimers } from "@/hooks/useRewardTimers";
 import { useMissions } from "@/hooks/useMissions";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { useVipStatus } from "@/hooks/useVipStatus";
-import { ProGiftModal, useProGiftEligibility } from "@/components/home/ProGiftBanner";
-import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
 import { InviteFriendsModal, useInviteModalVisibility } from "@/components/home/InviteFriendsModal";
 import { FriendJoinedModal } from "@/components/home/FriendJoinedModal";
@@ -207,11 +205,6 @@ export default function Index() {
   const [isAnimatingFromHome, setIsAnimatingFromHome] = useState(false);
   const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
 
-  // Pro Gift Modal state
-  const { eligible: proGiftEligible } = useProGiftEligibility();
-  const [proGiftModalOpen, setProGiftModalOpen] = useState(false);
-  const [proGiftDismissed, setProGiftDismissed] = useState(false);
-  const [proGiftClaimed, setProGiftClaimed] = useState(false);
 
   // Invite Friends Modal state
   const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading);
@@ -247,13 +240,6 @@ export default function Index() {
     return () => clearInterval(interval);
   }, [user]);
 
-  // Auto-open pro gift modal with delay (only after page data is loaded)
-  useEffect(() => {
-    if (proGiftEligible && !proGiftClaimed && !proGiftDismissed && !vipLoading && !isVip) {
-      const timer = setTimeout(() => setProGiftModalOpen(true), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [proGiftEligible, proGiftClaimed, proGiftDismissed, vipLoading, isVip]);
   
   // Guest play tracking
   const guestPlaysRemaining = !user ? getGuestPlaysRemaining() : 0;
@@ -689,14 +675,6 @@ export default function Index() {
           </div>
         </header>
 
-        {/* Pro Gift Modal */}
-        <ProGiftModal
-          open={proGiftModalOpen}
-          onOpenChange={setProGiftModalOpen}
-          onClaimed={() => setProGiftClaimed(true)}
-          onDismiss={() => setProGiftDismissed(true)}
-        />
-
         {/* Invite Friends Modal */}
         <InviteFriendsModal
           open={inviteModalVisible}
@@ -710,15 +688,6 @@ export default function Index() {
           onOpenChange={setFriendJoinedModalOpen}
         />
 
-        {/* Floating Gift Button - shown when modal dismissed without claiming */}
-        <AnimatePresence>
-          {proGiftEligible && proGiftDismissed && !proGiftClaimed && (
-            <FloatingGiftButton onClick={() => {
-              setProGiftDismissed(false);
-              setProGiftModalOpen(true);
-            }} />
-          )}
-        </AnimatePresence>
 
         {/* Content area */}
         <div className="flex-1 flex relative">
