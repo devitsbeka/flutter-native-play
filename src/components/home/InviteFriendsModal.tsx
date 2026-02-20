@@ -93,15 +93,15 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
           className="relative rounded-3xl overflow-hidden"
           style={{
-            background: "linear-gradient(180deg, #FFF7ED 0%, #FFFFFF 40%, #F0EBFF 100%)",
-            boxShadow: "0 8px 0 #E8E4EC, 0 16px 40px rgba(0, 0, 0, 0.2)",
-            border: "3px solid rgba(255, 255, 255, 0.95)",
+            background: "linear-gradient(135deg, #667eea 0%, #a855f7 40%, #ec4899 100%)",
+            boxShadow: "0 8px 0 rgba(88,28,135,0.5), 0 16px 40px rgba(124,58,237,0.4)",
+            border: "3px solid rgba(255, 255, 255, 0.25)",
           }}
         >
           <div
             className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full pointer-events-none"
             style={{
-              background: "radial-gradient(circle, rgba(251,191,36,0.2) 0%, transparent 70%)",
+              background: "radial-gradient(circle, rgba(236,72,153,0.3) 0%, transparent 70%)",
             }}
           />
 
@@ -114,8 +114,8 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               <div
                 className="w-16 h-16 rounded-full flex items-center justify-center"
                 style={{
-                  background: "linear-gradient(135deg, #A78BFA 0%, #7C3AED 50%, #6D28D9 100%)",
-                  boxShadow: "0 6px 0 #5B21B6, 0 0 30px rgba(124,58,237,0.4)",
+                  background: "linear-gradient(135deg, #c084fc 0%, #818cf8 50%, #60a5fa 100%)",
+                  boxShadow: "0 6px 0 rgba(88,28,135,0.6), 0 0 30px rgba(192,132,252,0.5)",
                 }}
               >
                 <Users className="w-8 h-8 text-white" />
@@ -126,7 +126,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="font-display text-lg font-bold text-gray-900 text-center mb-2"
+              className="font-display text-lg font-bold text-white text-center mb-2"
             >
               მოიწვიე მეგობრები!
             </motion.h2>
@@ -135,10 +135,10 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="text-gray-600 text-center text-sm leading-relaxed mb-4"
+              className="text-white/80 text-center text-sm leading-relaxed mb-4"
             >
               მოიწვიე მეგობრები ამ ლინკით და მიიღეთ{" "}
-              <span className="font-semibold text-amber-600">10 დღიანი PRO</span>,
+              <span className="font-semibold text-yellow-300">10 დღიანი PRO</span>,
               სასიამოვნო გართობას გისურვებთ!
             </motion.p>
 
@@ -149,12 +149,13 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               transition={{ delay: 0.2 }}
               className="flex items-center gap-2 px-4 py-2 rounded-full mb-5"
               style={{
-                background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
-                boxShadow: "0 3px 0 #C4B5FD",
+                background: "rgba(255,255,255,0.15)",
+                backdropFilter: "blur(10px)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
               }}
             >
               <img src={crownIcon} alt="" className="w-6 h-6 object-contain" />
-              <span className="font-display text-sm font-bold text-purple-700">
+              <span className="font-display text-sm font-bold text-white">
                 10 დღიანი PRO საჩუქარი
               </span>
             </motion.div>
@@ -167,13 +168,16 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               className="w-full mb-4"
             >
               {generating ? (
-                <div className="w-full py-3 px-4 rounded-xl bg-gray-100 text-center text-sm text-gray-500">
+                <div
+                  className="w-full py-3 px-4 rounded-xl text-center text-sm text-white/60"
+                  style={{ background: "rgba(0,0,0,0.15)" }}
+                >
                   ლინკი იქმნება...
                 </div>
               ) : referralLink ? (
                 <div
-                  className="w-full py-3 px-4 rounded-xl text-xs text-gray-600 break-all select-all cursor-pointer"
-                  style={{ background: "rgba(0,0,0,0.04)" }}
+                  className="w-full py-3 px-4 rounded-xl text-xs text-white/70 break-all select-all cursor-pointer"
+                  style={{ background: "rgba(0,0,0,0.15)" }}
                   onClick={handleCopy}
                 >
                   {referralLink}
@@ -189,9 +193,9 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               className="w-full flex gap-2"
             >
               <ChunkyButton
-                variant="primary"
-                size="lg"
-                className="flex-1"
+                variant="white"
+                size="md"
+                className="flex-1 min-w-0"
                 onClick={handleCopy}
                 disabled={!referralLink}
                 icon={copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
@@ -201,9 +205,9 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
 
               {"share" in navigator && (
                 <ChunkyButton
-                  variant="secondary"
-                  size="lg"
-                  className="flex-1"
+                  variant="whitePurple"
+                  size="md"
+                  className="flex-1 min-w-0"
                   onClick={handleShare}
                   disabled={!referralLink}
                   icon={<Share2 className="w-5 h-5" />}
@@ -218,7 +222,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               animate={{ opacity: 1 }}
               transition={{ delay: 0.35 }}
               onClick={handleClose}
-              className="mt-4 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              className="mt-4 text-xs text-white/50 hover:text-white/80 transition-colors"
             >
               მოგვიანებით
             </motion.button>
