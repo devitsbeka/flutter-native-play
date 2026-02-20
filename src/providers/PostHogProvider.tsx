@@ -75,12 +75,19 @@ function useIdentifyUser() {
   const { user, profile, loading } = useAuth();
   const identifiedRef = useRef<string | null>(null);
   const initialIdentifyDoneRef = useRef(false);
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     // Don't set any properties until auth state is resolved
     if (loading) return;
 
     const isRealEmail = user?.email && !user.email.endsWith('@mytrivia.local');
+
+    // Cancel any pending reset if user is present (token refresh resolved)
+    if (user && resetTimerRef.current) {
+      clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = null;
+    }
 
     if (user && profile && identifiedRef.current !== user.id) {
       // Full identify with all profile properties
@@ -113,24 +120,36 @@ function useIdentifyUser() {
       posthog.register({ user_type: "registered" });
       initialIdentifyDoneRef.current = true;
     } else if (!user && (identifiedRef.current || initialIdentifyDoneRef.current)) {
-      posthog.reset();
-      posthog.register({ user_type: "guest" });
-      posthog.setPersonProperties({
-        name: "Guest",
-        $name: "Guest",
-        user_type: "guest",
-      });
-      identifiedRef.current = null;
-      initialIdentifyDoneRef.current = false;
+      // User was previously identified — delay reset to survive token refresh flickers
+      if (!resetTimerRef.current) {
+        resetTimerRef.current = setTimeout(() => {
+          posthog.reset();
+          posthog.register({ user_type: "guest" });
+          posthog.setPersonProperties({
+            name: "Guest",
+            $name: "Guest",
+            user_type: "guest",
+          });
+          identifiedRef.current = null;
+          initialIdentifyDoneRef.current = false;
+          resetTimerRef.current = null;
+        }, 3000);
+      }
     } else if (!user && !identifiedRef.current) {
+      // True guest — only set super property, don't overwrite person props
+      // (bootstrap identity from localStorage handles returning users)
       posthog.register({ user_type: "guest" });
-      posthog.setPersonProperties({
-        name: "Guest",
-        $name: "Guest",
-        user_type: "guest",
-      });
     }
   }, [user, profile, loading]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current);
+      }
+    };
+  }, []);
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
