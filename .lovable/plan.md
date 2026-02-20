@@ -1,45 +1,30 @@
 
 
-## Fix: PostHog Users Showing as UUIDs Instead of Names
+## InviteFriendsModal Text Adjustments
 
-### Root Cause
+Three small tweaks in `src/components/home/InviteFriendsModal.tsx`:
 
-The `posthog-js` SDK (v1.343+) defaults `person_profiles` to `'identified_only'`. This means:
+### 1. Title: move up 5px and increase size by 7%
+- Current: `fontSize: "1.44rem"`, `mb-2` class
+- New: `fontSize: "1.54rem"` (1.44 * 1.07), add `style` margin-top of `-5px`
 
-1. When the page loads, PostHog starts recording with an **anonymous** distinct ID
-2. The auth state is still loading, so `identify()` hasn't fired yet
-3. The session recording gets tagged to the anonymous profile
-4. Even after `identify()` fires, the session recording display may not update properly because the initial anonymous events didn't create a person profile
+### 2. Description: decrease size by 8% and change text
+- Current: `fontSize: "1.03rem"`
+- New: `fontSize: "0.95rem"` (1.03 * 0.92)
+- Replace text content with: "გაუზიარე ეს ლინკი მეგობრებს და მიიღეთ საჩუქრად 10 დღიანი PRO!"
 
-### Fix
+### Technical Details
 
-**File: `src/providers/PostHogProvider.tsx`** (line 11-17)
+**File:** `src/components/home/InviteFriendsModal.tsx`
 
-Add `person_profiles: 'always'` to the `posthog.init()` configuration:
+**Title h2 (around line 122-128):**
+- Change `style={{ fontSize: "1.44rem" }}` to `style={{ fontSize: "1.54rem", marginTop: "-5px" }}`
 
+**Description p (around line 130-142):**
+- Change `style={{ fontSize: "1.03rem" }}` to `style={{ fontSize: "0.95rem" }}`
+- Replace inner text with:
 ```
-posthog.init(POSTHOG_KEY, {
-  api_host: POSTHOG_HOST,
-  capture_pageview: false,
-  capture_pageleave: true,
-  autocapture: true,
-  persistence: "localStorage+cookie",
-  person_profiles: "always",       // <-- ADD THIS
-});
+გაუზიარე ეს ლინკი მეგობრებს და მიიღეთ საჩუქრად{" "}
+<span className="font-semibold text-yellow-300">10 დღიანი PRO</span>!
 ```
-
-### What this changes
-
-| Before | After |
-|--------|-------|
-| Person profiles created only on `identify()` call | Person profiles created for every visitor from the start |
-| Session recordings tagged to anonymous IDs before auth resolves | All recordings properly linked to person profiles |
-| Users show as UUIDs in recordings list | Users show by `$name` / nickname once `identify()` fires |
-
-### Trade-off
-
-Setting `person_profiles: 'always'` means PostHog processes person profiles for all events (including anonymous/guest ones), which can be up to 4x more expensive per event compared to `'identified_only'`. However, this is necessary to ensure session recordings are properly associated with identified users.
-
-### Single file change
-- `src/providers/PostHogProvider.tsx` -- add one config line
 
