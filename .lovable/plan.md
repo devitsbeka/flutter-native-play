@@ -1,42 +1,39 @@
 
 
-## Show Invite Friends Modal Only When Free Plays Are Exhausted
+## Fix: PostHog Users Showing as Guests
 
-### Current Behavior
-The invite modal shows for **every** logged-in non-VIP user after 3 seconds, regardless of how many plays they have left.
+### Root Cause
 
-### Desired Behavior
-Only show the modal when the user has **0 free plays remaining** (all 5 games played).
+In `src/providers/PostHogProvider.tsx`, the `useIdentifyUser` hook calls `posthog.setPersonProperties({ user_type: "guest" })` for unauthenticated users. This writes a **permanent person-level property** on the anonymous PostHog person record. When the user later signs in and `posthog.identify(userId)` runs, PostHog merges the anonymous person into the identified one -- but the "guest" person property can persist or conflict with the "registered" value set during identify, causing all users to appear as guests in the PostHog dashboard.
 
-### Changes
+### Fix (single file change)
 
-**File: `src/components/home/InviteFriendsModal.tsx`**
+**File: `src/providers/PostHogProvider.tsx`**
 
-Update the `useInviteModalVisibility` hook to accept play limit data and gate visibility:
+1. **Remove `posthog.setPersonProperties({ user_type: "guest" })` from both guest branches** (lines 69 and 74)
+   - `setPersonProperties` writes permanent server-side person properties
+   - For guests, we only need `posthog.register()` which sets session-level super properties (attached to events, not the person record)
 
-1. Add a new parameter `freeGamesExhausted: boolean` (from `usePlayLimit`)
-2. Only trigger the 3-second timer when `freeGamesExhausted` is true
-3. Keep existing guards: must be logged in, not VIP, not already dismissed this session
+2. **Keep `posthog.register({ user_type: "guest" })` for event tagging** -- this correctly tags events as coming from a guest session without polluting the person record
 
-**File: `src/pages/Index.tsx`**
+3. **No changes to the identify branches** -- `posthog.identify(userId, { user_type: "registered", ... })` already correctly sets person properties during identification
 
-Update the call site to pass the exhaustion flag:
+### Before vs After
 
-1. The page already uses `usePlayLimit()` -- pass `freeGamesExhausted` to `useInviteModalVisibility`
-2. Change from: `useInviteModalVisibility(isVip, vipLoading)`
-3. Change to: `useInviteModalVisibility(isVip, vipLoading, freeGamesExhausted)`
+**Before (broken):**
+- Guest branch: `register("guest")` + `setPersonProperties("guest")` -- permanently marks person as guest
+- Then identify fires: `identify(userId, { user_type: "registered" })` -- but merge may not override the earlier person property
 
-### Technical Detail
+**After (fixed):**
+- Guest branch: only `register("guest")` -- session-level, doesn't touch person record
+- identify fires: `identify(userId, { user_type: "registered" })` -- cleanly sets person property on first identification
 
-Updated hook signature:
-```
-useInviteModalVisibility(isVip, vipLoading, freeGamesExhausted)
-```
+### Technical Details
 
-Updated condition inside the hook:
-```
-if (!user || vipLoading || isVip || !freeGamesExhausted) return;
-```
+Lines to change in `src/providers/PostHogProvider.tsx`:
 
-This is a minimal 2-file change -- just adding one boolean guard to the existing visibility logic.
+- Line 69: Remove `posthog.setPersonProperties({ user_type: "guest" });`
+- Line 74: Remove `posthog.setPersonProperties({ user_type: "guest" });`
+
+Two lines deleted, no new code added. Existing identified users in PostHog will be correctly updated on their next visit.
 
