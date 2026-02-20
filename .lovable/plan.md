@@ -1,46 +1,45 @@
 
 
-## Fix Georgian Ergative Case ("-მ") in Notification Titles
+## Fix: PostHog Users Showing as UUIDs Instead of Names
 
-### Problem
-Notification titles show names without the Georgian ergative case suffix. For example, "Barbara მოიწონა შენი ტრივია" is grammatically incorrect -- it should be "Barbara-მ მოიწონა შენი ტრივია".
+### Root Cause
 
-### Changes
+The `posthog-js` SDK (v1.343+) defaults `person_profiles` to `'identified_only'`. This means:
 
-All 4 notification creation points need the nickname formatted with "-მ" suffix:
+1. When the page loads, PostHog starts recording with an **anonymous** distinct ID
+2. The auth state is still loading, so `identify()` hasn't fired yet
+3. The session recording gets tagged to the anonymous profile
+4. Even after `identify()` fires, the session recording display may not update properly because the initial anonymous events didn't create a person profile
 
-**1. `src/hooks/useSocialFeed.ts` -- Like notification (line 166)**
-```
-Before: `${senderProfile?.nickname || "ვიღაცამ"} მოიწონა შენი ტრივია`
-After:  `${senderProfile?.nickname ? senderProfile.nickname + "-მ" : "ვიღაცამ"} მოიწონა შენი ტრივია`
-```
+### Fix
 
-**2. `src/hooks/useSocialFeed.ts` -- Save notification (line 227)**
-```
-Before: `${senderProfile?.nickname || "ვიღაცამ"} შეინახა შენი ტრივია`
-After:  `${senderProfile?.nickname ? senderProfile.nickname + "-მ" : "ვიღაცამ"} შეინახა შენი ტრივია`
-```
+**File: `src/providers/PostHogProvider.tsx`** (line 11-17)
 
-**3. `src/components/social/QuizPlayModal.tsx` -- Play notification (line 222)**
-```
-Before: `${senderProfile?.nickname || "ვიღაცამ"} ითამაშა შენი ტრივია`
-After:  `${senderProfile?.nickname ? senderProfile.nickname + "-მ" : "ვიღაცამ"} ითამაშა შენი ტრივია`
-```
+Add `person_profiles: 'always'` to the `posthog.init()` configuration:
 
-**4. `src/contexts/MultiplayerContextV2.tsx` -- Multiplayer play notification (line 38)**
 ```
-Before: `${playerProfile?.nickname || "ვიღაცამ"} ითამაშა შენი ტრივია`
-After:  `${playerProfile?.nickname ? playerProfile.nickname + "-მ" : "ვიღაცამ"} ითამაშა შენი ტრივია`
+posthog.init(POSTHOG_KEY, {
+  api_host: POSTHOG_HOST,
+  capture_pageview: false,
+  capture_pageleave: true,
+  autocapture: true,
+  persistence: "localStorage+cookie",
+  person_profiles: "always",       // <-- ADD THIS
+});
 ```
 
-### Why this works
-- When a nickname exists, we append "-მ" (e.g., "Barbara-მ მოიწონა")
-- The fallback "ვიღაცამ" already has the ergative suffix built in, so no change needed there
-- This is the standard Georgian grammatical convention for foreign/Latin-script names acting as the subject of an action verb
+### What this changes
 
-### Files changed
-| File | Lines |
-|------|-------|
-| `src/hooks/useSocialFeed.ts` | 166, 227 |
-| `src/components/social/QuizPlayModal.tsx` | 222 |
-| `src/contexts/MultiplayerContextV2.tsx` | 38 |
+| Before | After |
+|--------|-------|
+| Person profiles created only on `identify()` call | Person profiles created for every visitor from the start |
+| Session recordings tagged to anonymous IDs before auth resolves | All recordings properly linked to person profiles |
+| Users show as UUIDs in recordings list | Users show by `$name` / nickname once `identify()` fires |
+
+### Trade-off
+
+Setting `person_profiles: 'always'` means PostHog processes person profiles for all events (including anonymous/guest ones), which can be up to 4x more expensive per event compared to `'identified_only'`. However, this is necessary to ensure session recordings are properly associated with identified users.
+
+### Single file change
+- `src/providers/PostHogProvider.tsx` -- add one config line
+
