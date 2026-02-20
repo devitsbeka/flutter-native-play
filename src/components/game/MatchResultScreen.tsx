@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { showMissionCompleteToast } from "@/components/mission/MissionCompleteToast";
 import { usePlayLimit, MAX_FREE_PLAYS } from "@/hooks/usePlayLimit";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
+import { InviteFriendsModal } from "@/components/home/InviteFriendsModal";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
@@ -245,6 +246,7 @@ export function MatchResultScreen() {
   
   // State for showing PRO upgrade modal when limit reached
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guestModalBlocking, setGuestModalBlocking] = useState(false);
 
@@ -284,7 +286,7 @@ export function MatchResultScreen() {
     // Note: games_played is updated after game completion, so we need to account for the game just played
     const gamesPlayedAfterThisGame = (profile?.games_played || 0) + 1;
     if (!isVip && !vipLoading && gamesPlayedAfterThisGame >= MAX_FREE_PLAYS) {
-      setShowPlayLimitModal(true);
+      setShowInviteModal(true);
       return;
     }
     
@@ -495,6 +497,12 @@ export function MatchResultScreen() {
         awardedPowerUp={awardedPowerUp}
       />
       
+      <InviteFriendsModal
+        open={showInviteModal}
+        onOpenChange={setShowInviteModal}
+        onDismiss={() => setShowPlayLimitModal(true)}
+      />
+
       <PlayLimitModal
         isOpen={showPlayLimitModal}
         onClose={() => setShowPlayLimitModal(false)}
