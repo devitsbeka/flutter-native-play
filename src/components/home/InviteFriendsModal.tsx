@@ -85,6 +85,16 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
       <DialogContent className="max-w-[340px] p-0 overflow-hidden border-none bg-transparent shadow-none [&>button]:hidden">
+        <style>{`
+          @property --border-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+          }
+          @keyframes borderSpin {
+            to { --border-angle: 360deg; }
+          }
+        `}</style>
         <DialogTitle className="sr-only">მეგობრების მოწვევა</DialogTitle>
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
@@ -95,9 +105,23 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
           style={{
             background: "linear-gradient(135deg, #667eea 0%, #a855f7 40%, #ec4899 100%)",
             boxShadow: "0 8px 0 rgba(88,28,135,0.5), 0 16px 40px rgba(124,58,237,0.4)",
-            border: "3px solid rgba(255, 255, 255, 0.25)",
+            padding: "3px",
           }}
         >
+          {/* Animated gradient border */}
+          <div
+            className="absolute inset-0 rounded-3xl"
+            style={{
+              background: "conic-gradient(from var(--border-angle, 0deg), #FFD700, #ec4899, #667eea, #a855f7, #FFD700)",
+              animation: "borderSpin 4s linear infinite",
+            }}
+          />
+          <div
+            className="relative rounded-[calc(1.5rem-3px)] overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, #667eea 0%, #a855f7 40%, #ec4899 100%)",
+            }}
+          >
           <div
             className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full pointer-events-none"
             style={{
@@ -118,7 +142,8 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="font-display text-xl font-bold text-white text-center mb-2"
+              className="font-display font-bold text-white text-center mb-2"
+              style={{ fontSize: "1.44rem" }}
             >
               მოიწვიე მეგობრები!
             </motion.h2>
@@ -127,7 +152,8 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="text-white/80 text-center text-[15px] leading-relaxed mb-4"
+              className="text-white/80 text-center leading-relaxed mb-4"
+              style={{ fontSize: "1.03rem" }}
             >
               მოიწვიე მეგობრები ამ ლინკით და მიიღეთ{" "}
               <span className="font-semibold text-yellow-300">10 დღიანი PRO</span>,
@@ -193,6 +219,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
             >
               მოგვიანებით
             </motion.button>
+          </div>
           </div>
         </motion.div>
       </DialogContent>
