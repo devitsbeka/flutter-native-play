@@ -1,99 +1,45 @@
 
 
-## Fix PostHog User Identification -- New Approach
+## Fix: Registered Users Appearing as "Guest" in PostHog
+
+### Problem
+PostHog shows active sessions as "Guest" while the admin dashboard correctly shows them as registered users (Kato, makom1976, Player5057, etc.). The same people appear in both systems but PostHog labels them wrong.
 
 ### Root Cause
+When Supabase refreshes authentication tokens (which happens periodically), the auth state briefly flickers to "no user" before resolving back to the logged-in user. During this flicker:
 
-The problem is a **race condition**:
+1. `posthog.reset()` fires, destroying the identified person profile
+2. A new anonymous "Guest" person is created
+3. When auth resolves moments later, `identify` runs but the damage is done -- the session is now split
 
-1. `posthog.init()` runs at module level (immediately)
-2. `usePageviewTracker` fires a `$pageview` event on first render
-3. At this point, auth is still `loading: true`, so `useIdentifyUser` skips everything
-4. PostHog creates the person with an **anonymous UUID**
-5. Later, when auth resolves, `posthog.identify()` fires -- but PostHog's live view may not immediately reflect the merged identity, and the person was already created anonymously
-
-`posthog.setPersonProperties()` and late `identify()` calls don't reliably update the display name in PostHog's live session view because the person was already materialized as anonymous.
-
-### Solution: Bootstrap Identity at Init Time
-
-Use PostHog's `bootstrap` option during `posthog.init()` to pre-set the user's identity **before any events fire**. We can read the Supabase session from localStorage synchronously to get the user ID, and read `mytrivia_last_user` for the display name.
-
-### Changes
+### Solution
 
 **File: `src/providers/PostHogProvider.tsx`**
 
-**Step 1 -- Read cached identity before `posthog.init()`:**
-```typescript
-// Read Supabase session from localStorage to bootstrap identity
-function getBootstrapIdentity() {
-  try {
-    // Supabase stores session in localStorage
-    const storageKey = 'sb-sqwpzezkhpqkdyltvsim-auth-token';
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    const userId = parsed?.user?.id;
-    if (!userId) return null;
+1. **Remove `posthog.reset()` from the auth flicker path** -- Instead of immediately resetting when `user` becomes null, add a delay (e.g., 2-3 seconds) to allow token refreshes to complete. Only reset if the user is still null after the delay.
 
-    // Get display name from cached user data
-    const lastUser = localStorage.getItem('mytrivia_last_user');
-    const lastUserData = lastUser ? JSON.parse(lastUser) : null;
-    const meta = parsed?.user?.user_metadata;
-    const displayName = lastUserData?.nickname 
-      || meta?.nickname || meta?.full_name || meta?.name;
+2. **Stop eagerly labeling unknown state as "Guest"** -- Remove the `setPersonProperties({ name: "Guest" })` call from the initial/unknown state branch. Only label as "Guest" after confirming a true sign-out (after the delay).
 
-    return { userId, displayName };
-  } catch {
-    return null;
-  }
-}
+3. **Guard against re-identification loops** -- Keep `identifiedRef` but skip the reset path if the user was previously identified within the last few seconds.
+
+### Technical Changes
+
 ```
-
-**Step 2 -- Pass bootstrap to `posthog.init()`:**
-```typescript
-const bootstrapIdentity = getBootstrapIdentity();
-
-posthog.init(POSTHOG_KEY, {
-  api_host: POSTHOG_HOST,
-  capture_pageview: false,
-  capture_pageleave: true,
-  autocapture: true,
-  persistence: "localStorage+cookie",
-  person_profiles: "always",
-  bootstrap: bootstrapIdentity ? {
-    distinctID: bootstrapIdentity.userId,
-    isIdentifiedID: true,
-  } : undefined,
-});
-
-// If bootstrapped, immediately set person properties
-if (bootstrapIdentity) {
-  posthog.setPersonProperties({
-    $name: bootstrapIdentity.displayName,
-    user_type: "registered",
-  });
-}
+useIdentifyUser() effect:
+- When user becomes null AND was previously identified:
+  - Start a 3-second timer instead of calling posthog.reset() immediately
+  - If user comes back (token refresh), cancel the timer -- no reset
+  - If user stays null after 3s, THEN call posthog.reset() and label as Guest
+  
+- When user is null and was never identified (true guest):
+  - Only set user_type super property via posthog.register()
+  - Do NOT call setPersonProperties with "Guest" name (this overwrites identified users during race conditions)
+  - The bootstrap identity from localStorage will handle returning users
 ```
-
-This ensures that the **very first event** PostHog captures (including `$pageview`) already has the correct user ID and display name -- no race condition possible.
-
-**Step 3 -- Keep existing `useIdentifyUser` hook as-is:**
-The hook still handles the full identify with all profile properties when auth resolves, and handles the guest/logout cases. The bootstrap just ensures no anonymous person is created in the gap.
 
 ### What This Fixes
+- Token refresh no longer destroys the identified person
+- Registered users will retain their real names (Kato, Eka K., etc.) in PostHog
+- True guests (never logged in) will still be tracked correctly
+- The bootstrap identity (line 36-59) will continue working as the first line of defense for returning users
 
-| Scenario | Before | After |
-|----------|--------|-------|
-| Returning registered user | First events go out as anonymous UUID, then merge | First event already uses real user ID + name |
-| Guest user | Shows as anonymous UUID | Shows as anonymous UUID (expected -- they have no identity) |
-| OAuth user | May show UUID until profile loads | Shows name immediately from bootstrap |
-
-### Why Previous Fix Didn't Work
-
-`posthog.setPersonProperties()` and late `identify()` calls set properties on the person, but PostHog's live view and persons list display the identity that was set when the person was **first created**. By bootstrapping at init time, the person is created with the correct identity from the start.
-
-### Files Changed
-
-| File | Change |
-|------|--------|
-| `src/providers/PostHogProvider.tsx` | Add `getBootstrapIdentity()` function, pass `bootstrap` option to `posthog.init()`, set initial person properties |
