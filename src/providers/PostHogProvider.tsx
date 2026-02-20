@@ -7,6 +7,32 @@ import { fbTrackPageView } from "@/lib/fbpixel";
 const POSTHOG_KEY = "phc_mJKmSyJCq92bAxkvo7NZmdP7UZP79zqmJ7AX9E5vFYA";
 const POSTHOG_HOST = "https://us.i.posthog.com";
 
+// Read Supabase session from localStorage to bootstrap PostHog identity
+// This runs synchronously BEFORE posthog.init() so the very first event
+// already carries the correct user ID — no anonymous-person race condition.
+function getBootstrapIdentity(): { userId: string; displayName: string | undefined } | null {
+  try {
+    const storageKey = 'sb-sqwpzezkhpqkdyltvsim-auth-token';
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const userId = parsed?.user?.id;
+    if (!userId) return null;
+
+    const lastUser = localStorage.getItem('mytrivia_last_user');
+    const lastUserData = lastUser ? JSON.parse(lastUser) : null;
+    const meta = parsed?.user?.user_metadata;
+    const displayName = lastUserData?.nickname
+      || meta?.nickname || meta?.full_name || meta?.name;
+
+    return { userId, displayName };
+  } catch {
+    return null;
+  }
+}
+
+const bootstrapIdentity = getBootstrapIdentity();
+
 // Initialize synchronously at module level so it's ready before any hooks fire
 posthog.init(POSTHOG_KEY, {
   api_host: POSTHOG_HOST,
@@ -15,7 +41,18 @@ posthog.init(POSTHOG_KEY, {
   autocapture: true,
   persistence: "localStorage+cookie",
   person_profiles: "always",
+  bootstrap: bootstrapIdentity
+    ? { distinctID: bootstrapIdentity.userId, isIdentifiedID: true }
+    : undefined,
 });
+
+// If bootstrapped, immediately set person properties so the first event has a name
+if (bootstrapIdentity) {
+  posthog.setPersonProperties({
+    $name: bootstrapIdentity.displayName,
+    user_type: "registered",
+  });
+}
 
 /** Tracks SPA route changes as $pageview events */
 function usePageviewTracker() {
