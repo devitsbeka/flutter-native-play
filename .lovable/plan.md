@@ -1,53 +1,46 @@
 
 
-## Fix: Race Condition Causing Registered Users to Appear as Guests
+## Fix: PostHog Still Shows Registered Users as Guests
 
-### Problem
+### Root Cause
 
-On every app load, the `useIdentifyUser` hook runs immediately. At that point, `user` and `profile` are still `null` (auth is loading), so it hits the guest branch and calls:
+There is a gap in the identification logic. After signup, the auth state resolves in two steps:
+
+1. `user` becomes available (auth session established)
+2. `profile` loads shortly after (created by a database trigger, then fetched)
+
+The current code requires **both** `user` AND `profile` to be non-null before calling `posthog.identify()`. If `profile` is null (due to trigger delay or fetch failure), **none of the branches execute** -- the user is never identified and stays as "guest" in PostHog.
+
 ```
-posthog.setPersonProperties({ user_type: "guest" })
+Step 1: loading=false, user=set, profile=null --> NO BRANCH MATCHES (bug!)
+Step 2: profile loads --> identify fires (but too late, events already sent as guest)
 ```
 
-A moment later, auth resolves and `posthog.identify()` fires with `user_type: "registered"`. But PostHog has already stamped the anonymous person as "guest". During the identify/merge, properties can conflict or the "guest" value persists depending on timing.
+Additionally, `trackSignupCompleted()` fires immediately after signup (in Auth.tsx, Index.tsx, etc.), which sends a `signup_completed` event BEFORE `posthog.identify()` runs. This event gets attributed to the anonymous/guest person.
 
-### Solution
-
-**Skip setting any person properties while auth is still loading.** Only set `user_type` once we know the actual auth state.
-
-### Technical Changes
+### Changes
 
 **File: `src/providers/PostHogProvider.tsx`**
 
-1. Import `loading` from `useAuth()` alongside `user` and `profile`
-2. Add an early return in `useIdentifyUser` when `loading` is `true` -- do nothing until auth state is resolved
-3. This ensures `user_type: "guest"` is only set for users who are genuinely not logged in, not for users whose auth state hasn't loaded yet
+1. Add a new branch: when `user` exists but `profile` is still null, call `posthog.identify(user.id)` immediately with just the user ID and email -- don't wait for the full profile. This ensures the anonymous person gets merged with the identified person right away.
 
+2. When `profile` later arrives (the effect re-runs because `profile` is in the dependency array), the existing `user && profile` branch fires and updates all person properties (nickname, coins, etc.).
+
+3. Use a ref to track whether we've done the initial identify (without profile) so we don't skip the full identify when profile loads.
+
+Updated logic:
 ```
-function useIdentifyUser() {
-  const { user, profile, loading } = useAuth();
-  const identifiedRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    // Don't set any properties until auth state is resolved
-    if (loading) return;
-
-    if (user && profile && identifiedRef.current !== user.id) {
-      posthog.identify(user.id, { ... user_type: "registered" });
-      posthog.register({ user_type: "registered" });
-      identifiedRef.current = user.id;
-    } else if (!user && identifiedRef.current) {
-      posthog.reset();
-      posthog.register({ user_type: "guest" });
-      posthog.setPersonProperties({ user_type: "guest" });
-      identifiedRef.current = null;
-    } else if (!user && !identifiedRef.current) {
-      posthog.register({ user_type: "guest" });
-      posthog.setPersonProperties({ user_type: "guest" });
-    }
-  }, [user, profile, loading]);
-}
+if (user && profile && not yet fully identified)
+   --> identify with all properties, mark as fully identified
+else if (user && !profile && not yet initially identified)
+   --> identify with just user.id + email + user_type: "registered"
+else if (!user && was identified)
+   --> reset, set guest
+else if (!user && never identified)
+   --> set guest
 ```
 
-This single change prevents the false "guest" stamp from being applied before auth has a chance to resolve.
+### Technical Detail
 
+- The key insight is that `posthog.identify()` can be called multiple times with the same ID -- subsequent calls just update person properties. So calling it first with minimal data, then again with full profile data, works correctly.
+- This also ensures that `trackSignupCompleted()` events (which fire right after signup) get correctly attributed to the identified person rather than an anonymous guest.
