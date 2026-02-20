@@ -1,42 +1,95 @@
 
-## Show Floating Gift Button After Invite Modal Dismissed
 
-When the user clicks "მოგვიანებით" (Later) on the invite modal, show a floating circular gift button on the main page (like `FloatingGiftButton`) so they can easily reopen the invite modal.
+## Investigation: PostHog User Identification
 
-### What Changes
+### Current State -- What's Already Working
 
-**1. Track dismissed state and show floating button (`src/pages/Index.tsx`)**
-- Add a state `inviteDismissedThisSession` that becomes `true` when the user dismisses the invite modal
-- Show `FloatingGiftButton` (with `AnimatePresence`) when:
-  - `inviteDismissedThisSession === true`
-  - `freeGamesExhausted === true`
-  - `!isVip`
-  - invite modal is NOT currently open
-- Clicking the floating button reopens the `InviteFriendsModal`
+Your code **IS** calling `posthog.identify()` correctly for registered users. Here's the flow:
 
-**2. Update the dismiss handler (`src/pages/Index.tsx`, around line 718-721)**
-- In the `onDismiss` callback, set `inviteDismissedThisSession = true`
-- Keep the existing `dismissInvite()` and `setShowGuestMaxPlaysModal(true)` calls
+1. **Registered user with loaded profile** (line 44-60): Calls `posthog.identify(user.id, { $name: profile.nickname, $email: ..., user_type: "registered" })` -- this works perfectly.
+2. **Registered user before profile loads** (line 61-70): Calls early identify with `user.user_metadata.nickname` -- but this may be `undefined` for Google OAuth users (their metadata uses `name`/`full_name`, not `nickname`).
+3. **Guest users** (line 71-78): Only sets `user_type: "guest"` as a super property. They remain **completely anonymous** in PostHog with random IDs.
 
-**3. Render the FloatingGiftButton (`src/pages/Index.tsx`)**
-- Import `FloatingGiftButton` from `@/components/shared/FloatingGiftButton`
-- Render it conditionally with `AnimatePresence` near the other modals:
+### The Problem
+
+**Guests are never identified.** They show as random PostHog anonymous IDs with no name, email, or any distinguishing info. You cannot tell who they are in PostHog because they literally have no identity in your system.
+
+### Fix: Two Issues to Address
+
+**Issue 1: Early identify missing name for Google/Apple users**
+
+The early identify (before profile loads) reads `user.user_metadata.nickname`, but Google OAuth stores the name as `full_name` or `name`. Fix: fall back to those fields.
+
+**Issue 2: Guests have zero identification**
+
+Since guests have no account, we cannot `identify()` them. But we CAN set **person properties** so they show up with useful labels in PostHog instead of random UUIDs.
+
+### Solution
+
+**File: `src/providers/PostHogProvider.tsx`**
+
+**Change 1 -- Fix early identify name resolution (line 63):**
+```typescript
+// Before:
+const metaNickname = (user.user_metadata as any)?.nickname;
+
+// After:
+const meta = user.user_metadata as any;
+const metaNickname = meta?.nickname || meta?.full_name || meta?.name;
 ```
-{inviteDismissedThisSession && freeGamesExhausted && !isVip && !inviteModalVisible && (
-  <FloatingGiftButton onClick={() => setInviteModalVisible(true)} />
-)}
+This ensures Google/Apple OAuth users get their name set immediately, even before the profile DB query completes.
+
+**Change 2 -- Give guests a descriptive label (line 76-78):**
+```typescript
+// Before:
+} else if (!user && !identifiedRef.current) {
+  posthog.register({ user_type: "guest" });
+}
+
+// After:
+} else if (!user && !identifiedRef.current) {
+  posthog.register({ user_type: "guest" });
+  // Set person properties so guests show a readable label in PostHog
+  // instead of a random UUID
+  posthog.setPersonProperties({
+    $name: "Guest",
+    user_type: "guest",
+  });
+}
 ```
 
-### Files changed
+Also update the reset branch (line 71-75) similarly:
+```typescript
+} else if (!user && (identifiedRef.current || initialIdentifyDoneRef.current)) {
+  posthog.reset();
+  posthog.register({ user_type: "guest" });
+  posthog.setPersonProperties({
+    $name: "Guest",
+    user_type: "guest",
+  });
+  identifiedRef.current = null;
+  initialIdentifyDoneRef.current = false;
+}
+```
+
+### What This Achieves
+
+| User Type | Before | After |
+|-----------|--------|-------|
+| Registered (username signup) | Shows as nickname | No change (already works) |
+| Registered (Google OAuth) | May show as UUID until profile loads | Shows name immediately from OAuth metadata |
+| Guest | Random UUID, no label | Shows as "Guest" with `user_type: "guest"` property |
+
+### How to Filter in PostHog
+
+After this change, in PostHog you can:
+- **See all registered users**: Filter by `user_type = registered` -- they'll show nicknames/emails
+- **See all guests**: Filter by `user_type = guest` -- they'll show as "Guest"
+- **Distinguish guest vs registered**: The `user_type` property is set on every event via `posthog.register()`
+
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/pages/Index.tsx` | Add `inviteDismissedThisSession` state, import `FloatingGiftButton`, render it conditionally, update dismiss handler |
+| `src/providers/PostHogProvider.tsx` | Fix OAuth name fallback, add guest person properties |
 
-The existing `FloatingGiftButton` component already has the perfect design with:
-- Purple/green gradient circle
-- Bouncing gift icon animation
-- Pulsing glow ring
-- Red "1" notification badge
-
-No changes needed to the `FloatingGiftButton` component itself -- it matches what was previously shown.
