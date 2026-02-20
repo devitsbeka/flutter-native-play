@@ -122,6 +122,22 @@ export function VipProvider({ children }: { children: ReactNode }) {
     };
 
     fetchVipStatus();
+
+    const channel = supabase
+      .channel("vip-status-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "vip_subscriptions",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => { fetchVipStatus(); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   const activateVip = async (duration: VipDuration): Promise<boolean> => {
