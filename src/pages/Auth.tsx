@@ -125,24 +125,14 @@ export default function Auth() {
                 .single();
 
               if (invite) {
-                // Update the invite status
-                await supabase
-                  .from('friend_invites')
-                  .update({
-                    status: 'accepted',
-                    invited_user_id: data.user.id,
-                    accepted_at: new Date().toISOString(),
-                  })
-                  .eq('id', invite.id);
-
-                // Update the new user's profile with referral info
-                await supabase
-                  .from('profiles')
-                  .update({ referred_by_invite_id: invite.id })
-                  .eq('user_id', data.user.id);
+                // Process referral reward via secure DB function
+                await supabase.rpc('process_referral_reward', {
+                  p_invite_id: invite.id,
+                  p_new_user_id: data.user.id,
+                });
 
                 notify.success("მოგესალმებით!", { 
-                  description: "მიიღე PRO სტატუსი მეგობრის მოწვევით!", 
+                  description: "მიიღე 10 დღიანი PRO მეგობრის მოწვევით!", 
                   icon: toastIcon(ICON_URLS.partyPopper) 
                 });
               }

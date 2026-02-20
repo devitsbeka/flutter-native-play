@@ -68,6 +68,8 @@ import { useVipStatus } from "@/hooks/useVipStatus";
 import { ProGiftModal, useProGiftEligibility } from "@/components/home/ProGiftBanner";
 import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
+import { InviteFriendsModal, useInviteModalVisibility } from "@/components/home/InviteFriendsModal";
+import { FriendJoinedModal } from "@/components/home/FriendJoinedModal";
 import { useNotifications } from "@/hooks/useNotifications";
 import { 
   getGuestPlaysRemaining, 
@@ -210,6 +212,40 @@ export default function Index() {
   const [proGiftModalOpen, setProGiftModalOpen] = useState(false);
   const [proGiftDismissed, setProGiftDismissed] = useState(false);
   const [proGiftClaimed, setProGiftClaimed] = useState(false);
+
+  // Invite Friends Modal state
+  const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading);
+  const [friendJoinedModalOpen, setFriendJoinedModalOpen] = useState(false);
+
+  // Check for newly accepted referrals
+  const lastAcceptedCheckRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    const checkAccepted = async () => {
+      const { data } = await supabase
+        .from('friend_invites')
+        .select('id, accepted_at')
+        .eq('inviter_id', user.id)
+        .eq('status', 'accepted')
+        .order('accepted_at', { ascending: false })
+        .limit(1);
+      
+      if (data && data.length > 0) {
+        const latestAccepted = data[0].accepted_at;
+        const lastSeen = sessionStorage.getItem(`friend_joined_seen_${user.id}`);
+        if (latestAccepted && latestAccepted !== lastSeen) {
+          sessionStorage.setItem(`friend_joined_seen_${user.id}`, latestAccepted);
+          if (lastSeen !== null) {
+            // Only show if we had a previous check (not first load)
+            setFriendJoinedModalOpen(true);
+          }
+        }
+      }
+    };
+    checkAccepted();
+    const interval = setInterval(checkAccepted, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Auto-open pro gift modal with delay (only after page data is loaded)
   useEffect(() => {
@@ -659,6 +695,19 @@ export default function Index() {
           onOpenChange={setProGiftModalOpen}
           onClaimed={() => setProGiftClaimed(true)}
           onDismiss={() => setProGiftDismissed(true)}
+        />
+
+        {/* Invite Friends Modal */}
+        <InviteFriendsModal
+          open={inviteModalVisible}
+          onOpenChange={setInviteModalVisible}
+          onDismiss={dismissInvite}
+        />
+
+        {/* Friend Joined Modal */}
+        <FriendJoinedModal
+          open={friendJoinedModalOpen}
+          onOpenChange={setFriendJoinedModalOpen}
         />
 
         {/* Floating Gift Button - shown when modal dismissed without claiming */}

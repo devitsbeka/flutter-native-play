@@ -3795,6 +3795,10 @@ export type Database = {
         Args: { p_player_identifier: string; p_session_id: string }
         Returns: boolean
       }
+      process_referral_reward: {
+        Args: { p_invite_id: string; p_new_user_id: string }
+        Returns: undefined
+      }
       search_questions: {
         Args: {
           p_category_id?: string
