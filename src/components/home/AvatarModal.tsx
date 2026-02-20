@@ -58,6 +58,8 @@ interface AvatarModalProps {
   onClose: () => void;
 }
 
+const MAX_AVATAR_GENERATIONS = 5;
+
 interface AvatarGeneration {
   id: string;
   avatar_url: string;
@@ -273,8 +275,16 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     }
   };
 
+  const isLimitReached = generations.length >= MAX_AVATAR_GENERATIONS;
+  const remainingGenerations = MAX_AVATAR_GENERATIONS - generations.length;
+
   const generateAvatar = async () => {
     if (!uploadedImage || !user) return;
+
+    if (isLimitReached) {
+      toast.error("მაქსიმუმ 5 ავატარის გენერაცია შეგიძლიათ");
+      return;
+    }
 
     setIsLoading(true);
     setStep("generating");
@@ -557,6 +567,11 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
 
       // If no AI-generated record exists for this avatar, generate one first
       if (!existingGen) {
+        if (isLimitReached) {
+          toast.error("მაქსიმუმ 5 ავატარის გენერაცია შეგიძლიათ");
+          setIsAnimating(false);
+          return;
+        }
         toast.info("AI ავატარი გენერირდება...", { duration: 10000 });
 
         // Call generate-avatar with the current raw photo
@@ -757,45 +772,54 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
           {/* Generate New Section - MOVED UP */}
           <div className="pt-2">
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.createNew")}</p>
-            <div className="flex gap-3">
-              <motion.button
-                onClick={startCamera}
-                className="flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <img 
-                  src={iconSelfie} 
-                  alt="Selfie" 
-                  className="w-10 h-10 object-contain"
-                />
-                <span className="text-xs text-muted-foreground">{t("avatar.takeSelfie")}</span>
-              </motion.button>
-
-              <motion.button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isProcessingFile}
-                className={`flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all ${isProcessingFile ? 'opacity-50' : ''}`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {isProcessingFile ? (
-                  <>
-                    <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                    <span className="text-xs text-muted-foreground">{t("common.processing") || "Processing..."}</span>
-                  </>
-                ) : (
-                  <>
-                    <img 
-                      src={iconPhotoUpload} 
-                      alt="Upload" 
-                      className="w-10 h-10 object-contain"
-                    />
-                    <span className="text-xs text-muted-foreground">{t("avatar.uploadPhoto")}</span>
-                  </>
-                )}
-              </motion.button>
+          {isLimitReached ? (
+            <div className="flex items-center justify-center py-3 px-4 rounded-xl bg-muted/50 border border-border">
+              <p className="text-xs text-muted-foreground text-center">მაქსიმუმ 5 ავატარის გენერაცია შეგიძლიათ</p>
             </div>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground mb-1">დარჩა {remainingGenerations}/{MAX_AVATAR_GENERATIONS} გენერაცია</p>
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={startCamera}
+                  className="flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <img 
+                    src={iconSelfie} 
+                    alt="Selfie" 
+                    className="w-10 h-10 object-contain"
+                  />
+                  <span className="text-xs text-muted-foreground">{t("avatar.takeSelfie")}</span>
+                </motion.button>
+
+                <motion.button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isProcessingFile}
+                  className={`flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all ${isProcessingFile ? 'opacity-50' : ''}`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {isProcessingFile ? (
+                    <>
+                      <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                      <span className="text-xs text-muted-foreground">{t("common.processing") || "Processing..."}</span>
+                    </>
+                  ) : (
+                    <>
+                      <img 
+                        src={iconPhotoUpload} 
+                        alt="Upload" 
+                        className="w-10 h-10 object-contain"
+                      />
+                      <span className="text-xs text-muted-foreground">{t("avatar.uploadPhoto")}</span>
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </>
+          )}
           </div>
 
           <input

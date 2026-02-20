@@ -79,6 +79,17 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
   ) => {
     if (!user) throw new Error("User not authenticated");
 
+    // Check avatar generation limit
+    const { count } = await supabase
+      .from("avatar_generations")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
+    
+    if ((count || 0) >= 5) {
+      toast.error("მაქსიმუმ 5 ავატარის გენერაცია შეგიძლიათ");
+      throw new Error("Avatar generation limit reached");
+    }
+
     const jobId = `avatar_${Date.now()}`;
     const job: GenerationJob = {
       id: jobId,
