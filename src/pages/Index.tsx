@@ -47,6 +47,7 @@ import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
 import guestMascotVideo from "@/assets/guest-welcome-avatar.mp4";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
+import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
 import { GuestWelcomePanel } from "@/components/home/GuestWelcomePanel";
 import { DesktopGuestSplitLayout } from "@/components/home/DesktopGuestSplitLayout";
 import { GuestSignupPromptModal } from "@/components/home/GuestSignupPromptModal";
@@ -208,6 +209,7 @@ export default function Index() {
 
   // Invite Friends Modal state
   const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading, freeGamesExhausted);
+  const [inviteDismissedThisSession, setInviteDismissedThisSession] = useState(false);
   const [friendJoinedModalOpen, setFriendJoinedModalOpen] = useState(false);
   const [friendModalVariant, setFriendModalVariant] = useState<"inviter" | "invited">("inviter");
   const [friendModalInviterName, setFriendModalInviterName] = useState<string | undefined>();
@@ -711,12 +713,20 @@ export default function Index() {
           </div>
         </header>
 
+        {/* Floating Gift Button (after invite modal dismissed) */}
+        <AnimatePresence>
+          {inviteDismissedThisSession && freeGamesExhausted && !isVip && !inviteModalVisible && (
+            <FloatingGiftButton onClick={() => setInviteModalVisible(true)} />
+          )}
+        </AnimatePresence>
+
         {/* Invite Friends Modal */}
         <InviteFriendsModal
           open={inviteModalVisible}
           onOpenChange={setInviteModalVisible}
           onDismiss={() => {
             dismissInvite();
+            setInviteDismissedThisSession(true);
             setShowGuestMaxPlaysModal(true);
           }}
         />
