@@ -1,74 +1,53 @@
 
 
-## Make Referral Links Reusable (Multi-Use)
+## Fix: PostHog Not Showing User Emails/Names
 
-### Problem
-Currently, each referral link creates one `friend_invites` row. When the first friend uses it, `process_referral_reward` sets `status = 'accepted'`, so the next person who clicks the link finds no pending invite and gets nothing.
+### Root Cause
 
-### Solution
-Instead of tying the link to a single `friend_invites` row, treat the referral code as a **permanent invite code** for the inviter. Each new signup via that code creates a **new** `friend_invites` row on the fly.
+The `useIdentifyUser` hook in `PostHogProvider.tsx` has an "early identify" path (line 58-65) that fires before the profile is loaded. This path only sets `$email`, which for username-only signups is a meaningless `@mytrivia.local` pseudo-email. The `$name` property is only set in the "full identify" path, which requires `profile` to be loaded.
 
----
+If the profile fetch is slow, fails, or the user navigates before it completes, PostHog never receives `$name` and falls back to showing the UUID.
 
-### 1. Add a permanent `referral_code` column to `profiles`
+Meanwhile, `user.user_metadata.nickname` (set during signup) is available immediately from the auth session but is never used.
 
-**Migration:**
-- Add `referral_code TEXT UNIQUE` to `profiles`
-- This stores a permanent, reusable code per user
+### Fix
 
-### 2. Change `createLinkInvite` to use the profile code
+**File: `src/providers/PostHogProvider.tsx`**
 
-**File: `src/hooks/useFriendInvites.ts`**
+Update the early identify path (lines 58-65) to also set `$name` using `user.user_metadata?.nickname`:
 
-Instead of inserting a `friend_invites` row when generating a link:
-- Check if the user already has a `referral_code` in `profiles`
-- If not, generate one and save it to `profiles.referral_code`
-- Return that code (no `friend_invites` row created yet)
-
-### 3. Update Auth.tsx signup flow
-
-**File: `src/pages/Auth.tsx`** (lines 117-157)
-
-When a new user signs up with `?ref=CODE`:
-- Look up `profiles` where `referral_code = CODE` to find the **inviter** (instead of querying `friend_invites`)
-- Create a **new** `friend_invites` row with `status = 'accepted'` for record-keeping
-- Call `process_referral_reward` with the new invite row ID
-- This way each signup creates its own invite record, and the code stays valid forever
-
-### 4. Update `process_referral_reward` (minor)
-
-**No change needed** -- the RPC already handles granting PRO to both users. It will work with each new invite row.
-
-### 5. Update `InviteFriendsModal` and `ProInviteFriendsModal`
-
-**Files: `src/components/home/InviteFriendsModal.tsx`, `src/components/profile/ProInviteFriendsModal.tsx`**
-
-Update `generateLink` to use the new profile-based code instead of calling `createLinkInvite`.
-
----
-
-### Technical Details
-
-**Migration SQL:**
-```text
-ALTER TABLE profiles ADD COLUMN referral_code TEXT UNIQUE;
+```
+} else if (user && !profile && !initialIdentifyDoneRef.current) {
+  const metaNickname = (user.user_metadata as any)?.nickname;
+  posthog.identify(user.id, {
+    $email: user.email ?? undefined,
+    $name: metaNickname ?? undefined,
+    user_type: "registered",
+  });
+  posthog.register({ user_type: "registered" });
+  initialIdentifyDoneRef.current = true;
+}
 ```
 
-**Auth.tsx signup referral flow (pseudocode):**
-```text
-1. Look up inviter: SELECT user_id, nickname FROM profiles WHERE referral_code = CODE
-2. If found:
-   a. Insert new friend_invites row (inviter_id, invited_user_id, status='pending')
-   b. Call process_referral_reward(invite_id, new_user_id)
-   c. Store inviter nickname in sessionStorage for the welcome modal
+Also filter out pseudo-emails so PostHog doesn't store `@mytrivia.local` addresses as `$email`. In both identify paths, only set `$email` if it's a real email:
+
+```
+const isRealEmail = user.email && !user.email.endsWith('@mytrivia.local');
+// ...
+$email: isRealEmail ? user.email : undefined,
 ```
 
-**useFriendInvites.ts createLinkInvite change:**
-```text
-1. Check profiles.referral_code for current user
-2. If null, generate code, UPDATE profiles SET referral_code = code
-3. Return the code (no friend_invites row)
-```
+This ensures:
+- `$name` is set immediately from auth metadata, even before profile loads
+- Fake pseudo-emails are never sent to PostHog
+- The full identify path still enriches with profile data when available
 
-This makes the referral link permanent and reusable -- every person who clicks it gets processed independently.
+### Summary
+
+| Change | Effect |
+|--------|--------|
+| Set `$name` from `user.user_metadata.nickname` in early identify | Users show by name immediately, no profile wait needed |
+| Filter out `@mytrivia.local` pseudo-emails | PostHog stops receiving meaningless email values |
+
+Single file change: `src/providers/PostHogProvider.tsx`
 
