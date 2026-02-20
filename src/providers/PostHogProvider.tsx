@@ -30,10 +30,13 @@ function usePageviewTracker() {
 
 /** Identifies / resets PostHog user when auth state changes */
 function useIdentifyUser() {
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
   const identifiedRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // Don't set any properties until auth state is resolved
+    if (loading) return;
+
     if (user && profile && identifiedRef.current !== user.id) {
       posthog.identify(user.id, {
         $name: profile.nickname,
@@ -58,7 +61,7 @@ function useIdentifyUser() {
       posthog.register({ user_type: "guest" });
       posthog.setPersonProperties({ user_type: "guest" });
     }
-  }, [user, profile]);
+  }, [user, profile, loading]);
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
