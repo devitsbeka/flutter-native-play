@@ -1,50 +1,69 @@
 
 
-## Fix: Instant PRO Status After Referral Acceptance
+## Show Congratulations Modal for Both Inviter and Invited User
 
-### Root Cause
+### Overview
+Both the **inviter** and the **invited friend** should see a celebratory modal confirming they received 10 days of PRO. Each side gets a tailored message.
 
-`VipContext.tsx` fetches VIP status only once when `user` changes (line 124). There is **no realtime subscription** on the `vip_subscriptions` table. So when `process_referral_reward` RPC inserts/updates the subscription row in the database, the friend's app still shows the old cached state (5/5 free games) until a manual refresh or re-mount.
+---
 
-Additionally, on `Auth.tsx` line 129-132, the `process_referral_reward` RPC runs **after** the signup completes and the navigation happens. The VipContext effect fires on `user` change, but there's a race condition -- it may fetch before the RPC finishes writing the VIP row.
+### 1. Update `FriendJoinedModal` to support two variants
 
-### Fix
+**File: `src/components/home/FriendJoinedModal.tsx`**
 
-**File: `src/contexts/VipContext.tsx`**
+Add a `variant` prop: `"inviter"` or `"invited"`, plus an optional `inviterName` prop.
 
-Add a Supabase realtime subscription on `vip_subscriptions` so VIP status updates instantly when the DB row is inserted or updated:
+- **Inviter variant** (existing behavior, refined text):
+  - Title: "გილოცავთ!"
+  - Body: "შენი მეგობარი შემოუერთდა MyTrivia LIVE-ს შენი ლინკით! მიიღე **10 დღიანი PRO**."
 
-1. Inside the existing `useEffect` (line 87-125), after `fetchVipStatus()`, subscribe to realtime changes on `vip_subscriptions` filtered by `user_id`
-2. On any `INSERT` or `UPDATE` event, re-run `fetchVipStatus()` to refresh the local state
-3. Clean up the channel on unmount
+- **Invited variant** (new):
+  - Title: "გილოცავთ!"
+  - Body: "მოგიწვია **[inviterName]**-მ და მიიღე **10 დღიანი PRO** საჩუქრად!"
+  - Falls back to generic text if inviter name is unknown.
 
-This is the same pattern already used in `useCategoryPlayLimit.ts` (which subscribes to `user_level_progress` changes).
+Both variants keep confetti, crown icon, and PRO badge.
 
-### Technical Details
+---
 
-```text
-// Add to the existing useEffect in VipContext.tsx after fetchVipStatus():
+### 2. Show modal to the invited user after signup
 
-const channel = supabase
-  .channel("vip-status-realtime")
-  .on(
-    "postgres_changes",
-    {
-      event: "*",
-      schema: "public",
-      table: "vip_subscriptions",
-      filter: `user_id=eq.${user.id}`,
-    },
-    () => { fetchVipStatus(); }
-  )
-  .subscribe();
+**File: `src/pages/Auth.tsx`**
 
-return () => { supabase.removeChannel(channel); };
+After `process_referral_reward` succeeds (line 129-132), store a flag in `sessionStorage`:
+```
+sessionStorage.setItem("referral_welcome", inviterNickname || "true")
 ```
 
-This single change ensures:
-- When `process_referral_reward` inserts a VIP row for the friend, the realtime event fires and the friend's VipContext immediately updates `isVip = true`
-- The `usePlayLimit` hook (which depends on `useVipStatus`) will instantly reflect `canPlay = true`
-- No race condition -- even if the initial fetch misses the row, the realtime event catches it within seconds
+We'll fetch the inviter's nickname from the invite row's `inviter_id` -> `profiles.nickname` before storing.
 
-No new files or dependencies needed.
+---
+
+### 3. Detect the flag on home page and show the invited variant
+
+**File: `src/pages/Index.tsx`**
+
+On mount, check `sessionStorage.getItem("referral_welcome")`. If present:
+- Set state to show `FriendJoinedModal` with `variant="invited"` and `inviterName` from the stored value
+- Remove the flag so it only shows once
+
+---
+
+### 4. Improve inviter detection with realtime
+
+**File: `src/pages/Index.tsx`**
+
+Replace the 30-second polling interval (lines 215-241) with a Supabase realtime subscription on `friend_invites` filtered by `inviter_id=eq.${user.id}`. When an `UPDATE` event arrives (status changed to "accepted"), immediately show the `FriendJoinedModal` with `variant="inviter"`.
+
+This makes the inviter notification instant instead of delayed up to 30 seconds.
+
+---
+
+### Summary of changes
+
+| File | Change |
+|------|--------|
+| `FriendJoinedModal.tsx` | Add `variant` and `inviterName` props, render different text per variant |
+| `Auth.tsx` | After referral processing, fetch inviter nickname and store in sessionStorage |
+| `Index.tsx` | Check sessionStorage for invited user modal; replace polling with realtime for inviter modal |
+
