@@ -11,17 +11,17 @@ import groupOfPeopleIcon from "@/assets/icons/group-of-people.png";
 
 const SESSION_KEY = "invite_modal_dismissed";
 
-export function useInviteModalVisibility(isVip: boolean, vipLoading: boolean, freeGamesExhausted: boolean) {
+export function useInviteModalVisibility(isVip: boolean, vipLoading: boolean) {
   const { user } = useAuth();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!user || vipLoading || isVip || !freeGamesExhausted) return;
+    if (!user || vipLoading || isVip) return;
     try {
       if (sessionStorage.getItem(SESSION_KEY)) return;
     } catch {}
     setVisible(true);
-  }, [user, isVip, vipLoading, freeGamesExhausted]);
+  }, [user, isVip, vipLoading]);
 
   const dismiss = () => {
     setVisible(false);
@@ -42,6 +42,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
   const { copy, copied } = useClipboard();
   const [referralLink, setReferralLink] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [shared, setShared] = useState(false);
 
   useEffect(() => {
     if (open && !referralLink) {
@@ -59,7 +60,10 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
   };
 
   const handleCopy = () => {
-    if (referralLink) copy(referralLink);
+    if (referralLink) {
+      copy(referralLink);
+      setShared(true);
+    }
   };
 
   const handleShare = async () => {
@@ -70,6 +74,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
         text: "შემოგვიერთდი MyTrivia LIVE-ზე და მიიღე 10 დღიანი PRO უფასოდ!",
         url: referralLink,
       });
+      setShared(true);
     } catch {
       handleCopy();
     }
@@ -208,6 +213,20 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
                 </ChunkyButton>
               )}
             </motion.div>
+
+            <AnimatePresence>
+              {shared && (
+                <motion.p
+                  initial={{ opacity: 0, y: 5, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: "auto" }}
+                  exit={{ opacity: 0, y: 5, height: 0 }}
+                  className="text-white/90 text-center text-xs leading-relaxed mt-3 px-2"
+                >
+                  როცა მოწვეული მეგობარი შემოგვიერთდება, შენ და შენი მეგობარი მიიღებთ{" "}
+                  <span className="font-semibold text-yellow-300">10 დღიან PRO-ს</span>!
+                </motion.p>
+              )}
+            </AnimatePresence>
 
             <motion.button
               initial={{ opacity: 0 }}

@@ -69,7 +69,7 @@ import { useVipStatus } from "@/hooks/useVipStatus";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
 import { InviteFriendsModal, useInviteModalVisibility } from "@/components/home/InviteFriendsModal";
 import { FriendJoinedModal } from "@/components/home/FriendJoinedModal";
-import { useProGiftEligibility, ProGiftModal } from "@/components/home/ProGiftBanner";
+
 import { useNotifications } from "@/hooks/useNotifications";
 import { 
   getGuestPlaysRemaining, 
@@ -209,29 +209,10 @@ export default function Index() {
 
 
   // Invite Friends Modal state
-  const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading, freeGamesExhausted);
+  const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading);
   const [inviteDismissedThisSession, setInviteDismissedThisSession] = useState(false);
   const [friendJoinedModalOpen, setFriendJoinedModalOpen] = useState(false);
 
-  // Pro Gift Modal state
-  const { eligible: proGiftEligible, loading: proGiftLoading } = useProGiftEligibility();
-  const [proGiftModalOpen, setProGiftModalOpen] = useState(false);
-  const [proGiftDismissedThisSession, setProGiftDismissedThisSession] = useState(false);
-  const [proGiftClaimed, setProGiftClaimed] = useState(false);
-
-  // Auto-show ProGiftModal for eligible users
-  useEffect(() => {
-    if (proGiftEligible && !proGiftLoading && !proGiftClaimed && !proGiftDismissedThisSession) {
-      setProGiftModalOpen(true);
-    }
-  }, [proGiftEligible, proGiftLoading, proGiftClaimed, proGiftDismissedThisSession]);
-
-  // Listen for pro-gift-claimed event (fired from ProGiftModal after successful claim)
-  useEffect(() => {
-    const handler = () => setProGiftClaimed(true);
-    window.addEventListener("pro-gift-claimed", handler);
-    return () => window.removeEventListener("pro-gift-claimed", handler);
-  }, []);
   const [friendModalVariant, setFriendModalVariant] = useState<"inviter" | "invited">("inviter");
   const [friendModalInviterName, setFriendModalInviterName] = useState<string | undefined>();
 
@@ -736,21 +717,10 @@ export default function Index() {
 
         {/* Floating Gift Button (after invite modal dismissed OR pro gift dismissed) */}
         <AnimatePresence>
-          {/* Pro gift floating button takes priority */}
-          {proGiftDismissedThisSession && proGiftEligible && !proGiftClaimed && !proGiftModalOpen ? (
-            <FloatingGiftButton onClick={() => setProGiftModalOpen(true)} />
-          ) : inviteDismissedThisSession && freeGamesExhausted && !isVip && !inviteModalVisible ? (
+          {inviteDismissedThisSession && !isVip && !inviteModalVisible ? (
             <FloatingGiftButton onClick={() => setInviteModalVisible(true)} />
           ) : null}
         </AnimatePresence>
-
-        {/* Pro Gift Modal */}
-        <ProGiftModal
-          open={proGiftModalOpen}
-          onOpenChange={setProGiftModalOpen}
-          onClaimed={() => setProGiftClaimed(true)}
-          onDismiss={() => setProGiftDismissedThisSession(true)}
-        />
 
         {/* Invite Friends Modal */}
         <InviteFriendsModal
