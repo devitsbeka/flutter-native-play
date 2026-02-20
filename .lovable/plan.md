@@ -1,25 +1,33 @@
 
 
-## Fix: Distinguish Registered vs Guest Users in PostHog
+## Fix: Registered Users Showing as Guests in PostHog
 
-### Problem
-All users appear as anonymous/guests in PostHog because:
-1. Registered users are identified, but there's no `user_type` property to filter by
-2. Guest users have zero person properties set — they're indistinguishable from any anonymous visitor
+### Root Causes
 
-### Solution
-Add a `user_type` person property to PostHog for both registered and guest users.
+1. **`posthog.register()` does NOT set person properties** -- it only attaches super properties to future events. The PostHog persons list shows person properties, so guests (and even registered users on the persons page) don't display `user_type`. We need `posthog.setPersonProperties()` for this.
 
-### Technical Details
+2. **Initialization timing issue** -- `initPostHog()` runs inside a `useEffect`, but `useIdentifyUser` also runs its own `useEffect` in the same render cycle. If `identify` or `register` fires before `init` completes, those calls are silently dropped.
+
+### Changes
 
 **File: `src/providers/PostHogProvider.tsx`**
 
-1. When a registered user is identified (line 44), add `user_type: "registered"` to the person properties
-2. When no user is present (guest), call `posthog.register({ user_type: "guest" })` to attach a super property to all subsequent events — this way every pageview and event from a guest is tagged
-3. On logout/reset (line 57), set `user_type` back to `"guest"`
+1. Move `initPostHog()` call to run **synchronously at module level** (outside of `useEffect`) so PostHog is guaranteed to be ready before any hooks fire.
 
-This lets you filter and segment in PostHog by `user_type = "registered"` vs `user_type = "guest"`.
+2. In the registered-user branch (line 44-57):
+   - Keep the existing `posthog.identify()` call (this sets person properties correctly)
+   - Keep `posthog.register({ user_type: "registered" })` for super properties on events
 
-### File to Change
-- `src/providers/PostHogProvider.tsx` — update `useIdentifyUser` hook
+3. In the guest branches (lines 58-64):
+   - Add `posthog.setPersonProperties({ user_type: "guest" })` so the persons list in PostHog shows `user_type`
+   - Keep `posthog.register({ user_type: "guest" })` for super properties on events
+
+4. In the logout/reset branch (line 58-61):
+   - After `posthog.reset()`, call both `posthog.register()` and `posthog.setPersonProperties()` with `user_type: "guest"`
+
+### Technical Detail
+
+- `posthog.register()` = super properties attached to every future event (event-level)
+- `posthog.setPersonProperties()` = updates the person record in PostHog (person-level, visible in persons list)
+- `posthog.identify(id, props)` = sets person properties for identified users (already correct for registered)
 
