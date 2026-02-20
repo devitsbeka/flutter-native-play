@@ -1,69 +1,74 @@
 
 
-## Show Congratulations Modal for Both Inviter and Invited User
+## Make Referral Links Reusable (Multi-Use)
 
-### Overview
-Both the **inviter** and the **invited friend** should see a celebratory modal confirming they received 10 days of PRO. Each side gets a tailored message.
+### Problem
+Currently, each referral link creates one `friend_invites` row. When the first friend uses it, `process_referral_reward` sets `status = 'accepted'`, so the next person who clicks the link finds no pending invite and gets nothing.
 
----
-
-### 1. Update `FriendJoinedModal` to support two variants
-
-**File: `src/components/home/FriendJoinedModal.tsx`**
-
-Add a `variant` prop: `"inviter"` or `"invited"`, plus an optional `inviterName` prop.
-
-- **Inviter variant** (existing behavior, refined text):
-  - Title: "გილოცავთ!"
-  - Body: "შენი მეგობარი შემოუერთდა MyTrivia LIVE-ს შენი ლინკით! მიიღე **10 დღიანი PRO**."
-
-- **Invited variant** (new):
-  - Title: "გილოცავთ!"
-  - Body: "მოგიწვია **[inviterName]**-მ და მიიღე **10 დღიანი PRO** საჩუქრად!"
-  - Falls back to generic text if inviter name is unknown.
-
-Both variants keep confetti, crown icon, and PRO badge.
+### Solution
+Instead of tying the link to a single `friend_invites` row, treat the referral code as a **permanent invite code** for the inviter. Each new signup via that code creates a **new** `friend_invites` row on the fly.
 
 ---
 
-### 2. Show modal to the invited user after signup
+### 1. Add a permanent `referral_code` column to `profiles`
 
-**File: `src/pages/Auth.tsx`**
+**Migration:**
+- Add `referral_code TEXT UNIQUE` to `profiles`
+- This stores a permanent, reusable code per user
 
-After `process_referral_reward` succeeds (line 129-132), store a flag in `sessionStorage`:
+### 2. Change `createLinkInvite` to use the profile code
+
+**File: `src/hooks/useFriendInvites.ts`**
+
+Instead of inserting a `friend_invites` row when generating a link:
+- Check if the user already has a `referral_code` in `profiles`
+- If not, generate one and save it to `profiles.referral_code`
+- Return that code (no `friend_invites` row created yet)
+
+### 3. Update Auth.tsx signup flow
+
+**File: `src/pages/Auth.tsx`** (lines 117-157)
+
+When a new user signs up with `?ref=CODE`:
+- Look up `profiles` where `referral_code = CODE` to find the **inviter** (instead of querying `friend_invites`)
+- Create a **new** `friend_invites` row with `status = 'accepted'` for record-keeping
+- Call `process_referral_reward` with the new invite row ID
+- This way each signup creates its own invite record, and the code stays valid forever
+
+### 4. Update `process_referral_reward` (minor)
+
+**No change needed** -- the RPC already handles granting PRO to both users. It will work with each new invite row.
+
+### 5. Update `InviteFriendsModal` and `ProInviteFriendsModal`
+
+**Files: `src/components/home/InviteFriendsModal.tsx`, `src/components/profile/ProInviteFriendsModal.tsx`**
+
+Update `generateLink` to use the new profile-based code instead of calling `createLinkInvite`.
+
+---
+
+### Technical Details
+
+**Migration SQL:**
+```text
+ALTER TABLE profiles ADD COLUMN referral_code TEXT UNIQUE;
 ```
-sessionStorage.setItem("referral_welcome", inviterNickname || "true")
+
+**Auth.tsx signup referral flow (pseudocode):**
+```text
+1. Look up inviter: SELECT user_id, nickname FROM profiles WHERE referral_code = CODE
+2. If found:
+   a. Insert new friend_invites row (inviter_id, invited_user_id, status='pending')
+   b. Call process_referral_reward(invite_id, new_user_id)
+   c. Store inviter nickname in sessionStorage for the welcome modal
 ```
 
-We'll fetch the inviter's nickname from the invite row's `inviter_id` -> `profiles.nickname` before storing.
+**useFriendInvites.ts createLinkInvite change:**
+```text
+1. Check profiles.referral_code for current user
+2. If null, generate code, UPDATE profiles SET referral_code = code
+3. Return the code (no friend_invites row)
+```
 
----
-
-### 3. Detect the flag on home page and show the invited variant
-
-**File: `src/pages/Index.tsx`**
-
-On mount, check `sessionStorage.getItem("referral_welcome")`. If present:
-- Set state to show `FriendJoinedModal` with `variant="invited"` and `inviterName` from the stored value
-- Remove the flag so it only shows once
-
----
-
-### 4. Improve inviter detection with realtime
-
-**File: `src/pages/Index.tsx`**
-
-Replace the 30-second polling interval (lines 215-241) with a Supabase realtime subscription on `friend_invites` filtered by `inviter_id=eq.${user.id}`. When an `UPDATE` event arrives (status changed to "accepted"), immediately show the `FriendJoinedModal` with `variant="inviter"`.
-
-This makes the inviter notification instant instead of delayed up to 30 seconds.
-
----
-
-### Summary of changes
-
-| File | Change |
-|------|--------|
-| `FriendJoinedModal.tsx` | Add `variant` and `inviterName` props, render different text per variant |
-| `Auth.tsx` | After referral processing, fetch inviter nickname and store in sessionStorage |
-| `Index.tsx` | Check sessionStorage for invited user modal; replace polling with realtime for inviter modal |
+This makes the referral link permanent and reusable -- every person who clicks it gets processed independently.
 
