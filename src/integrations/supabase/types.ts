@@ -1515,6 +1515,7 @@ export type Database = {
           last_play_regen_at: string | null
           nickname: string
           preferred_language: string
+          referral_code: string | null
           referred_by_invite_id: string | null
           region: string | null
           security_answer_hash: string | null
@@ -1540,6 +1541,7 @@ export type Database = {
           last_play_regen_at?: string | null
           nickname: string
           preferred_language?: string
+          referral_code?: string | null
           referred_by_invite_id?: string | null
           region?: string | null
           security_answer_hash?: string | null
@@ -1565,6 +1567,7 @@ export type Database = {
           last_play_regen_at?: string | null
           nickname?: string
           preferred_language?: string
+          referral_code?: string | null
           referred_by_invite_id?: string | null
           region?: string | null
           security_answer_hash?: string | null

@@ -81,25 +81,30 @@ export function useFriendInvites() {
     }
   };
 
-  const createLinkInvite = async (tierGranted: string): Promise<string | null> => {
+  const createLinkInvite = async (_tierGranted: string): Promise<string | null> => {
     if (!user) return null;
 
     try {
+      // Check if user already has a permanent referral code in profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('referral_code')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profile?.referral_code) {
+        return profile.referral_code;
+      }
+
+      // Generate and save a new permanent code
       const referralCode = generateReferralCode();
-      
       const { error } = await supabase
-        .from('friend_invites')
-        .insert({
-          inviter_id: user.id,
-          invited_email: `link_invite_${referralCode}@placeholder.local`,
-          tier_granted: tierGranted,
-          referral_code: referralCode,
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        });
+        .from('profiles')
+        .update({ referral_code: referralCode } as any)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       
-      await fetchInvites();
       return referralCode;
     } catch (error) {
       console.error('Error creating link invite:', error);

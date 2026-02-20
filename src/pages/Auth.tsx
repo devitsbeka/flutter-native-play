@@ -116,33 +116,37 @@ export default function Auth() {
           // Handle referral code if present
           if (referralCode && data?.user) {
             try {
-              // Find the invite by referral code
-              const { data: invite } = await supabase
-                .from('friend_invites')
-                .select('*')
+              // Look up inviter by permanent referral_code in profiles
+              const { data: inviterProfile } = await (supabase
+                .from('profiles')
+                .select('user_id, nickname') as any)
                 .eq('referral_code', referralCode)
-                .eq('status', 'pending')
                 .single();
 
-              if (invite) {
-                // Fetch inviter nickname before processing
-                let inviterNickname = "true";
-                try {
-                  const { data: inviterProfile } = await supabase
-                    .from('profiles')
-                    .select('nickname')
-                    .eq('user_id', invite.inviter_id)
-                    .single();
-                  if (inviterProfile?.nickname) {
-                    inviterNickname = inviterProfile.nickname;
-                  }
-                } catch {}
+              if (inviterProfile) {
+                const inviterNickname = inviterProfile.nickname || "true";
 
-                // Process referral reward via secure DB function
-                await supabase.rpc('process_referral_reward', {
-                  p_invite_id: invite.id,
-                  p_new_user_id: data.user.id,
-                });
+                // Create a new friend_invites row for this specific signup
+                const { data: newInvite } = await supabase
+                  .from('friend_invites')
+                  .insert({
+                    inviter_id: inviterProfile.user_id,
+                    invited_email: `ref_${referralCode}_${Date.now()}@placeholder.local`,
+                    invited_user_id: data.user.id,
+                    tier_granted: 'standard',
+                    status: 'pending',
+                    referral_code: null,
+                  })
+                  .select('id')
+                  .single();
+
+                if (newInvite) {
+                  // Process referral reward via secure DB function
+                  await supabase.rpc('process_referral_reward', {
+                    p_invite_id: newInvite.id,
+                    p_new_user_id: data.user.id,
+                  });
+                }
 
                 // Store flag for the invited user modal on home page
                 sessionStorage.setItem("referral_welcome", inviterNickname);
