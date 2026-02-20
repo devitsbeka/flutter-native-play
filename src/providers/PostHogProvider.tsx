@@ -51,11 +51,16 @@ function useIdentifyUser() {
         games_played: profile.games_played,
         current_streak: profile.current_streak,
         best_streak: profile.best_streak,
+        user_type: "registered",
       });
+      posthog.register({ user_type: "registered" });
       identifiedRef.current = user.id;
     } else if (!user && identifiedRef.current) {
       posthog.reset();
+      posthog.register({ user_type: "guest" });
       identifiedRef.current = null;
+    } else if (!user && !identifiedRef.current) {
+      posthog.register({ user_type: "guest" });
     }
   }, [user, profile]);
 }
