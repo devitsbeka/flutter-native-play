@@ -297,16 +297,16 @@ export default function Index() {
       // Logged in but no avatar - open polished avatar modal
       openAvatarModal();
     } else {
-      // Check if user has enough coins for stake
-      if (!hasEnoughCoins) {
-        setShowNotEnoughCoinsModal(true);
-        return;
-      }
-      
       // Check if user can play (lifetime limit for non-PRO, or regen play)
       if (!canPlay && !isVip) {
         // Show invite modal first, then PRO upgrade on dismiss
         setInviteModalVisible(true);
+        return;
+      }
+
+      // Check if user has enough coins for stake
+      if (!hasEnoughCoins) {
+        setShowNotEnoughCoinsModal(true);
         return;
       }
 
