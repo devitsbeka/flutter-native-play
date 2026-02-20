@@ -1,95 +1,99 @@
 
 
-## Investigation: PostHog User Identification
+## Fix PostHog User Identification -- New Approach
 
-### Current State -- What's Already Working
+### Root Cause
 
-Your code **IS** calling `posthog.identify()` correctly for registered users. Here's the flow:
+The problem is a **race condition**:
 
-1. **Registered user with loaded profile** (line 44-60): Calls `posthog.identify(user.id, { $name: profile.nickname, $email: ..., user_type: "registered" })` -- this works perfectly.
-2. **Registered user before profile loads** (line 61-70): Calls early identify with `user.user_metadata.nickname` -- but this may be `undefined` for Google OAuth users (their metadata uses `name`/`full_name`, not `nickname`).
-3. **Guest users** (line 71-78): Only sets `user_type: "guest"` as a super property. They remain **completely anonymous** in PostHog with random IDs.
+1. `posthog.init()` runs at module level (immediately)
+2. `usePageviewTracker` fires a `$pageview` event on first render
+3. At this point, auth is still `loading: true`, so `useIdentifyUser` skips everything
+4. PostHog creates the person with an **anonymous UUID**
+5. Later, when auth resolves, `posthog.identify()` fires -- but PostHog's live view may not immediately reflect the merged identity, and the person was already created anonymously
 
-### The Problem
+`posthog.setPersonProperties()` and late `identify()` calls don't reliably update the display name in PostHog's live session view because the person was already materialized as anonymous.
 
-**Guests are never identified.** They show as random PostHog anonymous IDs with no name, email, or any distinguishing info. You cannot tell who they are in PostHog because they literally have no identity in your system.
+### Solution: Bootstrap Identity at Init Time
 
-### Fix: Two Issues to Address
+Use PostHog's `bootstrap` option during `posthog.init()` to pre-set the user's identity **before any events fire**. We can read the Supabase session from localStorage synchronously to get the user ID, and read `mytrivia_last_user` for the display name.
 
-**Issue 1: Early identify missing name for Google/Apple users**
-
-The early identify (before profile loads) reads `user.user_metadata.nickname`, but Google OAuth stores the name as `full_name` or `name`. Fix: fall back to those fields.
-
-**Issue 2: Guests have zero identification**
-
-Since guests have no account, we cannot `identify()` them. But we CAN set **person properties** so they show up with useful labels in PostHog instead of random UUIDs.
-
-### Solution
+### Changes
 
 **File: `src/providers/PostHogProvider.tsx`**
 
-**Change 1 -- Fix early identify name resolution (line 63):**
+**Step 1 -- Read cached identity before `posthog.init()`:**
 ```typescript
-// Before:
-const metaNickname = (user.user_metadata as any)?.nickname;
+// Read Supabase session from localStorage to bootstrap identity
+function getBootstrapIdentity() {
+  try {
+    // Supabase stores session in localStorage
+    const storageKey = 'sb-sqwpzezkhpqkdyltvsim-auth-token';
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const userId = parsed?.user?.id;
+    if (!userId) return null;
 
-// After:
-const meta = user.user_metadata as any;
-const metaNickname = meta?.nickname || meta?.full_name || meta?.name;
-```
-This ensures Google/Apple OAuth users get their name set immediately, even before the profile DB query completes.
+    // Get display name from cached user data
+    const lastUser = localStorage.getItem('mytrivia_last_user');
+    const lastUserData = lastUser ? JSON.parse(lastUser) : null;
+    const meta = parsed?.user?.user_metadata;
+    const displayName = lastUserData?.nickname 
+      || meta?.nickname || meta?.full_name || meta?.name;
 
-**Change 2 -- Give guests a descriptive label (line 76-78):**
-```typescript
-// Before:
-} else if (!user && !identifiedRef.current) {
-  posthog.register({ user_type: "guest" });
+    return { userId, displayName };
+  } catch {
+    return null;
+  }
 }
+```
 
-// After:
-} else if (!user && !identifiedRef.current) {
-  posthog.register({ user_type: "guest" });
-  // Set person properties so guests show a readable label in PostHog
-  // instead of a random UUID
+**Step 2 -- Pass bootstrap to `posthog.init()`:**
+```typescript
+const bootstrapIdentity = getBootstrapIdentity();
+
+posthog.init(POSTHOG_KEY, {
+  api_host: POSTHOG_HOST,
+  capture_pageview: false,
+  capture_pageleave: true,
+  autocapture: true,
+  persistence: "localStorage+cookie",
+  person_profiles: "always",
+  bootstrap: bootstrapIdentity ? {
+    distinctID: bootstrapIdentity.userId,
+    isIdentifiedID: true,
+  } : undefined,
+});
+
+// If bootstrapped, immediately set person properties
+if (bootstrapIdentity) {
   posthog.setPersonProperties({
-    $name: "Guest",
-    user_type: "guest",
+    $name: bootstrapIdentity.displayName,
+    user_type: "registered",
   });
 }
 ```
 
-Also update the reset branch (line 71-75) similarly:
-```typescript
-} else if (!user && (identifiedRef.current || initialIdentifyDoneRef.current)) {
-  posthog.reset();
-  posthog.register({ user_type: "guest" });
-  posthog.setPersonProperties({
-    $name: "Guest",
-    user_type: "guest",
-  });
-  identifiedRef.current = null;
-  initialIdentifyDoneRef.current = false;
-}
-```
+This ensures that the **very first event** PostHog captures (including `$pageview`) already has the correct user ID and display name -- no race condition possible.
 
-### What This Achieves
+**Step 3 -- Keep existing `useIdentifyUser` hook as-is:**
+The hook still handles the full identify with all profile properties when auth resolves, and handles the guest/logout cases. The bootstrap just ensures no anonymous person is created in the gap.
 
-| User Type | Before | After |
-|-----------|--------|-------|
-| Registered (username signup) | Shows as nickname | No change (already works) |
-| Registered (Google OAuth) | May show as UUID until profile loads | Shows name immediately from OAuth metadata |
-| Guest | Random UUID, no label | Shows as "Guest" with `user_type: "guest"` property |
+### What This Fixes
 
-### How to Filter in PostHog
+| Scenario | Before | After |
+|----------|--------|-------|
+| Returning registered user | First events go out as anonymous UUID, then merge | First event already uses real user ID + name |
+| Guest user | Shows as anonymous UUID | Shows as anonymous UUID (expected -- they have no identity) |
+| OAuth user | May show UUID until profile loads | Shows name immediately from bootstrap |
 
-After this change, in PostHog you can:
-- **See all registered users**: Filter by `user_type = registered` -- they'll show nicknames/emails
-- **See all guests**: Filter by `user_type = guest` -- they'll show as "Guest"
-- **Distinguish guest vs registered**: The `user_type` property is set on every event via `posthog.register()`
+### Why Previous Fix Didn't Work
+
+`posthog.setPersonProperties()` and late `identify()` calls set properties on the person, but PostHog's live view and persons list display the identity that was set when the person was **first created**. By bootstrapping at init time, the person is created with the correct identity from the start.
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/providers/PostHogProvider.tsx` | Fix OAuth name fallback, add guest person properties |
-
+| `src/providers/PostHogProvider.tsx` | Add `getBootstrapIdentity()` function, pass `bootstrap` option to `posthog.init()`, set initial person properties |
