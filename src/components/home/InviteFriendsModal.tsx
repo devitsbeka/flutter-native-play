@@ -143,7 +143,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               className="font-display font-bold text-white text-center mb-2"
-              style={{ fontSize: "1.44rem" }}
+              style={{ fontSize: "1.54rem", marginTop: "-5px" }}
             >
               მოიწვიე მეგობრები!
             </motion.h2>
@@ -153,11 +153,10 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
               className="text-white/80 text-center leading-relaxed mb-4"
-              style={{ fontSize: "1.03rem" }}
+              style={{ fontSize: "0.95rem" }}
             >
-              მოიწვიე მეგობრები ამ ლინკით და მიიღეთ{" "}
-              <span className="font-semibold text-yellow-300">10 დღიანი PRO</span>,
-              სასიამოვნო გართობას გისურვებთ!
+              გაუზიარე ეს ლინკი მეგობრებს და მიიღეთ საჩუქრად{" "}
+              <span className="font-semibold text-yellow-300">10 დღიანი PRO</span>!
             </motion.p>
 
             {/* PRO badge */}
