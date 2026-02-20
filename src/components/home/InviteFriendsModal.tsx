@@ -5,9 +5,9 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
 import { useFriendInvites } from "@/hooks/useFriendInvites";
 import { useClipboard } from "@/hooks/use-clipboard";
-import { Copy, Check, Share2, Users } from "lucide-react";
+import { Copy, Check, Share2 } from "lucide-react";
 import crownIcon from "@/assets/icons/icon-vip-crown.png";
-import confettiGunIcon from "@/assets/icons/confetti-gun.png";
+import groupOfPeopleIcon from "@/assets/icons/group-of-people.png";
 
 const SESSION_KEY = "invite_modal_dismissed";
 
@@ -111,22 +111,14 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               className="mb-4"
             >
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{
-                  background: "linear-gradient(135deg, #c084fc 0%, #818cf8 50%, #60a5fa 100%)",
-                  boxShadow: "0 6px 0 rgba(88,28,135,0.6), 0 0 30px rgba(192,132,252,0.5)",
-                }}
-              >
-                <Users className="w-8 h-8 text-white" />
-              </div>
+              <img src={groupOfPeopleIcon} alt="" className="w-20 h-20 object-contain" />
             </motion.div>
 
             <motion.h2
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="font-display text-lg font-bold text-white text-center mb-2"
+              className="font-display text-xl font-bold text-white text-center mb-2"
             >
               მოიწვიე მეგობრები!
             </motion.h2>
@@ -135,7 +127,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="text-white/80 text-center text-sm leading-relaxed mb-4"
+              className="text-white/80 text-center text-[15px] leading-relaxed mb-4"
             >
               მოიწვიე მეგობრები ამ ლინკით და მიიღეთ{" "}
               <span className="font-semibold text-yellow-300">10 დღიანი PRO</span>,
@@ -158,31 +150,6 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               <span className="font-display text-sm font-bold text-white">
                 10 დღიანი PRO საჩუქარი
               </span>
-            </motion.div>
-
-            {/* Referral link */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-              className="w-full mb-4"
-            >
-              {generating ? (
-                <div
-                  className="w-full py-3 px-4 rounded-xl text-center text-sm text-white/60"
-                  style={{ background: "rgba(0,0,0,0.15)" }}
-                >
-                  ლინკი იქმნება...
-                </div>
-              ) : referralLink ? (
-                <div
-                  className="w-full py-3 px-4 rounded-xl text-xs text-white/70 break-all select-all cursor-pointer"
-                  style={{ background: "rgba(0,0,0,0.15)" }}
-                  onClick={handleCopy}
-                >
-                  {referralLink}
-                </div>
-              ) : null}
             </motion.div>
 
             {/* Action buttons */}
