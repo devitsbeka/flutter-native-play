@@ -60,7 +60,8 @@ function useIdentifyUser() {
       initialIdentifyDoneRef.current = true;
     } else if (user && !profile && !initialIdentifyDoneRef.current) {
       // Early identify with user ID + nickname from auth metadata
-      const metaNickname = (user.user_metadata as any)?.nickname;
+      const meta = user.user_metadata as any;
+      const metaNickname = meta?.nickname || meta?.full_name || meta?.name;
       posthog.identify(user.id, {
         $email: isRealEmail ? user.email : undefined,
         $name: metaNickname ?? undefined,
@@ -71,10 +72,18 @@ function useIdentifyUser() {
     } else if (!user && (identifiedRef.current || initialIdentifyDoneRef.current)) {
       posthog.reset();
       posthog.register({ user_type: "guest" });
+      posthog.setPersonProperties({
+        $name: "Guest",
+        user_type: "guest",
+      });
       identifiedRef.current = null;
       initialIdentifyDoneRef.current = false;
     } else if (!user && !identifiedRef.current) {
       posthog.register({ user_type: "guest" });
+      posthog.setPersonProperties({
+        $name: "Guest",
+        user_type: "guest",
+      });
     }
   }, [user, profile, loading]);
 }
