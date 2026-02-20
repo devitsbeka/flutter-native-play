@@ -14,6 +14,7 @@ posthog.init(POSTHOG_KEY, {
   capture_pageleave: true,
   autocapture: true,
   persistence: "localStorage+cookie",
+  person_profiles: "always",
 });
 
 /** Tracks SPA route changes as $pageview events */
