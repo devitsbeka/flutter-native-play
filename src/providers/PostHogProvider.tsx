@@ -66,12 +66,10 @@ function useIdentifyUser() {
     } else if (!user && (identifiedRef.current || initialIdentifyDoneRef.current)) {
       posthog.reset();
       posthog.register({ user_type: "guest" });
-      posthog.setPersonProperties({ user_type: "guest" });
       identifiedRef.current = null;
       initialIdentifyDoneRef.current = false;
     } else if (!user && !identifiedRef.current) {
       posthog.register({ user_type: "guest" });
-      posthog.setPersonProperties({ user_type: "guest" });
     }
   }, [user, profile, loading]);
 }
