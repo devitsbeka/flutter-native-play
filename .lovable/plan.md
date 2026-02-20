@@ -1,29 +1,28 @@
 
 
-## Fix: Play Limit Check Must Run Before Coin Check
+## Update Invite Friends Modal: Icon, Text Size, Remove Link Box
 
-### Root Cause
-In `src/pages/Index.tsx`, the `handlePlayClick` function checks conditions in this order:
-1. Line 301: `hasEnoughCoins` -- opens "Not Enough Coins" modal and returns
-2. Line 307: `canPlay` -- opens Invite Friends modal (never reached!)
+### Changes (single file: `src/components/home/InviteFriendsModal.tsx`)
 
-Since the user has 0 coins and the stake is 500, the coin modal always fires first, blocking the invite modal entirely.
+**1. Copy the uploaded icon into the project**
+- Copy `user-uploads://group-of-people.png` to `src/assets/icons/group-of-people.png`
+- Import it in the component
 
-### Fix
+**2. Replace the icon section (lines 109-123)**
+- Remove the circular container (`div` with gradient background and box-shadow)
+- Replace with a plain `<img>` tag using the new `group-of-people.png` icon
+- Size it at `w-20 h-20` (larger, no background circle)
+- Keep the floating animation on the wrapper
 
-**File: `src/pages/Index.tsx`**
+**3. Increase text sizes by ~10% (lines 125-143)**
+- Title: `text-lg` (18px) -> `text-xl` (20px)
+- Description: `text-sm` (14px) -> `text-[15px]`
 
-Swap the order of the two checks so the play limit (invite modal) is evaluated **before** the coin balance:
+**4. Remove the referral link box (lines 163-186)**
+- Delete the entire `motion.div` block that shows the generating state and the referral URL
+- The link is still generated in the background for Copy/Share buttons to use -- just not displayed visually
 
-```
-// BEFORE (current):
-1. Check coins -> show NotEnoughCoinsModal
-2. Check play limit -> show InviteFriendsModal  (never reached)
-
-// AFTER (fixed):
-1. Check play limit -> show InviteFriendsModal
-2. Check coins -> show NotEnoughCoinsModal
-```
-
-Specifically, move lines 307-310 (`if (!canPlay && !isVip)`) above lines 301-303 (`if (!hasEnoughCoins)`). This is a 2-line block swap, no other changes needed.
-
+**5. Clean up imports**
+- Remove `Users` from lucide-react imports (no longer used)
+- Remove `confettiGunIcon` import (unused)
+- Add import for the new group-of-people icon
