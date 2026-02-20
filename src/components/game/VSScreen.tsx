@@ -503,7 +503,7 @@ export function VSScreen() {
             <AnimatePresence>
               {isCategoryLocked && (
                 <motion.div
-                  className="flex flex-col items-center gap-1"
+                  className="flex flex-col items-center gap-1 mb-[-10px]"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
