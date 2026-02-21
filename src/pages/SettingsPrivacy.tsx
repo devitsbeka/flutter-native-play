@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { translateErrorMessage } from "@/utils/errorTranslations";
 
 export default function SettingsPrivacy() {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ export default function SettingsPrivacy() {
 
       notify.success("მონაცემები ექსპორტირებულია", { icon: toastIcon(ICON_URLS.box) });
     } catch (error: any) {
-      notify.error(t("errors.generic"), { description: error.message });
+      notify.error(t("errors.generic"), { description: translateErrorMessage(error.message) });
     } finally {
       setIsExporting(false);
     }
@@ -66,7 +67,7 @@ export default function SettingsPrivacy() {
       navigate("/");
       notify.success("ანგარიში წაშლილია", { icon: toastIcon(triviaBuzzer) });
     } catch (error: any) {
-      notify.error(t("errors.generic"), { description: error.message });
+      notify.error(t("errors.generic"), { description: translateErrorMessage(error.message) });
     } finally {
       setIsDeleting(false);
     }

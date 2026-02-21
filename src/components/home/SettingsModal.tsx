@@ -7,6 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { GameModal } from "@/components/ui/game-modal";
+import { translateErrorMessage } from "@/utils/errorTranslations";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -54,7 +55,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (user) await fetchProfile(user.id);
       notify.success(t("settings.nameChanged"), { icon: "✅" });
     } catch (error: any) {
-      notify.error(t("errors.generic"), { description: error.message });
+      notify.error(t("errors.generic"), { description: translateErrorMessage(error.message) });
     } finally {
       setIsNicknameLoading(false);
     }
@@ -88,7 +89,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: any) {
-      notify.error(t("errors.generic"), { description: error.message });
+      notify.error(t("errors.generic"), { description: translateErrorMessage(error.message) });
     } finally {
       setIsPasswordLoading(false);
     }
