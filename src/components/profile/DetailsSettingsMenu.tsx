@@ -8,6 +8,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
+import { translateErrorMessage } from "@/utils/errorTranslations";
 
 export function DetailsSettingsMenu() {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ export function DetailsSettingsMenu() {
       notify.success("წარმატება", "სახელი წარმატებით შეიცვალა");
       setIsNameOpen(false);
     } catch (error: any) {
-      notify.error("შეცდომა", error.message || "სახელის შეცვლა ვერ მოხერხდა");
+      notify.error("შეცდომა", translateErrorMessage(error.message));
     } finally {
       setIsNameLoading(false);
     }
@@ -82,7 +83,7 @@ export function DetailsSettingsMenu() {
       setConfirmPassword("");
       setIsPasswordOpen(false);
     } catch (error: any) {
-      notify.error("შეცდომა", error.message || "პაროლის შეცვლა ვერ მოხერხდა");
+      notify.error("შეცდომა", translateErrorMessage(error.message));
     } finally {
       setIsPasswordLoading(false);
     }

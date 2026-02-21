@@ -8,6 +8,7 @@ import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { translateErrorMessage } from "@/utils/errorTranslations";
 
 export default function SettingsName() {
   const { user, profile, fetchProfile } = useAuth();
@@ -38,7 +39,7 @@ export default function SettingsName() {
       if (user) await fetchProfile(user.id);
       notify.success(t("settings.nameChanged"), { icon: "✅" });
     } catch (error: any) {
-      notify.error(t("errors.generic"), { description: error.message });
+      notify.error(t("errors.generic"), { description: translateErrorMessage(error.message) });
     } finally {
       setIsLoading(false);
     }

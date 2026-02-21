@@ -11,6 +11,7 @@ import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { ArrowLeft, Mail, Lock, User, Apple, Gift } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { z } from "zod";
+import { translateErrorMessage } from "@/utils/errorTranslations";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trackSignupCompleted, trackLoginCompleted, trackAuthFailed, trackOAuthInitiated } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
@@ -109,7 +110,7 @@ export default function Auth() {
           if (error.message.includes("already registered")) {
             notify.error(t("auth.alreadyHaveAccount"), { description: t("auth.invalidCredentials") });
           } else {
-            notify.error(t("common.error"), { description: error.message });
+            notify.error(t("common.error"), { description: translateErrorMessage(error.message) });
           }
         } else {
           trackSignupCompleted('email', !!referralCode);
@@ -211,7 +212,7 @@ export default function Auth() {
         redirect_uri: window.location.origin,
       });
       if (error) {
-        notify.error(t("common.error"), { description: error.message });
+        notify.error(t("common.error"), { description: translateErrorMessage(error.message) });
       }
       // OAuth will redirect, so no need to navigate manually
     } catch (err) {
@@ -231,7 +232,7 @@ export default function Auth() {
       }
       const { error } = await signInWithGoogle();
       if (error) {
-        notify.error(t("common.error"), { description: error.message });
+        notify.error(t("common.error"), { description: translateErrorMessage(error.message) });
       }
       // OAuth will redirect, so no need to navigate manually
     } catch (err) {

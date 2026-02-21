@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Search, Check, Globe, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { translateErrorMessage } from "@/utils/errorTranslations";
 
 interface CountrySelectModalProps {
   isOpen: boolean;
@@ -83,7 +84,7 @@ export function CountrySelectModal({ isOpen, onClose, currentCountryCode }: Coun
     } catch (error: any) {
       toast({
         title: "შეცდომა",
-        description: error.message || "ქვეყნის შეცვლა ვერ მოხერხდა",
+        description: translateErrorMessage(error.message),
         variant: "destructive",
       });
     } finally {

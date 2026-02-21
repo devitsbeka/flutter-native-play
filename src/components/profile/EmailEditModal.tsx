@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, AlertCircle } from "lucide-react";
+import { translateErrorMessage } from "@/utils/errorTranslations";
 
 interface EmailEditModalProps {
   isOpen: boolean;
@@ -51,7 +52,7 @@ export function EmailEditModal({ isOpen, onClose, currentEmail }: EmailEditModal
     } catch (error: any) {
       toast({
         title: "შეცდომა",
-        description: error.message || "ელ-ფოსტის შეცვლა ვერ მოხერხდა",
+        description: translateErrorMessage(error.message),
         variant: "destructive",
       });
     } finally {

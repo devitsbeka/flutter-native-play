@@ -7,6 +7,7 @@ import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { translateErrorMessage } from "@/utils/errorTranslations";
 
 export default function SettingsPassword() {
   const { notify } = useNotificationModal();
@@ -44,7 +45,7 @@ export default function SettingsPassword() {
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: any) {
-      notify.error(t("errors.generic"), { description: error.message });
+      notify.error(t("errors.generic"), { description: translateErrorMessage(error.message) });
     } finally {
       setIsLoading(false);
     }

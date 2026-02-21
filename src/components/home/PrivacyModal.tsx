@@ -6,6 +6,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { GameModal } from "@/components/ui/game-modal";
+import { translateErrorMessage } from "@/utils/errorTranslations";
 
 interface PrivacyModalProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
       navigate("/");
     } catch (error: any) {
       console.error("Account deletion error:", error);
-      notify.error("შეცდომა", { description: error.message || "ანგარიშის წაშლა ვერ მოხერხდა" });
+      notify.error("შეცდომა", { description: translateErrorMessage(error.message) });
     } finally {
       setIsDeleting(false);
     }
@@ -64,7 +65,7 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
       notify.success("მონაცემები გადმოწერილია", { description: "თქვენი მონაცემების ფაილი მზადაა." });
     } catch (error: any) {
       console.error("Data export error:", error);
-      notify.error("შეცდომა", { description: error.message || "მონაცემების ექსპორტი ვერ მოხერხდა" });
+      notify.error("შეცდომა", { description: translateErrorMessage(error.message) });
     } finally {
       setIsExporting(false);
     }
