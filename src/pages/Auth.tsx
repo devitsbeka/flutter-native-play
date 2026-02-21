@@ -59,7 +59,6 @@ export default function Auth() {
   const navigate = useNavigate();
 
   const signUpSchema = z.object({
-    email: z.string().email(t("auth.invalidCredentials")),
     password: z.string().min(6, t("auth.passwordTooShort")),
     nickname: z.string().min(2, t("auth.usernameTooShort")).max(20, t("auth.usernameTooShort")),
   });
@@ -91,7 +90,7 @@ export default function Auth() {
 
     try {
       if (isSignUp) {
-        const result = signUpSchema.safeParse({ email, password, nickname });
+        const result = signUpSchema.safeParse({ password, nickname });
         if (!result.success) {
           const fieldErrors: Record<string, string> = {};
           result.error.errors.forEach((err) => {
@@ -104,16 +103,16 @@ export default function Auth() {
           return;
         }
 
-        const { error, data } = await signUp(email, password, nickname);
+        const { error, data } = await signUpWithUsername(nickname, password);
         if (error) {
-          trackAuthFailed('email', error.message || 'unknown');
+          trackAuthFailed('username', error.message || 'unknown');
           if (error.message.includes("already registered")) {
             notify.error(t("auth.alreadyHaveAccount"), { description: t("auth.invalidCredentials") });
           } else {
             notify.error(t("common.error"), { description: translateErrorMessage(error.message) });
           }
         } else {
-          trackSignupCompleted('email', !!referralCode);
+          trackSignupCompleted('username', !!referralCode);
           // Handle referral code if present
           if (referralCode && data?.user) {
             try {
@@ -342,23 +341,25 @@ export default function Auth() {
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-foreground">{isSignUp ? t("help.email") : t("auth.usernameOrEmail")}</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                id="email"
-                type={isSignUp ? "email" : "text"}
-                placeholder={isSignUp ? "you@example.com" : t("auth.usernameOrEmailPlaceholder")}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-10 text-sm"
-              />
+          {!isSignUp && (
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-foreground">{t("auth.usernameOrEmail")}</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="text"
+                  placeholder={t("auth.usernameOrEmailPlaceholder")}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 text-sm"
+                />
+              </div>
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email}</p>
+              )}
             </div>
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email}</p>
-            )}
-          </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="password" className="text-foreground">{t("auth.password")}</Label>
@@ -494,7 +495,7 @@ export default function Auth() {
                     if (result.error.message?.includes("already registered")) {
                       notify.error("ეს მომხმარებელი უკვე რეგისტრირებულია", { description: "სცადე სხვა პაროლი" });
                     } else {
-                      notify.error(t("common.error"), { description: result.error.message });
+                      notify.error(t("common.error"), { description: translateErrorMessage(result.error.message) });
                     }
                   } else {
                     trackSignupCompleted(isEmail ? 'email' : 'username', false);
