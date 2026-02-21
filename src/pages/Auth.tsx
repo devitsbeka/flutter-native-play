@@ -37,6 +37,7 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);
@@ -61,6 +62,7 @@ export default function Auth() {
   const signUpSchema = z.object({
     password: z.string().min(6, t("auth.passwordTooShort")),
     nickname: z.string().min(2, t("auth.usernameTooShort")).max(20, t("auth.usernameTooShort")),
+    email: z.string().email(t("auth.invalidEmail") || "Invalid email address"),
   });
 
   const signInSchema = z.object({
@@ -90,7 +92,7 @@ export default function Auth() {
 
     try {
       if (isSignUp) {
-        const result = signUpSchema.safeParse({ password, nickname });
+        const result = signUpSchema.safeParse({ password, nickname, email: signupEmail });
         if (!result.success) {
           const fieldErrors: Record<string, string> = {};
           result.error.errors.forEach((err) => {
@@ -103,16 +105,16 @@ export default function Auth() {
           return;
         }
 
-        const { error, data } = await signUpWithUsername(nickname, password);
+        const { error, data } = await signUp(signupEmail, password, nickname);
         if (error) {
-          trackAuthFailed('username', error.message || 'unknown');
+          trackAuthFailed('email', error.message || 'unknown');
           if (error.message.includes("already registered")) {
             notify.error(t("auth.alreadyHaveAccount"), { description: t("auth.invalidCredentials") });
           } else {
             notify.error(t("common.error"), { description: translateErrorMessage(error.message) });
           }
         } else {
-          trackSignupCompleted('username', !!referralCode);
+          trackSignupCompleted('email', !!referralCode);
           // Handle referral code if present
           if (referralCode && data?.user) {
             try {
@@ -322,23 +324,42 @@ export default function Auth() {
           className="w-full space-y-4"
         >
           {isSignUp && (
-            <div className="space-y-2">
-              <Label htmlFor="nickname" className="text-foreground">{t("auth.username")}</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="nickname"
-                  type="text"
-                  placeholder={t("auth.usernamePlaceholder")}
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  className="pl-10"
-                />
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="nickname" className="text-foreground">{t("auth.username")}</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="nickname"
+                    type="text"
+                    placeholder={t("auth.usernamePlaceholder")}
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                {errors.nickname && (
+                  <p className="text-sm text-destructive">{errors.nickname}</p>
+                )}
               </div>
-              {errors.nickname && (
-                <p className="text-sm text-destructive">{errors.nickname}</p>
-              )}
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="signupEmail" className="text-foreground">{t("auth.email") || "ელ-ფოსტა"}</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="signupEmail"
+                    type="email"
+                    placeholder="email@example.com"
+                    value={signupEmail}
+                    onChange={(e) => setSignupEmail(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email}</p>
+                )}
+              </div>
+            </>
           )}
 
           {!isSignUp && (
