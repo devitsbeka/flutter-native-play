@@ -1,37 +1,29 @@
 
+## Fix Slow Question Loading Between Category Rounds
 
-## Make Sign-Up Username-Only (Remove Email Requirement)
+### Root Cause
 
-### Problem
-The sign-up form currently requires users to enter an email address, but the app uses a **username-only architecture** where pseudo-emails (`username@mytrivia.local`) are generated internally. The sign-in form already accepts username or email, but sign-up still demands a real email.
+When transitioning between levels in category mode, two bottlenecks cause the long "კითხვების გენერირება..." loading screen:
 
-### Changes
+1. **Redundant category DB lookup**: Every level transition re-fetches category info (`categories` table) even though `dbCategory` is already loaded from the previous level and the category doesn't change between levels.
 
-**File: `src/pages/Auth.tsx`**
+2. **Fetching ALL questions without limit**: The question queries in `questionService.ts` have no `.limit()` clause. Categories contain 200-370+ questions, and ALL rows are fetched from the database, transferred over the network, and filtered client-side -- just to pick 5. This is the primary bottleneck.
 
-1. **Remove the email field during sign-up**: The email input should only appear for sign-in. During sign-up, the user only enters username + password.
+### Solution
 
-2. **Update the sign-up validation schema**: Replace the `email` field requirement with a `nickname` (username) validation:
-   - Username: 2-20 characters, required
-   - Password: min 6 characters
+**File: `src/pages/CategoryQuizPage.tsx`**
 
-3. **Switch sign-up to use `signUpWithUsername(nickname, password)`** instead of `signUp(email, password, nickname)`. This generates the pseudo-email internally.
+- Skip the category DB lookup (`supabase.from('categories').select(...)`) when `dbCategory` is already populated (i.e., when navigating between levels within the same category). Use the cached `dbCategory` directly, saving one network round-trip.
 
-4. **Update the sign-in field**: For sign-in mode, change the label and icon to use a `User` icon instead of `Mail`, since users primarily sign in with their username. Keep the field accepting both username and email.
+**File: `src/services/questionService.ts`**
 
-5. **Update the form layout**: During sign-up, only show:
-   - Username field (existing nickname field)
-   - Password field
-   
-   During sign-in, show:
-   - Username / Email field (existing, already works)
-   - Password field
+- Add `.limit(50)` to the main question query in `getCategoryQuestions()` (line ~347). Since we only need 5 questions and already exclude seen IDs server-side, fetching 50 provides ample variety for shuffling while dramatically reducing data transfer.
+- Add `.limit(50)` to Fallback 1 query (full level range, line ~367).
+- Add `.limit(50)` to Fallback 2 query (no exclusions, line ~383). This one can keep a larger limit since it's a last resort.
+- Add `.limit(50)` to the retry query after invalid-question detection (line ~419).
 
-### Technical Details
+### Expected Impact
 
-- **Validation**: The `signUpSchema` changes from requiring `z.string().email()` for `email` to just `z.string().min(2).max(20)` for `nickname`.
-- **API call**: Line 107 changes from `signUp(email, password, nickname)` to `signUpWithUsername(nickname, password)`.
-- **Tracking**: Update analytics tracking from `'email'` to `'username'` for sign-up events.
-- **Referral flow**: Referral processing after sign-up remains unchanged (it uses `data.user.id`).
-- The `email` state variable is still used for the sign-in field (where it can be username or email).
-
+- Eliminates 1 unnecessary DB query per level transition (category lookup)
+- Reduces data transfer from ~200-370 rows to max 50 rows per query
+- Expected loading time reduction from ~1000ms+ to ~200-300ms
