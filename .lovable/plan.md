@@ -1,30 +1,42 @@
 
 
-## Limit Avatar Generations to 5 Per User
+## Translate Raw English Error Messages to Georgian
 
-### What Changes
+### Problem
+In many places across the app, raw Supabase error messages (in English) are passed directly as notification/toast descriptions. The screenshot shows "შეცდომა" (Error) as the title but "User not found" in English as the description.
 
-Currently there is no limit on how many AI avatars a user can generate. We will add a **maximum of 5 generations** per user.
+### Solution
 
-### Implementation
+Create a utility function `translateErrorMessage(message: string): string` that maps common Supabase/auth error messages to Georgian equivalents, then apply it everywhere `error.message` is shown to the user.
 
-**File: `src/components/home/AvatarModal.tsx`**
+### New File: `src/utils/errorTranslations.ts`
 
-1. **Add a constant** `MAX_AVATAR_GENERATIONS = 5` at the top of the file.
+A simple helper with a map of known English error strings to Georgian translations:
 
-2. **Track generation count**: After `loadGenerations()` fetches the user's `avatar_generations` rows, derive the count from `generations.length`. This count is already available since the modal loads all generations on open.
+| English message pattern | Georgian translation |
+|---|---|
+| User not found | მომხმარებელი ვერ მოიძებნა |
+| Invalid login credentials | არასწორი მონაცემები |
+| Email not confirmed | ელ-ფოსტა არ არის დადასტურებული |
+| already registered | ეს მომხმარებელი უკვე რეგისტრირებულია |
+| Password should be at least | პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს |
+| Email rate limit exceeded | ძალიან ბევრი მცდელობა, სცადე მოგვიანებით |
+| Network / fetch error | ინტერნეტ კავშირის შეცდომა |
+| (fallback) | შეცდომა, სცადე თავიდან |
 
-3. **Block generation when limit reached**: In `generateAvatar()` (line ~276), before proceeding with the AI call, check if `generations.length >= 5`. If so, show a toast error (e.g., "მაქსიმუმ 5 ავატარის გენერაცია შეგიძლიათ") and return early.
+The function uses `includes()` matching against the raw message and returns the Georgian string.
 
-4. **Disable the generate button in UI**: In the upload step where the "Generate" / selfie / upload buttons are rendered, disable them and show remaining count (e.g., "დარჩა 3/5") when the user has fewer generations left. When at 5/5, disable the selfie and upload options entirely with a message indicating the limit is reached.
+### Files to Update (replace `error.message` with `translateErrorMessage(error.message)`)
 
-5. **Also guard `animateAvatar()`**: The animate flow (line ~559) can also trigger `generate-avatar` if no AI version exists. Add the same limit check there before generating a new avatar.
+1. **`src/pages/Auth.tsx`** -- 4 places where `description: error.message` or `description: result.error.message` is used
+2. **`src/components/home/SettingsModal.tsx`** -- 2 catch blocks
+3. **`src/pages/SettingsName.tsx`** -- 1 catch block
+4. **`src/pages/SettingsPassword.tsx`** -- 1 catch block
+5. **`src/pages/SettingsPrivacy.tsx`** -- 2 catch blocks
+6. **`src/components/home/PrivacyModal.tsx`** -- 2 catch blocks
+7. **`src/components/profile/CountrySelectModal.tsx`** -- 1 catch block
+8. **`src/components/profile/EmailEditModal.tsx`** -- 1 catch block
+9. **`src/components/profile/DetailsSettingsMenu.tsx`** -- 2 catch blocks (already have Georgian fallbacks, but `error.message` can still leak through)
+10. **`src/hooks/useAIGenerationSettings.ts`** -- 1 catch block
 
-6. **Also guard `BackgroundGenerationContext.startAvatarGeneration()`** (`src/contexts/BackgroundGenerationContext.tsx`): This is another path that can trigger avatar generation. Add the same count check at the start -- query `avatar_generations` count for the user and block if >= 5.
-
-### UI Changes
-
-- Show remaining generations count near the selfie/upload buttons: "დარჩა X/5 გენერაცია"
-- When limit is reached (0 remaining), gray out the generation options and show: "მაქსიმუმ 5 ავატარის გენერაცია შეგიძლიათ"
-- Users can still select from their existing generated avatars or use the default avatar options
-
+Each update is a simple import + wrapping `error.message` with `translateErrorMessage(error.message)`.
