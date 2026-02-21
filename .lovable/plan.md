@@ -1,27 +1,17 @@
 
 
-## Add Email Field to Sign-Up, Keep Username+Password for Sign-In
+## Fix Missing "გაზიარება" (Share) Button in InviteFriendsModal
 
-### Changes to `src/pages/Auth.tsx`
+### Problem
+The share button is hidden because the condition `{"share" in navigator}` returns `false` in some environments. This means users only see the copy button.
 
-1. **Add email state for sign-up**: An `email` state already exists (used for sign-in). We'll add a new `signupEmail` state to keep things clean and separate from the sign-in "username/email" field.
+### Solution
 
-2. **Update `signUpSchema`**: Add an `email` field with `z.string().email()` validation so users must provide a valid email during registration.
+**File: `src/components/home/InviteFriendsModal.tsx`**
 
-3. **Switch sign-up call**: Change from `signUpWithUsername(nickname, password)` back to `signUp(signupEmail, password, nickname)` which uses the real email address.
+- Remove the `{"share" in navigator && (...)}` conditional wrapper around the share button (line 203).
+- Always render both buttons side by side: "კოპირება" and "გაზიარება".
+- The `handleShare` function already has a fallback — if `navigator.share` is unavailable, it calls `handleCopy()` instead. So it's safe to always show the button.
 
-4. **Add email input to sign-up form**: Insert an email field (with Mail icon) between the username field and the password field in the sign-up UI. The field order will be:
-   - Username (nickname)
-   - Email
-   - Password
-
-5. **Sign-in stays the same**: Username/email + password, no changes needed.
-
-### Technical Details
-
-- New state: `const [signupEmail, setSignupEmail] = useState("")`
-- Schema update: `signUpSchema` adds `email: z.string().email(t("auth.invalidEmail"))`
-- API call change: line 106 switches from `signUpWithUsername(nickname, password)` to `signUp(signupEmail, password, nickname)`
-- Analytics: change tracking back from `'username'` to `'email'` for sign-up events since we now collect real emails
-- The sign-in form remains unchanged (username or email + password)
+This is a one-line change: remove the conditional on line 203 and its closing on line 214, keeping the `ChunkyButton` itself intact.
 
