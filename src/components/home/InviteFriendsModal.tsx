@@ -200,8 +200,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
                 {copied ? "დაკოპირდა!" : "კოპირება"}
               </ChunkyButton>
 
-              {"share" in navigator && (
-                <ChunkyButton
+              <ChunkyButton
                   variant="whitePurple"
                   size="md"
                   className="flex-1 min-w-0"
@@ -211,7 +210,6 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
                 >
                   გაზიარება
                 </ChunkyButton>
-              )}
             </motion.div>
 
             <AnimatePresence>
