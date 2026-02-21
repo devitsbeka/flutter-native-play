@@ -238,15 +238,20 @@ export default function CategoryQuizPage() {
       try {
         const levelNumber = parseInt(levelId || "1");
         
-        // Get category info for icon rendering
-        const { data: categoryData } = await supabase
-          .from('categories')
-          .select('id, name, icon_slug, total_levels')
-          .eq('category_id', categoryId)
-          .maybeSingle();
-        
-        if (categoryData) {
-          setDbCategory(categoryData);
+        // Reuse cached dbCategory if available (same category, different level)
+        // Only fetch from DB on first load
+        let categoryData = dbCategory;
+        if (!categoryData) {
+          const { data } = await supabase
+            .from('categories')
+            .select('id, name, icon_slug, total_levels')
+            .eq('category_id', categoryId)
+            .maybeSingle();
+          
+          if (data) {
+            categoryData = data;
+            setDbCategory(data);
+          }
         }
         
         // Use unified questionService - pass pre-resolved category data to skip redundant DB lookups
