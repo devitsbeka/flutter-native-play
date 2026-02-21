@@ -1,29 +1,27 @@
 
-## Fix Slow Question Loading Between Category Rounds
 
-### Root Cause
+## Add Email Field to Sign-Up, Keep Username+Password for Sign-In
 
-When transitioning between levels in category mode, two bottlenecks cause the long "კითხვების გენერირება..." loading screen:
+### Changes to `src/pages/Auth.tsx`
 
-1. **Redundant category DB lookup**: Every level transition re-fetches category info (`categories` table) even though `dbCategory` is already loaded from the previous level and the category doesn't change between levels.
+1. **Add email state for sign-up**: An `email` state already exists (used for sign-in). We'll add a new `signupEmail` state to keep things clean and separate from the sign-in "username/email" field.
 
-2. **Fetching ALL questions without limit**: The question queries in `questionService.ts` have no `.limit()` clause. Categories contain 200-370+ questions, and ALL rows are fetched from the database, transferred over the network, and filtered client-side -- just to pick 5. This is the primary bottleneck.
+2. **Update `signUpSchema`**: Add an `email` field with `z.string().email()` validation so users must provide a valid email during registration.
 
-### Solution
+3. **Switch sign-up call**: Change from `signUpWithUsername(nickname, password)` back to `signUp(signupEmail, password, nickname)` which uses the real email address.
 
-**File: `src/pages/CategoryQuizPage.tsx`**
+4. **Add email input to sign-up form**: Insert an email field (with Mail icon) between the username field and the password field in the sign-up UI. The field order will be:
+   - Username (nickname)
+   - Email
+   - Password
 
-- Skip the category DB lookup (`supabase.from('categories').select(...)`) when `dbCategory` is already populated (i.e., when navigating between levels within the same category). Use the cached `dbCategory` directly, saving one network round-trip.
+5. **Sign-in stays the same**: Username/email + password, no changes needed.
 
-**File: `src/services/questionService.ts`**
+### Technical Details
 
-- Add `.limit(50)` to the main question query in `getCategoryQuestions()` (line ~347). Since we only need 5 questions and already exclude seen IDs server-side, fetching 50 provides ample variety for shuffling while dramatically reducing data transfer.
-- Add `.limit(50)` to Fallback 1 query (full level range, line ~367).
-- Add `.limit(50)` to Fallback 2 query (no exclusions, line ~383). This one can keep a larger limit since it's a last resort.
-- Add `.limit(50)` to the retry query after invalid-question detection (line ~419).
+- New state: `const [signupEmail, setSignupEmail] = useState("")`
+- Schema update: `signUpSchema` adds `email: z.string().email(t("auth.invalidEmail"))`
+- API call change: line 106 switches from `signUpWithUsername(nickname, password)` to `signUp(signupEmail, password, nickname)`
+- Analytics: change tracking back from `'username'` to `'email'` for sign-up events since we now collect real emails
+- The sign-in form remains unchanged (username or email + password)
 
-### Expected Impact
-
-- Eliminates 1 unnecessary DB query per level transition (category lookup)
-- Reduces data transfer from ~200-370 rows to max 50 rows per query
-- Expected loading time reduction from ~1000ms+ to ~200-300ms
