@@ -1,42 +1,37 @@
 
 
-## Translate Raw English Error Messages to Georgian
+## Make Sign-Up Username-Only (Remove Email Requirement)
 
 ### Problem
-In many places across the app, raw Supabase error messages (in English) are passed directly as notification/toast descriptions. The screenshot shows "შეცდომა" (Error) as the title but "User not found" in English as the description.
+The sign-up form currently requires users to enter an email address, but the app uses a **username-only architecture** where pseudo-emails (`username@mytrivia.local`) are generated internally. The sign-in form already accepts username or email, but sign-up still demands a real email.
 
-### Solution
+### Changes
 
-Create a utility function `translateErrorMessage(message: string): string` that maps common Supabase/auth error messages to Georgian equivalents, then apply it everywhere `error.message` is shown to the user.
+**File: `src/pages/Auth.tsx`**
 
-### New File: `src/utils/errorTranslations.ts`
+1. **Remove the email field during sign-up**: The email input should only appear for sign-in. During sign-up, the user only enters username + password.
 
-A simple helper with a map of known English error strings to Georgian translations:
+2. **Update the sign-up validation schema**: Replace the `email` field requirement with a `nickname` (username) validation:
+   - Username: 2-20 characters, required
+   - Password: min 6 characters
 
-| English message pattern | Georgian translation |
-|---|---|
-| User not found | მომხმარებელი ვერ მოიძებნა |
-| Invalid login credentials | არასწორი მონაცემები |
-| Email not confirmed | ელ-ფოსტა არ არის დადასტურებული |
-| already registered | ეს მომხმარებელი უკვე რეგისტრირებულია |
-| Password should be at least | პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს |
-| Email rate limit exceeded | ძალიან ბევრი მცდელობა, სცადე მოგვიანებით |
-| Network / fetch error | ინტერნეტ კავშირის შეცდომა |
-| (fallback) | შეცდომა, სცადე თავიდან |
+3. **Switch sign-up to use `signUpWithUsername(nickname, password)`** instead of `signUp(email, password, nickname)`. This generates the pseudo-email internally.
 
-The function uses `includes()` matching against the raw message and returns the Georgian string.
+4. **Update the sign-in field**: For sign-in mode, change the label and icon to use a `User` icon instead of `Mail`, since users primarily sign in with their username. Keep the field accepting both username and email.
 
-### Files to Update (replace `error.message` with `translateErrorMessage(error.message)`)
+5. **Update the form layout**: During sign-up, only show:
+   - Username field (existing nickname field)
+   - Password field
+   
+   During sign-in, show:
+   - Username / Email field (existing, already works)
+   - Password field
 
-1. **`src/pages/Auth.tsx`** -- 4 places where `description: error.message` or `description: result.error.message` is used
-2. **`src/components/home/SettingsModal.tsx`** -- 2 catch blocks
-3. **`src/pages/SettingsName.tsx`** -- 1 catch block
-4. **`src/pages/SettingsPassword.tsx`** -- 1 catch block
-5. **`src/pages/SettingsPrivacy.tsx`** -- 2 catch blocks
-6. **`src/components/home/PrivacyModal.tsx`** -- 2 catch blocks
-7. **`src/components/profile/CountrySelectModal.tsx`** -- 1 catch block
-8. **`src/components/profile/EmailEditModal.tsx`** -- 1 catch block
-9. **`src/components/profile/DetailsSettingsMenu.tsx`** -- 2 catch blocks (already have Georgian fallbacks, but `error.message` can still leak through)
-10. **`src/hooks/useAIGenerationSettings.ts`** -- 1 catch block
+### Technical Details
 
-Each update is a simple import + wrapping `error.message` with `translateErrorMessage(error.message)`.
+- **Validation**: The `signUpSchema` changes from requiring `z.string().email()` for `email` to just `z.string().min(2).max(20)` for `nickname`.
+- **API call**: Line 107 changes from `signUp(email, password, nickname)` to `signUpWithUsername(nickname, password)`.
+- **Tracking**: Update analytics tracking from `'email'` to `'username'` for sign-up events.
+- **Referral flow**: Referral processing after sign-up remains unchanged (it uses `data.user.id`).
+- The `email` state variable is still used for the sign-in field (where it can be username or email).
+
