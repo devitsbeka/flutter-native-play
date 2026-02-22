@@ -383,6 +383,12 @@ export function BulkImport() {
                 ინსტრუქცია
               </Button>
             </a>
+            <a href="/english-generation-prompt.md" download className="inline-flex">
+              <Button variant="outline" size="sm">
+                <FileJson className="h-4 w-4 mr-1" />
+                EN Prompt
+              </Button>
+            </a>
           </div>
 
           {/* Expected format hint */}
@@ -541,6 +547,17 @@ export function BulkImport() {
               showSelection
             />
 
+            {/* Import progress */}
+            {importing && (
+              <div className="space-y-2 rounded-lg border p-4 bg-muted/30">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">იმპორტი მიმდინარეობს...</span>
+                  <span className="text-muted-foreground">{importProgress}% ({Math.round(selectedCount * importProgress / 100)}/{selectedCount})</span>
+                </div>
+                <Progress value={importProgress} className="h-2" />
+              </div>
+            )}
+
             {/* Import button */}
             <div className="flex items-center gap-3 pt-2">
               <Button
@@ -564,8 +581,6 @@ export function BulkImport() {
                 გასუფთავება
               </Button>
             </div>
-
-            {importing && <Progress value={importProgress} className="h-2" />}
           </CardContent>
         </Card>
       )}
