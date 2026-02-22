@@ -257,10 +257,15 @@ serve(async (req) => {
   }
 
   try {
-    const { questions, categoryId } = await req.json() as {
+    const { questions, categoryId, language } = await req.json() as {
       questions: QuestionInput[];
       categoryId?: string;
+      language?: string;
     };
+
+    // Skip semantic duplicate checking for non-Georgian languages
+    // since translated questions won't be shown to the same users as Georgian ones
+    const skipSemanticDupCheck = language && language !== 'ka';
 
     if (!questions || questions.length === 0) {
       return new Response(JSON.stringify({ results: [], total: 0 }), {
@@ -273,31 +278,35 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Fetch existing questions for semantic duplicate detection
+    // Fetch existing questions for semantic duplicate detection (only for Georgian)
     let existingQuestions: { question_text: string; correct_answer: string }[] = [];
-
-    if (categoryId) {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
-      existingQuestions = await fetchExistingQuestions(supabase, categoryId);
-      console.log(`Loaded ${existingQuestions.length} existing questions from category for semantic duplicate check`);
-    }
-
-    // If questions span multiple categories, group and fetch per category
-    const categoryIds = [...new Set(questions.map(q => q.category_id).filter(Boolean))];
     const existingByCategory: Record<string, { question_text: string; correct_answer: string }[]> = {};
 
-    if (!categoryId && categoryIds.length > 0) {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
+    if (!skipSemanticDupCheck) {
+      if (categoryId) {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
 
-      for (const catId of categoryIds) {
-        existingByCategory[catId!] = await fetchExistingQuestions(supabase, catId!);
-        console.log(`Loaded ${existingByCategory[catId!].length} existing questions for category ${catId}`);
+        existingQuestions = await fetchExistingQuestions(supabase, categoryId);
+        console.log(`Loaded ${existingQuestions.length} existing questions from category for semantic duplicate check`);
       }
+
+      // If questions span multiple categories, group and fetch per category
+      const categoryIds = [...new Set(questions.map(q => q.category_id).filter(Boolean))];
+
+      if (!categoryId && categoryIds.length > 0) {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        for (const catId of categoryIds) {
+          existingByCategory[catId!] = await fetchExistingQuestions(supabase, catId!);
+          console.log(`Loaded ${existingByCategory[catId!].length} existing questions for category ${catId}`);
+        }
+      }
+    } else {
+      console.log(`Skipping semantic duplicate check for language: ${language}`);
     }
 
     // Process in batches of 3 (slightly smaller since prompts are larger with existing questions)
