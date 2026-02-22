@@ -1,20 +1,18 @@
-# English Trivia Question Generation Prompt
+# English Trivia Question Generation — Master Prompt
 
-> Copy-paste this entire prompt to an AI agent (Claude, GPT, etc.) to generate trivia questions for bulk import.
+> Copy-paste this ENTIRE prompt to an AI agent (Claude, GPT, etc.) to generate English trivia questions. No modifications needed.
 
 ---
 
 ## Your Task
 
-Generate **200 trivia questions** for the category **`[CATEGORY_SLUG]`** in **English** following the exact JSON format and quality rules below.
+Generate **200 English trivia questions** spread across ALL 41 categories listed below (~5 per category). Each question must follow the exact JSON format and strict quality rules.
 
-Split your output into **4 batches of 50 questions** each.
+Output a single valid JSON object. **Do not split into multiple messages** — return everything in one JSON block.
 
 ---
 
 ## Output Format
-
-Return a valid JSON object with a single `questions` array:
 
 ```json
 {
@@ -32,137 +30,136 @@ Return a valid JSON object with a single `questions` array:
 }
 ```
 
+**All fields are required** except `icon_keyword` (recommended but optional).
+
 ---
 
-## STRICT Rules (Questions violating these are REJECTED)
+## The 41 Categories (use these exact `category_slug` values)
 
-### Character Limits
-| Field | Max Length |
-|-------|-----------|
-| `question_text` | **65 characters** (including `?`) |
-| `correct_answer` | **20 characters** |
-| Each `incorrect_answer` | **20 characters** |
+### Science (9)
+| Slug | Name | Example Topics |
+|------|------|---------------|
+| `astronomy` | Astronomy | Stars, planets, telescopes, constellations |
+| `biology` | Biology | Cells, DNA, evolution, organisms |
+| `chemistry` | Chemistry | Elements, reactions, periodic table |
+| `physics` | Physics | Forces, energy, quantum, relativity |
+| `math` | Mathematics | Numbers, geometry, famous theorems |
+| `science` | General Science | Scientific method, discoveries, Nobel prizes |
+| `geology` | Geology | Rocks, minerals, tectonic plates, volcanoes |
+| `ecology` | Ecology | Ecosystems, climate, biodiversity |
+| `medicine` | Medicine & Health | Diseases, anatomy, medical breakthroughs |
 
-### Formatting
-- `question_text` **MUST** end with `?`
-- Single, clear, unambiguous question — no compound sentences
+### History & Culture (5)
+| Slug | Name | Example Topics |
+|------|------|---------------|
+| `world_history` | World History | Ancient civilizations, revolutions, key dates |
+| `military_history` | Military History | Wars, battles, military leaders |
+| `archaeology` | Archaeology | Ancient ruins, discoveries, civilizations |
+| `religion_mythology` | Religion & Mythology | Gods, sacred texts, myths |
+| `philosophy` | Philosophy | Philosophers, schools of thought, ethics |
+
+### Geography & Nature (4)
+| Slug | Name | Example Topics |
+|------|------|---------------|
+| `geography` | Geography | Countries, capitals, rivers, mountains |
+| `space` | Space | Space missions, NASA, ISS, satellites |
+| `nature` | Nature | Forests, oceans, weather, natural wonders |
+| `languages` | Languages & Linguistics | Language families, grammar, translation |
+
+### Technology (3)
+| Slug | Name | Example Topics |
+|------|------|---------------|
+| `programming` | Programming | Languages, algorithms, famous programmers |
+| `technology` | Technology | Inventions, gadgets, tech companies |
+| `robotics_ai` | Robotics & AI | Machine learning, robots, AI history |
+
+### Entertainment (7)
+| Slug | Name | Example Topics |
+|------|------|---------------|
+| `movies` | Movies | Directors, actors, Oscar winners, iconic films |
+| `tv_series` | TV Series | Popular shows, characters, streaming |
+| `music` | Music | Artists, genres, albums, instruments |
+| `video_games` | Video Games | Games, studios, characters, consoles |
+| `anime_manga` | Anime & Manga | Series, creators, studios, characters |
+| `pop_culture` | Pop Culture | Trends, viral moments, icons |
+| `celebrities` | Celebrities | Famous people, achievements, trivia |
+
+### Society (6)
+| Slug | Name | Example Topics |
+|------|------|---------------|
+| `politics` | Politics | Leaders, systems, elections, organizations |
+| `economics` | Economics | Markets, currencies, economic theory |
+| `psychology` | Psychology | Theories, experiments, cognitive biases |
+| `fashion` | Fashion & Style | Designers, brands, fashion history |
+| `social_media` | Social Media | Platforms, influencers, viral trends |
+| `memes_internet` | Memes & Internet | Internet culture, viral memes, online history |
+
+### Arts & Food (3)
+| Slug | Name | Example Topics |
+|------|------|---------------|
+| `art` | Art | Painters, movements, famous works |
+| `architecture` | Architecture | Buildings, architects, styles |
+| `world_cuisine` | World Cuisine | Dishes, ingredients, culinary traditions |
+
+### Miscellaneous (4)
+| Slug | Name | Example Topics |
+|------|------|---------------|
+| `sports` | Sports | Athletes, records, Olympics, teams |
+| `animals` | Animals | Species, habitats, animal facts |
+| `fun_facts` | Fun Facts | Surprising trivia, records, oddities |
+| `myths_reality` | Myths vs Reality | Common misconceptions debunked |
+
+---
+
+## STRICT Rules (violations = REJECTED)
+
+### 1. Character Limits
+| Field | Max |
+|-------|-----|
+| `question_text` | **65 chars** (including the `?`) |
+| `correct_answer` | **20 chars** |
+| Each incorrect answer | **20 chars** |
+
+### 2. Formatting
+- Question **MUST** end with `?`
+- Single clear question — no compound sentences
 - Do NOT start with "Which of the following..."
 - All 4 answers must be grammatically consistent
 
-### Answer-in-Question Check (CRITICAL)
-The correct answer **MUST NOT** appear as a substring in the question text.
+### 3. Answer-in-Question Check (CRITICAL)
+The correct answer **MUST NOT** appear as a substring in the question.
 
-- ❌ `"What is Jupiter's largest moon?"` + answer `"Jupiter"` → REJECTED
-- ✅ `"What is the largest planet in our solar system?"` + answer `"Jupiter"` → OK
+- ❌ `"What is Jupiter's largest moon?"` + `"Jupiter"` → REJECTED
+- ✅ `"What is the largest planet in our solar system?"` + `"Jupiter"` → OK
 
-### Answer Length Balance
-Max difference between the longest and shortest answer: **8 characters**
+### 4. Answer Length Balance
+Max difference between longest and shortest answer: **8 characters**
 
-### Answer Count
-- Exactly **3 incorrect answers** (4 options total)
-- No duplicates among the 4 options
-- All answers must be non-empty
+### 5. Answer Count
+- Exactly **3 incorrect answers** per question (4 total options)
+- No duplicate answers
+- All non-empty
 
----
+### 6. Difficulty Distribution
+- **easy** (30%): Common knowledge
+- **medium** (50%): Requires domain knowledge
+- **hard** (20%): Expert-level, obscure
 
-## Difficulty Distribution
+### 7. Icon Keyword
+- Single English word for the question's **topic** (not the answer!)
+- `"planet"`, `"war"`, `"dna"`, `"film"`, `"music"` etc.
+- **MUST NOT** match or hint at the correct answer
 
-Per batch of 200 questions:
-- **easy** (30% = ~60 questions): Common knowledge, widely known facts
-- **medium** (50% = ~100 questions): Requires some domain knowledge
-- **hard** (20% = ~40 questions): Expert-level, obscure or nuanced
+### 8. No Duplicates
+- Each question tests a **unique fact**
+- Don't rephrase the same question ("Who painted X?" / "Which artist created X?")
 
----
-
-## Icon Keyword Rules
-
-The `icon_keyword` field is **optional but recommended**.
-
-- Should be a **single English word** describing the question's **topic** (not the answer!)
-- Examples: `"planet"`, `"war"`, `"dna"`, `"pyramid"`, `"music"`
-- The icon keyword **MUST NOT** match or hint at the correct answer
-- If the answer is `"pyramid"`, do NOT use `"pyramid"` as the keyword
+### 9. Language
+- Set `"language": "en"` on **every** question
 
 ---
 
-## Duplicate Avoidance
-
-- Vary the **fact being tested**, not just the phrasing
-- Do NOT ask the same thing from different angles (e.g., "Who painted X?" and "Which artist created X?")
-- Each question should test a **unique piece of knowledge**
-
----
-
-## 41 Eligible Categories
-
-Use exactly one of these `category_slug` values per question:
-
-| Slug | English Name |
-|------|-------------|
-| `anime_manga` | Anime & Manga |
-| `archaeology` | Archaeology |
-| `architecture` | Architecture |
-| `astronomy` | Astronomy |
-| `biology` | Biology |
-| `nature` | Nature |
-| `geography` | Geography |
-| `geology` | Geology |
-| `ecology` | Ecology |
-| `economics` | Economics |
-| `languages` | Languages & Linguistics |
-| `video_games` | Video Games |
-| `movies` | Movies |
-| `space` | Space |
-| `math` | Mathematics |
-| `medicine` | Medicine & Health |
-| `memes_internet` | Memes & Internet |
-| `science` | Science |
-| `myths_reality` | Myths vs Reality |
-| `fashion` | Fashion & Style |
-| `world_history` | World History |
-| `world_cuisine` | World Cuisine |
-| `music` | Music |
-| `politics` | Politics |
-| `pop_culture` | Pop Culture |
-| `programming` | Programming |
-| `religion_mythology` | Religion & Mythology |
-| `robotics_ai` | Robotics & AI |
-| `military_history` | Military History |
-| `fun_facts` | Fun Facts |
-| `tv_series` | TV Series |
-| `social_media` | Social Media |
-| `sports` | Sports |
-| `technology` | Technology |
-| `physics` | Physics |
-| `philosophy` | Philosophy |
-| `psychology` | Psychology |
-| `chemistry` | Chemistry |
-| `celebrities` | Celebrities |
-| `animals` | Animals |
-| `art` | Art |
-
-**DO NOT use:** `georgian_history`, `georgian_culture`, `georgian_literature`, `georgian_cuisine`
-
----
-
-## Quality Checklist (verify before submitting)
-
-- [ ] Every `question_text` is ≤65 characters and ends with `?`
-- [ ] Every `correct_answer` is ≤20 characters
-- [ ] Every incorrect answer is ≤20 characters
-- [ ] No correct answer appears as a substring in its question
-- [ ] Answer length difference within each question ≤8 characters
-- [ ] Exactly 3 incorrect answers per question
-- [ ] No duplicate questions testing the same fact
-- [ ] `category_slug` matches the table above exactly
-- [ ] `difficulty` is one of: `easy`, `medium`, `hard`
-- [ ] `language` is `"en"` for all questions
-- [ ] `icon_keyword` (if set) does NOT match the correct answer
-- [ ] JSON is valid and parseable
-
----
-
-## Example Batch (5 questions)
+## Example Questions
 
 ```json
 {
@@ -218,12 +215,14 @@ Use exactly one of these `category_slug` values per question:
 
 ---
 
-## How to Use This Prompt
+## Instructions for the AI Agent
 
-1. Replace `[CATEGORY_SLUG]` with one category from the table above
-2. Ask the AI to generate 200 questions for that category
-3. Request output in 4 batches of 50
-4. Combine all batches into one JSON file per category
-5. Upload via the Bulk Import tool at `/admin/import`
+1. Generate exactly **200 questions** spread across all 41 categories (~5 per category)
+2. Follow the difficulty distribution: 30% easy, 50% medium, 20% hard
+3. Return a single valid JSON object with a `"questions"` array
+4. Self-verify every question against the rules above before outputting
+5. Count characters carefully — the 65-char question limit is strict
 
-To generate all 8,200 questions, repeat for each of the 41 categories.
+**To generate more**: Run this prompt multiple times and combine the JSON outputs. Each run produces ~200 unique questions. Repeat ~41 times for ~8,200 total questions covering all categories deeply.
+
+**For category-focused generation**: Add this line to the top: _"Focus all 200 questions on the `[slug]` category only."_
