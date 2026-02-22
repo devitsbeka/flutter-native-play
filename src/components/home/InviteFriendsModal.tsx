@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFriendInvites } from "@/hooks/useFriendInvites";
 import { useClipboard } from "@/hooks/use-clipboard";
 import { Copy, Check, Share2 } from "lucide-react";
+import { useVipStatus } from "@/hooks/useVipStatus";
 import crownIcon from "@/assets/icons/icon-vip-crown.png";
 import groupOfPeopleIcon from "@/assets/icons/group-of-people.png";
 
@@ -23,6 +24,13 @@ export function useInviteModalVisibility(isVip: boolean, vipLoading: boolean) {
     setVisible(true);
   }, [user, isVip, vipLoading]);
 
+  // Auto-dismiss if VIP status loads after modal was already shown
+  useEffect(() => {
+    if (visible && isVip && !vipLoading) {
+      setVisible(false);
+    }
+  }, [visible, isVip, vipLoading]);
+
   const dismiss = () => {
     setVisible(false);
     try { sessionStorage.setItem(SESSION_KEY, "true"); } catch {}
@@ -38,6 +46,7 @@ interface InviteFriendsModalProps {
 }
 
 export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFriendsModalProps) {
+  const { isVip, loading: vipLoading } = useVipStatus();
   const { createLinkInvite } = useFriendInvites();
   const { copy, copied } = useClipboard();
   const [referralLink, setReferralLink] = useState<string | null>(null);
@@ -85,7 +94,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
     onOpenChange(false);
   };
 
-  if (!open) return null;
+  if (!open || (isVip && !vipLoading)) return null;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
@@ -220,7 +229,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
                   exit={{ opacity: 0, y: 5, height: 0 }}
                   className="text-white/90 text-center text-xs leading-relaxed mt-3 px-2"
                 >
-                  როცა მოწვეული მეგობარი შემოგვიერთდება, შენ და შენი მეგობარი მიიღებთ{" "}
+                  როცა მოწვეული მეგობრები შემოგვიერთდებიან, შენ და შენი მეგობრები მიიღებთ{" "}
                   <span className="font-semibold text-yellow-300">10 დღიან PRO-ს</span>!
                 </motion.p>
               )}
