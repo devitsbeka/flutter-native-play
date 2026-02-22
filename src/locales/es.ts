@@ -63,6 +63,9 @@ export const es: KaTranslations = {
     signInRequired: "Inicio de sesión requerido",
     usernameOrEmail: "Usuario o correo electrónico",
     usernameOrEmailPlaceholder: "Ingresa usuario o correo",
+    email: "Correo electrónico",
+    emailPlaceholder: "email@example.com",
+    invalidEmail: "Formato de correo inválido",
   },
   forgotPassword: {
     title: "Restablecer contraseña",

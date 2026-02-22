@@ -63,6 +63,9 @@ export const ru: KaTranslations = {
     signInRequired: "Требуется вход",
     usernameOrEmail: "Имя пользователя или email",
     usernameOrEmailPlaceholder: "Введите имя или email",
+    email: "Электронная почта",
+    emailPlaceholder: "email@example.com",
+    invalidEmail: "Неверный формат электронной почты",
   },
   forgotPassword: {
     title: "Восстановление пароля",

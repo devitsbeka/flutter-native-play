@@ -70,6 +70,9 @@ export const en: KaTranslations = {
     signInRequired: "Sign in required",
     usernameOrEmail: "Username or Email",
     usernameOrEmailPlaceholder: "Enter username or email",
+    email: "Email",
+    emailPlaceholder: "email@example.com",
+    invalidEmail: "Invalid email format",
   },
 
   // ==========================================
