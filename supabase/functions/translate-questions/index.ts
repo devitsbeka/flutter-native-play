@@ -4,24 +4,11 @@ import { getCorsHeaders } from "../_shared/cors.ts";
 const LANGUAGE_NAMES: Record<string, string> = {
   'ka': 'Georgian (ქართული)',
   'en': 'English',
-  
-  'es': 'Spanish (Español)',
   'fr': 'French (Français)',
-  'pt-br': 'Portuguese (Português)',
-  'it': 'Italian (Italiano)',
   'de': 'German (Deutsch)',
-  'nl': 'Dutch (Nederlands)',
-  'sv': 'Swedish (Svenska)',
-  'nb': 'Norwegian (Norsk)',
-  'da': 'Danish (Dansk)',
-  'fi': 'Finnish (Suomi)',
-  'pl': 'Polish (Polski)',
-  'cs': 'Czech (Čeština)',
-  'sk': 'Slovak (Slovenčina)',
-  'hu': 'Hungarian (Magyar)',
-  'ro': 'Romanian (Română)',
-  'hr': 'Croatian (Hrvatski)',
-  'sr-latn': 'Serbian Latin (Srpski)',
+  'es': 'Spanish (Español)',
+  'it': 'Italian (Italiano)',
+  'pt-br': 'Portuguese (Português)',
 };
 
 const QUESTION_MAX_LENGTH = 65;

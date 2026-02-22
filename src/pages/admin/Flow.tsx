@@ -53,24 +53,11 @@ export interface Category {
 const LANGUAGES = [
   { code: 'ka', name: 'Georgian', flag: '🇬🇪' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
-  
-  { code: 'es', name: 'Spanish', flag: '🇪🇸' },
   { code: 'fr', name: 'French', flag: '🇫🇷' },
-  { code: 'pt-br', name: 'Portuguese', flag: '🇧🇷' },
-  { code: 'it', name: 'Italian', flag: '🇮🇹' },
   { code: 'de', name: 'German', flag: '🇩🇪' },
-  { code: 'nl', name: 'Dutch', flag: '🇳🇱' },
-  { code: 'sv', name: 'Swedish', flag: '🇸🇪' },
-  { code: 'nb', name: 'Norwegian', flag: '🇳🇴' },
-  { code: 'da', name: 'Danish', flag: '🇩🇰' },
-  { code: 'fi', name: 'Finnish', flag: '🇫🇮' },
-  { code: 'pl', name: 'Polish', flag: '🇵🇱' },
-  { code: 'cs', name: 'Czech', flag: '🇨🇿' },
-  { code: 'sk', name: 'Slovak', flag: '🇸🇰' },
-  { code: 'hu', name: 'Hungarian', flag: '🇭🇺' },
-  { code: 'ro', name: 'Romanian', flag: '🇷🇴' },
-  { code: 'hr', name: 'Croatian', flag: '🇭🇷' },
-  { code: 'sr-latn', name: 'Serbian', flag: '🇷🇸' },
+  { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+  { code: 'it', name: 'Italian', flag: '🇮🇹' },
+  { code: 'pt-br', name: 'Portuguese', flag: '🇧🇷' },
 ];
 
 export { LANGUAGES };
@@ -386,7 +373,7 @@ export default function Flow() {
       }));
 
       const { data, error } = await supabase.functions.invoke('review-generated-questions', {
-        body: { questions: payload, categoryId: primaryCategoryId },
+        body: { questions: payload, categoryId: primaryCategoryId, language: selectedLanguage },
       });
 
       if (error) {
