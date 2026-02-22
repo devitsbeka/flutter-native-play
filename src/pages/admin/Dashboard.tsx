@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { AiMagicRefillModal } from '@/components/admin/AiMagicRefillModal';
 import { PalantirAnalyticsWidget } from '@/components/admin/PalantirAnalyticsWidget';
+import { ReferralAnalyticsWidget } from '@/components/admin/ReferralAnalyticsWidget';
 import { AdminMap } from '@/components/admin/AdminMap';
 import { LastActiveUsersPanel } from '@/components/admin/LastActiveUsersPanel';
 import { GameStatsModal } from '@/components/admin/GameStatsModal';
@@ -226,6 +227,10 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Palantir Analytics Widget */}
+        {/* Referral Analytics */}
+        <ReferralAnalyticsWidget />
 
         {/* Palantir Analytics Widget */}
         <PalantirAnalyticsWidget />
