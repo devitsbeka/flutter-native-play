@@ -1,135 +1,96 @@
 
+## Strategy: Generate 8,000+ English Questions via Bulk Import
 
-## Bulk Import System with Auto-Icon Assignment + Schema Template + Quality Guide
+### The Problem
+The current in-app generation pipeline (`generate-category-trivia`) is hardcoded for Georgian language with Georgian prompts, topic guidance, and exclusion lists. Adapting it for English and running 8,000 questions through it would be slow (rate limits), expensive, and error-prone.
 
-This plan covers three deliverables:
-1. A new "Bulk Import" tab on /admin/import for importing thousands of questions from JSON with auto-icon assignment
-2. A downloadable JSON schema template file for AI agents to use
-3. A downloadable Markdown quality guide with all validation rules
+### Recommended Approach: External AI Generation + Bulk Import
 
----
+Use external AI agents (Claude, GPT, etc.) with the existing JSON schema template and quality guide to generate ~200 English questions per category across 41 global categories, then import via the Bulk Import system.
 
-### Deliverable 1: JSON Schema Template File
+### What Needs to Change
 
-A new file `public/question-import-schema.json` that serves as both documentation and a template for AI agents. It will contain a JSON Schema definition plus example entries.
+**1. Update the JSON schema and quality guide for English**
 
-**Schema structure per question:**
-```json
-{
-  "category_slug": "string (e.g. 'astronomy', 'biology')",
-  "question_text": "string, max 65 chars, must end with '?'",
-  "correct_answer": "string, max 20 chars",
-  "incorrect_answers": ["string", "string", "string"],
-  "difficulty": "easy | medium | hard",
-  "language": "en | fr | de | es | it | pt-br",
-  "icon_keyword": "optional string hint for icon matching (e.g. 'planet', 'dna')"
-}
-```
+The existing `public/question-import-schema.json` and `public/question-quality-guide.md` already support English, but we should add:
+- A ready-to-use prompt template section in the quality guide specifically for English generation
+- A list of the 41 eligible categories (excluding the 4 Georgian-specific ones)
+- Target counts per category (~200 each)
 
-The file will include:
-- JSON Schema ($schema) for validation
-- Required/optional field definitions with exact constraints
-- An `examples` array with 3-5 sample questions across different categories/languages
-- A mapping of all 45 active category slugs to their UUIDs and Georgian names (so AI agents can reference them)
+**2. Create a dedicated English generation prompt file**
 
----
+New file: `public/english-generation-prompt.md`
 
-### Deliverable 2: Quality Control Guide (Markdown)
+A complete, copy-paste-ready prompt for external AI agents containing:
+- All 41 global category slugs with English names
+- The exact JSON output format expected
+- All quality rules (65-char question limit, 20-char answer limit, no answer-in-question, etc.)
+- Icon keyword instructions
+- Difficulty distribution (30% easy, 50% medium, 20% hard)
+- Target: ~200 questions per category
+- Instructions to split output into batches of 50 questions per category for manageability
 
-A new file `public/question-quality-guide.md` containing ALL quality rules extracted from the codebase:
+**3. Enhance Bulk Import to handle large English batches**
 
-**Content includes:**
-- Character limits: question max 65 chars, answer max 20 chars
-- Question must end with `?`
-- Correct answer must NOT appear in question text (substring check with normalization)
-- Exactly 3 incorrect answers required
-- Max answer length difference of 8 chars between answers
-- Similarity threshold of 0.55 for duplicate detection
-- Dual-model fact-check requirement (Gemini 2.5 Pro + GPT-5-mini, 0.95+ confidence)
-- AI review scoring: grammar (30%), uniqueness (40%), clarity (30%)
-- Grade thresholds: A (90+), B (75-89), C (50-74), D (below 50)
-- Semantic duplicate detection rules
-- Icon keyword rules: icon must NOT hint at the correct answer
-- Language-specific notes (Georgian word constraints for translations)
+Minor updates to `src/pages/admin/import/BulkImport.tsx`:
+- Add a progress indicator for large imports (1000+ questions)
+- Add category-level stats in the preview (show how many questions per category)
+- Auto-set language to "en" when all questions are English
 
----
+### Category Breakdown (41 categories, ~200 each = ~8,200 questions)
 
-### Deliverable 3: Enhanced Bulk Import UI
+| Group | Categories | Count |
+|-------|-----------|-------|
+| Science | astronomy, biology, chemistry, physics, math, science, geology, ecology, medicine | 9 |
+| History/Culture | world_history, military_history, archaeology, religion_mythology, philosophy | 5 |
+| Geography | geography, space, nature, languages | 4 |
+| Technology | programming, technology, robotics_ai | 3 |
+| Entertainment | movies, tv_series, music, video_games, anime_manga, pop_culture, celebrities | 7 |
+| Society | politics, economics, psychology, fashion, social_media, memes_internet | 6 |
+| Arts | art, architecture, world_cuisine | 3 |
+| Misc | sports, animals, fun_facts, myths_reality | 4 |
 
-**New file: `src/pages/admin/import/BulkImport.tsx`**
+**Excluded (Georgian-specific):** georgian_history, georgian_culture, georgian_literature, georgian_cuisine
 
-A dedicated import component with these features:
-
-1. **File Upload**: Accept `.json` files (drag-and-drop or file picker). Parse and validate all questions client-side using existing `validateQuestion()` logic.
-
-2. **Category Mapping**: Auto-map `category_slug` from the JSON to actual category UUIDs using a lookup table. Show unmapped categories as warnings.
-
-3. **Language Selection**: Support importing questions with a `language` field per question, or apply a single language to all.
-
-4. **Auto Icon Assignment**: After parsing, call the existing `batch-assign-icons` edge function to automatically assign `icon_slug` to all questions that don't already have one. This function uses keyword-based matching from the 9,000+ icon library.
-
-5. **Preview and Review**:
-   - Summary dashboard: total questions, valid/invalid counts, per-category breakdown, per-language breakdown
-   - Reuse existing `QuestionPreviewList` component for individual question review/editing
-   - Bulk actions: select all valid, deselect invalid, filter by category/difficulty/language
-   - Icon override: click any question's icon to change it via `IconPickerModal`
-
-6. **Destination Selection**: Radio buttons for "Library" (`in_production: false`) or "Production" (`in_production: true`)
-
-7. **Batch Import**: Insert questions in chunks of 100 using the existing `bulkAddQuestions` from `useAdminQuestions`. After insert, trigger `batch-assign-icons` edge function for any questions without icons.
-
-**Modifications to existing files:**
-
-- **`src/pages/admin/Import.tsx`**: Add a new tab "Bulk Import" with a `PackagePlus` icon, rendering `<BulkImport />`
-- **`src/hooks/useQuestionParser.ts`**: Add a new `parseFromBulkJson()` method that handles the extended schema format (with `category_slug`, `language`, `icon_keyword` fields) and maps category slugs to UUIDs
-- **`src/pages/admin/import/QuestionPreviewList.tsx`**: No changes needed -- it already supports icons, editing, selection, and filtering
-
-**New edge function: `supabase/functions/bulk-import-assign-icons/index.ts`**
-
-A lightweight wrapper that:
-1. Accepts an array of `{ question_text, correct_answer, category_name }` objects
-2. Uses the same keyword-based icon matching logic from `batch-assign-icons` (TOPIC_TO_ICONS mapping + icon library tag search)
-3. Returns `{ question_index, suggested_icon_slug }[]`
-4. Does NOT require AI calls -- purely keyword/tag matching for speed with thousands of questions
-
----
-
-### Technical Flow
+### Workflow
 
 ```text
-User uploads JSON file (1000+ questions)
-    |
-    v
-Client-side validation (char limits, format, question mark)
-    |
-    v
-Category slug -> UUID mapping
-    |
-    v
-Preview dashboard (stats, filters, per-question review)
-    |
-    v
-Auto-assign icons (call bulk-import-assign-icons edge function)
-    |
-    v
-User reviews, edits individual questions/icons if needed
-    |
-    v
-User selects destination (Library / Production)
-    |
-    v
-Batch insert in chunks of 100 via bulkAddQuestions
+Step 1: Generate the English prompt file (public/english-generation-prompt.md)
+        - Contains everything an AI agent needs to produce valid questions
+
+Step 2: You give this prompt to external AI agents (Claude/GPT)
+        - Ask them to generate 200 questions per category in batches
+        - Output: JSON files following the schema
+
+Step 3: Import via /admin/import -> Bulk Import tab
+        - Upload JSON file(s)
+        - Auto-validation + category mapping
+        - Auto-icon assignment via edge function
+        - Preview, review, approve
+
+Step 4: Questions go to Library or Production
 ```
 
----
+### Technical Details
 
-### Files to Create
-1. `public/question-import-schema.json` -- JSON Schema template for AI agents
-2. `public/question-quality-guide.md` -- Complete quality control documentation
-3. `src/pages/admin/import/BulkImport.tsx` -- Main bulk import UI component
-4. `supabase/functions/bulk-import-assign-icons/index.ts` -- Fast icon assignment for bulk imports
+**Files to create:**
+- `public/english-generation-prompt.md` -- Complete prompt template for AI agents with all 41 categories, rules, and expected JSON format
 
-### Files to Modify
-1. `src/pages/admin/Import.tsx` -- Add new "Bulk Import" tab
-2. `src/hooks/useQuestionParser.ts` -- Add `parseFromBulkJson()` method with category mapping
+**Files to modify:**
+- `public/question-quality-guide.md` -- Add English-specific section with the 41 eligible categories
+- `src/pages/admin/import/BulkImport.tsx` -- Add progress bar for large imports, per-category stats in preview
 
+### Cost Estimate
+
+Using external AI agents (e.g., Claude or GPT) to generate 8,200 questions:
+- Approximately $5-15 total (much cheaper than the in-app pipeline since no fact-checking or research steps)
+- The quality guide ensures the AI agent produces correctly formatted output
+- Post-import, you can optionally run the quality review from /admin/review to score them
+
+### Why This Approach Wins
+
+1. **Speed**: External AI can generate 200 questions in one shot vs. batches of 5-10 in-app
+2. **Cost**: No research, fact-check, or translation steps needed (questions are natively English)
+3. **Quality**: The schema + quality guide enforce all constraints upfront
+4. **Flexibility**: You can use any AI model, iterate on batches, and review before importing
+5. **Icons**: The bulk import auto-assigns icons via the existing edge function
