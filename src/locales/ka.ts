@@ -68,6 +68,9 @@ export const ka = {
     signInRequired: "შესვლა საჭიროა",
     usernameOrEmail: "მომხმარებელი ან ელფოსტა",
     usernameOrEmailPlaceholder: "შეიყვანე მომხმარებელი ან ელფოსტა",
+    email: "ელფოსტა",
+    emailPlaceholder: "email@example.com",
+    invalidEmail: "ელფოსტის ფორმატი არასწორია",
   },
 
   // ==========================================
