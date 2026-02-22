@@ -9,6 +9,7 @@ import {
   hasGuestProgress,
   GuestLevelProgress,
 } from "./useGuestProgress";
+import { getGuestGameLog, clearGuestPlays, logGuestGameComplete } from "./useGuestPlays";
 
 interface LevelProgress {
   level_number: number;
@@ -65,29 +66,52 @@ function buildGuestProgress(): Record<string, CategoryProgressData> {
 }
 
 async function transferGuestProgressToDb(userId: string) {
-  if (!hasGuestProgress()) return;
-  const guestProgress = getGuestProgress();
+  // Transfer level progress
+  if (hasGuestProgress()) {
+    const guestProgress = getGuestProgress();
 
-  try {
-    for (const [categoryId, catProgress] of Object.entries(guestProgress)) {
-      for (const level of catProgress.completedLevels) {
-        await supabase.from("user_level_progress").upsert(
-          {
-            user_id: userId,
-            category_id: categoryId,
-            level_number: level.level_number,
-            stars_earned: level.stars_earned,
-            score: level.score,
-            total_questions: level.total_questions,
-            completed_at: level.completed_at,
-          },
-          { onConflict: "user_id,category_id,level_number" }
-        );
+    try {
+      for (const [categoryId, catProgress] of Object.entries(guestProgress)) {
+        for (const level of catProgress.completedLevels) {
+          await supabase.from("user_level_progress").upsert(
+            {
+              user_id: userId,
+              category_id: categoryId,
+              level_number: level.level_number,
+              stars_earned: level.stars_earned,
+              score: level.score,
+              total_questions: level.total_questions,
+              completed_at: level.completed_at,
+            },
+            { onConflict: "user_id,category_id,level_number" }
+          );
+        }
       }
+      clearGuestProgress();
+    } catch (err) {
+      console.error("Error transferring guest progress:", err);
     }
-    clearGuestProgress();
-  } catch (err) {
-    console.error("Error transferring guest progress:", err);
+  }
+
+  // Transfer guest game log → game_plays rows (retroactive)
+  const gameLog = getGuestGameLog();
+  if (gameLog.length > 0) {
+    try {
+      const rows = gameLog.map((g) => ({
+        user_id: userId,
+        category_id: g.categoryId,
+        level_number: g.levelNumber,
+        game_type: g.gameType,
+        score: g.score,
+        total_questions: g.totalQuestions,
+        stars_earned: g.starsEarned,
+        played_at: g.playedAt,
+      }));
+      await supabase.from("game_plays").insert(rows);
+      clearGuestPlays();
+    } catch (err) {
+      console.error("Error transferring guest game log:", err);
+    }
   }
 }
 
@@ -259,6 +283,16 @@ export function useCategoryProgress() {
         if (stars > 0) {
           saveGuestLevelProgress(categoryId, levelNumber, score, totalQuestions, stars);
         }
+
+        // Log guest game for retroactive game_plays insertion on signup
+        logGuestGameComplete({
+          categoryId,
+          levelNumber,
+          gameType: "category",
+          score,
+          totalQuestions,
+          starsEarned: stars,
+        });
 
         // Optimistic update for guest
         queryClient.setQueryData<Record<string, CategoryProgressData>>(queryKey, (prev) => {
