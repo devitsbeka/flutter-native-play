@@ -1,0 +1,172 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Trivia Question Bulk Import Schema",
+  "description": "Schema for bulk importing trivia questions. AI agents should generate arrays of questions following this format.",
+  "type": "object",
+  "required": ["questions"],
+  "properties": {
+    "questions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["category_slug", "question_text", "correct_answer", "incorrect_answers", "difficulty", "language"],
+        "properties": {
+          "category_slug": {
+            "type": "string",
+            "description": "Category identifier slug. Must match one of the predefined category slugs listed below.",
+            "enum": [
+              "anime_manga", "archaeology", "architecture", "astronomy", "biology",
+              "nature", "geography", "geology", "ecology", "economics",
+              "languages", "video_games", "movies", "space", "math",
+              "medicine", "memes_internet", "science", "myths_reality", "fashion",
+              "world_history", "world_cuisine", "music", "politics", "pop_culture",
+              "programming", "religion_mythology", "robotics_ai", "military_history",
+              "georgian_history", "fun_facts", "tv_series", "social_media", "sports",
+              "technology", "physics", "philosophy", "psychology", "georgian_culture",
+              "georgian_literature", "georgian_cuisine", "chemistry", "celebrities",
+              "animals", "art"
+            ]
+          },
+          "question_text": {
+            "type": "string",
+            "maxLength": 65,
+            "minLength": 5,
+            "description": "The question text. MUST end with '?'. Maximum 65 characters including the question mark. Should be clear, concise, and factually accurate."
+          },
+          "correct_answer": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "description": "The correct answer. Maximum 20 characters. MUST NOT appear as a substring in the question_text."
+          },
+          "incorrect_answers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 20,
+              "minLength": 1
+            },
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "Exactly 3 incorrect (distractor) answers. Each max 20 characters. Should be plausible but clearly wrong. The length difference between the longest and shortest answer (including correct) should not exceed 8 characters."
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": ["easy", "medium", "hard"],
+            "description": "Question difficulty level. easy = common knowledge, medium = requires some domain knowledge, hard = expert-level knowledge."
+          },
+          "language": {
+            "type": "string",
+            "enum": ["ka", "en", "fr", "de", "es", "it", "pt-br"],
+            "description": "Language code. 'ka' = Georgian (primary), 'en' = English, etc."
+          },
+          "icon_keyword": {
+            "type": "string",
+            "description": "Optional hint keyword for icon matching (e.g. 'planet', 'dna', 'pyramid'). MUST NOT be the same as or hint at the correct_answer. Used by the system to auto-assign a 3D icon from the library.",
+            "maxLength": 30
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "examples": [
+    {
+      "questions": [
+        {
+          "category_slug": "astronomy",
+          "question_text": "რომელია მზის სისტემის ყველაზე დიდი პლანეტა?",
+          "correct_answer": "იუპიტერი",
+          "incorrect_answers": ["სატურნი", "მარსი", "ნეპტუნი"],
+          "difficulty": "easy",
+          "language": "ka",
+          "icon_keyword": "planet"
+        },
+        {
+          "category_slug": "astronomy",
+          "question_text": "What is the closest star to Earth?",
+          "correct_answer": "The Sun",
+          "incorrect_answers": ["Alpha Centauri", "Sirius", "Betelgeuse"],
+          "difficulty": "easy",
+          "language": "en",
+          "icon_keyword": "star"
+        },
+        {
+          "category_slug": "world_history",
+          "question_text": "რომელ წელს დაიწყო პირველი მსოფლიო ომი?",
+          "correct_answer": "1914",
+          "incorrect_answers": ["1916", "1912", "1918"],
+          "difficulty": "medium",
+          "language": "ka",
+          "icon_keyword": "war"
+        },
+        {
+          "category_slug": "biology",
+          "question_text": "რა არის ადამიანის სხეულის უდიდესი ორგანო?",
+          "correct_answer": "კანი",
+          "incorrect_answers": ["ღვიძლი", "ტვინი", "გული"],
+          "difficulty": "medium",
+          "language": "ka",
+          "icon_keyword": "anatomy"
+        },
+        {
+          "category_slug": "geography",
+          "question_text": "Quelle est la capitale de la France?",
+          "correct_answer": "Paris",
+          "incorrect_answers": ["Lyon", "Marseille", "Toulouse"],
+          "difficulty": "easy",
+          "language": "fr",
+          "icon_keyword": "city"
+        }
+      ]
+    }
+  ],
+  "_category_reference": {
+    "anime_manga": { "id": "b9a45cde-fa7a-47e4-bdd2-35b58085b95d", "name_ka": "ანიმე და მანგა" },
+    "archaeology": { "id": "54ae077e-d975-4e7d-b710-75a9b7b05d60", "name_ka": "არქეოლოგია" },
+    "architecture": { "id": "5e49f995-e562-42fa-a452-9a38ee8efeb0", "name_ka": "არქიტექტურა" },
+    "astronomy": { "id": "342a8343-2671-4faa-a870-008cb2bf319e", "name_ka": "ასტრონომია" },
+    "biology": { "id": "17a65a4f-22a9-4e41-b312-0990f68ff04e", "name_ka": "ბიოლოგია" },
+    "nature": { "id": "16f4b260-ccbd-4885-abac-604115bf3b74", "name_ka": "ბუნება" },
+    "geography": { "id": "b352d1cf-a825-48a3-b85b-b916368669a3", "name_ka": "გეოგრაფია" },
+    "geology": { "id": "5e0d45ac-c8bd-431d-a072-e8df2b643c8a", "name_ka": "გეოლოგია" },
+    "ecology": { "id": "cf214615-056c-4b13-b047-b61be0d6a6f5", "name_ka": "ეკოლოგია" },
+    "economics": { "id": "c384d660-dc34-4e4a-bbbc-919c0009c8c1", "name_ka": "ეკონომიკა" },
+    "languages": { "id": "747e57c5-56b9-48bd-af27-5b2bde9dc7a4", "name_ka": "ენები და ლინგვისტიკა" },
+    "video_games": { "id": "a4e83e6a-93dd-450a-b7ed-00c10278089e", "name_ka": "ვიდეო თამაშები" },
+    "movies": { "id": "cd03367e-62fd-425e-a81a-cd5664149e14", "name_ka": "კინო" },
+    "space": { "id": "6713f663-9f5e-46fe-874e-d1e808abab79", "name_ka": "კოსმოსი" },
+    "math": { "id": "a9bd3fe7-d241-4265-86fd-eab21226bd49", "name_ka": "მათემატიკა" },
+    "medicine": { "id": "a21bad24-764e-4310-8355-101f7d593299", "name_ka": "მედიცინა და ჯანმრთელობა" },
+    "memes_internet": { "id": "fd2b667e-1735-44df-b577-822aa05dfc0d", "name_ka": "მემები და ინტერნეტი" },
+    "science": { "id": "fe5c3271-5e40-4c6a-828c-0854f30af501", "name_ka": "მეცნიერება" },
+    "myths_reality": { "id": "3af995ce-b0a9-4221-9964-fe738e5f2e47", "name_ka": "მითები თუ რეალობა" },
+    "fashion": { "id": "8d7a3d46-705b-43a8-8a40-d57d86615721", "name_ka": "მოდა და სტილი" },
+    "world_history": { "id": "0ab371b2-85c5-4016-b14e-8e352caa6e6d", "name_ka": "მსოფლიო ისტორია" },
+    "world_cuisine": { "id": "5de491b3-b02f-4402-b1d5-f1506ac3513d", "name_ka": "მსოფლიო სამზარეულო" },
+    "music": { "id": "80b2b8b6-8637-43a2-b78b-6fe502609fa1", "name_ka": "მუსიკა" },
+    "politics": { "id": "b078f516-0f47-4c2b-83cd-8efc6165cc89", "name_ka": "პოლიტიკა" },
+    "pop_culture": { "id": "0faf0fd6-dafc-4fb0-9719-dd639a089bbc", "name_ka": "პოპ კულტურა" },
+    "programming": { "id": "9a515acc-54fc-4bbf-80b1-cfa21cb7ceb3", "name_ka": "პროგრამირება" },
+    "religion_mythology": { "id": "f86cec23-8436-47e8-be96-9f4be204ceb0", "name_ka": "რელიგია და მითოლოგია" },
+    "robotics_ai": { "id": "62d2aef2-f69e-4506-afa5-fef756e52da7", "name_ka": "რობოტიკა და AI" },
+    "military_history": { "id": "83af5aca-52b1-4499-adf9-77f256ea0908", "name_ka": "სამხედრო ისტორია" },
+    "georgian_history": { "id": "88c4ac45-a37c-4a8e-9f22-9012b0e6df3c", "name_ka": "საქართველოს ისტორია" },
+    "fun_facts": { "id": "730095eb-5d25-4c37-b8f2-88a880dbec27", "name_ka": "სახალისო ფაქტები" },
+    "tv_series": { "id": "ae1bcb74-802a-4169-a549-56200c4a4873", "name_ka": "სერიალები" },
+    "social_media": { "id": "b3db9b77-a0c3-439f-8403-4076affe4818", "name_ka": "სოციალური მედია" },
+    "sports": { "id": "25442741-92ef-4d73-8ea3-071fdd20201a", "name_ka": "სპორტი" },
+    "technology": { "id": "23f43d93-5fc3-4a00-9381-f1efb1cf7765", "name_ka": "ტექნოლოგიები" },
+    "physics": { "id": "ad8cc9d2-06e8-4ada-865a-0b7a24a96b81", "name_ka": "ფიზიკა" },
+    "philosophy": { "id": "d10a457a-02f9-423e-8104-df9d965663d9", "name_ka": "ფილოსოფია" },
+    "psychology": { "id": "331241d2-6aa9-4107-8f12-7108f3749e35", "name_ka": "ფსიქოლოგია" },
+    "georgian_culture": { "id": "3ddbd6b0-e031-4fa3-99ce-e8c1f89e193f", "name_ka": "ქართული კულტურა" },
+    "georgian_literature": { "id": "7eb970df-fd5a-474f-9c2f-52ab0d2b4371", "name_ka": "ქართული ლიტერატურა" },
+    "georgian_cuisine": { "id": "a1adbfea-6fe4-42e2-8a2c-da35423c90fb", "name_ka": "ქართული სამზარეულო" },
+    "chemistry": { "id": "ba1eb6cc-c9d9-4e08-b5f5-7cb11fdfd116", "name_ka": "ქიმია" },
+    "celebrities": { "id": "c38e0f1f-3325-4027-be2f-dcb253985096", "name_ka": "ცნობილი ადამიანები" },
+    "animals": { "id": "9e7ed994-2920-4a9e-b25a-cc97b15cf1bd", "name_ka": "ცხოველები" },
+    "art": { "id": "d0ac21f1-f19f-4fdb-8582-265d9c6c00ae", "name_ka": "ხელოვნება" }
+  }
+}
