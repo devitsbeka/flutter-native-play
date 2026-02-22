@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Link2, FileJson, FileSpreadsheet, Sparkles, FileText, FolderPlus } from 'lucide-react';
+import { Link2, FileJson, FileSpreadsheet, Sparkles, FileText, FolderPlus, PackagePlus } from 'lucide-react';
 import { ParserTool } from './import/ParserTool';
 import { JsonImport } from './import/JsonImport';
 import { CsvImport } from './import/CsvImport';
 import { AiGenerator } from './import/AiGenerator';
 import { TextImport } from './import/TextImport';
 import { CategoryImport } from './import/CategoryImport';
+import { BulkImport } from './import/BulkImport';
 
 const importTools = [
+  { id: 'bulk', label: 'Bulk Import', icon: PackagePlus, description: 'Import thousands from JSON' },
   { id: 'parser', label: 'URL Parser', icon: Link2, description: 'AI-powered web scraper' },
   { id: 'json', label: 'JSON', icon: FileJson, description: 'Import from JSON' },
   { id: 'csv', label: 'CSV', icon: FileSpreadsheet, description: 'Import from CSV' },
@@ -19,7 +21,7 @@ const importTools = [
 ];
 
 export default function Import() {
-  const [activeTab, setActiveTab] = useState('parser');
+  const [activeTab, setActiveTab] = useState('bulk');
 
   return (
     <ScrollArea className="h-full">
@@ -32,7 +34,7 @@ export default function Import() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 h-auto p-1">
+          <TabsList className="grid w-full grid-cols-7 h-auto p-1">
             {importTools.map((tool) => (
               <TabsTrigger
                 key={tool.id}
@@ -46,6 +48,10 @@ export default function Import() {
           </TabsList>
 
           <div className="mt-6">
+            <TabsContent value="bulk" className="mt-0">
+              <BulkImport />
+            </TabsContent>
+
             <TabsContent value="parser" className="mt-0">
               <ParserTool />
             </TabsContent>

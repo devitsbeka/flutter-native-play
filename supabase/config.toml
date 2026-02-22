@@ -93,6 +93,9 @@ verify_jwt = true
 [functions.translate-questions]
 verify_jwt = true
 
+[functions.bulk-import-assign-icons]
+verify_jwt = true
+
 # --- ADMIN/BATCH OPERATIONS (modify database) ---
 [functions.batch-assign-icons]
 verify_jwt = true
