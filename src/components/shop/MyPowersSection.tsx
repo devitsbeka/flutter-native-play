@@ -1,5 +1,6 @@
 import { PowerUpType } from "@/hooks/useUserPowerUps";
 import { REWARDS } from "@/config/rewardConfig";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 import icon5050 from "@/assets/powers/5050.png";
 import iconFreeze from "@/assets/powers/freeze.png";
@@ -25,12 +26,13 @@ interface MyPowersSectionProps {
 }
 
 export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canAffordCoins, onCardClick }: MyPowersSectionProps) {
+  const { t } = useLanguage();
   // Triple-layer defense: ensure powerUps is always a valid object
   const safeData = powerUps ?? { "5050": 0, freeze: 0, replace: 0, "time-drain": 0 };
   
   return (
     <div className="px-4 pt-1.5 pb-4 relative z-10">
-      <h2 className="text-lg font-display text-foreground mb-4">ჩემი ძალები</h2>
+      <h2 className="text-lg font-display text-foreground mb-4">{t("extra.myPowers")}</h2>
       
       <div className="grid grid-cols-4 gap-3 mt-6">
         {POWER_UP_ORDER.map((type) => {
