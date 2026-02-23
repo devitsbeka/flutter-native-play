@@ -1832,7 +1832,7 @@ export const en: KaTranslations = {
     createAccount: "Create account",
     alreadyHaveAccount: "Already have an account?",
     noAccount: "Don't have an account?",
-    createBtn: "Create",
+    createAccountBtn: "Create",
     orDivider: "or",
     usernamePlaceholder: "Username",
     emailOrUsername: "Email or username",
