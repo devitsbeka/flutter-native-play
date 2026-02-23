@@ -649,10 +649,10 @@ function TeamContentV2() {
                     }}
                   >
                     {/* Tabs with equal distribution */}
-                    {[
-                      { id: "explore", label: "აღმოაჩინე" },
-                      { id: "rooms", label: "ოთახები" },
-                      { id: "my-content", label: "ჩემი ტრივია" },
+                     {[
+                      { id: "explore", label: t("extra.tabExplore") },
+                      { id: "rooms", label: t("extra.tabRooms") },
+                      { id: "my-content", label: t("extra.tabMyTrivia") },
                     ].map((tab) => (
                         <button
                           key={tab.id}

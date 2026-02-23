@@ -85,11 +85,11 @@ export function MyRoomsSection({
       
       if (error) throw error;
       
-      toast.success("ოთახი წაიშალა");
+      toast.success(t("extra.roomDeleted"));
       refreshRooms();
     } catch (error) {
       console.error("Error deleting room:", error);
-      toast.error("ოთახის წაშლა ვერ მოხერხდა");
+      toast.error(t("extra.roomDeleteFailed"));
     }
   };
 
@@ -230,19 +230,19 @@ export function MyRoomsSection({
               <img src={danceFloorIcon} alt="" className="w-full h-full object-contain" />
             </div>
             <h3 className="text-base font-semibold text-foreground mb-1.5">
-              {activeFilter === "all" ? "ოთახები ჯერ არ გაქვს" : 
-               activeFilter === "my_rooms" ? "შენ ჯერ ოთახი არ შეგიქმნია" :
-               activeFilter === "friends_rooms" ? "მეგობრებს ოთახები არ აქვთ" :
-               activeFilter === "active" ? "აქტიური ოთახები არ არის" :
-               "დასრულებული ოთახები არ არის"}
+              {activeFilter === "all" ? t("extra.noRoomsYet") : 
+               activeFilter === "my_rooms" ? t("extra.noRoomsCreated") :
+               activeFilter === "friends_rooms" ? t("extra.friendsNoRooms") :
+               activeFilter === "active" ? t("extra.noActiveRoomsMsg") :
+               t("extra.noCompletedRooms")}
             </h3>
             {activeFilter === "all" && (
               <p className="text-muted-foreground text-xs text-center mb-5">
-                შექმენი ოთახი და მოიწვიე მეგობრები სათამაშოდ.
+                {t("extra.createRoomInvite")}
               </p>
             )}
             {onCreateRoom && activeFilter === "all" && (
-              <ChunkyButton onClick={onCreateRoom} size="sm">+ ოთახი</ChunkyButton>
+              <ChunkyButton onClick={onCreateRoom} size="sm">{t("extra.addRoom")}</ChunkyButton>
             )}
           </motion.div>
         )
@@ -285,7 +285,7 @@ export function MyRoomsSection({
                 <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                   <Users className="w-6 h-6 text-muted-foreground" />
                 </div>
-                <span className="text-sm font-medium text-muted-foreground">ყველას ნახვა</span>
+                <span className="text-sm font-medium text-muted-foreground">{t("extra.viewAllRooms")}</span>
               </motion.button>
             )}
           </div>
