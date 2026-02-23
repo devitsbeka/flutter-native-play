@@ -1794,6 +1794,10 @@ export const ka = {
     promoPlayFree: "ითამაშე უფასოდ",
     guestUser: "მომხმარებელი",
     createProfilePlayFree: "შექმენი შენი პროფილი და ითამაშე უფასოდ!",
+    addUser: "დამატება",
+    signInOtherAccount: "სხვა ანგარიშით შესვლა",
+    passwordPlaceholder: "პაროლი",
+    signInBtn: "შესვლა",
   },
 };
 

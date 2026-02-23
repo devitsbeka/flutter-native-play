@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Lock, Loader2, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ interface ReturningUserPickerProps {
 }
 
 export function ReturningUserPicker({ user, onSignIn, onAddUser, onSwitchUser }: ReturningUserPickerProps) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
@@ -109,7 +111,7 @@ export function ReturningUserPicker({ user, onSignIn, onAddUser, onSwitchUser }:
             <Plus className="w-8 h-8 md:w-10 md:h-10 text-white/40" />
           </div>
           <h3 className="mt-4 text-lg md:text-xl font-medium text-white/50">
-            დამატება
+            {t("extra.addUser")}
           </h3>
         </motion.div>
       </div>
@@ -127,7 +129,7 @@ export function ReturningUserPicker({ user, onSignIn, onAddUser, onSwitchUser }:
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
               <Input
                 type="password"
-                placeholder="პაროლი"
+                placeholder={t("extra.passwordPlaceholder")}
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
@@ -145,13 +147,13 @@ export function ReturningUserPicker({ user, onSignIn, onAddUser, onSwitchUser }:
               onClick={handleSubmit}
               disabled={loading || !password}
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "შესვლა"}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t("extra.signInBtn")}
             </ChunkyButton>
             <button
               onClick={() => { setShowPassword(false); setPassword(""); setError(""); }}
               className="text-sm text-white/50 hover:text-white/80 transition-colors"
             >
-              უკან
+              {t("extra.backBtn")}
             </button>
           </motion.div>
         )}
@@ -165,7 +167,7 @@ export function ReturningUserPicker({ user, onSignIn, onAddUser, onSwitchUser }:
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
       >
-        სხვა ანგარიშით შესვლა
+        {t("extra.signInOtherAccount")}
       </motion.button>
     </div>
   );

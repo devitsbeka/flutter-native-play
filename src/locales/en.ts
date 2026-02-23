@@ -1795,6 +1795,10 @@ export const en: KaTranslations = {
     promoPlayFree: "Play for free",
     guestUser: "User",
     createProfilePlayFree: "Create your profile and play for free!",
+    addUser: "Add",
+    signInOtherAccount: "Sign in with another account",
+    passwordPlaceholder: "Password",
+    signInBtn: "Sign in",
   },
 };
 
