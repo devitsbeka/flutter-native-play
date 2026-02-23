@@ -2357,6 +2357,7 @@ export const en: KaTranslations = {
     requestSentShort: "Sent",
     acceptRequestBtn: "Accept Request",
     fullProfileBtn: "Full Profile",
+    profileBtnLabel: "Profile",
     triviasStatLabel: "Trivias",
     gamesStatLabel: "Games",
     friendSuggestions: "Friend Suggestions",

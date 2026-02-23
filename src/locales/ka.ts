@@ -2356,6 +2356,7 @@ export const ka = {
     requestSentShort: "გაგზავნილია",
     acceptRequestBtn: "მოთხოვნის მიღება",
     fullProfileBtn: "სრული პროფილი",
+    profileBtnLabel: "პროფილი",
     triviasStatLabel: "ტრივიები",
     gamesStatLabel: "თამაშები",
     friendSuggestions: "მეგობრების შემოთავაზება",
