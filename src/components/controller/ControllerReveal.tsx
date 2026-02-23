@@ -4,24 +4,21 @@ import { useNavigate } from 'react-router-dom';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Check, X, Loader2, Star, Clock } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const ControllerReveal: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { questions, currentQuestionIndex, myAnswer, myScore, players, myPlayerId, leaveSession, phase, currentRoundSuggesterId } = useTVGame();
   
-  // Check if current player is the suggester for this round
   const isSuggester = myPlayerId && currentRoundSuggesterId && myPlayerId === currentRoundSuggesterId;
   
-  // FIX: Capture the answer state when we first enter reveal
-  // This prevents showing wrong data when myAnswer is cleared during transition
   const capturedAnswerRef = useRef<{ answer: string | null; questionIndex: number; isCorrect: boolean | null } | null>(null);
   
   const currentQuestion = questions[currentQuestionIndex];
   
-  // Capture the answer state on first render or when question changes
   useEffect(() => {
     if (phase === 'reveal' && currentQuestion) {
-      // Only capture if we have an answer or if this is a new question
       if (myAnswer !== null || !capturedAnswerRef.current || capturedAnswerRef.current.questionIndex !== currentQuestionIndex) {
         const isCorrect = myAnswer !== null ? myAnswer === currentQuestion.correct_answer : null;
         capturedAnswerRef.current = {
@@ -38,23 +35,21 @@ export const ControllerReveal: React.FC = () => {
     }
   }, [phase, currentQuestion, myAnswer, currentQuestionIndex]);
   
-  // Reset capture when leaving reveal phase
   useEffect(() => {
     if (phase !== 'reveal') {
       capturedAnswerRef.current = null;
     }
   }, [phase]);
 
-  // Handle missing question gracefully
   if (!currentQuestion || questions.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
-          <p className="text-white text-lg font-semibold mb-2">შედეგები იტვირთება...</p>
-          <p className="text-purple-300 text-sm mb-2">დაელოდე შემდეგ კითხვას</p>
+          <p className="text-white text-lg font-semibold mb-2">{t("extra.crResultsLoading")}</p>
+          <p className="text-purple-300 text-sm mb-2">{t("extra.crWaitNextQuestion")}</p>
         <div className="bg-white/10 rounded-xl px-6 py-3 mt-4 mb-4">
-          <span className="text-purple-300">შენი ქულა: </span>
+          <span className="text-purple-300">{t("extra.crYourScore")}</span>
           <span className="text-white text-2xl font-bold">{Math.round(myScore)}</span>
         </div>
           <ChunkyButton
@@ -65,56 +60,52 @@ export const ControllerReveal: React.FC = () => {
               navigate('/');
             }}
           >
-            თამაშიდან გასვლა
+            {t("extra.crLeaveGame")}
           </ChunkyButton>
         </div>
       </div>
     );
   }
 
-  // CRITICAL FIX: Suggester sees observer reveal UI, not "Time expired"
   if (isSuggester && currentQuestion) {
-    // Use score from players list (synced via presence) as it includes observer bonus
     const observerPlayer = players.find(p => p.id === myPlayerId);
     const observerScore = observerPlayer?.score ?? myScore;
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
         <Star className="w-16 h-16 text-yellow-400 mb-4" />
-        <h2 className="text-2xl font-bold text-white mb-2">შენი კატეგორიაა!</h2>
-        <p className="text-purple-300 mb-4">ამ რაუნდში აკვირდები</p>
+        <h2 className="text-2xl font-bold text-white mb-2">{t("extra.crYourCategory")}</h2>
+        <p className="text-purple-300 mb-4">{t("extra.crObservingRound")}</p>
 
         <div className="bg-white/10 rounded-xl p-4 mb-4 max-w-sm">
-          <p className="text-purple-300 text-sm mb-1">სწორი პასუხი:</p>
+          <p className="text-purple-300 text-sm mb-1">{t("extra.crCorrectAnswer")}</p>
           <p className="text-white font-semibold text-center">{currentQuestion.correct_answer}</p>
         </div>
 
         <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-xl px-6 py-3 mb-4">
-          <span className="text-yellow-300">შენი ქულა: </span>
+          <span className="text-yellow-300">{t("extra.crYourScore")}</span>
           <span className="text-white text-2xl font-bold">{Math.round(observerScore)}</span>
         </div>
 
-        <p className="text-purple-300/60">შემდეგი კითხვა მალე...</p>
+        <p className="text-purple-300/60">{t("extra.crNextQuestionSoon")}</p>
       </div>
     );
   }
 
-  // FIX: Use captured state if available and valid for current question
   const captured = capturedAnswerRef.current;
   const didAnswer = myAnswer !== null || (captured?.questionIndex === currentQuestionIndex && captured?.answer !== null);
   const isCorrect = captured?.questionIndex === currentQuestionIndex && captured?.isCorrect !== null
     ? captured.isCorrect
     : myAnswer === currentQuestion.correct_answer;
   
-  // If we have no answer data at all (transitioning state), show loading
   if (myAnswer === null && (!captured || captured.questionIndex !== currentQuestionIndex)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
-          <p className="text-white text-lg font-semibold mb-2">მოწმდება...</p>
+          <p className="text-white text-lg font-semibold mb-2">{t("extra.crChecking")}</p>
           <div className="bg-white/10 rounded-xl px-6 py-3 mt-4">
-            <span className="text-purple-300">შენი ქულა: </span>
+            <span className="text-purple-300">{t("extra.crYourScore")}</span>
             <span className="text-white text-2xl font-bold">{Math.round(myScore)}</span>
           </div>
         </div>
@@ -122,10 +113,9 @@ export const ControllerReveal: React.FC = () => {
     );
   }
 
-  // Determine icon, color, and message based on answer state
   const iconBg = didAnswer ? (isCorrect ? 'bg-green-500' : 'bg-red-500') : 'bg-gray-500';
   const textColor = didAnswer ? (isCorrect ? 'text-green-400' : 'text-red-400') : 'text-gray-400';
-  const message = didAnswer ? (isCorrect ? 'სწორია!' : 'არასწორია!') : 'დრო ამოიწურა!';
+  const message = didAnswer ? (isCorrect ? t("extra.crCorrect") : t("extra.crIncorrect")) : t("extra.crTimeExpired");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
@@ -140,16 +130,16 @@ export const ControllerReveal: React.FC = () => {
       
       {!isCorrect && currentQuestion && (
         <p className="text-purple-300 text-center mb-4">
-          პასუხი: {currentQuestion.correct_answer}
+          {t("extra.crAnswer")}{currentQuestion.correct_answer}
         </p>
       )}
       
       <div className="bg-white/10 rounded-xl px-6 py-3 mb-4">
-        <span className="text-purple-300">შენი ქულა: </span>
+        <span className="text-purple-300">{t("extra.crYourScore")}</span>
         <span className="text-white text-2xl font-bold">{Math.round(myScore)}</span>
       </div>
       
-      <p className="text-purple-300/60">შემდეგი კითხვა მალე...</p>
+      <p className="text-purple-300/60">{t("extra.crNextQuestionSoon")}</p>
     </div>
   );
 };

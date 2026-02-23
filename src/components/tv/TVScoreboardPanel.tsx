@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Check, Clock } from 'lucide-react';
 import { Avatar } from '@/components/shared/Avatar';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Player {
   id: string;
@@ -23,6 +24,7 @@ export const TVScoreboardPanel: React.FC<TVScoreboardPanelProps> = ({
   players,
   showAnswerStatus = true,
 }) => {
+  const { t } = useLanguage();
   // Sort players by score descending
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
@@ -32,7 +34,7 @@ export const TVScoreboardPanel: React.FC<TVScoreboardPanelProps> = ({
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-center gap-2">
           <Trophy className="w-6 h-6 text-yellow-500" />
-          <h3 className="text-xl font-bold text-foreground">ლიდერბორდი</h3>
+          <h3 className="text-xl font-bold text-foreground">{t("extra.tvLeaderboard")}</h3>
         </div>
       </div>
 
@@ -97,7 +99,7 @@ export const TVScoreboardPanel: React.FC<TVScoreboardPanelProps> = ({
                     </span>
                     {player.isHost && (
                       <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">
-                        HOST
+                        {t("extra.tvHostBadge")}
                       </span>
                     )}
                   </div>
@@ -119,7 +121,7 @@ export const TVScoreboardPanel: React.FC<TVScoreboardPanelProps> = ({
 
         {players.length === 0 && (
           <div className="text-center text-muted-foreground py-8">
-            ჯერ არავინ არ არის
+            {t("extra.tvNoPlayersYet")}
           </div>
         )}
       </div>

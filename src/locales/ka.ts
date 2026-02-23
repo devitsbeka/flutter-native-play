@@ -2609,6 +2609,29 @@ export const ka = {
     shRooms: "ოთახები",
     shTrivias: "ტრივიები",
     shCollections: "კოლექციები",
+    // Generation notifications
+    genAvatarTitle: "ავატარის გენერაცია",
+    genCoverTitle: "გარეკანის გენერაცია",
+    genPreparing: "მზადდება...",
+    genReady: "მზადაა",
+    genError: "შეცდომა მოხდა",
+    // ControllerReveal
+    crResultsLoading: "შედეგები იტვირთება...",
+    crWaitNextQuestion: "დაელოდე შემდეგ კითხვას",
+    crYourScore: "შენი ქულა: ",
+    crLeaveGame: "თამაშიდან გასვლა",
+    crYourCategory: "შენი კატეგორიაა!",
+    crObservingRound: "ამ რაუნდში აკვირდები",
+    crCorrectAnswer: "სწორი პასუხი:",
+    crNextQuestionSoon: "შემდეგი კითხვა მალე...",
+    crCorrect: "სწორია!",
+    crIncorrect: "არასწორია!",
+    crTimeExpired: "დრო ამოიწურა!",
+    crAnswer: "პასუხი: ",
+    crChecking: "მოწმდება...",
+    // TV Scoreboard Panel
+    tvHostBadge: "HOST",
+    tvNoPlayersYet: "ჯერ არავინ არ არის",
   },
 };
 

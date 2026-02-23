@@ -318,7 +318,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <span className="font-bold text-white">{(p as any).total_score || 0}</span>
                       <span className="text-xs text-white/60">
-                        ({p.total_rounds_played || 0}რ)
+                        ({t("extra.roundsShort", { count: p.total_rounds_played || 0 })})
                       </span>
                     </div>
                   ) : isHost && (

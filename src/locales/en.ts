@@ -2610,6 +2610,29 @@ export const en: KaTranslations = {
     shRooms: "Rooms",
     shTrivias: "Trivias",
     shCollections: "Collections",
+    // Generation notifications
+    genAvatarTitle: "Avatar Generation",
+    genCoverTitle: "Cover Generation",
+    genPreparing: "Preparing...",
+    genReady: "Ready",
+    genError: "An error occurred",
+    // ControllerReveal
+    crResultsLoading: "Results loading...",
+    crWaitNextQuestion: "Wait for the next question",
+    crYourScore: "Your score: ",
+    crLeaveGame: "Leave game",
+    crYourCategory: "Your category!",
+    crObservingRound: "You're observing this round",
+    crCorrectAnswer: "Correct answer:",
+    crNextQuestionSoon: "Next question soon...",
+    crCorrect: "Correct!",
+    crIncorrect: "Incorrect!",
+    crTimeExpired: "Time expired!",
+    crAnswer: "Answer: ",
+    crChecking: "Checking...",
+    // TV Scoreboard Panel
+    tvHostBadge: "HOST",
+    tvNoPlayersYet: "No one here yet",
   },
 };
 
