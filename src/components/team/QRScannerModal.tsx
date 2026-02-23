@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
 import { ChevronLeft, ScanLine, AlertCircle, Flashlight, ZoomIn, ZoomOut } from "lucide-react";
@@ -13,6 +14,7 @@ interface QRScannerModalProps {
 }
 
 export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -241,7 +243,7 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
                     <ScanLine className="w-12 h-12 text-primary" />
                   </motion.div>
                   <p className="mt-4 text-sm text-muted-foreground">
-                    კამერა იტვირთება...
+                    {t("extra.cameraLoading")}
                   </p>
                 </div>
               )}

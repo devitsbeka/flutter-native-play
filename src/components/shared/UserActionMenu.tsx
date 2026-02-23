@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Flag, Ban, X, AlertTriangle, MessageSquare, Shield, Swords, HelpCircle } from "lucide-react";
 import { useUserModeration, ReportType } from "@/hooks/useUserModeration";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface UserActionMenuProps {
   isOpen: boolean;
@@ -13,12 +14,13 @@ interface UserActionMenuProps {
   roomId?: string;
 }
 
-const REPORT_REASONS: { type: ReportType; label: string; icon: React.ElementType }[] = [
-  { type: "spam", label: "სპამი", icon: MessageSquare },
-  { type: "harassment", label: "შეურაცხყოფა", icon: AlertTriangle },
-  { type: "inappropriate", label: "შეუსაბამო კონტენტი", icon: Shield },
-  { type: "cheating", label: "თაღლითობა", icon: Swords },
-  { type: "other", label: "სხვა", icon: HelpCircle },
+// Report reasons - labels will be translated via t()
+const REPORT_REASON_KEYS: { type: ReportType; labelKey: string; icon: React.ElementType }[] = [
+  { type: "spam", labelKey: "extra.reportSpam", icon: MessageSquare },
+  { type: "harassment", labelKey: "extra.reportHarassment", icon: AlertTriangle },
+  { type: "inappropriate", labelKey: "extra.reportInappropriate", icon: Shield },
+  { type: "cheating", labelKey: "extra.reportCheating", icon: Swords },
+  { type: "other", labelKey: "extra.reportOther", icon: HelpCircle },
 ];
 
 export function UserActionMenu({
@@ -30,6 +32,7 @@ export function UserActionMenu({
   roomId,
 }: UserActionMenuProps) {
   const { reportUser, blockUser, isUserBlocked, unblockUser } = useUserModeration();
+  const { t } = useLanguage();
   const [showReportOptions, setShowReportOptions] = useState(false);
   const [selectedReason, setSelectedReason] = useState<ReportType | null>(null);
   const [description, setDescription] = useState("");
@@ -99,7 +102,7 @@ export function UserActionMenu({
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground">
-                {showReportOptions ? "რეპორტის მიზეზი" : targetUserName}
+                {showReportOptions ? t("extra.reportReason") : targetUserName}
               </h3>
               <button
                 onClick={handleClose}
@@ -119,10 +122,10 @@ export function UserActionMenu({
                   <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
                     <Flag className="w-5 h-5 text-amber-600" />
                   </div>
-                  <div className="text-left">
-                    <p className="font-medium text-foreground">რეპორტი</p>
-                    <p className="text-sm text-muted-foreground">შეატყობინე შეუსაბამო ქცევის შესახებ</p>
-                  </div>
+                   <div className="text-left">
+                     <p className="font-medium text-foreground">{t("extra.reportBtn")}</p>
+                     <p className="text-sm text-muted-foreground">{t("extra.reportHint")}</p>
+                   </div>
                 </button>
 
                 <button
@@ -136,14 +139,12 @@ export function UserActionMenu({
                     <Ban className={`w-5 h-5 ${isBlocked ? "text-green-600" : "text-red-600"}`} />
                   </div>
                   <div className="text-left">
-                    <p className="font-medium text-foreground">
-                      {isBlocked ? "განბლოკვა" : "დაბლოკვა"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {isBlocked 
-                        ? "ხელახლა ნახავ ამ მომხმარებლის შეტყობინებებს" 
-                        : "ვეღარ ნახავ ამ მომხმარებლის შეტყობინებებს"}
-                    </p>
+                     <p className="font-medium text-foreground">
+                       {isBlocked ? t("extra.unblockBtn") : t("extra.blockBtn")}
+                     </p>
+                     <p className="text-sm text-muted-foreground">
+                       {isBlocked ? t("extra.unblockHint") : t("extra.blockHint")}
+                     </p>
                   </div>
                 </button>
               </div>
@@ -152,26 +153,26 @@ export function UserActionMenu({
               <div className="space-y-3">
                 {/* Reason Selection */}
                 <div className="grid grid-cols-2 gap-2">
-                  {REPORT_REASONS.map(({ type, label, icon: Icon }) => (
-                    <button
-                      key={type}
-                      onClick={() => setSelectedReason(type)}
-                      className={`flex items-center gap-2 p-3 rounded-xl border transition-colors ${
-                        selectedReason === type
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-muted hover:bg-muted/80"
-                      }`}
-                    >
-                      <Icon className={`w-4 h-4 ${
-                        selectedReason === type ? "text-primary" : "text-muted-foreground"
-                      }`} />
-                      <span className={`text-sm font-medium ${
-                        selectedReason === type ? "text-primary" : "text-foreground"
-                      }`}>
-                        {label}
-                      </span>
-                    </button>
-                  ))}
+                {REPORT_REASON_KEYS.map(({ type, labelKey, icon: Icon }) => (
+                     <button
+                       key={type}
+                       onClick={() => setSelectedReason(type)}
+                       className={`flex items-center gap-2 p-3 rounded-xl border transition-colors ${
+                         selectedReason === type
+                           ? "border-primary bg-primary/10"
+                           : "border-border bg-muted hover:bg-muted/80"
+                       }`}
+                     >
+                       <Icon className={`w-4 h-4 ${
+                         selectedReason === type ? "text-primary" : "text-muted-foreground"
+                       }`} />
+                       <span className={`text-sm font-medium ${
+                         selectedReason === type ? "text-primary" : "text-foreground"
+                       }`}>
+                         {t(labelKey)}
+                       </span>
+                     </button>
+                   ))}
                 </div>
 
                 {/* Optional Description */}
@@ -183,7 +184,7 @@ export function UserActionMenu({
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="დამატებითი დეტალები (არასავალდებულო)"
+                      placeholder={t("extra.additionalDetails")}
                       className="w-full p-3 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground resize-none"
                       rows={3}
                     />
@@ -197,14 +198,14 @@ export function UserActionMenu({
                   className="w-full"
                   variant="primary"
                 >
-                  {loading ? "იგზავნება..." : "რეპორტის გაგზავნა"}
+                  {loading ? t("extra.reportSending") : t("extra.sendReport")}
                 </ChunkyButton>
 
                 <button
                   onClick={() => setShowReportOptions(false)}
                   className="w-full py-2 text-sm text-muted-foreground"
                 >
-                  უკან დაბრუნება
+                  {t("extra.goBack")}
                 </button>
               </div>
             )}

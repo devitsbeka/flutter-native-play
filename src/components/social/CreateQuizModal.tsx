@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, X, RefreshCw, Globe, Lock, Play, Users } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
@@ -171,6 +172,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const [isPublic, setIsPublic] = useState(false);
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const { t } = useLanguage();
   const [topicSuggestions, setTopicSuggestions] = useState<TopicSuggestion[]>([]);
   const [isLoadingTopics, setIsLoadingTopics] = useState(false);
 
@@ -953,12 +955,12 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   {isPosting ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      ინახება...
+                      {t("extra.savingState")}
                     </>
                   ) : (
                     <>
                       <Play className="w-5 h-5 mr-2" />
-                      შეინახე
+                      {t("extra.saveBtn2")}
                     </>
                   )}
                 </ChunkyButton>
