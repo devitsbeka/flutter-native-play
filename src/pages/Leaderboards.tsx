@@ -221,7 +221,7 @@ export default function Leaderboards() {
       isOpen={showAuthModal}
       onClose={() => setShowAuthModal(false)}
       returnToPath="/leaderboards"
-      message="შედი ანგარიშზე რეიტინგის სანახავად"
+      message={t("extra.signInForLeaderboard")}
     />
     <div className="min-h-screen w-full max-w-[100vw] flex flex-col overflow-x-hidden bg-background">
       {/* Header Bar - sticky with white background */}

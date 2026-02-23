@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Heart } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
@@ -91,6 +92,7 @@ export function AirbnbCategoryCard({
   onClick,
   variant = "compact",
 }: AirbnbCategoryCardProps) {
+  const { t } = useLanguage();
   const pastel = useMemo(() => getPastelColors(id), [id]);
   const isCompleted = progress >= totalLevels;
   const isFull = variant === "full";
@@ -234,7 +236,7 @@ export function AirbnbCategoryCard({
                 }}
               >
                 <span className="text-xs font-bold text-white leading-none">
-                  ახალი!
+                  {t("extra.newBadge")}
                 </span>
               </div>
             )}

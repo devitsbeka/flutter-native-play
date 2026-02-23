@@ -388,7 +388,7 @@ export default function PowerUps() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         returnToPath="/power-ups"
-        message="შედი ანგარიშზე შესყიდვისთვის"
+        message={t("extra.signInForPurchase")}
       />
     </MainLayout>
   );

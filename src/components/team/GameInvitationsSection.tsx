@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, Mail, X, Clock, Zap } from "lucide-react";
 import { useGameInvitations, GameInvitation } from "@/hooks/useGameInvitations";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
@@ -12,6 +13,7 @@ interface GameInvitationsSectionProps {
 }
 
 export function GameInvitationsSection({ onAcceptInvitation, onJoinRoom }: GameInvitationsSectionProps) {
+  const { t } = useLanguage();
   const { pendingInvitations, loading, declineInvitation } = useGameInvitations();
 
   if (loading) {
@@ -72,6 +74,7 @@ interface InvitationCardProps {
 }
 
 function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps) {
+  const { t } = useLanguage();
   const [isDeclining, setIsDeclining] = useState(false);
   const [timeLeft, setTimeLeft] = useState<string>("");
 
@@ -196,7 +199,7 @@ function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps
               {invitation.sender?.nickname || "მეგობარი"}
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-medium">
-              ახალი!
+              {t("extra.newBadge")}
             </span>
           </div>
           

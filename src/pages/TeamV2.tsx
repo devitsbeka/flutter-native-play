@@ -1141,7 +1141,7 @@ function TeamContentV2() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         returnToPath="/team"
-        message="შედი ანგარიშზე ონლაინ თამაშისთვის"
+        message={t("extra.signInForOnlineGame")}
       />
       
       {/* Guest Join Modal for invite links */}

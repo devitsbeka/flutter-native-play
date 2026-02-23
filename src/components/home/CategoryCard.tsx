@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Lock } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
@@ -50,6 +51,7 @@ export function CategoryCard({
   coinCost = 10,
   questionCount = 10,
 }: CategoryCardProps) {
+  const { t } = useLanguage();
   const isCompleted = progress >= totalLevels;
 
   return (
@@ -123,7 +125,7 @@ export function CategoryCard({
       {/* "NEW" badge */}
       {index === 2 && !isLocked && (
         <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-lg transform rotate-12 z-10">
-          ახალი!
+          {t("extra.newBadge")}
         </div>
       )}
     </motion.button>
