@@ -20,18 +20,18 @@ interface GuestWelcomePanelProps {
 }
 
 // Validation helpers
-const validateUsername = (value: string): string | undefined => {
-  if (!value.trim()) return "სახელი საჭიროა";
-  if (value.length < 3) return "მინ. 3 სიმბოლო";
+const validateUsername = (value: string, t: (key: string) => string): string | undefined => {
+  if (!value.trim()) return t("extra.usernameRequired");
+  if (value.length < 3) return t("extra.minChars3");
   if (!/^[a-zA-Z0-9_\u10A0-\u10FF]+$/.test(value)) {
-    return "მხოლოდ ასოები, ციფრები და _";
+    return t("extra.onlyLettersDigits");
   }
   return undefined;
 };
 
-const validatePassword = (value: string): string | undefined => {
-  if (!value) return "პაროლი საჭიროა";
-  if (value.length < 6) return "მინ. 6 სიმბოლო";
+const validatePassword = (value: string, t: (key: string) => string): string | undefined => {
+  if (!value) return t("extra.passwordRequired");
+  if (value.length < 6) return t("extra.minChars6");
   return undefined;
 };
 
@@ -64,8 +64,8 @@ export function GuestWelcomePanel({
     e.preventDefault();
     
     // For sign in mode, only validate password (username can be any format)
-    const uError = isSignUp ? validateUsername(username) : (!username.trim() ? "სახელი საჭიროა" : undefined);
-    const pError = validatePassword(password);
+    const uError = isSignUp ? validateUsername(username, t) : (!username.trim() ? t("extra.usernameRequired") : undefined);
+    const pError = validatePassword(password, t);
     
     setUsernameError(uError);
     setPasswordError(pError);
@@ -82,9 +82,9 @@ export function GuestWelcomePanel({
     } catch (err: any) {
       const msg = err?.message || "";
       if (msg.includes("Failed to lookup user") || msg.includes("Invalid login credentials")) {
-        toast.error("მომხმარებელი ვერ მოიძებნა. დარწმუნდი რომ სწორი მონაცემები შეიყვანე ან დარეგისტრირდი");
+        toast.error(t("extra.userNotFound"));
       } else {
-        toast.error("შეცდომა, სცადე თავიდან");
+        toast.error(t("extra.genericError"));
       }
     } finally {
       setIsSubmitting(false);
@@ -95,7 +95,7 @@ export function GuestWelcomePanel({
     try {
       await onGoogleSignIn();
     } catch (err: any) {
-      toast.error("Google-ით შესვლა ვერ მოხერხდა");
+      toast.error(t("extra.googleSignInError"));
     }
   };
 
@@ -103,7 +103,7 @@ export function GuestWelcomePanel({
     try {
       await onAppleSignIn();
     } catch (err: any) {
-      toast.error("Apple-ით შესვლა ვერ მოხერხდა");
+      toast.error(t("extra.appleSignInError"));
     }
   };
 
@@ -153,7 +153,7 @@ export function GuestWelcomePanel({
           transition={{ delay: 0.1, type: "spring" }}
           className="flex flex-col items-center mb-5"
         >
-          <h2 className="text-2xl font-bold text-foreground">გამარჯობა!</h2>
+          <h2 className="text-2xl font-bold text-foreground">{t("common.hello")}</h2>
         </motion.div>
       )}
 
@@ -228,7 +228,7 @@ export function GuestWelcomePanel({
                     className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-sm font-medium whitespace-nowrap"
                   >
                     <Camera className="w-4 h-4" />
-                    გადაიღე ფოტო
+                    {t("extra.takePhoto")}
                   </button>
                   <button
                     type="button"
@@ -237,7 +237,7 @@ export function GuestWelcomePanel({
                     className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-sm font-medium whitespace-nowrap"
                   >
                     <ImagePlus className="w-4 h-4" />
-                    აირჩიე გალერიიდან
+                    {t("extra.selectFromGallery")}
                   </button>
                 </div>
               </PopoverContent>
@@ -267,7 +267,7 @@ export function GuestWelcomePanel({
                 setUsername(e.target.value);
                 if (usernameError) setUsernameError(undefined);
               }}
-              placeholder="სახელი"
+              placeholder={t("extra.usernamePlaceholder")}
               disabled={loading}
               className="w-full pl-10 pr-3 py-[15px] rounded-xl bg-background border-2 border-border 
                          focus:border-primary outline-none text-base font-medium
@@ -293,7 +293,7 @@ export function GuestWelcomePanel({
                 setUsername(e.target.value);
                 if (usernameError) setUsernameError(undefined);
               }}
-              placeholder="ელფოსტა ან სახელი"
+              placeholder={t("extra.emailOrUsername")}
               disabled={loading}
               className="w-full pl-10 pr-3 py-[15px] rounded-xl bg-background border-2 border-border 
                          focus:border-primary outline-none text-base font-medium
@@ -318,7 +318,7 @@ export function GuestWelcomePanel({
               setPassword(e.target.value);
               if (passwordError) setPasswordError(undefined);
             }}
-            placeholder="პაროლი"
+            placeholder={t("extra.passwordPlaceholder")}
             disabled={loading}
             className="w-full pl-10 pr-3 py-[15px] rounded-xl bg-background border-2 border-border 
                        focus:border-primary outline-none text-base font-medium
@@ -343,12 +343,12 @@ export function GuestWelcomePanel({
           ) : isSignUp ? (
             <>
               <Sparkles className="w-4 h-4" />
-              <span className="text-[1.1rem]">შექმენი ანგარიში</span>
+              <span className="text-[1.1rem]">{t("extra.createAccount")}</span>
             </>
           ) : (
             <>
               <Lock className="w-4 h-4" />
-              შესვლა
+              {t("common.signIn")}
             </>
           )}
         </ChunkyButton>
@@ -357,24 +357,24 @@ export function GuestWelcomePanel({
         <p className="text-sm text-muted-foreground text-center mt-2">
           {isSignUp ? (
             <>
-              უკვე გაქვს ანგარიში?{" "}
+              {t("extra.alreadyHaveAccount")}{" "}
               <button 
                 type="button" 
                 onClick={() => setIsSignUp(false)}
                 className="text-primary font-semibold hover:underline"
               >
-                შესვლა
+                {t("common.signIn")}
               </button>
             </>
           ) : (
             <>
-              არ გაქვს ანგარიში?{" "}
+              {t("extra.noAccount")}{" "}
               <button 
                 type="button" 
                 onClick={() => setIsSignUp(true)}
                 className="text-primary font-semibold hover:underline"
               >
-                შექმენი
+                {t("extra.createAccountBtn")}
               </button>
             </>
           )}
@@ -389,7 +389,7 @@ export function GuestWelcomePanel({
         className="flex items-center gap-3 w-full my-3"
       >
         <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-muted-foreground font-medium">ან</span>
+        <span className="text-xs text-muted-foreground font-medium">{t("extra.orDivider")}</span>
         <div className="flex-1 h-px bg-border" />
       </motion.div>
 

@@ -19,6 +19,7 @@ import { MissionsModal } from "@/components/home/MissionsModal";
 import { LevelInfoModal } from "@/components/home/LevelInfoModal";
 import { NotEnoughCoinsModal } from "@/components/home/NotEnoughCoinsModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { calculateLevel } from "@/utils/levelCalculation";
@@ -173,6 +174,7 @@ const SideIconButton = ({
 export default function Index() {
   const navigate = useNavigate();
   const { profile, user, fetchProfile, signUp, signUpWithUsername, signIn, signInWithUsername, signInWithGoogle, signInWithApple } = useAuth();
+  const { t } = useLanguage();
   const { step, startOnboarding, setStep, hasCompletedOnboarding } = useOnboarding();
   const { openAvatarModal } = useAvatarModal();
   const { coins, gems, addCoins, spendGems } = useCurrency();
@@ -802,15 +804,15 @@ export default function Index() {
                     className="flex flex-col items-center mt-6 pointer-events-auto"
                   >
                     <span className="font-sans text-gray-800 font-black flex items-center gap-2" style={{ fontSize: 28 }}>
-                       <motion.img src={handGestureIcon} alt="" className="w-8 h-8" animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }} style={{ transformOrigin: "70% 80%" }} /> გამარჯობა!
+                       <motion.img src={handGestureIcon} alt="" className="w-8 h-8" animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }} style={{ transformOrigin: "70% 80%" }} /> {t("common.hello")}
                      </span>
                     {/* Auth buttons */}
                     <div className="flex items-center gap-3 mt-4">
                       <motion.button onClick={() => navigate("/auth")} className="px-5 py-2.5 rounded-full bg-white border border-border shadow-md text-sm font-semibold text-foreground" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        შესვლა
+                        {t("common.signIn")}
                       </motion.button>
                       <motion.button onClick={() => navigate("/auth?mode=signup")} className="px-5 py-2.5 rounded-full bg-primary shadow-md text-sm font-semibold text-primary-foreground" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        გაწევრიანდი უფასოდ
+                        {t("extra.joinFreeBtn")}
                       </motion.button>
                     </div>
                     <div className="mt-14">
@@ -861,15 +863,15 @@ export default function Index() {
                     className="flex flex-col items-center mt-3 pointer-events-auto"
                   >
                     <span className="font-slackey text-gray-800 font-black flex items-center gap-2" style={{ fontSize: 26 }}>
-                      <motion.img src={handGestureIcon} alt="" className="w-7 h-7" animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }} style={{ transformOrigin: "70% 80%" }} /> გამარჯობა!
+                      <motion.img src={handGestureIcon} alt="" className="w-7 h-7" animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }} style={{ transformOrigin: "70% 80%" }} /> {t("common.hello")}
                     </span>
                     {/* Auth buttons */}
                     <div className="flex items-center gap-3 mt-3">
                       <motion.button onClick={() => navigate("/auth")} className="px-5 py-2.5 rounded-full bg-white border border-border shadow-md text-sm font-semibold text-foreground" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        შესვლა
+                        {t("common.signIn")}
                       </motion.button>
                       <motion.button onClick={() => navigate("/auth?mode=signup")} className="px-5 py-2.5 rounded-full bg-primary shadow-md text-sm font-semibold text-primary-foreground" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        გაწევრიანდი უფასოდ
+                        {t("extra.joinFreeBtn")}
                       </motion.button>
                     </div>
                   </motion.div>
@@ -1207,7 +1209,7 @@ export default function Index() {
                   className="flex flex-col items-center mb-10 pointer-events-auto"
                 >
                   <span className="font-slackey text-gray-800 font-black" style={{ fontSize: 32, fontWeight: 900 }}>
-                    გამარჯობა!
+                    {t("common.hello")}
                   </span>
                   <motion.button
                     onClick={() => navigate("/auth")}
@@ -1216,7 +1218,7 @@ export default function Index() {
                     whileTap={{ scale: 0.98 }}
                   >
                     <p className="text-base text-gray-600 font-medium text-center leading-relaxed">
-                      შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
+                      {t("extra.createProfilePlayFree")}
                     </p>
                   </motion.button>
                 </motion.div>

@@ -547,7 +547,7 @@ export function VSScreen() {
                   whileTap={{ scale: 0.95 }}
                 >
                   <RefreshCw className="w-4 h-4 text-white" />
-                  <span className="text-white font-bold text-sm">ახლიდან</span>
+                  <span className="text-white font-bold text-sm">{t("extra.refreshBtn")}</span>
                 </motion.button>
               )}
             </AnimatePresence>
