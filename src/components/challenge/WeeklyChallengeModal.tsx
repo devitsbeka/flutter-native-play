@@ -6,6 +6,7 @@ import giftBoxIcon from "@/assets/unboxing-gift-3.png";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface WeeklyChallengeModalProps {
   open: boolean;
@@ -14,11 +15,11 @@ interface WeeklyChallengeModalProps {
 
 export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModalProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
-  // Hardcoded challenge data for now
   const challenge = {
-    title: "მოიგე 10 თამაში",
-    description: "მოიგე 10 თამაში დღეში და მიიღე ჯილდო",
+    title: t("extra.winGames", { count: 10 }),
+    description: t("extra.winGamesDesc", { count: 10 }),
     current: 3,
     target: 10,
     rewards: {
@@ -49,7 +50,7 @@ export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModa
           
           <DialogHeader>
             <DialogTitle className="text-white text-xl text-center">
-              კვირის გამოწვევა
+              {t("extra.weeklyChallenge")}
             </DialogTitle>
           </DialogHeader>
         </div>
@@ -59,7 +60,7 @@ export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModa
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
               <img src={triviaBuzzerIcon} alt="" className="w-6 h-6" />
-              დავალება
+              {t("extra.task")}
             </div>
             <div className="p-4 rounded-xl bg-muted/50 border border-border">
               <p className="font-bold text-foreground text-lg">{challenge.title}</p>
@@ -70,7 +71,7 @@ export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModa
           {/* Progress */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">პროგრესი</span>
+              <span className="text-sm font-medium text-muted-foreground">{t("extra.progress")}</span>
               <span className="text-sm font-bold text-foreground">
                 {challenge.current}/{challenge.target}
               </span>
@@ -89,7 +90,7 @@ export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModa
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
               <img src={giftBoxIcon} alt="" className="w-6 h-6" />
-              ჯილდო
+              {t("extra.reward")}
             </div>
             <div className="flex gap-3">
               <div className="flex-1 p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/20 text-center">
@@ -98,7 +99,7 @@ export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModa
               </div>
               <div className="flex-1 p-3 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 text-center">
                 <p className="text-2xl font-bold text-amber-600">{challenge.rewards.coins}</p>
-                <p className="text-xs text-muted-foreground">მონეტა</p>
+                <p className="text-xs text-muted-foreground">{t("extra.coin")}</p>
               </div>
             </div>
           </div>
@@ -107,7 +108,7 @@ export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModa
           <div className="flex items-center justify-center gap-2 py-2 text-muted-foreground">
             <Clock className="w-4 h-4" />
             <span className="text-sm">
-              დარჩენილია: <span className="font-semibold text-foreground">{challenge.daysRemaining} დღე</span>
+              {t("extra.remaining")}: <span className="font-semibold text-foreground">{challenge.daysRemaining} {t("extra.days")}</span>
             </span>
           </div>
 
@@ -117,8 +118,7 @@ export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModa
             onClick={handlePlayNow}
             className="w-full"
           >
-            ითამაშე ახლავე
-            ითამაშე ახლავე
+            {t("extra.playNow")}
           </ChunkyButton>
         </div>
       </DialogContent>

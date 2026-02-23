@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { fetchLeaderboardFast } from "./useLeaderboardPrefetch";
 
 export interface LeagueEntry {
@@ -30,6 +31,7 @@ export const LEAGUES: LeagueInfo[] = [
 
 export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
   const { user, profile } = useAuth();
+  const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [previousRank, setPreviousRank] = useState<number | null>(null);
   const [rankChange, setRankChange] = useState<number>(0);
@@ -120,14 +122,14 @@ export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
 
   // Fetch leaderboard using the optimized function
   const { data: leaderboard, isLoading, isFetching } = useQuery({
-    queryKey: ["leagueLeaderboard", activeTier, region],
-    queryFn: () => fetchLeaderboardFast(activeTier, region),
+    queryKey: ["leagueLeaderboard", activeTier, region, language],
+    queryFn: () => fetchLeaderboardFast(activeTier, region, language),
     enabled: true,
-    staleTime: 60 * 1000, // Cache for 1 minute - more responsive to changes
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-    refetchOnMount: true, // Refetch when navigating back
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
-    placeholderData: (previousData) => previousData, // Show previous data while loading
+    placeholderData: (previousData) => previousData,
   });
 
   // Update rank tracking when user visits their own league
