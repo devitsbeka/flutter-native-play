@@ -2648,6 +2648,23 @@ export const ka = {
     addToLibrary: "ბიბლიოთეკაში დამატება ({count})",
     loadingIcons: "იტვირთება აიკონები...",
     changeBtn: "შეცვლა",
+    // Category Selector Modal
+    csmSearchPlaceholder: "ძიება...",
+    csmMixedQuestions: "შერეული კითხვები",
+    csmCategoryNotFound: "კატეგორია ვერ მოიძებნა",
+    csmLevels: "{count} დონე",
+    // Trivia Lobby
+    leaderboardAutoInfo: "ქულა ავტომატურად აისახება ლიდერბორდზე.",
+    // Time ago (short)
+    timeJustNow: "ახლახანს",
+    timeMinShort: "{count}წთ",
+    timeHourShort: "{count}სთ",
+    timeYesterday: "გუშინ",
+    timeDayShort: "{count}დღე",
+    timeWeekShort: "{count}კვ",
+    // Chat time
+    chatToday: "დღეს",
+    chatYesterday: "გუშინ",
   },
 };
 

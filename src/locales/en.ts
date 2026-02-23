@@ -2649,6 +2649,23 @@ export const en: KaTranslations = {
     addToLibrary: "Add to Library ({count})",
     loadingIcons: "Loading icons...",
     changeBtn: "Change",
+    // Category Selector Modal
+    csmSearchPlaceholder: "Search...",
+    csmMixedQuestions: "Mixed questions",
+    csmCategoryNotFound: "Category not found",
+    csmLevels: "{count} levels",
+    // Trivia Lobby
+    leaderboardAutoInfo: "Score is automatically reflected on the leaderboard.",
+    // Time ago (short)
+    timeJustNow: "just now",
+    timeMinShort: "{count}m",
+    timeHourShort: "{count}h",
+    timeYesterday: "yesterday",
+    timeDayShort: "{count}d",
+    timeWeekShort: "{count}w",
+    // Chat time
+    chatToday: "Today",
+    chatYesterday: "Yesterday",
   },
 };
 

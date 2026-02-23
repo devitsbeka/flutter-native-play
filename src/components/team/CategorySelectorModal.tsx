@@ -109,7 +109,7 @@ export function CategorySelectorModal({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="ძიება..."
+            placeholder={t("extra.csmSearchPlaceholder")}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
           />
         </div>
@@ -128,7 +128,7 @@ export function CategorySelectorModal({
             ))
           ) : filteredCategories.length === 0 && !showMixedCategory ? (
             <div className="col-span-2 lg:col-span-4 py-8 text-center text-gray-500 text-sm">
-              კატეგორია ვერ მოიძებნა
+              {t("extra.csmCategoryNotFound")}
             </div>
           ) : (
             <>
@@ -176,7 +176,7 @@ export function CategorySelectorModal({
                     {MIXED_CATEGORY.name}
                   </span>
                   <p className="text-xs text-white/90 mt-0.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
-                    შერეული კითხვები
+                    {t("extra.csmMixedQuestions")}
                   </p>
                 </div>
 
@@ -243,7 +243,7 @@ export function CategorySelectorModal({
                       {category.name}
                     </span>
                     <p className="text-xs text-white/90 mt-0.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
-                      {category.total_levels} დონე
+                      {t("extra.csmLevels", { count: category.total_levels })}
                     </p>
                   </div>
                 </motion.button>

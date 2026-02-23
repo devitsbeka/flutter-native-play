@@ -25,8 +25,8 @@ const QuizPlayModal = lazy(() =>
 const EditQuizModal = lazy(() =>
   import("@/components/social/EditQuizModal").then(m => ({ default: m.EditQuizModal }))
 );
-// Georgian time format helper
-function formatGeorgianTimeAgo(date: Date): string {
+// Time format helper - uses translation function
+function formatTimeAgo(date: Date, t: (key: string, params?: Record<string, string | number>) => string): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -34,12 +34,12 @@ function formatGeorgianTimeAgo(date: Date): string {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const diffWeeks = Math.floor(diffDays / 7);
 
-  if (diffMins < 1) return "ახლახანს";
-  if (diffMins < 60) return `${diffMins}წთ`;
-  if (diffHours < 24) return `${diffHours}სთ`;
-  if (diffDays === 1) return "გუშინ";
-  if (diffDays < 7) return `${diffDays}დღე`;
-  if (diffWeeks < 4) return `${diffWeeks}კვ`;
+  if (diffMins < 1) return t("extra.timeJustNow");
+  if (diffMins < 60) return t("extra.timeMinShort", { count: diffMins });
+  if (diffHours < 24) return t("extra.timeHourShort", { count: diffHours });
+  if (diffDays === 1) return t("extra.timeYesterday");
+  if (diffDays < 7) return t("extra.timeDayShort", { count: diffDays });
+  if (diffWeeks < 4) return t("extra.timeWeekShort", { count: diffWeeks });
 
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -297,7 +297,7 @@ export default function TriviaLobby() {
                     {/* Name */}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-foreground text-sm truncate">{entry.nickname}</p>
-                      <p className="text-xs text-muted-foreground">{formatGeorgianTimeAgo(new Date(entry.played_at))}</p>
+                      <p className="text-xs text-muted-foreground">{formatTimeAgo(new Date(entry.played_at), t)}</p>
                     </div>
 
                     {/* Score or Remove Button */}
@@ -354,7 +354,7 @@ export default function TriviaLobby() {
           >
             <Info className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground leading-relaxed">
-              ქულა ავტომატურად აისახება ლიდერბორდზე.
+              {t("extra.leaderboardAutoInfo")}
             </p>
           </motion.div>
         </div>

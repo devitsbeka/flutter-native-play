@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, ArrowLeft, MoreVertical } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
@@ -59,6 +60,8 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
     return date.toLocaleTimeString("ka-GE", { hour: "2-digit", minute: "2-digit" });
   };
 
+  const { t, language } = useLanguage();
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const today = new Date();
@@ -66,11 +69,12 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (date.toDateString() === today.toDateString()) {
-      return "დღეს";
+      return t("extra.chatToday");
     } else if (date.toDateString() === yesterday.toDateString()) {
-      return "გუშინ";
+      return t("extra.chatYesterday");
     } else {
-      return date.toLocaleDateString("ka-GE", { day: "numeric", month: "short" });
+      const locale = language === 'ka' ? 'ka-GE' : language;
+      return date.toLocaleDateString(locale, { day: "numeric", month: "short" });
     }
   };
 
