@@ -614,6 +614,7 @@ interface RoomCardGridProps {
 
 function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
   const { openProfile } = usePlayerProfile();
+  const { t } = useLanguage();
   const isMobile = useIsMobile();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
