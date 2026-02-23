@@ -2389,6 +2389,10 @@ export const ka = {
     myTriviasLabel: "ჩემი ტრივიები",
     chooseFromTrivias: "აირჩიე შენი შექმნილი ტრივიებიდან",
     invitedStatusShort: "მოწვეული",
+    createTriviaBtn: "შექმენი ტრივია",
+    triviaNotFound: "ტრივია ვერ მოიძებნა",
+    triviaSaveFailed: "ტრივიას შენახვა ვერ მოხერხდა",
+    triviaCreatedToast: "✨ ტრივია \"{title}\" შეიქმნა!",
   },
 };
 
