@@ -7,9 +7,18 @@ interface NotificationData {
   [key: string]: unknown;
 }
 
+function getCurrentLanguage(): string {
+  try {
+    return localStorage.getItem('preferredLanguage') || DEFAULT_LANGUAGE;
+  } catch {
+    return DEFAULT_LANGUAGE;
+  }
+}
+
 function getTranslation(key: string): string {
+  const lang = getCurrentLanguage();
   const keys = key.split('.');
-  let result: unknown = translations[DEFAULT_LANGUAGE];
+  let result: unknown = translations[lang] || translations[DEFAULT_LANGUAGE];
   
   for (const k of keys) {
     if (result && typeof result === 'object' && k in result) {
