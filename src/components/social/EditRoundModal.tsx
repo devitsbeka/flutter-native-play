@@ -319,8 +319,8 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
               <div className="flex-1 text-center">
                 <h1 className={`text-lg font-bold ${viewMode === "questions" ? "text-white" : "text-foreground"}`}>
                   {viewMode === "questions" 
-                    ? `კითხვა ${currentQuestionIndex + 1} / ${questions.length}`
-                    : "რაუნდის რედაქტირება"
+                    ? t("extra.questionNofM", { n: currentQuestionIndex + 1, total: questions.length })
+                    : t("extra.editRoundTitle")
                   }
                 </h1>
               </div>
@@ -380,11 +380,11 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
 
                   {/* Title */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">სათაური</label>
+                    <label className="text-sm font-medium text-foreground">{t("extra.titleLabel")}</label>
                     <Input
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder="რაუნდის სათაური"
+                      placeholder={t("extra.roundTitlePlaceholder")}
                       className="h-12 rounded-xl"
                     />
                   </div>
@@ -392,7 +392,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                   {/* Questions Button */}
                   {questions.length > 0 && (
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">კითხვები</label>
+                      <label className="text-sm font-medium text-foreground">{t("extra.questionsSectionLabel")}</label>
                       <button
                         onClick={() => setViewMode("questions")}
                         className="w-full flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border hover:bg-muted transition-colors"
@@ -401,7 +401,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                             <span className="text-lg font-bold text-primary">{questions.length}</span>
                           </div>
-                          <span className="font-medium text-foreground">კითხვების ნახვა</span>
+                          <span className="font-medium text-foreground">{t("extra.viewQuestionsBtn")}</span>
                         </div>
                         <ChevronLeft className="w-5 h-5 text-muted-foreground rotate-180" />
                       </button>
@@ -410,7 +410,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
 
                   {/* Visibility Toggle */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">ხილვადობა</label>
+                    <label className="text-sm font-medium text-foreground">{t("extra.visibilityLabel")}</label>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setIsPublic(true)}
@@ -421,7 +421,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                         }`}
                       >
                         <Globe className="w-4 h-4" />
-                        <span className="font-medium">საჯარო</span>
+                        <span className="font-medium">{t("extra.publicVisibility")}</span>
                       </button>
                       <button
                         onClick={() => setIsPublic(false)}
@@ -432,7 +432,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                         }`}
                       >
                         <Lock className="w-4 h-4" />
-                        <span className="font-medium">პირადი</span>
+                        <span className="font-medium">{t("extra.privateVisibility")}</span>
                       </button>
                     </div>
                   </div>
@@ -480,7 +480,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                             className="w-full flex items-center justify-center gap-2 py-3 text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
-                            <span className="font-medium">რაუნდის წაშლა</span>
+                            <span className="font-medium">{t("extra.deleteRoundBtn")}</span>
                           </button>
                         </motion.div>
                       )}

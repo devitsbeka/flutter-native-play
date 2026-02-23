@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Upload, Sparkles, Loader2, X, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -52,6 +53,7 @@ export function CoverImagePicker({
   const { toast } = useToast();
   const { user } = useAuth();
   const { startCoverGeneration, isGenerating } = useBackgroundGeneration();
+  const { t } = useLanguage();
 
   const generationCount = previousGenerations.length;
   const remainingGenerations = MAX_GENERATIONS - generationCount;
@@ -241,7 +243,7 @@ export function CoverImagePicker({
           ) : (
             <>
               <Upload className="w-4 h-4" />
-              <span>ატვირთვა</span>
+              <span>{t("extra.uploadBtn")}</span>
             </>
           )}
         </button>
@@ -254,12 +256,12 @@ export function CoverImagePicker({
           {isCoverGenerating ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>გენერირდება...</span>
+              <span>{t("extra.generatingCover")}...</span>
             </>
           ) : (
             <>
               <Sparkles className="w-4 h-4" />
-              <span>გენერაცია {roundId && `(${remainingGenerations})`}</span>
+              <span>{t("extra.generateBtn")} {roundId && `(${remainingGenerations})`}</span>
             </>
           )}
         </button>
