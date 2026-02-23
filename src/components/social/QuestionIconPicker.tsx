@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Search, X, Smile, AlertTriangle, ChevronLeft, RefreshCw, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,7 @@ interface QuestionIconPickerProps {
 }
 
 export function QuestionIconPicker({ selectedSlug, onSelect, questionText, correctAnswer, incorrectAnswers, large = false, creatorMode = false, isOpen: externalOpen, onClose }: QuestionIconPickerProps) {
+  const { t } = useLanguage();
   // Use external open state if provided, otherwise use internal state
   const isControlled = externalOpen !== undefined;
   const [internalOpen, setInternalOpen] = useState(false);
@@ -348,7 +350,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                   <ChevronLeft className="w-6 h-6 text-foreground" />
                 </button>
                 <div className="flex-1">
-                  <h1 className="text-lg font-bold text-foreground">აირჩიე აიკონი</h1>
+                  <h1 className="text-lg font-bold text-foreground">{t("extra.chooseIconTitle")}</h1>
                 </div>
               </div>
             </div>
@@ -363,7 +365,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                   <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="ძებნა..."
+                    placeholder={t("extra.searchIconPlaceholder")}
                     className="pl-10 pr-10 h-12 rounded-xl"
                   />
                   {/* Loading indicator inside search input */}
@@ -383,7 +385,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                       className="w-14 h-14 object-contain"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground">მიმდინარე აიკონი</p>
+                      <p className="text-xs text-muted-foreground">{t("extra.currentIconLabel")}</p>
                       <p className="text-sm font-medium truncate">{selectedIconData.title}</p>
                     </div>
                   </div>
@@ -393,7 +395,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                 {suggestedIcons.length > 0 && !searchQuery && (
                   <div>
                     <div className="flex items-center justify-between mb-3 px-1">
-                      <p className="text-xs font-medium text-muted-foreground">შემოთავაზებული</p>
+                      <p className="text-xs font-medium text-muted-foreground">{t("extra.suggestedIconsLabel")}</p>
                       <button
                         onClick={handleRefreshSuggestions}
                         disabled={isRefreshingSuggestions}
@@ -445,7 +447,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                     </div>
                   ) : icons.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground text-sm">
-                      აიკონი ვერ მოიძებნა
+                      {t("extra.iconNotFound")}
                     </div>
                   ) : (
                     <div className="grid grid-cols-4 gap-3">
