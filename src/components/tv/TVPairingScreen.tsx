@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { Tv, Users, Loader2 } from 'lucide-react';
 import { useTVGame } from '@/contexts/TVGameContext';
@@ -13,6 +14,7 @@ export const TVPairingScreen: React.FC<TVPairingScreenProps> = ({ onStartGame })
   const { code, players, isHost } = useTVGame();
 
   const codeChars = code?.split('') || [];
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col items-center justify-center p-8">
@@ -64,7 +66,7 @@ export const TVPairingScreen: React.FC<TVPairingScreenProps> = ({ onStartGame })
         <div className="flex items-center justify-center gap-2 mb-6">
           <Users className="w-5 h-5 text-muted-foreground" />
           <span className="text-muted-foreground">
-            {players.length} მოთამაშე დაკავშირებულია
+            {t("extra.playersConnected", { count: players.length })}
           </span>
         </div>
 
