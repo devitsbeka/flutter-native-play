@@ -1,4 +1,5 @@
 import { useMemo, useState, lazy, Suspense } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Layers, Play, Users, HelpCircle, Heart, Pencil } from "lucide-react";
@@ -30,6 +31,7 @@ function getGradientProps(gradient: string) {
 export default function CollectionLobby() {
   const { collectionId } = useParams<{ collectionId: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { openProfile } = usePlayerProfile();
   const { user } = useAuth();
   const [isPlayModalOpen, setIsPlayModalOpen] = useState(false);

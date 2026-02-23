@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate, useParams } from "react-router-dom";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { motion, AnimatePresence } from "framer-motion";
@@ -112,6 +113,7 @@ interface TriviaQuestion {
 export default function CategoryQuizPage() {
   const { categoryId, levelId } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { user, profile } = useAuth();
   const { updateLevelProgress } = useCategoryProgress();
   const { canPlayLevel, loading: limitLoading } = useCategoryPlayLimit();

@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Play, Users, BarChart3, HelpCircle, Info, Pencil } from "lucide-react";
@@ -93,6 +94,7 @@ function convertToSamplePost(trivia: any, creator: any) {
 export default function TriviaLobby() {
   const { triviaId } = useParams<{ triviaId: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { openProfile } = usePlayerProfile();
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
