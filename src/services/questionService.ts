@@ -240,18 +240,8 @@ export async function getQuestions(ctx: QuestionContext): Promise<QuestionResult
   const language = getPreferredLanguage();
   const count = ctx.count || (ctx.mode === 'category' ? 5 : 10);
   
-  const result = await _getQuestionsForLanguage(ctx, count, language);
-  
-  // Fallback: if no questions found and language isn't 'ka', retry with 'ka'
-  if (result.questions.length === 0 && language !== DEFAULT_LANGUAGE) {
-    console.warn(`[questionService] No questions in '${language}', falling back to '${DEFAULT_LANGUAGE}'`);
-    return _getQuestionsForLanguage(ctx, count, DEFAULT_LANGUAGE);
-  }
-  
-  return result;
-}
-
-async function _getQuestionsForLanguage(ctx: QuestionContext, count: number, language: string): Promise<QuestionResult> {
+  // No fallback to Georgian - if no questions in user's language, return empty
+  // The UI will show a "no questions" modal instead
   // Resolve category UUID if needed
   let categoryUuid = ctx.categoryUuid;
   if (!categoryUuid && ctx.categorySlug) {

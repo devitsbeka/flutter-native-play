@@ -1710,6 +1710,12 @@ export const ka = {
     closeBtn: "დახურვა",
     // Feature onboarding action
     featureTriviaAction: "+ ტრივია",
+    // Connection error modal
+    connectionErrorTitle: "კავშირი შეფერხებულია",
+    connectionErrorMessage: "სცადეთ თავიდან ან დაბრუნდით მთავარ გვერდზე",
+    // No categories available
+    noCategoriesTitle: "კატეგორიები ჯერ არ არის",
+    noCategoriesMessage: "ამ ენაზე კატეგორიები მალე დაემატება!",
   },
 };
 

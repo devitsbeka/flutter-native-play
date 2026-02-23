@@ -651,8 +651,8 @@ export function VSScreen() {
                 <WifiOff className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h3 className="text-white font-bold text-lg mb-1">კავშირი შეფერხებულია</h3>
-                <p className="text-white/70 text-sm">სცადეთ თავიდან ან დაბრუნდით მთავარ გვერდზე</p>
+                <h3 className="text-white font-bold text-lg mb-1">{t("extra.connectionErrorTitle")}</h3>
+                <p className="text-white/70 text-sm">{t("extra.connectionErrorMessage")}</p>
               </div>
               <div className="flex flex-col gap-2 w-full">
                 <motion.button
@@ -665,7 +665,7 @@ export function VSScreen() {
                   whileTap={{ scale: 0.95 }}
                   onClick={handleRefresh}
                 >
-                  თავიდან ცდა
+                  {t("common.retry")}
                 </motion.button>
                 <motion.button
                   className="w-full py-2.5 rounded-2xl font-medium text-sm text-white/70"
@@ -676,7 +676,7 @@ export function VSScreen() {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => navigate("/")}
                 >
-                  უკან
+                  {t("common.back")}
                 </motion.button>
               </div>
             </motion.div>
