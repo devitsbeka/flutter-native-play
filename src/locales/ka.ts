@@ -2049,6 +2049,7 @@ export const ka = {
     goBack: "უკან დაბრუნება",
     additionalDetails: "დამატებითი დეტალები (არასავალდებულო)",
     addToQueue: "რიგში დამატება",
+    selectedCategoryLabel: "არჩეული კატეგორია",
     // Feed filter labels (used in FeedFiltersBar)
     feedFilterLiked: "მოწონებული",
     feedFilterSaved: "შენახული",

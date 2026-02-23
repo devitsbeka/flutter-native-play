@@ -2050,6 +2050,7 @@ export const en: KaTranslations = {
     goBack: "Go Back",
     additionalDetails: "Additional details (optional)",
     addToQueue: "Add to queue",
+    selectedCategoryLabel: "Selected category",
     // Feed filter labels (used in FeedFiltersBar)
     feedFilterLiked: "Most Liked",
     feedFilterSaved: "Most Saved",
