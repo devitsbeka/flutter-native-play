@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import glitchIcon from "@/assets/glitch.png";
 
 interface Trivia {
@@ -33,6 +34,7 @@ interface MyTriviasPickerProps {
 
 export function MyTriviasPicker({ onSelect }: MyTriviasPickerProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [tab, setTab] = useState("trivias");
 
   // Regular trivias (exclude personal/party ones)
@@ -106,11 +108,11 @@ export function MyTriviasPicker({ onSelect }: MyTriviasPickerProps) {
       <TabsList className="grid w-full grid-cols-3 mb-4">
         <TabsTrigger value="trivias" className="flex items-center gap-1.5 text-xs px-2">
           <Gamepad2 className="w-3.5 h-3.5" />
-          ტრივია ({trivias.length})
+          {t("extra.triviaTabLabel")} ({trivias.length})
         </TabsTrigger>
         <TabsTrigger value="collections" className="flex items-center gap-1.5 text-xs px-2">
           <FolderOpen className="w-3.5 h-3.5" />
-          კოლექციები ({collections.length})
+          {t("extra.collectionsTabLabel")} ({collections.length})
         </TabsTrigger>
         <TabsTrigger value="party" className="flex items-center gap-1.5 text-xs px-2">
           <PartyPopper className="w-3.5 h-3.5" />
@@ -124,7 +126,7 @@ export function MyTriviasPicker({ onSelect }: MyTriviasPickerProps) {
             <div className="w-12 h-12 rounded-xl overflow-hidden mx-auto mb-2">
               <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
             </div>
-            <p>ჯერ არ გაქვს ტრივიები</p>
+            <p>{t("extra.noTrivias")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -173,11 +175,11 @@ export function MyTriviasPicker({ onSelect }: MyTriviasPickerProps) {
                   {/* Spoiler indicator */}
                   {trivia.is_blind ? (
                     <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 mt-1 rounded-full bg-green-500/20 text-green-500 font-medium">
-                      <Gamepad2 className="w-3 h-3" /> ითამაშე
+                      <Gamepad2 className="w-3 h-3" /> {t("extra.playTrivia")}
                     </span>
                   ) : (
                     <span className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                      👀 იცი პასუხები
+                      👀 {t("extra.youKnowAnswers")}
                     </span>
                   )}
                 </div>
@@ -193,7 +195,7 @@ export function MyTriviasPicker({ onSelect }: MyTriviasPickerProps) {
             <div className="w-12 h-12 rounded-xl overflow-hidden mx-auto mb-2">
               <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
             </div>
-            <p>ჯერ არ გაქვს კოლექციები</p>
+            <p>{t("extra.noCollectionsYet")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
@@ -253,7 +255,7 @@ export function MyTriviasPicker({ onSelect }: MyTriviasPickerProps) {
         {personalTrivias.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
             <PartyPopper className="w-12 h-12 mx-auto mb-2 text-pink-400" />
-            <p>ჯერ არ გაქვს MyTrivia Party</p>
+            <p>{t("extra.noPartyYet")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -287,7 +289,7 @@ export function MyTriviasPicker({ onSelect }: MyTriviasPickerProps) {
                     </p>
                     <Lock className="w-3.5 h-3.5 text-pink-400 flex-shrink-0" />
                   </div>
-                  <p className="text-xs text-pink-400">პირადი ტრივია</p>
+                  <p className="text-xs text-pink-400">{t("extra.personalTriviaLabel")}</p>
                 </div>
               </motion.button>
             ))}
