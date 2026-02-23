@@ -124,11 +124,11 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
       });
 
       if (error) throw error;
-      toast.success("მოთხოვნა გაიგზავნა!");
+      toast.success(t("extra.friendRequestSentToast"));
       // Refetch profile to update button state
       refetch();
     } catch (err) {
-      toast.error("შეცდომა მოხდა");
+      toast.error(t("extra.errorOccurredToast"));
     } finally {
       setAddingFriend(false);
     }
@@ -144,7 +144,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
     
     if (!data?.friendshipId) {
       console.error('[handleDeleteFriend] No friendshipId available!');
-      toast.error("მეგობრობის ID ვერ მოიძებნა");
+      toast.error(t("extra.friendshipIdNotFound"));
       setShowDeleteConfirm(false);
       return;
     }
@@ -158,12 +158,12 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
 
       if (error) throw error;
       
-      toast.success("მეგობარი წაიშალა");
+      toast.success(t("extra.friendRemovedToast"));
       setShowDeleteConfirm(false);
       refetch();
     } catch (err) {
       console.error('[handleDeleteFriend] Error:', err);
-      toast.error("წაშლა ვერ მოხერხდა");
+      toast.error(t("extra.removeFailedToast"));
     } finally {
       setDeletingFriend(false);
     }
@@ -191,7 +191,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
       const rawPublicUrl = urlData.publicUrl;
 
       // Step 2: Generate AI avatar from the uploaded photo
-      toast.info("AI ავატარი გენერირდება...", { duration: 10000 });
+      toast.info(t("extra.aiAvatarGenerating"), { duration: 10000 });
 
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-avatar", {
         body: { imageUrl: rawPublicUrl },
@@ -199,7 +199,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
 
       if (aiError || !aiData?.success) {
         console.warn("AI generation failed, falling back to raw photo:", aiError || aiData?.error);
-        toast.warning("AI გენერაცია ვერ მოხერხდა, ორიგინალი ფოტო შეინახა");
+        toast.warning(t("extra.aiGenerationFallback"));
         
         // Fallback: use raw photo
         const fallbackUrl = `${rawPublicUrl}?t=${Date.now()}`;
@@ -240,11 +240,11 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
 
       if (updateError) throw updateError;
 
-      toast.success("AI ავატარი შეიქმნა! ✨");
+      toast.success(t("extra.aiAvatarCreated"));
       refetch();
     } catch (err) {
       console.error("Avatar upload error:", err);
-      toast.error("ავატარის ატვირთვა ვერ მოხერხდა");
+      toast.error(t("extra.avatarUploadFailed"));
     } finally {
       setUploadingAvatar(false);
       if (avatarInputRef.current) avatarInputRef.current.value = "";
@@ -611,7 +611,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   <div className="px-4 pb-6">
                     <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                       <Clock className="w-4 h-4 text-muted-foreground" />
-                      ბოლო აქტივობა
+                      {t("extra.recentActivityTitle")}
                     </h4>
                     <div className="space-y-2">
                       {data.interactions.slice(0, 3).map((interaction) => (
