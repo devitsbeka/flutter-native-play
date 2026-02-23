@@ -589,7 +589,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                                 )}
                               </div>
                               {missingIcon && !hasCriticalIssue && (
-                                <span className="text-xs text-yellow-200/80 font-medium">აიკონის დამატება</span>
+                                <span className="text-xs text-yellow-200/80 font-medium">{t("extra.addIconLabel")}</span>
                               )}
                             </div>
                             
@@ -689,7 +689,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                                   className="w-full py-3 rounded-xl bg-red-500/20 text-red-200 flex items-center justify-center gap-2 hover:bg-red-500/30 transition-colors border border-red-400/20"
                                 >
                                   <Trash2 className="w-4 h-4" />
-                                  <span className="font-medium">კითხვის წაშლა</span>
+                                  <span className="font-medium">{t("extra.deleteQuestionBtn")}</span>
                                 </motion.button>
                               )}
                             </AnimatePresence>

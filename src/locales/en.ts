@@ -2237,6 +2237,8 @@ export const en: KaTranslations = {
     uploadBtn: "Upload",
     generateBtn: "Generate",
     generatingCover: "Generating",
+    addIconLabel: "Add icon",
+    deleteQuestionBtn: "Delete question",
     // Live Games Widget
     liveGameRoom: "Game Room",
     playerCount: "{count} players",

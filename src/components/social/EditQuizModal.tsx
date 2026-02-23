@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon, Pencil, Smile, Plus } from "lucide-react";
@@ -44,6 +45,7 @@ type ViewMode = "info" | "questions";
 
 export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   
   const [title, setTitle] = useState("");
@@ -128,8 +130,8 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
     }
     
     toast({
-      title: "კითხვა წაიშალა",
-      description: "კითხვა წარმატებით წაიშალა",
+      title: t("extra.questionDeleted"),
+      description: t("extra.questionDeletedDesc"),
     });
   }, [questions, carouselApi, toast]);
 
@@ -250,8 +252,8 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                 viewMode === "questions" ? "text-white" : "text-foreground"
               }`}>
                 {viewMode === "questions" 
-                  ? `კითხვა ${currentQuestionIndex + 1} / ${questions.length}`
-                  : "რედაქტირება"
+                  ? t("extra.questionNofM", { n: currentQuestionIndex + 1, total: questions.length })
+                  : t("extra.editBtn")
                 }
               </h1>
               
@@ -477,8 +479,8 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                                 <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
                                 <span>
                                   {answerInQuestion 
-                                    ? "კითხვა შეიცავს სწორ პასუხს!" 
-                                    : "აიკონი მინიშნებაა პასუხზე!"}
+                                    ? t("extra.questionContainsAnswer")
+                                    : t("extra.iconHintsAnswer")}
                                 </span>
                               </div>
                             )}
@@ -512,7 +514,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                                 )}
                               </button>
                               {missingIcon && !hasCriticalIssue && (
-                                <span className="text-xs text-yellow-200/80 font-medium">აიკონის დამატება</span>
+                                <span className="text-xs text-yellow-200/80 font-medium">{t("extra.addIconLabel")}</span>
                               )}
                               {index === 0 && !q.icon_slug && <IconOnboardingTooltip />}
                             </div>
@@ -573,21 +575,21 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                                   className="space-y-2"
                                 >
                                   <p className="text-xs text-center text-red-200">
-                                    წაიშალოს ეს კითხვა?
+                                    {t("extra.deleteThisQuestion")}
                                   </p>
                                   <div className="flex gap-2">
                                     <button
                                       onClick={() => setDeleteQuestionIndex(null)}
                                       className="flex-1 py-2.5 rounded-xl border border-white/20 text-white text-sm font-medium"
                                     >
-                                      გაუქმება
+                                      {t("extra.cancelBtn")}
                                     </button>
                                     <button
                                       onClick={() => deleteQuestion(index)}
                                       className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium flex items-center justify-center gap-1.5"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
-                                      წაშლა
+                                      {t("extra.deleteBtn")}
                                     </button>
                                   </div>
                                 </motion.div>
@@ -600,7 +602,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                                   className="w-full py-3 rounded-xl bg-red-500/20 text-red-200 flex items-center justify-center gap-2 hover:bg-red-500/30 transition-colors border border-red-400/20"
                                 >
                                   <Trash2 className="w-4 h-4" />
-                                  <span className="font-medium">კითხვის წაშლა</span>
+                                  <span className="font-medium">{t("extra.deleteQuestionBtn")}</span>
                                 </motion.button>
                               )}
                             </AnimatePresence>
