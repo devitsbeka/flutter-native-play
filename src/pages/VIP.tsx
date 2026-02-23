@@ -6,44 +6,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { useVipStatus } from "@/hooks/useVipStatus";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const vipBenefits = [
-  {
-    icon: Zap,
-    title: "2x XP ბონუსი",
-    description: "მიიღე ორმაგი XP ყველა თამაშში",
-    color: "from-amber-400 to-orange-500",
-  },
-  {
-    icon: Shield,
-    title: "რეკლამების გარეშე",
-    description: "უწყვეტი თამაშის გამოცდილება",
-    color: "from-blue-400 to-cyan-500",
-  },
-  {
-    icon: Palette,
-    title: "ექსკლუზიური ავატარები",
-    description: "უნიკალური VIP ავატარები და ბეჯები",
-    color: "from-purple-400 to-pink-500",
-  },
-  {
-    icon: Gift,
-    title: "ყოველდღიური ჯილდოები",
-    description: "სპეციალური VIP საჩუქრები",
-    color: "from-green-400 to-emerald-500",
-  },
-  {
-    icon: Sparkles,
-    title: "ადრეული წვდომა",
-    description: "ახალი კატეგორიები და ფუნქციები პირველებში",
-    color: "from-pink-400 to-rose-500",
-  },
-  {
-    icon: Crown,
-    title: "VIP სტატუსი",
-    description: "ოქროს გვირგვინი შენი სახელის გვერდით",
-    color: "from-yellow-400 to-amber-500",
-  },
+// VIP benefits will use translation keys
+const vipBenefitKeys = [
+  { icon: Zap, titleKey: "extra.vipXpBonus", descKey: "extra.vipXpDesc", color: "from-amber-400 to-orange-500" },
+  { icon: Shield, titleKey: "extra.vipNoAds", descKey: "extra.vipNoAdsDesc", color: "from-blue-400 to-cyan-500" },
+  { icon: Palette, titleKey: "extra.vipAvatars", descKey: "extra.vipAvatarsDesc", color: "from-purple-400 to-pink-500" },
+  { icon: Gift, titleKey: "extra.vipDailyRewards", descKey: "extra.vipDailyRewardsDesc", color: "from-green-400 to-emerald-500" },
+  { icon: Sparkles, titleKey: "extra.vipEarlyAccess", descKey: "extra.vipEarlyAccessDesc", color: "from-pink-400 to-rose-500" },
+  { icon: Crown, titleKey: "extra.vipStatus", descKey: "extra.vipStatusDesc", color: "from-yellow-400 to-amber-500" },
 ];
 
 
@@ -53,6 +25,7 @@ export default function VIP() {
   const { restorePurchases } = useInAppPurchases();
   const { isVip, getDaysRemaining } = useVipStatus();
   const [restoring, setRestoring] = useState(false);
+  const { t } = useLanguage();
 
 
   const handleRestore = async () => {
@@ -64,7 +37,7 @@ export default function VIP() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <PageHeader title="მაღაზია" />
+      <PageHeader title={t("extra.vipShop")} />
 
       {/* Content */}
       <div className="p-4 pb-8 max-w-[700px] md:max-w-[600px] mx-auto">
@@ -89,22 +62,22 @@ export default function VIP() {
               <Crown className="w-10 h-10 text-white" />
             </motion.div>
             <h2 className="text-2xl font-display font-bold text-white mb-2">
-              გახდი VIP
+              {t("extra.becomeVipTitle")}
             </h2>
             <p className="text-white/80 text-sm mb-4">
-              განბლოკე ყველა ექსკლუზიური ფუნქცია
+              {t("extra.unlockFeatures")}
             </p>
           </div>
         </motion.div>
 
         {/* Benefits */}
         <h3 className="text-lg font-display font-bold text-slate-800 mb-4">
-          VIP უპირატესობები
+          {t("extra.vipBenefitsTitle")}
         </h3>
         <div className="grid gap-3 mb-6">
-          {vipBenefits.map((benefit, i) => (
+          {vipBenefitKeys.map((benefit, i) => (
             <motion.div
-              key={benefit.title}
+              key={benefit.titleKey}
               className="flex items-center gap-4 p-4 rounded-xl bg-white/90 backdrop-blur-sm border border-slate-200"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -116,8 +89,8 @@ export default function VIP() {
                 <benefit.icon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h4 className="font-semibold text-slate-800">{benefit.title}</h4>
-                <p className="text-sm text-slate-600">{benefit.description}</p>
+                <h4 className="font-semibold text-slate-800">{t(benefit.titleKey)}</h4>
+                <p className="text-sm text-slate-600">{t(benefit.descKey)}</p>
               </div>
             </motion.div>
           ))}
@@ -133,8 +106,8 @@ export default function VIP() {
             <div className="flex items-center gap-3">
               <Crown className="w-8 h-8 text-white" />
               <div>
-                <p className="font-bold text-white">VIP აქტიურია!</p>
-                <p className="text-white/80 text-sm">{getDaysRemaining()} დღე დარჩენილია</p>
+                <p className="font-bold text-white">{t("extra.vipActiveMsg")}</p>
+                <p className="text-white/80 text-sm">{t("extra.vipDaysRemaining", { days: getDaysRemaining() })}</p>
               </div>
             </div>
           </motion.div>
@@ -151,23 +124,20 @@ export default function VIP() {
           transition={{ delay: 0.5 }}
         >
           <RotateCcw className={`w-4 h-4 ${restoring ? "animate-spin" : ""}`} />
-          {restoring ? "მიმდინარეობს..." : "შესყიდვების აღდგენა"}
+          {restoring ? t("extra.restoring") : t("extra.restorePurchases")}
         </motion.button>
 
         {/* Apple Required Subscription Terms */}
         <div className="mt-6 space-y-3 px-2">
           {/* Georgian Terms */}
           <p className="text-xs text-slate-600 leading-relaxed">
-            <strong>ავტომატური განახლება:</strong> გამოწერა ავტომატურად განახლდება პერიოდის 
-            ბოლოს, თუ გაუქმება არ მოხდა მინიმუმ 24 საათით ადრე.
+            <strong>{t("extra.autoRenewal")}</strong> {t("extra.autoRenewalDesc")}
           </p>
           <p className="text-xs text-slate-600 leading-relaxed">
-            <strong>გადახდა:</strong> თანხა ჩამოიჭრება თქვენი iTunes/Apple ID ანგარიშიდან 
-            შეძენის დადასტურებისას.
+            <strong>{t("extra.paymentLabel")}</strong> {t("extra.paymentDesc")}
           </p>
           <p className="text-xs text-slate-600 leading-relaxed">
-            <strong>გაუქმება:</strong> გამოწერის გაუქმება შეგიძლიათ App Store-ის პარამეტრებში 
-            ნებისმიერ დროს. მიმდინარე პერიოდის თანხა არ დაბრუნდება.
+            <strong>{t("extra.cancellationLabel")}</strong> {t("extra.cancellationDesc")}
           </p>
 
           {/* English Terms (Required by Apple) */}
@@ -188,14 +158,14 @@ export default function VIP() {
               onClick={() => navigate("/privacy-policy")}
               className="text-xs text-primary underline"
             >
-              კონფიდენციალურობა
+              {t("extra.privacyLink")}
             </button>
             <span className="text-slate-300">|</span>
             <button 
               onClick={() => navigate("/terms")}
               className="text-xs text-primary underline"
             >
-              პირობები
+              {t("extra.termsLink")}
             </button>
           </div>
         </div>

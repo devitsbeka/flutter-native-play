@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback, ty
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { t } from "@/contexts/LanguageContext";
 
 export interface Friend {
   id: string;
@@ -161,8 +162,8 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
               .eq("user_id", senderId)
               .maybeSingle();
 
-            const senderName = profile?.nickname || "ვიღაც";
-            toast.info(`${senderName} გთხოვს მეგობრობას! 🤝`, {
+            const senderName = profile?.nickname || t("extra.someone");
+            toast.info(t("extra.friendRequestReceived", { name: senderName }), {
               duration: 5000,
             });
           }
@@ -177,8 +178,8 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
                 .eq("user_id", friendId)
                 .maybeSingle();
 
-              const friendName = profile?.nickname || "მოთამაშე";
-              toast.success(`${friendName} მიიღო შენი მოთხოვნა! 🎉`, {
+              const friendName = profile?.nickname || t("extra.playerDefault");
+              toast.success(t("extra.friendRequestAccepted", { name: friendName }), {
                 duration: 5000,
               });
             }
@@ -278,7 +279,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
 
       if (existing) {
         if (existing.status === "accepted") {
-          toast.info("უკვე მეგობრები ხართ");
+          toast.info(t("extra.alreadyFriends"));
         } else if (existing.status === "pending") {
           if (existing.user_id === friendId) {
             const { error: acceptError } = await supabase
@@ -291,14 +292,14 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
 
             if (acceptError) {
               console.error("Error auto-accepting friend request:", acceptError);
-              toast.error("მოთხოვნის მიღება ვერ მოხერხდა");
+              toast.error(t("extra.requestAcceptFailed"));
               return false;
             }
-            toast.success("მეგობარი დაემატა! 🎉");
+            toast.success(t("extra.friendAdded"));
             await fetchFriends();
             return true;
           } else {
-            toast.info("მოთხოვნა უკვე გაგზავნილია");
+            toast.info(t("extra.requestAlreadySent"));
           }
         }
         return false;
@@ -310,11 +311,11 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         status: "pending",
       });
       if (error) throw error;
-      toast.success("მოთხოვნა გაიგზავნა!");
+      toast.success(t("extra.requestSent"));
       return true;
     } catch (error) {
       console.error("Error sending friend request:", error);
-      toast.error("მოთხოვნის გაგზავნა ვერ მოხერხდა");
+      toast.error(t("extra.requestSendFailed"));
       return false;
     }
   }, [user, fetchFriends]);
@@ -334,7 +335,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       return true;
     } catch (error) {
       console.error("Error accepting friend request:", error);
-      toast.error("მოთხოვნის მიღება ვერ მოხერხდა");
+      toast.error(t("extra.requestAcceptFailed"));
       return false;
     }
   }, [user, fetchFriends]);
@@ -347,12 +348,12 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         .delete()
         .eq("id", friendshipId);
       if (error) throw error;
-      toast.success("მოთხოვნა უარყოფილია");
+      toast.success(t("extra.requestDeclined"));
       await fetchFriends();
       return true;
     } catch (error) {
       console.error("Error declining friend request:", error);
-      toast.error("მოთხოვნის უარყოფა ვერ მოხერხდა");
+      toast.error(t("extra.requestDeclineFailed"));
       return false;
     }
   }, [user, fetchFriends]);
@@ -365,12 +366,12 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         .delete()
         .eq("id", friendshipId);
       if (error) throw error;
-      toast.success("მეგობარი წაიშალა");
+      toast.success(t("extra.friendRemoved"));
       await fetchFriends();
       return true;
     } catch (error) {
       console.error("Error removing friend:", error);
-      toast.error("წაშლა ვერ მოხერხდა");
+      toast.error(t("extra.friendRemoveFailed"));
       return false;
     }
   }, [user, fetchFriends]);

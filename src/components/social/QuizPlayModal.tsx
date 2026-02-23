@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, RotateCcw, Share2, ChevronRight, ChevronLeft, Coins, Star, Heart, Bookmark, Play } from "lucide-react";
@@ -43,6 +44,7 @@ interface QuizPlayModalProps {
 }
 
 export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, returnTo }: QuizPlayModalProps) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const { addCoins } = useCurrency();
@@ -219,7 +221,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
             await createNotification(
               postData.user_id,
               "trivia_played",
-              `${senderProfile?.nickname ? senderProfile.nickname + "-მ" : "ვიღაცამ"} ითამაშა შენი ტრივია`,
+              `${senderProfile?.nickname ? senderProfile.nickname : ""} played your trivia`,
               postData.title || undefined,
               { post_id: postId, player_id: user.id }
             );
@@ -411,7 +413,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                   </motion.div>
                   
                   <h3 className="text-2xl font-bold text-white mb-2">
-                    რაუნდი {currentRoundIndex + 1} დასრულდა!
+                    {t("extra.roundCompleted", { round: currentRoundIndex + 1 })}
                   </h3>
                   
                   <p className="text-4xl font-bold text-white mb-2">
@@ -419,7 +421,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                   </p>
                   
                   <p className="text-white/70 text-sm mb-4">
-                    ჯამური: {cumulativeScore}/{collectionPosts.slice(0, currentRoundIndex + 1).reduce((sum, p) => sum + p.questions.length, 0)}
+                    {t("extra.totalScore", { score: cumulativeScore, total: collectionPosts.slice(0, currentRoundIndex + 1).reduce((sum, p) => sum + p.questions.length, 0) })}
                   </p>
                   
                   {/* Round Rewards */}
@@ -451,7 +453,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                   <div className="flex flex-col gap-4 w-full max-w-sm items-center">
                     <ChunkyButton onClick={startNextRound} className="w-full">
                       <ChevronRight className="w-4 h-4 mr-2" />
-                      გაგრძელება ({currentRoundIndex + 2}/{totalRounds})
+                      {t("extra.continueRound", { current: currentRoundIndex + 2, total: totalRounds })}
                     </ChunkyButton>
                     
                     <div className="flex items-center justify-center gap-8 mt-2">
@@ -472,7 +474,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                             }`}
                           />
                         </div>
-                        <span className="text-white/80 text-xs font-medium">მოწონება</span>
+                        <span className="text-white/80 text-xs font-medium">{t("extra.likeBtn")}</span>
                       </button>
                       
                       <button 
@@ -492,7 +494,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                             }`}
                           />
                         </div>
-                        <span className="text-white/80 text-xs font-medium">შენახვა</span>
+                        <span className="text-white/80 text-xs font-medium">{t("extra.saveBtn")}</span>
                       </button>
                     </div>
                   </div>
@@ -514,7 +516,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                   </motion.div>
                   
                   <h3 className="text-3xl font-bold text-white mb-3">
-                    თამაში დასრულდა!
+                    {t("extra.gameOver")}
                   </h3>
                   
                   <p className="text-6xl font-bold text-white mb-3">
@@ -523,7 +525,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                   
                   {isCollection && (
                     <p className="text-white/70 text-sm mb-4">
-                      {currentRoundIndex + 1} რაუნდი სრულად
+                      {currentRoundIndex + 1} {t("extra.roundsFull", { round: currentRoundIndex + 1 })}
                     </p>
                   )}
                   
@@ -558,9 +560,9 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                       const finalScore = isCollection ? cumulativeScore : score;
                       const total = totalCollectionQuestions;
                       if (finalScore >= total * 0.5) {
-                        return <span className="flex items-center justify-center gap-2">ყოჩაღ! <span className="text-2xl">🔥</span></span>;
+                        return <span className="flex items-center justify-center gap-2">{t("extra.wellDone")} <span className="text-2xl">🔥</span></span>;
                       }
-                      return <span className="flex items-center justify-center gap-2">სცადე ხელახლა! <span className="text-2xl">💪</span></span>;
+                      return <span className="flex items-center justify-center gap-2">{t("extra.tryAgainMotivation")} <span className="text-2xl">💪</span></span>;
                     })()}
                   </p>
                   
@@ -584,7 +586,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                         />
                       </div>
                       {!userLikes.includes(post?.id || '') && (
-                        <span className="text-white/80 text-sm font-medium">მოწონება</span>
+                        <span className="text-white/80 text-sm font-medium">{t("extra.likeBtn")}</span>
                       )}
                     </button>
                     
@@ -606,7 +608,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                         />
                       </div>
                       {!userSaves.includes(post?.id || '') && (
-                        <span className="text-white/80 text-sm font-medium">შენახვა</span>
+                        <span className="text-white/80 text-sm font-medium">{t("extra.saveBtn")}</span>
                       )}
                     </button>
                   </div>
@@ -618,7 +620,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                       className="w-full"
                     >
                       <Share2 className="w-4 h-4 mr-2" />
-                      გაზიარება
+                      {t("extra.shareAction")}
                     </ChunkyButton>
                   </div>
                 </motion.div>
