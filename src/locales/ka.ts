@@ -2538,6 +2538,20 @@ export const ka = {
     rlStarting: "იწყება...",
     rlChooseCategory: "აირჩიე კატეგორია",
     rlStartGame: "თამაშის დაწყება",
+    // Room menu & dialogs
+    rlHowItWorks: "როგორ მუშაობს",
+    rlLeaveRoom: "ოთახიდან გასვლა",
+    rlDeleteRoom: "ოთახის წაშლა",
+    rlDeleteRoomConfirm: "დარწმუნებული ხარ, რომ გინდა ამ ოთახის წაშლა? ეს მოქმედება შეუქცევადია.",
+    rlCancel: "გაუქმება",
+    rlDelete: "წაშლა",
+    rlHowStep1: "გააზიარეთ ლინკი მეგობრებს რომ შემოგვიერთდნენ",
+    rlHowStep2: "მასპინძელი იწყებს თამაშს როცა ყველა მზადაა",
+    rlHowStep3: "უპასუხეთ კითხვებს და დააგროვეთ ქულები",
+    rlHowTV: "გამოიყენეთ TV რეჟიმი წვეულებისთვის - კითხვები გამოჩნდება ტელევიზორზე!",
+    rlGotIt: "გასაგებია",
+    // Queue
+    cpsQueueLabel: "რიგი:",
   },
 };
 

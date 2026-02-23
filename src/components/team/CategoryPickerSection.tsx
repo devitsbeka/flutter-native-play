@@ -177,7 +177,7 @@ export function CategoryPickerSection({
           className="mt-4 pt-4 border-t border-white/10"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="text-white/50 text-xs mb-2 font-medium">რიგი:</p>
+          <p className="text-white/50 text-xs mb-2 font-medium">{t("extra.cpsQueueLabel")}</p>
 
           {/* Queue pills - draggable for host, static for others */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">

@@ -2539,6 +2539,20 @@ export const en: KaTranslations = {
     rlStarting: "Starting...",
     rlChooseCategory: "Choose Category",
     rlStartGame: "Start Game",
+    // Room menu & dialogs
+    rlHowItWorks: "How it works",
+    rlLeaveRoom: "Leave room",
+    rlDeleteRoom: "Delete room",
+    rlDeleteRoomConfirm: "Are you sure you want to delete this room? This action is irreversible.",
+    rlCancel: "Cancel",
+    rlDelete: "Delete",
+    rlHowStep1: "Share the link with friends to join",
+    rlHowStep2: "The host starts the game when everyone is ready",
+    rlHowStep3: "Answer questions and collect points",
+    rlHowTV: "Use TV mode for parties - questions appear on TV!",
+    rlGotIt: "Got it",
+    // Queue
+    cpsQueueLabel: "Queue:",
   },
 };
 
