@@ -238,7 +238,7 @@ export function UnifiedDesktopNav({
               />
             </div>
             <span className="text-[15px] font-medium truncate flex-1 text-left">
-              {profile?.nickname || "მომხმარებელი"}
+              {profile?.nickname || t("extra.guestUser")}
             </span>
           </motion.button>
         </div>
@@ -289,10 +289,10 @@ export function UnifiedDesktopNav({
               
               <div className="relative z-10">
                 <h3 className="font-bold text-foreground text-sm mb-1">
-                  გაერთე მეგობრებთან ერთად
+                  {t("extra.promoJoinFriends")}
                 </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-                  ითამაშე ტრივია აპლიკაციაში ან TV-ზე!
+                  {t("extra.promoPlayTrivia")}
                 </p>
                 <div 
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-primary-foreground"
@@ -301,7 +301,7 @@ export function UnifiedDesktopNav({
                     boxShadow: "0 2px 0 hsl(var(--primary)/0.3), 0 2px 8px hsl(var(--primary)/0.2)",
                   }}
                 >
-                  ითამაშე უფასოდ
+                  {t("extra.promoPlayFree")}
                 </div>
               </div>
             </motion.button>

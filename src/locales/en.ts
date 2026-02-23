@@ -1790,6 +1790,11 @@ export const en: KaTranslations = {
     addedCount: "{count} added",
     clearAll: "Clear",
     removeRound: "Remove round",
+    promoJoinFriends: "Join your friends",
+    promoPlayTrivia: "Play trivia in the app or on TV!",
+    promoPlayFree: "Play for free",
+    guestUser: "User",
+    createProfilePlayFree: "Create your profile and play for free!",
   },
 };
 
