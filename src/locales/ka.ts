@@ -550,6 +550,10 @@ export const ka = {
     animationTakingLong: "ანიმაციას მოსალოდნელზე მეტი დრო სჭირდება. გთხოვთ სცადოთ მოგვიანებით.",
     startingAnimation: "ანიმაცია იწყება... 1-2 წუთი დასჭირდება!",
     uploadEncouragement: "📸 ატვირთე შენი ფოტო და გააცოცხლე პროფილი!",
+    animationPro: "ანიმაცია (PRO)",
+    remainingGen: "დარჩა {remaining}/{max} გენერაცია",
+    maxGenReached: "მაქსიმუმ {max} ავატარის გენერაცია შეგიძლიათ",
+    avatarsList: "ავატარები",
   },
 
   // ==========================================
@@ -1820,6 +1824,7 @@ export const ka = {
     popularLabel: "პოპულარული",
     buyBtn: "ყიდვა",
     processingBtn: "მუშავდება...",
+    myPro: "ჩემი PRO",
   },
 };
 

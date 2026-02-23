@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2, Crown, Lock } from "lucide-react";
 
@@ -71,6 +72,7 @@ interface AvatarGeneration {
 export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
   const { user, profile, updateProfile } = useAuth();
   const { isVip } = useVipStatus();
+  const { t } = useLanguage();
 
   // Detect if current avatar is a preset mascot/bot avatar
   const isCurrentAvatarMascot = (() => {
@@ -762,7 +764,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                   whileTap={{ scale: 0.98 }}
                 >
                   <Lock className="w-3 h-3" />
-                  <span>ანიმაცია (PRO)</span>
+                  <span>{t("avatar.animationPro")}</span>
                   <Crown className="w-3 h-3 text-amber-500" />
                 </motion.button>
               )
@@ -774,11 +776,11 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.createNew")}</p>
           {isLimitReached ? (
             <div className="flex items-center justify-center py-3 px-4 rounded-xl bg-muted/50 border border-border">
-              <p className="text-xs text-muted-foreground text-center">მაქსიმუმ 5 ავატარის გენერაცია შეგიძლიათ</p>
+              <p className="text-xs text-muted-foreground text-center">{t("avatar.maxGenReached", { max: MAX_AVATAR_GENERATIONS })}</p>
             </div>
           ) : (
             <>
-              <p className="text-xs text-muted-foreground mb-1">დარჩა {remainingGenerations}/{MAX_AVATAR_GENERATIONS} გენერაცია</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("avatar.remainingGen", { remaining: remainingGenerations, max: MAX_AVATAR_GENERATIONS })}</p>
               <div className="flex gap-3">
                 <motion.button
                   onClick={startCamera}
@@ -912,7 +914,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
 
           {/* Default Avatars */}
           <div>
-            <p className="text-sm font-medium text-foreground mb-2">ავატარები</p>
+            <p className="text-sm font-medium text-foreground mb-2">{t("avatar.avatarsList")}</p>
             <div className="grid grid-cols-4 gap-2">
               {DEFAULT_AVATARS.map((avatar, index) => {
                 // Check against both bundled URL and canonical path for selection indicator

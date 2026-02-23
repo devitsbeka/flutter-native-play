@@ -39,9 +39,9 @@ export default function Profile() {
   // Dynamic PRO label
   const getProLabel = () => {
     if (currentTier && ['pro', 'pro_plus', 'pro_master'].includes(currentTier)) {
-      return "ჩემი PRO";
+      return t("extra.myPro");
     }
-    return "გახდი PRO";
+    return t("extra.becomePro");
   };
 
   const rank = profile ? getRankFromPoints(profile.total_points) : null;
@@ -161,7 +161,7 @@ export default function Profile() {
                     : "bg-secondary text-secondary-foreground"
                 )}
               >
-                სტატისტიკა
+                {t("profile.statistics")}
               </button>
               
               {/* PRO Title with Crown - clickable */}
@@ -194,17 +194,17 @@ export default function Profile() {
               >
                 <div className="bg-card rounded-2xl p-4 flex items-center gap-3 border border-border/30">
                   <img src={triviaIcon} alt="" className="w-8 h-8" />
-                  <span className="text-foreground flex-1">ნათამაშები</span>
+                  <span className="text-foreground flex-1">{t("profile.gamesPlayed")}</span>
                   <span className="font-bold text-foreground">{profile.games_played}</span>
                 </div>
                 <div className="bg-card rounded-2xl p-4 flex items-center gap-3 border border-border/30">
                   <img src={trophyIcon} alt="" className="w-8 h-8" />
-                  <span className="text-foreground flex-1">მოგებული</span>
+                  <span className="text-foreground flex-1">{t("profile.gamesWon")}</span>
                   <span className="font-bold text-foreground">{profile.games_won}</span>
                 </div>
                 <div className="bg-card rounded-2xl p-4 flex items-center gap-3 border border-border/30">
                   <img src={percentIcon} alt="" className="w-8 h-8" />
-                  <span className="text-foreground flex-1">მოგების %</span>
+                  <span className="text-foreground flex-1">{t("profile.winRate")}</span>
                   <span className="font-bold text-foreground">
                     {profile.games_played > 0
                       ? Math.round((profile.games_won / profile.games_played) * 100)
@@ -213,7 +213,7 @@ export default function Profile() {
                 </div>
                 <div className="bg-card rounded-2xl p-4 flex items-center gap-3 border border-border/30">
                   <img src={trophyShelfIcon} alt="" className="w-8 h-8" />
-                  <span className="text-foreground flex-1">საუკეთესო სერია</span>
+                  <span className="text-foreground flex-1">{t("profile.bestStreak")}</span>
                   <span className="font-bold text-foreground">{profile.best_streak}</span>
                 </div>
               </motion.div>
