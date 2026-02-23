@@ -3036,6 +3036,20 @@ export const ka = {
     // True/False
     trueAnswer: "მართალია",
     falseAnswer: "მცდარია",
+    // EditQuizModal & CoverImagePicker
+    yourGenerations: "თქვენი გენერაციები ({current}/{max})",
+    editTitleLabel: "სათაური",
+    editIconLabel: "აიქონი",
+    editQuestionsLabel: "კითხვები",
+    editViewQuestions: "კითხვების ნახვა",
+    editVisibilityLabel: "ხილვადობა",
+    editPublicLabel: "საჯარო",
+    editPrivateLabel: "პირადი",
+    editDeleteLabel: "წაშლა",
+    editDeleteConfirm: "დარწმუნებული ხარ რომ გსურს წაშლა?",
+    editCancelLabel: "გაუქმება",
+    editTriviaTitlePlaceholder: "Trivia-ს სათაური",
+    editDefaultTitle: "სათაური",
   },
 };
 

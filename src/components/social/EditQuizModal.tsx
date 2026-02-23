@@ -303,11 +303,11 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                   {/* Title Input */}
                   <div className="flex gap-3 items-end">
                     <div className="flex-1 space-y-2">
-                      <label className="text-sm font-medium text-foreground">სათაური</label>
+                      <label className="text-sm font-medium text-foreground">{t("extra.editTitleLabel")}</label>
                       <Input
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Trivia-ს სათაური"
+                        placeholder={t("extra.editTriviaTitlePlaceholder")}
                         className="h-12 rounded-xl"
                       />
                     </div>
@@ -315,7 +315,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                     {/* Icon Picker - only for quizzes, not collections */}
                     {!isCollection && (
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-foreground">აიქონი</label>
+                        <label className="text-sm font-medium text-foreground">{t("extra.editIconLabel")}</label>
                         <QuestionIconPicker
                           selectedSlug={iconSlug}
                           onSelect={setIconSlug}
@@ -329,7 +329,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                   {/* Questions Button - only for quiz posts with questions */}
                   {!isCollection && questions.length > 0 && (
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">კითხვები</label>
+                      <label className="text-sm font-medium text-foreground">{t("extra.editQuestionsLabel")}</label>
                       <button
                         onClick={() => setViewMode("questions")}
                         className="w-full flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border hover:bg-muted transition-colors"
@@ -338,7 +338,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                             <span className="text-lg font-bold text-primary">{questions.length}</span>
                           </div>
-                          <span className="font-medium text-foreground">კითხვების ნახვა</span>
+                          <span className="font-medium text-foreground">{t("extra.editViewQuestions")}</span>
                         </div>
                         <ChevronLeft className="w-5 h-5 text-muted-foreground rotate-180" />
                       </button>
@@ -347,7 +347,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
 
                   {/* Visibility Toggle */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">ხილვადობა</label>
+                    <label className="text-sm font-medium text-foreground">{t("extra.editVisibilityLabel")}</label>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setIsPublic(true)}
@@ -358,7 +358,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                         }`}
                       >
                         <Globe className="w-4 h-4" />
-                        <span className="font-medium">საჯარო</span>
+                        <span className="font-medium">{t("extra.editPublicLabel")}</span>
                       </button>
                       <button
                         onClick={() => setIsPublic(false)}
@@ -369,7 +369,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                         }`}
                       >
                         <Lock className="w-4 h-4" />
-                        <span className="font-medium">პირადი</span>
+                        <span className="font-medium">{t("extra.editPrivateLabel")}</span>
                       </button>
                     </div>
                   </div>
@@ -385,7 +385,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                           className="space-y-3"
                         >
                           <p className="text-sm text-center text-destructive font-medium">
-                            დარწმუნებული ხარ რომ გსურს წაშლა?
+                            {t("extra.editDeleteConfirm")}
                           </p>
                           <div className="flex gap-2">
                             <ChunkyButton
@@ -393,7 +393,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                               onClick={() => setShowDeleteConfirm(false)}
                               className="flex-1"
                             >
-                              გაუქმება
+                              {t("extra.editCancelLabel")}
                             </ChunkyButton>
                             <ChunkyButton
                               variant="danger"
@@ -402,7 +402,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                               className="flex-1"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              წაშლა
+                              {t("extra.editDeleteLabel")}
                             </ChunkyButton>
                           </div>
                         </motion.div>
@@ -417,7 +417,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                             className="w-full flex items-center justify-center gap-2 py-3 text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
-                            <span className="font-medium">წაშლა</span>
+                            <span className="font-medium">{t("extra.editDeleteLabel")}</span>
                           </button>
                         </motion.div>
                       )}
