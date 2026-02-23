@@ -89,9 +89,9 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
           setIsStarting(false);
           if (err instanceof Error) {
             if (err.message.includes("Permission")) {
-              setError("კამერაზე წვდომა უარყოფილია. გთხოვთ დაუშვათ კამერა.");
+              setError(t("extra.cameraPermissionDenied"));
             } else {
-              setError("კამერის გახსნა ვერ მოხერხდა");
+              setError(t("extra.cameraOpenFailed"));
             }
           }
         }
@@ -174,12 +174,12 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
     }
 
     if (code) {
-      toast.success("კოდი ნაპოვნია!", { description: code });
+      toast.success(t("extra.codeFound"), { description: code });
       handleClose();
       navigate(`/join?code=${code}`);
     } else {
-      toast.error("არასწორი QR კოდი", {
-        description: "ეს QR კოდი არ შეიცავს თამაშის კოდს",
+      toast.error(t("extra.invalidQrCode"), {
+        description: t("extra.qrNoGameCode"),
       });
       // Restart scanner after error
       if (open) {
@@ -224,7 +224,7 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                 <ScanLine className="w-4 h-4 text-primary" />
               </div>
-              <h2 className="text-lg font-bold text-foreground">QR კოდის სკანერი</h2>
+              <h2 className="text-lg font-bold text-foreground">{t("extra.qrScannerTitle")}</h2>
             </div>
           </div>
 
@@ -260,7 +260,7 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
                     className="mt-4"
                     onClick={handleClose}
                   >
-                    დახურვა
+                    {t("extra.closeBtn")}
                   </Button>
                 </div>
               )}
@@ -334,7 +334,7 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
             {/* Footer */}
             <div className="flex-shrink-0 p-4 text-center bg-background border-t border-border/50">
               <p className="text-xs text-muted-foreground">
-              მიმართეთ კამერა QR კოდისკენ • გამოიყენეთ ზუმი დაშორებული კოდებისთვის
+              {t("extra.qrFooterHint")}
               </p>
             </div>
           </div>

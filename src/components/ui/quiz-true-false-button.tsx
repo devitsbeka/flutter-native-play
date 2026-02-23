@@ -2,6 +2,7 @@ import * as React from "react";
 import { motion, AnimatePresence, type Easing } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Check, X } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export type QuizTrueFalseState = "default" | "selected" | "correct" | "wrong";
 
@@ -20,6 +21,7 @@ export function QuizTrueFalseButton({
   disabled,
   className,
 }: QuizTrueFalseButtonProps) {
+  const { t } = useLanguage();
   const isTrue = variant === "true";
   const isRevealed = state === "correct" || state === "wrong";
   
@@ -193,7 +195,7 @@ export function QuizTrueFalseButton({
           }}
           transition={{ duration: 0.3 }}
         >
-          {isTrue ? "მართალია" : "მცდარია"}
+          {isTrue ? t("extra.trueLabel") : t("extra.falseLabel")}
         </motion.span>
 
         {/* Particles for correct answer */}
