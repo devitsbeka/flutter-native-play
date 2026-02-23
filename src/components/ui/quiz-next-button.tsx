@@ -13,7 +13,7 @@ interface QuizNextButtonProps {
 const QuizNextButton = React.forwardRef<HTMLButtonElement, QuizNextButtonProps>(
   (
     {
-      text = "შემდეგი კითხვა",
+      text = "Next Question",
       duration = 3000,
       onClick,
       autoClickEnabled = true,

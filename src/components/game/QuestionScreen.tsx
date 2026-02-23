@@ -11,6 +11,7 @@ import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { Check, X, Crown, ChevronLeft, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type AnswerState = "idle" | "selected" | "revealed";
 
@@ -19,6 +20,7 @@ export function QuestionScreen() {
   const { playSound, vibrate, startBackgroundMusic, stopBackgroundMusic } = useSound();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { 
     questions, 
     currentQuestionIndex, 
@@ -444,10 +446,10 @@ export function QuestionScreen() {
               </div>
               <span className="text-white font-bold">
                 {lastAnswerCorrect 
-                  ? `+${lastPointsEarned} ქულა!` 
+                  ? t("extra.plusPoints", { count: lastPointsEarned }) 
                   : timedOut 
-                    ? "დრო ამოიწურა!" 
-                    : "არასწორია!"}
+                    ? t("extra.timeUpLabel") 
+                    : t("extra.incorrectLabel")}
               </span>
             </motion.div>
           )}
@@ -465,7 +467,7 @@ export function QuestionScreen() {
               onClick={handleNext}
               className="w-full"
             >
-              {currentQuestionIndex < questions.length - 1 ? "შემდეგი კითხვა" : "შედეგები"}
+              {currentQuestionIndex < questions.length - 1 ? t("game.nextQuestion") : t("extra.resultsLabel")}
             </ChunkyButton>
           </div>
         </div>

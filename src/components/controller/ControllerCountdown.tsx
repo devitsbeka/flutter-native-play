@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const ControllerCountdown: React.FC = () => {
   const { categoryName, categoryIcon } = useTVGame();
+  const { t } = useLanguage();
   const [count, setCount] = useState(3);
 
   useEffect(() => {
@@ -24,19 +26,17 @@ export const ControllerCountdown: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
-      {/* Category info */}
       {categoryName && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8 text-center"
         >
-          <p className="text-purple-300 text-sm">ვთამაშობთ</p>
+          <p className="text-purple-300 text-sm">{t('extra.playing')}</p>
           <p className="text-white text-lg font-bold">{categoryName}</p>
         </motion.div>
       )}
 
-      {/* Countdown number */}
       <AnimatePresence mode="wait">
         <motion.div
           key={count}
@@ -61,9 +61,9 @@ export const ControllerCountdown: React.FC = () => {
         animate={{ opacity: 1 }}
         className="text-2xl text-white font-bold"
       >
-        {count === 0 ? 'დაიწყო!' : 'მოემზადე!'}
+        {count === 0 ? t('extra.started') : t('extra.getReadyExcl')}
       </motion.p>
-      <p className="text-purple-200 mt-2">მოემზადე პასუხებისთვის!</p>
+      <p className="text-purple-200 mt-2">{t('extra.prepareForAnswers')}</p>
     </div>
   );
 };
