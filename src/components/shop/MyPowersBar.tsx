@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Plus, Clock } from "lucide-react";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // 3D cube-style power-up icons
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
@@ -15,11 +16,11 @@ const POWER_UP_ICONS: Record<PowerUpType, string> = {
   "time-drain": timeDrainIcon,
 };
 
-const POWER_UP_NAMES: Record<PowerUpType, string> = {
-  "5050": "50/50",
-  freeze: "გაყინვა",
-  replace: "შეცვლა",
-  "time-drain": "დრო+",
+const POWER_UP_NAME_KEYS: Record<PowerUpType, string> = {
+  "5050": "extra.powerFiftyFifty",
+  freeze: "extra.powerFreeze",
+  replace: "extra.powerReplace",
+  "time-drain": "extra.powerTimeDrain",
 };
 
 const POWER_UP_GRADIENTS: Record<PowerUpType, string> = {
@@ -35,13 +36,14 @@ interface MyPowersBarProps {
 
 export function MyPowersBar({ onPowerClick }: MyPowersBarProps) {
   const { powerUps, isLoading } = useUserPowerUps();
+  const { t } = useLanguage();
 
   const powerTypes: PowerUpType[] = ["5050", "freeze", "replace", "time-drain"];
 
   return (
     <div className="px-4 mb-6">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-display font-bold text-foreground">ჩემი ძალები</h2>
+        <h2 className="text-lg font-display font-bold text-foreground">{t("extra.myPowers")}</h2>
       </div>
 
       <div className="flex gap-3 overflow-x-auto scrollbar-hide pt-3 pb-2">
@@ -105,7 +107,7 @@ export function MyPowersBar({ onPowerClick }: MyPowersBarProps) {
                 ) : (
                   <img
                     src={POWER_UP_ICONS[type]}
-                    alt={POWER_UP_NAMES[type]}
+                    alt={t(POWER_UP_NAME_KEYS[type])}
                     className="w-11 h-11 object-contain"
                     style={{ 
                       filter: isEmpty ? "grayscale(1)" : "drop-shadow(0 2px 4px rgba(0,0,0,0.2))" 
@@ -116,7 +118,7 @@ export function MyPowersBar({ onPowerClick }: MyPowersBarProps) {
 
               {/* Name */}
               <p className="text-xs font-semibold text-center text-foreground truncate">
-                {POWER_UP_NAMES[type]}
+                {t(POWER_UP_NAME_KEYS[type])}
               </p>
             </motion.button>
           );

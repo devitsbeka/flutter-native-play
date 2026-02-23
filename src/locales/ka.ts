@@ -1661,6 +1661,8 @@ export const ka = {
     noRoomChats: "ოთახები არ გაქვს",
     noFriendChats: "მეგობრების ჩატები არ არის",
     noRoomsInChat: "ოთახები არ არის",
+    noConversations: "საუბრები არ არის",
+    chatViewAll: "ყველას ნახვა",
     // How it works modal
     howItWorksRandom: "შემთხვევითი",
     howItWorksRandomDesc: "სისტემა ავტომატურად აირჩევს შემთხვევით კატეგორიას - იდეალურია სწრაფი თამაშისთვის!",

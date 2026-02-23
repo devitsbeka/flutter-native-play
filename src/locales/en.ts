@@ -1662,6 +1662,8 @@ export const en: KaTranslations = {
     noRoomChats: "No rooms",
     noFriendChats: "No friend chats",
     noRoomsInChat: "No rooms",
+    noConversations: "No conversations",
+    chatViewAll: "View all",
     // How it works modal
     howItWorksRandom: "Random",
     howItWorksRandomDesc: "The system automatically picks a random category - perfect for quick games!",

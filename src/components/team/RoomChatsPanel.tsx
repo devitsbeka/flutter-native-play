@@ -20,6 +20,7 @@ import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { MAP_VIDEOS } from "@/config/videoConfig";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface RoomChatsPanelProps {
   isOpen: boolean;
@@ -28,11 +29,7 @@ interface RoomChatsPanelProps {
 
 type FilterType = "all" | "rooms" | "friends";
 
-const filters: { id: FilterType; label: string }[] = [
-  { id: "all", label: "ყველა" },
-  { id: "rooms", label: "ოთახები" },
-  { id: "friends", label: "მეგობრები" },
-];
+// Filter labels are now dynamic - see component body
 
 const truncateTitle = (text: string) => {
   // If title > 22 chars, show 3 dots after 20 chars
@@ -171,7 +168,14 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick,
 
 export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { rooms, loading: roomsLoading } = useMyRooms();
+
+  const filters: { id: FilterType; label: string }[] = [
+    { id: "all", label: t("extra.chatFilterAll") },
+    { id: "rooms", label: t("extra.chatFilterRooms") },
+    { id: "friends", label: t("extra.chatFilterFriends") },
+  ];
   const { friends, loading: friendsLoading } = useFriends();
   const { unreadCounts: roomUnreadCounts, markRoomAsRead } = useUnreadRoomMessages();
   const { unreadCounts: friendUnreadCounts, clearUnreadForFriend } = useUnreadMessages();
@@ -469,12 +473,12 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                           </div>
                           <p className="text-muted-foreground text-center">
                             {searchQuery 
-                              ? "ვერ მოიძებნა" 
+                              ? t("extra.notFound") 
                               : activeFilter === "rooms"
-                                ? "ოთახები არ გაქვს"
+                                ? t("extra.noRoomChats")
                                 : activeFilter === "friends"
-                                  ? "მეგობრების ჩატები არ არის"
-                                  : "საუბრები არ არის"
+                                  ? t("extra.noFriendChats")
+                                  : t("extra.noConversations")
                             }
                           </p>
                           {(activeFilter === "rooms" || activeFilter === "friends") && conversations.length > 0 && (
@@ -482,7 +486,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                               onClick={() => setActiveFilter("all")}
                               className="mt-3 text-sm text-primary font-medium"
                             >
-                              ყველას ნახვა
+                              {t("extra.chatViewAll")}
                             </button>
                           )}
                         </div>
