@@ -1,78 +1,97 @@
 
 
-# Translate Remaining Hardcoded Georgian Strings
+# Translate Hardcoded Georgian Strings in Gameplay Screens
 
-## Overview
-There are still many hardcoded Georgian strings across user-facing components, hooks, and pages. This plan covers translating them all into the localization system using `t()` keys. Admin-only files are excluded since they're internal tools.
+## Files to Update
 
-## Scope of Changes
+### 1. `src/components/game/QuestionScreen.tsx`
+- Add `useLanguage` import and `const { t } = useLanguage()`
+- Line 447: `+${lastPointsEarned} ქულა!` -> `t("extra.plusPoints", { count: lastPointsEarned })`
+- Line 449: `"დრო ამოიწურა!"` -> `t("extra.timeUpLabel")`
+- Line 450: `"არასწორია!"` -> `t("extra.incorrectLabel")`
+- Line 468: `"შემდეგი კითხვა"` / `"შედეგები"` -> `t("game.nextQuestion")` / `t("game.results")`
 
-### 1. Locale Files (src/locales/en.ts and src/locales/ka.ts)
-Add ~80-100 new translation keys across the `extra` namespace.
+### 2. `src/components/ui/quiz-next-button.tsx`
+- Line 16: Default prop `text = "შემდეგი კითხვა"` -> Change default to `"Next Question"` (callers should pass translated text; this is a UI primitive)
 
-### 2. Components to Update
+### 3. `src/components/game/PowerUpEffectOverlay.tsx`
+- Lines 23-27: Hardcoded `POWER_UP_NAMES` (`"გაყინვა"`, `"შეცვლა"`, `"+ 10 წამი"`) -> Use `t()` keys: `t("extra.powerFreezeName")`, `t("extra.powerReplaceName")`, `t("extra.powerTimeDrainName")`
+- This component doesn't use hooks, so it needs to accept `t` as a prop or use the standalone `t` import from LanguageContext
 
-**Authentication / Onboarding:**
-- `src/components/home/DesktopGuestSplitLayout.tsx` -- Validation messages ("სახელი საჭიროა", "მინ. 3 სიმბოლო", "პაროლი საჭიროა"), button labels ("შექმენი ანგარიში", "შესვლა"), placeholders ("სახელი", "ელფოსტა ან სახელი", "პაროლი"), toggle text ("უკვე გაქვს ანგარიში?", "არ გაქვს ანგარიში?"), camera buttons ("გადაიღე სელფი", "აირჩიე ფოტო"), error toasts
-- `src/components/home/GuestActivationFlow.tsx` -- "დაიწყე თამაში", "შექმენი ანგარიში და ითამაშე"
-- `src/components/onboarding/SignupOnboardingModal.tsx` -- "უსაფრთხოების კითხვა" placeholder
+### 4. `src/components/game/ActivePowerUpIndicator.tsx`
+- Lines 27, 34, 41: Hardcoded labels (`"დრო გაყინულია"`, `"შეცვლა"`, `"+დრო"`) -> Convert to use `t()` keys
+- Refactor `POWER_UP_CONFIG` to be a function that takes `t` and returns the config
 
-**Game Room (Multiplayer):**
-- `src/hooks/useGameRoom.ts` -- All toast messages: room creation failed, room not found, game already started, room full, join success/failure (~10 strings)
-- `src/components/team/MultiplayerGameScreen.tsx` -- "შენ" (you), "უპასუხა" (answered), "შედეგები" / "შემდეგი კითხვა" (results/next question)
-- `src/components/team/RoomLobby.tsx` -- Toast messages for copy, share, host transfer, room delete, name change, invitation resend (~10 strings)
+### 5. `src/components/mission/MissionCompleteToast.tsx`
+- Line 73: `"მისია შესრულდა! 🎉"` -> New key `extra.missionCompleted`
+- Lines 16-21: Hardcoded `POWER_UP_NAMES` -> Same approach as PowerUpEffectOverlay
 
-**TV Mode:**
-- `src/components/controller/ControllerCountdown.tsx` -- "ვთამაშობთ", "დაიწყო!", "მოემზადე!", "მოემზადე პასუხებისთვის!"
-- `src/components/controller/ControllerPollResults.tsx` -- "ხმის მიცემის შედეგები", "ხმა", "რაუნდი", "რაუნდების რაოდენობა:", "იწყება...", "დაწყება", toast messages
-- `src/components/tv/TVQuestionScreen.tsx` -- "კითხვა"
-- `src/components/tv/TVQuestionScreenV3.tsx` -- "ლიდერბორდი"
-- `src/components/tv/TVPairingScreen.tsx` -- "ველოდებით..."
-- `src/components/tv/TVMirrorButton.tsx` -- "დაკავშირება..."
-- `src/components/team/TVSetupModal.tsx` -- "დაკავშირებულია!", "მზადაა თამაშისთვის"
+### 6. `src/components/challenge/ChallengeShareModal.tsx`
+- Line 83: `"შეგიძლია დამამარცხო?"` -> New key
+- Line 84: `მოთამაშემ მოაგროვა... შეგიძლია დაამარცხო?` -> New key with interpolation
+- Line 98/105: `"ბმული დაკოპირდა!"` -> New key
+- Line 122: `"გამოიწვიე მეგობრები"` -> New key
+- Line 125: `"მოაწყვე შეჯიბრი მეგობრებს შორის"` -> New key
+- Line 132: `"შენი შედეგი"` -> New key
+- Line 133: `ქულა` -> New key
+- Line 135: `სწორი პასუხი` -> New key
+- Line 145: `"ბმული იქმნება..."` -> New key
+- Line 156: `"გაუზიარე მეგობრებს"` -> New key
+- Line 166: `"დაკოპირდა!" / "ბმულის კოპირება"` -> New keys
 
-**Collection Lobby:**
-- `src/pages/CollectionLobby.tsx` -- "კოლექცია ვერ მოიძებნა", "უკან დაბრუნება", "კითხვა", "ნათამაშები", "მოწონება", "რაუნდები", question count suffix
+### 7. `src/components/tv/TVCountdownScreenV2.tsx`
+- Line 39/89: `'დაიწყო!'` -> Existing key `extra.gameStarted` or new key
+- Line 55: `'რაუნდი'` -> New key
+- Line 125: `'წავედით!' / 'მოემზადეთ...'` -> New keys
 
-**Shop / Monetization:**
-- `src/components/home/NotEnoughCoinsModal.tsx` -- "გახდი PRO", "ულიმიტო თამაშები და ფუნქციები"
-- `src/components/home/GemShopModal.tsx` -- Various purchase-related strings
-- `src/components/shop/ShopPowerUpGuide.tsx` -- "როგორ გამოვიყენოთ ძალები"
-- `src/components/shop/ShopProSidebar.tsx` -- "გახდი PRO", "გახსენი ყველა შესაძლებლობა"
-- `src/hooks/useGemPurchase.ts` -- Authorization and payment error toasts
-- `src/hooks/useDailyVipRewards.ts` -- "ძალების მიღება ვერ მოხერხდა"
-- `src/hooks/useLeaderboardRewards.ts` -- Reward claim / frame equip error toasts
+### 8. `src/components/tv/TVRevealScreen.tsx`
+- Line 160: `სწორი` -> New key
+- Line 164: `არასწორი` -> New key
+- Line 175: `"შემდეგი კითხვა მოდის..."` -> Use existing `extra.nextQuestionSoon`
 
-**Profile:**
-- `src/components/profile/ProfileRightSidebar.tsx` -- "გახდი PRO", "განბლოკე ყველა ფუნქცია", "ითამაშე 10 თამაში", "დღეს ითამაშე", etc.
+### 9. `src/components/controller/ControllerCountdown.tsx`
+- Line 34: `"ვთამაშობთ"` -> New key
+- Line 64: `'დაიწყო!' / 'მოემზადე!'` -> New keys
+- Line 66: `"მოემზადე პასუხებისთვის!"` -> New key
 
-**Missions / Challenges:**
-- `src/components/mission/MissionCompleteToast.tsx` -- "მისია შესრულდა!"
+### 10. `src/config/rewardConfig.ts`
+- Line 60-62: Hardcoded reward labels (`"250 მონეტა"`, `"1 ალმასი"`, `"ძალა"`) -> These are static config; will need dynamic label resolution
 
-**Social / Trivia Creation:**
-- `src/components/social/AddRoundToCollectionModal.tsx` -- Suggestion labels ("Disney ფილმები", "NBA ლეგენდები", etc.), toast messages, placeholder
-- `src/components/team/GameStylePersonalTrivia.tsx` -- Draft save/load toasts
+## New Locale Keys to Add
 
-**Time formatting:**
-- `src/hooks/usePlayLimit.ts` -- "სთ" / "წთ" (hours/minutes abbreviations)
+In `en.ts` and `ka.ts` `extra` namespace:
+- `missionCompleted`: "Mission Complete! :tada:" / "მისია შესრულდა! :tada:"
+- `challengeTitle`: "Can you beat me?" / "შეგიძლია დამამარცხო?"
+- `challengeShareText`: "{player} scored {score}/{total} points{category}. Can you beat them?" / "{player} მოაგროვა {score}/{total} ქულა{category}. შეგიძლია დაამარცხო?"
+- `linkCopied`: "Link copied!" / "ბმული დაკოპირდა!"
+- `challengeFriends`: "Challenge Friends" / "გამოიწვიე მეგობრები"
+- `challengeSubtitle`: "Set up a competition among friends" / "მოაწყვე შეჯიბრი მეგობრებს შორის"
+- `yourResult`: "Your Result" / "შენი შედეგი"
+- `pointsLabel`: "points" / "ქულა"
+- `correctAnswersCount`: "{count} correct answers" / "{count} სწორი პასუხი"
+- `linkCreating`: "Creating link..." / "ბმული იქმნება..."
+- `shareWithFriends`: "Share with Friends" / "გაუზიარე მეგობრებს"
+- `copied`: "Copied!" / "დაკოპირდა!"
+- `copyLink`: "Copy Link" / "ბმულის კოპირება"
+- `letsGo`: "Let's go!" / "წავედით!"
+- `getReady`: "Get ready..." / "მოემზადეთ..."
+- `started`: "Started!" / "დაიწყო!"
+- `roundLabel`: "Round" / "რაუნდი"
+- `correctCount`: "correct" / "სწორი"
+- `incorrectCount`: "incorrect" / "არასწორი"
+- `playing`: "Playing" / "ვთამაშობთ"
+- `getReadyExcl`: "Get ready!" / "მოემზადე!"
+- `getReadyForAnswers`: "Get ready for answers!" / "მოემზადე პასუხებისთვის!"
+- `timerFrozen`: "Timer frozen" / "დრო გაყინულია"
+- `timePlus`: "+Time" / "+დრო"
+- `powerUpTimeDrainLabel`: "+ 10 sec" / "+ 10 წამი"
+- `powerUpQuestionReplace`: "Question replace" / "კითხვის შეცვლა"
+- `powerUpTimeFreeze`: "Time freeze" / "დროის გაყინვა"
 
-**Country names:**
-- `src/lib/countryCoordinates.ts` -- All country names in Georgian (these should use a translation lookup instead of hardcoded values)
+## Technical Notes
+- `QuestionScreen.tsx` needs `useLanguage` added (it currently doesn't import it)
+- `QuizGameScreenProd.tsx` already uses `t()` for "Next Question"/"Results" -- no changes needed there
+- `PowerUpEffectOverlay.tsx` and `ActivePowerUpIndicator.tsx` use static config objects outside the component; will convert labels to functions that call `t()`
+- `MissionCompleteToast.tsx` is called from a non-React context via `showMissionCompleteToast`; the toast itself is a component so `useLanguage` works inside it
+- Existing keys will be reused where possible (e.g., `game.nextQuestion`, `game.results`, `extra.plusPoints`, `extra.timeUpLabel`, `extra.incorrectLabel`)
 
-### 3. Files Intentionally Excluded
-- `src/utils/iconAnswerValidation.ts` -- Georgian word stems used for answer matching (not UI strings)
-- `src/pages/SampleDemoPlayer.tsx` -- Demo/sample page with placeholder content
-- All `src/components/admin/*` and `src/pages/admin/*` -- Internal admin tools
-- `src/data/categories.ts` -- Categories are translated via database
-
-## Technical Approach
-
-1. Add all new keys to `src/locales/ka.ts` (Georgian originals) and `src/locales/en.ts` (English translations)
-2. In each component/hook, import `useLanguage` (or the standalone `t` helper for non-React contexts like hooks) and replace hardcoded strings with `t("extra.keyName")` calls
-3. For interpolated strings (e.g., `${count} ხმა`), use `t("extra.voteCount", { count })` pattern
-4. For time formatting in `usePlayLimit.ts`, use `t("extra.hoursShort")` and `t("extra.minutesShort")`
-5. For country names, add a `countryNames` section to locales and look up by country code
-
-## Estimated Changes
-- ~100 new locale keys across en.ts and ka.ts
-- ~25 component/hook files edited
