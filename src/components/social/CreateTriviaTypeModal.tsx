@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ArrowLeft } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
@@ -23,6 +24,7 @@ export function CreateTriviaTypeModal({
   onSelectPersonal,
   onSelectGameRoom,
 }: CreateTriviaTypeModalProps) {
+  const { t } = useLanguage();
   const handleResumeDraft = (draftId: string, type: "collection" | "trivia" | "personal") => {
     if (type === "trivia") {
       onSelectSingle(draftId);
@@ -68,7 +70,7 @@ export function CreateTriviaTypeModal({
                 >
                   <ArrowLeft className="w-5 h-5 text-white" />
                 </button>
-                <h2 className="text-xl font-bold text-white">რა შევქმნათ?</h2>
+                <h2 className="text-xl font-bold text-white">{t("extra.whatToCreate")}</h2>
               </div>
             </div>
           </div>
@@ -109,8 +111,8 @@ export function CreateTriviaTypeModal({
               
               {/* Text */}
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white text-base">ტრივია</h3>
-                  <p className="text-white/60 text-xs">1 რაუნდი, სწრაფი თამაში</p>
+                <h3 className="font-bold text-white text-base">{t("extra.triviaLabel")}</h3>
+                  <p className="text-white/60 text-xs">{t("extra.triviaDesc2")}</p>
               </div>
             </motion.button>
 
@@ -147,8 +149,8 @@ export function CreateTriviaTypeModal({
               
               {/* Text */}
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white text-base">კოლექცია</h3>
-                  <p className="text-white/60 text-xs">შექმენი რამდენიმე თემატური რაუნდი</p>
+                <h3 className="font-bold text-white text-base">{t("extra.collectionLabel")}</h3>
+                  <p className="text-white/60 text-xs">{t("extra.collectionDesc2")}</p>
               </div>
             </motion.button>
 
@@ -188,7 +190,7 @@ export function CreateTriviaTypeModal({
                   {/* Text */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-white text-base">My Trivia Party</h3>
-                    <p className="text-white/60 text-xs">შენი კითხვები, შენი პასუხები - მეგობრებთან ერთად სათამაშოდ</p>
+                    <p className="text-white/60 text-xs">{t("extra.myTriviaPartyDesc2")}</p>
                   </div>
                 </motion.button>
               </>

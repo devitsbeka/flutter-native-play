@@ -533,8 +533,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                 <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
                   <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">შექმენი</h3>
-                <p className="text-white/70">როგორი ტრივია / კოლექცია გინდა?</p>
+                <h3 className="text-2xl font-bold text-white mb-2">{t("extra.createTitle")}</h3>
+                <p className="text-white/70">{t("extra.createSubtitle")}</p>
               </div>
 
               <div className="flex flex-col gap-3">
@@ -549,8 +549,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                     <img src={pencilIcon} alt="" className="w-10 h-10 object-contain" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-white text-base">ღია</h4>
-                    <p className="text-white/60 text-xs mt-1">ნახე კითხვები/პასუხები, შეასწორე, გამოაქვეყნე</p>
+                    <h4 className="font-bold text-white text-base">{t("extra.openType")}</h4>
+                    <p className="text-white/60 text-xs mt-1">{t("extra.openTypeDesc")}</p>
                   </div>
                 </motion.button>
 
@@ -565,8 +565,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                     <img src={lockIcon} alt="" className="w-10 h-10 object-contain" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-white text-base">დახურული</h4>
-                    <p className="text-white/60 text-xs mt-1">არ ნახო კითხვები/პასუხები და ითამაშე მეგობრებთან ერთად</p>
+                    <h4 className="font-bold text-white text-base">{t("extra.lockedType")}</h4>
+                    <p className="text-white/60 text-xs mt-1">{t("extra.lockedTypeDesc")}</p>
                   </div>
                 </motion.button>
               </div>
@@ -671,7 +671,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                 disabled={!subject.trim()}
                 className="w-full"
               >
-                შემდეგი
+                {t("extra.nextBtn")}
                 <ChevronRight className="w-5 h-5 ml-2" />
               </ChunkyButton>
 
@@ -729,10 +729,10 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <ChevronLeft className="w-4 h-4 mr-2" />
-                უკან
+                {t("extra.backBtn")}
               </Button>
               <ChunkyButton onClick={() => setStep(4)} className="flex-1">
-                შემდეგი
+                {t("extra.nextBtn")}
                 <ChevronRight className="w-5 h-5 ml-2" />
               </ChunkyButton>
             </div>
@@ -749,8 +749,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             className="space-y-5"
           >
             <div className="text-center">
-              <h3 className="text-xl font-bold text-white mb-1">რამდენი კითხვა? 🤔</h3>
-              <p className="text-sm text-white/70">აირჩიე რაოდენობა</p>
+              <h3 className="text-xl font-bold text-white mb-1">{t("extra.howManyQuestions2")} 🤔</h3>
+              <p className="text-sm text-white/70">{t("extra.chooseQuestionCount2")}</p>
             </div>
 
             <div className="flex justify-center gap-3">
@@ -780,10 +780,10 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep(3)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <ChevronLeft className="w-4 h-4 mr-2" />
-                უკან
+                {t("extra.backBtn")}
               </Button>
               <ChunkyButton onClick={() => setStep(5)} className="flex-1">
-                შემდეგი
+                {t("extra.nextBtn")}
                 <ChevronRight className="w-5 h-5 ml-2" />
               </ChunkyButton>
             </div>
@@ -819,8 +819,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   <img src={bullseyeIcon} alt="" className="w-10 h-10 object-contain" />
                 </div>
                 <div className="flex-1">
-                  <div className="font-semibold text-white">4 ვარიანტი</div>
-                  <div className="text-sm text-white/70">კლასიკური Quiz ფორმატი</div>
+                  <div className="font-semibold text-white">{t("extra.fourOptions2")}</div>
+                  <div className="text-sm text-white/70">{t("extra.fourOptionsDesc2")}</div>
                 </div>
                 {answerFormat === "4_answers" && (
                   <Check className="w-5 h-5 text-white" />
@@ -841,8 +841,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   <img src={checkmarkIcon} alt="" className="w-10 h-10 object-contain" />
                 </div>
                 <div className="flex-1">
-                  <div className="font-semibold text-white">მართალი / მცდარი</div>
-                  <div className="text-sm text-white/70">სწრაფი True/False</div>
+                  <div className="font-semibold text-white">{t("extra.trueFalseOption2")}</div>
+                  <div className="text-sm text-white/70">{t("extra.trueFalseDesc2")}</div>
                 </div>
                 {answerFormat === "true_false" && (
                   <Check className="w-5 h-5 text-white" />
@@ -853,7 +853,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep(4)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <ChevronLeft className="w-4 h-4 mr-2" />
-                უკან
+                {t("extra.backBtn")}
               </Button>
               <ChunkyButton onClick={generateQuestions} disabled={isGenerating} className="flex-1">
                 {isGenerating ? (

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, Loader2, ChevronLeft, Sparkles, Settings, ChevronRight, Check, Play, Users } from "lucide-react";
 import pencilIcon from "@/assets/classic-yellow-pencil.png";
@@ -84,6 +85,7 @@ const COVER_GRADIENTS = [
 const DEFAULT_QUESTIONS_PER_ROUND = 5;
 
 export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated, draftId, initialRoundSubject }: CreateCollectionModalProps) {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -879,8 +881,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                     <div className="inline-flex items-center justify-center mb-4">
                       <img src={iconCollections} alt="Create Collection" className="w-16 h-16 object-contain" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">შექმენი</h3>
-                    <p className="text-white/70">როგორი ტრივია / კოლექცია გინდა?</p>
+                    <h3 className="text-2xl font-bold text-white mb-2">{t("extra.createTitle")}</h3>
+                    <p className="text-white/70">{t("extra.createSubtitle")}</p>
                   </div>
 
                   <div className="flex flex-col gap-3">
@@ -895,8 +897,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                         <img src={pencilIcon} alt="" className="w-10 h-10 object-contain" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-white text-base">ღია</h4>
-                        <p className="text-white/60 text-xs mt-1">ნახე კითხვები/პასუხები, შეასწორე, გამოაქვეყნე</p>
+                        <h4 className="font-bold text-white text-base">{t("extra.openType")}</h4>
+                        <p className="text-white/60 text-xs mt-1">{t("extra.openTypeDesc")}</p>
                       </div>
                     </motion.button>
 
@@ -911,8 +913,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                         <img src={lockIcon} alt="" className="w-10 h-10 object-contain" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-white text-base">დახურული</h4>
-                        <p className="text-white/60 text-xs mt-1">არ ნახო კითხვები/პასუხები და ითამაშე მეგობრებთან ერთად</p>
+                        <h4 className="font-bold text-white text-base">{t("extra.lockedType")}</h4>
+                        <p className="text-white/60 text-xs mt-1">{t("extra.lockedTypeDesc")}</p>
                       </div>
                     </motion.button>
                   </div>
@@ -980,7 +982,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
 
                   {/* Rotating topic suggestions */}
                   <div className="space-y-2">
-                    <span className="text-sm text-white/70">💡 იდეები:</span>
+                    <span className="text-sm text-white/70">💡 {t("extra.ideasLabel2")}</span>
                     <div className="flex flex-wrap gap-2">
                       <AnimatePresence mode="popLayout">
                         {topicSuggestions.slice(suggestionIndex, suggestionIndex + 4).map((topic) => (
@@ -1009,8 +1011,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                   </div>
 
                   {/* AI info text */}
-                  <p className="text-sm text-white/80 text-center">
-                    ✨ AI დააგენერირებს <span className="font-bold">{DEFAULT_QUESTIONS_PER_ROUND} კითხვას</span> თითოეულ რაუნდზე
+                   <p className="text-sm text-white/80 text-center">
+                    ✨ {t("extra.aiWillGenerate2", { count: DEFAULT_QUESTIONS_PER_ROUND })}
                   </p>
 
                   {/* Add round button */}
@@ -1020,7 +1022,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                       className="w-full py-3 rounded-xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
                     >
                       <Plus className="w-5 h-5" />
-                      დაამატე რაუნდი
+                      {t("extra.addRoundBtn2")}
                     </button>
                   )}
 
