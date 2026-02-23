@@ -1725,6 +1725,66 @@ export const ka = {
     // No categories available
     noCategoriesTitle: "კატეგორიები ჯერ არ არის",
     noCategoriesMessage: "ამ ენაზე კატეგორიები მალე დაემატება!",
+    // Room/Social filters
+    filterMyRooms: "ჩემი შექმნილი",
+    filterFriendsRooms: "მეგობრების",
+    filterActive: "აქტიური",
+    filterCompleted: "დასრულებული",
+    filterLabel: "ფილტრი",
+    // Social feed filters
+    filterPrivate: "პირადი",
+    filterPublic: "საჯარო",
+    filterTrivias: "ტრივიები",
+    filterCollections: "კოლექციები",
+    filterMostLiked: "მოწონებული",
+    filterMostSaved: "შენახული",
+    filterMostPlayed: "ნათამაშები",
+    addTrivia: "+ ტრივია",
+    addCreate: "+ შექმენი",
+    // Social post labels
+    questionsLabel: "{count} კითხვა",
+    answersLabel: "4 პასუხი",
+    trueFalseLabel: "მართალი/მცდარი",
+    playBtn: "ითამაშე",
+    playsLabel: "ნათამაშები",
+    answersCount: "პასუხი",
+    topicsLabel: "თემატიკა",
+    roundLabel: "რაუნდი",
+    roundsLabel: "რაუნდები",
+    collectionBadge: "კოლექცია",
+    publicLabel: "საჯარო",
+    privateLabel: "პირადი",
+    playedBadge: "ნათამაშები",
+    // Room cards
+    gameRoom: "თამაშის ოთახი",
+    deleteRoom: "ოთახის წაშლა",
+    deleteConfirmMessage: "დარწმუნებული ხარ? ეს მოქმედება შეუქცევადია.",
+    deleteBtn: "წაშლა",
+    cancelBtn: "გაუქმება",
+    gameBtn: "თამაში",
+    chatBtn: "ჩატი",
+    // Recent sections
+    recentPlayers: "ბოლო მოთამაშეები",
+    recentGames: "ბოლო თამაშები",
+    viewAll: "ყველა",
+    // Social feed - SocialFeed sponsored
+    sponsorLabel: "სპონსორი",
+    // Search
+    searchPlaceholder: "ძიება...",
+    // Social found results
+    foundResults: "მოიძებნა",
+    triviaWithHashtag: "ტრივია ჰეშთეგით",
+    // MyTriviaTab empty states
+    myTriviaPartyDesc: "შექმენი პერსონალური MyTrivia Party და გაუზიარე მეგობრებს!",
+    triviaEmptyDesc: "შექმენი შენი პირველი Trivia და გაუზიარე მეგობრებს!",
+    collectionsEmptyTitle: "კოლექციები",
+    collectionsEmptyDesc: "შექმენი კოლექცია და დაამატე მასში რაუნდები!",
+    yourTriviasTitle: "შენი Trivia-ები",
+    yourTriviasDesc: "შექმენი შენი საკუთარი ქვიზები და გაუზიარე მეგობრებს!",
+    roomCreateFailed: "ოთახის შექმნა ვერ მოხერხდა",
+    createRoomLabel: "ოთახის შექმნა",
+    playWithFriends: "ითამაშე მეგობრებთან ერთად",
+    gameRoomLabel: "სათამაშო ოთახი",
   },
 };
 

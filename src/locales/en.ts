@@ -1726,6 +1726,66 @@ export const en: KaTranslations = {
     // No categories available
     noCategoriesTitle: "No Categories Yet",
     noCategoriesMessage: "Categories in this language will be added soon!",
+    // Room/Social filters
+    filterMyRooms: "My Rooms",
+    filterFriendsRooms: "Friends'",
+    filterActive: "Active",
+    filterCompleted: "Completed",
+    filterLabel: "Filter",
+    // Social feed filters
+    filterPrivate: "Private",
+    filterPublic: "Public",
+    filterTrivias: "Trivias",
+    filterCollections: "Collections",
+    filterMostLiked: "Most Liked",
+    filterMostSaved: "Saved",
+    filterMostPlayed: "Most Played",
+    addTrivia: "+ Trivia",
+    addCreate: "+ Create",
+    // Social post labels
+    questionsLabel: "{count} questions",
+    answersLabel: "4 answers",
+    trueFalseLabel: "True/False",
+    playBtn: "Play",
+    playsLabel: "Plays",
+    answersCount: "Answers",
+    topicsLabel: "Topics",
+    roundLabel: "Round",
+    roundsLabel: "Rounds",
+    collectionBadge: "Collection",
+    publicLabel: "Public",
+    privateLabel: "Private",
+    playedBadge: "Played",
+    // Room cards
+    gameRoom: "Game Room",
+    deleteRoom: "Delete Room",
+    deleteConfirmMessage: "Are you sure? This action is irreversible.",
+    deleteBtn: "Delete",
+    cancelBtn: "Cancel",
+    gameBtn: "Play",
+    chatBtn: "Chat",
+    // Recent sections
+    recentPlayers: "Recent Players",
+    recentGames: "Recent Games",
+    viewAll: "View All",
+    // Social feed - SocialFeed sponsored
+    sponsorLabel: "Sponsor",
+    // Search
+    searchPlaceholder: "Search...",
+    // Social found results
+    foundResults: "Found",
+    triviaWithHashtag: "trivia with hashtag",
+    // MyTriviaTab empty states
+    myTriviaPartyDesc: "Create a personal MyTrivia Party and share it with friends!",
+    triviaEmptyDesc: "Create your first Trivia and share it with friends!",
+    collectionsEmptyTitle: "Collections",
+    collectionsEmptyDesc: "Create a collection and add rounds to it!",
+    yourTriviasTitle: "Your Trivias",
+    yourTriviasDesc: "Create your own quizzes and share them with friends!",
+    roomCreateFailed: "Failed to create room",
+    createRoomLabel: "Create Room",
+    playWithFriends: "Play with friends together",
+    gameRoomLabel: "Game Room",
   },
 };
 
