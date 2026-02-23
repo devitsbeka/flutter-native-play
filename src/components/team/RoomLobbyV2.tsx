@@ -916,8 +916,8 @@ export function RoomLobbyV2() {
                   className="w-10 h-10 object-contain"
                 />
                 <div>
-                  <p className="text-white font-medium text-sm">TV რეჟიმი</p>
-                  <p className="text-white/60 text-xs">კითხვები ტელევიზორზე</p>
+                  <p className="text-white font-medium text-sm">{t("extra.tvModeLabel")}</p>
+                  <p className="text-white/60 text-xs">{t("extra.tvQuestionsOnTV")}</p>
                 </div>
               </div>
               <Switch
@@ -1001,10 +1001,10 @@ export function RoomLobbyV2() {
                   icon={needsCategorySelection ? <Plus className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                 >
                   {isStarting 
-                    ? "იწყება..." 
+                    ? t("extra.rlStarting")
                     : needsCategorySelection 
-                      ? "აირჩიე კატეგორია" 
-                      : "თამაშის დაწყება"
+                      ? t("extra.rlChooseCategory")
+                      : t("extra.rlStartGame")
                   }
                 </ChunkyButton>
               );
