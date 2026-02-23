@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -28,6 +29,7 @@ interface TierConfig {
     icon: React.ElementType;
     text: string;
     highlight?: boolean;
+    count?: number;
   }[];
 }
 
@@ -46,15 +48,15 @@ export const PRO_TIERS: TierConfig[] = [
     lightBg: 'rgba(147, 51, 234, 0.1)',
     buttonGradient: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)',
     benefits: [
-      { icon: Zap, text: '2x XP ბონუსი' },
-      { icon: Shield, text: 'რეკლამების გარეშე' },
-      { icon: Star, text: 'VIP ბეჯი' },
-      { icon: Users, text: '1 მეგობრის მოწვევა', highlight: true },
+      { icon: Zap, text: 'extra.xpBonus' },
+      { icon: Shield, text: 'extra.noAds' },
+      { icon: Star, text: 'extra.vipBadge' },
+      { icon: Users, text: 'extra.friendInvite', highlight: true, count: 1 },
     ]
   },
   {
     id: 'pro_plus',
-    name: 'სამეგობრო PRO',
+    name: 'Friends PRO',
     nameKa: 'სამეგობრო PRO',
     price: 7.99,
     friendInvites: 5,
@@ -67,11 +69,11 @@ export const PRO_TIERS: TierConfig[] = [
     buttonGradient: 'linear-gradient(135deg, #F59E0B 0%, #FB923C 100%)',
     popular: true,
     benefits: [
-      { icon: Zap, text: '2x XP ბონუსი' },
-      { icon: Shield, text: 'რეკლამების გარეშე' },
-      { icon: Star, text: 'VIP ბეჯი' },
-      { icon: Gift, text: 'ყოველდღიური ჯილდოები' },
-      { icon: Users, text: '5 მეგობრის მოწვევა', highlight: true },
+      { icon: Zap, text: 'extra.xpBonus' },
+      { icon: Shield, text: 'extra.noAds' },
+      { icon: Star, text: 'extra.vipBadge' },
+      { icon: Gift, text: 'extra.dailyRewards' },
+      { icon: Users, text: 'extra.friendInvite', highlight: true, count: 5 },
     ]
   }
 ];
@@ -388,6 +390,7 @@ function TierCard({
   onPurchase: () => void; 
   purchasing: boolean;
 }) {
+  const { t } = useLanguage();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -406,7 +409,7 @@ function TierCard({
             className="text-white text-xs font-bold px-3 py-1 rounded-bl-xl"
             style={{ background: tier.gradient }}
           >
-            პოპულარული
+            {t("extra.popularLabel")}
           </div>
         </div>
       )}
@@ -436,7 +439,7 @@ function TierCard({
             <Crown className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-foreground">{tier.nameKa}</h3>
+            <h3 className="text-lg font-bold text-foreground">{tier.id === 'pro' ? t("extra.proName") : t("extra.friendProName")}</h3>
             <p className="text-2xl font-bold text-foreground">
               ${tier.price}<span className="text-sm text-muted-foreground font-normal">/mo</span>
             </p>
@@ -466,7 +469,7 @@ function TierCard({
                 "text-sm",
                 benefit.highlight ? "text-foreground" : "text-muted-foreground"
               )}>
-                {benefit.text}
+                {benefit.count ? t(benefit.text, { count: benefit.count }) : t(benefit.text)}
               </span>
             </div>
           ))}
@@ -487,12 +490,12 @@ function TierCard({
           {purchasing ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              მუშავდება...
+              {t("extra.processingBtn")}
             </>
           ) : (
             <>
               <Sparkles className="w-4 h-4" />
-              ყიდვა
+              {t("extra.buyBtn")}
             </>
           )}
         </motion.button>
