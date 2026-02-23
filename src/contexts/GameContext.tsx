@@ -203,9 +203,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       // P2-4: Handle no questions with user-facing error
       if (!questions || questions.length === 0) {
         console.error("No questions available at all");
-        // Show toast and return to home
+        // Show toast with localized message and return to home
         const { toast } = await import("sonner");
-        toast.error("კითხვები ვერ მოიძებნა ამ ენაზე");
+        const stored = localStorage.getItem('preferredLanguage') || 'ka';
+        const msg = stored === 'ka' ? 'კითხვები ვერ მოიძებნა ამ ენაზე' : 'No questions available in this language yet';
+        toast.error(msg);
         setState(prev => ({ ...prev, phase: "home" }));
         return;
       }

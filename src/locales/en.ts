@@ -1711,6 +1711,12 @@ export const en: KaTranslations = {
     closeBtn: "Close",
     // Feature onboarding action
     featureTriviaAction: "+ Trivia",
+    // Connection error modal
+    connectionErrorTitle: "Connection Error",
+    connectionErrorMessage: "Please try again or return to the main page",
+    // No categories available
+    noCategoriesTitle: "No Categories Yet",
+    noCategoriesMessage: "Categories in this language will be added soon!",
   },
 };
 
