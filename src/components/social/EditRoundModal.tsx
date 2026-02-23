@@ -605,7 +605,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                                 {q.question_text}
                               </p>
                               <span className="text-xs text-white/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                                დააჭირე რედაქტირებისთვის
+                                {t("extra.editHint")}
                               </span>
                             </button>
                             

@@ -1383,7 +1383,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{customTriviaTitle}</p>
                     <p className="text-xs text-muted-foreground">
-                      {customTriviaQuestions.length} კითხვა • {isPersonalTrivia ? "✏️ დააჭირე რედაქტირებისთვის" : "🔒 პასუხები დამალულია"}
+                      {t("extra.questionsCount", { count: customTriviaQuestions.length })} • {isPersonalTrivia ? t("extra.editHint") : t("extra.answersHidden")}
                     </p>
                   </div>
                   <button 
