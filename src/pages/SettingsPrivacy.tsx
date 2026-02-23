@@ -49,7 +49,7 @@ export default function SettingsPrivacy() {
       a.click();
       URL.revokeObjectURL(url);
 
-      notify.success("მონაცემები ექსპორტირებულია", { icon: toastIcon(ICON_URLS.box) });
+      notify.success(t("settings.dataExported"), { icon: toastIcon(ICON_URLS.box) });
     } catch (error: any) {
       notify.error(t("errors.generic"), { description: translateErrorMessage(error.message) });
     } finally {
@@ -65,7 +65,7 @@ export default function SettingsPrivacy() {
       await supabase.from("profiles").delete().eq("user_id", user.id);
       await signOut();
       navigate("/");
-      notify.success("ანგარიში წაშლილია", { icon: toastIcon(triviaBuzzer) });
+      notify.success(t("settings.accountDeleted"), { icon: toastIcon(triviaBuzzer) });
     } catch (error: any) {
       notify.error(t("errors.generic"), { description: translateErrorMessage(error.message) });
     } finally {
@@ -76,14 +76,14 @@ export default function SettingsPrivacy() {
   const privacyItems = [
     {
       icon: FileText,
-      label: "კონფიდენციალურობის პოლიტიკა",
+      label: t("settings.privacyPolicy"),
       route: "/privacy-policy",
       color: "bg-blue-500/10",
       iconColor: "text-blue-500",
     },
     {
       icon: FileText,
-      label: "მომსახურების პირობები",
+      label: t("settings.termsOfService"),
       route: "/terms",
       color: "bg-emerald-500/10",
       iconColor: "text-emerald-500",
@@ -131,7 +131,7 @@ export default function SettingsPrivacy() {
             className="space-y-3"
           >
             <h2 className="text-lg font-display font-bold text-foreground">
-              მონაცემების მართვა
+              {t("settings.dataManagement")}
             </h2>
 
             <button
@@ -148,10 +148,10 @@ export default function SettingsPrivacy() {
               </div>
               <div className="flex-1 text-left">
                 <span className="font-medium text-foreground block">
-                  მონაცემების ექსპორტი
+                  {t("settings.exportData")}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  ჩამოტვირთე შენი მონაცემები
+                  {t("settings.exportDataDescription")}
                 </span>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -167,10 +167,10 @@ export default function SettingsPrivacy() {
                 </div>
                 <div className="flex-1 text-left">
                   <span className="font-medium text-destructive block">
-                    ანგარიშის წაშლა
+                    {t("settings.deleteAccount")}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    სამუდამოდ წაშალე ანგარიში
+                    {t("settings.deleteAccountDescription")}
                   </span>
                 </div>
                 <ChevronRight className="w-5 h-5 text-destructive/50" />
@@ -184,11 +184,11 @@ export default function SettingsPrivacy() {
                 <div className="flex items-center gap-3">
                   <AlertTriangle className="w-6 h-6 text-destructive" />
                   <h3 className="font-semibold text-destructive">
-                    დარწმუნებული ხარ?
+                    {t("settings.deleteConfirmTitle")}
                   </h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  ეს მოქმედება შეუქცევადია. ყველა შენი მონაცემი სამუდამოდ წაიშლება.
+                  {t("settings.deleteConfirmMessage")}
                 </p>
                 <div className="flex gap-3">
                   <ChunkyButton
@@ -197,7 +197,7 @@ export default function SettingsPrivacy() {
                     className="flex-1"
                     onClick={() => setShowDeleteConfirm(false)}
                   >
-                    გაუქმება
+                    {t("common.cancel")}
                   </ChunkyButton>
                   <ChunkyButton
                     variant="danger"
@@ -209,7 +209,7 @@ export default function SettingsPrivacy() {
                     {isDeleting ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
-                      "წაშლა"
+                      t("settings.deleteAccount")
                     )}
                   </ChunkyButton>
                 </div>

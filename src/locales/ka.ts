@@ -502,6 +502,15 @@ export const ka = {
     nameChanged: "სახელი შეიცვალა!",
     deleteAccount: "ანგარიშის წაშლა",
     deleteAccountDescription: "სამუდამოდ წაშალე შენი ანგარიში",
+    privacyPolicy: "კონფიდენციალურობის პოლიტიკა",
+    termsOfService: "მომსახურების პირობები",
+    dataManagement: "მონაცემების მართვა",
+    exportData: "მონაცემების ექსპორტი",
+    exportDataDescription: "ჩამოტვირთე შენი მონაცემები",
+    dataExported: "მონაცემები ექსპორტირებულია",
+    deleteConfirmTitle: "დარწმუნებული ხარ?",
+    deleteConfirmMessage: "ეს მოქმედება შეუქცევადია. ყველა შენი მონაცემი სამუდამოდ წაიშლება.",
+    accountDeleted: "ანგარიში წაშლილია",
   },
 
   // ==========================================
