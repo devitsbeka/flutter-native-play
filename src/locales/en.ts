@@ -2390,6 +2390,10 @@ export const en: KaTranslations = {
     myTriviasLabel: "My Trivias",
     chooseFromTrivias: "Choose from your created trivias",
     invitedStatusShort: "Invited",
+    createTriviaBtn: "Create Trivia",
+    triviaNotFound: "Trivia not found",
+    triviaSaveFailed: "Failed to save trivia",
+    triviaCreatedToast: "Trivia \"{title}\" created!",
   },
 };
 

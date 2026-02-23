@@ -427,7 +427,7 @@ function TeamContentV2() {
             .single();
           
           if (error || !trivia) {
-            toast.error("ტრივია ვერ მოიძებნა");
+            toast.error(t("extra.triviaNotFound"));
             return;
           }
           
@@ -700,7 +700,7 @@ function TeamContentV2() {
                   searchQuery={roomsSearchQuery}
                   onSearchQueryChange={setRoomsSearchQuery}
                   onAddClick={() => requirePro("rooms", () => setShowCreateModal(true))}
-                  addButtonText="+ ოთახი"
+                  addButtonText={t("extra.addRoom")}
                 />
               )}
 
@@ -715,7 +715,7 @@ function TeamContentV2() {
                   searchQuery={exploreSearchQuery}
                   onSearchQueryChange={setExploreSearchQuery}
                   onAddClick={() => requirePro("trivia", () => setShowCreateTypeModal(true))}
-                  addButtonText="შექმენი ტრივია"
+                  addButtonText={t("extra.createTriviaBtn")}
                 />
               )}
 
@@ -727,7 +727,7 @@ function TeamContentV2() {
                   searchQuery={searchQuery}
                   onSearchQueryChange={setSearchQuery}
                   onAddClick={() => requirePro("trivia", () => setShowCreateTypeModal(true))}
-                  addButtonText="+ ტრივია"
+                  addButtonText={t("extra.feedCreateTriviaBtn")}
                 />
               )}
               
@@ -1038,7 +1038,7 @@ function TeamContentV2() {
 
           if (error) {
             console.error("Error saving trivia:", error);
-            toast.error("ტრივიას შენახვა ვერ მოხერხდა");
+            toast.error(t("extra.triviaSaveFailed"));
             return;
           }
 
@@ -1054,7 +1054,7 @@ function TeamContentV2() {
           setShowBlindTriviaModal(false);
           setEditingDraftId(null);
           setActiveTab("my-content");
-          toast.success(`✨ ტრივია "${title}" შეიქმნა!`);
+          toast.success(t("extra.triviaCreatedToast", { title }));
         }}
         resumeDraftId={editingDraftId}
         onDraftResumed={() => setEditingDraftId(null)}

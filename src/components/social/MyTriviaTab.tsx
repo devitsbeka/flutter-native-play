@@ -13,6 +13,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 
 import { EditQuizModal } from "./EditQuizModal";
@@ -916,6 +917,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
   const { drafts, isLoading: draftsLoading, deleteDraft } = useDrafts();
   const { profile } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { createRoom } = useMultiplayerV2();
   const [editingQuiz, setEditingQuiz] = useState<any>(null);
@@ -1294,15 +1296,15 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
           </div>
           
           <h3 className="text-base font-semibold text-foreground mb-1.5">
-            {sortFilter === "all" ? "ტრივიები ჯერ არ გაქვს" : title}
+            {sortFilter === "all" ? t("extra.noTriviasYet") : title}
           </h3>
           
           <p className="text-muted-foreground text-center text-xs max-w-xs mb-5">
-            {sortFilter === "all" ? "შექმენი შენი ტრივია და გაუზიარე მეგობრებს." : description}
+            {sortFilter === "all" ? t("extra.createFirstTrivia") : description}
           </p>
           
           {onCreateQuiz && sortFilter === "all" && (
-            <ChunkyButton onClick={onCreateQuiz} size="sm">+ ტრივია</ChunkyButton>
+            <ChunkyButton onClick={onCreateQuiz} size="sm">{t("extra.feedCreateTriviaBtn")}</ChunkyButton>
           )}
         </div>
       </motion.div>
