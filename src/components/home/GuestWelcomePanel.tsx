@@ -64,8 +64,8 @@ export function GuestWelcomePanel({
     e.preventDefault();
     
     // For sign in mode, only validate password (username can be any format)
-    const uError = isSignUp ? validateUsername(username) : (!username.trim() ? "სახელი საჭიროა" : undefined);
-    const pError = validatePassword(password);
+    const uError = isSignUp ? validateUsername(username, t) : (!username.trim() ? t("extra.usernameRequired") : undefined);
+    const pError = validatePassword(password, t);
     
     setUsernameError(uError);
     setPasswordError(pError);
