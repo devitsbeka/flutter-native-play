@@ -99,7 +99,7 @@ const getTimeUntilMidnight = (): string => {
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 };
 
-const getTimeUntilMonday = (): string => {
+const getTimeUntilMonday = (t: (key: string) => string): string => {
   const now = new Date();
   const day = now.getDay();
   const daysUntilMonday = day === 0 ? 1 : 8 - day;
@@ -109,7 +109,32 @@ const getTimeUntilMonday = (): string => {
   const diff = nextMonday.getTime() - now.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  return `${days}დ ${hours}სთ`;
+  return `${days}${t("missions.timeDays")} ${hours}${t("missions.timeHours")}`;
+};
+
+// Map mission_id to translation keys for title/description
+const MISSION_TITLE_KEYS: Record<string, { title: string; desc: string }> = {
+  win_games: { title: "missions.dailyWinGames", desc: "missions.dailyWinGamesDesc" },
+  answer_correct: { title: "missions.dailyAnswerCorrect", desc: "missions.dailyAnswerCorrectDesc" },
+  play_categories: { title: "missions.dailyPlayCategories", desc: "missions.dailyPlayCategoriesDesc" },
+  play_games: { title: "missions.dailyPlayGames", desc: "missions.dailyPlayGamesDesc" },
+  perfect_round: { title: "missions.dailyPerfectRound", desc: "missions.dailyPerfectRoundDesc" },
+  weekly_wins: { title: "missions.weeklyWins", desc: "missions.weeklyWinsDesc" },
+  weekly_answers: { title: "missions.weeklyAnswers", desc: "missions.weeklyAnswersDesc" },
+  weekly_categories: { title: "missions.weeklyCategories", desc: "missions.weeklyCategoriesDesc" },
+  weekly_perfect: { title: "missions.weeklyPerfect", desc: "missions.weeklyPerfectDesc" },
+};
+
+// Map achievement_id to translation keys
+const ACHIEVEMENT_TITLE_KEYS: Record<string, { title: string; desc: string }> = {
+  streak_3: { title: "missions.achStreak3", desc: "missions.achStreak3Desc" },
+  streak_7: { title: "missions.achStreak7", desc: "missions.achStreak7Desc" },
+  streak_14: { title: "missions.achStreak14", desc: "missions.achStreak14Desc" },
+  streak_30: { title: "missions.achStreak30", desc: "missions.achStreak30Desc" },
+  missions_10: { title: "missions.achMissions10", desc: "missions.achMissions10Desc" },
+  missions_50: { title: "missions.achMissions50", desc: "missions.achMissions50Desc" },
+  missions_100: { title: "missions.achMissions100", desc: "missions.achMissions100Desc" },
+  missions_500: { title: "missions.achMissions500", desc: "missions.achMissions500Desc" },
 };
 
 interface Mission {
@@ -312,12 +337,12 @@ function MissionCarouselCard({
 
           {/* Title */}
           <h3 className={`font-black text-base mb-1 ${isClaimed ? "text-muted-foreground" : theme.text}`}>
-            {mission.mission_title}
+            {MISSION_TITLE_KEYS[mission.mission_id] ? t(MISSION_TITLE_KEYS[mission.mission_id].title) : mission.mission_title}
           </h3>
           
           {mission.mission_description && (
             <p className="text-xs text-muted-foreground mb-3">
-              {mission.mission_description}
+              {MISSION_TITLE_KEYS[mission.mission_id] ? t(MISSION_TITLE_KEYS[mission.mission_id].desc) : mission.mission_description}
             </p>
           )}
 
@@ -440,7 +465,7 @@ function MissionCarouselCard({
               </div>
               <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                 <Clock className="w-3 h-3" />
-                <span>{t("missions.newIn")}: {missionType === "daily" ? getTimeUntilMidnight() : getTimeUntilMonday()}</span>
+                <span>{t("missions.newIn")}: {missionType === "daily" ? getTimeUntilMidnight() : getTimeUntilMonday(t)}</span>
               </div>
             </div>
           ) : null}
@@ -602,7 +627,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
       <div className="w-px h-4 bg-border" />
       <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
         <Calendar className="w-4 h-4" />
-        <span>{t("missions.weekly")}: <span className="font-mono font-bold">{getTimeUntilMonday()}</span></span>
+        <span>{t("missions.weekly")}: <span className="font-mono font-bold">{getTimeUntilMonday(t)}</span></span>
       </div>
     </div>
   );
@@ -785,9 +810,9 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                     </div>
                     <div className="flex-1">
                       <h4 className={`font-bold text-sm ${unlocked ? rarityStyle.text : "text-muted-foreground"}`}>
-                        {achievement.title}
+                        {ACHIEVEMENT_TITLE_KEYS[achievement.id] ? t(ACHIEVEMENT_TITLE_KEYS[achievement.id].title) : achievement.title}
                       </h4>
-                      <p className="text-xs text-muted-foreground">{achievement.description}</p>
+                      <p className="text-xs text-muted-foreground">{ACHIEVEMENT_TITLE_KEYS[achievement.id] ? t(ACHIEVEMENT_TITLE_KEYS[achievement.id].desc) : achievement.description}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${rarityStyle.bg} ${rarityStyle.text}`}>
                           {t(`missions.rarity.${achievement.rarity}`)}
