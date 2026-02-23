@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Compass, Sparkles, HelpCircle } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ONBOARDING_TOOLTIPS_KEY = "mytrivia_tab_tooltips_shown";
 
@@ -14,6 +15,7 @@ interface TabOnboardingTooltipsProps {
 
 export const TabOnboardingTooltips = forwardRef<TabOnboardingTooltipsRef, TabOnboardingTooltipsProps>(
   ({ activeTab }, ref) => {
+    const { t } = useLanguage();
     const [showTooltips, setShowTooltips] = useState(false);
     
     // Expose showTooltips method to parent
@@ -122,10 +124,10 @@ export const TabOnboardingTooltips = forwardRef<TabOnboardingTooltipsRef, TabOnb
                   <div className="relative bg-white text-gray-700 px-3 py-2 rounded-xl shadow-lg border border-gray-200 max-w-[140px]">
                     <div className="flex items-center gap-1.5 mb-0.5">
                       <Sparkles className="w-3.5 h-3.5 text-gray-500" />
-                      <span className="text-xs font-semibold">ჩემი ტრივია</span>
+                      <span className="text-xs font-semibold">{t("extra.myTriviaTitle")}</span>
                     </div>
                     <p className="text-[10px] text-gray-500 leading-tight">
-                      შექმენი შენი ტრივია
+                      {t("extra.createYourTriviaTooltip")}
                     </p>
                     {/* Arrow pointing down */}
                     <div 

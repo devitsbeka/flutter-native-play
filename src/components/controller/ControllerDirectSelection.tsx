@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { 
   Library, 
@@ -50,6 +51,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
   onStartGame,
   onBack,
 }) => {
+  const { t } = useLanguage();
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showTriviaPicker, setShowTriviaPicker] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -355,7 +357,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                         <span className="text-xs text-green-400">ითამაშე</span>
                       ) : (
                         <span className="text-xs text-yellow-400">
-                          ⚠️ {!trivia.is_blind ? 'გამოტოვებ' : 'უკვე ითამაშე'}
+                          ⚠️ {!trivia.is_blind ? t('extra.youKnowAnswers') : t('extra.alreadyPlayed')}
                         </span>
                       )}
                     </div>

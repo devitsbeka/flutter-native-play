@@ -1098,7 +1098,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
       }
     } catch (e) {
       console.error("TV mode error:", e);
-      toast.error("TV რეჟიმის დაწყება ვერ მოხერხდა");
+      toast.error(t("extra.tvModeStartError"));
     } finally {
       setIsStartingRoom(false);
       setPlayModeTrivia(null);
@@ -1254,22 +1254,22 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         case "personal":
           return {
             title: "MyTrivia Party",
-            description: "შექმენი პერსონალური MyTrivia Party და გაუზიარე მეგობრებს!"
+            description: t("extra.createPersonalParty")
           };
         case "trivias":
           return {
             title: "Trivia",
-            description: "შექმენი შენი პირველი Trivia და გაუზიარე მეგობრებს!"
+            description: t("extra.createFirstTriviaDesc")
           };
         case "collections":
           return {
-            title: "კოლექციები",
-            description: "შექმენი კოლექცია და დაამატე მასში რაუნდები!"
+            title: t("extra.collectionsTabLabel"),
+            description: t("extra.createCollectionDesc")
           };
         default:
           return {
-            title: "შენი Trivia-ები",
-            description: "შექმენი შენი საკუთარი ქვიზები და გაუზიარე მეგობრებს!"
+            title: t("extra.yourTrivias"),
+            description: t("extra.createOwnQuizzes")
           };
       }
     };
@@ -1326,7 +1326,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
       {/* Drafts Section */}
       {drafts && drafts.length > 0 && (
         <div className="space-y-3">
-          <h3 className="font-semibold text-foreground">დრაფტები ({drafts.length})</h3>
+          <h3 className="font-semibold text-foreground">{t("extra.draftsLabel")} ({drafts.length})</h3>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
             {drafts.map((draft) => (
               <div 
@@ -1345,7 +1345,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
                 {/* Title */}
                 <div>
                   <p className="font-medium text-sm truncate text-foreground">
-                    {draft.title || "უსათაურო დრაფტი"}
+                    {draft.title || t("extra.untitledDraft")}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {formatLocalTimeAgo(new Date(draft.updated_at), t)}
@@ -1359,7 +1359,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
                     onClick={() => onContinueDraft?.(draft.id)}
                     className="flex-1 text-xs"
                   >
-                    გაგრძელება
+                    {t("extra.continueLabel")}
                   </ChunkyButton>
                   <button 
                     onClick={() => deleteDraft(draft.id)}

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import glitchIcon from "@/assets/glitch.png";
 import partyBlowerIcon from "@/assets/Party-Blower.webp";
 import triviaBuzzerIcon from "@/assets/trivia-buzzer-5.png";
@@ -41,6 +42,7 @@ interface MyTriviasPickerModalProps {
 
 export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTrivia }: MyTriviasPickerModalProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [tab, setTab] = useState("trivias");
   const [query, setQuery] = useState("");
   const [isDesktop, setIsDesktop] = useState(false);
@@ -157,7 +159,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                 >
                   <ChevronLeft className="w-5 h-5 text-foreground" />
                 </button>
-                <h2 className="text-lg font-bold text-foreground">ჩემი ტრივია</h2>
+                <h2 className="text-lg font-bold text-foreground">{t("extra.myTriviaTitle")}</h2>
               </div>
               {onCreateTrivia && (
                 <button
@@ -165,7 +167,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                   className="flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>შექმენი</span>
+                  <span>{t("extra.createBtn")}</span>
                 </button>
               )}
             </div>
@@ -175,7 +177,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="ძებნა..."
+                placeholder={t("extra.searchPlaceholder")}
                 className="h-11 rounded-2xl"
               />
             </div>
@@ -194,14 +196,14 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                   <TabsTrigger value="trivias" className="flex items-center gap-2 text-sm md:text-sm px-3 py-3 h-auto">
                     <img src={triviaBuzzerIcon} alt="" className="w-[44px] h-[44px] md:w-[44px] md:h-[44px] object-contain" />
                     <span className="font-semibold">
-                      ტრივია ({isDesktop ? filteredTrivias.length : mobileTotalCount})
+                      {t("extra.triviaTabLabel")} ({isDesktop ? filteredTrivias.length : mobileTotalCount})
                     </span>
                   </TabsTrigger>
 
                   {/* Desktop-only: separate Collections tab */}
                   <TabsTrigger value="collections" className="hidden md:flex items-center gap-2 text-sm px-3 py-3 h-auto">
                     <img src={collectionMagnetIcon} alt="" className="w-[44px] h-[44px] object-contain" />
-                    <span className="font-semibold">კოლექციები ({filteredCollections.length})</span>
+                    <span className="font-semibold">{t("extra.collectionsTabLabel")} ({filteredCollections.length})</span>
                   </TabsTrigger>
 
                   <TabsTrigger value="party" className="flex items-center gap-2 text-sm md:text-sm px-3 py-3 h-auto">
@@ -216,7 +218,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                       <div className="w-12 h-12 rounded-xl overflow-hidden mx-auto mb-2">
                         <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
                       </div>
-                      <p>{normalizedQuery ? "ვერაფერი მოიძებნა" : "ჯერ არ გაქვს ტრივიები"}</p>
+                      <p>{normalizedQuery ? t("extra.nothingFoundSearch") : t("extra.noTrivias")}</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -270,17 +272,17 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                               {missingIconCount > 0 && (
                                 <span className="text-xs text-amber-500 flex items-center gap-1 mt-0.5">
                                   <AlertTriangle className="w-3 h-3" />
-                                  {missingIconCount} კითხვას აკლია აიქონი
+                                  {t("extra.missingIconCount", { count: missingIconCount })}
                                 </span>
                               )}
                               {/* Spoiler indicator - STRICT HOST POLICY */}
                               {trivia.is_blind && (trivia.plays_count || 0) === 0 ? (
                                 <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 mt-1 rounded-full bg-green-500/20 text-green-500 font-medium">
-                                  <Gamepad2 className="w-3 h-3" /> ითამაშე
+                                  <Gamepad2 className="w-3 h-3" /> {t("extra.playTrivia")}
                                 </span>
                               ) : (
                                 <span className="text-xs text-amber-500 mt-1 flex items-center gap-1">
-                                  👀 {!trivia.is_blind ? 'იცი პასუხები' : 'უკვე ითამაშე'}
+                                  👀 {!trivia.is_blind ? t("extra.youKnowAnswers") : t("extra.alreadyPlayed")}
                                 </span>
                               )}
                             </div>
@@ -296,13 +298,13 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                       <div className="flex items-center gap-2 mb-2 px-1">
                         <img src={collectionMagnetIcon} alt="" className="w-8 h-8 object-contain" />
                         <p className="text-base font-bold text-foreground">
-                          კოლექციები ({filteredCollections.length})
+                          {t("extra.collectionsTabLabel")} ({filteredCollections.length})
                         </p>
                       </div>
 
                       {filteredCollections.length === 0 ? (
                         <div className="py-6 text-center text-muted-foreground">
-                          <p>{normalizedQuery ? "ვერაფერი მოიძებნა" : "ჯერ არ გაქვს კოლექციები"}</p>
+                          <p>{normalizedQuery ? t("extra.nothingFoundSearch") : t("extra.noCollectionsYet")}</p>
                         </div>
                       ) : (
                         <div className="grid grid-cols-2 gap-2">
@@ -368,7 +370,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                       <div className="w-12 h-12 rounded-xl overflow-hidden mx-auto mb-2">
                         <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
                       </div>
-                      <p>{normalizedQuery ? "ვერაფერი მოიძებნა" : "ჯერ არ გაქვს კოლექციები"}</p>
+                      <p>{normalizedQuery ? t("extra.nothingFoundSearch") : t("extra.noCollectionsYet")}</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
@@ -428,7 +430,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                       <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-muted/50 flex items-center justify-center">
                         <img src={partyBlowerIcon} alt="" className="w-8 h-8 object-contain" />
                       </div>
-                      <p>{normalizedQuery ? "ვერაფერი მოიძებნა" : "ჯერ არ გაქვს MyTrivia Party"}</p>
+                      <p>{normalizedQuery ? t("extra.nothingFoundSearch") : t("extra.noPartyYet")}</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -460,7 +462,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                               </p>
                               <Lock className="w-3.5 h-3.5 text-pink-400 flex-shrink-0" />
                             </div>
-                            <p className="text-xs text-pink-400">პირადი ტრივია</p>
+                            <p className="text-xs text-pink-400">{t("extra.personalTriviaLabel")}</p>
                           </div>
                         </motion.button>
                       ))}
