@@ -245,8 +245,8 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
     } catch (error) {
       console.error("Error updating:", error);
       toast({
-        title: "შეცდომა",
-        description: "ცვლილებების შენახვა ვერ მოხერხდა",
+        title: t("extra.errorTitle"),
+        description: t("extra.saveChangesFailed"),
         variant: "destructive",
       });
     } finally {
@@ -456,7 +456,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                             onClick={() => setShowDeleteConfirm(false)}
                             className="flex-1"
                           >
-                            გაუქმება
+                            {t("extra.cancelBtn")}
                           </ChunkyButton>
                           <ChunkyButton
                             variant="danger"
@@ -669,7 +669,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                                       onClick={() => setDeleteQuestionIndex(null)}
                                       className="flex-1 py-2.5 rounded-xl border border-white/20 text-white text-sm font-medium"
                                     >
-                                      გაუქმება
+                                      {t("extra.cancelBtn")}
                                     </button>
                                     <button
                                       onClick={() => deleteQuestion(index)}
@@ -783,10 +783,10 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
         >
           <h3 className="text-lg font-bold text-foreground">
             {editingField.type === 'question' 
-              ? "კითხვის რედაქტირება" 
+              ? t("extra.editQuestion")
               : editingField.type === 'correct'
-                ? "სწორი პასუხის რედაქტირება"
-                : "არასწორი პასუხის რედაქტირება"
+                ? t("extra.editCorrectAnswer")
+                : t("extra.editIncorrectAnswer")
             }
           </h3>
           {editingField.type === 'question' ? (
@@ -818,14 +818,14 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
               }}
               className="flex-1"
             >
-              გაუქმება
+              {t("extra.cancelBtn")}
             </ChunkyButton>
             <ChunkyButton
               onClick={handleEditSave}
               disabled={!editValue.trim()}
               className="flex-1"
             >
-              შენახვა
+              {t("extra.editSaveBtn")}
             </ChunkyButton>
           </div>
         </motion.div>

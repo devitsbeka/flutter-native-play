@@ -497,7 +497,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                   className="w-full flex items-center justify-center gap-2 py-3 text-sm text-destructive hover:bg-destructive/10 rounded-xl transition-colors border border-destructive/20"
                 >
                     <X className="w-4 h-4" />
-                    აიკონის წაშლა
+                    {t("extra.removeIconBtn")}
                   </button>
                 </div>
               </div>

@@ -2244,6 +2244,7 @@ export const en: KaTranslations = {
     currentIconLabel: "Current icon",
     suggestedIconsLabel: "Suggested",
     iconNotFound: "Icon not found",
+    removeIconBtn: "Remove icon",
     // Live Games Widget
     liveGameRoom: "Game Room",
     playerCount: "{count} players",
