@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ResolvedAvatarImage } from '@/components/ui/resolved-avatar-image';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { getNotificationConfig } from '@/config/notificationConfig';
+import { useLanguage } from '@/contexts/LanguageContext';
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
 import pushButton3d from "@/assets/icons/push-button-3d.png";
@@ -46,6 +47,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   actionLoading,
   timeAgo,
 }: CompactNotificationCardProps) {
+  const { t } = useLanguage();
   const [isDismissing, setIsDismissing] = useState(false);
   const touchedRef = useRef(false);
   const x = useMotionValue(0);
@@ -65,18 +67,14 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const isTriviaLikedOrSaved = ['trivia_liked', 'trivia_saved'].includes(notification.type);
   const isTriviaPlayed = notification.type === 'trivia_played';
 
-  // Check if action was already taken on this notification
   const actionTaken = notification.data?.action_taken as 'accepted' | 'declined' | undefined;
   const hasActionTaken = !!actionTaken;
 
-  // Friend requests and game invites ALWAYS show action buttons (accept/decline) until acted upon
-  // The buttons should remain visible even after marking as read
   const hasDualActions = (isFriendRequest || isGameInvite) && !hasActionTaken;
   const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved) && !hasDualActions;
 
   const isLoading = actionLoading === notification.id;
 
-  // Get avatar and sender info from notification data (handle both field names for backwards compatibility)
   const avatarUrl = (notification.data?.sender_avatar || notification.data?.sender_avatar_url) as string | undefined;
   const senderName = notification.data?.sender_nickname as string || notification.data?.sender_name as string || '';
   const roomName = notification.data?.room_name as string | undefined;
@@ -85,12 +83,10 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const triviaCover = notification.data?.trivia_cover as string | undefined;
   const triviaIconSlug = notification.data?.trivia_icon_slug as string | undefined;
   
-  // Check if notification has room context
   const hasRoomContext = isRoomInvite || isGameStarted || isGameInvite;
 
   // Determine avatar content based on notification type
   const avatarContent = useMemo(() => {
-    // 1. Trivia notifications - show trivia cover or icon
     if (isTriviaLikedOrSaved || isTriviaPlayed) {
       if (triviaCover) {
         return { type: 'image' as const, src: triviaCover };
@@ -100,27 +96,25 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
       }
     }
     
-    // 2. Game notifications - show room icon if available
     if (isRoomInvite || isGameStarted || isGameInvite) {
       if (roomIcon) {
         return { type: 'image' as const, src: roomIcon };
       }
     }
     
-    // 3. Default - sender avatar
     return { type: 'avatar' as const, src: avatarUrl };
   }, [notification.type, triviaCover, triviaIconSlug, roomIcon, avatarUrl, isTriviaLikedOrSaved, isTriviaPlayed, isRoomInvite, isGameStarted, isGameInvite]);
   
   // Build subtitle based on notification type
   const getSubtitle = () => {
     if (isRoomInvite || isGameInvite) {
-      return senderName ? `${senderName} გიწვევს თამაშში` : 'გიწვევს თამაშში';
+      return senderName ? t("extra.notifInvitesYou", { name: senderName }) : t("extra.notifInviteGeneric");
     }
     if (isGameStarted) {
-      return senderName ? `${senderName} დაიწყო თამაში` : 'თამაში დაიწყო';
+      return senderName ? t("extra.notifStartedGame", { name: senderName }) : t("extra.notifGameStarted");
     }
     if (isFriendRequest && senderName) {
-      return `${senderName} გთხოვს მეგობრობას`;
+      return t("extra.notifFriendReq", { name: senderName });
     }
     return null;
   };
@@ -221,9 +215,9 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   };
 
   const getActionButtonLabel = () => {
-    if (isRoomInvite || isGameStarted || isTriviaPlayed) return 'ითამაშე';
-    if (isGameResult || isTriviaLikedOrSaved) return 'ნახვა';
-    return 'გახსნა';
+    if (isRoomInvite || isGameStarted || isTriviaPlayed) return t("extra.notifPlay");
+    if (isGameResult || isTriviaLikedOrSaved) return t("extra.notifView");
+    return t("extra.notifOpen");
   };
 
   const isPlayButton = isRoomInvite || isGameStarted || isTriviaPlayed;
@@ -313,7 +307,6 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
             </Avatar>
           )}
           
-          {/* Type indicator badge - solid background for visibility */}
           <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center bg-card border-2 border-border shadow-sm">
             {TRIVIA_TYPE_ICONS[notification.type] ? (
               <img 
@@ -362,7 +355,6 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                     </p>
                   )}
                   
-                  {/* Room/Category context card for game-related notifications */}
                   {hasRoomContext && (roomName || categoryName) && (
                     <div className="mt-2 p-2.5 rounded-xl bg-muted/50 border border-border/30 space-y-1.5">
                       {roomName && (
@@ -386,7 +378,6 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
               </div>
             </div>
 
-            {/* Unread indicator */}
             {isUnread && (
               <div className="flex-shrink-0 mt-1.5">
                 <div className="w-2 h-2 rounded-full bg-primary" />
@@ -394,7 +385,6 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
             )}
           </div>
 
-          {/* Action buttons */}
           {hasDualActions && (
             <div className="flex gap-2 mt-2">
               <button
@@ -409,7 +399,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   </span>
-                ) : isFriendRequest ? "მიღება" : "შესვლა"}
+                ) : isFriendRequest ? t("extra.notifAccept") : t("extra.notifJoin")}
               </button>
               <button
                 type="button"
@@ -423,12 +413,11 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   </span>
-                ) : "უარყოფა"}
+                ) : t("extra.notifDecline")}
               </button>
             </div>
           )}
 
-          {/* Show action taken status for friend requests */}
           {hasActionTaken && isFriendRequest && (
             <div className={cn(
               "mt-2 px-4 py-2 rounded-full text-xs font-semibold inline-flex items-center gap-1.5",
@@ -439,12 +428,12 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
               {actionTaken === 'accepted' ? (
                 <>
                   <span className="text-base">✓</span>
-                  <span>მიღებულია</span>
+                  <span>{t("extra.notifAccepted")}</span>
                 </>
               ) : (
                 <>
                   <span className="text-base">✗</span>
-                  <span>უარყოფილია</span>
+                  <span>{t("extra.notifDeclined")}</span>
                 </>
               )}
             </div>

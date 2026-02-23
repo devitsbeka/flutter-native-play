@@ -1674,6 +1674,43 @@ export const en: KaTranslations = {
     questionsShort: "{count} questions left",
     watchAnswers: "Watch answers",
     searching: "Searching...",
+    // Notification actions
+    notifAccept: "Accept",
+    notifJoin: "Join",
+    notifDecline: "Decline",
+    notifAccepted: "Accepted",
+    notifDeclined: "Declined",
+    notifPlay: "Play",
+    notifView: "View",
+    notifOpen: "Open",
+    notifInvitesYou: "{name} invites you to play",
+    notifInviteGeneric: "Invites you to play",
+    notifStartedGame: "{name} started a game",
+    notifFriendReq: "{name} wants to be friends",
+    notifFriendLabel: "Friend",
+    notifSent: "Sent",
+    notifAcceptRequest: "Accept request",
+    notifAddFriend: "Add friend",
+    // Room status badges
+    roomStatusNew: "New",
+    roomStatusCompleted: "Completed",
+    roomStatusWaiting: "Waiting",
+    // How it works
+    howItWorksTitle: "How does it work?",
+    howItWorksFunGuaranteed: "Fun is guaranteed! 🎉",
+    howItWorksGotIt: "Got it!",
+    howItWorksFriendsWins: "and the one who scores the most wins.",
+    // Create room extra
+    friendsInApp: "Friends in app",
+    moreBtn: "More",
+    // Quick profile
+    profileTitle: "Profile",
+    trivias: "Trivias",
+    games: "Games",
+    fullProfile: "Full profile",
+    closeBtn: "Close",
+    // Feature onboarding action
+    featureTriviaAction: "+ Trivia",
   },
 };
 

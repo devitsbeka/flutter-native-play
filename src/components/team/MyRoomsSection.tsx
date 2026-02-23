@@ -501,16 +501,16 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
                   ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                      ახალი
+                      {t("extra.roomStatusNew")}
                     </span>
                   ) : isCompleted ? (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                      დასრულდა
+                      {t("extra.roomStatusCompleted")}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                      მოლოდინი
+                      {t("extra.roomStatusWaiting")}
                     </span>
                   )}
                   
@@ -762,16 +762,16 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
               ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                  ახალი
+                  {t("extra.roomStatusNew")}
                 </span>
               ) : isCompleted ? (
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                  დასრულდა
+                  {t("extra.roomStatusCompleted")}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                  მოლოდინი
+                  {t("extra.roomStatusWaiting")}
                 </span>
               )}
               

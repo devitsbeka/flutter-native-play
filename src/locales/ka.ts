@@ -1673,6 +1673,43 @@ export const ka = {
     questionsShort: "{count} კითხვას აკლია აქორნი",
     watchAnswers: "იცი პასუხები",
     searching: "ვეძებთ...",
+    // Notification actions
+    notifAccept: "მიღება",
+    notifJoin: "შესვლა",
+    notifDecline: "უარყოფა",
+    notifAccepted: "მიღებულია",
+    notifDeclined: "უარყოფილია",
+    notifPlay: "ითამაშე",
+    notifView: "ნახვა",
+    notifOpen: "გახსნა",
+    notifInvitesYou: "{name} გიწვევს თამაშში",
+    notifInviteGeneric: "გიწვევს თამაშში",
+    notifStartedGame: "{name} დაიწყო თამაში",
+    notifFriendReq: "{name} გთხოვს მეგობრობას",
+    notifFriendLabel: "მეგობარი",
+    notifSent: "გაგზავნილია",
+    notifAcceptRequest: "მოთხოვნის მიღება",
+    notifAddFriend: "მეგობრად დამატება",
+    // Room status badges
+    roomStatusNew: "ახალი",
+    roomStatusCompleted: "დასრულდა",
+    roomStatusWaiting: "მოლოდინი",
+    // How it works
+    howItWorksTitle: "როგორ მუშაობს?",
+    howItWorksFunGuaranteed: "გართობა გარანტირებულია! 🎉",
+    howItWorksGotIt: "გასაგებია!",
+    howItWorksFriendsWins: "და იგებს ის, ვინც მეტ ქულას დააგროვებს.",
+    // Create room extra
+    friendsInApp: "აპში მეგობრები",
+    moreBtn: "მეტი",
+    // Quick profile
+    profileTitle: "პროფილი",
+    trivias: "ტრივიები",
+    games: "თამაშები",
+    fullProfile: "სრული პროფილი",
+    closeBtn: "დახურვა",
+    // Feature onboarding action
+    featureTriviaAction: "+ ტრივია",
   },
 };
 
