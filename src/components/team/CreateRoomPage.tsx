@@ -122,7 +122,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const [isCreating, setIsCreating] = useState(false);
   
   // Room name & icon state - AI-generated via edge function
-  const [roomName, setRoomName] = useState<string>("იტვირთება...");
+  const [roomName, setRoomName] = useState<string>(t("extra.loadingState"));
   const [roomIcon, setRoomIcon] = useState<string | null>(null);
   const [isGeneratingName, setIsGeneratingName] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -562,10 +562,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (!hasValidSelection) return;
     
     // Guard: Prevent room creation while name is still generating
-    if (roomName === "იტვირთება..." || isGeneratingName) {
+    if (roomName === t("extra.loadingState") || isGeneratingName) {
       toast({
-        title: "მოიცადეთ",
-        description: "ოთახის სახელი გენერირდება...",
+        title: t("extra.pleaseWait"),
+        description: t("extra.roomNameGenerating"),
       });
       return;
     }

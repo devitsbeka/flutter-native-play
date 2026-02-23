@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon, Plus, Smile, RefreshCw } from "lucide-react";
@@ -34,6 +35,7 @@ type ViewMode = "info" | "questions";
 
 export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRoundModalProps) {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   
   const [title, setTitle] = useState("");
@@ -712,7 +714,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
               <p className={`text-xs text-center font-medium ${
                 viewMode === "questions" ? "text-yellow-200" : "text-amber-600"
               }`}>
-                ცვლილებები შესანახია
+                {t("extra.changesNeedSaving")}
               </p>
             )}
             <ChunkyButton
@@ -724,15 +726,15 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
               {isSaving ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  ინახება...
+                  {t("extra.savingState")}
                 </>
               ) : hasChanges ? (
                 <>
                   <Check className="w-5 h-5 mr-2" />
-                  შენახვა
+                  {t("extra.saveChanges")}
                 </>
               ) : (
-                "შენახვა"
+                t("extra.saveChanges")
                 )}
               </ChunkyButton>
             </div>

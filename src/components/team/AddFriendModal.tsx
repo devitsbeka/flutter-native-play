@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, UserPlus, Loader2, Clock } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
@@ -23,6 +24,7 @@ interface SearchResult {
 }
 
 export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -99,7 +101,7 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
     <GameModal
       isOpen={isOpen}
       onClose={handleClose}
-      title="მეგობრის დამატება"
+      title={t("extra.addFriendTitle")}
       icon={<UserPlus className="w-8 h-8" />}
       variant="success"
     >
@@ -109,7 +111,7 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="მომხმარებლის ძებნა..."
+            placeholder={t("extra.searchUserPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 bg-white/10 border-white/20 text-foreground placeholder:text-muted-foreground focus:ring-offset-0"
@@ -129,7 +131,7 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
                 animate={{ opacity: 1 }}
                 className="text-center py-8 text-muted-foreground text-sm"
               >
-                მინიმუმ 2 სიმბოლო შეიყვანე
+                {t("extra.minCharsHint")}
               </motion.div>
             ) : (
               (() => {
@@ -140,7 +142,7 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
                     animate={{ opacity: 1 }}
                     className="text-center py-8 text-muted-foreground text-sm"
                   >
-                    მომხმარებელი ვერ მოიძებნა
+                    {t("extra.userNotFoundSearch")}
                   </motion.div>
                 ) : (
                   filteredResults.map((result) => (
@@ -172,6 +174,7 @@ interface SearchResultCardProps {
 }
 
 function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchResultCardProps) {
+  const { t } = useLanguage();
   const [isSending, setIsSending] = useState(false);
   const touchedRef = useRef(false);
   
@@ -182,7 +185,7 @@ function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchRe
     
     if (isPending || isSent || isSending) {
       if (isPending || isSent) {
-        toast.info("მოთხოვნა უკვე გაგზავნილია, დაელოდე პასუხს");
+        toast.info(t("extra.requestAlreadySentWait"));
       }
       return;
     }
@@ -255,17 +258,17 @@ function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchRe
         {isSending ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            იგზავნება...
+            {t("extra.sending")}
           </>
         ) : showPendingState ? (
           <>
             <Clock className="w-4 h-4" />
-            მოლოდინში
+            {t("extra.pending")}
           </>
         ) : (
           <>
             <UserPlus className="w-4 h-4" />
-            დამატება
+            {t("extra.addBtn")}
           </>
         )}
       </button>

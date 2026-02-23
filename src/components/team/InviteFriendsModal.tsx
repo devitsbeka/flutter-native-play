@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { 
@@ -101,6 +102,7 @@ function getCountryFlag(countryCode: string): string {
 }
 
 export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCode, onFriendSelect, selectedFriends, onInviteSuccess }: InviteFriendsModalProps) {
+  const { t } = useLanguage();
   const [isSharing, setIsSharing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -151,7 +153,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   }, [user?.id, isOpen]);
   
   const appLink = inviteLink || `${window.location.origin}/team`;
-  const shareMessage = "მოგიწვიე MyTrivia-ში თამაშზე! 🎮🧠 შემოგვიერთდი და გავერთოთ ერთად!";
+  const shareMessage = t("extra.shareMessage");
   const encodedMessage = encodeURIComponent(shareMessage);
   const encodedLink = encodeURIComponent(appLink);
 
@@ -220,7 +222,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
         .maybeSingle();
       
       if (existing) {
-        toast.info("მომხმარებელი უკვე ოთახშია");
+        toast.info(t("extra.userAlreadyInRoom"));
         return;
       }
       
@@ -246,7 +248,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
       // when participant is added to room_participants table
       
       setSentRequests(prev => new Set([...prev, userId]));
-      toast.success("მოწვევა გაიგზავნა!");
+      toast.success(t("extra.inviteSent"));
       
       // Auto-close modal after brief delay for visual feedback
       setTimeout(() => {
@@ -255,7 +257,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
       }, 600);
     } catch (error) {
       console.error("Invite error:", error);
-      toast.error("მოწვევა ვერ მოხერხდა");
+      toast.error(t("extra.inviteFailed"));
     } finally {
       setInvitingUser(null);
     }
@@ -285,7 +287,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
         url = `https://twitter.com/intent/tweet?text=${encodedMessage}&url=${encodedLink}`;
         break;
       case "email":
-        url = `mailto:?subject=${encodeURIComponent("შემოგვიერთდი MyTrivia-ში!")}&body=${encodedMessage} ${encodedLink}`;
+        url = `mailto:?subject=${encodeURIComponent(t("extra.shareEmailSubject"))}&body=${encodedMessage} ${encodedLink}`;
         break;
     }
     
@@ -297,7 +299,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   };
   
   const handleImportContacts = () => {
-    toast.info("კონტაქტების იმპორტი მალე დაემატება");
+    toast.info(t("extra.contactsImportSoon"));
   };
 
   if (!isOpen) return null;
@@ -348,7 +350,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
               >
                 <ChevronLeft className="w-6 h-6 text-primary-foreground" />
               </button>
-              <h2 className="text-lg font-bold text-primary-foreground">მეგობრების მოწვევა</h2>
+              <h2 className="text-lg font-bold text-primary-foreground">{t("extra.inviteFriendsTitle")}</h2>
             </div>
           </div>
 
@@ -362,7 +364,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                   <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/90 z-10" />
                 <Input
                   type="text"
-                  placeholder="მომხმარებლის ძებნა..."
+                  placeholder={t("extra.searchUserPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border-white/20 text-white placeholder:text-white/60"
@@ -386,7 +388,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                           const filteredResults = searchResults;
                           return filteredResults.length === 0 && !searching ? (
                             <p className="text-center py-6 text-primary-foreground/80 text-sm">
-                              მომხმარებელი ვერ მოიძებნა
+                              {t("extra.userNotFoundSearch")}
                             </p>
                           ) : (
                             filteredResults.map((result) => (
@@ -428,7 +430,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                   } else {
                                     // For non-friends - send friend request
                                     if (isPendingOutgoing) {
-                                      toast.info("მოთხოვნა უკვე გაგზავნილია, დაელოდე პასუხს");
+                                      toast.info(t("extra.requestAlreadySentWait"));
                                       return;
                                     }
                                     if (isSent || isLoading) return;
@@ -473,27 +475,27 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                     {isLoading ? (
                                       <>
                                         <Loader2 className="w-4 h-4 animate-spin" />
-                                        იგზავნება...
+                                        {t("extra.sending")}
                                       </>
                                     ) : !isFriend && isPendingOutgoing ? (
                                       <>
                                         <Clock className="w-4 h-4" />
-                                        მოლოდინში
+                                        {t("extra.pending")}
                                       </>
                                     ) : isSent ? (
                                       <>
                                         <Check className="w-3 h-3" />
-                                        გაგზავნილი
+                                        {t("extra.sent")}
                                       </>
                                     ) : isFriend ? (
                                       <>
                                         <UserPlus className="w-4 h-4" />
-                                        მოწვევა
+                                        {t("extra.inviteFriendBtn")}
                                       </>
                                     ) : (
                                       <>
                                         <UserPlus className="w-4 h-4" />
-                                        + დამატება
+                                        {t("extra.addFriendActionBtn")}
                                       </>
                                     )}
                                   </button>
@@ -511,7 +513,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                 {/* Friends Grid - Show in pre-room selection mode when not searching */}
                 {isPreRoomMode && acceptedFriends.length > 0 && !searchQuery && (
                   <div className={`space-y-3 ${narrow}`}>
-                    <p className="text-sm font-medium text-white/80 px-1">შენი მეგობრები</p>
+                    <p className="text-sm font-medium text-white/80 px-1">{t("extra.yourFriends")}</p>
                     <div className="grid grid-cols-4 gap-2 max-h-[240px] overflow-y-auto">
                       {acceptedFriends.map((friend) => {
                         const isSelected = selectedFriends?.has(friend.friendId) || false;
@@ -553,8 +555,8 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                 {/* No friends message in pre-room mode */}
                 {isPreRoomMode && acceptedFriends.length === 0 && !searchQuery && (
                   <div className={`text-center py-6 ${narrow}`}>
-                    <p className="text-white/70 text-sm mb-2">ჯერ არ გყავს მეგობრები</p>
-                    <p className="text-white/50 text-xs">მოძებნე და დაამატე მეგობრები ზემოთ</p>
+                    <p className="text-white/70 text-sm mb-2">{t("extra.noFriendsYetShort")}</p>
+                    <p className="text-white/50 text-xs">{t("extra.searchAndAddAbove")}</p>
                   </div>
                 )}
 
@@ -563,7 +565,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                 {/* Divider */}
                 <div className={`flex items-center gap-3 ${narrow}`}>
                   <div className="flex-1 h-px bg-primary-foreground/25" />
-                  <span className="text-xs text-primary-foreground/90 font-semibold">ან გააზიარე</span>
+                  <span className="text-xs text-primary-foreground/90 font-semibold">{t("extra.orShare")}</span>
                   <div className="flex-1 h-px bg-primary-foreground/25" />
                 </div>
 
@@ -604,7 +606,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                 onClick={() => {
                   navigator.clipboard.writeText(appLink);
                   setCopied(true);
-                  toast.success("ლინკი დაკოპირდა!");
+                  toast.success(t("extra.linkCopiedToast"));
                   setTimeout(() => setCopied(false), 2000);
                 }}
                 className={`mx-auto w-full max-w-[460px] py-4 rounded-2xl ${lobbyGlassCard} text-white font-bold text-base transition-colors flex items-center justify-center gap-2 ${copied ? 'bg-green-500/30 border-green-400/50' : 'bg-white/15 hover:bg-white/20'}`}
@@ -614,12 +616,12 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                 {copied ? (
                   <>
                     <Check className="w-5 h-5 text-green-300" />
-                    დაკოპირდა!
+                    {t("extra.linkCopied")}
                   </>
                 ) : (
                   <>
                     <Share2 className="w-5 h-5 text-white/90" />
-                    ლინკის კოპირება
+                    {t("extra.copyLink")}
                   </>
                 )}
               </motion.button>
