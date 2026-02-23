@@ -2294,6 +2294,59 @@ export const en: KaTranslations = {
     hoursAgo: "{count}h ago",
     // Rematch toast
     rematchSent: "Rematch challenge sent!",
+    // True/False buttons
+    trueLabel: "True",
+    falseLabel: "False",
+    // Level unlock
+    newLevelUnlocked: "New level unlocked!",
+    unlocking: "Unlocking...",
+    levelNumber: "Level {level}",
+    // QR Scanner
+    qrScannerTitle: "QR Code Scanner",
+    cameraPermissionDenied: "Camera access denied. Please allow camera access.",
+    cameraOpenFailed: "Failed to open camera",
+    codeFound: "Code found!",
+    invalidQrCode: "Invalid QR code",
+    qrNoGameCode: "This QR code does not contain a game code",
+    qrFooterHint: "Point camera at QR code • Use zoom for distant codes",
+    // Recent players
+    recentPlayersTitle: "Recent Players",
+    noRecentPlayers: "You haven't played with anyone yet",
+    // Room scoreboard extras
+    invitedEllipsis: "Invited...",
+    resendInvite: "Resend",
+    sendInvite: "Invite",
+    roundsShort: "{count}r",
+    // Guest activation
+    onboardSignup: "Sign up",
+    onboardPhoto: "Photo",
+    onboardAvatar: "Avatar",
+    onboardAnimate: "Animate",
+    // Drafts
+    savedDrafts: "Saved drafts",
+    untitledMyTrivia: "Untitled MyTrivia",
+    untitledTrivia: "Untitled trivia",
+    untitledDraft: "Untitled",
+    minutesAgoLong: "{count} minutes ago",
+    hoursAgoLong: "{count} hours ago",
+    daysAgoLong: "{count} days ago",
+    // Hooks
+    rewardClaimed: "Received {coins} coins and {gems} gems!",
+    rewardClaimFailed: "Failed to claim reward",
+    frameActivated: "Frame activated!",
+    frameDeactivated: "Frame deactivated",
+    frameActivationFailed: "Failed to activate frame",
+    inviteAlreadySent: "Invite already sent",
+    inviteSentSuccess: "Invite sent!",
+    inviteSendFailed: "Failed to send invite",
+    inviteAcceptFailed: "Failed to accept invite",
+    friendInvitesYouGame: "{name} invites you to play!",
+    playerFallback: "Player",
+    friendFallback: "Friend",
+    hoursShort: "{h}h",
+    minutesShort: "{m}m",
+    // Floating gift
+    giftAlt: "Gift",
   },
 };
 

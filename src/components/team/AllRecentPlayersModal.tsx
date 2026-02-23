@@ -4,6 +4,7 @@ import { Trophy, Swords } from "lucide-react";
 import { useRecentPlayers, RecentPlayer } from "@/hooks/useRecentPlayers";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AllRecentPlayersModalProps {
   isOpen: boolean;
@@ -12,12 +13,13 @@ interface AllRecentPlayersModalProps {
 
 export function AllRecentPlayersModal({ isOpen, onClose }: AllRecentPlayersModalProps) {
   const { recentPlayers, loading } = useRecentPlayers();
+  const { t } = useLanguage();
 
   return (
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      title="ბოლო მოთამაშეები"
+      title={t("extra.recentPlayersTitle")}
       iconSrc={ICON_URLS.team}
       showSparkles={false}
       className="max-w-md"
@@ -47,7 +49,7 @@ export function AllRecentPlayersModal({ isOpen, onClose }: AllRecentPlayersModal
             >
               <Swords className="w-8 h-8 text-gray-400" />
             </div>
-            <p className="text-gray-500 font-medium">ჯერ არავინ გითამაშიხარ</p>
+            <p className="text-gray-500 font-medium">{t("extra.noRecentPlayers")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -60,7 +62,7 @@ export function AllRecentPlayersModal({ isOpen, onClose }: AllRecentPlayersModal
 
       <div className="mt-4">
         <GameModalFooter
-          primaryLabel="დახურვა"
+          primaryLabel={t("extra.closeBtn")}
           onPrimary={onClose}
           primaryVariant="secondary"
         />
@@ -90,7 +92,7 @@ function PlayerListItem({ player, index }: { player: RecentPlayer; index: number
 
       <div className="flex-1 min-w-0">
         <p className="font-bold text-gray-800 text-sm uppercase tracking-wide">{player.odername}</p>
-        <p className="text-gray-500 text-xs">{player.gamesPlayed} თამაში</p>
+        <p className="text-gray-500 text-xs">{t("extra.gamesCount", { count: String(player.gamesPlayed) })}</p>
       </div>
 
       {/* Win/Loss Stats */}

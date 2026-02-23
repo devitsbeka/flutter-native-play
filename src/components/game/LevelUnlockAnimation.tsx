@@ -3,6 +3,7 @@ import { Lock, Unlock, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface LevelUnlockAnimationProps {
   isVisible: boolean;
@@ -19,6 +20,7 @@ export function LevelUnlockAnimation({
   categoryId,
   onComplete,
 }: LevelUnlockAnimationProps) {
+  const { t } = useLanguage();
   const [phase, setPhase] = useState<"lock" | "unlock" | "celebrate">("lock");
 
   useEffect(() => {
@@ -137,7 +139,7 @@ export function LevelUnlockAnimation({
               transition={{ delay: 0.2 }}
             >
               <p className="text-muted-foreground text-sm mb-2">
-                {phase === "celebrate" ? "ახალი დონე გახსნილია!" : "იხსნება..."}
+                {phase === "celebrate" ? t("extra.newLevelUnlocked") : t("extra.unlocking")}
               </p>
               <motion.h2
                 className="text-4xl font-bold text-foreground"
@@ -148,7 +150,7 @@ export function LevelUnlockAnimation({
                 }
                 transition={{ duration: 0.3 }}
               >
-                დონე {unlockedLevel}
+                {t("extra.levelNumber", { level: String(unlockedLevel) })}
               </motion.h2>
             </motion.div>
 

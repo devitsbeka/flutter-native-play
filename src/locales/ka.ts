@@ -2293,6 +2293,59 @@ export const ka = {
     hoursAgo: "{count} სთ წინ",
     // Rematch toast
     rematchSent: "რემატჩის გამოწვევა გაიგზავნა!",
+    // True/False buttons
+    trueLabel: "მართალია",
+    falseLabel: "მცდარია",
+    // Level unlock
+    newLevelUnlocked: "ახალი დონე გახსნილია!",
+    unlocking: "იხსნება...",
+    levelNumber: "დონე {level}",
+    // QR Scanner
+    qrScannerTitle: "QR კოდის სკანერი",
+    cameraPermissionDenied: "კამერაზე წვდომა უარყოფილია. გთხოვთ დაუშვათ კამერა.",
+    cameraOpenFailed: "კამერის გახსნა ვერ მოხერხდა",
+    codeFound: "კოდი ნაპოვნია!",
+    invalidQrCode: "არასწორი QR კოდი",
+    qrNoGameCode: "ეს QR კოდი არ შეიცავს თამაშის კოდს",
+    qrFooterHint: "მიმართეთ კამერა QR კოდისკენ • გამოიყენეთ ზუმი დაშორებული კოდებისთვის",
+    // Recent players
+    recentPlayersTitle: "ბოლო მოთამაშეები",
+    noRecentPlayers: "ჯერ არავინ გითამაშიხარ",
+    // Room scoreboard extras
+    invitedEllipsis: "მოწვეული...",
+    resendInvite: "თავიდან",
+    sendInvite: "მოიწვიე",
+    roundsShort: "{count}რ",
+    // Guest activation
+    onboardSignup: "რეგისტრაცია",
+    onboardPhoto: "ფოტო",
+    onboardAvatar: "ავატარი",
+    onboardAnimate: "ანიმაცია",
+    // Drafts
+    savedDrafts: "შენახული დრაფტები",
+    untitledMyTrivia: "უსათაურო MyTrivia",
+    untitledTrivia: "უსათაურო ტრივია",
+    untitledDraft: "უსათაურო",
+    minutesAgoLong: "{count} წუთის წინ",
+    hoursAgoLong: "{count} საათის წინ",
+    daysAgoLong: "{count} დღის წინ",
+    // Hooks
+    rewardClaimed: "მიღებულია {coins} მონეტა და {gems} ალმასი!",
+    rewardClaimFailed: "ჯილდოს მიღება ვერ მოხერხდა",
+    frameActivated: "ჩარჩო აქტივირებულია!",
+    frameDeactivated: "ჩარჩო გამოირთო",
+    frameActivationFailed: "ჩარჩოს აქტივაცია ვერ მოხერხდა",
+    inviteAlreadySent: "მოწვევა უკვე გაგზავნილია",
+    inviteSentSuccess: "მოწვევა გაიგზავნა!",
+    inviteSendFailed: "მოწვევა ვერ გაიგზავნა",
+    inviteAcceptFailed: "მოწვევის მიღება ვერ მოხერხდა",
+    friendInvitesYouGame: "{name} გიწვევს თამაშში!",
+    playerFallback: "მოთამაშე",
+    friendFallback: "მეგობარი",
+    hoursShort: "{h}სთ",
+    minutesShort: "{m}წთ",
+    // Floating gift
+    giftAlt: "საჩუქარი",
   },
 };
 
