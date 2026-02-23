@@ -95,6 +95,7 @@ interface MyTriviaTabProps {
 // Compact quiz card for inside collections
 function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; profile: any; onEdit: (quiz: any) => void; onPlay?: (quiz: any) => void }) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   // Get icon from quiz's icon_slug or first question's icon
   const iconSlug = quiz.icon_slug || (Array.isArray(quiz.questions) ? quiz.questions[0]?.icon_slug : null);
   
@@ -156,7 +157,7 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
         {/* 2) X questions + Edit */}
         <div className="flex items-center justify-between gap-2 -mt-2.5">
           <p className="text-xs text-muted-foreground">
-            {quiz.question_count} კითხვა
+            {t("extra.questionsCount", { count: quiz.question_count })}
           </p>
           <span aria-hidden className="w-9" />
         </div>
@@ -217,6 +218,7 @@ function CollectionCard({
   onExpandChange?: (collectionId: string | null) => void;
   isMobile?: boolean;
 }) {
+  const { t } = useLanguage();
   const isExpanded = isExpandedProp ?? false;
   
   const handleToggleExpand = () => {
@@ -506,12 +508,12 @@ function CollectionCard({
               ) : collection.is_public === false ? (
                 <>
                   <Globe className="w-4 h-4 text-emerald-500" />
-                  <span>გამოაქვეყნე</span>
+                   <span>{t("extra.publishBtn")}</span>
                 </>
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  <span>გამოქვეყნებულია</span>
+                   <span>{t("extra.publishedLabel")}</span>
                 </>
               )}
             </button>
@@ -587,6 +589,7 @@ function CollectionCard({
 // Personal trivia card with distinct styling
 function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNew, isPosting }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; onPost?: (post: any) => void; isNew?: boolean; isPosting?: boolean }) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { createRoom } = useMultiplayerV2();
   const [isStartingTV, setIsStartingTV] = useState(false);
   const gradientProps = getGradientProps(post.cover_gradient);
@@ -687,7 +690,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           ) : (
             <Lock className="w-3.5 h-3.5" aria-hidden />
           )}
-          <span>{(Array.isArray(post.questions) ? post.questions.length : post.question_count) || 0} კითხვა</span>
+          <span>{t("extra.questionsCount", { count: (Array.isArray(post.questions) ? post.questions.length : post.question_count) || 0 })}</span>
         </div>
       </div>
 
@@ -743,7 +746,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
               )
             }
           >
-            ითამაშე მეგობრებთან
+            {t("extra.playWithFriendsBtn")}
           </ChunkyButton>
         </div>
       </div>
@@ -774,6 +777,7 @@ function StandaloneQuizCard({
   onPlayModeSelect?: (post: any) => void;
 }) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const gradientProps = getGradientProps(post.cover_gradient);
 
   // Tilt animation for new items - random left or right tilt
@@ -830,7 +834,7 @@ function StandaloneQuizCard({
           ) : (
             <Lock className="w-3.5 h-3.5" aria-hidden />
           )}
-          <span>{(Array.isArray(post.questions) ? post.questions.length : post.question_count) || 0} კითხვა</span>
+          <span>{t("extra.questionsCount", { count: (Array.isArray(post.questions) ? post.questions.length : post.question_count) || 0 })}</span>
         </div>
       </div>
 
@@ -888,12 +892,12 @@ function StandaloneQuizCard({
             ) : post.is_public === false ? (
               <>
                 <Globe className="w-4 h-4 text-emerald-500" />
-                <span>გამოაქვეყნე</span>
+                <span>{t("extra.publishBtn")}</span>
               </>
             ) : (
               <>
                 <Check className="w-4 h-4" />
-                <span>გამოქვეყნებულია</span>
+                <span>{t("extra.publishedLabel")}</span>
               </>
             )}
           </button>
@@ -904,7 +908,7 @@ function StandaloneQuizCard({
             onClick={handlePlayClick}
           >
             <Play className="w-4 h-4" />
-            <span>ითამაშე</span>
+            <span>{t("extra.playBtn")}</span>
           </ChunkyButton>
         </div>
       </div>
