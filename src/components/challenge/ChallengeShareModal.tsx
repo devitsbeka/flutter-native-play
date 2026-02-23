@@ -4,6 +4,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClipboard } from "@/hooks/use-clipboard";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Share2, Copy, Check, Loader2 } from "lucide-react";
 import danceFloorIcon from "@/assets/dance-floor-3.png";
@@ -40,6 +41,7 @@ export function ChallengeShareModal({
 }: ChallengeShareModalProps) {
   const { user, profile } = useAuth();
   const { copy, copied } = useClipboard({ timeout: 3000 });
+  const { t } = useLanguage();
   const [challengeUrl, setChallengeUrl] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -70,7 +72,7 @@ export function ChallengeShareModal({
       setChallengeUrl(url);
     } catch (err) {
       console.error("Failed to create challenge link:", err);
-      toast.error("ბმულის შექმნა ვერ მოხერხდა");
+      toast.error(t("extra.linkCreateFailed"));
     } finally {
       setIsCreating(false);
     }
@@ -80,8 +82,13 @@ export function ChallengeShareModal({
     if (!challengeUrl) return;
 
     const shareData = {
-      title: "შეგიძლია დამამარცხო?",
-      text: `${profile?.nickname || "მოთამაშემ"} მოაგროვა ${score}/${totalQuestions} ქულა${categoryName ? ` - ${categoryName}` : ""}. შეგიძლია დაამარცხო?`,
+      title: t("extra.challengeBeatMe"),
+      text: t("extra.challengeShareText", {
+        player: profile?.nickname || t("extra.player"),
+        score: String(score),
+        total: String(totalQuestions),
+        category: categoryName ? ` - ${categoryName}` : "",
+      }),
       url: challengeUrl,
     };
 
@@ -95,14 +102,14 @@ export function ChallengeShareModal({
       }
     } else {
       await copy(challengeUrl);
-      toast.success("ბმული დაკოპირდა!");
+      toast.success(t("extra.challengeLinkCopied"));
     }
   };
 
   const handleCopy = async () => {
     if (!challengeUrl) return;
     await copy(challengeUrl);
-    toast.success("ბმული დაკოპირდა!");
+    toast.success(t("extra.challengeLinkCopied"));
   };
 
   useEffect(() => {
@@ -119,20 +126,20 @@ export function ChallengeShareModal({
             <div className="flex items-center gap-2 justify-center">
               <img src={danceFloorIcon} alt="" className="w-10 h-10" />
               <DialogTitle className="text-xl font-bold text-white">
-                გამოიწვიე მეგობრები
+                {t("extra.challengeFriendsTitle")}
               </DialogTitle>
             </div>
-            <p className="text-sm text-white/70">მოაწყვე შეჯიბრი მეგობრებს შორის</p>
+            <p className="text-sm text-white/70">{t("extra.challengeSubtitle")}</p>
           </div>
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
           {/* Score display */}
           <div className="text-center p-4 rounded-xl bg-white/15 border border-white/20">
-            <p className="text-sm text-white/70 mb-1">შენი შედეგი</p>
-            <p className="text-3xl font-bold text-white">{score} ქულა</p>
+            <p className="text-sm text-white/70 mb-1">{t("extra.yourResult")}</p>
+            <p className="text-3xl font-bold text-white">{score} {t("extra.gamePointsLabel")}</p>
             {correctAnswers !== undefined && (
-              <p className="text-sm text-white/70 mt-1">({correctAnswers} სწორი პასუხი)</p>
+              <p className="text-sm text-white/70 mt-1">{t("extra.correctAnswersCount", { count: correctAnswers })}</p>
             )}
             {categoryName && (
               <p className="text-sm text-white/70 mt-1">{categoryName}</p>
@@ -142,7 +149,7 @@ export function ChallengeShareModal({
           {isCreating ? (
             <div className="flex items-center justify-center py-6">
               <Loader2 className="w-6 h-6 animate-spin text-white" />
-              <span className="ml-2 text-white/70">ბმული იქმნება...</span>
+              <span className="ml-2 text-white/70">{t("extra.linkCreating")}</span>
             </div>
           ) : challengeUrl ? (
             <div className="space-y-2">
@@ -153,7 +160,7 @@ export function ChallengeShareModal({
                 onClick={handleShare}
                 icon={<Share2 className="w-5 h-5" />}
               >
-                გაუზიარე მეგობრებს
+                {t("extra.shareWithFriends")}
               </ChunkyButton>
 
               <ChunkyButton
@@ -163,7 +170,7 @@ export function ChallengeShareModal({
                 onClick={handleCopy}
                 icon={copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
               >
-                {copied ? "დაკოპირდა!" : "ბმულის კოპირება"}
+                {copied ? t("extra.copied") : t("extra.gameCopyLink")}
               </ChunkyButton>
             </div>
           ) : null}

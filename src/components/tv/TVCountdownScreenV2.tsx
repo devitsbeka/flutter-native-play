@@ -5,10 +5,12 @@ import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { tvLog } from '@/utils/tvDebug';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
 import { AppIcon } from '@/components/shared/AppIcon';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 
 export const TVCountdownScreenV2: React.FC = () => {
   const { players, categoryName, categoryIcon, roundNumber } = useTVGame();
+  const { t } = useLanguage();
   const [count, setCount] = useState(3);
 
   useEffect(() => {
@@ -25,10 +27,6 @@ export const TVCountdownScreenV2: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // NOTE: startPlaying is now ONLY called from TVHostController.tsx (the phone)
-  // This prevents race conditions where both TV display and Host phone try to trigger simultaneously.
-  // The TV display component just shows the countdown animation - it doesn't control game state.
-  // TVHostController has its own countdown timer that triggers startPlaying on the HOST PHONE.
   useEffect(() => {
     if (count === 0) {
       tvLog('TV Countdown display reached 0 - host phone will trigger startPlaying');
@@ -36,23 +34,21 @@ export const TVCountdownScreenV2: React.FC = () => {
   }, [count]);
 
   const getCountDisplay = () => {
-    if (count === 0) return 'დაიწყო!';
+    if (count === 0) return t('extra.started');
     return count.toString();
   };
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6 overflow-hidden relative">
-      {/* Branding Overlay */}
       <TVBrandingOverlay showLogo showCode />
 
-      {/* Category info - moved up */}
       {categoryName && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8 text-center -mt-8"
         >
-          <p className="text-purple-300 text-lg">რაუნდი {roundNumber || 1}</p>
+          <p className="text-purple-300 text-lg">{t('extra.tvRoundLabel')} {roundNumber || 1}</p>
           <div className="flex items-center gap-3 text-white text-2xl font-bold">
             <AppIcon slug={categoryIcon} size={40} hideIfEmpty />
             <span>{categoryName}</span>
@@ -60,7 +56,6 @@ export const TVCountdownScreenV2: React.FC = () => {
         </motion.div>
       )}
 
-      {/* Countdown number - moved up */}
       <AnimatePresence mode="wait">
         <motion.div
           key={count}
@@ -70,14 +65,12 @@ export const TVCountdownScreenV2: React.FC = () => {
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="relative -mt-4"
         >
-          {/* Glow effect - only for countdown numbers */}
           {count > 0 && (
             <div className="absolute inset-0 blur-3xl">
               <div className="w-64 h-64 rounded-full bg-purple-500/50" />
             </div>
           )}
 
-          {/* Number or Text */}
           {count > 0 ? (
             <div className="relative z-10 w-64 h-64 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-purple-700 shadow-2xl">
               <span className="text-white text-9xl font-bold font-display">
@@ -86,13 +79,12 @@ export const TVCountdownScreenV2: React.FC = () => {
             </div>
           ) : (
             <span className="relative z-10 text-green-400 text-9xl font-bold font-display drop-shadow-[0_0_30px_rgba(74,222,128,0.5)]">
-              დაიწყო!
+              {t('extra.started')}
             </span>
           )}
         </motion.div>
       </AnimatePresence>
 
-      {/* Players at bottom */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -122,7 +114,7 @@ export const TVCountdownScreenV2: React.FC = () => {
         transition={{ delay: 0.5 }}
         className="mt-6 text-purple-300 text-lg"
       >
-        {count === 0 ? 'წავედით!' : 'მოემზადეთ...'}
+        {count === 0 ? t('extra.letsGo') : t('extra.getReady')}
       </motion.p>
     </div>
   );

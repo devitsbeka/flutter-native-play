@@ -52,14 +52,14 @@ export const REWARDS = {
 
   // ===== LUCKY SPIN REWARDS - Balanced =====
   SPIN_REWARDS: [
-    { type: "coins", value: 100, label: "100 მონეტა" },
-    { type: "coins", value: 200, label: "200 მონეტა" },
-    { type: "coins", value: 300, label: "300 მონეტა" },
-    { type: "coins", value: 500, label: "500 მონეტა" },   // 1 game!
-    { type: "coins", value: 150, label: "150 მონეტა" },
-    { type: "coins", value: 250, label: "250 მონეტა" },
-    { type: "gems", value: 1, label: "1 ალმასი" },        // Rare: 500 coin value
-    { type: "powerup", value: 1, label: "ძალა" },
+    { type: "coins", value: 100, label: "100 coins" },
+    { type: "coins", value: 200, label: "200 coins" },
+    { type: "coins", value: 300, label: "300 coins" },
+    { type: "coins", value: 500, label: "500 coins" },   // 1 game!
+    { type: "coins", value: 150, label: "150 coins" },
+    { type: "coins", value: 250, label: "250 coins" },
+    { type: "gems", value: 1, label: "1 gem" },        // Rare: 500 coin value
+    { type: "powerup", value: 1, label: "power-up" },
   ],
 
   // ===== WATCH AD REWARD =====

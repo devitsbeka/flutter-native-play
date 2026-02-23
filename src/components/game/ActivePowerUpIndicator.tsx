@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Snowflake, Clock, Shuffle, Sparkles } from "lucide-react";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ActivePowerUpIndicatorProps {
   type: PowerUpType;
@@ -8,45 +9,48 @@ interface ActivePowerUpIndicatorProps {
   isVisible: boolean;
 }
 
-const POWER_UP_CONFIG: Record<PowerUpType, {
+function getPowerUpConfig(t: (key: string) => string): Record<PowerUpType, {
   icon: React.ReactNode;
   label: string;
   color: string;
   bgColor: string;
   glowColor: string;
-}> = {
-  "5050": {
-    icon: <Sparkles className="w-4 h-4" />,
-    label: "50/50",
-    color: "#A855F7",
-    bgColor: "linear-gradient(135deg, #A855F7 0%, #7C3AED 100%)",
-    glowColor: "rgba(168, 85, 247, 0.4)",
-  },
-  "freeze": {
-    icon: <Snowflake className="w-4 h-4" />,
-    label: "დრო გაყინულია",
-    color: "#22D3EE",
-    bgColor: "linear-gradient(135deg, #22D3EE 0%, #0891B2 100%)",
-    glowColor: "rgba(34, 211, 238, 0.4)",
-  },
-  "replace": {
-    icon: <Shuffle className="w-4 h-4" />,
-    label: "შეცვლა",
-    color: "#10B981",
-    bgColor: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
-    glowColor: "rgba(16, 185, 129, 0.4)",
-  },
-  "time-drain": {
-    icon: <Clock className="w-4 h-4" />,
-    label: "+დრო",
-    color: "#F59E0B",
-    bgColor: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
-    glowColor: "rgba(245, 158, 11, 0.4)",
-  },
-};
+}> {
+  return {
+    "5050": {
+      icon: <Sparkles className="w-4 h-4" />,
+      label: "50/50",
+      color: "#A855F7",
+      bgColor: "linear-gradient(135deg, #A855F7 0%, #7C3AED 100%)",
+      glowColor: "rgba(168, 85, 247, 0.4)",
+    },
+    "freeze": {
+      icon: <Snowflake className="w-4 h-4" />,
+      label: t("extra.timerFrozen"),
+      color: "#22D3EE",
+      bgColor: "linear-gradient(135deg, #22D3EE 0%, #0891B2 100%)",
+      glowColor: "rgba(34, 211, 238, 0.4)",
+    },
+    "replace": {
+      icon: <Shuffle className="w-4 h-4" />,
+      label: t("extra.powerUpReplaceShort"),
+      color: "#10B981",
+      bgColor: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+      glowColor: "rgba(16, 185, 129, 0.4)",
+    },
+    "time-drain": {
+      icon: <Clock className="w-4 h-4" />,
+      label: t("extra.timePlus"),
+      color: "#F59E0B",
+      bgColor: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
+      glowColor: "rgba(245, 158, 11, 0.4)",
+    },
+  };
+}
 
 export function ActivePowerUpIndicator({ type, remainingTime, isVisible }: ActivePowerUpIndicatorProps) {
-  const config = POWER_UP_CONFIG[type];
+  const { t } = useLanguage();
+  const config = getPowerUpConfig(t)[type];
 
   return (
     <AnimatePresence>

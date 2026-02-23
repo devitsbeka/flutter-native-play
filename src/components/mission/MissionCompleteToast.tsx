@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Sparkles, Coins, Gem, Star } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MissionCompleteToastProps {
   missionTitle: string;
@@ -12,13 +13,14 @@ interface MissionCompleteToastProps {
   powerUpCount?: number;
 }
 
-// Power-up display names
-const POWER_UP_NAMES: Record<string, string> = {
-  "5050": "50/50",
-  "freeze": "დროის გაყინვა",
-  "replace": "კითხვის შეცვლა",
-  "time-drain": "+ 10 წამი",
-};
+function getPowerUpNames(t: (key: string) => string): Record<string, string> {
+  return {
+    "5050": "50/50",
+    "freeze": t("extra.powerUpTimeFreeze"),
+    "replace": t("extra.powerUpQuestionReplace"),
+    "time-drain": t("extra.powerUpTimeDrainLabel"),
+  };
+}
 
 export function MissionCompleteToast({
   missionTitle,
@@ -28,8 +30,10 @@ export function MissionCompleteToast({
   powerUp,
   powerUpCount,
 }: MissionCompleteToastProps) {
+  const { t } = useLanguage();
+  const POWER_UP_NAMES = getPowerUpNames(t);
+
   useEffect(() => {
-    // Fire confetti on mount
     const duration = 1500;
     const end = Date.now() + duration;
 
@@ -62,7 +66,6 @@ export function MissionCompleteToast({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       className="flex flex-col gap-2"
     >
-      {/* Header */}
       <div className="flex items-center gap-2">
         <motion.div
           animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
@@ -70,13 +73,11 @@ export function MissionCompleteToast({
         >
           <Sparkles className="w-5 h-5 text-amber-400" />
         </motion.div>
-        <span className="font-bold text-base">მისია შესრულდა! 🎉</span>
+        <span className="font-bold text-base">{t("extra.missionCompleted")}</span>
       </div>
 
-      {/* Mission name */}
       <p className="text-sm text-muted-foreground">{missionTitle}</p>
 
-      {/* Rewards */}
       <div className="flex flex-wrap items-center gap-3 mt-1">
         {xp > 0 && (
           <motion.div

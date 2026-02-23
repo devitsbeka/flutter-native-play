@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Check, X, Users } from 'lucide-react';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { Avatar } from '@/components/shared/Avatar';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const OPTION_COLORS = [
   { bg: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)', label: 'A', labelBg: '#A855F7', barBg: '#A855F7' },
@@ -13,6 +14,7 @@ const OPTION_COLORS = [
 
 export const TVRevealScreen: React.FC = () => {
   const { questions, currentQuestionIndex, players } = useTVGame();
+  const { t } = useLanguage();
 
   const currentQuestion = questions[currentQuestionIndex];
   if (!currentQuestion) return null;
@@ -157,11 +159,11 @@ export const TVRevealScreen: React.FC = () => {
       >
         <div className="flex items-center gap-2 bg-green-500/20 border border-green-500/50 rounded-full px-6 py-3">
           <Check className="w-5 h-5 text-green-400" />
-          <span className="text-green-400 font-bold text-lg">{correctPlayers.length} სწორი</span>
+          <span className="text-green-400 font-bold text-lg">{correctPlayers.length} {t('extra.correctCount')}</span>
         </div>
         <div className="flex items-center gap-2 bg-red-500/20 border border-red-500/50 rounded-full px-6 py-3">
           <X className="w-5 h-5 text-red-400" />
-          <span className="text-red-400 font-bold text-lg">{wrongPlayers.length} არასწორი</span>
+          <span className="text-red-400 font-bold text-lg">{wrongPlayers.length} {t('extra.incorrectCount')}</span>
         </div>
       </motion.div>
 
@@ -172,7 +174,7 @@ export const TVRevealScreen: React.FC = () => {
         transition={{ delay: 1 }}
         className="mt-4 text-center"
       >
-        <span className="text-muted-foreground">შემდეგი კითხვა მოდის...</span>
+        <span className="text-muted-foreground">{t('extra.nextQuestionSoon')}</span>
       </motion.div>
     </div>
   );
