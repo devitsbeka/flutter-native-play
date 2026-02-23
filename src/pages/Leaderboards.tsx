@@ -46,6 +46,7 @@ const TROPHY_SIZES = {
 
 // League-colored "ნახე რეიტინგი" button that opens ratings
 const AnimatedLeagueBadge = ({ tier, onClick }: { tier: number; onClick?: () => void }) => {
+  const { t } = useLanguage();
   const variant = tier === 3 ? "gold" : tier === 2 ? "silver" : "bronze";
   
   return (
@@ -54,14 +55,14 @@ const AnimatedLeagueBadge = ({ tier, onClick }: { tier: number; onClick?: () => 
       size="sm" 
       onClick={onClick}
     >
-      ნახე რეიტინგი
+      {t("extra.viewRating")}
     </ChunkyButton>
   );
 };
 
 export default function Leaderboards() {
   const { user } = useAuth();
-  const { region, language } = useLanguage();
+  const { region, language, t } = useLanguage();
   const isMobile = useIsMobile();
   const [viewingTier, setViewingTier] = useState<number | undefined>(undefined);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
@@ -149,12 +150,10 @@ export default function Leaderboards() {
 
   const activeTier = viewingTier ?? userTier;
 
-  // League names in Georgian
-  const LEAGUE_NAMES: Record<number, string> = {
-    1: "ბრინჯაოს ლიგა",
-    2: "ვერცხლის ლიგა",
-    3: "ოქროს ლიგა",
-  };
+  // League names - language-aware
+  const LEAGUE_NAMES: Record<number, string> = Object.fromEntries(
+    LEAGUES.map(l => [l.tier, language === 'ka' ? l.nameKa : l.name])
+  );
 
   const handleSelectTier = useCallback((tier: number) => {
     if (tier >= 1 && tier <= LEAGUES.length) {
@@ -303,7 +302,7 @@ export default function Leaderboards() {
                 className="text-xs font-bold text-white"
                 style={{ textShadow: '0 1px 6px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.5)' }}
               >
-                შენი ლიგა
+                {t("extra.yourLeague")}
               </span>
             )}
           </div>
@@ -434,7 +433,7 @@ export default function Leaderboards() {
 // Desktop: Match tablet layout with league nav and View Rating button
 function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: string }) {
   const { user } = useAuth();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [activeTier, setActiveTier] = useState(2); // Default to Silver
   const [isModalOpen, setIsModalOpen] = useState(false);
   
@@ -445,11 +444,9 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
     previousRank,
   } = useLeagueLeaderboard(activeTier, region);
   
-  const LEAGUE_NAMES: Record<number, string> = {
-    1: "ბრინჯაოს ლიგა",
-    2: "ვერცხლის ლიგა",
-    3: "ოქროს ლიგა",
-  };
+  const LEAGUE_NAMES: Record<number, string> = Object.fromEntries(
+    LEAGUES.map(l => [l.tier, language === 'ka' ? l.nameKa : l.name])
+  );
   
   const handlePrevTier = useCallback(() => {
     setActiveTier(t => {
@@ -512,7 +509,7 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
               className="text-xs font-bold text-white"
               style={{ textShadow: '0 1px 6px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.5)' }}
             >
-              შენი ლიგა
+              {t("extra.yourLeague")}
             </span>
           )}
         </div>
@@ -604,7 +601,7 @@ function TabletLeaderboards({
   onNextTier: () => void;
 }) {
   const { user } = useAuth();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const {
@@ -614,11 +611,9 @@ function TabletLeaderboards({
     previousRank,
   } = useLeagueLeaderboard(activeTier, region);
   
-  const LEAGUE_NAMES: Record<number, string> = {
-    1: "ბრინჯაოს ლიგა",
-    2: "ვერცხლის ლიგა",
-    3: "ოქროს ლიგა",
-  };
+  const LEAGUE_NAMES: Record<number, string> = Object.fromEntries(
+    LEAGUES.map(l => [l.tier, language === 'ka' ? l.nameKa : l.name])
+  );
   
   const currentTier = activeTier || 2;
   
@@ -667,7 +662,7 @@ function TabletLeaderboards({
               className="text-xs font-bold text-white"
               style={{ textShadow: '0 1px 6px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.5)' }}
             >
-              შენი ლიგა
+              {t("extra.yourLeague")}
             </span>
           )}
         </div>
@@ -761,6 +756,7 @@ function DesktopLeagueColumn({
   isActive?: boolean;
 }) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const isUserTier = tier === userTier;
 
   return (
@@ -779,7 +775,7 @@ function DesktopLeagueColumn({
         <CardHeader className="py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent text-center">
           <CardTitle className="text-lg text-foreground" style={{ fontFamily: "'Google Sans', sans-serif", fontWeight: 700 }}>{name.toUpperCase()}</CardTitle>
           {isUserTier && (
-            <CardDescription className="text-xs text-primary font-medium">შენი ლიგა</CardDescription>
+            <CardDescription className="text-xs text-primary font-medium">{t("extra.yourLeague")}</CardDescription>
           )}
         </CardHeader>
 
@@ -860,6 +856,7 @@ function MobileLeagueCard({
   onPrevTier,
   onNextTier,
 }: MobileLeagueCardProps) {
+  const { t } = useLanguage();
   const isUserTier = tier === userTier;
   
   // Show skeleton if loading and this is the current tier being viewed
@@ -896,7 +893,7 @@ function MobileLeagueCard({
           <div className="text-center flex-1">
             <CardTitle className="text-lg text-foreground" style={{ fontFamily: "'Google Sans', sans-serif", fontWeight: 700 }}>{name.toUpperCase()}</CardTitle>
             {isUserTier && (
-              <CardDescription className="text-xs text-primary font-medium">შენი ლიგა</CardDescription>
+              <CardDescription className="text-xs text-primary font-medium">{t("extra.yourLeague")}</CardDescription>
             )}
           </div>
           

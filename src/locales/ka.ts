@@ -2286,7 +2286,7 @@ export const ka = {
     allGames: "ყველა თამაში",
     notPlayedYet: "ჯერ არ გითამაშია",
     generalCategory: "ზოგადი",
-    scoreLabel: "{score} ქულა",
+    scorePoints: "{score} ქულა",
     minutesAgo: "{count} წთ წინ",
     hoursAgo: "{count} სთ წინ",
     // Rematch toast

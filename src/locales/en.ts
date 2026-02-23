@@ -2287,7 +2287,7 @@ export const en: KaTranslations = {
     allGames: "All Games",
     notPlayedYet: "You haven't played yet",
     generalCategory: "General",
-    scoreLabel: "{score} pts",
+    scorePoints: "{score} pts",
     minutesAgo: "{count}m ago",
     hoursAgo: "{count}h ago",
     // Rematch toast
