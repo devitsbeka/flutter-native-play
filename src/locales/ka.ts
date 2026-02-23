@@ -2236,6 +2236,8 @@ export const ka = {
     uploadBtn: "ატვირთვა",
     generateBtn: "გენერაცია",
     generatingCover: "გენერირდება",
+    addIconLabel: "აიკონის დამატება",
+    deleteQuestionBtn: "კითხვის წაშლა",
     // Live Games Widget
     liveGameRoom: "თამაშის ოთახი",
     playerCount: "{count} მოთამაშე",
