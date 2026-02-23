@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -46,6 +47,7 @@ interface InviteFriendsModalProps {
 }
 
 export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFriendsModalProps) {
+  const { t } = useLanguage();
   const { isVip, loading: vipLoading } = useVipStatus();
   const { createLinkInvite } = useFriendInvites();
   const { copy, copied } = useClipboard();
@@ -159,7 +161,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               className="font-display font-bold text-white text-center mb-2"
               style={{ fontSize: "1.54rem", marginTop: "-5px" }}
             >
-              მოიწვიე მეგობრები!
+              {t("extra.inviteFriends")}
             </motion.h2>
 
             <motion.p
@@ -169,8 +171,8 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               className="text-white/80 text-center leading-relaxed mb-4"
               style={{ fontSize: "0.95rem" }}
             >
-              გაუზიარე ეს ლინკი მეგობრებს და მიიღეთ საჩუქრად{" "}
-              <span className="font-semibold text-yellow-300">10 დღიანი PRO</span>!
+              {t("extra.shareLink")}{" "}
+              <span className="font-semibold text-yellow-300">{t("extra.tenDayPro")}</span>!
             </motion.p>
 
             {/* PRO badge */}
@@ -187,7 +189,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
             >
               <img src={crownIcon} alt="" className="w-6 h-6 object-contain" />
               <span className="font-display text-sm font-bold text-white">
-                10 დღიანი PRO საჩუქარი
+                {t("extra.proGift")}
               </span>
             </motion.div>
 
@@ -206,7 +208,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
                 disabled={!referralLink}
                 icon={copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
               >
-                {copied ? "დაკოპირდა!" : "კოპირება"}
+                {copied ? t("extra.copiedBtn") : t("extra.copyBtn")}
               </ChunkyButton>
 
               <ChunkyButton
@@ -217,7 +219,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
                   disabled={!referralLink}
                   icon={<Share2 className="w-5 h-5" />}
                 >
-                  გაზიარება
+                  {t("extra.shareBtn")}
                 </ChunkyButton>
             </motion.div>
 
@@ -229,8 +231,8 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
                   exit={{ opacity: 0, y: 5, height: 0 }}
                   className="text-white/90 text-center text-xs leading-relaxed mt-3 px-2"
                 >
-                  როცა მოწვეული მეგობრები შემოგვიერთდებიან, შენ და შენი მეგობრები მიიღებთ{" "}
-                  <span className="font-semibold text-yellow-300">10 დღიან PRO-ს</span>!
+                  {t("extra.sharedConfirmation")}{" "}
+                  <span className="font-semibold text-yellow-300">{t("extra.tenDayProSuffix")}</span>!
                 </motion.p>
               )}
             </AnimatePresence>
@@ -242,7 +244,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
               onClick={handleClose}
               className="mt-4 text-xs text-white/50 hover:text-white/80 transition-colors"
             >
-              მოგვიანებით
+              {t("extra.laterBtn")}
             </motion.button>
           </div>
           </div>

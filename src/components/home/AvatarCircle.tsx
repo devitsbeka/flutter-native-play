@@ -416,7 +416,7 @@ export function AvatarCircle({
           }}
         >
           <img src={aiSparkleIcon} alt="" className="w-4 h-4" />
-          <span className="text-white text-sm font-bold whitespace-nowrap">გააცოცხლე ავატარი</span>
+          <span className="text-white text-sm font-bold whitespace-nowrap">{t("extra.animateAvatarPrompt")}</span>
         </motion.button>
       )}
 
