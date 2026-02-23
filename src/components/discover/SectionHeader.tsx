@@ -1,4 +1,5 @@
 import { ChevronRight } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SectionHeaderProps {
   title: string;
@@ -7,6 +8,7 @@ interface SectionHeaderProps {
 }
 
 export function SectionHeader({ title, subtitle, onSeeAll }: SectionHeaderProps) {
+  const { t } = useLanguage();
   return (
     <div className="flex items-start justify-between mb-3" style={{ paddingLeft: 20, paddingRight: 20 }}>
       <div className="flex-1">
@@ -20,7 +22,7 @@ export function SectionHeader({ title, subtitle, onSeeAll }: SectionHeaderProps)
           onClick={onSeeAll}
           className="flex items-center gap-0.5 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
         >
-          <span className="underline">ყველა</span>
+          <span className="underline">{t("extra.seeAll")}</span>
           <ChevronRight className="w-4 h-4" />
         </button>
       )}
