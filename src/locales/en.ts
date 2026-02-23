@@ -3044,7 +3044,7 @@ export const en: KaTranslations = {
     tvGetReadyFun: "Get ready for a fun game!",
     tvEnterCodeOnPhone: "Enter this code on your phone",
     tvOpen: "Open",
-    tvEnterCode: "Enter code",
+    tvEnterCodeLabel: "Enter code",
     tvYoureReady: "You're ready!",
     tvWaitingPlayers: "Waiting for players...",
     // TVPairingScreen
@@ -3091,6 +3091,9 @@ export const en: KaTranslations = {
     tvHostControls: "Host Controls",
     tvCategoryLabel: "Category:",
     tvNewRound: "New Round",
+    tvWaitGameStart: "Wait for game to start",
+    tvStart: "Start",
+    tvJoin: "Join",
     tvWaitingHostInstruction: "Waiting for host's instruction...",
     // TVRoundIntroScreen
     tvRound: "Round",
