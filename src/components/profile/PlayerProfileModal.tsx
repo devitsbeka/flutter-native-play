@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useState, useRef } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { MASCOT_USER_IDS } from "@/lib/excludedUsers";
 import { CreateQuizModal } from "@/components/social/CreateQuizModal";
@@ -76,6 +77,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { data, loading, refetch } = usePlayerProfileData(userId);
   const [addingFriend, setAddingFriend] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -274,7 +276,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 </motion.button>
                 
                 <h1 className="flex-1 text-center font-display text-lg font-bold text-foreground">
-                  პროფილი
+                  {t("extra.profileTitle")}
                 </h1>
                 
                 {/* Three-dots menu for friends */}
@@ -306,7 +308,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                         className="text-destructive focus:text-destructive focus:bg-destructive/10 gap-2 cursor-pointer"
                       >
                         <UserMinus className="w-4 h-4" />
-                        წაშლა
+                        {t("extra.removeMenuItem")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -322,15 +324,15 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
               </div>
             ) : !data?.profile ? (
               <div className="flex-1 flex items-center justify-center">
-                <p className="text-muted-foreground">პროფილი ვერ მოიძებნა</p>
+                <p className="text-muted-foreground">{t("extra.profileNotFound")}</p>
               </div>
             ) : data.profile.nickname === '[წაშლილი]' ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8">
                 <div className="w-[100px] h-[100px] rounded-full bg-muted flex items-center justify-center">
                   <Users className="w-12 h-12 text-muted-foreground/50" />
                 </div>
-                <p className="text-lg font-medium text-muted-foreground">წაშლილი მომხმარებელი</p>
-                <p className="text-sm text-muted-foreground/70">ეს ანგარიში წაშლილია</p>
+                <p className="text-lg font-medium text-muted-foreground">{t("extra.deletedUser")}</p>
+                <p className="text-sm text-muted-foreground/70">{t("extra.accountDeleted")}</p>
               </div>
             ) : (
               <div className="flex-1 overflow-y-auto">
@@ -358,7 +360,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   {canSeePrivateInfo && (
                     <div className="mt-1">
                       <span className="text-sm text-muted-foreground">
-                        {data.stats.totalPoints.toLocaleString()} ქულა
+                        {data.stats.totalPoints.toLocaleString()} {t("extra.pointsLabel", { count: "" }).trim()}
                       </span>
                     </div>
                   )}
@@ -371,7 +373,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           <Gamepad2 className="w-4 h-4 text-primary" />
                           <span className="font-bold text-foreground">{data.stats.gamesPlayed}</span>
                         </div>
-                        <span className="text-xs text-muted-foreground">თამაშები</span>
+                        <span className="text-xs text-muted-foreground">{t("extra.gamesPlayedStat")}</span>
                       </div>
                       <div className="w-px h-8 bg-border" />
                       <div className="flex flex-col items-center">
@@ -379,7 +381,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           <Trophy className="w-4 h-4 text-primary" />
                           <span className="font-bold text-foreground">{data.stats.gamesWon}</span>
                         </div>
-                        <span className="text-xs text-muted-foreground">მოგებული</span>
+                        <span className="text-xs text-muted-foreground">{t("extra.gamesWonStat")}</span>
                       </div>
                       <div className="w-px h-8 bg-border" />
                       <div className="flex flex-col items-center">
@@ -387,7 +389,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           <Target className="w-4 h-4 text-primary" />
                           <span className="font-bold text-foreground">{data.stats.winRate}%</span>
                         </div>
-                        <span className="text-xs text-muted-foreground">მოგება</span>
+                        <span className="text-xs text-muted-foreground">{t("extra.winRateStat")}</span>
                       </div>
                       <div className="w-px h-8 bg-border" />
                       <div className="flex flex-col items-center">
@@ -395,7 +397,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           <Flame className="w-4 h-4 text-primary" />
                           <span className="font-bold text-foreground">{data.stats.bestStreak}</span>
                         </div>
-                        <span className="text-xs text-muted-foreground">სტრიქი</span>
+                        <span className="text-xs text-muted-foreground">{t("extra.streakStat")}</span>
                       </div>
                     </div>
                   )}
@@ -414,32 +416,32 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           {addingFriend ? (
                             <>
                               <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                              იგზავნება...
+                              {t("extra.sendingLabel")}
                             </>
                           ) : (
                             <>
                               <UserPlus className="w-4 h-4 mr-1" />
-                              დამატება
+                              {t("extra.addBtn")}
                             </>
                           )}
                         </ChunkyButton>
                       )}
                       {data.friendshipStatus === 'sent' && (
-                        <ChunkyButton disabled variant="secondary" size="sm" className="flex-1">
+                         <ChunkyButton disabled variant="secondary" size="sm" className="flex-1">
                           <Clock className="w-4 h-4 mr-1" />
-                          გაგზავნილია
+                          {t("extra.sentStatusLabel")}
                         </ChunkyButton>
                       )}
                       {data.friendshipStatus === 'pending' && (
                         <ChunkyButton variant="primary" size="sm" className="flex-1">
                           <Check className="w-4 h-4 mr-1" />
-                          მიღება
+                          {t("extra.acceptBtn")}
                         </ChunkyButton>
                       )}
                       {data.friendshipStatus === 'accepted' && (
                         <ChunkyButton onClick={handleChallenge} variant="primary" size="sm" className="flex-1">
                           <Swords className="w-4 h-4 mr-1" />
-                          გამოწვევა
+                          {t("extra.challengeBtn")}
                         </ChunkyButton>
                       )}
                     </div>
@@ -467,7 +469,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                         ) : (
                           <Camera className="w-4 h-4" />
                         )}
-                        <span className="ml-1 text-xs">ავატარი</span>
+                        <span className="ml-1 text-xs">{t("extra.avatarBtn")}</span>
                       </ChunkyButton>
                       <ChunkyButton
                         onClick={() => setShowCreateTrivia(true)}
@@ -476,7 +478,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                         className="flex-1"
                       >
                         <Plus className="w-4 h-4" />
-                        <span className="ml-1 text-xs">ტრივია</span>
+                        <span className="ml-1 text-xs">{t("extra.triviaLabel")}</span>
                       </ChunkyButton>
                       <ChunkyButton
                         onClick={() => setShowEditProfile(true)}
@@ -485,7 +487,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                         className="flex-1"
                       >
                         <Pencil className="w-4 h-4" />
-                        <span className="ml-1 text-xs">რედაქტირება</span>
+                        <span className="ml-1 text-xs">{t("extra.editBtn")}</span>
                       </ChunkyButton>
                     </div>
                   )}
@@ -496,18 +498,18 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   <TabsList className="grid w-full mb-4 h-auto py-2 grid-cols-2">
                     <TabsTrigger value="trivias" className="flex flex-col items-center gap-0.5">
                       <img src={iconTrivia} alt="" className="w-9 h-9" />
-                      <span className="text-xs">ტრივიები</span>
+                      <span className="text-xs">{t("extra.triviasTab")}</span>
                     </TabsTrigger>
                     <TabsTrigger value="trophies" className="flex flex-col items-center gap-0.5">
                       <img src={iconTrophy} alt="" className="w-9 h-9" />
-                      <span className="text-xs">ჯილდოები</span>
+                      <span className="text-xs">{t("extra.trophiesTab")}</span>
                     </TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="trophies">
                     {data.achievements.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
-                        <p>ჯერ არ აქვს ჯილდოები</p>
+                        <p>{t("extra.noTrophiesYet")}</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-4 gap-3">
@@ -528,7 +530,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   <TabsContent value="trivias">
                     {data.trivias.length === 0 && data.collections.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
-                        <p>ჯერ არ აქვს ტრივიები</p>
+                        <p>{t("extra.noTriviasProfileYet")}</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -657,13 +659,13 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
           <AlertDialogOverlay className="z-[140]" />
           <AlertDialogContent className="z-[150]">
             <AlertDialogHeader>
-              <AlertDialogTitle>მეგობრის წაშლა</AlertDialogTitle>
+              <AlertDialogTitle>{t("extra.deleteFriendTitle")}</AlertDialogTitle>
               <AlertDialogDescription>
-                ნამდვილად გსურთ {data?.profile?.nickname}-ის მეგობრებიდან წაშლა?
+                {t("extra.deleteFriendDesc", { name: data?.profile?.nickname || "" })}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={deletingFriend}>გაუქმება</AlertDialogCancel>
+              <AlertDialogCancel disabled={deletingFriend}>{t("extra.cancelBtn")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={(e) => {
                   e.preventDefault();
@@ -672,7 +674,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 disabled={deletingFriend}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {deletingFriend ? "იშლება..." : "წაშლა"}
+                {deletingFriend ? t("extra.deletingLabel") : t("extra.deleteBtn")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
