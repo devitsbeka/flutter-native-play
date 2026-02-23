@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { useLocation } from 'react-router-dom';
 import { usePendingChallenges } from '@/hooks/usePendingChallenges';
-import { useFriends } from '@/hooks/useFriends';
+import { FriendsContext } from '@/contexts/FriendsContext';
 
 const STORAGE_KEY = 'lastTabVisits';
 
@@ -49,7 +49,8 @@ function storeVisit(tab: keyof TabVisits) {
 export function useNewContentIndicators() {
   const location = useLocation();
   const { pendingChallenges } = usePendingChallenges();
-  const { pendingRequests } = useFriends();
+  const friendsCtx = useContext(FriendsContext);
+  const pendingRequests = friendsCtx?.pendingRequests ?? [];
   
   const [indicators, setIndicators] = useState({
     explore: false,

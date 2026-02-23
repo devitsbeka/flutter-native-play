@@ -29,7 +29,7 @@ interface FriendsContextValue {
   refreshFriends: () => Promise<void>;
 }
 
-const FriendsContext = createContext<FriendsContextValue | null>(null);
+export const FriendsContext = createContext<FriendsContextValue | null>(null);
 
 export function FriendsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
