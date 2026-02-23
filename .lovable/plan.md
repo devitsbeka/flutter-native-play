@@ -1,97 +1,274 @@
 
+# Translate All Remaining Hardcoded Georgian Strings in TV/Controller Screens
 
-# Translate Hardcoded Georgian Strings in Gameplay Screens
+## Complete List of Hardcoded Georgian Strings Found
 
-## Files to Update
+### TVPairingScreenV3.tsx (TV pairing code display)
+1. `"TV რეჟიმი"` -- "TV Mode"
+2. `"მოემზადეთ სახალისო თამაშისთვის!"` -- "Get ready for a fun game!"
+3. `"შეიყვანეთ ეს კოდი თქვენს ტელეფონზე"` -- "Enter this code on your phone"
+4. `"გახსენით"` -- "Open"
+5. `"შეიყვანეთ კოდი"` -- "Enter code"
+6. `"მზად ხართ!"` -- "You're ready!"
+7. `"ველოდებით მოთამაშეებს..."` -- "Waiting for players..."
 
-### 1. `src/components/game/QuestionScreen.tsx`
-- Add `useLanguage` import and `const { t } = useLanguage()`
-- Line 447: `+${lastPointsEarned} ქულა!` -> `t("extra.plusPoints", { count: lastPointsEarned })`
-- Line 449: `"დრო ამოიწურა!"` -> `t("extra.timeUpLabel")`
-- Line 450: `"არასწორია!"` -> `t("extra.incorrectLabel")`
-- Line 468: `"შემდეგი კითხვა"` / `"შედეგები"` -> `t("game.nextQuestion")` / `t("game.results")`
+### TVPairingScreen.tsx (older pairing screen)
+8. `"შეიყვანეთ კოდი თქვენს ტელეფონში"` -- "Enter the code on your phone"
+9. `"ან გადადით:"` -- "Or go to:"
+10. `"ველოდებით..."` -- "Waiting..."
+11. `"თამაშის დაწყება"` -- "Start Game"
 
-### 2. `src/components/ui/quiz-next-button.tsx`
-- Line 16: Default prop `text = "შემდეგი კითხვა"` -> Change default to `"Next Question"` (callers should pass translated text; this is a UI primitive)
+### TVLobbyScreenV2.tsx (TV lobby)
+12. `"TV ოთახი"` -- "TV Room" (default room name fallback)
+13. `"დაამატე რიგში"` / `"აირჩიე კატეგორია"` -- "Add to queue" / "Choose category"
+14. `"შემთხვევითი"` (x2) -- "Random"
+15. `"რაუნდი"` -- "Round" (fallback for queue item without name)
+16. `"მოწვეული"` -- "Invited"
+17. `"მოლოდინი..."` -- "Waiting..."
+18. `"ან გახსენით"` -- "Or open"
+19. `"კოდი: "` -- "Code: "
+20. `"ავტო-დაწყება"` -- "Auto-start"
+21. `` `დაწყება (${queue.length} რაუნდი)` `` / `"თამაშის დაწყება"` -- "Start (N rounds)" / "Start Game"
+22. `"მოლოდინი, ჰოსტმა დაიწყოს თამაში..."` -- "Waiting for host to start..."
 
-### 3. `src/components/game/PowerUpEffectOverlay.tsx`
-- Lines 23-27: Hardcoded `POWER_UP_NAMES` (`"გაყინვა"`, `"შეცვლა"`, `"+ 10 წამი"`) -> Use `t()` keys: `t("extra.powerFreezeName")`, `t("extra.powerReplaceName")`, `t("extra.powerTimeDrainName")`
-- This component doesn't use hooks, so it needs to accept `t` as a prop or use the standalone `t` import from LanguageContext
+### TVQuestionScreen.tsx (TV question display - old)
+23. `"კითხვა "` -- "Question "
+24. `"უპასუხა"` -- "answered"
 
-### 4. `src/components/game/ActivePowerUpIndicator.tsx`
-- Lines 27, 34, 41: Hardcoded labels (`"დრო გაყინულია"`, `"შეცვლა"`, `"+დრო"`) -> Convert to use `t()` keys
-- Refactor `POWER_UP_CONFIG` to be a function that takes `t` and returns the config
+### TVQuestionScreenV3.tsx (TV question V3)
+25. `"ლიდერბორდი"` -- "Leaderboard"
+26. `"ფიქრობს..."` -- "Thinking..."
+27. `"უპასუხა"` -- "answered"
 
-### 5. `src/components/mission/MissionCompleteToast.tsx`
-- Line 73: `"მისია შესრულდა! 🎉"` -> New key `extra.missionCompleted`
-- Lines 16-21: Hardcoded `POWER_UP_NAMES` -> Same approach as PowerUpEffectOverlay
+### TVQuestionScreenV4.tsx (TV question V4)
+28. `"კითხვა"` -- "Question" (vertical label)
+29. `"რაუნდი {N}/{M}"` -- "Round N/M"
 
-### 6. `src/components/challenge/ChallengeShareModal.tsx`
-- Line 83: `"შეგიძლია დამამარცხო?"` -> New key
-- Line 84: `მოთამაშემ მოაგროვა... შეგიძლია დაამარცხო?` -> New key with interpolation
-- Line 98/105: `"ბმული დაკოპირდა!"` -> New key
-- Line 122: `"გამოიწვიე მეგობრები"` -> New key
-- Line 125: `"მოაწყვე შეჯიბრი მეგობრებს შორის"` -> New key
-- Line 132: `"შენი შედეგი"` -> New key
-- Line 133: `ქულა` -> New key
-- Line 135: `სწორი პასუხი` -> New key
-- Line 145: `"ბმული იქმნება..."` -> New key
-- Line 156: `"გაუზიარე მეგობრებს"` -> New key
-- Line 166: `"დაკოპირდა!" / "ბმულის კოპირება"` -> New keys
+### TVResultsScreen.tsx (TV results)
+30. `"თამაში დასრულდა"` -- "Game Over"
+31. `"საბოლოო შედეგები"` -- "Final Results"
+32. `"ქულა"` -- "points" (after score)
+33. `"დანარჩენი მოთამაშეები"` -- "Other Players"
+34. `"მასპინძელს შეუძლია ახალი რაუნდის დაწყება ტელეფონიდან"` -- "Host can start a new round from their phone"
 
-### 7. `src/components/tv/TVCountdownScreenV2.tsx`
-- Line 39/89: `'დაიწყო!'` -> Existing key `extra.gameStarted` or new key
-- Line 55: `'რაუნდი'` -> New key
-- Line 125: `'წავედით!' / 'მოემზადეთ...'` -> New keys
+### TVResultsScreenV2.tsx (TV results V2)
+35. `"თამაში დასრულდა"` -- "Game Over"
+36. `"შემდეგი:"` -- "Next:"
+37. `"დააჭირე კონტროლერზე გასაგრძელებლად"` / `"მოლოდინი..."` -- "Press controller to continue" / "Waiting..."
+38. `"ახალი რაუნდის დასაწყებად დააჭირე ღილაკს კონტროლერზე"` / `"რაუნდები დასრულდა"` -- "Press button on controller to start new round" / "Rounds finished"
+39. `"ლიდერბორდი"` -- "Leaderboard"
 
-### 8. `src/components/tv/TVRevealScreen.tsx`
-- Line 160: `სწორი` -> New key
-- Line 164: `არასწორი` -> New key
-- Line 175: `"შემდეგი კითხვა მოდის..."` -> Use existing `extra.nextQuestionSoon`
+### TVIdleScreen.tsx (TV idle between rounds)
+40. `"TV კვიზი"` -- "TV Quiz" (default name)
+41. `` `რაუნდი ${N} დასრულდა` `` / `"მოელოდეთ თამაშის დაწყებას"` -- "Round N finished" / "Wait for game to start"
+42. `"მოთამაშე"` -- "player(s)"
+43. `"ლიდერბორდი"` -- "Leaderboard"
+44. `` `(${N} რაუნდის შემდეგ)` `` -- "(after N rounds)"
+45. `"ამ რაუნდში"` -- "in this round"
+46. `"ქულა"` -- "points"
+47. `"ჯერ არავინ შემოსულა"` -- "Nobody has joined yet"
+48. `"ჰოსტის კონტროლი"` -- "Host Controls"
+49. `"კატეგორია:"` / `"შემთხვევითი"` -- "Category:" / "Random"
+50. `"შემთხვევითი"` (button) -- "Random"
+51. `"ახალი რაუნდი"` / `"დაწყება"` -- "New Round" / "Start"
+52. `"შემოუერთდი"` -- "Join"
+53. `"მოელოდეთ ჰოსტის მითითებას..."` -- "Waiting for host's instruction..."
 
-### 9. `src/components/controller/ControllerCountdown.tsx`
-- Line 34: `"ვთამაშობთ"` -> New key
-- Line 64: `'დაიწყო!' / 'მოემზადე!'` -> New keys
-- Line 66: `"მოემზადე პასუხებისთვის!"` -> New key
+### TVRoundIntroScreen.tsx (round intro)
+54. `"რაუნდი"` -- "Round"
+55. `"კატეგორია"` -- "Category" (fallback)
+56. `"მზადაა!"` -- "Ready!"
+57. `"მზად ვარ"` -- "I'm ready"
+58. `"ველოდებით ჰოსტს..."` -- "Waiting for host..."
 
-### 10. `src/config/rewardConfig.ts`
-- Line 60-62: Hardcoded reward labels (`"250 მონეტა"`, `"1 ალმასი"`, `"ძალა"`) -> These are static config; will need dynamic label resolution
+### TVPollScreen.tsx (TV poll)
+59. `"კოდი"` -- "Code"
+60. `"რა ვითამაშოთ?"` / `"ხმა მიეცით!"` -- "What shall we play?" / "Vote!"
+61. `"აირჩიეთ რომელი კატეგორიები გსურთ"` / `"აირჩიე მაქსიმუმ 3 ვარიანტი"` -- "Choose which categories you want" / "Choose max 3 options"
+62. `"ველოდებით შემოთავაზებებს..."` -- "Waiting for suggestions..."
+63. `"აირჩიეთ მაქსიმუმ 3 შემოთავაზებული ვარიანტებიდან"` -- "Choose max 3 from suggested options"
+64. `"მოთამაშეები ({N})"` -- "Players (N)"
+65. `"ველოდებით მოთამაშეებს..."` -- "Waiting for players..."
+66. `"ხმა"` -- "vote(s)"
+67. `"ველოდებით ჰოსტს ხმის მიცემის დასაწყებად..."` -- "Waiting for host to start voting..."
+68. `"ხმის მიცემა დასრულდა! ჰოსტი ირჩევს რაუნდებს..."` -- "Voting complete! Host is choosing rounds..."
+69. `"ხმის მიცემა მიმდინარეობს!"` -- "Voting in progress!"
 
-## New Locale Keys to Add
+### TVPollResultsScreen.tsx (TV poll results)
+70. `"გამარჯვებული კატეგორიები"` -- "Winning Categories"
+71. `` `მომდევნო ${N} რაუნდი` `` -- "Next N rounds"
+72. `"კატეგორია"` (fallback) -- "Category"
+73. `"კატეგორია"` / `"ტრივია"` (source type badge) -- "Category" / "Trivia"
+74. `"მოემზადეთ... თამაში იწყება!"` -- "Get ready... game is starting!"
 
-In `en.ts` and `ka.ts` `extra` namespace:
-- `missionCompleted`: "Mission Complete! :tada:" / "მისია შესრულდა! :tada:"
-- `challengeTitle`: "Can you beat me?" / "შეგიძლია დამამარცხო?"
-- `challengeShareText`: "{player} scored {score}/{total} points{category}. Can you beat them?" / "{player} მოაგროვა {score}/{total} ქულა{category}. შეგიძლია დაამარცხო?"
-- `linkCopied`: "Link copied!" / "ბმული დაკოპირდა!"
-- `challengeFriends`: "Challenge Friends" / "გამოიწვიე მეგობრები"
-- `challengeSubtitle`: "Set up a competition among friends" / "მოაწყვე შეჯიბრი მეგობრებს შორის"
-- `yourResult`: "Your Result" / "შენი შედეგი"
-- `pointsLabel`: "points" / "ქულა"
-- `correctAnswersCount`: "{count} correct answers" / "{count} სწორი პასუხი"
-- `linkCreating`: "Creating link..." / "ბმული იქმნება..."
-- `shareWithFriends`: "Share with Friends" / "გაუზიარე მეგობრებს"
-- `copied`: "Copied!" / "დაკოპირდა!"
-- `copyLink`: "Copy Link" / "ბმულის კოპირება"
-- `letsGo`: "Let's go!" / "წავედით!"
-- `getReady`: "Get ready..." / "მოემზადეთ..."
-- `started`: "Started!" / "დაიწყო!"
-- `roundLabel`: "Round" / "რაუნდი"
-- `correctCount`: "correct" / "სწორი"
-- `incorrectCount`: "incorrect" / "არასწორი"
-- `playing`: "Playing" / "ვთამაშობთ"
-- `getReadyExcl`: "Get ready!" / "მოემზადე!"
-- `getReadyForAnswers`: "Get ready for answers!" / "მოემზადე პასუხებისთვის!"
-- `timerFrozen`: "Timer frozen" / "დრო გაყინულია"
-- `timePlus`: "+Time" / "+დრო"
-- `powerUpTimeDrainLabel`: "+ 10 sec" / "+ 10 წამი"
-- `powerUpQuestionReplace`: "Question replace" / "კითხვის შეცვლა"
-- `powerUpTimeFreeze`: "Time freeze" / "დროის გაყინვა"
+### TVLeaderboardPanel.tsx
+75. `"რეიტინგი"` -- "Rating"
+76. `"გათიშული"` -- "Disconnected"
+77. `"უპასუხა"` -- "Answered"
+78. `"ფიქრობს..."` -- "Thinking..."
 
-## Technical Notes
-- `QuestionScreen.tsx` needs `useLanguage` added (it currently doesn't import it)
-- `QuizGameScreenProd.tsx` already uses `t()` for "Next Question"/"Results" -- no changes needed there
-- `PowerUpEffectOverlay.tsx` and `ActivePowerUpIndicator.tsx` use static config objects outside the component; will convert labels to functions that call `t()`
-- `MissionCompleteToast.tsx` is called from a non-React context via `showMissionCompleteToast`; the toast itself is a component so `useLanguage` works inside it
-- Existing keys will be reused where possible (e.g., `game.nextQuestion`, `game.results`, `extra.plusPoints`, `extra.timeUpLabel`, `extra.incorrectLabel`)
+### TVBrandingOverlay.tsx
+79. `"კოდი:"` -- "Code:"
 
+### TVRoundQueueIndicator.tsx
+80. `"რაუნდი"` -- "Round" (vertical label)
+
+### TVRevealScreenV2.tsx
+81. `"კითხვა {N} / {M}"` -- "Question N / M"
+82. `"შემდეგი კითხვა იწყება..."` -- "Next question starting..."
+
+### TVGameOverScreen.tsx (controller game over)
+83. `"რაუნდი დასრულდა!"` / `"თამაში დასრულდა!"` -- "Round Over!" / "Game Over!"
+84. `"ლიდერბორდი"` -- "Leaderboard"
+85. `"(შენ)"` -- "(you)"
+86. `"შემდეგი რაუნდის მოლოდინი..."` -- "Waiting for next round..."
+87. `"რაუნდები დასრულდა"` -- "Rounds finished"
+88. `"შემდეგი რაუნდი"` -- "Next Round"
+89. `"კატეგორიის დამატება"` -- "Add Category"
+90. `"არჩევნების დაწყება"` -- "Start Poll"
+91. `"გასვლა"` -- "Exit"
+
+### TVScoreboardScreen.tsx
+92. `"საბოლოო შედეგები"` -- "Final Results"
+93. `"თავიდან თამაში"` -- "Play Again"
+94. `"გასვლა"` -- "Exit"
+
+### TVMirrorButton.tsx
+95. `"სესია ვერ მოიძებნა"` -- "Session not found"
+96. `"შეიყვანე 4-ციფრიანი კოდი..."` -- "Enter 4-digit code from another TV..."
+97. `"დაკავშირება..."` -- "Connecting..."
+
+### ControllerCodeEntry.tsx
+98. `"TV თამაშში შესვლა"` -- "Join TV Game"
+99. `"თამაში ვერ მოიძებნა. შეამოწმეთ კოდი."` (x3) -- "Game not found. Check the code."
+100. `"კოდი უნდა იყოს მინიმუმ 4 სიმბოლო"` (x2) -- "Code must be at least 4 characters"
+101. `"ავტორიზებული"` -- "Authorized"
+102. `"თამაშის კოდი"` -- "Game Code"
+103. `"შეიყვანეთ კოდი"` -- "Enter code"
+104. `"შემოსვლა..."` / `"შესვლა"` -- "Joining..." / "Join"
+
+### ControllerQuestion.tsx
+105. `"შენი კატეგორიაა!"` -- "It's your category!"
+106. `"ამიტომ ამ რაუნდში აკვირდები"` -- "So you're observing this round"
+107. `"კითხვა {N}/{M}"` -- "Question N/M"
+108. `"ტელევიზორზე უყურე..."` -- "Watch on TV..."
+109. `"თამაშიდან გასვლა"` -- "Leave Game"
+110. `"მართალია"` / `"მცდარია"` -- "True" / "False" (answer labels)
+
+### ControllerPollResults.tsx
+111. `"არ არის გამარჯვებული კატეგორიები"` -- "No winning categories"
+112. `"თამაში იწყება!"` -- "Game is starting!"
+113. `"თამაშის დაწყება ვერ მოხერხდა"` (x2) -- "Failed to start game"
+114. `"ხმის მიცემის შედეგები"` -- "Voting Results"
+115. `"ხმა"` -- "vote(s)"
+116. `"რაუნდი"` -- "Round"
+117. `"რაუნდების რაოდენობა:"` -- "Number of rounds:"
+118. `"იწყება..."` / `` `დაწყება (${N} რაუნდი)` `` -- "Starting..." / "Start (N rounds)"
+
+### ControllerPollScreen.tsx
+119. `"კატეგორია შემოთავაზებულია!"` -- "Category suggested!"
+120. `"შემოთავაზება ვერ მოხერხდა"` -- "Suggestion failed"
+121. `"შემოთავაზებულია!"` (trivia) -- "Suggested!"
+122. `"შემოთავაზება წაიშალა"` -- "Suggestion removed"
+123. `"წაშლა ვერ მოხერხდა"` -- "Removal failed"
+124. `"საჭიროა მინიმუმ 2 შემოთავაზება"` -- "At least 2 suggestions needed"
+125. `"ხმის მიცემა დაიწყო!"` -- "Voting started!"
+126. `` `მაქსიმუმ ${MAX_VOTES} ხმის მიცემა შეგიძლია` `` -- "You can vote for max N"
+127. `"აირჩიე კატეგორიები"` (header, x2) -- "Choose Categories"
+128. `"არჩეულია:"` -- "Selected:"
+129. `"უკვე დამატებულია"` (x2) -- "Already added"
+130. `"აირჩიე კატეგორიები"` / `` `დამატება (${N})` `` -- "Choose categories" / "Add (N)"
+131. `"აირჩიე ტრივია"` -- "Choose Trivia"
+132. `"შენ ჯერ არ გაქვს ტრივიები"` (x2) -- "You don't have trivias yet"
+133. `"შენი შეთავაზებული:"` -- "Your suggestions:"
+134. `"კატეგორია"` / `"შენი ტრივია - გამოტოვებ"` -- "Category" / "Your trivia - you'll skip"
+135. `"ბიბლიოთეკიდან"` (x2) -- "From Library"
+136. `"ჩემი ტრივიებიდან"` (x2) -- "From My Trivias"
+137. `"მაქსიმალური რაოდენობა მიღწეულია"` -- "Maximum count reached"
+138. `"საჭიროა მინ. 2 კატეგორია"` / `"ხმის მიცემის დაწყება"` -- "Need min. 2 categories" / "Start Voting"
+139. `"კატეგორიების არჩევა"` -- "Choosing Categories" (guest heading)
+140. `"ჰოსტი ამატებს კატეგორიებს..."` -- "Host is adding categories..."
+141. `"მალე დაიწყება ხმის მიცემა"` -- "Voting will start soon"
+142. `"ჰოსტის არჩევანი"` -- "Host's choice"
+143. `"ხმის მიცემა"` -- "Voting" (header)
+144. `"აირჩიე მაქსიმუმ N კატეგორია"` -- "Choose max N categories"
+145. `"ხმა მისცა:"` -- "Voted:"
+146. `"ჰოსტის ტრივია"` / `"კატეგორია"` -- "Host's trivia" / "Category"
+147. `"შენი ხმები"` -- "Your votes"
+
+### ControllerDirectSelection.tsx
+148. `"კატეგორია დაემატა!"` -- "Category added!"
+149. `"დამატება ვერ მოხერხდა"` -- "Addition failed"
+150. `"უკვე არჩეულია!"` -- "Already selected!"
+151. `"დაემატა!"` (trivia) -- "Added!"
+152. `"წაიშალა რიგიდან"` -- "Removed from queue"
+153. `"წაშლა ვერ მოხერხდა"` -- "Removal failed"
+154. `"აირჩიე მინიმუმ 1 კატეგორია"` -- "Choose at least 1 category"
+155. `"აირჩიე კატეგორიები"` (header) -- "Choose Categories"
+156. `"არჩეულია:"` -- "Selected:"
+157. `"უკვე დამატებულია"` -- "Already added"
+158. `"აირჩიე კატეგორიები"` / `` `დამატება (${N})` `` -- "Choose categories" / "Add (N)"
+159. `"აირჩიე ტრივია"` -- "Choose Trivia"
+160. `"შენ ჯერ არ გაქვს ტრივიები"` -- "You don't have trivias yet"
+161. `"კატეგორია"` / `"შენი ტრივია"` -- "Category" / "Your trivia"
+162. `"ბიბლიოთეკიდან"` -- "From Library"
+163. `"ჩემი ტრივიებიდან"` -- "From My Trivias"
+164. `"აირჩიე კატეგორიები თამაშისთვის"` -- "Choose categories for the game"
+165. `"არჩეული რაუნდები:"` -- "Selected rounds:"
+166. `"აირჩიე მინ. 1 კატეგორია"` / `` `თამაშის დაწყება (${N} რაუნდი)` `` -- "Choose min. 1 category" / "Start Game (N rounds)"
+
+### QRCodeDisplay.tsx
+167. `"შემოუერთდი თამაშს"` -- "Join the Game" (default title prop)
+168. `"დაასკანერე QR კოდი შენი ტელეფონით"` -- "Scan QR code with your phone" (default subtitle prop)
+
+---
+
+## Implementation Plan
+
+### Step 1: Add ~170 New Locale Keys
+Add all keys to `src/locales/en.ts` and `src/locales/ka.ts` in a new `tv` namespace section within `extra` to keep them organized.
+
+### Step 2: Update 24 Files
+Each file will:
+1. Import `useLanguage` (if not already imported)
+2. Call `const { t } = useLanguage()` in the component
+3. Replace every hardcoded Georgian string with a `t("extra.xxx")` call
+
+Files to update:
+- `TVPairingScreenV3.tsx` (7 strings)
+- `TVPairingScreen.tsx` (4 strings)
+- `TVLobbyScreenV2.tsx` (11 strings)
+- `TVQuestionScreen.tsx` (2 strings)
+- `TVQuestionScreenV3.tsx` (3 strings)
+- `TVQuestionScreenV4.tsx` (2 strings)
+- `TVResultsScreen.tsx` (5 strings)
+- `TVResultsScreenV2.tsx` (5 strings)
+- `TVIdleScreen.tsx` (14 strings)
+- `TVRoundIntroScreen.tsx` (5 strings)
+- `TVPollScreen.tsx` (11 strings)
+- `TVPollResultsScreen.tsx` (5 strings)
+- `TVLeaderboardPanel.tsx` (4 strings)
+- `TVBrandingOverlay.tsx` (1 string)
+- `TVRoundQueueIndicator.tsx` (1 string)
+- `TVRevealScreenV2.tsx` (2 strings)
+- `TVGameOverScreen.tsx` (9 strings)
+- `TVScoreboardScreen.tsx` (3 strings)
+- `TVMirrorButton.tsx` (3 strings)
+- `ControllerCodeEntry.tsx` (7 strings)
+- `ControllerQuestion.tsx` (6 strings)
+- `ControllerPollResults.tsx` (8 strings)
+- `ControllerPollScreen.tsx` (30 strings)
+- `ControllerDirectSelection.tsx` (18 strings)
+- `QRCodeDisplay.tsx` (2 default prop strings)
+
+### Technical Notes
+- Many keys can be reused across files (e.g., "Leaderboard", "Category", "Round", "Waiting...")
+- Interpolation patterns like `t("extra.roundNofM", { n: roundNumber, m: totalRounds })` will be used for dynamic strings
+- Static config objects will get `t()` calls inside the component body
+- Some files like `TVMirrorModal.tsx` and `GuestJoinModal.tsx` are already fully translated -- no changes needed
+- `ControllerReveal.tsx`, `ControllerResults.tsx`, `ControllerLobby.tsx` are already fully translated -- no changes needed
+
+### Estimated Impact
+- ~170 new locale keys in `en.ts` and `ka.ts`
+- 24 component files updated
+- Zero Georgian strings remaining in TV/Controller user-facing screens after completion
