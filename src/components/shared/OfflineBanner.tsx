@@ -1,9 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { WifiOff } from "lucide-react";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function OfflineBanner() {
   const { isOnline } = useNetworkStatus();
+  const { t } = useLanguage();
 
   return (
     <AnimatePresence>
@@ -15,7 +17,7 @@ export function OfflineBanner() {
           className="fixed top-0 left-0 right-0 z-[9999] bg-destructive text-destructive-foreground px-4 py-2 flex items-center justify-center gap-2 safe-area-inset-top"
         >
           <WifiOff className="w-4 h-4" />
-          <span className="text-sm font-medium">ინტერნეტ კავშირი არ არის</span>
+          <span className="text-sm font-medium">{t("extra.noInternet")}</span>
         </motion.div>
       )}
     </AnimatePresence>

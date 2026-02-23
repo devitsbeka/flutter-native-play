@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { User, Plus } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { Avatar } from "@/components/shared/Avatar";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AccountSwitcherModalProps {
   isOpen: boolean;
@@ -20,6 +21,8 @@ export const AccountSwitcherModal = memo(function AccountSwitcherModal({
   onViewProfile,
   profile,
 }: AccountSwitcherModalProps) {
+  const { t } = useLanguage();
+
   const handleViewProfile = () => {
     onViewProfile();
     onClose();
@@ -30,10 +33,9 @@ export const AccountSwitcherModal = memo(function AccountSwitcherModal({
       isOpen={isOpen}
       onClose={onClose}
       variant="primary"
-      title="ექაუნთი"
+      title={t("extra.accountLabel")}
     >
       <div className="flex flex-col items-center gap-6 py-4">
-        {/* Profile Info */}
         <div className="flex flex-col items-center gap-3">
           <div className="relative">
             <Avatar
@@ -50,13 +52,11 @@ export const AccountSwitcherModal = memo(function AccountSwitcherModal({
             </motion.div>
           </div>
           <p className="text-lg font-bold text-foreground">
-            {profile?.nickname || "მომხმარებელი"}
+            {profile?.nickname || t("extra.userLabel")}
           </p>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-col gap-3 w-full max-w-[280px]">
-          {/* View Profile Button */}
           <motion.button
             onClick={handleViewProfile}
             className="relative w-full py-4 px-6 rounded-2xl font-bold text-white transition-all"
@@ -69,11 +69,10 @@ export const AccountSwitcherModal = memo(function AccountSwitcherModal({
           >
             <div className="flex items-center justify-center gap-3">
               <User className="w-5 h-5" />
-              <span className="text-base">პროფილის ნახვა</span>
+              <span className="text-base">{t("extra.viewProfile")}</span>
             </div>
           </motion.button>
 
-          {/* Add Account Button - Disabled */}
           <motion.button
             disabled
             className="relative w-full py-4 px-6 rounded-2xl font-bold transition-all opacity-50 cursor-not-allowed"
@@ -85,7 +84,7 @@ export const AccountSwitcherModal = memo(function AccountSwitcherModal({
           >
             <div className="flex items-center justify-center gap-3">
               <Plus className="w-5 h-5" />
-              <span className="text-base">ექაუნთის დამატება</span>
+              <span className="text-base">{t("extra.addAccount")}</span>
             </div>
           </motion.button>
         </div>

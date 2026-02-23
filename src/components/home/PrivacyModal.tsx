@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { GameModal } from "@/components/ui/game-modal";
 import { translateErrorMessage } from "@/utils/errorTranslations";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PrivacyModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
   const { user, signOut } = useAuth();
   const { notify } = useNotificationModal();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -27,16 +29,15 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
     setIsDeleting(true);
     try {
       const { data, error } = await supabase.functions.invoke("delete-user-account");
-      
       if (error) throw error;
       
       await signOut();
-      notify.success("ანგარიში წაიშალა", { description: "თქვენი ყველა მონაცემი წაიშალა." });
+      notify.success(t("extra.accountDeleted"), { description: t("extra.allDataDeleted") });
       onClose();
       navigate("/");
     } catch (error: any) {
       console.error("Account deletion error:", error);
-      notify.error("შეცდომა", { description: translateErrorMessage(error.message) });
+      notify.error(t("extra.errorStatus"), { description: translateErrorMessage(error.message) });
     } finally {
       setIsDeleting(false);
     }
@@ -48,10 +49,8 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
     setIsExporting(true);
     try {
       const { data, error } = await supabase.functions.invoke("export-user-data");
-      
       if (error) throw error;
       
-      // Create and download the JSON file
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -62,10 +61,10 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      notify.success("მონაცემები გადმოწერილია", { description: "თქვენი მონაცემების ფაილი მზადაა." });
+      notify.success(t("extra.dataDownloaded"), { description: t("extra.dataFileReady") });
     } catch (error: any) {
       console.error("Data export error:", error);
-      notify.error("შეცდომა", { description: translateErrorMessage(error.message) });
+      notify.error(t("extra.errorStatus"), { description: translateErrorMessage(error.message) });
     } finally {
       setIsExporting(false);
     }
@@ -74,20 +73,20 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
   const privacyItems = [
     {
       icon: Shield,
-      label: "კონფიდენციალურობის პოლიტიკა",
-      sublabel: "როგორ ვიცავთ თქვენს მონაცემებს",
+      label: t("extra.privacyPolicyLabel"),
+      sublabel: t("extra.privacyPolicySublabel"),
       action: () => { onClose(); navigate("/privacy-policy"); },
     },
     {
       icon: FileText,
-      label: "მომსახურების პირობები",
-      sublabel: "წესები და პირობები",
+      label: t("extra.termsLabel"),
+      sublabel: t("extra.termsSublabel"),
       action: () => { onClose(); navigate("/terms"); },
     },
     {
       icon: Download,
-      label: "მონაცემების ჩამოტვირთვა",
-      sublabel: isExporting ? "მიმდინარეობს..." : "გადმოწერეთ თქვენი ინფორმაცია",
+      label: t("extra.downloadDataLabel"),
+      sublabel: isExporting ? `${t("extra.processingLabel")}` : t("extra.downloadDataSublabel"),
       action: handleExportData,
       loading: isExporting,
       requiresAuth: true,
@@ -98,12 +97,11 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      title="კონფიდენციალურობა"
+      title={t("extra.privacyTitle")}
       hideFooter
     >
       <div className="space-y-2">
         {privacyItems.map((item) => {
-          // Skip items that require auth if user is not logged in
           if (item.requiresAuth && !user) return null;
           
           return (
@@ -130,7 +128,6 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           );
         })}
 
-        {/* Delete Account Section */}
         {user && (
           <div className="pt-4 border-t border-gray-200 mt-4">
             {!showDeleteConfirm ? (
@@ -143,8 +140,8 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
                   <Trash2 className="h-5 w-5 text-red-500" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="font-medium text-red-600">ანგარიშის წაშლა</p>
-                  <p className="text-sm text-red-500/70">სამუდამოდ წაშალეთ ყველა მონაცემი</p>
+                  <p className="font-medium text-red-600">{t("extra.deleteAccountLabel")}</p>
+                  <p className="text-sm text-red-500/70">{t("extra.deleteAllDataForever")}</p>
                 </div>
               </button>
             ) : (
@@ -153,7 +150,7 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
                 style={{ boxShadow: "0 2px 0 #FEE2E2" }}
               >
                 <p className="text-sm text-red-600 font-medium">
-                  დარწმუნებული ხართ? ეს მოქმედება შეუქცევადია.
+                  {t("extra.deleteConfirmPrompt")}
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -161,7 +158,7 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
                     className="flex-1 py-2 px-4 rounded-xl bg-gray-100 text-gray-700 font-medium"
                     style={{ boxShadow: "0 2px 0 #E5E7EB" }}
                   >
-                    გაუქმება
+                    {t("extra.cancelAction2")}
                   </button>
                   <button
                     onClick={handleDeleteAccount}
@@ -169,7 +166,7 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
                     className="flex-1 py-2 px-4 rounded-xl bg-red-500 text-white font-medium disabled:opacity-50"
                     style={{ boxShadow: "0 2px 0 #DC2626" }}
                   >
-                    {isDeleting ? "..." : "წაშლა"}
+                    {isDeleting ? "..." : t("extra.deleteAction2")}
                   </button>
                 </div>
               </div>

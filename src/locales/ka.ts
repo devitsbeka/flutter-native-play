@@ -2753,15 +2753,12 @@ export const ka = {
     playTriviaTV: "ითამაშე Trivia TV",
     shopGifts: "საჩუქრები მაღაზიაში",
     // DesktopLeftNav
-    navHome: "მთავარი",
     navSearch: "ძიება",
     navDiscover2: "აღმოჩენა",
-    navOnlineGame: "ონლაინ თამაში",
     navNotifications: "შეტყობინებები",
     navCreate: "შექმნა",
     navDashboard: "დეშბორდი",
     navProfile: "პროფილი",
-    navMore: "მეტი",
     // DesktopRightSidebar
     aboutUs: "ჩვენს შესახებ",
     helpLabel: "დახმარება",
@@ -2815,7 +2812,7 @@ export const ka = {
     // QuickPlayModal
     asyncChallenge48h: "ასინქრონული გამოწვევა (48 საათი)",
     // TVPollScreen
-    whatToPlay: "რა ვითამაშოთ?",
+    whatToPlayTV: "რა ვითამაშოთ?",
     voteNow: "ხმა მიეცით!",
     waitingSuggestions: "ველოდებით შემოთავაზებებს...",
     playersTitle: "მოთამაშეები",
@@ -2845,7 +2842,7 @@ export const ka = {
     // ControllerCountdown
     letsPlay: "ვთამაშობთ",
     gameStarted: "დაიწყო!",
-    getReady: "მოემზადე!",
+    getReadyController: "მოემზადე!",
     getReadyForAnswers: "მოემზადე პასუხებისთვის!",
     // ControllerQuestion
     yourCategoryBang: "შენი კატეგორიაა!",
@@ -2903,7 +2900,6 @@ export const ka = {
     vipXpBonusTitle: "2x XP ბონუსი",
     vipXpBonusDesc: "მიიღე ორმაგი XP ყველა თამაშში",
     vipNoAdsTitle: "რეკლამების გარეშე",
-    vipNoAdsDesc: "უწყვეტი თამაშის გამოცდილება",
     vipBadgeTitle: "VIP ბეჯი",
     vipBadgeDesc: "ოქროს გვირგვინი შენი სახელის გვერდით",
     vipDailyTitle: "ყოველდღიური ჯილდოები",
@@ -2911,14 +2907,11 @@ export const ka = {
     vipEarlyTitle: "ადრეული წვდომა",
     vipEarlyDesc: "ახალი კატეგორიები და ფუნქციები პირველებში",
     vipStatusTitle: "VIP სტატუსი",
-    vipStatusDesc: "ოქროს გვირგვინი შენი სახელის გვერდით",
     vipAvatarsTitle: "ექსკლუზიური ავატარები",
-    vipAvatarsDesc: "უნიკალური VIP ავატარები და ბეჯები",
     // CreateTriviaTypeModal
     gameRoomLabel2: "სათამაშო ოთახი",
     playWithFriendsTogether: "ითამაშე მეგობრებთან ერთად",
     // CollectionPreviewModal
-    collectionLabel: "კოლექცია",
     roundWordLabel: "რაუნდი",
     questionWordLabel: "კითხვა",
     playsCountLabel: "ნათამაშები",
