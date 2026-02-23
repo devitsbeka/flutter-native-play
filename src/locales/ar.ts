@@ -1,4 +1,0 @@
-// Arabic - extending English
-import type { KaTranslations } from './ka';
-import { en } from './en';
-export const ar: KaTranslations = { ...en, common: { ...en.common, play: "العب", back: "رجوع", next: "التالي", close: "إغلاق", save: "حفظ", cancel: "إلغاء", loading: "جاري التحميل...", error: "خطأ", success: "نجاح!", continue: "استمر", coins: "عملات", gems: "جواهر" }, nav: { ...en.nav, explore: "استكشف", map: "خريطة", play: "العب", rank: "الترتيب", profile: "الملف الشخصي", settings: "الإعدادات", home: "الرئيسية", menu: "القائمة" }, team: { ...en.team, multiplayer: "متعدد اللاعبين", signInToPlay: "سجل الدخول للعب مع الأصدقاء", friends: "الأصدقاء", yourRooms: "غرفك", noActiveRooms: "لا توجد غرف نشطة", join: "انضم", recentGames: "الألعاب الأخيرة", noGamesYet: "لا ألعاب بعد" }, auth: { ...en.auth, signIn: "تسجيل الدخول", signUp: "التسجيل", signOut: "تسجيل الخروج" }, featured: { ...en.featured, badgeNew: "جديد", badgePopular: "شائع", badgeBestPrice: "أفضل سعر" } };

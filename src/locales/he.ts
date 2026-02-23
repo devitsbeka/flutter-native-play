@@ -1,4 +1,0 @@
-// Hebrew - extending English
-import type { KaTranslations } from './ka';
-import { en } from './en';
-export const he: KaTranslations = { ...en, common: { ...en.common, play: "שחק", back: "חזור", next: "הבא", close: "סגור", save: "שמור", cancel: "בטל", loading: "טוען...", error: "שגיאה", success: "הצלחה!", continue: "המשך", coins: "מטבעות", gems: "יהלומים" }, nav: { ...en.nav, explore: "גלה", map: "מפה", play: "שחק", rank: "דירוג", profile: "פרופיל", settings: "הגדרות", home: "בית", menu: "תפריט" }, team: { ...en.team, multiplayer: "מרובה משתתפים", signInToPlay: "התחבר כדי לשחק עם חברים", friends: "חברים", yourRooms: "החדרים שלך", noActiveRooms: "אין חדרים פעילים", join: "הצטרף", recentGames: "משחקים אחרונים", noGamesYet: "עדיין אין משחקים" }, auth: { ...en.auth, signIn: "התחברות", signUp: "הרשמה", signOut: "התנתקות" }, featured: { ...en.featured, badgeNew: "חדש", badgePopular: "פופולרי", badgeBestPrice: "מחיר הכי טוב" } };
