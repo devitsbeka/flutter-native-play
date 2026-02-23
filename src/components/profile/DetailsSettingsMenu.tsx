@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { User, Lock, HelpCircle, Shield, ChevronRight, ChevronDown, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ export function DetailsSettingsMenu() {
   const navigate = useNavigate();
   const { profile, fetchProfile, signOut } = useAuth();
   const { notify } = useNotificationModal();
+  const { t } = useLanguage();
   
   // Name change state
   const [isNameOpen, setIsNameOpen] = useState(false);
@@ -123,7 +125,7 @@ export function DetailsSettingsMenu() {
               className="w-full"
               size="sm"
             >
-              {isNameLoading ? "იტვირთება..." : "შენახვა"}
+              {isNameLoading ? t("common.loading") : t("common.save")}
             </ChunkyButton>
           </div>
         </CollapsibleContent>
@@ -135,7 +137,7 @@ export function DetailsSettingsMenu() {
           <div className="p-2 rounded-full bg-purple-500/10">
             <Lock className="w-4 h-4 text-purple-500" />
           </div>
-          <span className="flex-1 text-foreground text-left">პაროლის შეცვლა</span>
+          <span className="flex-1 text-foreground text-left">{t("settings.changePassword")}</span>
           {isPasswordOpen ? (
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           ) : (
@@ -148,14 +150,14 @@ export function DetailsSettingsMenu() {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="ახალი პაროლი"
+              placeholder={t("settings.newPassword")}
               className="bg-background/50"
             />
             <Input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="პაროლის დადასტურება"
+              placeholder={t("settings.confirmPassword")}
               className="bg-background/50"
             />
             <ChunkyButton
@@ -164,7 +166,7 @@ export function DetailsSettingsMenu() {
               className="w-full"
               size="sm"
             >
-              {isPasswordLoading ? "იტვირთება..." : "შეცვლა"}
+              {isPasswordLoading ? t("common.loading") : t("extra.changeBtn")}
             </ChunkyButton>
           </div>
         </CollapsibleContent>

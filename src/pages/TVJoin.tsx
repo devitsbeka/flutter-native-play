@@ -11,6 +11,7 @@ import { ControllerRoundIntroWaiting } from '@/components/controller/ControllerR
 import { ControllerPollScreen } from '@/components/controller/ControllerPollScreen';
 import { ControllerPollResultsGuest } from '@/components/controller/ControllerPollResultsGuest';
 import { Loader2 } from 'lucide-react';
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 
 const TVJoinContent: React.FC = () => {
@@ -25,6 +26,7 @@ const TVJoinContent: React.FC = () => {
   
   const { phase, sessionId, questions, leaveSession, myPlayerId, players, refetchSessionData, currentQuestionIndex } = useTVGame();
   const [isJoined, setIsJoined] = useState(false);
+  const { t } = useLanguage();
 
   // Auto-redirect to home when game is idle for 120s
   // Use composite value (phase + question index) so every new question resets the timer
@@ -75,8 +77,8 @@ const TVJoinContent: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-purple-300 mx-auto mb-4 animate-spin" />
-          <h2 className="text-white text-xl font-bold mb-2">იტვირთება კითხვები...</h2>
-          <p className="text-purple-300 mb-6">გთხოვთ დაელოდოთ</p>
+          <h2 className="text-white text-xl font-bold mb-2">{t("extra.loadingQuestions")}</h2>
+          <p className="text-purple-300 mb-6">{t("extra.pleaseWait")}</p>
         </div>
       </div>
     );

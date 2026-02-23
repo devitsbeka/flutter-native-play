@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
@@ -22,6 +23,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
   const { joinSession } = useTVGame();
   const { user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const isUuid = (value: string) =>
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
@@ -117,7 +119,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
         <Loader2 className="w-12 h-12 text-purple-300 animate-spin mb-4" />
-        <p className="text-white text-lg">იტვირთება...</p>
+        <p className="text-white text-lg">{t("common.loading")}</p>
       </div>
     );
   }

@@ -614,7 +614,7 @@ export function VSScreen() {
             disabled={startButtonDisabled}
             className="w-full"
           >
-            {isStarting ? "იტვირთება..." : t("game.start")}
+            {isStarting ? t("common.loading") : t("game.start")}
           </ChunkyButton>
         </motion.div>
       </div>

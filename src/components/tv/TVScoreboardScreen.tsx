@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from 'framer-motion';
 import { Trophy, Star, RotateCcw, Home, Crown } from 'lucide-react';
 import { useTVGame, TVPlayer } from '@/contexts/TVGameContext';
@@ -23,6 +24,7 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
 }) => {
   const { players: contextPlayers, leaveSession } = useTVGame();
   const [showConfetti, setShowConfetti] = useState(false);
+  const { t } = useLanguage();
 
   // Use props if provided, otherwise fall back to context
   const players = propPlayers && propPlayers.length > 0 ? propPlayers : contextPlayers;
@@ -78,14 +80,14 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-8">
         <Trophy className="w-24 h-24 text-yellow-500 mb-6" />
-        <h1 className="text-4xl font-bold text-white mb-4">თამაში დასრულდა!</h1>
-        <p className="text-purple-200 text-xl mb-8">შედეგები იტვირთება...</p>
+        <h1 className="text-4xl font-bold text-white mb-4">{t("extra.gameFinished")}</h1>
+        <p className="text-purple-200 text-xl mb-8">{t("extra.resultsLoading2")}</p>
         <motion.div
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ repeat: Infinity, duration: 2 }}
           className="text-purple-300"
         >
-          მოლოდინი...
+          {t("extra.waiting")}
         </motion.div>
       </div>
     );

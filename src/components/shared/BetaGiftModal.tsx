@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -98,6 +99,7 @@ const POWER_UP_NAMES: Record<string, string> = {
 
 export function BetaGiftModal({ isOpen, onDismiss, onClaimed }: BetaGiftModalProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { activateVip } = useVipStatus();
   const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>("offer");
@@ -216,6 +218,7 @@ function OfferPhase({
   onClaim: () => void;
   onClose: () => void;
 }) {
+  const { t } = useLanguage();
   return (
     <motion.div
       key="offer"
@@ -299,7 +302,7 @@ function OfferPhase({
             showParticles
             icon={<img src={unboxingGiftIcon} alt="" className="w-7 h-7 object-contain" />}
           >
-            {claiming ? "იტვირთება..." : "მიიღე საჩუქარი"}
+            {claiming ? t("common.loading") : t("extra.claimGift")}
           </ChunkyButton>
         </motion.div>
 

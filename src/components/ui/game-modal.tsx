@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "./chunky-button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Sparkle particle for background decoration - memoized to prevent re-renders
 const ModalSparkle = React.memo(({ index }: { index: number }) => {
@@ -636,6 +637,7 @@ export function GameModalFooter({
   primaryVariant = "success",
   isLoading = false,
 }: GameModalFooterProps) {
+  const { t } = useLanguage();
   return (
     <div className="space-y-2">
       <ChunkyButton
@@ -646,7 +648,7 @@ export function GameModalFooter({
         disabled={isLoading}
         icon={primaryIcon}
       >
-        {isLoading ? "იტვირთება..." : primaryLabel}
+        {isLoading ? t("common.loading") : primaryLabel}
       </ChunkyButton>
       
       {secondaryLabel && onSecondary && (
