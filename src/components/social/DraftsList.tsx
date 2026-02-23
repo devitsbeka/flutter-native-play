@@ -2,19 +2,20 @@ import { motion } from "framer-motion";
 import { Trash2, FileText, Clock, Layers } from "lucide-react";
 import { useDrafts } from "@/hooks/useDrafts";
 import { useTriviaDrafts } from "@/hooks/useTriviaDrafts";
+import { useLanguage } from "@/contexts/LanguageContext";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
 
-function formatTimeAgo(date: Date) {
+function formatTimeAgo(date: Date, t: (key: string, params?: Record<string, string | number>) => string) {
   const diffMs = Date.now() - date.getTime();
   const diffMins = Math.max(0, Math.floor(diffMs / (1000 * 60)));
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMins < 60) return `${diffMins} წუთის წინ`;
-  if (diffHours < 24) return `${diffHours} საათის წინ`;
-  return `${diffDays} დღის წინ`;
+  if (diffMins < 60) return t("extra.draftsMinutesAgo", { count: diffMins });
+  if (diffHours < 24) return t("extra.draftsHoursAgo", { count: diffHours });
+  return t("extra.draftsDaysAgo", { count: diffDays });
 }
 
 interface DraftsListProps {
@@ -25,6 +26,7 @@ interface DraftsListProps {
 export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
   const { drafts: collectionDrafts, isLoading: isLoadingCollections, deleteDraft: deleteCollectionDraft, isDeletingDraft: isDeletingCollection } = useDrafts();
   const { drafts: triviaDrafts, isLoading: isLoadingTrivias, deleteDraft: deleteTriviaDraft, isDeletingDraft: isDeletingTrivia } = useTriviaDrafts();
+  const { t } = useLanguage();
 
   const isLoading = isLoadingCollections || isLoadingTrivias;
   const isDeletingDraft = isDeletingCollection || isDeletingTrivia;
@@ -48,7 +50,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
     <div className="pt-4">
       <div className="flex items-center gap-2 mb-3 px-1">
         <FileText className="w-[18px] h-[18px] text-white/60" />
-        <span className="text-[14px] font-medium text-white/60">შენახული დრაფტები</span>
+        <span className="text-[14px] font-medium text-white/60">{t("extra.draftsSavedDrafts")}</span>
       </div>
       
       <div className="space-y-2 max-h-full overflow-y-auto pr-1">
@@ -56,7 +58,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
         {triviaDrafts?.slice(0, 5).map((draft) => {
           const questionCount = Array.isArray(draft.questions) ? draft.questions.length : 0;
           const isPersonal = draft.draft_type === 'personal';
-          const displayTitle = draft.title || (isPersonal ? "უსათაურო MyTrivia" : "უსათაურო ტრივია");
+          const displayTitle = draft.title || (isPersonal ? t("extra.draftsUntitledMyTrivia") : t("extra.draftsUntitledTrivia"));
           
           return (
             <motion.div
@@ -86,13 +88,13 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                 {/* Mobile: 3 rows (title / count / date). Desktop: single meta row. */}
                 <div className="mt-[3px] flex flex-col gap-[6px] text-xs text-white/60 sm:mt-0 sm:flex-row sm:items-center sm:gap-2 sm:whitespace-nowrap">
                   <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="shrink-0">{questionCount} კითხვა</span>
+                    <span className="shrink-0">{t("extra.draftsQuestionCount", { count: questionCount })}</span>
                   </div>
                   <div className="hidden sm:block shrink-0">•</div>
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Clock className="w-3 h-3 shrink-0" />
                     <span className="truncate">
-                      {formatTimeAgo(new Date(draft.updated_at))}
+                      {formatTimeAgo(new Date(draft.updated_at), t)}
                     </span>
                   </div>
                 </div>
@@ -118,7 +120,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                   }}
                   className="px-3 py-1.5 text-xs font-medium text-white bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
                 >
-                  გაგრძელება
+                  {t("extra.draftsContinueBtn")}
                 </button>
               </div>
             </motion.div>
@@ -128,7 +130,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
         {/* Collection Drafts */}
         {collectionDrafts?.slice(0, 3).map((draft) => {
           const roundsConfig = draft.rounds_config as { subject: string }[] | undefined;
-          const subjects = roundsConfig?.map(r => r.subject).filter(Boolean).join(", ") || "უსათაურო";
+          const subjects = roundsConfig?.map(r => r.subject).filter(Boolean).join(", ") || t("extra.draftsUntitledLabel");
           const displayTitle = draft.title || subjects;
           const roundCount = roundsConfig?.length || 0;
           
@@ -165,13 +167,13 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                 <div className="mt-[3px] flex flex-col gap-[6px] text-xs text-white/60 sm:mt-0 sm:flex-row sm:items-center sm:gap-2 sm:whitespace-nowrap">
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     <Layers className="w-3 h-3 shrink-0" />
-                    <span className="shrink-0">{roundCount} რაუნდი</span>
+                    <span className="shrink-0">{t("extra.draftsRoundCount", { count: roundCount })}</span>
                   </div>
                   <div className="hidden sm:block shrink-0">•</div>
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Clock className="w-3 h-3 shrink-0" />
                     <span className="truncate">
-                      {formatTimeAgo(new Date(draft.updated_at))}
+                      {formatTimeAgo(new Date(draft.updated_at), t)}
                     </span>
                   </div>
                 </div>
@@ -197,7 +199,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                   }}
                   className="px-3 py-1.5 text-xs font-medium text-white bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
                 >
-                  გაგრძელება
+                  {t("extra.draftsContinueBtn")}
                 </button>
               </div>
             </motion.div>

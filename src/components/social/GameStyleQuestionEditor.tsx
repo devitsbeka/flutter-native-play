@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { ChevronLeft, ChevronRight, Copy, Trash2, Check, Plus, Edit3, ImageIcon, GripVertical, X, Lightbulb, Image, Globe, Lock, RefreshCw, Loader2, Sparkles, Smile } from "lucide-react";
@@ -132,6 +133,7 @@ function DraggableAnswerItem({
   letter: string;
   hasError: boolean;
 }) {
+  const { t } = useLanguage();
   const dragControls = useDragControls();
 
   if (isEditing) {
@@ -153,7 +155,7 @@ function DraggableAnswerItem({
               onKeyDown={onEditKeyDown}
               className="flex-1 bg-white/20 border-0 text-white placeholder:text-white/50 font-semibold"
               maxLength={answerMax}
-              placeholder="სწორი პასუხი..."
+              placeholder={t("extra.editorCorrectAnswerPlaceholder")}
             />
             <span className="text-xs text-white/70">{editValue.length}/{answerMax}</span>
           </div>
@@ -177,7 +179,7 @@ function DraggableAnswerItem({
               onKeyDown={onEditKeyDown}
               className="flex-1 border-0 font-semibold"
               maxLength={answerMax}
-              placeholder="პასუხი..."
+              placeholder={t("extra.editorAnswerPlaceholder")}
             />
             <span className="text-xs text-muted-foreground">{editValue.length}/{answerMax}</span>
           </div>
@@ -216,7 +218,7 @@ function DraggableAnswerItem({
               ? "bg-white text-emerald-500" 
               : "bg-[#7DD3FC] hover:bg-emerald-400 text-white"
           )}
-          title={answer.isCorrect ? "სწორი პასუხი" : "დააჭირე სწორად დასაყენებლად"}
+          title={answer.isCorrect ? t("extra.editorCorrectAnswerTitle") : t("extra.editorSetCorrectTitle")}
         >
           {answer.isCorrect ? <Check className="w-5 h-5" /> : `${letter}:`}
         </button>
@@ -231,7 +233,7 @@ function DraggableAnswerItem({
           )}>
             {answer.text || (
               <span className={answer.isCorrect ? "text-white/70" : "text-slate-400"}>
-                {answer.isCorrect ? "სწორი პასუხი..." : "პასუხი..."}
+                {answer.isCorrect ? t("extra.editorCorrectAnswerPlaceholder") : t("extra.editorAnswerPlaceholder")}
               </span>
             )}
           </span>
@@ -263,7 +265,7 @@ export function GameStyleQuestionEditor({
   onTitleChange,
   onSave,
   onBack,
-  saveButtonText = "შენახვა",
+  saveButtonText,
   showTitleEditor = true,
   subject,
   answerFormat = "4_answers",
@@ -286,6 +288,7 @@ export function GameStyleQuestionEditor({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const { t } = useLanguage();
   const [isUploading, setIsUploading] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
@@ -682,7 +685,7 @@ export function GameStyleQuestionEditor({
               onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
               autoFocus
               className="max-w-[180px] bg-white/20 border-white/30 text-white placeholder:text-white/70 font-bold text-center"
-              placeholder="თამაშის სახელი..."
+              placeholder={t("extra.editorGameNamePlaceholder")}
             />
           ) : (
             <button 
@@ -690,7 +693,7 @@ export function GameStyleQuestionEditor({
               className="flex items-center gap-2 text-white"
             >
               <span className="font-bold truncate max-w-[150px]">
-                {title || "თამაშის სახელი..."}
+                {title || t("extra.editorGameNamePlaceholder")}
               </span>
               <Edit3 className="w-4 h-4 text-white/70" />
             </button>
@@ -1122,12 +1125,12 @@ export function GameStyleQuestionEditor({
           {isSaving ? (
             <>
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              ინახება...
+              {t("extra.editorSavingBtn")}
             </>
           ) : (
             <>
               <Check className="w-5 h-5 mr-2" />
-              {saveButtonText}
+              {saveButtonText || t("extra.editorSaveBtn")}
             </>
           )}
         </ChunkyButton>
