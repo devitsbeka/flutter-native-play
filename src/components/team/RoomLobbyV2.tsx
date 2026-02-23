@@ -744,12 +744,12 @@ export function RoomLobbyV2() {
                 <DropdownMenuContent align="end" className="w-48 bg-card border-border">
                   <DropdownMenuItem onClick={() => setShowHowItWorks(true)} className="cursor-pointer">
                     <Info className="w-4 h-4 mr-2" />
-                    როგორ მუშაობს
+                    {t("extra.rlHowItWorks")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLeaveConfirm} className="cursor-pointer">
                     <LogOut className="w-4 h-4 mr-2" />
-                    ოთახიდან გასვლა
+                    {t("extra.rlLeaveRoom")}
                   </DropdownMenuItem>
                   {isHost && (
                     <DropdownMenuItem 
@@ -757,7 +757,7 @@ export function RoomLobbyV2() {
                       className="cursor-pointer text-destructive focus:text-destructive"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      ოთახის წაშლა
+                      {t("extra.rlDeleteRoom")}
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
@@ -1080,21 +1080,21 @@ export function RoomLobbyV2() {
               <AlertTriangle className="w-6 h-6 text-destructive" />
             </div>
             <AlertDialogTitle className="text-foreground font-display text-xl">
-              ოთახის წაშლა
+              {t("extra.rlDeleteRoom")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              დარწმუნებული ხარ, რომ გინდა ამ ოთახის წაშლა? ეს მოქმედება შეუქცევადია.
+              {t("extra.rlDeleteRoomConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row gap-3 sm:justify-center mt-2">
             <AlertDialogCancel className="flex-1 bg-secondary text-secondary-foreground border-border hover:bg-secondary/80 rounded-xl">
-              გაუქმება
+              {t("extra.rlCancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteRoom}
               className="flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
             >
-              წაშლა
+              {t("extra.rlDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1106,32 +1106,32 @@ export function RoomLobbyV2() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-foreground font-display text-xl">
               <Info className="w-5 h-5 text-primary" />
-              როგორ მუშაობს
+              {t("extra.rlHowItWorks")}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-3 text-left text-muted-foreground">
                 <div className="flex items-start gap-3">
                   <span className="text-lg">1️⃣</span>
-                  <p>გააზიარეთ ლინკი მეგობრებს რომ შემოგვიერთდნენ</p>
+                  <p>{t("extra.rlHowStep1")}</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-lg">2️⃣</span>
-                  <p>მასპინძელი იწყებს თამაშს როცა ყველა მზადაა</p>
+                  <p>{t("extra.rlHowStep2")}</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-lg">3️⃣</span>
-                  <p>უპასუხეთ კითხვებს და დააგროვეთ ქულები</p>
+                  <p>{t("extra.rlHowStep3")}</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-lg">📺</span>
-                  <p>გამოიყენეთ TV რეჟიმი წვეულებისთვის - კითხვები გამოჩნდება ტელევიზორზე!</p>
+                  <p>{t("extra.rlHowTV")}</p>
                 </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-4">
             <AlertDialogAction className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
-              გასაგებია
+              {t("extra.rlGotIt")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
