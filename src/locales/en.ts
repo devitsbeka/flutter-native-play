@@ -752,6 +752,7 @@ export const en: KaTranslations = {
     notEnoughGems: "Not enough gems!",
     notEnoughCoins: "Not enough coins",
     purchaseFailed: "Purchase failed",
+    frameUnlocked: "frame unlocked!",
     exchangeFailed: "Exchange failed",
     loginRequired: "Login required for purchase!",
     purchaseSuccess: "Successfully purchased!",

@@ -746,6 +746,7 @@ export const ka = {
     notEnoughGems: "არ გაქვს საკმარისი ალმასი!",
     notEnoughCoins: "არ გაქვს საკმარისი მონეტა",
     purchaseFailed: "შეძენა ვერ მოხერხდა",
+    frameUnlocked: "ჩარჩო გახსნილია!",
     exchangeFailed: "გაცვლა ვერ მოხერხდა",
     loginRequired: "შესვლა საჭიროა შეძენისთვის!",
     purchaseSuccess: "წარმატებით შეძენილია!",

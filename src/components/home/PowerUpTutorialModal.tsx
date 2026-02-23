@@ -1,5 +1,6 @@
 import { GameModal } from "@/components/ui/game-modal";
 import { PowerUpBadge, PowerUpType } from "@/components/game/PowerUpBadge";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PowerUpTutorialModalProps {
   isOpen: boolean;
@@ -7,26 +8,31 @@ interface PowerUpTutorialModalProps {
   powerUpType: PowerUpType | null;
 }
 
-const POWER_UP_INFO: Record<PowerUpType, { name: string; description: string }> = {
-  "fifty-fifty": {
-    name: "50/50",
-    description: "ორი არასწორი პასუხი გაქრება და დარჩება მხოლოდ ერთი არასწორი და სწორი პასუხი. ეს გაგიადვილებს არჩევანს!",
-  },
-  "freeze": {
-    name: "გაყინვა",
-    description: "დრო გაიყინება 10 წამით. შეგიძლია მშვიდად დაფიქრდე კითხვაზე დროის დაკარგვის გარეშე!",
-  },
-  "replace": {
-    name: "ჩანაცვლება",
-    description: "მიმდინარე კითხვა შეიცვლება ახალით. გამოიყენე როცა კითხვა ძალიან რთულია!",
-  },
-  "time-drain": {
-    name: "დრო+",
-    description: "დაემატება 10 წამი დროს. გამოიყენე როცა დრო იწურება!",
-  },
-};
+function usePowerUpInfo() {
+  const { t } = useLanguage();
+  const info: Record<PowerUpType, { name: string; description: string }> = {
+    "fifty-fifty": {
+      name: t("extra.powerFiftyFifty"),
+      description: t("extra.powerFiftyFiftyDesc"),
+    },
+    "freeze": {
+      name: t("extra.powerFreeze"),
+      description: t("extra.powerFreezeDesc"),
+    },
+    "replace": {
+      name: t("extra.powerReplace"),
+      description: t("extra.powerReplaceDesc"),
+    },
+    "time-drain": {
+      name: t("extra.powerTimeDrain"),
+      description: t("extra.powerTimeDrainDesc"),
+    },
+  };
+  return info;
+}
 
 export function PowerUpTutorialModal({ isOpen, onClose, powerUpType }: PowerUpTutorialModalProps) {
+  const POWER_UP_INFO = usePowerUpInfo();
   if (!powerUpType) return null;
 
   const info = POWER_UP_INFO[powerUpType];

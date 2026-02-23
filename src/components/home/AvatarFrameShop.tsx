@@ -1,6 +1,7 @@
 import { toastIcon, ICON_URLS } from "@/lib/toast-icons";
 import crownIcon from "@/assets/icons/crown-3d.png";
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { Check, Lock, Sparkles, Crown } from "lucide-react";
 import { useAvatarFrames, AVATAR_FRAMES, AvatarFrame } from "@/hooks/useAvatarFrames";
@@ -45,6 +46,7 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
   const { isVip } = useVipStatus();
   const { playSound } = useSound();
   const { notify } = useNotificationModal();
+  const { t } = useLanguage();
   const [selectedFrame, setSelectedFrame] = useState<AvatarFrame | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
 
@@ -125,10 +127,10 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
         zIndex: 9999,
       });
 
-      notify.success(`${frame.name} ჩარჩო გახსნილია!`, { icon: toastIcon(ICON_URLS.partyPopper) });
+      notify.success(`${frame.name} ${t('shop.frameUnlocked')}`, { icon: toastIcon(ICON_URLS.partyPopper) });
     } catch (error) {
       console.error("Purchase failed:", error);
-      notify.error("შეძენა ვერ მოხერხდა");
+      notify.error(t('shop.purchaseFailed'));
     } finally {
       setIsPurchasing(false);
     }
