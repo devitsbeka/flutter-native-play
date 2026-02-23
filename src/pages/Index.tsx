@@ -868,10 +868,10 @@ export default function Index() {
                     {/* Auth buttons */}
                     <div className="flex items-center gap-3 mt-3">
                       <motion.button onClick={() => navigate("/auth")} className="px-5 py-2.5 rounded-full bg-white border border-border shadow-md text-sm font-semibold text-foreground" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        შესვლა
+                        {t("common.signIn")}
                       </motion.button>
                       <motion.button onClick={() => navigate("/auth?mode=signup")} className="px-5 py-2.5 rounded-full bg-primary shadow-md text-sm font-semibold text-primary-foreground" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        გაწევრიანდი უფასოდ
+                        {t("extra.joinFreeBtn")}
                       </motion.button>
                     </div>
                   </motion.div>
@@ -1209,7 +1209,7 @@ export default function Index() {
                   className="flex flex-col items-center mb-10 pointer-events-auto"
                 >
                   <span className="font-slackey text-gray-800 font-black" style={{ fontSize: 32, fontWeight: 900 }}>
-                    გამარჯობა!
+                    {t("common.hello")}
                   </span>
                   <motion.button
                     onClick={() => navigate("/auth")}
@@ -1218,7 +1218,7 @@ export default function Index() {
                     whileTap={{ scale: 0.98 }}
                   >
                     <p className="text-base text-gray-600 font-medium text-center leading-relaxed">
-                      შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
+                      {t("extra.createProfilePlayFree")}
                     </p>
                   </motion.button>
                 </motion.div>
