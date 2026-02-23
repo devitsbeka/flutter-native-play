@@ -239,8 +239,8 @@ export default function TriviaLobby() {
             {/* Leaderboard Header */}
             <div className="flex items-center gap-2 p-4 border-b border-border">
               <img src={trophy3d} alt="" className="w-5 h-5 object-contain" />
-              <h2 className="font-bold text-foreground">ლიდერბორდი</h2>
-              <span className="text-xs text-muted-foreground ml-auto">{stats.uniquePlayers || leaderboard.length} მოთამაშე</span>
+              <h2 className="font-bold text-foreground">{t("extra.leaderboardTitle")}</h2>
+              <span className="text-xs text-muted-foreground ml-auto">{t("extra.playersCount", { count: stats.uniquePlayers || leaderboard.length })}</span>
             </div>
 
             {/* Leaderboard List - scrollable */}
@@ -371,7 +371,7 @@ export default function TriviaLobby() {
               onClick={() => setIsEditModalOpen(true)}
             >
               <Pencil className="w-5 h-5" />
-              რედაქტირება
+              {t("extra.editBtn")}
             </ChunkyButton>
           )}
           <ChunkyButton variant="primary" size="lg" className="w-full gap-2" onClick={handlePlay}>
