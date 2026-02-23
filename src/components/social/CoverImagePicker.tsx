@@ -216,7 +216,7 @@ export function CoverImagePicker({
         {/* Preview title */}
         <div className="absolute inset-0 flex items-center justify-center">
           <h4 className="text-lg font-bold text-white text-center px-4 drop-shadow-lg line-clamp-2">
-            {title || "სათაური"}
+            {title || t("extra.editDefaultTitle")}
           </h4>
         </div>
 
@@ -279,7 +279,7 @@ export function CoverImagePicker({
       {previousGenerations.length > 0 && (
         <div className="space-y-2">
           <label className="text-xs font-medium text-muted-foreground">
-            თქვენი გენერაციები ({previousGenerations.length}/{MAX_GENERATIONS})
+            {t("extra.yourGenerations", { current: previousGenerations.length, max: MAX_GENERATIONS })}
           </label>
           <div className="grid grid-cols-3 gap-2">
             {previousGenerations.map((gen) => (
