@@ -1,6 +1,7 @@
 import React from "react";
 import { Users, Gamepad2, Sparkles, Folder, Crown } from "lucide-react";
 import { FriendMiniCard, RoomMiniCard, TriviaMiniCard, CollectionMiniCard } from "./SearchMiniCards";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { Friend } from "@/hooks/useFriends";
 import type { MyRoom } from "@/hooks/useMyRooms";
 
@@ -60,6 +61,7 @@ export function SearchHorizontalLists({
   onSelectTrivia,
   onSelectCollection,
 }: SearchHorizontalListsProps) {
+  const { t } = useLanguage();
   // Filter host rooms for "My Trivia Parties"
   const myParties = rooms.filter(r => r.is_host);
   const allRooms = rooms;
@@ -68,7 +70,7 @@ export function SearchHorizontalLists({
     <div className="space-y-4 py-4">
       {/* Friends Section */}
       <HorizontalSection 
-        title="მეგობრები" 
+        title={t("extra.ssFriends")} 
         icon={Users}
         isEmpty={friends.length === 0}
       >
@@ -83,7 +85,7 @@ export function SearchHorizontalLists({
 
       {/* Rooms Section */}
       <HorizontalSection 
-        title="ოთახები" 
+        title={t("extra.shRooms")} 
         icon={Gamepad2}
         isEmpty={allRooms.length === 0}
       >
@@ -98,7 +100,7 @@ export function SearchHorizontalLists({
 
       {/* Trivias Section */}
       <HorizontalSection 
-        title="ტრივიები" 
+        title={t("extra.shTrivias")} 
         icon={Sparkles}
         isEmpty={trivias.length === 0}
       >
@@ -113,7 +115,7 @@ export function SearchHorizontalLists({
 
       {/* Collections Section */}
       <HorizontalSection 
-        title="კოლექციები" 
+        title={t("extra.shCollections")} 
         icon={Folder}
         isEmpty={collections.length === 0}
       >

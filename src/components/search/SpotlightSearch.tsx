@@ -34,6 +34,7 @@ import { useMyRooms } from "@/hooks/useMyRooms";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections } from "@/hooks/useCollections";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { Input } from "@/components/ui/input";
@@ -45,17 +46,18 @@ interface SpotlightSearchProps {
   variant?: "bar" | "button";
 }
 
-const COMMANDS = [
-  { command: "/newroom", label: "ახალი ოთახის შექმნა", icon: Plus, action: "create-room" },
-  { command: "/settings", label: "პარამეტრები", icon: Settings, action: "navigate", path: "/settings" },
-  { command: "/profile", label: "ჩემი პროფილი", icon: User, action: "navigate", path: "/profile" },
-  { command: "/play", label: "თამაშის დაწყება", icon: Gamepad2, action: "navigate", path: "/game" },
-  { command: "/shop", label: "მაღაზია", icon: Store, action: "navigate", path: "/power-ups" },
-  { command: "/leaderboard", label: "ლიდერბორდი", icon: Trophy, action: "navigate", path: "/leaderboards" },
-  { command: "/notifications", label: "შეტყობინებები", icon: Bell, action: "navigate", path: "/notifications" },
-  { command: "/help", label: "დახმარება", icon: HelpCircle, action: "navigate", path: "/support" },
-  { command: "/team", label: "გუნდი", icon: Users, action: "navigate", path: "/team" },
-  { command: "/logout", label: "გასვლა", icon: LogOut, action: "logout" },
+// Command definitions - labels will be resolved via t() at render time
+const COMMAND_KEYS = [
+  { command: "/newroom", labelKey: "extra.ssCreateNewRoom", icon: Plus, action: "create-room" as const },
+  { command: "/settings", labelKey: "extra.ssSettings", icon: Settings, action: "navigate" as const, path: "/settings" },
+  { command: "/profile", labelKey: "extra.ssMyProfile", icon: User, action: "navigate" as const, path: "/profile" },
+  { command: "/play", labelKey: "extra.ssStartGame", icon: Gamepad2, action: "navigate" as const, path: "/game" },
+  { command: "/shop", labelKey: "extra.ssShop", icon: Store, action: "navigate" as const, path: "/power-ups" },
+  { command: "/leaderboard", labelKey: "extra.ssLeaderboard", icon: Trophy, action: "navigate" as const, path: "/leaderboards" },
+  { command: "/notifications", labelKey: "extra.ssNotifications", icon: Bell, action: "navigate" as const, path: "/notifications" },
+  { command: "/help", labelKey: "extra.ssHelp", icon: HelpCircle, action: "navigate" as const, path: "/support" },
+  { command: "/team", labelKey: "extra.ssTeam", icon: Users, action: "navigate" as const, path: "/team" },
+  { command: "/logout", labelKey: "extra.ssLogout", icon: LogOut, action: "logout" as const },
 ];
 
 const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = "bar" }) => {
@@ -70,6 +72,13 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { guardPlay } = usePlayGuard();
+  const { t } = useLanguage();
+  
+  // Resolve command labels with current language
+  const COMMANDS = useMemo(() => 
+    COMMAND_KEYS.map(cmd => ({ ...cmd, label: t(cmd.labelKey) })),
+    [t]
+  );
   
   // Data hooks
   const { categories } = useCategories();
@@ -312,7 +321,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                 <Input
                   ref={mobileInputRef}
                   type="text"
-                  placeholder="ძებნა..."
+                  placeholder={t("extra.ssSearchPlaceholder")}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="pl-10 pr-10 h-11 rounded-full bg-muted border-0"
@@ -361,7 +370,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                filteredCollections.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12">
                   <Search className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                  <p className="text-muted-foreground text-sm">არაფერი მოიძებნა</p>
+                  <p className="text-muted-foreground text-sm">{t("extra.ssNothingFound")}</p>
                 </div>
               )}
             </div>
@@ -396,7 +405,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleInputKeyDown}
-            placeholder="ძებნა..."
+            placeholder={t("extra.ssSearchPlaceholder")}
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
           />
           <kbd 
@@ -412,7 +421,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
       {!isMobile && (
         <CommandDialog open={open} onOpenChange={handleOpenChange}>
           <CommandInput 
-            placeholder={isCommand ? "შეიყვანე ბრძანება..." : "ძებნა კატეგორიებში, მეგობრებში, ოთახებში..."}
+            placeholder={isCommand ? t("extra.ssEnterCommand") : t("extra.ssSearchInCategoriesFriendsRooms")}
             value={query}
             onValueChange={setQuery}
           />
@@ -420,16 +429,16 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             <CommandEmpty>
               <div className="flex flex-col items-center gap-2 py-6">
                 <Search className="w-10 h-10 text-muted-foreground/50" />
-                <p className="text-sm text-muted-foreground">არაფერი მოიძებნა</p>
+                <p className="text-sm text-muted-foreground">{t("extra.ssNothingFound")}</p>
                 <p className="text-xs text-muted-foreground/70">
-                  სცადე <span className="font-mono bg-muted px-1 rounded">/</span> ბრძანებებისთვის
+                  {t("extra.ssTryCommands")} <span className="font-mono bg-muted px-1 rounded">/</span> {t("extra.ssTryCommandsSuffix")}
                 </p>
               </div>
             </CommandEmpty>
 
             {/* Commands Group (when starts with /) */}
             {isCommand && filteredCommands.length > 0 && (
-              <CommandGroup heading="ბრძანებები">
+              <CommandGroup heading={t("extra.ssCommands")}>
                 {filteredCommands.map((cmd) => (
                   <CommandItem 
                     key={cmd.command}
@@ -451,7 +460,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             {/* Quick Actions (when no query) */}
             {!isCommand && !query && (
               <>
-                <CommandGroup heading="სწრაფი მოქმედებები">
+                <CommandGroup heading={t("extra.ssQuickActions")}>
                   <CommandItem 
                     onSelect={() => handleCommandSelect(COMMANDS[0])}
                     className="flex items-center gap-3 cursor-pointer"
@@ -459,7 +468,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                     <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
                       <Plus className="w-4 h-4 text-white" />
                     </div>
-                    <span>ახალი ოთახის შექმნა</span>
+                    <span>{t("extra.ssCreateNewRoom")}</span>
                     <span className="ml-auto text-xs text-muted-foreground font-mono">/newroom</span>
                   </CommandItem>
                   <CommandItem 
@@ -472,7 +481,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                     <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500">
                       <Zap className="w-4 h-4 text-white" />
                     </div>
-                    <span>თამაშის დაწყება</span>
+                    <span>{t("extra.ssStartGame")}</span>
                   </CommandItem>
                   <CommandItem 
                     onSelect={() => { setOpen(false); navigate("/discover"); }}
@@ -481,7 +490,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                     <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
                       <Search className="w-4 h-4 text-white" />
                     </div>
-                    <span>აღმოაჩინე</span>
+                    <span>{t("extra.ssDiscover")}</span>
                   </CommandItem>
                 </CommandGroup>
                 <CommandSeparator />
@@ -490,7 +499,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
 
             {/* Categories */}
             {!isCommand && filteredCategories.length > 0 && (
-              <CommandGroup heading="კატეგორიები">
+              <CommandGroup heading={t("extra.ssCategories")}>
                 {filteredCategories.map((category) => (
                   <CommandItem 
                     key={category.id}
@@ -506,7 +515,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                     <span>{category.name}</span>
                     {category.totalLevels && (
                       <span className="ml-auto text-xs text-muted-foreground">
-                        {category.totalLevels} დონე
+                        {category.totalLevels} {t("extra.ssLevels")}
                       </span>
                     )}
                   </CommandItem>
@@ -518,7 +527,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             {!isCommand && filteredFriends.length > 0 && (
               <>
                 <CommandSeparator />
-                <CommandGroup heading="მეგობრები">
+                <CommandGroup heading={t("extra.ssFriends")}>
                   {filteredFriends.slice(0, 5).map((friend) => (
                     <CommandItem 
                       key={friend.id}
@@ -534,8 +543,8 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                       <span>{friend.nickname}</span>
                       {friend.isOnline && (
                         <span className="ml-auto flex items-center gap-1.5 text-xs text-green-600">
-                          <span className="w-2 h-2 rounded-full bg-green-500" />
-                          ონლაინ
+                         <span className="w-2 h-2 rounded-full bg-green-500" />
+                          {t("extra.ssOnline")}
                         </span>
                       )}
                     </CommandItem>
@@ -548,7 +557,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             {!isCommand && filteredRooms.length > 0 && (
               <>
                 <CommandSeparator />
-                <CommandGroup heading="თამაშის ოთახები">
+                <CommandGroup heading={t("extra.ssGameRooms")}>
                   {filteredRooms.slice(0, 5).map((room) => (
                     <CommandItem 
                       key={room.id}
@@ -561,12 +570,12 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                       <div className="flex flex-col">
                         <span>{room.room_name || room.room_code}</span>
                         <span className="text-xs text-muted-foreground">
-                          {room.participants?.length || 0} მოთამაშე
+                          {room.participants?.length || 0} {t("extra.ssPlayers")}
                         </span>
                       </div>
                       {room.status === "playing" && (
                         <span className="ml-auto px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
-                          მიმდინარე
+                          {t("extra.ssOngoing")}
                         </span>
                       )}
                     </CommandItem>
@@ -579,7 +588,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             {!isCommand && (
               <>
                 <CommandSeparator />
-                <CommandGroup heading="მაღაზია">
+                <CommandGroup heading={t("extra.ssShop")}>
                   <CommandItem 
                     onSelect={() => { setOpen(false); navigate("/power-ups"); }}
                     className="flex items-center gap-3 cursor-pointer"
@@ -587,7 +596,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                     <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500">
                       <Zap className="w-4 h-4 text-white" />
                     </div>
-                    <span>ძალები</span>
+                    <span>{t("extra.ssPowers")}</span>
                   </CommandItem>
                   <CommandItem 
                     onSelect={() => { setOpen(false); navigate("/vip"); }}
