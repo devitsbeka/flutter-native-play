@@ -1,96 +1,64 @@
 
-## Strategy: Generate 8,000+ English Questions via Bulk Import
 
-### The Problem
-The current in-app generation pipeline (`generate-category-trivia`) is hardcoded for Georgian language with Georgian prompts, topic guidance, and exclusion lists. Adapting it for English and running 8,000 questions through it would be slow (rate limits), expensive, and error-prone.
+## Make Language Switching Actually Work End-to-End
 
-### Recommended Approach: External AI Generation + Bulk Import
+### Problem
+Right now there are **two disconnected language systems**:
+1. **UI strings** (`LanguageContext` / `t()` function) — hardcoded to Georgian, `setLanguage` is a no-op
+2. **Questions/Categories** (`preferredLanguage` in localStorage) — used by question fetching and category hooks, but never actually set by the language switcher
 
-Use external AI agents (Claude, GPT, etc.) with the existing JSON schema template and quality guide to generate ~200 English questions per category across 41 global categories, then import via the Bulk Import system.
+Result: switching language does nothing meaningful. Category names always show in Georgian (even in admin), and UI strings never change.
 
-### What Needs to Change
+### What Will Change
 
-**1. Update the JSON schema and quality guide for English**
+**1. Unlock LanguageContext (currently frozen to Georgian)**
+- Remove the hardcoded `DEFAULT_LANGUAGE` override in `LanguageProvider`
+- Add `useState` + `localStorage` sync for `preferredLanguage`
+- Make `setLanguage` actually persist the choice and update `currentTranslations`
+- The `t()` function will then return strings from the selected language (en, fr, etc.)
 
-The existing `public/question-import-schema.json` and `public/question-quality-guide.md` already support English, but we should add:
-- A ready-to-use prompt template section in the quality guide specifically for English generation
-- A list of the 41 eligible categories (excluding the 4 Georgian-specific ones)
-- Target counts per category (~200 each)
+**2. Admin: Language Question Browser shows translated category names**
+- In `LanguageQuestionBrowser.tsx`, when language is not `ka`, fetch `category_translations` for that language
+- Display English category names (e.g., "Astronomy" instead of "ასტრონომია") when browsing English questions
 
-**2. Create a dedicated English generation prompt file**
+**3. User-facing app: full language switch from Settings**
+- Add a language selector to `SettingsModal` (or ensure the existing `LanguageSwitcher` is accessible)
+- When user picks English:
+  - `preferredLanguage` localStorage key is set to `en`
+  - All UI strings switch to English via `t()`
+  - Questions load from the `en` bucket (already works via `questionService.getPreferredLanguage()`)
+  - Categories show English names (already works via `useCategories` which fetches `category_translations`)
+  - VS mode, category mode, all game modes use English questions
 
-New file: `public/english-generation-prompt.md`
-
-A complete, copy-paste-ready prompt for external AI agents containing:
-- All 41 global category slugs with English names
-- The exact JSON output format expected
-- All quality rules (65-char question limit, 20-char answer limit, no answer-in-question, etc.)
-- Icon keyword instructions
-- Difficulty distribution (30% easy, 50% medium, 20% hard)
-- Target: ~200 questions per category
-- Instructions to split output into batches of 50 questions per category for manageability
-
-**3. Enhance Bulk Import to handle large English batches**
-
-Minor updates to `src/pages/admin/import/BulkImport.tsx`:
-- Add a progress indicator for large imports (1000+ questions)
-- Add category-level stats in the preview (show how many questions per category)
-- Auto-set language to "en" when all questions are English
-
-### Category Breakdown (41 categories, ~200 each = ~8,200 questions)
-
-| Group | Categories | Count |
-|-------|-----------|-------|
-| Science | astronomy, biology, chemistry, physics, math, science, geology, ecology, medicine | 9 |
-| History/Culture | world_history, military_history, archaeology, religion_mythology, philosophy | 5 |
-| Geography | geography, space, nature, languages | 4 |
-| Technology | programming, technology, robotics_ai | 3 |
-| Entertainment | movies, tv_series, music, video_games, anime_manga, pop_culture, celebrities | 7 |
-| Society | politics, economics, psychology, fashion, social_media, memes_internet | 6 |
-| Arts | art, architecture, world_cuisine | 3 |
-| Misc | sports, animals, fun_facts, myths_reality | 4 |
-
-**Excluded (Georgian-specific):** georgian_history, georgian_culture, georgian_literature, georgian_cuisine
-
-### Workflow
-
-```text
-Step 1: Generate the English prompt file (public/english-generation-prompt.md)
-        - Contains everything an AI agent needs to produce valid questions
-
-Step 2: You give this prompt to external AI agents (Claude/GPT)
-        - Ask them to generate 200 questions per category in batches
-        - Output: JSON files following the schema
-
-Step 3: Import via /admin/import -> Bulk Import tab
-        - Upload JSON file(s)
-        - Auto-validation + category mapping
-        - Auto-icon assignment via edge function
-        - Preview, review, approve
-
-Step 4: Questions go to Library or Production
-```
+**4. Standalone `t()` function also respects selected language**
+- The exported standalone `t()` (used outside React) currently hardcodes `DEFAULT_LANGUAGE` — update it to read from `localStorage`
 
 ### Technical Details
 
-**Files to create:**
-- `public/english-generation-prompt.md` -- Complete prompt template for AI agents with all 41 categories, rules, and expected JSON format
-
 **Files to modify:**
-- `public/question-quality-guide.md` -- Add English-specific section with the 41 eligible categories
-- `src/pages/admin/import/BulkImport.tsx` -- Add progress bar for large imports, per-category stats in preview
 
-### Cost Estimate
+| File | Change |
+|------|--------|
+| `src/contexts/LanguageContext.tsx` | Add `useState` for language, read/write `localStorage('preferredLanguage')`, make `setLanguage` functional, load correct translations object |
+| `src/components/admin/flow/LanguageQuestionBrowser.tsx` | Fetch `category_translations` for non-`ka` languages and use translated names in the category list |
+| `src/components/home/SettingsModal.tsx` | Add language picker section (flag + name + dropdown) |
+| `src/lib/i18n.ts` | Update standalone `t` re-export to use localStorage language |
 
-Using external AI agents (e.g., Claude or GPT) to generate 8,200 questions:
-- Approximately $5-15 total (much cheaper than the in-app pipeline since no fact-checking or research steps)
-- The quality guide ensures the AI agent produces correctly formatted output
-- Post-import, you can optionally run the quality review from /admin/review to score them
+**No changes needed (already working):**
+- `src/services/questionService.ts` — reads `preferredLanguage` from localStorage
+- `src/utils/questionFetcher.ts` — same
+- `src/hooks/useCategories.ts` — already fetches `category_translations` and listens to storage changes
+- `src/locales/*.ts` — all 19 translation files already exist
 
-### Why This Approach Wins
+### Flow After Implementation
 
-1. **Speed**: External AI can generate 200 questions in one shot vs. batches of 5-10 in-app
-2. **Cost**: No research, fact-check, or translation steps needed (questions are natively English)
-3. **Quality**: The schema + quality guide enforce all constraints upfront
-4. **Flexibility**: You can use any AI model, iterate on batches, and review before importing
-5. **Icons**: The bulk import auto-assigns icons via the existing edge function
+```text
+User opens Settings -> picks "English"
+  -> localStorage.preferredLanguage = "en"
+  -> LanguageContext re-renders with English translations
+  -> All t("common.play") calls return "Play" instead of "თამაში"
+  -> useCategories refetches with lang="en", shows translated names
+  -> questionService fetches language="en" questions
+  -> VS mode, Category mode, everything loads English content
+```
+
