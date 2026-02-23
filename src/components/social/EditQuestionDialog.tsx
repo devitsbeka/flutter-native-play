@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +37,7 @@ export function EditQuestionDialog({
   onSave,
   answerFormat = "4_answers"
 }: EditQuestionDialogProps) {
+  const { t } = useLanguage();
   const [questionText, setQuestionText] = useState(question.question_text);
   const [correctAnswer, setCorrectAnswer] = useState(question.correct_answer);
   const [incorrectAnswers, setIncorrectAnswers] = useState<string[]>(
@@ -89,7 +91,7 @@ export function EditQuestionDialog({
                 <ChevronLeft className="w-6 h-6 text-white" />
               </button>
               <div className="flex-1">
-                <h1 className="text-lg font-bold text-white">✏️ კითხვის რედაქტირება</h1>
+                <h1 className="text-lg font-bold text-white">✏️ {t("extra.editQuestion")}</h1>
               </div>
             </div>
           </div>
@@ -175,7 +177,7 @@ export function EditQuestionDialog({
               variant="success"
             >
                 <Check className="w-5 h-5 mr-2" />
-                შენახვა
+                {t("extra.editSaveBtn")}
               </ChunkyButton>
             </div>
           </div>

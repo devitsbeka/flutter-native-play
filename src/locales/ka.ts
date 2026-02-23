@@ -2243,6 +2243,7 @@ export const ka = {
     currentIconLabel: "მიმდინარე აიკონი",
     suggestedIconsLabel: "შემოთავაზებული",
     iconNotFound: "აიკონი ვერ მოიძებნა",
+    removeIconBtn: "აიკონის წაშლა",
     // Live Games Widget
     liveGameRoom: "თამაშის ოთახი",
     playerCount: "{count} მოთამაშე",
