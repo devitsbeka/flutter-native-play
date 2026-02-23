@@ -504,6 +504,15 @@ export const en: KaTranslations = {
     nameChanged: "Name changed!",
     deleteAccount: "Delete Account",
     deleteAccountDescription: "Permanently delete your account",
+    privacyPolicy: "Privacy Policy",
+    termsOfService: "Terms of Service",
+    dataManagement: "Data Management",
+    exportData: "Export Data",
+    exportDataDescription: "Download your data",
+    dataExported: "Data exported",
+    deleteConfirmTitle: "Are you sure?",
+    deleteConfirmMessage: "This action is irreversible. All your data will be permanently deleted.",
+    accountDeleted: "Account deleted",
   },
 
   // ==========================================
