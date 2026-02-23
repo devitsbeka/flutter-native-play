@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -62,6 +63,7 @@ interface ProGiftModalProps {
 }
 
 export function ProGiftModal({ open, onOpenChange, onClaimed, onDismiss }: ProGiftModalProps) {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { activateVip } = useVipStatus();
   const navigate = useNavigate();
@@ -94,7 +96,7 @@ export function ProGiftModal({ open, onOpenChange, onClaimed, onDismiss }: ProGi
 
   const handleClaim = async () => {
     if (!user) {
-      toast("შედი ანგარიშზე საჩუქრის მისაღებად", { icon: "👑" });
+      toast(t("extra.signInForGift"), { icon: "👑" });
       navigate("/auth");
       return;
     }

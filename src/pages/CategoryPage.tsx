@@ -215,7 +215,7 @@ export default function CategoryPage() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         returnToPath={`/category/${categoryId}`}
-        message="შედი ანგარიშზე თამაშის დასაწყებად"
+        message={t("extra.signInForGame")}
       />
       {/* PRO Required Modal */}
       <ProRequiredModal
