@@ -338,8 +338,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
       clearInterval(progressInterval);
       console.error("Error generating quiz:", error);
       toast({
-        title: "შეცდომა 😕",
-        description: error instanceof Error ? error.message : "კითხვების გენერაცია ვერ მოხერხდა",
+        title: t("extra.errorTitle") + " 😕",
+        description: error instanceof Error ? error.message : t("extra.editorGenerationFailed"),
         variant: "destructive",
       });
     } finally {
@@ -417,8 +417,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
     } catch (error) {
       console.error("Error posting quiz:", error);
       toast({
-        title: "შეცდომა",
-        description: "Trivia-ს გამოქვეყნება ვერ მოხერხდა",
+        title: t("extra.errorTitle"),
+        description: t("extra.editorPublishFailed"),
         variant: "destructive",
       });
     } finally {
@@ -485,8 +485,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
     } catch (error) {
       console.error("Error saving quiz:", error);
       toast({
-        title: "შეცდომა",
-        description: "შენახვა ვერ მოხერხდა",
+        title: t("extra.errorTitle"),
+        description: t("extra.editorSaveFailed"),
         variant: "destructive",
       });
     } finally {
@@ -916,8 +916,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   >
                     <Check className="w-10 h-10 text-emerald-400" />
                   </motion.div>
-                  <h3 className="text-2xl font-bold text-white mb-2">{questions.length} კითხვა მზადაა!</h3>
-                  <p className="text-white/70">პასუხები დამალულია - ითამაშე მეგობრებთან ერთად</p>
+                  <h3 className="text-2xl font-bold text-white mb-2">{t("extra.editorQuestionsReady", { count: questions.length })}</h3>
+                  <p className="text-white/70">{t("extra.editorAnswersHiddenPlay")}</p>
                 </div>
 
                 {/* Title input */}

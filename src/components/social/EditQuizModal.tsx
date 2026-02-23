@@ -176,8 +176,8 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
     } catch (error) {
       console.error("Error updating:", error);
       toast({
-        title: "შეცდომა",
-        description: "ცვლილებების შენახვა ვერ მოხერხდა",
+        title: t("extra.errorTitle"),
+        description: t("extra.editorChangesSaveFailed"),
         variant: "destructive",
       });
     } finally {
@@ -671,10 +671,10 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
               {isSaving ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  ინახება...
+                  {t("extra.editorSavingBtn")}
                 </>
               ) : (
-                "შენახვა"
+                t("extra.editorSaveBtn")
               )}
             </ChunkyButton>
           </div>
