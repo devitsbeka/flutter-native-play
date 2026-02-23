@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Sparkles } from "lucide-react";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import iconGem from "@/assets/icons/icon-gem.png";
@@ -59,6 +60,7 @@ export function AvatarCircle({
   userId,
   autoPlayInterval,
 }: AvatarCircleProps) {
+  const { t } = useLanguage();
   const [showVideo, setShowVideo] = useState(!!autoPlayInterval);
   const [isHovering, setIsHovering] = useState(false);
   const [isReversing, setIsReversing] = useState(false);
@@ -466,7 +468,7 @@ export function AvatarCircle({
               }}
             />
             
-            <span className="relative font-bold text-white text-base drop-shadow-sm">დონე {level}</span>
+            <span className="relative font-bold text-white text-base drop-shadow-sm">{t("extra.levelNum", { num: level })}</span>
             <span className="relative text-white/80 text-xs drop-shadow-sm">
               {xpCurrent !== undefined ? xpCurrent.toLocaleString() : 0} / {xpTotal !== undefined ? xpTotal.toLocaleString() : 0} XP
             </span>

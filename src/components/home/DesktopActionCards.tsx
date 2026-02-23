@@ -10,6 +10,7 @@ import { useRewardTimers } from "@/hooks/useRewardTimers";
 import { useMissions } from "@/hooks/useMissions";
 import { useUserPowerUps } from "@/hooks/useUserPowerUps";
 import { useVipStatus } from "@/hooks/useVipStatus";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DesktopActionCardsProps {
   onDailyRewardsClick: () => void;
@@ -65,7 +66,7 @@ const ActionCard = ({
   title,
   statusText,
   expandedDetails,
-  actionLabel = "გახსნა",
+  actionLabel = "",
   onClick,
   isReady = false,
   badgeCount,
@@ -201,7 +202,7 @@ const ActionCard = ({
                 )}
               </div>
               <p className="text-[10px] text-gray-400 mt-1 text-left font-medium">
-                {progressPercent}% პროგრესი
+                {progressPercent}%
               </p>
             </div>
           )}
@@ -262,16 +263,17 @@ export function DesktopActionCards({
   const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
   const incompleteMissions = totalCount - completedCount;
   const allMissionsDone = incompleteMissions === 0 && totalCount > 0;
+  const { t } = useLanguage();
 
   return (
     <div className={vertical ? "flex flex-col gap-3" : "flex flex-row flex-nowrap justify-center gap-4 overflow-x-auto"}>
       {/* Daily Rewards Card */}
       <ActionCard
         iconSrc={giftBottleIcon}
-        title="დღიური საჩუქარი"
-        statusText={canClaimDaily ? "მზად არის! 🎁" : `დარჩა: ${dailyTimeLeft || "00:00:00"}`}
-        expandedDetails="ყოველდღიური შესვლით იღებ მონეტებს, გემებს და სპეციალურ ჯილდოებს."
-        actionLabel={canClaimDaily ? "აიღე ჯილდო" : "ნახე დეტალები"}
+        title={t("extra.dailyGift")}
+        statusText={canClaimDaily ? t("extra.dailyGiftReady") : t("extra.dailyGiftTimeLeft", { time: dailyTimeLeft || "00:00:00" })}
+        expandedDetails={t("extra.dailyGiftDetails")}
+        actionLabel={canClaimDaily ? t("extra.claimReward") : t("extra.viewDetails")}
         onClick={onDailyRewardsClick}
         isReady={canClaimDaily}
         bgGradient=""
@@ -282,10 +284,10 @@ export function DesktopActionCards({
       {/* Missions Card */}
       <ActionCard
         iconSrc={missionCrystalIcon}
-        title="მისიები"
-        statusText={allMissionsDone ? "ყველა შესრულებულია ✓" : `${completedCount}/${totalCount}`}
-        expandedDetails="დაასრულე დავალებები და მიიღე დამატებითი ჯილდოები."
-        actionLabel="ნახე მისიები"
+        title={t("extra.missions")}
+        statusText={allMissionsDone ? t("extra.allCompleted") : `${completedCount}/${totalCount}`}
+        expandedDetails={t("extra.missionsDetails")}
+        actionLabel={t("extra.viewMissions")}
         onClick={onMissionsClick}
         isReady={allMissionsDone}
         badgeCount={incompleteMissions}
@@ -299,10 +301,10 @@ export function DesktopActionCards({
       {/* Chest Card */}
       <ActionCard
         iconSrc={chestBoxIcon}
-        title="სკივრი"
-        statusText={canClaimChest ? "გახსენი ახლა! 📦" : `დარჩა: ${chestTimeLeft || "00:00:00"}`}
-        expandedDetails="საიდუმლო სკივრში შეიძლება იყოს იშვიათი ჯილდოები და დამხმარე ძალები."
-        actionLabel={canClaimChest ? "გახსენი სკივრი" : "ნახე დეტალები"}
+        title={t("extra.chest")}
+        statusText={canClaimChest ? t("extra.chestOpenNow") : t("extra.chestTimeLeft", { time: chestTimeLeft || "00:00:00" })}
+        expandedDetails={t("extra.chestDetails")}
+        actionLabel={canClaimChest ? t("extra.openChest") : t("extra.viewDetails")}
         onClick={onChestClick}
         isReady={canClaimChest}
         bgGradient=""
@@ -313,10 +315,10 @@ export function DesktopActionCards({
       {/* Powers Card */}
       <ActionCard
         iconSrc={powersIcon}
-        title="ძალები"
-        statusText={totalPowerUps > 0 ? `${totalPowerUps} ხელმისაწვდომია` : "არ გაქვს ძალები"}
-        expandedDetails="ძალები გეხმარება კითხვებზე პასუხის გაცემაში."
-        actionLabel="მართე ძალები"
+        title={t("extra.powers")}
+        statusText={totalPowerUps > 0 ? t("extra.powersAvailable", { count: totalPowerUps }) : t("extra.noPowers")}
+        expandedDetails={t("extra.powersDetails")}
+        actionLabel={t("extra.managePowers")}
         onClick={onPowersClick}
         badgeCount={totalPowerUps}
         bgGradient=""
@@ -328,10 +330,10 @@ export function DesktopActionCards({
       {!isVip && (
         <ActionCard
           iconSrc={adFreeIcon}
-          title="რეკლამის გარეშე"
-          statusText="პრემიუმ გამოცდილება"
-          expandedDetails="ითამაშე რეკლამების გარეშე და მიიღე ექსკლუზიური შეღავათები."
-          actionLabel="გახდი VIP"
+          title={t("extra.adFree")}
+          statusText={t("extra.premiumExperience")}
+          expandedDetails={t("extra.adFreeDetails")}
+          actionLabel={t("extra.becomeVip")}
           onClick={onAdFreeClick}
           bgGradient=""
           particleColor=""

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LevelInfoModal } from "./LevelInfoModal";
 import { usePlayGuard } from "@/contexts/PlayGuardContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface LevelBadgeProps {
   totalPoints: number;
@@ -13,6 +14,7 @@ export function LevelBadge({ totalPoints }: LevelBadgeProps) {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const { guardPlay } = usePlayGuard();
+  const { t } = useLanguage();
   const levelInfo = calculateLevel(totalPoints);
   const progressPercent = levelInfo.progress;
 
@@ -87,7 +89,7 @@ export function LevelBadge({ totalPoints }: LevelBadgeProps) {
               {levelInfo.level}
             </motion.span>
             <span className="text-xs uppercase tracking-widest text-white/50 mt-1">
-              დონე
+              {t("common.level")}
             </span>
           </div>
         </div>

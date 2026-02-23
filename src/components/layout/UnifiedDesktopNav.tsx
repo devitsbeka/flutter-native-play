@@ -26,6 +26,7 @@ import {
 import { MoreMenuModal } from "@/components/home/MoreMenuModal";
 
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 
 interface UnifiedDesktopNavProps {
@@ -40,12 +41,12 @@ interface UnifiedDesktopNavProps {
 // Items that require authentication
 const LOCKED_FOR_GUESTS = ["rank", "team"];
 
-const navItems = [
-  { id: "home", label: "მთავარი", icon: Home, path: "/" },
-  { id: "explore", label: "აღმოჩენა", icon: Compass, path: "/discover" },
-  { id: "shop", label: "მაღაზია", icon: Store, path: "/power-ups" },
-  { id: "rank", label: "რეიტინგი", icon: Trophy, path: "/leaderboards" },
-  { id: "team", label: "ონლაინ თამაში", icon: Users, path: "/team" },
+const NAV_ITEM_DEFS = [
+  { id: "home", icon: Home, path: "/", labelKey: "extra.navHome" },
+  { id: "explore", icon: Compass, path: "/discover", labelKey: "extra.navDiscover" },
+  { id: "shop", icon: Store, path: "/power-ups", labelKey: "extra.navShop" },
+  { id: "rank", icon: Trophy, path: "/leaderboards", labelKey: "extra.navRating" },
+  { id: "team", icon: Users, path: "/team", labelKey: "extra.navOnlineGame" },
 ];
 
 export function UnifiedDesktopNav({
@@ -62,6 +63,9 @@ export function UnifiedDesktopNav({
   const { pendingChallenges } = usePendingChallenges();
   const pendingCount = pendingChallenges?.length || 0;
   const { prefetchRoute } = useNavigationPrefetch();
+  const { t } = useLanguage();
+
+  const navItems = NAV_ITEM_DEFS.map(item => ({ ...item, label: t(item.labelKey) }));
 
   // Guest detection
   const isGuest = !user && !profile;
@@ -314,7 +318,7 @@ export function UnifiedDesktopNav({
             whileTap={{ scale: 0.98 }}
           >
             <Menu className="w-6 h-6" strokeWidth={1.5} />
-            <span className="text-[15px] hidden lg:inline">მეტი</span>
+            <span className="text-[15px] hidden lg:inline">{t("extra.navMore")}</span>
           </motion.button>
         </div>
       </nav>

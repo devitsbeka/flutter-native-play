@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Play, Hourglass } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DesktopPlayButtonProps {
   onClick?: () => void;
@@ -20,6 +21,7 @@ export function DesktopPlayButton({
   isCompact = false,
   size = "md",
 }: DesktopPlayButtonProps) {
+  const { t } = useLanguage();
   const isExhausted = !canPlay && playsRemaining === 0;
   
   // Size configurations - lg is 15% larger
@@ -120,7 +122,7 @@ export function DesktopPlayButton({
         {/* Text - hidden on compact/tablet */}
         {!isCompact && (
           <span className={`text-white font-bold ${config.textSize} drop-shadow-md tracking-wide`}>
-            ითამაშე
+            {t("extra.playButton")}
           </span>
         )}
       </motion.button>
