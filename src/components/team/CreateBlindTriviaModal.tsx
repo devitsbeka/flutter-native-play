@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, RefreshCw, Globe, Lock, CheckCircle, Plus } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
@@ -79,6 +80,7 @@ interface TopicSuggestion {
 
 export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resumeDraftId, onDraftResumed, onSwitchToCollection }: CreateBlindTriviaModalProps) {
   const { toast: toastHook } = useToast();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { saveDraft, loadDraft, deleteDraft } = useTriviaDrafts();
@@ -380,28 +382,28 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
               <div className="inline-flex items-center justify-center mb-4">
                 <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">შექმენი Trivia</h3>
-              <p className="text-white/70">1 რაუნდი, სწრაფი შექმნა</p>
+              <h3 className="text-2xl font-bold text-white mb-2">{t("extra.createTriviaTitle2")}</h3>
+              <p className="text-white/70">{t("extra.triviaQuickCreate")}</p>
             </div>
 
             <div className="space-y-4">
               <Input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="მაგ: Friends TV Show, NBA, K-Pop..."
+                placeholder={t("extra.topicPlaceholder2")}
                 className="w-full text-base h-14 px-5 rounded-2xl border-0 bg-white/95 text-slate-800 placeholder:text-slate-400 shadow-lg"
               />
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-white/80">💡 იდეები:</span>
+                  <span className="text-sm text-white/80">💡 {t("extra.ideasLabel2")}</span>
                   <button
                     onClick={fetchTopicSuggestions}
                     disabled={isLoadingTopics}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 text-white/80 text-sm hover:bg-white/30 transition-colors"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isLoadingTopics ? 'animate-spin' : ''}`} />
-                    სხვა
+                    {t("extra.otherIdeas2")}
                   </button>
                 </div>
                 
@@ -449,8 +451,8 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
             className="space-y-5"
           >
             <div className="text-center">
-              <h3 className="text-2xl font-bold text-white mb-2">რამდენი კითხვა? 🎯</h3>
-              <p className="text-white/70">აირჩიე კითხვების რაოდენობა</p>
+              <h3 className="text-2xl font-bold text-white mb-2">{t("extra.howManyQuestions2")} 🎯</h3>
+              <p className="text-white/70">{t("extra.chooseQuestionCount2")}</p>
             </div>
 
             {/* Question Count */}
@@ -485,7 +487,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                 }`}
               >
                 <img src={bullseyeIcon} alt="" className="w-10 h-10 object-contain" />
-                <span className="text-white font-medium text-sm">4 ვარიანტი</span>
+                <span className="text-white font-medium text-sm">{t("extra.fourOptions2")}</span>
               </motion.button>
               
               <motion.button
@@ -499,7 +501,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                 }`}
               >
                 <img src={checkmarkIcon} alt="" className="w-10 h-10 object-contain" />
-                <span className="text-white font-medium text-sm">მართალი/მცდარი</span>
+                <span className="text-white font-medium text-sm">{t("extra.trueFalseOption2")}</span>
               </motion.button>
             </div>
 
@@ -513,14 +515,14 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                 className="w-full py-3 rounded-xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
               >
                 <Plus className="w-5 h-5" />
-                დაამატე რაუნდი
+                {t("extra.addRoundBtn2")}
               </button>
             )}
 
             {/* AI info text */}
             {!isGenerating && (
               <p className="text-sm text-white/80 text-center">
-                ✨ AI დააგენერირებს <span className="font-bold">{questionCount} კითხვას</span>
+                ✨ {t("extra.aiWillGenerate2", { count: questionCount })}
               </p>
             )}
 
@@ -539,7 +541,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                   />
                 </div>
                 <p className="text-sm text-center text-white/80 animate-pulse">
-                  ✨ AI ქმნის კითხვებს...
+                  ✨ {t("extra.aiCreatingQuestions")}
                 </p>
               </motion.div>
             )}

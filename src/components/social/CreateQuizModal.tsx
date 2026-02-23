@@ -1043,7 +1043,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   {step === 1 ? <X className="w-6 h-6 text-white" /> : <ChevronLeft className="w-6 h-6 text-white" />}
                 </button>
                 
-                <h2 className="text-lg font-bold text-white">შექმენი Trivia</h2>
+                <h2 className="text-lg font-bold text-white">{t("extra.createTriviaTitle2")}</h2>
                 
                 {/* Progress dots */}
                 <div className="flex gap-1.5">
