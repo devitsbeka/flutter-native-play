@@ -160,23 +160,25 @@ export default function TermsOfService() {
               </p>
             </section>
 
-            {/* Language Toggle */}
-            <section className="bg-primary/5 rounded-xl p-4 border border-primary/20">
-              <Link 
-                to={isEnglish ? "/terms" : "/terms-en"}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-center gap-3">
-                  <Globe className="w-5 h-5 text-primary" />
-                  <span className="text-sm font-medium text-foreground">
-                    {isEnglish ? "ქართული ვერსია" : "English Version"}
+            {/* Language Toggle - only show for non-English users */}
+            {!isEnglish && (
+              <section className="bg-primary/5 rounded-xl p-4 border border-primary/20">
+                <Link 
+                  to="/terms-en"
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <Globe className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-medium text-foreground">
+                      English Version
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    View in English →
                   </span>
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  {isEnglish ? "ნახე ქართულად →" : "View in English →"}
-                </span>
-              </Link>
-            </section>
+                </Link>
+              </section>
+            )}
 
             {/* Contact */}
             <section className="bg-muted/50 rounded-xl p-4">
