@@ -65,6 +65,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   code,
 }) => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
   const handleBack = () => {
     // Always navigate to /team - the rooms page
