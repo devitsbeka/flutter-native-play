@@ -36,7 +36,7 @@ export const TVPairingScreen: React.FC<TVPairingScreenProps> = ({ onStartGame })
         className="bg-card border border-border rounded-3xl p-8 mb-8 shadow-2xl"
       >
         <p className="text-muted-foreground text-center mb-4 text-lg">
-          შეიყვანეთ კოდი თქვენს ტელეფონში
+          {t("extra.tvEnterCodePhone2")}
         </p>
         <div className="flex gap-3 justify-center">
           {codeChars.map((char, index) => (
@@ -52,7 +52,7 @@ export const TVPairingScreen: React.FC<TVPairingScreenProps> = ({ onStartGame })
           ))}
         </div>
         <p className="text-muted-foreground text-center mt-4 text-sm">
-          ან გადადით: <span className="text-primary font-mono">mytrivia.io/tv/{code}</span>
+          {t("extra.tvOrGoTo")} <span className="text-primary font-mono">mytrivia.io/tv/{code}</span>
         </p>
       </motion.div>
 
@@ -98,7 +98,7 @@ export const TVPairingScreen: React.FC<TVPairingScreenProps> = ({ onStartGame })
               className="bg-card/50 border border-dashed border-border rounded-2xl p-4 flex flex-col items-center justify-center gap-2"
             >
               <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
-              <span className="text-muted-foreground text-sm">ველოდებით...</span>
+              <span className="text-muted-foreground text-sm">{t("extra.tvWaiting")}</span>
             </motion.div>
           )}
         </div>
@@ -116,7 +116,7 @@ export const TVPairingScreen: React.FC<TVPairingScreenProps> = ({ onStartGame })
               size="lg"
               onClick={onStartGame}
             >
-              თამაშის დაწყება
+              {t("extra.tvStartGame")}
             </ChunkyButton>
           </motion.div>
         )}
