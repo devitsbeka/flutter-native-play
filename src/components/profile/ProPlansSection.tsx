@@ -91,6 +91,7 @@ export function ProPlansSection({
   subscriptionStartDate,
   subscriptionExpiryDate
 }: ProPlansSectionProps) {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -180,13 +181,13 @@ export function ProPlansSection({
                     className="px-2 py-0.5 rounded-full text-xs font-semibold"
                     style={{ background: proTier.lightBg, color: proTier.accentColor }}
                   >
-                    აქტიური
+                    {t("extra.proActive")}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  ვადა: {subscriptionExpiryDate 
-                    ? format(new Date(subscriptionExpiryDate), 'dd.MM.yyyy') 
-                    : 'უვადო'}
+                  {subscriptionExpiryDate 
+                    ? t("extra.proExpiry", { date: format(new Date(subscriptionExpiryDate), 'dd.MM.yyyy') })
+                    : t("extra.proUnlimited")}
                 </p>
               </div>
             </div>
@@ -210,7 +211,7 @@ export function ProPlansSection({
                 style={{ background: familyTier.gradient }}
               >
                 <ArrowUp className="w-3 h-3" />
-                გაუმჯობესება
+                {t("extra.upgradeBtn")}
               </div>
             </div>
 
@@ -226,7 +227,7 @@ export function ProPlansSection({
                   <Crown className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">{familyTier.nameKa}</h3>
+                  <h3 className="text-lg font-bold text-foreground">{t("extra.friendProName")}</h3>
                   <p className="text-2xl font-bold text-foreground">
                     ${familyTier.price}<span className="text-sm text-muted-foreground font-normal">/mo</span>
                   </p>
@@ -247,8 +248,8 @@ export function ProPlansSection({
                       "text-sm",
                       benefit.highlight ? "text-foreground font-medium" : "text-muted-foreground"
                     )}>
-                      {benefit.text}
-                      {benefit.icon === Users && " (4 მეტი!)"}
+                      {t(benefit.text, benefit.count ? { count: benefit.count } : undefined)}
+                      {benefit.icon === Users && ` (4 ${t("extra.moreExcl") || "more!"})`}
                     </span>
                   </div>
                 ))}
@@ -268,12 +269,12 @@ export function ProPlansSection({
                 {purchasing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    მუშავდება...
+                    {t("extra.processingBtn")}
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    გაუმჯობესება
+                    {t("extra.upgradeBtn")}
                   </>
                 )}
               </motion.button>
@@ -306,18 +307,18 @@ export function ProPlansSection({
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-xl font-bold text-foreground">{familyTier.nameKa}</p>
+                      <p className="text-xl font-bold text-foreground">{t("extra.friendProName")}</p>
                       <span 
                         className="px-2 py-0.5 rounded-full text-xs font-semibold"
                         style={{ background: familyTier.lightBg, color: familyTier.accentColor }}
                       >
-                        აქტიური
+                        {t("extra.proActive")}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      ვადა: {subscriptionExpiryDate 
-                        ? format(new Date(subscriptionExpiryDate), 'dd.MM.yyyy') 
-                        : 'უვადო'}
+                      {subscriptionExpiryDate 
+                        ? t("extra.proExpiry", { date: format(new Date(subscriptionExpiryDate), 'dd.MM.yyyy') })
+                        : t("extra.proUnlimited")}
                     </p>
                   </div>
                 </div>
@@ -331,11 +332,11 @@ export function ProPlansSection({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Users className="w-5 h-5" style={{ color: familyTier.accentColor }} />
-                    <span className="font-medium text-foreground">მეგობრების მოწვევა</span>
+                    <span className="font-medium text-foreground">{t("extra.proInviteFriendsLabel")}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">
-                      {friendInvitesRemaining} დარჩენილი
+                      {t("extra.proInvitesLeft", { count: friendInvitesRemaining })}
                     </span>
                     {friendInvitesRemaining > 0 && (
                       <motion.button
@@ -345,7 +346,7 @@ export function ProPlansSection({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        მოწვევა
+                        {t("extra.proInviteAction")}
                       </motion.button>
                     )}
                   </div>
