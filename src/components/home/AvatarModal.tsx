@@ -1029,7 +1029,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                   className="w-full"
                   icon={<Crown className="w-4 h-4" />}
                 >
-                  გახდი PRO - ₾9.99/თვე
+                  გახდი PRO - $3.99/mo
                 </ChunkyButton>
               </motion.div>
             </>

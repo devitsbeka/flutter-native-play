@@ -93,7 +93,7 @@ export function TeamProSidebar() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-foreground">{tier.nameKa}</h3>
                       <p className="text-lg font-bold text-foreground">
-                        ₾{tier.price}<span className="text-xs text-muted-foreground font-normal">/თვე</span>
+                        ${tier.price}<span className="text-xs text-muted-foreground font-normal">/mo</span>
                       </p>
                     </div>
                   </div>

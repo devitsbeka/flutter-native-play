@@ -302,13 +302,13 @@ export function useShopData() {
       },
     ];
 
-    // Gems Section (Real Money - Lari) - 1 GEL = 10 gems, minimum 3 GEL
+    // Gems Section (Real Money - USD)
     const GEMS_ITEMS: ShopItem[] = [
       {
         id: "gems_30",
         name: "30",
         description: t("shop.smallPackage"),
-        price: 3,  // Base rate: 10 gems/GEL
+        price: 1.19,
         currency: "lari",
         icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(270 80% 60%) 0%, hsl(290 75% 55%) 100%)",
@@ -318,7 +318,7 @@ export function useShopData() {
         id: "gems_100",
         name: "100 +11",
         description: `${t("shop.mediumPackage")} +11%`,
-        price: 9,  // 90 gems at base + 11% bonus = 100
+        price: 3.59,
         currency: "lari",
         icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(275 80% 58%) 0%, hsl(295 75% 52%) 100%)",
@@ -331,7 +331,7 @@ export function useShopData() {
         id: "gems_300",
         name: "300 +60",
         description: `${t("shop.largePackage")} +20%`,
-        price: 25,  // 250 gems at base + 20% bonus = 300
+        price: 9.99,
         currency: "lari",
         icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(280 82% 55%) 0%, hsl(300 78% 50%) 100%)",
@@ -343,7 +343,7 @@ export function useShopData() {
         id: "gems_700",
         name: "700 +200",
         description: `${t("shop.megaPackage")} +40%`,
-        price: 50,  // 500 gems at base + 40% bonus = 700
+        price: 19.99,
         currency: "lari",
         icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(285 85% 52%) 0%, hsl(310 80% 48%) 100%)",
@@ -366,7 +366,7 @@ export function useShopData() {
       {
         id: "gems-lari",
         title: t("common.gems"),
-        description: "₾ ლარით შეძენა",
+        description: "$ Buy with USD",
         videoSrc: "/videos/gems.mp4",
         items: GEMS_ITEMS,
       },
