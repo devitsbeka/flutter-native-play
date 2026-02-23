@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { useLanguage } from "@/contexts/LanguageContext";
 import storyDice from "@/assets/story-dice.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
 import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
@@ -10,28 +11,30 @@ interface HowItWorksModalProps {
   onClose: () => void;
 }
 
-const steps = [
-  { 
-    icon: storyDice, 
-    title: "შემთხვევითი", 
-    desc: "სისტემა ავტომატურად აირჩევს შემთხვევით კატეგორიას - იდეალურია სწრაფი თამაშისთვის!",
-    color: "from-purple-500 to-pink-500"
-  },
-  { 
-    icon: secretBookcase, 
-    title: "ბიბლიოთეკა", 
-    desc: "აირჩიე შენთვის სასურველი კატეგორია ჩვენი მრავალფეროვანი კოლექციიდან",
-    color: "from-orange-500 to-amber-500"
-  },
-  { 
-    icon: triviaBuzzer, 
-    title: "შექმენი შენი", 
-    desc: "შექმენი საკუთარი კითხვები ან გამოიყენე AI დახმარებით გენერირებული ტრივია",
-    color: "from-emerald-500 to-teal-500"
-  },
-];
-
 export const HowItWorksModal = ({ isOpen, onClose }: HowItWorksModalProps) => {
+  const { t } = useLanguage();
+
+  const steps = [
+    { 
+      icon: storyDice, 
+      title: t("extra.howItWorksRandom"), 
+      desc: t("extra.howItWorksRandomDesc"),
+      color: "from-purple-500 to-pink-500"
+    },
+    { 
+      icon: secretBookcase, 
+      title: t("extra.howItWorksLibrary"), 
+      desc: t("extra.howItWorksLibraryDesc"),
+      color: "from-orange-500 to-amber-500"
+    },
+    { 
+      icon: triviaBuzzer, 
+      title: t("extra.howItWorksCreate"), 
+      desc: t("extra.howItWorksCreateDesc"),
+      color: "from-emerald-500 to-teal-500"
+    },
+  ];
+
   if (!isOpen) return null;
 
   return (
@@ -52,7 +55,7 @@ export const HowItWorksModal = ({ isOpen, onClose }: HowItWorksModalProps) => {
               >
                 <ChevronLeft className="w-5 h-5 text-muted-foreground" />
               </button>
-              <h2 className="text-lg font-bold text-foreground">როგორ მუშაობს?</h2>
+              <h2 className="text-lg font-bold text-foreground">{t("extra.howItWorksTitle")}</h2>
             </div>
           </div>
 
@@ -65,10 +68,9 @@ export const HowItWorksModal = ({ isOpen, onClose }: HowItWorksModalProps) => {
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20"
             >
-              <h3 className="font-semibold text-foreground mb-2">მეგობრებთან თამაში</h3>
+              <h3 className="font-semibold text-foreground mb-2">{t("extra.howItWorksFriends")}</h3>
               <p className="text-sm text-muted-foreground">
-                მოიწვიე მეგობრები და ითამაშეთ ერთად! თითოეული მოთამაშე პასუხობს კითხვებს 
-                და იგებს ის, ვინც მეტ ქულას დააგროვებს.
+                {t("extra.howItWorksFriendsDesc")} {t("extra.howItWorksFriendsWins")}
               </p>
             </motion.div>
 
@@ -99,7 +101,7 @@ export const HowItWorksModal = ({ isOpen, onClose }: HowItWorksModalProps) => {
               transition={{ delay: 0.4 }}
               className="flex items-center justify-center gap-2 py-4 mt-6 rounded-2xl bg-gradient-to-r from-primary/20 to-accent/20"
             >
-              <span className="font-medium text-foreground">გართობა გარანტირებულია! 🎉</span>
+              <span className="font-medium text-foreground">{t("extra.howItWorksFunGuaranteed")}</span>
             </motion.div>
             </div>
           </div>
@@ -108,7 +110,7 @@ export const HowItWorksModal = ({ isOpen, onClose }: HowItWorksModalProps) => {
           <div className="flex-shrink-0 border-t border-border/50 bg-background">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full p-4">
               <ChunkyButton onClick={onClose} className="w-full">
-                გასაგებია!
+                {t("extra.howItWorksGotIt")}
               </ChunkyButton>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Import feature icons
 import roomsIcon from "@/assets/icons/rooms-icon.png";
@@ -11,43 +12,43 @@ const ONBOARDING_KEY = "mytrivia_feature_onboarding_seen";
 interface FeatureTooltip {
   id: string;
   iconSrc: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descKey: string;
   targetTab: string;
-  actionLabel?: string;
+  actionKey?: string;
 }
 
-const FEATURE_TOOLTIPS: FeatureTooltip[] = [
+const FEATURE_TOOLTIP_DEFS: FeatureTooltip[] = [
   {
     id: "rooms",
     iconSrc: roomsIcon,
-    title: "ოთახები",
-    description: "შექმენი სათამაშო ოთახი, აირჩიე რას ითამაშებთ, და მოიწვიე მეგობრები სათამაშოდ. თამაში TV-ზეც შესაძლებელია",
+    titleKey: "extra.featureRoomsTitle",
+    descKey: "extra.featureRoomsDesc",
     targetTab: "rooms",
-    actionLabel: "+ ოთახი",
+    actionKey: "extra.featureRoomsAction",
   },
   {
     id: "my-trivia",
     iconSrc: triviaIcon,
-    title: "ჩემი ტრივია",
-    description: "შექმენი შენი Trivia, გამოაქვეყნე ან შექმენი My Trivia Party მეგობრებთან ერთად სათამაშოდ, შენი კითხვებით / შენი პასუხებით",
+    titleKey: "extra.featureTriviaTitle",
+    descKey: "extra.featureTriviaDesc",
     targetTab: "my-content",
-    actionLabel: "+ ტრივია",
+    actionKey: "extra.featureTriviaAction",
   },
   {
     id: "explore",
     iconSrc: exploreIcon,
-    title: "აღმოაჩინე",
-    description: "ითამაშე სხვა მოთამაშეების მიერ შექმნილი Trivia სხვადასხვა თემაზე",
+    titleKey: "extra.featureExploreTitle",
+    descKey: "extra.featureExploreDesc",
     targetTab: "explore",
-    actionLabel: "აღმოაჩინე",
+    actionKey: "extra.featureExploreAction",
   },
 ];
 
 interface FeatureOnboardingCarouselProps {
   onNavigateToTab?: (tab: string) => void;
   onComplete?: () => void;
-  showAllCards?: boolean; // For preview page
+  showAllCards?: boolean;
   onCreateRoom?: () => void;
   onCreateTrivia?: () => void;
   contextTab?: string;
@@ -61,27 +62,24 @@ export function FeatureOnboardingCarousel({
   onCreateTrivia,
   contextTab,
 }: FeatureOnboardingCarouselProps) {
+  const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Reorder tooltips based on context tab
   const orderedTooltips = (() => {
-    if (!contextTab) return FEATURE_TOOLTIPS;
+    if (!contextTab) return FEATURE_TOOLTIP_DEFS;
     const priorityId = contextTab === "rooms" ? "rooms" : contextTab === "my-content" ? "my-trivia" : null;
-    if (!priorityId) return FEATURE_TOOLTIPS;
-    const priority = FEATURE_TOOLTIPS.find(t => t.id === priorityId);
-    if (!priority) return FEATURE_TOOLTIPS;
-    return [priority, ...FEATURE_TOOLTIPS.filter(t => t.id !== priorityId)];
+    if (!priorityId) return FEATURE_TOOLTIP_DEFS;
+    const priority = FEATURE_TOOLTIP_DEFS.find(t => t.id === priorityId);
+    if (!priority) return FEATURE_TOOLTIP_DEFS;
+    return [priority, ...FEATURE_TOOLTIP_DEFS.filter(t => t.id !== priorityId)];
   })();
 
-  // Auto-rotate every 4 seconds
   useEffect(() => {
     if (showAllCards || isPaused) return;
-
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % orderedTooltips.length);
     }, 6000);
-
     return () => clearInterval(interval);
   }, [showAllCards, isPaused, orderedTooltips.length]);
 
@@ -92,10 +90,7 @@ export function FeatureOnboardingCarousel({
   }, [onCreateRoom, onCreateTrivia]);
 
   const handleCardClick = useCallback((tooltip: FeatureTooltip) => {
-    // Mark onboarding as seen
     localStorage.setItem(ONBOARDING_KEY, "true");
-    
-    // Navigate to the corresponding tab
     onNavigateToTab?.(tooltip.targetTab);
     onComplete?.();
   }, [onNavigateToTab, onComplete]);
@@ -107,7 +102,6 @@ export function FeatureOnboardingCarousel({
       action();
       onComplete?.();
     } else {
-      // For explore, just navigate
       onNavigateToTab?.(tooltip.targetTab);
       onComplete?.();
     }
@@ -116,7 +110,6 @@ export function FeatureOnboardingCarousel({
   const handleDotClick = (index: number) => {
     setCurrentIndex(index);
     setIsPaused(true);
-    // Resume auto-rotation after 6 seconds
     setTimeout(() => setIsPaused(false), 6000);
   };
 
@@ -130,6 +123,7 @@ export function FeatureOnboardingCarousel({
             onClick={() => handleCardClick(tooltip)}
             onAction={() => handleAction(tooltip)}
             index={index}
+            t={t}
           />
         ))}
       </div>
@@ -154,11 +148,11 @@ export function FeatureOnboardingCarousel({
             onClick={() => handleCardClick(currentTooltip)}
             onAction={() => handleAction(currentTooltip)}
             index={currentIndex}
+            t={t}
           />
         </motion.div>
       </AnimatePresence>
 
-      {/* Dot indicators */}
       <div className="flex gap-2">
         {orderedTooltips.map((_, index) => (
           <button
@@ -182,16 +176,20 @@ interface FeatureCardProps {
   onClick: () => void;
   onAction?: () => void;
   index: number;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
-function FeatureCard({ tooltip, onClick, onAction, index }: FeatureCardProps) {
+function FeatureCard({ tooltip, onClick, onAction, index, t }: FeatureCardProps) {
+  const title = t(tooltip.titleKey);
+  const description = t(tooltip.descKey);
+  const actionLabel = tooltip.actionKey ? t(tooltip.actionKey) : undefined;
+
   return (
     <button
       onClick={onClick}
       className="w-full text-left focus:outline-none group"
     >
       <div className="relative">
-        {/* Animated gradient border */}
         <div className="absolute -inset-[2px] rounded-2xl overflow-hidden">
           <div 
             className="absolute inset-0 animate-spin-slow"
@@ -206,9 +204,7 @@ function FeatureCard({ tooltip, onClick, onAction, index }: FeatureCardProps) {
           />
         </div>
         
-        {/* Card content */}
         <div className="relative bg-card rounded-2xl p-5 transition-transform duration-200 group-hover:scale-[0.99] group-active:scale-[0.97]">
-          {/* Animated shadow glow */}
           <div 
             className="absolute inset-0 rounded-2xl opacity-50 animate-pulse-shadow pointer-events-none"
             style={{
@@ -217,25 +213,21 @@ function FeatureCard({ tooltip, onClick, onAction, index }: FeatureCardProps) {
           />
           
           <div className="relative z-10 flex flex-col gap-3">
-            {/* Icon - no background container */}
             <img 
               src={tooltip.iconSrc} 
-              alt={tooltip.title} 
+              alt={title} 
               className="w-16 h-16 object-contain"
             />
             
-            {/* Title */}
             <h3 className="text-lg font-bold text-foreground">
-              {tooltip.title}
+              {title}
             </h3>
             
-            {/* Description */}
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {tooltip.description}
+              {description}
             </p>
 
-            {/* Glowing CTA Button */}
-            {tooltip.actionLabel && (
+            {actionLabel && (
               <motion.div
                 onClick={(e) => {
                   e.stopPropagation();
@@ -255,7 +247,7 @@ function FeatureCard({ tooltip, onClick, onAction, index }: FeatureCardProps) {
                   background: "linear-gradient(135deg, hsl(var(--primary)), hsl(280, 80%, 60%))",
                 }}
               >
-                {tooltip.actionLabel}
+                {actionLabel}
               </motion.div>
             )}
           </div>
@@ -265,12 +257,10 @@ function FeatureCard({ tooltip, onClick, onAction, index }: FeatureCardProps) {
   );
 }
 
-// Utility to check if onboarding has been seen
 export function hasSeenFeatureOnboarding(): boolean {
   return localStorage.getItem(ONBOARDING_KEY) === "true";
 }
 
-// Utility to reset onboarding (for testing)
 export function resetFeatureOnboarding(): void {
   localStorage.removeItem(ONBOARDING_KEY);
 }
