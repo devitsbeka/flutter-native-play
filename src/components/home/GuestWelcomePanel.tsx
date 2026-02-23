@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { User, Lock, Sparkles, Loader2, Camera, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
@@ -42,6 +43,7 @@ export function GuestWelcomePanel({
   onPlayAsGuest,
   isLoading,
 }: GuestWelcomePanelProps) {
+  const { t } = useLanguage();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [usernameError, setUsernameError] = useState<string | undefined>();
@@ -164,7 +166,7 @@ export function GuestWelcomePanel({
           className="flex flex-col items-center mb-3"
         >
           <p className="text-sm sm:text-base text-muted-foreground font-medium text-center leading-relaxed">
-            შექმენი შენი პროფილი და ითამაშე უფასოდ!
+            {t("extra.createProfilePlayFree")}
           </p>
         </motion.div>
       )}

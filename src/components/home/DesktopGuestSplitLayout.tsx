@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { User, Lock, Sparkles, Loader2, Camera, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
@@ -46,6 +47,7 @@ export function DesktopGuestSplitLayout({
   guestPlaysRemaining = 3,
   maxGuestPlays = 3,
 }: DesktopGuestSplitLayoutProps) {
+  const { t } = useLanguage();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [usernameError, setUsernameError] = useState<string | undefined>();
@@ -150,11 +152,11 @@ export function DesktopGuestSplitLayout({
           className="flex flex-col items-center mb-4"
         >
           <span className="font-slackey text-foreground font-bold text-2xl">
-            გამარჯობა!
+            {t("common.hello")}
           </span>
           {isSignUp && (
             <p className="mt-1 text-sm text-muted-foreground font-medium text-center leading-relaxed">
-              შექმენი შენი პროფილი და ითამაშე უფასოდ!
+              {t("extra.createProfilePlayFree")}
             </p>
           )}
         </motion.div>

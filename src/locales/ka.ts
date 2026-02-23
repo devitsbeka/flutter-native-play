@@ -1789,6 +1789,11 @@ export const ka = {
     addedCount: "{count} დამატებულია",
     clearAll: "გასუფთავება",
     removeRound: "რაუნდის წაშლა",
+    promoJoinFriends: "გაერთე მეგობრებთან ერთად",
+    promoPlayTrivia: "ითამაშე ტრივია აპლიკაციაში ან TV-ზე!",
+    promoPlayFree: "ითამაშე უფასოდ",
+    guestUser: "მომხმარებელი",
+    createProfilePlayFree: "შექმენი შენი პროფილი და ითამაშე უფასოდ!",
   },
 };
 
