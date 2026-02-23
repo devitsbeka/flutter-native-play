@@ -7,6 +7,7 @@ import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { supabase } from '@/integrations/supabase/client';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 
 interface Category {
@@ -47,6 +48,7 @@ export const ControllerLobby: React.FC = () => {
     startGame(selectedCategory?.id);
   };
 
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col overflow-hidden">
       <div className="max-w-xl mx-auto w-full flex-1 flex flex-col min-h-0">
@@ -59,17 +61,17 @@ export const ControllerLobby: React.FC = () => {
           />
         )}
         <h1 className="text-2xl font-bold text-white mb-2">
-          {isHost ? "შენ ხარ ჰოსტი!" : "ველოდებით ჰოსტს"}
+          {isHost ? t("extra.youAreHost") : t("extra.waitingForHostLabel")}
         </h1>
         <p className="text-purple-300">
-          {isHost ? "აირჩიე კატეგორია და დაიწყე თამაში" : "TV-ზე თამაში მალე დაიწყება"}
+          {isHost ? t("extra.chooseAndStart") : t("extra.tvGameSoon")}
         </p>
       </motion.div>
 
       <div className="mb-6 flex-1 min-h-0 flex flex-col">
         <div className="flex items-center gap-2 mb-3 flex-shrink-0">
           <Users className="w-5 h-5 text-purple-300" />
-          <span className="text-purple-200">მოთამაშეები ({players.length})</span>
+          <span className="text-purple-200">{t("extra.playersLabel", { count: String(players.length) })}</span>
         </div>
         <div className="space-y-2 flex-1 overflow-y-auto min-h-0 max-h-[50vh]">
           {players.map(player => (
@@ -91,7 +93,7 @@ export const ControllerLobby: React.FC = () => {
         <div className="flex-1 flex flex-col">
           {/* Category Selection */}
           <div className="mb-4">
-            <p className="text-purple-200 text-sm mb-2">აირჩიე კატეგორია</p>
+            <p className="text-purple-200 text-sm mb-2">{t("extra.chooseCategory")}</p>
             <button
               onClick={() => setShowCategories(!showCategories)}
               className="w-full bg-white/10 backdrop-blur rounded-xl p-4 flex items-center justify-between border border-white/20"
@@ -106,7 +108,7 @@ export const ControllerLobby: React.FC = () => {
                   <span className="text-white font-medium">{selectedCategory.name}</span>
                 </div>
               ) : (
-                <span className="text-purple-300">ყველა კატეგორია (შემთხვევითი)</span>
+                <span className="text-purple-300">{t("extra.allCategoriesRandom")}</span>
               )}
               <ChevronDown className={`w-5 h-5 text-purple-300 transition-transform ${showCategories ? 'rotate-180' : ''}`} />
             </button>
@@ -139,7 +141,7 @@ export const ControllerLobby: React.FC = () => {
                           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
                             <span className="text-white text-xs">?</span>
                           </div>
-                          <span className="text-white">შემთხვევითი მიქსი</span>
+                          <span className="text-white">{t("extra.randomMix")}</span>
                         </button>
 
                         {categories.map(category => (
@@ -179,7 +181,7 @@ export const ControllerLobby: React.FC = () => {
                 icon={<Play className="w-5 h-5" />} 
                 className="w-full"
               >
-                თამაშის დაწყება
+                {t("extra.controllerStartGame")}
               </ChunkyButton>
             )}
           </div>

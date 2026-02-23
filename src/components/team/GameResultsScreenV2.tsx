@@ -597,7 +597,7 @@ export function GameResultsScreenV2() {
               disabled={isStartingRematch}
               icon={<ChevronRight className="w-5 h-5" />}
             >
-              კატეგორიის დამატება
+              {t("extra.addCategory")}
             </ChunkyButton>
 
             {/* Challenge Friends button */}
@@ -608,7 +608,7 @@ export function GameResultsScreenV2() {
               onClick={() => setShowChallengeModal(true)}
               icon={<Share2 className="w-5 h-5" />}
             >
-              გამოწვიე მეგობარი
+              {t("extra.challengeFriend")}
             </ChunkyButton>
 
           </>
@@ -616,7 +616,7 @@ export function GameResultsScreenV2() {
           <>
             {/* Non-host - show waiting or back */}
             <div className="text-center py-4 px-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-              <p className="text-white/70 font-medium">ველოდებით ჰოსტს</p>
+              <p className="text-white/70 font-medium">{t("extra.waitingForHostResult")}</p>
             </div>
           </>
         )}

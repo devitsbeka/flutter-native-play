@@ -4,8 +4,10 @@ import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function WaitingForOpponentScreen() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { participants, questions, room } = useMultiplayer();
 
@@ -34,10 +36,10 @@ export function WaitingForOpponentScreen() {
         </motion.div>
 
         <h2 className="text-2xl font-display font-bold text-white mb-2 text-center">
-          ველოდებით მოთამაშეებს...
+          {t("extra.waitingForPlayersGeneric")}
         </h2>
         <p className="text-white/80 text-center mb-6">
-          {finishedCount}/{totalOthers} დაასრულა
+          {t("extra.finishedCount", { finished: String(finishedCount), total: String(totalOthers) })}
         </p>
 
         <motion.div
@@ -45,7 +47,7 @@ export function WaitingForOpponentScreen() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full bg-white/95 backdrop-blur-lg rounded-2xl p-4 mb-4 shadow-xl"
         >
-          <p className="text-slate-500 text-sm text-center mb-3">შენი ქულა</p>
+          <p className="text-slate-500 text-sm text-center mb-3">{t("extra.yourScore")}</p>
           <p className="text-4xl font-bold text-purple-600 text-center mb-2">
             {myParticipant?.score || 0}
           </p>
@@ -59,7 +61,7 @@ export function WaitingForOpponentScreen() {
         >
           <div className="flex items-center gap-2 mb-3">
             <Users className="w-4 h-4 text-white/60" />
-            <span className="text-white/80 text-sm font-medium">მოთამაშეების პროგრესი</span>
+            <span className="text-white/80 text-sm font-medium">{t("extra.playersProgress")}</span>
           </div>
           
           <div className="space-y-3">
