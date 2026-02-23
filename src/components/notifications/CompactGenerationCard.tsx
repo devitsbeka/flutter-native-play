@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ka, enUS } from 'date-fns/locale';
 import { GenerationNotification } from '@/hooks/useGenerationNotifications';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface CompactGenerationCardProps {
   notification: GenerationNotification;
@@ -18,6 +19,7 @@ export const CompactGenerationCard = memo(function CompactGenerationCard({
   dateLocale = ka,
 }: CompactGenerationCardProps) {
   const [elapsedTime, setElapsedTime] = useState(0);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (notification.status !== 'generating') return;
@@ -38,9 +40,9 @@ export const CompactGenerationCard = memo(function CompactGenerationCard({
     if (notification.status === 'generating') {
       const remaining = Math.max(0, notification.estimatedTime - elapsedTime);
       if (remaining > 0) {
-        return `~${remaining} წმ`;
+        return `~${remaining} ${t('extra.secondsShort')}`;
       }
-      return 'მზადდება...';
+      return `${t('extra.generatingStatus')}...`;
     }
     return formatDistanceToNow(notification.startedAt, { addSuffix: false, locale: dateLocale });
   };
@@ -114,10 +116,10 @@ export const CompactGenerationCard = memo(function CompactGenerationCard({
                   : "bg-destructive/20 text-destructive"
               )}>
                 {notification.status === 'generating' 
-                  ? 'მზადდება' 
+                  ? t('extra.generatingStatus')
                   : notification.status === 'completed' 
-                  ? 'მზადაა' 
-                  : 'შეცდომა'}
+                  ? t('extra.readyStatus')
+                  : t('extra.errorStatus')}
               </span>
             </p>
             <p className="text-xs text-muted-foreground/60 mt-0.5">
@@ -140,7 +142,7 @@ export const CompactGenerationCard = memo(function CompactGenerationCard({
             className="mt-2 px-4 py-1.5 rounded-full border border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10 transition-colors text-xs font-semibold"
             whileTap={{ scale: 0.95 }}
           >
-            გამოყენება
+            {t('extra.useAction')}
           </motion.button>
         )}
       </div>

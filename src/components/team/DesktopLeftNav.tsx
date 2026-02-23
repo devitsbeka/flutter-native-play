@@ -15,6 +15,7 @@ import { Avatar } from "@/components/shared/Avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DesktopLeftNavProps {
@@ -22,13 +23,6 @@ interface DesktopLeftNavProps {
   onMessagesClick: () => void;
   onCreateClick: () => void;
 }
-
-const navItems = [
-  { id: "home", label: "მთავარი", icon: Home, path: "/" },
-  { id: "search", label: "ძიება", icon: Search, path: "/search" },
-  { id: "explore", label: "აღმოჩენა", icon: Compass, path: "/explore" },
-  { id: "team", label: "ონლაინ თამაში", icon: Users, path: "/team" },
-];
 
 export function DesktopLeftNav({ 
   onNotificationsClick, 
@@ -40,6 +34,14 @@ export function DesktopLeftNav({
   const { profile } = useAuth();
   const { unreadCount } = useNotifications();
   const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
+  const { t } = useLanguage();
+
+  const navItems = [
+    { id: "home", label: t("extra.navHome"), icon: Home, path: "/" },
+    { id: "search", label: t("extra.navSearch"), icon: Search, path: "/search" },
+    { id: "explore", label: t("extra.navDiscover2"), icon: Compass, path: "/explore" },
+    { id: "team", label: t("extra.navOnlineGame"), icon: Users, path: "/team" },
+  ];
 
   const isActive = (path: string) => {
     if (path === "/team") return location.pathname === "/team";
@@ -47,7 +49,6 @@ export function DesktopLeftNav({
     return location.pathname.startsWith(path);
   };
 
-  // Shared NavButton component for consistency
   const NavButton = ({ 
     icon: Icon, 
     label, 
@@ -86,11 +87,9 @@ export function DesktopLeftNav({
                 </span>
               )}
             </div>
-            {/* Label - hidden on tablet, visible on desktop */}
             <span className="text-[15px] hidden xl:inline">{label}</span>
           </motion.button>
         </TooltipTrigger>
-        {/* Tooltip only shows on tablet (lg) where label is hidden */}
         <TooltipContent side="right" className="xl:hidden">
           {label}
         </TooltipContent>
@@ -100,20 +99,17 @@ export function DesktopLeftNav({
 
   return (
     <nav className="hidden lg:flex flex-col w-[72px] xl:w-[220px] min-w-[72px] xl:min-w-[220px] h-screen sticky top-0 border-r border-border/40 bg-background pt-6 pb-4 transition-all duration-200">
-      {/* Logo */}
       <div className="px-3 xl:px-6 mb-8 flex justify-center xl:justify-start">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-xl font-display font-bold text-foreground"
         >
-          {/* Icon on tablet, full text on desktop */}
           <span className="xl:hidden text-2xl">🎯</span>
           <span className="hidden xl:inline">MyTrivia</span>
         </motion.div>
       </div>
 
-      {/* Main Navigation */}
       <div className="flex-1 px-2 xl:px-3 space-y-1">
         {navItems.map((item) => (
           <NavButton
@@ -125,32 +121,27 @@ export function DesktopLeftNav({
           />
         ))}
 
-        {/* Messages with badge */}
         <NavButton
           icon={MessageCircle}
-          label="შეტყობინებები"
+          label={t("extra.navNotifications")}
           onClick={onMessagesClick}
           badge={unreadMessagesCount}
         />
 
-
-        {/* Create */}
         <NavButton
           icon={PlusSquare}
-          label="შექმნა"
+          label={t("extra.navCreate")}
           onClick={onCreateClick}
         />
 
-        {/* Dashboard */}
         <NavButton
           icon={BarChart3}
-          label="დეშბორდი"
+          label={t("extra.navDashboard")}
           onClick={() => navigate("/profile")}
         />
 
-        {/* Profile */}
         <NavButton
-          label="პროფილი"
+          label={t("extra.navProfile")}
           onClick={() => navigate("/profile")}
         >
           <Avatar
@@ -161,11 +152,10 @@ export function DesktopLeftNav({
         </NavButton>
       </div>
 
-      {/* Bottom Section */}
       <div className="px-2 xl:px-3 space-y-1 mt-auto">
         <NavButton
           icon={Menu}
-          label="მეტი"
+          label={t("extra.navMore")}
           onClick={() => {}}
         />
       </div>

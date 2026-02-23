@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Sparkles } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
@@ -43,14 +44,15 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
     },
     ref
   ) {
-    // Top section - full-width horizontal cards
+    const { t } = useLanguage();
+
     const topOptions: MenuOption[] = [
       {
         id: "random",
         imageIcon: spinTheBottle,
         icon: null,
-        title: "შემთხვევითი კატეგორია",
-        subtitle: "სწრაფი სტარტი",
+        title: t("extra.randomCategoryLabel"),
+        subtitle: t("extra.quickStart"),
         gradient: "from-amber-500 to-orange-500",
         glowColor: "rgba(245, 158, 11, 0.4)",
         fullWidth: true,
@@ -60,8 +62,8 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
         id: "library",
         imageIcon: secretBookcase,
         icon: null,
-        title: "აირჩიე ბიბლიოთეკიდან",
-        subtitle: "კატეგორიების არჩევა",
+        title: t("extra.chooseFromLibrary"),
+        subtitle: t("extra.chooseCategories"),
         gradient: "from-violet-500 to-purple-600",
         glowColor: "rgba(139, 92, 246, 0.4)",
         fullWidth: true,
@@ -69,14 +71,13 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
       },
     ];
 
-    // 2x2 Grid - all same size vertical cards
     const menuOptions: MenuOption[] = [
       {
         id: "create-room",
         imageIcon: danceFloor,
         icon: null,
-        title: "ოთახი",
-        subtitle: "შექმენი სათამაშო ოთახი",
+        title: t("extra.roomLabel"),
+        subtitle: t("extra.createGameRoom"),
         gradient: "from-emerald-500 to-green-600",
         glowColor: "rgba(16, 185, 129, 0.4)",
         onClick: onSelectCreateRoom,
@@ -85,8 +86,8 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
         id: "trivia",
         imageIcon: triviaBuzzer,
         icon: null,
-        title: "ტრივია",
-        subtitle: "1 რაუნდი",
+        title: t("extra.triviaLabel2"),
+        subtitle: t("extra.oneRound"),
         gradient: "from-purple-500 to-indigo-600",
         glowColor: "rgba(139, 92, 246, 0.4)",
         onClick: onSelectTrivia,
@@ -95,8 +96,8 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
         id: "collection",
         imageIcon: iconCollections,
         icon: null,
-        title: "კოლექცია",
-        subtitle: "რამდენიმე რაუნდი",
+        title: t("extra.collectionLabel"),
+        subtitle: t("extra.multipleRounds"),
         gradient: "from-cyan-400 to-blue-500",
         glowColor: "rgba(34, 211, 238, 0.4)",
         onClick: () => onSelectCollection(),
@@ -106,7 +107,7 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
         imageIcon: iconGroupOfPeople,
         icon: null,
         title: "MyTrivia Party",
-        subtitle: "შენი კითხვები",
+        subtitle: t("extra.yourQuestions"),
         gradient: "from-pink-500 to-rose-500",
         glowColor: "rgba(236, 72, 153, 0.4)",
         onClick: onSelectPersonalTrivia,
@@ -124,7 +125,6 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
         background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)",
       }}
     >
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -138,13 +138,11 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
         </button>
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-white/80" />
-          <h2 className="text-xl font-bold text-white">შექმნა</h2>
+          <h2 className="text-xl font-bold text-white">{t("extra.navCreate")}</h2>
         </div>
       </motion.div>
 
-      {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 pb-8 safe-bottom max-w-2xl lg:mx-auto">
-        {/* Top section - Full-width horizontal cards */}
         <div className="space-y-3 mb-4">
           {topOptions.map((option, index) => (
             <motion.button
@@ -162,20 +160,15 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
                 border: "1px solid rgba(255, 255, 255, 0.2)",
               }}
             >
-              {/* Glow effect */}
               <div
                 className="absolute inset-0 opacity-20"
                 style={{
                   background: `radial-gradient(circle at left center, ${option.glowColor}, transparent 50%)`,
                 }}
               />
-              
-              {/* Icon */}
               <div className="relative shrink-0">
                 <img src={option.imageIcon} alt="" className="w-14 h-14 object-contain" />
               </div>
-              
-              {/* Text */}
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-white text-base">{option.title}</h3>
                 <p className="text-white/60 text-xs">{option.subtitle}</p>
@@ -184,7 +177,6 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
           ))}
         </div>
 
-        {/* 2x2 Grid for all 4 options - same size vertical cards */}
         <div className="grid grid-cols-2 gap-3">
           {menuOptions.map((option, index) => (
             <motion.button
@@ -202,34 +194,28 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
                 border: "1px solid rgba(255, 255, 255, 0.2)",
               }}
             >
-              {/* Glow effect */}
               <div
                 className="absolute inset-0 opacity-30"
                 style={{
                   background: `radial-gradient(circle at top right, ${option.glowColor}, transparent 60%)`,
                 }}
               />
-              
-              {/* Icon */}
               <div className="relative mb-3">
                 <img src={option.imageIcon} alt="" className="w-14 h-14 object-contain" />
               </div>
-              
-              {/* Text */}
               <h3 className="font-bold text-white text-base mb-0.5">{option.title}</h3>
               <p className="text-white/60 text-xs">{option.subtitle}</p>
             </motion.button>
           ))}
         </div>
 
-        {/* Hint */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
           className="text-xs text-center text-white/50 mt-6"
         >
-          💡 შემთხვევითი კატეგორია სწრაფი თამაშისთვის
+          💡 {t("extra.quickStartDesc")}
         </motion.p>
       </div>
     </motion.div>

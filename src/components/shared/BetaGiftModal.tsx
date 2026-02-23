@@ -18,7 +18,6 @@ import unboxingGiftIcon from "@/assets/icons/unboxing-gift-2.png";
 
 const LAST_VISIT_KEY = "last_visit_ts";
 const GIFT_CLAIMED_KEY = "returnee_gift_claimed";
-/** Minimum time away (ms) to qualify as a "return" — 30 minutes */
 const MIN_AWAY_MS = 30 * 60 * 1000;
 
 type Phase = "offer" | "success";
@@ -29,17 +28,6 @@ interface BetaGiftModalProps {
   onClaimed: () => void;
 }
 
-const FEATURE_CLUES = [
-  { icon: triviaIcon, text: "შექმენი ტრივია", path: "/team" },
-  { icon: roomsIcon, text: "ითამაშე მეგობრებთან", path: "/team" },
-  { icon: retroTvIcon, text: "ითამაშე TV-ზე", path: "/team?tvHint=true" },
-];
-
-/**
- * Hook that checks if the user qualifies for a one-time return gift.
- * Returns true once if user returned after 30+ min, is not VIP, played ≥1 game,
- * and has never claimed the gift before.
- */
 export function useReturnGiftEligibility(): boolean {
   const { user } = useAuth();
   const { isVip, loading: vipLoading } = useVipStatus();
@@ -50,13 +38,11 @@ export function useReturnGiftEligibility(): boolean {
     if (hasChecked.current || vipLoading || !user) return;
     hasChecked.current = true;
 
-    // Don't offer to active VIP users
     if (isVip) {
       localStorage.setItem(`${LAST_VISIT_KEY}_${user.id}`, Date.now().toString());
       return;
     }
 
-    // One-time only: skip if already claimed
     if (localStorage.getItem(`${GIFT_CLAIMED_KEY}_${user.id}`)) {
       localStorage.setItem(`${LAST_VISIT_KEY}_${user.id}`, Date.now().toString());
       return;
@@ -66,13 +52,11 @@ export function useReturnGiftEligibility(): boolean {
     const now = Date.now();
     localStorage.setItem(`${LAST_VISIT_KEY}_${user.id}`, now.toString());
 
-    // First ever visit — just record timestamp
     if (!lastVisit) return;
 
     const timeSinceLastVisit = now - parseInt(lastVisit, 10);
     if (timeSinceLastVisit < MIN_AWAY_MS) return;
 
-    // User returned after 30+ min — check if they've played before
     const checkEngagement = async () => {
       const { data: profile } = await supabase
         .from("profiles")
@@ -90,13 +74,6 @@ export function useReturnGiftEligibility(): boolean {
   return eligible;
 }
 
-const POWER_UP_NAMES: Record<string, string> = {
-  "5050": "50/50",
-  "freeze": "გაყინვა",
-  "replace": "შეცვლა",
-  "time-drain": "დროის წართმევა",
-};
-
 export function BetaGiftModal({ isOpen, onDismiss, onClaimed }: BetaGiftModalProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -106,7 +83,19 @@ export function BetaGiftModal({ isOpen, onDismiss, onClaimed }: BetaGiftModalPro
   const [claiming, setClaiming] = useState(false);
   const [grantedPowerUp, setGrantedPowerUp] = useState<string | null>(null);
 
-  // Reset phase when modal reopens
+  const POWER_UP_NAMES: Record<string, string> = {
+    "5050": "50/50",
+    "freeze": t("extra.powerFreezeName"),
+    "replace": t("extra.powerReplaceName"),
+    "time-drain": t("extra.powerTimeDrainName"),
+  };
+
+  const FEATURE_CLUES = [
+    { icon: triviaIcon, text: t("extra.createTriviaFeature"), path: "/team" },
+    { icon: roomsIcon, text: t("extra.playWithFriendsFeature"), path: "/team" },
+    { icon: retroTvIcon, text: t("extra.playOnTVFeature"), path: "/team?tvHint=true" },
+  ];
+
   useEffect(() => {
     if (isOpen) {
       setPhase("offer");
@@ -118,10 +107,8 @@ export function BetaGiftModal({ isOpen, onDismiss, onClaimed }: BetaGiftModalPro
     setClaiming(true);
     const success = await activateVip("10days");
     if (success && user) {
-      // Mark as claimed (one-time)
       localStorage.setItem(`${GIFT_CLAIMED_KEY}_${user.id}`, "true");
 
-      // Grant 150 coins
       try {
         await supabase.rpc("update_user_currency", {
           p_user_id: user.id,
@@ -131,12 +118,10 @@ export function BetaGiftModal({ isOpen, onDismiss, onClaimed }: BetaGiftModalPro
         console.error("Failed to grant coins:", e);
       }
 
-      // Grant 1 random power-up
       const types = ["5050", "freeze", "replace", "time-drain"];
       const randomType = types[Math.floor(Math.random() * types.length)];
       setGrantedPowerUp(randomType);
       try {
-        // Try update first, then insert if no row exists
         const { data: existing } = await supabase
           .from("user_power_ups")
           .select("quantity")
@@ -187,19 +172,17 @@ export function BetaGiftModal({ isOpen, onDismiss, onClaimed }: BetaGiftModalPro
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-[340px] p-0 overflow-hidden border-none bg-transparent shadow-none [&>button]:hidden">
-        <DialogTitle className="sr-only">ბეტა საჩუქარი</DialogTitle>
+        <DialogTitle className="sr-only">{t("extra.betaGiftTitle")}</DialogTitle>
         <AnimatePresence mode="wait">
           {phase === "offer" ? (
-            <OfferPhase
-              claiming={claiming}
-              onClaim={handleClaim}
-              onClose={handleClose}
-            />
+            <OfferPhase claiming={claiming} onClaim={handleClaim} onClose={handleClose} />
           ) : (
             <SuccessPhase
               onClose={handleClose}
               onFeatureClick={handleFeatureClick}
               grantedPowerUp={grantedPowerUp}
+              powerUpNames={POWER_UP_NAMES}
+              featureClues={FEATURE_CLUES}
             />
           )}
         </AnimatePresence>
@@ -208,7 +191,6 @@ export function BetaGiftModal({ isOpen, onDismiss, onClaimed }: BetaGiftModalPro
   );
 }
 
-/* ── Offer Phase ── */
 function OfferPhase({
   claiming,
   onClaim,
@@ -255,7 +237,7 @@ function OfferPhase({
           transition={{ delay: 0.1 }}
           className="font-display text-xl font-bold text-gray-900 text-center mb-2"
         >
-          მადლობა, რომ ჩვენთან ხარ!
+          {t("extra.thankYouForBeingHere")}
         </motion.h2>
 
         <motion.p
@@ -265,10 +247,10 @@ function OfferPhase({
           className="text-gray-600 text-center text-sm leading-relaxed mb-6"
         >
           <span className="font-semibold text-amber-600">
-            საჩუქრად გიგზავნით 10 დღიან PRO-ს.
+            {t("extra.giftPro10Days")}
           </span>
           <br />
-          სასიამოვნო გართობას გისურვებთ!
+          {t("extra.enjoyPlaying")}
         </motion.p>
 
         <motion.div
@@ -283,7 +265,7 @@ function OfferPhase({
         >
           <img src={crownIcon} alt="" className="w-6 h-6 object-contain" />
           <span className="font-display text-sm font-bold text-purple-700">
-            10 დღიანი PRO
+            {t("extra.tenDayProLabel")}
           </span>
         </motion.div>
 
@@ -313,23 +295,27 @@ function OfferPhase({
           onClick={onClose}
           className="mt-4 text-xs text-gray-400 hover:text-gray-600 transition-colors"
         >
-          მოგვიანებით
+          {t("extra.laterLabel")}
         </motion.button>
       </div>
     </motion.div>
   );
 }
 
-/* ── Success Phase ── */
 function SuccessPhase({
   onClose,
   onFeatureClick,
   grantedPowerUp,
+  powerUpNames,
+  featureClues,
 }: {
   onClose: () => void;
   onFeatureClick: (path: string) => void;
   grantedPowerUp: string | null;
+  powerUpNames: Record<string, string>;
+  featureClues: { icon: string; text: string; path: string }[];
 }) {
+  const { t } = useLanguage();
   return (
     <motion.div
       key="success"
@@ -345,7 +331,6 @@ function SuccessPhase({
       }}
     >
       <div className="relative flex flex-col items-center px-6 pt-8 pb-6">
-        {/* Crown icon */}
         <motion.div
           initial={{ scale: 0, rotate: -30 }}
           animate={{ scale: 1, rotate: 0 }}
@@ -369,10 +354,9 @@ function SuccessPhase({
           transition={{ delay: 0.1 }}
           className="font-display text-xl font-bold text-gray-900 text-center mb-2"
         >
-          PRO გააქტიურდა!
+          {t("extra.proActivated")}
         </motion.h2>
 
-        {/* 24hr badge */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -384,10 +368,9 @@ function SuccessPhase({
           }}
         >
           <Clock className="w-3.5 h-3.5 text-amber-600" strokeWidth={2.5} />
-          <span className="text-xs font-bold text-amber-700">10 დღე</span>
+          <span className="text-xs font-bold text-amber-700">{t("extra.tenDays")}</span>
         </motion.div>
 
-        {/* Rewards earned */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -399,7 +382,7 @@ function SuccessPhase({
             style={{ background: "rgba(251,191,36,0.15)" }}
           >
             <span className="text-lg">🪙</span>
-            <span className="text-sm font-bold text-amber-700">+150 მონეტა</span>
+            <span className="text-sm font-bold text-amber-700">{t("extra.plus150coins")}</span>
           </div>
           {grantedPowerUp && (
             <div
@@ -408,24 +391,23 @@ function SuccessPhase({
             >
               <span className="text-lg">⚡</span>
               <span className="text-sm font-bold text-purple-700">
-                +1 {POWER_UP_NAMES[grantedPowerUp] ?? grantedPowerUp}
+                +1 {powerUpNames[grantedPowerUp] ?? grantedPowerUp}
               </span>
             </div>
           )}
         </motion.div>
 
-        {/* Interactive feature clues */}
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="text-gray-500 text-center text-sm mb-4"
         >
-          სცადე PRO ფუნქციები:
+          {t("extra.tryProFeatures")}
         </motion.p>
 
         <div className="w-full space-y-2 mb-6">
-          {FEATURE_CLUES.map((feature, i) => (
+          {featureClues.map((feature, i) => (
             <motion.button
               key={i}
               initial={{ opacity: 0, x: -20 }}
@@ -460,7 +442,7 @@ function SuccessPhase({
             onClick={onClose}
             icon={<img src={confettiGunIcon} alt="" className="w-5 h-5 object-contain" />}
           >
-            დავიწყოთ!
+            {t("extra.letsStart")}
           </ChunkyButton>
         </motion.div>
       </div>

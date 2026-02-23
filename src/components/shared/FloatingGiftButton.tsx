@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 import giftBoxIcon from "@/assets/icons/gift-box.png";
 
 interface FloatingGiftButtonProps {
@@ -6,6 +7,8 @@ interface FloatingGiftButtonProps {
 }
 
 export function FloatingGiftButton({ onClick }: FloatingGiftButtonProps) {
+  const { t } = useLanguage();
+
   return (
     <motion.button
       initial={{ scale: 0, opacity: 0 }}
@@ -19,7 +22,6 @@ export function FloatingGiftButton({ onClick }: FloatingGiftButtonProps) {
         boxShadow: "0 4px 0 #065F46, 0 0 20px rgba(16,185,129,0.4), 0 0 40px rgba(16,185,129,0.2)",
       }}
     >
-      {/* Pulsing glow ring */}
       <motion.div
         className="absolute inset-0 rounded-full"
         animate={{
@@ -31,16 +33,14 @@ export function FloatingGiftButton({ onClick }: FloatingGiftButtonProps) {
         transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
       />
 
-      {/* Bounce animation on the icon */}
       <motion.img
         src={giftBoxIcon}
-        alt="საჩუქარი"
+        alt={t("extra.giftAlt")}
         className="w-9 h-9 object-contain"
         animate={{ y: [0, -4, 0] }}
         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Sparkle badge */}
       <motion.div
         className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
         style={{

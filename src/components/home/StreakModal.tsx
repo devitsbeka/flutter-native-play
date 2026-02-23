@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Flame, Calendar, Award } from "lucide-react";
 import { GameModal, GameModalStat } from "@/components/ui/game-modal";
 import { getStreakMilestones, getStreakBonus } from "@/utils/levelCalculation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface StreakModalProps {
   isOpen: boolean;
@@ -11,16 +12,17 @@ interface StreakModalProps {
 }
 
 export function StreakModal({ isOpen, onClose, currentStreak, bestStreak }: StreakModalProps) {
+  const { t, language } = useLanguage();
   const milestones = getStreakMilestones();
   const currentBonus = getStreakBonus(currentStreak);
 
-  // Generate last 7 days
   const today = new Date();
+  const locale = language === 'ka' ? 'ka-GE' : language === 'en' ? 'en-US' : language;
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(today);
     date.setDate(date.getDate() - (6 - i));
     return {
-      day: date.toLocaleDateString("ka-GE", { weekday: "short" }),
+      day: date.toLocaleDateString(locale, { weekday: "short" }),
       isActive: i >= 7 - currentStreak,
     };
   });
@@ -31,15 +33,14 @@ export function StreakModal({ isOpen, onClose, currentStreak, bestStreak }: Stre
       onClose={onClose}
       variant="gold"
       icon={<Flame className="w-10 h-10" />}
-      title={`${currentStreak} დღიანი სერია! 🔥`}
-      subtitle={currentBonus > 0 ? `+${currentBonus}% XP ბონუსი აქტიურია!` : undefined}
+      title={t("extra.streakDays", { count: currentStreak })}
+      subtitle={currentBonus > 0 ? t("extra.xpBonusActive", { percent: currentBonus }) : undefined}
       showSparkles
     >
-      {/* Week Calendar */}
       <div className="mb-4">
         <div className="flex items-center gap-1.5 mb-2">
           <Calendar className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-600">ბოლო 7 დღე</span>
+          <span className="text-sm font-medium text-gray-600">{t("extra.last7Days")}</span>
         </div>
         <div className="flex justify-between gap-1">
           {last7Days.map((day, i) => (
@@ -74,26 +75,24 @@ export function StreakModal({ isOpen, onClose, currentStreak, bestStreak }: Stre
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <GameModalStat
           icon={<Flame className="h-5 w-5 text-orange-400" />}
           value={currentStreak}
-          label="მიმდინარე"
+          label={t("extra.currentLabel")}
         />
         <GameModalStat
           icon={<Award className="h-5 w-5 text-amber-500" />}
           value={bestStreak}
-          label="საუკეთესო"
+          label={t("extra.bestLabel")}
           highlight
         />
       </div>
 
-      {/* Milestones */}
       <div className="space-y-2">
         <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
           <span>🎯</span>
-          სერიის ეტაპები
+          {t("extra.streakMilestones")}
         </h3>
         {milestones.map((milestone, i) => {
           const isReached = currentStreak >= milestone.days;
@@ -117,13 +116,13 @@ export function StreakModal({ isOpen, onClose, currentStreak, bestStreak }: Stre
             >
               <div className="flex items-center gap-2">
                 <span className={isReached ? "text-green-500" : "text-gray-500"}>
-                  {isReached ? "✓" : `${milestone.days} დღე`}
+                  {isReached ? "✓" : t("extra.daysLabel", { count: milestone.days })}
                 </span>
                 <span className="text-sm font-medium text-gray-800">{milestone.reward}</span>
               </div>
               {isNext && (
                 <span className="text-xs font-bold text-orange-500 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded-lg">
-                  {milestone.days - currentStreak} დღე დარჩა
+                  {t("extra.daysLeft", { count: milestone.days - currentStreak })}
                 </span>
               )}
             </motion.div>
