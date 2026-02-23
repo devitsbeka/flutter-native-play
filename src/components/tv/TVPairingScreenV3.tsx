@@ -4,6 +4,7 @@ import { Smartphone, QrCode } from 'lucide-react';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 import { useTVGame } from '@/contexts/TVGameContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 /**
  * TV Pairing Screen V3 - Shows a 4-digit code for phone pairing
@@ -11,6 +12,7 @@ import { useTVGame } from '@/contexts/TVGameContext';
  */
 export const TVPairingScreenV3: React.FC = () => {
   const { code } = useTVGame();
+  const { t } = useLanguage();
   const fourDigitCode = (code || '').padStart(4, '0');
 
   return (
@@ -63,9 +65,9 @@ export const TVPairingScreenV3: React.FC = () => {
         >
           <div className="flex items-center justify-center gap-2">
             <img src={retroTvIcon} alt="TV" className="w-8 h-8 object-contain" />
-            <span className="text-lg font-bold text-white">TV რეჟიმი</span>
+            <span className="text-lg font-bold text-white">{t("extra.tvMode")}</span>
             <span className="text-lg text-purple-200/80">-</span>
-            <span className="text-lg text-purple-200/80">მოემზადეთ სახალისო თამაშისთვის!</span>
+            <span className="text-lg text-purple-200/80">{t("extra.tvGetReadyFun")}</span>
           </div>
         </motion.div>
 
@@ -85,7 +87,7 @@ export const TVPairingScreenV3: React.FC = () => {
               boxShadow: '0 16px 48px rgba(0,0,0,0.4)',
             }}
           >
-            <p className="text-purple-200 mb-2.5 text-sm">შეიყვანეთ ეს კოდი თქვენს ტელეფონზე</p>
+            <p className="text-purple-200 mb-2.5 text-sm">{t("extra.tvEnterCodeOnPhone")}</p>
             
             {/* 4-Digit Code Display */}
             <div className="flex justify-center gap-2.5">
@@ -122,7 +124,7 @@ export const TVPairingScreenV3: React.FC = () => {
               <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
                 <Smartphone className="w-6 h-6" />
               </div>
-              <span className="text-xs">გახსენით</span>
+              <span className="text-xs">{t("extra.tvOpen")}</span>
               <span className="font-bold text-sm">mytrivia.io/join</span>
             </div>
             
@@ -132,7 +134,7 @@ export const TVPairingScreenV3: React.FC = () => {
               <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
                 <span className="text-lg font-bold">#</span>
               </div>
-              <span className="text-xs">შეიყვანეთ კოდი</span>
+              <span className="text-xs">{t("extra.tvEnterCode")}</span>
             </div>
             
             <div className="text-2xl text-purple-400">→</div>
@@ -141,7 +143,7 @@ export const TVPairingScreenV3: React.FC = () => {
               <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
                 <QrCode className="w-6 h-6" />
               </div>
-              <span className="text-xs">მზად ხართ!</span>
+              <span className="text-xs">{t("extra.tvYoureReady")}</span>
             </div>
           </div>
         </motion.div>
@@ -170,7 +172,7 @@ export const TVPairingScreenV3: React.FC = () => {
               transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
             />
           </div>
-          <p className="text-purple-300/60 mt-3 text-sm">ველოდებით მოთამაშეებს...</p>
+          <p className="text-purple-300/60 mt-3 text-sm">{t("extra.tvWaitingPlayers")}</p>
         </motion.div>
       </div>
     </div>
