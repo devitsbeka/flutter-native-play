@@ -531,7 +531,7 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
                           className="text-destructive focus:text-destructive focus:bg-destructive/10"
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
-                          წაშლა
+                          {t("extra.rlDelete")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -584,18 +584,18 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">
           <AlertDialogHeader className="text-center">
-            <AlertDialogTitle>ოთახის წაშლა</AlertDialogTitle>
+            <AlertDialogTitle>{t("extra.rlDeleteRoom")}</AlertDialogTitle>
             <AlertDialogDescription>
-              დარწმუნებული ხარ? ეს მოქმედება შეუქცევადია.
+              {t("extra.rlDeleteRoomConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row gap-3">
-            <AlertDialogCancel className="flex-1 mt-0">გაუქმება</AlertDialogCancel>
+            <AlertDialogCancel className="flex-1 mt-0">{t("extra.rlCancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmDelete}
               className="flex-1 bg-destructive hover:bg-destructive/90"
             >
-              წაშლა
+              {t("extra.rlDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -793,7 +793,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
                       className="text-destructive focus:text-destructive focus:bg-destructive/10"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      წაშლა
+                      {t("extra.rlDelete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -878,18 +878,18 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">
           <AlertDialogHeader className="text-center">
-            <AlertDialogTitle>ოთახის წაშლა</AlertDialogTitle>
+            <AlertDialogTitle>{t("extra.rlDeleteRoom")}</AlertDialogTitle>
             <AlertDialogDescription>
-              დარწმუნებული ხარ? ეს მოქმედება შეუქცევადია.
+              {t("extra.rlDeleteRoomConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row gap-3">
-            <AlertDialogCancel className="flex-1 mt-0">გაუქმება</AlertDialogCancel>
+            <AlertDialogCancel className="flex-1 mt-0">{t("extra.rlCancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmDelete}
               className="flex-1 bg-destructive hover:bg-destructive/90"
             >
-              წაშლა
+              {t("extra.rlDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
