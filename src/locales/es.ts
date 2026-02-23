@@ -40,6 +40,7 @@ export const es: KaTranslations = {
     new: "Nuevo",
     or: "o",
     owned: "Adquirido",
+    signIn: "Iniciar sesión",
   },
   auth: {
     createAccount: "Crear cuenta",

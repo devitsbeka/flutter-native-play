@@ -40,6 +40,7 @@ export const en: KaTranslations = {
     new: "New",
     or: "or",
     owned: "Owned",
+    signIn: "Sign In",
   },
 
   // ==========================================
