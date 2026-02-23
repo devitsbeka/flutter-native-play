@@ -1,5 +1,20 @@
 import { useEffect, useRef } from 'react';
 import { useBackgroundGenerationSafe, GenerationJob } from '@/contexts/BackgroundGenerationContext';
+import { en } from '@/locales/en';
+import { ka } from '@/locales/ka';
+
+const locales: Record<string, any> = { en, ka };
+
+function getT() {
+  const lang = localStorage.getItem('preferredLanguage') || 'ka';
+  const loc = locales[lang] || ka;
+  return (key: string) => {
+    const parts = key.split('.');
+    let val: any = loc;
+    for (const p of parts) val = val?.[p];
+    return val || key;
+  };
+}
 
 export interface GenerationNotification {
   id: string;
@@ -21,12 +36,13 @@ export function useGenerationNotifications() {
   const activeJobs = context?.activeJobs ?? [];
   const previousJobsRef = useRef<Map<string, GenerationJob>>(new Map());
 
-  // Convert active jobs to notification format
+  const t = getT();
+
   const generationNotifications: GenerationNotification[] = activeJobs.map(job => ({
     id: `gen_${job.id}`,
     type: 'ai_generation' as const,
-    title: job.type === 'avatar' ? 'ავატარის გენერაცია' : 'გარეკანის გენერაცია',
-    message: getStatusMessage(job),
+    title: job.type === 'avatar' ? t('extra.genAvatarTitle') : t('extra.genCoverTitle'),
+    message: getStatusMessage(job, t),
     status: job.status,
     imageUrl: job.imageUrl,
     startedAt: job.startedAt,
@@ -37,7 +53,6 @@ export function useGenerationNotifications() {
     data: { ...job.metadata, generationType: job.type, status: job.status },
   }));
 
-  // Track job state changes
   useEffect(() => {
     activeJobs.forEach(job => {
       previousJobsRef.current.set(job.id, job);
@@ -52,13 +67,13 @@ export function useGenerationNotifications() {
   };
 }
 
-function getStatusMessage(job: GenerationJob): string {
+function getStatusMessage(job: GenerationJob, t: (key: string) => string): string {
   switch (job.status) {
     case 'generating':
-      return 'მზადდება...';
+      return t('extra.genPreparing');
     case 'completed':
-      return 'მზადაა';
+      return t('extra.genReady');
     case 'failed':
-      return 'შეცდომა მოხდა';
+      return t('extra.genError');
   }
 }
