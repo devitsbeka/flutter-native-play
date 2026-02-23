@@ -1030,7 +1030,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           {/* Inline queue preview */}
                           {queuedRounds.length > 0 && (
                              <div className="mt-2 space-y-0.5">
-                               <p className="text-xs text-white/60 font-medium">შემდეგი რაუნდები:</p>
+                <p className="text-xs text-white/60 font-medium">{t("extra.nextRounds")}</p>
                                <div className="flex flex-wrap gap-1.5">
                                  {queuedRounds.map((r, i) => (
                                    <span 
@@ -1057,7 +1057,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         <button
                           onClick={() => setShowQueuePicker(true)}
                           className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
-                          title="რიგში დამატება"
+                           title={t("extra.addToQueue")}
                         >
                           <Plus className="w-5 h-5 text-white" />
                         </button>
@@ -1172,12 +1172,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                             {selectedCategory.name}
                           </p>
                           <p className="text-xs text-white/80">
-                            არჩეული კატეგორია
+                            {t("extra.selectedCategoryLabel")}
                           </p>
                           {/* Inline queue preview */}
                           {queuedRounds.length > 0 && (
                              <div className="mt-2 space-y-0.5">
-                               <p className="text-xs text-white/60 font-medium">შემდეგი რაუნდები:</p>
+                <p className="text-xs text-white/60 font-medium">{t("extra.nextRounds")}</p>
                                <div className="flex flex-wrap gap-1.5">
                                  {queuedRounds.map((r, i) => (
                                    <span 
@@ -1196,7 +1196,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         <button
                           onClick={() => setShowQueuePicker(true)}
                           className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
-                          title="რიგში დამატება"
+                           title={t("extra.addToQueue")}
                         >
                           <Plus className="w-5 h-5 text-white" />
                         </button>
@@ -1261,12 +1261,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                             {challengeTrivia.title}
                           </p>
                           <p className="text-xs text-white/80">
-                            {challengeTrivia.type === "collection" ? "კოლექცია" : "ტრივია"}
+                            {challengeTrivia.type === "collection" ? t("extra.collectionLabel") : t("extra.triviaLabel")}
                           </p>
                           {/* Inline queue preview */}
                           {queuedRounds.length > 0 && (
                              <div className="mt-2 space-y-0.5">
-                               <p className="text-xs text-white/60 font-medium">შემდეგი რაუნდები:</p>
+                               <p className="text-xs text-white/60 font-medium">{t("extra.nextRounds")}</p>
                                <div className="flex flex-wrap gap-1.5">
                                  {queuedRounds.map((r, i) => (
                                    <span 
@@ -1290,7 +1290,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         <button
                           onClick={() => setShowQueuePicker(true)}
                           className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
-                          title="რიგში დამატება"
+                          title={t("extra.addToQueue")}
                         >
                           <Plus className="w-5 h-5 text-white" />
                         </button>
