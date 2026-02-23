@@ -356,6 +356,8 @@ export const en: KaTranslations = {
     perfectScore: "🏆 Perfect Score!",
     levelCompleted: "🎉 Level Completed!",
     tryAgainForNextLevel: "Try again to unlock the next level!",
+    noQuestionsError: "No new questions are currently available in this category. Try again later or choose a different category.",
+    pointsEarnedToast: "+{points} points earned!",
   },
 
   // ==========================================

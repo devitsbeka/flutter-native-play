@@ -310,6 +310,8 @@ export const es: KaTranslations = {
     perfectScore: "🏆 ¡Puntuación perfecta!",
     levelCompleted: "🎉 ¡Nivel completado!",
     tryAgainForNextLevel: "¡Intenta de nuevo para desbloquear el siguiente nivel!",
+    noQuestionsError: "No hay preguntas nuevas disponibles en esta categoría. Inténtalo más tarde o elige otra categoría.",
+    pointsEarnedToast: "+{points} puntos ganados!",
   },
   profile: {
     myProfile: "Mi perfil",

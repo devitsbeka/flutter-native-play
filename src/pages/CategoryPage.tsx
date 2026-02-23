@@ -296,7 +296,7 @@ export default function CategoryPage() {
                 variant="mint"
                 icon={<Play className="h-4 w-4 fill-current" />}
               >
-                ითამაშე
+                {t("extra.playButton")}
               </ChunkyButton>
             </div>
           </div>
@@ -323,7 +323,7 @@ export default function CategoryPage() {
                 }}
               >
                 <Play className="h-4 w-4 fill-current" />
-                ითამაშე
+                {t("extra.playButton")}
               </button>
             </div>
           </div>

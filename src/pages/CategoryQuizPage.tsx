@@ -268,7 +268,7 @@ export default function CategoryQuizPage() {
         });
         
         if (result.questions.length === 0) {
-          setError("ამ კატეგორიაში ახალი კითხვები დროებით არ არის ხელმისაწვდომი. სცადეთ მოგვიანებით ან აირჩიეთ სხვა კატეგორია.");
+          setError(t("discover.noQuestionsError"));
           setLoading(false);
           return;
         }
@@ -465,11 +465,11 @@ export default function CategoryQuizPage() {
         }
         
         toast.success(
-          score === questions.length ? "🏆 იდეალური შედეგი!" : "🎉 დონე გავლილია!", 
-          { description: `+${earned} ქულა მიღებულია!` }
+          score === questions.length ? t("discover.perfectScore") : t("discover.levelCompleted"), 
+          { description: t("discover.pointsEarnedToast", { points: earned }) }
         );
       } else {
-        toast.info("სცადე თავიდან შემდეგი დონის გასახსნელად!");
+        toast.info(t("discover.tryAgainForNextLevel"));
       }
       
       // Show registration prompt for guests after completing a few levels
@@ -843,7 +843,7 @@ export default function CategoryQuizPage() {
                 setLoading(true);
               }}
             >
-              სცადე თავიდან
+              {t("extra.tryAgain")}
             </ChunkyButton>
             <ChunkyButton 
               variant="secondary"
@@ -1028,7 +1028,7 @@ export default function CategoryQuizPage() {
                   className="w-full"
                   onClick={resetQuiz}
                 >
-              სცადე თავიდან
+              {t("extra.tryAgain")}
               </ChunkyButton>
             )}
               
