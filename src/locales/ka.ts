@@ -3103,7 +3103,7 @@ export const ka = {
     tvGetReadyFun: "მოემზადეთ სახალისო თამაშისთვის!",
     tvEnterCodeOnPhone: "შეიყვანეთ ეს კოდი თქვენს ტელეფონზე",
     tvOpen: "გახსენით",
-    tvEnterCode: "შეიყვანეთ კოდი",
+    tvEnterCodeLabel: "შეიყვანეთ კოდი",
     tvYoureReady: "მზად ხართ!",
     tvWaitingPlayers: "ველოდებით მოთამაშეებს...",
     tvEnterCodePhone2: "შეიყვანეთ კოდი თქვენს ტელეფონში",

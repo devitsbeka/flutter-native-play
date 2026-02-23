@@ -134,7 +134,7 @@ export const TVPairingScreenV3: React.FC = () => {
               <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
                 <span className="text-lg font-bold">#</span>
               </div>
-              <span className="text-xs">{t("extra.tvEnterCode")}</span>
+              <span className="text-xs">{t("extra.tvEnterCodeLabel")}</span>
             </div>
             
             <div className="text-2xl text-purple-400">→</div>
