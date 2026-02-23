@@ -270,9 +270,9 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     setShowCategoryPicker(false);
     
     if (successCount > 0) {
-      toast.success(`${successCount} კატეგორია შემოთავაზებულია!`);
+      toast.success(t("extra.tvCategorySuggested"));
     } else {
-      toast.error('შემოთავაზება ვერ მოხერხდა');
+      toast.error(t("extra.tvSuggestionFailed"));
     }
   };
 
@@ -289,30 +289,30 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     setShowTriviaPicker(false);
     
     if (success) {
-      toast.success(`${trivia.title} შემოთავაზებულია!`);
+      toast.success(`${trivia.title} ${t("extra.tvSuggested")}`);
     } else {
-      toast.error('შემოთავაზება ვერ მოხერხდა');
+      toast.error(t("extra.tvSuggestionFailed"));
     }
   };
 
   const handleRemoveSuggestion = async (suggestionId: string) => {
     const success = await removeSuggestion(suggestionId);
     if (success) {
-      toast.success('შემოთავაზება წაიშალა');
+      toast.success(t("extra.tvSuggestionRemoved"));
     } else {
-      toast.error('წაშლა ვერ მოხერხდა');
+      toast.error(t("extra.tvRemovalFailed"));
     }
   };
 
   const handleStartVoting = async () => {
     if (suggestions.length < 2) {
-      toast.error('საჭიროა მინიმუმ 2 შემოთავაზება');
+      toast.error(t("extra.tvNeed2Suggestions"));
       return;
     }
     
     const success = await startVoting();
     if (success) {
-      toast.success('ხმის მიცემა დაიწყო!');
+      toast.success(t("extra.tvVotingStarted"));
     }
   };
 
@@ -322,7 +322,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     
     // If not already voted and at max, show warning
     if (!isAlreadyVoted && myVotes.length >= MAX_VOTES) {
-      toast.error(`მაქსიმუმ ${MAX_VOTES} ხმის მიცემა შეგიძლია`);
+      toast.error(t("extra.tvMaxVotes", { n: MAX_VOTES }));
       return;
     }
     
@@ -367,9 +367,9 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
           <div className="max-w-xl mx-auto w-full flex-1 flex flex-col min-h-0">
             <div className="flex items-center justify-between mb-4 shrink-0">
               <div>
-                <h2 className="text-xl font-bold text-white">აირჩიე კატეგორიები</h2>
+                <h2 className="text-xl font-bold text-white">{t("extra.tvChooseCategories")}</h2>
                 {selectedCategoryIds.size > 0 && (
-                  <p className="text-sm text-green-300 mt-1">არჩეულია: {selectedCategoryIds.size}</p>
+                  <p className="text-sm text-green-300 mt-1">{t("extra.tvSelected")} {selectedCategoryIds.size}</p>
                 )}
               </div>
               <button 
@@ -405,7 +405,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                     )}
                     <span className="flex-1 text-left font-medium text-white">{category.name}</span>
                     {isAlreadySuggested ? (
-                      <span className="text-xs text-purple-400">უკვე დამატებულია</span>
+                      <span className="text-xs text-purple-400">{t("extra.tvAlreadyAdded")}</span>
                     ) : isSelected ? (
                       <Check className="w-5 h-5 text-green-400" />
                     ) : (
@@ -432,8 +432,8 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                   <Play className="w-5 h-5 mr-2" />
                 )}
                 {selectedCategoryIds.size === 0
-                  ? 'აირჩიე კატეგორიები'
-                  : `დამატება (${selectedCategoryIds.size})`}
+                  ? t("extra.tvChooseCategories")
+                  : `${t("extra.tvAddToQueue")} (${selectedCategoryIds.size})`}
               </ChunkyButton>
             </div>
           </div>
@@ -447,7 +447,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
           <div className="max-w-xl mx-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">აირჩიე ტრივია</h2>
+              <h2 className="text-xl font-bold text-white">{t("extra.tvChooseTrivia")}</h2>
               <button 
                 onClick={() => setShowTriviaPicker(false)}
                 className="p-2 rounded-full bg-white/10"
@@ -459,7 +459,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
             {userTrivias.length === 0 ? (
               <div className="text-center py-12">
                 <User className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                <p className="text-purple-300">შენ ჯერ არ გაქვს ტრივიები</p>
+                <p className="text-purple-300">{t("extra.tvNoTrivias")}</p>
               </div>
             ) : (
               <div className="space-y-2 max-h-[70vh] overflow-y-auto">
@@ -511,7 +511,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
             {/* Host's suggestions */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20 flex-1 min-h-0 flex flex-col overflow-hidden">
               <p className="text-purple-300 text-sm mb-3 shrink-0">
-                შენი შეთავაზებული: <span className="font-bold text-white">{mySuggestions.length}/8</span>
+                {t("extra.tvYourSuggestions")} <span className="font-bold text-white">{mySuggestions.length}/8</span>
               </p>
               
               {/* Show existing suggestions */}
@@ -534,8 +534,8 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-white text-sm truncate">{suggestion.category_name}</p>
                         <p className="text-xs text-purple-300">
-                          {suggestion.source_type === 'category' ? 'კატეგორია' : (
-                            <span className="text-yellow-400">⚠️ შენი ტრივია - გამოტოვებ</span>
+                          {suggestion.source_type === 'category' ? t("extra.tvCategoryType") : (
+                            <span className="text-yellow-400">⚠️ {t("extra.tvYourTriviaSkip")}</span>
                           )}
                         </p>
                       </div>
@@ -559,7 +559,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                     onClick={() => setShowCategoryPicker(true)}
                   >
                     <Library className="w-5 h-5 mr-2" />
-                    ბიბლიოთეკიდან
+                    {t("extra.tvFromLibrary")}
                   </ChunkyButton>
                   <ChunkyButton
                     variant="secondary"
@@ -567,7 +567,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                     onClick={() => setShowTriviaPicker(true)}
                   >
                     <User className="w-5 h-5 mr-2" />
-                    ჩემი ტრივიებიდან
+                    {t("extra.tvFromMyTrivias")}
                   </ChunkyButton>
                 </div>
               )}
@@ -575,7 +575,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
               {/* At limit message */}
               {!canAddMoreSuggestions && mySuggestions.length >= 8 && (
                 <p className="text-xs text-purple-400 text-center mt-2 shrink-0">
-                  მაქსიმალური რაოდენობა მიღწეულია
+                  {t("extra.tvMaxReached")}
                 </p>
               )}
             </div>
@@ -590,8 +590,8 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
               >
                 <Vote className="w-5 h-5 mr-2" />
                 {suggestions.length < 2 
-                  ? 'საჭიროა მინ. 2 კატეგორია' 
-                  : 'ხმის მიცემის დაწყება'}
+                  ? t("extra.tvNeedMin2")
+                  : t("extra.tvStartVoting")}
               </ChunkyButton>
             </div>
           </div>
@@ -605,7 +605,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
         <div className="max-w-xl mx-auto w-full flex-1 flex flex-col">
           <div className="flex items-center gap-3 mb-6">
             <Vote className="w-7 h-7 text-purple-300" />
-            <h1 className="text-xl font-bold text-white">კატეგორიების არჩევა</h1>
+            <h1 className="text-xl font-bold text-white">{t("extra.tvChoosingCategories")}</h1>
           </div>
 
           {/* Current suggestions from host */}
@@ -618,13 +618,13 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                 >
                   <Loader2 className="w-12 h-12 text-purple-400 mx-auto mb-4 animate-spin" />
                 </motion.div>
-                <p className="text-purple-300 font-medium">ჰოსტი ამატებს კატეგორიებს...</p>
-                <p className="text-purple-400 text-sm mt-2">მალე დაიწყება ხმის მიცემა</p>
+                <p className="text-purple-300 font-medium">{t("extra.tvHostAddingCategories")}</p>
+                <p className="text-purple-400 text-sm mt-2">{t("extra.tvVotingSoon")}</p>
               </div>
             ) : (
               <>
                 <p className="text-purple-300 text-sm mb-3">
-                  ჰოსტის არჩევანი ({suggestions.length}):
+                  {t("extra.tvHostChoice")} ({suggestions.length}):
                 </p>
                 <div className="space-y-2 max-h-[70vh] overflow-y-auto pb-4">
                   {suggestions.map((suggestion, index) => (
@@ -650,7 +650,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                       <div className="flex-1">
                         <p className="font-medium text-white text-sm">{suggestion.category_name}</p>
                         <p className="text-xs text-purple-300">
-                          {suggestion.source_type === 'category' ? t("extra.categoryLabel") : t("extra.hostTrivia")}
+                          {suggestion.source_type === 'category' ? t("extra.categoryLabel") : t("extra.tvHostTrivia")}
                         </p>
                       </div>
                     </motion.div>
@@ -704,7 +704,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <Vote className="w-7 h-7 text-purple-300" />
-              <h1 className="text-xl font-bold text-white">ხმის მიცემა</h1>
+              <h1 className="text-xl font-bold text-white">{t("extra.tvVoting")}</h1>
             </div>
             <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
               timeRemaining <= 10 ? 'bg-red-500/30' : 'bg-white/10'
@@ -719,7 +719,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
           {/* Vote limit indicator */}
           <div className="flex items-center justify-between mb-4">
             <p className="text-purple-300 text-sm">
-              აირჩიე მაქსიმუმ {MAX_VOTES} კატეგორია
+              {t("extra.tvChooseMaxN", { n: MAX_VOTES })}
             </p>
             <div className={`px-3 py-1 rounded-full text-sm font-medium ${
               myVotes.length >= MAX_VOTES 
@@ -733,7 +733,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
           {/* Players who voted indicator */}
           {players.length > 0 && (
             <div className="mb-4 p-3 bg-white/5 rounded-xl">
-              <p className="text-xs text-purple-300 mb-2">ხმა მისცა:</p>
+              <p className="text-xs text-purple-300 mb-2">{t("extra.tvVoted")}</p>
               <div className="flex flex-wrap gap-2">
                 {players.map((player) => {
                   const hasPlayerVoted = voters.some(v => v.id === player.player_id);
@@ -809,8 +809,8 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                       <p className="font-medium text-white">{suggestion.category_name}</p>
                       <p className="text-xs text-purple-300">
                         {isHostTrivia ? (
-                          <span className="text-yellow-400">ჰოსტის ტრივია</span>
-                        ) : 'კატეგორია'}
+                          <span className="text-yellow-400">{t("extra.tvHostTrivia")}</span>
+                        ) : t("extra.tvCategoryType")}
                       </p>
                     </div>
 
@@ -829,7 +829,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
           <div className="mt-4 py-3 px-4 bg-white/5 rounded-xl">
             <div className="flex items-center justify-between">
               <p className="text-purple-300 text-sm">
-                შენი ხმები
+                {t("extra.tvYourVotes")}
               </p>
               <div className="flex items-center gap-2">
                 {[...Array(MAX_VOTES)].map((_, i) => (

@@ -58,7 +58,7 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
 
   const handleStartGame = async () => {
     if (winningCategories.length === 0) {
-      toast.error('არ არის გამარჯვებული კატეგორიები');
+      toast.error(t("extra.tvNoWinningCategories"));
       return;
     }
 
@@ -67,14 +67,14 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
       const success = await finalizePollAndStartGame(selectedRoundCount);
       
       if (success) {
-        toast.success('თამაში იწყება!');
+        toast.success(t("extra.tvGameStarting"));
         onGameStart();
       } else {
-        toast.error('თამაშის დაწყება ვერ მოხერხდა');
+        toast.error(t("extra.tvStartGameFailed"));
       }
     } catch (error) {
       console.error('[ControllerPollResults] Error starting game:', error);
-      toast.error('თამაშის დაწყება ვერ მოხერხდა');
+      toast.error(t("extra.tvStartGameFailed"));
     } finally {
       // Always reset isStarting to ensure button isn't stuck disabled
       setIsStarting(false);
@@ -86,7 +86,7 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Trophy className="w-7 h-7 text-yellow-500" />
-        <h1 className="text-xl font-bold text-white">ხმის მიცემის შედეგები</h1>
+        <h1 className="text-xl font-bold text-white">{t("extra.tvVotingResults")}</h1>
       </div>
 
       {/* Results list */}
@@ -132,14 +132,14 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
               <div className="flex-1">
                 <p className="font-bold text-white">{suggestion.category_name}</p>
                 <p className="text-xs text-purple-300">
-                  {suggestion.vote_count} ხმა • {suggestion.nickname}
+                  {suggestion.vote_count} {t("extra.tvVoteLabel")} • {suggestion.nickname}
                 </p>
               </div>
 
               {/* Winning indicator */}
               {isWinning && (
                 <span className="text-xs bg-green-500/30 text-green-300 px-2 py-1 rounded">
-                  რაუნდი {index + 1}
+                  {t("extra.tvRoundFallback")} {index + 1}
                 </span>
               )}
             </motion.div>
@@ -149,7 +149,7 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
 
       {/* Round count selector */}
       <div className="mb-6">
-        <p className="text-purple-300 text-sm mb-3 text-center">რაუნდების რაოდენობა:</p>
+        <p className="text-purple-300 text-sm mb-3 text-center">{t("extra.tvRoundsCountLabel")}</p>
         <div className="flex justify-center gap-2">
           {roundOptions.map((count) => (
             <button
@@ -176,8 +176,8 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
       >
         <Play className="w-5 h-5 mr-2" />
         {isStarting 
-          ? 'იწყება...' 
-          : `დაწყება (${selectedRoundCount} რაუნდი)`}
+          ? t("extra.tvStartingEllipsis") 
+          : t("extra.tvStartNRounds", { n: selectedRoundCount })}
       </ChunkyButton>
     </div>
   );

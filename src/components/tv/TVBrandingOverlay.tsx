@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTVGame } from '@/contexts/TVGameContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 
 interface TVBrandingOverlayProps {
@@ -14,6 +15,7 @@ export const TVBrandingOverlay: React.FC<TVBrandingOverlayProps> = ({
   compact = false,
 }) => {
   const { code } = useTVGame();
+  const { t } = useLanguage();
 
   return (
     <>
@@ -31,7 +33,7 @@ export const TVBrandingOverlay: React.FC<TVBrandingOverlayProps> = ({
       {showCode && code && (
         <div className={`absolute z-20 ${compact ? 'bottom-4 right-4' : 'top-4 right-4'}`}>
           <div className={`bg-black/40 backdrop-blur-sm rounded-xl px-3 py-2 border border-white/20 flex items-center gap-2 ${compact ? 'text-sm' : ''}`}>
-            <span className="text-white/60 text-xs">კოდი:</span>
+            <span className="text-white/60 text-xs">{t("extra.tvCodeLabel")}</span>
             <span className="text-white font-bold text-lg tracking-wider">{code}</span>
           </div>
         </div>

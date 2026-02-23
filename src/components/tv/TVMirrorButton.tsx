@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Monitor, Loader2 } from 'lucide-react';
 import { useTVGame } from '@/contexts/TVGameContext';
@@ -9,6 +10,7 @@ import { useTVGame } from '@/contexts/TVGameContext';
  */
 export const TVMirrorButton: React.FC = () => {
   const { mirrorSession } = useTVGame();
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [code, setCode] = useState(['', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +61,7 @@ export const TVMirrorButton: React.FC = () => {
     setIsLoading(false);
     
     if (!success) {
-      setError('სესია ვერ მოიძებნა');
+      setError(t("extra.tvSessionNotFound"));
       setCode(['', '', '', '']);
       inputRefs.current[0]?.focus();
     } else {
@@ -111,7 +113,7 @@ export const TVMirrorButton: React.FC = () => {
 
               {/* Description */}
               <p className="text-purple-300 text-sm mb-6">
-                შეიყვანე 4-ციფრიანი კოდი სხვა TV-დან ამ ეკრანზე თამაშის სარკისებურად საჩვენებლად.
+                {t("extra.tvEnter4DigitCode")}
               </p>
 
               {/* Code input */}
@@ -147,7 +149,7 @@ export const TVMirrorButton: React.FC = () => {
               {isLoading && (
                 <div className="flex items-center justify-center gap-2 text-purple-300">
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>დაკავშირება...</span>
+                  <span>{t("extra.tvConnecting")}</span>
                 </div>
               )}
             </motion.div>

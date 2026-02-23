@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { TVLeaderboardPanel } from './TVLeaderboardPanel';
 import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
@@ -8,6 +9,7 @@ const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
 
 export const TVRevealScreenV2: React.FC = () => {
   const { questions, currentQuestionIndex, players } = useTVGame();
+  const { t } = useLanguage();
   
   const currentQuestion = questions[currentQuestionIndex];
   const correctAnswer = currentQuestion?.correct_answer;
@@ -67,9 +69,9 @@ export const TVRevealScreenV2: React.FC = () => {
             className="mt-3 text-center flex-shrink-0"
           >
             <p className="text-purple-300 text-sm">
-              კითხვა {currentQuestionIndex + 1} / {questions.length}
+              {t("extra.tvQuestionNofM", { n: currentQuestionIndex + 1, m: questions.length })}
             </p>
-            <p className="text-white/60 text-xs mt-1">შემდეგი კითხვა იწყება...</p>
+            <p className="text-white/60 text-xs mt-1">{t("extra.tvNextQuestionStarting")}</p>
           </motion.div>
         </div>
 

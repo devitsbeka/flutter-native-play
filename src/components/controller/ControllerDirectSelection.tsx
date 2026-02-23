@@ -128,9 +128,9 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
     setShowCategoryPicker(false);
     
     if (successCount > 0) {
-      toast.success(`${successCount} კატეგორია დაემატა!`);
+      toast.success(`${successCount} ${t("extra.tvCategorySuggested")}`);
     } else {
-      toast.error('დამატება ვერ მოხერხდა');
+      toast.error(t("extra.tvSuggestionFailed"));
     }
   };
 
@@ -144,7 +144,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
     );
     
     if (alreadyInQueue) {
-      toast.error(`${trivia.title} უკვე არჩეულია!`);
+      toast.error(`${trivia.title} ${t("extra.tvAlreadySelected")}`);
       setPendingTriviaId(null);
       setShowTriviaPicker(false);
       return;
@@ -190,10 +190,10 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
       });
 
       if (error) throw error;
-      toast.success(`${trivia.title} დაემატა!`);
+      toast.success(`${trivia.title} ${t("extra.tvAdded")}`);
     } catch (error) {
       console.error('Error adding trivia:', error);
-      toast.error('დამატება ვერ მოხერხდა');
+      toast.error(t("extra.tvSuggestionFailed"));
     }
     setLoading(false);
     setPendingTriviaId(null);
@@ -203,16 +203,16 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
   const handleRemoveFromQueue = async (itemId: string) => {
     try {
       await removeFromQueue(itemId);
-      toast.success('წაიშალა რიგიდან');
+      toast.success(t("extra.tvRemovedFromQueue"));
     } catch (error) {
       console.error('Error removing from queue:', error);
-      toast.error('წაშლა ვერ მოხერხდა');
+      toast.error(t("extra.tvRemovalFailed"));
     }
   };
 
   const handleStartGame = () => {
     if (queue.length === 0) {
-      toast.error('აირჩიე მინიმუმ 1 კატეგორია');
+      toast.error(t("extra.tvChooseMin1"));
       return;
     }
     
@@ -234,9 +234,9 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
         <div className="max-w-xl mx-auto w-full flex-1 flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-4 shrink-0">
             <div>
-              <h2 className="text-xl font-bold text-white">აირჩიე კატეგორიები</h2>
+              <h2 className="text-xl font-bold text-white">{t("extra.tvChooseCategories")}</h2>
               {selectedCategoryIds.size > 0 && (
-                <p className="text-sm text-green-300 mt-1">არჩეულია: {selectedCategoryIds.size}</p>
+                <p className="text-sm text-green-300 mt-1">{t("extra.tvSelected")} {selectedCategoryIds.size}</p>
               )}
             </div>
             <button 
@@ -272,7 +272,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                   )}
                   <span className="flex-1 text-left font-medium text-white">{category.name}</span>
                   {isAlreadyInQueue ? (
-                    <span className="text-xs text-purple-400">უკვე დამატებულია</span>
+                    <span className="text-xs text-purple-400">{t("extra.tvAlreadyAdded")}</span>
                   ) : isSelected ? (
                     <Check className="w-5 h-5 text-green-400" />
                   ) : (
@@ -295,8 +295,8 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
             >
               <Play className="w-5 h-5 mr-2" />
               {selectedCategoryIds.size === 0
-                ? 'აირჩიე კატეგორიები'
-                : `დამატება (${selectedCategoryIds.size})`}
+                ? t("extra.tvChooseCategories")
+                : `${t("extra.tvAddToQueue")} (${selectedCategoryIds.size})`}
             </ChunkyButton>
           </div>
         </div>
@@ -310,7 +310,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
         <div className="max-w-xl mx-auto">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-white">აირჩიე ტრივია</h2>
+            <h2 className="text-xl font-bold text-white">{t("extra.tvChooseTrivia")}</h2>
             <button 
               onClick={() => setShowTriviaPicker(false)}
               className="p-2 rounded-full bg-white/10"
@@ -322,7 +322,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
           {userTrivias.length === 0 ? (
             <div className="text-center py-12">
               <User className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-              <p className="text-purple-300">შენ ჯერ არ გაქვს ტრივიები</p>
+              <p className="text-purple-300">{t("extra.tvNoTrivias")}</p>
             </div>
           ) : (
             <div className="space-y-2 max-h-[70vh] overflow-y-auto">
@@ -391,13 +391,13 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
             </button>
           )}
           <Crown className="w-7 h-7 text-yellow-400" />
-          <h1 className="text-xl font-bold text-white">აირჩიე კატეგორიები</h1>
+          <h1 className="text-xl font-bold text-white">{t("extra.tvChooseCategories")}</h1>
         </div>
 
         {/* Queue - scrollable area */}
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20 flex-1 min-h-0 max-h-[calc(100dvh-250px)] overflow-hidden flex flex-col">
           <p className="text-purple-300 text-sm mb-3 shrink-0">
-            არჩეული რაუნდები: <span className="font-bold text-white">{queue.length}/8</span>
+            {t("extra.tvSelectedRounds")} <span className="font-bold text-white">{queue.length}/8</span>
           </p>
           
           {/* Show queue items - scrollable */}
@@ -424,7 +424,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-white text-sm truncate">{item.category_name}</p>
                       <p className="text-xs text-purple-300">
-                        {item.source_type === 'category' ? 'კატეგორია' : 'შენი ტრივია'}
+                        {item.source_type === 'category' ? t("extra.tvCategoryType") : t("extra.tvYourTrivia")}
                       </p>
                     </div>
                     <button 
@@ -439,7 +439,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
             ) : (
               <div className="text-center py-8">
                 <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-3" />
-                <p className="text-purple-300">აირჩიე კატეგორიები თამაშისთვის</p>
+                <p className="text-purple-300">{t("extra.tvChooseCategoriesForGame")}</p>
               </div>
             )}
           </div>
@@ -453,7 +453,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                 onClick={() => setShowCategoryPicker(true)}
               >
                 <Library className="w-5 h-5 mr-2" />
-                ბიბლიოთეკიდან
+                {t("extra.tvFromLibrary")}
               </ChunkyButton>
               <ChunkyButton
                 variant="secondary"
@@ -461,7 +461,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                 onClick={() => setShowTriviaPicker(true)}
               >
                 <User className="w-5 h-5 mr-2" />
-                ჩემი ტრივიებიდან
+                {t("extra.tvFromMyTrivias")}
               </ChunkyButton>
             </div>
           )}
@@ -479,8 +479,8 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
           >
             <Play className="w-5 h-5 mr-2" />
             {queue.length === 0 
-              ? 'აირჩიე მინ. 1 კატეგორია' 
-              : `თამაშის დაწყება (${queue.length} რაუნდი)`}
+              ? t("extra.tvChooseMin1Short")
+              : t("extra.tvStartGameNRounds", { n: queue.length })}
           </ChunkyButton>
         </div>
       </div>

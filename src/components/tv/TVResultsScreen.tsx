@@ -9,7 +9,10 @@ import silverMedal from '@/assets/trophy-silver.png';
 import bronzeMedal from '@/assets/trophy-bronze.png';
 
 
+import { useLanguage } from '@/contexts/LanguageContext';
+
 export const TVResultsScreen: React.FC = () => {
+  const { t } = useLanguage();
   const { players, code } = useTVGame();
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -111,8 +114,8 @@ export const TVResultsScreen: React.FC = () => {
             LIVE
           </span>
         </div>
-        <h1 className="text-3xl font-bold text-white font-display mb-1">თამაში დასრულდა</h1>
-        <p className="text-purple-300 text-base">საბოლოო შედეგები</p>
+        <h1 className="text-3xl font-bold text-white font-display mb-1">{t("extra.tvGameOver")}</h1>
+        <p className="text-purple-300 text-base">{t("extra.tvFinalResults")}</p>
       </motion.div>
 
       {/* Podium */}
@@ -162,7 +165,7 @@ export const TVResultsScreen: React.FC = () => {
 
               {/* Name and score */}
               <p className="text-white font-bold text-lg mb-0.5">{player.nickname}</p>
-              <p className="text-purple-300 font-semibold text-sm mb-2">{player.score} ქულა</p>
+              <p className="text-purple-300 font-semibold text-sm mb-2">{player.score} {t("extra.tvPoints")}</p>
 
               {/* Podium block */}
               <div className={`w-24 ${actualRank === 0 ? 'h-20' : actualRank === 1 ? 'h-14' : 'h-10'} bg-gradient-to-t ${getPodiumColor(actualRank)} rounded-t-xl flex items-center justify-center`}>
@@ -181,7 +184,7 @@ export const TVResultsScreen: React.FC = () => {
           transition={{ delay: 0.8 }}
           className="max-w-4xl mx-auto flex-1 min-h-0 overflow-y-auto"
         >
-          <h3 className="text-purple-300 text-base mb-2 text-center">დანარჩენი მოთამაშეები</h3>
+          <h3 className="text-purple-300 text-base mb-2 text-center">{t("extra.tvOtherPlayers")}</h3>
           <div className="grid grid-cols-3 gap-2">
             {otherPlayers.map((player, index) => (
               <div
@@ -211,7 +214,7 @@ export const TVResultsScreen: React.FC = () => {
         className="mt-3 text-center flex-shrink-0"
       >
         <p className="text-purple-300 text-sm">
-          მასპინძელს შეუძლია ახალი რაუნდის დაწყება ტელეფონიდან
+          {t("extra.tvHostCanStartNew")}
         </p>
       </motion.div>
     </div>

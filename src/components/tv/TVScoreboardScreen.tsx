@@ -102,7 +102,7 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
         className="flex items-center gap-3 mb-8"
       >
         <Trophy className="w-16 h-16 text-yellow-500" />
-        <h1 className="text-5xl font-bold text-white">საბოლოო შედეგები</h1>
+        <h1 className="text-5xl font-bold text-white">{t("extra.tvFinalResults")}</h1>
         <Trophy className="w-16 h-16 text-yellow-500" />
       </motion.div>
 
@@ -239,7 +239,7 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
           icon={<RotateCcw className="w-6 h-6" />}
           onClick={handlePlayAgain}
         >
-          თავიდან თამაში
+          {t("extra.tvPlayAgain")}
         </ChunkyButton>
         <ChunkyButton
           variant="secondary"
@@ -247,7 +247,7 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
           icon={<Home className="w-6 h-6" />}
           onClick={handleExit}
         >
-          გასვლა
+          {t("extra.tvExit")}
         </ChunkyButton>
       </motion.div>
     </div>

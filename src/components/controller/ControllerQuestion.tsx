@@ -38,18 +38,18 @@ export const ControllerQuestion: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center">
         <div className="text-center">
           <Star className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-          <p className="text-white text-xl font-bold mb-2">შენი კატეგორიაა!</p>
-          <p className="text-purple-300 mb-4">ამიტომ ამ რაუნდში აკვირდები</p>
+          <p className="text-white text-xl font-bold mb-2">{t("extra.tvYourCategory")}</p>
+          <p className="text-purple-300 mb-4">{t("extra.tvObservingRound")}</p>
           <div className="bg-white/10 rounded-xl p-4 mb-6">
             <p className="text-white font-semibold text-center text-sm">
-              კითხვა {currentQuestionIndex + 1}/{questions.length}
+              {t("extra.tvQuestionNofM", { n: currentQuestionIndex + 1, m: questions.length })}
             </p>
             <div className="flex items-center justify-center gap-2 mt-2">
               <Clock className="w-4 h-4 text-purple-300" />
               <span className="text-purple-300">{timeRemaining}წ</span>
             </div>
           </div>
-          <p className="text-purple-300 text-sm">ტელევიზორზე უყურე...</p>
+          <p className="text-purple-300 text-sm">{t("extra.tvWatchOnTV")}</p>
         </div>
       </div>
     );
@@ -80,7 +80,7 @@ export const ControllerQuestion: React.FC = () => {
               navigate('/');
             }}
           >
-            თამაშიდან გასვლა
+            {t("extra.tvLeaveGame")}
           </ChunkyButton>
         </div>
       </div>
@@ -172,7 +172,7 @@ export const ControllerQuestion: React.FC = () => {
                     className="font-bold text-base sm:text-lg"
                     style={{ color: isTrue ? '#22C55E' : '#EF4444' }}
                   >
-                    {isTrue ? "მართალია" : "მცდარია"}
+                    {isTrue ? t("extra.tvTrue") : t("extra.tvFalse")}
                   </span>
                 </div>
               </motion.button>

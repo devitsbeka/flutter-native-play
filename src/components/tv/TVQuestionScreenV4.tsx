@@ -12,10 +12,12 @@ import { TVDebugOverlay } from './TVDebugOverlay';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
 
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
 
 export const TVQuestionScreenV4: React.FC = () => {
+  const { t } = useLanguage();
   const { 
     questions, 
     currentQuestionIndex, 
@@ -95,7 +97,7 @@ export const TVQuestionScreenV4: React.FC = () => {
           </motion.div>
 
           <span className="text-white/60 text-[10px] font-medium mt-1 writing-vertical">
-            კითხვა
+            {t("extra.tvQuestionVertical")}
           </span>
         </motion.div>
       )}
@@ -214,7 +216,7 @@ export const TVQuestionScreenV4: React.FC = () => {
             <span>{categoryName}</span>
           )}
           <span className="text-white/60 font-medium">-</span>
-          <span className="text-white/80 font-medium">რაუნდი {roundNumber}/{totalRounds}</span>
+          <span className="text-white/80 font-medium">{t("extra.tvRoundNofM", { n: roundNumber, m: totalRounds })}</span>
         </div>
 
         <TimerBadge seconds={timeRemaining} maxSeconds={timerMax} compact />

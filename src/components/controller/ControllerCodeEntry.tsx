@@ -59,7 +59,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
         if (success) {
           onJoined();
         } else {
-          setError('თამაში ვერ მოიძებნა. შეამოწმეთ კოდი.');
+          setError(t("extra.tvGameNotFound"));
         }
         setLoading(false);
       }
@@ -70,7 +70,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
 
   const handleJoin = async (codeToJoin: string, nickname: string, avatarUrl?: string) => {
     if (!codeToJoin || codeToJoin.length < 4) {
-      setError('კოდი უნდა იყოს მინიმუმ 4 სიმბოლო');
+      setError(t("extra.tvCodeMin4"));
       return false;
     }
     
@@ -87,7 +87,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
     if (success) {
       onJoined();
     } else {
-      setError('თამაში ვერ მოიძებნა. შეამოწმეთ კოდი.');
+      setError(t("extra.tvGameNotFound"));
     }
     setLoading(false);
     return success;
@@ -95,7 +95,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
 
   const handleSubmitCode = async () => {
     if (code.length < 4) {
-      setError('კოდი უნდა იყოს მინიმუმ 4 სიმბოლო');
+      setError(t("extra.tvCodeMin4"));
       return;
     }
     
@@ -140,7 +140,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
       setShowGuestModal(false);
       onJoined();
     } else {
-      setError('თამაში ვერ მოიძებნა. შეამოწმეთ კოდი.');
+      setError(t("extra.tvGameNotFound"));
     }
     setLoading(false);
   };
@@ -154,7 +154,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
           className="flex items-center gap-2 mb-8"
         >
           <Tv className="w-8 h-8 text-purple-300" />
-          <h1 className="text-2xl font-bold text-white">TV თამაშში შესვლა</h1>
+          <h1 className="text-2xl font-bold text-white">{t("extra.tvJoinTVGame")}</h1>
         </motion.div>
 
         <motion.div
@@ -175,17 +175,17 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
               </div>
               <div>
                 <p className="text-white font-medium">{profile.nickname}</p>
-                <p className="text-purple-300 text-xs">ავტორიზებული</p>
+                <p className="text-purple-300 text-xs">{t("extra.tvAuthorized")}</p>
               </div>
             </div>
           )}
 
           <div>
-            <label className="text-purple-200 text-sm mb-2 block">თამაშის კოდი</label>
+            <label className="text-purple-200 text-sm mb-2 block">{t("extra.tvGameCode")}</label>
             <Input
               value={code}
               onChange={handleCodeChange}
-              placeholder="შეიყვანეთ კოდი"
+              placeholder={t("extra.tvEnterCodePlaceholder")}
               className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-14 text-center text-2xl font-mono tracking-widest"
               maxLength={4}
               autoFocus
@@ -204,7 +204,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
             icon={loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
             className="w-full"
           >
-            {loading ? 'შემოსვლა...' : 'შესვლა'}
+            {loading ? t("extra.tvJoining") : t("extra.tvJoinBtn")}
           </ChunkyButton>
         </motion.div>
       </div>

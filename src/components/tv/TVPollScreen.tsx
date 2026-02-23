@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { Users, Vote, Timer, Sparkles, Crown } from 'lucide-react';
 import { useTVGame } from '@/contexts/TVGameContext';
@@ -21,6 +22,7 @@ export const TVPollScreen: React.FC = () => {
     userId: null, // TV display doesn't have a user
     nickname: 'TV',
   });
+  const { t } = useLanguage();
 
   // Get active players
   const activePlayers = useMemo(() => {
@@ -98,7 +100,7 @@ export const TVPollScreen: React.FC = () => {
             <QRCodeSVG value={joinUrl} size={56} level="H" />
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-purple-300 text-xs">კოდი</span>
+            <span className="text-purple-300 text-xs">{t("extra.tvCode")}</span>
             <span className="text-lg font-mono font-bold text-white">{code}</span>
           </div>
         </div>
@@ -109,13 +111,13 @@ export const TVPollScreen: React.FC = () => {
         <div className="flex items-center gap-2 mb-1">
           <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain" />
           <h1 className="text-2xl font-bold text-white">
-            {pollPhase === 'suggest' ? 'რა ვითამაშოთ?' : 'ხმა მიეცით!'}
+            {pollPhase === 'suggest' ? t("extra.tvWhatShallWePlay") : t("extra.tvVote")}
           </h1>
         </div>
         <p className="text-purple-300 text-sm ml-8">
           {pollPhase === 'voting' 
-            ? 'აირჩიეთ რომელი კატეგორიები გსურთ'
-            : 'აირჩიე მაქსიმუმ 3 ვარიანტი'}
+            ? t("extra.tvChooseCategories")
+            : t("extra.tvChooseMax3")}
         </p>
       </div>
 
@@ -131,10 +133,10 @@ export const TVPollScreen: React.FC = () => {
             >
               <Sparkles className="w-20 h-20 text-purple-400 mb-6 animate-pulse" />
               <h2 className="text-2xl font-bold text-white mb-2">
-                ველოდებით შემოთავაზებებს...
+                {t("extra.tvWaitingSuggestions")}
               </h2>
               <p className="text-purple-300 text-lg">
-                აირჩიეთ მაქსიმუმ 3 შემოთავაზებული ვარიანტებიდან
+                {t("extra.tvChooseMax3Suggested")}
               </p>
             </motion.div>
           ) : (
@@ -164,7 +166,7 @@ export const TVPollScreen: React.FC = () => {
           <div className="w-full bg-white/10 rounded-xl p-3 border border-white/20 flex-1 overflow-hidden">
             <div className="flex items-center gap-2 mb-2">
               <Users className="w-4 h-4 text-purple-300" />
-              <span className="text-white font-bold text-sm">მოთამაშეები ({activePlayers.length})</span>
+              <span className="text-white font-bold text-sm">{t("extra.tvPlayersCount", { n: activePlayers.length })}</span>
             </div>
             <div className="flex flex-col gap-1.5 max-h-[320px] overflow-y-auto pr-1">
               {activePlayers.map((player) => (
@@ -182,7 +184,7 @@ export const TVPollScreen: React.FC = () => {
                 </div>
               ))}
               {activePlayers.length === 0 && (
-                <p className="text-purple-300 text-xs text-center py-2">ველოდებით მოთამაშეებს...</p>
+                <p className="text-purple-300 text-xs text-center py-2">{t("extra.tvWaitingPlayersEllipsis")}</p>
               )}
             </div>
           </div>
@@ -198,10 +200,10 @@ export const TVPollScreen: React.FC = () => {
       >
         <p className="text-purple-400 text-sm">
           {pollPhase === 'suggest' 
-            ? '⏳ ველოდებით ჰოსტს ხმის მიცემის დასაწყებად...'
+            ? `⏳ ${t("extra.tvWaitingHostVoting")}`
             : timeRemaining === 0 
-              ? '✅ ხმის მიცემა დასრულდა! ჰოსტი ირჩევს რაუნდებს...'
-              : '🗳️ ხმის მიცემა მიმდინარეობს!'}
+              ? `✅ ${t("extra.tvVotingComplete")}`
+              : `🗳️ ${t("extra.tvVotingInProgress")}`}
         </p>
       </motion.div>
     </div>
@@ -312,7 +314,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
           <span className="text-lg font-bold text-white">
             {suggestion.vote_count}
           </span>
-          <span className="text-purple-300 text-xs">ხმა</span>
+          <span className="text-purple-300 text-xs">{t("extra.tvVoteLabel")}</span>
         </motion.div>
       )}
     </motion.div>

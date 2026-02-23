@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { Check, Loader2 } from 'lucide-react';
@@ -15,6 +16,7 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
   isController = false,
   onReady 
 }) => {
+  const { t } = useLanguage();
   const { 
     players, 
     categoryName, 
@@ -50,7 +52,7 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
         className="mb-4"
       >
         <span className="px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold text-lg flex items-center gap-2">
-          <span className="text-purple-300">რაუნდი</span>
+          <span className="text-purple-300">{t("extra.tvRound")}</span>
           <span className="text-white">{roundNumber}</span>
           <span className="text-purple-300">/</span>
           <span className="text-white">{totalRounds}</span>
@@ -67,7 +69,7 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
       >
         <AppIcon slug={categoryIcon} size={80} hideIfEmpty />
         <h2 className="text-2xl sm:text-3xl font-bold text-white text-center">
-          {categoryName || 'კატეგორია'}
+          {categoryName || t("extra.tvCategoryFallback")}
         </h2>
       </motion.div>
 
@@ -127,10 +129,10 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
             {isReady ? (
               <span className="flex items-center gap-2">
                 <Check className="w-5 h-5" />
-                მზადაა!
+                {t("extra.tvReady")}
               </span>
             ) : (
-              'მზად ვარ'
+              {t("extra.tvImReady")}
             )}
           </motion.button>
         </motion.div>
@@ -145,7 +147,7 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
           className="flex items-center gap-2 text-purple-200"
         >
           <Loader2 className="w-5 h-5 animate-spin" />
-          <span>ველოდებით ჰოსტს...</span>
+          <span>{t("extra.tvWaitingHost")}</span>
         </motion.div>
       )}
     </div>

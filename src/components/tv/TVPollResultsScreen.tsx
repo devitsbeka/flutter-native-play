@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Crown, Star, Sparkles } from 'lucide-react';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +27,7 @@ interface QueueItem {
  */
 export const TVPollResultsScreen: React.FC = () => {
   const { sessionId, players } = useTVGame();
+  const { t } = useLanguage();
   const [winningCategories, setWinningCategories] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -115,10 +117,10 @@ export const TVPollResultsScreen: React.FC = () => {
           className="text-center mb-8"
         >
           <h1 className="text-xl md:text-2xl font-bold text-white mb-2">
-            გამარჯვებული კატეგორიები
+            {t("extra.tvWinningCategories")}
           </h1>
           <p className="text-purple-300 text-lg">
-            მომდევნო {winningCategories.length} რაუნდი
+            {t("extra.tvNextNRounds", { n: winningCategories.length })}
           </p>
         </motion.div>
 
@@ -159,7 +161,7 @@ export const TVPollResultsScreen: React.FC = () => {
 
                     {/* Category name */}
                     <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">
-                      {category.category_name || 'კატეგორია'}
+                      {category.category_name || t("extra.tvCategoryFallback")}
                     </h3>
 
                     {/* Suggester info */}
@@ -181,7 +183,7 @@ export const TVPollResultsScreen: React.FC = () => {
                           ? 'bg-blue-500/20 text-blue-300' 
                           : 'bg-green-500/20 text-green-300'
                       }`}>
-                        {category.source_type === 'category' ? 'კატეგორია' : 'ტრივია'}
+                        {category.source_type === 'category' ? t("extra.tvCategoryBadge") : t("extra.tvTriviaBadge")}
                       </span>
                     </div>
                   </div>
@@ -219,7 +221,7 @@ export const TVPollResultsScreen: React.FC = () => {
           transition={{ delay: 0.8 }}
           className="text-center text-purple-300/60 mt-6"
         >
-          მოემზადეთ... თამაში იწყება!
+          {t("extra.tvGetReadyGameStarting")}
         </motion.p>
       </div>
     </div>
