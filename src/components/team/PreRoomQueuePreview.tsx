@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Library, Shuffle, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export type PreRoomQueuePreviewItem = {
   tmpId: string;
@@ -15,6 +16,7 @@ interface PreRoomQueuePreviewProps {
 }
 
 export function PreRoomQueuePreview({ items, onRemove, onClear }: PreRoomQueuePreviewProps) {
+  const { t } = useLanguage();
   if (!items.length) return null;
 
   return (
@@ -25,8 +27,8 @@ export function PreRoomQueuePreview({ items, onRemove, onClear }: PreRoomQueuePr
     >
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-muted-foreground text-xs font-medium">შემდეგი რაუნდები (ლობის წინ)</p>
-          <p className="text-foreground text-sm font-semibold">{items.length} დამატებულია</p>
+          <p className="text-muted-foreground text-xs font-medium">{t("extra.nextRoundsPreLobby")}</p>
+          <p className="text-foreground text-sm font-semibold">{t("extra.addedCount", { count: items.length })}</p>
         </div>
 
         {onClear && (
@@ -35,7 +37,7 @@ export function PreRoomQueuePreview({ items, onRemove, onClear }: PreRoomQueuePr
             onClick={onClear}
             className="text-muted-foreground text-xs hover:text-foreground transition-colors"
           >
-            გასუფთავება
+            {t("extra.clearAll")}
           </button>
         )}
       </div>
@@ -60,14 +62,14 @@ export function PreRoomQueuePreview({ items, onRemove, onClear }: PreRoomQueuePr
             )}
 
             <span className="text-foreground text-xs font-medium">
-              {item.source_type === "random" ? "შემთხვევითი" : item.category_name || "ტრივია"}
+              {item.source_type === "random" ? t("extra.randomOption") : item.category_name || t("extra.trivia")}
             </span>
 
             <button
               type="button"
               onClick={() => onRemove(item.tmpId)}
               className="ml-0.5 p-1 rounded-full hover:bg-muted transition-colors"
-              aria-label="რაუნდის წაშლა"
+              aria-label={t("extra.removeRound")}
             >
               <X className={cn("w-[18px] h-[18px]", "text-muted-foreground hover:text-foreground")} />
             </button>

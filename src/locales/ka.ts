@@ -1784,6 +1784,11 @@ export const ka = {
     createRoomLabel: "ოთახის შექმნა",
     playWithFriends: "ითამაშე მეგობრებთან ერთად",
     gameRoomLabel: "სათამაშო ოთახი",
+    addedToQueue: "რიგში დაემატა",
+    nextRoundsPreLobby: "შემდეგი რაუნდები (ლობის წინ)",
+    addedCount: "{count} დამატებულია",
+    clearAll: "გასუფთავება",
+    removeRound: "რაუნდის წაშლა",
   },
 };
 

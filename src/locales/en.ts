@@ -1785,6 +1785,11 @@ export const en: KaTranslations = {
     createRoomLabel: "Create Room",
     playWithFriends: "Play with friends together",
     gameRoomLabel: "Game Room",
+    addedToQueue: "Added to queue",
+    nextRoundsPreLobby: "Next rounds (pre-lobby)",
+    addedCount: "{count} added",
+    clearAll: "Clear",
+    removeRound: "Remove round",
   },
 };
 

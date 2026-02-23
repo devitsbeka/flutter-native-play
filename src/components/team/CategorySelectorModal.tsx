@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { Search, Check } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -44,6 +45,7 @@ export function CategorySelectorModal({
   onSelect,
   selectedCategoryId,
 }: CategorySelectorModalProps) {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: categories = [], isLoading } = useQuery({
@@ -95,7 +97,7 @@ export function CategorySelectorModal({
     <GameModal
       isOpen={open}
       onClose={() => onOpenChange(false)}
-      title="ბიბლიოთეკა"
+      title={t("extra.libraryOption")}
       hideFooter
       className="!pb-0"
     >
