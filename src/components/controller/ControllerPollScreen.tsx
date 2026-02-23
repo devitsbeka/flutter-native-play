@@ -343,7 +343,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center">
         <div className="max-w-xl mx-auto w-full text-center">
           <Loader2 className="w-8 h-8 text-purple-300 animate-spin mb-4 mx-auto" />
-          <p className="text-white font-medium">იტვირთება შედეგები...</p>
+          <p className="text-white font-medium">{t("extra.loadingResultsEllipsis")}</p>
         </div>
       </div>
     );
@@ -648,7 +648,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                       <div className="flex-1">
                         <p className="font-medium text-white text-sm">{suggestion.category_name}</p>
                         <p className="text-xs text-purple-300">
-                          {suggestion.source_type === 'category' ? 'კატეგორია' : 'ჰოსტის ტრივია'}
+                          {suggestion.source_type === 'category' ? t("extra.categoryLabel") : t("extra.hostTrivia")}
                         </p>
                       </div>
                     </motion.div>
@@ -660,7 +660,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
 
           {/* Waiting message */}
           <div className="mt-auto text-center py-4">
-            <p className="text-purple-300">⏳ ველოდებით ხმის მიცემის დაწყებას...</p>
+            <p className="text-purple-300">⏳ {t("extra.votingWaitStart")}</p>
           </div>
         </div>
       </div>
@@ -684,9 +684,9 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
               <div className="w-16 h-16 rounded-full bg-purple-500/30 flex items-center justify-center mx-auto mb-4">
                 <Loader2 className="w-8 h-8 text-purple-300 animate-spin" />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">ხმის მიცემა დასრულდა!</h2>
+              <h2 className="text-xl font-bold text-white mb-2">{t("extra.votingEnded")}</h2>
               <p className="text-purple-300">
-                {isHost ? 'იტვირთება შედეგები...' : 'ველოდებით ჰოსტს თამაშის დასაწყებად...'}
+                {isHost ? t("extra.loadingResultsEllipsis") : t("extra.waitingHostToStart")}
               </p>
             </motion.div>
           </div>
@@ -851,7 +851,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   // Fallback
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
-      <p className="text-purple-300">იტვირთება...</p>
+      <p className="text-purple-300">{t("common.loading")}</p>
     </div>
   );
 };

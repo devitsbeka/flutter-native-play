@@ -53,7 +53,7 @@ export function FeedFiltersBar({
   selectedHashtag,
   onClearHashtag,
   onAddClick,
-  addButtonText = t("extra.feedCreateBtn"),
+  addButtonText,
 }: FeedFiltersBarProps) {
   const { t } = useLanguage();
   const filterOptions = getFilterOptions(t);

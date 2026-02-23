@@ -9,6 +9,7 @@ import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AsyncResultScreenProps {
   challengerInfo?: {
@@ -24,7 +25,7 @@ interface AsyncResultScreenProps {
   opponentUserId?: string;
 }
 
-export function AsyncResultScreen({ 
+export function AsyncResultScreen({
   challengerInfo, 
   myScore, 
   isChallenger,
@@ -35,6 +36,7 @@ export function AsyncResultScreen({
 }: AsyncResultScreenProps) {
   const navigate = useNavigate();
   const { resetMultiplayer, createChallengeRoom } = useMultiplayer();
+  const { t } = useLanguage();
   const { playSound, vibrate } = useSound();
   const hasPlayedSound = useRef(false);
   const [isRematchLoading, setIsRematchLoading] = useState(false);
@@ -148,7 +150,7 @@ export function AsyncResultScreen({
               </div>
             </motion.div>
 
-            <h2 className="font-display text-2xl text-white mb-2">შენი ქულა</h2>
+            <h2 className="font-display text-2xl text-white mb-2">{t("extra.yourScore")}</h2>
             <p className="text-5xl font-bold text-white mb-6">{myScore}</p>
 
             {/* Waiting Message */}
@@ -159,13 +161,13 @@ export function AsyncResultScreen({
             >
               <Clock className="w-6 h-6 text-amber-300" />
               <span className="text-white/80">
-                ველოდებით {challengerInfo?.nickname || "მოწინააღმდეგეს"}...
+                {t("extra.waitingForOpponent", { name: challengerInfo?.nickname || t("extra.opponent") })}
               </span>
             </motion.div>
 
             {isChallenger && (
               <p className="text-white/60 text-sm mb-6">
-                შენ გაგზავნე გამოწვევა. როცა მეგობარი ითამაშებს, შეძლებ შედეგების ნახვას.
+                {t("extra.challengeSentDesc")}
               </p>
             )}
 
@@ -177,7 +179,7 @@ export function AsyncResultScreen({
                 onClick={handleSendReminder}
                 icon={<Bell className="w-5 h-5" />}
               >
-                შეხსენების გაგზავნა
+                {t("extra.sendReminder")}
               </ChunkyButton>
 
               <ChunkyButton
@@ -186,7 +188,7 @@ export function AsyncResultScreen({
                 onClick={handleBackToTeam}
                 icon={<Home className="w-5 h-5" />}
               >
-                უკან დაბრუნება
+                {t("extra.asyncGoBack")}
               </ChunkyButton>
             </div>
           </div>
@@ -225,7 +227,7 @@ export function AsyncResultScreen({
               iWon ? "text-yellow-300" : isTie ? "text-white" : "text-white/80"
             }`}
           >
-            {iWon ? "🎉 გაიმარჯვე!" : isTie ? "🤝 ფრე!" : "😔 წააგე..."}
+            {iWon ? `🎉 ${t("extra.youWon")}` : isTie ? `🤝 ${t("extra.itsTie")}` : `😔 ${t("extra.youLost")}`}
           </motion.h1>
 
           {/* Score Comparison */}
@@ -242,7 +244,7 @@ export function AsyncResultScreen({
               }`}>
                 <span className="text-2xl font-bold text-white">{myScore}</span>
               </div>
-              <p className="text-white/80 text-sm">შენ</p>
+              <p className="text-white/80 text-sm">{t("extra.youLabel")}</p>
             </motion.div>
 
             {/* VS */}
@@ -271,7 +273,7 @@ export function AsyncResultScreen({
                 </div>
               </div>
               <p className="text-white/80 text-sm truncate max-w-[80px]">
-                {challengerInfo?.nickname || "მოწინააღმდეგე"}
+                {challengerInfo?.nickname || t("extra.opponent")}
               </p>
             </motion.div>
           </div>
@@ -285,7 +287,7 @@ export function AsyncResultScreen({
               className="mb-6 p-3 rounded-xl bg-white/10"
             >
               <p className="text-white/80">
-                {iWon ? "+" : "-"}{Math.abs(myScore - opponentScore)} ქულით {iWon ? "უკეთესი!" : "ჩამორჩი"}
+                {iWon ? "+" : "-"}{Math.abs(myScore - opponentScore)} {t("extra.pointsDiff", { diff: "", result: iWon ? t("extra.pointsBetter") : t("extra.pointsBehind") })}
               </p>
             </motion.div>
           )}
@@ -301,7 +303,7 @@ export function AsyncResultScreen({
                 disabled={isRematchLoading}
                 icon={isRematchLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <RotateCcw className="w-5 h-5" />}
               >
-                {isRematchLoading ? "იგზავნება..." : "რემატჩი"}
+                {isRematchLoading ? t("extra.sendingRematch") : t("extra.rematch")}
               </ChunkyButton>
             )}
             
@@ -311,7 +313,7 @@ export function AsyncResultScreen({
               onClick={handleBackToTeam}
               icon={<ArrowRight className="w-5 h-5" />}
             >
-              გაგრძელება
+              {t("extra.continueBtn")}
             </ChunkyButton>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { t } from "@/contexts/LanguageContext";
 
 export type ReportType = "spam" | "harassment" | "inappropriate" | "cheating" | "other";
 

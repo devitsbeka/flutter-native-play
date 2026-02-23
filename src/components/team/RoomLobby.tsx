@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoomChat } from "@/hooks/useRoomChat";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
@@ -32,6 +33,7 @@ export function RoomLobby() {
     phase,
   } = useMultiplayer();
   
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
@@ -268,10 +270,10 @@ export function RoomLobby() {
           .eq("status", "pending");
       }
       
-      toast.success("მოთამაშე წაიშალა ოთახიდან");
+      toast.success(t("extra.playerRemovedFromRoom"));
     } catch (error) {
       console.error("Error removing participant:", error);
-      toast.error("წაშლა ვერ მოხერხდა");
+      toast.error(t("extra.removeFailed"));
     }
   };
 
@@ -368,7 +370,7 @@ export function RoomLobby() {
                 value={editedName}
                 onChange={(e) => setEditedName(e.target.value)}
                 className="text-center font-bold"
-                placeholder="ოთახის სახელი"
+                placeholder={t("extra.roomNamePlaceholder")}
                 autoFocus
               />
               <ChunkyButton size="sm" variant="primary" onClick={handleSaveRoomName}>
@@ -388,7 +390,7 @@ export function RoomLobby() {
                 />
               )}
               <h2 className="text-2xl font-bold text-foreground">
-                {room.room_name || `ოთახი #${room.room_code.slice(-4)}`}
+                {room.room_name || t("extra.roomDefaultName", { code: room.room_code.slice(-4) })}
               </h2>
               {isHost && (
                 <motion.button
@@ -416,7 +418,7 @@ export function RoomLobby() {
             onClick={handleCopyCode}
             icon={copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
           >
-            ლინკი
+            {t("extra.linkBtn")}
           </ChunkyButton>
           
           <ChunkyButton
@@ -425,7 +427,7 @@ export function RoomLobby() {
             onClick={handleShare}
             icon={<Share2 className="w-4 h-4" />}
           >
-            გაზიარება
+            {t("extra.lobbyShareBtn")}
           </ChunkyButton>
         </motion.div>
 
@@ -442,7 +444,7 @@ export function RoomLobby() {
                 <div className="flex-1 overflow-y-auto p-3 space-y-2">
                   {messages.length === 0 ? (
                     <p className="text-center text-muted-foreground text-sm py-4">
-                      ჯერ შეტყობინება არ არის
+                      {t("extra.lobbyNoMessages")}
                     </p>
                   ) : (
                     messages.map((msg) => (
@@ -482,7 +484,7 @@ export function RoomLobby() {
                   <Input
                     value={chatMessage}
                     onChange={(e) => setChatMessage(e.target.value)}
-                    placeholder="დაწერე შეტყობინება..."
+                    placeholder={t("extra.lobbyWriteMessage")}
                     className="flex-1 text-sm"
                     onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                   />
@@ -550,12 +552,12 @@ export function RoomLobby() {
               disabled={loading}
               icon={<Gamepad2 className="w-5 h-5" />}
             >
-              {loading ? "იწყება..." : "🎮 რაუნდის დაწყება"}
+              {loading ? t("extra.startingGame") : `🎮 ${t("extra.startRound")}`}
             </ChunkyButton>
           ) : (
             <div className="text-center py-4">
               <p className="text-muted-foreground text-sm">
-                ველოდებით ჰოსტს...
+                {t("extra.waitingForHostEllipsis")}
               </p>
             </div>
           )}
@@ -581,10 +583,10 @@ export function RoomLobby() {
             >
               <div className="flex items-center gap-2 mb-4">
                 <Crown className="w-6 h-6 text-amber-500" />
-                <h3 className="text-lg font-bold text-foreground">ჰოსტის გადაცემა</h3>
+                <h3 className="text-lg font-bold text-foreground">{t("extra.hostTransfer")}</h3>
               </div>
               <p className="text-muted-foreground text-sm mb-4">
-                შენ ხარ ჰოსტი. გადაეცი ჰოსტის უფლება სხვა მოთამაშეს გასვლამდე:
+                {t("extra.hostTransferDesc")}
               </p>
               <div className="space-y-2 mb-4">
                 {otherParticipants.map((p) => (
