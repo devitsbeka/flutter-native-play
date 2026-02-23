@@ -1,110 +1,78 @@
 
 
-# Fix Duplicate Keys and Translate All Remaining Hardcoded Georgian Strings
+# Translate Remaining Hardcoded Georgian Strings
 
-## Phase 1: Fix Build Errors (Duplicate Keys)
+## Overview
+There are still many hardcoded Georgian strings across user-facing components, hooks, and pages. This plan covers translating them all into the localization system using `t()` keys. Admin-only files are excluded since they're internal tools.
 
-Remove duplicate translation keys from both `en.ts` and `ka.ts`. The following keys already exist earlier in the files and were accidentally re-added:
+## Scope of Changes
 
-**In `en.ts`** - remove these duplicates from the newly added block (lines ~2746-2876):
-- `navHome` (already at line 1541)
-- `navOnlineGame` (already at line 1545)
-- `navMore` (already at line 1546)
-- `whatToPlay` (already at line 1607) -- rename new one to `whatToPlayTV`
-- `vipNoAdsDesc` (already at line 1917)
-- `vipStatusDesc` (already at line 1925)
-- `vipAvatarsDesc` (already at line 1919)
-- `collectionLabel` (already at line 1622)
-- `gameRoomLabel2` -- keep this one (no duplicate, name is already unique)
+### 1. Locale Files (src/locales/en.ts and src/locales/ka.ts)
+Add ~80-100 new translation keys across the `extra` namespace.
 
-**In `ka.ts`** - same set of duplicates to remove/rename.
+### 2. Components to Update
 
-For keys that have different values in the two locations (like `whatToPlay`), we'll rename the new one to `whatToPlayTV` to distinguish TV poll context vs room context.
+**Authentication / Onboarding:**
+- `src/components/home/DesktopGuestSplitLayout.tsx` -- Validation messages ("სახელი საჭიროა", "მინ. 3 სიმბოლო", "პაროლი საჭიროა"), button labels ("შექმენი ანგარიში", "შესვლა"), placeholders ("სახელი", "ელფოსტა ან სახელი", "პაროლი"), toggle text ("უკვე გაქვს ანგარიში?", "არ გაქვს ანგარიში?"), camera buttons ("გადაიღე სელფი", "აირჩიე ფოტო"), error toasts
+- `src/components/home/GuestActivationFlow.tsx` -- "დაიწყე თამაში", "შექმენი ანგარიში და ითამაშე"
+- `src/components/onboarding/SignupOnboardingModal.tsx` -- "უსაფრთხოების კითხვა" placeholder
 
-For keys with identical values, we'll simply delete the duplicate and use the existing key in the components.
+**Game Room (Multiplayer):**
+- `src/hooks/useGameRoom.ts` -- All toast messages: room creation failed, room not found, game already started, room full, join success/failure (~10 strings)
+- `src/components/team/MultiplayerGameScreen.tsx` -- "შენ" (you), "უპასუხა" (answered), "შედეგები" / "შემდეგი კითხვა" (results/next question)
+- `src/components/team/RoomLobby.tsx` -- Toast messages for copy, share, host transfer, room delete, name change, invitation resend (~10 strings)
 
-## Phase 2: Update Components (Group 1 - Core UI)
+**TV Mode:**
+- `src/components/controller/ControllerCountdown.tsx` -- "ვთამაშობთ", "დაიწყო!", "მოემზადე!", "მოემზადე პასუხებისთვის!"
+- `src/components/controller/ControllerPollResults.tsx` -- "ხმის მიცემის შედეგები", "ხმა", "რაუნდი", "რაუნდების რაოდენობა:", "იწყება...", "დაწყება", toast messages
+- `src/components/tv/TVQuestionScreen.tsx` -- "კითხვა"
+- `src/components/tv/TVQuestionScreenV3.tsx` -- "ლიდერბორდი"
+- `src/components/tv/TVPairingScreen.tsx` -- "ველოდებით..."
+- `src/components/tv/TVMirrorButton.tsx` -- "დაკავშირება..."
+- `src/components/team/TVSetupModal.tsx` -- "დაკავშირებულია!", "მზადაა თამაშისთვის"
 
-### `src/components/shared/OfflineBanner.tsx`
-- Add `useLanguage` hook, replace hardcoded "ინტერნეტ კავშირი არ არის" with `t("extra.noInternet")`
+**Collection Lobby:**
+- `src/pages/CollectionLobby.tsx` -- "კოლექცია ვერ მოიძებნა", "უკან დაბრუნება", "კითხვა", "ნათამაშები", "მოწონება", "რაუნდები", question count suffix
 
-### `src/components/shared/BetaGiftModal.tsx`
-- Add ~15 new keys: `betaGiftTitle`, `thankYouForBeingHere`, `sendingYou10DayPro`, `enjoyTrivia`, `tenDayPro`, `laterBtn`, `proActivated`, `tenDays`, `plus150Coins`, `tryProFeatures`, `letsStartBtn`, `createTrivia`, `playWithFriends`, `playOnTV`, `freezePowerUp`, `replacePowerUp`, `timeDrainPowerUp`
-- Replace all hardcoded text with `t()` calls, pass `t` to sub-components
+**Shop / Monetization:**
+- `src/components/home/NotEnoughCoinsModal.tsx` -- "გახდი PRO", "ულიმიტო თამაშები და ფუნქციები"
+- `src/components/home/GemShopModal.tsx` -- Various purchase-related strings
+- `src/components/shop/ShopPowerUpGuide.tsx` -- "როგორ გამოვიყენოთ ძალები"
+- `src/components/shop/ShopProSidebar.tsx` -- "გახდი PRO", "გახსენი ყველა შესაძლებლობა"
+- `src/hooks/useGemPurchase.ts` -- Authorization and payment error toasts
+- `src/hooks/useDailyVipRewards.ts` -- "ძალების მიღება ვერ მოხერხდა"
+- `src/hooks/useLeaderboardRewards.ts` -- Reward claim / frame equip error toasts
 
-### `src/components/shared/FloatingGiftButton.tsx`
-- Replace `alt="საჩუქარი"` with `t("extra.giftAlt")`
+**Profile:**
+- `src/components/profile/ProfileRightSidebar.tsx` -- "გახდი PRO", "განბლოკე ყველა ფუნქცია", "ითამაშე 10 თამაში", "დღეს ითამაშე", etc.
 
-### `src/components/shared/IconOnboardingTooltip.tsx`
-- Replace hardcoded text with `t("extra.addIconToQuestion")`
+**Missions / Challenges:**
+- `src/components/mission/MissionCompleteToast.tsx` -- "მისია შესრულდა!"
 
-### `src/components/notifications/CompactGenerationCard.tsx`
-- Replace "წმ", "მზადდება...", "მზადდება", "მზადაა", "შეცდომა", "გამოყენება" with t() calls
+**Social / Trivia Creation:**
+- `src/components/social/AddRoundToCollectionModal.tsx` -- Suggestion labels ("Disney ფილმები", "NBA ლეგენდები", etc.), toast messages, placeholder
+- `src/components/team/GameStylePersonalTrivia.tsx` -- Draft save/load toasts
 
-## Phase 3: Update Components (Group 2 - Home & Account)
+**Time formatting:**
+- `src/hooks/usePlayLimit.ts` -- "სთ" / "წთ" (hours/minutes abbreviations)
 
-### `src/components/home/AccountSwitcherModal.tsx`
-- Replace "ექაუნთი", "მომხმარებელი", "პროფილის ნახვა", "ექაუნთის დამატება"
+**Country names:**
+- `src/lib/countryCoordinates.ts` -- All country names in Georgian (these should use a translation lookup instead of hardcoded values)
 
-### `src/components/home/AvatarFrameShop.tsx`
-- Replace rarityLabels with t() calls
+### 3. Files Intentionally Excluded
+- `src/utils/iconAnswerValidation.ts` -- Georgian word stems used for answer matching (not UI strings)
+- `src/pages/SampleDemoPlayer.tsx` -- Demo/sample page with placeholder content
+- All `src/components/admin/*` and `src/pages/admin/*` -- Internal admin tools
+- `src/data/categories.ts` -- Categories are translated via database
 
-### `src/components/home/PrivacyModal.tsx`
-- Replace all menu labels, confirmation dialogs, and toast messages
+## Technical Approach
 
-### `src/components/home/StreakModal.tsx`
-- Replace streak-related strings
+1. Add all new keys to `src/locales/ka.ts` (Georgian originals) and `src/locales/en.ts` (English translations)
+2. In each component/hook, import `useLanguage` (or the standalone `t` helper for non-React contexts like hooks) and replace hardcoded strings with `t("extra.keyName")` calls
+3. For interpolated strings (e.g., `${count} ხმა`), use `t("extra.voteCount", { count })` pattern
+4. For time formatting in `usePlayLimit.ts`, use `t("extra.hoursShort")` and `t("extra.minutesShort")`
+5. For country names, add a `countryNames` section to locales and look up by country code
 
-### `src/components/home/widgets/TriviaPartyPromo.tsx`
-- Replace "ითამაშე Trivia TV"
-
-### `src/components/home/widgets/ShopPromoWidget.tsx`
-- Replace "საჩუქრები მაღაზიაში"
-
-## Phase 4: Update Components (Group 3 - Team & Multiplayer)
-
-Files: `DesktopLeftNav.tsx`, `DesktopRightSidebar.tsx`, `TeamMenuScreen.tsx`, `TeamRightSidebar.tsx`, `TVConnectModal.tsx`, `TVPlayModal.tsx`, `AllRecentRoomsModal.tsx`, `GameInvitationsSection.tsx`, `RecentPlayersList.tsx`, `RoomLobbyV2.tsx`, `MultiplayerGameScreen.tsx`, `GameStylePersonalTrivia.tsx`, `RoomChatsPanel.tsx`, `PersonalTriviaModal.tsx`, `QuickPlayModal.tsx`
-
-Each will get `useLanguage` hook and replace Georgian strings with `t()` calls using the keys already added or new ones as needed.
-
-## Phase 5: Update Components (Group 4 - TV & Controller)
-
-Files: `TVPollScreen.tsx`, `TVLeaderboardPanel.tsx`, `TVRoundIntroScreen.tsx`, `ControllerPollResultsGuest.tsx`, `ControllerPollResults.tsx`, `ControllerCountdown.tsx`, `ControllerQuestion.tsx`, `ControllerCodeEntry.tsx`, `ControllerDirectSelection.tsx`
-
-## Phase 6: Update Components (Group 5 - Game Screens)
-
-Files: `QuestionScreen.tsx`, `ComingSoonModal.tsx`, `GameLoseModal.tsx`, `CloudCategoryFlight.tsx`, `ActivePowerUpIndicator.tsx`, `QuizGameScreenProd.tsx`, `CategoryQuizPage.tsx`, `quiz-next-button.tsx`, `exhaustion-indicator.tsx`
-
-## Phase 7: Update Components (Group 6 - Shop & PRO)
-
-Files: `ShopProSidebar.tsx`, `ShopRightSidebar.tsx`, `MobileProCarousel.tsx`
-
-### `src/contexts/VipContext.tsx`
-- Convert `VIP_BENEFITS` arrays to use translation keys instead of hardcoded strings
-
-## Phase 8: Update Components (Group 7 - Social & Profile)
-
-Files: `CreateTriviaTypeModal.tsx`, `CollectionPreviewModal.tsx`, `CreateCollectionModal.tsx`, `EditQuizModal.tsx`, `FriendInvitesTracker.tsx`, `ProfileRightSidebar.tsx`, `ClaimRewardsModal.tsx`, `FriendChatSheet.tsx`
-
-## Phase 9: Update Hooks & Contexts (Group 8)
-
-Files using standalone `t()` from LanguageContext (not the hook):
-- `useConversationPreviews.ts` - time formatting
-- `useDailyPlays.ts` - toast messages
-- `useTrivia.ts` - error message
-- `PendingChallengesContext.tsx` - toast messages
-- `MultiplayerContext.tsx` - toast messages
-- `GameContext.tsx` - error message
-- `FriendsContext.tsx` - toast action label
-- `ReturningUserPicker.tsx` - error message
-
----
-
-## Technical Details
-
-- **Total new translation keys**: ~200+ across `en.ts` and `ka.ts`
-- **Total files modified**: ~50 component/hook/context files + 2 locale files
-- **Pattern**: Components use `const { t } = useLanguage()`, hooks/contexts use standalone `t()` import from `@/contexts/LanguageContext`
-- **No breaking changes**: All keys are additive; existing keys are reused where they match
-- **Build error fix**: Remove 8 duplicate keys from each locale file
-
+## Estimated Changes
+- ~100 new locale keys across en.ts and ka.ts
+- ~25 component/hook files edited
