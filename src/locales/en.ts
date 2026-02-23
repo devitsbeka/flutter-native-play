@@ -552,6 +552,10 @@ export const en: KaTranslations = {
     animationTakingLong: "Animation is taking longer than expected. Please try again later.",
     startingAnimation: "Starting animation... Will take 1-2 minutes!",
     uploadEncouragement: "📸 Upload your photo and bring your profile to life!",
+    animationPro: "Animation (PRO)",
+    remainingGen: "{remaining}/{max} generations left",
+    maxGenReached: "Maximum {max} avatar generations allowed",
+    avatarsList: "Avatars",
   },
 
   // ==========================================
@@ -1821,6 +1825,7 @@ export const en: KaTranslations = {
     popularLabel: "Popular",
     buyBtn: "Buy",
     processingBtn: "Processing...",
+    myPro: "My PRO",
   },
 };
 

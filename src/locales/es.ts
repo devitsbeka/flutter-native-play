@@ -477,6 +477,10 @@ export const es: KaTranslations = {
     animationTakingLong: "La animación está tardando más de lo esperado. Intenta más tarde.",
     startingAnimation: "Iniciando animación... ¡Tardará 1-2 minutos!",
     uploadEncouragement: "📸 ¡Sube tu foto y dale vida a tu perfil!",
+    animationPro: "Animación (PRO)",
+    remainingGen: "{remaining}/{max} generaciones restantes",
+    maxGenReached: "Máximo {max} generaciones de avatar permitidas",
+    avatarsList: "Avatares",
   },
   errors: {
     generic: "Algo salió mal",
