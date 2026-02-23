@@ -174,6 +174,7 @@ const SideIconButton = ({
 export default function Index() {
   const navigate = useNavigate();
   const { profile, user, fetchProfile, signUp, signUpWithUsername, signIn, signInWithUsername, signInWithGoogle, signInWithApple } = useAuth();
+  const { t } = useLanguage();
   const { step, startOnboarding, setStep, hasCompletedOnboarding } = useOnboarding();
   const { openAvatarModal } = useAvatarModal();
   const { coins, gems, addCoins, spendGems } = useCurrency();
