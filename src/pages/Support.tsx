@@ -1,58 +1,46 @@
 import { motion } from "framer-motion";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { HelpCircle, Mail, MessageCircle, Bug, Lightbulb, ChevronRight, ExternalLink } from "lucide-react";
-
-const faqs = [
-  {
-    question: "როგორ ვითამაშო მეგობრებთან?",
-    answer: "გადადი 'გუნდი' განყოფილებაში, შექმენი ახალი ოთახი და გაუზიარე კოდი მეგობრებს. ისინი შეძლებენ შემოერთებას კოდით.",
-  },
-  {
-    question: "როგორ აღვადგინო შესყიდვები?",
-    answer: "გადადი მაღაზიაში და დააჭირე 'შესყიდვების აღდგენა' ღილაკს. დარწმუნდი რომ იგივე Apple ID-ით ხარ შესული.",
-  },
-  {
-    question: "როგორ წავშალო ანგარიში?",
-    answer: "გადადი პროფილში → პარამეტრები → კონფიდენციალურობა → ანგარიშის წაშლა. ყველა მონაცემი სამუდამოდ წაიშლება.",
-  },
-  {
-    question: "როგორ გავაუქმო VIP გამოწერა?",
-    answer: "გახსენი iPhone-ის Settings → Apple ID → Subscriptions და იპოვე MyTrivia. აქედან შეგიძლია გაუქმება.",
-  },
-  {
-    question: "რატომ არ მუშაობს push შეტყობინებები?",
-    answer: "გადადი iPhone-ის Settings → Notifications → MyTrivia და ჩართე შეტყობინებები. ასევე დარწმუნდი რომ Do Not Disturb გამორთულია.",
-  },
-];
-
-const contactOptions = [
-  {
-    icon: Mail,
-    title: "ელ-ფოსტა",
-    description: "დაგვიკავშირდი ელ-ფოსტით",
-    action: "mailto:support@mytrivia.io",
-    color: "from-blue-400 to-cyan-500",
-  },
-  {
-    icon: Bug,
-    title: "ხარვეზის რეპორტი",
-    description: "შეგვატყობინე პრობლემის შესახებ",
-    action: "mailto:bugs@mytrivia.io?subject=Bug Report",
-    color: "from-red-400 to-orange-500",
-  },
-  {
-    icon: Lightbulb,
-    title: "შეთავაზება",
-    description: "გაგვიზიარე იდეა",
-    action: "mailto:ideas@mytrivia.io?subject=Feature Request",
-    color: "from-amber-400 to-yellow-500",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Support() {
+  const { t } = useLanguage();
+
+  const faqs = [
+    { question: t("extra.faq1Q"), answer: t("extra.faq1A") },
+    { question: t("extra.faq2Q"), answer: t("extra.faq2A") },
+    { question: t("extra.faq3Q"), answer: t("extra.faq3A") },
+    { question: t("extra.faq4Q"), answer: t("extra.faq4A") },
+    { question: t("extra.faq5Q"), answer: t("extra.faq5A") },
+  ];
+
+  const contactOptions = [
+    {
+      icon: Mail,
+      title: t("extra.emailContact"),
+      description: t("extra.emailContactDesc"),
+      action: "mailto:support@mytrivia.io",
+      color: "from-blue-400 to-cyan-500",
+    },
+    {
+      icon: Bug,
+      title: t("extra.bugReport"),
+      description: t("extra.bugReportDesc"),
+      action: "mailto:bugs@mytrivia.io?subject=Bug Report",
+      color: "from-red-400 to-orange-500",
+    },
+    {
+      icon: Lightbulb,
+      title: t("extra.suggestion"),
+      description: t("extra.suggestionDesc"),
+      action: "mailto:ideas@mytrivia.io?subject=Feature Request",
+      color: "from-amber-400 to-yellow-500",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader title="დახმარება" />
+      <PageHeader title={t("extra.supportTitle")} />
 
       <div className="p-4 pb-12 space-y-6 max-w-[700px] md:max-w-[600px] mx-auto">
         {/* Hero */}
@@ -65,10 +53,10 @@ export default function Support() {
             <HelpCircle className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-xl font-display font-bold text-foreground mb-2">
-            როგორ შეგვიძლია დაგეხმაროთ?
+            {t("extra.howCanWeHelp")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            იპოვე პასუხი ხშირად დასმულ კითხვებზე ან დაგვიკავშირდი
+            {t("extra.findAnswers")}
           </p>
         </motion.div>
 
@@ -79,7 +67,7 @@ export default function Support() {
           transition={{ delay: 0.1 }}
         >
           <h2 className="text-lg font-display font-bold text-foreground mb-3">
-            დაგვიკავშირდი
+            {t("extra.contactUs")}
           </h2>
           <div className="grid gap-3">
             {contactOptions.map((option) => (
@@ -108,7 +96,7 @@ export default function Support() {
           transition={{ delay: 0.2 }}
         >
           <h2 className="text-lg font-display font-bold text-foreground mb-3">
-            ხშირად დასმული კითხვები
+            {t("extra.faqTitle")}
           </h2>
           <div className="bg-card rounded-2xl border border-border overflow-hidden">
             {faqs.map((faq, index) => (
@@ -146,7 +134,7 @@ export default function Support() {
             MyTrivia v1.0.0
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            © 2025 MyTrivia. ყველა უფლება დაცულია.
+            © 2025 MyTrivia. {t("extra.allRightsReserved")}
           </p>
         </motion.div>
       </div>

@@ -65,7 +65,7 @@ function generateFakeUsers(tier: number, count: number = 15, lowestRealUserCoins
 }
 
 // Fast leaderboard fetch using RPC
-async function fetchLeaderboardFast(tier: number, region?: string) {
+async function fetchLeaderboardFast(tier: number, region?: string, language?: string) {
   // Try the RPC function first (single optimized query)
   const { data: rpcData, error: rpcError } = await supabase
     .rpc('get_league_leaderboard', {
@@ -77,20 +77,32 @@ async function fetchLeaderboardFast(tier: number, region?: string) {
   let realEntries: any[] = [];
 
   if (!rpcError && rpcData && rpcData.length > 0) {
-    // Use RPC data directly
-    realEntries = rpcData.map((u: any) => ({
-      user_id: u.user_id,
-      nickname: u.nickname || "Unknown",
-      avatar_url: u.avatar_url,
-      weekly_xp: u.coins || 0,
-      coins: u.coins || 0,
-      rank: 0,
-      league_tier: tier,
-      rankChange: u.previous_rank === null ? "new" : "same",
-      isAI: false,
-    }));
+    // Use RPC data directly - filter by language client-side if needed
+    realEntries = rpcData
+      .filter((u: any) => !language || language === 'ka' || u.preferred_language === language)
+      .map((u: any) => ({
+        user_id: u.user_id,
+        nickname: u.nickname || "Unknown",
+        avatar_url: u.avatar_url,
+        weekly_xp: u.coins || 0,
+        coins: u.coins || 0,
+        rank: 0,
+        league_tier: tier,
+        rankChange: u.previous_rank === null ? "new" : "same",
+        isAI: false,
+      }));
   } else {
     // Fallback: fetch with two queries (but in parallel)
+    const profileQuery = supabase
+      .from("profiles")
+      .select("user_id, nickname, avatar_url, coins, region, preferred_language")
+      .limit(100);
+    
+    // Filter by language if not Georgian (default)
+    if (language && language !== 'ka') {
+      profileQuery.eq('preferred_language', language);
+    }
+
     const [leagueResult, profilesResult] = await Promise.all([
       supabase
         .from("user_league_data")
@@ -98,10 +110,7 @@ async function fetchLeaderboardFast(tier: number, region?: string) {
         .eq("league_tier", tier)
         .order("weekly_xp", { ascending: false })
         .limit(50),
-      supabase
-        .from("profiles")
-        .select("user_id, nickname, avatar_url, coins, region")
-        .limit(100)
+      profileQuery
     ]);
 
     const leagueUsers = leagueResult.data || [];

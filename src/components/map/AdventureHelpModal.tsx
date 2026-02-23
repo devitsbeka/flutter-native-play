@@ -6,6 +6,7 @@ import missionCrystalIcon from "@/assets/icons/icon-compass.png";
 import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
 import xpIcon from "@/assets/icons/icon-xp.png";
 import powersIcon from "@/assets/icons/icon-powers-3d.png";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AdventureHelpModalProps {
   isOpen: boolean;
@@ -47,35 +48,37 @@ function HelpItem({ icon, title, description, gradient, index }: HelpItemProps) 
 }
 
 export function AdventureHelpModal({ isOpen, onClose }: AdventureHelpModalProps) {
+  const { t } = useLanguage();
+
   const helpItems = [
     {
-      icon: <img src={giftBottleIcon} alt="საჩუქარი" className="w-6 h-6 object-contain" />,
-      title: "საჩუქარი",
-      description: "ყოველდღიური ჯილდოები - შემოდი ყოველ დღე და მიიღე ბონუსები!",
+      icon: <img src={giftBottleIcon} alt="" className="w-6 h-6 object-contain" />,
+      title: t("extra.adventureGift"),
+      description: t("extra.adventureGiftDesc"),
       gradient: "linear-gradient(135deg, #f472b6, #ec4899)",
     },
     {
-      icon: <img src={missionCrystalIcon} alt="მისია" className="w-6 h-6 object-contain" />,
-      title: "მისია",
-      description: "შეასრულე დავალებები და მიიღე XP და მონეტები.",
+      icon: <img src={missionCrystalIcon} alt="" className="w-6 h-6 object-contain" />,
+      title: t("extra.adventureMission"),
+      description: t("extra.adventureMissionDesc"),
       gradient: "linear-gradient(135deg, #60a5fa, #3b82f6)",
     },
     {
-      icon: <img src={chestBoxIcon} alt="სკივრი" className="w-6 h-6 object-contain" />,
-      title: "სკივრი",
-      description: "გახსენი სკივრი და მიიღე შემთხვევითი ჯილდოები!",
+      icon: <img src={chestBoxIcon} alt="" className="w-6 h-6 object-contain" />,
+      title: t("extra.adventureChest"),
+      description: t("extra.adventureChestDesc"),
       gradient: "linear-gradient(135deg, #fbbf24, #f59e0b)",
     },
     {
-      icon: <img src={xpIcon} alt="XP ქულა" className="w-6 h-6 object-contain" />,
-      title: "XP ქულა",
-      description: "დააგროვე XP თამაშით და აიმაღლე დონე ახალი ჯილდოებისთვის.",
+      icon: <img src={xpIcon} alt="" className="w-6 h-6 object-contain" />,
+      title: t("extra.adventureXP"),
+      description: t("extra.adventureXPDesc"),
       gradient: "linear-gradient(135deg, #a855f7, #7c3aed)",
     },
     {
-      icon: <img src={powersIcon} alt="ძალები" className="w-6 h-6 object-contain" />,
-      title: "ძალები",
-      description: "გამოიყენე სპეციალური ძალები კითხვებზე პასუხის გასაადვილებლად.",
+      icon: <img src={powersIcon} alt="" className="w-6 h-6 object-contain" />,
+      title: t("extra.adventurePowers"),
+      description: t("extra.adventurePowersDesc"),
       gradient: "linear-gradient(135deg, #22c55e, #16a34a)",
     },
   ];
@@ -85,9 +88,9 @@ export function AdventureHelpModal({ isOpen, onClose }: AdventureHelpModalProps)
       isOpen={isOpen} 
       onClose={onClose}
       iconSrc={ICON_URLS.questionMark}
-      title="დახმარება"
-      subtitle="როგორ მუშაობს თავგადასავალი"
-      primaryLabel="გასაგებია"
+      title={t("extra.adventureHelp")}
+      subtitle={t("extra.adventureHelpSubtitle")}
+      primaryLabel={t("extra.adventureGotIt")}
       onPrimaryClick={onClose}
     >
       <div className="space-y-1.5">

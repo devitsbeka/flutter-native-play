@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Settings, HelpCircle, Shield, FileText, LogOut } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MoreMenuModalProps {
   isOpen: boolean;
@@ -60,6 +61,8 @@ export function MoreMenuModal({
   onNavigate,
   onSignOut,
 }: MoreMenuModalProps) {
+  const { t } = useLanguage();
+
   const handleNavigation = (path: string) => {
     onNavigate(path);
     onClose();
@@ -75,27 +78,27 @@ export function MoreMenuModal({
       isOpen={isOpen}
       onClose={onClose}
       variant="primary"
-      title="მეტი"
+      title={t("extra.more")}
     >
       <div className="flex flex-col gap-2 py-2 max-w-[700px] md:max-w-[600px] mx-auto w-full">
         <MenuItem
           icon={Settings}
-          label="პარამეტრები"
+          label={t("menu.settings")}
           onClick={() => handleNavigation("/settings")}
         />
         <MenuItem
           icon={HelpCircle}
-          label="დახმარება"
+          label={t("menu.help")}
           onClick={() => handleNavigation("/support")}
         />
         <MenuItem
           icon={Shield}
-          label="კონფიდენციალურობა"
+          label={t("menu.privacy")}
           onClick={() => handleNavigation("/privacy-policy")}
         />
         <MenuItem
           icon={FileText}
-          label="მომსახურების პირობები"
+          label={t("extra.termsOfService")}
           onClick={() => handleNavigation("/terms")}
         />
         
@@ -103,7 +106,7 @@ export function MoreMenuModal({
         
         <MenuItem
           icon={LogOut}
-          label="გასვლა"
+          label={t("menu.signOut")}
           onClick={handleSignOut}
           variant="destructive"
         />

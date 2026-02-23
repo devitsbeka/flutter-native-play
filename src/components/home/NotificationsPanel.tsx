@@ -14,20 +14,20 @@ import { CompactNotificationCard } from '@/components/notifications/CompactNotif
 import { CompactGenerationCard } from '@/components/notifications/CompactGenerationCard';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Custom time formatter for Georgian (no "დაახლოებით" prefix)
-const formatTimeAgo = (date: Date) => {
+// Language-aware time formatter
+const formatTimeAgo = (date: Date, t: (key: string, params?: Record<string, string | number>) => string) => {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMins < 1) return "ახლა";
-  if (diffMins < 60) return `${diffMins} წუთის წინ`;
-  if (diffHours < 24) return `${diffHours} საათის წინ`;
-  if (diffDays < 7) return `${diffDays} დღის წინ`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} კვირის წინ`;
-  return `${Math.floor(diffDays / 30)} თვის წინ`;
+  if (diffMins < 1) return t("extra.timeNow");
+  if (diffMins < 60) return t("extra.timeMinutesAgo", { count: diffMins });
+  if (diffHours < 24) return t("extra.timeHoursAgo", { count: diffHours });
+  if (diffDays < 7) return t("extra.timeDaysAgo", { count: diffDays });
+  if (diffDays < 30) return t("extra.timeWeeksAgo", { count: Math.floor(diffDays / 7) });
+  return t("extra.timeMonthsAgo", { count: Math.floor(diffDays / 30) });
 };
 
 // Tab category mapping
@@ -470,7 +470,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
                         onDeclineInvite={handleDeclineInvite}
                         onDismiss={deleteNotification}
                         actionLoading={actionLoading}
-                        timeAgo={formatTimeAgo(new Date(notification.created_at))}
+                        timeAgo={formatTimeAgo(new Date(notification.created_at), t)}
                       />
                     ))}
                   </AnimatePresence>
