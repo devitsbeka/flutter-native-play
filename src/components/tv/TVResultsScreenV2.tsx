@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 import { SafeAvatar } from '@/components/shared/SafeAvatar';
@@ -19,6 +20,7 @@ const getPlayerStats = (player: { score: number }) => {
 const XP_REWARDS = [2000, 500, 200];
 
 export const TVResultsScreenV2: React.FC = () => {
+  const { t } = useLanguage();
   const { players, isHost, resetGame, sessionId, startNextRound } = useTVGame();
   const { queue } = useTVSessionQueue(sessionId);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -93,7 +95,7 @@ export const TVResultsScreenV2: React.FC = () => {
           transition={{ duration: 0.6 }}
         >
           <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
-            თამაში დასრულდა
+            {t("extra.tvGameOver")}
           </h1>
         </motion.div>
 
@@ -224,7 +226,7 @@ export const TVResultsScreenV2: React.FC = () => {
           >
             <div className="bg-purple-500/30 backdrop-blur-sm rounded-xl px-4 py-2 flex items-center gap-2">
               <ArrowRight className="w-4 h-4 text-purple-300" />
-              <span className="text-white/80 text-sm">შემდეგი:</span>
+              <span className="text-white/80 text-sm">{t("extra.tvNext")}</span>
               <span className="text-white font-semibold text-sm">{nextRound.category_name}</span>
             </div>
             <motion.p
@@ -232,7 +234,7 @@ export const TVResultsScreenV2: React.FC = () => {
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ repeat: Infinity, duration: 2 }}
             >
-              {isHost ? 'დააჭირე კონტროლერზე გასაგრძელებლად' : 'მოლოდინი...'}
+              {isHost ? t("extra.tvPressControllerContinue") : t("extra.tvWaitingEllipsis")}
             </motion.p>
           </motion.div>
         ) : (
@@ -243,7 +245,7 @@ export const TVResultsScreenV2: React.FC = () => {
             transition={{ delay: 1.5 }}
           >
             <p className="text-white/60 text-xs">
-              {isHost ? 'ახალი რაუნდის დასაწყებად დააჭირე ღილაკს კონტროლერზე' : 'რაუნდები დასრულდა'}
+              {isHost ? t("extra.tvPressControllerNewRound") : t("extra.tvRoundsFinished")}
             </p>
           </motion.div>
         )}
@@ -256,7 +258,7 @@ export const TVResultsScreenV2: React.FC = () => {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5, duration: 0.5 }}
       >
-        <h2 className="text-white text-base font-bold mb-2 text-center flex-shrink-0">ლიდერბორდი</h2>
+        <h2 className="text-white text-base font-bold mb-2 text-center flex-shrink-0">{t("extra.tvLeaderboard")}</h2>
         
         <div className="space-y-1.5 flex-1 overflow-y-auto min-h-0">
           {sortedPlayers.map((player, index) => {

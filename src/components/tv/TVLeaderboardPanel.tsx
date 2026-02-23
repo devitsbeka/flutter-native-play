@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { Trophy, Check, Clock } from 'lucide-react';
 
 export const TVLeaderboardPanel: React.FC = () => {
   const { players } = useTVGame();
+  const { t } = useLanguage();
 
   // Sort: active players first by score, then inactive players by score
   const sortedPlayers = [...players].sort((a, b) => {
@@ -24,7 +26,7 @@ export const TVLeaderboardPanel: React.FC = () => {
       {/* Header */}
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
         <Trophy className="w-6 h-6 text-yellow-400" />
-        <h3 className="text-white text-xl font-bold">რეიტინგი</h3>
+        <h3 className="text-white text-xl font-bold">{t("extra.tvRating")}</h3>
       </div>
 
       {/* Player list */}
@@ -71,16 +73,16 @@ export const TVLeaderboardPanel: React.FC = () => {
                 </p>
                 <div className="flex items-center gap-1">
                   {(player as any).isActive === false ? (
-                    <span className="text-purple-400/70 text-xs">გათიშული</span>
+                    <span className="text-purple-400/70 text-xs">{t("extra.tvDisconnected")}</span>
                   ) : player.hasAnswered ? (
                     <>
                       <Check className="w-3 h-3 text-green-400" />
-                      <span className="text-green-400 text-xs">უპასუხა</span>
+                      <span className="text-green-400 text-xs">{t("extra.tvAnswered")}</span>
                     </>
                   ) : (
                     <>
                       <Clock className="w-3 h-3 text-purple-400" />
-                      <span className="text-purple-400 text-xs">ფიქრობს...</span>
+                      <span className="text-purple-400 text-xs">{t("extra.tvThinking")}</span>
                     </>
                   )}
                 </div>

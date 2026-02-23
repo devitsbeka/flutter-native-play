@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Crown, Medal, LogOut, Library, Vote } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 
@@ -39,6 +40,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
   onDirectSelection,
   onStartPoll,
 }) => {
+  const { t } = useLanguage();
   
 
   // Sort players by score
@@ -117,7 +119,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
       >
         <div className="flex items-center justify-center gap-2 mb-2">
           <h1 className="text-2xl font-bold text-white">
-            {hasMoreRounds ? 'რაუნდი დასრულდა!' : 'თამაში დასრულდა!'}
+            {hasMoreRounds ? t("extra.tvRoundOver") : t("extra.tvGameOverExcl")}
           </h1>
         </div>
       </motion.div>
@@ -132,7 +134,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
       >
         <div className="flex items-center gap-2 mb-4">
           <Medal className="w-5 h-5 text-purple-300" />
-          <h2 className="text-lg font-bold text-white">ლიდერბორდი</h2>
+          <h2 className="text-lg font-bold text-white">{t("extra.tvLeaderboard")}</h2>
         </div>
         
         <div className="space-y-2 flex-1 min-h-0 overflow-y-auto">
@@ -175,7 +177,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                   <div className="flex-1">
                     <span className={`font-semibold ${isCurrentPlayer ? 'text-purple-300' : 'text-white'}`}>
                       {player.nickname}
-                      {isCurrentPlayer && ' (შენ)'}
+                      {isCurrentPlayer && ` ${t("extra.tvYou")}`}
                       {player.isHost && (
                         <img
                           src={crown2}
@@ -210,7 +212,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ repeat: Infinity, duration: 2 }}
           >
-            შემდეგი რაუნდის მოლოდინი...
+            {t("extra.tvWaitingNextRound")}
           </motion.div>
         </motion.div>
       )}
@@ -221,7 +223,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
           transition={{ delay: 0.6 }}
           className="text-center text-purple-200 mb-4"
         >
-          რაუნდები დასრულდა
+          {t("extra.tvRoundsFinished")}
         </motion.div>
       )}
 
@@ -238,7 +240,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
             variant="primary"
             className="w-full"
           >
-            შემდეგი რაუნდი
+            {t("extra.tvNextRound")}
           </ChunkyButton>
         ) : isHost && !hasMoreRounds ? (
           // Two-option new game flow: Direct Selection or Poll
@@ -250,7 +252,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                 className="w-full"
               >
                 <Library className="w-5 h-5 mr-2" />
-                კატეგორიის დამატება
+                {t("extra.tvAddCategory")}
               </ChunkyButton>
             )}
             {onStartPoll && (
@@ -260,7 +262,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                 className="w-full"
               >
                 <Vote className="w-5 h-5 mr-2" />
-                არჩევნების დაწყება
+                {t("extra.tvStartPoll")}
               </ChunkyButton>
             )}
           </div>
@@ -272,7 +274,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
             className="w-full"
           >
             <LogOut className="w-5 h-5 mr-2" />
-            გასვლა
+            {t("extra.tvExit")}
           </ChunkyButton>
         )}
       </motion.div>

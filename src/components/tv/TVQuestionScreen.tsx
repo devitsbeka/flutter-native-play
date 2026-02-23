@@ -64,7 +64,7 @@ export const TVQuestionScreen: React.FC<TVQuestionScreenProps> = ({
             animate={{ x: 0, opacity: 1 }}
             className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3"
           >
-            <span className="text-purple-200">კითხვა </span>
+            <span className="text-purple-200">{t("extra.tvQuestion")}</span>
             <span className="text-white font-bold text-2xl">
               {currentQuestionIndex + 1}
             </span>
@@ -121,7 +121,7 @@ export const TVQuestionScreen: React.FC<TVQuestionScreenProps> = ({
             className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3"
           >
             <span className="text-white font-bold text-2xl">{answeredCount}</span>
-            <span className="text-purple-200"> / {totalPlayers} უპასუხა</span>
+            <span className="text-purple-200"> / {totalPlayers} {t("extra.tvAnswered")}</span>
           </motion.div>
         </div>
 

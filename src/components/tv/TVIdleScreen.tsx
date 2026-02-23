@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { Play, Settings, Trophy, Users, RefreshCw, Loader2 } from 'lucide-react';
@@ -26,6 +27,8 @@ export const TVIdleScreen: React.FC = () => {
     accumulatedScores,
     sessionId,
   } = useTVGame();
+  
+  const { t } = useLanguage();
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -70,10 +73,10 @@ export const TVIdleScreen: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-white">{roomName || 'TV კვიზი'}</h1>
+          <h1 className="text-4xl font-bold text-white">{roomName || t("extra.tvQuiz")}</h1>
           <div className="flex items-center gap-4 mt-2">
             <span className="text-purple-300">
-              {totalRoundsPlayed > 0 ? `რაუნდი ${totalRoundsPlayed} დასრულდა` : 'მოელოდეთ თამაშის დაწყებას'}
+              {totalRoundsPlayed > 0 ? t("extra.tvRoundFinished", { n: totalRoundsPlayed }) : t("extra.tvWaitGameStart")}
             </span>
             {categoryName && (
               <span className="px-3 py-1 bg-purple-500/30 rounded-full text-purple-200 text-sm">
@@ -84,7 +87,7 @@ export const TVIdleScreen: React.FC = () => {
         </div>
         <div className="flex items-center gap-2 text-purple-300">
           <Users className="w-5 h-5" />
-          <span>{players.length} მოთამაშე</span>
+          <span>{players.length} {t("extra.tvPlayer")}</span>
         </div>
       </div>
 
@@ -93,9 +96,9 @@ export const TVIdleScreen: React.FC = () => {
         <div className="col-span-2 bg-white/5 backdrop-blur-sm rounded-3xl p-6 border border-white/10">
           <div className="flex items-center gap-3 mb-6">
             <Trophy className="w-6 h-6 text-yellow-400" />
-            <h2 className="text-2xl font-bold text-white">ლიდერბორდი</h2>
+            <h2 className="text-2xl font-bold text-white">{t("extra.tvLeaderboard")}</h2>
             {totalRoundsPlayed > 0 && (
-              <span className="text-purple-300 text-sm">({totalRoundsPlayed} რაუნდის შემდეგ)</span>
+              <span className="text-purple-300 text-sm">{t("extra.tvAfterNRounds", { n: totalRoundsPlayed })}</span>
             )}
           </div>
 
@@ -141,14 +144,14 @@ export const TVIdleScreen: React.FC = () => {
                       )}
                     </div>
                     {totalRoundsPlayed > 0 && player.score > 0 && (
-                      <span className="text-green-400 text-sm">+{player.score} ამ რაუნდში</span>
+                      <span className="text-green-400 text-sm">+{player.score} {t("extra.tvInThisRound")}</span>
                     )}
                   </div>
 
                   {/* Score */}
                   <div className="text-right">
                     <span className="text-2xl font-bold text-white">{totalScore}</span>
-                    <span className="text-purple-300 text-sm ml-1">ქულა</span>
+                    <span className="text-purple-300 text-sm ml-1">{t("extra.tvPoints")}</span>
                   </div>
                 </motion.div>
               );
@@ -159,7 +162,7 @@ export const TVIdleScreen: React.FC = () => {
                 <div className="w-16 h-16 rounded-2xl overflow-hidden mx-auto mb-4">
                   <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
                 </div>
-                <p>ჯერ არავინ შემოსულა</p>
+                <p>{t("extra.tvNobodyJoined")}</p>
               </div>
             )}
           </div>
@@ -172,7 +175,7 @@ export const TVIdleScreen: React.FC = () => {
             <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-6 border border-white/10">
               <div className="flex items-center gap-3 mb-4">
                 <Settings className="w-5 h-5 text-purple-300" />
-                <h3 className="text-lg font-bold text-white">ჰოსტის კონტროლი</h3>
+                <h3 className="text-lg font-bold text-white">{t("extra.tvHostControls")}</h3>
               </div>
 
               <div className="space-y-3">
@@ -181,7 +184,7 @@ export const TVIdleScreen: React.FC = () => {
                   onClick={() => setShowCategoryPicker(!showCategoryPicker)}
                   className="w-full p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-left text-white flex items-center justify-between"
                 >
-                  <span>კატეგორია: {selectedCategoryId ? categories.find(c => c.id === selectedCategoryId)?.name : categoryName || 'შემთხვევითი'}</span>
+                  <span>{t("extra.tvCategoryLabel")} {selectedCategoryId ? categories.find(c => c.id === selectedCategoryId)?.name : categoryName || t("extra.tvRandom")}</span>
                   <RefreshCw className="w-4 h-4 text-purple-300" />
                 </button>
 
@@ -198,7 +201,7 @@ export const TVIdleScreen: React.FC = () => {
                       }}
                       className="w-full p-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 transition-colors text-purple-200 text-left text-sm"
                     >
-                      🎲 შემთხვევითი
+                      🎲 {t("extra.tvRandom")}
                     </button>
                     {categories.map(cat => (
                       <button
@@ -228,7 +231,7 @@ export const TVIdleScreen: React.FC = () => {
                   ) : (
                     <Play className="w-6 h-6" />
                   )}
-                  {totalRoundsPlayed > 0 ? 'ახალი რაუნდი' : 'დაწყება'}
+                  {totalRoundsPlayed > 0 ? t("extra.tvNewRound") : t("extra.tvStart")}
                 </motion.button>
               </div>
             </div>
@@ -236,7 +239,7 @@ export const TVIdleScreen: React.FC = () => {
 
           {/* QR Code for Late Joiners */}
           <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-6 border border-white/10 text-center">
-            <h3 className="text-lg font-bold text-white mb-4">შემოუერთდი</h3>
+            <h3 className="text-lg font-bold text-white mb-4">{t("extra.tvJoin")}</h3>
             <div className="bg-white rounded-2xl p-4 inline-block">
               <QRCodeSVG
                 value={joinUrl}
@@ -257,7 +260,7 @@ export const TVIdleScreen: React.FC = () => {
                 transition={{ duration: 2, repeat: Infinity }}
                 className="text-purple-300"
               >
-                მოელოდეთ ჰოსტის მითითებას...
+                {t("extra.tvWaitingHostInstruction")}
               </motion.div>
             </div>
           )}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TVRoundQueueIndicatorProps {
   currentRound: number;
@@ -16,6 +17,7 @@ export const TVRoundQueueIndicator: React.FC<TVRoundQueueIndicatorProps> = ({
   totalRounds,
   className = '',
 }) => {
+  const { t } = useLanguage();
   // Only show if there are multiple rounds
   if (totalRounds <= 1) return null;
 
@@ -79,7 +81,7 @@ export const TVRoundQueueIndicator: React.FC<TVRoundQueueIndicatorProps> = ({
 
       {/* Label at bottom */}
       <span className="text-white/60 text-[10px] font-medium mt-1 writing-vertical">
-        რაუნდი
+        {t("extra.tvRoundVertical")}
       </span>
     </motion.div>
   );

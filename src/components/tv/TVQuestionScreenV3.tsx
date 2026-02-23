@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { Clock, Users, Check, Trophy } from 'lucide-react';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
@@ -13,6 +14,7 @@ const OPTION_COLORS = [
 ];
 
 export const TVQuestionScreenV3: React.FC = () => {
+  const { t } = useLanguage();
   const { 
     questions, 
     currentQuestionIndex, 
@@ -149,7 +151,7 @@ export const TVQuestionScreenV3: React.FC = () => {
       >
         <div className="flex items-center gap-2 mb-3 flex-shrink-0">
           <Trophy className="w-5 h-5 text-yellow-400" />
-          <h3 className="text-lg font-bold text-white">ლიდერბორდი</h3>
+          <h3 className="text-lg font-bold text-white">{t("extra.tvLeaderboard")}</h3>
         </div>
 
         <div className="flex-1 space-y-2 overflow-y-auto min-h-0">
@@ -209,7 +211,7 @@ export const TVQuestionScreenV3: React.FC = () => {
                       animate={{ opacity: [0.5, 1, 0.5] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     >
-                      ფიქრობს...
+                      {t("extra.tvThinking")}
                     </motion.p>
                   )}
                 </div>
@@ -232,7 +234,7 @@ export const TVQuestionScreenV3: React.FC = () => {
         <div className="mt-2 pt-2 border-t border-white/10 text-center flex-shrink-0">
           <div className="flex items-center justify-center gap-2 text-purple-300/60">
             <Users className="w-3 h-3" />
-            <span className="text-xs">{answeredCount}/{totalPlayers} უპასუხა</span>
+            <span className="text-xs">{answeredCount}/{totalPlayers} {t("extra.tvAnswered")}</span>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { useTVGame } from '@/contexts/TVGameContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Crown, Users, Play, Shuffle, Check, X, UserPlus } from 'lucide-react';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +34,7 @@ interface InvitedGuest {
 
 export const TVLobbyScreenV2: React.FC = () => {
   const { code, sessionId, players, categoryName, categoryIcon, isHost, startGame, categoryQueue: contextQueue } = useTVGame() as any;
+  const { t } = useLanguage();
   const [roomName, setRoomName] = useState('');
   const [roomIcon, setRoomIcon] = useState<string | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -337,7 +339,7 @@ export const TVLobbyScreenV2: React.FC = () => {
   }
 
   // Display name: use room name (category is shown in queue pills)
-  const displayRoomName = roomName || 'TV ოთახი';
+  const displayRoomName = roomName || t("extra.tvRoom");
 
   // Determine what to show in the central category area
   const hasMultiRound = queue.length > 0;
@@ -402,7 +404,7 @@ export const TVLobbyScreenV2: React.FC = () => {
         <div className="flex items-center gap-3 text-purple-200">
           <Users className="w-5 h-5" />
           <span className="text-xl font-bold">{players.length}/{MAX_PLAYERS}</span>
-          <img src={retroTvIcon} alt="TV რეჟიმი" className="w-12 h-12 object-contain" />
+          <img src={retroTvIcon} alt="TV" className="w-12 h-12 object-contain" />
         </div>
       </div>
 
@@ -417,7 +419,7 @@ export const TVLobbyScreenV2: React.FC = () => {
                 ? (item.category_name.length > 12 
                     ? item.category_name.slice(0, 8) + '.' 
                     : item.category_name)
-                : 'რაუნდი';
+                : t("extra.tvRoundFallback");
               
               return (
                 <motion.div
@@ -462,7 +464,7 @@ export const TVLobbyScreenV2: React.FC = () => {
                 />
               )}
               <span className="text-xl text-white font-medium">
-                {displayCategory?.name || categoryName || 'შემთხვევითი'}
+                {displayCategory?.name || categoryName || t("extra.tvRandom")}
               </span>
               {isHost && <Shuffle className="w-4 h-4 text-purple-300" />}
             </button>
@@ -488,7 +490,7 @@ export const TVLobbyScreenV2: React.FC = () => {
               >
                 <div className="sticky top-0 bg-purple-900/95 p-3 border-b border-purple-500/20">
                   <h3 className="text-white font-bold text-center">
-                    {hasMultiRound ? 'დაამატე რიგში' : 'აირჩიე კატეგორია'}
+                    {hasMultiRound ? t("extra.tvAddToQueue") : t("extra.tvChooseCategory")}
                   </h3>
                 </div>
                 
@@ -502,7 +504,7 @@ export const TVLobbyScreenV2: React.FC = () => {
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors border-b border-purple-500/20"
                   >
                     <span className="text-2xl">🎲</span>
-                    <span className="text-white">შემთხვევითი</span>
+                    <span className="text-white">{t("extra.tvRandom")}</span>
                   </button>
                 )}
                 
@@ -623,7 +625,7 @@ export const TVLobbyScreenV2: React.FC = () => {
                       </p>
                       <div className="flex items-center gap-1 mt-0.5">
                         <UserPlus className="w-3 h-3 text-purple-400/50" />
-                        <span className="text-[10px] text-purple-400/50">მოწვეული</span>
+                        <span className="text-[10px] text-purple-400/50">{t("extra.tvInvited")}</span>
                       </div>
                     </>
                   ) : (
@@ -631,7 +633,7 @@ export const TVLobbyScreenV2: React.FC = () => {
                       <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mb-2">
                         <Users className="w-6 h-6 text-purple-400/50" />
                       </div>
-                      <p className="text-purple-400/50 text-xs mt-1">მოლოდინი...</p>
+                      <p className="text-purple-400/50 text-xs mt-1">{t("extra.tvWaitingEllipsis")}</p>
                     </>
                   )}
                 </motion.div>
@@ -659,7 +661,7 @@ export const TVLobbyScreenV2: React.FC = () => {
             </motion.div>
 
             <div className="mt-3 text-center">
-              <p className="text-purple-300 text-sm mb-1">ან გახსენით</p>
+              <p className="text-purple-300 text-sm mb-1">{t("extra.tvOrOpen")}</p>
               <p className="text-sm font-bold text-white">mytrivia.io/join</p>
               {/* Code to enter */}
               <div className="mt-2 px-3 py-1 bg-white/10 rounded-lg inline-block">
@@ -717,7 +719,7 @@ export const TVLobbyScreenV2: React.FC = () => {
                   {autoStartCountdown}
                 </span>
               </div>
-              <span className="text-white text-sm">ავტო-დაწყება</span>
+              <span className="text-white text-sm">{t("extra.tvAutoStart")}</span>
               <button
                 onClick={cancelAutoStart}
                 className="ml-2 p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -753,7 +755,7 @@ export const TVLobbyScreenV2: React.FC = () => {
           animate={{ opacity: 1 }}
           className="mt-2 text-center text-purple-300/60 text-sm flex-shrink-0"
         >
-          მოლოდინი, ჰოსტმა დაიწყოს თამაში...
+          {t("extra.tvWaitingHostStart")}
         </motion.p>
       )}
     </div>
