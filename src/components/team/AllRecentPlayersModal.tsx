@@ -72,6 +72,7 @@ export function AllRecentPlayersModal({ isOpen, onClose }: AllRecentPlayersModal
 }
 
 function PlayerListItem({ player, index }: { player: RecentPlayer; index: number }) {
+  const { t } = useLanguage();
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
