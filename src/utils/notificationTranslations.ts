@@ -44,11 +44,24 @@ export function translateNotificationTitle(
     'friend_accepted': 'notifications.friendAccepted',
     'challenge': 'notifications.challengeReceived',
     'game_result': 'notifications.gameResult',
+    'trivia_played': 'extra.playedYourTrivia',
+    'trivia_liked': 'extra.likedYourTrivia',
+    'trivia_saved': 'extra.savedYourTrivia',
   };
 
   const translationKey = titleMap[type];
   if (translationKey) {
-    return getTranslation(translationKey);
+    let translation = getTranslation(translationKey);
+    // Replace {name} with sender nickname if available
+    if (data?.sender_nickname) {
+      translation = translation.replace('{name}', data.sender_nickname as string);
+    } else {
+      // Use "someone" fallback for trivia types
+      if (type === 'trivia_played') return getTranslation('extra.someonePlayed');
+      if (type === 'trivia_liked') return getTranslation('extra.someoneLiked');
+      if (type === 'trivia_saved') return getTranslation('extra.someoneSaved');
+    }
+    return translation;
   }
 
   return originalTitle;
