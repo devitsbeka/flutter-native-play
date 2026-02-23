@@ -30,28 +30,7 @@ interface PowerUpInfo {
   description: string;
 }
 
-const POWER_UP_INFO: PowerUpInfo[] = [
-  {
-    type: "5050",
-    name: "50/50",
-    description: "წაშლის 2 არასწორ პასუხს",
-  },
-  {
-    type: "freeze",
-    name: "გაყინვა",
-    description: "დრო გაიყინება 10 წამით",
-  },
-  {
-    type: "replace",
-    name: "შეცვლა",
-    description: "ცვლის ერთ არასწორ პასუხს",
-  },
-  {
-    type: "time-drain",
-    name: "დრო",
-    description: "ამატებს 5 წამს",
-  },
-];
+const POWER_UP_TYPES: PowerUpType[] = ["5050", "freeze", "replace", "time-drain"];
 
 const POWER_UP_PRICES: Record<PowerUpType, number> = REWARDS.POWER_UP_PRICES as Record<PowerUpType, number>;
 
@@ -68,14 +47,19 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
 
   // Get translated power-up info
   const getPowerUpInfo = (type: PowerUpType) => {
-    const info = POWER_UP_INFO.find(p => p.type === type)!;
     const names: Record<PowerUpType, string> = {
       "5050": "50/50",
-      "freeze": t('shop.freeze'),
-      "replace": t('shop.replace'),
-      "time-drain": t('shop.timePlus'),
+      "freeze": t('extra.powerFreeze'),
+      "replace": t('extra.powerReplace'),
+      "time-drain": t('extra.powerTimeDrain'),
     };
-    return { ...info, displayName: names[type] };
+    const descriptions: Record<PowerUpType, string> = {
+      "5050": t('shop.deletesWrongAnswers'),
+      "freeze": t('shop.freezesTime'),
+      "replace": t('shop.replacesQuestion'),
+      "time-drain": t('shop.addsTime'),
+    };
+    return { type, name: names[type], description: descriptions[type], displayName: names[type] };
   };
 
   // Restart animation when switching power-ups
@@ -207,16 +191,16 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
 
         {/* Power-up selector */}
         <div className="flex justify-center gap-3 mt-5 mb-6">
-          {POWER_UP_INFO.map((info) => {
-            const isSelected = selectedType === info.type;
-            const count = isLoading ? 0 : powerUps[info.type];
+          {POWER_UP_TYPES.map((type) => {
+            const isSelected = selectedType === type;
+            const count = isLoading ? 0 : powerUps[type];
 
             return (
               <motion.button
-                key={info.type}
+                key={type}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => handleSelectPowerUp(info.type)}
+                onClick={() => handleSelectPowerUp(type)}
                 className={`relative rounded-2xl p-1 transition-all ${
                   isSelected
                     ? "ring-2 ring-primary bg-primary/10"
@@ -224,7 +208,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
                 }`}
               >
                 <PowerUpBadge 
-                  type={info.type === "5050" ? "fifty-fifty" : info.type} 
+                  type={type === "5050" ? "fifty-fifty" : type} 
                   size="xs" 
                   count={count}
                 />
@@ -286,7 +270,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
               <img src={coinIcon} alt="coins" className="w-5 h-5" />
             )}
             <span className="text-xl font-bold text-amber-900 drop-shadow-sm">
-              {totalPrice.toLocaleString()} შეძენა
+              {totalPrice.toLocaleString()} {t('shop.buy')}
             </span>
           </motion.button>
           <p className="text-xs text-muted-foreground mt-2">
