@@ -33,7 +33,7 @@ import {
 
 export default function Notifications() {
   const navigate = useNavigate();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification, clearAllNotifications } = useNotifications();
   const { generationNotifications, hasActiveGenerations } = useGenerationNotifications();
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
@@ -117,9 +117,9 @@ export default function Notifications() {
         })
         .eq('id', notificationId);
         
-      toast.success("მეგობრის მოთხოვნა მიღებულია!");
+      toast.success(t("extra.notifFriendAcceptedToast"));
     } catch (error) {
-      toast.error("შეცდომა მოხდა");
+      toast.error(t("extra.errorOccurred"));
     } finally {
       setActionLoading(null);
     }
@@ -152,9 +152,9 @@ export default function Notifications() {
         })
         .eq('id', notificationId);
         
-      toast.success("მოთხოვნა უარყოფილია");
+      toast.success(t("extra.notifRequestDeclinedToast"));
     } catch (error) {
-      toast.error("შეცდომა მოხდა");
+      toast.error(t("extra.errorOccurred"));
     } finally {
       setActionLoading(null);
     }
@@ -169,7 +169,7 @@ export default function Notifications() {
         navigate(`/team?join=${roomCode}`);
       }
     } catch (error) {
-      toast.error("შეცდომა მოხდა");
+      toast.error(t("extra.errorOccurred"));
     } finally {
       setActionLoading(null);
     }
@@ -180,9 +180,9 @@ export default function Notifications() {
     try {
       await declineInvitation(invitationId);
       await deleteNotification(notificationId);
-      toast.success("მოწვევა უარყოფილია");
+      toast.success(t("extra.notifInviteDeclinedToast"));
     } catch (error) {
-      toast.error("შეცდომა მოხდა");
+      toast.error(t("extra.errorOccurred"));
     } finally {
       setActionLoading(null);
     }
@@ -227,7 +227,7 @@ export default function Notifications() {
               navigate('/team');
             }
           } catch {
-            toast.error('ვერ მოხერხდა თამაშზე გადასვლა');
+            toast.error(t("extra.notifCouldNotNavigate"));
             navigate('/team');
           }
         })();
@@ -275,9 +275,9 @@ export default function Notifications() {
     setClearingAll(true);
     try {
       await clearAllNotifications();
-      toast.success("ყველა შეტყობინება წაიშალა");
+      toast.success(t("extra.notifAllDeleted"));
     } catch (error) {
-      toast.error("შეცდომა მოხდა");
+      toast.error(t("extra.errorOccurred"));
     } finally {
       setClearingAll(false);
     }
@@ -303,7 +303,7 @@ export default function Notifications() {
             <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
               <Bell className="w-4 h-4 text-primary" />
             </div>
-            <h1 className="font-bold text-base text-foreground">აქტივობა</h1>
+            <h1 className="font-bold text-base text-foreground">{t("extra.notifActivity")}</h1>
           </div>
           <button
             onClick={() => navigate(-1)}
@@ -320,7 +320,7 @@ export default function Notifications() {
           <TabsList className="grid grid-cols-3 w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto">
             <TabsTrigger value="games" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
               <Gamepad2 className="w-3.5 h-3.5" />
-              <span>თამაშები</span>
+              <span>{t("extra.notifGamesTab")}</span>
               {getUnreadCount('games') > 0 && (
                 <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
                   {getUnreadCount('games')}
@@ -329,7 +329,7 @@ export default function Notifications() {
             </TabsTrigger>
             <TabsTrigger value="social" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
               <Users className="w-3.5 h-3.5" />
-              <span>მეგობრები</span>
+              <span>{t("extra.notifSocialTab")}</span>
               {getUnreadCount('social') > 0 && (
                 <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
                   {getUnreadCount('social')}
@@ -338,7 +338,7 @@ export default function Notifications() {
             </TabsTrigger>
             <TabsTrigger value="trivia" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>ტრივია</span>
+              <span>{t("extra.notifTriviaTab")}</span>
               {getUnreadCount('trivia') > 0 && (
                 <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
                   {getUnreadCount('trivia')}
@@ -361,7 +361,7 @@ export default function Notifications() {
               <BellOff className="w-8 h-8 text-muted-foreground" />
             </div>
             <p className="text-muted-foreground text-center">
-              შეტყობინებები არ არის
+              {t("extra.notifNoNotifications")}
             </p>
           </div>
         ) : !hasTabContent ? (
@@ -370,9 +370,9 @@ export default function Notifications() {
               <BellOff className="w-8 h-8 text-muted-foreground" />
             </div>
             <p className="text-muted-foreground text-center">
-              {activeTab === 'games' && 'თამაშების შეტყობინებები არ არის'}
-              {activeTab === 'social' && 'მეგობრების შეტყობინებები არ არის'}
-              {activeTab === 'trivia' && 'ტრივიის შეტყობინებები არ არის'}
+              {activeTab === 'games' && t("extra.notifNoGames")}
+              {activeTab === 'social' && t("extra.notifNoSocial")}
+              {activeTab === 'trivia' && t("extra.notifNoTrivia")}
             </p>
           </div>
         ) : (
@@ -381,7 +381,7 @@ export default function Notifications() {
             {activeTab === 'games' && generationNotifications.length > 0 && (
               <>
                 <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-background/40 border-b border-border/30">
-                  AI გენერაცია
+                  {t("extra.notifAiGeneration")}
                 </div>
                 {generationNotifications.map((notification) => (
                   <CompactGenerationCard
@@ -427,7 +427,7 @@ export default function Notifications() {
                 whileTap={{ scale: 0.98 }}
               >
                 <ChevronDown className="w-5 h-5" />
-                მეტის ნახვა
+                {t("extra.notifShowMore")}
               </motion.button>
             )}
 
@@ -440,23 +440,23 @@ export default function Notifications() {
                     disabled={clearingAll}
                   >
                     <Trash2 className="w-5 h-5" />
-                    ყველას წაშლა
+                    {t("extra.notifDeleteAll")}
                   </motion.button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>ყველა შეტყობინების წაშლა</AlertDialogTitle>
+                    <AlertDialogTitle>{t("extra.notifDeleteConfirmTitle")}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      დარწმუნებული ხართ? ეს მოქმედება შეუქცევადია.
+                      {t("extra.notifDeleteConfirmDesc")}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>გაუქმება</AlertDialogCancel>
+                    <AlertDialogCancel>{t("extra.notifCancel")}</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleClearAll}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
-                      წაშლა
+                      {t("extra.notifDeleteButton")}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
