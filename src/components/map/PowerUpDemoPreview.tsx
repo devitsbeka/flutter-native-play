@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
+import { useLanguage } from "@/contexts/LanguageContext";
 import power5050 from "@/assets/powers/5050.png";
 import powerFreeze from "@/assets/powers/freeze.png";
 import powerReplace from "@/assets/powers/replace.png";
@@ -17,14 +18,15 @@ const POWER_UP_IMAGES: Record<PowerUpType, string> = {
   "time-drain": timeDrainIcon,
 };
 
-const POWER_UP_DESCRIPTIONS: Record<PowerUpType, string> = {
-  "5050": "წაშლის 2 არასწორ პასუხს",
-  "freeze": "დრო გაიყინება 10 წამით",
-  "replace": "ცვლის კითხვას ახლით",
-  "time-drain": "ამატებს 10 წამს",
+const POWER_UP_DESC_KEYS: Record<PowerUpType, string> = {
+  "5050": "extra.demoDesc5050",
+  "freeze": "extra.demoDescFreeze",
+  "replace": "extra.demoDescReplace",
+  "time-drain": "extra.demoDescTimeDrain",
 };
 
 export function PowerUpDemoPreview({ type, animationKey }: PowerUpDemoPreviewProps) {
+  const { t } = useLanguage();
   return (
     <motion.div
       key={animationKey}
@@ -41,7 +43,7 @@ export function PowerUpDemoPreview({ type, animationKey }: PowerUpDemoPreviewPro
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
       />
       <p className="text-sm text-muted-foreground text-center font-medium">
-        {POWER_UP_DESCRIPTIONS[type]}
+        {t(POWER_UP_DESC_KEYS[type])}
       </p>
     </motion.div>
   );
