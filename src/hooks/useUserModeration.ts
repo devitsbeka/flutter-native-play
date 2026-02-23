@@ -65,12 +65,12 @@ export function useUserModeration() {
     roomId?: string
   ): Promise<boolean> => {
     if (!user) {
-      toast.error("გთხოვთ გაიაროთ ავტორიზაცია");
+      toast.error(t("extra.pleaseLogin"));
       return false;
     }
 
     if (reportedUserId === user.id) {
-      toast.error("საკუთარ თავს ვერ დაარეპორტებთ");
+      toast.error(t("extra.cantReportSelf"));
       return false;
     }
 
@@ -88,13 +88,13 @@ export function useUserModeration() {
 
       if (error) throw error;
 
-      toast.success("რეპორტი გაიგზავნა", {
-        description: "ჩვენ გადავხედავთ თქვენს რეპორტს მალე",
+      toast.success(t("extra.reportSentSuccess"), {
+        description: t("extra.reportSentDesc"),
       });
       return true;
     } catch (error) {
       console.error("Error reporting user:", error);
-      toast.error("რეპორტის გაგზავნა ვერ მოხერხდა");
+      toast.error(t("extra.reportSendFailed2"));
       return false;
     }
   }, [user]);
@@ -102,12 +102,12 @@ export function useUserModeration() {
   // Block a user
   const blockUser = useCallback(async (blockedId: string): Promise<boolean> => {
     if (!user) {
-      toast.error("გთხოვთ გაიაროთ ავტორიზაცია");
+      toast.error(t("extra.pleaseLogin"));
       return false;
     }
 
     if (blockedId === user.id) {
-      toast.error("საკუთარ თავს ვერ დაბლოკავთ");
+      toast.error(t("extra.cantBlockSelf"));
       return false;
     }
 
@@ -122,18 +122,18 @@ export function useUserModeration() {
       if (error) {
         // Handle unique constraint violation (already blocked)
         if (error.code === "23505") {
-          toast.info("მომხმარებელი უკვე დაბლოკილია");
+          toast.info(t("extra.userAlreadyBlocked"));
           return true;
         }
         throw error;
       }
 
       setBlockedUsers(prev => [...prev, blockedId]);
-      toast.success("მომხმარებელი დაბლოკილია");
+      toast.success(t("extra.userBlockedSuccess"));
       return true;
     } catch (error) {
       console.error("Error blocking user:", error);
-      toast.error("დაბლოკვა ვერ მოხერხდა");
+      toast.error(t("extra.blockFailed"));
       return false;
     }
   }, [user]);
@@ -141,7 +141,7 @@ export function useUserModeration() {
   // Unblock a user
   const unblockUser = useCallback(async (blockedId: string): Promise<boolean> => {
     if (!user) {
-      toast.error("გთხოვთ გაიაროთ ავტორიზაცია");
+      toast.error(t("extra.pleaseLogin"));
       return false;
     }
 
@@ -155,11 +155,11 @@ export function useUserModeration() {
       if (error) throw error;
 
       setBlockedUsers(prev => prev.filter(id => id !== blockedId));
-      toast.success("მომხმარებელი განბლოკილია");
+      toast.success(t("extra.userUnblockedSuccess"));
       return true;
     } catch (error) {
       console.error("Error unblocking user:", error);
-      toast.error("განბლოკვა ვერ მოხერხდა");
+      toast.error(t("extra.unblockFailed"));
       return false;
     }
   }, [user]);

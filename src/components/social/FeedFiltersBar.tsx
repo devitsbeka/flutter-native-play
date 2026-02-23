@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Search, Filter, ChevronDown, X, Hash, Lock, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -32,16 +33,16 @@ interface FeedFiltersBarProps {
   addButtonDescription?: string;
 }
 
-const filterOptions: { value: SortFilter; label: string }[] = [
-  { value: "all", label: "ყველა" },
-  { value: "private", label: "პირადი" },
-  { value: "published", label: "საჯარო" },
-  { value: "trivias", label: "ტრივიები" },
-  { value: "collections", label: "კოლექციები" },
+const getFilterOptions = (t: (k: string) => string): { value: SortFilter; label: string }[] => [
+  { value: "all", label: t("extra.filterAll") },
+  { value: "private", label: t("extra.filterPrivate") },
+  { value: "published", label: t("extra.filterPublic") },
+  { value: "trivias", label: t("extra.filterTrivias") },
+  { value: "collections", label: t("extra.filterCollections") },
   { value: "personal", label: "MyTrivia Party" },
-  { value: "most_liked", label: "მოწონებული" },
-  { value: "most_saved", label: "შენახული" },
-  { value: "most_played", label: "ნათამაშები" },
+  { value: "most_liked", label: t("extra.feedFilterLiked") },
+  { value: "most_saved", label: t("extra.feedFilterSaved") },
+  { value: "most_played", label: t("extra.feedFilterPlayed") },
 ];
 
 export function FeedFiltersBar({
@@ -52,8 +53,10 @@ export function FeedFiltersBar({
   selectedHashtag,
   onClearHashtag,
   onAddClick,
-  addButtonText = "+ შექმენი",
+  addButtonText = t("extra.feedCreateBtn"),
 }: FeedFiltersBarProps) {
+  const { t } = useLanguage();
+  const filterOptions = getFilterOptions(t);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const scrollToTop = () => {
@@ -66,7 +69,7 @@ export function FeedFiltersBar({
     }
   };
 
-  const currentLabel = filterOptions.find(opt => opt.value === sortFilter)?.label || "ყველა";
+  const currentLabel = filterOptions.find(opt => opt.value === sortFilter)?.label || t("extra.filterAll");
 
   return (
     <div className="px-4 py-2">
@@ -88,7 +91,7 @@ export function FeedFiltersBar({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => { if (!searchQuery && e.target.value) scrollToTop(); onSearchQueryChange(e.target.value); }}
-                  placeholder="ძიება..."
+                  placeholder={t("extra.feedSearchPlaceholder")}
                   autoFocus
                   className="flex-1 bg-transparent text-base md:text-sm text-foreground placeholder:text-muted-foreground outline-none min-w-0 w-full"
                 />
