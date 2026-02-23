@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useMyRooms, isActiveTVSession, isLiveTVSession } from "@/hooks/useMyRooms";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { formatDistanceToNow } from "date-fns";
-import { ka } from "date-fns/locale";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { LiveBadge } from "@/components/social/LiveBadge";
 import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
 
@@ -15,6 +15,7 @@ interface ActiveRoomsWidgetProps {
 
 export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { rooms, loading } = useMyRooms();
   
   // Filter for active rooms or rooms with unread activity or others online, prioritize TV sessions first, limit to 3
@@ -48,7 +49,7 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
       <div className="flex items-center gap-2 text-foreground">
         <Layers className="w-4 h-4" />
         <span className="text-sm font-bold tracking-wide">
-          აქტიური ოთახები
+          {t("extra.activeRooms")}
         </span>
         {activeRooms.some(r => r.has_unread_activity || isActiveTVSession(r.tv_status) || r.has_others_online) && (
           <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
@@ -116,15 +117,14 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
                 {/* Room Info */}
                 <div className="flex-1 min-w-0">
                   <p className="font-display text-foreground text-sm truncate">
-                    {room.room_name || room.category_name || "თამაშის ოთახი"}
+                    {room.room_name || room.category_name || t("extra.gameRoom")}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
-                    <span>{displayPlayerCount} მოთამაშე</span>
+                    <span>{displayPlayerCount} {t("extra.players")}</span>
                     <span>•</span>
                     <span className="truncate">
                       {formatDistanceToNow(new Date(room.last_activity_at || room.created_at), { 
                         addSuffix: false, 
-                        locale: ka 
                       })}
                     </span>
                   </div>
@@ -154,7 +154,7 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
         onClick={onViewAll}
         className="w-full flex items-center justify-center gap-1 text-sm text-primary hover:underline py-1"
       >
-        ყველა ოთახი
+        {t("extra.allRooms")}
         <ChevronRight className="w-3 h-3" />
       </button>
     </motion.div>

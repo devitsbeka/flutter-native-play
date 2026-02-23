@@ -63,15 +63,15 @@ export default function Settings() {
       await updateProfile({ nickname: newName.trim() });
       await fetchProfile(user.id);
       toast({
-        title: "სახელი შეიცვალა",
-        description: "შენი სახელი წარმატებით განახლდა",
+        title: t("extra.nameChangedSuccess"),
+        description: t("extra.nameChangedDesc"),
       });
       setNewName("");
       setIsNameOpen(false);
     } catch (error) {
       toast({
-        title: "შეცდომა",
-        description: "სახელის შეცვლა ვერ მოხერხდა",
+        title: t("extra.errorTitle"),
+        description: t("extra.nameChangeFailed"),
         variant: "destructive",
       });
     } finally {
@@ -81,44 +81,23 @@ export default function Settings() {
 
   const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
-      toast({
-        title: "შეცდომა",
-        description: "პაროლები არ ემთხვევა",
-        variant: "destructive",
-      });
+      toast({ title: t("extra.errorTitle"), description: t("extra.passwordMismatchError"), variant: "destructive" });
       return;
     }
-
     if (newPassword.length < 6) {
-      toast({
-        title: "შეცდომა",
-        description: "პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო",
-        variant: "destructive",
-      });
+      toast({ title: t("extra.errorTitle"), description: t("extra.passwordMinError"), variant: "destructive" });
       return;
     }
-
     setIsPasswordLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-
-      toast({
-        title: "პაროლი შეიცვალა",
-        description: "შენი პაროლი წარმატებით განახლდა",
-      });
+      toast({ title: t("extra.passwordChangedSuccess"), description: t("extra.passwordChangedDesc") });
       setNewPassword("");
       setConfirmPassword("");
       setIsPasswordOpen(false);
     } catch (error) {
-      toast({
-        title: "შეცდომა",
-        description: "პაროლის შეცვლა ვერ მოხერხდა",
-        variant: "destructive",
-      });
+      toast({ title: t("extra.errorTitle"), description: t("extra.passwordChangeFailed"), variant: "destructive" });
     } finally {
       setIsPasswordLoading(false);
     }
@@ -244,7 +223,7 @@ export default function Settings() {
               <CollapsibleContent className="px-4 pb-4">
                 <div className="mt-3 space-y-3 bg-secondary/30 rounded-xl p-4">
                   <Input
-                    placeholder={profile?.nickname || "შეიყვანე ახალი სახელი"}
+                    placeholder={profile?.nickname || t("extra.enterNewName")}
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     className="bg-background"
@@ -259,7 +238,7 @@ export default function Settings() {
                     ) : (
                       <Check className="w-4 h-4 mr-2" />
                     )}
-                    შენახვა
+                    {t("extra.save")}
                   </Button>
                 </div>
               </CollapsibleContent>
@@ -288,14 +267,14 @@ export default function Settings() {
                 <div className="mt-3 space-y-3 bg-secondary/30 rounded-xl p-4">
                   <Input
                     type="password"
-                    placeholder="ახალი პაროლი"
+                    placeholder={t("extra.newPasswordPlaceholder")}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="bg-background"
                   />
                   <Input
                     type="password"
-                    placeholder="გაიმეორე პაროლი"
+                    placeholder={t("extra.repeatPasswordPlaceholder")}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="bg-background"
@@ -310,7 +289,7 @@ export default function Settings() {
                     ) : (
                       <Check className="w-4 h-4 mr-2" />
                     )}
-                    შენახვა
+                    {t("extra.save")}
                   </Button>
                 </div>
               </CollapsibleContent>

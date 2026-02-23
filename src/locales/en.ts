@@ -1317,9 +1317,14 @@ export const en: KaTranslations = {
   // ==========================================
   extra: {
     player: "Player",
+    players: "players",
     gameName: "Game name...",
     myTrivia: "My Trivia",
     create: "Create",
+    createRoom: "Create Room",
+    createRoomTitle: "Create Room",
+    chooseWhatToPlay: "Choose what to play",
+    inviteAfterCreate: "You can invite friends after creating the room",
     randomCategory: "Random Category",
     quickStart: "Quick Start",
     chooseFromLibrary: "Choose from Library",
@@ -1344,6 +1349,28 @@ export const en: KaTranslations = {
     questionsNotLoaded: "Questions haven't loaded yet",
     waitingNextQuestion: "Waiting for next question",
     leaveGame: "Leave Game",
+    activeRooms: "Active Rooms",
+    allRooms: "All Rooms",
+    gameRoom: "Game Room",
+    // Room creation screen
+    room: "Room",
+    createPlayRoom: "Create a play room",
+    // Settings page
+    nameChangedSuccess: "Name changed!",
+    nameChangedDesc: "Your name has been successfully updated",
+    errorTitle: "Error",
+    nameChangeFailed: "Failed to change name",
+    passwordMismatchError: "Passwords don't match",
+    passwordMinError: "Password must be at least 6 characters",
+    passwordChangedSuccess: "Password changed!",
+    passwordChangedDesc: "Your password has been successfully updated",
+    passwordChangeFailed: "Failed to change password",
+    enterNewName: "Enter new name",
+    newPasswordPlaceholder: "New password",
+    repeatPasswordPlaceholder: "Repeat password",
+    save: "Save",
+    viewRating: "View Rating",
+    yourLeague: "Your League",
     // Spotlight commands
     createNewRoom: "Create New Room",
     settings: "Settings",
@@ -1394,6 +1421,8 @@ export const en: KaTranslations = {
     gamesCount: "{count} games",
     wonToday: "Won today",
     currentStreak: "Current streak",
+    // SectionHeader
+    seeAll: "See All",
     // Notification types
     notifAiGeneration: "AI Generation",
     notifNewMessage: "New Message",
