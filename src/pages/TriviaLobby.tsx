@@ -374,7 +374,7 @@ export default function TriviaLobby() {
           )}
           <ChunkyButton variant="primary" size="lg" className="w-full gap-2" onClick={handlePlay}>
             <Play className="w-5 h-5 fill-current" />
-            ითამაშე
+            {t("extra.playGame")}
           </ChunkyButton>
         </div>
       </div>

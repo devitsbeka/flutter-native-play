@@ -817,7 +817,7 @@ export default function CategoryQuizPage() {
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           />
-          <p className="text-muted-foreground">კითხვების გენერირება...</p>
+          <p className="text-muted-foreground">{t("extra.generatingQuestions")}</p>
         </div>
       </div>
     );
@@ -828,7 +828,7 @@ export default function CategoryQuizPage() {
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
           <div className="text-6xl mb-4">😕</div>
-          <h2 className="text-xl font-bold text-foreground mb-2">უპს!</h2>
+          <h2 className="text-xl font-bold text-foreground mb-2">{t("extra.oopsTitle")}</h2>
           <p className="text-muted-foreground mb-6">{error}</p>
           <div className="space-y-3">
             <ChunkyButton 
@@ -848,14 +848,14 @@ export default function CategoryQuizPage() {
               className="w-full"
               onClick={() => navigate(`/category/${categoryId}`)}
             >
-              სხვა დონის არჩევა
+              {t("extra.chooseDifferentLevel")}
             </ChunkyButton>
             <ChunkyButton 
               variant="outline"
               className="w-full"
               onClick={() => navigate('/')}
             >
-              მთავარ გვერდზე
+              {t("extra.goToHome")}
             </ChunkyButton>
           </div>
         </div>
