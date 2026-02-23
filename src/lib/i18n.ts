@@ -10,3 +10,6 @@ export { translate as t };
 export type TranslationKey = keyof typeof ka;
 
 export default ka;
+
+// Note: The standalone `t` function now reads from localStorage('preferredLanguage')
+// so it respects the user's language choice even outside React components.

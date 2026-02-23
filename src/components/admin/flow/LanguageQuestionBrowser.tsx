@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,10 +44,38 @@ export function LanguageQuestionBrowser({ language, languageFlag, languageName, 
   const [totalLib, setTotalLib] = useState(0);
   const [totalProd, setTotalProd] = useState(0);
 
+  // Cache translated category names for non-ka languages
+  const translatedNamesRef = useRef<Map<string, string>>(new Map());
+
+  // Fetch translated category names when language changes
+  useEffect(() => {
+    if (language === 'ka') {
+      translatedNamesRef.current = new Map();
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from('category_translations')
+        .select('category_id, name')
+        .eq('language', language);
+      const map = new Map<string, string>();
+      (data || []).forEach(t => map.set(t.category_id, t.name));
+      translatedNamesRef.current = map;
+    })();
+  }, [language]);
+
+  const getCategoryName = useCallback((categoryId: string) => {
+    if (language !== 'ka') {
+      const translated = translatedNamesRef.current.get(categoryId);
+      if (translated) return translated;
+    }
+    const cat = categories.find(c => c.id === categoryId);
+    return cat?.name || categoryId;
+  }, [language, categories]);
+
   const fetchCategoryCounts = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch counts per category for both statuses
       const { data, error } = await supabase
         .from('questions')
         .select('category_id, in_production')
@@ -56,7 +84,6 @@ export function LanguageQuestionBrowser({ language, languageFlag, languageName, 
 
       if (error) throw error;
 
-      // Count per category
       const libCounts = new Map<string, number>();
       const prodCounts = new Map<string, number>();
       let libTotal = 0;
@@ -76,10 +103,9 @@ export function LanguageQuestionBrowser({ language, languageFlag, languageName, 
       const counts: CategoryCount[] = [];
       
       countsMap.forEach((count, categoryId) => {
-        const cat = categories.find(c => c.id === categoryId);
         counts.push({
           categoryId,
-          categoryName: cat?.name || categoryId,
+          categoryName: getCategoryName(categoryId),
           count,
         });
       });
@@ -92,7 +118,7 @@ export function LanguageQuestionBrowser({ language, languageFlag, languageName, 
     } finally {
       setLoading(false);
     }
-  }, [language, activeTab, categories]);
+  }, [language, activeTab, categories, getCategoryName]);
 
   useEffect(() => {
     fetchCategoryCounts();
