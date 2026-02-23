@@ -67,7 +67,7 @@ export function PlayerFeedItem({
   const navigate = useNavigate();
   const { sendFriendRequest, acceptFriendRequest } = useFriends();
   const { openProfile } = usePlayerProfile();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { isAdmin } = useAdminRole();
   const [friendshipStatus, setFriendshipStatus] = useState(player.friendship_status);
   const [isLoading, setIsLoading] = useState(false);
@@ -241,7 +241,7 @@ export function PlayerFeedItem({
                 ) : (
                   <Layers className="w-3 h-3" />
                 )}
-                <span>{isTrivia ? "ტრივია" : "კოლექცია"}</span>
+                <span>{isTrivia ? t("extra.triviaTypeLabel") : t("extra.collectionBadge")}</span>
               </span>
             </div>
           </div>
@@ -283,7 +283,7 @@ export function PlayerFeedItem({
           {/* Question Count Badge - top right (for trivia only) */}
           {isTrivia && questionCount > 0 && (
             <div className="absolute top-2 right-2 bg-black/60 rounded-full px-2 py-0.5 text-xs text-white">
-              {questionCount} კითხვა
+              {t("extra.questionsLabel", { count: String(questionCount) })}
             </div>
           )}
         </div>
@@ -330,7 +330,7 @@ export function PlayerFeedItem({
                 className="flex items-center gap-1.5 px-3.5 py-1.5 bg-background border-2 border-primary rounded-full transition-colors hover:bg-primary/10"
               >
                 <Pencil className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">რედაქტირება</span>
+                <span className="text-sm font-semibold text-primary">{t("extra.editBtnLabel")}</span>
               </button>
             ) : isPlayed ? (
               <button 
@@ -345,7 +345,7 @@ export function PlayerFeedItem({
                 className="flex items-center gap-1.5 px-3.5 py-1.5 bg-background border-2 border-purple-500 rounded-full transition-colors hover:bg-purple-50 dark:hover:bg-purple-500/10"
               >
                 {isVip ? <Play className="w-4 h-4 text-purple-500" /> : <Hourglass className="w-4 h-4 text-purple-500" />}
-                <span className="text-sm font-semibold text-purple-500">ითამაშე</span>
+                <span className="text-sm font-semibold text-purple-500">{t("extra.playBtn")}</span>
               </button>
             )}
           </div>

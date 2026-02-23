@@ -10,15 +10,16 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface FilterOption<T extends string> {
   value: T;
-  label: string;
+  labelKey: string;
 }
 
 export interface SortOption<T extends string> {
   value: T;
-  label: string;
+  labelKey: string;
 }
 
 interface UnifiedFiltersBarProps<F extends string, S extends string> {
@@ -44,9 +45,12 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
   searchQuery,
   onSearchQueryChange,
   onAddClick,
-  addButtonText = "+ ახალი",
+  addButtonText,
 }: UnifiedFiltersBarProps<F, S>) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { t } = useLanguage();
+
+  const defaultAddText = addButtonText || t("extra.addNewDefault");
 
   const scrollToTop = () => {
     const container = document.getElementById('main-scroll-container');
@@ -58,8 +62,12 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
     }
   };
 
-  const currentFilterLabel = filterOptions.find((opt) => opt.value === filter)?.label || filterOptions[0]?.label || "ყველა";
-  const currentSortLabel = sortOptions?.find((opt) => opt.value === sort)?.label;
+  const currentFilterLabel = filterOptions.find((opt) => opt.value === filter)?.labelKey 
+    ? t(filterOptions.find((opt) => opt.value === filter)!.labelKey)
+    : t("extra.filterAll");
+  const currentSortLabel = sortOptions?.find((opt) => opt.value === sort)?.labelKey
+    ? t(sortOptions.find((opt) => opt.value === sort)!.labelKey)
+    : undefined;
 
   return (
     <div className="px-4 py-2 w-full max-w-full overflow-visible box-border">
@@ -76,7 +84,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
               >
                 <Input
                   type="text"
-                  placeholder="ძიება..."
+                  placeholder={t("extra.searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => { if (!searchQuery && e.target.value) scrollToTop(); onSearchQueryChange(e.target.value); }}
                   className="h-9 flex-1 rounded-full bg-card/50 border-border/30 text-base md:text-sm"
@@ -119,7 +127,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56 py-2">
-                <DropdownMenuLabel className="text-[13px] text-muted-foreground pt-1 pb-1">ფილტრი</DropdownMenuLabel>
+                <DropdownMenuLabel className="text-[13px] text-muted-foreground pt-1 pb-1">{t("extra.filterLabel")}</DropdownMenuLabel>
                 {filterOptions.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
@@ -128,7 +136,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
                   >
                     <div className="flex items-center gap-2 w-full">
                       {filter === option.value && <Check className="h-4 w-4" />}
-                      <span className={filter !== option.value ? "pl-6" : ""}>{option.label}</span>
+                      <span className={filter !== option.value ? "pl-6" : ""}>{t(option.labelKey)}</span>
                     </div>
                   </DropdownMenuItem>
                 ))}
@@ -136,7 +144,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
                 {sortOptions && sortOptions.length > 0 && onSortChange && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-[13px] text-muted-foreground pt-1 pb-1">დალაგება</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-[13px] text-muted-foreground pt-1 pb-1">{t("extra.sortLabel")}</DropdownMenuLabel>
                     {sortOptions.map((option) => (
                       <DropdownMenuItem
                         key={option.value}
@@ -145,7 +153,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
                       >
                         <div className="flex items-center gap-2 w-full">
                           {sort === option.value && <Check className="h-4 w-4" />}
-                          <span className={sort !== option.value ? "pl-6" : ""}>{option.label}</span>
+                          <span className={sort !== option.value ? "pl-6" : ""}>{t(option.labelKey)}</span>
                         </div>
                       </DropdownMenuItem>
                     ))}
@@ -164,7 +172,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
                 onClick={onAddClick}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0"
               >
-                <span className="text-[13px] font-bold">{addButtonText}</span>
+                <span className="text-[13px] font-bold">{defaultAddText}</span>
               </motion.button>
             )}
           </>
@@ -176,40 +184,40 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
 
 // Pre-defined filter options for rooms
 export const roomFilterOptions: FilterOption<RoomFilter>[] = [
-  { value: "all", label: "ყველა" },
-  { value: "my_rooms", label: "ჩემი შექმნილი" },
-  { value: "friends_rooms", label: "მეგობრების" },
-  { value: "active", label: "აქტიური" },
-  { value: "completed", label: "დასრულებული" },
+  { value: "all", labelKey: "extra.filterAll" },
+  { value: "my_rooms", labelKey: "extra.filterMyRooms" },
+  { value: "friends_rooms", labelKey: "extra.filterFriendsRooms" },
+  { value: "active", labelKey: "extra.filterActive" },
+  { value: "completed", labelKey: "extra.filterCompleted" },
 ];
 
 // Room sort options removed - always sort by last activity
 
 // Pre-defined filter options for my trivia content
 export const myTriviaFilterOptions: FilterOption<MyTriviaFilter>[] = [
-  { value: "all", label: "ყველა" },
-  { value: "private", label: "პირადი" },
-  { value: "published", label: "საჯარო" },
-  { value: "trivias", label: "ტრივიები" },
-  { value: "collections", label: "კოლექციები" },
-  { value: "personal", label: "MyTrivia Party" },
-  { value: "most_liked", label: "მოწონებული" },
-  { value: "most_saved", label: "შენახული" },
-  { value: "most_played", label: "ნათამაშები" },
+  { value: "all", labelKey: "extra.filterAll" },
+  { value: "private", labelKey: "extra.filterPrivate" },
+  { value: "published", labelKey: "extra.filterPublic" },
+  { value: "trivias", labelKey: "extra.filterTrivias" },
+  { value: "collections", labelKey: "extra.filterCollections" },
+  { value: "personal", labelKey: "extra.myTriviaParty" },
+  { value: "most_liked", labelKey: "extra.filterMostLiked" },
+  { value: "most_saved", labelKey: "extra.filterMostSaved" },
+  { value: "most_played", labelKey: "extra.filterMostPlayed" },
 ];
 
 // Pre-defined filter options for explore/discover tab
 export const exploreFilterOptions: FilterOption<ExploreFilter>[] = [
-  { value: "all", label: "ყველა" },
-  { value: "friends", label: "მეგობრების" },
-  { value: "trivias", label: "ტრივიები" },
-  { value: "collections", label: "კოლექციები" },
+  { value: "all", labelKey: "extra.filterAll" },
+  { value: "friends", labelKey: "extra.filterFriendsRooms" },
+  { value: "trivias", labelKey: "extra.filterTrivias" },
+  { value: "collections", labelKey: "extra.filterCollections" },
 ];
 
 export const exploreSortOptions: SortOption<ExploreSort>[] = [
-  { value: "recent", label: "უახლესი" },
-  { value: "most_played", label: "ნათამაშები" },
-  { value: "most_liked", label: "მოწონებული" },
+  { value: "recent", labelKey: "extra.sortRecent" },
+  { value: "most_played", labelKey: "extra.filterMostPlayed" },
+  { value: "most_liked", labelKey: "extra.filterMostLiked" },
 ];
 
 // Type exports

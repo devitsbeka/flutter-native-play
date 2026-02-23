@@ -131,7 +131,7 @@ export function TriviaPortfolioCard({
         
         {/* Question Count Badge - top right */}
         <div className="absolute top-2 right-2 bg-black/60 rounded-full px-2 py-0.5 text-xs text-white">
-          {trivia.questionCount} კითხვა
+          {t("extra.questionsLabel", { count: String(trivia.questionCount) })}
         </div>
       </div>
       
@@ -181,7 +181,7 @@ export function TriviaPortfolioCard({
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-background border-2 border-purple-500 rounded-full transition-colors hover:bg-purple-50 dark:hover:bg-purple-500/10"
             >
               {isVip ? <Play className="w-4 h-4 text-purple-500" /> : <Hourglass className="w-4 h-4 text-purple-500" />}
-              <span className="text-sm font-semibold text-purple-500">ითამაშე</span>
+              <span className="text-sm font-semibold text-purple-500">{t("extra.playBtn")}</span>
             </button>
           )}
         </div>

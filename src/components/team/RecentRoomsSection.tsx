@@ -16,7 +16,7 @@ export function RecentRoomsSection({ onViewAll }: RecentRoomsSectionProps) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-slate-800 tracking-wide">ბოლო თამაშები</span>
+           <span className="text-sm font-bold text-slate-800 tracking-wide">{t("extra.recentGames")}</span>
         </div>
         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
           {[1, 2, 3].map((i) => (
@@ -37,9 +37,9 @@ export function RecentRoomsSection({ onViewAll }: RecentRoomsSectionProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-slate-800 tracking-wide">ბოლო თამაშები</span>
+        <span className="text-sm font-bold text-slate-800 tracking-wide">{t("extra.recentGames")}</span>
         <ChunkyButton onClick={onViewAll} variant="secondary" size="sm">
-          ყველა
+          {t("extra.viewAll")}
         </ChunkyButton>
       </div>
 
@@ -115,7 +115,7 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
           className="flex-1"
           icon={<Plus className="w-4 h-4" />}
         >
-          თამაში
+          {t("extra.gameBtn")}
         </ChunkyButton>
 
         <ChunkyButton
@@ -124,7 +124,7 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
           className="flex-1"
           icon={<MessageCircle className="w-4 h-4" />}
         >
-          ჩატი
+          {t("extra.chatBtn")}
         </ChunkyButton>
       </div>
     </motion.div>
