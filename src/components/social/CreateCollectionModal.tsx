@@ -940,12 +940,12 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                        />
                      </div>
                      <h3 className="text-2xl font-bold text-white mb-2">
-                       {roundNames.filter(n => n.trim()).length <= 1 ? "შექმენი Trivia" : "შექმენი კოლექცია"}
+                       {roundNames.filter(n => n.trim()).length <= 1 ? t("extra.createTriviaTitle2") : t("extra.createCollectionTitle2")}
                      </h3>
                      <p className="text-white/70">
                        {roundNames.filter(n => n.trim()).length <= 1 
-                         ? "ჩაწერე თემა" 
-                         : "ჩაწერე რა თემებზე გსურს რაუნდები"}
+                         ? t("extra.writeTopicSingle") 
+                         : t("extra.writeTopicsMulti")}
                      </p>
                    </div>
 
@@ -965,7 +965,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                         <Input
                           value={name}
                           onChange={(e) => updateRoundName(index, e.target.value)}
-                          placeholder={`მაგ: ${index === 0 ? "სპორტი" : index === 1 ? "მუსიკა" : "ფილმები"}`}
+                          placeholder={`${t("extra.exSport")}${index === 0 ? "" : index === 1 ? `, ${t("extra.exMusic")}` : `, ${t("extra.exMovies")}`}`}
                           className="flex-1 h-12 text-base rounded-xl border-0 bg-white/95 text-slate-800 placeholder:text-slate-400"
                         />
                         {roundNames.length > 1 && (
@@ -1034,7 +1034,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                     className="w-full"
                   >
                     <Sparkles className="w-5 h-5 mr-2" />
-                    შექმნა
+                    {t("extra.generateBtnLabel")}
                     <ChevronRight className="w-5 h-5 ml-2" />
                   </ChunkyButton>
                 </motion.div>
