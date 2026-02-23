@@ -1755,8 +1755,7 @@ export const ka = {
     publicLabel: "საჯარო",
     privateLabel: "პირადი",
     playedBadge: "ნათამაშები",
-    // Room cards
-    gameRoom: "თამაშის ოთახი",
+    // Room cards (gameRoom already defined above)
     deleteRoom: "ოთახის წაშლა",
     deleteConfirmMessage: "დარწმუნებული ხარ? ეს მოქმედება შეუქცევადია.",
     deleteBtn: "წაშლა",

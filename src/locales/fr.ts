@@ -1,5 +1,6 @@
 // French Translation System - Français
 import type { KaTranslations } from './ka';
+import { en } from './en';
 
 export const fr: KaTranslations = {
   common: { play: "Jouer", back: "Retour", next: "Suivant", skip: "Passer", done: "Terminé", close: "Fermer", save: "Sauvegarder", cancel: "Annuler", loading: "Chargement...", error: "Erreur", success: "Succès!", continue: "Continuer", confirm: "Confirmer", retry: "Réessayer", gotIt: "Compris!", letsGo: "Allons-y!", awesome: "Génial!", nice: "Super!", oops: "Oups!", welcome: "Bienvenue!", hello: "Bonjour!", xp: "XP", level: "Niveau", coins: "Pièces", gems: "Gemmes", noQuestionsTitle: "Pas encore de questions", noQuestionsMessage: "Les questions dans cette langue seront bientôt ajoutées!", popular: "Populaire", bestValue: "Meilleur prix", limited: "Limité", new: "Nouveau", or: "ou", owned: "Acheté" },

@@ -1,4 +1,0 @@
-// Japanese - extending English
-import type { KaTranslations } from './ka';
-import { en } from './en';
-export const ja: KaTranslations = { ...en, common: { ...en.common, play: "プレイ", back: "戻る", next: "次へ", close: "閉じる", save: "保存", cancel: "キャンセル", loading: "読み込み中...", error: "エラー", success: "成功!", continue: "続ける", coins: "コイン", gems: "ジェム" }, nav: { ...en.nav, explore: "探索", map: "マップ", play: "プレイ", rank: "ランキング", profile: "プロフィール", settings: "設定", home: "ホーム", menu: "メニュー" }, team: { ...en.team, multiplayer: "マルチプレイヤー", signInToPlay: "友達と遊ぶにはログイン", friends: "友達", yourRooms: "あなたの部屋", noActiveRooms: "アクティブな部屋がありません", join: "参加", recentGames: "最近のゲーム", noGamesYet: "まだゲームがありません" }, auth: { ...en.auth, signIn: "ログイン", signUp: "登録", signOut: "ログアウト" }, featured: { ...en.featured, badgeNew: "新着", badgePopular: "人気", badgeBestPrice: "お得" } };

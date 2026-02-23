@@ -1756,8 +1756,7 @@ export const en: KaTranslations = {
     publicLabel: "Public",
     privateLabel: "Private",
     playedBadge: "Played",
-    // Room cards
-    gameRoom: "Game Room",
+    // Room cards (gameRoom already defined above)
     deleteRoom: "Delete Room",
     deleteConfirmMessage: "Are you sure? This action is irreversible.",
     deleteBtn: "Delete",
