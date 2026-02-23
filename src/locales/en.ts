@@ -1756,6 +1756,7 @@ export const en: KaTranslations = {
     trueFalseLabel: "True/False",
     playBtn: "Play",
     playsLabel: "Plays",
+    playedLabel: "Played",
     answersCount: "Answers",
     topicsLabel: "Topics",
     roundLabel: "Round",

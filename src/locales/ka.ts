@@ -1755,6 +1755,7 @@ export const ka = {
     trueFalseLabel: "მართალი/მცდარი",
     playBtn: "ითამაშე",
     playsLabel: "ნათამაშები",
+    playedLabel: "ნათამაშები",
     answersCount: "პასუხი",
     topicsLabel: "თემატიკა",
     roundLabel: "რაუნდი",
