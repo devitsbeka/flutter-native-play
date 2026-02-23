@@ -2394,6 +2394,10 @@ export const ka = {
     resendInvite: "თავიდან",
     sendInvite: "მოიწვიე",
     roundsShort: "{count}რ",
+    scoreboardYouWon: "შენ მოიგე",
+    scoreboardPlayerWon: "{name}-მ მოიგო",
+    scoreboardRoundStats: "{rounds} რაუნდი • {wins} მოგ.",
+    scoreboardRoundsLabel: "{count} რაუნდი",
     // Guest activation
     onboardSignup: "რეგისტრაცია",
     onboardPhoto: "ფოტო",

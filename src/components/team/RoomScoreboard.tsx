@@ -4,6 +4,7 @@ import { Crown, Swords, Users, Send, X, Plus } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
 import { MatchHistoryEntry } from "@/hooks/useRoomMatchHistory";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
+import { useLanguage } from "@/contexts/LanguageContext";
 import medalGold from "@/assets/icons/medal-gold.png";
 import medalSilver from "@/assets/icons/medal-silver.png";
 import medalBronze from "@/assets/icons/medal-bronze.png";
@@ -35,7 +36,8 @@ const getRankIcon = (rank: number) => {
 };
 
 export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true, maxPlayers, isHost = false, isRoomActive = true, onInviteFriends, onResendInvitation, onRemoveParticipant }: RoomScoreboardProps) {
-  // Track sent invites for showing "გაიგზავნა" + "ველოდებით" feedback
+  const { t } = useLanguage();
+  // Track sent invites for showing feedback
   const [sentInvites, setSentInvites] = useState<Set<string>>(new Set());
   // Sort by total cumulative score (primary), then by total wins (secondary)
   const sortedParticipants = [...participants].sort(
@@ -70,7 +72,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-white/60" />
           <span className="font-semibold text-white text-sm">
-            მოთამაშეები {maxPlayers && <span className="text-white/60">({participants.length}/{maxPlayers})</span>}
+            {t("extra.playersHeader")} {maxPlayers && <span className="text-white/60">({participants.length}/{maxPlayers})</span>}
           </span>
         </div>
 
@@ -80,8 +82,8 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
             onClick={onInviteFriends}
             whileTap={{ scale: 0.92 }}
             className="w-10 h-10 rounded-xl border border-dashed border-white/40 flex items-center justify-center"
-            aria-label="მეგობრის დამატება"
-            title="მეგობრის დამატება"
+            aria-label={t("extra.addFriendLabel")}
+            title={t("extra.addFriendLabel")}
           >
             <Plus className="w-5 h-5 text-white/60" />
           </motion.button>
@@ -114,19 +116,19 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       </div>
                     </div>
                     <p className={`font-medium text-sm truncate ${isInvited ? 'text-white/50' : 'text-white'}`}>
-                      {player.user_id === currentUserId ? "შენ" : player.nickname}
+                      {player.user_id === currentUserId ? t("extra.youLabel") : player.nickname}
                     </p>
                     {isInvited ? (
                       <div className="mt-2 flex flex-col items-center">
                         {isHost && sentInvites.has(player.user_id) ? (
-                          <>
-                            <span className="text-xs text-green-400 font-medium">გაიგზავნა</span>
+                         <>
+                            <span className="text-xs text-green-400 font-medium">{t("extra.sentLabel")}</span>
                             <motion.p 
                               animate={{ opacity: [0.5, 1, 0.5] }}
                               transition={{ duration: 2, repeat: Infinity }}
                               className="text-xs text-white/50"
                             >
-                              ველოდებით
+                              {t("extra.waitingLabel")}
                             </motion.p>
                           </>
                         ) : (
@@ -135,8 +137,8 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                               animate={{ opacity: [0.5, 1, 0.5] }}
                               transition={{ duration: 2, repeat: Infinity }}
                               className="text-xs text-white/40 italic"
-                            >
-                              მოწვეული...
+                             >
+                              {t("extra.invitedEllipsis")}
                             </motion.p>
                             {isHost && (
                               <div className="min-h-[36px] flex items-center justify-center mt-1">
@@ -148,8 +150,8 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                                   className="px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-xs shadow-md flex items-center gap-1.5"
                                   whileTap={{ scale: 0.95 }}
                                 >
-                                  <Send className="w-3 h-3" />
-                                  {isRoomActive ? "თავიდან" : "მოიწვიე"}
+                                   <Send className="w-3 h-3" />
+                                   {isRoomActive ? t("extra.resendInvite") : t("extra.sendInvite")}
                                 </motion.button>
                               </div>
                             )}
@@ -162,7 +164,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                           {(player as any).total_score || 0}
                         </span>
                         <p className="text-xs text-white/60">
-                          {player.total_rounds_played || 0} რაუნდი • {player.total_wins || 0} მოგ.
+                          {t("extra.scoreboardRoundStats", { rounds: player.total_rounds_played || 0, wins: player.total_wins || 0 })}
                         </p>
                       </div>
                     )}
@@ -182,7 +184,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                 <Swords className="w-6 h-6 text-white" />
               </motion.div>
               <span className="text-xs text-white/60 mt-1">
-                {sortedParticipants[0].total_rounds_played || 0} რაუნდი
+                {t("extra.scoreboardRoundsLabel", { count: sortedParticipants[0].total_rounds_played || 0 })}
               </span>
             </div>
 
@@ -207,19 +209,19 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       </div>
                     </div>
                     <p className={`font-medium text-sm truncate ${isInvited ? 'text-white/50' : 'text-white'}`}>
-                      {player.user_id === currentUserId ? "შენ" : player.nickname}
+                      {player.user_id === currentUserId ? t("extra.youLabel") : player.nickname}
                     </p>
                     {isInvited ? (
                       <div className="mt-2 flex flex-col items-center">
                         {isHost && sentInvites.has(player.user_id) ? (
-                          <>
-                            <span className="text-xs text-green-400 font-medium">გაიგზავნა</span>
+                         <>
+                            <span className="text-xs text-green-400 font-medium">{t("extra.sentLabel")}</span>
                             <motion.p 
                               animate={{ opacity: [0.5, 1, 0.5] }}
                               transition={{ duration: 2, repeat: Infinity }}
                               className="text-xs text-white/50"
                             >
-                              ველოდებით
+                              {t("extra.waitingLabel")}
                             </motion.p>
                           </>
                         ) : (
@@ -228,8 +230,8 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                               animate={{ opacity: [0.5, 1, 0.5] }}
                               transition={{ duration: 2, repeat: Infinity }}
                               className="text-xs text-white/40 italic"
-                            >
-                              მოწვეული...
+                             >
+                              {t("extra.invitedEllipsis")}
                             </motion.p>
                             {isHost && (
                               <div className="min-h-[36px] flex items-center justify-center mt-1">
@@ -241,8 +243,8 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                                   className="px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-xs shadow-md flex items-center gap-1.5"
                                   whileTap={{ scale: 0.95 }}
                                 >
-                                  <Send className="w-3 h-3" />
-                                  {isRoomActive ? "თავიდან" : "მოიწვიე"}
+                                   <Send className="w-3 h-3" />
+                                   {isRoomActive ? t("extra.resendInvite") : t("extra.sendInvite")}
                                 </motion.button>
                               </div>
                             )}
@@ -255,7 +257,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                           {(player as any).total_score || 0}
                         </span>
                         <p className="text-xs text-white/60">
-                          {player.total_rounds_played || 0} რაუნდი • {player.total_wins || 0} მოგ.
+                          {t("extra.scoreboardRoundStats", { rounds: player.total_rounds_played || 0, wins: player.total_wins || 0 })}
                         </p>
                       </div>
                     )}
@@ -301,10 +303,10 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                   {/* Name + Crown - flex grow */}
                   <div className="flex-1 min-w-0 flex items-center gap-1.5">
                     <p className={`font-medium text-sm truncate ${isInvited ? "text-white/50" : "text-white"}`}>
-                      {p.user_id === currentUserId ? "შენ" : p.nickname}
+                      {p.user_id === currentUserId ? t("extra.youLabel") : p.nickname}
                     </p>
                     {isInvited && (
-                      <span className="text-xs text-white/40 italic">მოწვეული</span>
+                      <span className="text-xs text-white/40 italic">{t("extra.invitedLabel")}</span>
                     )}
                     {showHostCrown && p.is_host && !isInvited && (
                       <Crown className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
@@ -321,15 +323,15 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                     </div>
                   ) : isHost && (
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {sentInvites.has(p.user_id) ? (
-                        <div className="flex flex-col items-center">
-                          <span className="text-xs text-green-400 font-medium">გაიგზავნა</span>
-                          <motion.p 
-                            animate={{ opacity: [0.5, 1, 0.5] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            className="text-[10px] text-white/50"
-                          >
-                            ველოდებით
+                        {sentInvites.has(p.user_id) ? (
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs text-green-400 font-medium">{t("extra.sentLabel")}</span>
+                            <motion.p 
+                              animate={{ opacity: [0.5, 1, 0.5] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                              className="text-[10px] text-white/50"
+                            >
+                              {t("extra.waitingLabel")}
                           </motion.p>
                         </div>
                       ) : (
@@ -341,8 +343,8 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                           className="px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-xs shadow-md flex items-center gap-1.5"
                           whileTap={{ scale: 0.95 }}
                         >
-                          <Send className="w-3 h-3" />
-                          {isRoomActive ? "თავიდან" : "მოიწვიე"}
+                           <Send className="w-3 h-3" />
+                           {isRoomActive ? t("extra.resendInvite") : t("extra.sendInvite")}
                         </motion.button>
                       )}
                     </div>
@@ -356,7 +358,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
         {/* Recent Rounds */}
         {matches.length > 0 && (
           <div className="mt-3 pt-3 border-t border-white/10">
-            <p className="text-xs text-white/50 mb-2">ბოლო რაუნდები</p>
+            <p className="text-xs text-white/50 mb-2">{t("extra.recentRoundsTitle")}</p>
             <div className="space-y-1.5 max-h-28 overflow-y-auto">
               {matches.slice(0, 5).map((match, index) => {
                 const winner = match.player_scores?.find(p => p.user_id === match.winner_user_id);
@@ -381,8 +383,8 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                     </div>
                     <span className="flex-1 font-medium truncate text-xs text-white/90">
                       {isMyWin 
-                        ? "შენ მოიგე" 
-                        : `${winner?.nickname || "?"}-მ მოიგო`}
+                        ? t("extra.scoreboardYouWon")
+                        : t("extra.scoreboardPlayerWon", { name: winner?.nickname || "?" })}
                     </span>
                     <span className="text-white/50 text-xs">{winner?.score || 0}pts</span>
                   </div>

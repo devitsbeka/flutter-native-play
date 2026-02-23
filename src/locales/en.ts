@@ -2395,6 +2395,10 @@ export const en: KaTranslations = {
     resendInvite: "Resend",
     sendInvite: "Invite",
     roundsShort: "{count}r",
+    scoreboardYouWon: "You won",
+    scoreboardPlayerWon: "{name} won",
+    scoreboardRoundStats: "{rounds} rounds • {wins} wins",
+    scoreboardRoundsLabel: "{count} rounds",
     // Guest activation
     onboardSignup: "Sign up",
     onboardPhoto: "Photo",
