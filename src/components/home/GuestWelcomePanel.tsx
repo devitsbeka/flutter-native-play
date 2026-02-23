@@ -20,18 +20,18 @@ interface GuestWelcomePanelProps {
 }
 
 // Validation helpers
-const validateUsername = (value: string): string | undefined => {
-  if (!value.trim()) return "სახელი საჭიროა";
-  if (value.length < 3) return "მინ. 3 სიმბოლო";
+const validateUsername = (value: string, t: (key: string) => string): string | undefined => {
+  if (!value.trim()) return t("extra.usernameRequired");
+  if (value.length < 3) return t("extra.minChars3");
   if (!/^[a-zA-Z0-9_\u10A0-\u10FF]+$/.test(value)) {
-    return "მხოლოდ ასოები, ციფრები და _";
+    return t("extra.onlyLettersDigits");
   }
   return undefined;
 };
 
-const validatePassword = (value: string): string | undefined => {
-  if (!value) return "პაროლი საჭიროა";
-  if (value.length < 6) return "მინ. 6 სიმბოლო";
+const validatePassword = (value: string, t: (key: string) => string): string | undefined => {
+  if (!value) return t("extra.passwordRequired");
+  if (value.length < 6) return t("extra.minChars6");
   return undefined;
 };
 
