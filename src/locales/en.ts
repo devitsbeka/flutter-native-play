@@ -2990,6 +2990,17 @@ export const en: KaTranslations = {
     editCancelLabel: "Cancel",
     editTriviaTitlePlaceholder: "Trivia title",
     editDefaultTitle: "Title",
+    // PlayerProfileModal toasts
+    friendRequestSentToast: "Request sent!",
+    errorOccurredToast: "An error occurred",
+    friendshipIdNotFound: "Friendship ID not found",
+    friendRemovedToast: "Friend removed",
+    removeFailedToast: "Removal failed",
+    aiAvatarGenerating: "Generating AI avatar...",
+    aiGenerationFallback: "AI generation failed, original photo saved",
+    aiAvatarCreated: "AI avatar created! ✨",
+    avatarUploadFailed: "Avatar upload failed",
+    recentActivityTitle: "Recent Activity",
   },
 };
 

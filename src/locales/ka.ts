@@ -3050,6 +3050,17 @@ export const ka = {
     editCancelLabel: "გაუქმება",
     editTriviaTitlePlaceholder: "Trivia-ს სათაური",
     editDefaultTitle: "სათაური",
+    // PlayerProfileModal toasts
+    friendRequestSentToast: "მოთხოვნა გაიგზავნა!",
+    errorOccurredToast: "შეცდომა მოხდა",
+    friendshipIdNotFound: "მეგობრობის ID ვერ მოიძებნა",
+    friendRemovedToast: "მეგობარი წაიშალა",
+    removeFailedToast: "წაშლა ვერ მოხერხდა",
+    aiAvatarGenerating: "AI ავატარი გენერირდება...",
+    aiGenerationFallback: "AI გენერაცია ვერ მოხერხდა, ორიგინალი ფოტო შეინახა",
+    aiAvatarCreated: "AI ავატარი შეიქმნა! ✨",
+    avatarUploadFailed: "ავატარის ატვირთვა ვერ მოხერხდა",
+    recentActivityTitle: "ბოლო აქტივობა",
   },
 };
 
