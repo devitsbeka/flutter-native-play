@@ -2238,6 +2238,11 @@ export const ka = {
     generatingCover: "გენერირდება",
     addIconLabel: "აიკონის დამატება",
     deleteQuestionBtn: "კითხვის წაშლა",
+    chooseIconTitle: "აირჩიე აიკონი",
+    searchIconPlaceholder: "ძებნა...",
+    currentIconLabel: "მიმდინარე აიკონი",
+    suggestedIconsLabel: "შემოთავაზებული",
+    iconNotFound: "აიკონი ვერ მოიძებნა",
     // Live Games Widget
     liveGameRoom: "თამაშის ოთახი",
     playerCount: "{count} მოთამაშე",

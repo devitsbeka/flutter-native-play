@@ -2239,6 +2239,11 @@ export const en: KaTranslations = {
     generatingCover: "Generating",
     addIconLabel: "Add icon",
     deleteQuestionBtn: "Delete question",
+    chooseIconTitle: "Choose icon",
+    searchIconPlaceholder: "Search...",
+    currentIconLabel: "Current icon",
+    suggestedIconsLabel: "Suggested",
+    iconNotFound: "Icon not found",
     // Live Games Widget
     liveGameRoom: "Game Room",
     playerCount: "{count} players",
