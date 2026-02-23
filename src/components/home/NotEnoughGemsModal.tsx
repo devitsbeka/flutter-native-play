@@ -10,17 +10,17 @@ import gemIcon from "@/assets/icons/icon-gem.png";
 interface GemPackage {
   id: string;
   gems: number;
-  priceGel: number;
+  priceUsd: number;
   name: string;
   bonus?: number;
   badge?: "popular" | "best-value";
 }
 
 const GEM_PACKAGES: GemPackage[] = [
-  { id: "gems_100", gems: 100, priceGel: 2, name: "100" },
-  { id: "gems_500", gems: 500, priceGel: 8, name: "500" },
-  { id: "gems_1500", gems: 1500, priceGel: 20, name: "1500", bonus: 20, badge: "popular" },
-  { id: "gems_5000", gems: 5000, priceGel: 60, name: "5000", bonus: 40, badge: "best-value" },
+  { id: "gems_100", gems: 100, priceUsd: 0.79, name: "100" },
+  { id: "gems_500", gems: 500, priceUsd: 3.19, name: "500" },
+  { id: "gems_1500", gems: 1500, priceUsd: 7.99, name: "1500", bonus: 20, badge: "popular" },
+  { id: "gems_5000", gems: 5000, priceUsd: 23.99, name: "5000", bonus: 40, badge: "best-value" },
 ];
 
 interface NotEnoughGemsModalProps {
@@ -61,7 +61,7 @@ export function NotEnoughGemsModal({
       id: pkg.id,
       name: pkg.name,
       gems: pkg.gems,
-      priceGel: pkg.priceGel,
+      priceGel: pkg.priceUsd,
     });
     setSelectedPackage(null);
   };
@@ -168,7 +168,7 @@ export function NotEnoughGemsModal({
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <>₾{pkg.priceGel}</>
+                  <>${pkg.priceUsd}</>
                 )}
               </div>
             </motion.button>

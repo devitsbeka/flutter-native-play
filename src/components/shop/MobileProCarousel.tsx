@@ -11,7 +11,7 @@ const PRO_TIERS = [
   {
     id: "solo" as const,
     nameKa: "სოლო PRO",
-    price: 9.99,
+    price: 3.99,
     icon: Crown,
     benefits: [
       "ულიმიტო უფასო თამაში",
@@ -24,7 +24,7 @@ const PRO_TIERS = [
   {
     id: "family" as const,
     nameKa: "სამეგობრო PRO",
-    price: 19.99,
+    price: 7.99,
     icon: Users,
     benefits: [
       "ყველა Solo PRO ფუნქცია + 5 მეგობრის მოწვევა",
@@ -161,14 +161,14 @@ export function MobileProCarousel() {
                   </h3>
                   {/* Price - md+: inline with header */}
                   <div className="hidden md:flex items-baseline gap-1 ml-auto">
-                    <span className="text-2xl font-black text-white">₾{tier.price}</span>
-                    <span className="text-sm text-white/70">/თვე</span>
+                    <span className="text-2xl font-black text-white">${tier.price}</span>
+                    <span className="text-sm text-white/70">/mo</span>
                   </div>
                 </div>
                 {/* Price - mobile only: below title */}
                 <div className="flex md:hidden items-baseline gap-1 mb-2">
-                  <span className="text-xl font-black text-white">₾{tier.price}</span>
-                  <span className="text-xs text-white/70">/თვე</span>
+                  <span className="text-xl font-black text-white">${tier.price}</span>
+                  <span className="text-xs text-white/70">/mo</span>
                 </div>
               </div>
 

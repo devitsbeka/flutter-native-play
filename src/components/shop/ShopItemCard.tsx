@@ -170,7 +170,7 @@ export function ShopItemCard({
           ) : isLari ? (
             <>
               {/* Price Display */}
-              <span className="font-bold text-lg sm:text-xl text-pink-600 dark:text-pink-400">₾{price}</span>
+              <span className="font-bold text-lg sm:text-xl text-pink-600 dark:text-pink-400">${price}</span>
               {/* Buy Button - only this is clickable */}
               <motion.button
                 onClick={onClick}

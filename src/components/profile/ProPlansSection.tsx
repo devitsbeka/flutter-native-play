@@ -36,7 +36,7 @@ export const PRO_TIERS: TierConfig[] = [
     id: 'pro',
     name: 'PRO',
     nameKa: 'PRO',
-    price: 9.99,
+    price: 3.99,
     friendInvites: 1,
     xpMultiplier: 2,
     gradient: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)',
@@ -56,7 +56,7 @@ export const PRO_TIERS: TierConfig[] = [
     id: 'pro_plus',
     name: 'სამეგობრო PRO',
     nameKa: 'სამეგობრო PRO',
-    price: 19.99,
+    price: 7.99,
     friendInvites: 5,
     xpMultiplier: 2,
     gradient: 'linear-gradient(135deg, #F59E0B 0%, #FB923C 100%)',
@@ -226,7 +226,7 @@ export function ProPlansSection({
                 <div>
                   <h3 className="text-lg font-bold text-foreground">{familyTier.nameKa}</h3>
                   <p className="text-2xl font-bold text-foreground">
-                    ₾{familyTier.price}<span className="text-sm text-muted-foreground font-normal">/თვე</span>
+                    ${familyTier.price}<span className="text-sm text-muted-foreground font-normal">/mo</span>
                   </p>
                 </div>
               </div>
@@ -438,7 +438,7 @@ function TierCard({
           <div>
             <h3 className="text-lg font-bold text-foreground">{tier.nameKa}</h3>
             <p className="text-2xl font-bold text-foreground">
-              ₾{tier.price}<span className="text-sm text-muted-foreground font-normal">/თვე</span>
+              ${tier.price}<span className="text-sm text-muted-foreground font-normal">/mo</span>
             </p>
           </div>
         </div>

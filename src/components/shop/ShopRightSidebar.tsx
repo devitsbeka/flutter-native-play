@@ -33,7 +33,7 @@ const SIMPLIFIED_TIERS = [
   {
     id: "solo" as const,
     nameKa: "სოლო PRO",
-    price: 9.99,
+    price: 3.99,
     icon: Crown,
     benefits: [
       "2x XP ბონუსი ყველა თამაშში",
@@ -47,7 +47,7 @@ const SIMPLIFIED_TIERS = [
   {
     id: "family" as const,
     nameKa: "სამეგობრო PRO",
-    price: 19.99,
+    price: 7.99,
     icon: Users,
     benefits: [
       "ყველა Solo PRO ფუნქცია + 5 მეგობრის მოწვევა",
@@ -191,8 +191,8 @@ export function ShopRightSidebar() {
                     <div className="flex-1">
                       <h3 className="text-base font-bold text-white">{tier.nameKa}</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-xl font-black text-white">₾{tier.price}</span>
-                        <span className="text-xs text-white/70">/თვე</span>
+                        <span className="text-xl font-black text-white">${tier.price}</span>
+                        <span className="text-xs text-white/70">/mo</span>
                       </div>
                     </div>
                     {!isHovered && !isCurrentTier && (
