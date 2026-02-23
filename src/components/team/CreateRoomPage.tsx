@@ -403,8 +403,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     setQueuedRounds((prev) => [...prev, { ...item, tmpId }]);
     toast({
-      title: "რიგში დაემატა",
-      description: `დამატებითი რაუნდი: ${item.category_name || "შემთხვევითი"}`,
+      title: t("extra.addedToQueue") || "Added to queue",
+      description: `${item.category_name || t("extra.randomOption")}`,
     });
   };
 
@@ -814,7 +814,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4 space-y-5">
         {/* Room Name with Icon - AI generated */}
         <div>
-          <h2 className="text-xs font-medium text-muted-foreground mb-2">შეარჩიე ოთახის სახელი</h2>
+          <h2 className="text-xs font-medium text-muted-foreground mb-2">{t("extra.chooseRoomName")}</h2>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
                   {/* Clickable area for Icon + Name - opens picker modal */}
                   <div
@@ -867,13 +867,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         {/* Invite Friends - Horizontal Scroll */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xs font-medium text-muted-foreground">მოიწვიე მეგობრები სათამაშოდ</h2>
+            <h2 className="text-xs font-medium text-muted-foreground">{t("extra.inviteFriendsToPlay")}</h2>
             {acceptedFriends.length > 5 && (
               <button 
                 onClick={() => setShowInviteModal(true)}
                 className="text-xs text-primary font-medium hover:underline"
               >
-                ყველა
+                {t("extra.seeAll")}
               </button>
             )}
           </div>
@@ -893,7 +893,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     <div className="w-[52px] h-[52px] rounded-full border-2 border-dashed border-primary/40 flex items-center justify-center">
                       <UserPlus className="w-6 h-6 text-primary" />
                     </div>
-                    <span className="text-xs text-primary font-medium">მოწვევა</span>
+                    <span className="text-xs text-primary font-medium">{t("extra.inviteBtn")}</span>
                   </motion.button>
                   
                   {acceptedFriends.slice(0, 10).map((friend) => {
@@ -986,7 +986,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
         {/* 3 Option Cards - Vertical List with Descriptions */}
         <div>
-          <h2 className="text-xs font-medium text-muted-foreground mb-2">რას ითამაშებთ?</h2>
+          <h2 className="text-xs font-medium text-muted-foreground mb-2">{t("extra.whatToPlay")}</h2>
           
           <div className="space-y-3">
             {/* Random Option - Container that expands to show preview */}
@@ -1025,7 +1025,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                             {selectedCategory.name}
                           </p>
                           <p className="text-xs text-white/80">
-                            რანდომ კატეგორია თამაშისთვის
+                            {t("extra.randomDesc")}
                           </p>
                           {/* Inline queue preview */}
                           {queuedRounds.length > 0 && (
@@ -1038,7 +1038,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-xs text-white/90"
                                    >
                                      <span className="text-white/50">{i + 1}.</span>
-                                     {r.category_name || "შემთხვევითი"}
+                                      {r.category_name || t("extra.randomOption")}
                                    </span>
                                  ))}
                                </div>
@@ -1105,12 +1105,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     </div>
                     <div className="flex-1 text-left relative z-10">
                       <p className={`font-semibold ${isSearchingRandom ? "text-white" : "text-foreground"}`}>
-                        {isSearchingRandom ? "ვეძებთ..." : "შემთხვევითი"}
+                        {isSearchingRandom ? t("extra.searchingCategory") : t("extra.randomOption")}
                       </p>
                       <p className={`text-sm ${isSearchingRandom ? "text-white/70" : "text-muted-foreground"}`}>
                         {isSearchingRandom 
-                          ? (selectedCategory?.name || "კატეგორიის არჩევა...") 
-                          : "რანდომ კატეგორია თამაშისთვის"
+                          ? (selectedCategory?.name || t("extra.choosingCategory")) 
+                          : t("extra.randomDesc")
                         }
                       </p>
                     </div>
@@ -1185,7 +1185,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-xs text-white/90"
                                    >
                                      <span className="text-white/50">{i + 1}.</span>
-                                     {r.category_name || "შემთხვევითი"}
+                                      {r.category_name || t("extra.randomOption")}
                                    </span>
                                  ))}
                                </div>
@@ -1229,10 +1229,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     </div>
                     <div className="flex-1 text-left">
                       <p className={`font-semibold ${selectionMode === "library" && !selectedCategory ? "text-white" : "text-foreground"}`}>
-                        ბიბლიოთეკა
+                        {t("extra.libraryOption")}
                       </p>
                       <p className={`text-sm ${selectionMode === "library" && !selectedCategory ? "text-white/70" : "text-muted-foreground"}`}>
-                        აირჩიე კატეგორია სიიდან
+                        {t("extra.libraryDesc")}
                       </p>
                     </div>
                   </motion.button>
@@ -1274,7 +1274,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-xs text-white/90"
                                    >
                                      <span className="text-white/50">{i + 1}.</span>
-                                     {r.category_name || "შემთხვევითი"}
+                                     {r.category_name || t("extra.randomOption")}
                                    </span>
                                  ))}
                                </div>
@@ -1326,10 +1326,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     </div>
                     <div className="flex-1 text-left">
                       <p className={`font-semibold ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white" : "text-foreground"}`}>
-                        ჩემი ტრივია
+                        {t("extra.myTriviaOption")}
                       </p>
                       <p className={`text-sm ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white/70" : "text-muted-foreground"}`}>
-                        აირჩიე შენი შექმნილი ტრივიებიდან
+                        {t("extra.myTriviaDesc")}
                       </p>
                     </div>
                   </motion.button>
@@ -1422,7 +1422,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           ) : (
             <Play className="w-5 h-5 mr-2" />
           )}
-          შექმნა
+          {t("extra.createBtn")}
         </ChunkyButton>
         </div>
       </div>
