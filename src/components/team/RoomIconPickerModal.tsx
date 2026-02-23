@@ -4,22 +4,23 @@ import { RefreshCw, Check, Loader2, Search, X, ChevronLeft } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { useLanguage } from "@/contexts/LanguageContext";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 
 const RECENT_ROOM_ICONS_KEY = "recent-room-icons";
 const MAX_RECENT_ICONS = 4;
 
-// Icon categories with Georgian labels and emojis
-const ICON_CATEGORIES = [
-  { id: "all", label: "ყველა", emoji: "✨", dbValue: null },
-  { id: "animals", label: "ცხოველები", emoji: "🐾", dbValue: "Animals" },
-  { id: "food", label: "საჭმელი", emoji: "🍕", dbValue: "Food & Drink" },
-  { id: "places", label: "ადგილები", emoji: "🏠", dbValue: "Places & Structures" },
-  { id: "nature", label: "ბუნება", emoji: "🌿", dbValue: "Nature & Outdoors" },
-  { id: "sports", label: "სპორტი", emoji: "⚽", dbValue: "Sports" },
-  { id: "entertainment", label: "გართობა", emoji: "🎮", dbValue: "Entertainment & Leisure" },
-  { id: "tech", label: "ტექნოლოგია", emoji: "💻", dbValue: "Technology & Media" },
-  { id: "vehicles", label: "ტრანსპორტი", emoji: "🚗", dbValue: "Vehicles & Transport" },
+// Icon categories - dbValues for querying, labels resolved via t() in component
+const ICON_CATEGORIES_DATA = [
+  { id: "all", key: "icAll", emoji: "✨", dbValue: null },
+  { id: "animals", key: "icAnimals", emoji: "🐾", dbValue: "Animals" },
+  { id: "food", key: "icFood", emoji: "🍕", dbValue: "Food & Drink" },
+  { id: "places", key: "icPlaces", emoji: "🏠", dbValue: "Places & Structures" },
+  { id: "nature", key: "icNature", emoji: "🌿", dbValue: "Nature & Outdoors" },
+  { id: "sports", key: "icSports", emoji: "⚽", dbValue: "Sports" },
+  { id: "entertainment", key: "icEntertainment", emoji: "🎮", dbValue: "Entertainment & Leisure" },
+  { id: "tech", key: "icTech", emoji: "💻", dbValue: "Technology & Media" },
+  { id: "vehicles", key: "icVehicles", emoji: "🚗", dbValue: "Vehicles & Transport" },
 ];
 
 function getRecentIconSlugs(): string[] {
@@ -62,6 +63,8 @@ export function RoomIconPickerModal({
   roomName,
   onConfirm,
 }: RoomIconPickerModalProps) {
+  const { t } = useLanguage();
+  const ICON_CATEGORIES = ICON_CATEGORIES_DATA.map(c => ({ ...c, label: t(`extra.${c.key}`) }));
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);
   const [searchResults, setSearchResults] = useState<IconItem[]>([]);
   const [recentIcons, setRecentIcons] = useState<IconItem[]>([]);
@@ -341,7 +344,7 @@ export function RoomIconPickerModal({
                 >
                   <ChevronLeft className="w-5 h-5 text-foreground" />
                 </button>
-                <h1 className="text-lg font-bold text-foreground">შეცვალე აიკონი/სახელი</h1>
+                <h1 className="text-lg font-bold text-foreground">{t("extra.ripTitle")}</h1>
               </div>
             </div>
           </div>
@@ -355,7 +358,7 @@ export function RoomIconPickerModal({
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="მოძებნე აიკონი..."
+                  placeholder={t("extra.ripSearchPlaceholder")}
                   className="pl-10 pr-10 h-12 bg-muted/50 border-border rounded-xl"
                 />
                 {searchQuery && (
@@ -425,7 +428,7 @@ export function RoomIconPickerModal({
                       }}
                       maxLength={35}
                       className="text-base font-semibold pr-8 bg-background h-12"
-                      placeholder="ოთახის სახელი"
+                      placeholder={t("extra.ripRoomNamePlaceholder")}
                       disabled={isGeneratingName}
                     />
                     {isGeneratingName && (
@@ -435,7 +438,7 @@ export function RoomIconPickerModal({
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    შეცვალე სახელი ან აირჩიე ახალი აიკონი
+                    {t("extra.ripEditHint")}
                   </p>
                 </div>
               </div>
@@ -445,7 +448,7 @@ export function RoomIconPickerModal({
                 <>
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-medium text-muted-foreground">
-                      ბოლოს გამოყენებული
+                      {t("extra.ripRecentlyUsed")}
                     </h3>
                   </div>
                   
@@ -489,10 +492,10 @@ export function RoomIconPickerModal({
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-muted-foreground">
                   {searchQuery.trim() 
-                    ? `ძებნის შედეგები (${searchResults.length})` 
+                    ? t("extra.ripSearchResults", { count: searchResults.length })
                     : selectedCategory !== "all"
-                    ? ICON_CATEGORIES.find(c => c.id === selectedCategory)?.label || "კატეგორია"
-                    : "შემოთავაზებული"
+                    ? ICON_CATEGORIES.find(c => c.id === selectedCategory)?.label || t("extra.ripCategory")
+                    : t("extra.ripSuggested")
                   }
                 </h3>
                 {!searchQuery.trim() && selectedCategory === "all" && (
@@ -502,17 +505,17 @@ export function RoomIconPickerModal({
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-100 hover:bg-emerald-200 transition-colors text-xs font-medium text-emerald-700"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
-                    განახლება
+                    {t("extra.ripRefresh")}
                   </button>
                 )}
                 {!searchQuery.trim() && selectedCategory !== "all" && (
                   <button
-                    onClick={() => fetchCategoryIcons(ICON_CATEGORIES.find(c => c.id === selectedCategory)?.dbValue || null)}
+                    onClick={() => fetchCategoryIcons(ICON_CATEGORIES_DATA.find(c => c.id === selectedCategory)?.dbValue || null)}
                     disabled={isCategoryLoading}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-100 hover:bg-emerald-200 transition-colors text-xs font-medium text-emerald-700"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isCategoryLoading ? "animate-spin" : ""}`} />
-                    განახლება
+                    {t("extra.ripRefresh")}
                   </button>
                 )}
               </div>
@@ -584,7 +587,7 @@ export function RoomIconPickerModal({
                 variant="success"
               >
                 <Check className="w-5 h-5 mr-2" />
-                არჩევა
+                {t("extra.ripSelect")}
               </ChunkyButton>
             </div>
           </div>

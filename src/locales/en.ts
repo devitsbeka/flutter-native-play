@@ -2553,6 +2553,30 @@ export const en: KaTranslations = {
     rlGotIt: "Got it",
     // Queue
     cpsQueueLabel: "Queue:",
+    // Gradient picker
+    gpTitle: "Choose Background",
+    gpSubtitle: "Choose your room colors",
+    // Room icon picker
+    ripTitle: "Change Icon/Name",
+    ripSearchPlaceholder: "Search icon...",
+    ripRoomNamePlaceholder: "Room name",
+    ripEditHint: "Change name or choose a new icon",
+    ripRecentlyUsed: "Recently used",
+    ripSuggested: "Suggested",
+    ripSearchResults: "Search results ({count})",
+    ripCategory: "Category",
+    ripRefresh: "Refresh",
+    ripSelect: "Select",
+    // Icon categories
+    icAll: "All",
+    icAnimals: "Animals",
+    icFood: "Food",
+    icPlaces: "Places",
+    icNature: "Nature",
+    icSports: "Sports",
+    icEntertainment: "Entertainment",
+    icTech: "Technology",
+    icVehicles: "Transport",
   },
 };
 

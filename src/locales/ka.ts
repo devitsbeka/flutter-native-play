@@ -2552,6 +2552,30 @@ export const ka = {
     rlGotIt: "გასაგებია",
     // Queue
     cpsQueueLabel: "რიგი:",
+    // Gradient picker
+    gpTitle: "ფონის არჩევა",
+    gpSubtitle: "აირჩიე შენი ოთახის ფერები",
+    // Room icon picker
+    ripTitle: "შეცვალე აიკონი/სახელი",
+    ripSearchPlaceholder: "მოძებნე აიკონი...",
+    ripRoomNamePlaceholder: "ოთახის სახელი",
+    ripEditHint: "შეცვალე სახელი ან აირჩიე ახალი აიკონი",
+    ripRecentlyUsed: "ბოლოს გამოყენებული",
+    ripSuggested: "შემოთავაზებული",
+    ripSearchResults: "ძებნის შედეგები ({count})",
+    ripCategory: "კატეგორია",
+    ripRefresh: "განახლება",
+    ripSelect: "არჩევა",
+    // Icon categories
+    icAll: "ყველა",
+    icAnimals: "ცხოველები",
+    icFood: "საჭმელი",
+    icPlaces: "ადგილები",
+    icNature: "ბუნება",
+    icSports: "სპორტი",
+    icEntertainment: "გართობა",
+    icTech: "ტექნოლოგია",
+    icVehicles: "ტრანსპორტი",
   },
 };
 
