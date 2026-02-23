@@ -27,19 +27,19 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Georgian time format helper
-function formatGeorgianTimeAgo(date: Date): string {
+// Localized time format helper
+function formatLocalTimeAgo(date: Date, t: (key: string, params?: Record<string, string | number>) => string): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   
-  if (diffMins < 1) return "ახლახანს";
-  if (diffMins < 60) return `${diffMins} წთ წინ`;
-  if (diffHours < 24) return `${diffHours} სთ წინ`;
-  if (diffDays === 1) return "გუშინ";
-  if (diffDays < 7) return `${diffDays} დღის წინ`;
+  if (diffMins < 1) return t("extra.timeJustNow");
+  if (diffMins < 60) return t("extra.timeMinutesAgo", { count: diffMins });
+  if (diffHours < 24) return t("extra.timeHoursAgo", { count: diffHours });
+  if (diffDays === 1) return t("extra.timeYesterday");
+  if (diffDays < 7) return t("extra.timeDaysAgo", { count: diffDays });
   
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -470,7 +470,7 @@ function CollectionCard({
                   {profile?.nickname || 'შენ'}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {formatGeorgianTimeAgo(new Date(collection.created_at))}
+                  {formatLocalTimeAgo(new Date(collection.created_at), t)}
                 </p>
               </div>
             </div>
@@ -709,7 +709,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
               {profile?.nickname || 'შენ'}
             </p>
             <p className="text-xs text-muted-foreground">
-              {formatGeorgianTimeAgo(new Date(post.created_at))}
+              {formatLocalTimeAgo(new Date(post.created_at), t)}
             </p>
           </div>
         </div>
@@ -854,7 +854,7 @@ function StandaloneQuizCard({
               {profile?.nickname || 'შენ'}
             </p>
             <p className="text-xs text-muted-foreground">
-              {formatGeorgianTimeAgo(new Date(post.created_at))}
+              {formatLocalTimeAgo(new Date(post.created_at), t)}
             </p>
           </div>
         </div>
@@ -1348,7 +1348,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
                     {draft.title || "უსათაურო დრაფტი"}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {formatGeorgianTimeAgo(new Date(draft.updated_at))}
+                    {formatLocalTimeAgo(new Date(draft.updated_at), t)}
                   </p>
                 </div>
                 
