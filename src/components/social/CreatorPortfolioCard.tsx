@@ -44,7 +44,7 @@ function getCountryFlag(countryCode: string | null): string {
 export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onLikeTrivia, onSaveTrivia, userLikes = [], userSaves = [], userPlays = [] }: CreatorPortfolioCardProps) {
   const { sendFriendRequest, acceptFriendRequest } = useFriends();
   const { openProfile } = usePlayerProfile();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [friendshipStatus, setFriendshipStatus] = useState(creator.friendship_status);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -99,7 +99,7 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
             disabled
           >
             <Clock className="w-4 h-4" />
-            <span className="hidden sm:inline">გაგზავნილია</span>
+            <span className="hidden sm:inline">{t("extra.requestSentShort")}</span>
           </Button>
         );
       case 'pending_received':
@@ -112,7 +112,7 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
             disabled={isLoading}
           >
             <UserCheck className="w-4 h-4" />
-            <span className="hidden sm:inline">მიღება</span>
+            <span className="hidden sm:inline">{t("extra.acceptRequestBtn")}</span>
           </Button>
         );
       default:
@@ -125,7 +125,7 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
             disabled={isLoading}
           >
             <UserPlus className="w-4 h-4" />
-            <span className="hidden sm:inline">მეგობარი</span>
+            <span className="hidden sm:inline">{t("extra.friendBtnLabel")}</span>
           </Button>
         );
     }
@@ -163,7 +163,7 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <Play className="w-3.5 h-3.5" />
-                <span>ტრივია</span>
+                <span>{t("extra.triviaLabel")}</span>
               </span>
             </div>
           </div>
@@ -179,7 +179,7 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
             onClick={() => onViewProfile(creator)}
           >
             <Eye className="w-4 h-4" />
-            <span>პროფილი</span>
+            <span>{t("extra.profileBtnLabel")}</span>
           </Button>
         </div>
       </div>
