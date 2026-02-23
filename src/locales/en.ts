@@ -2633,6 +2633,11 @@ export const en: KaTranslations = {
     // TV Scoreboard Panel
     tvHostBadge: "HOST",
     tvNoPlayersYet: "No one here yet",
+    // Power-up demo short descriptions
+    demoDesc5050: "Removes 2 wrong answers",
+    demoDescFreeze: "Time freezes for 10 seconds",
+    demoDescReplace: "Replaces question with a new one",
+    demoDescTimeDrain: "Adds 10 seconds",
   },
 };
 

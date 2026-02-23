@@ -2632,6 +2632,11 @@ export const ka = {
     // TV Scoreboard Panel
     tvHostBadge: "HOST",
     tvNoPlayersYet: "ჯერ არავინ არ არის",
+    // Power-up demo short descriptions
+    demoDesc5050: "წაშლის 2 არასწორ პასუხს",
+    demoDescFreeze: "დრო გაიყინება 10 წამით",
+    demoDescReplace: "ცვლის კითხვას ახლით",
+    demoDescTimeDrain: "ამატებს 10 წამს",
   },
 };
 
