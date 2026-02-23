@@ -2252,6 +2252,7 @@ export const ka = {
     signInForGame: "შედი ანგარიშზე თამაშის დასაწყებად",
     signInForPurchase: "შედი ანგარიშზე შესყიდვისთვის",
     signInForGift: "შედი ანგარიშზე საჩუქრის მისაღებად",
+    iconLibraryLabel: "ბიბლიოთეკა",
     // Live Games Widget
     liveGameRoom: "თამაშის ოთახი",
     playerCount: "{count} მოთამაშე",

@@ -430,7 +430,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                 {/* Library section */}
                 <div>
                   <div className="flex items-center justify-between mb-3 px-1">
-                    <p className="text-xs font-medium text-muted-foreground">ბიბლიოთეკა</p>
+                    <p className="text-xs font-medium text-muted-foreground">{t("extra.iconLibraryLabel")}</p>
                     {!searchQuery && (
                       <button
                         onClick={fetchRandomLibraryIcons}

@@ -2253,6 +2253,7 @@ export const en: KaTranslations = {
     signInForGame: "Sign in to start the game",
     signInForPurchase: "Sign in for purchase",
     signInForGift: "Sign in to claim the gift",
+    iconLibraryLabel: "Library",
     // Live Games Widget
     liveGameRoom: "Game Room",
     playerCount: "{count} players",
