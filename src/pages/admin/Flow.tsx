@@ -4,6 +4,7 @@ import { GenerationPanel } from '@/components/admin/flow/GenerationPanel';
 import { QuestionPreviewList } from '@/components/admin/flow/QuestionPreviewList';
 import { QuestionQueue } from '@/components/admin/flow/QuestionQueue';
 import { KnowledgeSourcesList, KnowledgeSource } from '@/components/admin/flow/KnowledgeSourcesList';
+import { LanguageQuestionBrowser } from '@/components/admin/flow/LanguageQuestionBrowser';
 import { AutoGenerationPanel, JobQuestionReview } from '@/components/admin/auto-generation';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -753,6 +754,15 @@ export default function Flow() {
           }
         />
       </div>
+
+      {/* Language Question Browser */}
+      <LanguageQuestionBrowser
+        language={selectedLanguage}
+        languageFlag={LANGUAGES.find(l => l.code === selectedLanguage)?.flag || '🌐'}
+        languageName={LANGUAGES.find(l => l.code === selectedLanguage)?.name || selectedLanguage}
+        categories={categories}
+        onStatsChanged={fetchStats}
+      />
 
       {/* Two Column Layout - More space for questions */}
       <div className="flex">
