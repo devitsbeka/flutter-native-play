@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Play, Hourglass } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DesktopPlayButtonLargeProps {
   onClick?: () => void;
@@ -18,6 +19,7 @@ export function DesktopPlayButtonLarge({
   isVip = false,
   isGuest = false,
 }: DesktopPlayButtonLargeProps) {
+  const { t } = useLanguage();
   const isExhausted = !canPlay && playsRemaining === 0;
   
   // Get button styling based on state
@@ -110,7 +112,7 @@ export function DesktopPlayButtonLarge({
 
         {/* Text */}
         <span className="text-white font-bold text-xl drop-shadow-md tracking-wide">
-          ითამაშე
+          {t("extra.playButton")}
         </span>
       </motion.button>
     </div>
