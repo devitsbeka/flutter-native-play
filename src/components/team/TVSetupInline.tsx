@@ -4,6 +4,7 @@ import { Tv, Loader2, Check, Globe } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
@@ -21,6 +22,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [code, setCode] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -298,7 +300,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
 
     } catch (error) {
       console.error('Error connecting to TV:', error);
-      toast.error('დაკავშირება ვერ მოხერხდა');
+      toast.error(t('extra.tvConnectFailed'));
     } finally {
       setIsConnecting(false);
     }
@@ -328,7 +330,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
               >
                 <Check className="w-6 h-6 text-white" />
               </motion.div>
-              <p className="text-white font-semibold">დაკავშირებულია!</p>
+              <p className="text-white font-semibold">{t('extra.tvConnected')}</p>
             </motion.div>
           ) : (
             <motion.div
@@ -343,14 +345,14 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
                   <Globe className="w-5 h-5 text-white/80" />
                 </div>
                 <div>
-                  <p className="text-white text-sm font-medium">გახსენი ტელევიზორზე:</p>
+                  <p className="text-white text-sm font-medium">{t('extra.tvOpenOnTV')}</p>
                   <p className="text-purple-300 font-bold">mytrivia.io/tv</p>
                 </div>
               </div>
 
               {/* Code input */}
               <div className="mb-4">
-                <p className="text-white/70 text-sm mb-2 text-center">შეიყვანე 4-ციფრიანი კოდი:</p>
+                <p className="text-white/70 text-sm mb-2 text-center">{t('extra.tvEnterCode')}</p>
                 <div className="flex justify-center">
                   <InputOTP
                     maxLength={4}
@@ -378,10 +380,10 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
                 {isConnecting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    დაკავშირება...
+                    {t('extra.tvConnectingBtn')}
                   </>
                 ) : (
-                  'დაკავშირება'
+                  t('extra.tvConnectBtn')
                 )}
               </ChunkyButton>
             </motion.div>

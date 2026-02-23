@@ -5,6 +5,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 interface Category {
@@ -59,6 +60,7 @@ export function CategoryPickerModal({
   excludeTriviaId,
 }: CategoryPickerModalProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [view, setView] = useState<ViewState>("main");
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<{
@@ -220,9 +222,9 @@ export function CategoryPickerModal({
             <div className="w-9" />
           )}
           <h2 className="text-lg font-bold text-white">
-            {view === "main" && "აირჩიე კატეგორია"}
-            {view === "library" && "ბიბლიოთეკა"}
-            {view === "my-trivias" && "ჩემი ტრივიები"}
+            {view === "main" && t("extra.cpSelectCategory")}
+            {view === "library" && t("extra.cpLibrary")}
+            {view === "my-trivias" && t("extra.cpMyTrivias")}
           </h2>
           <motion.button
             onClick={onClose}
@@ -253,9 +255,9 @@ export function CategoryPickerModal({
                   <div className="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center">
                     <Shuffle className="w-7 h-7 text-purple-400" />
                   </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-white text-lg">შემთხვევითი</p>
-                    <p className="text-white/60 text-sm">რანდომ კატეგორია თამაშისთვის</p>
+                   <div className="flex-1">
+                    <p className="font-semibold text-white text-lg">{t("extra.cpRandomTitle")}</p>
+                    <p className="text-white/60 text-sm">{t("extra.cpRandomDesc")}</p>
                   </div>
                   {selectedItem?.type === "random" && (
                     <Check className="w-5 h-5 text-white" />
@@ -274,9 +276,9 @@ export function CategoryPickerModal({
                   <div className="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center">
                     <Library className="w-7 h-7 text-purple-400" />
                   </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-white text-lg">ბიბლიოთეკა</p>
-                    <p className="text-white/60 text-sm">აირჩიე კატეგორია სიიდან</p>
+                   <div className="flex-1">
+                    <p className="font-semibold text-white text-lg">{t("extra.cpLibraryTitle")}</p>
+                    <p className="text-white/60 text-sm">{t("extra.cpLibraryDesc")}</p>
                   </div>
                 </div>
               </motion.button>
@@ -292,9 +294,9 @@ export function CategoryPickerModal({
                   <div className="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center">
                     <Sparkles className="w-7 h-7 text-purple-400" />
                   </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-white text-lg">ჩემი ტრივიები</p>
-                    <p className="text-white/60 text-sm">აირჩიე შენი შექმნილი ტრივიებიდან</p>
+                   <div className="flex-1">
+                    <p className="font-semibold text-white text-lg">{t("extra.cpMyTriviasTitle")}</p>
+                    <p className="text-white/60 text-sm">{t("extra.cpMyTriviasDesc")}</p>
                   </div>
                 </div>
               </motion.button>
@@ -307,7 +309,7 @@ export function CategoryPickerModal({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                 <input
-                  placeholder="კატეგორიის ძიება..."
+                  placeholder={t("extra.cpSearchCategories")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:border-white/40 outline-none backdrop-blur-sm"
@@ -323,7 +325,7 @@ export function CategoryPickerModal({
                 <>
                   <div className="grid grid-cols-2 gap-3">
                     {/* Mixed Category - First in grid */}
-                    {(!search.trim() || "სხვადასხვა".toLowerCase().includes(search.toLowerCase())) && (
+                    {(!search.trim() || t("extra.cpMixedCategory").toLowerCase().includes(search.toLowerCase())) && (
                       <motion.button
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -331,7 +333,7 @@ export function CategoryPickerModal({
                         onClick={() => setSelectedItem({
                           type: "category",
                           id: "__mixed__",
-                          name: "სხვადასხვა",
+                          name: t("extra.cpMixedCategory"),
                           iconSlug: "mystery-box",
                         })}
                         className={`p-4 rounded-xl backdrop-blur-sm transition-all text-left ${
@@ -348,9 +350,9 @@ export function CategoryPickerModal({
                           >
                             <DynamicIcon slug="mystery-box" size={22} />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white text-sm truncate">სხვადასხვა</p>
-                            <p className="text-white/50 text-xs">შერეული</p>
+                           <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white text-sm truncate">{t("extra.cpMixedCategory")}</p>
+                            <p className="text-white/50 text-xs">{t("extra.cpMixedDesc")}</p>
                           </div>
                           {selectedItem?.id === "__mixed__" && (
                             <Check className="w-4 h-4 text-white flex-shrink-0" />
@@ -390,7 +392,7 @@ export function CategoryPickerModal({
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-white text-sm truncate">{cat.name}</p>
-                            <p className="text-white/50 text-xs">{cat.total_levels} დონე</p>
+                            <p className="text-white/50 text-xs">{t("extra.cpLevels", { count: cat.total_levels })}</p>
                           </div>
                           {selectedItem?.type === "category" && selectedItem.id === cat.id && (
                             <Check className="w-4 h-4 text-white flex-shrink-0" />
@@ -410,7 +412,7 @@ export function CategoryPickerModal({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                 <input
-                  placeholder="ტრივიის ძიება..."
+                   placeholder={t("extra.cpSearchTrivias")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:border-white/40 outline-none backdrop-blur-sm"
@@ -424,8 +426,8 @@ export function CategoryPickerModal({
                 </div>
               ) : filteredTrivias.length === 0 ? (
                 <div className="text-center py-12">
-                  <Sparkles className="w-12 h-12 text-white/30 mx-auto mb-3" />
-                  <p className="text-white/60">ტრივია ვერ მოიძებნა</p>
+                   <Sparkles className="w-12 h-12 text-white/30 mx-auto mb-3" />
+                   <p className="text-white/60">{t("extra.cpNoTriviaFound")}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -457,9 +459,9 @@ export function CategoryPickerModal({
                         }`}
                       >
                         {/* Observer badge */}
-                        {willBeObserver && (
-                          <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500/80 text-white text-[10px] font-medium">
-                            👁️ Observer
+                         {willBeObserver && (
+                           <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500/80 text-white text-[10px] font-medium">
+                             👁️ {t("extra.cpObserverLabel")}
                           </span>
                         )}
                         <div className="flex items-center gap-3">
@@ -478,20 +480,20 @@ export function CategoryPickerModal({
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-white truncate">{trivia.title}</p>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <p className="text-white/50 text-xs">
-                                {questionCount} კითხვა • {trivia.plays_count || 0} თამაში
+                               <p className="text-white/50 text-xs">
+                                 {t("extra.cpQuestionAndPlays", { questions: questionCount, plays: trivia.plays_count || 0 })}
                               </p>
-                              {trivia.is_blind && (trivia.plays_count || 0) === 0 && (
-                                <span className="px-1.5 py-0.5 rounded bg-green-500/20 text-green-300 text-[10px] font-medium">
-                                  დახურული
+                               {trivia.is_blind && (trivia.plays_count || 0) === 0 && (
+                                 <span className="px-1.5 py-0.5 rounded bg-green-500/20 text-green-300 text-[10px] font-medium">
+                                   {t("extra.cpBlindLabel")}
                                 </span>
                               )}
                             </div>
                             {/* Missing icons warning */}
                             {missingIconCount > 0 && (
-                              <span className="text-xs text-amber-400 flex items-center gap-1 mt-0.5">
-                                <AlertTriangle className="w-3 h-3" />
-                                {missingIconCount} კითხვას აკლია აიქონი
+                               <span className="text-xs text-amber-400 flex items-center gap-1 mt-0.5">
+                                 <AlertTriangle className="w-3 h-3" />
+                                 {t("extra.cpMissingIcons", { count: missingIconCount })}
                               </span>
                             )}
                           </div>
@@ -523,7 +525,7 @@ export function CategoryPickerModal({
                 className="w-full"
                 onClick={handleSelectNow}
               >
-                არჩევა
+                {t("extra.cpSelectBtn")}
               </ChunkyButton>
               
               {/* Secondary action - Add to queue - Dashed outline style */}
@@ -534,8 +536,8 @@ export function CategoryPickerModal({
                   onClick={handleAddToQueue}
                   className="w-full flex items-center justify-center gap-2 px-8 py-4 text-lg font-semibold rounded-2xl bg-transparent border-2 border-dashed border-white/60 text-white hover:border-white hover:bg-white/5 transition-all"
                 >
-                  <Plus className="w-5 h-5" />
-                  რიგში დამატება
+                   <Plus className="w-5 h-5" />
+                   {t("extra.cpAddToQueue")}
                 </motion.button>
               )}
             </div>

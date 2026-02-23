@@ -3,6 +3,7 @@ import { Plus, Shuffle, X, GripVertical, Library, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils";
 import { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CategoryPickerSectionProps {
   categoryName: string | null;
@@ -30,6 +31,7 @@ function DraggableQueueItem({
   onRemoveQueueItem?: (id: string) => void;
 }) {
   const dragControls = useDragControls();
+  const { t } = useLanguage();
 
   return (
     <Reorder.Item
@@ -63,8 +65,8 @@ function DraggableQueueItem({
       )}
       <span className="text-white/80 text-xs font-medium">
         {item.source_type === "random" 
-          ? "შემთხვევითი" 
-          : item.category_name || "ტრივია"}
+          ? t("extra.cpRandomTitle")
+          : item.category_name || "Trivia"}
       </span>
       {onRemoveQueueItem && (
         <button
@@ -95,11 +97,12 @@ export function CategoryPickerSection({
   isAlreadyPlayed,
   willBeObserver,
 }: CategoryPickerSectionProps) {
+  const { t } = useLanguage();
   const hasCategory = !!categoryName;
   const showQueuePreview = queue.length > 0;
   const currentPillType: "random" | "category" | "user_trivia" | null = !hasCategory
     ? null
-    : categoryName === "შემთხვევითი"
+    : categoryName === t("extra.cpRandomTitle")
       ? "random"
       : categoryId
         ? "category"
@@ -120,7 +123,7 @@ export function CategoryPickerSection({
           <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center overflow-hidden">
             {categoryId === "__mixed__" ? (
               <DynamicIcon slug="mystery-box" size={24} />
-            ) : categoryName === "შემთხვევითი" || !categoryName ? (
+            ) : categoryName === t("extra.cpRandomTitle") || !categoryName ? (
               <Shuffle className="w-6 h-6 text-purple-400" />
             ) : categoryId ? (
               <Library className="w-6 h-6 text-purple-400" />
@@ -134,16 +137,16 @@ export function CategoryPickerSection({
                 "text-white font-semibold leading-tight truncate",
                 hasCategory ? "text-[18px]" : "text-[14px]"
               )}>
-                {hasCategory ? categoryName : (isHost ? "რისი თამაში გინდა?" : "მიმდინარე კატეგორია")}
+                {hasCategory ? categoryName : (isHost ? t("extra.cpsWhatToPlay") : t("extra.cpsCurrentCategory"))}
               </p>
               {isAlreadyPlayed && hasCategory && (
                 <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 text-xs font-medium">
-                  უკვე ითამაშე
+                  {t("extra.cpsAlreadyPlayed")}
                 </span>
               )}
               {willBeObserver && hasCategory && !isAlreadyPlayed && (
                 <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-medium">
-                  👁️ დამკვირვებელი
+                  👁️ {t("extra.cpsObserver")}
                 </span>
               )}
             </div>
@@ -152,10 +155,10 @@ export function CategoryPickerSection({
               hasCategory ? "text-white/60 text-[14px]" : "text-white/60 text-[12px]"
             )}>
               {isAlreadyPlayed && hasCategory
-                ? "აირჩიე ახალი კატეგორია"
+                ? t("extra.cpsChooseNew")
                 : hasCategory 
-                  ? "მიმდინარე" 
-                  : (isHost ? "დაამატე კატეგორია სათამაშოდ" : "ჯერ არჩეული არ არის")}
+                  ? t("extra.cpsCurrent")
+                  : (isHost ? t("extra.cpsAddCategory") : t("extra.cpsNotChosen"))}
             </p>
           </div>
         </div>
