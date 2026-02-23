@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Loader2, Users } from "lucide-react";
 import { usePlayerFeedItems } from "@/hooks/usePlayerFeedItems";
 import { useExploreCreators } from "@/hooks/useExploreCreators";
@@ -22,6 +23,7 @@ export function ExplorePortfolioFeed({
   onPlayQuiz,
 }: ExplorePortfolioFeedProps) {
   // Flattened feed for mobile
+  const { t } = useLanguage();
   const { data: feedItems = [], isLoading: isFlatLoading } = usePlayerFeedItems(searchQuery, filter, sort);
   // Grouped feed for desktop/tablet
   const { data: creators = [], isLoading: isGroupedLoading } = useExploreCreators(searchQuery, filter, sort);
@@ -33,7 +35,7 @@ export function ExplorePortfolioFeed({
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">იტვირთება...</p>
+        <p className="text-muted-foreground">{t("common.loading")}</p>
       </div>
     );
   }

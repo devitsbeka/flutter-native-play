@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { Gamepad2, Clock, Zap } from "lucide-react";
 import { Friend } from "@/hooks/useFriends";
@@ -24,6 +25,7 @@ export function QuickPlayModal({
 }: QuickPlayModalProps) {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [categoryType, setCategoryType] = useState<"classic" | "fun" | "educational">("classic");
+  const { t } = useLanguage();
 
   if (!friend) return null;
 
@@ -152,7 +154,7 @@ export function QuickPlayModal({
       </ScrollArea>
 
       <GameModalFooter
-        primaryLabel={isLoading ? "იტვირთება..." : friend.isOnline ? "დაიწყე თამაში" : "გაგზავნე გამოწვევა"}
+        primaryLabel={isLoading ? t("common.loading") : friend.isOnline ? t("game.start") : t("extra.sendChallenge")}
         onPrimary={handleStartChallenge}
         primaryIcon={<Gamepad2 className="w-5 h-5" />}
         isLoading={isLoading || !selectedCategory}

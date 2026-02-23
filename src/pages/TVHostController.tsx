@@ -8,6 +8,7 @@ import { CategoryPickerModal } from '@/components/team/CategoryPickerModal';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useLanguage } from "@/contexts/LanguageContext";
 import { QRCodeSVG } from 'qrcode.react';
 import { Avatar } from '@/components/shared/Avatar';
 import { TVGameOverScreen } from '@/components/tv/TVGameOverScreen';
@@ -44,6 +45,7 @@ const TVHostController: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   
   // Get state from TVGameContext instead of local state
   const {
@@ -636,7 +638,7 @@ const TVHostController: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
-          <p className="text-purple-200">იტვირთება...</p>
+          <p className="text-purple-200">{t("common.loading")}</p>
         </div>
       </div>
     );

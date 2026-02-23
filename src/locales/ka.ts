@@ -2637,6 +2637,16 @@ export const ka = {
     demoDescFreeze: "დრო გაიყინება 10 წამით",
     demoDescReplace: "ცვლის კითხვას ახლით",
     demoDescTimeDrain: "ამატებს 10 წამს",
+    claimGift: "მიიღე საჩუქარი",
+    loadingQuestions: "იტვირთება კითხვები...",
+    resultsLoading2: "შედეგები იტვირთება...",
+    waiting: "მოლოდინი...",
+    sendChallenge: "გაგზავნე გამოწვევა",
+    uploading: "იტვირთება...",
+    upload: "ატვირთვა",
+    addToLibrary: "ბიბლიოთეკაში დამატება ({count})",
+    loadingIcons: "იტვირთება აიკონები...",
+    changeBtn: "შეცვლა",
   },
 };
 

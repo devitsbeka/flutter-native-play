@@ -2638,6 +2638,16 @@ export const en: KaTranslations = {
     demoDescFreeze: "Time freezes for 10 seconds",
     demoDescReplace: "Replaces question with a new one",
     demoDescTimeDrain: "Adds 10 seconds",
+    claimGift: "Claim Gift",
+    loadingQuestions: "Loading questions...",
+    resultsLoading2: "Results loading...",
+    waiting: "Waiting...",
+    sendChallenge: "Send Challenge",
+    uploading: "Uploading...",
+    upload: "Upload",
+    addToLibrary: "Add to Library ({count})",
+    loadingIcons: "Loading icons...",
+    changeBtn: "Change",
   },
 };
 

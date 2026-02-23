@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTVGame } from '@/contexts/TVGameContext';
@@ -7,6 +8,7 @@ import { Clock, Check, Loader2, AlertCircle, X, Star } from 'lucide-react';
 
 export const ControllerQuestion: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { 
     questions, currentQuestionIndex, timeRemaining, myAnswer, myScore, 
     submitAnswer, leaveSession, currentRoundSuggesterId, myPlayerId, phase
@@ -61,14 +63,14 @@ export const ControllerQuestion: React.FC = () => {
           {questions.length === 0 ? (
             <>
               <AlertCircle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-              <p className="text-white text-lg font-semibold mb-2">თამაში არ არის მზად</p>
-              <p className="text-purple-300 text-sm mb-6">კითხვები ჯერ არ ჩაიტვირთა</p>
+              <p className="text-white text-lg font-semibold mb-2">{t("extra.gameNotReady")}</p>
+              <p className="text-purple-300 text-sm mb-6">{t("extra.questionsNotLoaded")}</p>
             </>
           ) : (
             <>
               <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
-              <p className="text-white text-lg font-semibold mb-2">იტვირთება...</p>
-              <p className="text-purple-300 text-sm mb-6">დაელოდე შემდეგ კითხვას</p>
+              <p className="text-white text-lg font-semibold mb-2">{t("common.loading")}</p>
+              <p className="text-purple-300 text-sm mb-6">{t("extra.waitingNextQuestion")}</p>
             </>
           )}
           <ChunkyButton
