@@ -1831,7 +1831,7 @@ export const ka = {
     createAccount: "შექმენი ანგარიში",
     alreadyHaveAccount: "უკვე გაქვს ანგარიში?",
     noAccount: "არ გაქვს ანგარიში?",
-    createBtn: "შექმენი",
+    createAccountBtn: "შექმენი",
     orDivider: "ან",
     usernamePlaceholder: "სახელი",
     emailOrUsername: "ელფოსტა ან სახელი",
