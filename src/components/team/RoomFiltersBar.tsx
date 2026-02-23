@@ -9,6 +9,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "active" | "completed";
 
@@ -21,12 +22,12 @@ interface RoomFiltersBarProps {
   addButtonText?: string;
 }
 
-const filterOptions: { value: RoomFilter; label: string }[] = [
-  { value: "all", label: "ყველა" },
-  { value: "my_rooms", label: "ჩემი შექმნილი" },
-  { value: "friends_rooms", label: "მეგობრების" },
-  { value: "active", label: "აქტიური" },
-  { value: "completed", label: "დასრულებული" },
+const filterOptions: { value: RoomFilter; labelKey: string }[] = [
+  { value: "all", labelKey: "extra.filterAll" },
+  { value: "my_rooms", labelKey: "extra.filterMyRooms" },
+  { value: "friends_rooms", labelKey: "extra.filterFriendsRooms" },
+  { value: "active", labelKey: "extra.filterActive" },
+  { value: "completed", labelKey: "extra.filterCompleted" },
 ];
 
 export function RoomFiltersBar({
@@ -35,11 +36,14 @@ export function RoomFiltersBar({
   searchQuery,
   onSearchQueryChange,
   onAddClick,
-  addButtonText = "+ ოთახი",
+  addButtonText,
 }: RoomFiltersBarProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { t } = useLanguage();
 
-  const currentFilterLabel = filterOptions.find((opt) => opt.value === filter)?.label || "ყველა";
+  const defaultAddText = addButtonText || t("extra.addRoom");
+
+  const currentFilterLabel = t(filterOptions.find((opt) => opt.value === filter)?.labelKey || "extra.filterAll");
 
   return (
     <div className="px-4 py-2 w-full max-w-[100vw] overflow-visible box-border">
@@ -56,7 +60,7 @@ export function RoomFiltersBar({
               >
                 <Input
                   type="text"
-                  placeholder="ძიება..."
+                  placeholder={t("extra.searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => onSearchQueryChange(e.target.value)}
                   className="h-9 flex-1 rounded-full bg-card/50 border-border/30 text-base md:text-sm"
@@ -99,7 +103,7 @@ export function RoomFiltersBar({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-52">
-                <DropdownMenuLabel className="text-xs text-muted-foreground">ფილტრი</DropdownMenuLabel>
+                <DropdownMenuLabel className="text-xs text-muted-foreground">{t("extra.filterLabel")}</DropdownMenuLabel>
                 {filterOptions.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
@@ -108,7 +112,7 @@ export function RoomFiltersBar({
                   >
                     <div className="flex items-center gap-2 w-full">
                       {filter === option.value && <Check className="h-4 w-4" />}
-                      <span className={filter !== option.value ? "pl-6" : ""}>{option.label}</span>
+                      <span className={filter !== option.value ? "pl-6" : ""}>{t(option.labelKey)}</span>
                     </div>
                   </DropdownMenuItem>
                 ))}
@@ -125,7 +129,7 @@ export function RoomFiltersBar({
                 onClick={onAddClick}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0"
               >
-                <span className="text-sm font-bold">{addButtonText}</span>
+                <span className="text-sm font-bold">{defaultAddText}</span>
               </motion.button>
             )}
           </>
