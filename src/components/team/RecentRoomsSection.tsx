@@ -4,12 +4,14 @@ import { useRecentRooms, RecentRoom } from "@/hooks/useRecentRooms";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface RecentRoomsSectionProps {
   onViewAll?: () => void;
 }
 
 export function RecentRoomsSection({ onViewAll }: RecentRoomsSectionProps) {
+  const { t } = useLanguage();
   const { rooms, loading } = useRecentRooms(10);
 
   if (loading) {
@@ -58,6 +60,7 @@ interface RecentRoomCardProps {
 }
 
 function RecentRoomCard({ room, index }: RecentRoomCardProps) {
+  const { t } = useLanguage();
   // Generate a squad-style name from room code
   const squadName = `SQUAD ${room.room_code?.slice(-4).toUpperCase() || index + 1}`;
 

@@ -8,6 +8,7 @@ import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
 import bookmark3dIcon from "@/assets/icons/bookmark-3d.png";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TriviaPortfolioCardProps {
   trivia: SamplePost;
@@ -56,6 +57,7 @@ export function TriviaPortfolioCard({
   className 
 }: TriviaPortfolioCardProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
   const { isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
   
@@ -118,7 +120,7 @@ export function TriviaPortfolioCard({
         {isPlayed && (
           <div className="absolute top-2 left-2 bg-emerald-500 rounded-full px-2 py-0.5 text-xs text-white flex items-center gap-1">
             <Check className="w-3 h-3" />
-            <span>ნათამაშები</span>
+            <span>{t("extra.playedLabel")}</span>
           </div>
         )}
         
