@@ -11,6 +11,7 @@ interface Question {
   correct_answer: string;
   incorrect_answers: string[];
   category_id: string;
+  language: string;
 }
 
 interface AnswerShortenResult {
@@ -48,7 +49,7 @@ serve(async (req) => {
     // Build query for questions that need answer shortening
     let query = supabase
       .from("questions")
-      .select("id, question_text, correct_answer, incorrect_answers, category_id")
+      .select("id, question_text, correct_answer, incorrect_answers, category_id, language")
       .eq("is_active", true)
       .is("answer_shorten_status", null);
 
@@ -140,7 +141,10 @@ serve(async (req) => {
           }
         });
 
-        const prompt = `შენ ხარ ქართული ქვიზის პასუხების შემოკლების ექსპერტი.
+        const isGeorgian = question.language === 'ka';
+
+        const prompt = isGeorgian
+          ? `შენ ხარ ქართული ქვიზის პასუხების შემოკლების ექსპერტი.
 
 ამოცანა: შეამოკლე პასუხები ${MAX_ANSWER_LENGTH} სიმბოლომდე ისე, რომ მნიშვნელობა არ დაიკარგოს.
 
@@ -170,6 +174,38 @@ ${answersToShorten.map((a, i) => `${i + 1}. "${a.answer}" (${a.answer.length} �
 {
   "shortened": [
     {"original": "...", "shortened": "..." ან "CANNOT_SHORTEN"}
+  ]
+}`
+          : `You are a quiz answer shortening expert.
+
+Task: Shorten answers to max ${MAX_ANSWER_LENGTH} characters while preserving meaning.
+
+🚫 Do NOT:
+- Do not truncate words halfway (e.g. "Alexander" → "Alexand" is wrong!)
+- Do not shorten proper nouns and surnames (e.g. "Alexander the Great", "Leonardo da Vinci")
+- Do not shorten names of historical figures and their titles
+- Do not shorten geographical names
+- Do not use abbreviations unless universally known
+
+✅ You MAY:
+- Remove filler words ("that is", "which is", "etc.")
+- Use a shorter synonym
+- Rephrase more concisely
+
+⚠️ Important:
+- If the answer is a proper noun, surname, or historical figure - it cannot be shortened
+- If shortening is impossible for the above reasons, respond: CANNOT_SHORTEN
+- It is better to keep a long answer than to distort it
+
+Question (for context): "${question.question_text}"
+
+Answers to shorten:
+${answersToShorten.map((a, i) => `${i + 1}. "${a.answer}" (${a.answer.length} characters)`).join('\n')}
+
+Respond ONLY in JSON format:
+{
+  "shortened": [
+    {"original": "...", "shortened": "..." or "CANNOT_SHORTEN"}
   ]
 }`;
 
