@@ -697,7 +697,7 @@ export function RoomLobbyV2() {
           <div className="flex items-center justify-between">
             <motion.button
               onClick={handleExitRoom}
-              className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
+              className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 border border-white/[0.12]"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -723,7 +723,7 @@ export function RoomLobbyV2() {
               {/* Share button */}
               <motion.button
                 onClick={handleShare}
-                className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
+                className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 border border-white/[0.12]"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -734,7 +734,7 @@ export function RoomLobbyV2() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <motion.button
-                    className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
+                    className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 border border-white/[0.12]"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -906,7 +906,7 @@ export function RoomLobbyV2() {
                 setSearchParams(searchParams, { replace: true });
               }
             }}
-            className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 mb-6"
+            className="w-full p-4 rounded-2xl bg-white/10 border border-white/[0.12] mb-6"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
