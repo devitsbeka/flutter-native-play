@@ -776,7 +776,7 @@ export function RoomLobbyV2() {
       </div>
 
       {/* Scrollable content area */}
-      <div className="flex-1 overflow-y-auto relative z-10 px-4 sm:px-6 pb-32 sm:max-w-[520px] mx-auto w-full">
+      <div className="flex-1 overflow-y-auto relative z-10 px-4 sm:px-6 pb-32 sm:max-w-[520px] mx-auto w-full will-change-transform">
 
         {/* Room Name Section */}
         <div className="text-center mb-4 space-y-3">

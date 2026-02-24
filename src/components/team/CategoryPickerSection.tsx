@@ -113,7 +113,7 @@ export function CategoryPickerSection({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={() => isHost && onOpenPicker()}
-      className={`w-full p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 mb-6 ${
+      className={`w-full p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/[0.12] mb-6 ${
         isHost ? "cursor-pointer hover:bg-white/15 transition-colors" : ""
       }`}
     >
@@ -219,8 +219,8 @@ export function CategoryPickerSection({
                   )}
                   <span className="text-white/80 text-xs font-medium">
                     {item.source_type === "random" 
-                      ? "შემთხვევითი" 
-                      : item.category_name || "ტრივია"}
+                      ? t("extra.cpRandomTitle")
+                      : item.category_name || "Trivia"}
                   </span>
                 </motion.div>
               ))

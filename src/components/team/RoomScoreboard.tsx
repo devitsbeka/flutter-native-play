@@ -65,7 +65,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/20"
+      className="rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/[0.12]"
     >
       {/* Header - Combined label with count */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
