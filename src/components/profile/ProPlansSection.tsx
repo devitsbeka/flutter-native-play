@@ -9,6 +9,7 @@ import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { format } from "date-fns";
 import { FriendInvitesTracker } from "./FriendInvitesTracker";
 import { useSearchParams } from "react-router-dom";
+import { getPriceDisplay } from "@/utils/currency";
 export type ProTier = 'pro' | 'pro_plus' | 'pro_master' | 'standard';
 
 interface TierConfig {
@@ -229,7 +230,7 @@ export function ProPlansSection({
                 <div>
                   <h3 className="text-lg font-bold text-foreground">{t("extra.friendProName")}</h3>
                   <p className="text-2xl font-bold text-foreground">
-                    ${familyTier.price}<span className="text-sm text-muted-foreground font-normal">/mo</span>
+                    {getPriceDisplay(familyTier.price).symbol}{getPriceDisplay(familyTier.price).value}{getPriceDisplay(familyTier.price).suffix}<span className="text-sm text-muted-foreground font-normal">/mo</span>
                   </p>
                 </div>
               </div>
@@ -442,7 +443,7 @@ function TierCard({
           <div>
             <h3 className="text-lg font-bold text-foreground">{tier.id === 'pro' ? t("extra.proName") : t("extra.friendProName")}</h3>
             <p className="text-2xl font-bold text-foreground">
-              ${tier.price}<span className="text-sm text-muted-foreground font-normal">/mo</span>
+              {getPriceDisplay(tier.price).symbol}{getPriceDisplay(tier.price).value}{getPriceDisplay(tier.price).suffix}<span className="text-sm text-muted-foreground font-normal">/mo</span>
             </p>
           </div>
         </div>

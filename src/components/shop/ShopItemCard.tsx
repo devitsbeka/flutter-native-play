@@ -4,6 +4,7 @@ import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatPrice } from "@/utils/currency";
 
 export type ShopItemBadge = "popular" | "best-value" | "limited" | "new" | null;
 export type ShopItemCurrency = "gems" | "coins" | "lari";
@@ -170,7 +171,7 @@ export function ShopItemCard({
           ) : isLari ? (
             <>
               {/* Price Display */}
-              <span className="font-bold text-lg sm:text-xl text-pink-600 dark:text-pink-400">${price}</span>
+              <span className="font-bold text-lg sm:text-xl text-pink-600 dark:text-pink-400">{formatPrice(price)}</span>
               {/* Buy Button - only this is clickable */}
               <motion.button
                 onClick={onClick}

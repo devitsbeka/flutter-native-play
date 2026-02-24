@@ -3,6 +3,7 @@ import { Crown, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PRO_TIERS, ProTier } from "@/components/profile/ProPlansSection";
 import { useVipStatus } from "@/hooks/useVipStatus";
+import { getPriceDisplay } from "@/utils/currency";
 import { cn } from "@/lib/utils";
 
 export function TeamProSidebar() {
@@ -93,7 +94,7 @@ export function TeamProSidebar() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-foreground">{tier.nameKa}</h3>
                       <p className="text-lg font-bold text-foreground">
-                        ${tier.price}<span className="text-xs text-muted-foreground font-normal">/mo</span>
+                        {getPriceDisplay(tier.price).symbol}{getPriceDisplay(tier.price).value}{getPriceDisplay(tier.price).suffix}<span className="text-xs text-muted-foreground font-normal">/mo</span>
                       </p>
                     </div>
                   </div>
