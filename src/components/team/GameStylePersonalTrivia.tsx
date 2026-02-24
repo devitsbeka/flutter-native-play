@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X, Sparkles, Image, RefreshCw, Lightbulb, Save, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast as sonnerToast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -76,6 +77,10 @@ function DraggableAnswerItem({
   answerMax,
   letter,
   hasError,
+  correctPlaceholder,
+  wrongPlaceholder,
+  correctTitle,
+  setCorrectTitle,
 }: {
   answer: Answer;
   onEdit: () => void;
@@ -89,6 +94,10 @@ function DraggableAnswerItem({
   answerMax: number;
   letter: string;
   hasError: boolean;
+  correctPlaceholder: string;
+  wrongPlaceholder: string;
+  correctTitle: string;
+  setCorrectTitle: string;
 }) {
   const dragControls = useDragControls();
 
@@ -111,7 +120,7 @@ function DraggableAnswerItem({
               onKeyDown={onEditKeyDown}
               className="flex-1 bg-white/20 border-0 text-white placeholder:text-white/50 font-semibold"
               maxLength={answerMax}
-              placeholder="სწორი პასუხი..."
+              placeholder={correctPlaceholder}
             />
             <span className="text-xs text-white/70">{editValue.length}/{answerMax}</span>
           </div>
@@ -135,7 +144,7 @@ function DraggableAnswerItem({
               onKeyDown={onEditKeyDown}
               className="flex-1 border-0 font-semibold"
               maxLength={answerMax}
-              placeholder="პასუხი..."
+              placeholder={wrongPlaceholder}
             />
             <span className="text-xs text-muted-foreground">{editValue.length}/{answerMax}</span>
           </div>
@@ -174,7 +183,7 @@ function DraggableAnswerItem({
               ? "bg-white text-emerald-500" 
               : "bg-[#7DD3FC] hover:bg-emerald-400 text-white"
           )}
-          title={answer.isCorrect ? "სწორი პასუხი" : "დააჭირე სწორად დასაყენებლად"}
+          title={answer.isCorrect ? correctTitle : setCorrectTitle}
         >
           {answer.isCorrect ? <Check className="w-5 h-5" /> : `${letter}:`}
         </button>
@@ -190,7 +199,7 @@ function DraggableAnswerItem({
           )}>
             {answer.text || (
               <span className={answer.isCorrect ? "text-white/70" : "text-slate-400"}>
-                {answer.isCorrect ? "სწორი პასუხი..." : "პასუხი..."}
+                {answer.isCorrect ? correctPlaceholder : wrongPlaceholder}
               </span>
             )}
           </span>
@@ -224,6 +233,7 @@ export function GameStylePersonalTrivia({
   resumeDraftId,
   onDraftResumed,
 }: GameStylePersonalTriviaProps) {
+  const { t, language } = useLanguage();
   const { toast } = useToast();
   const { saveDraft, loadDraft } = useTriviaDrafts();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
@@ -306,7 +316,7 @@ export function GameStylePersonalTrivia({
       setTitle(data.title || "");
       setCurrentDraftId(resumeDraftId);
       onDraftResumed?.();
-      sonnerToast.success("დრაფტი ჩაიტვირთა");
+      sonnerToast.success(t("extra.ptDraftLoaded"));
     };
     
     loadDraftData();
@@ -397,7 +407,7 @@ export function GameStylePersonalTrivia({
   const ANSWER_MAX = 25;
 
   // Letters for answer labels
-  const letters = ["ა", "ბ", "გ", "დ"];
+  const letters = language === 'ka' ? ["ა", "ბ", "გ", "დ"] : ["A", "B", "C", "D"];
 
   // Sync carousel index
   useEffect(() => {
@@ -437,8 +447,8 @@ export function GameStylePersonalTrivia({
   const handleAddQuestion = () => {
     if (questions.length >= MAX_QUESTIONS) {
       toast({
-        title: "მაქსიმუმ 20 კითხვა",
-        description: "წაშალე ზედმეტი კითხვები ახლის დასამატებლად",
+        title: t("extra.ptMax20Questions"),
+        description: t("extra.ptDeleteExtraToAdd"),
         variant: "destructive",
       });
       return;
@@ -462,7 +472,7 @@ export function GameStylePersonalTrivia({
     }, 100);
 
     toast({
-      title: "➕ ახალი კითხვა დაემატა",
+      title: t("extra.ptQuestionAdded"),
       duration: 2000,
     });
   };
@@ -470,8 +480,8 @@ export function GameStylePersonalTrivia({
   const handleDuplicate = () => {
     if (questions.length >= MAX_QUESTIONS) {
       toast({
-        title: "მაქსიმუმ 20 კითხვა",
-        description: "წაშალე ზედმეტი კითხვები დუბლირებისთვის",
+        title: t("extra.ptMax20Questions"),
+        description: t("extra.ptDeleteExtraToDuplicate"),
         variant: "destructive",
       });
       return;
@@ -494,7 +504,7 @@ export function GameStylePersonalTrivia({
     }, 100);
 
     toast({
-      title: "📋 კითხვა დუბლირდა",
+      title: t("extra.ptQuestionDuplicated"),
       duration: 2000,
     });
   };
@@ -502,8 +512,8 @@ export function GameStylePersonalTrivia({
   const handleDelete = () => {
     if (questions.length <= 1) {
       toast({
-        title: "არ შეიძლება",
-        description: "მინიმუმ 1 კითხვა უნდა იყოს",
+        title: t("extra.ptCannotDelete"),
+        description: t("extra.ptMinOneQuestion"),
         variant: "destructive",
       });
       return;
@@ -519,7 +529,7 @@ export function GameStylePersonalTrivia({
 
     setShowDeleteConfirm(false);
     toast({
-      title: "🗑️ კითხვა წაიშალა",
+      title: t("extra.ptQuestionDeleted"),
       duration: 2000,
     });
   };
@@ -592,8 +602,8 @@ export function GameStylePersonalTrivia({
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast({
-        title: "შეცდომა",
-        description: "მხოლოდ სურათის ატვირთვაა შესაძლებელი",
+        title: t("common.error"),
+        description: t("extra.ptImageOnlyError"),
         variant: "destructive",
       });
       return;
@@ -602,8 +612,8 @@ export function GameStylePersonalTrivia({
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: "შეცდომა",
-        description: "სურათი ძალიან დიდია (მაქს. 5MB)",
+        title: t("common.error"),
+        description: t("extra.ptImageTooBig"),
         variant: "destructive",
       });
       return;
@@ -633,8 +643,8 @@ export function GameStylePersonalTrivia({
         setQuestions(newQuestions);
         
         toast({
-          title: "📷 სურათი დაემატა",
-          description: "ლოკალური preview",
+          title: t("extra.ptImageAddedLocal"),
+          description: t("extra.ptLocalPreview"),
           duration: 2000,
         });
         return;
@@ -652,14 +662,14 @@ export function GameStylePersonalTrivia({
       setQuestions(newQuestions);
 
       toast({
-        title: "📷 სურათი აიტვირთა!",
+        title: t("extra.ptImageUploaded"),
         duration: 2000,
       });
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: "შეცდომა",
-        description: "სურათის ატვირთვა ვერ მოხერხდა",
+        title: t("common.error"),
+        description: t("extra.ptUploadFailed"),
         variant: "destructive",
       });
     } finally {
@@ -724,7 +734,7 @@ export function GameStylePersonalTrivia({
         setQuestions(newQuestions);
         
         toast({
-          title: "✨ კითხვა შეივსო!",
+          title: t("extra.ptAIFilled"),
           duration: 2000,
         });
       } else {
@@ -733,8 +743,8 @@ export function GameStylePersonalTrivia({
     } catch (error) {
       console.error('AI generation error:', error);
       toast({
-        title: "შეცდომა",
-        description: "AI გენერაცია ვერ მოხერხდა. სცადეთ თავიდან.",
+        title: t("common.error"),
+        description: t("extra.ptAIFailed"),
         variant: "destructive",
       });
     } finally {
@@ -751,7 +761,7 @@ export function GameStylePersonalTrivia({
         errors.push({
           questionIndex: idx,
           field: "question",
-          message: "კითხვა არ არის შევსებული",
+          message: t("extra.ptQuestionEmpty"),
         });
       }
       
@@ -761,7 +771,7 @@ export function GameStylePersonalTrivia({
             questionIndex: idx,
             field: "answer",
             answerIndex: answerIdx,
-            message: `პასუხი არ არის შევსებული`,
+            message: t("extra.ptAnswerEmpty"),
           });
         }
       });
@@ -791,8 +801,8 @@ export function GameStylePersonalTrivia({
       
       // Show toast with error message
       toast({
-        title: "⚠️ შეცდომა",
-        description: `კითხვა ${firstError.questionIndex + 1}: ${firstError.message}`,
+        title: t("extra.ptValidationError"),
+        description: `${t("extra.questionNofM", { n: String(firstError.questionIndex + 1), total: String(questions.length) })}: ${firstError.message}`,
         variant: "destructive",
       });
       
@@ -888,7 +898,7 @@ export function GameStylePersonalTrivia({
                 onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
                 autoFocus
                 className="max-w-[180px] bg-white/20 border-white/30 text-white placeholder:text-white/70 font-bold text-center"
-                placeholder="თამაშის სახელი..."
+                placeholder={t("extra.editorGameNamePlaceholder")}
               />
             ) : (
               <button 
@@ -896,7 +906,7 @@ export function GameStylePersonalTrivia({
                 className="flex items-center gap-2 text-white"
               >
                 <span className="font-bold truncate max-w-[150px]">
-                  {title || "თამაშის სახელი..."}
+                  {title || t("extra.editorGameNamePlaceholder")}
                 </span>
                 <Edit3 className="w-4 h-4 text-white/70" />
               </button>
@@ -1059,7 +1069,7 @@ export function GameStylePersonalTrivia({
                             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && saveEdit()}
                             className="min-h-[70px] text-center text-lg font-bold bg-white/20 border-white/30 text-white placeholder:text-white/50 resize-none"
                             maxLength={QUESTION_MAX}
-                            placeholder="შეიყვანე კითხვა..."
+                            placeholder={t("extra.ptEnterQuestion")}
                           />
                           <div className="text-xs text-white/60 text-center">
                             {editValue.length}/{QUESTION_MAX}
@@ -1077,7 +1087,7 @@ export function GameStylePersonalTrivia({
                             "text-xl font-bold text-white leading-relaxed group-hover:text-white/80 transition-colors min-h-[50px] flex items-center justify-center",
                             errorField?.questionIndex === index && errorField?.field === "question" && "text-red-300"
                           )}>
-                            {question.question || <span className="text-white/50">დააჭირე კითხვის დასამატებლად...</span>}
+                            {question.question || <span className="text-white/50">{t("extra.editorTapToAddQuestion")}</span>}
                           </p>
                           <Edit3 className="w-4 h-4 text-white/50 mx-auto mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </button>
@@ -1112,6 +1122,10 @@ export function GameStylePersonalTrivia({
                         answerMax={ANSWER_MAX}
                         letter={getLetterForAnswer(question.answers, answer.id)}
                         hasError={errorField?.questionIndex === index && errorField?.answerId === answer.id}
+                        correctPlaceholder={t("extra.editorCorrectAnswerPlaceholder")}
+                        wrongPlaceholder={t("extra.editorAnswerPlaceholder")}
+                        correctTitle={t("extra.editorCorrectAnswerTitle")}
+                        setCorrectTitle={t("extra.editorSetCorrectTitle")}
                       />
                     ))}
                   </Reorder.Group>
@@ -1142,7 +1156,7 @@ export function GameStylePersonalTrivia({
               variant="success"
             >
               <Check className="w-5 h-5 mr-2" />
-              შენახვა
+              {t("extra.editorSaveBtn")}
             </ChunkyButton>
           </div>
 
@@ -1167,9 +1181,9 @@ export function GameStylePersonalTrivia({
                     <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-3">
                       <Trash2 className="w-6 h-6 text-destructive" />
                     </div>
-                    <h3 className="text-lg font-bold text-foreground">კითხვის წაშლა?</h3>
+                    <h3 className="text-lg font-bold text-foreground">{t("extra.ptDeleteQuestionTitle")}</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      ეს მოქმედება ვერ გაუქმდება
+                      {t("extra.ptDeleteIrreversible")}
                     </p>
                   </div>
                   <div className="flex gap-3">
@@ -1178,14 +1192,14 @@ export function GameStylePersonalTrivia({
                       onClick={() => setShowDeleteConfirm(false)}
                       className="flex-1"
                     >
-                      გაუქმება
+                      {t("common.cancel")}
                     </ChunkyButton>
                     <ChunkyButton
                       variant="danger"
                       onClick={handleDelete}
                       className="flex-1"
                     >
-                      წაშლა
+                      {t("extra.editorDeleteBtn")}
                     </ChunkyButton>
                   </div>
                 </motion.div>
@@ -1220,9 +1234,9 @@ export function GameStylePersonalTrivia({
                         <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-3">
                           <ChevronLeft className="w-6 h-6 text-amber-500" />
                         </div>
-                        <h3 className="text-lg font-bold text-foreground">გასვლა?</h3>
+                        <h3 className="text-lg font-bold text-foreground">{t("extra.ptExitTitle")}</h3>
                         <p className="text-sm text-muted-foreground mt-1">
-                          შენი პროგრესი დაიკარგება
+                          {t("extra.ptProgressLost")}
                         </p>
                       </div>
                       <div className="flex flex-col gap-3">
@@ -1231,7 +1245,7 @@ export function GameStylePersonalTrivia({
                           onClick={() => setShowExitConfirm(false)}
                           className="w-full"
                         >
-                          დარჩენა
+                          {t("extra.ptStay")}
                         </ChunkyButton>
                         <ChunkyButton
                           variant="secondary"
@@ -1239,7 +1253,7 @@ export function GameStylePersonalTrivia({
                           className="w-full"
                         >
                           <Save className="w-4 h-4 mr-2" />
-                          დრაფტად შენახვა
+                          {t("extra.ptSaveAsDraft")}
                         </ChunkyButton>
                         <ChunkyButton
                           variant="danger"
@@ -1250,7 +1264,7 @@ export function GameStylePersonalTrivia({
                           }}
                           className="w-full"
                         >
-                          გასვლა
+                          {t("extra.ptExit")}
                         </ChunkyButton>
                       </div>
                     </>
@@ -1260,13 +1274,13 @@ export function GameStylePersonalTrivia({
                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
                           <Save className="w-6 h-6 text-primary" />
                         </div>
-                        <h3 className="text-lg font-bold text-foreground">დრაფტის სახელი</h3>
+                        <h3 className="text-lg font-bold text-foreground">{t("extra.ptDraftNameTitle")}</h3>
                         <p className="text-sm text-muted-foreground mt-1">
-                          შეიყვანეთ სახელი მოგვიანებით მოსაძებნად
+                          {t("extra.ptDraftNameDesc")}
                         </p>
                       </div>
                       <Input
-                        placeholder="ჩემი ვიქტორინა..."
+                        placeholder={t("extra.ptDraftPlaceholder")}
                         value={draftName}
                         onChange={(e) => setDraftName(e.target.value)}
                         autoFocus
@@ -1281,7 +1295,7 @@ export function GameStylePersonalTrivia({
                           }}
                           className="flex-1"
                         >
-                          უკან
+                          {t("extra.ptBack")}
                         </ChunkyButton>
                         <ChunkyButton
                           onClick={async () => {
@@ -1307,14 +1321,14 @@ export function GameStylePersonalTrivia({
                                 setCurrentDraftId(saved.id);
                               }
                               
-                              sonnerToast.success("დრაფტი შეინახა!");
+                              sonnerToast.success(t("extra.ptDraftSaved"));
                               setShowExitConfirm(false);
                               setShowDraftNameInput(false);
                               setDraftName("");
                               setCurrentDraftId(null);
                               onClose();
                             } catch (error) {
-                              sonnerToast.error("დრაფტის შენახვა ვერ მოხერხდა");
+                              sonnerToast.error(t("extra.ptDraftSaveFailed"));
                             } finally {
                               setIsSavingDraft(false);
                             }
@@ -1322,7 +1336,7 @@ export function GameStylePersonalTrivia({
                           disabled={!draftName.trim() || isSavingDraft}
                           className="flex-1"
                         >
-                          {isSavingDraft ? <Loader2 className="w-4 h-4 animate-spin" /> : "შენახვა"}
+                          {isSavingDraft ? <Loader2 className="w-4 h-4 animate-spin" /> : t("extra.editorSaveBtn")}
                         </ChunkyButton>
                       </div>
                     </>
