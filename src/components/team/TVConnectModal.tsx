@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 interface TVConnectModalProps {
@@ -16,33 +17,34 @@ interface TVConnectModalProps {
 
 type ConnectionStep = 'instructions' | 'code-entry' | 'connected';
 
-const steps = [
-  {
-    icon: Monitor,
-    title: 'გახსენი mytrivia.io/tv',
-    description: 'შენს TV-ის ბრაუზერში გახსენი ეს გვერდი',
-  },
-  {
-    icon: Hash,
-    title: '4-ციფრიანი კოდი გამოჩნდება',
-    description: 'TV ეკრანზე დაინახავ კოდს',
-  },
-  {
-    icon: Smartphone,
-    title: 'შეიყვანე კოდი ტელეფონიდან',
-    description: 'დააკავშირე ტელეფონი TV-სთან',
-  },
-];
-
 export const TVConnectModal: React.FC<TVConnectModalProps> = ({
   open,
   onOpenChange,
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [step, setStep] = useState<ConnectionStep>('instructions');
   const [code, setCode] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
+
+  const steps = [
+    {
+      icon: Monitor,
+      title: t("extra.tvStep1Title"),
+      description: t("extra.tvStep1Desc"),
+    },
+    {
+      icon: Hash,
+      title: t("extra.tvStep2Title"),
+      description: t("extra.tvStep2Desc"),
+    },
+    {
+      icon: Smartphone,
+      title: t("extra.tvStep3Title"),
+      description: t("extra.tvStep3Desc"),
+    },
+  ];
 
   const handleConnect = async () => {
     if (code.length !== 4 || !user) return;
@@ -60,7 +62,7 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
         .maybeSingle();
 
       if (error || !session) {
-        toast.error('კოდი არ მოიძებნა ან უკვე დაკავშირებულია');
+        toast.error(t("extra.tvCodeNotFound"));
         setIsConnecting(false);
         return;
       }
@@ -79,7 +81,7 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
       }
 
       setStep('connected');
-      toast.success('წარმატებით დაკავშირდა!');
+      toast.success(t("extra.tvConnectedToast"));
 
       setTimeout(() => {
         onOpenChange(false);
@@ -90,7 +92,7 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
 
     } catch (error) {
       console.error('Error connecting to TV:', error);
-      toast.error('დაკავშირება ვერ მოხერხდა');
+      toast.error(t("extra.tvConnectionFailed"));
     } finally {
       setIsConnecting(false);
     }
@@ -110,7 +112,7 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
     }
   };
 
-  const headerTitle = step === 'instructions' ? 'TV-ზე თამაში' : step === 'code-entry' ? 'კოდის შეყვანა' : 'დაკავშირებულია';
+  const headerTitle = step === 'instructions' ? t("extra.tvPlayOnTv") : step === 'code-entry' ? t("extra.tvCodeEntry") : t("extra.tvConnectedStatus");
 
   if (!open) return null;
 
@@ -155,8 +157,8 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
                     >
                       <Check className="w-12 h-12 text-white" />
                     </motion.div>
-                    <h3 className="text-2xl font-bold text-foreground mb-2">დაკავშირებულია!</h3>
-                    <p className="text-muted-foreground">გადამისამართება...</p>
+                    <h3 className="text-2xl font-bold text-foreground mb-2">{t("extra.tvConnectedExcl")}</h3>
+                    <p className="text-muted-foreground">{t("extra.tvRedirecting")}</p>
                   </motion.div>
                 ) : step === 'instructions' ? (
                   <motion.div
@@ -171,7 +173,7 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
                         <img src={retroTvIcon} alt="TV" className="w-12 h-12 object-contain" />
                       </div>
                       <p className="text-muted-foreground">
-                        მიჰყევი ნაბიჯებს TV-სთან დასაკავშირებლად
+                        {t("extra.tvFollowSteps")}
                       </p>
                     </div>
 
@@ -195,7 +197,7 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
                       className="w-full"
                       onClick={() => setStep('code-entry')}
                     >
-                      გაგრძელება
+                      {t("extra.tvContinueBtn")}
                     </ChunkyButton>
                   </motion.div>
                 ) : (
@@ -208,7 +210,7 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
                   >
                     <div className="text-center mb-8">
                       <p className="text-muted-foreground">
-                        შეიყვანე 4-ციფრიანი კოდი რომელიც ნაჩვენებია TV ეკრანზე
+                        {t("extra.tvEnterCodePrompt")}
                       </p>
                     </div>
 
@@ -236,10 +238,10 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
                       {isConnecting ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                          დაკავშირება...
+                          {t("extra.tvConnectedStatus")}...
                         </>
                       ) : (
-                        'დაკავშირება'
+                        t("tv.connect")
                       )}
                     </ChunkyButton>
                   </motion.div>
