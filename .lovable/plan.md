@@ -1,28 +1,47 @@
 
 
-## Show Icon Preview on Question Card in Studio
+## Localize Room Name Generation by Language
 
-### What We're Doing
-Adding the question's assigned icon above the question card in the Studio preview panel -- exactly like it appears during actual gameplay. This will let you visually verify which icon is assigned to each question without needing to check the metadata section below.
+### Problem
+The room name generator (both the edge function and the client-side fallback) only contains Georgian names. When a user switches to English (or any other language), room titles still appear in Georgian.
 
-### How It Works
-In the production game screen, a `DynamicIcon` component is absolutely positioned above the `QuizQuestionCard`, overlapping its top edge by about 33px. The card itself uses `reserveTopSpace` to add padding so the icon doesn't cover the question text.
+### Solution
+Add multilingual room name sets to both the edge function and the client-side fallback, and pass the user's current language when requesting a name.
 
-The Studio preview already passes `reserveTopSpace` but doesn't render the actual icon. We just need to add it.
+### Changes
 
-### Technical Details
+**1. Edge Function: `supabase/functions/generate-room-name/index.ts`**
 
-**File: `src/components/admin/studio/QuestionPreviewPanel.tsx`**
+- Accept an optional `language` parameter from the request body (default: `ka`)
+- Add English name equivalents for all 15 themes (using the comments already in the code as a guide), plus short names for FR, DE, ES, IT, PT
+- `generateThemedRoomName()` will take a `language` parameter and pick names from the matching language set
+- Georgian names remain the default; for non-KA languages, use the translated name sets
+- The `MAX_NAME_LENGTH` check will be relaxed slightly for Latin-script languages since they use fewer characters per word
 
-1. Import `DynamicIcon` from `@/components/shared/DynamicIcon`
-2. Inside the "Game content" div, before the `QuizQuestionCard`, add a wrapper `div` with `relative` positioning
-3. When the question has no media (no image/video/audio) and has an `icon_slug`, render a `DynamicIcon` component:
-   - Absolutely positioned, centered horizontally, offset above the card top (`-top-[33px]`)
-   - Using `question.icon_slug` as the slug
-   - Size ~64px to match the smaller preview scale
-   - `hideIfEmpty={true}` so nothing renders if no icon is assigned
-   - `drop-shadow-lg` for the same visual treatment as gameplay
-4. The existing `reserveTopSpace` prop on `QuizQuestionCard` already handles the padding -- no changes needed there
+The translated names per theme (8 names each, 15 themes) for each language:
+- **KA**: Keep existing Georgian names as-is
+- **EN**: "Golden Cup", "Stars Battle", "Space Traveler", etc. (from the existing comments)
+- **FR/DE/ES/IT/PT**: Short, catchy translated equivalents
 
-This mirrors the exact same pattern used in `QuizGameScreenProd.tsx` (lines 367-386).
+**2. Client-Side Fallback: `src/utils/roomNameGenerator.ts`**
+
+- Add a `THEMED_ROOM_NAMES_BY_LANG` structure with at minimum EN translations alongside the existing KA names
+- Update `generateRoomName()` to accept an optional `language` parameter
+- Default to KA if no language specified
+
+**3. Room Creation UI: `src/components/team/CreateRoomPage.tsx`**
+
+- Import `useLanguage` hook
+- Pass the current `language` to the edge function call: `supabase.functions.invoke('generate-room-name', { body: { language } })`
+- Update the Georgian-only fallback string `"სახალისო გუნდი"` to use a language-appropriate default (e.g., "Fun Squad" for EN)
+- Update hardcoded Georgian error toast messages to use `t()` translations
+
+**4. Room Creation Hook: `src/hooks/useGameRoom.ts`**
+
+- Pass the current language when calling `generateRoomName()` from the fallback path
+
+### Technical Notes
+- The edge function currently parses `{ iconSlug }` from the body; we'll extend this to also accept `{ language }`
+- For languages without a full translation set, English will be the fallback (not Georgian), since Latin-script users would find English more readable
+- Room name max length of 18 chars works well for Georgian but may need to be 22 for longer Latin-script names like "Celebration Square"
 
