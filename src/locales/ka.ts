@@ -1381,6 +1381,7 @@ export const ka = {
     createRoomTitle: "შექმენი ოთახი",
     chooseWhatToPlay: "აირჩიე რას ითამაშებთ",
     inviteAfterCreate: "მეგობრების მოწვევას შეძლებ ოთახის შექმნის შემდეგ",
+    nameGenerationError: "ვერ მოხერხდა სახელის გენერირება",
     randomCategory: "შემთხვევითი კატეგორია",
     quickStart: "სწრაფი სტარტი",
     chooseFromLibrary: "აირჩიე ბიბლიოთეკიდან",

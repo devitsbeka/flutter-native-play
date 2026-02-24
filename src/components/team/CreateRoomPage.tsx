@@ -168,33 +168,39 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // Only accepted friends
   const acceptedFriends = friends.filter(f => f.status === "accepted");
 
+  // Get current language for room name generation
+  const currentLanguage = localStorage.getItem('preferredLanguage') || 'ka';
+  const defaultFallback = currentLanguage === 'ka' ? 'სახალისო გუნდი' : 'Fun Squad';
+
   // Generate room name via edge function
   const generateRoomName = async () => {
     setIsGeneratingName(true);
     try {
-      const { data, error } = await supabase.functions.invoke('generate-room-name');
+      const { data, error } = await supabase.functions.invoke('generate-room-name', {
+        body: { language: currentLanguage }
+      });
       if (!error && data) {
         // Strip emojis from the name - only show the library icon
-        const nameWithoutEmoji = (data.name || "სახალისო გუნდი")
+        const nameWithoutEmoji = (data.name || defaultFallback)
           .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F000}-\u{1F02F}]|[\u{1F0A0}-\u{1F0FF}]|[\u{1F100}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1FA00}-\u{1FAFF}]/gu, '')
           .trim();
-        setRoomName(nameWithoutEmoji || "სახალისო გუნდი");
+        setRoomName(nameWithoutEmoji || defaultFallback);
         setRoomIcon(data.icon_url || null);
       } else {
         console.error('Error generating room name:', error);
-        setRoomName("სახალისო გუნდი");
+        setRoomName(defaultFallback);
         toast({
-          title: "შეცდომა",
-          description: "ვერ მოხერხდა სახელის გენერირება",
+          title: t("common.error"),
+          description: t("extra.nameGenerationError"),
           variant: "destructive",
         });
       }
     } catch (e) {
       console.error('Failed to generate room name:', e);
-      setRoomName("სახალისო გუნდი");
+      setRoomName(defaultFallback);
       toast({
-        title: "შეცდომა",
-        description: "ვერ მოხერხდა სახელის გენერირება",
+        title: t("common.error"),
+        description: t("extra.nameGenerationError"),
         variant: "destructive",
       });
     } finally {

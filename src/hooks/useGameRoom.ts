@@ -3,7 +3,7 @@ import { t } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { generateRoomName } from "@/utils/roomNameGenerator";
+import { generateRoomName, getDefaultRoomName } from "@/utils/roomNameGenerator";
 import { getRandomGradient } from "@/config/roomGradients";
 export type RoomStatus = "waiting" | "ready" | "playing" | "completed" | "cancelled";
 export type ParticipantStatus = "joined" | "ready" | "playing" | "finished" | "disconnected";
@@ -88,11 +88,14 @@ export function useGameRoom() {
       }
 
       // Generate AI-powered funny room name based on random icon
-      let roomName = generateRoomName(); // fallback
+      const currentLanguage = localStorage.getItem('preferredLanguage') || 'ka';
+      let roomName = generateRoomName(currentLanguage); // fallback
       let roomIcon: string | null = null;
       
       try {
-        const { data: nameData, error: nameError } = await supabase.functions.invoke('generate-room-name');
+        const { data: nameData, error: nameError } = await supabase.functions.invoke('generate-room-name', {
+          body: { language: currentLanguage }
+        });
         if (!nameError && nameData?.name) {
           roomName = nameData.name;
           roomIcon = nameData.icon_url || null;
