@@ -94,7 +94,7 @@ export function TeamProSidebar() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-foreground">{tier.nameKa}</h3>
                       <p className="text-lg font-bold text-foreground">
-                        {getPriceDisplay(tier.price).symbol}{getPriceDisplay(tier.price).value}{getPriceDisplay(tier.price).suffix}<span className="text-xs text-muted-foreground font-normal">/mo</span>
+                        {getPriceDisplay(tier.price).symbol}{getPriceDisplay(tier.price).value}{getPriceDisplay(tier.price).suffix}<span className="text-xs text-muted-foreground font-normal">{getPriceDisplay(tier.price).monthLabel}</span>
                       </p>
                     </div>
                   </div>

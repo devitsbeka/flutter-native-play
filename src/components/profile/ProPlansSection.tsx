@@ -230,7 +230,7 @@ export function ProPlansSection({
                 <div>
                   <h3 className="text-lg font-bold text-foreground">{t("extra.friendProName")}</h3>
                   <p className="text-2xl font-bold text-foreground">
-                    {getPriceDisplay(familyTier.price).symbol}{getPriceDisplay(familyTier.price).value}{getPriceDisplay(familyTier.price).suffix}<span className="text-sm text-muted-foreground font-normal">/mo</span>
+                    {getPriceDisplay(familyTier.price).symbol}{getPriceDisplay(familyTier.price).value}{getPriceDisplay(familyTier.price).suffix}<span className="text-sm text-muted-foreground font-normal">{getPriceDisplay(familyTier.price).monthLabel}</span>
                   </p>
                 </div>
               </div>
@@ -443,7 +443,7 @@ function TierCard({
           <div>
             <h3 className="text-lg font-bold text-foreground">{tier.id === 'pro' ? t("extra.proName") : t("extra.friendProName")}</h3>
             <p className="text-2xl font-bold text-foreground">
-              {getPriceDisplay(tier.price).symbol}{getPriceDisplay(tier.price).value}{getPriceDisplay(tier.price).suffix}<span className="text-sm text-muted-foreground font-normal">/mo</span>
+              {getPriceDisplay(tier.price).symbol}{getPriceDisplay(tier.price).value}{getPriceDisplay(tier.price).suffix}<span className="text-sm text-muted-foreground font-normal">{getPriceDisplay(tier.price).monthLabel}</span>
             </p>
           </div>
         </div>
