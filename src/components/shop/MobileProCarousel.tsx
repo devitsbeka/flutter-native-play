@@ -4,6 +4,7 @@ import { Crown, Users, Sparkles, Check, ChevronRight, Loader2 } from "lucide-rea
 import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
+import { getPriceDisplay } from "@/utils/currency";
 import shopBgVideo from "@/assets/shopbg.mp4";
 import shopBgVideoWebm from "@/assets/shopbg.webm";
 
@@ -161,13 +162,13 @@ export function MobileProCarousel() {
                   </h3>
                   {/* Price - md+: inline with header */}
                   <div className="hidden md:flex items-baseline gap-1 ml-auto">
-                    <span className="text-2xl font-black text-white">${tier.price}</span>
+                    <span className="text-2xl font-black text-white">{getPriceDisplay(tier.price).symbol}{getPriceDisplay(tier.price).value}{getPriceDisplay(tier.price).suffix}</span>
                     <span className="text-sm text-white/70">/mo</span>
                   </div>
                 </div>
                 {/* Price - mobile only: below title */}
                 <div className="flex md:hidden items-baseline gap-1 mb-2">
-                  <span className="text-xl font-black text-white">${tier.price}</span>
+                  <span className="text-xl font-black text-white">{getPriceDisplay(tier.price).symbol}{getPriceDisplay(tier.price).value}{getPriceDisplay(tier.price).suffix}</span>
                   <span className="text-xs text-white/70">/mo</span>
                 </div>
               </div>

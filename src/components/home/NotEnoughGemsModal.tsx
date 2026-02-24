@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useGemPurchase } from "@/hooks/useGemPurchase";
 import { useAuth } from "@/contexts/AuthContext";
 import gemIcon from "@/assets/icons/icon-gem.png";
+import { formatPrice } from "@/utils/currency";
 
 interface GemPackage {
   id: string;
@@ -168,7 +169,7 @@ export function NotEnoughGemsModal({
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <>${pkg.priceUsd}</>
+                  <>{formatPrice(pkg.priceUsd)}</>
                 )}
               </div>
             </motion.button>

@@ -6,6 +6,7 @@ import shopBgVideo from "@/assets/shopbg.mp4";
 import shopBgVideoWebm from "@/assets/shopbg.webm";
 import crown3dIcon from "@/assets/crown-3d.png";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
+import { getPriceDisplay } from "@/utils/currency";
 
 // White particle component for sidebar
 function SidebarParticle({ delay, left }: { delay: number; left: number }) {
@@ -191,7 +192,7 @@ export function ShopRightSidebar() {
                     <div className="flex-1">
                       <h3 className="text-base font-bold text-white">{tier.nameKa}</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-xl font-black text-white">${tier.price}</span>
+                        <span className="text-xl font-black text-white">{getPriceDisplay(tier.price).symbol}{getPriceDisplay(tier.price).value}{getPriceDisplay(tier.price).suffix}</span>
                         <span className="text-xs text-white/70">/mo</span>
                       </div>
                     </div>
