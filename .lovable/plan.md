@@ -1,115 +1,152 @@
 
 
-## Systematic Hardcoded String Elimination and Translation Readiness
+# Remaining Hardcoded Georgian Strings - Localization Plan
 
-### The Problem
-There are **47 component files** with hardcoded Georgian strings that bypass the `t()` translation system entirely. Additionally, the locale files for FR, DE, IT, and PT are incomplete -- they spread `...en` (English) as fallback for untranslated sections, but the massive `extra` section (500+ keys) remains English-only for these languages. Spanish is the only fully translated non-English locale.
+## Summary
 
-### The Solution: Two-Phase Approach
+After scanning the entire `src/` directory (excluding locale files and static data files), I found **hardcoded Georgian strings in 20+ user-facing files** across components, hooks, pages, and data files. Below is the full inventory grouped by priority.
 
 ---
 
-### Phase 1: Extract All Hardcoded Strings to Translation Keys
+## Priority 1: User-Facing Components (High Impact)
 
-Go through all 47 files that contain hardcoded Georgian text and replace every string with `t("key")` calls. This is the critical step -- once all strings use the translation system, adding new languages becomes a matter of updating locale files only.
+### 1. `src/components/team/MultiplayerResultScreen.tsx`
+- `"შენ"` (You) -- used for current player label (lines 362, 492)
 
-**Files requiring extraction (grouped by area):**
+### 2. `src/components/team/JoinRoomModal.tsx`
+- `"შესვლა..."` / `"შესვლა"` (Joining.../Join) -- button label
+- `"გაუქმება"` (Cancel) -- button label
 
-**Auth and Guest flows (5 files):**
-- `DesktopGuestSplitLayout.tsx` -- validation messages, placeholders, error toasts
-- `GuestJoinScreen.tsx` -- join flow text
-- `AuthFormModal.tsx` -- auth modal strings
-- `MobileAuthScreen.tsx` -- mobile auth text
-- `SecurityQuestionSelector.tsx` -- security question labels
+### 3. `src/components/team/AllRecentRoomsModal.tsx`
+- `"დახურვა"` (Close) -- button label
+- `"ზოგადი"` (General) -- fallback category name
 
-**Game and Quiz creation (8 files):**
-- `CreateBlindTriviaModal.tsx` -- difficulty labels, topic suggestions, toasts
-- `CreateQuizModal.tsx` -- difficulty labels, topic suggestions, format options
-- `EditRoundModal.tsx` -- button titles, placeholders
-- `GameStylePersonalTrivia.tsx` -- (partially done, verify remaining)
-- `SocialFeed.tsx` -- ad/promo text
-- `QuizResultsScreen.tsx` -- results text
-- `RoundResultScreen.tsx` -- round result text
-- `AIGenerationStatus.tsx` -- generation status messages
+### 4. `src/components/team/QuickPlayModal.tsx`
+- `"ონლაინ"` / `"ოფლაინ"` (Online/Offline) -- friend status
+- `"კლასიკა"` / `"გართობა"` / `"სწავლა"` (Classic/Fun/Learning) -- category type tabs
 
-**Room and Team (6 files):**
-- `RoomLobbyV2.tsx` -- lobby UI text
-- `RoomScoreboard.tsx` -- scoreboard labels
-- `CategoryPickerSection.tsx` -- (partially done, verify remaining)
-- `TeamMenuScreen.tsx` -- menu option text
-- `CreateRoomPage.tsx` -- (partially done, verify remaining)
-- `RoomChatSection.tsx` -- chat placeholders
+### 5. `src/components/team/ChatModal.tsx`
+- `"ონლაინ"` / `"ოფლაინ"` (Online/Offline) -- friend status
 
-**Profile and Settings (5 files):**
-- `AvatarFrameShop.tsx` -- purchase toasts
-- `ProfilePage.tsx` -- profile labels
-- `SettingsModal.tsx` -- settings text
-- `CountrySelectModal.tsx` -- country selection text
-- `EmailEditModal.tsx` -- email edit text
+### 6. `src/components/team/GameInvitationsSection.tsx`
+- `"მეგობარი"` (Friend) -- fallback nickname
+- `"ზოგადი"` (General) -- fallback category
 
-**Map and Adventure (4 files):**
-- `AdventureMapPage.tsx` -- map labels
-- `AdventureHelpModal.tsx` -- help text
-- `PowerUpDemoPreview.tsx` -- power-up labels
-- `MapNodePopup.tsx` -- node popup text
+### 7. `src/components/team/PendingChallengesSection.tsx`
+- `"ზოგადი"` (General) -- fallback category
 
-**Leaderboard (3 files):**
-- `LeagueHeroHeader.tsx` -- league names
-- `WeeklyRewardsModal.tsx` -- rewards text
-- `LeaderboardPage.tsx` -- leaderboard labels
+### 8. `src/components/team/GameResultsScreenV2.tsx`
+- `"შემთხვევითი"` (Random) -- random category label
+- `"კატეგორია"` (Category) -- fallback
 
-**Other (16+ files):**
-- Various modals, toasts, and utility components with scattered Georgian strings
+### 9. `src/components/chat/FriendChatSheet.tsx`
+- `"დღეს"` / `"გუშინ"` (Today/Yesterday) -- date headers
+
+### 10. `src/components/social/EditQuizModal.tsx`
+- `"წაიშალა"` / `"შეცდომა"` / `"წაშლა ვერ მოხერხდა"` -- toast messages
+
+### 11. `src/components/social/CoverImagePicker.tsx`
+- `"შეცდომა"` / `"სურათის ატვირთვა/გენერაცია ვერ მოხერხდა"` -- toast messages
+
+### 12. `src/components/social/AddRoundToCollectionModal.tsx`
+- Suggested topic labels: `"მემები"`, `"ანიმე"`, `"კოსმოსი"`, `"ფსიქოლოგია"`, `"საქართველოს ისტორია"`, `"ქართული კერძები"`, `"ცხოველები"`, `"სუპერ მანქანები"` etc.
+- `"შეცდომა"` / `"რაუნდის შენახვა ვერ მოხერხდა"` -- toast messages
+
+### 13. `src/components/social/FeedPost.tsx`
+- `subjectCoverImages` keys: `"მუსიკა"`, `"მომღერლები"`, `"სპორტი"`, `"ფეხბურთი"`, `"ფილმები"`, `"სერიალები"`, `"ისტორია"`, `"გეოგრაფია"`, `"მეცნიერება"`, `"თამაშები"` -- these are used as lookup keys (keep both KA + EN keys; functional, not display strings)
+
+### 14. `src/components/challenge/ChallengeTypeModal.tsx`
+- `"ოთახი"` / `"შექმენი სათამაშო ოთახი"` (Room/Create game room)
+- `"ტრივია"` / `"1 რაუნდი"` (Trivia/1 round)
+- `"კოლექცია"` / `"რამდენიმე რაუნდი"` (Collection/Multiple rounds)
+
+### 15. `src/components/challenge/LibraryCategoryPicker.tsx`
+- `"კატეგორიის ძიება..."` (Search categories) -- placeholder
+- `"კატეგორია ვერ მოიძებნა"` (Category not found) -- empty state
+
+### 16. `src/components/profile/FriendInvitesTracker.tsx`
+- `"ჩემი მოწვევები"` (My invitations) -- section header
+
+### 17. `src/components/leaderboard/ClaimRewardsModal.tsx`
+- `"კატეგორია"` (Category) -- fallback label
+
+### 18. `src/components/social/QuizPlayModal.tsx`
+- `"მართალია"` / `"მცდარია"` -- true/false answer detection (functional, but needs bilingual handling)
+
+### 19. `src/components/game/QuizGameScreenProd.tsx`
+- Same `"მართალია"` / `"მცდარია"` true/false detection
+
+### 20. `src/components/controller/ControllerQuestion.tsx`
+- Same `"მართალია"` / `"მცდარია"` true/false detection
+
+### 21. `src/components/team/MultiplayerGameScreenV2.tsx`
+- Same `"მართალია"` / `"მცდარია"` true/false detection
+
+---
+
+## Priority 2: Hooks and Utilities
+
+### 22. `src/hooks/useConversationPreviews.ts`
+- `"ახლა"` (now), `"წთ"` (min), `"გუშინ"` (yesterday) -- relative time formatting
+
+### 23. `src/hooks/useGameInvitations.ts`
+- `"მეგობარი"` (Friend) fallback + `"გიწვევს თამაშში!"` (invites you to play!) -- notification text
+
+### 24. `src/hooks/useTriviaLobby.ts`
+- `"მოთამაშე"` (Player) -- fallback nickname
+
+### 25. `src/hooks/useMissions.ts`
+- Mission titles and descriptions: `"მარათონელი"`, `"სრულყოფილება"`, `"მულტიკატეგორია"`, `"პერფექციონისტი"` etc.
+
+### 26. `src/data/opponents.ts`
+- Rank names: `"ბრინჯაო"`, `"ვერცხლი"`, `"ოქრო"`, `"პლატინა"`, `"ბრილიანტი"`, `"ოსტატი"`, `"გრანდმასტერი"`
+
+---
+
+## Priority 3: Admin-Only (Lower Priority)
+
+### 27. `src/components/admin/AdminRoute.tsx`
+- `"იტვირთება..."` / `"ხელახლა ცდა"` (Loading/Retry)
+
+### 28. `src/components/admin/analytics/UserDetailModal.tsx`
+- Day names: `["კვი", "ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ"]`
+
+### 29. `src/components/admin/IconPickerModal.tsx`
+- `"შეთავაზებული"` (Suggested)
+
+### 30. `src/components/admin/ReferralAnalyticsWidget.tsx`
+- `"გაგზავნილი"` / `"მიღებული"` (Sent/Received)
+
+### 31. `src/pages/admin/Reports.tsx`
+- Report type/status labels (spam, harassment, pending, resolved, etc.)
+
+---
+
+## Skipped (Intentional / Non-Display)
+
+- **`src/data/categories.ts`** -- Category names/descriptions (loaded from DB in production, fallback data only)
+- **`src/utils/roomNameGenerator.ts`** -- Themed Georgian room names (intentionally Georgian)
+- **`src/utils/transliteration.ts`** -- Bilingual search utility (functional, not display)
+- **`src/components/social/FeedPost.tsx`** `subjectCoverImages` keys -- Used as lookup keys matching DB data
+- **`src/pages/AllButtons.tsx`** -- Dev/demo page only
+- **`src/pages/SampleDemoTV.tsx`** -- Demo page only
+- **True/False detection** (`"მართალია"/"მცდარია"`) -- These are matching against DB question data, not display strings. Should keep both KA and EN checks.
+
+---
+
+## Technical Approach
 
 For each file:
-1. Identify all hardcoded Georgian strings
-2. Create appropriate keys in `ka.ts` (if not already present)
-3. Add corresponding English translations in `en.ts`
-4. Replace the hardcoded string with `t("section.keyName")`
+1. Add new translation keys to `en.ts` and `ka.ts`
+2. Import and use `useLanguage()` hook (or standalone `t()` for non-React contexts)
+3. Replace hardcoded strings with `t("key")` calls
+4. For fallback strings like `|| "ზოგადი"`, change to `|| t("common.general")`
 
----
+Estimated: ~50 new translation keys across `en.ts` and `ka.ts`.
 
-### Phase 2: Complete the Missing Locale Files
+I recommend implementing in 2 batches:
+- **Batch A**: Priority 1 items (20 component files) -- all user-facing
+- **Batch B**: Priority 2 items (hooks + data) -- functional strings
 
-Once all strings flow through `t()`, complete the translations for the 5 remaining languages:
-
-**Current state of each locale file:**
-- `ka.ts` -- 3,389 lines, complete (source of truth)
-- `en.ts` -- 3,358 lines, complete
-- `es.ts` -- 524 lines, complete (has full `extra` section)
-- `fr.ts` -- 121 lines, missing: `extra`, `errors`, `shop`, `guestModal`, `authModal`, `proModal`, `completedLevel`, `powerUpDetail`, `guestJoin`, `controllerWaiting`, `gameInvite`, `categoryWheel`, `playLimit`, `notificationsPanel`
-- `de.ts` -- 29 lines, same gaps as FR
-- `it.ts` -- 39 lines, same gaps as FR
-- `pt.ts` -- 39 lines, same gaps as FR
-
-**What needs translating per language (FR, DE, IT, PT):**
-- The `extra` section (~200 keys) -- the biggest gap
-- `guestModal`, `authModal`, `proModal` sections
-- `completedLevel`, `powerUpDetail`, `guestJoin` sections
-- `controllerWaiting`, `gameInvite`, `categoryWheel` sections
-- `playLimit`, `notificationsPanel` sections
-- Any new keys added during Phase 1
-
-**Approach:** Each locale file already uses `...en` spread for missing sections, so the app won't break -- English text shows as fallback. The translation work fills in native-language values progressively.
-
----
-
-### Execution Plan
-
-This is a large task. I recommend tackling it in batches:
-
-**Batch 1:** Auth flows + Game creation components (13 files) -- these are the most user-facing
-**Batch 2:** Room/Team + Profile/Settings (11 files)
-**Batch 3:** Map, Leaderboard, and remaining components (23+ files)
-**Batch 4:** Complete FR locale file (biggest gap after EN/ES)
-**Batch 5:** Complete DE, IT, PT locale files
-
-Each batch adds the new keys to both `ka.ts` and `en.ts`, replaces hardcoded strings with `t()` calls, and the other locale files automatically fall back to English until their translations are filled in.
-
-### Why This Works
-- **No more hunting:** Once Phase 1 is done, every user-visible string goes through `t()`. Adding a new language = adding one file.
-- **Graceful fallback:** The `...en` spread pattern means untranslated keys show in English (not Georgian) for non-KA users.
-- **Incremental:** Each batch is independently deployable. Users see English fallback for not-yet-translated sections.
-
-### Would you like to start with Batch 1 (Auth + Game creation)?
+Admin files (Priority 3) can be deferred since they're not user-facing.
 
