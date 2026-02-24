@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Trophy, Play, Crown, Sparkles } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { useTVPoll } from '@/hooks/useTVPoll';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { toast } from 'sonner';
 
@@ -21,6 +22,7 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
   avatarUrl,
   onGameStart,
 }) => {
+  const { t } = useLanguage();
   const { suggestions, finalizePollAndStartGame } = useTVPoll({
     sessionId,
     userId,

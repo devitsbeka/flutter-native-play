@@ -225,6 +225,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
   showVotes,
   hasVotes,
 }) => {
+  const { t } = useLanguage();
   const [previousVotes, setPreviousVotes] = useState(suggestion.vote_count);
   const [isAnimating, setIsAnimating] = useState(false);
 

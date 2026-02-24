@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { useCategories } from "@/hooks/useCategories";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 
 interface CloudCategoryFlightProps {
@@ -23,6 +24,7 @@ const BUBBLE_POSITIONS = [
 
 export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategoryFlightProps) {
   const { categories } = useCategories();
+  const { t } = useLanguage();
   const [displayCategories, setDisplayCategories] = useState<typeof categories>([]);
   const [winnerIndex, setWinnerIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("floating");
@@ -107,7 +109,7 @@ export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategor
         }}
         transition={{ duration: 0.4 }}
       >
-        კატეგორიის არჩევა...
+        {t("extra.choosingCategory")}
       </motion.h1>
 
       {/* Bubbles container - centered */}

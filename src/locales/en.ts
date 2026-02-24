@@ -3213,6 +3213,46 @@ export const en: KaTranslations = {
     // QRCodeDisplay
     tvJoinTheGame: "Join the Game",
     tvScanQRCode: "Scan QR code with your phone",
+    // Phase 1 - answer labels
+    answerLabelA: "A",
+    answerLabelB: "B",
+    answerLabelC: "C",
+    answerLabelD: "D",
+    // Phase 1 - ControllerPollResultsGuest
+    tvPollResults: "Voting Results",
+    tvVoteUnit: "vote",
+    tvWaitingHostToStart: "Waiting for host to start the game...",
+    // Phase 1 - ControllerDirectSelection
+    tvPlayLabel: "Play",
+    // Phase 2 - Game screens
+    answerSubmitted: "Answer Submitted!",
+    watchTV: "Watch the TV...",
+    // ComingSoonModal
+    comingSoonCategoryLevel: "{category} - Level {level} questions will be added soon.",
+    comingSoonGeneric: "Our team is working on creating new interesting questions.",
+    // GameLoseModal
+    gameLoseTitle: "You Lost",
+    youLabel: "You",
+    dontGiveUp: "Don't give up! You'll definitely win next time",
+    consolationCoins: "Consolation coins",
+    goToHomePage: "Go to Home",
+    // VSScreen
+    mixedCategory: "Mixed",
+    winReward: "Win",
+    // CloudCategoryFlight
+    choosingCategory: "Choosing category...",
+    // Exhaustion indicator
+    exhaustionRestarted: "Restarted",
+    exhaustionRestartedFull: "Questions restarted - some may repeat",
+    exhaustionMixedCategories: "Mixed categories",
+    exhaustionMixedCategoriesFull: "Some questions are from other categories",
+    exhaustionAllSeen: "All seen",
+    exhaustionAllSeenFull: "All questions seen - new ones coming soon!",
+    exhaustionPercentLeft: "{percent}% left",
+    exhaustionPercentSeenFull: "Almost all questions seen ({percent}%)",
+    exhaustionPercentSeen: "Already {percent}% questions seen",
+    exhaustionNewQuestions: "New questions",
+    exhaustionQuestionsSeen: "{seen} / {total} questions seen",
   },
 };
 

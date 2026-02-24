@@ -46,7 +46,7 @@ export const ControllerQuestion: React.FC = () => {
             </p>
             <div className="flex items-center justify-center gap-2 mt-2">
               <Clock className="w-4 h-4 text-purple-300" />
-              <span className="text-purple-300">{timeRemaining}წ</span>
+              <span className="text-purple-300">{timeRemaining}{t("extra.secondsShort")}</span>
             </div>
           </div>
           <p className="text-purple-300 text-sm">{t("extra.tvWatchOnTV")}</p>
@@ -126,8 +126,8 @@ export const ControllerQuestion: React.FC = () => {
       {myAnswer ? (
         <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex-1 flex flex-col items-center justify-center">
           <Check className="w-16 h-16 text-green-400 mb-4" />
-          <p className="text-white text-xl font-bold">Answer Submitted!</p>
-          <p className="text-purple-300">Watch the TV...</p>
+          <p className="text-white text-xl font-bold">{t("extra.answerSubmitted")}</p>
+          <p className="text-purple-300">{t("extra.watchTV")}</p>
         </motion.div>
       ) : isTrueFalseQuestion ? (
         /* True/False Layout - side by side cards */

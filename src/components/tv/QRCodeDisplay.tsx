@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { QrCode } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface QRCodeDisplayProps {
   url: string;
@@ -13,9 +14,12 @@ interface QRCodeDisplayProps {
 export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   url,
   size = 200,
-  title = 'შემოუერთდი თამაშს',
-  subtitle = 'დაასკანერე QR კოდი შენი ტელეფონით',
+  title: titleProp,
+  subtitle: subtitleProp,
 }) => {
+  const { t } = useLanguage();
+  const title = titleProp ?? t("extra.tvJoinTheGame");
+  const subtitle = subtitleProp ?? t("extra.tvScanQRCode");
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
