@@ -1,47 +1,69 @@
 
 
-## Localize Room Name Generation by Language
+## Fix Room Lobby Glitches and Translate Category Names
 
-### Problem
-The room name generator (both the edge function and the client-side fallback) only contains Georgian names. When a user switches to English (or any other language), room titles still appear in Georgian.
+### Issue 1: Visual Line Glitches While Scrolling
 
-### Solution
-Add multilingual room name sets to both the edge function and the client-side fallback, and pass the user's current language when requesting a name.
+The thin lines visible between glass-card sections (category picker, TV mode, scoreboard) are caused by semi-transparent `border border-white/20` on elements with `backdrop-blur`. During scrolling on mobile, sub-pixel rendering creates visible seams.
 
-### Changes
+**Fix in `RoomLobbyV2.tsx`:**
+- On the glass card containers (CategoryPickerSection wrapper, TV Mode toggle, RoomScoreboard), replace `border border-white/20` with `border border-white/[0.12]` or use `shadow` instead
+- This affects lines ~68, ~116, ~909 and related components
 
-**1. Edge Function: `supabase/functions/generate-room-name/index.ts`**
+**Fix in `CategoryPickerSection.tsx` (line 116):**
+- Change `border border-white/20` to `border border-white/[0.12]`
 
-- Accept an optional `language` parameter from the request body (default: `ka`)
-- Add English name equivalents for all 15 themes (using the comments already in the code as a guide), plus short names for FR, DE, ES, IT, PT
-- `generateThemedRoomName()` will take a `language` parameter and pick names from the matching language set
-- Georgian names remain the default; for non-KA languages, use the translated name sets
-- The `MAX_NAME_LENGTH` check will be relaxed slightly for Latin-script languages since they use fewer characters per word
+**Fix in `RoomScoreboard.tsx` (line 68):**
+- Change `border border-white/20` to `border border-white/[0.12]`
 
-The translated names per theme (8 names each, 15 themes) for each language:
-- **KA**: Keep existing Georgian names as-is
-- **EN**: "Golden Cup", "Stars Battle", "Space Traveler", etc. (from the existing comments)
-- **FR/DE/ES/IT/PT**: Short, catchy translated equivalents
+Alternatively, a cleaner approach: add `will-change-transform` to the scrollable container in `RoomLobbyV2.tsx` (line 779) to promote compositing and eliminate sub-pixel rendering artifacts entirely.
 
-**2. Client-Side Fallback: `src/utils/roomNameGenerator.ts`**
+---
 
-- Add a `THEMED_ROOM_NAMES_BY_LANG` structure with at minimum EN translations alongside the existing KA names
-- Update `generateRoomName()` to accept an optional `language` parameter
-- Default to KA if no language specified
+### Issue 2: Category Names Still in Georgian
 
-**3. Room Creation UI: `src/components/team/CreateRoomPage.tsx`**
+The `CategorySelectorModal` fetches categories directly from the `categories` table without applying translations from `category_translations`. The `useCategories` hook already handles this correctly, but this modal has its own separate query.
 
-- Import `useLanguage` hook
-- Pass the current `language` to the edge function call: `supabase.functions.invoke('generate-room-name', { body: { language } })`
-- Update the Georgian-only fallback string `"სახალისო გუნდი"` to use a language-appropriate default (e.g., "Fun Squad" for EN)
-- Update hardcoded Georgian error toast messages to use `t()` translations
+**Fix in `CategorySelectorModal.tsx`:**
+1. Read the current language from `useLanguage()`
+2. For non-Georgian languages, also fetch from `category_translations` table (same pattern as `useCategories` hook)
+3. Map translated names onto categories before rendering
+4. Include `language` in the `queryKey` so it refetches on language change
+5. Also filter out language-specific categories for non-Georgian users (matching `useCategories` logic)
 
-**4. Room Creation Hook: `src/hooks/useGameRoom.ts`**
+**Translate the Mixed category name:**
+- Replace hardcoded `MIXED_CATEGORY.name = "სხვადასხვა"` with a dynamic value using `t("extra.csmMixedLabel")` or similar
+- Add translation keys: KA = "სხვადასხვა", EN = "Mixed"
 
-- Pass the current language when calling `generateRoomName()` from the fallback path
+---
 
-### Technical Notes
-- The edge function currently parses `{ iconSlug }` from the body; we'll extend this to also accept `{ language }`
-- For languages without a full translation set, English will be the fallback (not Georgian), since Latin-script users would find English more readable
-- Room name max length of 18 chars works well for Georgian but may need to be 22 for longer Latin-script names like "Celebration Square"
+### Issue 3: Hardcoded Georgian in CategoryPickerSection
+
+**Fix in `CategoryPickerSection.tsx` (lines 222-223):**
+- Replace `"შემთხვევითი"` with `t("extra.cpRandomTitle")` (already exists as a key)
+- Replace `"ტრივია"` with `"Trivia"` or a `t()` key
+
+---
+
+### Technical Details
+
+**Files to modify:**
+
+1. **`src/components/team/CategorySelectorModal.tsx`**
+   - Add language-aware category fetching with `category_translations` join
+   - Use `t()` for Mixed category name instead of hardcoded Georgian
+   - Filter language-specific categories for non-KA users
+   - Add `language` to query key
+
+2. **`src/components/team/CategoryPickerSection.tsx`**
+   - Replace hardcoded Georgian strings on lines 222-223 with `t()` calls
+
+3. **`src/components/team/RoomLobbyV2.tsx`**
+   - Add `will-change-transform` to the scrollable content container to fix sub-pixel border rendering glitches
+
+4. **`src/components/team/RoomScoreboard.tsx`**
+   - Reduce border opacity from `border-white/20` to `border-white/[0.12]` to minimize visible seams
+
+5. **`src/locales/ka.ts`** and **`src/locales/en.ts`**
+   - Add `csmMixedLabel` key (KA: "სხვადასხვა", EN: "Mixed")
 
