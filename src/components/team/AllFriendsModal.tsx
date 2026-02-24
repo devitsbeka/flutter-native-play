@@ -49,14 +49,14 @@ export function AllFriendsModal({
   const handleAccept = async (friendshipId: string) => {
     const success = await acceptFriendRequest(friendshipId);
     if (success) {
-      toast.success("მეგობრის მოთხოვნა მიღებულია!");
+      toast.success(t("extra.friendRequestAcceptedToast"));
     }
   };
 
   const handleDecline = async (friendshipId: string) => {
     const success = await declineFriendRequest(friendshipId);
     if (success) {
-      toast.success("მოთხოვნა უარყოფილია");
+      toast.success(t("extra.requestDeclinedToast"));
     }
   };
 
@@ -64,7 +64,7 @@ export function AllFriendsModal({
     if (!friendToRemove) return;
     const success = await removeFriend(friendToRemove.id);
     if (success) {
-      toast.success("მეგობარი წაიშალა");
+      toast.success(t("extra.friendRemovedToast"));
     }
     setFriendToRemove(null);
   };
@@ -103,7 +103,7 @@ export function AllFriendsModal({
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                     <Users className="w-4 h-4 text-primary" />
                   </div>
-                  <h2 className="text-lg font-bold text-foreground">მეგობრები</h2>
+                  <h2 className="text-lg font-bold text-foreground">{t("extra.friendsModalTitle")}</h2>
                 </div>
               </div>
               <button
@@ -114,7 +114,7 @@ export function AllFriendsModal({
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                დამატება
+                {t("extra.addBtnLabel")}
               </button>
             </div>
 
@@ -129,8 +129,8 @@ export function AllFriendsModal({
                   {/* Pending Requests */}
                   {pendingRequests.length > 0 && (
                     <div className="space-y-3">
-                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                        მოთხოვნები ({pendingRequests.length})
+                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                        {t("extra.requestsHeader")} ({pendingRequests.length})
                       </h3>
                       <div className="space-y-2">
                         <AnimatePresence>
@@ -153,7 +153,7 @@ export function AllFriendsModal({
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-foreground truncate">{request.nickname}</p>
-                                <p className="text-xs text-muted-foreground">გსურს მეგობრობა</p>
+                                <p className="text-xs text-muted-foreground">{t("extra.wantsFriendship")}</p>
                               </div>
                               <div className="flex items-center gap-2">
                                 <button
@@ -179,7 +179,7 @@ export function AllFriendsModal({
                   {/* Friends List */}
                   <div className="space-y-3">
                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                      მეგობრები ({sortedFriends.length})
+                      {t("extra.friendsModalTitle")} ({sortedFriends.length})
                     </h3>
                     
                     {sortedFriends.length === 0 ? (
@@ -187,7 +187,7 @@ export function AllFriendsModal({
                         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
                           <UserPlus className="w-8 h-8 text-muted-foreground" />
                         </div>
-                        <p className="text-muted-foreground mb-4">ჯერ არ გყავს მეგობრები</p>
+                        <p className="text-muted-foreground mb-4">{t("extra.noFriendsYet")}</p>
                         <button
                           onClick={() => {
                             onClose();
@@ -195,7 +195,7 @@ export function AllFriendsModal({
                           }}
                           className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
                         >
-                          მეგობრის დამატება
+                          {t("extra.addFriendBtnLabel")}
                         </button>
                       </div>
                     ) : (
@@ -235,7 +235,7 @@ export function AllFriendsModal({
                                 )}
                               </div>
                               <p className="text-xs text-muted-foreground">
-                                {friend.isOnline ? "ონლაინ" : "ოფლაინ"}
+                                {friend.isOnline ? t("extra.onlineStatus") : t("extra.offlineStatus")}
                               </p>
                             </div>
 
@@ -269,7 +269,7 @@ export function AllFriendsModal({
                                     className="text-destructive focus:text-destructive"
                                   >
                                     <Trash2 className="w-4 h-4 mr-2" />
-                                    წაშლა
+                                    {t("extra.removeFriendMenuItem")}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -290,15 +290,15 @@ export function AllFriendsModal({
       <AlertDialog open={!!friendToRemove} onOpenChange={(open) => !open && setFriendToRemove(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>მეგობრის წაშლა</AlertDialogTitle>
+            <AlertDialogTitle>{t("extra.removeFriendModalTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              დარწმუნებული ხარ რომ გსურს {friendToRemove?.nickname}-ის წაშლა მეგობრებიდან?
+              {t("extra.removeFriendModalDesc", { name: friendToRemove?.nickname || "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>გაუქმება</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleRemoveFriend} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              წაშლა
+              {t("extra.removeFriendMenuItem")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

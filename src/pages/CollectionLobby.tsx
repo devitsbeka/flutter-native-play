@@ -51,7 +51,7 @@ export default function CollectionLobby() {
     return rounds.map((r) => ({
       id: r.id,
       username: creator?.nickname || "user",
-      displayName: creator?.nickname || "მომხმარებელი",
+      displayName: creator?.nickname || t("extra.userFallback"),
       avatarUrl: creator?.avatar_url || "",
       verified: false,
       createdAt: r.created_at || new Date().toISOString(),
@@ -67,7 +67,6 @@ export default function CollectionLobby() {
       playsCount: r.plays_count || 0,
       savesCount: r.saves_count || 0,
       commentsCount: 0,
-      // Convert DB shape (question_text) to UI shape (question)
       questions: ((r.questions as any[]) || []).map((q: any) => ({
         question: q.question_text || q.question || "",
         correct_answer: q.correct_answer || "",
@@ -77,7 +76,7 @@ export default function CollectionLobby() {
       isPublic: r.is_public,
       roundNumber: r.round_number || undefined,
     }));
-  }, [collection, rounds, creator?.nickname, creator?.avatar_url]);
+  }, [collection, rounds, creator?.nickname, creator?.avatar_url, t]);
 
   const totals = useMemo(() => {
     const totalQuestions = posts.reduce((sum, p) => sum + (p.questionCount || 0), 0);
@@ -107,9 +106,9 @@ export default function CollectionLobby() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground">კოლექცია ვერ მოიძებნა</p>
+          <p className="text-muted-foreground">{t("extra.collectionNotFound")}</p>
           <button onClick={handleBack} className="text-primary mt-2 underline">
-            უკან დაბრუნება
+            {t("extra.goBackLabel")}
           </button>
         </div>
       </div>
@@ -141,7 +140,6 @@ export default function CollectionLobby() {
           </>
         )}
 
-        {/* Back */}
         <button
           onClick={handleBack}
           className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
@@ -149,7 +147,6 @@ export default function CollectionLobby() {
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
 
-        {/* Header Right Side - Edit + Avatar */}
         <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
           {isOwner && (
             <button
@@ -171,7 +168,6 @@ export default function CollectionLobby() {
           )}
         </div>
 
-        {/* Title */}
         <div className="absolute inset-0 flex items-center justify-center p-4">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -186,7 +182,6 @@ export default function CollectionLobby() {
 
       {/* Content */}
       <div className="px-4 space-y-4 -mt-6 relative z-10">
-        {/* Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -197,26 +192,25 @@ export default function CollectionLobby() {
             <p className="text-lg font-bold text-foreground">{totals.totalQuestions}</p>
             <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
               <HelpCircle className="w-3.5 h-3.5" />
-              <span>კითხვა</span>
+              <span>{t("extra.questionsStatLabel")}</span>
             </div>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-foreground">{totals.totalPlays}</p>
             <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
               <Users className="w-3.5 h-3.5" />
-              <span>ნათამაშები</span>
+              <span>{t("extra.playsStatLabel")}</span>
             </div>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-foreground">{totals.totalLikes}</p>
             <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
               <Heart className="w-3.5 h-3.5" />
-              <span>მოწონება</span>
+              <span>{t("extra.likesStatLabel")}</span>
             </div>
           </div>
         </motion.div>
 
-        {/* Rounds */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -225,7 +219,7 @@ export default function CollectionLobby() {
         >
           <div className="flex items-center gap-2 p-4 border-b border-border">
             <Layers className="w-5 h-5 text-primary" />
-            <h2 className="font-bold text-foreground">რაუნდები</h2>
+            <h2 className="font-bold text-foreground">{t("extra.roundsTitle")}</h2>
             <span className="text-xs text-muted-foreground ml-auto">{posts.length}</span>
           </div>
           <div className="divide-y divide-border">
@@ -246,7 +240,7 @@ export default function CollectionLobby() {
                   <p className="font-medium text-foreground text-sm truncate">
                     {idx + 1}. {p.title}
                   </p>
-                  <p className="text-xs text-muted-foreground">{p.questionCount} კითხვა</p>
+                  <p className="text-xs text-muted-foreground">{t("extra.nQuestionsLabel", { count: p.questionCount })}</p>
                 </div>
                 {isOwner && (
                   <Pencil className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -282,7 +276,6 @@ export default function CollectionLobby() {
         </Suspense>
       )}
 
-      {/* Edit Collection Modal */}
       {isEditCollectionOpen && collection && (
         <Suspense fallback={null}>
           <EditQuizModal
@@ -302,7 +295,6 @@ export default function CollectionLobby() {
         </Suspense>
       )}
 
-      {/* Edit Round Modal */}
       {editingRoundIndex !== null && rounds[editingRoundIndex] && (
         <Suspense fallback={null}>
           <EditRoundModal

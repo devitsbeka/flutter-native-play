@@ -55,9 +55,9 @@ export function usePlayLimit() {
     const hoursLeft = Math.floor(msRemaining / (60 * 60 * 1000));
     const minutesLeft = Math.floor((msRemaining % (60 * 60 * 1000)) / (60 * 1000));
     if (hoursLeft > 0) {
-      timeUntilNextPlay = `${hoursLeft}სთ ${minutesLeft}წთ`;
+      timeUntilNextPlay = `${hoursLeft}h ${minutesLeft}m`;
     } else {
-      timeUntilNextPlay = `${minutesLeft}წთ`;
+      timeUntilNextPlay = `${minutesLeft}m`;
     }
   }
 

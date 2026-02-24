@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Swords } from "lucide-react";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import spinTheBottle from "@/assets/spin-the-bottle.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
 import iconCollections from "@/assets/icon-collections.png";
@@ -21,56 +22,6 @@ interface ChallengeTypeModalProps {
   } | null;
 }
 
-// Top section - full-width horizontal cards (Quick Play options)
-const topOptions = [
-  {
-    id: "random",
-    imageIcon: spinTheBottle,
-    title: "შემთხვევითი კატეგორია",
-    subtitle: "სწრაფი სტარტი",
-    glowColor: "rgba(245, 158, 11, 0.4)",
-  },
-  {
-    id: "library",
-    imageIcon: secretBookcase,
-    title: "აირჩიე ბიბლიოთეკიდან",
-    subtitle: "კატეგორიების არჩევა",
-    glowColor: "rgba(139, 92, 246, 0.4)",
-  },
-];
-
-// Bottom 2x2 grid - Room creation flow
-const bottomOptions = [
-  {
-    id: "create-room",
-    imageIcon: danceFloor,
-    title: "ოთახი",
-    subtitle: "შექმენი სათამაშო ოთახი",
-    glowColor: "rgba(16, 185, 129, 0.4)",
-  },
-  {
-    id: "trivia",
-    imageIcon: triviaBuzzer,
-    title: "ტრივია",
-    subtitle: "1 რაუნდი",
-    glowColor: "rgba(139, 92, 246, 0.4)",
-  },
-  {
-    id: "collection",
-    imageIcon: iconCollections,
-    title: "კოლექცია",
-    subtitle: "რამდენიმე რაუნდი",
-    glowColor: "rgba(34, 211, 238, 0.4)",
-  },
-  {
-    id: "my-trivias",
-    imageIcon: iconGroupOfPeople,
-    title: "MyTrivia Party",
-    subtitle: "შენი კითხვები",
-    glowColor: "rgba(236, 72, 153, 0.4)",
-  },
-];
-
 export function ChallengeTypeModal({
   isOpen,
   onClose,
@@ -79,6 +30,55 @@ export function ChallengeTypeModal({
   targetUserProfile,
 }: ChallengeTypeModalProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  const topOptions = [
+    {
+      id: "random",
+      imageIcon: spinTheBottle,
+      title: t("extra.randomCategoryLabel"),
+      subtitle: t("extra.quickStartLabel"),
+      glowColor: "rgba(245, 158, 11, 0.4)",
+    },
+    {
+      id: "library",
+      imageIcon: secretBookcase,
+      title: t("extra.chooseFromLibraryLabel"),
+      subtitle: t("extra.chooseCategoriesLabel"),
+      glowColor: "rgba(139, 92, 246, 0.4)",
+    },
+  ];
+
+  const bottomOptions = [
+    {
+      id: "create-room",
+      imageIcon: danceFloor,
+      title: t("extra.roomLabel"),
+      subtitle: t("extra.createGameRoomLabel"),
+      glowColor: "rgba(16, 185, 129, 0.4)",
+    },
+    {
+      id: "trivia",
+      imageIcon: triviaBuzzer,
+      title: t("extra.triviaLabelShort"),
+      subtitle: t("extra.oneRoundLabel"),
+      glowColor: "rgba(139, 92, 246, 0.4)",
+    },
+    {
+      id: "collection",
+      imageIcon: iconCollections,
+      title: t("extra.multipleRoundsLabel"),
+      subtitle: t("extra.multipleRoundsLabel"),
+      glowColor: "rgba(34, 211, 238, 0.4)",
+    },
+    {
+      id: "my-trivias",
+      imageIcon: iconGroupOfPeople,
+      title: t("extra.myTriviaPartyLabel"),
+      subtitle: t("extra.yourQuestionsLabel"),
+      glowColor: "rgba(236, 72, 153, 0.4)",
+    },
+  ];
 
   const handleOptionSelect = (optionId: string) => {
     onClose();
@@ -132,7 +132,7 @@ export function ChallengeTypeModal({
             </button>
             <div className="flex items-center gap-2">
               <Swords className="w-5 h-5 text-white/80" />
-              <h2 className="text-xl font-bold text-white">გამოწვევა</h2>
+              <h2 className="text-xl font-bold text-white">{t("challenge.challenge")}</h2>
             </div>
           </div>
 
@@ -152,7 +152,7 @@ export function ChallengeTypeModal({
                     {targetUserProfile.nickname}
                   </p>
                   <p className="text-sm text-white/60">
-                    აირჩიე რას ითამაშებთ
+                    {t("extra.chooseGameTypeLabel")}
                   </p>
                 </div>
               </div>
@@ -176,7 +176,6 @@ export function ChallengeTypeModal({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {/* Glow effect */}
                   <div 
                     className="absolute inset-0 opacity-20 pointer-events-none" 
                     style={{
@@ -214,7 +213,6 @@ export function ChallengeTypeModal({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {/* Glow effect */}
                   <div 
                     className="absolute inset-0 opacity-30 pointer-events-none" 
                     style={{

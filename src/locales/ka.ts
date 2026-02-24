@@ -3963,6 +3963,8 @@ export const ka = {
     // FriendChatSheet
     chatStartConversation: "დაიწყეთ საუბარი!",
     chatMessagePlaceholder: "დაწერეთ შეტყობინება...",
+    chatTodayLabel: "დღეს",
+    chatYesterdayLabel: "გუშინ",
   },
 };
 

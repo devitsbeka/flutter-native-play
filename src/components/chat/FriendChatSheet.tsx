@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Send, ChevronLeft, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
-import { ka } from "date-fns/locale";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ChatMessage {
   id: string;
@@ -33,6 +33,7 @@ interface FriendChatSheetProps {
 
 export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: FriendChatSheetProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -145,7 +146,7 @@ export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: Fr
     if (isToday) {
       return format(date, "HH:mm");
     }
-    return format(date, "d MMM, HH:mm", { locale: ka });
+    return format(date, "d MMM, HH:mm");
   };
 
   // Group messages by date
@@ -165,11 +166,11 @@ export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: Fr
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (date.toDateString() === today.toDateString()) {
-      return "დღეს";
+      return t("extra.chatTodayLabel");
     } else if (date.toDateString() === yesterday.toDateString()) {
-      return "გუშინ";
+      return t("extra.chatYesterdayLabel");
     } else {
-      return format(date, "d MMMM", { locale: ka });
+      return format(date, "d MMMM");
     }
   };
 
@@ -235,7 +236,7 @@ export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: Fr
                   transition={{ delay: 0.2 }}
                   className="text-muted-foreground text-sm"
                 >
-                  დაიწყეთ საუბარი!
+                  {t("extra.chatStartConversation")}
                 </motion.p>
               </motion.div>
             ) : (
@@ -320,7 +321,7 @@ export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: Fr
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="დაწერეთ შეტყობინება..."
+                placeholder={t("extra.chatMessagePlaceholder")}
                 className="flex-1"
                 disabled={sending}
               />

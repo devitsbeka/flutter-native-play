@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Category {
   id: string;
@@ -19,6 +20,7 @@ interface LibraryCategoryPickerProps {
 
 export function LibraryCategoryPicker({ onSelect }: LibraryCategoryPickerProps) {
   const [search, setSearch] = useState("");
+  const { t } = useLanguage();
 
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ["categories-for-challenge"],
@@ -56,7 +58,7 @@ export function LibraryCategoryPicker({ onSelect }: LibraryCategoryPickerProps) 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="კატეგორიის ძიება..."
+          placeholder={t("extra.searchCategoryPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
@@ -102,7 +104,7 @@ export function LibraryCategoryPicker({ onSelect }: LibraryCategoryPickerProps) 
 
         {filteredCategories.length === 0 && (
           <div className="col-span-3 py-8 text-center text-muted-foreground">
-            <p>კატეგორია ვერ მოიძებნა</p>
+            <p>{t("extra.categoryNotFoundMsg")}</p>
           </div>
         )}
       </div>

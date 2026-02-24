@@ -3933,6 +3933,8 @@ export const en: KaTranslations = {
     // FriendChatSheet
     chatStartConversation: "Start a conversation!",
     chatMessagePlaceholder: "Write a message...",
+    chatTodayLabel: "Today",
+    chatYesterdayLabel: "Yesterday",
   },
 };
 
