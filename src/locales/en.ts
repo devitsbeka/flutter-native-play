@@ -2743,6 +2743,7 @@ export const en: KaTranslations = {
     csmMixedQuestions: "Mixed questions",
     csmCategoryNotFound: "Category not found",
     csmLevels: "{count} levels",
+    csmMixedLabel: "Mixed",
     // Trivia Lobby
     leaderboardAutoInfo: "Score is automatically reflected on the leaderboard.",
     // Time ago (short)

@@ -2742,6 +2742,7 @@ export const ka = {
     csmMixedQuestions: "შერეული კითხვები",
     csmCategoryNotFound: "კატეგორია ვერ მოიძებნა",
     csmLevels: "{count} დონე",
+    csmMixedLabel: "სხვადასხვა",
     // Trivia Lobby
     leaderboardAutoInfo: "ქულა ავტომატურად აისახება ლიდერბორდზე.",
     // Time ago (short)

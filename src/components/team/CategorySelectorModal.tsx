@@ -11,11 +11,10 @@ import { GameModal } from "@/components/ui/game-modal";
 import { buildBilingualSearchTerms } from "@/utils/transliteration";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
-// Mixed category constants
-const MIXED_CATEGORY = {
+// Mixed category constants (name is set dynamically via t())
+const MIXED_CATEGORY_BASE = {
   id: "__mixed__",
   category_id: "__mixed__",
-  name: "სხვადასხვა",
   icon: "🎁",
   color: "#8B5CF6",
   icon_slug: "mystery-box",
@@ -45,20 +44,44 @@ export function CategorySelectorModal({
   onSelect,
   selectedCategoryId,
 }: CategorySelectorModalProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: categories = [], isLoading } = useQuery({
-    queryKey: ["categories-for-room"],
+    queryKey: ["categories-for-room", language],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
-        .select("id, category_id, name, icon, color, image_url, total_levels")
+        .select("id, category_id, name, icon, color, image_url, total_levels, is_language_specific, language")
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
 
       if (error) throw error;
-      return data as Category[];
+
+      // Filter language-specific categories
+      const filtered = (data || []).filter((cat: any) => {
+        if (!cat.is_language_specific) return true;
+        return cat.language === language;
+      });
+
+      // Fetch translations for non-Georgian languages
+      if (language !== "ka") {
+        const { data: translations } = await supabase
+          .from("category_translations")
+          .select("category_id, name")
+          .eq("language", language);
+
+        if (translations && translations.length > 0) {
+          const transMap: Record<string, string> = {};
+          translations.forEach((t: any) => { transMap[t.category_id] = t.name; });
+          return filtered.map((cat: any) => ({
+            ...cat,
+            name: transMap[cat.id] || cat.name,
+          })) as Category[];
+        }
+      }
+
+      return filtered as Category[];
     },
     enabled: open,
   });
@@ -86,12 +109,14 @@ export function CategorySelectorModal({
   };
 
   // Check if mixed category should show in search results
+  const mixedCategoryName = t("extra.csmMixedLabel");
+  
   const showMixedCategory = useMemo(() => {
     if (!searchQuery.trim()) return true;
     const searchTerms = buildBilingualSearchTerms(searchQuery);
-    const mixedName = MIXED_CATEGORY.name.toLowerCase();
+    const mixedName = mixedCategoryName.toLowerCase();
     return searchTerms.some(term => mixedName.includes(term));
-  }, [searchQuery]);
+  }, [searchQuery, mixedCategoryName]);
 
   return (
     <GameModal
@@ -138,15 +163,15 @@ export function CategorySelectorModal({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSelect({
-                  id: MIXED_CATEGORY.id,
-                  category_id: MIXED_CATEGORY.category_id,
-                  name: MIXED_CATEGORY.name,
-                  icon: MIXED_CATEGORY.icon,
-                  color: MIXED_CATEGORY.color,
-                  total_levels: MIXED_CATEGORY.total_levels,
+                  id: MIXED_CATEGORY_BASE.id,
+                  category_id: MIXED_CATEGORY_BASE.category_id,
+                  name: mixedCategoryName,
+                  icon: MIXED_CATEGORY_BASE.icon,
+                  color: MIXED_CATEGORY_BASE.color,
+                  total_levels: MIXED_CATEGORY_BASE.total_levels,
                 })}
                 className={`relative aspect-[4/3] rounded-2xl overflow-hidden transition-all ${
-                  selectedCategoryId === MIXED_CATEGORY.id
+                  selectedCategoryId === MIXED_CATEGORY_BASE.id
                     ? "ring-2 ring-primary ring-offset-2"
                     : ""
                 }`}
@@ -173,7 +198,7 @@ export function CategorySelectorModal({
                 {/* Content */}
                 <div className="absolute inset-0 p-3 flex flex-col justify-end">
                   <span className="text-sm font-semibold text-white truncate drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
-                    {MIXED_CATEGORY.name}
+                    {mixedCategoryName}
                   </span>
                   <p className="text-xs text-white/90 mt-0.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                     {t("extra.csmMixedQuestions")}
@@ -181,7 +206,7 @@ export function CategorySelectorModal({
                 </div>
 
                 {/* Selected check */}
-                {selectedCategoryId === MIXED_CATEGORY.id && (
+                {selectedCategoryId === MIXED_CATEGORY_BASE.id && (
                   <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white flex items-center justify-center">
                     <Check className="w-4 h-4 text-purple-600" />
                   </div>
