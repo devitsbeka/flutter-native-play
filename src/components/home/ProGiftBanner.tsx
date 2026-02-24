@@ -160,7 +160,7 @@ export function ProGiftModal({ open, onOpenChange, onClaimed, onDismiss }: ProGi
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            გილოცავთ! თქვენ გაქვთ PRO 10 დღის განმავლობაში — სრულიად უფასოდ.
+            {t("extra.proGiftDesc")}
           </motion.p>
 
           {/* CTA Button */}
@@ -179,7 +179,7 @@ export function ProGiftModal({ open, onOpenChange, onClaimed, onDismiss }: ProGi
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            {claiming ? "..." : "მიიღე საჩუქარი 🎁"}
+            {claiming ? "..." : t("extra.claimGiftEmoji")}
           </motion.button>
         </div>
       </DialogContent>

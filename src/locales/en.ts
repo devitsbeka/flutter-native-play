@@ -3604,6 +3604,23 @@ export const en: KaTranslations = {
     // Hooks
     roomCreateFailed2: "Room creation failed",
     aiAvatarAnimating: "AI avatar created! Animation starting...",
+    // GuestWelcomePanel
+    orLabel: "or",
+    playAsGuestShort: "play as a guest",
+    // FriendJoinedModal
+    congratulationsTitle: "Congratulations",
+    congratulationsEmoji: "🎉 Congratulations!",
+    invitedByFriend: "{name} invited you — get 10 days of PRO as a gift!",
+    registeredWithInvite: "Registered with invite — get 10 days of PRO as a gift!",
+    friendJoinedViaLink: "Your friend joined MyTrivia LIVE via your link! Get 10 days of PRO.",
+    tenDayProBadge: "10-day PRO ✓",
+    // InviteFriendsModal
+    inviteShareText: "Join MyTrivia LIVE and get 10 days of PRO for free!",
+    // ProGiftBanner
+    proGiftDesc: "Congratulations! You have PRO for 10 days — completely free.",
+    claimGiftEmoji: "Claim Gift 🎁",
+    // GemShopModal
+    notEnoughGems: "You don't have enough gems!",
   },
 };
 
