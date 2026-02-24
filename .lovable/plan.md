@@ -1,44 +1,35 @@
 
 
-## Fix: Shorten Questions/Answers in the Correct Language
+## Add Language Filter to Icon Assignment Page
 
-### Problem
-Both `shorten-questions` and `shorten-answers` edge functions have their AI prompts hardcoded entirely in Georgian. When English questions are processed, the AI translates them to Georgian instead of shortening them in English.
+### What it does
+Adds a language dropdown filter (English, Georgian, etc.) to the icon assignment page so you can work with questions from one language at a time when assigning icons.
 
-From the screenshot: "What was the costliest war in human history adjusted for inflation?" gets shortened to a Georgian sentence instead of a shorter English version.
+### Changes
 
-### Root Cause
-- `shorten-questions/index.ts` line 229: Prompt says "შენ ხარ ქართული ქვიზის კითხვების შემოკლების ექსპერტი" (You are a Georgian quiz shortening expert)
-- `shorten-answers/index.ts` line 143: Same issue -- Georgian-only prompt
-- Neither function queries the `language` column from the database
-- The database has ~7,300 English questions and ~9,000 Georgian questions
+**1. Hook: `src/hooks/useAdminIconAssignment.ts`**
+- Add `languageFilter` state (default: `null` = all languages)
+- Add `language` to the SELECT query so we can display it
+- Apply `.eq('language', languageFilter)` when a language is selected
+- Include `languageFilter` in the filter change effect and pass it through `fetchQuestions`
+- Add `language` field to `QuestionForAssignment` interface
+- Apply language filter to stats counting as well
+- Return `languageFilter` and `setLanguageFilter` from the hook
 
-### Solution
-Make both functions language-aware:
-
-1. **Add `language` to the SELECT query** in both functions so we know each question's language
-2. **Create language-specific prompts** -- Georgian prompt for `ka` questions, English prompt for `en` (and other languages)
-3. **Update the validation** in `shorten-questions` -- the `incompleteEndings` check (line 77) currently only has Georgian words; add English equivalents for non-Georgian questions
+**2. Page UI: `src/pages/admin/IconAssignment.tsx`**
+- Destructure `languageFilter` and `setLanguageFilter` from the hook
+- Add a language Select dropdown next to the category filter (around line 782), with options:
+  - All Languages (default)
+  - English (en)
+  - Georgian (ka)
+  - French (fr)
+  - German (de)
+  - Spanish (es)
+  - Italian (it)
+  - Portuguese (pt)
+- Show a small language badge on each question row so it's clear which language each question is in
 
 ### Technical Details
 
-**File: `supabase/functions/shorten-questions/index.ts`**
-
-- Line 145: Add `language` to the SELECT: `"id, question_text, correct_answer, incorrect_answers, category_id, language"`
-- Lines 76-85: Make `incompleteEndings` validation language-aware (Georgian endings for `ka`, English endings like "and", "but", "or", "the", "a" for `en`)
-- Lines 229-260: Replace the single Georgian prompt with a function that returns the appropriate prompt based on `question.language`:
-  - For `ka`: Keep existing Georgian prompt
-  - For `en`/other: English prompt with equivalent rules (e.g., "You are a quiz question shortening expert. Shorten this question to max 65 characters while preserving meaning...")
-
-**File: `supabase/functions/shorten-answers/index.ts`**
-
-- Line 51: Add `language` to the SELECT: `"id, question_text, correct_answer, incorrect_answers, category_id, language"`
-- Lines 143-174: Replace the single Georgian prompt with a language-aware function:
-  - For `ka`: Keep existing Georgian prompt
-  - For `en`/other: English prompt with equivalent rules about not truncating proper nouns, using shorter synonyms, etc.
-
-### Key Design Decisions
-- Default to English prompt if `language` is null or unrecognized (safer than defaulting to Georgian for non-Georgian content)
-- Keep the exact same validation logic and thresholds -- only the AI prompt language changes
-- Georgian-specific validation rules (incomplete endings) are skipped for non-Georgian questions, replaced with English equivalents
+The language filter will be applied server-side in the Supabase query, so pagination and stats will correctly reflect only the selected language's questions. The supported language codes match the project's seven supported languages: `ka`, `en`, `fr`, `de`, `es`, `it`, `pt`.
 
