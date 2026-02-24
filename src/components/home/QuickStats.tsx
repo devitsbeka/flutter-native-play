@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Gamepad2, Trophy, TrendingUp } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface QuickStatsProps {
   gamesPlayed: number;
@@ -8,12 +9,13 @@ interface QuickStatsProps {
 }
 
 export function QuickStats({ gamesPlayed, gamesWon, currentStreak }: QuickStatsProps) {
+  const { t } = useLanguage();
   const winRate = gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0;
 
   const stats = [
-    { icon: Gamepad2, label: "თამაშები", value: gamesPlayed },
-    { icon: Trophy, label: "მოგებული", value: gamesWon },
-    { icon: TrendingUp, label: "წარმატება", value: `${winRate}%` },
+    { icon: Gamepad2, label: t("extra.statsGames"), value: gamesPlayed },
+    { icon: Trophy, label: t("extra.statsWon"), value: gamesWon },
+    { icon: TrendingUp, label: t("extra.statsWinRate"), value: `${winRate}%` },
   ];
 
   return (
@@ -31,16 +33,9 @@ export function QuickStats({ gamesPlayed, gamesWon, currentStreak }: QuickStatsP
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3 + index * 0.1 }}
         >
-          <stat.icon 
-            className="w-5 h-5 mb-2 text-white/60"
-            strokeWidth={2}
-          />
-          <span className="text-xl font-bold text-white">
-            {stat.value}
-          </span>
-          <span className="text-[10px] uppercase tracking-wider text-white/50 mt-0.5">
-            {stat.label}
-          </span>
+          <stat.icon className="w-5 h-5 mb-2 text-white/60" strokeWidth={2} />
+          <span className="text-xl font-bold text-white">{stat.value}</span>
+          <span className="text-[10px] uppercase tracking-wider text-white/50 mt-0.5">{stat.label}</span>
         </motion.div>
       ))}
     </motion.div>
