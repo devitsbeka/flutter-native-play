@@ -39,18 +39,18 @@ interface CreateQuizModalProps {
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
 type CreatorMode = "edit" | "play" | null;
 
-const DIFFICULTY_OPTIONS: { value: DifficultyLevel; emoji: string; label: string; description: string }[] = [
-  { value: "mixed", emoji: "🎲", label: "შერეული", description: "ადვილი → რთული" },
-  { value: "easy", emoji: "🟢", label: "ადვილი", description: "დამწყებთათვის" },
-  { value: "medium", emoji: "🟡", label: "საშუალო", description: "მცოდნეებს" },
-  { value: "hard", emoji: "🔴", label: "რთული", description: "ექსპერტებს" },
+const DIFFICULTY_KEYS: { value: DifficultyLevel; emoji: string; labelKey: string; descKey: string }[] = [
+  { value: "mixed", emoji: "🎲", labelKey: "extra.diffMixed", descKey: "extra.diffMixedDesc" },
+  { value: "easy", emoji: "🟢", labelKey: "extra.diffEasy", descKey: "extra.diffEasyDesc" },
+  { value: "medium", emoji: "🟡", labelKey: "extra.diffMedium", descKey: "extra.diffMediumDesc" },
+  { value: "hard", emoji: "🔴", labelKey: "extra.diffHard", descKey: "extra.diffHardDesc" },
 ];
 
-const TITLE_SUGGESTIONS = [
-  (subject: string) => `${subject} მასტერი 🏆`,
-  (subject: string) => `რამდენი იცი ${subject}-ზე?`,
-  (subject: string) => `${subject} ჩემპიონატი ⚡`,
-  (subject: string) => `${subject} გამოწვევა 🎯`,
+const TITLE_SUGGESTION_KEYS = [
+  (subject: string, t: (k: string) => string) => `${subject} ${t("extra.cqmTitleMaster")}`,
+  (subject: string, t: (k: string) => string) => `${t("extra.cqmTitleHowMuch")} ${subject}${t("extra.cqmTitleAbout")}`,
+  (subject: string, t: (k: string) => string) => `${subject} ${t("extra.cqmTitleChampionship")}`,
+  (subject: string, t: (k: string) => string) => `${subject} ${t("extra.cqmTitleChallenge")}`,
 ];
 
 const QUESTION_COUNTS = [5, 10, 15, 20];
@@ -85,66 +85,60 @@ interface TopicSuggestion {
 // Curated trivia-worthy topics with icon slugs
 const TRIVIA_TOPIC_POOL = [
   // Entertainment
-  { label: "Friends", icon_slug: "television" },
-  { label: "Star Wars", icon_slug: "rocket" },
-  { label: "Marvel", icon_slug: "superhero" },
-  { label: "სერიალები", icon_slug: "television" },
-  { label: "Netflix", icon_slug: "film-reel" },
-  { label: "Harry Potter", icon_slug: "magic-wand" },
-  { label: "Disney", icon_slug: "castle" },
-  { label: "ჰოლივუდი", icon_slug: "cinema" },
-  { label: "Game of Thrones", icon_slug: "crown" },
-  { label: "Breaking Bad", icon_slug: "chemistry" },
-  { label: "The Office", icon_slug: "office" },
-  
+  { labelKey: "Friends", icon_slug: "television" },
+  { labelKey: "Star Wars", icon_slug: "rocket" },
+  { labelKey: "Marvel", icon_slug: "superhero" },
+  { labelKey: "extra.topicTVShows", icon_slug: "television", isTranslationKey: true },
+  { labelKey: "Netflix", icon_slug: "film-reel" },
+  { labelKey: "Harry Potter", icon_slug: "magic-wand" },
+  { labelKey: "Disney", icon_slug: "castle" },
+  { labelKey: "extra.topicHollywood", icon_slug: "cinema", isTranslationKey: true },
+  { labelKey: "Game of Thrones", icon_slug: "crown" },
+  { labelKey: "Breaking Bad", icon_slug: "chemistry" },
+  { labelKey: "The Office", icon_slug: "office" },
   // Sports
-  { label: "NBA", icon_slug: "basketball" },
-  { label: "ფეხბურთი", icon_slug: "soccer-ball" },
-  { label: "ჩემპიონთა ლიგა", icon_slug: "trophy" },
-  { label: "F1", icon_slug: "racing-car" },
-  { label: "ოლიმპიადა", icon_slug: "medal" },
-  { label: "ტენისი", icon_slug: "tennis" },
-  { label: "კრიკეტი", icon_slug: "cricket" },
-  
+  { labelKey: "NBA", icon_slug: "basketball" },
+  { labelKey: "extra.topicFootball", icon_slug: "soccer-ball", isTranslationKey: true },
+  { labelKey: "extra.topicChampionsLeague", icon_slug: "trophy", isTranslationKey: true },
+  { labelKey: "F1", icon_slug: "racing-car" },
+  { labelKey: "extra.topicOlympics", icon_slug: "medal", isTranslationKey: true },
+  { labelKey: "extra.topicTennis", icon_slug: "tennis", isTranslationKey: true },
+  { labelKey: "extra.topicCricket", icon_slug: "cricket", isTranslationKey: true },
   // Music
-  { label: "K-Pop", icon_slug: "music-note" },
-  { label: "Taylor Swift", icon_slug: "microphone" },
-  { label: "ქართული მუსიკა", icon_slug: "guitar" },
-  { label: "Hip-Hop", icon_slug: "headphones" },
-  { label: "90s მუსიკა", icon_slug: "vinyl" },
-  { label: "BTS", icon_slug: "star" },
-  { label: "Queen", icon_slug: "crown" },
-  
+  { labelKey: "K-Pop", icon_slug: "music-note" },
+  { labelKey: "Taylor Swift", icon_slug: "microphone" },
+  { labelKey: "extra.topicGeorgianMusic", icon_slug: "guitar", isTranslationKey: true },
+  { labelKey: "Hip-Hop", icon_slug: "headphones" },
+  { labelKey: "extra.topicNinetiesMusic", icon_slug: "vinyl", isTranslationKey: true },
+  { labelKey: "BTS", icon_slug: "star" },
+  { labelKey: "Queen", icon_slug: "crown" },
   // Knowledge
-  { label: "გეოგრაფია", icon_slug: "globe" },
-  { label: "ისტორია", icon_slug: "hourglass" },
-  { label: "მეცნიერება", icon_slug: "microscope" },
-  { label: "ასტრონომია", icon_slug: "planet" },
-  { label: "ბიოლოგია", icon_slug: "dna" },
-  { label: "მათემატიკა", icon_slug: "calculator" },
-  { label: "ფიზიკა", icon_slug: "atom" },
-  
+  { labelKey: "extra.topicGeography", icon_slug: "globe", isTranslationKey: true },
+  { labelKey: "extra.topicHistory", icon_slug: "hourglass", isTranslationKey: true },
+  { labelKey: "extra.topicScience", icon_slug: "microscope", isTranslationKey: true },
+  { labelKey: "extra.topicAstronomy", icon_slug: "planet", isTranslationKey: true },
+  { labelKey: "extra.topicBiology", icon_slug: "dna", isTranslationKey: true },
+  { labelKey: "extra.topicMath", icon_slug: "calculator", isTranslationKey: true },
+  { labelKey: "extra.topicPhysics", icon_slug: "atom", isTranslationKey: true },
   // Pop Culture & Gaming
-  { label: "მემები", icon_slug: "smiley" },
-  { label: "TikTok", icon_slug: "smartphone" },
-  { label: "ვიდეო თამაშები", icon_slug: "game-controller" },
-  { label: "Anime", icon_slug: "ninja" },
-  { label: "საქართველო", icon_slug: "flag" },
-  { label: "Minecraft", icon_slug: "cube" },
-  { label: "FIFA", icon_slug: "soccer-ball" },
-  
+  { labelKey: "extra.topicMemes", icon_slug: "smiley", isTranslationKey: true },
+  { labelKey: "TikTok", icon_slug: "smartphone" },
+  { labelKey: "extra.topicVideoGames", icon_slug: "game-controller", isTranslationKey: true },
+  { labelKey: "Anime", icon_slug: "ninja" },
+  { labelKey: "extra.topicGeorgia", icon_slug: "flag", isTranslationKey: true },
+  { labelKey: "Minecraft", icon_slug: "cube" },
+  { labelKey: "FIFA", icon_slug: "soccer-ball" },
   // Food & Lifestyle
-  { label: "კულინარია", icon_slug: "chef-hat" },
-  { label: "ღვინო", icon_slug: "wine" },
-  { label: "ქართული კერძები", icon_slug: "food" },
-  { label: "კოქტეილები", icon_slug: "cocktail" },
-  
+  { labelKey: "extra.topicCulinary", icon_slug: "chef-hat", isTranslationKey: true },
+  { labelKey: "extra.topicWine", icon_slug: "wine", isTranslationKey: true },
+  { labelKey: "extra.topicGeorgianFood", icon_slug: "food", isTranslationKey: true },
+  { labelKey: "extra.topicCocktails", icon_slug: "cocktail", isTranslationKey: true },
   // Other
-  { label: "ფსიქოლოგია", icon_slug: "brain" },
-  { label: "ბიზნესი", icon_slug: "briefcase" },
-  { label: "ცხოველები", icon_slug: "paw" },
-  { label: "ავტომობილები", icon_slug: "car" },
-  { label: "მოდა", icon_slug: "dress" },
+  { labelKey: "extra.topicPsychology", icon_slug: "brain", isTranslationKey: true },
+  { labelKey: "extra.topicBusiness", icon_slug: "briefcase", isTranslationKey: true },
+  { labelKey: "extra.topicAnimals", icon_slug: "paw", isTranslationKey: true },
+  { labelKey: "extra.topicCars", icon_slug: "car", isTranslationKey: true },
+  { labelKey: "extra.topicFashion", icon_slug: "dress", isTranslationKey: true },
 ];
 
 export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToCollection, overrideUserId }: CreateQuizModalProps) {
@@ -184,8 +178,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
     const shuffled = [...TRIVIA_TOPIC_POOL].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, 6);
     
-    // Get unique icon slugs to fetch
-    const iconSlugs = [...new Set(selected.map(t => t.icon_slug))];
+    const iconSlugs = [...new Set(selected.map(tp => tp.icon_slug))];
     
     try {
       const { data: icons } = await supabase
@@ -196,23 +189,28 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
       const iconMap = new Map(icons?.map(i => [i.slug, i.icon_url]) || []);
       
       setTopicSuggestions(
-        selected.map(topic => ({
-          label: topic.label,
-          value: topic.label,
-          icon_slug: topic.icon_slug,
-          icon_url: iconMap.get(topic.icon_slug) || null
-        }))
+        selected.map(topic => {
+          const label = topic.isTranslationKey ? t(topic.labelKey) : topic.labelKey;
+          return {
+            label,
+            value: label,
+            icon_slug: topic.icon_slug,
+            icon_url: iconMap.get(topic.icon_slug) || null
+          };
+        })
       );
     } catch (e) {
       console.error("Failed to fetch topic icons:", e);
-      // Still show topics without icons
       setTopicSuggestions(
-        selected.map(topic => ({
-          label: topic.label,
-          value: topic.label,
-          icon_slug: topic.icon_slug,
-          icon_url: null
-        }))
+        selected.map(topic => {
+          const label = topic.isTranslationKey ? t(topic.labelKey) : topic.labelKey;
+          return {
+            label,
+            value: label,
+            icon_slug: topic.icon_slug,
+            icon_url: null
+          };
+        })
       );
     } finally {
       setIsLoadingTopics(false);
@@ -278,7 +276,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   // Generate title suggestions when subject changes
   useEffect(() => {
     if (subject.trim()) {
-      const suggestions = TITLE_SUGGESTIONS.map(fn => fn(subject.trim()));
+      const suggestions = TITLE_SUGGESTION_KEYS.map(fn => fn(subject.trim(), t));
       setSuggestedTitles(suggestions);
     } else {
       setSuggestedTitles([]);
@@ -311,7 +309,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
       
       const generatedQuestions = data?.questions || [];
       if (!generatedQuestions.length) {
-        throw new Error("კითხვები ვერ დაგენერირდა");
+        throw new Error(t("extra.cbtGenerationFailed"));
       }
 
       // Client-side duplicate filtering as safety net
@@ -331,7 +329,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
 
       setQuestions(uniqueQuestions);
       setEditorQuestions(convertToEditorQuestions(uniqueQuestions));
-      setTitle(data?.suggestedTitle || `${subject} ტრივია`);
+      setTitle(data?.suggestedTitle || `${subject} ${t("extra.cbtTriviaSuffix")}`);
       
       setTimeout(() => setStep(6), 300);
     } catch (error) {
@@ -356,8 +354,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const handlePost = async () => {
     if (!user) {
       toast({
-        title: "შესვლა საჭიროა",
-        description: "გთხოვთ შეხვიდეთ თქვენს ანგარიშში",
+        title: t("extra.cqmLoginRequired"),
+        description: t("extra.cqmPleaseLogin"),
         variant: "destructive",
       });
       return;
@@ -402,8 +400,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
       });
 
       toast({
-        title: "წარმატება! 🎉",
-        description: "შენი Trivia გამოქვეყნდა!",
+        title: t("extra.cqmSuccessTitle"),
+        description: t("extra.cqmSuccessDesc"),
       });
 
       // Invalidate queries to refresh the trivia list immediately
@@ -430,8 +428,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const handleSaveAndStartGame = async () => {
     if (!user) {
       toast({
-        title: "შესვლა საჭიროა",
-        description: "გთხოვთ შეხვიდეთ თქვენს ანგარიშში",
+        title: t("extra.cqmLoginRequired"),
+        description: t("extra.cqmPleaseLogin"),
         variant: "destructive",
       });
       return;
@@ -473,8 +471,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
       });
 
       toast({
-        title: "მზადაა! 🎮",
-        description: "ტრივია შენახულია და მზადაა თამაშისთვის!",
+        title: t("extra.cqmReadyTitle"),
+        description: t("extra.cqmReadyDesc"),
       });
 
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
@@ -505,9 +503,9 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
 
   const getDifficultyLabel = (difficulty?: string) => {
     switch (difficulty) {
-      case 'easy': return 'მარტივი';
-      case 'medium': return 'საშუალო';
-      case 'hard': return 'რთული';
+      case 'easy': return t("extra.cqmDiffEasy");
+      case 'medium': return t("extra.cqmDiffMedium");
+      case 'hard': return t("extra.cqmDiffHard");
       default: return '';
     }
   };
@@ -588,14 +586,14 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                 <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
                   <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-1">შექმენი შენი ტრივია</h3>
-                <p className="text-sm text-white/70">რა თემაზე გსურს კითხვები?</p>
+                <h3 className="text-xl font-bold text-white mb-1">{t("extra.cqmCreateYourTrivia")}</h3>
+                <p className="text-sm text-white/70">{t("extra.cqmWhatTopic")}</p>
               </div>
 
               <Input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="მაგ: Friends TV Show, NBA, K-Pop..."
+                placeholder={t("extra.cqmTopicPlaceholder")}
                 className="text-center text-lg h-14 rounded-xl bg-white/95 text-slate-800 placeholder:text-slate-400 border-0"
               />
 
@@ -644,7 +642,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
               {/* Title suggestions */}
               {subject.trim() && suggestedTitles.length > 0 && (
                 <div className="pt-2">
-                  <p className="text-xs text-white/70 mb-2 text-center">💡 იდეები სათაურისთვის:</p>
+                  <p className="text-xs text-white/70 mb-2 text-center">💡 {t("extra.cqmTitleIdeas")}</p>
                   <div className="flex flex-wrap justify-center gap-1.5">
                     {suggestedTitles.slice(0, 3).map((suggestedTitle) => (
                       <button
@@ -677,7 +675,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
 
               {/* Switch to collection prompt */}
               <div className="flex items-center justify-center gap-2 pt-3 border-t border-white/20">
-                <span className="text-xs text-white/70">გინდა რამდენიმე რაუნდი?</span>
+                <span className="text-xs text-white/70">{t("extra.cqmWantMultipleRounds")}</span>
                 <button
                   onClick={() => {
                     handleClose();
@@ -685,7 +683,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   }}
                   className="text-xs text-white font-medium hover:underline"
                 >
-                  შექმენი კოლექცია →
+                  {t("extra.cqmCreateCollection")}
                 </button>
               </div>
             </div>
@@ -702,12 +700,12 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             className="space-y-5"
           >
             <div className="text-center">
-              <h3 className="text-xl font-bold text-white mb-1">სირთულე 🎯</h3>
-              <p className="text-sm text-white/70">რა სირთულის კითხვები გინდა?</p>
+              <h3 className="text-xl font-bold text-white mb-1">{t("extra.cqmDifficultyTitle")}</h3>
+              <p className="text-sm text-white/70">{t("extra.cqmDifficultySubtitle")}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              {DIFFICULTY_OPTIONS.map((option) => (
+              {DIFFICULTY_KEYS.map((option) => (
                 <motion.button
                   key={option.value}
                   whileHover={{ scale: 1.02 }}
@@ -720,8 +718,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   }`}
                 >
                   <span className="text-2xl block mb-1">{option.emoji}</span>
-                  <span className="font-semibold text-white block">{option.label}</span>
-                  <span className="text-xs text-white/70">{option.description}</span>
+                  <span className="font-semibold text-white block">{t(option.labelKey)}</span>
+                  <span className="text-xs text-white/70">{t(option.descKey)}</span>
                 </motion.button>
               ))}
             </div>
@@ -800,8 +798,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] space-y-5"
           >
             <div className="text-center">
-              <h3 className="text-xl font-bold text-white mb-1">ფორმატი ⚡</h3>
-              <p className="text-sm text-white/70">როგორი კითხვები გინდა?</p>
+              <h3 className="text-xl font-bold text-white mb-1">{t("extra.cqmFormatTitle")}</h3>
+              <p className="text-sm text-white/70">{t("extra.cqmFormatSubtitle")}</p>
             </div>
 
             <div className="space-y-3">
@@ -864,7 +862,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5 mr-2" />
-                    დაგენერირება
+                    {t("extra.cqmGenerateBtn")}
                   </>
                 )}
               </ChunkyButton>
@@ -887,7 +885,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                     />
                   </div>
                   <p className="text-sm text-center text-white/80 animate-pulse">
-                    ✨ AI ქმნის კითხვებს...
+                    ✨ {t("extra.cqmAiCreating")}
                   </p>
                 </div>
               </motion.div>
@@ -922,11 +920,11 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
 
                 {/* Title input */}
                 <div className="space-y-2">
-                  <label className="text-sm text-white/80 block text-center">სათაური</label>
+                  <label className="text-sm text-white/80 block text-center">{t("extra.cqmPlayTitleLabel")}</label>
                   <Input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="ტრივიას სათაური..."
+                    placeholder={t("extra.cqmPlayTitlePlaceholder")}
                     className="text-center text-lg h-14 rounded-xl bg-white/95 text-slate-800 placeholder:text-slate-400 border-0"
                   />
                 </div>
@@ -938,8 +936,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                       <Users className="w-5 h-5 text-purple-300" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-white font-medium">თამაშის რეჟიმი</p>
-                      <p className="text-xs text-white/60">შენახვის შემდეგ შეგიძლია დაიწყო თამაში მეგობრებთან</p>
+                      <p className="text-sm text-white font-medium">{t("extra.cqmPlayMode")}</p>
+                      <p className="text-xs text-white/60">{t("extra.cqmPlayModeDesc")}</p>
                     </div>
                   </div>
                 </div>

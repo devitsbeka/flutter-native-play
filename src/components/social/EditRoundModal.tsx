@@ -193,8 +193,8 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
     }
     
     toast({
-      title: "კითხვა წაიშალა",
-      description: "კითხვა წარმატებით წაიშალა",
+      title: t("extra.ermQuestionDeleted"),
+      description: t("extra.ermQuestionDeletedDesc"),
     });
   }, [questions, carouselApi, toast]);
 
@@ -234,8 +234,8 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
       if (error) throw error;
 
       toast({
-        title: "შენახულია! ✓",
-        description: "ცვლილებები წარმატებით შეინახა",
+        title: t("extra.ermSaved"),
+        description: t("extra.ermSavedDesc"),
       });
 
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
@@ -267,8 +267,8 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
       if (error) throw error;
 
       toast({
-        title: "წაიშალა",
-        description: "რაუნდი წარმატებით წაიშალა",
+        title: t("extra.ermDeleted"),
+        description: t("extra.ermDeletedDesc"),
       });
 
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
@@ -278,8 +278,8 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
     } catch (error) {
       console.error("Error deleting:", error);
       toast({
-        title: "შეცდომა",
-        description: "წაშლა ვერ მოხერხდა",
+        title: t("extra.ermDeleteError"),
+        description: t("extra.ermDeleteErrorDesc"),
         variant: "destructive",
       });
     } finally {
@@ -328,7 +328,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                 <button
                   onClick={addQuestion}
                   className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors active:scale-95"
-                  title="დაამატე კითხვა"
+                  title={t("extra.ermAddQuestionTitle")}
                 >
                   <Plus className="w-5 h-5 text-white" />
                 </button>
@@ -448,7 +448,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                           className="space-y-3"
                         >
                           <p className="text-sm text-center text-destructive font-medium">
-                            დარწმუნებული ხარ რომ გსურს წაშლა?
+                            {t("extra.ermDeleteConfirm")}
                           </p>
                         <div className="flex gap-2">
                           <ChunkyButton
@@ -465,7 +465,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                             className="flex-1"
                           >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              წაშლა
+                               {t("extra.ermDeleteBtn")}
                             </ChunkyButton>
                           </div>
                         </motion.div>
@@ -501,7 +501,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                                    flex items-center justify-center gap-2 text-primary"
                       >
                         <Plus className="w-4 h-4" />
-                        <span className="font-medium">რაუნდის დამატება</span>
+                        <span className="font-medium">{t("extra.ermAddRound")}</span>
                       </button>
                     </div>
                     )}
@@ -540,9 +540,9 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                               <div className="flex items-center gap-2 text-xs text-red-200 bg-red-500/20 px-3 py-2 rounded-lg border border-red-400/30">
                                 <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
                                 <span>
-                                  {answerInQuestion 
-                                    ? "კითხვა შეიცავს სწორ პასუხს!" 
-                                    : "აიკონი მინიშნებაა პასუხზე!"}
+                                 {answerInQuestion 
+                                    ? t("extra.ermQuestionHasAnswer")
+                                    : t("extra.ermIconHint")}
                                 </span>
                               </div>
                             )}
@@ -643,7 +643,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                                   <div className="relative p-3 rounded-xl bg-white flex items-center gap-3 group-hover:bg-gray-100 transition-colors">
                                     <div className="w-7 h-7 rounded-full bg-sky-300 flex items-center justify-center flex-shrink-0">
                                       <span className="text-slate-700 font-bold text-sm">
-                                        {['ბ', 'გ', 'დ'][i]}
+                                        {['B', 'C', 'D'][i]}
                                       </span>
                                     </div>
                                     <span className="text-slate-700 font-medium flex-1">{ans}</span>
@@ -662,7 +662,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                                   className="space-y-2"
                                 >
                                   <p className="text-xs text-center text-red-200">
-                                    წაიშალოს ეს კითხვა?
+                                    {t("extra.ermDeleteQuestionConfirm")}
                                   </p>
                                   <div className="flex gap-2">
                                     <button
@@ -676,7 +676,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                                       className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium flex items-center justify-center gap-1.5"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
-                                      წაშლა
+                                      {t("extra.ermDeleteBtn")}
                                     </button>
                                   </div>
                                 </motion.div>
