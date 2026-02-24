@@ -81,7 +81,7 @@ export function ShopProSidebar() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm text-slate-700">{benefit.title}</p>
-              <p className="text-xs text-muted-foreground truncate">{benefit.description}</p>
+              <p className="text-xs text-muted-foreground truncate">{t(benefit.descriptionKey)}</p>
             </div>
           </motion.div>
         ))}

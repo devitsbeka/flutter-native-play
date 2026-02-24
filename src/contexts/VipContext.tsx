@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { addDays, addMonths, isAfter } from "date-fns";
+import { t } from "@/utils/standaloneTranslation";
 
 export interface VipSubscription {
   id: string;
@@ -24,29 +25,30 @@ export const VIP_PRICES: Record<VipDuration, number> = {
 };
 
 // Base benefits for all PRO users
+// VIP_BENEFITS uses translation keys - consumers should call t() on descriptions
 export const VIP_BENEFITS = [
-  { icon: "⭐", title: "2x XP", description: "ორმაგი გამოცდილება ყველა თამაშში" },
-  { icon: "🎰", title: "+3 სპინი", description: "დამატებითი ყოველდღიური სპინები" },
-  { icon: "⚡", title: "უფასო ძალები", description: "ყოველდღიური უფასო power-ups" },
-  { icon: "👑", title: "VIP ბეჯი", description: "ოქროს გვირგვინის ბეჯი პროფილზე" },
-  { icon: "🚫", title: "რეკლამების გარეშე", description: "სრული თამაში რეკლამების გარეშე" },
+  { icon: "⭐", title: "2x XP", descriptionKey: "extra.vip2xXpDesc" },
+  { icon: "🎰", title: "+3 Spins", descriptionKey: "extra.vipExtraSpinsDesc" },
+  { icon: "⚡", title: "Free Powers", descriptionKey: "extra.vipFreePowersDesc" },
+  { icon: "👑", title: "VIP Badge", descriptionKey: "extra.vipBadgeDesc" },
+  { icon: "🚫", title: "No Ads", descriptionKey: "extra.vipNoAdsDesc" },
 ];
 
 // Tier-specific benefits for different VIP levels
 export const VIP_BENEFITS_BY_TIER = {
   pro: [
-    { icon: "⭐", title: "2x XP", description: "ორმაგი გამოცდილება ყველა თამაშში" },
-    { icon: "🎰", title: "+3 სპინი", description: "დამატებითი ყოველდღიური სპინები" },
-    { icon: "🚫", title: "რეკლამების გარეშე", description: "სრული თამაში რეკლამების გარეშე" },
-    { icon: "👑", title: "VIP ბეჯი", description: "ოქროს გვირგვინის ბეჯი პროფილზე" },
+    { icon: "⭐", title: "2x XP", descriptionKey: "extra.vip2xXpDesc" },
+    { icon: "🎰", title: "+3 Spins", descriptionKey: "extra.vipExtraSpinsDesc" },
+    { icon: "🚫", title: "No Ads", descriptionKey: "extra.vipNoAdsDesc" },
+    { icon: "👑", title: "VIP Badge", descriptionKey: "extra.vipBadgeDesc" },
   ],
   pro_plus: [
-    { icon: "⭐", title: "2x XP", description: "ორმაგი გამოცდილება ყველა თამაშში" },
-    { icon: "🎰", title: "+3 სპინი", description: "დამატებითი ყოველდღიური სპინები" },
-    { icon: "🚫", title: "რეკლამების გარეშე", description: "სრული თამაში რეკლამების გარეშე" },
-    { icon: "👑", title: "VIP ბეჯი", description: "ოქროს გვირგვინის ბეჯი პროფილზე" },
-    { icon: "⚡", title: "უფასო ძალები", description: "ყოველდღიურად 4 უფასო power-up" },
-    { icon: "🎁", title: "გაძლიერებული ჯილდოები", description: "+50% ყოველდღიური ჯილდო" },
+    { icon: "⭐", title: "2x XP", descriptionKey: "extra.vip2xXpDesc" },
+    { icon: "🎰", title: "+3 Spins", descriptionKey: "extra.vipExtraSpinsDesc" },
+    { icon: "🚫", title: "No Ads", descriptionKey: "extra.vipNoAdsDesc" },
+    { icon: "👑", title: "VIP Badge", descriptionKey: "extra.vipBadgeDesc" },
+    { icon: "⚡", title: "Free Powers", descriptionKey: "extra.vipFreePowersDesc" },
+    { icon: "🎁", title: "Enhanced Rewards", descriptionKey: "extra.vipEnhancedRewardsDesc" },
   ],
 };
 
@@ -184,11 +186,11 @@ export function VipProvider({ children }: { children: ReactNode }) {
       }
 
       setIsVip(true);
-      toast.success("VIP აქტივირებულია! 👑");
+      toast.success(t("extra.vipActivatedToast"));
       return true;
     } catch (error) {
       console.error("Error activating VIP:", error);
-      toast.error("VIP აქტივაცია ვერ მოხერხდა");
+      toast.error(t("extra.vipActivationFailed"));
       return false;
     }
   };
