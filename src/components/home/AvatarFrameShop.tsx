@@ -25,11 +25,11 @@ const rarityColors = {
   legendary: "from-yellow-400 to-orange-500",
 };
 
-const rarityLabels = {
-  common: "ჩვეულებრივი",
-  rare: "იშვიათი",
-  epic: "ეპიკური",
-  legendary: "ლეგენდარული",
+const RARITY_LABEL_KEYS: Record<string, string> = {
+  common: "extra.rarityCommon",
+  rare: "extra.rarityRare",
+  epic: "extra.rarityEpic",
+  legendary: "extra.rarityLegendary",
 };
 
 const rarityShadows = {
@@ -54,7 +54,7 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
     // VIP-only frame handling
     if (frame.vipOnly) {
       if (!isVip) {
-        notify.error("ეს ჩარჩო მხოლოდ VIP მომხმარებლებისთვისაა!", { icon: toastIcon(crownIcon) });
+        notify.error(t("extra.frameVipOnly"), { icon: toastIcon(crownIcon) });
         playSound("wrong-answer");
         return;
       }
@@ -91,7 +91,7 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
     }
 
     if (!canAffordGems(frame.price)) {
-      notify.error("არ გაქვს საკმარისი ალმასი!", { icon: "💎" });
+      notify.error(t("extra.frameNotEnoughGems"), { icon: "💎" });
       playSound("wrong-answer");
       return;
     }
@@ -146,7 +146,7 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
           boxShadow: "0 3px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)",
         }}
       >
-        <p className="text-sm text-gray-500 font-medium">გადახედვა</p>
+        <p className="text-sm text-gray-500 font-medium">{t("extra.framePreview")}</p>
         <AvatarWithFrame
           imageUrl={profile?.avatar_url || undefined}
           size="xl"
@@ -241,7 +241,7 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
                     boxShadow: `0 1px 0 ${rarityShadows[frame.rarity]}`,
                   }}
                 >
-                  {rarityLabels[frame.rarity]}
+                  {t(RARITY_LABEL_KEYS[frame.rarity])}
                 </div>
               )}
 
@@ -279,17 +279,17 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
               {/* Price or Status */}
               <div className="flex items-center justify-center gap-1 mt-1">
                 {isEquipped ? (
-                  <span className="text-[10px] text-green-600 font-bold">აქტიური</span>
+                  <span className="text-[10px] text-green-600 font-bold">{t("extra.activeFrame")}</span>
                 ) : isVipFrame ? (
                   isVip ? (
-                    <span className="text-[10px] text-amber-600 font-bold">უფასო</span>
+                    <span className="text-[10px] text-amber-600 font-bold">{t("extra.freeFrame")}</span>
                   ) : (
                     <span className="text-[10px] text-amber-600 font-bold flex items-center gap-0.5">
                       <Crown className="w-3 h-3" /> VIP
                     </span>
                   )
                 ) : isUnlocked ? (
-                  <span className="text-[10px] text-gray-500">გახსნილი</span>
+                  <span className="text-[10px] text-gray-500">{t("extra.unlockedFrame")}</span>
                 ) : (
                   <>
                     <img src={gemIcon} alt="" className="w-4 h-4" />

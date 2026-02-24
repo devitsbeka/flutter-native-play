@@ -6,11 +6,13 @@ import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 import glitchIcon from "@/assets/glitch.png";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function LiveGamesWidget() {
   const navigate = useNavigate();
   const { openProfile } = usePlayerProfile();
   const { rooms, loading } = useMyRooms();
+  const { t } = useLanguage();
 
   // Filter to show only active rooms (waiting or playing) - max 2 to save space
   const activeRooms = rooms.filter(
@@ -49,13 +51,13 @@ export function LiveGamesWidget() {
     >
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <h3 className="text-[15px] font-semibold text-foreground tracking-tight">შენი</h3>
+        <h3 className="text-[15px] font-semibold text-foreground tracking-tight">{t("extra.yourLiveGames")}</h3>
         <span 
           className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-destructive text-destructive-foreground"
         >
           LIVE
         </span>
-        <h3 className="text-[15px] font-semibold text-foreground tracking-tight">თამაშები</h3>
+        <h3 className="text-[15px] font-semibold text-foreground tracking-tight">{t("extra.liveGamesLabel")}</h3>
       </div>
 
       {activeRooms.length === 0 ? (
@@ -64,7 +66,7 @@ export function LiveGamesWidget() {
             <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
           </div>
           <p className="text-[13px] text-muted-foreground">
-            აქტიური თამაშები არ გაქვს
+            {t("extra.noActiveGames")}
           </p>
         </div>
       ) : (
@@ -121,10 +123,10 @@ export function LiveGamesWidget() {
               {/* Bottom left - Room name and description */}
               <div className="absolute bottom-3 left-3 right-3">
                 <h4 className="text-[15px] font-display text-foreground truncate">
-                  {room.room_name || "თამაშის ოთახი"}
+                  {room.room_name || t("extra.gameRoomDefault")}
                 </h4>
                 <p className="text-[12px] text-muted-foreground truncate mt-0.5">
-                  {room.category_name || `${room.participants.length} მოთამაშე`}
+                  {room.category_name || t("extra.playerCount", { count: room.participants.length })}
                 </p>
               </div>
             </motion.div>
@@ -138,7 +140,7 @@ export function LiveGamesWidget() {
           onClick={() => navigate("/rooms")}
           className="w-full mt-3 text-center text-[13px] font-medium text-primary hover:underline"
         >
-          ყველა ოთახი ({rooms.length})
+          {t("extra.allRooms", { count: rooms.length })}
         </button>
       )}
     </motion.div>
