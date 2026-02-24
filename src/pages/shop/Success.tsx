@@ -5,17 +5,18 @@ import { Check, Sparkles, ArrowLeft, Gem } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/hooks/useCurrency";
 import confetti from "canvas-confetti";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ShopSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { gems } = useCurrency();
   const [displayGems, setDisplayGems] = useState(gems);
+  const { t } = useLanguage();
 
   const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
-    // Trigger confetti
     confetti({
       particleCount: 100,
       spread: 70,
@@ -25,7 +26,6 @@ export default function ShopSuccess() {
   }, []);
 
   useEffect(() => {
-    // Update display gems when the hook value changes
     const timer = setTimeout(() => {
       setDisplayGems(gems);
     }, 1500);
@@ -39,7 +39,6 @@ export default function ShopSuccess() {
         animate={{ opacity: 1, scale: 1 }}
         className="max-w-md w-full text-center space-y-6"
       >
-        {/* Success Icon */}
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -49,7 +48,6 @@ export default function ShopSuccess() {
           <Check className="w-12 h-12 text-white" strokeWidth={3} />
         </motion.div>
 
-        {/* Title */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -57,14 +55,13 @@ export default function ShopSuccess() {
           className="space-y-2"
         >
           <h1 className="text-3xl font-bold text-foreground">
-            გადახდა წარმატებით დასრულდა!
+            {t("extra.paymentSuccess")}
           </h1>
           <p className="text-muted-foreground">
-            თქვენი ალმასები დამატებულია ბალანსზე
+            {t("extra.gemsAddedToBalance")}
           </p>
         </motion.div>
 
-        {/* Current Balance */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -76,7 +73,7 @@ export default function ShopSuccess() {
               <Gem className="w-8 h-8 text-purple-500" />
             </div>
             <div className="text-left">
-              <p className="text-sm text-muted-foreground">მიმდინარე ბალანსი</p>
+              <p className="text-sm text-muted-foreground">{t("extra.currentBalance")}</p>
               <p className="text-3xl font-bold text-foreground flex items-center gap-1">
                 <Sparkles className="w-5 h-5 text-purple-500" />
                 {displayGems.toLocaleString()}
@@ -85,7 +82,6 @@ export default function ShopSuccess() {
           </div>
         </motion.div>
 
-        {/* Actions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -98,18 +94,17 @@ export default function ShopSuccess() {
             size="lg"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            მაღაზიაში დაბრუნება
+            {t("extra.backToShop")}
           </Button>
           <Button
             onClick={() => navigate("/")}
             variant="ghost"
             className="w-full"
           >
-            მთავარ გვერდზე გადასვლა
+            {t("extra.goToHomePage2")}
           </Button>
         </motion.div>
 
-        {/* Transaction ID */}
         {sessionId && (
           <motion.p
             initial={{ opacity: 0 }}
@@ -117,7 +112,7 @@ export default function ShopSuccess() {
             transition={{ delay: 0.6 }}
             className="text-xs text-muted-foreground"
           >
-            ტრანზაქციის ID: {sessionId.slice(0, 20)}...
+            {t("extra.transactionId")}: {sessionId.slice(0, 20)}...
           </motion.p>
         )}
       </motion.div>

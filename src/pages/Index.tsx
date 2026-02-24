@@ -497,7 +497,7 @@ export default function Index() {
         await supabase.from('profiles').update({ avatar_url: aiAvatarUrl }).eq('user_id', user.id);
 
         imageUrl = aiAvatarUrl;
-        toast({ title: "AI ავატარი შეიქმნა! ანიმაცია იწყება..." });
+        toast({ title: t("extra.aiAvatarAnimating") });
       }
 
       // Now animate the AI-generated avatar (never the raw photo)
@@ -1473,11 +1473,11 @@ export default function Index() {
                       className="text-base text-gray-600 font-semibold text-center cursor-pointer hover:opacity-80 transition-opacity"
                       onClick={() => navigate("/auth?mode=signup")}
                     >
-                      რეგისტრაცია
+                      {t("extra.registration")}
                     </p>
                     <div className="flex flex-col items-center" style={{ marginTop: 25 }}>
                       <p className="text-base text-gray-600 font-medium text-center">
-                        ან ითამაშე როგორც სტუმარმა
+                        {t("extra.playAsGuest")}
                       </p>
                       <HandDrawnArrow size={44} color="#9CA3AF" />
                     </div>

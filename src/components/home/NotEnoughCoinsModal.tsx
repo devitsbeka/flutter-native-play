@@ -80,8 +80,8 @@ export function NotEnoughCoinsModal({
             <Crown className="w-6 h-6 text-amber-600" />
           </div>
           <div className="flex-1 text-left">
-            <p className="font-bold text-gray-800">გახდი PRO</p>
-            <p className="text-sm text-gray-500">ულიმიტო თამაშები და ფუნქციები</p>
+            <p className="font-bold text-gray-800">{t("extra.becomeProBtn")}</p>
+            <p className="text-sm text-gray-500">{t("extra.unlimitedGamesFeatures")}</p>
           </div>
         </button>
 

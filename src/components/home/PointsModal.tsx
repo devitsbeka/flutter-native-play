@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Crown, TrendingUp, Gamepad2, Gift, Flame } from "lucide-react";
 import { GameModal, GameModalInfoRow } from "@/components/ui/game-modal";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PointsModalProps {
   isOpen: boolean;
@@ -19,15 +20,17 @@ export function PointsModal({
   gamesWon,
   currentStreak,
 }: PointsModalProps) {
+  const { t } = useLanguage();
+
   // Estimate XP breakdown
   const estimatedGameXP = gamesWon * 50;
   const estimatedBonusXP = Math.floor(totalPoints * 0.1);
   const estimatedStreakXP = currentStreak * 10;
 
   const xpSources = [
-    { icon: <Gamepad2 className="w-4 h-4" />, label: "თამაშებიდან", value: `+${estimatedGameXP.toLocaleString()}`, color: "text-blue-500" },
-    { icon: <Gift className="w-4 h-4" />, label: "ბონუსები", value: `+${estimatedBonusXP.toLocaleString()}`, color: "text-purple-500" },
-    { icon: <Flame className="w-4 h-4" />, label: "სერიები", value: `+${estimatedStreakXP.toLocaleString()}`, color: "text-orange-500" },
+    { icon: <Gamepad2 className="w-4 h-4" />, label: t("extra.xpFromGames"), value: `+${estimatedGameXP.toLocaleString()}`, color: "text-blue-500" },
+    { icon: <Gift className="w-4 h-4" />, label: t("extra.xpFromBonuses"), value: `+${estimatedBonusXP.toLocaleString()}`, color: "text-purple-500" },
+    { icon: <Flame className="w-4 h-4" />, label: t("extra.xpFromStreaks"), value: `+${estimatedStreakXP.toLocaleString()}`, color: "text-orange-500" },
   ];
 
   // Next milestone
@@ -41,7 +44,7 @@ export function PointsModal({
       onClose={onClose}
       variant="gold"
       icon={<Crown className="w-10 h-10" />}
-      title="შენი ქულები 👑"
+      title={t("extra.pointsTitle")}
       showSparkles
     >
       {/* Total Points - Big Display */}
@@ -61,14 +64,14 @@ export function PointsModal({
         >
           {totalPoints.toLocaleString()}
         </motion.p>
-        <p className="text-sm font-medium text-amber-700">სულ XP</p>
+        <p className="text-sm font-medium text-amber-700">{t("extra.totalXpLabel")}</p>
       </div>
 
       {/* XP Sources */}
       <div className="space-y-2 mb-4">
         <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
           <TrendingUp className="w-4 h-4" />
-          XP წყაროები
+          {t("extra.xpSources")}
         </h3>
         {xpSources.map((source, i) => (
           <motion.div
@@ -97,7 +100,7 @@ export function PointsModal({
         }}
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-500">შემდეგი ეტაპი</span>
+          <span className="text-sm font-medium text-gray-500">{t("extra.nextMilestoneLabel")}</span>
           <span className="text-sm font-bold text-gray-800">
             {totalPoints.toLocaleString()} / {nextMilestone.toLocaleString()}
           </span>
@@ -114,7 +117,7 @@ export function PointsModal({
           />
         </div>
         <p className="text-xs text-gray-500 mt-2 text-center">
-          🏆 {nextMilestone.toLocaleString()} XP-ზე ოქროს ბეჯი!
+          {t("extra.goldBadgeAt", { xp: nextMilestone.toLocaleString() })}
         </p>
       </div>
     </GameModal>
