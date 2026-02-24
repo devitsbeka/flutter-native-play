@@ -83,7 +83,7 @@ export function VipBenefitsPopup({
                       {benefit.title}
                     </p>
                     <p className={`text-xs ${isVip ? "text-amber-600" : "text-gray-500"}`}>
-                      {benefit.description}
+                      {t(benefit.descriptionKey)}
                     </p>
                   </div>
                   {isVip && (

@@ -3965,6 +3965,11 @@ export const ka = {
     chatMessagePlaceholder: "დაწერეთ შეტყობინება...",
     chatTodayLabel: "დღეს",
     chatYesterdayLabel: "გუშინ",
+    // Additional MP keys
+    mpLeftRoom: "ოთახი დატოვე",
+    mpLeaveRoomFailed: "ოთახის დატოვება ვერ მოხერხდა",
+    mpRoomDeleted: "ოთახი წაიშალა",
+    mpDeleteRoomFailed: "ოთახის წაშლა ვერ მოხერხდა",
   },
 };
 

@@ -1,5 +1,5 @@
 // Fake opponent data for simulated matchmaking
-
+import { t } from "@/utils/standaloneTranslation";
 import mascotAvatar1 from "@/assets/avatars/mascot-avatar-1.png";
 import mascotAvatar2 from "@/assets/avatars/mascot-avatar-2.png";
 import mascotAvatar3 from "@/assets/avatars/mascot-avatar-3.png";
@@ -89,19 +89,23 @@ function getWeightedCountry() {
 
 const avatarEmojis = ["😎", "🤓", "🧐", "😏", "🤔", "😊", "🙂", "🤠", "👻", "🦊", "🐱", "🐶", "🦁", "🐯", "🐼", "🐨", "🦄", "🐲", "👾", "🤖"];
 
-export const ranks = [
-  { name: "ბრინჯაო", minPoints: 0, maxPoints: 999, color: "text-amber-600", gradient: null },
-  { name: "ვერცხლი", minPoints: 1000, maxPoints: 2499, color: "text-gray-400", gradient: null },
-  { name: "ოქრო", minPoints: 2500, maxPoints: 4999, color: "text-yellow-500", gradient: null },
-  { name: "პლატინა", minPoints: 5000, maxPoints: 9999, color: "text-cyan-400", gradient: null },
-  { name: "ბრილიანტი", minPoints: 10000, maxPoints: 24999, color: "text-blue-400", gradient: null },
-  { name: "ოსტატი", minPoints: 25000, maxPoints: 49999, color: "text-transparent", gradient: "bg-gradient-to-r from-violet-400 via-purple-500 to-fuchsia-500 bg-clip-text" },
-  { name: "გრანდმასტერი", minPoints: 50000, maxPoints: Infinity, color: "text-transparent", gradient: "bg-gradient-to-r from-amber-300 via-rose-400 to-purple-500 bg-clip-text" },
+export const getRanks = () => [
+  { name: t("extra.rankBronze"), minPoints: 0, maxPoints: 999, color: "text-amber-600", gradient: null },
+  { name: t("extra.rankSilver"), minPoints: 1000, maxPoints: 2499, color: "text-gray-400", gradient: null },
+  { name: t("extra.rankGold"), minPoints: 2500, maxPoints: 4999, color: "text-yellow-500", gradient: null },
+  { name: t("extra.rankPlatinum"), minPoints: 5000, maxPoints: 9999, color: "text-cyan-400", gradient: null },
+  { name: t("extra.rankDiamond"), minPoints: 10000, maxPoints: 24999, color: "text-blue-400", gradient: null },
+  { name: t("extra.rankMaster"), minPoints: 25000, maxPoints: 49999, color: "text-transparent", gradient: "bg-gradient-to-r from-violet-400 via-purple-500 to-fuchsia-500 bg-clip-text" },
+  { name: t("extra.rankGrandmaster"), minPoints: 50000, maxPoints: Infinity, color: "text-transparent", gradient: "bg-gradient-to-r from-amber-300 via-rose-400 to-purple-500 bg-clip-text" },
 ];
 
+// Keep backward-compatible export (evaluated lazily)
+export const ranks = getRanks();
+
 export function getRankFromPoints(points: number): { name: string; color: string; gradient: string | null } {
-  const rank = ranks.find(r => points >= r.minPoints && points <= r.maxPoints);
-  return rank || ranks[0];
+  const currentRanks = getRanks();
+  const rank = currentRanks.find(r => points >= r.minPoints && points <= r.maxPoints);
+  return rank || currentRanks[0];
 }
 
 export function generateFakeOpponent(): FakeOpponent {

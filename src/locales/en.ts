@@ -3935,6 +3935,11 @@ export const en: KaTranslations = {
     chatMessagePlaceholder: "Write a message...",
     chatTodayLabel: "Today",
     chatYesterdayLabel: "Yesterday",
+    // Additional MP keys
+    mpLeftRoom: "You left the room",
+    mpLeaveRoomFailed: "Could not leave room",
+    mpRoomDeleted: "Room deleted",
+    mpDeleteRoomFailed: "Could not delete room",
   },
 };
 

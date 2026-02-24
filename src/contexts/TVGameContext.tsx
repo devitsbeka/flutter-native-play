@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { t } from '@/utils/standaloneTranslation';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 import { tvLog, tvLogPhase, tvLogPlayer, tvLogError, tvLogPresence, tvLogTimer } from '@/utils/tvDebug';
@@ -1032,7 +1033,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (updateError) {
         tvLogError('startNextRoundFromQueueIfAny update session', updateError);
         const { toast } = await import('sonner');
-        toast.error('ვერ დაიწყო შემდეგი რაუნდი');
+        toast.error(t('extra.tvNextRoundFailed'));
         return false;
       }
 
@@ -1134,7 +1135,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (err) {
       tvLogError('startNextRoundFromQueueIfAny', err);
       const { toast } = await import('sonner');
-      toast.error('ვერ დაიწყო შემდეგი რაუნდი');
+      toast.error(t('extra.tvNextRoundFailed'));
       return false;
     }
   }, [isHost, state.sessionId, confirmActivePlayers]);
@@ -2517,7 +2518,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const trackerKey = `tv_mixed`;
           markQuestionsAsAsked(trackerKey, formattedQuestions.map(q => q.id));
 
-          categoryName = 'სხვადასხვა';
+          categoryName = t('extra.tvMixedCategory');
           categoryIcon = 'mystery-box';
         } else {
           // Standard category - resolve UUID
@@ -3023,7 +3024,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (!started) {
           tvLog('startNextRound: no more rounds in queue');
           const { toast } = await import('sonner');
-          toast('რაუნდები დასრულდა');
+          toast(t('extra.tvRoundsCompleted'));
         }
       } finally {
         nextRoundInFlightRef.current = false;

@@ -1,5 +1,6 @@
 // Multiplayer Context V2 - Manages room-based trivia games
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { t as tStandalone } from "@/utils/standaloneTranslation";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
@@ -35,7 +36,7 @@ const notifyTriviaCreator = async (userTriviaId: string, playerId: string) => {
     await createNotification(
       triviaPost.user_id,
       "trivia_played",
-      `${playerProfile?.nickname ? playerProfile.nickname + "-მ" : "ვიღაცამ"} ითამაშა შენი ტრივია`,
+      tStandalone("extra.mpSomeonePlayedTrivia").replace("{name}", playerProfile?.nickname || "Someone"),
       triviaPost.title || undefined,
       { post_id: userTriviaId, player_id: playerId }
     );
@@ -464,7 +465,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 
                 // CRITICAL: Do NOT fallback to stale data - this causes the sync issue!
                 console.error(`[MP] Failed to fetch questions for game_id ${expectedGameId} after ${MAX_ATTEMPTS} attempts`);
-                toast.error("კითხვების სინქრონიზაცია ვერ მოხერხდა. ცადე თავიდან.");
+                toast.error(tStandalone("extra.mpSyncFailed"));
                 
                 // Return to lobby instead of playing with stale/wrong data
                 setState(prev => ({
@@ -477,7 +478,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           } else if (updated.status === "completed") {
             setState(prev => ({ ...prev, phase: "results" }));
           } else if (updated.status === "cancelled") {
-            toast.info("ოთახი დაიხურა");
+            toast.info(tStandalone("extra.mpRoomClosed"));
             setState(initialState);
             cleanupChannels();
           } else if (updated.status === "waiting" && currentPhase === "results") {
@@ -583,7 +584,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 }));
               } else {
                 console.error(`[MP] Initial sync: failed to fetch questions after ${MAX_ATTEMPTS} attempts`);
-                toast.error("კითხვების სინქრონიზაცია ვერ მოხერხდა. ცადე თავიდან.");
+                toast.error(tStandalone("extra.mpSyncFailed"));
                 setState(prev => ({
                   ...prev,
                   phase: "lobby",
@@ -710,7 +711,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     providedRoomIcon?: string | null
   ): Promise<GameRoom | null> => {
     if (!user || !profile) {
-      toast.error("ჯერ გაიარე ავტორიზაცია");
+      toast.error(tStandalone("extra.mpAuthRequired"));
       return null;
     }
     
@@ -786,12 +787,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
       setState(prev => ({ ...prev, phase: "lobby", currentRoom: room as GameRoom }));
       setShowCreateModal(false);
-      toast.success("ოთახი შეიქმნა!");
+      toast.success(tStandalone("extra.mpRoomCreated"));
       
       return room as GameRoom;
     } catch (error) {
       console.error("Error creating room:", error);
-      toast.error("ოთახის შექმნა ვერ მოხერხდა");
+      toast.error(tStandalone("extra.mpRoomCreateFailed"));
       return null;
     } finally {
       setLoading(false);
@@ -801,7 +802,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   // Enter room (join or re-enter)
   const enterRoom = useCallback(async (roomCode: string): Promise<boolean> => {
     if (!user || !profile) {
-      toast.error("ჯერ გაიარე ავტორიზაცია");
+      toast.error(tStandalone("extra.mpAuthRequired"));
       return false;
     }
     
@@ -815,12 +816,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .single();
       
       if (roomError || !room) {
-        toast.error("ოთახი ვერ მოიძებნა");
+        toast.error(tStandalone("extra.mpRoomNotFound"));
         return false;
       }
       
       if (room.status === "cancelled") {
-        toast.error("ეს ოთახი დაიხურა");
+        toast.error(tStandalone("extra.mpRoomIsClosed"));
         return false;
       }
       
@@ -960,7 +961,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       } else {
         // New participant (not invited). Don't allow late-join into a running match.
         if (room.status === 'playing') {
-          toast.error('თამაში უკვე დაწყებულია');
+          toast.error(tStandalone("extra.mpGameAlreadyStarted"));
           return false;
         }
 
@@ -971,7 +972,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .eq("room_id", room.id);
         
         if (typeof count === 'number' && count >= room.max_players) {
-          toast.error("ოთახი სავსეა");
+          toast.error(tStandalone("extra.mpRoomFull"));
           return false;
         }
         
@@ -994,7 +995,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       return true;
     } catch (error) {
       console.error("Error entering room:", error);
-      toast.error("ოთახში შესვლა ვერ მოხერხდა");
+      toast.error(tStandalone("extra.mpJoinFailed"));
       return false;
     } finally {
       setLoading(false);
@@ -1069,7 +1070,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     if (roomError || !freshRoom) {
       console.error("[startGame] Failed to fetch fresh room:", roomError);
-      toast.error("ოთახის მონაცემები ვერ მოიძებნა");
+      toast.error(tStandalone("extra.mpRoomDataNotFound"));
       return;
     }
     
@@ -1102,7 +1103,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         
         if (!triviaPost?.questions) {
           console.error('[startGame] Failed to load trivia questions');
-          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          toast.error(tStandalone("extra.mpTriviaQuestionsNotFound"));
           return;
         }
         
@@ -1113,7 +1114,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         const deleteSuccess1 = await safeDeleteRoomQuestions(roomId);
         if (!deleteSuccess1) {
           console.error("[MP startGame] Failed to delete old questions after retries");
-          toast.error("თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.");
+          toast.error(tStandalone("extra.mpGameStartFailed"));
           return;
         }
         
@@ -1265,7 +1266,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       });
       
       if (result.questions.length === 0) {
-        toast.error("კითხვები ვერ მოიძებნა");
+        toast.error(tStandalone("extra.mpQuestionsNotFound"));
         return;
       }
       
@@ -1301,7 +1302,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
     } catch (error) {
       console.error("Error starting game:", error);
-      toast.error("თამაშის დაწყება ვერ მოხერხდა");
+      toast.error(tStandalone("extra.mpGameStartError"));
     }
   }, [state.currentRoom, isHost, user]);
 
@@ -1315,7 +1316,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const deleteSuccess2 = await safeDeleteRoomQuestions(roomId);
     if (!deleteSuccess2) {
       console.error("[MP saveQuestionsAndStartGame] Failed to delete old questions after retries");
-      toast.error("თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.");
+      toast.error(tStandalone("extra.mpGameStartFailed"));
       return;
     }
     
@@ -1595,7 +1596,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         
         if (!triviaPost?.questions) {
           console.error('[startNewRound] Failed to load trivia questions');
-          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          toast.error(tStandalone("extra.mpTriviaQuestionsNotFound"));
           return;
         }
         
@@ -1622,7 +1623,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         const deleteSuccess3 = await safeDeleteRoomQuestions(roomId);
         if (!deleteSuccess3) {
           console.error("[MP startNewRound/userTrivia] Failed to delete old questions after retries");
-          toast.error("თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.");
+          toast.error(tStandalone("extra.mpGameStartFailed"));
           return;
         }
         
@@ -1731,7 +1732,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       });
       
       if (result.questions.length === 0) {
-        toast.error("კითხვები ვერ მოიძებნა");
+        toast.error(tStandalone("extra.mpQuestionsNotFound"));
         return;
       }
       
@@ -1751,7 +1752,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       const deleteSuccess4 = await safeDeleteRoomQuestions(roomId);
       if (!deleteSuccess4) {
         console.error("[MP startNewRound/library] Failed to delete old questions after retries");
-        toast.error("თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.");
+        toast.error(tStandalone("extra.mpGameStartFailed"));
         return;
       }
       
@@ -1853,7 +1854,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       }));
     } catch (error) {
       console.error("Error starting new round:", error);
-      toast.error("ახალი რაუნდის დაწყება ვერ მოხერხდა");
+      toast.error(tStandalone("extra.mpGameStartError"));
     }
   }, [state.currentRoom, user]);
 
@@ -1934,7 +1935,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           const deleteSuccess5 = await safeDeleteRoomQuestions(roomId);
           if (!deleteSuccess5) {
             console.error("[MP startNextFromQueue/userTrivia] Failed to delete old questions after retries");
-            toast.error("თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.");
+            toast.error(tStandalone("extra.mpGameStartFailed"));
             return;
           }
           
@@ -2093,7 +2094,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       });
       
       if (result.questions.length === 0) {
-        toast.error("კითხვები ვერ მოიძებნა");
+        toast.error(tStandalone("extra.mpQuestionsNotFound"));
         return;
       }
       
@@ -2113,7 +2114,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       const deleteSuccess6 = await safeDeleteRoomQuestions(roomId);
       if (!deleteSuccess6) {
         console.error("[MP startNextFromQueue/library] Failed to delete old questions after retries");
-        toast.error("თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.");
+        toast.error(tStandalone("extra.mpGameStartFailed"));
         return;
       }
       
@@ -2223,7 +2224,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
     } catch (error) {
       console.error("Error starting next from queue:", error);
-      toast.error("რაუნდის დაწყება ვერ მოხერხდა");
+      toast.error(tStandalone("extra.mpGameStartError"));
     }
   }, [state.currentRoom, user, startNewRound]);
 
@@ -2261,10 +2262,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
       cleanupChannels();
       setState(initialState);
-      toast.success("ოთახი დატოვე");
+      toast.success(tStandalone("extra.mpLeftRoom"));
     } catch (error) {
       console.error("Error leaving room:", error);
-      toast.error("ოთახის დატოვება ვერ მოხერხდა");
+      toast.error(tStandalone("extra.mpLeaveRoomFailed"));
     }
   }, [state.currentRoom, user, isHost, participants, cleanupChannels]);
 
@@ -2280,10 +2281,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
       cleanupChannels();
       setState(initialState);
-      toast.success("ოთახი წაიშალა");
+      toast.success(tStandalone("extra.mpRoomDeleted"));
     } catch (error) {
       console.error("Error deleting room:", error);
-      toast.error("ოთახის წაშლა ვერ მოხერხდა");
+      toast.error(tStandalone("extra.mpDeleteRoomFailed"));
     }
   }, [state.currentRoom, isHost, cleanupChannels]);
 
