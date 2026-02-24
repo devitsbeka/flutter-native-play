@@ -52,6 +52,8 @@ export default function IconAssignment() {
     setCategoryFilter,
     showOnlyWithoutIcons,
     setShowOnlyWithoutIcons,
+    languageFilter,
+    setLanguageFilter,
     loadMore,
     assignIcon,
     removeIcon,
@@ -779,12 +781,12 @@ export default function IconAssignment() {
               )}
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <Select
                 value={categoryFilter || 'all'}
                 onValueChange={(v) => setCategoryFilter(v === 'all' ? null : v)}
               >
-                <SelectTrigger className="flex-1">
+                <SelectTrigger className="flex-1 min-w-[140px]">
                   <SelectValue placeholder="ყველა კატეგორია" />
                 </SelectTrigger>
                 <SelectContent>
@@ -794,6 +796,25 @@ export default function IconAssignment() {
                       {cat.icon} {cat.name}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={languageFilter || 'all'}
+                onValueChange={(v) => setLanguageFilter(v === 'all' ? null : v)}
+              >
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue placeholder="ენა" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">🌐 ყველა ენა</SelectItem>
+                  <SelectItem value="ka">🇬🇪 ქართული</SelectItem>
+                  <SelectItem value="en">🇺🇸 English</SelectItem>
+                  <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                  <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
+                  <SelectItem value="es">🇪🇸 Español</SelectItem>
+                  <SelectItem value="it">🇮🇹 Italiano</SelectItem>
+                  <SelectItem value="pt">🇵🇹 Português</SelectItem>
                 </SelectContent>
               </Select>
               
@@ -908,6 +929,11 @@ export default function IconAssignment() {
                             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                               {question.category_name}
                             </Badge>
+                            {question.language && question.language !== 'ka' && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono uppercase">
+                                {question.language}
+                              </Badge>
+                            )}
                             {question.icon_slug && (
                               <span className="text-[10px] text-green-600 font-medium">{question.icon_slug}</span>
                             )}
