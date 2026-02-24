@@ -284,7 +284,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     if (!uploadedImage || !user) return;
 
     if (isLimitReached) {
-      toast.error("მაქსიმუმ 5 ავატარის გენერაცია შეგიძლიათ");
+      toast.error(t("extra.avatarMaxGenReachedShort"));
       return;
     }
 
@@ -570,11 +570,11 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       // If no AI-generated record exists for this avatar, generate one first
       if (!existingGen) {
         if (isLimitReached) {
-          toast.error("მაქსიმუმ 5 ავატარის გენერაცია შეგიძლიათ");
+          toast.error(t("extra.avatarMaxGenReachedShort"));
           setIsAnimating(false);
           return;
         }
-        toast.info("AI ავატარი გენერირდება...", { duration: 10000 });
+        toast.info(t("extra.avatarAiGenerating"), { duration: 10000 });
 
         // Call generate-avatar with the current raw photo
         const { data: genData, error: genError } = await supabase.functions.invoke("generate-avatar", {
@@ -611,7 +611,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
         await updateProfile({ avatar_url: aiAvatarUrl });
 
         imageUrlToAnimate = aiAvatarUrl;
-        toast.success("AI ავატარი შეიქმნა! ახლა ანიმაცია იწყება...", { duration: 3000 });
+        toast.success(t("extra.avatarAiCreated"), { duration: 3000 });
       }
 
       // Now animate the AI-generated avatar
@@ -971,7 +971,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                   disabled={isLoading}
                   className="flex-1"
                 >
-                  ორიგინალი
+                  {t("extra.avatarOriginal")}
                 </ChunkyButton>
                 <ChunkyButton
                   variant="primary"
@@ -995,7 +995,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 disabled={isLoading}
                 className="w-full"
               >
-                შენახვა ფოტოდ
+                {t("extra.avatarSaveAsPhoto")}
               </ChunkyButton>
               
               <div className="w-full h-px bg-border my-2" />
@@ -1011,14 +1011,13 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                     <img src={iconAiSparkle} alt="" className="w-6 h-6 object-contain" />
                   </div>
                   <div>
-                    <p className="font-bold text-sm">AI ავატარის გენერაცია</p>
-                    <p className="text-xs text-muted-foreground">PRO ფუნქცია</p>
+                    <p className="font-bold text-sm">{t("extra.avatarAiGenTitle")}</p>
+                    <p className="text-xs text-muted-foreground">{t("extra.avatarProFeature")}</p>
                   </div>
                 </div>
                 
                 <p className="text-xs text-muted-foreground mb-3">
-                  გადააქციე შენი ფოტო 3D ავატარად! <br />
-                  + შექმენი ანიმირებული ავატარი ✨
+                  {t("extra.avatarAiDesc")}
                 </p>
                 
                 <ChunkyButton
@@ -1031,7 +1030,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                   className="w-full"
                   icon={<Crown className="w-4 h-4" />}
                 >
-                  გახდი PRO - $3.99/mo
+                  {t("extra.avatarBecomePro")}
                 </ChunkyButton>
               </motion.div>
             </>
@@ -1141,7 +1140,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                   if (uploadedImage) {
                     e.currentTarget.src = uploadedImage;
                   }
-                  toast.error("ავატარი ვერ ჩაიტვირთა, სცადეთ თავიდან");
+                  toast.error(t("extra.avatarLoadFailed"));
                 }}
               />
             </motion.div>
@@ -1191,7 +1190,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 className="w-full"
                 icon={isAnimating ? <Loader2 className="w-4 h-4 animate-spin shrink-0" /> : <Sparkles className="w-4 h-4 shrink-0" />}
               >
-                {isAnimating ? t("avatar.animating") : "გააცოცხლე ✨"}
+                {isAnimating ? t("avatar.animating") : t("extra.avatarAnimateEmoji")}
               </ChunkyButton>
             ) : (
               <ChunkyButton
@@ -1205,7 +1204,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 icon={<Lock className="w-4 h-4 shrink-0" />}
               >
                 <span className="flex items-center gap-1.5">
-                  გააცოცხლე (PRO)
+                  {t("extra.avatarAnimatePro")}
                   <Crown className="w-3.5 h-3.5 text-amber-500" />
                 </span>
               </ChunkyButton>

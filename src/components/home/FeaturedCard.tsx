@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-
+import { useLanguage } from "@/contexts/LanguageContext";
 interface FeaturedCardProps {
   title: string;
   subtitle?: string;
@@ -39,6 +39,7 @@ export function FeaturedCard({
   onClick,
   index = 0,
 }: FeaturedCardProps) {
+  const { t } = useLanguage();
   const isCompleted = progress.current >= progress.total;
 
   return (
@@ -79,19 +80,19 @@ export function FeaturedCard({
           {/* Stats row - clearer layout */}
           <div className="flex items-center justify-center gap-4 mt-2 pt-2 border-t border-amber-200">
             {/* Coin cost */}
-            <div className="flex items-center gap-1" title="მონეტები">
+            <div className="flex items-center gap-1" title={t("extra.tooltipCoins")}>
               <span className="text-base">🪙</span>
               <span className="font-bold text-amber-700 text-xs">{coinCost}</span>
             </div>
 
             {/* Question count */}
-            <div className="flex items-center gap-1" title="კითხვები">
+            <div className="flex items-center gap-1" title={t("extra.tooltipQuestions")}>
               <span className="text-base">📝</span>
               <span className="font-bold text-amber-700 text-xs">{questionCount}</span>
             </div>
 
             {/* Progress */}
-            <div className="flex items-center gap-1" title="პროგრესი">
+            <div className="flex items-center gap-1" title={t("extra.tooltipProgress")}>
               <span className="text-base">⭐</span>
               <span className={`font-bold text-xs ${isCompleted ? "text-emerald-600" : "text-amber-700"}`}>
                 {progress.current}/{progress.total}

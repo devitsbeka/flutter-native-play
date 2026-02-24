@@ -207,7 +207,7 @@ export default function CategoryQuizPage() {
     if (limitLoading || !categoryId) return;
     const levelNumber = parseInt(levelId || "1");
     if (!canPlayLevel(categoryId, levelNumber)) {
-      toast.error("PRO გახდი მეტი დონეების სათამაშოდ");
+      toast.error(t("extra.quizProUpgrade"));
       navigate(`/category/${categoryId}`, { replace: true });
     }
   }, [limitLoading, categoryId, levelId, canPlayLevel, navigate]);
@@ -306,7 +306,7 @@ export default function CategoryQuizPage() {
         );
       } catch (err) {
         console.error("Unexpected error:", err);
-        setError("მოულოდნელი შეცდომა მოხდა. გთხოვთ სცადოთ თავიდან.");
+        setError(t("extra.quizUnexpectedError"));
       } finally {
         setLoading(false);
       }
@@ -537,7 +537,7 @@ export default function CategoryQuizPage() {
         }
       }
     } else if (user) {
-      toast.error("პროგრესის შენახვა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.");
+      toast.error(t("extra.quizSaveError"));
     }
     
     setIsSaving(false);
@@ -725,13 +725,12 @@ export default function CategoryQuizPage() {
   }, [currentQuestion?.allAnswers]);
 
   // Georgian answer labels
-  const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
+  const ANSWER_LABELS = [t("extra.answerLabelA"), t("extra.answerLabelB"), t("extra.answerLabelC"), t("extra.answerLabelD")];
   
-  // Difficulty labels and colors (same as QuizGameScreenProd)
   const DIFFICULTY_LABELS: Record<string, string> = {
-    easy: "მარტივი",
-    medium: "საშუალო",
-    hard: "რთული",
+    easy: t("extra.difficultyEasy"),
+    medium: t("extra.difficultyMedium"),
+    hard: t("extra.difficultyHard"),
   };
 
   const DIFFICULTY_COLORS: Record<string, string> = {
@@ -931,10 +930,10 @@ export default function CategoryQuizPage() {
             </motion.div>
             
             <h2 className="text-2xl font-bold text-foreground mb-2">
-              {isPerfect ? "იდეალური!" : passed ? "შესანიშნავია!" : "გააგრძელე ვარჯიში!"}
+              {isPerfect ? t("extra.quizPerfect") : passed ? t("extra.quizExcellent") : t("extra.quizKeepPracticing")}
             </h2>
             <p className="text-muted-foreground mb-2">
-              სწორი პასუხი: {score} / {questions.length}
+              {t("extra.quizCorrectAnswers", { score, total: questions.length })}
             </p>
             
             {/* Points earned with animation */}
@@ -945,7 +944,7 @@ export default function CategoryQuizPage() {
                 transition={{ delay: 0.3, type: "spring" }}
                 className="text-xl font-bold text-primary mb-3"
               >
-                +{pointsEarned} ქულა!
+                {t("extra.quizPointsEarned", { points: pointsEarned })}
               </motion.p>
             )}
             
@@ -959,7 +958,7 @@ export default function CategoryQuizPage() {
               >
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <TrendingUp className="w-5 h-5 text-primary" />
-                  <span className="font-bold text-foreground">დონე აიწია!</span>
+                  <span className="font-bold text-foreground">{t("extra.quizLevelUp")}</span>
                 </div>
                 <p className="text-lg font-bold text-primary">
                   {previousProfileLevel} → {newProfileLevel}
@@ -1005,7 +1004,7 @@ export default function CategoryQuizPage() {
             )}
 
             {isSaving && (
-              <p className="text-sm text-muted-foreground mb-4">პროგრესის შენახვა...</p>
+              <p className="text-sm text-muted-foreground mb-4">{t("extra.quizSavingProgress")}</p>
             )}
 
             <div className="space-y-3 relative z-10">
@@ -1017,7 +1016,7 @@ export default function CategoryQuizPage() {
                   icon={<ChevronRight className="w-5 h-5" />}
                   className="w-full"
                 >
-                  შემდეგი დონე: {unlockedLevel}
+                  {t("extra.quizNextLevel", { level: unlockedLevel })}
                 </ChunkyButton>
               )}
               
@@ -1039,7 +1038,7 @@ export default function CategoryQuizPage() {
                   className="w-full"
                   onClick={resetQuiz}
                 >
-                  თავიდან თამაში
+                  {t("extra.quizReplay")}
                 </ChunkyButton>
               )}
             </div>
@@ -1191,7 +1190,7 @@ export default function CategoryQuizPage() {
                   onClick={handleNextQuestion}
                   className="w-full"
                 >
-                  {currentQuestionIndex < questions.length - 1 ? "შემდეგი კითხვა" : "შედეგები"}
+                  {currentQuestionIndex < questions.length - 1 ? t("extra.quizNextQuestion") : t("extra.quizResults")}
                 </ChunkyButton>
               </motion.div>
             ) : (
@@ -1215,15 +1214,15 @@ export default function CategoryQuizPage() {
         <AlertDialogContent className="bg-white rounded-2xl border-0 max-w-[90%] sm:max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-center text-xl text-slate-800">
-              გამოსვლა?
+              {t("extra.quizExitTitle")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center text-slate-500">
-              თქვენი პროგრესი დაიკარგება. დარწმუნებული ხართ რომ გინდათ გამოსვლა?
+              {t("extra.quizExitDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row gap-3 sm:gap-3">
             <AlertDialogCancel className="flex-1 m-0 bg-slate-100 border-0 text-slate-700 hover:bg-slate-200">
-              გაგრძელება
+              {t("extra.quizContinue")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
@@ -1233,7 +1232,7 @@ export default function CategoryQuizPage() {
               }}
               className="flex-1 m-0 bg-red-500 hover:bg-red-600 text-white"
             >
-              გამოსვლა
+              {t("extra.quizExit")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -98,20 +98,20 @@ export function CategoryCard({
           {/* Stats row - clearer layout */}
           <div className="flex items-center justify-center gap-4 mt-2 pt-2 border-t border-amber-200">
             {/* Coin cost */}
-            <div className="flex items-center gap-1" title="მონეტები">
+            <div className="flex items-center gap-1" title={t("extra.tooltipCoins")}>
               <DynamicIcon slug="coin" size={18} />
               <span className="font-bold text-amber-700 text-xs">{coinCost}</span>
             </div>
 
             {/* Question count */}
-            <div className="flex items-center gap-1" title="კითხვები">
+            <div className="flex items-center gap-1" title={t("extra.tooltipQuestions")}>
               <DynamicIcon slug="notebook" size={18} />
               <span className="font-bold text-amber-700 text-xs">{questionCount}</span>
             </div>
 
             {/* Progress */}
             {!isLocked && (
-              <div className="flex items-center gap-1" title="პროგრესი">
+              <div className="flex items-center gap-1" title={t("extra.tooltipProgress")}>
                 <DynamicIcon slug="star" size={18} />
                 <span className={`font-bold text-xs ${isCompleted ? "text-emerald-600" : "text-amber-700"}`}>
                   {progress}/{totalLevels}
