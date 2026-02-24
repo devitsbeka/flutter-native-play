@@ -182,7 +182,7 @@ export function SignupOnboardingModal() {
     if (!value.trim()) return t("auth.usernameRequired");
     if (value.length < 3) return t("auth.usernameTooShort");
     if (!/^[a-zA-Z0-9_\u10A0-\u10FF]+$/.test(value)) {
-      return "მხოლოდ ასოები, ციფრები და _ დასაშვებია";
+      return t("extra.onlyLettersAllowed");
     }
     return undefined;
   };
@@ -210,9 +210,9 @@ export function SignupOnboardingModal() {
     let securityError: string | undefined;
     
     if (!securityQuestionId) {
-      securityError = "აირჩიე უსაფრთხოების კითხვა";
+      securityError = t("extra.chooseSecurityQuestion");
     } else if (!securityAnswer.trim()) {
-      securityError = "შეიყვანე პასუხი";
+      securityError = t("extra.enterAnswer");
     }
     
     if (usernameError || passwordError || securityError) {
@@ -470,7 +470,7 @@ export function SignupOnboardingModal() {
                       color: securityQuestionId ? "inherit" : "hsl(var(--muted-foreground))",
                     }}
                   >
-                    <option value="" disabled>უსაფრთხოების კითხვა</option>
+                    <option value="" disabled>{t("extra.securityQuestionLabel")}</option>
                     {SECURITY_QUESTIONS.map((q) => (
                       <option key={q.id} value={q.id}>{q.ka}</option>
                     ))}
@@ -491,7 +491,7 @@ export function SignupOnboardingModal() {
                       setSecurityAnswer(e.target.value);
                       setErrors(prev => ({ ...prev, security: undefined }));
                     }}
-                    placeholder="პასუხი"
+                    placeholder={t("extra.answerLabel")}
                     className="w-full pl-12 pr-5 py-3 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-sm font-medium text-left transition-all duration-200"
                     style={{
                       boxShadow: "0 4px 0 hsl(var(--border))",

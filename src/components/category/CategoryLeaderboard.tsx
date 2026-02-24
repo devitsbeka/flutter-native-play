@@ -138,7 +138,7 @@ export function CategoryLeaderboard({
                 : "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
             }`}>
               <Gift className="h-3.5 w-3.5" />
-              <span>{getDaysRemainingInWeek()}დ</span>
+              <span>{getDaysRemainingInWeek()}{t("extra.daysShort")}</span>
             </button>
           }
         />

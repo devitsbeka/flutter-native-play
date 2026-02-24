@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { calculateLevel } from "@/utils/levelCalculation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface LevelCircleProps {
   totalPoints: number;
@@ -8,7 +9,7 @@ interface LevelCircleProps {
 
 export function LevelCircle({ totalPoints, onClick }: LevelCircleProps) {
   const levelInfo = calculateLevel(totalPoints);
-  
+  const { t } = useLanguage();
   return (
     <motion.div
       initial={{ scale: 0.8, opacity: 0 }}
@@ -51,7 +52,7 @@ export function LevelCircle({ totalPoints, onClick }: LevelCircleProps) {
               className="text-sm font-medium mt-1"
               style={{ color: "#7C3AED" }}
             >
-              საფეხური
+              {t("extra.levelLabel2")}
             </span>
             
             {/* XP Progress Bar */}

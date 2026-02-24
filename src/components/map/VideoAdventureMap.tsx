@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { usePlayGuard } from "@/contexts/PlayGuardContext";
 import { motion } from "framer-motion";
@@ -25,6 +26,7 @@ export function VideoAdventureMap() {
   const navigate = useNavigate();
   const { guardPlay } = usePlayGuard();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [totalPoints, setTotalPoints] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentPhase, setCurrentPhase] = useState<VideoPhase>("default");
@@ -361,7 +363,7 @@ export function VideoAdventureMap() {
               textShadow: "0 1px 2px rgba(255,255,255,0.8)" 
             }}
           >
-            რუქა
+            {t("extra.mapTitle")}
           </h1>
 
           {/* Right: Level Badge */}

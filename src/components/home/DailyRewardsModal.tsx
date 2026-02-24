@@ -278,7 +278,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
           {isProPlus() && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg">
               <Crown className="w-4 h-4 text-white" />
-              <span className="text-sm font-bold text-white">+50% ბონუსი</span>
+              <span className="text-sm font-bold text-white">{t("extra.vipBonusPercent")}</span>
             </div>
           )}
         </div>

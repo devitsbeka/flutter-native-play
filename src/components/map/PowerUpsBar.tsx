@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { PowerUpBadge, PowerUpType } from "@/components/game/PowerUpBadge";
 import { useUserPowerUps, PowerUpType as UserPowerUpType } from "@/hooks/useUserPowerUps";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PowerUpsBarProps {
   onAddClick?: () => void;
@@ -18,7 +19,7 @@ const powerUpOrder: UserPowerUpType[] = ["5050", "freeze", "replace", "time-drai
 
 export function PowerUpsBar({ onAddClick }: PowerUpsBarProps) {
   const { powerUps, isLoading } = useUserPowerUps();
-
+  const { t } = useLanguage();
   return (
     <motion.div
       initial={{ y: 50, opacity: 0 }}
@@ -31,7 +32,7 @@ export function PowerUpsBar({ onAddClick }: PowerUpsBarProps) {
         className="text-left font-display text-lg mb-4"
         style={{ color: "#7C3AED" }}
       >
-        შენი ძალები
+        {t("extra.yourPowers")}
       </h3>
       
       {/* Power-ups row */}

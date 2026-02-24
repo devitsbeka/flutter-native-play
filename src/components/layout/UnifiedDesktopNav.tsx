@@ -340,7 +340,7 @@ export function UnifiedDesktopNav({
           setPendingNavPath(null);
         }}
         returnToPath={pendingNavPath || undefined}
-        message="შექმენი ანგარიში და ჩაერთე თამაშში უფასოდ"
+        message={t("extra.authRequiredMessage")}
       />
     </>
   );

@@ -9,6 +9,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { RefreshCw, Info, AlertCircle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ExhaustionIndicatorProps {
   percentUsed: number;
@@ -33,6 +34,9 @@ export const ExhaustionIndicator: React.FC<ExhaustionIndicatorProps> = ({
   if (percentUsed < 70 && !wasReset && !usedFallback) {
     return null;
   }
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { t } = useLanguage();
   
   // Determine status
   const isNearExhaustion = percentUsed >= 70 && percentUsed < 90;
@@ -47,7 +51,7 @@ export const ExhaustionIndicator: React.FC<ExhaustionIndicatorProps> = ({
         color: 'text-amber-500',
         bgColor: 'bg-amber-500/10',
         borderColor: 'border-amber-500/30',
-        message: compact ? 'ახლადან დაიწყო' : 'კითხვები ახლადან დაიწყო - ზოგიერთი შეიძლება გაიმეოროს',
+        message: compact ? t('extra.exhaustionRestarted') : t('extra.exhaustionRestartedFull'),
       };
     }
     if (usedFallback) {
@@ -56,7 +60,7 @@ export const ExhaustionIndicator: React.FC<ExhaustionIndicatorProps> = ({
         color: 'text-blue-500',
         bgColor: 'bg-blue-500/10',
         borderColor: 'border-blue-500/30',
-        message: compact ? 'შერეული კატეგორიები' : 'ზოგიერთი კითხვა სხვა კატეგორიიდანაა',
+        message: compact ? t('extra.exhaustionMixedCategories') : t('extra.exhaustionMixedCategoriesFull'),
       };
     }
     if (isExhausted) {
@@ -65,7 +69,7 @@ export const ExhaustionIndicator: React.FC<ExhaustionIndicatorProps> = ({
         color: 'text-orange-500',
         bgColor: 'bg-orange-500/10',
         borderColor: 'border-orange-500/30',
-        message: compact ? 'ყველა ნანახია' : 'ყველა კითხვა ნანახია - ახალ კითხვებს მალე დავამატებთ!',
+        message: compact ? t('extra.exhaustionAllSeen') : t('extra.exhaustionAllSeenFull'),
       };
     }
     if (isAlmostExhausted) {
@@ -74,7 +78,7 @@ export const ExhaustionIndicator: React.FC<ExhaustionIndicatorProps> = ({
         color: 'text-amber-500',
         bgColor: 'bg-amber-500/10',
         borderColor: 'border-amber-500/30',
-        message: compact ? `${100 - percentUsed}% დარჩა` : `თითქმის ყველა კითხვა ნანახია (${percentUsed}%)`,
+        message: compact ? t('extra.exhaustionPercentLeft', { percent: 100 - percentUsed }) : t('extra.exhaustionPercentSeenFull', { percent: percentUsed }),
       };
     }
     if (isNearExhaustion) {
@@ -83,7 +87,7 @@ export const ExhaustionIndicator: React.FC<ExhaustionIndicatorProps> = ({
         color: 'text-sky-500',
         bgColor: 'bg-sky-500/10',
         borderColor: 'border-sky-500/30',
-        message: compact ? `${100 - percentUsed}% დარჩა` : `უკვე ${percentUsed}% კითხვა ნანახია`,
+        message: compact ? t('extra.exhaustionPercentLeft', { percent: 100 - percentUsed }) : t('extra.exhaustionPercentSeen', { percent: percentUsed }),
       };
     }
     return {
@@ -91,7 +95,7 @@ export const ExhaustionIndicator: React.FC<ExhaustionIndicatorProps> = ({
       color: 'text-green-500',
       bgColor: 'bg-green-500/10',
       borderColor: 'border-green-500/30',
-      message: 'ახალი კითხვები',
+      message: t('extra.exhaustionNewQuestions'),
     };
   };
   
@@ -136,7 +140,7 @@ export const ExhaustionIndicator: React.FC<ExhaustionIndicatorProps> = ({
         </p>
         {!compact && totalAvailable > 0 && (
           <p className="text-xs text-muted-foreground mt-0.5">
-            {totalSeen} / {totalAvailable} კითხვა ნანახია
+            {t('extra.exhaustionQuestionsSeen', { seen: totalSeen, total: totalAvailable })}
           </p>
         )}
       </div>
