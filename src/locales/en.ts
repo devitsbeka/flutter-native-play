@@ -3001,6 +3001,9 @@ export const en: KaTranslations = {
     aiAvatarCreated: "AI avatar created! ✨",
     avatarUploadFailed: "Avatar upload failed",
     recentActivityTitle: "Recent Activity",
+    activityInvitedToGame: "Invited to game",
+    activityYouInvited: "You invited to game",
+    activityPlayedTogether: "Played together",
     // Gameplay translations
     missionCompleted: "Mission Complete! 🎉",
     challengeBeatMe: "Can you beat me?",
