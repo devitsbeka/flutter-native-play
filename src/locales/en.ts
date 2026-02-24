@@ -1382,6 +1382,7 @@ export const en: KaTranslations = {
     createRoomTitle: "Create Room",
     chooseWhatToPlay: "Choose what to play",
     inviteAfterCreate: "You can invite friends after creating the room",
+    nameGenerationError: "Failed to generate room name",
     randomCategory: "Random Category",
     quickStart: "Quick Start",
     chooseFromLibrary: "Choose from Library",
