@@ -174,7 +174,7 @@ export function BulkImport() {
           return {
             ...q,
             ...validation,
-            selected: validation.isValid,
+            selected: true,
           } as SelectableParsedQuestion;
         });
 
@@ -255,7 +255,7 @@ export function BulkImport() {
   const handleImport = async () => {
     const selectedQuestions = questions
       .map((q, idx) => ({ q, idx }))
-      .filter(({ q }) => q.selected && q.isValid);
+      .filter(({ q }) => q.selected);
 
     if (selectedQuestions.length === 0) {
       toast({ title: 'შეცდომა', description: 'არჩეული კითხვები ვერ მოიძებნა', variant: 'destructive' });
@@ -332,11 +332,12 @@ export function BulkImport() {
   };
 
   const handleSelectAll = (selected: boolean) => {
-    setQuestions(prev => prev.map(q => ({ ...q, selected: q.isValid ? selected : false })));
+    setQuestions(prev => prev.map(q => ({ ...q, selected })));
   };
 
-  const selectedCount = questions.filter(q => q.selected && q.isValid).length;
+  const selectedCount = questions.filter(q => q.selected).length;
   const validCount = questions.filter(q => q.isValid).length;
+  const flaggedSelectedCount = questions.filter(q => q.selected && !q.isValid).length;
 
   return (
     <div className="space-y-6">
@@ -439,6 +440,9 @@ export function BulkImport() {
               <div className="rounded-lg bg-primary/10 p-3 text-center">
                 <div className="text-2xl font-bold text-primary">{selectedCount}</div>
                 <div className="text-xs text-muted-foreground">არჩეული</div>
+                {flaggedSelectedCount > 0 && (
+                  <div className="text-xs text-yellow-600 mt-0.5">({flaggedSelectedCount} ⚠️)</div>
+                )}
               </div>
             </div>
 
