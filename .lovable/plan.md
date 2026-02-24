@@ -1,37 +1,44 @@
 
 
-## Fix: Glass Card Visual Glitches in Room Lobby
+## Fix: Shorten Questions/Answers in the Correct Language
 
 ### Problem
-The room lobby page shows horizontal and vertical line glitches (seams) on the glass-card components. These are sub-pixel rendering artifacts caused by `backdrop-blur` on multiple stacked semi-transparent elements scrolling over a gradient background.
+Both `shorten-questions` and `shorten-answers` edge functions have their AI prompts hardcoded entirely in Georgian. When English questions are processed, the AI translates them to Georgian instead of shortening them in English.
+
+From the screenshot: "What was the costliest war in human history adjusted for inflation?" gets shortened to a Georgian sentence instead of a shorter English version.
 
 ### Root Cause
-Three glass-card components use `backdrop-blur-sm` or `backdrop-blur-md` combined with `bg-white/10` and semi-transparent borders. When these elements overlap or sit adjacent during scrolling, the browser compositor creates visible seam lines at their edges.
-
-Additionally, the TV Mode card still uses `border-white/20` (higher opacity) instead of the project standard `border-white/[0.12]`.
+- `shorten-questions/index.ts` line 229: Prompt says "შენ ხარ ქართული ქვიზის კითხვების შემოკლების ექსპერტი" (You are a Georgian quiz shortening expert)
+- `shorten-answers/index.ts` line 143: Same issue -- Georgian-only prompt
+- Neither function queries the `language` column from the database
+- The database has ~7,300 English questions and ~9,000 Georgian questions
 
 ### Solution
+Make both functions language-aware:
 
-**File: `src/components/team/RoomLobbyV2.tsx`**
-
-1. **TV Mode card (line 909)**: Change `border-white/20` to `border-white/[0.12]` to match the project standard
-2. **All glass cards**: Remove `backdrop-blur-sm`/`backdrop-blur-md` from the content cards entirely. The blur effect is barely noticeable over a solid gradient background anyway, and it's the primary cause of the rendering glitches. Keep the solid `bg-white/10` which provides sufficient glass effect.
-3. **Header blur (line 696)**: Keep `backdrop-blur-md` only on the sticky header where it's functional (content scrolls behind it)
-4. **Header buttons (lines 700, 726, 737)**: Change `border-white/20` to `border-white/[0.12]` on the header action buttons
-
-**File: `src/components/team/CategoryPickerSection.tsx`**
-
-5. **Line 116**: Remove `backdrop-blur-sm` from the category picker card
-
-**File: `src/components/team/RoomScoreboard.tsx`**
-
-6. **Line 68**: Remove `backdrop-blur-md` from the scoreboard card
+1. **Add `language` to the SELECT query** in both functions so we know each question's language
+2. **Create language-specific prompts** -- Georgian prompt for `ka` questions, English prompt for `en` (and other languages)
+3. **Update the validation** in `shorten-questions` -- the `incompleteEndings` check (line 77) currently only has Georgian words; add English equivalents for non-Georgian questions
 
 ### Technical Details
 
-The changes are minimal class string edits:
-- `bg-white/10 backdrop-blur-sm border border-white/20` becomes `bg-white/10 border border-white/[0.12]`
-- `bg-white/10 backdrop-blur-md border border-white/[0.12]` becomes `bg-white/10 border border-white/[0.12]`
+**File: `supabase/functions/shorten-questions/index.ts`**
 
-The `will-change-transform` on the scroll container (already in place on line 779) will continue to help with compositing. Removing `backdrop-blur` from content cards eliminates the seam artifacts entirely while maintaining the visual glass-card appearance through the semi-transparent white backgrounds.
+- Line 145: Add `language` to the SELECT: `"id, question_text, correct_answer, incorrect_answers, category_id, language"`
+- Lines 76-85: Make `incompleteEndings` validation language-aware (Georgian endings for `ka`, English endings like "and", "but", "or", "the", "a" for `en`)
+- Lines 229-260: Replace the single Georgian prompt with a function that returns the appropriate prompt based on `question.language`:
+  - For `ka`: Keep existing Georgian prompt
+  - For `en`/other: English prompt with equivalent rules (e.g., "You are a quiz question shortening expert. Shorten this question to max 65 characters while preserving meaning...")
+
+**File: `supabase/functions/shorten-answers/index.ts`**
+
+- Line 51: Add `language` to the SELECT: `"id, question_text, correct_answer, incorrect_answers, category_id, language"`
+- Lines 143-174: Replace the single Georgian prompt with a language-aware function:
+  - For `ka`: Keep existing Georgian prompt
+  - For `en`/other: English prompt with equivalent rules about not truncating proper nouns, using shorter synonyms, etc.
+
+### Key Design Decisions
+- Default to English prompt if `language` is null or unrecognized (safer than defaulting to Georgian for non-Georgian content)
+- Keep the exact same validation logic and thresholds -- only the AI prompt language changes
+- Georgian-specific validation rules (incomplete endings) are skipped for non-Georgian questions, replaced with English equivalents
 
