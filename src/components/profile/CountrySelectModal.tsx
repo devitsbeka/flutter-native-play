@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Check, Globe, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { translateErrorMessage } from "@/utils/errorTranslations";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CountrySelectModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export function CountrySelectModal({ isOpen, onClose, currentCountryCode }: Coun
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const { updateProfile } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Get flag emoji from country code
   const getFlagEmoji = (countryCode: string) => {
@@ -77,13 +79,13 @@ export function CountrySelectModal({ isOpen, onClose, currentCountryCode }: Coun
     try {
       await updateProfile({ country_code: countryCode });
       toast({
-        title: "წარმატება!",
-        description: "ქვეყანა შეცვლილია",
+        title: t("extra.countrySuccess"),
+        description: t("extra.countryChanged"),
       });
       onClose();
     } catch (error: any) {
       toast({
-        title: "შეცდომა",
+        title: t("common.error"),
         description: translateErrorMessage(error.message),
         variant: "destructive",
       });
@@ -99,7 +101,7 @@ export function CountrySelectModal({ isOpen, onClose, currentCountryCode }: Coun
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Globe className="w-5 h-5 text-primary" />
-            ქვეყნის არჩევა
+            {t("extra.countrySelectTitle")}
           </DialogTitle>
         </DialogHeader>
 
@@ -107,7 +109,7 @@ export function CountrySelectModal({ isOpen, onClose, currentCountryCode }: Coun
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="მოძებნე ქვეყანა..."
+              placeholder={t("extra.countrySearchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -146,7 +148,7 @@ export function CountrySelectModal({ isOpen, onClose, currentCountryCode }: Coun
 
               {countries.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
-                  ქვეყანა ვერ მოიძებნა
+                  {t("extra.countryNotFound")}
                 </div>
               )}
             </div>

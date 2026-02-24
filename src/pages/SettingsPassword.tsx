@@ -67,7 +67,7 @@ export default function SettingsPassword() {
             </div>
             <div>
               <h3 className="font-semibold text-foreground">{t("settings.changePassword")}</h3>
-              <p className="text-sm text-muted-foreground">შეიყვანე ახალი პაროლი</p>
+              <p className="text-sm text-muted-foreground">{t("extra.settingsPasswordSubtitle")}</p>
             </div>
           </div>
 
