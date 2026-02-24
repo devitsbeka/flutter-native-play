@@ -183,7 +183,7 @@ export function QuestionScreen() {
 
   const timerPercentage = (timeRemaining / timePerQuestion) * 100;
   const isRevealed = answerState === "revealed";
-  const letters = ["ა", "ბ", "გ", "დ"];
+  const letters = [t("extra.answerLabelA"), t("extra.answerLabelB"), t("extra.answerLabelC"), t("extra.answerLabelD")];
 
   // Filter visible answers based on power-ups
   const visibleAnswers = currentQuestion.allAnswers.filter(answer => {
@@ -301,7 +301,7 @@ export function QuestionScreen() {
             animate={{ opacity: 1, scale: 1 }}
             className="absolute top-3 right-3 bg-cyan-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1"
           >
-            ❄️ {freezeTimeLeft}წ
+            ❄️ {freezeTimeLeft}{t("extra.secondsShort")}
           </motion.div>
         )}
 

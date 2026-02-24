@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { RotateCcw, Home } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { useLanguage } from "@/contexts/LanguageContext";
 import coinIcon from "@/assets/icons/icon-coin.png";
 
 interface GameLoseModalProps {
@@ -27,6 +28,7 @@ export function GameLoseModal({
   coinsEarned,
 }: GameLoseModalProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleBackToHome = () => {
     onClose();
@@ -37,7 +39,7 @@ export function GameLoseModal({
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      title="წაგება"
+      title={t("extra.gameLoseTitle")}
       iconSrc={ICON_URLS.brokenHeart}
       showSparkles={false}
     >
@@ -53,7 +55,7 @@ export function GameLoseModal({
         }}
       >
         <div className="text-center">
-          <p className="text-gray-500 text-sm mb-1">შენ</p>
+          <p className="text-gray-500 text-sm mb-1">{t("extra.youLabel")}</p>
           <p className="text-3xl font-bold text-gray-900">{userScore}</p>
         </div>
         <div 
@@ -77,7 +79,7 @@ export function GameLoseModal({
         transition={{ delay: 0.2 }}
         className="text-gray-600 text-center text-sm mb-4"
       >
-        არ დანებდე! შემდეგ ჯერზე აუცილებლად მოიგებ 💪
+        {t("extra.dontGiveUp")} 💪
       </motion.p>
 
       {/* Consolation coins */}
@@ -93,7 +95,7 @@ export function GameLoseModal({
           }}
         >
           <img src={coinIcon} alt="" className="w-5 h-5" />
-          <span className="text-amber-800 font-semibold">+{coinsEarned} ნუგეშის მონეტები</span>
+          <span className="text-amber-800 font-semibold">+{coinsEarned} {t("extra.consolationCoins")}</span>
         </motion.div>
       )}
 
@@ -111,7 +113,7 @@ export function GameLoseModal({
           className="w-full"
           icon={<RotateCcw className="w-5 h-5" />}
         >
-          თავიდან სცადე
+          {t("extra.tryAgain")}
         </ChunkyButton>
 
         <ChunkyButton
@@ -121,7 +123,7 @@ export function GameLoseModal({
           className="w-full"
           icon={<Home className="w-5 h-5" />}
         >
-          მთავარ გვერდზე
+          {t("extra.goToHomePage")}
         </ChunkyButton>
       </motion.div>
     </GameModal>

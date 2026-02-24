@@ -89,7 +89,7 @@ export function VSScreen() {
   // Mixed category constant
   const MIXED_CATEGORY = {
     id: "__mixed__",
-    name: "სხვადასხვა",
+    name: t("extra.mixedCategory"),
     image_url: null,
     icon_slug: "mystery-box",
   };
@@ -435,7 +435,7 @@ export function VSScreen() {
             >
               <img src={coinIcon} alt="" className="w-4 h-4" />
               <span className="text-white font-bold text-sm">{REWARDS.GAME_WIN_REWARD.toLocaleString()}</span>
-              <span className="text-white/60 text-xs">მოგება</span>
+              <span className="text-white/60 text-xs">{t("extra.winReward")}</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -513,8 +513,8 @@ export function VSScreen() {
                     className="text-white font-bold text-lg"
                     style={{ textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
                   >
-                    {selectedCategory?.id === "__mixed__" 
-                      ? "სხვადასხვა" 
+                  {selectedCategory?.id === "__mixed__" 
+                      ? t("extra.mixedCategory") 
                       : (selectedCategory?.name || currentCategory?.name || t("game.category"))}
                   </span>
                 </motion.div>

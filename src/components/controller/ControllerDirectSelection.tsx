@@ -354,7 +354,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                     <div className="flex-1 min-w-0">
                       <span className="text-left font-medium text-white block truncate">{trivia.title}</span>
                       {trivia.is_blind && (trivia.plays_count || 0) === 0 ? (
-                        <span className="text-xs text-green-400">ითამაშე</span>
+                        <span className="text-xs text-green-400">{t("extra.tvPlayLabel")}</span>
                       ) : (
                         <span className="text-xs text-yellow-400">
                           ⚠️ {!trivia.is_blind ? t('extra.youKnowAnswers') : t('extra.alreadyPlayed')}

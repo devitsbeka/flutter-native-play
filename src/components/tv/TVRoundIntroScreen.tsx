@@ -132,7 +132,7 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
                 {t("extra.tvReady")}
               </span>
             ) : (
-              {t("extra.tvImReady")}
+              t("extra.tvImReady")
             )}
           </motion.button>
         </motion.div>

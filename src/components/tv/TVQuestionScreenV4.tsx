@@ -14,7 +14,9 @@ import { TVBrandingOverlay } from './TVBrandingOverlay';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
+const getAnswerLabels = (t: (key: string) => string) => [
+  t("extra.answerLabelA"), t("extra.answerLabelB"), t("extra.answerLabelC"), t("extra.answerLabelD")
+];
 
 export const TVQuestionScreenV4: React.FC = () => {
   const { t } = useLanguage();
@@ -258,7 +260,7 @@ export const TVQuestionScreenV4: React.FC = () => {
                       : 'disabled'
                     : 'default'
                 }
-                label={GEORGIAN_LABELS[index]}
+                label={getAnswerLabels(t)[index]}
                 text={option}
                 disabled
                 className="w-full"
@@ -330,7 +332,7 @@ export const TVQuestionScreenV4: React.FC = () => {
                       : 'disabled'
                     : 'default'
                 }
-                label={GEORGIAN_LABELS[index]}
+                label={getAnswerLabels(t)[index]}
                 text={option}
                 disabled
                 className="w-full h-full"

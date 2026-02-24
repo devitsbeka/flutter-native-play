@@ -665,7 +665,7 @@ export const TVLobbyScreenV2: React.FC = () => {
               <p className="text-sm font-bold text-white">mytrivia.io/join</p>
               {/* Code to enter */}
               <div className="mt-2 px-3 py-1 bg-white/10 rounded-lg inline-block">
-                <span className="text-purple-300 text-xs">კოდი: </span>
+                <span className="text-purple-300 text-xs">{t("extra.tvCodePrefix")}</span>
                 <span className="text-white font-bold text-lg tracking-wider">{code}</span>
               </div>
             </div>
@@ -743,7 +743,7 @@ export const TVLobbyScreenV2: React.FC = () => {
             whileTap={{ scale: 0.95 }}
           >
             <Play className="w-5 h-5" />
-            {queue.length > 0 ? `დაწყება (${queue.length} რაუნდი)` : 'თამაშის დაწყება'}
+            {queue.length > 0 ? t("extra.tvStartRoundsBtn", { count: queue.length }) : t("extra.tvStartGame")}
           </motion.button>
         </motion.div>
       )}

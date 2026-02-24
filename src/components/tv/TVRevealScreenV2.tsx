@@ -5,7 +5,9 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { TVLeaderboardPanel } from './TVLeaderboardPanel';
 import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
 
-const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
+const getAnswerLabels = (t: (key: string) => string) => [
+  t("extra.answerLabelA"), t("extra.answerLabelB"), t("extra.answerLabelC"), t("extra.answerLabelD")
+];
 
 export const TVRevealScreenV2: React.FC = () => {
   const { questions, currentQuestionIndex, players } = useTVGame();
@@ -52,7 +54,7 @@ export const TVRevealScreenV2: React.FC = () => {
                 >
                   <QuizAnswerButton
                     state={isCorrect ? 'correct' : 'disabled'}
-                    label={GEORGIAN_LABELS[index]}
+                    label={getAnswerLabels(t)[index]}
                     text={option}
                     disabled
                     className="min-h-[64px]"

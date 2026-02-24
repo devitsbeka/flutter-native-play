@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Trophy, Crown, Sparkles, Loader2 } from 'lucide-react';
 import { useTVPoll, PollSuggestion } from '@/hooks/useTVPoll';
 import { useTVGame } from '@/contexts/TVGameContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 
 interface ControllerPollResultsGuestProps {
@@ -13,6 +14,7 @@ export const ControllerPollResultsGuest: React.FC<ControllerPollResultsGuestProp
   sessionId,
 }) => {
   const { myPlayerId, players } = useTVGame();
+  const { t } = useLanguage();
   const myPlayer = players.find(p => p.id === myPlayerId);
   
   const { suggestions, loading, pollPhase } = useTVPoll({
@@ -48,7 +50,7 @@ export const ControllerPollResultsGuest: React.FC<ControllerPollResultsGuestProp
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Trophy className="w-7 h-7 text-yellow-500" />
-        <h1 className="text-xl font-bold text-white">ხმის მიცემის შედეგები</h1>
+        <h1 className="text-xl font-bold text-white">{t("extra.tvPollResults")}</h1>
       </div>
 
       {/* Results list */}
@@ -91,7 +93,7 @@ export const ControllerPollResultsGuest: React.FC<ControllerPollResultsGuestProp
             <div className="flex-1">
               <p className="font-bold text-white">{suggestion.category_name}</p>
               <p className="text-xs text-purple-300">
-                {suggestion.vote_count} ხმა • {suggestion.nickname}
+                {suggestion.vote_count} {t("extra.tvVoteUnit")} • {suggestion.nickname}
               </p>
             </div>
 
@@ -114,7 +116,7 @@ export const ControllerPollResultsGuest: React.FC<ControllerPollResultsGuestProp
       >
         <div className="flex items-center justify-center gap-2 text-purple-300">
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-sm">ველოდებით ჰოსტს თამაშის დასაწყებად...</span>
+          <span className="text-sm">{t("extra.tvWaitingHostToStart")}</span>
         </div>
       </motion.div>
     </div>

@@ -81,7 +81,7 @@ export function ActivePowerUpIndicator({ type, remainingTime, isVisible }: Activ
                 animate={{ scale: 1 }}
                 className="bg-black/30 rounded-full px-2 py-0.5 text-sm"
               >
-                {remainingTime}წ
+                {remainingTime}{t("extra.secondsShort")}
               </motion.span>
             )}
           </motion.div>

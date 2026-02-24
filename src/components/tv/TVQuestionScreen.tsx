@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Clock } from 'lucide-react';
 import { Avatar } from '@/components/shared/Avatar';
 import { TVScoreboardPanel } from './TVScoreboardPanel';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { getQuestionTime } from '@/utils/tvScoring';
 
 const OPTION_COLORS = [
@@ -42,6 +43,7 @@ export const TVQuestionScreen: React.FC<TVQuestionScreenProps> = ({
   players,
 }) => {
   const currentQuestion = questions[currentQuestionIndex];
+  const { t } = useLanguage();
   if (!currentQuestion) return null;
 
   const answeredCount = players.filter(p => p.hasAnswered).length;
