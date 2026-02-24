@@ -7,13 +7,13 @@ interface LeagueHeroHeaderProps {
 }
 
 export function LeagueHeroHeader({ league }: LeagueHeroHeaderProps) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   
   // Use language-aware league name
   const leagueName = language === 'ka' ? league.nameKa : league.name;
   
   // Country name based on language
-  const countryName = language === 'ka' ? 'საქართველო' : 'Georgia';
+  const countryName = t("extra.countryGeorgia");
   
   return (
     <div className="pt-6 pb-4 px-4 text-center">
