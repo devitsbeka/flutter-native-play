@@ -11,6 +11,7 @@ export interface QuestionForAssignment {
   icon_slug: string | null;
   category_id: string;
   category_name?: string;
+  language?: string;
 }
 
 interface Stats {
@@ -30,6 +31,7 @@ export function useAdminIconAssignment() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [showOnlyWithoutIcons, setShowOnlyWithoutIcons] = useState(false);
+  const [languageFilter, setLanguageFilter] = useState<string | null>(null);
   
   const { categories } = useCategories();
   const { slugSet: iconSlugSet, loading: iconSlugSetLoading } = useIconLibrarySlugSet();
@@ -55,10 +57,12 @@ export function useAdminIconAssignment() {
 
   // Fetch stats
   const fetchStats = useCallback(async () => {
-    const { count: total, error: totalError } = await supabase
+    let totalQuery = supabase
       .from('questions')
       .select('*', { count: 'exact', head: true })
       .eq('is_active', true);
+    if (languageFilter) totalQuery = totalQuery.eq('language', languageFilter);
+    const { count: total, error: totalError } = await totalQuery;
 
     if (totalError) {
       console.error('Error fetching stats total:', totalError);
@@ -67,11 +71,13 @@ export function useAdminIconAssignment() {
 
     // While icon slugs are still loading, fall back to old counting.
     if (iconSlugSetLoading) {
-      const { count: withIcons } = await supabase
+      let withIconsQuery = supabase
         .from('questions')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true)
         .not('icon_slug', 'is', null);
+      if (languageFilter) withIconsQuery = withIconsQuery.eq('language', languageFilter);
+      const { count: withIcons } = await withIconsQuery;
 
       setStats({
         total: total || 0,
@@ -88,11 +94,12 @@ export function useAdminIconAssignment() {
     let withValidIcons = 0;
 
     while (hasMore) {
-      const { data, error } = await supabase
+      let statsPageQuery = supabase
         .from('questions')
         .select('icon_slug')
-        .eq('is_active', true)
-        .range(page * pageSize, (page + 1) * pageSize - 1);
+        .eq('is_active', true);
+      if (languageFilter) statsPageQuery = statsPageQuery.eq('language', languageFilter);
+      const { data, error } = await statsPageQuery.range(page * pageSize, (page + 1) * pageSize - 1);
 
       if (error) {
         console.error('Error fetching stats page:', error);
@@ -113,7 +120,7 @@ export function useAdminIconAssignment() {
       withIcons: withValidIcons,
       withoutIcons: Math.max(0, (total || 0) - withValidIcons)
     });
-  }, [iconSlugSetLoading, isValidIconSlug]);
+  }, [iconSlugSetLoading, isValidIconSlug, languageFilter]);
 
   // Fetch questions with filters
   const fetchQuestions = useCallback(async (reset = false, currentSearchTerm?: string, currentCategoryFilter?: string | null, currentShowOnlyWithoutIcons?: boolean) => {
@@ -127,8 +134,12 @@ export function useAdminIconAssignment() {
     
     let query = supabase
       .from('questions')
-      .select('id, question_text, correct_answer, icon_slug, category_id')
+      .select('id, question_text, correct_answer, icon_slug, category_id, language')
       .eq('is_active', true);
+
+    if (languageFilter) {
+      query = query.eq('language', languageFilter);
+    }
 
     // IMPORTANT:
     // The "Only without icons" toggle is applied client-side (it can include invalid slugs,
@@ -186,7 +197,8 @@ export function useAdminIconAssignment() {
     // Map category names - use uuid to match since questions have UUID category_id
     const questionsWithCategories = (data || []).map(q => ({
       ...q,
-      category_name: categories.find(c => (c as any).uuid === q.category_id)?.name || 'უცნობი'
+      category_name: categories.find(c => (c as any).uuid === q.category_id)?.name || 'უცნობი',
+      language: (q as any).language || 'ka'
     }));
 
     const filteredQuestions = onlyWithout
@@ -203,7 +215,7 @@ export function useAdminIconAssignment() {
     // Pagination is based on raw fetch size; filtering happens client-side.
     setHasMore((data?.length || 0) === PAGE_SIZE);
     setLoading(false);
-  }, [page, searchTerm, categoryFilter, showOnlyWithoutIcons, categories, isMissingIcon]);
+  }, [page, searchTerm, categoryFilter, showOnlyWithoutIcons, languageFilter, categories, isMissingIcon]);
 
   // Initial fetch and stats
   useEffect(() => {
@@ -217,7 +229,7 @@ export function useAdminIconAssignment() {
     if (categories.length > 0) {
       fetchQuestions(true, searchTerm, categoryFilter, showOnlyWithoutIcons);
     }
-  }, [searchTerm, categoryFilter, showOnlyWithoutIcons, categories.length]);
+  }, [searchTerm, categoryFilter, showOnlyWithoutIcons, languageFilter, categories.length]);
 
   // Load more
   const loadMore = useCallback(() => {
@@ -296,6 +308,8 @@ export function useAdminIconAssignment() {
     setCategoryFilter,
     showOnlyWithoutIcons,
     setShowOnlyWithoutIcons,
+    languageFilter,
+    setLanguageFilter,
     loadMore,
     assignIcon,
     removeIcon,
