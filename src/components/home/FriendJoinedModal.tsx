@@ -5,6 +5,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import confetti from "canvas-confetti";
 import { Sparkles } from "lucide-react";
 import crownIcon from "@/assets/icons/icon-vip-crown.png";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FriendJoinedModalProps {
   open: boolean;
@@ -14,6 +15,8 @@ interface FriendJoinedModalProps {
 }
 
 export function FriendJoinedModal({ open, onOpenChange, variant = "inviter", inviterName }: FriendJoinedModalProps) {
+  const { t } = useLanguage();
+
   useEffect(() => {
     if (open) {
       confetti({
@@ -34,17 +37,14 @@ export function FriendJoinedModal({ open, onOpenChange, variant = "inviter", inv
 
   const bodyText = variant === "invited"
     ? inviterName && inviterName !== "true"
-      ? <>მოგიწვია <span className="font-semibold text-purple-700">{inviterName}</span>-მ და მიიღე{" "}
-          <span className="font-semibold text-amber-600">10 დღიანი PRO</span> საჩუქრად!</>
-      : <>დარეგისტრირდი მოწვევით და მიიღე{" "}
-          <span className="font-semibold text-amber-600">10 დღიანი PRO</span> საჩუქრად!</>
-    : <>შენი მეგობარი შემოუერთდა MyTrivia LIVE-ს შენი ლინკით!{" "}
-        <span className="font-semibold text-amber-600">მიიღე 10 დღიანი PRO.</span></>;
+      ? t("extra.invitedByFriend", { name: inviterName })
+      : t("extra.registeredWithInvite")
+    : t("extra.friendJoinedViaLink");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[340px] p-0 overflow-hidden border-none bg-transparent shadow-none [&>button]:hidden">
-        <DialogTitle className="sr-only">გილოცავთ</DialogTitle>
+        <DialogTitle className="sr-only">{t("extra.congratulationsTitle")}</DialogTitle>
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -58,7 +58,6 @@ export function FriendJoinedModal({ open, onOpenChange, variant = "inviter", inv
           }}
         >
           <div className="relative flex flex-col items-center px-6 pt-8 pb-6">
-            {/* Crown icon */}
             <motion.div
               initial={{ scale: 0, rotate: -30 }}
               animate={{ scale: 1, rotate: 0 }}
@@ -82,7 +81,7 @@ export function FriendJoinedModal({ open, onOpenChange, variant = "inviter", inv
               transition={{ delay: 0.1 }}
               className="font-display text-xl font-bold text-gray-900 text-center mb-3"
             >
-              🎉 გილოცავთ!
+              {t("extra.congratulationsEmoji")}
             </motion.h2>
 
             <motion.p
@@ -94,7 +93,6 @@ export function FriendJoinedModal({ open, onOpenChange, variant = "inviter", inv
               {bodyText}
             </motion.p>
 
-            {/* PRO badge */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -107,7 +105,7 @@ export function FriendJoinedModal({ open, onOpenChange, variant = "inviter", inv
             >
               <img src={crownIcon} alt="" className="w-6 h-6 object-contain" />
               <span className="font-display text-sm font-bold text-purple-700">
-                10 დღიანი PRO ✓
+                {t("extra.tenDayProBadge")}
               </span>
             </motion.div>
 
@@ -124,7 +122,7 @@ export function FriendJoinedModal({ open, onOpenChange, variant = "inviter", inv
                 onClick={() => onOpenChange(false)}
                 icon={<Sparkles className="w-5 h-5" />}
               >
-                გასაგებია
+                {t("common.gotIt")}
               </ChunkyButton>
             </motion.div>
           </div>

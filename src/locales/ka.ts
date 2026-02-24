@@ -3634,6 +3634,23 @@ export const ka = {
     // Hooks
     roomCreateFailed2: "ოთახის შექმნა ვერ მოხერხდა",
     aiAvatarAnimating: "AI ავატარი შეიქმნა! ანიმაცია იწყება...",
+    // GuestWelcomePanel
+    orLabel: "ან",
+    playAsGuestShort: "ითამაშე როგორც სტუმარმა",
+    // FriendJoinedModal
+    congratulationsTitle: "გილოცავთ",
+    congratulationsEmoji: "🎉 გილოცავთ!",
+    invitedByFriend: "მოგიწვია {name}-მ და მიიღე 10 დღიანი PRO საჩუქრად!",
+    registeredWithInvite: "დარეგისტრირდი მოწვევით და მიიღე 10 დღიანი PRO საჩუქრად!",
+    friendJoinedViaLink: "შენი მეგობარი შემოუერთდა MyTrivia LIVE-ს შენი ლინკით! მიიღე 10 დღიანი PRO.",
+    tenDayProBadge: "10 დღიანი PRO ✓",
+    // InviteFriendsModal
+    inviteShareText: "შემოგვიერთდი MyTrivia LIVE-ზე და მიიღე 10 დღიანი PRO უფასოდ!",
+    // ProGiftBanner
+    proGiftDesc: "გილოცავთ! თქვენ გაქვთ PRO 10 დღის განმავლობაში — სრულიად უფასოდ.",
+    claimGiftEmoji: "მიიღე საჩუქარი 🎁",
+    // GemShopModal
+    notEnoughGems: "არ გაქვს საკმარისი ალმასი!",
   },
 };
 

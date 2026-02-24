@@ -441,11 +441,11 @@ export function GuestWelcomePanel({
       >
         <div className="flex items-center gap-2 mb-0.5">
           <div className="w-6 h-px bg-border" />
-          <span className="text-xs text-muted-foreground">ან</span>
-          <div className="w-6 h-px bg-border" />
-        </div>
-        <p className="text-sm text-muted-foreground font-medium text-center">
-          ითამაშე როგორც სტუმარმა
+           <span className="text-xs text-muted-foreground">{t("extra.orLabel")}</span>
+           <div className="w-6 h-px bg-border" />
+         </div>
+         <p className="text-sm text-muted-foreground font-medium text-center">
+           {t("extra.playAsGuestShort")}
         </p>
         <HandDrawnArrow size={28} color="hsl(var(--muted-foreground))" />
       </motion.div>

@@ -4,35 +4,37 @@ import { Sparkles, Trophy, Lock } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface GuestSignupPromptModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const benefits = [
-  {
-    icon: <Sparkles className="w-5 h-5 text-purple-600" />,
-    text: "შექმენი ანიმირებული ავატარი",
-    bg: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
-    shadow: "0 3px 0 #C4B5FD",
-  },
-  {
-    icon: <Trophy className="w-5 h-5 text-emerald-600" />,
-    text: "შეინახე პროგრესი",
-    bg: "linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)",
-    shadow: "0 3px 0 #6EE7B7",
-  },
-  {
-    icon: <Lock className="w-5 h-5 text-blue-600" />,
-    text: "გახსენი ყველა ფუნქცია",
-    bg: "linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)",
-    shadow: "0 3px 0 #93C5FD",
-  },
-];
-
 export function GuestSignupPromptModal({ isOpen, onClose }: GuestSignupPromptModalProps) {
   const { startOnboarding } = useOnboarding();
+  const { t } = useLanguage();
+
+  const benefits = [
+    {
+      icon: <Sparkles className="w-5 h-5 text-purple-600" />,
+      text: t("guestModal.createAnimatedAvatar"),
+      bg: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
+      shadow: "0 3px 0 #C4B5FD",
+    },
+    {
+      icon: <Trophy className="w-5 h-5 text-emerald-600" />,
+      text: t("guestModal.saveProgress"),
+      bg: "linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)",
+      shadow: "0 3px 0 #6EE7B7",
+    },
+    {
+      icon: <Lock className="w-5 h-5 text-blue-600" />,
+      text: t("guestModal.unlockAllFeatures"),
+      bg: "linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)",
+      shadow: "0 3px 0 #93C5FD",
+    },
+  ];
 
   const handleStart = () => {
     onClose();
@@ -47,7 +49,7 @@ export function GuestSignupPromptModal({ isOpen, onClose }: GuestSignupPromptMod
       showSparkles
       showStars
       iconSrc={triviaBuzzer}
-      title="შექმენი ანგარიში და გააგრძელე თამაში"
+      title={t("guestModal.title")}
     >
       <div className="cursor-pointer" onClick={handleStart}>
         <div className="space-y-3 pb-2">
@@ -97,7 +99,7 @@ export function GuestSignupPromptModal({ isOpen, onClose }: GuestSignupPromptMod
               onClick={handleStart}
               icon={<Sparkles className="w-5 h-5" />}
             >
-              დავიწყოთ!
+              {t("guestModal.letsGo")}
             </ChunkyButton>
           </motion.div>
         </motion.div>

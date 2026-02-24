@@ -82,7 +82,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
     try {
       await navigator.share({
         title: "MyTrivia LIVE",
-        text: "შემოგვიერთდი MyTrivia LIVE-ზე და მიიღე 10 დღიანი PRO უფასოდ!",
+        text: t("extra.inviteShareText"),
         url: referralLink,
       });
       setShared(true);

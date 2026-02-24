@@ -1,16 +1,18 @@
 import { motion } from "framer-motion";
 import { User, Camera, Sparkles, Wand2, Play } from "lucide-react";
 import { useOnboarding } from "@/contexts/OnboardingContext";
-
-const steps = [
-  { id: "signup", title: "რეგისტრაცია", icon: User },
-  { id: "photo", title: "ფოტო", icon: Camera },
-  { id: "avatar", title: "ავატარი", icon: Sparkles },
-  { id: "animate", title: "ანიმაცია", icon: Wand2 },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function GuestActivationFlow() {
   const { startOnboarding } = useOnboarding();
+  const { t } = useLanguage();
+
+  const steps = [
+    { id: "signup", title: t("extra.stepSignup"), icon: User },
+    { id: "photo", title: t("extra.stepPhoto"), icon: Camera },
+    { id: "avatar", title: t("extra.stepAvatar"), icon: Sparkles },
+    { id: "animate", title: t("extra.stepAnimate"), icon: Wand2 },
+  ];
 
   return (
     <motion.div 
@@ -30,11 +32,9 @@ export function GuestActivationFlow() {
         whileHover={{ scale: 1.02, y: -2 }}
         whileTap={{ scale: 0.98 }}
       >
-        {/* Decorative circles */}
         <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-white/10" />
         <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
         
-        {/* Play icon */}
         <motion.div 
           className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4"
           animate={{ scale: [1, 1.1, 1] }}
@@ -43,8 +43,8 @@ export function GuestActivationFlow() {
           <Play className="w-8 h-8 text-white fill-white" />
         </motion.div>
         
-        <h2 className="text-white text-xl font-bold mb-1">დაიწყე თამაში</h2>
-        <p className="text-white/80 text-sm">შექმენი ანგარიში და ითამაშე</p>
+        <h2 className="text-white text-xl font-bold mb-1">{t("extra.startGameCta")}</h2>
+        <p className="text-white/80 text-sm">{t("extra.createAccountAndPlay")}</p>
       </motion.button>
 
       {/* Steps Progress */}
@@ -61,7 +61,6 @@ export function GuestActivationFlow() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                {/* Circle */}
                 <div 
                   className={`
                     w-11 h-11 rounded-full flex items-center justify-center relative
@@ -77,8 +76,6 @@ export function GuestActivationFlow() {
                   }}
                 >
                   <Icon className="w-5 h-5" />
-                  
-                  {/* Number badge */}
                   <span 
                     className={`
                       absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold
@@ -92,8 +89,6 @@ export function GuestActivationFlow() {
                     {index + 1}
                   </span>
                 </div>
-                
-                {/* Label */}
                 <span 
                   className={`
                     text-[10px] font-medium mt-1.5
@@ -104,7 +99,6 @@ export function GuestActivationFlow() {
                 </span>
               </motion.div>
               
-              {/* Connector */}
               {index < steps.length - 1 && (
                 <div className="w-2 h-px bg-border mx-1 mt-[-14px]" />
               )}
@@ -113,9 +107,8 @@ export function GuestActivationFlow() {
         })}
       </div>
       
-      {/* Subtitle */}
       <p className="text-muted-foreground text-xs mt-4">
-        4 მარტივი ნაბიჯი 🎮
+        {t("extra.simpleSteps")}
       </p>
     </motion.div>
   );
