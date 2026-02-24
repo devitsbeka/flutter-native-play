@@ -61,7 +61,7 @@ export default function SettingsName() {
             </div>
             <div>
               <h3 className="font-semibold text-foreground">{t("settings.editName")}</h3>
-              <p className="text-sm text-muted-foreground">შეცვალე შენი სახელი</p>
+              <p className="text-sm text-muted-foreground">{t("extra.settingsNameSubtitle")}</p>
             </div>
           </div>
 

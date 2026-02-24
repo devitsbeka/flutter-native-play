@@ -226,8 +226,8 @@ export function RoomLobbyV2() {
     
     const link = getShareLink(currentRoom.room_code);
     const shareData = {
-      title: "MyTrivia - შემომიერთდი ოთახში!",
-      text: `შემომიერთდი ტრივიას თამაშში!`,
+      title: t("extra.shareTitle"),
+      text: t("extra.shareText"),
       url: link,
     };
 
@@ -334,10 +334,10 @@ export function RoomLobbyV2() {
         .from("room_participants")
         .delete()
         .eq("id", participantId);
-      toast.success("მოთამაშე წაიშალა");
+      toast.success(t("extra.playerRemoved"));
     } catch (error) {
       console.error("Remove participant error:", error);
-      toast.error("წაშლა ვერ მოხერხდა");
+      toast.error(t("extra.removePlayerFailed"));
     }
   };
 
@@ -350,9 +350,9 @@ export function RoomLobbyV2() {
       await supabase.from("notifications").insert({
         user_id: userId,
         type: "room_invite",
-        title: "მოგიწვიეს თამაშზე!",
-        message: `${profile?.nickname || 'მეგობარი'} გიწვევს თამაშში`,
-        data: { 
+        title: t("extra.invitedToGame"),
+        message: t("extra.invitedToGameMsg", { name: profile?.nickname || t("extra.friendFallback") }),
+        data: {
           room_id: currentRoom.id, 
           room_code: currentRoom.room_code,
           room_name: currentRoom.room_name,
@@ -362,10 +362,10 @@ export function RoomLobbyV2() {
           sender_avatar: profile?.avatar_url
         },
       });
-      toast.success("მოწვევა თავიდან გაიგზავნა!");
+      toast.success(t("extra.invitationResent"));
     } catch (error) {
       console.error("Resend invitation error:", error);
-      toast.error("მოწვევის გაგზავნა ვერ მოხერხდა");
+      toast.error(t("extra.invitationResendFailed"));
     }
   };
 
@@ -460,7 +460,7 @@ export function RoomLobbyV2() {
         })
         .eq("id", currentRoom.id);
       
-      toast.success("კატეგორია შეიცვალა");
+      toast.success(t("extra.categoryChanged"));
       setMadeNewSelection(true); // Mark that user made a new selection
       
       // Auto-start game if startAfterPick is true
@@ -471,7 +471,7 @@ export function RoomLobbyV2() {
       }
     } catch (error) {
       console.error("Error updating category:", error);
-      toast.error("კატეგორიის შეცვლა ვერ მოხერხდა");
+      toast.error(t("extra.categoryChangeFailed"));
     }
   };
 
@@ -487,12 +487,12 @@ export function RoomLobbyV2() {
         .from("game_rooms")
         .update({ 
           category_id: null, 
-          category_name: "შემთხვევითი",
+          category_name: t("extra.randomCategoryName"),
           user_trivia_id: null, // Clear any previously selected user trivia
         })
         .eq("id", currentRoom.id);
       
-      toast.success("შემთხვევითი კატეგორია");
+      toast.success(t("extra.randomCategoryToast"));
       setMadeNewSelection(true); // Mark that user made a new selection
       
       // Auto-start game if startAfterPick is true
@@ -518,7 +518,7 @@ export function RoomLobbyV2() {
         .single();
       
       if (!triviaData?.questions) {
-        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+        toast.error(t("extra.triviaQuestionsNotFound"));
         return;
       }
 
@@ -538,7 +538,7 @@ export function RoomLobbyV2() {
         })
         .eq("id", currentRoom.id);
       
-      toast.success("ტრივია დაემატა");
+      toast.success(t("extra.triviaAdded"));
       setMadeNewSelection(true); // Mark that user made a new selection
       
       // Auto-start game if startAfterPick is true
@@ -549,7 +549,7 @@ export function RoomLobbyV2() {
       }
     } catch (error) {
       console.error("Error setting trivia:", error);
-      toast.error("ტრივიის დამატება ვერ მოხერხდა");
+      toast.error(t("extra.triviaAddFailed"));
     }
   };
 
@@ -562,7 +562,7 @@ export function RoomLobbyV2() {
   }) => {
     const success = await addToQueue(item);
     if (success) {
-      toast.success("რიგში დაემატა");
+      toast.success(t("extra.addedToQueueToast"));
     }
   };
 
@@ -570,7 +570,7 @@ export function RoomLobbyV2() {
 
   const canStartGame = participants.length >= 1;
   const roomGradient = getGradientById(currentRoom?.background_gradient);
-  const roomName = currentRoom.room_name || "თამაშის ოთახი";
+  const roomName = currentRoom.room_name || t("extra.gameRoomDefault");
 
   const chatOverlay = showChat
     ? createPortal(
@@ -861,7 +861,7 @@ export function RoomLobbyV2() {
           categoryId={(justReturnedFromResults && !madeNewSelection && queue.length === 0) ? null : currentRoom.category_id}
           iconSlug={
             (justReturnedFromResults && !madeNewSelection && queue.length === 0) ? null : (
-              currentRoom.category_name === "შემთხვევითი" 
+              currentRoom.category_name === t("extra.randomCategoryName") 
                 ? null
                 : currentRoom.category_id 
                   ? getCategoryIconSlug(currentRoom.category_id) 
@@ -1178,11 +1178,11 @@ export function RoomLobbyV2() {
               <AlertTriangle className="w-7 h-7 text-amber-500" />
             </div>
             <AlertDialogTitle className="text-foreground font-display text-xl">
-              ამ რაუნდს გამოტოვებ, რადგან პასუხები იცი!
+              {t("extra.observerSkipTitle")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
               <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
-                ქულებს მიიღებ, თუ სხვას პასუხი შეეშლება. 💡
+                {t("extra.observerSkipDesc")}
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1191,10 +1191,10 @@ export function RoomLobbyV2() {
               onClick={() => proceedWithStartGame(true)}
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
             >
-              გასაგებია, დავიწყოთ!
+              {t("extra.observerProceed")}
             </AlertDialogAction>
             <AlertDialogCancel className="w-full bg-secondary text-secondary-foreground border-border hover:bg-secondary/80 rounded-xl">
-              გაუქმება
+              {t("extra.observerCancel")}
             </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>

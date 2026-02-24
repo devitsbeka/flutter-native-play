@@ -40,22 +40,22 @@ import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 // Inspirational topics for trivia creation
-const INSPIRATIONAL_TOPICS = [
-  { categoryId: "movies", label: "კინო" },
-  { categoryId: "sports", label: "სპორტი" },
-  { categoryId: "music", label: "მუსიკა" },
-  { categoryId: "geography", label: "გეოგრაფია" },
-  { categoryId: "world_history", label: "ისტორია" },
-  { categoryId: "science", label: "მეცნიერება" },
-  { categoryId: "art", label: "ხელოვნება" },
-  { categoryId: "celebrities", label: "ცნობილები" },
-  { categoryId: "video_games", label: "გეიმინგი" },
-  { categoryId: "world_cuisine", label: "საჭმელი" },
-  { categoryId: "anime_manga", label: "ანიმე" },
-  { categoryId: "tv_series", label: "სერიალები" },
-  { categoryId: "space", label: "კოსმოსი" },
-  { categoryId: "animals", label: "ცხოველები" },
-  { categoryId: "technology", label: "ტექნოლოგია" },
+const INSPIRATIONAL_TOPIC_KEYS = [
+  { categoryId: "movies", labelKey: "extra.inspirationalMovies" },
+  { categoryId: "sports", labelKey: "extra.inspirationalSports" },
+  { categoryId: "music", labelKey: "extra.inspirationalMusic" },
+  { categoryId: "geography", labelKey: "extra.inspirationalGeography" },
+  { categoryId: "world_history", labelKey: "extra.inspirationalHistory" },
+  { categoryId: "science", labelKey: "extra.inspirationalScience" },
+  { categoryId: "art", labelKey: "extra.inspirationalArt" },
+  { categoryId: "celebrities", labelKey: "extra.inspirationalCelebrities" },
+  { categoryId: "video_games", labelKey: "extra.inspirationalGaming" },
+  { categoryId: "world_cuisine", labelKey: "extra.inspirationalFood" },
+  { categoryId: "anime_manga", labelKey: "extra.inspirationalAnime" },
+  { categoryId: "tv_series", labelKey: "extra.inspirationalTVSeries" },
+  { categoryId: "space", labelKey: "extra.inspirationalSpace" },
+  { categoryId: "animals", labelKey: "extra.inspirationalAnimals" },
+  { categoryId: "technology", labelKey: "extra.inspirationalTechnology" },
 ];
 
 interface GeneratedQuestion {
@@ -149,7 +149,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   
   // Shuffle inspirational topics when menu opens
   const shuffledTopics = useMemo(() => {
-    return [...INSPIRATIONAL_TOPICS].sort(() => Math.random() - 0.5);
+    return [...INSPIRATIONAL_TOPIC_KEYS].sort(() => Math.random() - 0.5);
   }, [showCreateOptionsMenu]);
   const [selectionMode, setSelectionMode] = useState<SelectionMode>(null);
   const [isSearchingRandom, setIsSearchingRandom] = useState(false);
@@ -454,14 +454,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const handleShareInviteLink = async () => {
     const baseUrl = window.location.origin;
     const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const categoryName = selectedCategory?.name || "ტრივია";
+    const categoryName = selectedCategory?.name || "Trivia";
     const inviteLink = `${baseUrl}/join?invite=${inviteCode}`;
     
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "შემოგვიერთდი ტრივიაში! 🎮",
-          text: `${categoryName} - მოდი ითამაშე ჩვენთან ერთად!`,
+          title: t("extra.joinTriviaShare"),
+          text: t("extra.joinTriviaShareText", { category: categoryName }),
           url: inviteLink,
         });
       } catch (err) {
@@ -541,8 +541,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (error) {
       console.error("Error saving trivia:", error);
       toast({
-        title: "შეცდომა",
-        description: "ტრივიას შენახვა ვერ მოხერხდა",
+        title: t("extra.savingError"),
+        description: t("extra.savingFailed"),
         variant: "destructive",
       });
       return;
@@ -558,8 +558,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     setSelectionMode("my-trivias");
     
     toast({
-      title: "✨ ტრივია მზადაა!",
-      description: `${questions.length} კითხვა შეიქმნა - "${title}"`,
+      title: t("extra.triviaReady"),
+      description: t("extra.triviaReadyDesc", { count: questions.length, title }),
     });
   };
 
@@ -755,7 +755,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           await createNotification(
             challengeUserId,
             "challenge",
-            `${userProfile?.nickname || "მეგობარი"} გიწვევს თამაშში!`,
+            `${userProfile?.nickname || t("extra.friendFallback")} ${t("extra.invitedToGameMsg", { name: "" })}`,
             roomName,
             {
               room_id: room.id,
@@ -1055,7 +1055,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         <button 
                           onClick={selectRandomCategory}
                           className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
-                          title="სხვა კატეგორია"
+                          title={t("extra.anotherCategory")}
                         >
                           <RefreshCw className="w-5 h-5 text-white" />
                         </button>
@@ -1490,10 +1490,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           if (!open) setCollectionInitialSubject("");
         }}
         onCollectionCreated={() => {
-          // After collection is created, could auto-select it for the room
           toast({
-            title: "✨ კოლექცია შეიქმნა!",
-            description: "ახლა შეგიძლია გამოიყენო მეგობრებთან ერთად",
+            title: t("extra.collectionCreated"),
+            description: t("extra.collectionCreatedDesc"),
           });
         }}
         initialRoundSubject={collectionInitialSubject}
