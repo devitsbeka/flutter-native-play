@@ -3061,6 +3061,9 @@ export const ka = {
     aiAvatarCreated: "AI ავატარი შეიქმნა! ✨",
     avatarUploadFailed: "ავატარის ატვირთვა ვერ მოხერხდა",
     recentActivityTitle: "ბოლო აქტივობა",
+    activityInvitedToGame: "თამაშზე მოგიწვია",
+    activityYouInvited: "თამაშზე მოიწვიე",
+    activityPlayedTogether: "ერთად ითამაშეთ",
     // Gameplay translations
     missionCompleted: "მისია შესრულდა! 🎉",
     challengeBeatMe: "შეგიძლია დამამარცხო?",

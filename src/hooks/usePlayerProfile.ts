@@ -162,7 +162,7 @@ export function usePlayerProfile(userId: string | null) {
               interactions.push({
                 id: inv.id,
                 type: isSender ? 'invitation_sent' : 'invitation_received',
-                message: isSender ? 'თამაშზე მოიწვიე' : 'თამაშზე მოგიწვია',
+                message: isSender ? 'activityYouInvited' : 'activityInvitedToGame',
                 details: categoryName || undefined,
                 timestamp: inv.created_at,
                 categoryName,
@@ -192,7 +192,7 @@ export function usePlayerProfile(userId: string | null) {
                 interactions.push({
                   id: `room-${r.room_id}`,
                   type: 'room_together',
-                  message: 'ერთად ითამაშეთ',
+                  message: 'activityPlayedTogether',
                   details: room?.category_name || room?.room_name || undefined,
                   timestamp: r.joined_at,
                   roomId: r.room_id,

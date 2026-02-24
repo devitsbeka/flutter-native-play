@@ -634,7 +634,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm text-foreground truncate">
-                              {interaction.message}
+                              {t(`extra.${interaction.message}`)}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {formatProfileTimeAgo(new Date(interaction.timestamp), t)}
