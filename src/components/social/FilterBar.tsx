@@ -1,4 +1,5 @@
 import { Star, TrendingUp, Hash, ChevronDown, X } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export type PopularityFilter = "all" | "low" | "medium" | "high";
 
@@ -25,6 +26,7 @@ export function FilterBar({
   hasActiveFilters,
   onClearFilters,
 }: FilterBarProps) {
+  const { t } = useLanguage();
   const cyclePopularity = () => {
     const next: PopularityFilter[] = ["all", "low", "medium", "high"];
     const currentIndex = next.indexOf(popularityFilter);
@@ -48,7 +50,7 @@ export function FilterBar({
             }`}
           >
             <Star className={`w-4 h-4 ${showSavedOnly ? "fill-current" : ""}`} />
-            შენახული
+            {t("extra.filterSaved")}
           </button>
           
           {/* Popularity Filter */}
@@ -61,10 +63,10 @@ export function FilterBar({
             }`}
           >
             <TrendingUp className="w-4 h-4" />
-            {popularityFilter === "all" && "პოპულარობა"}
-            {popularityFilter === "low" && "დაბალი"}
-            {popularityFilter === "medium" && "საშუალო"}
-            {popularityFilter === "high" && "მაღალი"}
+            {popularityFilter === "all" && t("extra.filterPopularity")}
+            {popularityFilter === "low" && t("extra.filterLow")}
+            {popularityFilter === "medium" && t("extra.filterMedium")}
+            {popularityFilter === "high" && t("extra.filterHigh")}
             <ChevronDown className="w-3 h-3 opacity-60" />
           </button>
           

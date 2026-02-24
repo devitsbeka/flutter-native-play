@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AdminProfileEditorProps {
   open: boolean;
@@ -32,6 +33,7 @@ export function AdminProfileEditor({
   const [countryCode, setCountryCode] = useState(currentCountryCode || "");
   const [animatedAvatarUrl, setAnimatedAvatarUrl] = useState(currentAnimatedAvatarUrl || "");
   const [saving, setSaving] = useState(false);
+  const { t } = useLanguage();
 
   // Sync state when props change (e.g., reopening with different user)
   useEffect(() => {
@@ -58,12 +60,12 @@ export function AdminProfileEditor({
 
       if (error) throw error;
 
-      toast.success("პროფილი განახლდა");
+      toast.success(t("extra.adminProfileUpdated"));
       onSaved();
       onOpenChange(false);
     } catch (err) {
       console.error("Error updating profile:", err);
-      toast.error("შეცდომა პროფილის განახლებისას");
+      toast.error(t("extra.adminProfileError"));
     } finally {
       setSaving(false);
     }
@@ -73,21 +75,21 @@ export function AdminProfileEditor({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm z-[250]" style={{ zIndex: 250 }}>
         <DialogHeader>
-          <DialogTitle>პროფილის რედაქტირება</DialogTitle>
+          <DialogTitle>{t("extra.adminEditProfile")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label>სახელი (Nickname)</Label>
+            <Label>{t("extra.adminNicknameLabel")}</Label>
             <Input
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
-              placeholder="სახელი"
+              placeholder={t("extra.adminNamePlaceholder")}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>ქვეყნის კოდი (Country Code)</Label>
+            <Label>{t("extra.adminCountryCodeLabel")}</Label>
             <Input
               value={countryCode}
               onChange={(e) => setCountryCode(e.target.value.toUpperCase())}
@@ -97,7 +99,7 @@ export function AdminProfileEditor({
           </div>
 
           <div className="space-y-2">
-            <Label>ანიმირებული ავატარი (URL)</Label>
+            <Label>{t("extra.adminAnimatedAvatarLabel")}</Label>
             <Input
               value={animatedAvatarUrl}
               onChange={(e) => setAnimatedAvatarUrl(e.target.value)}
@@ -108,11 +110,11 @@ export function AdminProfileEditor({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            გაუქმება
+            {t("extra.adminCancel")}
           </Button>
           <Button onClick={handleSave} disabled={saving || !nickname.trim()}>
             {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            შენახვა
+            {t("extra.adminSave")}
           </Button>
         </DialogFooter>
       </DialogContent>
