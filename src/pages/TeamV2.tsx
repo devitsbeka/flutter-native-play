@@ -685,61 +685,61 @@ function TeamContentV2() {
                   </div>
                 </div>
               </div>
+
+              {/* Filter Bar - inside sticky header */}
+              {((activeTab === "rooms" && hasRooms) || 
+                (activeTab === "explore") || 
+                (activeTab === "my-content" && hasTrivias)) && (
+                <div key={activeTab} id="sticky-filter-bar" className="border-b border-border/50">
+                  {activeTab === "rooms" && hasRooms && (
+                    <UnifiedFiltersBar<RoomFilter, string>
+                      filter={roomsFilter}
+                      onFilterChange={(f) => setRoomsFilter(f)}
+                      filterOptions={roomFilterOptions}
+                      searchQuery={roomsSearchQuery}
+                      onSearchQueryChange={setRoomsSearchQuery}
+                      onAddClick={() => requirePro("rooms", () => setShowCreateModal(true))}
+                      addButtonText={t("extra.addRoom")}
+                    />
+                  )}
+
+                  {activeTab === "explore" && (
+                    <UnifiedFiltersBar<ExploreFilter, ExploreSort>
+                      filter={exploreFilter}
+                      onFilterChange={(f) => setExploreFilter(f)}
+                      filterOptions={exploreFilterOptions}
+                      sort={exploreSort}
+                      onSortChange={(s) => setExploreSort(s)}
+                      sortOptions={exploreSortOptions}
+                      searchQuery={exploreSearchQuery}
+                      onSearchQueryChange={setExploreSearchQuery}
+                      onAddClick={() => requirePro("trivia", () => setShowCreateTypeModal(true))}
+                      addButtonText={t("extra.createTriviaBtn")}
+                    />
+                  )}
+
+                  {activeTab === "my-content" && hasTrivias && (
+                    <UnifiedFiltersBar<MyTriviaFilter, string>
+                      filter={sortFilter}
+                      onFilterChange={(f) => setSortFilter(f)}
+                      filterOptions={myTriviaFilterOptions}
+                      searchQuery={searchQuery}
+                      onSearchQueryChange={setSearchQuery}
+                      onAddClick={() => requirePro("trivia", () => setShowCreateTypeModal(true))}
+                      addButtonText={t("extra.feedCreateTriviaBtn")}
+                    />
+                  )}
+                  
+                  {/* Fade gradient below sticky filter bar */}
+                  <div 
+                    className="h-4 -mb-4 pointer-events-none"
+                    style={{
+                      background: 'linear-gradient(to bottom, hsl(var(--background) / 0.95), transparent)'
+                    }}
+                  />
+                </div>
+              )}
             </div>
-
-          {/* STICKY: Only Filter Bar - Hidden when tab has no content */}
-          {((activeTab === "rooms" && hasRooms) || 
-            (activeTab === "explore") || 
-            (activeTab === "my-content" && hasTrivias)) && (
-            <div key={activeTab} id="sticky-filter-bar" className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/50">
-              {activeTab === "rooms" && hasRooms && (
-                <UnifiedFiltersBar<RoomFilter, string>
-                  filter={roomsFilter}
-                  onFilterChange={(f) => setRoomsFilter(f)}
-                  filterOptions={roomFilterOptions}
-                  searchQuery={roomsSearchQuery}
-                  onSearchQueryChange={setRoomsSearchQuery}
-                  onAddClick={() => requirePro("rooms", () => setShowCreateModal(true))}
-                  addButtonText={t("extra.addRoom")}
-                />
-              )}
-
-              {activeTab === "explore" && (
-                <UnifiedFiltersBar<ExploreFilter, ExploreSort>
-                  filter={exploreFilter}
-                  onFilterChange={(f) => setExploreFilter(f)}
-                  filterOptions={exploreFilterOptions}
-                  sort={exploreSort}
-                  onSortChange={(s) => setExploreSort(s)}
-                  sortOptions={exploreSortOptions}
-                  searchQuery={exploreSearchQuery}
-                  onSearchQueryChange={setExploreSearchQuery}
-                  onAddClick={() => requirePro("trivia", () => setShowCreateTypeModal(true))}
-                  addButtonText={t("extra.createTriviaBtn")}
-                />
-              )}
-
-              {activeTab === "my-content" && hasTrivias && (
-                <UnifiedFiltersBar<MyTriviaFilter, string>
-                  filter={sortFilter}
-                  onFilterChange={(f) => setSortFilter(f)}
-                  filterOptions={myTriviaFilterOptions}
-                  searchQuery={searchQuery}
-                  onSearchQueryChange={setSearchQuery}
-                  onAddClick={() => requirePro("trivia", () => setShowCreateTypeModal(true))}
-                  addButtonText={t("extra.feedCreateTriviaBtn")}
-                />
-              )}
-              
-              {/* Fade gradient below sticky filter bar */}
-              <div 
-                className="h-4 -mb-4 pointer-events-none"
-                style={{
-                  background: 'linear-gradient(to bottom, hsl(var(--background) / 0.95), transparent)'
-                }}
-              />
-            </div>
-          )}
 
             {/* Content Area - Full width like Shop/PowerUps */}
             <div className="flex-1 px-4 pt-4 pb-4 overflow-x-hidden max-w-full">
