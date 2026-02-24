@@ -38,37 +38,37 @@ interface CreateBlindTriviaModalProps {
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
 type CreatorMode = "edit" | "play" | null;
 
-const DIFFICULTY_OPTIONS: { value: DifficultyLevel; emoji: string; label: string; description: string }[] = [
-  { value: "mixed", emoji: "🎲", label: "შერეული", description: "ადვილი → რთული" },
-  { value: "easy", emoji: "🟢", label: "ადვილი", description: "დამწყებთათვის" },
-  { value: "medium", emoji: "🟡", label: "საშუალო", description: "მცოდნეებს" },
-  { value: "hard", emoji: "🔴", label: "რთული", description: "ექსპერტებს" },
+const DIFFICULTY_KEYS: { value: DifficultyLevel; emoji: string; labelKey: string; descKey: string }[] = [
+  { value: "mixed", emoji: "🎲", labelKey: "extra.diffMixed", descKey: "extra.diffMixedDesc" },
+  { value: "easy", emoji: "🟢", labelKey: "extra.diffEasy", descKey: "extra.diffEasyDesc" },
+  { value: "medium", emoji: "🟡", labelKey: "extra.diffMedium", descKey: "extra.diffMediumDesc" },
+  { value: "hard", emoji: "🔴", labelKey: "extra.diffHard", descKey: "extra.diffHardDesc" },
 ];
 
 const QUESTION_COUNTS = [5, 10, 15];
 
 // Creative topic pool - specific, fun topics that inspire users
 const TRIVIA_TOPIC_POOL = [
-  { label: "Friends", icon_slug: "television" },
-  { label: "Star Wars", icon_slug: "rocket" },
-  { label: "Marvel", icon_slug: "superhero" },
-  { label: "Harry Potter", icon_slug: "magic-wand" },
-  { label: "Game of Thrones", icon_slug: "crown" },
-  { label: "Breaking Bad", icon_slug: "chemistry" },
-  { label: "Netflix სერიალები", icon_slug: "film-reel" },
-  { label: "Disney ფილმები", icon_slug: "castle" },
-  { label: "NBA ლეგენდები", icon_slug: "basketball" },
-  { label: "ჩემპიონთა ლიგა", icon_slug: "trophy" },
-  { label: "Formula 1", icon_slug: "racing-car" },
-  { label: "K-Pop", icon_slug: "music-note" },
-  { label: "Taylor Swift", icon_slug: "microphone" },
-  { label: "BTS", icon_slug: "star" },
-  { label: "მემები", icon_slug: "smiley" },
-  { label: "Minecraft", icon_slug: "cube" },
-  { label: "კოსმოსი და ვარსკვლავები", icon_slug: "planet" },
-  { label: "საქართველოს ისტორია", icon_slug: "flag" },
-  { label: "ქართული კერძები", icon_slug: "food" },
-  { label: "ცხოველთა სამყარო", icon_slug: "paw" },
+  { labelKey: "Friends", icon_slug: "television" },
+  { labelKey: "Star Wars", icon_slug: "rocket" },
+  { labelKey: "Marvel", icon_slug: "superhero" },
+  { labelKey: "Harry Potter", icon_slug: "magic-wand" },
+  { labelKey: "Game of Thrones", icon_slug: "crown" },
+  { labelKey: "Breaking Bad", icon_slug: "chemistry" },
+  { labelKey: "extra.topicNetflixShows", icon_slug: "film-reel", isTranslationKey: true },
+  { labelKey: "extra.topicDisneyMovies", icon_slug: "castle", isTranslationKey: true },
+  { labelKey: "extra.topicNBALegends", icon_slug: "basketball", isTranslationKey: true },
+  { labelKey: "extra.topicChampionsLeague", icon_slug: "trophy", isTranslationKey: true },
+  { labelKey: "Formula 1", icon_slug: "racing-car" },
+  { labelKey: "K-Pop", icon_slug: "music-note" },
+  { labelKey: "Taylor Swift", icon_slug: "microphone" },
+  { labelKey: "BTS", icon_slug: "star" },
+  { labelKey: "extra.topicMemes", icon_slug: "smiley", isTranslationKey: true },
+  { labelKey: "Minecraft", icon_slug: "cube" },
+  { labelKey: "extra.topicSpace", icon_slug: "planet", isTranslationKey: true },
+  { labelKey: "extra.topicGeorgianHistory", icon_slug: "flag", isTranslationKey: true },
+  { labelKey: "extra.topicGeorgianFood", icon_slug: "food", isTranslationKey: true },
+  { labelKey: "extra.topicAnimalWorld", icon_slug: "paw", isTranslationKey: true },
 ];
 
 interface TopicSuggestion {
@@ -113,7 +113,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
     const shuffled = [...TRIVIA_TOPIC_POOL].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, 4);
     
-    const iconSlugs = [...new Set(selected.map(t => t.icon_slug))];
+    const iconSlugs = [...new Set(selected.map(tp => tp.icon_slug))];
     
     const { data: icons } = await supabase
       .from("icon_library")
@@ -123,12 +123,15 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
     const iconMap = new Map(icons?.map(i => [i.slug, i.icon_url]) || []);
     
     setTopicSuggestions(
-      selected.map(topic => ({
-        label: topic.label,
-        value: topic.label,
-        icon_slug: topic.icon_slug,
-        icon_url: iconMap.get(topic.icon_slug) || null
-      }))
+      selected.map(topic => {
+        const label = topic.isTranslationKey ? t(topic.labelKey) : topic.labelKey;
+        return {
+          label,
+          value: label,
+          icon_slug: topic.icon_slug,
+          icon_url: iconMap.get(topic.icon_slug) || null
+        };
+      })
     );
     
     setIsLoadingTopics(false);
@@ -150,7 +153,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
             setStep(5); // Go directly to editor
           }
           
-          toast.success("დრაფტი ჩაიტვირთა");
+          toast.success(t("extra.cbtDraftLoaded"));
           onDraftResumed?.();
         }
       });
@@ -185,7 +188,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
 
   const handleSaveAndStartGame = async () => {
     if (!user) {
-      toast.error("გაიარე ავტორიზაცია");
+      toast.error(t("extra.cbtAuthRequired"));
       return;
     }
 
@@ -234,7 +237,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
         if (savedDraft) {
           setCurrentDraftId(savedDraft.id);
           queryClient.invalidateQueries({ queryKey: ["trivia-drafts"] });
-          toast.success("დრაფტი ავტომატურად შეინახა");
+          toast.success(t("extra.cbtDraftAutoSaved"));
         }
       } catch (error) {
         console.error("Auto-save failed:", error);
@@ -265,7 +268,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
       
       const generatedQuestions = data?.questions || [];
       if (!generatedQuestions.length) {
-        throw new Error("კითხვები ვერ დაგენერირდა");
+        throw new Error(t("extra.cbtGenerationFailed"));
       }
 
       confetti({
@@ -277,15 +280,15 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
       // Convert to editor format
       const converted = convertToEditorQuestions(generatedQuestions);
       setEditorQuestions(converted);
-      setTitle(data?.suggestedTitle || `${subject} ტრივია`);
+      setTitle(data?.suggestedTitle || `${subject} ${t("extra.cbtTriviaSuffix")}`);
       
       setTimeout(() => setStep(5), 300);
     } catch (error) {
       clearInterval(progressInterval);
       console.error("Error generating quiz:", error);
       toastHook({
-        title: "შეცდომა 😕",
-        description: error instanceof Error ? error.message : "კითხვების გენერაცია ვერ მოხერხდა",
+        title: t("extra.cbtErrorToastTitle"),
+        description: error instanceof Error ? error.message : t("extra.cbtErrorToastDesc"),
         variant: "destructive",
       });
     } finally {
@@ -330,8 +333,8 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
               <div className="inline-flex items-center justify-center mb-4">
                 <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">შექმენი</h3>
-              <p className="text-white/70">როგორი ტრივია / კოლექცია გინდა?</p>
+              <h3 className="text-2xl font-bold text-white mb-2">{t("extra.cbtCreateTitle")}</h3>
+              <p className="text-white/70">{t("extra.cbtCreateSubtitle")}</p>
             </div>
 
             <div className="flex flex-col gap-3">
@@ -346,8 +349,8 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                   <img src={pencilIcon} alt="" className="w-10 h-10 object-contain" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-white text-base">ღია</h4>
-                  <p className="text-white/60 text-xs mt-1">ნახე კითხვები/პასუხები, შეასწორე, გამოაქვეყნე</p>
+                  <h4 className="font-bold text-white text-base">{t("extra.cbtOpenMode")}</h4>
+                  <p className="text-white/60 text-xs mt-1">{t("extra.cbtOpenModeDesc")}</p>
                 </div>
               </motion.button>
 
@@ -362,8 +365,8 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                   <img src={lockIcon} alt="" className="w-10 h-10 object-contain" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-white text-base">დახურული</h4>
-                  <p className="text-white/60 text-xs mt-1">არ ნახო კითხვები/პასუხები და ითამაშე მეგობრებთან ერთად</p>
+                  <h4 className="font-bold text-white text-base">{t("extra.cbtClosedMode")}</h4>
+                  <p className="text-white/60 text-xs mt-1">{t("extra.cbtClosedModeDesc")}</p>
                 </div>
               </motion.button>
             </div>
@@ -568,7 +571,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
             className="flex-1 h-14 rounded-2xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
-            უკან
+            {t("extra.cbtBackBtn")}
           </button>
           <ChunkyButton
             variant="whitePurple"
@@ -576,7 +579,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
             disabled={!subject.trim()}
             className="flex-[2]"
           >
-            შემდეგი
+            {t("extra.cbtNextBtn")}
             <ChevronRight className="w-5 h-5 ml-2" />
           </ChunkyButton>
         </div>
@@ -592,7 +595,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
             className="flex-1 h-14 rounded-2xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
-            უკან
+            {t("extra.cbtBackBtn")}
           </button>
           <ChunkyButton 
             variant="whitePurple"
@@ -608,7 +611,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
             ) : (
               <>
                 <Sparkles className="w-5 h-5 mr-2" />
-                შექმნა
+                {t("extra.cbtCreateBtn")}
               </>
             )}
           </ChunkyButton>
@@ -667,19 +670,19 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                 
                 <div>
                   <h3 className="text-2xl font-bold text-white mb-2">
-                    {editorQuestions.length} კითხვა მზადაა!
+                    {t("extra.cbtQuestionsReady", { count: editorQuestions.length })}
                   </h3>
                   <p className="text-white/70">
-                    პასუხები დამალულია — ითამაშე მეგობრებთან ერთად
+                    {t("extra.cbtAnswersHidden")}
                   </p>
                 </div>
 
                 <div className="bg-white/10 rounded-2xl p-4 space-y-3">
-                  <label className="text-sm text-white/70 block text-left">სათაური</label>
+                  <label className="text-sm text-white/70 block text-left">{t("extra.cbtTitleLabel")}</label>
                   <Input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="ტრივიას სათაური..."
+                    placeholder={t("extra.cbtTitlePlaceholder")}
                     className="w-full text-base h-14 px-5 rounded-2xl border-0 bg-white/95 text-slate-800 placeholder:text-slate-400 shadow-lg"
                   />
                 </div>
@@ -690,7 +693,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                     onClick={handleSaveAndStartGame}
                     className="w-full"
                   >
-                    შეინახე და დაიწყე თამაში 🎮
+                    {t("extra.cbtSaveAndStart")}
                   </ChunkyButton>
                 </div>
               </motion.div>
@@ -709,7 +712,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
         onTitleChange={setTitle}
         onSave={handleStartGame}
         onBack={() => setStep(3)}
-        saveButtonText="მზადაა! 🚀"
+        saveButtonText={t("extra.cbtEditorReady")}
         showTitleEditor={true}
         subject={subject}
         answerFormat={answerFormat}
