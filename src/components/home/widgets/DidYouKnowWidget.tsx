@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useDidYouKnow } from "@/hooks/useDidYouKnow";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ImageIcons: Record<string, React.ReactNode> = {
   whale: (
@@ -57,6 +58,7 @@ const ImageIcons: Record<string, React.ReactNode> = {
 export function DidYouKnowWidget() {
   const { user } = useAuth();
   const { fact, loading, voting, voteResult, hasVoted, countdown, vote } = useDidYouKnow();
+  const { t } = useLanguage();
 
   // Remove fixed height - let content flow naturally
   const LOADING_HEIGHT = 200;
@@ -100,11 +102,11 @@ export function DidYouKnowWidget() {
             {ImageIcons.whale}
           </div>
           <h3 className="text-[15px] font-semibold text-foreground">
-            იცოდით თუ არა?
+            {t("extra.didYouKnow")}
           </h3>
         </div>
         <p className="text-[14px] text-muted-foreground mt-3">
-          ფაქტები მალე დაემატება...
+          {t("extra.factsSoon")}
         </p>
       </div>
     );
@@ -122,7 +124,7 @@ export function DidYouKnowWidget() {
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <h3 className="text-[15px] font-semibold text-foreground tracking-tight">
-          იცოდით თუ არა რომ:
+          {t("extra.didYouKnowThat")}
         </h3>
         <div 
           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
@@ -167,7 +169,7 @@ export function DidYouKnowWidget() {
                 boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 3px 0 0 hsl(var(--border)), 0 4px 8px rgba(0,0,0,0.06)",
               }}
             >
-              ვიცოდი
+              {t("extra.iKnew")}
             </motion.button>
             
             {/* არ ვიცოდი button */}
@@ -184,7 +186,7 @@ export function DidYouKnowWidget() {
                 boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 3px 0 0 hsl(var(--border)), 0 4px 8px rgba(0,0,0,0.06)",
               }}
             >
-              არ ვიცოდი
+              {t("extra.didntKnow")}
             </motion.button>
           </motion.div>
         ) : (
@@ -216,16 +218,16 @@ export function DidYouKnowWidget() {
             {/* Stats row */}
             <div className="flex justify-between items-center">
               <span className={`text-xs font-medium ${voteResult?.userVote === "knew" ? "text-primary" : "text-muted-foreground/70"}`}>
-                ვიცოდი: {voteResult?.knewPercentage}%
+                {t("extra.iKnewPercent", { percent: voteResult?.knewPercentage || 0 })}
               </span>
               <span className={`text-xs font-medium ${voteResult?.userVote === "didnt_know" ? "text-primary" : "text-muted-foreground/70"}`}>
-                არ ვიცოდი: {voteResult?.didntKnowPercentage}%
+                {t("extra.didntKnowPercent", { percent: voteResult?.didntKnowPercentage || 0 })}
               </span>
             </div>
 
             {/* Total votes */}
             <p className="text-[13px] font-medium text-center text-muted-foreground">
-              {voteResult?.totalVotes.toLocaleString()} ხმა
+              {voteResult?.totalVotes.toLocaleString()} {t("extra.voteUnit")}
             </p>
             
             {/* Countdown indicator */}
@@ -235,7 +237,7 @@ export function DidYouKnowWidget() {
                 animate={{ opacity: 1 }}
                 className="text-[11px] text-center text-muted-foreground/60"
               >
-                ახალი ფაქტი {countdown} წამში...
+                {t("extra.newFactIn", { seconds: countdown })}
               </motion.p>
             )}
           </motion.div>
@@ -244,7 +246,7 @@ export function DidYouKnowWidget() {
 
       {!user && !hasVoted && (
         <p className="text-[11px] text-muted-foreground/50 text-center mt-3">
-          შედით ანგარიშზე ხმის მისაცემად
+          {t("extra.loginToVote")}
         </p>
       )}
     </div>

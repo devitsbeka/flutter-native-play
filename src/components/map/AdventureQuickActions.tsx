@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { HelpCircle } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Import custom 3D icons
 import giftBottleIcon from "@/assets/icons/icon-gem.png";
@@ -73,6 +74,7 @@ export function AdventureQuickActions({
   onChestClick,
   onHelpClick,
 }: AdventureQuickActionsProps) {
+  const { t } = useLanguage();
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -84,7 +86,7 @@ export function AdventureQuickActions({
       <div className="flex items-center justify-center gap-4 px-4">
         <ActionButton
           icon={giftBottleIcon}
-          label="საჩუქარი"
+          label={t("extra.giftLabel")}
           onClick={onGiftsClick}
           index={0}
           badge={1}
@@ -92,7 +94,7 @@ export function AdventureQuickActions({
         
         <ActionButton
           icon={missionCrystalIcon}
-          label="მისია"
+          label={t("extra.missionLabel")}
           onClick={onMissionsClick}
           index={1}
           badge={3}
@@ -100,7 +102,7 @@ export function AdventureQuickActions({
         
         <ActionButton
           icon={chestBoxIcon}
-          label="სკივრი"
+          label={t("extra.chestLabel")}
           onClick={onChestClick}
           index={2}
         />
@@ -130,7 +132,7 @@ export function AdventureQuickActions({
               textShadow: "0 1px 2px rgba(255,255,255,0.8)",
             }}
           >
-            დახმარება
+            {t("extra.helpLabel")}
           </span>
         </motion.button>
       </div>

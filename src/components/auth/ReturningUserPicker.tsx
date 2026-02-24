@@ -36,7 +36,7 @@ export function ReturningUserPicker({ user, onSignIn, onAddUser, onSwitchUser }:
     try {
       await onSignIn(password);
     } catch (err: any) {
-      setError(err?.message || "არასწორი პაროლი");
+      setError(err?.message || t("auth.invalidCredentials"));
     } finally {
       setLoading(false);
     }

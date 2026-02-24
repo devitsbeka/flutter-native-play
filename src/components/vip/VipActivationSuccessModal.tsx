@@ -4,6 +4,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import confetti from "canvas-confetti";
 import { useEffect } from "react";
 import { VIP_BENEFITS } from "@/hooks/useVipStatus";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface VipActivationSuccessModalProps {
   open: boolean;
@@ -16,6 +17,7 @@ export function VipActivationSuccessModal({
   onOpenChange,
   daysRemaining,
 }: VipActivationSuccessModalProps) {
+  const { t } = useLanguage();
   useEffect(() => {
     if (open) {
       // Celebration confetti
@@ -80,10 +82,10 @@ export function VipActivationSuccessModal({
 
               {/* Title */}
               <h2 className="text-2xl font-bold text-amber-800 mb-2">
-                🎉 VIP აქტივირებულია!
+                {t("extra.vipActivated")}
               </h2>
               <p className="text-amber-700 text-sm mb-6">
-                შენ გახდი PRO მომხმარებელი {daysRemaining} დღით
+                {t("extra.becameProUser", { days: daysRemaining })}
               </p>
 
               {/* Benefits Grid */}
@@ -113,7 +115,7 @@ export function VipActivationSuccessModal({
                 }}
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                დავიწყოთ!
+                {t("extra.letsStart")}
               </ChunkyButton>
             </div>
           </motion.div>

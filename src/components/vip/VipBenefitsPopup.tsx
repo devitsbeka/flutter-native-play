@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Crown } from "lucide-react";
 import { VIP_BENEFITS } from "@/hooks/useVipStatus";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface VipBenefitsPopupProps {
   open: boolean;
@@ -15,6 +16,7 @@ export function VipBenefitsPopup({
   daysRemaining,
   isVip,
 }: VipBenefitsPopupProps) {
+  const { t } = useLanguage();
   return (
     <AnimatePresence>
       {open && (
@@ -45,7 +47,7 @@ export function VipBenefitsPopup({
               <div className="flex items-center gap-2">
                 <Crown className={`w-5 h-5 ${isVip ? "text-amber-600" : "text-gray-500"}`} />
                 <h3 className={`font-bold ${isVip ? "text-amber-800" : "text-gray-700"}`}>
-                  {isVip ? "VIP ბენეფიტები" : "PRO ბენეფიტები"}
+                  {isVip ? t("extra.vipBenefitsTitle") : t("extra.proBenefitsTitle")}
                 </h3>
               </div>
               <button
@@ -60,7 +62,7 @@ export function VipBenefitsPopup({
             {isVip && daysRemaining !== undefined && (
               <div className="mx-4 mb-3 px-3 py-1.5 bg-amber-500/20 rounded-full inline-flex items-center gap-1">
                 <span className="text-xs font-bold text-amber-700">
-                  ⏳ დარჩა {daysRemaining} დღე
+                  {t("extra.daysRemainingVip", { days: daysRemaining })}
                 </span>
               </div>
             )}

@@ -116,7 +116,7 @@ export function SoundSettingsModal({ isOpen, onClose }: SoundSettingsModalProps)
       
       {/* Footer hint */}
       <p className="text-xs text-center text-gray-400">
-        პარამეტრები ავტომატურად შეინახება
+        {t("extra.settingsAutoSave")}
       </p>
     </GameModal>
   );

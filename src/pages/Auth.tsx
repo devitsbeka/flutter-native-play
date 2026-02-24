@@ -153,8 +153,8 @@ export default function Auth() {
                 // Store flag for the invited user modal on home page
                 sessionStorage.setItem("referral_welcome", inviterNickname);
 
-                notify.success("მოგესალმებით!", { 
-                  description: "მიიღე 10 დღიანი PRO მეგობრის მოწვევით!", 
+                notify.success(t("extra.referralWelcome"), { 
+                  description: t("extra.referralProDays"), 
                   icon: toastIcon(ICON_URLS.partyPopper) 
                 });
               }
@@ -294,10 +294,10 @@ export default function Auth() {
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  მოწვეული ხარ!
+                  {t("extra.referralInvited")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  დარეგისტრირდი და მიიღე PRO სტატუსი უფასოდ
+                  {t("extra.referralSignup")}
                 </p>
               </div>
             </div>
@@ -343,7 +343,7 @@ export default function Auth() {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signupEmail" className="text-foreground">{t("auth.email") || "ელ-ფოსტა"}</Label>
+                <Label htmlFor="signupEmail" className="text-foreground">{t("auth.email")}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
@@ -491,14 +491,14 @@ export default function Auth() {
       <AlertDialog open={showAccountPrompt} onOpenChange={(open) => { if (!autoRegistering) setShowAccountPrompt(open); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>მომხმარებელი ვერ მოიძებნა</AlertDialogTitle>
+            <AlertDialogTitle>{t("extra.userNotFound")}</AlertDialogTitle>
             <AlertDialogDescription>
-              ამ მონაცემებით ანგარიში არ არსებობს. შექმენი ანგარიში ერთი დაჭერით!
+              {t("extra.accountNotExist")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={autoRegistering} onClick={() => setShowAccountPrompt(false)}>
-              უკან
+              {t("extra.backBtn2")}
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={autoRegistering}
@@ -514,7 +514,7 @@ export default function Auth() {
                   if (result.error) {
                     trackAuthFailed(isEmail ? 'email' : 'username', result.error.message || 'unknown');
                     if (result.error.message?.includes("already registered")) {
-                      notify.error("ეს მომხმარებელი უკვე რეგისტრირებულია", { description: "სცადე სხვა პაროლი" });
+                      notify.error(t("extra.alreadyRegistered"), { description: t("extra.tryOtherPassword") });
                     } else {
                       notify.error(t("common.error"), { description: translateErrorMessage(result.error.message) });
                     }
@@ -531,7 +531,7 @@ export default function Auth() {
                 }
               }}
             >
-              {autoRegistering ? "იქმნება..." : "ანგარიშის შექმნა"}
+              {autoRegistering ? t("extra.creatingAccount") : t("extra.createAccountAction")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

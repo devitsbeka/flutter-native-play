@@ -30,12 +30,12 @@ export function DetailsSettingsMenu() {
 
   const handleSaveName = async () => {
     if (!nickname.trim()) {
-      notify.error("შეცდომა", "გთხოვთ შეიყვანოთ სახელი");
+      notify.error(t("extra.errorLabel"), t("extra.pleaseEnterName"));
       return;
     }
     
     if (!profile?.user_id) {
-      notify.error("შეცდომა", "მომხმარებელი ვერ მოიძებნა");
+      notify.error(t("extra.errorLabel"), t("extra.userNotFound"));
       return;
     }
     
@@ -49,10 +49,10 @@ export function DetailsSettingsMenu() {
       if (error) throw error;
       
       await fetchProfile(profile.user_id);
-      notify.success("წარმატება", "სახელი წარმატებით შეიცვალა");
+      notify.success(t("extra.successLabel"), t("extra.nameChanged"));
       setIsNameOpen(false);
     } catch (error: any) {
-      notify.error("შეცდომა", translateErrorMessage(error.message));
+      notify.error(t("extra.errorLabel"), translateErrorMessage(error.message));
     } finally {
       setIsNameLoading(false);
     }
@@ -60,17 +60,17 @@ export function DetailsSettingsMenu() {
 
   const handleChangePassword = async () => {
     if (!newPassword || !confirmPassword) {
-      notify.error("შეცდომა", "გთხოვთ შეავსოთ ყველა ველი");
+      notify.error(t("extra.errorLabel"), t("extra.fillAllFields"));
       return;
     }
     
     if (newPassword !== confirmPassword) {
-      notify.error("შეცდომა", "პაროლები არ ემთხვევა");
+      notify.error(t("extra.errorLabel"), t("extra.passwordsDontMatch"));
       return;
     }
     
     if (newPassword.length < 6) {
-      notify.error("შეცდომა", "პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს");
+      notify.error(t("extra.errorLabel"), t("extra.passwordMinLength"));
       return;
     }
     
@@ -80,12 +80,12 @@ export function DetailsSettingsMenu() {
       
       if (error) throw error;
       
-      notify.success("წარმატება", "პაროლი წარმატებით შეიცვალა");
+      notify.success(t("extra.successLabel"), t("extra.passwordChanged"));
       setNewPassword("");
       setConfirmPassword("");
       setIsPasswordOpen(false);
     } catch (error: any) {
-      notify.error("შეცდომა", translateErrorMessage(error.message));
+      notify.error(t("extra.errorLabel"), translateErrorMessage(error.message));
     } finally {
       setIsPasswordLoading(false);
     }
@@ -104,7 +104,7 @@ export function DetailsSettingsMenu() {
           <div className="p-2 rounded-full bg-purple-500/10">
             <User className="w-4 h-4 text-purple-500" />
           </div>
-          <span className="flex-1 text-foreground text-left">სახელის შეცვლა</span>
+          <span className="flex-1 text-foreground text-left">{t("extra.changeName")}</span>
           {isNameOpen ? (
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           ) : (
@@ -116,7 +116,7 @@ export function DetailsSettingsMenu() {
             <Input
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
-              placeholder="ახალი სახელი"
+              placeholder={t("extra.newNamePlaceholder")}
               className="bg-background/50"
             />
             <ChunkyButton
@@ -180,7 +180,7 @@ export function DetailsSettingsMenu() {
         <div className="p-2 rounded-full bg-blue-500/10">
           <HelpCircle className="w-4 h-4 text-blue-500" />
         </div>
-        <span className="flex-1 text-foreground text-left">დახმარება</span>
+        <span className="flex-1 text-foreground text-left">{t("extra.helpLabel")}</span>
         <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </button>
 
@@ -192,7 +192,7 @@ export function DetailsSettingsMenu() {
         <div className="p-2 rounded-full bg-amber-500/10">
           <Shield className="w-4 h-4 text-amber-500" />
         </div>
-        <span className="flex-1 text-foreground text-left">კონფიდენციალურობა</span>
+        <span className="flex-1 text-foreground text-left">{t("extra.privacyLabel")}</span>
         <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </button>
 
@@ -204,7 +204,7 @@ export function DetailsSettingsMenu() {
         <div className="p-2 rounded-full bg-red-500/10">
           <LogOut className="w-4 h-4 text-red-500" />
         </div>
-        <span className="flex-1 text-red-500 text-left">გასვლა</span>
+        <span className="flex-1 text-red-500 text-left">{t("extra.logoutLabel")}</span>
         <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </button>
     </div>

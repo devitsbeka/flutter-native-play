@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, AlertCircle } from "lucide-react";
 import { translateErrorMessage } from "@/utils/errorTranslations";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface EmailEditModalProps {
   isOpen: boolean;
@@ -17,12 +18,13 @@ export function EmailEditModal({ isOpen, onClose, currentEmail }: EmailEditModal
   const [newEmail, setNewEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleSubmit = async () => {
     if (!newEmail.trim()) {
       toast({
-        title: "შეცდომა",
-        description: "გთხოვთ შეიყვანოთ ახალი ელ-ფოსტა",
+        title: t("extra.errorLabel"),
+        description: t("extra.enterNewEmail"),
         variant: "destructive",
       });
       return;
@@ -30,8 +32,8 @@ export function EmailEditModal({ isOpen, onClose, currentEmail }: EmailEditModal
 
     if (newEmail === currentEmail) {
       toast({
-        title: "შეცდომა", 
-        description: "ახალი ელ-ფოსტა იგივეა რაც ძველი",
+        title: t("extra.errorLabel"), 
+        description: t("extra.emailSameAsOld"),
         variant: "destructive",
       });
       return;
@@ -44,14 +46,14 @@ export function EmailEditModal({ isOpen, onClose, currentEmail }: EmailEditModal
       if (error) throw error;
 
       toast({
-        title: "წარმატება!",
-        description: "დადასტურების ლინკი გაიგზავნა ახალ ელ-ფოსტაზე",
+        title: t("extra.successLabel"),
+        description: t("extra.emailSuccess"),
       });
       setNewEmail("");
       onClose();
     } catch (error: any) {
       toast({
-        title: "შეცდომა",
+        title: t("extra.errorLabel"),
         description: translateErrorMessage(error.message),
         variant: "destructive",
       });
@@ -66,23 +68,23 @@ export function EmailEditModal({ isOpen, onClose, currentEmail }: EmailEditModal
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="w-5 h-5 text-primary" />
-            ელ-ფოსტის შეცვლა
+            {t("extra.changeEmail")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <label className="text-sm text-muted-foreground">მიმდინარე ელ-ფოსტა</label>
+            <label className="text-sm text-muted-foreground">{t("extra.currentEmailLabel")}</label>
             <div className="px-3 py-2 bg-secondary/50 rounded-lg text-foreground">
               {currentEmail}
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm text-muted-foreground">ახალი ელ-ფოსტა</label>
+            <label className="text-sm text-muted-foreground">{t("extra.newEmailLabel")}</label>
             <Input
               type="email"
-              placeholder="შეიყვანეთ ახალი ელ-ფოსტა"
+              placeholder={t("extra.enterNewEmail")}
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
               disabled={isLoading}
@@ -92,7 +94,7 @@ export function EmailEditModal({ isOpen, onClose, currentEmail }: EmailEditModal
           <div className="flex items-start gap-2 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
             <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
             <p className="text-xs text-amber-600 dark:text-amber-400">
-              ელ-ფოსტის შეცვლისთვის დაგჭირდებათ ახალ მისამართზე გაგზავნილი ლინკის დადასტურება
+              {t("extra.emailConfirmNote")}
             </p>
           </div>
 
@@ -104,10 +106,10 @@ export function EmailEditModal({ isOpen, onClose, currentEmail }: EmailEditModal
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                მიმდინარეობს...
+                {t("extra.changingEmail")}
               </>
             ) : (
-              "შეცვლა"
+              t("extra.changeBtn2")
             )}
           </Button>
         </div>

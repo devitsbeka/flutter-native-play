@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { LuckySpinModal } from "@/components/game/LuckySpinModal";
 import iconWheel from "@/assets/icon-wheel.png";
@@ -15,6 +16,7 @@ export function QuickActionsBar({ className = "" }: QuickActionsBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSpinModalOpen, setIsSpinModalOpen] = useState(false);
+  const { t } = useLanguage();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -37,7 +39,7 @@ export function QuickActionsBar({ className = "" }: QuickActionsBarProps) {
             <div className="flex justify-between items-start">
               <QuickButton 
                 iconSrc={iconWheel}
-                label="ბორბალი"
+                label={t("extra.quickWheel")}
                 onClick={() => setIsSpinModalOpen(true)}
               />
               <div className="w-px h-14 self-center" style={{ background: "rgba(30, 41, 59, 0.08)" }} />
@@ -50,14 +52,14 @@ export function QuickActionsBar({ className = "" }: QuickActionsBarProps) {
               <div className="w-px h-14 self-center" style={{ background: "rgba(30, 41, 59, 0.08)" }} />
               <QuickButton 
                 iconSrc={iconLeaderboard}
-                label="რეიტინგი"
+                label={t("extra.quickRating")}
                 onClick={() => navigate("/leaderboards")}
                 isActive={isActive("/leaderboards")}
               />
               <div className="w-px h-14 self-center" style={{ background: "rgba(30, 41, 59, 0.08)" }} />
               <QuickButton 
                 iconSrc={iconShop}
-                label="მაღაზია"
+                label={t("extra.quickShop")}
                 onClick={() => navigate("/power-ups")}
                 isActive={isActive("/power-ups")}
               />
