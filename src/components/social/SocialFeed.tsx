@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { PopularityFilter } from "./FilterBar";
 import { SortFilter } from "./FeedFiltersBar";
 import glitchIcon from "@/assets/glitch.png";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SocialFeedProps {
   onPlayQuiz?: (post: SamplePost, collectionPosts?: SamplePost[]) => void;
@@ -24,23 +25,23 @@ interface SocialFeedProps {
 // Shop Ad Component - reuses feed styling
 function ShopAdCard({ index }: { index: number }) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
-  // Rotate through different ad copy
   const adVariants = [
     { 
-      title: "გაიუმჯობესე გამოცდილება",
-      description: "შეიძინე პრემიუმ ფრეიმები და ბეჯები მაღაზიაში",
-      cta: "მაღაზია"
+      title: t("extra.sfAdTitle1"),
+      description: t("extra.sfAdDesc1"),
+      cta: t("extra.sfAdCta1"),
     },
     { 
-      title: "გახდი VIP მოთამაშე",
-      description: "განბლოკე ექსკლუზიური კონტენტი და რევარდები",
-      cta: "გაიგე მეტი"
+      title: t("extra.sfAdTitle2"),
+      description: t("extra.sfAdDesc2"),
+      cta: t("extra.sfAdCta2"),
     },
     { 
-      title: "აჩუქე მეგობრებს",
-      description: "გაუგზავნე გემები მეგობრებს და ითამაშეთ ერთად",
-      cta: "მაღაზია"
+      title: t("extra.sfAdTitle3"),
+      description: t("extra.sfAdDesc3"),
+      cta: t("extra.sfAdCta3"),
     },
   ];
   
@@ -52,20 +53,17 @@ function ShopAdCard({ index }: { index: number }) {
       animate={{ opacity: 1, y: 0 }}
       className="bg-card my-6"
     >
-      {/* Ad Label */}
       <div className="px-4 pt-4 pb-3 flex items-center gap-2">
         <Badge variant="outline" className="text-xs font-medium bg-muted/50">
           <Sparkles className="w-3 h-3 mr-1" />
-          სპონსორი
+          {t("extra.sfSponsorLabel")}
         </Badge>
       </div>
       
-      {/* Ad Content */}
       <div 
         onClick={() => navigate("/shop")}
         className="cursor-pointer px-4 pb-6"
       >
-        {/* Gradient Banner */}
         <div className="relative rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-accent/20 flex items-center justify-center overflow-hidden py-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(139,92,246,0.3),transparent_50%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(236,72,153,0.2),transparent_50%)]" />
@@ -97,6 +95,7 @@ export function SocialFeed({
   searchQuery = "",
   onHashtagClick
 }: SocialFeedProps) {
+  const { t } = useLanguage();
   const { posts, feedItems, isLoading, userSaves, userLikes, userPlays, toggleLike, toggleSave, isLiking, isSaving } = useSocialFeed();
 
   // Filter feed items based on active filters
@@ -252,7 +251,7 @@ export function SocialFeed({
           <div className="flex items-center gap-2">
             <Hash className="w-4 h-4 text-primary" />
             <span className="text-sm text-foreground">
-              მოიძებნა <strong>{filteredFeedItems.length}</strong> ტრივია ჰეშთეგით{" "}
+              {t("extra.sfHashtagResults", { count: filteredFeedItems.length })}{" "}
               <span className="text-primary font-semibold">#{selectedHashtag}</span>
             </span>
           </div>
@@ -260,7 +259,7 @@ export function SocialFeed({
             onClick={() => onHashtagClick?.(null)}
             className="text-sm text-primary hover:underline font-medium"
           >
-            გასუფთავება
+            {t("extra.sfClearFilter")}
           </button>
         </div>
       )}
@@ -278,8 +277,8 @@ export function SocialFeed({
             </div>
             <p className="text-muted-foreground text-sm">
               {hasActiveFilters 
-                ? "ფილტრებით პოსტები ვერ მოიძებნა"
-                : "ჯერ არ არის პოსტები"
+                ? t("extra.sfNoPostsFiltered")
+                : t("extra.sfNoPosts")
               }
             </p>
           </div>

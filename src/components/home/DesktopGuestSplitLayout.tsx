@@ -21,22 +21,6 @@ interface DesktopGuestSplitLayoutProps {
   maxGuestPlays?: number;
 }
 
-// Validation helpers
-const validateUsername = (value: string): string | undefined => {
-  if (!value.trim()) return "სახელი საჭიროა";
-  if (value.length < 3) return "მინ. 3 სიმბოლო";
-  if (!/^[a-zA-Z0-9_\u10A0-\u10FF]+$/.test(value)) {
-    return "მხოლოდ ასოები, ციფრები და _";
-  }
-  return undefined;
-};
-
-const validatePassword = (value: string): string | undefined => {
-  if (!value) return "პაროლი საჭიროა";
-  if (value.length < 6) return "მინ. 6 სიმბოლო";
-  return undefined;
-};
-
 export function DesktopGuestSplitLayout({
   onCreateAccount,
   onSignIn,
@@ -63,10 +47,26 @@ export function DesktopGuestSplitLayout({
   
   const { takePhoto, selectFromGallery, isLoading: isCameraLoading } = useCamera();
 
+  // Validation helpers
+  const validateUsername = (value: string): string | undefined => {
+    if (!value.trim()) return t("extra.authUsernameRequired");
+    if (value.length < 3) return t("extra.authMinChars3");
+    if (!/^[a-zA-Z0-9_\u10A0-\u10FF]+$/.test(value)) {
+      return t("extra.authOnlyLettersDigits");
+    }
+    return undefined;
+  };
+
+  const validatePassword = (value: string): string | undefined => {
+    if (!value) return t("extra.authPasswordRequired");
+    if (value.length < 6) return t("extra.authMinChars6");
+    return undefined;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const uError = isSignUp ? validateUsername(username) : (!username.trim() ? "სახელი საჭიროა" : undefined);
+    const uError = isSignUp ? validateUsername(username) : (!username.trim() ? t("extra.authUsernameRequired") : undefined);
     const pError = validatePassword(password);
     
     setUsernameError(uError);
@@ -84,9 +84,9 @@ export function DesktopGuestSplitLayout({
     } catch (err: any) {
       const msg = err?.message || "";
       if (msg.includes("Failed to lookup user") || msg.includes("Invalid login credentials")) {
-        toast.error("მომხმარებელი ვერ მოიძებნა. დარწმუნდი რომ სწორი მონაცემები შეიყვანე ან დარეგისტრირდი");
+        toast.error(t("extra.authUserNotFound"));
       } else {
-        toast.error("შეცდომა, სცადე თავიდან");
+        toast.error(t("extra.authGenericError"));
       }
     } finally {
       setIsSubmitting(false);
@@ -97,7 +97,7 @@ export function DesktopGuestSplitLayout({
     try {
       await onGoogleSignIn();
     } catch (err: any) {
-      toast.error("Google-ით შესვლა ვერ მოხერხდა");
+      toast.error(t("extra.authGoogleFailed"));
     }
   };
 
@@ -105,7 +105,7 @@ export function DesktopGuestSplitLayout({
     try {
       await onAppleSignIn();
     } catch (err: any) {
-      toast.error("Apple-ით შესვლა ვერ მოხერხდა");
+      toast.error(t("extra.authAppleFailed"));
     }
   };
 
@@ -203,14 +203,10 @@ export function DesktopGuestSplitLayout({
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/10 -z-10" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                   </button>
-                  {/* Camera badge - appears with animation after video ends */}
                   <motion.div 
                     className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-md z-20"
                     initial={{ scale: 0, opacity: 0 }}
-                    animate={videoEnded ? { 
-                      scale: [0, 1.3, 1],
-                      opacity: 1
-                    } : { scale: 0, opacity: 0 }}
+                    animate={videoEnded ? { scale: [0, 1.3, 1], opacity: 1 } : { scale: 0, opacity: 0 }}
                     transition={{ duration: 0.5, ease: "easeOut" }}
                   >
                     <motion.div
@@ -231,7 +227,7 @@ export function DesktopGuestSplitLayout({
                     className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-left"
                   >
                     <Camera className="w-5 h-5 text-primary" />
-                    <span className="text-sm font-medium">გადაიღე სელფი</span>
+                    <span className="text-sm font-medium">{t("extra.authTakeSelfie")}</span>
                   </button>
                   <button
                     type="button"
@@ -239,7 +235,7 @@ export function DesktopGuestSplitLayout({
                     className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-left"
                   >
                     <ImagePlus className="w-5 h-5 text-primary" />
-                    <span className="text-sm font-medium">აირჩიე ფოტო</span>
+                    <span className="text-sm font-medium">{t("extra.authChoosePhoto")}</span>
                   </button>
                 </div>
               </PopoverContent>
@@ -255,7 +251,6 @@ export function DesktopGuestSplitLayout({
           onSubmit={handleSubmit}
           className="w-full max-w-xs space-y-2"
         >
-          {/* Username/Email Input */}
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10">
               <User className="w-4 h-4" />
@@ -267,7 +262,7 @@ export function DesktopGuestSplitLayout({
                 setUsername(e.target.value);
                 if (usernameError) setUsernameError(undefined);
               }}
-              placeholder={isSignUp ? "სახელი" : "ელფოსტა ან სახელი"}
+              placeholder={isSignUp ? t("extra.authUsernamePlaceholder") : t("extra.authEmailOrUsername")}
               disabled={loading}
               className="w-full pl-10 pr-3 py-[15px] rounded-xl bg-background border-2 border-border 
                          focus:border-primary outline-none text-base font-medium
@@ -279,7 +274,6 @@ export function DesktopGuestSplitLayout({
             )}
           </div>
 
-          {/* Password Input */}
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10">
               <Lock className="w-4 h-4" />
@@ -291,7 +285,7 @@ export function DesktopGuestSplitLayout({
                 setPassword(e.target.value);
                 if (passwordError) setPasswordError(undefined);
               }}
-              placeholder="პაროლი"
+              placeholder={t("extra.authPasswordPlaceholder")}
               disabled={loading}
               className="w-full pl-10 pr-3 py-[15px] rounded-xl bg-background border-2 border-border 
                          focus:border-primary outline-none text-base font-medium
@@ -303,7 +297,6 @@ export function DesktopGuestSplitLayout({
             )}
           </div>
 
-          {/* Submit Button */}
           <ChunkyButton 
             type="submit" 
             variant="primary" 
@@ -316,38 +309,37 @@ export function DesktopGuestSplitLayout({
             ) : isSignUp ? (
               <>
                 <Sparkles className="w-4 h-4" />
-                შექმენი ანგარიში
+                {t("extra.authCreateAccountBtn")}
               </>
             ) : (
               <>
                 <Lock className="w-4 h-4" />
-                შესვლა
+                {t("extra.authSignInBtn")}
               </>
             )}
           </ChunkyButton>
 
-          {/* Toggle between Sign Up and Sign In */}
           <p className="text-sm text-muted-foreground text-center mt-2">
             {isSignUp ? (
               <>
-                უკვე გაქვს ანგარიში?{" "}
+                {t("extra.authAlreadyHaveAccount")}{" "}
                 <button 
                   type="button" 
                   onClick={() => setIsSignUp(false)}
                   className="text-primary font-semibold hover:underline"
                 >
-                  შესვლა
+                  {t("extra.authSignInLink")}
                 </button>
               </>
             ) : (
               <>
-                არ გაქვს ანგარიში?{" "}
+                {t("extra.authNoAccount")}{" "}
                 <button 
                   type="button" 
                   onClick={() => setIsSignUp(true)}
                   className="text-primary font-semibold hover:underline"
                 >
-                  შექმენი
+                  {t("extra.authCreateLink")}
                 </button>
               </>
             )}
@@ -362,7 +354,7 @@ export function DesktopGuestSplitLayout({
           className="flex items-center gap-3 w-full max-w-xs my-3"
         >
           <div className="flex-1 h-px bg-border" />
-          <span className="text-xs text-muted-foreground font-medium">ან</span>
+          <span className="text-xs text-muted-foreground font-medium">{t("extra.authOrDivider")}</span>
           <div className="flex-1 h-px bg-border" />
         </motion.div>
 
