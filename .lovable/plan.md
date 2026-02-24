@@ -1,80 +1,103 @@
 
 
-# Full Localization: Readiness Check and Execution Plan
+# Complete Missing Translations: Eliminate English Fallbacks
 
-## Current State
+## Problem
+When a user selects Italian (or any non-English language), approximately **550-600 keys in the `extra` section** and **50-100 keys in other sections** still show English text because they were never translated. The `...en` spread pattern safely prevents crashes but silently shows English strings.
 
-### What IS ready
-- **ka.ts** (Georgian): 3,878 lines -- fully complete, the primary source of truth
-- **en.ts** (English): 3,847 lines -- fully complete, used as fallback base for all other languages
-- All 5 remaining languages (ES, FR, DE, IT, PT) use `...en` spread, so the app already works in all languages (falling back to English for untranslated keys)
+## Scope of Missing Translations
 
-### What is NOT ready
+### Per-language gap in `extra` section (the biggest gap)
 
-**Step 1 -- Still ~70 hardcoded Georgian strings in components/hooks that need `t()` wiring:**
+All 5 languages (ES, FR, DE, IT, PT) are missing translations for these blocks of `extra` keys (roughly lines 1893-3946 in `en.ts`):
 
-| File | Hardcoded strings |
-|------|-------------------|
-| `ChallengeTypeModal.tsx` | Room/Trivia/Collection labels |
-| `TVConnectModal.tsx` | Full connection flow instructions |
-| `CollectionLobby.tsx` | Collection UI labels |
-| `LibraryCategoryPicker.tsx` | Search placeholder, empty state |
-| `AllFriendsModal.tsx` | Friend status labels |
-| `PlayerProfileModal.tsx` | Profile stats labels |
-| `usePlayLimit.ts` | Time units (hours/minutes) |
-| `useLeagueLeaderboard.ts` | League names (Bronze-Grandmaster) |
-| `VipContext.tsx` | VIP benefit descriptions, toasts |
-| `TVGameContext.tsx` | Toast notifications |
-| `MultiplayerContextV2.tsx` | Toast messages |
-| `opponents.ts` | Rank name wiring |
-| `FriendChatSheet.tsx` | Today/Yesterday headers |
+| Block | Approx. Keys | Content |
+|-------|-------------|---------|
+| Friend context | ~15 | friendRequestReceived, alreadyFriends, requestSent, etc. |
+| Social notifications | ~6 | playedYourTrivia, likedYourTrivia, someonePlayed, etc. |
+| Quiz play modal | ~10 | roundCompleted, totalScore, gameOver, wellDone, etc. |
+| VIP page | ~25 | vipShop, becomeVipTitle, vipBenefitsTitle, autoRenewal, etc. |
+| Controller/TV game | ~15 | playersConnected, chooseTrivia, selectedRounds, etc. |
+| Achievements | ~16 | achieveStreak3 through achieveMissions500 |
+| Trivia detail | ~5 | leaderboardTitle, playersCount, editTrivia, etc. |
+| Search/Spotlight | ~5 | searchLabel, spotlightPlay, spotlightShop, etc. |
+| Edit quiz modal | ~6 | questionNumber, editMode, etc. |
+| Invite friends modal | ~20 | inviteFriendsTitle, searchUserPlaceholder, pending, etc. |
+| Save/loading states | ~10 | savingState, loadingState, pleaseWait, etc. |
+| Report/block | ~15 | reportReason, reportSpam, blockBtn, etc. |
+| Feed filters | ~6 | feedFilterLiked, feedFilterSaved, etc. |
+| Profile stats | ~10 | profileTrivias, profileAwards, profileGames, etc. |
+| Challenge modal | ~8 | challengeModalTitle, roomOption, triviaOption, etc. |
+| My trivias widget | ~15 | myTriviasWidget, noTriviasYet, createFirstTrivia, etc. |
+| MyTrivia picker | ~15 | myTriviaTitle, noCollectionsYet, draftsLabel, etc. |
+| Edit round/question | ~20 | questionLabel, editRoundTitle, deleteThisQuestion, etc. |
+| Power-ups detail | ~10 | myPowers, powerFiftyFifty, powerFreezeDesc, etc. |
+| Shop/Pro sidebar | ~25 | becomeProSidebar, soloPro, familyPro, benefits, etc. |
+| Profile sidebar | ~15 | proBenefit2xXp, quickStatsTitle, playedTodayLabel, etc. |
+| Invite friends (Pro) | ~20 | inviteFriendsHeader, byEmailTab, byLinkTab, etc. |
+| Daily plays/VIP | ~8 | rightNow, playsLimitReached, adLimitReached, etc. |
+| User moderation | ~10 | pleaseLogin, cantReportSelf, userBlockedSuccess, etc. |
+| Drafts | ~12 | draftDeleted, savedDrafts, untitledMyTrivia, etc. |
+| Guest activation | ~10 | startGameCta, stepSignup, simpleSteps, etc. |
+| Room Lobby extras | ~25 | playerRemovedFromRoom, hostTransfer, startRound, etc. |
+| Category Picker | ~25 | cpSelectCategory, cpLibrary, cpMyTrivias, etc. |
+| SpotlightSearch | ~25 | ssSearchPlaceholder, ssQuickActions, ssCategories, etc. |
+| Generation notifications | ~5 | genAvatarTitle, genPreparing, genReady, etc. |
+| ControllerReveal | ~12 | crResultsLoading, crCorrect, crTimeExpired, etc. |
+| TV screens (all) | ~120 | tvMode, tvPairingScreen, tvLobbyScreen, tvQuestionScreen, tvResultsScreen, tvIdleScreen, tvPollScreen, tvGameOverScreen, etc. |
+| Topic pool labels | ~30 | topicNetflixShows, topicDisneyMovies, topicNBALegends, etc. |
+| Batch 2-3 keys | ~80 | playerRemoved, categoryChanged, triviaReady, inspirational*, country*, settings*, auth*, diff*, cbt*, cqm*, erm*, sf*, etc. |
+| Phase 3-4 keys | ~40 | quickWheel, didYouKnow, mapTitle, referralWelcome, exhaustion*, etc. |
 
-**Step 2 -- 5 language files need full translation:**
+**Total: ~550-600 missing keys per language x 5 languages = ~2,800-3,000 translations needed**
 
-| Language | Current coverage | Keys to translate |
-|----------|-----------------|-------------------|
-| Spanish (es.ts) | ~60% done | ~400 remaining keys |
-| French (fr.ts) | ~15% done | ~800 remaining keys |
-| German (de.ts) | ~10% done | ~850 remaining keys |
-| Italian (it.ts) | ~10% done | ~850 remaining keys |
-| Portuguese (pt.ts) | ~10% done | ~850 remaining keys |
+### Partially translated non-`extra` sections
+
+| Section | Languages affected | Missing keys |
+|---------|-------------------|-------------|
+| `shop` (full version) | ES, DE, IT, PT | ~30 keys (smallPackage, megaPackage, vipDay, etc.) |
+| `legal` (full version) | All 5 | ~50 keys (only title/intro translated) |
+| `tv` (full version) | All 5 | ~10 keys (playOnTV, mirrorDescription, etc.) |
+| `spin` (full version) | All 5 | ~10 keys (winChances, watchAdForSpins, etc.) |
+| `help` (coinsExplanation, xpExplanation) | ES, DE, IT, PT | ~2 keys |
 
 ## Execution Plan
 
-### Phase 1: Wire remaining hardcoded strings (MUST do first)
-Replace all ~70 hardcoded Georgian strings with `t()` calls in the 13 files listed above. Add any missing translation keys to both `en.ts` and `ka.ts`.
+### Phase A: Translate `extra` section for all 5 languages
 
-### Phase 2: Translate all 5 languages (can be parallel)
-Since all 5 files use `...en` as the base spread, they are independent of each other. We can update all 5 in parallel.
+Due to size constraints (~600 keys per language), each language will need 4-6 sequential edits to cover the full `extra` section. The work will proceed in batches per language:
 
-Each file will be expanded to include full translations for every section that `en.ts` has:
-- `common`, `auth`, `forgotPassword`, `onboarding`, `powerups`, `nav`, `menu`
-- `game`, `discover`, `profile`, `leaderboard`, `team`, `modals`, `settings`
-- `dailyRewards`, `missions`, `shop`, `help`, `legal`, `tv`, `spin`
-- `notifications`, `sound`, `errors`, `success`, `avatar`, `category`
-- `chest`, `featured`, `iap`, `gameExtra`, `social`, `challenge`
-- `chat`, `controllerWaiting`, `gameInvite`, `categoryWheel`, `playLimit`
-- `notificationsPanel`, `extra`, `completedLevel`, `powerUpDetail`, `guestJoin`
+1. **Batch 1** (per language): Keys from friend context through VIP page (~80 keys)
+2. **Batch 2** (per language): Keys from Controller/TV through invite friends modal (~80 keys)
+3. **Batch 3** (per language): Keys from save/loading through MyTrivia picker (~80 keys)
+4. **Batch 4** (per language): Keys from edit round through Room Lobby extras (~80 keys)
+5. **Batch 5** (per language): Keys from Category Picker through TV screens (~100 keys)
+6. **Batch 6** (per language): Keys from topic pool through Phase 4 and remaining (~100 keys)
 
-### Recommended approach: All 5 in parallel
-- All 5 files are independent (no cross-dependencies)
-- Each uses `...en` spread so partial updates are safe
-- We can process them in batches per section to ensure consistency
-- Due to file size constraints, each language will be done across 2-3 edits
+Languages can be processed in parallel since they're independent files.
 
-### Technical Details
+### Phase B: Fill partial sections (shop, legal, tv, spin, help)
 
-**File structure for each language (same pattern):**
+Add missing keys to the non-`extra` sections for each language. These are smaller (~100 keys total across all sections per language).
+
+### Technical approach
+
+Each edit appends translated key overrides within the existing `extra: { ...en.extra, ... }` block. Since we use the spread pattern, we only need to add the missing keys -- existing translations remain untouched.
+
 ```typescript
-export const fr: KaTranslations = {
-  ...en,
-  common: { ...en.common, play: "Jouer", ... },
-  auth: { ...en.auth, signIn: "Connexion", ... },
-  // ... all sections with translated overrides
-};
+// Example: adding missing keys to it.ts extra section
+extra: {
+  ...en.extra,
+  // ... existing ~230 translated keys stay ...
+  // NEW translations added:
+  friendRequestReceived: "{name} vuole essere tuo amico! ...",
+  alreadyFriends: "Siete già amici",
+  // ... etc
+},
 ```
 
-The `...en` spread ensures any keys we miss still show English (not broken UI). Each section override uses `...en.sectionName` to inherit defaults, then overrides with translated strings.
-
-**Estimated scope:** ~4,000 translated strings across 5 files.
+### Estimated total work
+- ~3,000 new translated strings across 5 files
+- 25-30 file edits total
+- No structural changes, only adding key-value pairs
 
