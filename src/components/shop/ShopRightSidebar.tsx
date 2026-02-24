@@ -193,7 +193,7 @@ export function ShopRightSidebar() {
                       <h3 className="text-base font-bold text-white">{tier.nameKa}</h3>
                       <div className="flex items-baseline gap-1">
                         <span className="text-xl font-black text-white">{getPriceDisplay(tier.price).symbol}{getPriceDisplay(tier.price).value}{getPriceDisplay(tier.price).suffix}</span>
-                        <span className="text-xs text-white/70">/mo</span>
+                        <span className="text-xs text-white/70">{getPriceDisplay(tier.price).monthLabel}</span>
                       </div>
                     </div>
                     {!isHovered && !isCurrentTier && (

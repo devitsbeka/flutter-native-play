@@ -32,21 +32,23 @@ export function formatPrice(usdPrice: number): string {
 /**
  * Format price with per-month suffix
  */
-export function formatMonthlyPrice(usdPrice: number, monthLabel: string = "/mo"): string {
-  if (shouldShowGel()) {
+export function formatMonthlyPrice(usdPrice: number, monthLabel?: string): string {
+  const isGel = shouldShowGel();
+  const label = monthLabel ?? (isGel ? '/თვე' : '/mo');
+  if (isGel) {
     const gel = usdToGel(usdPrice);
-    return `${gel.toFixed(2)} ₾${monthLabel}`;
+    return `${gel.toFixed(2)} ₾${label}`;
   }
-  return `$${usdPrice.toFixed(2)}${monthLabel}`;
+  return `$${usdPrice.toFixed(2)}${label}`;
 }
 
 /**
  * Get the price value and currency symbol separately (for inline rendering)
  */
-export function getPriceDisplay(usdPrice: number): { value: string; symbol: string; suffix: string } {
+export function getPriceDisplay(usdPrice: number): { value: string; symbol: string; suffix: string; monthLabel: string } {
   if (shouldShowGel()) {
     const gel = usdToGel(usdPrice);
-    return { value: gel.toFixed(2), symbol: '', suffix: ' ₾' };
+    return { value: gel.toFixed(2), symbol: '', suffix: ' ₾', monthLabel: '/თვე' };
   }
-  return { value: usdPrice.toFixed(2), symbol: '$', suffix: '' };
+  return { value: usdPrice.toFixed(2), symbol: '$', suffix: '', monthLabel: '/mo' };
 }
