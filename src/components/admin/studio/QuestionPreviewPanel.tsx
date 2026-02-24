@@ -6,6 +6,7 @@ import { QuizQuestionCard } from '@/components/ui/quiz-question-card';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { QuestionTypeIndicator } from './QuestionTypeIndicator';
+import { DynamicIcon } from '@/components/shared/DynamicIcon';
 
 interface QuestionPreviewPanelProps {
   question: StudioQuestion | null;
@@ -78,25 +79,36 @@ export function QuestionPreviewPanel({
               
               {/* Game content */}
               <div className="px-4 pb-6 space-y-4">
-                {/* Question Card */}
-                <QuizQuestionCard
-                  questionText={question.question_text}
-                  imageUrl={question.image_url}
-                  videoUrl={question.video_url}
-                  audioUrl={question.audio_url}
-                  progressPercent={75}
-                  difficultyLabel={
-                    question.difficulty === 'easy' ? 'მარტივი' :
-                    question.difficulty === 'medium' ? 'საშუალო' : 'რთული'
-                  }
-                  difficultyColor={
-                    question.difficulty === 'easy' ? 'bg-green-500' :
-                    question.difficulty === 'medium' ? 'bg-yellow-500' : 'bg-red-500'
-                  }
-                  timerSeconds={15}
-                  reserveTopSpace={!question.image_url && !question.video_url && !question.audio_url}
-                  hideQuestionText={!!question.image_url}
-                />
+                {/* Question Card with Icon */}
+                <div className="relative">
+                  {!question.image_url && !question.video_url && !question.audio_url && question.icon_slug && (
+                    <div className="absolute -top-[33px] left-1/2 -translate-x-1/2 z-10 drop-shadow-lg">
+                      <DynamicIcon
+                        slug={question.icon_slug}
+                        size={64}
+                        hideIfEmpty
+                      />
+                    </div>
+                  )}
+                  <QuizQuestionCard
+                    questionText={question.question_text}
+                    imageUrl={question.image_url}
+                    videoUrl={question.video_url}
+                    audioUrl={question.audio_url}
+                    progressPercent={75}
+                    difficultyLabel={
+                      question.difficulty === 'easy' ? 'მარტივი' :
+                      question.difficulty === 'medium' ? 'საშუალო' : 'რთული'
+                    }
+                    difficultyColor={
+                      question.difficulty === 'easy' ? 'bg-green-500' :
+                      question.difficulty === 'medium' ? 'bg-yellow-500' : 'bg-red-500'
+                    }
+                    timerSeconds={15}
+                    reserveTopSpace={!question.image_url && !question.video_url && !question.audio_url}
+                    hideQuestionText={!!question.image_url}
+                  />
+                </div>
 
                 {/* Answer Buttons */}
                 <div className="grid grid-cols-2 gap-2">
