@@ -3586,6 +3586,24 @@ export const en: KaTranslations = {
     completedOf: "{done}/{total} completed",
     gamesUnit: "games",
     countryGeorgia: "Georgia",
+    totalXpLabel: "Total XP",
+    nextMilestoneLabel: "Next Milestone",
+    // NotEnoughCoinsModal
+    becomeProBtn: "Become PRO",
+    unlimitedGamesFeatures: "Unlimited games and features",
+    // Shop Success
+    paymentSuccess: "Payment completed successfully!",
+    gemsAddedToBalance: "Your gems have been added to your balance",
+    currentBalance: "Current Balance",
+    backToShop: "Back to Shop",
+    goToHomePage2: "Go to Home Page",
+    transactionId: "Transaction ID",
+    // Index guest
+    registration: "Register",
+    playAsGuest: "or play as a guest",
+    // Hooks
+    roomCreateFailed2: "Room creation failed",
+    aiAvatarAnimating: "AI avatar created! Animation starting...",
   },
 };
 

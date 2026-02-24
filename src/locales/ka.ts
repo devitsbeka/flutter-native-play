@@ -3616,6 +3616,24 @@ export const ka = {
     completedOf: "{done}/{total} შესრულებულია",
     gamesUnit: "თამაში",
     countryGeorgia: "საქართველო",
+    totalXpLabel: "სულ XP",
+    nextMilestoneLabel: "შემდეგი ეტაპი",
+    // NotEnoughCoinsModal
+    becomeProBtn: "გახდი PRO",
+    unlimitedGamesFeatures: "ულიმიტო თამაშები და ფუნქციები",
+    // Shop Success
+    paymentSuccess: "გადახდა წარმატებით დასრულდა!",
+    gemsAddedToBalance: "თქვენი ალმასები დამატებულია ბალანსზე",
+    currentBalance: "მიმდინარე ბალანსი",
+    backToShop: "მაღაზიაში დაბრუნება",
+    goToHomePage2: "მთავარ გვერდზე გადასვლა",
+    transactionId: "ტრანზაქციის ID",
+    // Index guest
+    registration: "რეგისტრაცია",
+    playAsGuest: "ან ითამაშე როგორც სტუმარმა",
+    // Hooks
+    roomCreateFailed2: "ოთახის შექმნა ვერ მოხერხდა",
+    aiAvatarAnimating: "AI ავატარი შეიქმნა! ანიმაცია იწყება...",
   },
 };
 
