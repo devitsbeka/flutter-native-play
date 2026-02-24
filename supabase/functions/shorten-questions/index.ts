@@ -14,6 +14,7 @@ interface Question {
   correct_answer: string;
   incorrect_answers: string[];
   category_id: string;
+  language: string;
 }
 
 interface ShortenResult {
@@ -33,7 +34,7 @@ interface ValidationResult {
 }
 
 // Validate shortened question quality
-function isValidShortenedQuestion(shortened: string, original: string): ValidationResult {
+function isValidShortenedQuestion(shortened: string, original: string, language: string = 'en'): ValidationResult {
   const trimmed = shortened.trim();
   
   // Must have minimum length
@@ -73,14 +74,16 @@ function isValidShortenedQuestion(shortened: string, original: string): Validati
     };
   }
   
-  // Check for incomplete sentences (Georgian particles/prepositions that shouldn't end a sentence)
-  const incompleteEndings = ['რომ', 'რო', 'და', 'თუ', 'რა', 'ან', 'მაგრამ', 'ამიტომ', 'რადგან', 'როცა', 'სანამ', 'თუმცა'];
+  // Check for incomplete sentences (particles/prepositions that shouldn't end a sentence)
   const lastWord = words[words.length - 1].replace('?', '').toLowerCase();
+  const kaIncompleteEndings = ['რომ', 'რო', 'და', 'თუ', 'რა', 'ან', 'მაგრამ', 'ამიტომ', 'რადგან', 'როცა', 'სანამ', 'თუმცა'];
+  const enIncompleteEndings = ['and', 'but', 'or', 'the', 'a', 'an', 'of', 'in', 'to', 'for', 'with', 'by', 'from', 'that', 'which', 'who', 'whose', 'whom'];
+  const incompleteEndings = language === 'ka' ? kaIncompleteEndings : enIncompleteEndings;
   if (incompleteEndings.includes(lastWord)) {
     return { 
       valid: false, 
       reason: 'incomplete_sentence', 
-      reasonGe: `არასრული წინადადება (მთავრდება: "${lastWord}")` 
+      reasonGe: `Incomplete sentence (ends with: "${lastWord}")` 
     };
   }
   
@@ -142,7 +145,7 @@ serve(async (req) => {
     // Build query for questions that need shortening
     let query = supabase
       .from("questions")
-      .select("id, question_text, correct_answer, incorrect_answers, category_id")
+      .select("id, question_text, correct_answer, incorrect_answers, category_id, language")
       .eq("is_active", true)
       .is("shorten_status", null);
 
@@ -226,7 +229,10 @@ serve(async (req) => {
           continue;
         }
 
-        const prompt = `შენ ხარ ქართული ქვიზის კითხვების შემოკლების ექსპერტი.
+        const isGeorgian = question.language === 'ka';
+        
+        const prompt = isGeorgian
+          ? `შენ ხარ ქართული ქვიზის კითხვების შემოკლების ექსპერტი.
 
 ამოცანა: შეამოკლე კითხვა ${MAX_LENGTH} სიმბოლომდე.
 
@@ -257,7 +263,38 @@ serve(async (req) => {
 ორიგინალი კითხვა: "${question.question_text}"
 სიგრძე: ${question.question_text.length} → მაქსიმუმ ${MAX_LENGTH}
 
-შემოკლებული კითხვა:`;
+შემოკლებული კითხვა:`
+          : `You are a quiz question shortening expert.
+
+Task: Shorten the question to max ${MAX_LENGTH} characters.
+
+Strict rules:
+1. Preserve the full meaning and context of the question
+2. Minimum ${MIN_LENGTH} characters
+3. Must contain at least ${MIN_WORDS} words
+4. Must end with a question mark (?)
+5. Must be a complete, understandable question without additional context
+6. Do not leave sentences incomplete - every word must contribute meaning
+7. Use correct grammar
+
+Bad examples (do NOT do this):
+❌ "What?" - incomplete, meaningless
+❌ "Which one?" - no context
+❌ "What and which?" - not understandable
+
+Good examples:
+✅ "What is the capital of France?"
+✅ "Who wrote Romeo and Juliet?"
+✅ "What year was the UN founded?"
+
+Correct answer (for reference): "${question.correct_answer}"
+
+If shortening to ${MAX_LENGTH} characters is impossible while preserving full meaning, respond only with: CANNOT_SHORTEN
+
+Original question: "${question.question_text}"
+Length: ${question.question_text.length} → max ${MAX_LENGTH}
+
+Shortened question:`;
 
         const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
@@ -338,7 +375,7 @@ serve(async (req) => {
           unshortenable++;
         } else if (aiResponse.length > 0) {
           // Validate quality of shortened question
-          const validation = isValidShortenedQuestion(aiResponse, question.question_text);
+          const validation = isValidShortenedQuestion(aiResponse, question.question_text, question.language);
           
           if (!validation.valid) {
             // Failed quality validation - mark as unshortenable
