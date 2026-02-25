@@ -869,4 +869,6 @@ export const de: KaTranslations = {
     sfClearFilter: "Löschen", sfNoPostsFiltered: "Keine Posts mit diesen Filtern gefunden",
     sfNoPosts: "Noch keine Posts",
   },
+
+  systemErrors: { ...en.systemErrors, userNotFound: "Benutzer nicht gefunden", invalidCredentials: "Ungültige Anmeldedaten", emailNotConfirmed: "E-Mail nicht bestätigt", alreadyRegistered: "Dieser Benutzer ist bereits registriert", passwordTooShort: "Passwort muss mindestens 6 Zeichen haben", rateLimitExceeded: "Zu viele Versuche, versuche es später erneut", networkError: "Internetverbindungsfehler", newPasswordDifferent: "Neues Passwort muss unterschiedlich sein", emailAlreadyInUse: "Diese E-Mail wird bereits verwendet", invalidEmailFormat: "Ungültiges E-Mail-Format", signupsNotAllowed: "Registrierungen sind vorübergehend nicht möglich", genericError: "Fehler, versuche es erneut" },
 };

@@ -1,29 +1,31 @@
+import { t } from './standaloneTranslation';
+
 const errorMap: [string, string][] = [
-  ['User not found', 'მომხმარებელი ვერ მოიძებნა'],
-  ['Invalid login credentials', 'არასწორი მონაცემები'],
-  ['Email not confirmed', 'ელ-ფოსტა არ არის დადასტურებული'],
-  ['already registered', 'ეს მომხმარებელი უკვე რეგისტრირებულია'],
-  ['Password should be at least', 'პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს'],
-  ['Email rate limit exceeded', 'ძალიან ბევრი მცდელობა, სცადე მოგვიანებით'],
-  ['rate limit', 'ძალიან ბევრი მცდელობა, სცადე მოგვიანებით'],
-  ['Failed to fetch', 'ინტერნეტ კავშირის შეცდომა'],
-  ['NetworkError', 'ინტერნეტ კავშირის შეცდომა'],
-  ['network', 'ინტერნეტ კავშირის შეცდომა'],
-  ['New password should be different', 'ახალი პაროლი განსხვავებული უნდა იყოს'],
-  ['Email already in use', 'ეს ელ-ფოსტა უკვე გამოყენებულია'],
-  ['Unable to validate email', 'ელ-ფოსტის ფორმატი არასწორია'],
-  ['Signups not allowed', 'რეგისტრაცია დროებით შეუძლებელია'],
+  ['User not found', 'systemErrors.userNotFound'],
+  ['Invalid login credentials', 'systemErrors.invalidCredentials'],
+  ['Email not confirmed', 'systemErrors.emailNotConfirmed'],
+  ['already registered', 'systemErrors.alreadyRegistered'],
+  ['Password should be at least', 'systemErrors.passwordTooShort'],
+  ['Email rate limit exceeded', 'systemErrors.rateLimitExceeded'],
+  ['rate limit', 'systemErrors.rateLimitExceeded'],
+  ['Failed to fetch', 'systemErrors.networkError'],
+  ['NetworkError', 'systemErrors.networkError'],
+  ['network', 'systemErrors.networkError'],
+  ['New password should be different', 'systemErrors.newPasswordDifferent'],
+  ['Email already in use', 'systemErrors.emailAlreadyInUse'],
+  ['Unable to validate email', 'systemErrors.invalidEmailFormat'],
+  ['Signups not allowed', 'systemErrors.signupsNotAllowed'],
 ];
 
 export function translateErrorMessage(message: string): string {
-  if (!message) return 'შეცდომა, სცადე თავიდან';
+  if (!message) return t('systemErrors.genericError');
   
   const lowerMessage = message.toLowerCase();
-  for (const [pattern, translation] of errorMap) {
+  for (const [pattern, translationKey] of errorMap) {
     if (lowerMessage.includes(pattern.toLowerCase())) {
-      return translation;
+      return t(translationKey);
     }
   }
   
-  return 'შეცდომა, სცადე თავიდან';
+  return t('systemErrors.genericError');
 }

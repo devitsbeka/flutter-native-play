@@ -1444,4 +1444,6 @@ export const es: KaTranslations = {
     sfNoPostsFiltered: "No se encontraron posts con estos filtros",
     sfNoPosts: "Sin posts aún",
   },
+
+  systemErrors: { ...en.systemErrors, userNotFound: "Usuario no encontrado", invalidCredentials: "Credenciales inválidas", emailNotConfirmed: "Email no confirmado", alreadyRegistered: "Este usuario ya está registrado", passwordTooShort: "La contraseña debe tener al menos 6 caracteres", rateLimitExceeded: "Demasiados intentos, inténtalo más tarde", networkError: "Error de conexión a internet", newPasswordDifferent: "La nueva contraseña debe ser diferente", emailAlreadyInUse: "Este email ya está en uso", invalidEmailFormat: "Formato de email inválido", signupsNotAllowed: "Los registros no están disponibles temporalmente", genericError: "Error, inténtalo de nuevo" },
 };
