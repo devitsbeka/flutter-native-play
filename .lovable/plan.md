@@ -1,52 +1,71 @@
 
 
-## Fix Welcome Onboarding Not Showing + Add Admin Preview Route
+## Fix Welcome Onboarding Tooltips + Add Icons and Gradient
 
-### Problem
-The welcome onboarding modal never appears because the trigger condition (`hasCompletedOnboarding`) only becomes `true` when a user goes through the `SignupOnboardingModal` flow. Users who sign up via Google, Apple, or the standard auth page bypass this entirely. Even users who do use the signup modal may miss it due to the avatar modal opening immediately after.
+### Problems (from screenshot)
+1. On mobile, the tooltip floats to the top-left corner of the screen instead of appearing directly above the corresponding bottom nav item
+2. No 3D icons in the tooltip cards
+3. Plain white card background -- should use a gradient animation
 
-### Solution
+### Root Cause of Positioning
+The `tooltipAbove` logic uses `targetRect.top > window.innerHeight / 2` to decide placement. Since the bottom nav items are at the very bottom of the screen, `tooltipAbove` is always `true`, and the tooltip is placed using `bottom: window.innerHeight - targetRect.top + 16`. This works conceptually, but the tooltip width (260px) combined with `getTooltipLeft()` centering logic causes it to anchor near the top-left when the target element is near an edge. The real issue is that on mobile the tooltip should ALWAYS appear above the nav bar, anchored to the target nav item's horizontal center.
 
-**1. Fix the trigger logic in `src/pages/Index.tsx`**
+### Changes
 
-Replace the `hasCompletedOnboarding` check with a more reliable approach:
-- Instead of depending on `OnboardingContext.hasCompletedOnboarding`, check if the user's `profile.created_at` is recent (within the last 5 minutes) AND the localStorage key `mytrivia_welcome_onboarding_seen` is NOT set.
-- This works for ALL signup paths (username, Google, Apple, guest conversion).
-- Remove the dependency on `useOnboarding().hasCompletedOnboarding` for this feature.
+**1. Copy uploaded icons to `src/assets/onboarding/`**
+- `rocket-2.png` (explore)
+- `magical-shop.png` (shop)  
+- `competition.png` (rank)
+- `group-of-people-2.png` (team)
+- `trivia-buzzer-2.png` (play)
 
-```ts
-useEffect(() => {
-  if (
-    user &&
-    profile?.created_at &&
-    !localStorage.getItem("mytrivia_welcome_onboarding_seen")
-  ) {
-    // Show for accounts created in the last 5 minutes
-    const createdAt = new Date(profile.created_at).getTime();
-    const fiveMinAgo = Date.now() - 5 * 60 * 1000;
-    if (createdAt > fiveMinAgo) {
-      const timer = setTimeout(() => setShowWelcomeOnboarding(true), 800);
-      return () => clearTimeout(timer);
-    } else {
-      // Old account, mark as seen so we never check again
-      localStorage.setItem("mytrivia_welcome_onboarding_seen", "true");
-    }
-  }
-}, [user, profile]);
+**2. Rewrite `WelcomeOnboardingOverlay.tsx`**
+- Add an `icon` field to each step in the `STEPS` array, importing the 5 uploaded images
+- Fix tooltip positioning: on mobile, always place the tooltip above the bottom nav with a fixed `bottom` value (e.g., `bottom: navBarHeight + 16px`) and horizontally centered on the target element
+- Add a gradient background to the tooltip card using an animated purple/blue gradient (similar to the app's `gradient-purple` utility but with a subtle animation via CSS or framer-motion)
+- Render each step's icon (40x40px) next to the title inside the tooltip card
+- Keep the arrow pointing down toward the highlighted nav item
+- Increase tooltip width slightly (280px) to accommodate the icon
+
+**3. Tooltip card design**
+- Background: animated gradient (purple-to-blue shimmer via CSS `@keyframes` or a `background-size` animation)
+- Layout: icon (left) + title/description (right) stacked, then step dots + buttons below
+- Text color: white (since the background is dark gradient)
+- Arrow color: matches the gradient start color
+- Button: white background with dark text (inverted from current)
+
+### Files to Create/Edit
+1. **Copy 5 icon images** to `src/assets/onboarding/`
+2. **`src/components/onboarding/WelcomeOnboardingOverlay.tsx`** -- Full rework: icon imports, gradient card, fixed mobile positioning
+3. **`src/locales/ka.ts`** -- No changes needed (already has translations)
+
+### Technical Details
+
+Tooltip positioning fix (pseudocode):
+```text
+// Always place tooltip above nav on mobile
+const tooltipBottom = window.innerHeight - targetRect.top + 16;
+const tooltipLeft = clamp(
+  targetCenterX - tooltipWidth/2,
+  padding,
+  windowWidth - padding - tooltipWidth
+);
 ```
 
-**2. Add `/onboarding` admin preview route**
+Gradient animation CSS (inline style):
+```text
+background: linear-gradient(135deg, #7C3AED, #6366F1, #8B5CF6);
+background-size: 200% 200%;
+animation: gradient-shift 3s ease infinite;
+```
 
-Update `src/App.tsx`:
-- Add a new route `/onboarding` pointing to a new preview page.
-
-Create `src/pages/OnboardingWelcomePreview.tsx`:
-- A simple page that renders `WelcomeOnboardingModal` with `isOpen={true}`.
-- Includes a "Reset and Reopen" button to clear the localStorage key and re-trigger it.
-- Wrapped in `AdminRoute` so only admins can access it.
-
-### Files to Edit
-1. `src/pages/Index.tsx` -- Fix the trigger useEffect to use `profile.created_at` instead of `hasCompletedOnboarding`
-2. `src/pages/OnboardingWelcomePreview.tsx` -- New admin preview page
-3. `src/App.tsx` -- Add `/onboarding` route
-
+Icon rendering inside tooltip:
+```text
+<div className="flex items-start gap-3">
+  <img src={step.icon} className="w-10 h-10 flex-shrink-0" />
+  <div>
+    <h3>title</h3>
+    <p>description</p>
+  </div>
+</div>
+```
