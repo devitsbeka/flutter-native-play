@@ -1,62 +1,81 @@
 
-Goal: make each onboarding spotlight/modal anchor to the actual button icon (not to layout containers), so the highlighted icon is perfectly centered and fully visible on mobile, tablet, and desktop.
+Goal
+- Fix onboarding spotlight targeting so that:
+  1) desktop highlights cover the full nav row (icon + text),
+  2) tablet/desktop always show the last “Play” step,
+  3) spotlight stays fully visible and centered on the intended button.
 
-1) Root-cause fix: target the real clickable icon elements
-- Current issue comes from measuring wrapper containers (`flex-1`, wide desktop rows, padded wrappers) instead of the exact button/icon.
-- I will change the onboarding anchors so each step (`explore`, `shop`, `rank`, `team`, `play`) is attached to the true interactive element.
-- This removes horizontal drift, oversized highlight areas, and partial clipping.
+What I found
+- The desktop/tablet nav items currently apply `data-onboarding-id` to the icon wrapper in `UnifiedDesktopNav.tsx` (not the full row), so the spotlight only hugs the icon.
+- The onboarding overlay (`WelcomeOnboardingOverlay.tsx`) currently forces a square spotlight via `buildSpotlightRect`, which is good for icon-only targets but wrong for full-row desktop targets.
+- Only mobile bottom nav has `data-onboarding-id="play"` (in `UniversalBottomNav.tsx`). On tablet/desktop preview route (`/onboarding`), that element is hidden and no alternative `play` target exists, so the 5th step disappears.
 
-2) File updates and exact strategy
+Implementation plan
 
-A) `src/components/layout/UniversalBottomNav.tsx`
-- Move `data-onboarding-id` off wrapper `<div className="flex-1 ...">` nodes.
-- Add onboarding id to the actual target:
-  - standard nav items: apply on `NavButton` root button (or icon container inside it).
-  - center play item: apply on the real `motion.button` inside `Hex3DPlayButton` (the circular button face).
-- Keep wrappers purely for layout only (no onboarding targeting).
-- Optional precision improvement: expose `onboardingId?: string` prop on `NavButton` and set `data-onboarding-id={onboardingId}` there.
+1) Make desktop/tablet nav anchors represent the full row
+- File: `src/components/layout/UnifiedDesktopNav.tsx`
+- Move onboarding anchoring from the inner icon container to the `motion.button` root in `NavButton`.
+- Keep onboarding IDs for `explore/shop/rank/team` exactly as now, but bound to the full clickable row so spotlight includes icon + label on desktop.
+- Keep behavior unchanged for locked items, badges, and hover.
 
-B) `src/components/layout/UnifiedDesktopNav.tsx`
-- Move `data-onboarding-id` off the outer row wrapper `<div key={item.id}>`.
-- Add onboarding id at icon-level target inside `NavButton` (recommended) or button root:
-  - icon-level gives perfect centering over the icon across tablet + desktop label variants.
-- Add a tiny helper prop like `onboardingId?: "explore" | "shop" | "rank" | "team"` so only relevant items receive an id.
+2) Add a reliable desktop/tablet “Play” anchor
+- File: `src/components/home/DesktopPlayButtonLarge.tsx`
+- Add optional prop `onboardingId?: string`.
+- Apply `data-onboarding-id={onboardingId}` on the actual clickable `motion.button`.
+- This ensures the overlay can target the real play CTA (not a container).
 
-C) `src/components/onboarding/WelcomeOnboardingOverlay.tsx`
-- Improve `updateTargetRect` selection:
-  - Query all matches for current step.
-  - Filter for truly visible nodes (non-zero rect + visible style).
-  - Prefer the node that is actually on-screen and closest to intended area (bottom for mobile nav steps, left sidebar for desktop/tablet nav steps).
-- Remove dependence on broad fallback rectangles when a real anchor exists.
-- Keep fallback rects only as last resort (for resilience), but not primary.
-- Build spotlight rect from anchor with controlled padding and min size:
-  - regular nav icons: use square-ish expansion so icon is centered and fully visible.
-  - play button: larger expansion to cover the full circular button cleanly.
-- Keep tooltip placement logic but compute arrow from the new anchor center so pointer lands exactly on highlighted icon/button.
+3) Wire play onboarding ID in desktop/tablet play CTA usage
+- Files:
+  - `src/pages/Index.tsx`
+  - `src/components/home/DesktopGuestSplitLayout.tsx` (if used in guest desktop flows)
+- Pass `onboardingId="play"` to `DesktopPlayButtonLarge` where it is the visible play action.
+- This covers real onboarding on home layouts for both logged-in and guest desktop/tablet variants.
 
-3) Positioning behavior after fix
-- Mobile: modal sits above bottom-nav icon/button currently highlighted, with arrow centered to that icon.
-- Tablet: modal points to left nav icon (not row center drift).
-- Desktop: modal aligns to the same precise icon target; labels no longer skew anchor center.
-- Play step: always centers on the full play button shape.
+4) Ensure `/onboarding` preview also has a play target on desktop/tablet
+- File: `src/pages/OnboardingWelcomePreview.tsx`
+- Add a small desktop/tablet preview play CTA section (using `DesktopPlayButtonLarge` with `onboardingId="play"`), so step 5 always has a visible anchor on preview route.
+- Keep mobile preview unchanged (mobile still uses bottom nav play target).
 
-4) Why this solves your specific complaint
-- “Icons centered perfectly”: anchor rect will now come from icon/button geometry, not padded layout containers.
-- “Visible fully”: spotlight padding + min-size per step prevents clipping of icon edges and the play circle.
-- “On what button we’re showing info modal”: each step id maps directly to that button’s real DOM target.
+5) Update overlay geometry logic for mixed target types
+- File: `src/components/onboarding/WelcomeOnboardingOverlay.tsx`
+- Refactor target resolution to keep both element and rect context (not only rect), enabling shape-aware spotlight behavior.
+- Spotlight shaping rules:
+  - For desktop/tablet nav rows (wide targets): use rectangular spotlight (preserve row width/height + controlled padding).
+  - For icon-only targets (mobile nav icons): use square spotlight with min icon size.
+  - For play targets: preserve actual button geometry with min bounds so full button is visible.
+- Keep arrow logic anchored to true target center/right edge so pointer remains accurate after row-level targeting.
 
-5) Validation checklist (end-to-end)
-- `/onboarding` at mobile width:
-  - steps 1–5 each spotlight centered on the correct nav icon/button.
-  - no off-screen clipping, no wrong-button highlights.
-- Tablet width (md):
-  - spotlight lands on sidebar icons (not row text center).
-- Desktop width (lg+):
-  - same correctness with labels visible.
-- Confirm arrow points to anchor center for every step.
-- Confirm all five steps remain trackable and dismiss/next still work.
+6) Improve candidate selection so hidden duplicates are never chosen
+- File: `src/components/onboarding/WelcomeOnboardingOverlay.tsx`
+- Tighten visibility filter (non-zero rect, computed visibility/display/opacity, in viewport).
+- Add step-aware preference:
+  - `explore/shop/rank/team` prefer left-nav candidates on md+.
+  - `play` prefer visible desktop/tablet play CTA on md+; prefer bottom-nav play on mobile.
+- Keep fallback retry; add last-resort play fallback rect only if no visible target is found after retries (to prevent flow from silently disappearing).
 
-Technical implementation notes
-- This is a UI anchoring fix only; no backend/data/auth changes required.
-- Existing animation styles (spinning conic border + pulse glow) stay intact.
-- I’ll keep fallback logic for robustness, but reorder it to favor real visible anchors first.
+Expected result
+- Desktop: first 4 steps spotlight full nav row (icon + text), not icon-only.
+- Tablet: first 4 steps spotlight full tablet nav row area; tooltip remains properly positioned.
+- Play step: visible and correctly anchored on desktop and tablet (including `/onboarding` preview).
+- No regression on mobile bottom-nav spotlighting.
+
+Validation checklist
+1) `/onboarding` at desktop width (e.g., 1536):
+- Steps 1–4 highlight full left-nav rows.
+- Step 5 highlights a visible play button target (not missing).
+- Tooltip arrow points to selected target correctly.
+
+2) `/onboarding` at tablet width (e.g., 820):
+- Steps align to tablet nav items.
+- Step 5 appears and highlights play target.
+
+3) Home page onboarding trigger on desktop/tablet:
+- Play step highlights the real play CTA and remains fully visible.
+
+4) Mobile regression check:
+- Steps still align over bottom-nav icons and play button.
+- No clipping/off-screen modal.
+
+Technical notes
+- UI-only change; no backend/database/auth changes required.
+- Existing onboarding analytics/tracking stays unchanged.
