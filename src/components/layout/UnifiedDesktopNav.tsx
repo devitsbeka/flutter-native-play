@@ -247,11 +247,12 @@ export function UnifiedDesktopNav({
         <div className="px-2 lg:px-3 space-y-1">
           {navItems.map((item) => {
             const isLockedItem = isGuest && LOCKED_FOR_GUESTS.includes(item.id);
-            return (
-              <div 
-                key={item.id}
-                onMouseEnter={() => !isLockedItem && handleNavHover(item.path)}
-                onFocus={() => !isLockedItem && handleNavHover(item.path)}
+              return (
+                <div 
+                  key={item.id}
+                  data-onboarding-id={item.id === "explore" ? "explore" : item.id === "shop" ? "shop" : item.id === "rank" ? "rank" : item.id === "team" ? "team" : undefined}
+                  onMouseEnter={() => !isLockedItem && handleNavHover(item.path)}
+                  onFocus={() => !isLockedItem && handleNavHover(item.path)}
               >
                 <NavButton
                   icon={item.icon}

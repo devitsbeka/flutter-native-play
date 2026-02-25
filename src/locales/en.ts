@@ -3940,7 +3940,18 @@ export const en: KaTranslations = {
     mpLeaveRoomFailed: "Could not leave room",
     mpRoomDeleted: "Room deleted",
     mpDeleteRoomFailed: "Could not delete room",
-    // Welcome Onboarding
+    // Welcome Onboarding (inline tooltips)
+    onboardingExploreTitle: "Explore & Discover",
+    onboardingExploreDesc: "Browse dozens of categories and find your next trivia challenge.",
+    onboardingShopTitle: "Power-Up Shop",
+    onboardingShopDesc: "Grab power-ups and boosters to gain an edge in your games.",
+    onboardingRankTitle: "Leaderboards",
+    onboardingRankDesc: "Compete with players and climb the rankings to earn rewards.",
+    onboardingTeamTitle: "Play Together",
+    onboardingTeamDesc: "Create rooms and challenge friends to live trivia matches.",
+    onboardingPlayTitle: "Start Playing!",
+    onboardingPlayDesc: "Tap here to jump into a quick trivia game and earn points.",
+    // Legacy keys kept for backwards compat
     welcomeOnboardingStep1Title: "Thousands of Questions",
     welcomeOnboardingStep1Desc: "Browse dozens of categories and challenge yourself with thousands of trivia questions in Discover.",
     welcomeOnboardingStep2Title: "Play on TV",

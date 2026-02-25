@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import { WelcomeOnboardingModal } from "@/components/onboarding/WelcomeOnboardingModal";
+import { WelcomeOnboardingOverlay } from "@/components/onboarding/WelcomeOnboardingOverlay";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 
@@ -14,18 +15,22 @@ export default function OnboardingWelcomePreview() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background p-4">
-      <h1 className="text-2xl font-bold text-foreground">Welcome Onboarding Preview</h1>
-      <p className="text-muted-foreground text-sm">Admin-only preview of the welcome onboarding modal.</p>
+    <MainLayout showPlayButton showBottomNav>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-4">
+        <h1 className="text-2xl font-bold text-foreground">Welcome Onboarding Preview</h1>
+        <p className="text-muted-foreground text-sm text-center max-w-md">
+          This preview shows the inline onboarding tooltips that highlight navigation items for new users.
+        </p>
 
-      {!isOpen && (
-        <Button onClick={handleReset} className="gap-2">
-          <RotateCcw className="w-4 h-4" />
-          Reset & Reopen
-        </Button>
-      )}
+        {!isOpen && (
+          <Button onClick={handleReset} className="gap-2">
+            <RotateCcw className="w-4 h-4" />
+            Reset & Reopen
+          </Button>
+        )}
+      </div>
 
-      <WelcomeOnboardingModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
-    </div>
+      <WelcomeOnboardingOverlay isOpen={isOpen} onClose={() => setIsOpen(false)} />
+    </MainLayout>
   );
 }

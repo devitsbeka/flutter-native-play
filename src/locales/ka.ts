@@ -3970,7 +3970,18 @@ export const ka = {
     mpLeaveRoomFailed: "ოთახის დატოვება ვერ მოხერხდა",
     mpRoomDeleted: "ოთახი წაიშალა",
     mpDeleteRoomFailed: "ოთახის წაშლა ვერ მოხერხდა",
-    // Welcome Onboarding
+    // Welcome Onboarding (inline tooltips)
+    onboardingExploreTitle: "აღმოაჩინე",
+    onboardingExploreDesc: "დაათვალიერე ათობით კატეგორია და იპოვე შენი შემდეგი გამოწვევა.",
+    onboardingShopTitle: "მაღაზია",
+    onboardingShopDesc: "შეიძინე გამაძლიერებლები და ბუსტერები თამაშში უპირატესობისთვის.",
+    onboardingRankTitle: "რეიტინგი",
+    onboardingRankDesc: "შეჯიბრე სხვა მოთამაშეებს და აიწიე რეიტინგში ჯილდოების მოსაპოვებლად.",
+    onboardingTeamTitle: "ითამაშე ერთად",
+    onboardingTeamDesc: "შექმენი ოთახი და გამოუწვიე მეგობრები ლაივ ტრივია მატჩზე.",
+    onboardingPlayTitle: "დაიწყე თამაში!",
+    onboardingPlayDesc: "დააჭირე აქ სწრაფი ტრივიის დასაწყებად და ქულების მოსაგროვებლად.",
+    // Legacy
     welcomeOnboardingStep1Title: "ათასობით კითხვა",
     welcomeOnboardingStep1Desc: "გამოიკვლიე ათობით კატეგორია და გამოსცადე შენი თავი ათასობით კითხვით Discover-ში.",
     welcomeOnboardingStep2Title: "ითამაშე TV-ზე",
