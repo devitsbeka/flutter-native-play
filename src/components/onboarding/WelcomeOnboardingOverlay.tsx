@@ -48,9 +48,44 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
     return new DOMRect(left, top, PLAY_TARGET_SIZE, PLAY_TARGET_SIZE);
   }, []);
 
+  const getMobileStepRect = useCallback((stepId: typeof STEPS[number]["id"]): DOMRect => {
+    const navHeight = 110;
+    const navTop = window.innerHeight - navHeight;
+    const centers = {
+      explore: window.innerWidth * 0.1,
+      shop: window.innerWidth * 0.3,
+      play: window.innerWidth * 0.5,
+      rank: window.innerWidth * 0.7,
+      team: window.innerWidth * 0.9,
+    } as const;
+
+    const isPlay = stepId === "play";
+    const size = isPlay ? PLAY_TARGET_SIZE : 44;
+    const left = centers[stepId] - size / 2;
+    const top = isPlay ? navTop - 30 : navTop + 20;
+    return new DOMRect(left, top, size, size);
+  }, []);
+
   const updateTargetRect = useCallback(() => {
     if (!isOpen) return;
     const step = STEPS[currentStep];
+    const isDesktopViewport = window.innerWidth >= 1024;
+
+    if (!isDesktopViewport) {
+      const el = document.querySelector(`[data-onboarding-id="${step.id}"]`);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const looksLikeBottomNavTarget = rect.width > 0 && rect.height > 0 && rect.top > window.innerHeight * 0.6;
+        if (looksLikeBottomNavTarget) {
+          setTargetRect(rect);
+          return;
+        }
+      }
+
+      setTargetRect(getMobileStepRect(step.id));
+      return;
+    }
+
     const el = document.querySelector(`[data-onboarding-id="${step.id}"]`);
 
     if (el) {
@@ -79,7 +114,7 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
         }
       }
     }, 500);
-  }, [isOpen, currentStep, createPlayFallbackRect]);
+  }, [isOpen, currentStep, createPlayFallbackRect, getMobileStepRect]);
 
   useEffect(() => {
     if (!isOpen) return;
