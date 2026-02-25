@@ -32,13 +32,13 @@ export default function Profile() {
   const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Get current tier from subscription
-  const currentTier = subscription?.vip_tier as ProTier | undefined;
-  const friendInvitesRemaining = (subscription as any)?.friend_invites_remaining || 0;
+  // Get current tier from subscription - only if actively VIP
+  const currentTier = isVip ? (subscription?.vip_tier as ProTier | undefined) : undefined;
+  const friendInvitesRemaining = isVip ? ((subscription as any)?.friend_invites_remaining || 0) : 0;
 
   // Dynamic PRO label
   const getProLabel = () => {
-    if (currentTier && ['pro', 'pro_plus', 'pro_master'].includes(currentTier)) {
+    if (isVip && currentTier && ['pro', 'pro_plus', 'pro_master'].includes(currentTier)) {
       return t("extra.myPro");
     }
     return t("extra.becomePro");
