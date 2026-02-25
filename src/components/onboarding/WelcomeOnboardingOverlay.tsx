@@ -222,8 +222,8 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
     if (left + TOOLTIP_WIDTH > window.innerWidth - PADDING) {
       left = window.innerWidth - PADDING - TOOLTIP_WIDTH;
     }
-    const tooltipEstimatedHeight = 200;
-    const top = targetRect.top - tooltipEstimatedHeight - 16;
+    const tooltipEstimatedHeight = 170;
+    const top = targetRect.top - tooltipEstimatedHeight - 10;
     return { position: "absolute", top: Math.max(PADDING, top), left, width: TOOLTIP_WIDTH };
   };
 
