@@ -3970,6 +3970,15 @@ export const ka = {
     mpLeaveRoomFailed: "ოთახის დატოვება ვერ მოხერხდა",
     mpRoomDeleted: "ოთახი წაიშალა",
     mpDeleteRoomFailed: "ოთახის წაშლა ვერ მოხერხდა",
+    // Welcome Onboarding
+    welcomeOnboardingStep1Title: "ათასობით კითხვა",
+    welcomeOnboardingStep1Desc: "გამოიკვლიე ათობით კატეგორია და გამოსცადე შენი თავი ათასობით კითხვით Discover-ში.",
+    welcomeOnboardingStep2Title: "ითამაშე TV-ზე",
+    welcomeOnboardingStep2Desc: "გადაიტანე თამაში ტელევიზორზე და ითამაშე ინტერაქტიული ტრივია მეგობრებთან და ოჯახთან ერთად.",
+    welcomeOnboardingStep3Title: "თამაშის ოთახები",
+    welcomeOnboardingStep3Desc: "შექმენი ოთახი, აირჩიე კატეგორიები და გაუზიარე ლინკი — მეგობრები მომენტალურად შემოუერთდებიან.",
+    welcomeOnboardingStep4Title: "შექმენი შენი ტრივია",
+    welcomeOnboardingStep4Desc: "უბრალოდ აღწერე თემა და AI შექმნის შენთვის კითხვებს წამებში. ითამაშე რაც მოგესურვება!",
   },
 };
 

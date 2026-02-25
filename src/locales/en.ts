@@ -3940,6 +3940,15 @@ export const en: KaTranslations = {
     mpLeaveRoomFailed: "Could not leave room",
     mpRoomDeleted: "Room deleted",
     mpDeleteRoomFailed: "Could not delete room",
+    // Welcome Onboarding
+    welcomeOnboardingStep1Title: "Thousands of Questions",
+    welcomeOnboardingStep1Desc: "Browse dozens of categories and challenge yourself with thousands of trivia questions in Discover.",
+    welcomeOnboardingStep2Title: "Play on TV",
+    welcomeOnboardingStep2Desc: "Cast the game to your TV and play interactive trivia with friends and family in your living room.",
+    welcomeOnboardingStep3Title: "Game Rooms",
+    welcomeOnboardingStep3Desc: "Create a room, pick categories, and share the link — your friends join instantly for a live match.",
+    welcomeOnboardingStep4Title: "Create Your Trivia",
+    welcomeOnboardingStep4Desc: "Just describe a topic and AI generates a custom quiz for you in seconds. Play anything you imagine!",
   },
 };
 
