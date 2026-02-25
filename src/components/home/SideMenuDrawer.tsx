@@ -49,7 +49,11 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   };
 
   const handlePlayClick = () => {
-    if (!guardPlay(() => { onClose(); navigate('/game'); })) return;
+    const allowed = guardPlay(() => { onClose(); navigate('/game'); });
+    if (!allowed) {
+      onClose(); // Close drawer so play-limit modal is visible
+      return;
+    }
     onClose();
     navigate('/game');
   };
