@@ -20,6 +20,9 @@ export function useInviteModalVisibility(isVip: boolean, vipLoading: boolean) {
   useEffect(() => {
     if (!user || vipLoading || isVip) return;
     try {
+      if (localStorage.getItem("cached_vip_status") === "true") return;
+    } catch {}
+    try {
       if (sessionStorage.getItem(SESSION_KEY)) return;
     } catch {}
     setVisible(true);
@@ -54,12 +57,21 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
   const [referralLink, setReferralLink] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [shared, setShared] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (open && !referralLink) {
+    if (open) {
+      const timer = setTimeout(() => setReady(true), 150);
+      return () => clearTimeout(timer);
+    }
+    setReady(false);
+  }, [open]);
+
+  useEffect(() => {
+    if (open && ready && !referralLink) {
       generateLink();
     }
-  }, [open]);
+  }, [open, ready]);
 
   const generateLink = async () => {
     setGenerating(true);
@@ -96,7 +108,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
     onOpenChange(false);
   };
 
-  if (!open || (isVip && !vipLoading)) return null;
+  if (!open || !ready || (isVip && !vipLoading)) return null;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
