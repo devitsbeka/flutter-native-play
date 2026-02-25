@@ -1,21 +1,52 @@
 
 
-## Fix: Tooltip position for Play step on desktop
+## Fix: Prevent Invite Friends Modal from flashing for PRO users
 
-The tooltip for the "Play" step on desktop/tablet floats too far above the actual play button because the positioning logic overestimates the tooltip height (hardcoded at 200px), creating a large visual gap between the modal and the highlighted button.
+### Problem
+The "Invite Friends" modal briefly appears (glitches) for PRO users because there's a timing gap between when `vipLoading` transitions from `true` to `false` and when `isVip` is confirmed `true`. During this gap, the modal can mount and render for a frame before being dismissed.
 
-### Changes
+### Solution
+Two targeted fixes in `src/components/home/InviteFriendsModal.tsx`:
 
-**File: `src/components/onboarding/WelcomeOnboardingOverlay.tsx`**
+1. **`useInviteModalVisibility` hook**: Before showing the modal, also check the localStorage VIP cache. If the cache says the user is PRO, skip showing the modal entirely -- don't even wait for the async fetch. This prevents the flash because the cached value is available synchronously on first render.
 
-1. Reduce the estimated tooltip height used for "above target" positioning from 200px to a more accurate value (~170px), and reduce the gap from 16px to 10px. This will bring the tooltip card much closer to the play button spotlight.
+2. **`InviteFriendsModal` component**: Add a brief render delay (e.g., 150ms after `open` becomes true) before actually mounting the dialog content. This gives VIP status time to resolve from the fast DB fetch, so PRO users never see even a single frame of the modal.
 
-2. For the desktop play step specifically, ensure the tooltip positions snugly above the spotlight area (accounting for spotlight padding) so the arrow visually connects to the highlighted button.
+### Files to modify
+- `src/components/home/InviteFriendsModal.tsx`
 
-3. The arrow already points downward correctly in this case -- no arrow changes needed, just tighter vertical spacing.
+### Technical details
 
-### What this fixes
-- The tooltip card will sit directly above the play button spotlight with a small, consistent gap
-- The arrow will visually connect the tooltip to the highlighted button
-- No impact on mobile or side-nav positioning (those branches are unchanged)
+**Hook fix (primary)**:
+```typescript
+// In useInviteModalVisibility, add cached VIP check
+useEffect(() => {
+  if (!user || vipLoading || isVip) return;
+  // Also check localStorage cache synchronously
+  try {
+    if (localStorage.getItem("cached_vip_status") === "true") return;
+  } catch {}
+  try {
+    if (sessionStorage.getItem(SESSION_KEY)) return;
+  } catch {}
+  setVisible(true);
+}, [user, isVip, vipLoading]);
+```
+
+**Component render guard (secondary safety net)**:
+```typescript
+// Add a small mount delay to prevent single-frame flash
+const [ready, setReady] = useState(false);
+useEffect(() => {
+  if (open) {
+    const t = setTimeout(() => setReady(true), 150);
+    return () => clearTimeout(t);
+  }
+  setReady(false);
+}, [open]);
+
+if (!open || !ready || (isVip && !vipLoading)) return null;
+```
+
+This dual approach ensures PRO users never see the modal -- not even for a single frame.
 
