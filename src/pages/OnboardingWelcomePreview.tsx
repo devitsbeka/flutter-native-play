@@ -3,6 +3,7 @@ import { WelcomeOnboardingOverlay } from "@/components/onboarding/WelcomeOnboard
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
+import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
 
 const WELCOME_ONBOARDING_KEY = "mytrivia_welcome_onboarding_seen";
 
@@ -21,6 +22,11 @@ export default function OnboardingWelcomePreview() {
         <p className="text-muted-foreground text-sm text-center max-w-md">
           This preview shows the inline onboarding tooltips that highlight navigation items for new users.
         </p>
+
+        {/* Desktop/tablet play target for onboarding step 5 */}
+        <div className="hidden md:block mt-4">
+          <DesktopPlayButtonLarge onboardingId="play" />
+        </div>
 
         {!isOpen && (
           <Button onClick={handleReset} className="gap-2">

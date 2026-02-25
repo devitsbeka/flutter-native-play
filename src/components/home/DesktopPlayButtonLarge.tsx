@@ -9,6 +9,7 @@ interface DesktopPlayButtonLargeProps {
   canPlay?: boolean;
   isVip?: boolean;
   isGuest?: boolean;
+  onboardingId?: string;
 }
 
 export function DesktopPlayButtonLarge({
@@ -18,6 +19,7 @@ export function DesktopPlayButtonLarge({
   canPlay = true,
   isVip = false,
   isGuest = false,
+  onboardingId,
 }: DesktopPlayButtonLargeProps) {
   const { t } = useLanguage();
   const isExhausted = !canPlay && playsRemaining === 0;
@@ -70,6 +72,7 @@ export function DesktopPlayButtonLarge({
 
       <motion.button
         onClick={onClick}
+        data-onboarding-id={onboardingId}
         className={`
           relative rounded-full flex items-center justify-center gap-3
           h-16 px-12 min-w-[200px]

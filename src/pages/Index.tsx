@@ -847,6 +847,7 @@ export default function Index() {
                         canPlay={guestPlaysRemaining > 0}
                         isVip={false}
                         isGuest={true}
+                        onboardingId="play"
                       />
                     </div>
                   </motion.div>
@@ -1116,6 +1117,7 @@ export default function Index() {
                       canPlay={user ? canPlay : guestPlaysRemaining > 0}
                       isVip={isVip}
                       isGuest={!user}
+                      onboardingId="play"
                     />
                   </div>
                 </motion.div>
@@ -1210,6 +1212,7 @@ export default function Index() {
                     canPlay={user ? canPlay : guestPlaysRemaining > 0}
                     isVip={isVip}
                     isGuest={!user}
+                    onboardingId="play"
                   />
                 </div>
               </motion.div>
