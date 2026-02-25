@@ -31,6 +31,9 @@ const STEPS = [
 
 const TOOLTIP_WIDTH = 280;
 const PADDING = 12;
+const DESKTOP_TOOLTIP_HEIGHT = 220;
+const PLAY_TARGET_SIZE = 90;
+const PLAY_TARGET_BOTTOM_OFFSET = 36;
 
 export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingOverlayProps) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -39,21 +42,44 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
   const retryRef = useRef<ReturnType<typeof setTimeout>>();
   const { t } = useLanguage();
 
+  const createPlayFallbackRect = useCallback((): DOMRect => {
+    const left = window.innerWidth / 2 - PLAY_TARGET_SIZE / 2;
+    const top = window.innerHeight - PLAY_TARGET_SIZE - PLAY_TARGET_BOTTOM_OFFSET;
+    return new DOMRect(left, top, PLAY_TARGET_SIZE, PLAY_TARGET_SIZE);
+  }, []);
+
   const updateTargetRect = useCallback(() => {
     if (!isOpen) return;
     const step = STEPS[currentStep];
     const el = document.querySelector(`[data-onboarding-id="${step.id}"]`);
+
     if (el) {
-      setTargetRect(el.getBoundingClientRect());
-    } else {
-      setTargetRect(null);
-      // Retry after a delay if element not found
-      retryRef.current = setTimeout(() => {
-        const retryEl = document.querySelector(`[data-onboarding-id="${step.id}"]`);
-        if (retryEl) setTargetRect(retryEl.getBoundingClientRect());
-      }, 500);
+      const rect = el.getBoundingClientRect();
+      const isVisible = rect.width > 0 && rect.height > 0;
+      if (isVisible) {
+        setTargetRect(rect);
+        return;
+      }
     }
-  }, [isOpen, currentStep]);
+
+    if (step.id === "play") {
+      setTargetRect(createPlayFallbackRect());
+      return;
+    }
+
+    setTargetRect(null);
+    // Retry after a delay if element not found
+    retryRef.current = setTimeout(() => {
+      const retryEl = document.querySelector(`[data-onboarding-id="${step.id}"]`);
+      if (retryEl) {
+        const retryRect = retryEl.getBoundingClientRect();
+        const isRetryVisible = retryRect.width > 0 && retryRect.height > 0;
+        if (isRetryVisible) {
+          setTargetRect(retryRect);
+        }
+      }
+    }, 500);
+  }, [isOpen, currentStep, createPlayFallbackRect]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -105,34 +131,35 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
   const step = STEPS[currentStep];
   const isLastStep = currentStep === STEPS.length - 1;
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
+  const useBottomAnchor = !isDesktop || step.id === "play";
 
   const getTooltipStyle = (): React.CSSProperties => {
     if (!targetRect) return { opacity: 0, pointerEvents: "none" };
 
-    if (isDesktop) {
+    if (!useBottomAnchor) {
       // Desktop: position to the right of the sidebar item
-      const top = targetRect.top + targetRect.height / 2 - 60;
-      const left = targetRect.right + 16;
+      const unclampedTop = targetRect.top + targetRect.height / 2 - 60;
+      const top = Math.max(PADDING, Math.min(window.innerHeight - DESKTOP_TOOLTIP_HEIGHT - PADDING, unclampedTop));
+      const left = Math.min(targetRect.right + 16, window.innerWidth - TOOLTIP_WIDTH - PADDING);
       return { position: "absolute", top, left, width: TOOLTIP_WIDTH };
-    } else {
-      // Mobile: position above the bottom nav item using top
-      const centerX = targetRect.left + targetRect.width / 2;
-      let left = centerX - TOOLTIP_WIDTH / 2;
-      if (left < PADDING) left = PADDING;
-      if (left + TOOLTIP_WIDTH > window.innerWidth - PADDING) {
-        left = window.innerWidth - PADDING - TOOLTIP_WIDTH;
-      }
-      // Place tooltip so its bottom edge is 16px above the target's top
-      const tooltipEstimatedHeight = 200;
-      const top = targetRect.top - tooltipEstimatedHeight - 16;
-      return { position: "absolute", top: Math.max(PADDING, top), left, width: TOOLTIP_WIDTH };
     }
+
+    // Mobile + play step on desktop/tablet: position above bottom nav/play target
+    const centerX = targetRect.left + targetRect.width / 2;
+    let left = centerX - TOOLTIP_WIDTH / 2;
+    if (left < PADDING) left = PADDING;
+    if (left + TOOLTIP_WIDTH > window.innerWidth - PADDING) {
+      left = window.innerWidth - PADDING - TOOLTIP_WIDTH;
+    }
+    const tooltipEstimatedHeight = 200;
+    const top = targetRect.top - tooltipEstimatedHeight - 16;
+    return { position: "absolute", top: Math.max(PADDING, top), left, width: TOOLTIP_WIDTH };
   };
 
   const getArrowStyle = (): React.CSSProperties => {
     if (!targetRect) return {};
 
-    if (isDesktop) {
+    if (!useBottomAnchor) {
       // Arrow points left
       return {
         position: "absolute",
@@ -145,24 +172,24 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
         borderLeft: "2px solid hsl(var(--primary))",
         borderBottom: "2px solid hsl(var(--primary))",
       };
-    } else {
-      // Arrow points down
-      const centerX = targetRect.left + targetRect.width / 2;
-      const tooltipStyle = getTooltipStyle();
-      const tooltipLeft = (tooltipStyle.left as number) || 0;
-      const arrowLeft = Math.max(20, Math.min(TOOLTIP_WIDTH - 20, centerX - tooltipLeft));
-      return {
-        position: "absolute",
-        bottom: -6,
-        left: arrowLeft - 6,
-        width: 12,
-        height: 12,
-        transform: "rotate(45deg)",
-        background: "hsl(var(--card))",
-        borderRight: "2px solid hsl(var(--primary))",
-        borderBottom: "2px solid hsl(var(--primary))",
-      };
     }
+
+    // Arrow points down
+    const centerX = targetRect.left + targetRect.width / 2;
+    const tooltipStyle = getTooltipStyle();
+    const tooltipLeft = (tooltipStyle.left as number) || 0;
+    const arrowLeft = Math.max(20, Math.min(TOOLTIP_WIDTH - 20, centerX - tooltipLeft));
+    return {
+      position: "absolute",
+      bottom: -6,
+      left: arrowLeft - 6,
+      width: 12,
+      height: 12,
+      transform: "rotate(45deg)",
+      background: "hsl(var(--card))",
+      borderRight: "2px solid hsl(var(--primary))",
+      borderBottom: "2px solid hsl(var(--primary))",
+    };
   };
 
   return (
