@@ -1044,11 +1044,78 @@ export const en: KaTranslations = {
     portability: "Portability:",
     portabilityDesc: "Download your data",
     childrenPrivacy: "Children's Privacy",
-    childrenPrivacyText: "Our service is intended for users 13 years and older. We do not knowingly collect data from children under 13.",
+    childrenPrivacyText: "Our service is intended for users aged 13 and older. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided us with personal information, please contact us immediately and we will take steps to delete such information.",
+
+    // Third-party services
+    thirdPartyServices: "Third-Party Services",
+    thirdPartyServicesText: "We use the following third-party services to operate our app:",
+    thirdPartySupabase: "Supabase: Database and authentication",
+    thirdPartyFirebase: "Firebase: Push notifications",
+    thirdPartyAdMob: "Google AdMob: Advertising (with ATT consent on iOS)",
+    thirdPartyRevenueCat: "RevenueCat: Subscription management and purchase analytics",
+    thirdPartyApple: "Apple: In-app purchases and Sign in with Apple",
+
+    // Advertising & Tracking
+    advertisingTracking: "Advertising & Tracking",
+    advertisingTrackingText: "We use Google AdMob for advertising. Before any tracking occurs for personalized ads, you will be asked for permission via iOS App Tracking Transparency (ATT). You can opt-out at any time through your device settings: iOS Settings → Privacy & Security → Tracking. If you opt out, you will still see ads, but they will not be personalized.",
+
+    // Data Security
+    dataSecurity: "Data Security",
+    dataSecurityText: "We implement industry-standard security measures to protect your personal data, including:",
+    dataSecurity1: "Data encryption in transit (TLS/SSL) and at rest",
+    dataSecurity2: "Secure password hashing — we never store passwords in plain text",
+    dataSecurity3: "Regular security audits and monitoring",
+    dataSecurity4: "Access controls limiting who can view your data",
+    dataSecurityDisclaimer: "While we strive to protect your information, no method of electronic transmission or storage is 100% secure. We cannot guarantee absolute security.",
+
+    // International Data Transfers
+    internationalTransfers: "International Data Transfers",
+    internationalTransfersText: "Your data may be processed and stored on servers located outside your country of residence, including in the United States and European Union. By using our app, you consent to the transfer of your data to these locations. We ensure appropriate safeguards are in place to protect your data in accordance with this privacy policy.",
+
+    // GDPR
+    gdprRights: "European Users (GDPR)",
+    gdprRightsText: "If you are located in the European Economic Area (EEA), you have additional rights under the General Data Protection Regulation (GDPR):",
+    gdprLegalBasis: "Legal Basis for Processing:",
+    gdprLegalBasisDesc: "We process your data based on: (a) your consent, (b) performance of a contract (providing the game service), (c) legitimate interests (improving our service, preventing fraud)",
+    gdprRight1: "Right to access your personal data",
+    gdprRight2: "Right to rectification of inaccurate data",
+    gdprRight3: "Right to erasure ('right to be forgotten')",
+    gdprRight4: "Right to restrict processing",
+    gdprRight5: "Right to data portability",
+    gdprRight6: "Right to object to processing",
+    gdprRight7: "Right to lodge a complaint with a supervisory authority",
+    gdprDPO: "For GDPR-related requests, contact us at support@mytrivia.io",
+
+    // CCPA
+    ccpaRights: "California Users (CCPA/CPRA)",
+    ccpaRightsText: "If you are a California resident, you have additional rights under the California Consumer Privacy Act (CCPA) and California Privacy Rights Act (CPRA):",
+    ccpaRight1: "Right to know what personal information we collect, use, and disclose",
+    ccpaRight2: "Right to delete your personal information",
+    ccpaRight3: "Right to opt-out of the sale or sharing of personal information",
+    ccpaRight4: "Right to non-discrimination for exercising your privacy rights",
+    ccpaNoSell: "We do not sell your personal information. We do not share your personal information for cross-context behavioral advertising purposes.",
+
+    // Account Deletion
+    accountDeletion: "Account Deletion",
+    accountDeletionText: "You can delete your account at any time directly within the app:",
+    accountDeletionStep1: "Open the app and go to Settings",
+    accountDeletionStep2: "Navigate to Privacy & Security",
+    accountDeletionStep3: "Tap 'Delete Account'",
+    accountDeletionStep4: "Confirm your decision",
+    accountDeletionNote: "Upon deletion, all your personal data including profile information, game history, scores, and any virtual currency will be permanently removed within 30 days. This action cannot be undone. Active subscriptions should be cancelled separately through the App Store or Google Play.",
+
+    // Push Notifications
+    pushNotifications: "Push Notifications",
+    pushNotificationsText: "We may send you push notifications about game updates, friend requests, and challenges. You can manage or disable push notifications at any time through your device settings: iOS Settings → Notifications → MyTrivia, or Android Settings → Apps → MyTrivia → Notifications.",
+
+    // Policy Changes
+    policyChanges: "Changes to This Policy",
+    policyChangesText: "We may update this Privacy Policy from time to time. We will notify you of material changes by posting the new policy in the app and updating the 'Effective Date' at the top. Your continued use of the app after changes constitutes acceptance of the updated policy. We encourage you to review this policy periodically.",
+
     englishVersion: "English Version",
     viewInEnglish: "View in English →",
-    contact: "Contact",
-    contactText: "For questions, contact us:",
+    contact: "Contact Us",
+    contactText: "If you have any questions or concerns about this Privacy Policy or our data practices, please contact us:",
     termsOfService: "Terms",
     termsOfServiceFull: "Terms of Service",
     acceptance: "Terms Acceptance",
