@@ -32,16 +32,11 @@ const STEPS = [
 const TOOLTIP_WIDTH = 280;
 const PADDING = 12;
 
-const gradientStyle = {
-  background: "linear-gradient(135deg, #7C3AED, #6366F1, #8B5CF6, #7C3AED)",
-  backgroundSize: "300% 300%",
-  animation: "onboarding-gradient-shift 4s ease infinite",
-};
-
 export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingOverlayProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const rafRef = useRef<number>();
+  const retryRef = useRef<ReturnType<typeof setTimeout>>();
   const { t } = useLanguage();
 
   const updateTargetRect = useCallback(() => {
@@ -52,6 +47,11 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
       setTargetRect(el.getBoundingClientRect());
     } else {
       setTargetRect(null);
+      // Retry after a delay if element not found
+      retryRef.current = setTimeout(() => {
+        const retryEl = document.querySelector(`[data-onboarding-id="${step.id}"]`);
+        if (retryEl) setTargetRect(retryEl.getBoundingClientRect());
+      }, 500);
     }
   }, [isOpen, currentStep]);
 
@@ -66,6 +66,7 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
     window.addEventListener("scroll", handleUpdate, true);
     return () => {
       clearTimeout(timer);
+      if (retryRef.current) clearTimeout(retryRef.current);
       window.removeEventListener("resize", handleUpdate);
       window.removeEventListener("scroll", handleUpdate, true);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -103,170 +104,218 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
 
   const step = STEPS[currentStep];
   const isLastStep = currentStep === STEPS.length - 1;
+  const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
 
-  // Tooltip always goes above the target on mobile (bottom nav)
-  const getTooltipPosition = () => {
-    if (!targetRect) return { bottom: 100, left: PADDING };
-    const centerX = targetRect.left + targetRect.width / 2;
-    let left = centerX - TOOLTIP_WIDTH / 2;
-    if (left < PADDING) left = PADDING;
-    if (left + TOOLTIP_WIDTH > window.innerWidth - PADDING) {
-      left = window.innerWidth - PADDING - TOOLTIP_WIDTH;
+  const getTooltipStyle = (): React.CSSProperties => {
+    if (!targetRect) return { opacity: 0, pointerEvents: "none" };
+
+    if (isDesktop) {
+      // Desktop: position to the right of the sidebar item
+      const top = targetRect.top + targetRect.height / 2 - 60;
+      const left = targetRect.right + 16;
+      return { position: "absolute", top, left, width: TOOLTIP_WIDTH };
+    } else {
+      // Mobile: position above the bottom nav item
+      const centerX = targetRect.left + targetRect.width / 2;
+      let left = centerX - TOOLTIP_WIDTH / 2;
+      if (left < PADDING) left = PADDING;
+      if (left + TOOLTIP_WIDTH > window.innerWidth - PADDING) {
+        left = window.innerWidth - PADDING - TOOLTIP_WIDTH;
+      }
+      const bottom = window.innerHeight - targetRect.top + 16;
+      return { position: "absolute", bottom, left, width: TOOLTIP_WIDTH };
     }
-    const bottom = window.innerHeight - targetRect.top + 16;
-    return { bottom, left };
   };
 
-  const getArrowLeft = () => {
-    if (!targetRect) return TOOLTIP_WIDTH / 2;
-    const centerX = targetRect.left + targetRect.width / 2;
-    const pos = getTooltipPosition();
-    return Math.max(20, Math.min(TOOLTIP_WIDTH - 20, centerX - pos.left));
-  };
+  const getArrowStyle = (): React.CSSProperties => {
+    if (!targetRect) return {};
 
-  const pos = getTooltipPosition();
+    if (isDesktop) {
+      // Arrow points left
+      return {
+        position: "absolute",
+        top: 20,
+        left: -6,
+        width: 12,
+        height: 12,
+        transform: "rotate(45deg)",
+        background: "hsl(var(--card))",
+        borderLeft: "2px solid hsl(var(--primary))",
+        borderBottom: "2px solid hsl(var(--primary))",
+      };
+    } else {
+      // Arrow points down
+      const centerX = targetRect.left + targetRect.width / 2;
+      const tooltipStyle = getTooltipStyle();
+      const tooltipLeft = (tooltipStyle.left as number) || 0;
+      const arrowLeft = Math.max(20, Math.min(TOOLTIP_WIDTH - 20, centerX - tooltipLeft));
+      return {
+        position: "absolute",
+        bottom: -6,
+        left: arrowLeft - 6,
+        width: 12,
+        height: 12,
+        transform: "rotate(45deg)",
+        background: "hsl(var(--card))",
+        borderRight: "2px solid hsl(var(--primary))",
+        borderBottom: "2px solid hsl(var(--primary))",
+      };
+    }
+  };
 
   return (
-    <>
-      {/* Inject keyframes */}
-      <style>{`
-        @keyframes onboarding-gradient-shift {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-      `}</style>
-      <AnimatePresence>
-        {isOpen && targetRect && (
-          <div className="fixed inset-0" style={{ zIndex: 10000 }}>
-            {/* SVG mask backdrop */}
-            <svg className="absolute inset-0 w-full h-full" onClick={handleSkip}>
-              <defs>
-                <mask id="spotlight-mask">
-                  <rect width="100%" height="100%" fill="white" />
-                  <rect
-                    x={targetRect.left - 8}
-                    y={targetRect.top - 8}
-                    width={targetRect.width + 16}
-                    height={targetRect.height + 16}
-                    rx={16}
-                    ry={16}
-                    fill="black"
-                  />
-                </mask>
-              </defs>
-              <rect
-                width="100%"
-                height="100%"
-                fill="rgba(0,0,0,0.55)"
-                mask="url(#spotlight-mask)"
-              />
-            </svg>
-
-            {/* Spotlight border glow */}
-            <motion.div
-              key={`spotlight-${currentStep}`}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
-              className="absolute rounded-2xl pointer-events-none"
-              style={{
-                top: targetRect.top - 8,
-                left: targetRect.left - 8,
-                width: targetRect.width + 16,
-                height: targetRect.height + 16,
-                border: "2px solid rgba(255,255,255,0.3)",
-                boxShadow: "0 0 20px rgba(147,51,234,0.3), inset 0 0 20px rgba(147,51,234,0.1)",
-              }}
+    <AnimatePresence>
+      {isOpen && targetRect && (
+        <div className="fixed inset-0" style={{ zIndex: 10000 }}>
+          {/* SVG mask backdrop */}
+          <svg className="absolute inset-0 w-full h-full" onClick={handleSkip}>
+            <defs>
+              <mask id="spotlight-mask">
+                <rect width="100%" height="100%" fill="white" />
+                <rect
+                  x={targetRect.left - 8}
+                  y={targetRect.top - 8}
+                  width={targetRect.width + 16}
+                  height={targetRect.height + 16}
+                  rx={16}
+                  ry={16}
+                  fill="black"
+                />
+              </mask>
+            </defs>
+            <rect
+              width="100%"
+              height="100%"
+              fill="rgba(0,0,0,0.55)"
+              mask="url(#spotlight-mask)"
             />
+          </svg>
 
-            {/* Tooltip */}
-            <motion.div
-              key={`tooltip-${currentStep}`}
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: "spring", duration: 0.35, bounce: 0.15, delay: 0.1 }}
-              className="absolute"
-              style={{
-                width: TOOLTIP_WIDTH,
-                left: pos.left,
-                bottom: pos.bottom,
-                zIndex: 10001,
-              }}
-            >
-              {/* Arrow pointing down */}
-              <div
-                className="absolute w-3 h-3 rotate-45"
-                style={{
-                  left: getArrowLeft() - 6,
-                  bottom: -6,
-                  background: "#7C3AED",
-                }}
-              />
+          {/* Spotlight border glow */}
+          <motion.div
+            key={`spotlight-${currentStep}`}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
+            className="absolute rounded-2xl pointer-events-none"
+            style={{
+              top: targetRect.top - 8,
+              left: targetRect.left - 8,
+              width: targetRect.width + 16,
+              height: targetRect.height + 16,
+              border: "2px solid rgba(255,255,255,0.3)",
+              boxShadow: "0 0 20px rgba(147,51,234,0.3), inset 0 0 20px rgba(147,51,234,0.1)",
+            }}
+          />
 
-              <div
-                className="relative rounded-2xl shadow-2xl p-4 overflow-hidden"
-                style={gradientStyle}
-              >
-                {/* Icon + text */}
-                <div className="flex items-start gap-3 mb-3">
-                  <img
-                    src={step.icon}
-                    alt=""
-                    className="w-10 h-10 flex-shrink-0 drop-shadow-lg"
-                  />
-                  <div>
-                    <h3 className="text-sm font-bold text-white mb-0.5">
-                      {t(step.titleKey)}
-                    </h3>
-                    <p className="text-xs text-white/80 leading-relaxed">
-                      {t(step.descKey)}
-                    </p>
+          {/* Tooltip */}
+          <motion.div
+            key={`tooltip-${currentStep}`}
+            initial={{ opacity: 0, y: isDesktop ? 0 : 10, x: isDesktop ? -10 : 0, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ type: "spring", duration: 0.35, bounce: 0.15, delay: 0.1 }}
+            style={{ ...getTooltipStyle(), zIndex: 10001 }}
+          >
+            {/* Arrow */}
+            <div style={getArrowStyle() as React.CSSProperties} />
+
+            {/* Card with spinning conic-gradient border */}
+            <div className="relative">
+              {/* Spinning conic-gradient border */}
+              <div className="absolute -inset-[2px] rounded-2xl overflow-hidden">
+                <div
+                  className="absolute inset-0 animate-spin-slow"
+                  style={{
+                    background: `conic-gradient(from ${currentStep * 72}deg, 
+                      hsl(var(--primary)), 
+                      hsl(280, 80%, 60%), 
+                      hsl(320, 80%, 60%), 
+                      hsl(var(--primary))
+                    )`,
+                  }}
+                />
+              </div>
+
+              {/* Card content */}
+              <div className="relative bg-card rounded-2xl p-4">
+                {/* Pulse glow */}
+                <div
+                  className="absolute inset-0 rounded-2xl opacity-50 animate-pulse-shadow pointer-events-none"
+                  style={{ boxShadow: "0 0 30px hsl(var(--primary) / 0.3)" }}
+                />
+
+                <div className="relative z-10 flex flex-col gap-3">
+                  {/* Icon + text */}
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={step.icon}
+                      alt=""
+                      className="w-10 h-10 flex-shrink-0 drop-shadow-lg"
+                    />
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground mb-0.5">
+                        {t(step.titleKey)}
+                      </h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {t(step.descKey)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Step dots + counter */}
+                  <div className="flex items-center gap-1.5">
+                    {STEPS.map((_, i) => (
+                      <div
+                        key={i}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          i === currentStep
+                            ? "w-5 bg-primary"
+                            : i < currentStep
+                            ? "w-1.5 bg-primary/50"
+                            : "w-1.5 bg-muted-foreground/20"
+                        }`}
+                      />
+                    ))}
+                    <span className="ml-auto text-[11px] text-muted-foreground">
+                      {currentStep + 1}/{STEPS.length}
+                    </span>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex items-center gap-2">
+                    <motion.button
+                      onClick={handleNext}
+                      animate={{
+                        boxShadow: [
+                          "0 0 8px hsl(var(--primary) / 0.2)",
+                          "0 0 20px hsl(var(--primary) / 0.5)",
+                          "0 0 8px hsl(var(--primary) / 0.2)",
+                        ],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      className="flex-1 px-4 py-2 rounded-full font-semibold text-xs text-white cursor-pointer"
+                      style={{
+                        background: "linear-gradient(135deg, hsl(var(--primary)), hsl(280, 80%, 60%))",
+                      }}
+                    >
+                      {isLastStep ? t("common.letsGo") : t("common.next")}
+                    </motion.button>
+                    {!isLastStep && (
+                      <button
+                        onClick={handleSkip}
+                        className="px-3 py-2 rounded-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {t("common.skip")}
+                      </button>
+                    )}
                   </div>
                 </div>
-
-                {/* Step dots + counter */}
-                <div className="flex items-center gap-1.5 mb-3">
-                  {STEPS.map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        i === currentStep
-                          ? "w-5 bg-white"
-                          : i < currentStep
-                          ? "w-1.5 bg-white/50"
-                          : "w-1.5 bg-white/20"
-                      }`}
-                    />
-                  ))}
-                  <span className="ml-auto text-[11px] text-white/60">
-                    {currentStep + 1}/{STEPS.length}
-                  </span>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleNext}
-                    className="flex-1 px-4 py-2 rounded-full bg-white text-violet-700 font-semibold text-xs hover:bg-white/90 transition-opacity"
-                  >
-                    {isLastStep ? t("common.letsGo") : t("common.next")}
-                  </button>
-                  {!isLastStep && (
-                    <button
-                      onClick={handleSkip}
-                      className="px-3 py-2 rounded-full text-xs text-white/70 hover:text-white transition-colors"
-                    >
-                      {t("common.skip")}
-                    </button>
-                  )}
-                </div>
               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }
