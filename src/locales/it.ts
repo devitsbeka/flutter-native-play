@@ -2005,4 +2005,6 @@ export const it: KaTranslations = {
     questionNumber: "Domanda {current} / {total}",
     editMode: "Modifica",
   },
+
+  systemErrors: { ...en.systemErrors, userNotFound: "Utente non trovato", invalidCredentials: "Credenziali non valide", emailNotConfirmed: "Email non confermata", alreadyRegistered: "Questo utente è già registrato", passwordTooShort: "La password deve avere almeno 6 caratteri", rateLimitExceeded: "Troppi tentativi, riprova più tardi", networkError: "Errore di connessione internet", newPasswordDifferent: "La nuova password deve essere diversa", emailAlreadyInUse: "Questa email è già in uso", invalidEmailFormat: "Formato email non valido", signupsNotAllowed: "Le registrazioni non sono temporaneamente disponibili", genericError: "Errore, riprova" },
 };

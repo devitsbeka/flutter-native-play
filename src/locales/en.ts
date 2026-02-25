@@ -3961,6 +3961,21 @@ export const en: KaTranslations = {
     welcomeOnboardingStep4Title: "Create Your Trivia",
     welcomeOnboardingStep4Desc: "Just describe a topic and AI generates a custom quiz for you in seconds. Play anything you imagine!",
   },
+
+  systemErrors: {
+    userNotFound: "User not found",
+    invalidCredentials: "Invalid login credentials",
+    emailNotConfirmed: "Email not confirmed",
+    alreadyRegistered: "This user is already registered",
+    passwordTooShort: "Password must be at least 6 characters",
+    rateLimitExceeded: "Too many attempts, try again later",
+    networkError: "Internet connection error",
+    newPasswordDifferent: "New password must be different",
+    emailAlreadyInUse: "This email is already in use",
+    invalidEmailFormat: "Invalid email format",
+    signupsNotAllowed: "Sign ups are temporarily unavailable",
+    genericError: "Error, please try again",
+  },
 };
 
 export default en;

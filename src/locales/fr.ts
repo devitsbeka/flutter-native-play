@@ -923,4 +923,6 @@ export const fr: KaTranslations = {
     sfClearFilter: "Effacer", sfNoPostsFiltered: "Aucun post trouvé avec ces filtres",
     sfNoPosts: "Pas de posts encore",
   },
+
+  systemErrors: { ...en.systemErrors, userNotFound: "Utilisateur introuvable", invalidCredentials: "Identifiants invalides", emailNotConfirmed: "Email non confirmé", alreadyRegistered: "Cet utilisateur est déjà inscrit", passwordTooShort: "Le mot de passe doit avoir au moins 6 caractères", rateLimitExceeded: "Trop de tentatives, réessayez plus tard", networkError: "Erreur de connexion internet", newPasswordDifferent: "Le nouveau mot de passe doit être différent", emailAlreadyInUse: "Cet email est déjà utilisé", invalidEmailFormat: "Format d'email invalide", signupsNotAllowed: "Les inscriptions sont temporairement indisponibles", genericError: "Erreur, réessayez" },
 };

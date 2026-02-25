@@ -3991,6 +3991,24 @@ export const ka = {
     welcomeOnboardingStep4Title: "შექმენი შენი ტრივია",
     welcomeOnboardingStep4Desc: "უბრალოდ აღწერე თემა და AI შექმნის შენთვის კითხვებს წამებში. ითამაშე რაც მოგესურვება!",
   },
+
+  // ==========================================
+  // System Errors / სისტემური შეცდომები
+  // ==========================================
+  systemErrors: {
+    userNotFound: "მომხმარებელი ვერ მოიძებნა",
+    invalidCredentials: "არასწორი მონაცემები",
+    emailNotConfirmed: "ელ-ფოსტა არ არის დადასტურებული",
+    alreadyRegistered: "ეს მომხმარებელი უკვე რეგისტრირებულია",
+    passwordTooShort: "პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს",
+    rateLimitExceeded: "ძალიან ბევრი მცდელობა, სცადე მოგვიანებით",
+    networkError: "ინტერნეტ კავშირის შეცდომა",
+    newPasswordDifferent: "ახალი პაროლი განსხვავებული უნდა იყოს",
+    emailAlreadyInUse: "ეს ელ-ფოსტა უკვე გამოყენებულია",
+    invalidEmailFormat: "ელ-ფოსტის ფორმატი არასწორია",
+    signupsNotAllowed: "რეგისტრაცია დროებით შეუძლებელია",
+    genericError: "შეცდომა, სცადე თავიდან",
+  },
 };
 
 export type KaTranslations = typeof ka;
