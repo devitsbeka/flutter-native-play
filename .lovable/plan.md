@@ -1,35 +1,64 @@
 
 
-## Add Language Filter to Icon Assignment Page
+## Post-Signup Welcome Onboarding Modal
 
-### What it does
-Adds a language dropdown filter (English, Georgian, etc.) to the icon assignment page so you can work with questions from one language at a time when assigning icons.
+### Overview
+Create a multi-step welcome modal that shows to users immediately after they complete signup. It walks them through the 4 core features using a swipeable/clickable carousel inside a full-screen modal, with PostHog tracking for each step.
 
-### Changes
+### Trigger Logic
+- New localStorage key: `mytrivia_welcome_onboarding_seen`
+- Show the modal on the home page (`Index.tsx`) when:
+  1. User is authenticated (`user` exists)
+  2. `hasCompletedOnboarding` is true (signup just finished)
+  3. `localStorage` key is NOT set
+- Set the key after the user completes/dismisses the modal
+- This ensures it only shows once per account, right after signup
 
-**1. Hook: `src/hooks/useAdminIconAssignment.ts`**
-- Add `languageFilter` state (default: `null` = all languages)
-- Add `language` to the SELECT query so we can display it
-- Apply `.eq('language', languageFilter)` when a language is selected
-- Include `languageFilter` in the filter change effect and pass it through `fetchQuestions`
-- Add `language` field to `QuestionForAssignment` interface
-- Apply language filter to stats counting as well
-- Return `languageFilter` and `setLanguageFilter` from the hook
+### New Component: `src/components/onboarding/WelcomeOnboardingModal.tsx`
 
-**2. Page UI: `src/pages/admin/IconAssignment.tsx`**
-- Destructure `languageFilter` and `setLanguageFilter` from the hook
-- Add a language Select dropdown next to the category filter (around line 782), with options:
-  - All Languages (default)
-  - English (en)
-  - Georgian (ka)
-  - French (fr)
-  - German (de)
-  - Spanish (es)
-  - Italian (it)
-  - Portuguese (pt)
-- Show a small language badge on each question row so it's clear which language each question is in
+A full-screen animated modal with 4 steps, each featuring:
 
-### Technical Details
+**Step 1 - Discover:** icon (`explore-icon.png`), title "Thousands of Questions", description about browsing categories in /discover
 
-The language filter will be applied server-side in the Supabase query, so pagination and stats will correctly reflect only the selected language's questions. The supported language codes match the project's seven supported languages: `ka`, `en`, `fr`, `de`, `es`, `it`, `pt`.
+**Step 2 - TV Mode:** icon (`rooms-icon.png` or `trivia-buzzer.png`), title "Play on TV", description about interactive TV mode with friends
+
+**Step 3 - Game Rooms:** icon (`group-of-people.png`), title "Game Rooms", description about creating rooms, choosing categories, sharing URL
+
+**Step 4 - Create Trivia:** icon (`trivia-icon.png` or `icon-ai-sparkle.png`), title "Create Your Trivia", description about AI-powered custom quiz creation from a prompt
+
+**UI Details:**
+- Reuses the `NotificationModal` visual style (glass container, backdrop blur, rounded-3xl, spring animations)
+- Step indicator dots at bottom (like `FeatureOnboardingCarousel`)
+- "Next" button advances steps, final step shows "Let's Go!" button
+- "Skip" secondary button to dismiss early
+- Each step animates in with `framer-motion` slide transition
+- Works on desktop, tablet, and mobile (max-w-sm centered, responsive padding)
+
+### Translation Keys
+Add to both `en.ts` and `ka.ts` in the `extra` section:
+- `welcomeOnboardingStep1Title` / `welcomeOnboardingStep1Desc`
+- `welcomeOnboardingStep2Title` / `welcomeOnboardingStep2Desc`
+- `welcomeOnboardingStep3Title` / `welcomeOnboardingStep3Desc`
+- `welcomeOnboardingStep4Title` / `welcomeOnboardingStep4Desc`
+- `welcomeOnboardingNext` / `welcomeOnboardingSkip` / `welcomeOnboardingDone`
+
+### PostHog Tracking
+Add to `src/lib/analytics.ts`:
+- `trackWelcomeOnboardingStarted()` -- fired when modal opens
+- `trackWelcomeOnboardingStepViewed(step: number, stepName: string)` -- fired on each step transition
+- `trackWelcomeOnboardingCompleted(stepsViewed: number)` -- fired when user clicks "Let's Go!" on the last step
+- `trackWelcomeOnboardingSkipped(stepSkippedAt: number)` -- fired when user clicks "Skip"
+
+### Integration in `src/pages/Index.tsx`
+- Import the new `WelcomeOnboardingModal`
+- Add state: `const [showWelcomeOnboarding, setShowWelcomeOnboarding] = useState(false)`
+- Add effect: after auth loads, if user exists + `hasCompletedOnboarding` + localStorage key not set, show modal with a small delay (500ms to let the page render)
+- Render `<WelcomeOnboardingModal isOpen={showWelcomeOnboarding} onClose={() => setShowWelcomeOnboarding(false)} />`
+
+### Files to Create/Modify
+1. **Create** `src/components/onboarding/WelcomeOnboardingModal.tsx` -- the multi-step modal component
+2. **Edit** `src/lib/analytics.ts` -- add 4 tracking functions
+3. **Edit** `src/locales/en.ts` -- add English translation keys
+4. **Edit** `src/locales/ka.ts` -- add Georgian translation keys
+5. **Edit** `src/pages/Index.tsx` -- integrate the modal trigger
 
