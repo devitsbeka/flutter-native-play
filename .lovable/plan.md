@@ -1,71 +1,86 @@
 
 
-## Fix Welcome Onboarding Tooltips + Add Icons and Gradient
+## Fix Onboarding Tooltips: Positioning, Stroke Gradient, Icons
 
-### Problems (from screenshot)
-1. On mobile, the tooltip floats to the top-left corner of the screen instead of appearing directly above the corresponding bottom nav item
-2. No 3D icons in the tooltip cards
-3. Plain white card background -- should use a gradient animation
+### Problems
+1. **Mobile**: Tooltips not visible — the overlay renders nothing because `targetRect` stays null or the `bottom` positioning pushes content off-screen
+2. **Desktop/Tablet**: Tooltip is cropped at the top edge of the viewport
+3. **Gradient style**: Currently a solid fill gradient on the card background. Should be a **spinning conic-gradient border stroke** (like the team page's `FeatureOnboardingCarousel` cards) with a dark/semi-transparent card interior
+4. **Icons**: Already imported but should display inside the tooltip on all screen sizes
 
-### Root Cause of Positioning
-The `tooltipAbove` logic uses `targetRect.top > window.innerHeight / 2` to decide placement. Since the bottom nav items are at the very bottom of the screen, `tooltipAbove` is always `true`, and the tooltip is placed using `bottom: window.innerHeight - targetRect.top + 16`. This works conceptually, but the tooltip width (260px) combined with `getTooltipLeft()` centering logic causes it to anchor near the top-left when the target element is near an edge. The real issue is that on mobile the tooltip should ALWAYS appear above the nav bar, anchored to the target nav item's horizontal center.
+### Solution
 
-### Changes
+**Rewrite `src/components/onboarding/WelcomeOnboardingOverlay.tsx`:**
 
-**1. Copy uploaded icons to `src/assets/onboarding/`**
-- `rocket-2.png` (explore)
-- `magical-shop.png` (shop)  
-- `competition.png` (rank)
-- `group-of-people-2.png` (team)
-- `trivia-buzzer-2.png` (play)
+**Positioning fix:**
+- On mobile (bottom nav), use `bottom: window.innerHeight - targetRect.top + 12` to place tooltip above the nav item, and clamp `left` so the tooltip stays within screen bounds
+- On desktop (left sidebar), position the tooltip to the **right** of the target element: `top: targetRect.top`, `left: targetRect.right + 12`, with the arrow pointing left
+- Add a fallback: if `targetRect` is null after 300ms, retry the querySelector with a longer delay (the nav may not have mounted yet in the preview page)
 
-**2. Rewrite `WelcomeOnboardingOverlay.tsx`**
-- Add an `icon` field to each step in the `STEPS` array, importing the 5 uploaded images
-- Fix tooltip positioning: on mobile, always place the tooltip above the bottom nav with a fixed `bottom` value (e.g., `bottom: navBarHeight + 16px`) and horizontally centered on the target element
-- Add a gradient background to the tooltip card using an animated purple/blue gradient (similar to the app's `gradient-purple` utility but with a subtle animation via CSS or framer-motion)
-- Render each step's icon (40x40px) next to the title inside the tooltip card
-- Keep the arrow pointing down toward the highlighted nav item
-- Increase tooltip width slightly (280px) to accommodate the icon
+**Spinning conic-gradient border (matching team page pattern):**
+- Use the same technique from `FeatureOnboardingCarousel.tsx`:
+  - Outer wrapper with `absolute -inset-[2px] rounded-2xl overflow-hidden`
+  - Inner `div` with `animate-spin-slow` and `conic-gradient(from 0deg, hsl(var(--primary)), hsl(280, 80%, 60%), hsl(320, 80%, 60%), hsl(var(--primary)))`
+  - Card content sits on top with `bg-card rounded-2xl` background
+- Remove the current solid gradient fill (`gradientStyle`) and the `onboarding-gradient-shift` keyframes
+- Add a subtle pulsing box-shadow glow (`animate-pulse-shadow`) around the card
 
-**3. Tooltip card design**
-- Background: animated gradient (purple-to-blue shimmer via CSS `@keyframes` or a `background-size` animation)
-- Layout: icon (left) + title/description (right) stacked, then step dots + buttons below
-- Text color: white (since the background is dark gradient)
-- Arrow color: matches the gradient start color
-- Button: white background with dark text (inverted from current)
+**Icon rendering:**
+- Keep the existing icon imports (rocket, shop, competition, group-of-people, trivia-buzzer)
+- Render `step.icon` as a 40x40 image inside the tooltip, left-aligned next to title/description
+- Works on mobile, tablet, and desktop
 
-### Files to Create/Edit
-1. **Copy 5 icon images** to `src/assets/onboarding/`
-2. **`src/components/onboarding/WelcomeOnboardingOverlay.tsx`** -- Full rework: icon imports, gradient card, fixed mobile positioning
-3. **`src/locales/ka.ts`** -- No changes needed (already has translations)
+**Arrow direction:**
+- Mobile: arrow points **down** toward the bottom nav item
+- Desktop: arrow points **left** toward the sidebar nav item
+- Detect layout using `window.innerWidth >= 1024` (lg breakpoint where desktop nav appears)
+
+### Files to Edit
+1. `src/components/onboarding/WelcomeOnboardingOverlay.tsx` — Full rework of positioning logic, replace solid gradient with conic-gradient spinning border, keep icons
 
 ### Technical Details
 
-Tooltip positioning fix (pseudocode):
 ```text
-// Always place tooltip above nav on mobile
-const tooltipBottom = window.innerHeight - targetRect.top + 16;
-const tooltipLeft = clamp(
-  targetCenterX - tooltipWidth/2,
-  padding,
-  windowWidth - padding - tooltipWidth
-);
-```
+Tooltip card structure (matching team page pattern):
 
-Gradient animation CSS (inline style):
-```text
-background: linear-gradient(135deg, #7C3AED, #6366F1, #8B5CF6);
-background-size: 200% 200%;
-animation: gradient-shift 3s ease infinite;
-```
-
-Icon rendering inside tooltip:
-```text
-<div className="flex items-start gap-3">
-  <img src={step.icon} className="w-10 h-10 flex-shrink-0" />
-  <div>
-    <h3>title</h3>
-    <p>description</p>
+<div className="relative">
+  <!-- Spinning conic-gradient border -->
+  <div className="absolute -inset-[2px] rounded-2xl overflow-hidden">
+    <div className="absolute inset-0 animate-spin-slow"
+         style={{ background: "conic-gradient(from 0deg, ...)" }} />
+  </div>
+  
+  <!-- Card content -->
+  <div className="relative bg-card rounded-2xl p-4">
+    <!-- Pulse glow -->
+    <div className="absolute inset-0 rounded-2xl opacity-50 animate-pulse-shadow" />
+    
+    <!-- Icon + text -->
+    <div className="flex items-start gap-3">
+      <img src={step.icon} className="w-10 h-10" />
+      <div>
+        <h3>title</h3>
+        <p>description</p>
+      </div>
+    </div>
+    <!-- dots + buttons -->
   </div>
 </div>
+```
+
+Positioning logic:
+```text
+const isDesktop = window.innerWidth >= 1024;
+
+if (isDesktop) {
+  // Place tooltip to the right of the sidebar item
+  top = targetRect.top + targetRect.height / 2 - tooltipHeight / 2
+  left = targetRect.right + 12
+  arrow: points left
+} else {
+  // Place tooltip above the bottom nav item
+  bottom = window.innerHeight - targetRect.top + 12
+  left = clamp(centerX - width/2, padding, maxRight)
+  arrow: points down
+}
 ```
