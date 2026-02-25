@@ -143,6 +143,7 @@ export function UnifiedDesktopNav({
         <TooltipTrigger asChild>
           <motion.button
             onClick={onClick}
+            data-onboarding-id={onboardingId}
             className={`
               w-full flex items-center gap-3 px-3 py-3 rounded-xl
               transition-all duration-200
@@ -155,7 +156,7 @@ export function UnifiedDesktopNav({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="relative flex items-center justify-center w-6 h-6" data-onboarding-id={onboardingId}>
+            <div className="relative flex items-center justify-center w-6 h-6">
               {children ? children : Icon ? (
                 <Icon 
                   className={`w-6 h-6 transition-all ${active ? 'text-primary' : ''}`}

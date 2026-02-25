@@ -32,25 +32,33 @@ const STEPS = [
 const TOOLTIP_WIDTH = 280;
 const PADDING = 12;
 const DESKTOP_TOOLTIP_HEIGHT = 220;
-const ICON_SPOTLIGHT_SIZE = 48;
-const PLAY_SPOTLIGHT_SIZE = 96;
 const SPOTLIGHT_PADDING = 10;
+
+const NAV_STEP_IDS = ["explore", "shop", "rank", "team"];
 
 /**
  * Find the best visible element for a given onboarding step.
- * Queries all matches, filters for visible ones, and picks the best candidate.
+ * On md+ screens, prefer side-nav for nav steps and desktop play button for play step.
+ * On mobile, prefer bottom-nav elements.
  */
-function findVisibleTarget(stepId: string): DOMRect | null {
+function findVisibleTarget(stepId: string): { rect: DOMRect; isWide: boolean } | null {
   const elements = document.querySelectorAll(`[data-onboarding-id="${stepId}"]`);
   if (elements.length === 0) return null;
 
-  let bestRect: DOMRect | null = null;
+  const isDesktop = window.innerWidth >= 768;
+  const isNavStep = NAV_STEP_IDS.includes(stepId);
+
+  let bestEl: Element | null = null;
   let bestScore = -1;
 
   elements.forEach((el) => {
     const rect = el.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
-    // Check if element is within viewport
+
+    const style = window.getComputedStyle(el);
+    if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") return;
+
+    // Check viewport
     const inViewport =
       rect.top >= -rect.height &&
       rect.left >= -rect.width &&
@@ -58,43 +66,59 @@ function findVisibleTarget(stepId: string): DOMRect | null {
       rect.right <= window.innerWidth + rect.width;
     if (!inViewport) return;
 
-    // Score: prefer elements that are actually visible (higher = better)
-    // Slight preference for bottom-positioned elements on mobile, left-positioned on desktop
     let score = 1;
-    const style = window.getComputedStyle(el);
-    if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") return;
-    score += 1; // visible
-    bestRect = rect;
-    bestScore = score;
+
+    if (isDesktop) {
+      // Prefer side-nav (left < 300) for nav steps
+      if (isNavStep && rect.left < 300) score += 10;
+      // Prefer desktop play button (not in bottom nav)
+      if (stepId === "play" && rect.top < window.innerHeight - 100) score += 10;
+    } else {
+      // Mobile: prefer bottom nav (bottom area)
+      if (rect.top > window.innerHeight - 150) score += 10;
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestEl = el;
+    }
   });
 
-  return bestRect;
+  if (!bestEl) return null;
+  const rect = (bestEl as Element).getBoundingClientRect();
+  // "Wide" means the target is a row (wider than tall, e.g. desktop nav row)
+  const isWide = rect.width > rect.height * 1.5;
+  return { rect, isWide };
 }
 
 /**
- * Build a square spotlight rect centered on the target, with controlled sizing.
+ * Build spotlight rect. For wide targets (desktop nav rows), keep rectangular shape.
+ * For compact targets (icons, play button), use square/circular spotlight.
  */
-function buildSpotlightRect(rawRect: DOMRect, stepId: string): DOMRect {
+function buildSpotlightRect(rawRect: DOMRect, isWide: boolean, stepId: string): DOMRect {
+  if (isWide) {
+    // Rectangular: preserve the row shape with small padding
+    return new DOMRect(
+      rawRect.left,
+      rawRect.top,
+      rawRect.width,
+      rawRect.height
+    );
+  }
+
+  // Square/circular for icon-only or play button
   const isPlay = stepId === "play";
-  const minSize = isPlay ? PLAY_SPOTLIGHT_SIZE : ICON_SPOTLIGHT_SIZE;
-  
+  const minSize = isPlay ? 96 : 48;
   const centerX = rawRect.left + rawRect.width / 2;
   const centerY = rawRect.top + rawRect.height / 2;
-  
-  // Use the larger of actual size or min size
   const size = Math.max(rawRect.width, rawRect.height, minSize);
-  
-  return new DOMRect(
-    centerX - size / 2,
-    centerY - size / 2,
-    size,
-    size
-  );
+  return new DOMRect(centerX - size / 2, centerY - size / 2, size, size);
 }
 
 export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingOverlayProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [isWideTarget, setIsWideTarget] = useState(false);
   const rafRef = useRef<number>();
   const retryRef = useRef<ReturnType<typeof setTimeout>>();
   const { t } = useLanguage();
@@ -103,18 +127,20 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
     if (!isOpen) return;
     const step = STEPS[currentStep];
 
-    const rawRect = findVisibleTarget(step.id);
-    if (rawRect) {
-      setTargetRect(buildSpotlightRect(rawRect, step.id));
+    const result = findVisibleTarget(step.id);
+    if (result) {
+      setIsWideTarget(result.isWide);
+      setTargetRect(buildSpotlightRect(result.rect, result.isWide, step.id));
       return;
     }
 
     // Fallback: retry after a short delay (DOM may not be ready)
     setTargetRect(null);
     retryRef.current = setTimeout(() => {
-      const retryRect = findVisibleTarget(step.id);
-      if (retryRect) {
-        setTargetRect(buildSpotlightRect(retryRect, step.id));
+      const retryResult = findVisibleTarget(step.id);
+      if (retryResult) {
+        setIsWideTarget(retryResult.isWide);
+        setTargetRect(buildSpotlightRect(retryResult.rect, retryResult.isWide, step.id));
       }
     }, 500);
   }, [isOpen, currentStep]);
@@ -171,14 +197,17 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
 
   // Determine anchor direction based on where the target actually is
   const isBottomNavTarget = !!targetRect && targetRect.top > window.innerHeight * 0.5;
-  const isSideNavTarget = !!targetRect && targetRect.left < 250 && targetRect.top < window.innerHeight * 0.5;
-  const useBottomAnchor = step.id === "play" || isBottomNavTarget;
+  const isSideNavTarget = !!targetRect && targetRect.left < 300 && targetRect.top < window.innerHeight * 0.5;
+  const useBottomAnchor = step.id === "play" ? isBottomNavTarget : isBottomNavTarget;
+
+  // For play step on desktop (not bottom nav), position above the button
+  const isDesktopPlayTarget = step.id === "play" && !!targetRect && !isBottomNavTarget;
 
   const getTooltipStyle = (): React.CSSProperties => {
     if (!targetRect) return { opacity: 0, pointerEvents: "none" };
 
-    if (!useBottomAnchor && isSideNavTarget) {
-      // Side nav: position to the right of the icon
+    if (isSideNavTarget && !useBottomAnchor) {
+      // Side nav: position to the right of the row
       const anchorCenterY = targetRect.top + targetRect.height / 2;
       const unclampedTop = anchorCenterY - 60;
       const top = Math.max(PADDING, Math.min(window.innerHeight - DESKTOP_TOOLTIP_HEIGHT - PADDING, unclampedTop));
@@ -186,7 +215,7 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
       return { position: "absolute", top, left, width: TOOLTIP_WIDTH };
     }
 
-    // Bottom nav / play: position above the target
+    // Bottom nav or desktop play: position above the target
     const anchorCenterX = targetRect.left + targetRect.width / 2;
     let left = anchorCenterX - TOOLTIP_WIDTH / 2;
     if (left < PADDING) left = PADDING;
@@ -201,8 +230,8 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
   const getArrowStyle = (): React.CSSProperties => {
     if (!targetRect) return {};
 
-    if (!useBottomAnchor && isSideNavTarget) {
-      // Arrow points left toward the icon
+    if (isSideNavTarget && !useBottomAnchor) {
+      // Arrow points left toward the nav row
       const anchorCenterY = targetRect.top + targetRect.height / 2;
       const tooltipStyle = getTooltipStyle();
       const tooltipTop = (tooltipStyle.top as number) || 0;
@@ -220,7 +249,7 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
       };
     }
 
-    // Arrow points down toward the icon
+    // Arrow points down toward the target
     const anchorCenterX = targetRect.left + targetRect.width / 2;
     const tooltipStyle = getTooltipStyle();
     const tooltipLeft = (tooltipStyle.left as number) || 0;
@@ -238,6 +267,11 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
     };
   };
 
+  // Determine spotlight shape
+  const isRoundSpotlight = step.id === "play" && !isWideTarget;
+  const isRectSpotlight = isWideTarget;
+  const spotlightRx = isRoundSpotlight ? 999 : isRectSpotlight ? 12 : 16;
+
   return (
     <AnimatePresence>
       {isOpen && targetRect && (
@@ -252,8 +286,8 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
                   y={targetRect.top - SPOTLIGHT_PADDING}
                   width={targetRect.width + SPOTLIGHT_PADDING * 2}
                   height={targetRect.height + SPOTLIGHT_PADDING * 2}
-                  rx={step.id === "play" ? 999 : 16}
-                  ry={step.id === "play" ? 999 : 16}
+                  rx={spotlightRx}
+                  ry={spotlightRx}
                   fill="black"
                 />
               </mask>
@@ -272,7 +306,7 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
-            className={`absolute pointer-events-none ${step.id === "play" ? "rounded-full" : "rounded-2xl"}`}
+            className={`absolute pointer-events-none ${isRoundSpotlight ? "rounded-full" : isRectSpotlight ? "rounded-xl" : "rounded-2xl"}`}
             style={{
               top: targetRect.top - SPOTLIGHT_PADDING,
               left: targetRect.left - SPOTLIGHT_PADDING,

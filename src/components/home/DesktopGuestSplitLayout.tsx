@@ -416,6 +416,7 @@ export function DesktopGuestSplitLayout({
             canPlay={guestPlaysRemaining > 0}
             isVip={false}
             isGuest={true}
+            onboardingId="play"
           />
         </motion.div>
       </div>
