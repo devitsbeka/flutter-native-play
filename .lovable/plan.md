@@ -1,51 +1,52 @@
 
 
-## Fix: PRO Status Showing as Active for Expired Users + Play Button in Burger Menu
+## Fix Welcome Onboarding Not Showing + Add Admin Preview Route
 
-### Issue 1: Non-PRO User Sees "PRO Active" on Profile
+### Problem
+The welcome onboarding modal never appears because the trigger condition (`hasCompletedOnboarding`) only becomes `true` when a user goes through the `SignupOnboardingModal` flow. Users who sign up via Google, Apple, or the standard auth page bypass this entirely. Even users who do use the signup modal may miss it due to the avatar modal opening immediately after.
 
-**Root Cause:** `Profile.tsx` passes `subscription?.vip_tier` as `currentTier` to `ProPlansSection` without checking if the subscription is actually active (`isVip`). When a subscription expires, the database row still exists with `vip_tier = 'standard'`, so the profile page incorrectly shows "PRO - Active".
+### Solution
 
-**Fix in `src/pages/Profile.tsx`:**
-- Change line 36 from:
-  ```ts
-  const currentTier = subscription?.vip_tier as ProTier | undefined;
-  ```
-  to:
-  ```ts
-  const currentTier = isVip ? (subscription?.vip_tier as ProTier | undefined) : undefined;
-  ```
-- Similarly fix `getProLabel()` (line 41) and `friendInvitesRemaining` (line 37) to also gate on `isVip`.
+**1. Fix the trigger logic in `src/pages/Index.tsx`**
 
-This ensures that when `isVip` is false (subscription expired), `currentTier` is `undefined`, and `ProPlansSection` correctly shows the "Not PRO" scenario with both tier purchase cards.
+Replace the `hasCompletedOnboarding` check with a more reliable approach:
+- Instead of depending on `OnboardingContext.hasCompletedOnboarding`, check if the user's `profile.created_at` is recent (within the last 5 minutes) AND the localStorage key `mytrivia_welcome_onboarding_seen` is NOT set.
+- This works for ALL signup paths (username, Google, Apple, guest conversion).
+- Remove the dependency on `useOnboarding().hasCompletedOnboarding` for this feature.
 
----
-
-### Issue 2: Play Button in Burger Menu Doesn't Show Play Limit Modal
-
-**Root Cause:** The `SideMenuDrawer` has `z-[60]` (line 138) and covers the entire screen. When `guardPlay()` returns false and opens the `PlayLimitModal`/`InviteFriendsModal` (rendered by `PlayGuardProvider`), those modals appear behind the drawer and are invisible to the user.
-
-**Fix in `src/components/home/SideMenuDrawer.tsx`:**
-- In `handlePlayClick` (lines 51-55), close the drawer before the guard modals appear:
-  ```ts
-  const handlePlayClick = () => {
-    const allowed = guardPlay(() => {
-      onClose();
-      navigate('/game');
-    });
-    if (!allowed) {
-      onClose(); // Close drawer so the play-limit modal is visible
-      return;
+```ts
+useEffect(() => {
+  if (
+    user &&
+    profile?.created_at &&
+    !localStorage.getItem("mytrivia_welcome_onboarding_seen")
+  ) {
+    // Show for accounts created in the last 5 minutes
+    const createdAt = new Date(profile.created_at).getTime();
+    const fiveMinAgo = Date.now() - 5 * 60 * 1000;
+    if (createdAt > fiveMinAgo) {
+      const timer = setTimeout(() => setShowWelcomeOnboarding(true), 800);
+      return () => clearTimeout(timer);
+    } else {
+      // Old account, mark as seen so we never check again
+      localStorage.setItem("mytrivia_welcome_onboarding_seen", "true");
     }
-    onClose();
-    navigate('/game');
-  };
-  ```
+  }
+}, [user, profile]);
+```
 
-This ensures the drawer closes first, allowing the invite/play-limit modals from `PlayGuardProvider` to be visible on screen.
+**2. Add `/onboarding` admin preview route**
 
----
+Update `src/App.tsx`:
+- Add a new route `/onboarding` pointing to a new preview page.
+
+Create `src/pages/OnboardingWelcomePreview.tsx`:
+- A simple page that renders `WelcomeOnboardingModal` with `isOpen={true}`.
+- Includes a "Reset and Reopen" button to clear the localStorage key and re-trigger it.
+- Wrapped in `AdminRoute` so only admins can access it.
 
 ### Files to Edit
-1. **`src/pages/Profile.tsx`** -- Gate `currentTier` on `isVip` so expired subscriptions show as non-PRO
-2. **`src/components/home/SideMenuDrawer.tsx`** -- Close drawer when play is blocked so modals are visible
+1. `src/pages/Index.tsx` -- Fix the trigger useEffect to use `profile.created_at` instead of `hasCompletedOnboarding`
+2. `src/pages/OnboardingWelcomePreview.tsx` -- New admin preview page
+3. `src/App.tsx` -- Add `/onboarding` route
+
