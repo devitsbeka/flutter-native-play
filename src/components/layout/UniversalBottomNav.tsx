@@ -130,10 +130,10 @@ export function UniversalBottomNav({
           {/* Explore - always accessible */}
           <div 
             className="flex-1 flex justify-center"
-            data-onboarding-id="explore"
             onTouchStart={() => handleRouteTouchStart("/discover")}
           >
             <NavButton
+              onboardingId="explore"
               onClick={() => {
                 if (isActive("/discover")) {
                   const mainEl = document.getElementById("main-scroll-container");
@@ -156,10 +156,10 @@ export function UniversalBottomNav({
           {/* Shop - always accessible */}
           <div 
             className="flex-1 flex justify-center pr-4"
-            data-onboarding-id="shop"
             onTouchStart={() => handleRouteTouchStart("/power-ups")}
           >
             <NavButton
+              onboardingId="shop"
               onClick={() => {
                 if (isActive("/power-ups")) {
                   const mainEl = document.getElementById("main-scroll-container");
@@ -180,7 +180,7 @@ export function UniversalBottomNav({
           </div>
 
           {/* Center Play Button - floats above, overlapping nav bar */}
-          <div className="flex-1 flex justify-center overflow-visible pointer-events-auto" data-onboarding-id="play" style={{ zIndex: 60 }}>
+          <div className="flex-1 flex justify-center overflow-visible pointer-events-auto" style={{ zIndex: 60 }}>
             <div 
               className="relative overflow-visible pointer-events-auto" 
               style={{ width: 90, height: 90, marginTop: -42, zIndex: 60 }}
@@ -203,10 +203,10 @@ export function UniversalBottomNav({
           {/* Rank */}
           <div 
             className="flex-1 flex justify-center pl-4"
-            data-onboarding-id="rank"
             onTouchStart={() => handleRouteTouchStart("/leaderboards")}
           >
             <NavButton
+              onboardingId="rank"
               onClick={isGuest ? handleLockedNavClick : () => {
                 if (isActive("/leaderboards")) {
                   // Leaderboards has its own scroll container on mobile
@@ -233,10 +233,10 @@ export function UniversalBottomNav({
           {/* Team */}
           <div 
             className="flex-1 flex justify-center"
-            data-onboarding-id="team"
             onTouchStart={() => handleRouteTouchStart("/team")}
           >
             <NavButton
+              onboardingId="team"
               onClick={isGuest ? handleLockedNavClick : () => {
                 if (isActive("/team")) {
                   const mainEl = document.getElementById("main-scroll-container");
@@ -280,6 +280,7 @@ function NavButton({
   badgeCount = 0,
   hasNewContent = false,
   isLocked = false,
+  onboardingId,
 }: { 
   onClick: () => void;
   isActive: boolean;
@@ -288,10 +289,12 @@ function NavButton({
   badgeCount?: number;
   hasNewContent?: boolean;
   isLocked?: boolean;
+  onboardingId?: string;
 }) {
   return (
     <button
       onClick={onClick}
+      data-onboarding-id={onboardingId}
       className="relative flex flex-col items-center justify-center w-14 h-12 flex-shrink-0 gap-1 active:scale-95 transition-transform duration-75"
     >
       <div className="relative" style={{ opacity: isLocked ? 0.35 : isActive ? 1 : 0.5 }}>
@@ -533,6 +536,7 @@ function Hex3DPlayButton({
 
       <motion.button
         onClick={onClick}
+        data-onboarding-id="play"
         className="relative z-[60]"
         whileHover={{ scale: 1.05, y: -2 }}
         whileTap={{ scale: 0.92, y: 4 }}

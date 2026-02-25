@@ -127,6 +127,7 @@ export function UnifiedDesktopNav({
     badge,
     children,
     isLocked = false,
+    onboardingId,
   }: {
     icon?: React.ElementType;
     label: string;
@@ -135,6 +136,7 @@ export function UnifiedDesktopNav({
     badge?: number;
     children?: React.ReactNode;
     isLocked?: boolean;
+    onboardingId?: string;
   }) => (
     <TooltipProvider delayDuration={300}>
       <Tooltip>
@@ -153,7 +155,7 @@ export function UnifiedDesktopNav({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="relative flex items-center justify-center w-6 h-6">
+            <div className="relative flex items-center justify-center w-6 h-6" data-onboarding-id={onboardingId}>
               {children ? children : Icon ? (
                 <Icon 
                   className={`w-6 h-6 transition-all ${active ? 'text-primary' : ''}`}
@@ -250,7 +252,6 @@ export function UnifiedDesktopNav({
               return (
                 <div 
                   key={item.id}
-                  data-onboarding-id={item.id === "explore" ? "explore" : item.id === "shop" ? "shop" : item.id === "rank" ? "rank" : item.id === "team" ? "team" : undefined}
                   onMouseEnter={() => !isLockedItem && handleNavHover(item.path)}
                   onFocus={() => !isLockedItem && handleNavHover(item.path)}
               >
@@ -261,6 +262,7 @@ export function UnifiedDesktopNav({
                   active={isActive(item.path)}
                   badge={item.id === "team" ? pendingCount : undefined}
                   isLocked={isLockedItem}
+                  onboardingId={["explore", "shop", "rank", "team"].includes(item.id) ? item.id : undefined}
                 />
               </div>
             );

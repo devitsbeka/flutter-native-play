@@ -32,8 +32,65 @@ const STEPS = [
 const TOOLTIP_WIDTH = 280;
 const PADDING = 12;
 const DESKTOP_TOOLTIP_HEIGHT = 220;
-const PLAY_TARGET_SIZE = 90;
-const PLAY_TARGET_BOTTOM_OFFSET = 36;
+const ICON_SPOTLIGHT_SIZE = 48;
+const PLAY_SPOTLIGHT_SIZE = 96;
+const SPOTLIGHT_PADDING = 10;
+
+/**
+ * Find the best visible element for a given onboarding step.
+ * Queries all matches, filters for visible ones, and picks the best candidate.
+ */
+function findVisibleTarget(stepId: string): DOMRect | null {
+  const elements = document.querySelectorAll(`[data-onboarding-id="${stepId}"]`);
+  if (elements.length === 0) return null;
+
+  let bestRect: DOMRect | null = null;
+  let bestScore = -1;
+
+  elements.forEach((el) => {
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    // Check if element is within viewport
+    const inViewport =
+      rect.top >= -rect.height &&
+      rect.left >= -rect.width &&
+      rect.bottom <= window.innerHeight + rect.height &&
+      rect.right <= window.innerWidth + rect.width;
+    if (!inViewport) return;
+
+    // Score: prefer elements that are actually visible (higher = better)
+    // Slight preference for bottom-positioned elements on mobile, left-positioned on desktop
+    let score = 1;
+    const style = window.getComputedStyle(el);
+    if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") return;
+    score += 1; // visible
+    bestRect = rect;
+    bestScore = score;
+  });
+
+  return bestRect;
+}
+
+/**
+ * Build a square spotlight rect centered on the target, with controlled sizing.
+ */
+function buildSpotlightRect(rawRect: DOMRect, stepId: string): DOMRect {
+  const isPlay = stepId === "play";
+  const minSize = isPlay ? PLAY_SPOTLIGHT_SIZE : ICON_SPOTLIGHT_SIZE;
+  
+  const centerX = rawRect.left + rawRect.width / 2;
+  const centerY = rawRect.top + rawRect.height / 2;
+  
+  // Use the larger of actual size or min size
+  const size = Math.max(rawRect.width, rawRect.height, minSize);
+  
+  return new DOMRect(
+    centerX - size / 2,
+    centerY - size / 2,
+    size,
+    size
+  );
+}
 
 export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingOverlayProps) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -42,79 +99,25 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
   const retryRef = useRef<ReturnType<typeof setTimeout>>();
   const { t } = useLanguage();
 
-  const createPlayFallbackRect = useCallback((): DOMRect => {
-    const left = window.innerWidth / 2 - PLAY_TARGET_SIZE / 2;
-    const top = window.innerHeight - PLAY_TARGET_SIZE - PLAY_TARGET_BOTTOM_OFFSET;
-    return new DOMRect(left, top, PLAY_TARGET_SIZE, PLAY_TARGET_SIZE);
-  }, []);
-
-  const getMobileStepRect = useCallback((stepId: typeof STEPS[number]["id"]): DOMRect => {
-    const navHeight = 110;
-    const navTop = window.innerHeight - navHeight;
-    const centers = {
-      explore: window.innerWidth * 0.1,
-      shop: window.innerWidth * 0.3,
-      play: window.innerWidth * 0.5,
-      rank: window.innerWidth * 0.7,
-      team: window.innerWidth * 0.9,
-    } as const;
-
-    const isPlay = stepId === "play";
-    const size = isPlay ? PLAY_TARGET_SIZE : 44;
-    const left = centers[stepId] - size / 2;
-    const top = isPlay ? navTop - 30 : navTop + 20;
-    return new DOMRect(left, top, size, size);
-  }, []);
-
   const updateTargetRect = useCallback(() => {
     if (!isOpen) return;
     const step = STEPS[currentStep];
-    const isDesktopViewport = window.innerWidth >= 1024;
 
-    if (!isDesktopViewport) {
-      const el = document.querySelector(`[data-onboarding-id="${step.id}"]`);
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        const isVisible = rect.width > 0 && rect.height > 0;
-        if (isVisible) {
-          setTargetRect(rect);
-          return;
-        }
-      }
-
-      setTargetRect(getMobileStepRect(step.id));
+    const rawRect = findVisibleTarget(step.id);
+    if (rawRect) {
+      setTargetRect(buildSpotlightRect(rawRect, step.id));
       return;
     }
 
-    const el = document.querySelector(`[data-onboarding-id="${step.id}"]`);
-
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      const isVisible = rect.width > 0 && rect.height > 0;
-      if (isVisible) {
-        setTargetRect(rect);
-        return;
-      }
-    }
-
-    if (step.id === "play") {
-      setTargetRect(createPlayFallbackRect());
-      return;
-    }
-
+    // Fallback: retry after a short delay (DOM may not be ready)
     setTargetRect(null);
-    // Retry after a delay if element not found
     retryRef.current = setTimeout(() => {
-      const retryEl = document.querySelector(`[data-onboarding-id="${step.id}"]`);
-      if (retryEl) {
-        const retryRect = retryEl.getBoundingClientRect();
-        const isRetryVisible = retryRect.width > 0 && retryRect.height > 0;
-        if (isRetryVisible) {
-          setTargetRect(retryRect);
-        }
+      const retryRect = findVisibleTarget(step.id);
+      if (retryRect) {
+        setTargetRect(buildSpotlightRect(retryRect, step.id));
       }
     }, 500);
-  }, [isOpen, currentStep, createPlayFallbackRect, getMobileStepRect]);
+  }, [isOpen, currentStep]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -165,24 +168,27 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
 
   const step = STEPS[currentStep];
   const isLastStep = currentStep === STEPS.length - 1;
-  const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
-  const isBottomNavTarget = !!targetRect && targetRect.top > window.innerHeight * 0.6;
+
+  // Determine anchor direction based on where the target actually is
+  const isBottomNavTarget = !!targetRect && targetRect.top > window.innerHeight * 0.5;
+  const isSideNavTarget = !!targetRect && targetRect.left < 250 && targetRect.top < window.innerHeight * 0.5;
   const useBottomAnchor = step.id === "play" || isBottomNavTarget;
 
   const getTooltipStyle = (): React.CSSProperties => {
     if (!targetRect) return { opacity: 0, pointerEvents: "none" };
 
-    if (!useBottomAnchor) {
-      // Desktop: position to the right of the sidebar item
-      const unclampedTop = targetRect.top + targetRect.height / 2 - 60;
+    if (!useBottomAnchor && isSideNavTarget) {
+      // Side nav: position to the right of the icon
+      const anchorCenterY = targetRect.top + targetRect.height / 2;
+      const unclampedTop = anchorCenterY - 60;
       const top = Math.max(PADDING, Math.min(window.innerHeight - DESKTOP_TOOLTIP_HEIGHT - PADDING, unclampedTop));
       const left = Math.min(targetRect.right + 16, window.innerWidth - TOOLTIP_WIDTH - PADDING);
       return { position: "absolute", top, left, width: TOOLTIP_WIDTH };
     }
 
-    // Mobile + play step on desktop/tablet: position above bottom nav/play target
-    const centerX = targetRect.left + targetRect.width / 2;
-    let left = centerX - TOOLTIP_WIDTH / 2;
+    // Bottom nav / play: position above the target
+    const anchorCenterX = targetRect.left + targetRect.width / 2;
+    let left = anchorCenterX - TOOLTIP_WIDTH / 2;
     if (left < PADDING) left = PADDING;
     if (left + TOOLTIP_WIDTH > window.innerWidth - PADDING) {
       left = window.innerWidth - PADDING - TOOLTIP_WIDTH;
@@ -195,11 +201,15 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
   const getArrowStyle = (): React.CSSProperties => {
     if (!targetRect) return {};
 
-    if (!useBottomAnchor) {
-      // Arrow points left
+    if (!useBottomAnchor && isSideNavTarget) {
+      // Arrow points left toward the icon
+      const anchorCenterY = targetRect.top + targetRect.height / 2;
+      const tooltipStyle = getTooltipStyle();
+      const tooltipTop = (tooltipStyle.top as number) || 0;
+      const arrowTop = Math.max(16, Math.min(180, anchorCenterY - tooltipTop));
       return {
         position: "absolute",
-        top: 20,
+        top: arrowTop - 6,
         left: -6,
         width: 12,
         height: 12,
@@ -210,11 +220,11 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
       };
     }
 
-    // Arrow points down
-    const centerX = targetRect.left + targetRect.width / 2;
+    // Arrow points down toward the icon
+    const anchorCenterX = targetRect.left + targetRect.width / 2;
     const tooltipStyle = getTooltipStyle();
     const tooltipLeft = (tooltipStyle.left as number) || 0;
-    const arrowLeft = Math.max(20, Math.min(TOOLTIP_WIDTH - 20, centerX - tooltipLeft));
+    const arrowLeft = Math.max(20, Math.min(TOOLTIP_WIDTH - 20, anchorCenterX - tooltipLeft));
     return {
       position: "absolute",
       bottom: -6,
@@ -238,12 +248,12 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
               <mask id="spotlight-mask">
                 <rect width="100%" height="100%" fill="white" />
                 <rect
-                  x={targetRect.left - 8}
-                  y={targetRect.top - 8}
-                  width={targetRect.width + 16}
-                  height={targetRect.height + 16}
-                  rx={16}
-                  ry={16}
+                  x={targetRect.left - SPOTLIGHT_PADDING}
+                  y={targetRect.top - SPOTLIGHT_PADDING}
+                  width={targetRect.width + SPOTLIGHT_PADDING * 2}
+                  height={targetRect.height + SPOTLIGHT_PADDING * 2}
+                  rx={step.id === "play" ? 999 : 16}
+                  ry={step.id === "play" ? 999 : 16}
                   fill="black"
                 />
               </mask>
@@ -262,12 +272,12 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
-            className="absolute rounded-2xl pointer-events-none"
+            className={`absolute pointer-events-none ${step.id === "play" ? "rounded-full" : "rounded-2xl"}`}
             style={{
-              top: targetRect.top - 8,
-              left: targetRect.left - 8,
-              width: targetRect.width + 16,
-              height: targetRect.height + 16,
+              top: targetRect.top - SPOTLIGHT_PADDING,
+              left: targetRect.left - SPOTLIGHT_PADDING,
+              width: targetRect.width + SPOTLIGHT_PADDING * 2,
+              height: targetRect.height + SPOTLIGHT_PADDING * 2,
               border: "2px solid rgba(255,255,255,0.3)",
               boxShadow: "0 0 20px rgba(147,51,234,0.3), inset 0 0 20px rgba(147,51,234,0.1)",
             }}
@@ -276,7 +286,7 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
           {/* Tooltip */}
           <motion.div
             key={`tooltip-${currentStep}`}
-            initial={{ opacity: 0, y: isDesktop ? 0 : 10, x: isDesktop ? -10 : 0, scale: 0.95 }}
+            initial={{ opacity: 0, y: isSideNavTarget ? 0 : 10, x: isSideNavTarget ? -10 : 0, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", duration: 0.35, bounce: 0.15, delay: 0.1 }}
