@@ -250,6 +250,34 @@ export function trackShopItemPurchased(params: {
   fbTrackPurchase(params.price, params.currency, params.productType);
 }
 
+// ─── WELCOME ONBOARDING ─────────────────────────────────
+
+export function trackWelcomeOnboardingStarted() {
+  posthog.capture("welcome_onboarding_started");
+}
+
+export function trackWelcomeOnboardingStepViewed(
+  step: number,
+  stepName: string
+) {
+  posthog.capture("welcome_onboarding_step_viewed", {
+    step_number: step + 1,
+    step_name: stepName,
+  });
+}
+
+export function trackWelcomeOnboardingCompleted(stepsViewed: number) {
+  posthog.capture("welcome_onboarding_completed", {
+    steps_viewed: stepsViewed,
+  });
+}
+
+export function trackWelcomeOnboardingSkipped(stepSkippedAt: number) {
+  posthog.capture("welcome_onboarding_skipped", {
+    step_skipped_at: stepSkippedAt + 1,
+  });
+}
+
 // ─── CATEGORY NAVIGATION ────────────────────────────────
 
 export function trackCategoryViewed(

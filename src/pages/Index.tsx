@@ -26,6 +26,7 @@ import { calculateLevel } from "@/utils/levelCalculation";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { PowerUpDetailModal, PowerUpType } from "@/components/game/PowerUpDetailModal";
 import { SignupOnboardingModal } from "@/components/onboarding/SignupOnboardingModal";
+import { WelcomeOnboardingModal } from "@/components/onboarding/WelcomeOnboardingModal";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
@@ -207,8 +208,20 @@ export default function Index() {
   const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
   const [showGuestSignupPrompt, setShowGuestSignupPrompt] = useState(false);
   const [isAnimatingFromHome, setIsAnimatingFromHome] = useState(false);
-  const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
+   const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
+  const [showWelcomeOnboarding, setShowWelcomeOnboarding] = useState(false);
 
+  // Show welcome onboarding for newly signed-up users
+  useEffect(() => {
+    if (
+      user &&
+      hasCompletedOnboarding &&
+      !localStorage.getItem("mytrivia_welcome_onboarding_seen")
+    ) {
+      const timer = setTimeout(() => setShowWelcomeOnboarding(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [user, hasCompletedOnboarding]);
 
   // Invite Friends Modal state
   const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading);
@@ -563,6 +576,10 @@ export default function Index() {
     <>
       {/* Onboarding modals */}
       <SignupOnboardingModal />
+      <WelcomeOnboardingModal
+        isOpen={showWelcomeOnboarding}
+        onClose={() => setShowWelcomeOnboarding(false)}
+      />
       <GuestSignupPromptModal 
         isOpen={showGuestSignupPrompt} 
         onClose={() => setShowGuestSignupPrompt(false)} 
