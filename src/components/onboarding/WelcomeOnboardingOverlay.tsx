@@ -115,15 +115,17 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
       const left = targetRect.right + 16;
       return { position: "absolute", top, left, width: TOOLTIP_WIDTH };
     } else {
-      // Mobile: position above the bottom nav item
+      // Mobile: position above the bottom nav item using top
       const centerX = targetRect.left + targetRect.width / 2;
       let left = centerX - TOOLTIP_WIDTH / 2;
       if (left < PADDING) left = PADDING;
       if (left + TOOLTIP_WIDTH > window.innerWidth - PADDING) {
         left = window.innerWidth - PADDING - TOOLTIP_WIDTH;
       }
-      const bottom = window.innerHeight - targetRect.top + 16;
-      return { position: "absolute", bottom, left, width: TOOLTIP_WIDTH };
+      // Place tooltip so its bottom edge is 16px above the target's top
+      const tooltipEstimatedHeight = 200;
+      const top = targetRect.top - tooltipEstimatedHeight - 16;
+      return { position: "absolute", top: Math.max(PADDING, top), left, width: TOOLTIP_WIDTH };
     }
   };
 
