@@ -130,6 +130,7 @@ export function UniversalBottomNav({
           {/* Explore - always accessible */}
           <div 
             className="flex-1 flex justify-center"
+            data-onboarding-id="explore"
             onTouchStart={() => handleRouteTouchStart("/discover")}
           >
             <NavButton
@@ -155,6 +156,7 @@ export function UniversalBottomNav({
           {/* Shop - always accessible */}
           <div 
             className="flex-1 flex justify-center pr-4"
+            data-onboarding-id="shop"
             onTouchStart={() => handleRouteTouchStart("/power-ups")}
           >
             <NavButton
@@ -178,7 +180,7 @@ export function UniversalBottomNav({
           </div>
 
           {/* Center Play Button - floats above, overlapping nav bar */}
-          <div className="flex-1 flex justify-center overflow-visible pointer-events-auto" style={{ zIndex: 60 }}>
+          <div className="flex-1 flex justify-center overflow-visible pointer-events-auto" data-onboarding-id="play" style={{ zIndex: 60 }}>
             <div 
               className="relative overflow-visible pointer-events-auto" 
               style={{ width: 90, height: 90, marginTop: -42, zIndex: 60 }}
@@ -201,6 +203,7 @@ export function UniversalBottomNav({
           {/* Rank */}
           <div 
             className="flex-1 flex justify-center pl-4"
+            data-onboarding-id="rank"
             onTouchStart={() => handleRouteTouchStart("/leaderboards")}
           >
             <NavButton
@@ -230,6 +233,7 @@ export function UniversalBottomNav({
           {/* Team */}
           <div 
             className="flex-1 flex justify-center"
+            data-onboarding-id="team"
             onTouchStart={() => handleRouteTouchStart("/team")}
           >
             <NavButton

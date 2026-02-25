@@ -26,7 +26,7 @@ import { calculateLevel } from "@/utils/levelCalculation";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { PowerUpDetailModal, PowerUpType } from "@/components/game/PowerUpDetailModal";
 import { SignupOnboardingModal } from "@/components/onboarding/SignupOnboardingModal";
-import { WelcomeOnboardingModal } from "@/components/onboarding/WelcomeOnboardingModal";
+import { WelcomeOnboardingOverlay } from "@/components/onboarding/WelcomeOnboardingOverlay";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
@@ -583,7 +583,7 @@ export default function Index() {
     <>
       {/* Onboarding modals */}
       <SignupOnboardingModal />
-      <WelcomeOnboardingModal
+      <WelcomeOnboardingOverlay
         isOpen={showWelcomeOnboarding}
         onClose={() => setShowWelcomeOnboarding(false)}
       />
