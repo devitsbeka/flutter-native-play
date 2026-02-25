@@ -211,17 +211,24 @@ export default function Index() {
    const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
   const [showWelcomeOnboarding, setShowWelcomeOnboarding] = useState(false);
 
-  // Show welcome onboarding for newly signed-up users
+  // Show welcome onboarding for newly signed-up users (works for all signup paths)
   useEffect(() => {
     if (
       user &&
-      hasCompletedOnboarding &&
+      profile?.created_at &&
       !localStorage.getItem("mytrivia_welcome_onboarding_seen")
     ) {
-      const timer = setTimeout(() => setShowWelcomeOnboarding(true), 500);
-      return () => clearTimeout(timer);
+      const createdAt = new Date(profile.created_at).getTime();
+      const fiveMinAgo = Date.now() - 5 * 60 * 1000;
+      if (createdAt > fiveMinAgo) {
+        const timer = setTimeout(() => setShowWelcomeOnboarding(true), 800);
+        return () => clearTimeout(timer);
+      } else {
+        // Old account, mark as seen so we never check again
+        localStorage.setItem("mytrivia_welcome_onboarding_seen", "true");
+      }
     }
-  }, [user, hasCompletedOnboarding]);
+  }, [user, profile]);
 
   // Invite Friends Modal state
   const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading);

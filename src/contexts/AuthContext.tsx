@@ -20,6 +20,7 @@ export interface Profile {
   coins: number;
   gems: number;
   has_face_photo: boolean | null;
+  created_at: string;
 }
 
 interface AuthContextType {

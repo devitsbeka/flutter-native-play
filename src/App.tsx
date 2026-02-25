@@ -96,6 +96,7 @@ const AdminEconomy = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Economy"))
 const AdminSettings = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Settings")) : null;
 const AdminGuestShowcase = INCLUDE_ADMIN ? lazy(() => import("./pages/AdminGuestShowcase")) : null;
 const UserAnalytics = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/UserAnalytics")) : null;
+const OnboardingWelcomePreview = INCLUDE_ADMIN ? lazy(() => import("./pages/OnboardingWelcomePreview")) : null;
 
 // Shop pages
 const ShopSuccess = lazy(() => import("./pages/shop/Success"));
@@ -198,6 +199,9 @@ const App = () => (
                     <Route path="settings" element={AdminSettings && <AdminSettings />} />
                     <Route path="tvmodegame" element={TVModeGameDocs && <TVModeGameDocs />} />
                   </Route>
+                )}
+                {INCLUDE_ADMIN && AdminRoute && OnboardingWelcomePreview && (
+                  <Route path="/onboarding" element={<AdminRoute><OnboardingWelcomePreview /></AdminRoute>} />
                 )}
                 <Route path="/shop/success" element={<ShopSuccess />} />
                 <Route path="/shop/cancel" element={<ShopCancel />} />
