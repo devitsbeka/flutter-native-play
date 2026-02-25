@@ -75,8 +75,8 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
       const el = document.querySelector(`[data-onboarding-id="${step.id}"]`);
       if (el) {
         const rect = el.getBoundingClientRect();
-        const looksLikeBottomNavTarget = rect.width > 0 && rect.height > 0 && rect.top > window.innerHeight * 0.6;
-        if (looksLikeBottomNavTarget) {
+        const isVisible = rect.width > 0 && rect.height > 0;
+        if (isVisible) {
           setTargetRect(rect);
           return;
         }
@@ -166,7 +166,8 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
   const step = STEPS[currentStep];
   const isLastStep = currentStep === STEPS.length - 1;
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
-  const useBottomAnchor = !isDesktop || step.id === "play";
+  const isBottomNavTarget = !!targetRect && targetRect.top > window.innerHeight * 0.6;
+  const useBottomAnchor = step.id === "play" || isBottomNavTarget;
 
   const getTooltipStyle = (): React.CSSProperties => {
     if (!targetRect) return { opacity: 0, pointerEvents: "none" };
