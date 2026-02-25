@@ -69,6 +69,7 @@ const PrivacyPolicyEN = lazy(() => import("./pages/PrivacyPolicyEN"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const TermsOfServiceEN = lazy(() => import("./pages/TermsOfServiceEN"));
 const Support = lazy(() => import("./pages/Support"));
+const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
 
 // Admin pages - conditionally imported to enable tree-shaking when excluded
 const AdminRoute = INCLUDE_ADMIN ? lazy(() => import("./components/admin/AdminRoute").then(m => ({ default: m.AdminRoute }))) : null;
@@ -169,6 +170,7 @@ const App = () => (
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/terms-en" element={<TermsOfServiceEN />} />
                 <Route path="/support" element={<Support />} />
+                <Route path="/delete-account" element={<DeleteAccount />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/settings/name" element={<SettingsName />} />
                 <Route path="/settings/password" element={<SettingsPassword />} />
