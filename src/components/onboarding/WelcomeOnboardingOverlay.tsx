@@ -276,8 +276,8 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
     <AnimatePresence>
       {isOpen && targetRect && (
         <div className="fixed inset-0" style={{ zIndex: 10000 }}>
-          {/* SVG mask backdrop */}
-          <svg className="absolute inset-0 w-full h-full" onClick={handleSkip}>
+          {/* SVG mask backdrop - pointer-events-none so tooltip buttons work */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
             <defs>
               <mask id="spotlight-mask">
                 <rect width="100%" height="100%" fill="white" />
@@ -299,6 +299,9 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
               mask="url(#spotlight-mask)"
             />
           </svg>
+
+          {/* Click-catcher for backdrop dismiss */}
+          <div className="absolute inset-0" onClick={handleSkip} />
 
           {/* Spotlight border glow */}
           <motion.div
@@ -324,7 +327,7 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
             animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", duration: 0.35, bounce: 0.15, delay: 0.1 }}
-            style={{ ...getTooltipStyle(), zIndex: 10001 }}
+            style={{ ...getTooltipStyle(), zIndex: 10001, pointerEvents: "auto" as const }}
           >
             {/* Arrow */}
             <div style={getArrowStyle() as React.CSSProperties} />
