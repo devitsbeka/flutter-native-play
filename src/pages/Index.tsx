@@ -218,15 +218,16 @@ export default function Index() {
       profile?.created_at &&
       !localStorage.getItem("mytrivia_welcome_onboarding_seen")
     ) {
+      const isNewSignup = localStorage.getItem("mytrivia_is_new_signup") === "true";
       const createdAt = new Date(profile.created_at).getTime();
-      const fiveMinAgo = Date.now() - 5 * 60 * 1000;
-      if (createdAt > fiveMinAgo) {
+      const thirtyMinAgo = Date.now() - 30 * 60 * 1000;
+
+      if (isNewSignup || createdAt > thirtyMinAgo) {
+        localStorage.removeItem("mytrivia_is_new_signup");
         const timer = setTimeout(() => setShowWelcomeOnboarding(true), 800);
         return () => clearTimeout(timer);
-      } else {
-        // Old account, mark as seen so we never check again
-        localStorage.setItem("mytrivia_welcome_onboarding_seen", "true");
       }
+      // For old accounts without the flag, do nothing — don't permanently mark as seen
     }
   }, [user, profile]);
 

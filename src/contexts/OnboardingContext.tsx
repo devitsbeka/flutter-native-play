@@ -60,6 +60,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     setStep("complete");
     setHasCompletedOnboarding(true);
     localStorage.setItem(ONBOARDING_STORAGE_KEY, "true");
+    localStorage.setItem("mytrivia_is_new_signup", "true");
   }, []);
   
   // Reset onboarding (for testing/debugging)
