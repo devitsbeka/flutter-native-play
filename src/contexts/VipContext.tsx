@@ -98,7 +98,7 @@ export function VipProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const fetchVipStatus = async () => {
+    const fetchVipStatus = async (retryCount = 0) => {
       try {
         const { data, error } = await supabase
           .from("vip_subscriptions")
@@ -113,6 +113,9 @@ export function VipProvider({ children }: { children: ReactNode }) {
           const isActive = isAfter(new Date(data.expires_at), new Date());
           setIsVip(isActive);
           try { localStorage.setItem(VIP_CACHE_KEY, String(isActive)); } catch {}
+        } else if (sessionStorage.getItem("referral_welcome") && retryCount < 2) {
+          setTimeout(() => fetchVipStatus(retryCount + 1), 1500);
+          return;
         } else {
           setSubscription(null);
           setIsVip(false);
@@ -120,10 +123,8 @@ export function VipProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error("[VipContext] Error fetching VIP status:", error);
-        // On error, preserve cached value instead of resetting to false
-        // This prevents network hiccups from incorrectly removing PRO status
       } finally {
-        setLoading(false);
+        if (retryCount === 0) setLoading(false);
       }
     };
 
