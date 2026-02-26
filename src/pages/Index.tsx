@@ -231,7 +231,7 @@ export default function Index() {
   }, [user, profile]);
 
   // Invite Friends Modal state
-  const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading);
+  const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading, showWelcomeOnboarding);
   const [inviteDismissedThisSession, setInviteDismissedThisSession] = useState(false);
   const [friendJoinedModalOpen, setFriendJoinedModalOpen] = useState(false);
 
@@ -743,7 +743,7 @@ export default function Index() {
 
         {/* Floating Gift Button (after invite modal dismissed OR pro gift dismissed) */}
         <AnimatePresence>
-          {inviteDismissedThisSession && !isVip && !inviteModalVisible ? (
+          {inviteDismissedThisSession && !isVip && !inviteModalVisible && !showWelcomeOnboarding ? (
             <FloatingGiftButton onClick={() => setInviteModalVisible(true)} />
           ) : null}
         </AnimatePresence>
@@ -755,7 +755,9 @@ export default function Index() {
           onDismiss={() => {
             dismissInvite();
             setInviteDismissedThisSession(true);
-            setShowGuestMaxPlaysModal(true);
+            if (!showWelcomeOnboarding) {
+              setShowGuestMaxPlaysModal(true);
+            }
           }}
         />
 

@@ -13,12 +13,12 @@ import groupOfPeopleIcon from "@/assets/icons/group-of-people.png";
 
 const SESSION_KEY = "invite_modal_dismissed";
 
-export function useInviteModalVisibility(isVip: boolean, vipLoading: boolean) {
+export function useInviteModalVisibility(isVip: boolean, vipLoading: boolean, suppress = false) {
   const { user } = useAuth();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!user || vipLoading || isVip) return;
+    if (!user || vipLoading || isVip || suppress) return;
     try {
       if (localStorage.getItem("cached_vip_status") === "true") return;
     } catch {}
@@ -26,7 +26,7 @@ export function useInviteModalVisibility(isVip: boolean, vipLoading: boolean) {
       if (sessionStorage.getItem(SESSION_KEY)) return;
     } catch {}
     setVisible(true);
-  }, [user, isVip, vipLoading]);
+  }, [user, isVip, vipLoading, suppress]);
 
   // Auto-dismiss if VIP status loads after modal was already shown
   useEffect(() => {
