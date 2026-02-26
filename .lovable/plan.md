@@ -1,53 +1,56 @@
 
+# Fix: PlayLimitModal Showing with Free Games + Onboarding Buttons Not Clickable
 
-# Fix: Welcome Onboarding Not Showing for New Accounts
+## Issue 1: PlayLimitModal appears even when user has 5/5 free games
 
-## Root Cause
+**Root cause**: When the InviteFriendsModal is dismissed, it unconditionally chains to `setShowGuestMaxPlaysModal(true)` (which renders the PlayLimitModal). There is no check for whether the user actually has exhausted their free plays.
 
-The welcome onboarding trigger in `Index.tsx` uses a **5-minute window** based on `profile.created_at`. If the signup + avatar creation process takes longer than 5 minutes, the `else` branch fires and **permanently marks the onboarding as "seen"** — so the user never gets the feature tour.
+**Fix in `src/pages/Index.tsx`**:
+- Add a `canPlay` check before showing the PlayLimitModal on invite dismiss
+- Only show PlayLimitModal if the user has actually exhausted free games (`freeGamesExhausted` or `!canPlay`)
 
 ```typescript
-// Current broken logic:
-const createdAt = new Date(profile.created_at).getTime();
-const fiveMinAgo = Date.now() - 5 * 60 * 1000;
-if (createdAt > fiveMinAgo) {
-  // show onboarding
-} else {
-  // PROBLEM: permanently marks as seen for any account older than 5 min
-  localStorage.setItem("mytrivia_welcome_onboarding_seen", "true");
-}
+// Before (broken):
+onDismiss={() => {
+  dismissInvite();
+  setInviteDismissedThisSession(true);
+  if (!showWelcomeOnboarding) {
+    setShowGuestMaxPlaysModal(true); // Always shows!
+  }
+}}
+
+// After (fixed):
+onDismiss={() => {
+  dismissInvite();
+  setInviteDismissedThisSession(true);
+  if (!showWelcomeOnboarding && freeGamesExhausted && !isVip) {
+    setShowGuestMaxPlaysModal(true);
+  }
+}}
 ```
 
-## Fix
+Also need to check where `freeGamesExhausted` comes from -- it's returned by `usePlayLimit()` which is already used in Index.tsx.
 
-### 1. `src/pages/Index.tsx` — Use a flag-based approach instead of time window
+## Issue 2: Onboarding "შემდეგი" (Next) button not clickable
 
-Replace the 5-minute time check with a more reliable approach:
-- Use a **new localStorage flag** `mytrivia_is_new_signup` that gets set during the signup flow
-- When the user lands on Index after signup with this flag present AND `welcome_onboarding_seen` is not set, show the onboarding
-- Remove the time-based check entirely
-- Also keep a fallback: if account is less than **30 minutes** old (instead of 5 min) and flag isn't set, still show onboarding
+**Root cause**: In `WelcomeOnboardingOverlay.tsx`, the full-screen SVG mask (line 280) has `onClick={handleSkip}` and sits at `z-index: 10000`. The tooltip card is at `z-index: 10001` but doesn't explicitly set `pointer-events: auto`, so click events on buttons may be intercepted by the SVG underneath due to event bubbling/overlap.
 
-### 2. `src/contexts/OnboardingContext.tsx` — Set new-signup flag on complete
+**Fix in `src/components/onboarding/WelcomeOnboardingOverlay.tsx`**:
+- Add `pointer-events-none` to the SVG element
+- Create a separate invisible click-catcher div behind the tooltip (but above the SVG) for the skip-on-backdrop-click behavior
+- Ensure the tooltip div explicitly has `pointer-events: auto` so buttons are clickable
 
-When `completeOnboarding()` is called (signup flow finishes), set `mytrivia_is_new_signup` in localStorage so the Index page knows to trigger the welcome tour.
+```text
+Current structure:
+  [SVG mask with onClick={handleSkip}]  z-index: 10000 (catches ALL clicks)
+  [Tooltip with buttons]                z-index: 10001 (buttons blocked)
 
-### 3. Verify modal sequencing remains correct
+Fixed structure:
+  [SVG mask, pointer-events: none]      (visual only)
+  [Click-catcher div onClick={handleSkip}]  (backdrop clicks only)
+  [Tooltip, pointer-events: auto]       z-index: 10001 (buttons work)
+```
 
-The existing suppression logic (from previous fix) will continue to work:
-- Welcome Onboarding shows first (highest priority)
-- Invite Friends / Play Limit modals are suppressed while onboarding is active
-- Gift button hidden during onboarding
-
-## Technical Details
-
-**File: `src/contexts/OnboardingContext.tsx`**
-- In `completeOnboarding()`, add: `localStorage.setItem("mytrivia_is_new_signup", "true")`
-
-**File: `src/pages/Index.tsx`**
-- Replace the time-based check with:
-  - Check if `mytrivia_is_new_signup` flag exists AND `welcome_onboarding_seen` is not set
-  - If so, show onboarding and clear the `is_new_signup` flag
-  - Fallback: also trigger if account is less than 30 minutes old (wider window)
-  - Remove the `else` branch that permanently marks old accounts as "seen" — instead just do nothing for old accounts without the flag
-
+## Files to edit
+1. **`src/pages/Index.tsx`** -- Add `freeGamesExhausted` and `!isVip` guard to InviteFriendsModal dismiss handler
+2. **`src/components/onboarding/WelcomeOnboardingOverlay.tsx`** -- Fix pointer events so tooltip buttons are clickable
