@@ -1,80 +1,79 @@
 
-# Fix: Referral Users Should Instantly Get PRO Status
+
+# Auto-Start Game After Avatar Setup
 
 ## Problem
-When a user registers via an invitation link, the `process_referral_reward` RPC creates a VIP subscription in the database, but when they land on the home page there's a race condition: `VipContext` may fetch VIP status before the subscription row is fully committed, or before the auth session is ready. This causes the play button to show as non-PRO (with play limit) instead of the yellow PRO state with unlimited plays.
-
-## Root Cause
-1. In `Auth.tsx`, after `signUp()`, the referral reward RPC runs and then immediately navigates to `/`
-2. On Index, `VipContext` fetches `vip_subscriptions` but may not find the new row yet (race condition)
-3. The localStorage VIP cache is still `"false"` from before signup
-4. The realtime subscription also may not fire fast enough
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
 ## Solution
-Use the existing `referral_welcome` sessionStorage flag (already set in Auth.tsx after referral signup) to **optimistically set VIP status** in VipContext before the DB fetch completes. This ensures instant PRO UI on the home page.
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
 ## Changes
 
-### 1. `src/contexts/VipContext.tsx` -- Optimistic VIP for referral signups
-- In the initial `isVip` state initializer, also check `sessionStorage.getItem("referral_welcome")` -- if present, start as `true`
-- In the `useEffect` that fetches VIP status, if `referral_welcome` flag exists in sessionStorage, set `isVip = true` and `localStorage(VIP_CACHE_KEY, "true")` immediately, then still fetch from DB (the DB fetch will confirm and set the subscription object)
-- Add a retry mechanism: if the first fetch returns no subscription but `referral_welcome` was set, retry after 1.5s (the RPC may still be committing)
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-### 2. `src/pages/Index.tsx` -- Ensure FriendJoinedModal doesn't block play
-- When the FriendJoinedModal closes (for "invited" variant), don't show any additional blocking modals -- the user should be able to play immediately with their new PRO status
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
 ## Technical Details
 
-**VipContext.tsx changes:**
+**AvatarModalContext changes:**
 ```typescript
-// In the useState initializer for isVip, add referral check:
-const [isVip, setIsVip] = useState(() => {
-  try {
-    // Referral signup: optimistically set PRO
-    if (sessionStorage.getItem("referral_welcome")) {
-      localStorage.setItem(VIP_CACHE_KEY, "true");
-      return true;
-    }
-    const cached = localStorage.getItem(VIP_CACHE_KEY);
-    return cached === "true";
-  } catch {
-    return false;
-  }
-});
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
 
-// In fetchVipStatus, add retry for referral users:
-const fetchVipStatus = async (retryCount = 0) => {
-  try {
-    const { data, error } = await supabase
-      .from("vip_subscriptions")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
 
-    if (error) throw error;
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
 
-    if (data) {
-      setSubscription(data as VipSubscription);
-      const isActive = isAfter(new Date(data.expires_at), new Date());
-      setIsVip(isActive);
-      try { localStorage.setItem(VIP_CACHE_KEY, String(isActive)); } catch {}
-    } else if (sessionStorage.getItem("referral_welcome") && retryCount < 2) {
-      // Referral reward RPC may still be processing -- retry
-      setTimeout(() => fetchVipStatus(retryCount + 1), 1500);
-      // Keep optimistic VIP status while retrying
-      return;
-    } else {
-      setSubscription(null);
-      setIsVip(false);
-      try { localStorage.setItem(VIP_CACHE_KEY, "false"); } catch {}
-    }
-  } catch (error) {
-    console.error("[VipContext] Error fetching VIP status:", error);
-  } finally {
-    if (retryCount === 0) setLoading(false);
-  }
-};
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
+```
+
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
 ```
 
 ## Files to edit
-1. `src/contexts/VipContext.tsx` -- Optimistic VIP status for referral signups with retry
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
