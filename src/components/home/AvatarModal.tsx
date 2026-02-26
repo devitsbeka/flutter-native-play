@@ -57,6 +57,7 @@ DEFAULT_AVATARS.forEach((bundledUrl, index) => {
 interface AvatarModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onComplete?: () => void;
 }
 
 const MAX_AVATAR_GENERATIONS = 5;
@@ -69,7 +70,8 @@ interface AvatarGeneration {
   created_at: string;
 }
 
-export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
+export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
+  const finishAndClose = onComplete || onClose;
   const { user, profile, updateProfile } = useAuth();
   const { isVip } = useVipStatus();
   const { t } = useLanguage();
@@ -389,7 +391,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       await updateProfile({ avatar_url: finalUrl, has_face_photo: true } as any);
 
       toast.success(t("avatar.avatarSaved"));
-      onClose();
+      finishAndClose();
 
     } catch (error) {
       console.error("Error saving avatar:", error);
@@ -434,7 +436,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       }
 
       toast.success(t("avatar.avatarSaved"));
-      onClose();
+      finishAndClose();
 
     } catch (error) {
       console.error("Error saving photo:", error);
@@ -474,7 +476,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       // Small delay to ensure state propagates before modal closes
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      onClose();
+      finishAndClose();
     } catch (error) {
       console.error("Error updating avatar:", error);
       toast.error(t("errors.generationFailed"));
@@ -539,7 +541,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       // Small delay to ensure state propagates before modal closes
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      onClose();
+      finishAndClose();
     } catch (error) {
       console.error("Error updating avatar:", error);
       toast.error(t("errors.generationFailed"));
