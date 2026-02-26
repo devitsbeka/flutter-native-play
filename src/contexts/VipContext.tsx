@@ -79,6 +79,10 @@ export function VipProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isVip, setIsVip] = useState(() => {
     try {
+      if (sessionStorage.getItem("referral_welcome")) {
+        localStorage.setItem(VIP_CACHE_KEY, "true");
+        return true;
+      }
       const cached = localStorage.getItem(VIP_CACHE_KEY);
       return cached === "true";
     } catch {
