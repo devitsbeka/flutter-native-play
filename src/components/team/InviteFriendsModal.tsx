@@ -381,129 +381,149 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className={`mt-2 max-h-[180px] overflow-y-auto space-y-1.5 pointer-events-auto ${narrow}`}
+                        className={`mt-2 max-h-[280px] overflow-y-auto space-y-1.5 pointer-events-auto ${narrow}`}
                       >
                         {(() => {
-                          // Show all search results - both friends and non-friends
-                          const filteredResults = searchResults;
-                          return filteredResults.length === 0 && !searching ? (
-                            <p className="text-center py-6 text-primary-foreground/80 text-sm">
-                              {t("extra.userNotFoundSearch")}
-                            </p>
-                          ) : (
-                            filteredResults.map((result) => (
-                            <motion.div
-                              key={result.user_id}
-                              initial={{ opacity: 0, y: 5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              className={`flex items-center gap-3 p-3 pointer-events-auto ${lobbyGlassRow} hover:bg-white/15 transition-colors`}
-                            >
-                              <SafeAvatar
-                                avatarUrl={result.avatar_url}
-                                fallback={result.nickname}
-                                className="w-11 h-11 border border-white/20"
-                                fallbackClassName="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold"
-                              />
+                          // Split results into friends and non-friends
+                          const friendResults = searchResults.filter(r => friendIds.has(r.user_id));
+                          const nonFriendResults = searchResults.filter(r => !friendIds.has(r.user_id));
+                          const hasResults = friendResults.length > 0 || nonFriendResults.length > 0;
 
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm text-white truncate">{result.nickname}</p>
-                                {result.country_code && (
-                                  <p className="text-xs text-white/70">{getCountryFlag(result.country_code)}</p>
-                                )}
-                              </div>
+                          if (!hasResults && !searching) {
+                            return (
+                              <p className="text-center py-6 text-primary-foreground/80 text-sm">
+                                {t("extra.userNotFoundSearch")}
+                              </p>
+                            );
+                          }
 
-                              {(() => {
-                                const isFriend = friendIds.has(result.user_id);
-                                const isPendingOutgoing = pendingOutgoingIds.has(result.user_id);
-                                const isLoading = invitingUser === result.user_id || sendingRequestTo === result.user_id;
-                                const isSent = sentRequests.has(result.user_id);
-                                
-                                const handleButtonAction = () => {
-                                  console.log("[InviteFriendsModal] handleButtonAction called", { 
-                                    isFriend, isSent, isLoading, isPendingOutgoing, userId: result.user_id 
-                                  });
-                                  if (isFriend) {
-                                    // For friends - send room invite
-                                    if (isSent || isLoading) return;
-                                    handleInviteToRoom(result.user_id);
-                                  } else {
-                                    // For non-friends - send friend request
-                                    if (isPendingOutgoing) {
-                                      toast.info(t("extra.requestAlreadySentWait"));
-                                      return;
-                                    }
-                                    if (isSent || isLoading) return;
-                                    handleSendRequest(result.user_id);
-                                  }
-                                };
-                                
-                                const handleClick = (e: React.MouseEvent) => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                  if (touchedRef.current) {
-                                    touchedRef.current = false;
-                                    return; // Skip click after touch
-                                  }
-                                  handleButtonAction();
-                                };
-                                
-                                const handleTouch = (e: React.TouchEvent) => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                  touchedRef.current = true;
-                                  handleButtonAction();
-                                };
-                                
-                                const isDisabled = isSent || isLoading || (!isFriend && isPendingOutgoing);
-                                
-                                return (
-                                  <button
-                                    type="button"
-                                    onClick={handleClick}
-                                    onTouchEnd={handleTouch}
-                                    disabled={isDisabled}
-                                    className={`relative z-10 flex items-center gap-2 px-5 py-3 min-h-[48px] rounded-2xl text-sm font-semibold transition-colors border active:scale-95 ${
-                                      isSent || (!isFriend && isPendingOutgoing)
-                                        ? "bg-white/15 border-white/20 text-white/70"
-                                        : isFriend
-                                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 border-emerald-400/30 text-white hover:opacity-90"
-                                        : "bg-white/10 border-white/15 text-white/90 hover:bg-white/15"
-                                    }`}
-                                    style={{ touchAction: 'manipulation' }}
-                                  >
-                                    {isLoading ? (
-                                      <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        {t("extra.sending")}
-                                      </>
-                                    ) : !isFriend && isPendingOutgoing ? (
-                                      <>
-                                        <Clock className="w-4 h-4" />
-                                        {t("extra.pending")}
-                                      </>
-                                    ) : isSent ? (
-                                      <>
-                                        <Check className="w-3 h-3" />
-                                        {t("extra.sent")}
-                                      </>
-                                    ) : isFriend ? (
-                                      <>
-                                        <UserPlus className="w-4 h-4" />
-                                        {t("extra.inviteFriendBtn")}
-                                      </>
-                                    ) : (
-                                      <>
-                                        <UserPlus className="w-4 h-4" />
-                                        {t("extra.addFriendActionBtn")}
-                                      </>
-                                    )}
-                                  </button>
-                                );
-                              })()}
-                            </motion.div>
-                          ))
-                        );
+                          const renderRow = (result: SearchResult) => {
+                            const isFriend = friendIds.has(result.user_id);
+                            const isPendingOutgoing = pendingOutgoingIds.has(result.user_id);
+                            const isLoading = invitingUser === result.user_id || sendingRequestTo === result.user_id;
+                            const isSent = sentRequests.has(result.user_id);
+                            
+                            const handleButtonAction = () => {
+                              if (isFriend) {
+                                if (isSent || isLoading) return;
+                                handleInviteToRoom(result.user_id);
+                              } else {
+                                if (isPendingOutgoing) {
+                                  toast.info(t("extra.requestAlreadySentWait"));
+                                  return;
+                                }
+                                if (isSent || isLoading) return;
+                                handleSendRequest(result.user_id);
+                              }
+                            };
+                            
+                            const handleClick = (e: React.MouseEvent) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              if (touchedRef.current) {
+                                touchedRef.current = false;
+                                return;
+                              }
+                              handleButtonAction();
+                            };
+                            
+                            const handleTouch = (e: React.TouchEvent) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              touchedRef.current = true;
+                              handleButtonAction();
+                            };
+                            
+                            const isDisabled = isSent || isLoading || (!isFriend && isPendingOutgoing);
+                            
+                            return (
+                              <motion.div
+                                key={result.user_id}
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className={`flex items-center gap-3 p-3 pointer-events-auto ${lobbyGlassRow} hover:bg-white/15 transition-colors`}
+                              >
+                                <SafeAvatar
+                                  avatarUrl={result.avatar_url}
+                                  fallback={result.nickname}
+                                  className="w-11 h-11 border border-white/20"
+                                  fallbackClassName="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm text-white truncate">{result.nickname}</p>
+                                  {result.country_code && (
+                                    <p className="text-xs text-white/70">{getCountryFlag(result.country_code)}</p>
+                                  )}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={handleClick}
+                                  onTouchEnd={handleTouch}
+                                  disabled={isDisabled}
+                                  className={`relative z-10 flex items-center gap-2 px-5 py-3 min-h-[48px] rounded-2xl text-sm font-semibold transition-colors border active:scale-95 ${
+                                    isSent || (!isFriend && isPendingOutgoing)
+                                      ? "bg-white/15 border-white/20 text-white/70"
+                                      : isFriend
+                                      ? "bg-gradient-to-r from-emerald-500 to-teal-500 border-emerald-400/30 text-white hover:opacity-90"
+                                      : "bg-white/10 border-white/15 text-white/90 hover:bg-white/15"
+                                  }`}
+                                  style={{ touchAction: 'manipulation' }}
+                                >
+                                  {isLoading ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      {t("extra.sending")}
+                                    </>
+                                  ) : !isFriend && isPendingOutgoing ? (
+                                    <>
+                                      <Clock className="w-4 h-4" />
+                                      {t("extra.pending")}
+                                    </>
+                                  ) : isSent ? (
+                                    <>
+                                      <Check className="w-3 h-3" />
+                                      {t("extra.sent")}
+                                    </>
+                                  ) : isFriend ? (
+                                    <>
+                                      <UserPlus className="w-4 h-4" />
+                                      {t("extra.inviteFriendBtn")}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <UserPlus className="w-4 h-4" />
+                                      {t("extra.addFriendActionBtn")}
+                                    </>
+                                  )}
+                                </button>
+                              </motion.div>
+                            );
+                          };
+
+                          return (
+                            <>
+                              {friendResults.length > 0 && (
+                                <>
+                                  <p className="text-xs font-semibold text-white/50 uppercase tracking-wider px-1 pt-1">
+                                    {t("extra.yourFriends")}
+                                  </p>
+                                  {friendResults.map(renderRow)}
+                                </>
+                              )}
+                              {nonFriendResults.length > 0 && (
+                                <>
+                                  {friendResults.length > 0 && (
+                                    <div className="border-t border-white/10 my-2" />
+                                  )}
+                                  <p className="text-xs font-semibold text-white/50 uppercase tracking-wider px-1 pt-1">
+                                    {t("extra.otherPlayers")}
+                                  </p>
+                                  {nonFriendResults.map(renderRow)}
+                                </>
+                              )}
+                            </>
+                          );
                         })()}
                       </motion.div>
                     )}

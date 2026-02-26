@@ -2079,6 +2079,7 @@ export const en: KaTranslations = {
     linkCopiedToast: "Link copied!",
     yourFriends: "Your Friends",
     noFriendsYetShort: "No friends yet",
+    otherPlayers: "Other Players",
     searchAndAddAbove: "Search and add friends above",
     userAlreadyInRoom: "User is already in the room",
     inviteSent: "Invite sent!",

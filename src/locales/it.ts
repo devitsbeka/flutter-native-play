@@ -346,6 +346,7 @@ export const it: KaTranslations = {
     linkCopiedToast: "Link copiato!",
     yourFriends: "I tuoi Amici",
     noFriendsYetShort: "Nessun amico ancora",
+    otherPlayers: "Altri Giocatori",
     searchAndAddAbove: "Cerca e aggiungi amici sopra",
     userAlreadyInRoom: "L'utente è già nella stanza",
     inviteSent: "Invito inviato!",
