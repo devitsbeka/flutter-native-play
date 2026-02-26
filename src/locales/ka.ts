@@ -3760,7 +3760,7 @@ export const ka = {
     friendJoinedViaLink: "შენი მეგობარი შემოუერთდა MyTrivia LIVE-ს შენი ლინკით! მიიღე 10 დღიანი PRO.",
     tenDayProBadge: "10 დღიანი PRO ✓",
     // InviteFriendsModal
-    inviteShareText: "შემოგვიერთდი MyTrivia LIVE-ზე და მიიღე 10 დღიანი PRO უფასოდ!",
+    inviteShareText: "შემომიერთდი My Trivia LIVE-ში ამ ლინკით და მიიღე 10 დღიანი PRO საჩუქრად 🎁",
     // ProGiftBanner
     proGiftDesc: "გილოცავთ! თქვენ გაქვთ PRO 10 დღის განმავლობაში — სრულიად უფასოდ.",
     claimGiftEmoji: "მიიღე საჩუქარი 🎁",
