@@ -730,11 +730,7 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
             <p className="text-sm text-muted-foreground">{t("avatar.uploadEncouragement")}</p>
             
             {/* Animate Avatar Button - PRO gated, only for user-uploaded photos */}
-            {isCurrentAvatarMascot ? (
-              <p className="mt-2 text-xs text-center text-muted-foreground max-w-[220px]">
-                {t("avatar.uploadEncouragement")}
-              </p>
-            ) : profile?.avatar_url && (
+            {!isCurrentAvatarMascot && profile?.avatar_url && (
               isVip ? (
                 <motion.button
                   onClick={animateAvatar}
