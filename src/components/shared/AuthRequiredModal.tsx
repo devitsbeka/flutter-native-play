@@ -207,7 +207,7 @@ export function AuthRequiredModal({
                 <PopoverTrigger asChild>
                   <button type="button" className="relative">
                     {/* Circle container with overflow-hidden */}
-                    <div className="w-[90px] h-[90px] rounded-full overflow-hidden border-4 border-primary/20 shadow-lg">
+                    <div className="relative w-[90px] h-[90px] rounded-full overflow-hidden border-4 border-primary/20 shadow-lg">
                       {selectedPhoto ? (
                         <img 
                           src={selectedPhoto} 
