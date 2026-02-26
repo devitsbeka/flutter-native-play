@@ -1,62 +1,76 @@
 
 
-## Fix: Make error translations language-aware
+# Modal Priority & Sequencing Fix
 
-### Problem
-The `translateErrorMessage()` utility in `src/utils/errorTranslations.ts` has a hardcoded Georgian-only error map. When a backend error like "User not found" arrives, it translates to Georgian -- but if the user has selected English, French, German, etc., they still see the Georgian translation (or sometimes the raw English falls through). The screenshot shows "User not found" leaking through as raw English in the error modal.
+## Problem
+Multiple modals compete for attention on app load:
+1. **Welcome Onboarding** (spotlight tour for new users)
+2. **Invite Friends Modal** (auto-shows for non-VIP logged-in users)
+3. **Play Limit Modal** ("თამაშის ლიმიტი ამოწურულია" - chains from invite dismiss)
+4. **Floating Gift Button** (appears after invite dismiss)
 
-### Root cause
-`translateErrorMessage()` does not check the user's selected language. It always maps English backend errors to Georgian strings. It should use the locales system instead.
+These can all appear simultaneously, overwhelming the user.
 
-### Solution
+## Solution: Sequential Modal Priority System
 
-**1. Add error translation keys to the locales system**
+Establish a strict priority order -- only one modal layer at a time:
 
-Add a new `systemErrors` section to `ka.ts` (type definition) and all 7 locale files with translations for each backend error pattern:
+1. **Welcome Onboarding** (highest priority) -- must complete/dismiss first
+2. **Invite Friends / Play Limit modals** -- only after onboarding is done
+3. **Floating Gift Button** -- only after invite modal dismissed
 
-| Backend error pattern | Key |
-|---|---|
-| User not found | `systemErrors.userNotFound` |
-| Invalid login credentials | `systemErrors.invalidCredentials` |
-| Email not confirmed | `systemErrors.emailNotConfirmed` |
-| already registered | `systemErrors.alreadyRegistered` |
-| Password should be at least | `systemErrors.passwordTooShort` |
-| Email rate limit exceeded / rate limit | `systemErrors.rateLimitExceeded` |
-| Failed to fetch / NetworkError / network | `systemErrors.networkError` |
-| New password should be different | `systemErrors.newPasswordDifferent` |
-| Email already in use | `systemErrors.emailAlreadyInUse` |
-| Unable to validate email | `systemErrors.invalidEmailFormat` |
-| Signups not allowed | `systemErrors.signupsNotAllowed` |
-| (fallback) | `systemErrors.genericError` |
+## Changes
 
-**2. Refactor `translateErrorMessage` to be language-aware**
+### 1. `src/components/home/InviteFriendsModal.tsx` - Suppress auto-show during onboarding
 
-Update `src/utils/errorTranslations.ts` to:
-- Import the standalone `t()` function from `src/utils/standaloneTranslation.ts` (which reads the current locale from localStorage)
-- Map each English error pattern to the corresponding `systemErrors.*` translation key
-- Return the localized string via `t()` instead of a hardcoded Georgian string
-- Keep the same function signature so all 9+ consumer files need zero changes
+Update `useInviteModalVisibility` to accept a `suppress` parameter. When the welcome onboarding is active, the invite modal will not auto-show. Once onboarding completes, the invite modal can appear.
 
-**3. Files to modify**
+```typescript
+export function useInviteModalVisibility(isVip: boolean, vipLoading: boolean, suppress = false) {
+  // ... existing code ...
+  useEffect(() => {
+    if (!user || vipLoading || isVip || suppress) return;
+    // ... rest unchanged
+  }, [user, isVip, vipLoading, suppress]);
+}
+```
 
-| File | Change |
-|---|---|
-| `src/locales/ka.ts` | Add `systemErrors` type definition and Georgian translations |
-| `src/locales/en.ts` | Add `systemErrors` with English translations |
-| `src/locales/es.ts` | Add `systemErrors` with Spanish translations |
-| `src/locales/fr.ts` | Add `systemErrors` with French translations |
-| `src/locales/de.ts` | Add `systemErrors` with German translations |
-| `src/locales/it.ts` | Add `systemErrors` with Italian translations |
-| `src/locales/pt.ts` | Add `systemErrors` with Portuguese translations |
-| `src/utils/errorTranslations.ts` | Refactor to use `t()` with `systemErrors.*` keys |
+### 2. `src/pages/Index.tsx` - Wire suppression based on onboarding state
 
-### What stays the same
-- All 9+ consumer files (`Auth.tsx`, `SettingsModal.tsx`, etc.) keep calling `translateErrorMessage(error.message)` unchanged
-- The function signature and behavior remain identical -- only the output language changes based on user preference
-- No backend, database, or auth changes needed
+- Pass `showWelcomeOnboarding` as the `suppress` flag to `useInviteModalVisibility`
+- Also suppress `PlayLimitModal` auto-chaining while onboarding is active
+- Ensure the `FloatingGiftButton` is hidden during onboarding
 
-### Expected result
-- Georgian users see Georgian error messages (unchanged)
-- English users see English error messages (no more Georgian leaking)
-- All other languages see properly translated error messages
-- No raw English backend errors leak through in any language
+Key logic change:
+```typescript
+const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = 
+  useInviteModalVisibility(isVip, vipLoading, showWelcomeOnboarding);
+```
+
+For the invite dismiss -> PlayLimitModal chain, add a guard:
+```typescript
+onDismiss={() => {
+  dismissInvite();
+  setInviteDismissedThisSession(true);
+  // Only show play limit modal if onboarding is not active
+  if (!showWelcomeOnboarding) {
+    setShowGuestMaxPlaysModal(true);
+  }
+}}
+```
+
+For the floating gift button, add onboarding check:
+```typescript
+{inviteDismissedThisSession && !isVip && !inviteModalVisible && !showWelcomeOnboarding ? (
+  <FloatingGiftButton ... />
+) : null}
+```
+
+### 3. `src/contexts/PlayGuardContext.tsx` - No changes needed
+
+The PlayGuardContext only triggers modals on explicit play attempts (button clicks), not on page load, so it won't conflict.
+
+## Summary of files to edit
+- `src/components/home/InviteFriendsModal.tsx` -- add `suppress` param to hook
+- `src/pages/Index.tsx` -- pass onboarding state as suppress flag, guard modal chains
+
