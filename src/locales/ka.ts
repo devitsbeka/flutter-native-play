@@ -2078,6 +2078,7 @@ export const ka = {
     linkCopiedToast: "ლინკი დაკოპირდა!",
     yourFriends: "შენი მეგობრები",
     noFriendsYetShort: "ჯერ არ გყავს მეგობრები",
+    otherPlayers: "სხვა მოთამაშეები",
     searchAndAddAbove: "მოძებნე და დაამატე მეგობრები ზემოთ",
     userAlreadyInRoom: "მომხმარებელი უკვე ოთახშია",
     inviteSent: "მოწვევა გაიგზავნა!",
