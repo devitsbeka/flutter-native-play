@@ -550,7 +550,7 @@ export const ka = {
     stillProcessing: "ჯერ კიდევ მუშავდება... ({time} წთ)",
     animationTakingLong: "ანიმაციას მოსალოდნელზე მეტი დრო სჭირდება. გთხოვთ სცადოთ მოგვიანებით.",
     startingAnimation: "ანიმაცია იწყება... 1-2 წუთი დასჭირდება!",
-    uploadEncouragement: "📸 ატვირთე შენი ფოტო და გააცოცხლე პროფილი!",
+    uploadEncouragement: "ატვირთე შენი ფოტო და გააცოცხლე ავატარი",
     animationPro: "ანიმაცია (PRO)",
     remainingGen: "დარჩა {remaining}/{max} გენერაცია",
     maxGenReached: "მაქსიმუმ {max} ავატარის გენერაცია შეგიძლიათ",

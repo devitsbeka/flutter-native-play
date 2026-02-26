@@ -725,7 +725,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 )}
               </div>
             </div>
-            <p className="text-sm text-muted-foreground">{t("avatar.currentAvatar")}</p>
+            <p className="text-sm text-muted-foreground">{t("avatar.uploadEncouragement")}</p>
             
             {/* Animate Avatar Button - PRO gated, only for user-uploaded photos */}
             {isCurrentAvatarMascot ? (
@@ -1223,7 +1223,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       onClose={onClose}
       variant="primary"
       title={t("avatar.title")}
-      subtitle={t("avatar.subtitle")}
+      subtitle=""
       showSparkles
     >
       {renderContent()}
