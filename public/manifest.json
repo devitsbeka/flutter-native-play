@@ -1,7 +1,7 @@
 {
   "name": "MyTrivia",
   "short_name": "MyTrivia",
-  "description": "Test your knowledge, become a trivia champion!",
+  "description": "შეამოწმე შენი ცოდნა და გახდი Trivia-ს ჩემპიონი",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
