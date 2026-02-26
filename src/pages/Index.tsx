@@ -756,7 +756,7 @@ export default function Index() {
           onDismiss={() => {
             dismissInvite();
             setInviteDismissedThisSession(true);
-            if (!showWelcomeOnboarding) {
+            if (!showWelcomeOnboarding && freeGamesExhausted && !isVip) {
               setShowGuestMaxPlaysModal(true);
             }
           }}
