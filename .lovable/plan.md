@@ -1,59 +1,79 @@
 
-# Fix: Don't Show Invite Friends Modal Until Free Games Are Exhausted
+
+# Auto-Start Game After Avatar Setup
 
 ## Problem
-The `useInviteModalVisibility` hook in `InviteFriendsModal.tsx` auto-shows for ANY non-VIP logged-in user on page load. It only suppresses during onboarding (`suppress` flag), but it doesn't check if the user still has free games remaining. This causes:
-1. New users see both onboarding spotlight AND invite modal simultaneously (as shown in screenshot)
-2. Users with 5/5 free games see the invite modal before they've even played
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-## Desired Behavior
-1. Onboarding modals show first for new users (no other modals)
-2. Invite Friends modal only appears AFTER all 5 free games are used
-3. Play Limit (PRO upgrade) modal only appears after invite modal is dismissed AND games are exhausted
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-## Root Cause
-In `useInviteModalVisibility` (line 16-44 of `InviteFriendsModal.tsx`), there's no check for `freeGamesExhausted`. It shows for all non-VIP users immediately.
+## Changes
 
-## Fix
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-### File: `src/components/home/InviteFriendsModal.tsx`
-- Add `freeGamesExhausted` parameter to `useInviteModalVisibility`
-- Only set `visible(true)` when `freeGamesExhausted` is true
-- Updated signature: `useInviteModalVisibility(isVip, vipLoading, suppress, freeGamesExhausted)`
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-### File: `src/pages/Index.tsx`
-- Pass `freeGamesExhausted` to `useInviteModalVisibility`:
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
   ```
-  useInviteModalVisibility(isVip, vipLoading, showWelcomeOnboarding, freeGamesExhausted)
+  openAvatarModal(() => navigate("/game"));
   ```
 
 ## Technical Details
 
-**`src/components/home/InviteFriendsModal.tsx` - useInviteModalVisibility hook:**
+**AvatarModalContext changes:**
 ```typescript
-export function useInviteModalVisibility(
-  isVip: boolean, 
-  vipLoading: boolean, 
-  suppress = false, 
-  freeGamesExhausted = false
-) {
-  // ... existing state ...
-  useEffect(() => {
-    // Add freeGamesExhausted check - only show when games are used up
-    if (!user || vipLoading || isVip || suppress || !freeGamesExhausted) return;
-    // ... rest of checks ...
-    setVisible(true);
-  }, [user, isVip, vipLoading, suppress, freeGamesExhausted]);
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
+
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
+
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
+```
+
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
 }
 ```
 
-**`src/pages/Index.tsx` - Pass the new parameter:**
-```typescript
-const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = 
-  useInviteModalVisibility(isVip, vipLoading, showWelcomeOnboarding, freeGamesExhausted);
-```
-
-## Modal Priority Sequence (after fix)
-1. Welcome Onboarding (new users only, highest priority)
-2. Invite Friends (only after all 5 free games exhausted, suppressed during onboarding)
-3. Play Limit / PRO upgrade (only after invite dismissed AND games exhausted)
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
