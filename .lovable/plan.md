@@ -1,76 +1,53 @@
 
 
-# Modal Priority & Sequencing Fix
+# Fix: Welcome Onboarding Not Showing for New Accounts
 
-## Problem
-Multiple modals compete for attention on app load:
-1. **Welcome Onboarding** (spotlight tour for new users)
-2. **Invite Friends Modal** (auto-shows for non-VIP logged-in users)
-3. **Play Limit Modal** ("თამაშის ლიმიტი ამოწურულია" - chains from invite dismiss)
-4. **Floating Gift Button** (appears after invite dismiss)
+## Root Cause
 
-These can all appear simultaneously, overwhelming the user.
-
-## Solution: Sequential Modal Priority System
-
-Establish a strict priority order -- only one modal layer at a time:
-
-1. **Welcome Onboarding** (highest priority) -- must complete/dismiss first
-2. **Invite Friends / Play Limit modals** -- only after onboarding is done
-3. **Floating Gift Button** -- only after invite modal dismissed
-
-## Changes
-
-### 1. `src/components/home/InviteFriendsModal.tsx` - Suppress auto-show during onboarding
-
-Update `useInviteModalVisibility` to accept a `suppress` parameter. When the welcome onboarding is active, the invite modal will not auto-show. Once onboarding completes, the invite modal can appear.
+The welcome onboarding trigger in `Index.tsx` uses a **5-minute window** based on `profile.created_at`. If the signup + avatar creation process takes longer than 5 minutes, the `else` branch fires and **permanently marks the onboarding as "seen"** — so the user never gets the feature tour.
 
 ```typescript
-export function useInviteModalVisibility(isVip: boolean, vipLoading: boolean, suppress = false) {
-  // ... existing code ...
-  useEffect(() => {
-    if (!user || vipLoading || isVip || suppress) return;
-    // ... rest unchanged
-  }, [user, isVip, vipLoading, suppress]);
+// Current broken logic:
+const createdAt = new Date(profile.created_at).getTime();
+const fiveMinAgo = Date.now() - 5 * 60 * 1000;
+if (createdAt > fiveMinAgo) {
+  // show onboarding
+} else {
+  // PROBLEM: permanently marks as seen for any account older than 5 min
+  localStorage.setItem("mytrivia_welcome_onboarding_seen", "true");
 }
 ```
 
-### 2. `src/pages/Index.tsx` - Wire suppression based on onboarding state
+## Fix
 
-- Pass `showWelcomeOnboarding` as the `suppress` flag to `useInviteModalVisibility`
-- Also suppress `PlayLimitModal` auto-chaining while onboarding is active
-- Ensure the `FloatingGiftButton` is hidden during onboarding
+### 1. `src/pages/Index.tsx` — Use a flag-based approach instead of time window
 
-Key logic change:
-```typescript
-const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = 
-  useInviteModalVisibility(isVip, vipLoading, showWelcomeOnboarding);
-```
+Replace the 5-minute time check with a more reliable approach:
+- Use a **new localStorage flag** `mytrivia_is_new_signup` that gets set during the signup flow
+- When the user lands on Index after signup with this flag present AND `welcome_onboarding_seen` is not set, show the onboarding
+- Remove the time-based check entirely
+- Also keep a fallback: if account is less than **30 minutes** old (instead of 5 min) and flag isn't set, still show onboarding
 
-For the invite dismiss -> PlayLimitModal chain, add a guard:
-```typescript
-onDismiss={() => {
-  dismissInvite();
-  setInviteDismissedThisSession(true);
-  // Only show play limit modal if onboarding is not active
-  if (!showWelcomeOnboarding) {
-    setShowGuestMaxPlaysModal(true);
-  }
-}}
-```
+### 2. `src/contexts/OnboardingContext.tsx` — Set new-signup flag on complete
 
-For the floating gift button, add onboarding check:
-```typescript
-{inviteDismissedThisSession && !isVip && !inviteModalVisible && !showWelcomeOnboarding ? (
-  <FloatingGiftButton ... />
-) : null}
-```
+When `completeOnboarding()` is called (signup flow finishes), set `mytrivia_is_new_signup` in localStorage so the Index page knows to trigger the welcome tour.
 
-### 3. `src/contexts/PlayGuardContext.tsx` - No changes needed
+### 3. Verify modal sequencing remains correct
 
-The PlayGuardContext only triggers modals on explicit play attempts (button clicks), not on page load, so it won't conflict.
+The existing suppression logic (from previous fix) will continue to work:
+- Welcome Onboarding shows first (highest priority)
+- Invite Friends / Play Limit modals are suppressed while onboarding is active
+- Gift button hidden during onboarding
 
-## Summary of files to edit
-- `src/components/home/InviteFriendsModal.tsx` -- add `suppress` param to hook
-- `src/pages/Index.tsx` -- pass onboarding state as suppress flag, guard modal chains
+## Technical Details
+
+**File: `src/contexts/OnboardingContext.tsx`**
+- In `completeOnboarding()`, add: `localStorage.setItem("mytrivia_is_new_signup", "true")`
+
+**File: `src/pages/Index.tsx`**
+- Replace the time-based check with:
+  - Check if `mytrivia_is_new_signup` flag exists AND `welcome_onboarding_seen` is not set
+  - If so, show onboarding and clear the `is_new_signup` flag
+  - Fallback: also trigger if account is less than 30 minutes old (wider window)
+  - Remove the `else` branch that permanently marks old accounts as "seen" — instead just do nothing for old accounts without the flag
 
