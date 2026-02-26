@@ -2,7 +2,7 @@ import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
 import crownIcon from "@/assets/icons/crown-3d.png";
 import React from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Trophy, Lock, Crown, Hourglass, Play } from "lucide-react";
+import { Sparkles, Trophy, Lock, Crown } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -177,49 +177,6 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
             primaryIcon={<Crown className="w-5 h-5" />}
           />
 
-          {/* Timer / free play section BELOW the PRO button */}
-          {regenPlayAvailable ? (
-            <motion.div
-              className="mt-4 rounded-xl p-3 text-center"
-              style={{
-                background: "linear-gradient(180deg, rgba(34,197,94,0.12) 0%, rgba(34,197,94,0.04) 100%)",
-                border: "1.5px solid rgba(34,197,94,0.3)",
-              }}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <p className="text-xs font-bold text-green-600 mb-2">{t("playLimit.freePlayReady")}</p>
-              <button
-                onClick={onPlayWithRegen}
-                className="flex items-center justify-center gap-2 mx-auto rounded-xl px-5 py-2 text-sm font-bold text-white transition-transform active:scale-95"
-                style={{
-                  background: "linear-gradient(180deg, #34D399 0%, #10B981 100%)",
-                  boxShadow: "0 3px 0 #059669, 0 4px 12px rgba(16,185,129,0.3)",
-                }}
-              >
-                <Play className="w-4 h-4" />
-                {t("playLimit.playNow")}
-              </button>
-            </motion.div>
-          ) : timeUntilNextPlay ? (
-            <motion.div
-              className="mt-4 rounded-xl p-3 text-center"
-              style={{
-                background: "linear-gradient(180deg, rgba(107,114,128,0.08) 0%, rgba(107,114,128,0.03) 100%)",
-                border: "1.5px solid rgba(107,114,128,0.2)",
-              }}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <Hourglass className="h-4 w-4 text-foreground/50" />
-                <p className="text-xs font-semibold text-foreground/70">{t("playLimit.nextFreePlay", { time: timeUntilNextPlay })}</p>
-              </div>
-              <p className="text-[11px] text-foreground/40">{t("playLimit.freePlayInterval")}</p>
-            </motion.div>
-          ) : null}
         </GameModal>
       </div>
     );
