@@ -232,7 +232,7 @@ export default function Index() {
   }, [user, profile]);
 
   // Invite Friends Modal state
-  const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading, showWelcomeOnboarding);
+  const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading, showWelcomeOnboarding, freeGamesExhausted);
   const [inviteDismissedThisSession, setInviteDismissedThisSession] = useState(false);
   const [friendJoinedModalOpen, setFriendJoinedModalOpen] = useState(false);
 
