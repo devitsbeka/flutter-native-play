@@ -358,7 +358,7 @@ export default function Index() {
       }
     } else if (!profile?.avatar_url) {
       // Logged in but no avatar - open polished avatar modal
-      openAvatarModal();
+      openAvatarModal(() => navigate("/game"));
     } else {
       // Check if user can play (lifetime limit for non-PRO, or regen play)
       if (!canPlay && !isVip) {

@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import { AvatarModal } from "@/components/home/AvatarModal";
 
 interface AvatarModalContextType {
-  openAvatarModal: () => void;
+  openAvatarModal: (onComplete?: () => void) => void;
   closeAvatarModal: () => void;
   isOpen: boolean;
 }
@@ -24,13 +24,23 @@ export function useAvatarModal() {
 
 export function AvatarModalProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
+  const onCompleteRef = useRef<(() => void) | null>(null);
 
-  const openAvatarModal = useCallback(() => {
+  const openAvatarModal = useCallback((onComplete?: () => void) => {
+    onCompleteRef.current = onComplete || null;
     setIsOpen(true);
   }, []);
 
   const closeAvatarModal = useCallback(() => {
     setIsOpen(false);
+    onCompleteRef.current = null;
+  }, []);
+
+  const handleComplete = useCallback(() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
   }, []);
 
   return (
@@ -39,6 +49,7 @@ export function AvatarModalProvider({ children }: { children: React.ReactNode })
       <AvatarModal
         isOpen={isOpen}
         onClose={closeAvatarModal}
+        onComplete={handleComplete}
       />
     </AvatarModalContext.Provider>
   );
