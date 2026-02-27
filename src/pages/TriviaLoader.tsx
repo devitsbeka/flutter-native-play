@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tv, Grid3X3, Users, Trophy, Zap, Globe } from 'lucide-react';
 import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 import { useLanguage } from '@/contexts/LanguageContext';
+
+const ICON_BASE = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
 
 export default function TriviaLoader() {
   const { t } = useLanguage();
@@ -10,12 +11,12 @@ export default function TriviaLoader() {
   const [featureIndex, setFeatureIndex] = useState(0);
 
   const FEATURES = [
-    { icon: Tv, text: t("extra.tvModeFeature") },
-    { icon: Grid3X3, text: t("extra.categoriesFeature") },
-    { icon: Users, text: t("extra.realtimeFeature") },
-    { icon: Trophy, text: t("extra.weeklyFeature") },
-    { icon: Zap, text: t("extra.dailyFeature") },
-    { icon: Globe, text: t("extra.playersFeature") },
+    { icon: `${ICON_BASE}/television.png`, text: t("extra.tvModeFeature") },
+    { icon: `${ICON_BASE}/puzzle.png`, text: t("extra.categoriesFeature") },
+    { icon: `${ICON_BASE}/team.png`, text: t("extra.realtimeFeature") },
+    { icon: `${ICON_BASE}/trophy.png`, text: t("extra.weeklyFeature") },
+    { icon: `${ICON_BASE}/lightning-bolt.png`, text: t("extra.dailyFeature") },
+    { icon: `${ICON_BASE}/globe.png`, text: t("extra.playersFeature") },
   ];
 
   useEffect(() => {
@@ -81,14 +82,13 @@ export default function TriviaLoader() {
                 transition={{ duration: 0.3 }}
               >
                 {(() => {
-                  const Feature = FEATURES[featureIndex];
-                  const IconComponent = Feature.icon;
+                  const feature = FEATURES[featureIndex];
                   return (
                     <>
-                      <div className="shrink-0 w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                        <IconComponent className="w-5 h-5 text-white" />
+                      <div className="shrink-0 -ml-2 -my-4 w-14 h-14 flex items-center justify-center">
+                        <img src={feature.icon} alt="" className="w-14 h-14 object-contain drop-shadow-lg" />
                       </div>
-                      <p className="text-white/90 text-sm font-medium leading-snug">{Feature.text}</p>
+                      <p className="text-white/90 text-sm font-medium leading-snug">{feature.text}</p>
                     </>
                   );
                 })()}
