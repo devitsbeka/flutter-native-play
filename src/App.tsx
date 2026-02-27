@@ -48,6 +48,7 @@ const WorldHome = lazy(() => import("./pages/WorldHome"));
 const Game = lazy(() => import("./pages/Game"));
 const TriviaLobby = lazy(() => import("./pages/TriviaLobby"));
 const CollectionLobby = lazy(() => import("./pages/CollectionLobby"));
+const TriviaLoader = lazy(() => import("./pages/TriviaLoader"));
 const RoomRedirect = lazy(() => import("./pages/RoomRedirect"));
 const TVDisplay = lazy(() => import("./pages/TVDisplay"));
 const TVHostController = lazy(() => import("./pages/TVHostController"));
