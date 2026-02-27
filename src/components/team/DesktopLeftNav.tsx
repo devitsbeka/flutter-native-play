@@ -119,10 +119,10 @@ export function DesktopLeftNav({
         ))}
 
         <NavButton
-          icon={MessageCircle}
+          icon={Bell}
           label={t("extra.navNotifications")}
-          onClick={onMessagesClick}
-          badge={unreadMessagesCount}
+          onClick={onNotificationsClick}
+          badge={unreadCount}
         />
 
         <NavButton
