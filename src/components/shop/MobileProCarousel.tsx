@@ -19,10 +19,10 @@ const SIDEBAR_TO_STRIPE_TIER: Record<SimplifiedTier, ProTierId> = {
 export function MobileProCarousel() {
   const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { subscription } = useVipStatus();
+  const { subscription, isVip } = useVipStatus();
   const { initiateProCheckout, isProcessing } = useProPurchase();
   const navigate = useNavigate();
-  const currentTier = subscription?.vip_tier;
+  const currentTier = isVip ? subscription?.vip_tier : undefined;
 
   const PRO_TIERS = useMemo(() => [
     {

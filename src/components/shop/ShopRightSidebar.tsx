@@ -40,9 +40,9 @@ const SIDEBAR_TO_STRIPE_TIER: Record<SimplifiedTier, ProTierId> = {
 
 export function ShopRightSidebar() {
   const { t } = useLanguage();
-  const { subscription } = useVipStatus();
+  const { subscription, isVip } = useVipStatus();
   const { initiateProCheckout, isProcessing } = useProPurchase();
-  const currentTier = subscription?.vip_tier as SimplifiedTier | undefined;
+  const currentTier = isVip ? subscription?.vip_tier as SimplifiedTier | undefined : undefined;
   const [hoveredTier, setHoveredTier] = useState<string | null>(null);
 
   const SIMPLIFIED_TIERS = useMemo(() => [

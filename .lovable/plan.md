@@ -1,48 +1,79 @@
 
 
-# Fix: Don't Show "აქტიური" (Active) Badge for Expired PRO Subscriptions
+# Auto-Start Game After Avatar Setup
 
 ## Problem
-The shop page shows "აქტიური" (active) on PRO tier cards even when the subscription has expired. Meanwhile, the home page correctly shows the user has 0 free games and no PRO benefits. This creates a confusing inconsistency.
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-## Root Cause
-Three components determine "active" status by checking if a subscription **record exists** (`subscription?.vip_tier`), without verifying that the subscription hasn't expired. The `isVip` boolean from `VipContext` correctly checks expiry via `isAfter(expires_at, now)`, but these components don't use it.
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-## Affected Files
+## Changes
 
-### 1. `src/components/shop/MobileProCarousel.tsx`
-- Line 25: `const currentTier = subscription?.vip_tier;` -- should only be set when `isVip` is true
-- **Fix:** Also destructure `isVip` from `useVipStatus()`, then set `currentTier = isVip ? subscription?.vip_tier : undefined`
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-### 2. `src/components/shop/ShopRightSidebar.tsx`
-- Line 45: `const currentTier = subscription?.vip_tier;` -- same issue
-- **Fix:** Same pattern: gate `currentTier` behind `isVip`
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-### 3. `src/components/team/TeamProSidebar.tsx`
-- Line 12: `const currentTier = subscription?.vip_tier;` -- same issue
-- **Fix:** Same pattern: gate `currentTier` behind `isVip`
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-## Changes (all 3 files follow the same pattern)
+## Technical Details
 
-**Before:**
+**AvatarModalContext changes:**
 ```typescript
-const { subscription } = useVipStatus();
-const currentTier = subscription?.vip_tier;
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
+
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
+
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
 ```
 
-**After:**
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+
+**Index.tsx change:**
 ```typescript
-const { subscription, isVip } = useVipStatus();
-const currentTier = isVip ? subscription?.vip_tier : undefined;
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
 ```
 
-This single-line change in each file ensures:
-- Expired subscriptions no longer show the green "აქტიური" badge
-- Expired users see the normal "purchase" buttons instead of disabled "active" buttons
-- The shop page behavior matches the home page PRO status
-
-## Impact
-- 3 files changed, 1 line each
-- No new dependencies
-- No database changes needed
-
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
