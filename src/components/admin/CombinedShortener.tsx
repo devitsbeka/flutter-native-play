@@ -146,11 +146,15 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
       try {
         let query = supabase
           .from('questions')
-          .select('id, question_text, correct_answer, incorrect_answers, shorten_status, answer_shorten_status, in_production')
+          .select('id, question_text, correct_answer, incorrect_answers, shorten_status, answer_shorten_status, in_production, language')
           .eq('is_active', true);
         
         if (categoryId !== 'all') {
           query = query.eq('category_id', categoryId);
+        }
+
+        if (languageFilter !== 'all') {
+          query = query.eq('language', languageFilter);
         }
 
         const { data: questions } = await query;
@@ -180,6 +184,11 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
         const pendingReview = targetQuestions.filter(q => 
           q.shorten_status === 'pending_review' || q.answer_shorten_status === 'pending_review'
         );
+
+        // Questions flagged as needs_rewrite
+        const rewriteCount = targetQuestions.filter(q => 
+          q.answer_shorten_status === 'needs_rewrite'
+        );
         
         const alreadyProcessed = targetQuestions.filter(q => 
           q.shorten_status === 'shortened' || q.answer_shorten_status === 'shortened'
@@ -189,6 +198,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           total: targetQuestions.length,
           needsWork: needsWork.length,
           pendingReview: pendingReview.length,
+          needsRewrite: rewriteCount.length,
           alreadyProcessed: alreadyProcessed.length,
           loading: false
         });
