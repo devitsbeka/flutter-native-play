@@ -15,7 +15,6 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
-import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { Input } from "@/components/ui/input";
 import { RoomScoreboard } from "./RoomScoreboard";
