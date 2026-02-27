@@ -70,7 +70,7 @@ export default function TriviaLoader() {
         >
           <div
             className="mx-auto max-w-md px-4 py-3 flex items-center gap-3"
-            style={{ background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(12px)', borderRadius: '22px', border: '1px solid rgba(255, 255, 255, 0.2)' }}
+            style={{ background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(12px)', borderRadius: '22px', border: '1px solid rgba(255, 255, 255, 0.2)', minHeight: '80px' }}
           >
             <AnimatePresence mode="wait">
               <motion.div
