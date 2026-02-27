@@ -42,9 +42,8 @@ export default function TriviaLoader() {
       {/* Logo - Top */}
       <motion.div
         className="relative z-10"
-        style={{ transform: 'scale(0.85)' }}
-        initial={{ opacity: 0, scale: 0.8, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.68, y: 20 }}
+        animate={{ opacity: 1, scale: 0.85, y: 0 }}
         transition={{ delay: 0.3, duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
       >
         <motion.div
