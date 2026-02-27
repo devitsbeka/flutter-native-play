@@ -58,8 +58,46 @@ export default function TriviaLoader() {
       {/* Spacer */}
       <div />
 
-      {/* Loading Bar + Feature Carousel - Bottom */}
+      {/* Feature Carousel + Loading Bar - Bottom */}
       <div className="relative z-10 px-8 w-full max-w-lg flex flex-col items-center">
+        {/* Feature Carousel */}
+        <motion.div
+          className="mb-4 w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1, duration: 0.5 }}
+        >
+          <div
+            className="mx-auto max-w-md px-4 py-3 flex items-center gap-3"
+            style={{ background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(12px)', borderRadius: '22px', border: '1px solid rgba(255, 255, 255, 0.2)' }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={featureIndex}
+                className="flex items-center gap-3 w-full"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {(() => {
+                  const Feature = FEATURES[featureIndex];
+                  const IconComponent = Feature.icon;
+                  return (
+                    <>
+                      <div className="shrink-0 w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                        <IconComponent className="w-5 h-5 text-white" />
+                      </div>
+                      <p className="text-white/90 text-sm font-medium leading-snug">{Feature.text}</p>
+                    </>
+                  );
+                })()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
+        {/* Loading Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -111,43 +149,6 @@ export default function TriviaLoader() {
               <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-lg" style={{ background: 'rgba(0,0,0,0.2)' }} />
               <div className="absolute right-0 top-0 bottom-0 w-1 rounded-r-lg" style={{ background: 'rgba(0,0,0,0.2)' }} />
             </div>
-          </div>
-        </motion.div>
-
-        {/* Feature Carousel */}
-        <motion.div
-          className="mb-6 w-full"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1, duration: 0.5 }}
-        >
-          <div
-            className="mx-auto max-w-md px-4 py-3 flex items-center gap-3"
-            style={{ background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(12px)', borderRadius: '22px', border: '1px solid rgba(255, 255, 255, 0.2)' }}
-          >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={featureIndex}
-                className="flex items-center gap-3 w-full"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                {(() => {
-                  const Feature = FEATURES[featureIndex];
-                  const IconComponent = Feature.icon;
-                  return (
-                    <>
-                      <div className="shrink-0 w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                        <IconComponent className="w-5 h-5 text-white" />
-                      </div>
-                      <p className="text-white/90 text-sm font-medium leading-snug">{Feature.text}</p>
-                    </>
-                  );
-                })()}
-              </motion.div>
-            </AnimatePresence>
           </div>
         </motion.div>
       </div>
