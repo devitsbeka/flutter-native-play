@@ -209,7 +209,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
     };
 
     loadStats();
-  }, [categoryId, inProduction, progress.status]);
+  }, [categoryId, inProduction, languageFilter, progress.status]);
 
   const startShortening = async (testMode = false) => {
     setIsPaused(false);
@@ -241,7 +241,8 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           body: { 
             categoryId: categoryId === 'all' ? null : categoryId,
             testMode,
-            inProduction
+            inProduction,
+            language: languageFilter === 'all' ? undefined : languageFilter,
           }
         });
 
@@ -254,7 +255,9 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           body: { 
             categoryId: categoryId === 'all' ? null : categoryId,
             testMode,
-            inProduction
+            inProduction,
+            aggressiveMode,
+            language: languageFilter === 'all' ? undefined : languageFilter,
           }
         });
 
