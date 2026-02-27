@@ -712,6 +712,81 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
     }
   };
 
+  // Load needs_rewrite questions
+  const loadNeedsRewriteQuestions = async () => {
+    setLoadingNeedsRewrite(true);
+    try {
+      let query = supabase
+        .from('questions')
+        .select('id, question_text, correct_answer, incorrect_answers, answer_shorten_status, language')
+        .eq('is_active', true)
+        .eq('answer_shorten_status', 'needs_rewrite');
+      
+      if (categoryId !== 'all') {
+        query = query.eq('category_id', categoryId);
+      }
+      if (languageFilter !== 'all') {
+        query = query.eq('language', languageFilter);
+      }
+      if (!inProduction) {
+        query = query.eq('in_production', false);
+      } else {
+        query = query.eq('in_production', true);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      setNeedsRewriteQuestions((data || []).map(q => ({
+        ...q,
+        pending_question_text: null,
+        pending_correct_answer: null,
+        pending_incorrect_answers: null,
+        shorten_status: null,
+        incorrect_answers: Array.isArray(q.incorrect_answers) ? q.incorrect_answers as string[] : [],
+      })));
+    } catch (err) {
+      console.error('Error loading needs_rewrite questions:', err);
+      toast({ title: 'Error loading flagged questions', variant: 'destructive' });
+    } finally {
+      setLoadingNeedsRewrite(false);
+    }
+  };
+
+  // Delete a needs_rewrite question (deactivate)
+  const deleteNeedsRewriteQuestion = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({ is_active: false })
+        .eq('id', id);
+      if (error) throw error;
+      setNeedsRewriteQuestions(prev => prev.filter(q => q.id !== id));
+      setStats(prev => ({ ...prev, needsRewrite: prev.needsRewrite - 1 }));
+      toast({ title: 'Question removed' });
+    } catch (err) {
+      console.error('Delete error:', err);
+      toast({ title: 'Error', variant: 'destructive' });
+    }
+  };
+
+  // Reset needs_rewrite status so it can be reprocessed
+  const resetNeedsRewriteQuestion = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({ answer_shorten_status: null })
+        .eq('id', id);
+      if (error) throw error;
+      setNeedsRewriteQuestions(prev => prev.filter(q => q.id !== id));
+      setStats(prev => ({ ...prev, needsRewrite: prev.needsRewrite - 1, needsWork: prev.needsWork + 1 }));
+      toast({ title: 'Reset for reprocessing' });
+    } catch (err) {
+      console.error('Reset error:', err);
+      toast({ title: 'Error', variant: 'destructive' });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
