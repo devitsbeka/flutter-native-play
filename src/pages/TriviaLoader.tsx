@@ -82,14 +82,13 @@ export default function TriviaLoader() {
                 transition={{ duration: 0.3 }}
               >
                 {(() => {
-                  const Feature = FEATURES[featureIndex];
-                  const IconComponent = Feature.icon;
+                  const feature = FEATURES[featureIndex];
                   return (
                     <>
-                      <div className="shrink-0 w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                        <IconComponent className="w-5 h-5 text-white" />
+                      <div className="shrink-0 -ml-2 -my-4 w-14 h-14 flex items-center justify-center">
+                        <img src={feature.icon} alt="" className="w-14 h-14 object-contain drop-shadow-lg" />
                       </div>
-                      <p className="text-white/90 text-sm font-medium leading-snug">{Feature.text}</p>
+                      <p className="text-white/90 text-sm font-medium leading-snug">{feature.text}</p>
                     </>
                   );
                 })()}
