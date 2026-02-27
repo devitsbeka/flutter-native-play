@@ -243,7 +243,6 @@ function TeamContentV2() {
   const [showCreateRoomScreen, setShowCreateRoomScreen] = useState(false);
   const [showTVModal, setShowTVModal] = useState(false);
   const [showCategorySelectorModal, setShowCategorySelectorModal] = useState(false);
-  const [showCategorySelectorModal, setShowCategorySelectorModal] = useState(false);
   const [isEditingRound, setIsEditingRound] = useState(false);
   const [pendingRandomPlay, setPendingRandomPlay] = useState(false);
   const [preSelectedCategory, setPreSelectedCategory] = useState<{
