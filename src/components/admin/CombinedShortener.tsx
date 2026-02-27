@@ -129,7 +129,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
   });
   
   // Pending review state
-  const [viewMode, setViewMode] = useState<'shorten' | 'pending'>('shorten');
+  const [viewMode, setViewMode] = useState<'shorten' | 'pending' | 'needs_rewrite'>('shorten');
   const [pendingQuestions, setPendingQuestions] = useState<PendingQuestion[]>([]);
   const [loadingPending, setLoadingPending] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
