@@ -26,7 +26,7 @@ export default function TriviaLoader() {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-between overflow-hidden py-16">
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-between overflow-hidden pt-10 pb-16">
       {/* Video Background */}
       <video
         autoPlay
@@ -42,6 +42,7 @@ export default function TriviaLoader() {
       {/* Logo - Top */}
       <motion.div
         className="relative z-10"
+        style={{ transform: 'scale(0.85)' }}
         initial={{ opacity: 0, scale: 0.8, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
