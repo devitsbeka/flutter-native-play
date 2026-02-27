@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
-import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { Input } from "@/components/ui/input";
 import { RoomScoreboard } from "./RoomScoreboard";
@@ -37,26 +36,12 @@ export function RoomLobby() {
   const [copied, setCopied] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
-  const [showChat, setShowChat] = useState(false);
-  const [chatMessage, setChatMessage] = useState("");
   const [showTransferModal, setShowTransferModal] = useState(false);
-  const [lastSeenMessageCount, setLastSeenMessageCount] = useState(0);
   const prevParticipantsRef = useRef<string[]>([]);
 
-  const { messages, sendMessage } = useRoomChat(room?.id || null);
   const { matches } = useRoomMatchHistory(room?.id || null);
   const { sendInvitation } = useGameInvitations();
-  const chatEndRef = useRef<HTMLDivElement>(null);
   
-  // Calculate unread count
-  const unreadMessageCount = Math.max(0, messages.length - lastSeenMessageCount);
-  
-  // Mark messages as read when chat is opened
-  useEffect(() => {
-    if (showChat) {
-      setLastSeenMessageCount(messages.length);
-    }
-  }, [showChat, messages.length]);
 
   const otherParticipants = participants.filter(p => p.user_id !== user?.id);
 
@@ -74,23 +59,6 @@ export function RoomLobby() {
     
     prevParticipantsRef.current = currentIds;
   }, [participants, user?.id, playSound]);
-
-  // Play sound when new message arrives
-  const prevMessagesCountRef = useRef(0);
-  useEffect(() => {
-    if (messages.length > prevMessagesCountRef.current && prevMessagesCountRef.current > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.user_id !== user?.id) {
-        playSound("room-message");
-      }
-    }
-    prevMessagesCountRef.current = messages.length;
-  }, [messages, user?.id, playSound]);
-
-  // Scroll chat to bottom
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   useEffect(() => {
     if (room) {
