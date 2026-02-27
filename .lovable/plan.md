@@ -1,48 +1,79 @@
 
 
-# Wire AdMob Child-Safety Flags (TFCD/TFUA) Based on User Age Group
+# Auto-Start Game After Avatar Setup
 
-## Summary
-The age gate UI, onboarding flow, and database column (`age_group`) are already implemented. The remaining work is to pass the correct child-directed treatment flags to AdMob when loading/showing ads, based on the user's stored age group.
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-## What Changes
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-### 1. Update `adService.ts` -- Add age group awareness
-- Add a `setAgeGroup(ageGroup: string | null)` method to the `AdService` class
-- Store the age group internally (similar to how `setVipStatus` works)
-- When calling `AdMob.prepareRewardVideoAd()`, pass the AdMob child-safety options:
-  - `tagForChildDirectedTreatment: true` -- when age group is `"child"` (under 16)
-  - `tagForUnderAgeOfConsent: true` -- when age group is `"child"` or `"teen"` (under 18)
-  - `maxAdContentRating: 'G'` for children, `'T'` for teens, none for adults
-- For child users, also set `npa: true` (non-personalized ads) to comply with COPPA/GDPR
+## Changes
 
-### 2. Update `WatchAdModal.tsx` and `WatchAdForSpinsModal.tsx` -- Pass age group to adService
-- Before loading/showing ads, call `adService.setAgeGroup(profile?.age_group)` using the profile from `useAuth()`
-- This ensures the correct flags are set before each ad request
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-### 3. Update `adService.initialize()` -- Pass child flags during AdMob initialization
-- Add `requestConfiguration` call after `AdMob.initialize()` to set global child-safety defaults based on the stored age group
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
 ## Technical Details
 
-The key AdMob configuration options:
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
 
-```text
-AdMob.initialize() options:
-  - tagForChildDirectedTreatment: boolean  (COPPA - under 13/16)
-  - tagForUnderAgeOfConsent: boolean       (GDPR - under 18)
-  - maxAdContentRating: 'G' | 'PG' | 'T' | 'MA'
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
 
-prepareRewardVideoAd() options:
-  - npa: '1'  (non-personalized ads for minors)
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
 ```
 
-Age group mapping:
-- `"child"` -> TFCD=true, TFUA=true, maxRating='G', npa=true
-- `"teen"` -> TFCD=false, TFUA=true, maxRating='T', npa=true
-- `"adult"` / null -> no restrictions
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
 
-## Files Modified
-- `src/services/adService.ts` -- Add age group methods and pass flags to AdMob calls
-- `src/components/home/WatchAdModal.tsx` -- Set age group before ad calls
-- `src/components/home/WatchAdForSpinsModal.tsx` -- Set age group before ad calls
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
+
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button

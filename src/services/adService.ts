@@ -37,12 +37,41 @@ class AdService {
   private isAdLoaded = false;
   private listeners: any[] = [];
   private isVipUser = false;
+  private ageGroup: string | null = null;
 
   /**
    * Set VIP status - VIP users skip ads and get rewards automatically
    */
   setVipStatus(isVip: boolean) {
     this.isVipUser = isVip;
+  }
+
+  /**
+   * Set age group for child-directed ad treatment (COPPA/GDPR compliance).
+   * Must be called before loading/showing ads.
+   */
+  setAgeGroup(ageGroup: string | null | undefined) {
+    this.ageGroup = ageGroup ?? null;
+  }
+
+  private getChildSafetyOptions() {
+    if (this.ageGroup === 'child') {
+      return {
+        tagForChildDirectedTreatment: true,
+        tagForUnderAgeOfConsent: true,
+        maxAdContentRating: 'G' as const,
+        npa: '1' as const,
+      };
+    }
+    if (this.ageGroup === 'teen') {
+      return {
+        tagForChildDirectedTreatment: false,
+        tagForUnderAgeOfConsent: true,
+        maxAdContentRating: 'T' as const,
+        npa: '1' as const,
+      };
+    }
+    return {};
   }
 
   /**
@@ -71,9 +100,19 @@ class AdService {
           await trackingService.initialize();
           await trackingService.requestAuthorization();
           
+          const childSafety = this.getChildSafetyOptions();
           await this.AdMob.initialize({
             testingDevices: [],
             initializeForTesting: false,
+            ...(childSafety.tagForChildDirectedTreatment !== undefined && {
+              tagForChildDirectedTreatment: childSafety.tagForChildDirectedTreatment,
+            }),
+            ...(childSafety.tagForUnderAgeOfConsent !== undefined && {
+              tagForUnderAgeOfConsent: childSafety.tagForUnderAgeOfConsent,
+            }),
+            ...(childSafety.maxAdContentRating && {
+              maxAdContentRating: childSafety.maxAdContentRating,
+            }),
           });
           
           console.log('AdMob initialized successfully');
@@ -144,9 +183,11 @@ class AdService {
         );
         this.listeners.push(failedListener);
 
+        const childSafety = this.getChildSafetyOptions();
         await this.AdMob.prepareRewardVideoAd({
           adId: ADMOB_CONFIG.rewardedAdUnitId,
           isTesting: false,
+          ...(childSafety.npa && { npa: childSafety.npa }),
         });
 
         return true;

@@ -4,6 +4,7 @@ import { Play, Tv, Gift, AlertCircle } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { adService } from "@/services/adService";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface WatchAdModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface WatchAdModalProps {
 
 export function WatchAdModal({ isOpen, onClose, onWatchAd, playsRemaining }: WatchAdModalProps) {
   const { t } = useLanguage();
+  const { profile } = useAuth();
   const [isWatching, setIsWatching] = useState(false);
   const [watchProgress, setWatchProgress] = useState(0);
   const [adError, setAdError] = useState<string | null>(null);
@@ -23,6 +25,9 @@ export function WatchAdModal({ isOpen, onClose, onWatchAd, playsRemaining }: Wat
   useEffect(() => {
     if (isOpen) {
       setAdError(null);
+      
+      // Set age group for child-safety compliance
+      adService.setAgeGroup((profile as any)?.age_group);
       
       // Preload the ad
       adService.loadRewardedAd({
