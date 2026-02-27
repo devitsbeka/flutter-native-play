@@ -141,6 +141,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/loading" element={<Loading />} />
+                <Route path="/trivialoader" element={<TriviaLoader />} />
                 
                 <Route path="/power-ups" element={<PowerUps />} />
                 <Route path="/category/:categoryId" element={<CategoryPage />} />
