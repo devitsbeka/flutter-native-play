@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 
 export function TeamProSidebar() {
   const navigate = useNavigate();
-  const { subscription } = useVipStatus();
-  const currentTier = subscription?.vip_tier as ProTier | undefined;
+  const { subscription, isVip } = useVipStatus();
+  const currentTier = isVip ? subscription?.vip_tier as ProTier | undefined : undefined;
 
   const handleUpgrade = (tier: ProTier) => {
     navigate('/vip', { state: { selectedTier: tier } });
