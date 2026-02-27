@@ -1355,6 +1355,76 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
             )}
           </div>
         )}
+
+        {/* Needs Rewrite View */}
+        {viewMode === 'needs_rewrite' && (
+          <div className="space-y-4">
+            {loadingNeedsRewrite ? (
+              <div className="text-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-orange-500" />
+                <p className="text-sm text-muted-foreground mt-2">Loading flagged questions...</p>
+              </div>
+            ) : needsRewriteQuestions.length > 0 ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <Label>⚠️ Needs Rewrite ({needsRewriteQuestions.length})</Label>
+                  <p className="text-xs text-muted-foreground">These questions have sentence-like answers and need manual rewriting</p>
+                </div>
+                <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                  {needsRewriteQuestions.map((q) => (
+                    <div key={q.id} className="p-4 rounded-lg border border-orange-200 bg-orange-50 dark:bg-orange-950/20">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 space-y-2">
+                          <div className="text-sm font-medium">{q.question_text}</div>
+                          <div className="space-y-1">
+                            <div className="text-xs">
+                              <span className="text-green-600 font-medium">✓ </span>
+                              <span className={q.correct_answer.length > MAX_ANSWER_LENGTH ? 'text-destructive font-medium' : 'text-muted-foreground'}>
+                                {q.correct_answer} ({q.correct_answer.length})
+                              </span>
+                            </div>
+                            {(Array.isArray(q.incorrect_answers) ? q.incorrect_answers : []).map((ans, idx) => (
+                              <div key={idx} className="text-xs">
+                                <span className="text-muted-foreground">✗ </span>
+                                <span className={ans.length > MAX_ANSWER_LENGTH ? 'text-destructive font-medium' : 'text-muted-foreground'}>
+                                  {ans} ({ans.length})
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => resetNeedsRewriteQuestion(q.id)}
+                          >
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            Retry
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                            onClick={() => deleteNeedsRewriteQuestion(q.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <CheckCircle className="h-12 w-12 mx-auto mb-3 opacity-20 text-green-500" />
+                <p className="text-sm">No questions flagged for rewrite</p>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
