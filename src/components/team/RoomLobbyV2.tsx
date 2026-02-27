@@ -65,12 +65,9 @@ export function RoomLobbyV2() {
   } = useMultiplayerV2();
   
   const [showIconPicker, setShowIconPicker] = useState(false);
-  const [showChat, setShowChat] = useState(false);
-  const [chatMessage, setChatMessage] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isTVModeEnabled, setIsTVModeEnabled] = useState(() => searchParams.get("tvMode") === "true");
-  const [lastSeenMessageCount, setLastSeenMessageCount] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showGradientPicker, setShowGradientPicker] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
@@ -142,16 +139,6 @@ export function RoomLobbyV2() {
 
   const { matches } = useRoomMatchHistory(currentRoom?.id || null);
   const { queue, addToQueue, removeFromQueue, reorderQueue } = useRoomCategoryQueue(currentRoom?.id || null);
-  
-  // Calculate unread count
-  const unreadMessageCount = Math.max(0, messages.length - lastSeenMessageCount);
-  
-  // Mark messages as read when chat is opened
-  useEffect(() => {
-    if (showChat) {
-      setLastSeenMessageCount(messages.length);
-    }
-  }, [showChat, messages.length]);
 
   // Play sound when new participant joins
   useEffect(() => {
@@ -168,23 +155,6 @@ export function RoomLobbyV2() {
     
     prevParticipantsRef.current = currentIds;
   }, [participants, user?.id, playSound]);
-
-  // Play sound when new message arrives
-  const prevMessagesCountRef = useRef(0);
-  useEffect(() => {
-    if (messages.length > prevMessagesCountRef.current && prevMessagesCountRef.current > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.user_id !== user?.id) {
-        playSound("room-message");
-      }
-    }
-    prevMessagesCountRef.current = messages.length;
-  }, [messages, user?.id, playSound]);
-
-  // Scroll chat to bottom
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   // Pre-calculate if host will be observer for current trivia selection
   // This enables UI indicators before game start
