@@ -781,7 +781,6 @@ function TeamContentV2() {
               if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
             }}
             activeTab={activeTab}
-            activeTab={activeTab}
             onViewAllRooms={() => handleTabChange("rooms")}
             onViewAllTrivias={() => handleTabChange("my-content")}
           />

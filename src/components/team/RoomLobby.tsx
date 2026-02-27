@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Copy, Share2, Users, LogOut, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2, Trash2 } from "lucide-react";
+import { Copy, Share2, Users, LogOut, Check, Edit2, Crown, Send, X, Gamepad2, Trash2 } from "lucide-react";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +10,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useRoomChat } from "@/hooks/useRoomChat";
+import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { Input } from "@/components/ui/input";

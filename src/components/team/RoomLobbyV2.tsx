@@ -14,7 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useRoomChat } from "@/hooks/useRoomChat";
+import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { Input } from "@/components/ui/input";
