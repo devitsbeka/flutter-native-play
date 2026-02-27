@@ -373,40 +373,6 @@ export function RoomLobbyV2() {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!chatMessage.trim()) return;
-    const success = await sendMessage(chatMessage);
-    if (success) {
-      setChatMessage("");
-    }
-  };
-
-  const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  const focusChatInput = () => {
-    // Ensure focus happens after state update + render
-    requestAnimationFrame(() => {
-      chatInputRef.current?.focus();
-    });
-  };
-
-  const handleMentionPlayer = (nickname: string) => {
-    const cleanNickname = nickname.trim();
-    if (!cleanNickname) return;
-
-    setChatMessage((prev) => {
-      const mention = `@${cleanNickname}`;
-      const pattern = new RegExp(`(^|\\s)${escapeRegExp(mention)}(\\s|$)`);
-
-      // If already mentioned, keep message as-is.
-      if (pattern.test(prev)) return prev;
-
-      if (!prev || prev.endsWith(" ")) return `${prev}${mention} `;
-      return `${prev} ${mention} `;
-    });
-
-    focusChatInput();
-  };
 
   // Category selection handlers
   const handleSelectCategory = async (category: { id: string; name: string; iconSlug?: string | null }) => {
@@ -791,8 +757,6 @@ export function RoomLobbyV2() {
             />
           )}
         </AnimatePresence>
-
-        {chatOverlay}
 
         {/* Scoreboard */}
         <div className="w-full">
