@@ -866,6 +866,20 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           </div>
 
           <div className="space-y-2">
+            <Label><Globe className="h-3 w-3 inline mr-1" />Language</Label>
+            <Select value={languageFilter} onValueChange={setLanguageFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="en">🇬🇧 English</SelectItem>
+                <SelectItem value="ka">🇬🇪 Georgian</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label>სტატუსი</Label>
             <Select 
               value={inProduction ? 'prod' : 'lib'} 
@@ -879,6 +893,14 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
                 <SelectItem value="prod">In Prod</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="flex items-center gap-2 pb-1">
+            <Switch checked={aggressiveMode} onCheckedChange={setAggressiveMode} />
+            <Label className="flex items-center gap-1 text-xs cursor-pointer" onClick={() => setAggressiveMode(!aggressiveMode)}>
+              <Zap className="h-3 w-3" />
+              Aggressive (13-20)
+            </Label>
           </div>
 
           <div className="flex gap-2">
