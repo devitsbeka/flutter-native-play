@@ -5,7 +5,6 @@ import {
   Search, 
   Compass, 
   Users, 
-  MessageCircle, 
   Bell, 
   PlusSquare, 
   BarChart3, 
@@ -14,7 +13,6 @@ import {
 import { Avatar } from "@/components/shared/Avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
-import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -33,7 +31,6 @@ export function DesktopLeftNav({
   const location = useLocation();
   const { profile } = useAuth();
   const { unreadCount } = useNotifications();
-  const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
   const { t } = useLanguage();
 
   const navItems = [

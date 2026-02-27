@@ -3,9 +3,7 @@ import { trackSignupCompleted } from "@/lib/analytics";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Bell, Check, Clock, Mail, Menu, MessageCircle } from "lucide-react";
-import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
-import { RoomChatsPanel } from "@/components/team/RoomChatsPanel";
+import { Bell, Check, Clock, Mail, Menu } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
@@ -205,10 +203,8 @@ export default function Index() {
   const [showWatchAdModal, setShowWatchAdModal] = useState(false);
   const [showGuestMaxPlaysModal, setShowGuestMaxPlaysModal] = useState(false);
   const [showNotEnoughCoinsModal, setShowNotEnoughCoinsModal] = useState(false);
-  const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
   const [showGuestSignupPrompt, setShowGuestSignupPrompt] = useState(false);
   const [isAnimatingFromHome, setIsAnimatingFromHome] = useState(false);
-   const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
   const [showWelcomeOnboarding, setShowWelcomeOnboarding] = useState(false);
 
   // Show welcome onboarding for newly signed-up users (works for all signup paths)
@@ -1524,11 +1520,6 @@ export default function Index() {
         </div>
       </MainLayout>
       
-      {/* Room Chats Panel - TEMPORARILY HIDDEN */}
-      {/* <RoomChatsPanel
-        isOpen={showRoomChatsPanel}
-        onClose={() => setShowRoomChatsPanel(false)}
-      /> */}
     </>
   );
 }
