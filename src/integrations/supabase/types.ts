@@ -1500,6 +1500,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age_group: string | null
           animated_avatar_url: string | null
           avatar_url: string | null
           best_streak: number | null
@@ -1526,6 +1527,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          age_group?: string | null
           animated_avatar_url?: string | null
           avatar_url?: string | null
           best_streak?: number | null
@@ -1552,6 +1554,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          age_group?: string | null
           animated_avatar_url?: string | null
           avatar_url?: string | null
           best_streak?: number | null
