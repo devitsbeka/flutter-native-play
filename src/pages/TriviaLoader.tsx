@@ -26,7 +26,7 @@ export default function TriviaLoader() {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-between overflow-hidden py-16">
       {/* Video Background */}
       <video
         autoPlay
@@ -39,13 +39,12 @@ export default function TriviaLoader() {
       </video>
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
-      {/* Content Container */}
-      <div className="relative z-10 flex flex-col items-center justify-center px-8 w-full max-w-lg">
+      {/* Logo - Top */}
+      <div className="relative z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.8, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
-          className="mb-16"
         >
           <motion.div
             className="flex items-center justify-center"
@@ -55,9 +54,13 @@ export default function TriviaLoader() {
             <MyTriviaLiveLogo size="lg" textColor="light" />
           </motion.div>
         </motion.div>
+      </div>
 
-        {/* Loading Bar */}
-        <motion.div
+      {/* Spacer */}
+      <div />
+
+      {/* Loading Bar - Bottom */}
+      <div className="relative z-10 px-8 w-full max-w-lg">
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.4 }}
