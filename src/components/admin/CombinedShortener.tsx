@@ -68,6 +68,7 @@ interface CombinedStats {
   total: number;
   needsWork: number;
   pendingReview: number;
+  needsRewrite: number;
   alreadyProcessed: number;
   loading: boolean;
 }
@@ -122,6 +123,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
     total: 0,
     needsWork: 0,
     pendingReview: 0,
+    needsRewrite: 0,
     alreadyProcessed: 0,
     loading: false
   });
