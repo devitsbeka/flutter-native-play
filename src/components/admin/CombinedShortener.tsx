@@ -102,6 +102,10 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
   
   const [categoryId, setCategoryId] = useState<string>('all');
   const [inProduction, setInProduction] = useState<boolean>(false);
+  const [languageFilter, setLanguageFilter] = useState<string>('all');
+  const [aggressiveMode, setAggressiveMode] = useState<boolean>(false);
+  const [needsRewriteQuestions, setNeedsRewriteQuestions] = useState<PendingQuestion[]>([]);
+  const [loadingNeedsRewrite, setLoadingNeedsRewrite] = useState(false);
   const [progress, setProgress] = useState<CombinedProgress>({
     total: 0,
     processed: 0,
