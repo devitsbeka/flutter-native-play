@@ -151,6 +151,11 @@ export const en: KaTranslations = {
     step5Description: "See your progress and unlock new levels",
     step6Title: "Rank",
     step6Description: "Compare your score with other players",
+    ageGateTitle: "How old are you?",
+    ageGateSubtitle: "This helps us show you the right experience",
+    ageUnder16: "Under 16",
+    age16to17: "16–17",
+    age18plus: "18+",
   },
 
   // ==========================================

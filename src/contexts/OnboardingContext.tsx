@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
+import type { AgeGroup } from "@/hooks/useAgeGroup";
 
 export type OnboardingStep = 
   | "idle"
-  | "welcome"
+  | "age_gate"
   | "username"
   | "password"
   | "creating"
@@ -17,6 +18,8 @@ interface OnboardingContextType {
   setUsername: (username: string) => void;
   password: string;
   setPassword: (password: string) => void;
+  selectedAgeGroup: AgeGroup | null;
+  setSelectedAgeGroup: (age: AgeGroup | null) => void;
   
   // Flow control
   startOnboarding: () => void;
@@ -36,6 +39,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [step, setStep] = useState<OnboardingStep>("idle");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(null);
   
   // Check localStorage for completion status
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
@@ -48,11 +52,12 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   // Derived states
   const isOnboarding = step !== "idle" && step !== "complete";
   
-  // Start onboarding for new users - go directly to signup
+  // Start onboarding for new users - go to age gate first
   const startOnboarding = useCallback(() => {
-    setStep("username");
+    setStep("age_gate");
     setUsername("");
     setPassword("");
+    setSelectedAgeGroup(null);
   }, []);
   
   // Complete the entire onboarding
@@ -68,6 +73,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     setStep("idle");
     setUsername("");
     setPassword("");
+    setSelectedAgeGroup(null);
     setHasCompletedOnboarding(false);
     localStorage.removeItem(ONBOARDING_STORAGE_KEY);
   }, []);
@@ -81,6 +87,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         setUsername,
         password,
         setPassword,
+        selectedAgeGroup,
+        setSelectedAgeGroup,
         startOnboarding,
         completeOnboarding,
         resetOnboarding,
