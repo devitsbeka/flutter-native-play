@@ -68,7 +68,7 @@ export default function TriviaLoader() {
         >
           <div className="relative">
             <div
-              className="relative h-8 rounded-xl overflow-hidden"
+              className="relative h-10 rounded-xl overflow-hidden"
               style={{
                 background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%)',
                 boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.1)',
@@ -102,25 +102,15 @@ export default function TriviaLoader() {
                 />
                 <div className="absolute top-0 left-0 right-0 h-2 rounded-t-lg" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, transparent 100%)' }} />
               </motion.div>
+              {/* Text inside bar */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="text-sm font-bold tracking-wide" style={{ color: 'white', textShadow: '0 1px 3px rgba(0,0,0,0.5)', fontFamily: "'TASolivare', sans-serif" }}>
+                  {t("common.loading")} {progress}%
+                </span>
+              </div>
               <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-lg" style={{ background: 'rgba(0,0,0,0.2)' }} />
               <div className="absolute right-0 top-0 bottom-0 w-1 rounded-r-lg" style={{ background: 'rgba(0,0,0,0.2)' }} />
             </div>
-
-            <motion.div className="mt-4 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
-              <span className="text-3xl font-bold tracking-wider" style={{ fontFamily: "'TASolivare', sans-serif", color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.3)' }}>
-                {progress}%
-              </span>
-            </motion.div>
-
-            <motion.p
-              className="mt-3 text-center text-lg font-medium tracking-wide"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ delay: 0.7, duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ color: 'hsl(0 0% 90%)', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
-            >
-              {t("common.loading")}
-            </motion.p>
           </div>
         </motion.div>
 
