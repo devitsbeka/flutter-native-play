@@ -40,27 +40,27 @@ export default function TriviaLoader() {
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
       {/* Logo - Top */}
-      <div className="relative z-10">
+      <motion.div
+        className="relative z-10"
+        initial={{ opacity: 0, scale: 0.8, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+      >
         <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+          className="flex items-center justify-center"
+          animate={{ y: [0, -8, 0] }}
+          transition={{ delay: 1, duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <motion.div
-            className="flex items-center justify-center"
-            animate={{ y: [0, -8, 0] }}
-            transition={{ delay: 1, duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <MyTriviaLiveLogo size="lg" textColor="light" />
-          </motion.div>
+          <MyTriviaLiveLogo size="lg" textColor="light" />
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* Spacer */}
       <div />
 
-      {/* Loading Bar - Bottom */}
-      <div className="relative z-10 px-8 w-full max-w-lg">
+      {/* Loading Bar + Feature Carousel - Bottom */}
+      <div className="relative z-10 px-8 w-full max-w-lg flex flex-col items-center">
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.4 }}
@@ -123,44 +123,44 @@ export default function TriviaLoader() {
             </motion.p>
           </div>
         </motion.div>
-      </div>
 
-      {/* Feature Carousel */}
-      <motion.div
-        className="absolute bottom-8 left-4 right-4 z-20"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1, duration: 0.5 }}
-      >
-        <div
-          className="mx-auto max-w-md px-4 py-3 flex items-center gap-3"
-          style={{ background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(12px)', borderRadius: '22px', border: '1px solid rgba(255, 255, 255, 0.2)' }}
+        {/* Feature Carousel */}
+        <motion.div
+          className="mt-6 w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1, duration: 0.5 }}
         >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={featureIndex}
-              className="flex items-center gap-3 w-full"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {(() => {
-                const Feature = FEATURES[featureIndex];
-                const IconComponent = Feature.icon;
-                return (
-                  <>
-                    <div className="shrink-0 w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                      <IconComponent className="w-5 h-5 text-white" />
-                    </div>
-                    <p className="text-white/90 text-sm font-medium leading-snug">{Feature.text}</p>
-                  </>
-                );
-              })()}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </motion.div>
+          <div
+            className="mx-auto max-w-md px-4 py-3 flex items-center gap-3"
+            style={{ background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(12px)', borderRadius: '22px', border: '1px solid rgba(255, 255, 255, 0.2)' }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={featureIndex}
+                className="flex items-center gap-3 w-full"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {(() => {
+                  const Feature = FEATURES[featureIndex];
+                  const IconComponent = Feature.icon;
+                  return (
+                    <>
+                      <div className="shrink-0 w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                        <IconComponent className="w-5 h-5 text-white" />
+                      </div>
+                      <p className="text-white/90 text-sm font-medium leading-snug">{Feature.text}</p>
+                    </>
+                  );
+                })()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }
