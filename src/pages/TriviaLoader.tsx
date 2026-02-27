@@ -85,7 +85,7 @@ export default function TriviaLoader() {
                   const feature = FEATURES[featureIndex];
                   return (
                     <>
-                      <div className="shrink-0 -ml-2 -my-4 w-14 h-14 flex items-center justify-center">
+                      <div className="shrink-0 -ml-2 w-14 h-14 flex items-center justify-center" style={{ marginTop: '-16px', marginBottom: '0px' }}>
                         <img src={feature.icon} alt="" className="w-14 h-14 object-contain drop-shadow-lg" />
                       </div>
                       <p className="text-white/90 text-sm font-medium leading-snug">{feature.text}</p>
