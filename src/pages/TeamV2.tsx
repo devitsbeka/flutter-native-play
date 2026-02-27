@@ -24,7 +24,6 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { LiveBadge } from "@/components/social/LiveBadge";
-import { LiveBadge } from "@/components/social/LiveBadge";
 import { ExplorePortfolioFeed } from "@/components/social/ExplorePortfolioFeed";
 import { MyTriviaTab } from "@/components/social/MyTriviaTab";
 import { CreateQuizModal } from "@/components/social/CreateQuizModal";
@@ -62,7 +61,6 @@ import {
   ExploreSort,
 } from "@/components/team/UnifiedFiltersBar";
 import { QRScannerModal } from "@/components/team/QRScannerModal";
-import { supabase } from "@/integrations/supabase/client";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -244,7 +242,7 @@ function TeamContentV2() {
   const [showTeamMenu, setShowTeamMenu] = useState(false);
   const [showCreateRoomScreen, setShowCreateRoomScreen] = useState(false);
   const [showTVModal, setShowTVModal] = useState(false);
-  const [selectedChatFriend, setSelectedChatFriend] = useState<Friend | null>(null);
+  const [showCategorySelectorModal, setShowCategorySelectorModal] = useState(false);
   const [showCategorySelectorModal, setShowCategorySelectorModal] = useState(false);
   const [isEditingRound, setIsEditingRound] = useState(false);
   const [pendingRandomPlay, setPendingRandomPlay] = useState(false);
@@ -280,13 +278,8 @@ function TeamContentV2() {
     }
   }, [isGuest, searchParams]);
 
-  const { totalUnread: unreadRoomMessagesCount } = useUnreadRoomMessages();
-  const { unreadCounts: unreadFriendCounts } = useUnreadMessages();
-  const unreadFriendMessagesCount = Object.values(unreadFriendCounts).reduce(
-    (sum, n) => sum + n,
-    0
-  );
-  const unreadMessagesCount = unreadRoomMessagesCount + unreadFriendMessagesCount;
+
+
 
   // Link pending challenge attempt to user after registration
   useEffect(() => {
@@ -788,7 +781,7 @@ function TeamContentV2() {
               const room = await createRoom();
               if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
             }}
-            onOpenFriendChat={(friend) => setSelectedChatFriend(friend)}
+            activeTab={activeTab}
             activeTab={activeTab}
             onViewAllRooms={() => handleTabChange("rooms")}
             onViewAllTrivias={() => handleTabChange("my-content")}
@@ -801,12 +794,6 @@ function TeamContentV2() {
         onOpenChange={setShowTVModal} 
       />
 
-      {/* Friend Chat Modal */}
-      <ChatModal
-        isOpen={!!selectedChatFriend}
-        onClose={() => setSelectedChatFriend(null)}
-        friend={selectedChatFriend}
-      />
 
       {/* Modals */}
       <AnimatePresence>
@@ -922,11 +909,6 @@ function TeamContentV2() {
         isOpen={showAllGamesModal}
         onClose={() => setShowAllGamesModal(false)}
       />
-      {/* TEMPORARILY HIDDEN */}
-      {/* <RoomChatsPanel
-        isOpen={showRoomChatsPanel}
-        onClose={() => setShowRoomChatsPanel(false)}
-      /> */}
       <CreateTriviaTypeModal
         open={showCreateTypeModal}
         onOpenChange={setShowCreateTypeModal}
