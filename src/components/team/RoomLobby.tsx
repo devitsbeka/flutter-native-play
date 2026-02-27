@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Copy, Share2, Users, LogOut, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2, Trash2 } from "lucide-react";
+import { Copy, Share2, Users, LogOut, Check, Edit2, Crown, Send, X, Gamepad2, Trash2 } from "lucide-react";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +10,6 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useRoomChat } from "@/hooks/useRoomChat";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { Input } from "@/components/ui/input";
@@ -37,26 +36,12 @@ export function RoomLobby() {
   const [copied, setCopied] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
-  const [showChat, setShowChat] = useState(false);
-  const [chatMessage, setChatMessage] = useState("");
   const [showTransferModal, setShowTransferModal] = useState(false);
-  const [lastSeenMessageCount, setLastSeenMessageCount] = useState(0);
   const prevParticipantsRef = useRef<string[]>([]);
 
-  const { messages, sendMessage } = useRoomChat(room?.id || null);
   const { matches } = useRoomMatchHistory(room?.id || null);
   const { sendInvitation } = useGameInvitations();
-  const chatEndRef = useRef<HTMLDivElement>(null);
   
-  // Calculate unread count
-  const unreadMessageCount = Math.max(0, messages.length - lastSeenMessageCount);
-  
-  // Mark messages as read when chat is opened
-  useEffect(() => {
-    if (showChat) {
-      setLastSeenMessageCount(messages.length);
-    }
-  }, [showChat, messages.length]);
 
   const otherParticipants = participants.filter(p => p.user_id !== user?.id);
 
@@ -74,23 +59,6 @@ export function RoomLobby() {
     
     prevParticipantsRef.current = currentIds;
   }, [participants, user?.id, playSound]);
-
-  // Play sound when new message arrives
-  const prevMessagesCountRef = useRef(0);
-  useEffect(() => {
-    if (messages.length > prevMessagesCountRef.current && prevMessagesCountRef.current > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.user_id !== user?.id) {
-        playSound("room-message");
-      }
-    }
-    prevMessagesCountRef.current = messages.length;
-  }, [messages, user?.id, playSound]);
-
-  // Scroll chat to bottom
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   useEffect(() => {
     if (room) {
@@ -232,13 +200,6 @@ export function RoomLobby() {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!chatMessage.trim()) return;
-    const success = await sendMessage(chatMessage);
-    if (success) {
-      setChatMessage("");
-    }
-  };
 
   const handleResendInvitation = async (userId: string) => {
     if (!room) return;
@@ -299,22 +260,6 @@ export function RoomLobby() {
           </motion.button>
 
           <div className="flex items-center gap-2">
-            {/* Chat toggle */}
-            <motion.button
-              onClick={() => setShowChat(!showChat)}
-              className={`flex items-center justify-center w-10 h-10 rounded-xl relative border ${
-                showChat ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"
-              }`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <MessageCircle className={`w-4 h-4 ${showChat ? "text-primary-foreground" : "text-muted-foreground"}`} />
-              {unreadMessageCount > 0 && !showChat && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {unreadMessageCount}
-                </span>
-              )}
-            </motion.button>
 
             {/* Delete room button for host */}
             {isHost && (
@@ -431,71 +376,6 @@ export function RoomLobby() {
           </ChunkyButton>
         </motion.div>
 
-        {/* Chat Panel */}
-        <AnimatePresence>
-          {showChat && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 180 }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-4 rounded-2xl overflow-hidden bg-card border border-border"
-            >
-              <div className="h-full flex flex-col">
-                <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                  {messages.length === 0 ? (
-                    <p className="text-center text-muted-foreground text-sm py-4">
-                      {t("extra.lobbyNoMessages")}
-                    </p>
-                  ) : (
-                    messages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={`flex items-start gap-2 ${
-                          msg.user_id === user?.id ? "flex-row-reverse" : ""
-                        }`}
-                      >
-                        <div className="w-6 h-6 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                          {msg.avatar_url ? (
-                            <img src={resolveAvatarUrl(msg.avatar_url) || msg.avatar_url} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
-                              {msg.nickname?.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                        <div
-                          className={`max-w-[70%] px-3 py-1.5 rounded-2xl text-sm ${
-                            msg.user_id === user?.id
-                              ? "bg-primary text-primary-foreground rounded-tr-sm"
-                              : "bg-muted text-foreground rounded-tl-sm"
-                          }`}
-                        >
-                          {msg.user_id !== user?.id && (
-                            <p className="text-[10px] font-medium text-primary mb-0.5">{msg.nickname}</p>
-                          )}
-                          <p>{msg.message}</p>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                  <div ref={chatEndRef} />
-                </div>
-                <div className="p-2 border-t border-border flex gap-2">
-                  <Input
-                    value={chatMessage}
-                    onChange={(e) => setChatMessage(e.target.value)}
-                    placeholder={t("extra.lobbyWriteMessage")}
-                    className="flex-1 text-sm"
-                    onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                  />
-                  <ChunkyButton size="sm" variant="primary" onClick={handleSendMessage}>
-                    <Send className="w-4 h-4" />
-                  </ChunkyButton>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* BIG SCOREBOARD */}
         <div className="flex-1 max-w-md mx-auto w-full">

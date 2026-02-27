@@ -14,7 +14,6 @@ interface TeamRightSidebarProps {
   onAcceptInvitation: (invitationId: string) => Promise<string | null>;
   onJoinRoom: (roomCode: string) => void;
   onOpenTV: () => void;
-  onOpenFriendChat: (friend: Friend) => void;
   activeTab: string;
   onViewAllRooms: () => void;
   onViewAllTrivias: () => void;
@@ -24,7 +23,6 @@ export function TeamRightSidebar({
   onAcceptInvitation, 
   onJoinRoom,
   onOpenTV,
-  onOpenFriendChat,
   activeTab,
   onViewAllRooms,
   onViewAllTrivias,
@@ -153,9 +151,8 @@ export function TeamRightSidebar({
             {onlineFriends.length > 0 ? (
               <div className="divide-y divide-border/50">
                 {onlineFriends.slice(0, 5).map((friend) => (
-                  <button
+                  <div
                     key={friend.id}
-                    onClick={() => onOpenFriendChat(friend)}
                     className="w-full flex items-center gap-3 p-3 hover:bg-muted/80 transition-colors"
                   >
                     <div className="relative">
