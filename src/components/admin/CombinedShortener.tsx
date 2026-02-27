@@ -754,6 +754,15 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
             </div>
             <div className="text-xs text-muted-foreground">📝 მოლოდინში</div>
           </div>
+          <div 
+            className={`text-center cursor-pointer p-2 rounded-lg transition-colors hover:bg-orange-100 dark:hover:bg-orange-900/30 ${viewMode === 'needs_rewrite' ? 'ring-2 ring-orange-500' : ''}`}
+            onClick={() => { setViewMode('needs_rewrite'); loadNeedsRewriteQuestions(); }}
+          >
+            <div className="text-2xl font-bold text-orange-500">
+              {stats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : stats.needsRewrite}
+            </div>
+            <div className="text-xs text-muted-foreground">⚠️ Needs Rewrite</div>
+          </div>
           <div className="text-center p-2">
             <div className="text-2xl font-bold text-green-500">
               {stats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : stats.alreadyProcessed}
