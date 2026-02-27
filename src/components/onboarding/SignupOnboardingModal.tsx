@@ -1,8 +1,10 @@
 import { ICON_URLS } from "@/lib/toast-icons";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import { Sparkles, User, Eye, EyeOff, Lock, ShieldQuestion } from "lucide-react";
+import { Sparkles, User, Eye, EyeOff, Lock, ShieldQuestion, Calendar } from "lucide-react";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { AgeGateStep } from "./AgeGateStep";
+import type { AgeGroup } from "@/hooks/useAgeGroup";
 import { useAuth } from "@/hooks/useAuth";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { t } from "@/lib/i18n";
@@ -37,7 +39,7 @@ const celebrateConfetti = () => {
 };
 
 // Step order for determining animation direction
-const stepOrder = ["username", "creating"] as const;
+const stepOrder = ["age_gate", "username", "creating"] as const;
 
 // Slide and fade animation variants
 const slideVariants: Variants = {
@@ -143,6 +145,8 @@ export function SignupOnboardingModal() {
     setUsername, 
     password, 
     setPassword,
+    selectedAgeGroup,
+    setSelectedAgeGroup,
     completeOnboarding,
   } = useOnboarding();
   
@@ -159,7 +163,7 @@ export function SignupOnboardingModal() {
   
   const usernameRef = useRef<HTMLInputElement>(null);
   
-  const isOpen = step === "username" || step === "creating";
+  const isOpen = step === "age_gate" || step === "username" || step === "creating";
   
   // Track step changes to determine animation direction
   useEffect(() => {
