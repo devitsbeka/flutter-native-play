@@ -12,7 +12,7 @@ export default function TriviaLoader() {
 
   const FEATURES = [
     { icon: `${ICON_BASE}/television.png`, text: t("extra.tvModeFeature") },
-    { icon: `${ICON_BASE}/puzzle.png`, text: t("extra.categoriesFeature") },
+    { icon: `${ICON_BASE}/jigsaw-puzzle.png`, text: t("extra.categoriesFeature") },
     { icon: `${ICON_BASE}/team.png`, text: t("extra.realtimeFeature") },
     { icon: `${ICON_BASE}/trophy.png`, text: t("extra.weeklyFeature") },
     { icon: `${ICON_BASE}/lightning-bolt.png`, text: t("extra.dailyFeature") },
