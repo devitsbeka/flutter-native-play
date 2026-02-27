@@ -235,20 +235,25 @@ export function SignupOnboardingModal() {
         throw signUpError;
       }
       
-      // Save security question data to profile
-      if (data?.user?.id && securityQuestionId && securityAnswer.trim()) {
+      // Save security question data and age group to profile
+      if (data?.user?.id) {
         try {
-          const hashedAnswer = await hashAnswer(securityAnswer);
-          await supabase
-            .from("profiles")
-            .update({
-              security_question_id: securityQuestionId,
-              security_answer_hash: hashedAnswer,
-            })
-            .eq("user_id", data.user.id);
-        } catch (securityErr) {
-          console.error("Failed to save security question:", securityErr);
-          // Don't block signup if security Q save fails
+          const updateData: any = {};
+          if (securityQuestionId && securityAnswer.trim()) {
+            updateData.security_question_id = securityQuestionId;
+            updateData.security_answer_hash = await hashAnswer(securityAnswer);
+          }
+          if (selectedAgeGroup) {
+            updateData.age_group = selectedAgeGroup;
+          }
+          if (Object.keys(updateData).length > 0) {
+            await supabase
+              .from("profiles")
+              .update(updateData)
+              .eq("user_id", data.user.id);
+          }
+        } catch (profileErr) {
+          console.error("Failed to save profile data:", profileErr);
         }
       }
       
@@ -270,9 +275,23 @@ export function SignupOnboardingModal() {
     }
   };
   
-  // Handle back - close modal
+  // Handle back
   const handleBack = () => {
-    setStep("idle");
+    if (step === "username") {
+      setStep("age_gate");
+    } else {
+      setStep("idle");
+    }
+  };
+
+  const handleAgeSelect = (age: AgeGroup) => {
+    setSelectedAgeGroup(age);
+  };
+
+  const handleAgeContinue = () => {
+    if (selectedAgeGroup) {
+      setStep("username");
+    }
   };
   
   // Get animation variants based on direction
@@ -282,6 +301,16 @@ export function SignupOnboardingModal() {
   // Determine current step config
   const getStepConfig = () => {
     switch (step) {
+      case "age_gate":
+        return {
+          icon: <Calendar className="w-10 h-10 text-white" />,
+          title: t("onboarding.ageGateTitle"),
+          subtitle: t("onboarding.ageGateSubtitle"),
+          primaryLabel: t("common.continue"),
+          onPrimaryClick: handleAgeContinue,
+          primaryDisabled: !selectedAgeGroup,
+          showBack: true,
+        };
       case "username":
         return {
           icon: <User className="w-10 h-10 text-white" />,
