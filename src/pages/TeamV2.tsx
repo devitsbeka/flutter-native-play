@@ -23,9 +23,7 @@ import { AllFriendsModal } from "@/components/team/AllFriendsModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
-import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
-import { useUnreadMessages } from "@/hooks/useChat";
-import { RoomChatsPanel } from "@/components/team/RoomChatsPanel";
+import { LiveBadge } from "@/components/social/LiveBadge";
 import { LiveBadge } from "@/components/social/LiveBadge";
 import { ExplorePortfolioFeed } from "@/components/social/ExplorePortfolioFeed";
 import { MyTriviaTab } from "@/components/social/MyTriviaTab";
@@ -64,8 +62,7 @@ import {
   ExploreSort,
 } from "@/components/team/UnifiedFiltersBar";
 import { QRScannerModal } from "@/components/team/QRScannerModal";
-import { ChatModal } from "@/components/team/ChatModal";
-import { Friend } from "@/hooks/useFriends";
+import { supabase } from "@/integrations/supabase/client";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
