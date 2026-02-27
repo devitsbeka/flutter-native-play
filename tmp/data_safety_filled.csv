@@ -39,7 +39,7 @@ PSL_DATA_TYPES_LOCATION,PSL_PRECISE_LOCATION,,MULTIPLE_CHOICE,Location/Precise l
 PSL_DATA_TYPES_SEARCH_AND_BROWSING,PSL_WEB_BROWSING_HISTORY,,MULTIPLE_CHOICE,Web browsing/Web browsing history
 PSL_DATA_TYPES_EMAIL_AND_TEXT,PSL_EMAILS,,MULTIPLE_CHOICE,Messages/Emails
 PSL_DATA_TYPES_EMAIL_AND_TEXT,PSL_SMS_CALL_LOG,,MULTIPLE_CHOICE,Messages/SMS or MMS
-PSL_DATA_TYPES_EMAIL_AND_TEXT,PSL_OTHER_MESSAGES,TRUE,MULTIPLE_CHOICE,Messages/Other in-app messages
+PSL_DATA_TYPES_EMAIL_AND_TEXT,PSL_OTHER_MESSAGES,,MULTIPLE_CHOICE,Messages/Other in-app messages
 PSL_DATA_TYPES_PHOTOS_AND_VIDEOS,PSL_PHOTOS,TRUE,MULTIPLE_CHOICE,Photos and videos/Photos
 PSL_DATA_TYPES_PHOTOS_AND_VIDEOS,PSL_VIDEOS,,MULTIPLE_CHOICE,Photos and videos/Videos
 PSL_DATA_TYPES_AUDIO,PSL_AUDIO,,MULTIPLE_CHOICE,Audio files/Voice or sound recordings
@@ -401,12 +401,12 @@ PSL_DATA_USAGE_RESPONSES:PSL_SMS_CALL_LOG:DATA_USAGE_SHARING_PURPOSE,PSL_FRAUD_P
 PSL_DATA_USAGE_RESPONSES:PSL_SMS_CALL_LOG:DATA_USAGE_SHARING_PURPOSE,PSL_ADVERTISING,,MULTIPLE_CHOICE,Data usage and handling (SMS or MMS)/Why is this user data shared? Select all that apply./Advertising or marketing
 PSL_DATA_USAGE_RESPONSES:PSL_SMS_CALL_LOG:DATA_USAGE_SHARING_PURPOSE,PSL_PERSONALIZATION,,MULTIPLE_CHOICE,Data usage and handling (SMS or MMS)/Why is this user data shared? Select all that apply./Personalisation
 PSL_DATA_USAGE_RESPONSES:PSL_SMS_CALL_LOG:DATA_USAGE_SHARING_PURPOSE,PSL_ACCOUNT_MANAGEMENT,,MULTIPLE_CHOICE,Data usage and handling (SMS or MMS)/Why is this user data shared? Select all that apply./Account management
-PSL_DATA_USAGE_RESPONSES:PSL_OTHER_MESSAGES:PSL_DATA_USAGE_COLLECTION_AND_SHARING,PSL_DATA_USAGE_ONLY_COLLECTED,TRUE,MULTIPLE_CHOICE,"Data usage and handling (Other in-app messages)/Is this data collected, shared or both?/Collected"
+PSL_DATA_USAGE_RESPONSES:PSL_OTHER_MESSAGES:PSL_DATA_USAGE_COLLECTION_AND_SHARING,PSL_DATA_USAGE_ONLY_COLLECTED,,MULTIPLE_CHOICE,"Data usage and handling (Other in-app messages)/Is this data collected, shared or both?/Collected"
 PSL_DATA_USAGE_RESPONSES:PSL_OTHER_MESSAGES:PSL_DATA_USAGE_COLLECTION_AND_SHARING,PSL_DATA_USAGE_ONLY_SHARED,,MULTIPLE_CHOICE,"Data usage and handling (Other in-app messages)/Is this data collected, shared or both?/Shared"
-PSL_DATA_USAGE_RESPONSES:PSL_OTHER_MESSAGES:PSL_DATA_USAGE_EPHEMERAL,,FALSE,MAYBE_REQUIRED,Data usage and handling (Other in-app messages)/Is this data processed ephemerally?
-PSL_DATA_USAGE_RESPONSES:PSL_OTHER_MESSAGES:DATA_USAGE_USER_CONTROL,PSL_DATA_USAGE_USER_CONTROL_OPTIONAL,TRUE,SINGLE_CHOICE,"Data usage and handling (Other in-app messages)/Is this data required for your app, or can users choose whether it's collected?/Users can choose whether this data is collected"
+PSL_DATA_USAGE_RESPONSES:PSL_OTHER_MESSAGES:PSL_DATA_USAGE_EPHEMERAL,,,MAYBE_REQUIRED,Data usage and handling (Other in-app messages)/Is this data processed ephemerally?
+PSL_DATA_USAGE_RESPONSES:PSL_OTHER_MESSAGES:DATA_USAGE_USER_CONTROL,PSL_DATA_USAGE_USER_CONTROL_OPTIONAL,,SINGLE_CHOICE,"Data usage and handling (Other in-app messages)/Is this data required for your app, or can users choose whether it's collected?/Users can choose whether this data is collected"
 PSL_DATA_USAGE_RESPONSES:PSL_OTHER_MESSAGES:DATA_USAGE_USER_CONTROL,PSL_DATA_USAGE_USER_CONTROL_REQUIRED,,SINGLE_CHOICE,"Data usage and handling (Other in-app messages)/Is this data required for your app, or can users choose whether it's collected?/Data collection is required (users can't turn off this data collection)"
-PSL_DATA_USAGE_RESPONSES:PSL_OTHER_MESSAGES:DATA_USAGE_COLLECTION_PURPOSE,PSL_APP_FUNCTIONALITY,TRUE,MULTIPLE_CHOICE,Data usage and handling (Other in-app messages)/Why is this user data collected? Select all that apply./App functionality
+PSL_DATA_USAGE_RESPONSES:PSL_OTHER_MESSAGES:DATA_USAGE_COLLECTION_PURPOSE,PSL_APP_FUNCTIONALITY,,MULTIPLE_CHOICE,Data usage and handling (Other in-app messages)/Why is this user data collected? Select all that apply./App functionality
 PSL_DATA_USAGE_RESPONSES:PSL_OTHER_MESSAGES:DATA_USAGE_COLLECTION_PURPOSE,PSL_ANALYTICS,,MULTIPLE_CHOICE,Data usage and handling (Other in-app messages)/Why is this user data collected? Select all that apply./Analytics
 PSL_DATA_USAGE_RESPONSES:PSL_OTHER_MESSAGES:DATA_USAGE_COLLECTION_PURPOSE,PSL_DEVELOPER_COMMUNICATIONS,,MULTIPLE_CHOICE,Data usage and handling (Other in-app messages)/Why is this user data collected? Select all that apply./Developer communications
 PSL_DATA_USAGE_RESPONSES:PSL_OTHER_MESSAGES:DATA_USAGE_COLLECTION_PURPOSE,PSL_FRAUD_PREVENTION_SECURITY,,MULTIPLE_CHOICE,"Data usage and handling (Other in-app messages)/Why is this user data collected? Select all that apply./Fraud prevention, security and compliance"
