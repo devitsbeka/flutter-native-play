@@ -70,7 +70,7 @@ export default function TriviaLoader() {
         >
           <div
             className="mx-auto max-w-md px-4 py-3 flex items-center gap-3"
-            style={{ background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(12px)', borderRadius: '22px', border: '1px solid rgba(255, 255, 255, 0.2)', minHeight: '80px' }}
+            style={{ background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(12px)', borderRadius: '22px', border: '1px solid rgba(255, 255, 255, 0.2)', height: '65px' }}
           >
             <AnimatePresence mode="wait">
               <motion.div
@@ -85,7 +85,7 @@ export default function TriviaLoader() {
                   const feature = FEATURES[featureIndex];
                   return (
                     <>
-                      <div className="shrink-0 -ml-2 -my-4 w-14 h-14 flex items-center justify-center">
+                      <div className="shrink-0 -ml-2 w-14 h-14 flex items-center justify-center" style={{ marginTop: '-16px', marginBottom: '0px' }}>
                         <img src={feature.icon} alt="" className="w-14 h-14 object-contain drop-shadow-lg" />
                       </div>
                       <p className="text-white/90 text-sm font-medium leading-snug">{feature.text}</p>
