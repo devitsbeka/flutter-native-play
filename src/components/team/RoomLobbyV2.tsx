@@ -140,11 +140,8 @@ export function RoomLobbyV2() {
     checkActiveSession();
   }, [currentRoom?.id, currentRoom?.tv_session_id, isHost, hasCheckedTVSession, navigate]);
 
-  const { messages, sendMessage } = useRoomChat(currentRoom?.id || null);
   const { matches } = useRoomMatchHistory(currentRoom?.id || null);
   const { queue, addToQueue, removeFromQueue, reorderQueue } = useRoomCategoryQueue(currentRoom?.id || null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const chatInputRef = useRef<HTMLInputElement>(null);
   
   // Calculate unread count
   const unreadMessageCount = Math.max(0, messages.length - lastSeenMessageCount);
