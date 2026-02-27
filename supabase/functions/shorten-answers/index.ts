@@ -3,7 +3,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 const MAX_ANSWER_LENGTH = 20;
+const AGGRESSIVE_THRESHOLD = 12;
 const BATCH_SIZE = 10;
+const SENTENCE_LENGTH_THRESHOLD = 30;
 
 interface Question {
   id: string;
@@ -21,9 +23,30 @@ interface AnswerShortenResult {
   shortenedCorrect: string | null;
   originalIncorrect: string[];
   shortenedIncorrect: (string | null)[];
-  status: 'shortened' | 'partially_shortened' | 'unshortenable' | 'failed';
+  status: 'shortened' | 'partially_shortened' | 'unshortenable' | 'failed' | 'needs_rewrite';
   correctShortened: boolean;
   incorrectShortenedCount: number;
+}
+
+/**
+ * Detect if an answer looks like a full sentence rather than a quiz answer.
+ * Checks for verb-like patterns, multiple spaces, and length.
+ */
+function looksLikeSentence(answer: string): boolean {
+  if (answer.length < SENTENCE_LENGTH_THRESHOLD) return false;
+  
+  const wordCount = answer.trim().split(/\s+/).length;
+  if (wordCount < 4) return false;
+  
+  // Common sentence patterns: contains verbs, conjunctions, articles in sequence
+  const sentencePatterns = [
+    /\b(is|are|was|were|has|have|had|does|did|can|could|will|would|should|may|might)\b/i,
+    /\b(because|therefore|however|although|which|that|when|where|while)\b/i,
+    /\b(reduces|increases|causes|creates|provides|ensures|prevents|allows|enables)\b/i,
+  ];
+  
+  const matchCount = sentencePatterns.filter(p => p.test(answer)).length;
+  return matchCount >= 1 && wordCount >= 5;
 }
 
 serve(async (req) => {
@@ -34,7 +57,7 @@ serve(async (req) => {
   }
 
   try {
-    const { categoryId, testMode, inProduction } = await req.json();
+    const { categoryId, testMode, inProduction, aggressiveMode, language } = await req.json();
     
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -46,12 +69,25 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    const threshold = aggressiveMode ? AGGRESSIVE_THRESHOLD : MAX_ANSWER_LENGTH;
+
     // Build query for questions that need answer shortening
     let query = supabase
       .from("questions")
       .select("id, question_text, correct_answer, incorrect_answers, category_id, language")
-      .eq("is_active", true)
-      .is("answer_shorten_status", null);
+      .eq("is_active", true);
+
+    // In aggressive mode, also re-process already-shortened answers that are still > threshold
+    if (aggressiveMode) {
+      query = query.or("answer_shorten_status.is.null,answer_shorten_status.eq.shortened");
+    } else {
+      query = query.is("answer_shorten_status", null);
+    }
+
+    // Filter by language if specified
+    if (language && language !== "all") {
+      query = query.eq("language", language);
+    }
 
     // Filter by production status
     if (inProduction !== undefined) {
@@ -76,8 +112,8 @@ serve(async (req) => {
         ? q.incorrect_answers as string[]
         : [];
       
-      const correctTooLong = q.correct_answer.length > MAX_ANSWER_LENGTH;
-      const anyIncorrectTooLong = incorrectAnswers.some(a => a.length > MAX_ANSWER_LENGTH);
+      const correctTooLong = q.correct_answer.length > threshold;
+      const anyIncorrectTooLong = incorrectAnswers.some(a => a.length > threshold);
       
       return correctTooLong || anyIncorrectTooLong;
     });
@@ -93,6 +129,7 @@ serve(async (req) => {
           shortened: 0,
           partiallyShortened: 0,
           unshortenable: 0,
+          needsRewrite: 0,
           failed: 0,
           remaining: 0,
           results: [],
@@ -105,6 +142,7 @@ serve(async (req) => {
     let shortened = 0;
     let partiallyShortened = 0;
     let unshortenable = 0;
+    let needsRewrite = 0;
     let failed = 0;
 
     // Process questions one by one
@@ -114,9 +152,39 @@ serve(async (req) => {
           ? question.incorrect_answers as string[]
           : [];
 
+        // Check if any answers look like full sentences → flag for rewrite
+        const allAnswers = [question.correct_answer, ...incorrectAnswers];
+        const hasSentenceAnswers = allAnswers.some(a => looksLikeSentence(a));
+        
+        if (hasSentenceAnswers && question.language === 'en') {
+          // Flag as needs_rewrite — question itself is poorly constructed
+          await supabase
+            .from("questions")
+            .update({ 
+              answer_shorten_status: "needs_rewrite",
+              original_correct_answer: question.correct_answer,
+              original_incorrect_answers: incorrectAnswers,
+            })
+            .eq("id", question.id);
+
+          results.push({
+            id: question.id,
+            questionText: question.question_text,
+            originalCorrect: question.correct_answer,
+            shortenedCorrect: null,
+            originalIncorrect: incorrectAnswers,
+            shortenedIncorrect: incorrectAnswers.map(() => null),
+            status: 'needs_rewrite',
+            correctShortened: false,
+            incorrectShortenedCount: 0,
+          });
+          needsRewrite++;
+          continue;
+        }
+
         // Identify which answers need shortening
-        const correctNeedsShortening = question.correct_answer.length > MAX_ANSWER_LENGTH;
-        const incorrectNeedShortening = incorrectAnswers.map(a => a.length > MAX_ANSWER_LENGTH);
+        const correctNeedsShortening = question.correct_answer.length > threshold;
+        const incorrectNeedShortening = incorrectAnswers.map(a => a.length > threshold);
         const anyNeedsShortening = correctNeedsShortening || incorrectNeedShortening.some(Boolean);
 
         if (!anyNeedsShortening) {
@@ -136,15 +204,18 @@ serve(async (req) => {
         }
         
         incorrectAnswers.forEach((ans, idx) => {
-          if (ans.length > MAX_ANSWER_LENGTH) {
+          if (ans.length > threshold) {
             answersToShorten.push({ type: 'incorrect', answer: ans, index: idx });
           }
         });
 
         const isGeorgian = question.language === 'ka';
+        const isEnglish = question.language === 'en';
 
-        const prompt = isGeorgian
-          ? `შენ ხარ ქართული ქვიზის პასუხების შემოკლების ექსპერტი.
+        let prompt: string;
+
+        if (isGeorgian) {
+          prompt = `შენ ხარ ქართული ქვიზის პასუხების შემოკლების ექსპერტი.
 
 ამოცანა: შეამოკლე პასუხები ${MAX_ANSWER_LENGTH} სიმბოლომდე ისე, რომ მნიშვნელობა არ დაიკარგოს.
 
@@ -175,39 +246,56 @@ ${answersToShorten.map((a, i) => `${i + 1}. "${a.answer}" (${a.answer.length} �
   "shortened": [
     {"original": "...", "shortened": "..." ან "CANNOT_SHORTEN"}
   ]
-}`
-          : `You are a quiz answer shortening expert.
+}`;
+        } else {
+          // Enhanced English prompt (also used as default for other languages)
+          prompt = `You are a trivia quiz answer shortening expert. Your goal: make answers fit on mobile quiz buttons (max ${MAX_ANSWER_LENGTH} characters).
 
-Task: Shorten answers to max ${MAX_ANSWER_LENGTH} characters while preserving meaning.
+Task: Shorten each answer to max ${MAX_ANSWER_LENGTH} characters. These are quiz answer OPTIONS, not explanations.
+
+✅ GOOD shortenings (learn from these):
+- "The United Kingdom" → "United Kingdom" (drop articles)
+- "Consumer Price Index" → "CPI" (use well-known abbreviations)
+- "The Pacific Ocean" → "Pacific Ocean"
+- "Carbon Dioxide" → "CO₂"
+- "United States of America" → "USA"
+- "It is a type of mammal" → "Mammal" (extract the key term)
+- "Mount Kilimanjaro" → "Mt. Kilimanjaro"
+- "Approximately 365 days" → "365 days"
+- "The color blue" → "Blue"
+- "During the Renaissance" → "Renaissance"
 
 🚫 Do NOT:
-- Do not truncate words halfway (e.g. "Alexander" → "Alexand" is wrong!)
-- Do not shorten proper nouns and surnames (e.g. "Alexander the Great", "Leonardo da Vinci")
-- Do not shorten names of historical figures and their titles
-- Do not shorten geographical names
-- Do not use abbreviations unless universally known
+- Truncate words (e.g., "Alexander" → "Alexand" is WRONG)
+- Change proper nouns (names of people, places)
+- Use obscure abbreviations
+- Change the factual meaning
 
-✅ You MAY:
-- Remove filler words ("that is", "which is", "etc.")
-- Use a shorter synonym
-- Rephrase more concisely
+✅ Shortening strategies (in order of preference):
+1. Drop articles: "The", "A", "An"
+2. Drop filler: "It is", "That is", "Known as", "Called the"
+3. Use well-known abbreviations: USA, UK, EU, DNA, CPI, GDP, NATO, UN, WHO, CO₂
+4. Remove unnecessary qualifiers: "approximately", "roughly", "about", "around"
+5. Use shorter synonyms if exact meaning preserved
+6. Extract the key noun/term from a phrase
 
-⚠️ Important:
-- If the answer is a proper noun, surname, or historical figure - it cannot be shortened
-- If shortening is impossible for the above reasons, respond: CANNOT_SHORTEN
-- It is better to keep a long answer than to distort it
+⚠️ Rules:
+- If the answer is a proper noun that's already minimal (e.g., "Leonardo da Vinci") → CANNOT_SHORTEN
+- If shortening would lose critical meaning → CANNOT_SHORTEN
+- Better to keep it long than to distort it
 
 Question (for context): "${question.question_text}"
 
 Answers to shorten:
-${answersToShorten.map((a, i) => `${i + 1}. "${a.answer}" (${a.answer.length} characters)`).join('\n')}
+${answersToShorten.map((a, i) => `${i + 1}. "${a.answer}" (${a.answer.length} chars)`).join('\n')}
 
-Respond ONLY in JSON format:
+Respond ONLY in JSON:
 {
   "shortened": [
     {"original": "...", "shortened": "..." or "CANNOT_SHORTEN"}
   ]
 }`;
+        }
 
         const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
@@ -261,7 +349,6 @@ Respond ONLY in JSON format:
         }
 
         if (!parsedResponse || !parsedResponse.shortened) {
-          // Failed to get valid response
           results.push({
             id: question.id,
             questionText: question.question_text,
@@ -379,6 +466,7 @@ Respond ONLY in JSON format:
         shortened,
         partiallyShortened,
         unshortenable,
+        needsRewrite,
         failed,
         remaining,
         results,

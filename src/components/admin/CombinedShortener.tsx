@@ -13,7 +13,9 @@ import {
   Pencil,
   Save,
   X,
-  RotateCcw
+  RotateCcw,
+  Globe,
+  Zap
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +25,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -65,6 +68,7 @@ interface CombinedStats {
   total: number;
   needsWork: number;
   pendingReview: number;
+  needsRewrite: number;
   alreadyProcessed: number;
   loading: boolean;
 }
@@ -99,6 +103,10 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
   
   const [categoryId, setCategoryId] = useState<string>('all');
   const [inProduction, setInProduction] = useState<boolean>(false);
+  const [languageFilter, setLanguageFilter] = useState<string>('all');
+  const [aggressiveMode, setAggressiveMode] = useState<boolean>(false);
+  const [needsRewriteQuestions, setNeedsRewriteQuestions] = useState<PendingQuestion[]>([]);
+  const [loadingNeedsRewrite, setLoadingNeedsRewrite] = useState(false);
   const [progress, setProgress] = useState<CombinedProgress>({
     total: 0,
     processed: 0,
@@ -115,12 +123,13 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
     total: 0,
     needsWork: 0,
     pendingReview: 0,
+    needsRewrite: 0,
     alreadyProcessed: 0,
     loading: false
   });
   
   // Pending review state
-  const [viewMode, setViewMode] = useState<'shorten' | 'pending'>('shorten');
+  const [viewMode, setViewMode] = useState<'shorten' | 'pending' | 'needs_rewrite'>('shorten');
   const [pendingQuestions, setPendingQuestions] = useState<PendingQuestion[]>([]);
   const [loadingPending, setLoadingPending] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -137,11 +146,15 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
       try {
         let query = supabase
           .from('questions')
-          .select('id, question_text, correct_answer, incorrect_answers, shorten_status, answer_shorten_status, in_production')
+          .select('id, question_text, correct_answer, incorrect_answers, shorten_status, answer_shorten_status, in_production, language')
           .eq('is_active', true);
         
         if (categoryId !== 'all') {
           query = query.eq('category_id', categoryId);
+        }
+
+        if (languageFilter !== 'all') {
+          query = query.eq('language', languageFilter);
         }
 
         const { data: questions } = await query;
@@ -171,6 +184,11 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
         const pendingReview = targetQuestions.filter(q => 
           q.shorten_status === 'pending_review' || q.answer_shorten_status === 'pending_review'
         );
+
+        // Questions flagged as needs_rewrite
+        const rewriteCount = targetQuestions.filter(q => 
+          q.answer_shorten_status === 'needs_rewrite'
+        );
         
         const alreadyProcessed = targetQuestions.filter(q => 
           q.shorten_status === 'shortened' || q.answer_shorten_status === 'shortened'
@@ -180,6 +198,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           total: targetQuestions.length,
           needsWork: needsWork.length,
           pendingReview: pendingReview.length,
+          needsRewrite: rewriteCount.length,
           alreadyProcessed: alreadyProcessed.length,
           loading: false
         });
@@ -190,7 +209,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
     };
 
     loadStats();
-  }, [categoryId, inProduction, progress.status]);
+  }, [categoryId, inProduction, languageFilter, progress.status]);
 
   const startShortening = async (testMode = false) => {
     setIsPaused(false);
@@ -222,7 +241,8 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           body: { 
             categoryId: categoryId === 'all' ? null : categoryId,
             testMode,
-            inProduction
+            inProduction,
+            language: languageFilter === 'all' ? undefined : languageFilter,
           }
         });
 
@@ -235,7 +255,9 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           body: { 
             categoryId: categoryId === 'all' ? null : categoryId,
             testMode,
-            inProduction
+            inProduction,
+            aggressiveMode,
+            language: languageFilter === 'all' ? undefined : languageFilter,
           }
         });
 
@@ -690,6 +712,81 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
     }
   };
 
+  // Load needs_rewrite questions
+  const loadNeedsRewriteQuestions = async () => {
+    setLoadingNeedsRewrite(true);
+    try {
+      let query = supabase
+        .from('questions')
+        .select('id, question_text, correct_answer, incorrect_answers, answer_shorten_status, language')
+        .eq('is_active', true)
+        .eq('answer_shorten_status', 'needs_rewrite');
+      
+      if (categoryId !== 'all') {
+        query = query.eq('category_id', categoryId);
+      }
+      if (languageFilter !== 'all') {
+        query = query.eq('language', languageFilter);
+      }
+      if (!inProduction) {
+        query = query.eq('in_production', false);
+      } else {
+        query = query.eq('in_production', true);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      setNeedsRewriteQuestions((data || []).map(q => ({
+        ...q,
+        pending_question_text: null,
+        pending_correct_answer: null,
+        pending_incorrect_answers: null,
+        shorten_status: null,
+        incorrect_answers: Array.isArray(q.incorrect_answers) ? q.incorrect_answers as string[] : [],
+      })));
+    } catch (err) {
+      console.error('Error loading needs_rewrite questions:', err);
+      toast({ title: 'Error loading flagged questions', variant: 'destructive' });
+    } finally {
+      setLoadingNeedsRewrite(false);
+    }
+  };
+
+  // Delete a needs_rewrite question (deactivate)
+  const deleteNeedsRewriteQuestion = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({ is_active: false })
+        .eq('id', id);
+      if (error) throw error;
+      setNeedsRewriteQuestions(prev => prev.filter(q => q.id !== id));
+      setStats(prev => ({ ...prev, needsRewrite: prev.needsRewrite - 1 }));
+      toast({ title: 'Question removed' });
+    } catch (err) {
+      console.error('Delete error:', err);
+      toast({ title: 'Error', variant: 'destructive' });
+    }
+  };
+
+  // Reset needs_rewrite status so it can be reprocessed
+  const resetNeedsRewriteQuestion = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({ answer_shorten_status: null })
+        .eq('id', id);
+      if (error) throw error;
+      setNeedsRewriteQuestions(prev => prev.filter(q => q.id !== id));
+      setStats(prev => ({ ...prev, needsRewrite: prev.needsRewrite - 1, needsWork: prev.needsWork + 1 }));
+      toast({ title: 'Reset for reprocessing' });
+    } catch (err) {
+      console.error('Reset error:', err);
+      toast({ title: 'Error', variant: 'destructive' });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -732,6 +829,15 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
             </div>
             <div className="text-xs text-muted-foreground">📝 მოლოდინში</div>
           </div>
+          <div 
+            className={`text-center cursor-pointer p-2 rounded-lg transition-colors hover:bg-orange-100 dark:hover:bg-orange-900/30 ${viewMode === 'needs_rewrite' ? 'ring-2 ring-orange-500' : ''}`}
+            onClick={() => { setViewMode('needs_rewrite'); loadNeedsRewriteQuestions(); }}
+          >
+            <div className="text-2xl font-bold text-orange-500">
+              {stats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : stats.needsRewrite}
+            </div>
+            <div className="text-xs text-muted-foreground">⚠️ Needs Rewrite</div>
+          </div>
           <div className="text-center p-2">
             <div className="text-2xl font-bold text-green-500">
               {stats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : stats.alreadyProcessed}
@@ -760,6 +866,20 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           </div>
 
           <div className="space-y-2">
+            <Label><Globe className="h-3 w-3 inline mr-1" />Language</Label>
+            <Select value={languageFilter} onValueChange={setLanguageFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="en">🇬🇧 English</SelectItem>
+                <SelectItem value="ka">🇬🇪 Georgian</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label>სტატუსი</Label>
             <Select 
               value={inProduction ? 'prod' : 'lib'} 
@@ -773,6 +893,14 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
                 <SelectItem value="prod">In Prod</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="flex items-center gap-2 pb-1">
+            <Switch checked={aggressiveMode} onCheckedChange={setAggressiveMode} />
+            <Label className="flex items-center gap-1 text-xs cursor-pointer" onClick={() => setAggressiveMode(!aggressiveMode)}>
+              <Zap className="h-3 w-3" />
+              Aggressive (13-20)
+            </Label>
           </div>
 
           <div className="flex gap-2">
@@ -1223,6 +1351,76 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
               <div className="text-center py-8 text-muted-foreground">
                 <CheckCircle className="h-12 w-12 mx-auto mb-3 opacity-20 text-green-500" />
                 <p className="text-sm">მოლოდინში კითხვები არ არის</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Needs Rewrite View */}
+        {viewMode === 'needs_rewrite' && (
+          <div className="space-y-4">
+            {loadingNeedsRewrite ? (
+              <div className="text-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-orange-500" />
+                <p className="text-sm text-muted-foreground mt-2">Loading flagged questions...</p>
+              </div>
+            ) : needsRewriteQuestions.length > 0 ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <Label>⚠️ Needs Rewrite ({needsRewriteQuestions.length})</Label>
+                  <p className="text-xs text-muted-foreground">These questions have sentence-like answers and need manual rewriting</p>
+                </div>
+                <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                  {needsRewriteQuestions.map((q) => (
+                    <div key={q.id} className="p-4 rounded-lg border border-orange-200 bg-orange-50 dark:bg-orange-950/20">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 space-y-2">
+                          <div className="text-sm font-medium">{q.question_text}</div>
+                          <div className="space-y-1">
+                            <div className="text-xs">
+                              <span className="text-green-600 font-medium">✓ </span>
+                              <span className={q.correct_answer.length > MAX_ANSWER_LENGTH ? 'text-destructive font-medium' : 'text-muted-foreground'}>
+                                {q.correct_answer} ({q.correct_answer.length})
+                              </span>
+                            </div>
+                            {(Array.isArray(q.incorrect_answers) ? q.incorrect_answers : []).map((ans, idx) => (
+                              <div key={idx} className="text-xs">
+                                <span className="text-muted-foreground">✗ </span>
+                                <span className={ans.length > MAX_ANSWER_LENGTH ? 'text-destructive font-medium' : 'text-muted-foreground'}>
+                                  {ans} ({ans.length})
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => resetNeedsRewriteQuestion(q.id)}
+                          >
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            Retry
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                            onClick={() => deleteNeedsRewriteQuestion(q.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <CheckCircle className="h-12 w-12 mx-auto mb-3 opacity-20 text-green-500" />
+                <p className="text-sm">No questions flagged for rewrite</p>
               </div>
             )}
           </div>
