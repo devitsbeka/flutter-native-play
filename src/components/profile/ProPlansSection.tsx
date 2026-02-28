@@ -408,6 +408,51 @@ export function ProPlansSection({
   );
 }
 
+// Mini invite friends card
+function InviteFriendsMiniCard({ onShare, sharing }: { onShare: () => void; sharing: boolean }) {
+  const { t } = useLanguage();
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl p-4 overflow-hidden relative"
+      style={{
+        background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%)',
+        border: '1px solid rgba(147, 51, 234, 0.25)',
+      }}
+    >
+      <div className="flex items-center gap-3">
+        <div 
+          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, #9333EA 0%, #F59E0B 100%)' }}
+        >
+          <Users className="w-5 h-5 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground leading-tight">{t("extra.inviteMiniTitle")}</p>
+          <span 
+            className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+            style={{ background: 'linear-gradient(135deg, #9333EA, #F59E0B)' }}
+          >
+            🎁 {t("extra.inviteMiniReward")}
+          </span>
+        </div>
+        <motion.button
+          onClick={onShare}
+          disabled={sharing}
+          className="flex-shrink-0 px-3 py-2 rounded-xl text-white text-sm font-medium flex items-center gap-1.5 disabled:opacity-70"
+          style={{ background: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)' }}
+          whileHover={{ scale: sharing ? 1 : 1.05 }}
+          whileTap={{ scale: sharing ? 1 : 0.95 }}
+        >
+          <Share2 className="w-4 h-4" />
+          {t("extra.shareBtn")}
+        </motion.button>
+      </div>
+    </motion.div>
+  );
+}
+
 // Extracted TierCard component for cleaner code
 function TierCard({ 
   tier, 
