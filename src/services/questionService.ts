@@ -799,10 +799,11 @@ async function getMultiCategoryVSQuestions(
     exhausted = true;
   }
   
-  // Get fresh exclude list after potential reset
-  // Cap excludeIds to prevent oversized query URLs (5000 UUIDs = ~180KB, exceeds limits)
-  const MAX_EXCLUDE_IN_QUERY = 200;
-  let excludeIds = wasReset ? [] : seenIds.slice(-MAX_EXCLUDE_IN_QUERY);
+  // Get fresh seen list after potential reset - use full list for client-side filtering
+  const currentSeenIds = wasReset ? [] : seenIds;
+  const seenSet = new Set(currentSeenIds);
+  const mediaSeenIds = getMediaSeenIds();
+  const mediaSeenSet = new Set(mediaSeenIds);
   
   // Get all active categories
   const { data: categories } = await supabase
@@ -819,22 +820,15 @@ async function getMultiCategoryVSQuestions(
     };
   }
   
-  // BULK FETCH: Single query across ALL categories instead of per-category sequential queries
+  // BULK FETCH: Single query across ALL categories — NO limit, NO server-side exclude
   let usedFallbackLocal = false;
   
-  // Build a single query for all active+production questions in the user's language
-  let bulkQuery = supabase
+  const { data: allQuestions } = await supabase
     .from('questions')
     .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url, category_id')
     .eq('is_active', true)
     .eq('in_production', true)
     .eq('language', language);
-  
-  if (excludeIds.length > 0) {
-    bulkQuery = bulkQuery.not('id', 'in', `(${excludeIds.join(',')})`);
-  }
-  
-  const { data: allQuestions } = await bulkQuery.limit(1000);
   
   // Create Map for O(1) category lookups
   const categoryMap = new Map(categories.map(c => [c.id, c]));
