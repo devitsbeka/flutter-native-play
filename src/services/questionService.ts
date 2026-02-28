@@ -502,7 +502,7 @@ async function getTVQuestions(
   
   const totalAvailable = totalCount || 0;
   
-  // Build query
+  // Build query - fetch full pool, apply exclusion client-side
   let query = supabase
     .from('questions')
     .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
@@ -511,11 +511,13 @@ async function getTVQuestions(
     .eq('language', language)
     .eq('category_id', categoryUuid);
   
-  if (excludeIds.length > 0) {
-    query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-  }
-  
   let { data: questions } = await query;
+  
+  // Client-side exclusion using Set
+  const excludeSet = new Set(excludeIds);
+  if (questions && excludeSet.size > 0) {
+    questions = questions.filter(q => !excludeSet.has(q.id));
+  }
   
   // If not enough, reset tracker
   if (!questions || questions.length < count) {
@@ -651,11 +653,10 @@ async function getSingleCategoryVSQuestions(
   // Get category info
   const categoryInfo = await getCategoryInfo(categoryUuid);
   
-  // Get seen question IDs
+  // Get seen question IDs - use FULL list for client-side filtering
   const seenIds = getSeenQuestionIds();
-  // Cap excludeIds to prevent oversized query URLs (5000 UUIDs = ~180KB, exceeds limits)
-  const MAX_EXCLUDE_IN_QUERY = 200;
-  let excludeIds = seenIds.slice(-MAX_EXCLUDE_IN_QUERY);
+  // No cap needed - we filter client-side now
+  let excludeIds = [...seenIds];
   
   // Get total available in this category
   const { count: totalCount } = await supabase
@@ -676,8 +677,8 @@ async function getSingleCategoryVSQuestions(
     excludeIds = [];
   }
   
-  // Query questions from specific category
-  let query = supabase
+  // Query all questions from specific category, filter client-side
+  const { data: allCatQuestions } = await supabase
     .from('questions')
     .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
     .eq('is_active', true)
@@ -685,11 +686,9 @@ async function getSingleCategoryVSQuestions(
     .eq('language', language)
     .eq('category_id', categoryUuid);
   
-  if (excludeIds.length > 0) {
-    query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-  }
-  
-  let { data: questions } = await query;
+  // Client-side exclusion
+  const excludeSet = new Set(excludeIds);
+  let questions = (allCatQuestions || []).filter(q => !excludeSet.has(q.id));
   
   // If not enough, clear exclusions and retry
   if (!questions || questions.length < count) {
