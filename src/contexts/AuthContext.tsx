@@ -253,39 +253,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithApple = async () => {
     try {
-      // Dynamically import to avoid issues on web
-      const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+      // Check if running on native iOS — use Capacitor plugin
+      const { Capacitor } = await import('@capacitor/core');
+      const platform = Capacitor.getPlatform();
       
-      const result = await SignInWithApple.authorize({
-        clientId: 'app.lovable.f54c9281c7aa40a48ea74b75d0ffa3d4',
-        redirectURI: 'https://sqwpzezkhpqkdyltvsim.supabase.co/auth/v1/callback',
-        scopes: 'email name',
-      });
-
-      if (result.response) {
-        const { identityToken, givenName, familyName, email } = result.response;
+      if (platform === 'ios') {
+        const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
         
-        // Sign in with Supabase using the Apple ID token
-        const { data, error } = await supabase.auth.signInWithIdToken({
-          provider: 'apple',
-          token: identityToken,
+        const result = await SignInWithApple.authorize({
+          clientId: 'app.lovable.f54c9281c7aa40a48ea74b75d0ffa3d4',
+          redirectURI: 'https://sqwpzezkhpqkdyltvsim.supabase.co/auth/v1/callback',
+          scopes: 'email name',
         });
 
-        // If this is a new user, update their profile with the name from Apple
-        if (!error && data.user && (givenName || familyName)) {
-          const nickname = givenName || familyName || 'Player';
-          setTimeout(async () => {
-            await supabase
-              .from('profiles')
-              .update({ nickname })
-              .eq('user_id', data.user.id);
-          }, 1000);
-        }
+        if (result.response) {
+          const { identityToken, givenName, familyName } = result.response;
+          
+          const { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'apple',
+            token: identityToken,
+          });
 
-        return { data, error };
+          if (!error && data.user && (givenName || familyName)) {
+            const nickname = givenName || familyName || 'Player';
+            setTimeout(async () => {
+              await supabase
+                .from('profiles')
+                .update({ nickname })
+                .eq('user_id', data.user.id);
+            }, 1000);
+          }
+
+          return { data, error };
+        }
+        
+        return { data: null, error: new Error('Apple Sign In cancelled') };
       }
       
-      return { data: null, error: new Error('Apple Sign In cancelled') };
+      // Web fallback — use Lovable OAuth
+      const result = await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: window.location.origin,
+      });
+      
+      if (result.error) {
+        return { data: null, error: result.error };
+      }
+      
+      return { data: result, error: null };
     } catch (error: any) {
       console.error('Apple Sign In error:', error);
       return { data: null, error };

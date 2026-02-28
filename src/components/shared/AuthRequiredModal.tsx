@@ -160,8 +160,11 @@ export function AuthRequiredModal({
 
   const handleGoogleSignIn = async () => {
     try {
+      if (returnToPath) {
+        localStorage.setItem('authReturnTo', returnToPath);
+      }
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + (returnToPath || "/"),
+        redirect_uri: window.location.origin,
       });
       if (result.error) {
         toast.error(t("authModal.googleSignInFailed"));
@@ -173,11 +176,14 @@ export function AuthRequiredModal({
 
   const handleAppleSignIn = async () => {
     try {
-      const { error } = await signInWithApple();
-      if (error) {
+      if (returnToPath) {
+        localStorage.setItem('authReturnTo', returnToPath);
+      }
+      const result = await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
         toast.error(t("authModal.appleSignInFailed"));
-      } else {
-        onClose();
       }
     } catch (err) {
       toast.error(t("authModal.appleSignInFailed"));
