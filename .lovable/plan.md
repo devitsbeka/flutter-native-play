@@ -1,79 +1,30 @@
 
 
-# Auto-Start Game After Avatar Setup
+## Clean Up Georgian Questions Mislabeled as English in Anime/Manga
 
-## Problem
-When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
+### Current State
+- **34 questions** in category Anime/Manga have `language = 'en'` but contain Georgian text
+- All 34 are already `is_active = false` and `quality_status = 'rejected'`
+- None are in production -- no user-facing impact currently
 
-## Solution
-Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
+### Action
 
-## Changes
+Run a single database update to fix the language tag on these 34 records:
 
-### 1. `src/contexts/AvatarModalContext.tsx`
-- Add an optional `onComplete` callback to the context
-- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
-- Store the callback in a ref
-- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
-
-### 2. `src/components/home/AvatarModal.tsx`
-- Accept a new optional `onComplete?: () => void` prop
-- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
-
-### 3. `src/pages/Index.tsx`
-- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
-  ```
-  openAvatarModal(() => navigate("/game"));
-  ```
-
-## Technical Details
-
-**AvatarModalContext changes:**
-```typescript
-interface AvatarModalContextType {
-  openAvatarModal: (onComplete?: () => void) => void;
-  closeAvatarModal: () => void;
-  isOpen: boolean;
-}
-
-// Store pending callback in a ref
-const onCompleteRef = useRef<(() => void) | null>(null);
-
-const openAvatarModal = useCallback((onComplete?: () => void) => {
-  onCompleteRef.current = onComplete || null;
-  setIsOpen(true);
-}, []);
-
-const closeAvatarModal = useCallback(() => {
-  setIsOpen(false);
-  onCompleteRef.current = null;
-}, []);
-
-// Pass onComplete to AvatarModal
-<AvatarModal
-  isOpen={isOpen}
-  onClose={closeAvatarModal}
-  onComplete={() => {
-    const cb = onCompleteRef.current;
-    setIsOpen(false);
-    onCompleteRef.current = null;
-    cb?.();
-  }}
-/>
+```sql
+UPDATE questions
+SET language = 'ka'
+WHERE category_id = 'b9a45cde-fa7a-47e4-bdd2-35b58085b95d'
+  AND language = 'en'
+  AND (
+    question_text ~ '[\u10A0-\u10FF]'
+    OR correct_answer ~ '[\u10A0-\u10FF]'
+    OR incorrect_answers::text ~ '[\u10A0-\u10FF]'
+  );
 ```
 
-**AvatarModal changes:**
-- New prop: `onComplete?: () => void`
-- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+This corrects their language to `ka` (Georgian) so they won't appear in any English-filtered queries or reviews. They remain inactive/rejected -- no content changes, just a label fix.
 
-**Index.tsx change:**
-```typescript
-} else if (!profile?.avatar_url) {
-  openAvatarModal(() => navigate("/game"));
-}
-```
+### Files to Modify
+None -- this is a data-only fix via a database update.
 
-## Files to edit
-1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
-2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
-3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
