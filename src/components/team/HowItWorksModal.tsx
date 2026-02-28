@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import storyDice from "@/assets/story-dice.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
 import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
+import groupIcon from "@/assets/group-of-people-how.png";
 
 interface HowItWorksModalProps {
   isOpen: boolean;
