@@ -2255,6 +2255,8 @@ export const en: KaTranslations = {
     inviteBenefitRooms: "Participate in rooms",
     inviteBenefitPosts: "Publish posts",
     inviteBenefitDuration: "Valid for 1 month",
+    inviteMiniTitle: "Invite friends and become PRO users",
+    inviteMiniReward: "10 days PRO as gift",
     byEmailTab: "By Email",
     byLinkTab: "By Link",
     friendEmailLabel: "Friend's email",

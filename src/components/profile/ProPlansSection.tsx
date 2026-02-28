@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp } from "lucide-react";
+import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
+import { useFriendInvites } from "@/hooks/useFriendInvites";
+import { toast } from "sonner";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { format } from "date-fns";
