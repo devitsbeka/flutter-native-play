@@ -130,7 +130,7 @@ serve(async (req) => {
   }
 
   try {
-    const { categoryId, testMode, inProduction } = await req.json();
+    const { categoryId, testMode, inProduction, language } = await req.json();
     
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -157,6 +157,11 @@ serve(async (req) => {
     // Filter by category if specified
     if (categoryId && categoryId !== "all") {
       query = query.eq("category_id", categoryId);
+    }
+
+    // Filter by language if specified
+    if (language && language !== "all") {
+      query = query.eq("language", language);
     }
 
     // Only get questions longer than MAX_LENGTH

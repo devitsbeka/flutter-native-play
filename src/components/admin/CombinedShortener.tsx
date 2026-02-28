@@ -334,13 +334,16 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           shouldContinue = false;
         }
 
+        const currentRemaining = Math.max(qData?.remaining || 0, aData?.remaining || 0);
+        const dynamicTotal = testMode ? allResults.length : Math.max(allResults.length + currentRemaining, allResults.length);
+
         setProgress({
-          total: testMode ? allResults.length : stats.needsWork,
+          total: dynamicTotal,
           processed: allResults.length,
           shortened: allResults.filter(r => r.overallStatus === 'shortened').length,
           unshortenable: allResults.filter(r => r.overallStatus === 'unshortenable').length,
           failed: allResults.filter(r => r.overallStatus === 'failed').length,
-          remaining: Math.max(qData?.remaining || 0, aData?.remaining || 0),
+          remaining: currentRemaining,
           status: shouldContinue ? 'running' : 'completed',
           batchNumber: batchNum
         });

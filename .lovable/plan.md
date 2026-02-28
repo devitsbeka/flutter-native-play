@@ -1,52 +1,79 @@
 
 
-## Fix Shortener Logic: Language Filter and Progress Counter
+# Auto-Start Game After Avatar Setup
 
-### Problems Found
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-**Bug 1: `shorten-questions` ignores language filter**
-- The edge function on line 133 destructures `{ categoryId, testMode, inProduction }` but does NOT extract the `language` parameter
-- The client sends `language: languageFilter === 'all' ? undefined : languageFilter` but the function never reads it
-- Result: when you pick "English", it still processes Georgian questions because the query has no language filter
-- `shorten-answers` correctly reads `language` on line 60 and filters on lines 88-90
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-**Bug 2: Progress counter exceeds total (e.g., "155 out of 110")**
-- The while-loop calls BOTH `shorten-questions` and `shorten-answers` each iteration
-- These two functions return different, overlapping sets of questions (questions with long text vs questions with long answers)
-- Results are merged by ID, but when they DON'T overlap, the `allResults` array grows with items from both functions independently
-- `progress.total` is set to `stats.needsWork` which counts unique questions needing EITHER long question OR long answers -- but processed count can exceed this because both functions independently batch through their own queues at different rates
-- The `remaining` calculation `Math.max(qData?.remaining, aData?.remaining)` is also unreliable since the two functions track separate remaining counts
+## Changes
 
-### Fix Plan
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-#### 1. Fix language filter in `shorten-questions` edge function
-**File:** `supabase/functions/shorten-questions/index.ts`
-- Line 133: Add `language` to destructured params: `{ categoryId, testMode, inProduction, language }`
-- After line 159: Add language filter to query:
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
+
+## Technical Details
+
+**AvatarModalContext changes:**
 ```typescript
-if (language && language !== "all") {
-  query = query.eq("language", language);
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
+
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
+
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
+```
+
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
 }
 ```
 
-#### 2. Fix progress tracking in `CombinedShortener.tsx`
-**File:** `src/components/admin/CombinedShortener.tsx`
-
-Change the progress logic to track actual processed count correctly:
-- Track question and answer processing separately with independent `done` flags
-- Only continue the while-loop until BOTH are done
-- Use the `resultMap` size (unique question IDs) as the processed count instead of raw array length
-- Compute `total` dynamically: use `Math.max(allResults.length, stats.needsWork)` to prevent "X out of Y" where X > Y, or better yet, show the actual processed count against the running total from remaining counts
-- Update progress calculation:
-  - `total`: Use `allResults.length + Math.max(qData?.remaining || 0, aData?.remaining || 0)` for a dynamic total that adjusts as processing reveals the actual scope
-  - `processed`: Use `allResults.length` (unique merged results)
-
-This prevents the counter from showing more processed than total.
-
-### Files to Modify
-
-| File | Change |
-|------|--------|
-| `supabase/functions/shorten-questions/index.ts` | Add `language` parameter extraction and DB query filter |
-| `src/components/admin/CombinedShortener.tsx` | Fix progress total calculation to prevent exceeding total |
-
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
