@@ -165,7 +165,6 @@ export function ProPlansSection({
               }
             } finally { setSharing(false); }
           }} />
-        <>
           {PRO_TIERS.map((tier, index) => (
             <TierCard
               key={tier.id}
@@ -175,7 +174,6 @@ export function ProPlansSection({
               purchasing={purchasing}
             />
           ))}
-        </>
       )}
 
       {/* SCENARIO 2: PRO Solo - Show current status + upgrade to Family */}
