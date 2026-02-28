@@ -29,6 +29,9 @@ import {
   getCategorySeenIds,
   markCategorySeen,
   clearCategorySeen,
+  getMediaSeenIds,
+  markMediaQuestionsSeen,
+  clearMediaSeen,
 } from "@/services/questionTracker";
 import type { Json } from "@/integrations/supabase/types";
 
