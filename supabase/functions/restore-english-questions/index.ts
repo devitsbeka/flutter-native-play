@@ -16,11 +16,16 @@ async function translateBatch(
 ): Promise<any[]> {
   const prompt = `You are translating Georgian trivia questions about Anime/Manga back to English.
 
-RULES:
-- Keep proper nouns (character names, anime/manga titles) in their standard English form
-- Question text: MAXIMUM ${QUESTION_MAX_LENGTH} characters
-- Each answer: MAXIMUM ${ANSWER_MAX_LENGTH} characters
-- If translation exceeds limits, shorten while preserving meaning
+STRICT CHARACTER LIMITS - NEVER EXCEED:
+- Question text: MAXIMUM ${QUESTION_MAX_LENGTH} characters (count carefully!)
+- Each answer: MAXIMUM ${ANSWER_MAX_LENGTH} characters (count carefully!)
+
+SHORTENING STRATEGIES (use aggressively):
+- Use abbreviations: "Dragon Ball Z" → "DBZ", "One Piece" → "OP", "Attack on Titan" → "AoT"
+- Drop articles: "the", "a", "an"
+- Use shorter synonyms: "Which character" → "Who", "What is the name of" → "Who is"
+- Shorten titles: use the most recognizable short form
+- For answers: use last name only if character is well-known, abbreviate titles
 
 Translate these questions:
 
