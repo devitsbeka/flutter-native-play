@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp } from "lucide-react";
-import { InviteFriendsMiniCard } from "@/components/shared/InviteFriendsMiniCard";
+import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
