@@ -830,46 +830,72 @@ async function getMultiCategoryVSQuestions(
     .eq('in_production', true)
     .eq('language', language);
   
-  // Create Map for O(1) category lookups
   const categoryMap = new Map(categories.map(c => [c.id, c]));
   
   const selectedQuestions: FormattedQuestion[] = [];
   
   if (allQuestions && allQuestions.length > 0) {
-    const validQuestions = (allQuestions as RawQuestion[]).filter(isValidQuestionLength);
+    // Client-side exclusion: filter out all seen questions
+    const unseenQuestions = (allQuestions as RawQuestion[]).filter(q => !seenSet.has(q.id));
+    const validQuestions = (unseenQuestions.length >= count ? unseenQuestions : allQuestions as RawQuestion[])
+      .filter(isValidQuestionLength);
+    
+    // === MEDIA-AWARE SELECTION ===
+    // Separate media questions (image/video/audio) from text-only
+    const mediaQuestions = validQuestions.filter(q => q.image_url || q.video_url || q.audio_url);
+    const unseenMedia = mediaQuestions.filter(q => !mediaSeenSet.has(q.id));
+    
+    // Reserve 1-2 slots for unseen media questions if available
+    const mediaSlots = Math.min(2, unseenMedia.length, Math.floor(count / 3));
+    const usedIds = new Set<string>();
+    
+    if (mediaSlots > 0) {
+      const shuffledMedia = shuffleArray(unseenMedia).slice(0, mediaSlots);
+      for (const q of shuffledMedia) {
+        const cat = categoryMap.get(q.category_id || '');
+        selectedQuestions.push(formatQuestion(q, cat?.name, cat?.category_id));
+        usedIds.add(q.id);
+      }
+    }
+    
+    // If no unseen media left, reset media tracker
+    if (unseenMedia.length === 0 && mediaQuestions.length > 0) {
+      clearMediaSeen();
+    }
+    
+    // === ROUND-ROBIN CATEGORY DIVERSITY for remaining slots ===
+    const remainingCount = count - selectedQuestions.length;
+    const remainingValid = validQuestions.filter(q => !usedIds.has(q.id));
     
     // Group by category for diversity
     const byCategory = new Map<string, RawQuestion[]>();
-    for (const q of validQuestions) {
+    for (const q of remainingValid) {
       const catId = q.category_id || 'unknown';
       if (!byCategory.has(catId)) byCategory.set(catId, []);
       byCategory.get(catId)!.push(q);
     }
     
-    // Round-robin pick from shuffled categories for diversity
+    // Round-robin pick from shuffled categories
     const categoryKeys = shuffleArray([...byCategory.keys()]);
     let roundRobinIndex = 0;
-    const usedIds = new Set<string>();
     
     while (selectedQuestions.length < count && roundRobinIndex < categoryKeys.length * count) {
       const catId = categoryKeys[roundRobinIndex % categoryKeys.length];
       const pool = byCategory.get(catId);
       if (pool && pool.length > 0) {
-        // Pick a random question from this category's pool
         const idx = Math.floor(Math.random() * pool.length);
         const q = pool[idx];
         if (!usedIds.has(q.id)) {
           usedIds.add(q.id);
           const cat = categoryMap.get(q.category_id || '');
           selectedQuestions.push(formatQuestion(q, cat?.name, cat?.category_id));
-          // Remove from pool so we don't pick it again
           pool.splice(idx, 1);
         }
       }
       roundRobinIndex++;
     }
     
-    // If still not enough, pick any remaining valid questions
+    // If still not enough, pick any remaining
     if (selectedQuestions.length < count) {
       usedFallbackLocal = true;
       const remaining = validQuestions.filter(q => !usedIds.has(q.id));
