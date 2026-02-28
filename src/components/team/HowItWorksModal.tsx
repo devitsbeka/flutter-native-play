@@ -69,7 +69,10 @@ export const HowItWorksModal = ({ isOpen, onClose }: HowItWorksModalProps) => {
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20"
             >
-              <h3 className="font-semibold text-foreground mb-2">{t("extra.howItWorksFriends")}</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <img src={groupIcon} alt="" className="w-8 h-8 object-contain" />
+                <h3 className="font-semibold text-foreground">{t("extra.howItWorksFriends")}</h3>
+              </div>
               <p className="text-sm text-muted-foreground">
                 {t("extra.howItWorksFriendsDesc")} {t("extra.howItWorksFriendsWins")}
               </p>
@@ -95,15 +98,6 @@ export const HowItWorksModal = ({ isOpen, onClose }: HowItWorksModalProps) => {
               ))}
             </div>
 
-            {/* Footer Message */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="flex items-center justify-center gap-2 py-4 mt-6 rounded-2xl bg-gradient-to-r from-primary/20 to-accent/20"
-            >
-              <span className="font-medium text-foreground">{t("extra.howItWorksFunGuaranteed")}</span>
-            </motion.div>
             </div>
           </div>
 
