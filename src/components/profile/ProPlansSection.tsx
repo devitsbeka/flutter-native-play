@@ -562,26 +562,16 @@ function InviteCard({ sharing, onShare }: { sharing: boolean; onShare: () => voi
       </div>
 
       <div className="relative z-10 flex items-start gap-3">
-        {/* Left: Icon */}
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-          style={{
-            background: "linear-gradient(135deg, #EC4899 0%, #9333EA 100%)",
-            boxShadow: "0 4px 12px rgba(147, 51, 234, 0.25)",
-          }}
-        >
-          <Users className="w-6 h-6 text-white" />
-        </div>
+        {/* Left: Group Icon */}
+        <img src={groupIcon} alt="" className="w-12 h-12 shrink-0" />
 
         {/* Right: Text + Badge + Button */}
         <div className="flex flex-col gap-2 flex-1 min-w-0">
           <h3 className="text-sm font-bold text-foreground leading-tight">{t("extra.inviteMiniTitle")}</h3>
 
-          <span
-            className="inline-block px-3 py-1 rounded-full text-xs font-bold text-white self-start"
-            style={{ background: "linear-gradient(135deg, #EC4899, #9333EA)" }}
-          >
-            🎁 10 {t("extra.inviteMiniReward")}
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-foreground bg-muted self-start">
+            <img src={crownIcon} alt="" className="w-4 h-4" />
+            10 {t("extra.inviteMiniReward")}
           </span>
 
           <motion.button
