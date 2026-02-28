@@ -174,6 +174,7 @@ export function ProPlansSection({
               purchasing={purchasing}
             />
           ))}
+        </>
       )}
 
       {/* SCENARIO 2: PRO Solo - Show current status + upgrade to Family */}
