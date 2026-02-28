@@ -1,28 +1,79 @@
 
 
-## Restructure Invite Card Layout + Add to Shop Page
+# Auto-Start Game After Avatar Setup
 
-### Changes
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-#### 1. Restructure `InviteFriendsMiniCard` in `ProPlansSection.tsx`
-Change from horizontal layout (icon | text+badge | share button) to vertical:
-- Line 1: Title text "მოიწვიე მეგობრები და გახდით PRO მომხმარებლები"
-- Line 2: Reward badge "🎁 10 დღიანი PRO საჩუქრად"
-- Line 3: Share button "გაზიარება"
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-Remove the Users icon circle on the left to match the cleaner vertical layout shown in the reference.
+## Changes
 
-#### 2. Extract `InviteFriendsMiniCard` to a shared component
-Move `InviteFriendsMiniCard` to `src/components/shared/InviteFriendsMiniCard.tsx` so it can be reused by both the Profile PRO tab and the Shop page. It will include its own share logic (generate referral link, call navigator.share or clipboard fallback) so each consumer doesn't need to wire that up.
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-#### 3. Add the card to the Shop page (`ShopStandardLayout.tsx`)
-Insert the `InviteFriendsMiniCard` as the first element in the shop layout, above the hero carousel / MobileProCarousel. It will appear as a compact banner at the top of the shop.
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-### Files to Change
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-| File | Change |
-|------|--------|
-| `src/components/shared/InviteFriendsMiniCard.tsx` | New file - extracted and restructured vertical layout with self-contained share logic |
-| `src/components/profile/ProPlansSection.tsx` | Import shared `InviteFriendsMiniCard`, remove the local function definition |
-| `src/components/shop/ShopStandardLayout.tsx` | Import and render `InviteFriendsMiniCard` at the top of the layout |
+## Technical Details
 
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
+
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
+
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
+```
+
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
+
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button

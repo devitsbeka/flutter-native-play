@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp, Share2 } from "lucide-react";
+import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp } from "lucide-react";
+import { InviteFriendsMiniCard } from "@/components/shared/InviteFriendsMiniCard";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
@@ -99,9 +100,7 @@ export function ProPlansSection({
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [purchasedTierName, setPurchasedTierName] = useState("");
-  const [sharingLink, setSharingLink] = useState(false);
   const { initiateProCheckout, isProcessing: purchasing } = useProPurchase();
-  const { createLinkInvite } = useFriendInvites();
 
   // Handle success callback from Stripe
   useEffect(() => {
@@ -145,28 +144,7 @@ export function ProPlansSection({
   return (
     <div className="space-y-4">
       {/* Mini Invite Friends Banner - shown for everyone */}
-      <InviteFriendsMiniCard 
-        onShare={async () => {
-          if (sharingLink) return;
-          setSharingLink(true);
-          try {
-            const referralCode = await createLinkInvite('friend_pro');
-            if (referralCode) {
-              const link = `${window.location.origin}/auth?ref=${referralCode}`;
-              const shareText = t("extra.getProFree");
-              if (navigator.share) {
-                try {
-                  await navigator.share({ title: "My Trivia", text: shareText, url: link });
-                } catch { /* cancelled */ }
-              } else {
-                await navigator.clipboard.writeText(link);
-                toast.success(t("extra.linkCopiedInvite"));
-              }
-            }
-          } finally { setSharingLink(false); }
-        }}
-        sharing={sharingLink}
-      />
+      <InviteFriendsMiniCard />
 
       {/* SCENARIO 1: Not PRO - Show both tier cards */}
       {isNotPro && (
@@ -408,50 +386,6 @@ export function ProPlansSection({
   );
 }
 
-// Mini invite friends card
-function InviteFriendsMiniCard({ onShare, sharing }: { onShare: () => void; sharing: boolean }) {
-  const { t } = useLanguage();
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl p-4 overflow-hidden relative"
-      style={{
-        background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%)',
-        border: '1px solid rgba(147, 51, 234, 0.25)',
-      }}
-    >
-      <div className="flex items-center gap-3">
-        <div 
-          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'linear-gradient(135deg, #9333EA 0%, #F59E0B 100%)' }}
-        >
-          <Users className="w-5 h-5 text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground leading-tight">{t("extra.inviteMiniTitle")}</p>
-          <span 
-            className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
-            style={{ background: 'linear-gradient(135deg, #9333EA, #F59E0B)' }}
-          >
-            🎁 {t("extra.inviteMiniReward")}
-          </span>
-        </div>
-        <motion.button
-          onClick={onShare}
-          disabled={sharing}
-          className="flex-shrink-0 px-3 py-2 rounded-xl text-white text-sm font-medium flex items-center gap-1.5 disabled:opacity-70"
-          style={{ background: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)' }}
-          whileHover={{ scale: sharing ? 1 : 1.05 }}
-          whileTap={{ scale: sharing ? 1 : 0.95 }}
-        >
-          <Share2 className="w-4 h-4" />
-          {t("extra.shareBtn")}
-        </motion.button>
-      </div>
-    </motion.div>
-  );
-}
 
 // Extracted TierCard component for cleaner code
 function TierCard({ 
