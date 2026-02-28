@@ -1,79 +1,78 @@
 
 
-# Auto-Start Game After Avatar Setup
+## Fix Language-Aware Quality Review and Resolve + Undo Translated Questions
 
-## Problem
-When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
+### Problem Summary
 
-## Solution
-Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
+1. **96 English questions in Anime/Manga category got translated to Georgian** by the resolve function, which is hardcoded to treat everything as Georgian.
+2. Both `review-question-quality` and `resolve-question-quality` edge functions have hardcoded "Georgian language" in their AI prompts, so they evaluate and fix questions as Georgian regardless of the actual `language` column.
 
-## Changes
+### Plan
 
-### 1. `src/contexts/AvatarModalContext.tsx`
-- Add an optional `onComplete` callback to the context
-- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
-- Store the callback in a ref
-- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
+#### Part 1: Undo the damage -- Restore translated English questions
 
-### 2. `src/components/home/AvatarModal.tsx`
-- Accept a new optional `onComplete?: () => void` prop
-- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+The 96 recently-resolved English questions (updated after 2026-02-28 21:00:00) in the anime/manga category need to be reset so they can be re-resolved properly once the fix is in place.
 
-### 3. `src/pages/Index.tsx`
-- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
-  ```
-  openAvatarModal(() => navigate("/game"));
-  ```
+- Clear `ai_review_score`, `ai_review_grade`, `ai_review_data`, and `last_ai_review` for these 96 questions
+- Unfortunately, the original English text was overwritten in the database by the resolve function -- the originals are lost
+- **These questions will need to be re-imported or manually fixed** since their text is now Georgian
 
-## Technical Details
+I'll flag them by setting `in_production = false` and `quality_status = 'needs_rewrite'` so they're pulled from production and easily identifiable for re-import.
 
-**AvatarModalContext changes:**
-```typescript
-interface AvatarModalContextType {
-  openAvatarModal: (onComplete?: () => void) => void;
-  closeAvatarModal: () => void;
-  isOpen: boolean;
-}
+#### Part 2: Make `review-question-quality` language-aware
 
-// Store pending callback in a ref
-const onCompleteRef = useRef<(() => void) | null>(null);
+**File:** `supabase/functions/review-question-quality/index.ts`
 
-const openAvatarModal = useCallback((onComplete?: () => void) => {
-  onCompleteRef.current = onComplete || null;
-  setIsOpen(true);
-}, []);
+- Add `language` field to the `Question` interface
+- Include `language` in the SELECT query (line 186)
+- Add a language name map: `{ ka: 'Georgian', en: 'English', fr: 'French', ... }`
+- Pass `language` to `reviewQuestion()` function
+- Replace hardcoded "Georgian language trivia evaluator" with the question's actual language name
+- Replace "Georgian spelling, verb conjugation..." with language-appropriate grammar description
 
-const closeAvatarModal = useCallback(() => {
-  setIsOpen(false);
-  onCompleteRef.current = null;
-}, []);
+#### Part 3: Make `resolve-question-quality` language-aware
 
-// Pass onComplete to AvatarModal
-<AvatarModal
-  isOpen={isOpen}
-  onClose={closeAvatarModal}
-  onComplete={() => {
-    const cb = onCompleteRef.current;
-    setIsOpen(false);
-    onCompleteRef.current = null;
-    cb?.();
-  }}
-/>
+**File:** `supabase/functions/resolve-question-quality/index.ts`
+
+- Read `question.language` from the fetched question (already doing `select('*')`)
+- Use the same language name map
+- Replace all hardcoded "Georgian" references in the fix prompt:
+  - "Georgian language trivia question expert" --> "[Language] language trivia question expert"
+  - "All text must be in Georgian language" --> "All text must be in [Language] language"
+  - "Fixed question in Georgian" --> "Fixed question in [Language]"
+  - "case endings in Georgian" --> grammar rules appropriate for the language
+- Same changes for the re-review prompt
+
+#### Part 4: Make `fix-generated-question` consistent
+
+**File:** `supabase/functions/fix-generated-question/index.ts`
+
+- This function already accepts a `language` parameter and handles it correctly -- no changes needed here.
+
+### Language Name Map (shared constant in both functions)
+
+```text
+const LANGUAGE_NAMES: Record<string, string> = {
+  'ka': 'Georgian',
+  'en': 'English',
+  'fr': 'French',
+  'de': 'German',
+  'es': 'Spanish',
+  'it': 'Italian',
+  'pt': 'Portuguese',
+  'pt-br': 'Brazilian Portuguese',
+};
 ```
 
-**AvatarModal changes:**
-- New prop: `onComplete?: () => void`
-- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+### Files to Modify
 
-**Index.tsx change:**
-```typescript
-} else if (!profile?.avatar_url) {
-  openAvatarModal(() => navigate("/game"));
-}
-```
+| File | Change |
+|------|--------|
+| `supabase/functions/review-question-quality/index.ts` | Add language to query/interface, make prompts language-aware |
+| `supabase/functions/resolve-question-quality/index.ts` | Read question.language, make all prompts language-aware |
+| Database | Mark 96 corrupted questions as needs_rewrite + out of production |
 
-## Files to edit
-1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
-2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
-3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
+### No Client-Side Changes Needed
+
+The hook fetches questions by ID, and both edge functions fetch full question data from the DB -- the `language` column is already available without any client changes.
+
