@@ -768,6 +768,10 @@ export default function Index() {
           inviterName={friendModalInviterName}
         />
 
+        <ChangeNameModal
+          isOpen={showChangeNameModal}
+          onClose={() => setShowChangeNameModal(false)}
+        />
 
         {/* Content area */}
         <div className="flex-1 flex relative">
