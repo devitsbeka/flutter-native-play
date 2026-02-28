@@ -1744,7 +1744,7 @@ export const ka = {
     howItWorksLibrary: "ბიბლიოთეკა",
     howItWorksLibraryDesc: "აირჩიე შენთვის სასურველი კატეგორია ჩვენი მრავალფეროვანი კოლექციიდან",
     howItWorksCreate: "შექმენი შენი",
-    howItWorksCreateDesc: "შექმენი საკუთარი კითხვები ან გამოიყენე AI დახმარებით გენერირებული ტრივია",
+    howItWorksCreateDesc: "შექმენი ტრივია შენი კითხვებით ან აირჩიე თემა და შექმენი ტრივია AI-ს გამოყენებით",
     howItWorksFriends: "მეგობრებთან თამაში",
     howItWorksFriendsDesc: "მოიწვიე მეგობრები და ითამაშეთ ერთად! თითოეული მოთამაშე პასუხობს კითხვებს",
     // Feature onboarding
