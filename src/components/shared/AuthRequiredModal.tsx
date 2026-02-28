@@ -45,7 +45,7 @@ export function AuthRequiredModal({
   message,
 }: AuthRequiredModalProps) {
   const navigate = useNavigate();
-  const { signIn, signUpWithUsername, signInWithGoogle, signInWithApple } = useAuth();
+  const { signIn, signUpWithUsername } = useAuth();
   const { t } = useLanguage();
   
   const [username, setUsername] = useState("");
