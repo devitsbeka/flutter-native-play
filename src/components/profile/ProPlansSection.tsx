@@ -1,4 +1,6 @@
 import { motion } from "framer-motion";
+import groupIcon from "@/assets/group-of-people.png";
+import crownIcon from "@/assets/crown-icon.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
