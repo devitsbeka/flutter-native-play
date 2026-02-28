@@ -144,6 +144,30 @@ export function ProPlansSection({
 
   return (
     <div className="space-y-4">
+      {/* Mini Invite Friends Banner - shown for everyone */}
+      <InviteFriendsMiniCard 
+        onShare={async () => {
+          if (sharingLink) return;
+          setSharingLink(true);
+          try {
+            const referralCode = await createLinkInvite('friend_pro');
+            if (referralCode) {
+              const link = `${window.location.origin}/auth?ref=${referralCode}`;
+              const shareText = t("extra.getProFree");
+              if (navigator.share) {
+                try {
+                  await navigator.share({ title: "My Trivia", text: shareText, url: link });
+                } catch { /* cancelled */ }
+              } else {
+                await navigator.clipboard.writeText(link);
+                toast.success(t("extra.linkCopiedInvite"));
+              }
+            }
+          } finally { setSharingLink(false); }
+        }}
+        sharing={sharingLink}
+      />
+
       {/* SCENARIO 1: Not PRO - Show both tier cards */}
       {isNotPro && (
         <>
