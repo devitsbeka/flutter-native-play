@@ -907,9 +907,16 @@ async function getMultiCategoryVSQuestions(
     }
   }
   
-  // Mark as seen globally
+  // Mark as seen globally + track media separately
   if (selectedQuestions.length > 0) {
     markQuestionsAsAskedGlobally(selectedQuestions.map(q => q.id));
+    // Track media questions separately for better rotation
+    const mediaIds = selectedQuestions
+      .filter(q => q.imageUrl || q.videoUrl || q.audioUrl)
+      .map(q => q.id);
+    if (mediaIds.length > 0) {
+      markMediaQuestionsSeen(mediaIds);
+    }
   }
   
   return {
