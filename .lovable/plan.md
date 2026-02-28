@@ -1,79 +1,54 @@
 
 
-# Auto-Start Game After Avatar Setup
+## Re-Import 96 Corrupted Anime/Manga Questions
 
-## Problem
-When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
+### Situation
+- 90 of the 96 questions were translated from English to Georgian by the broken resolve function
+- 6 questions still have English text but were flagged
+- Original English text is lost from the database
 
-## Solution
-Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
+### Approach: AI-Powered Reverse Translation
 
-## Changes
+Instead of deleting and regenerating from scratch, we'll translate the 90 Georgian questions back to English. The content/trivia facts are correct -- they're just in the wrong language.
 
-### 1. `src/contexts/AvatarModalContext.tsx`
-- Add an optional `onComplete` callback to the context
-- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
-- Store the callback in a ref
-- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
+### Steps
 
-### 2. `src/components/home/AvatarModal.tsx`
-- Accept a new optional `onComplete?: () => void` prop
-- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+#### 1. Create a one-time edge function `restore-english-questions`
 
-### 3. `src/pages/Index.tsx`
-- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
-  ```
-  openAvatarModal(() => navigate("/game"));
-  ```
+This function will:
+- Fetch all 96 questions with `quality_status = 'needs_rewrite'` in the Anime/Manga category
+- For questions with Georgian text: send them to Gemini to translate back to English
+- For questions already in English: just reset their status
+- Apply character limits (question: 65 chars, answer: 20 chars)
+- Update each question in the database:
+  - Set `question_text`, `correct_answer`, `incorrect_answers` to the English translations
+  - Set `language = 'en'` (confirm it's correct)
+  - Clear `quality_status` (set to NULL)
+  - Clear `ai_review_score`, `ai_review_grade`, `ai_review_data`, `last_ai_review`
+  - Keep `in_production = false` so they can be reviewed before going live
 
-## Technical Details
+#### 2. AI Prompt Strategy
 
-**AvatarModalContext changes:**
-```typescript
-interface AvatarModalContextType {
-  openAvatarModal: (onComplete?: () => void) => void;
-  closeAvatarModal: () => void;
-  isOpen: boolean;
-}
+The prompt will instruct the model to:
+- Translate Georgian trivia questions about Anime/Manga back to English
+- Keep proper nouns (character names, show titles) in their standard English form
+- Respect character limits
+- Return clean JSON for batch processing
 
-// Store pending callback in a ref
-const onCompleteRef = useRef<(() => void) | null>(null);
+#### 3. After restoration
 
-const openAvatarModal = useCallback((onComplete?: () => void) => {
-  onCompleteRef.current = onComplete || null;
-  setIsOpen(true);
-}, []);
+- All 96 questions will have English text with `quality_status = NULL` and `in_production = false`
+- You can then run the (now language-aware) quality review to check them
+- Promote good ones to production
 
-const closeAvatarModal = useCallback(() => {
-  setIsOpen(false);
-  onCompleteRef.current = null;
-}, []);
+### Files to Create/Modify
 
-// Pass onComplete to AvatarModal
-<AvatarModal
-  isOpen={isOpen}
-  onClose={closeAvatarModal}
-  onComplete={() => {
-    const cb = onCompleteRef.current;
-    setIsOpen(false);
-    onCompleteRef.current = null;
-    cb?.();
-  }}
-/>
-```
+| File | Action |
+|------|--------|
+| `supabase/functions/restore-english-questions/index.ts` | New edge function for one-time batch reverse-translation |
 
-**AvatarModal changes:**
-- New prop: `onComplete?: () => void`
-- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+### Technical Notes
 
-**Index.tsx change:**
-```typescript
-} else if (!profile?.avatar_url) {
-  openAvatarModal(() => navigate("/game"));
-}
-```
-
-## Files to edit
-1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
-2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
-3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
+- Will process in batches of 10 to stay within AI token limits
+- Uses the existing Lovable AI integration (no extra API key needed)
+- The function can be deleted after use since it's a one-time operation
