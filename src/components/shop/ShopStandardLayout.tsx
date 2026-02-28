@@ -7,7 +7,7 @@ import { MobileProCarousel } from "./MobileProCarousel";
 import { MyPowersSection } from "./MyPowersSection";
 import { useIsBreakpointUp } from "@/hooks/use-breakpoint";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
-import { InviteFriendsMiniCard } from "@/components/shared/InviteFriendsMiniCard";
+
 
 interface ShopStandardLayoutProps {
   sections: ShopSection[];
@@ -72,11 +72,6 @@ export function ShopStandardLayout({
 
   return (
     <div className="flex-1 pb-8">
-      {/* Invite Friends Mini Card */}
-      <div className="px-4 pt-4">
-        <InviteFriendsMiniCard />
-      </div>
-
       {/* Hero Carousel - Desktop only / PRO Carousel - Mobile/Tablet */}
       {isDesktop ? (
         <ShopHeroCarousel onSlideClick={handleSlideClick} />

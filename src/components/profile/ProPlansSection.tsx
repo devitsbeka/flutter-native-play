@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp } from "lucide-react";
-import { InviteFriendsMiniCard } from "@/components/shared/InviteFriendsMiniCard";
+import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
@@ -100,7 +99,9 @@ export function ProPlansSection({
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [purchasedTierName, setPurchasedTierName] = useState("");
+  const [sharing, setSharing] = useState(false);
   const { initiateProCheckout, isProcessing: purchasing } = useProPurchase();
+  const { createLinkInvite } = useFriendInvites();
 
   // Handle success callback from Stripe
   useEffect(() => {
@@ -143,8 +144,24 @@ export function ProPlansSection({
 
   return (
     <div className="space-y-4">
-      {/* Mini Invite Friends Banner - shown for everyone */}
-      <InviteFriendsMiniCard />
+      {/* Invite Friends Card - matching TierCard style */}
+      <InviteCard sharing={sharing} onShare={async () => {
+        if (sharing) return;
+        setSharing(true);
+        try {
+          const referralCode = await createLinkInvite("friend_pro");
+          if (referralCode) {
+            const link = `${window.location.origin}/auth?ref=${referralCode}`;
+            const shareText = t("extra.getProFree");
+            if (navigator.share) {
+              try { await navigator.share({ title: "My Trivia", text: shareText, url: link }); } catch { /* cancelled */ }
+            } else {
+              await navigator.clipboard.writeText(link);
+              toast.success(t("extra.linkCopiedInvite"));
+            }
+          }
+        } finally { setSharing(false); }
+      }} />
 
       {/* SCENARIO 1: Not PRO - Show both tier cards */}
       {isNotPro && (
@@ -506,6 +523,83 @@ function TierCard({
               <Sparkles className="w-4 h-4" />
               {t("extra.buyBtn")}
             </>
+          )}
+        </motion.button>
+      </div>
+
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: 200% 200%; }
+          100% { background-position: -200% -200%; }
+        }
+      `}</style>
+    </motion.div>
+  );
+}
+
+// Invite Card matching TierCard style
+function InviteCard({ sharing, onShare }: { sharing: boolean; onShare: () => void }) {
+  const { t } = useLanguage();
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative rounded-2xl p-5 overflow-hidden bg-card"
+      style={{
+        border: "2px solid rgba(236, 72, 153, 0.4)",
+        boxShadow: "0 4px 24px -4px rgba(147, 51, 234, 0.25)",
+      }}
+    >
+      {/* Shimmer Effect */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            background: "linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%)",
+            animation: "shimmer 3s infinite",
+            backgroundSize: "200% 200%",
+          }}
+        />
+      </div>
+
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, #EC4899 0%, #9333EA 100%)",
+              boxShadow: "0 4px 12px rgba(147, 51, 234, 0.25)",
+            }}
+          >
+            <Share2 className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-foreground leading-tight">{t("extra.inviteMiniTitle")}</h3>
+          </div>
+        </div>
+
+        <span
+          className="inline-block px-3 py-1.5 rounded-full text-xs font-bold text-white mb-4"
+          style={{ background: "linear-gradient(135deg, #EC4899, #9333EA)" }}
+        >
+          🎁 {t("extra.inviteMiniReward")}
+        </span>
+
+        <motion.button
+          onClick={onShare}
+          disabled={sharing}
+          className="w-full py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-70"
+          style={{
+            background: "linear-gradient(135deg, #EC4899 0%, #9333EA 100%)",
+            boxShadow: "0 4px 16px rgba(147, 51, 234, 0.25)",
+          }}
+          whileHover={{ scale: sharing ? 1 : 1.02 }}
+          whileTap={{ scale: sharing ? 1 : 0.98 }}
+        >
+          {sharing ? (
+            <><Loader2 className="w-4 h-4 animate-spin" />{t("extra.processingBtn")}</>
+          ) : (
+            <><Share2 className="w-4 h-4" />{t("extra.shareBtn")}</>
           )}
         </motion.button>
       </div>

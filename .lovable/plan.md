@@ -1,52 +1,79 @@
 
 
-## Make Invite Card a Carousel Slide Matching PRO Card Style
+# Auto-Start Game After Avatar Setup
 
-### Goal
-Turn the "Invite Friends" banner into a card that looks identical to the Solo PRO and Family PRO cards (with mascot video on the right side), and show it as the first slide in the MobileProCarousel. Also update the ProPlansSection to use the same card style.
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-### Changes
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-#### 1. Update `MobileProCarousel.tsx` - Add invite slide as first card
+## Changes
 
-- Add a third slide type to the carousel: an "invite" slide shown first (index 0), before Solo PRO (index 1) and Family PRO (index 2)
-- The invite slide uses the same card layout as PRO cards:
-  - Left 65%: Title "მოიწვიე მეგობრები და გახდით PRO მომხმარებლები", reward badge "🎁 10 დღიანი PRO საჩუქრად", and a "გაზიარება" (Share) button
-  - Right 35%: Same mascot video (shopbg.mp4/webm)
-  - Background: Pink/purple gradient (`linear-gradient(135deg, #EC4899 0%, #9333EA 100%)`)
-- The share button triggers the same referral logic from `useFriendInvites`
-- Update the dot indicators and auto-rotate to include the new slide (3 total)
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-#### 2. Update `ProPlansSection.tsx` - Replace InviteFriendsMiniCard with matching card
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-- Replace the current `<InviteFriendsMiniCard />` at the top with a full-width card matching the TierCard style:
-  - Same rounded-2xl, border, shadow, shimmer effect
-  - Pink/purple gradient background
-  - Content: icon + title + reward badge + share button
-  - This card appears first, before the Solo PRO and Family PRO tier cards
-- The card uses the same referral share logic
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-#### 3. Keep `InviteFriendsMiniCard` shared component
-- Keep it as-is for use in the Shop page (compact version)
-- The ProPlansSection and MobileProCarousel will have their own styled versions inline
+## Technical Details
 
-### Files to Change
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
 
-| File | Change |
-|------|--------|
-| `src/components/shop/MobileProCarousel.tsx` | Add invite slide as index 0 with pink/purple gradient, share logic, same layout as PRO cards |
-| `src/components/profile/ProPlansSection.tsx` | Replace `InviteFriendsMiniCard` with a full TierCard-style invite card shown first |
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
 
-### Technical Details
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
 
-**MobileProCarousel invite slide structure:**
-```text
-[Left 65%]                    [Right 35%]
-Share2 icon + "მოიწვიე..."    Mascot video
-🎁 10 დღიანი PRO საჩუქრად
-[გაზიარება button]
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
 ```
 
-**Gradient:** `linear-gradient(135deg, #EC4899 0%, #9333EA 100%)`
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
 
-The invite slide uses `useFriendInvites` hook for `createLinkInvite` and `navigator.share` / clipboard fallback, same as the existing `InviteFriendsMiniCard`.
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
+
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
