@@ -334,7 +334,7 @@ async function getCategoryQuestions(
     console.log(`[questionService] Category ${categoryUuid} exhausted (${categorySeenIds.length}/${totalAvailable}), resetting...`);
   }
   
-  // Build query - still use level range for appropriate difficulty
+  // Build query - fetch WITHOUT exclude filter, apply client-side
   let query = supabase
     .from('questions')
     .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug, image_url, video_url, audio_url')
@@ -345,11 +345,13 @@ async function getCategoryQuestions(
     .gte('level_number', minLevel)
     .lte('level_number', maxLevel);
   
-  if (excludeIds.length > 0) {
-    query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-  }
-  
   let { data: questions } = await query.limit(50);
+  
+  // Client-side exclusion using Set for O(1) lookups
+  const excludeSet = new Set(excludeIds);
+  if (questions && excludeSet.size > 0) {
+    questions = questions.filter(q => !excludeSet.has(q.id));
+  }
   
   // Fallback 1: try full level range (1-20) with exclusions if not enough
   if (!questions || questions.length < count) {
@@ -364,13 +366,9 @@ async function getCategoryQuestions(
       .gte('level_number', 1)
       .lte('level_number', 20);
     
-    // Still apply exclusions in fallback
-    if (excludeIds.length > 0) {
-      fallbackQuery = fallbackQuery.not('id', 'in', `(${excludeIds.join(',')})`);
-    }
-    
     const { data: fallbackQuestions } = await fallbackQuery.limit(50);
-    questions = fallbackQuestions || [];
+    // Apply client-side exclusion
+    questions = (fallbackQuestions || []).filter(q => !excludeSet.has(q.id));
   }
   
   // Fallback 2: If still not enough, clear ALL exclusions and try ANY level
