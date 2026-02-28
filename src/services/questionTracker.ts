@@ -11,6 +11,7 @@ const STORAGE_KEY = 'question_tracker';
 const MAX_TRACKED_PER_CATEGORY = 500; // Remember last 500 questions per category
 const GLOBAL_MAX_TRACKED = 1000; // Global limit across all categories
 const SEEN_MAX_TRACKED = 5000; // Track up to 5000 seen questions across all modes
+const MEDIA_SEEN_MAX_TRACKED = 500; // Track up to 500 media (image/video/audio) questions
 const RESET_THRESHOLD = 1.0; // Only reset when 100% of available questions have been asked
 const CATEGORY_SEEN_KEY_PREFIX = 'cat_'; // Prefix for category-wide tracking
 
@@ -19,6 +20,7 @@ interface TrackerData {
   categoryLevels: Record<string, string[]>; // "categoryId_levelNumber" -> questionIds
   global: string[]; // All asked question IDs (for VS mode)
   seen: string[]; // All questions ever shown to user (across all modes)
+  mediaSeen: string[]; // Media questions (image/video/audio) seen - separate tracking
   lastUpdated: number;
 }
 
@@ -34,12 +36,15 @@ function getTrackerData(): TrackerData {
       if (!parsed.categoryLevels) {
         parsed.categoryLevels = {};
       }
+      if (!parsed.mediaSeen) {
+        parsed.mediaSeen = [];
+      }
       return parsed;
     }
   } catch (e) {
     console.warn('Failed to parse question tracker data:', e);
   }
-  return { categories: {}, categoryLevels: {}, global: [], seen: [], lastUpdated: Date.now() };
+  return { categories: {}, categoryLevels: {}, global: [], seen: [], mediaSeen: [], lastUpdated: Date.now() };
 }
 
 function saveTrackerData(data: TrackerData): void {
@@ -333,6 +338,7 @@ export function getTrackingDebugInfo(): string {
   const data = getTrackerData();
   return JSON.stringify({
     seenCount: data.seen.length,
+    mediaSeenCount: data.mediaSeen.length,
     globalCount: data.global.length,
     categoriesCount: Object.keys(data.categories).length,
     categoryLevelsCount: Object.keys(data.categoryLevels || {}).length,
@@ -340,4 +346,43 @@ export function getTrackingDebugInfo(): string {
     sampleSeenIds: data.seen.slice(0, 5),
     categoryLevelKeys: Object.keys(data.categoryLevels || {}).slice(0, 10),
   }, null, 2);
+}
+
+// ============================================================================
+// MEDIA QUESTION TRACKING (image/video/audio questions)
+// ============================================================================
+
+/**
+ * Get all media question IDs that have been seen
+ */
+export function getMediaSeenIds(): string[] {
+  const data = getTrackerData();
+  return data.mediaSeen || [];
+}
+
+/**
+ * Mark media questions as seen
+ */
+export function markMediaQuestionsSeen(questionIds: string[]): void {
+  const data = getTrackerData();
+  const updated = [...new Set([...(data.mediaSeen || []), ...questionIds])];
+  data.mediaSeen = updated.slice(-MEDIA_SEEN_MAX_TRACKED);
+  saveTrackerData(data);
+}
+
+/**
+ * Check if media pool should be reset
+ */
+export function shouldResetMediaPool(totalMediaAvailable: number): boolean {
+  const mediaSeenIds = getMediaSeenIds();
+  return mediaSeenIds.length >= totalMediaAvailable * RESET_THRESHOLD;
+}
+
+/**
+ * Clear media seen tracking (when all media questions exhausted)
+ */
+export function clearMediaSeen(): void {
+  const data = getTrackerData();
+  data.mediaSeen = [];
+  saveTrackerData(data);
 }

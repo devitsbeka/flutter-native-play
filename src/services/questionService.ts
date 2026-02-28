@@ -29,6 +29,9 @@ import {
   getCategorySeenIds,
   markCategorySeen,
   clearCategorySeen,
+  getMediaSeenIds,
+  markMediaQuestionsSeen,
+  clearMediaSeen,
 } from "@/services/questionTracker";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -331,7 +334,7 @@ async function getCategoryQuestions(
     console.log(`[questionService] Category ${categoryUuid} exhausted (${categorySeenIds.length}/${totalAvailable}), resetting...`);
   }
   
-  // Build query - still use level range for appropriate difficulty
+  // Build query - fetch WITHOUT exclude filter, apply client-side
   let query = supabase
     .from('questions')
     .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug, image_url, video_url, audio_url')
@@ -342,11 +345,13 @@ async function getCategoryQuestions(
     .gte('level_number', minLevel)
     .lte('level_number', maxLevel);
   
-  if (excludeIds.length > 0) {
-    query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-  }
-  
   let { data: questions } = await query.limit(50);
+  
+  // Client-side exclusion using Set for O(1) lookups
+  const excludeSet = new Set(excludeIds);
+  if (questions && excludeSet.size > 0) {
+    questions = questions.filter(q => !excludeSet.has(q.id));
+  }
   
   // Fallback 1: try full level range (1-20) with exclusions if not enough
   if (!questions || questions.length < count) {
@@ -361,13 +366,9 @@ async function getCategoryQuestions(
       .gte('level_number', 1)
       .lte('level_number', 20);
     
-    // Still apply exclusions in fallback
-    if (excludeIds.length > 0) {
-      fallbackQuery = fallbackQuery.not('id', 'in', `(${excludeIds.join(',')})`);
-    }
-    
     const { data: fallbackQuestions } = await fallbackQuery.limit(50);
-    questions = fallbackQuestions || [];
+    // Apply client-side exclusion
+    questions = (fallbackQuestions || []).filter(q => !excludeSet.has(q.id));
   }
   
   // Fallback 2: If still not enough, clear ALL exclusions and try ANY level
@@ -501,7 +502,7 @@ async function getTVQuestions(
   
   const totalAvailable = totalCount || 0;
   
-  // Build query
+  // Build query - fetch full pool, apply exclusion client-side
   let query = supabase
     .from('questions')
     .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
@@ -510,11 +511,13 @@ async function getTVQuestions(
     .eq('language', language)
     .eq('category_id', categoryUuid);
   
-  if (excludeIds.length > 0) {
-    query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-  }
-  
   let { data: questions } = await query;
+  
+  // Client-side exclusion using Set
+  const excludeSet = new Set(excludeIds);
+  if (questions && excludeSet.size > 0) {
+    questions = questions.filter(q => !excludeSet.has(q.id));
+  }
   
   // If not enough, reset tracker
   if (!questions || questions.length < count) {
@@ -650,11 +653,10 @@ async function getSingleCategoryVSQuestions(
   // Get category info
   const categoryInfo = await getCategoryInfo(categoryUuid);
   
-  // Get seen question IDs
+  // Get seen question IDs - use FULL list for client-side filtering
   const seenIds = getSeenQuestionIds();
-  // Cap excludeIds to prevent oversized query URLs (5000 UUIDs = ~180KB, exceeds limits)
-  const MAX_EXCLUDE_IN_QUERY = 200;
-  let excludeIds = seenIds.slice(-MAX_EXCLUDE_IN_QUERY);
+  // No cap needed - we filter client-side now
+  let excludeIds = [...seenIds];
   
   // Get total available in this category
   const { count: totalCount } = await supabase
@@ -675,8 +677,8 @@ async function getSingleCategoryVSQuestions(
     excludeIds = [];
   }
   
-  // Query questions from specific category
-  let query = supabase
+  // Query all questions from specific category, filter client-side
+  const { data: allCatQuestions } = await supabase
     .from('questions')
     .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
     .eq('is_active', true)
@@ -684,11 +686,9 @@ async function getSingleCategoryVSQuestions(
     .eq('language', language)
     .eq('category_id', categoryUuid);
   
-  if (excludeIds.length > 0) {
-    query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-  }
-  
-  let { data: questions } = await query;
+  // Client-side exclusion
+  const excludeSet = new Set(excludeIds);
+  let questions = (allCatQuestions || []).filter(q => !excludeSet.has(q.id));
   
   // If not enough, clear exclusions and retry
   if (!questions || questions.length < count) {
@@ -799,10 +799,11 @@ async function getMultiCategoryVSQuestions(
     exhausted = true;
   }
   
-  // Get fresh exclude list after potential reset
-  // Cap excludeIds to prevent oversized query URLs (5000 UUIDs = ~180KB, exceeds limits)
-  const MAX_EXCLUDE_IN_QUERY = 200;
-  let excludeIds = wasReset ? [] : seenIds.slice(-MAX_EXCLUDE_IN_QUERY);
+  // Get fresh seen list after potential reset - use full list for client-side filtering
+  const currentSeenIds = wasReset ? [] : seenIds;
+  const seenSet = new Set(currentSeenIds);
+  const mediaSeenIds = getMediaSeenIds();
+  const mediaSeenSet = new Set(mediaSeenIds);
   
   // Get all active categories
   const { data: categories } = await supabase
@@ -819,63 +820,82 @@ async function getMultiCategoryVSQuestions(
     };
   }
   
-  // BULK FETCH: Single query across ALL categories instead of per-category sequential queries
+  // BULK FETCH: Single query across ALL categories — NO limit, NO server-side exclude
   let usedFallbackLocal = false;
   
-  // Build a single query for all active+production questions in the user's language
-  let bulkQuery = supabase
+  const { data: allQuestions } = await supabase
     .from('questions')
     .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url, category_id')
     .eq('is_active', true)
     .eq('in_production', true)
     .eq('language', language);
   
-  if (excludeIds.length > 0) {
-    bulkQuery = bulkQuery.not('id', 'in', `(${excludeIds.join(',')})`);
-  }
-  
-  const { data: allQuestions } = await bulkQuery.limit(1000);
-  
-  // Create Map for O(1) category lookups
   const categoryMap = new Map(categories.map(c => [c.id, c]));
   
   const selectedQuestions: FormattedQuestion[] = [];
   
   if (allQuestions && allQuestions.length > 0) {
-    const validQuestions = (allQuestions as RawQuestion[]).filter(isValidQuestionLength);
+    // Client-side exclusion: filter out all seen questions
+    const unseenQuestions = (allQuestions as RawQuestion[]).filter(q => !seenSet.has(q.id));
+    const validQuestions = (unseenQuestions.length >= count ? unseenQuestions : allQuestions as RawQuestion[])
+      .filter(isValidQuestionLength);
+    
+    // === MEDIA-AWARE SELECTION ===
+    // Separate media questions (image/video/audio) from text-only
+    const mediaQuestions = validQuestions.filter(q => q.image_url || q.video_url || q.audio_url);
+    const unseenMedia = mediaQuestions.filter(q => !mediaSeenSet.has(q.id));
+    
+    // Reserve 1-2 slots for unseen media questions if available
+    const mediaSlots = Math.min(2, unseenMedia.length, Math.floor(count / 3));
+    const usedIds = new Set<string>();
+    
+    if (mediaSlots > 0) {
+      const shuffledMedia = shuffleArray(unseenMedia).slice(0, mediaSlots);
+      for (const q of shuffledMedia) {
+        const cat = categoryMap.get(q.category_id || '');
+        selectedQuestions.push(formatQuestion(q, cat?.name, cat?.category_id));
+        usedIds.add(q.id);
+      }
+    }
+    
+    // If no unseen media left, reset media tracker
+    if (unseenMedia.length === 0 && mediaQuestions.length > 0) {
+      clearMediaSeen();
+    }
+    
+    // === ROUND-ROBIN CATEGORY DIVERSITY for remaining slots ===
+    const remainingCount = count - selectedQuestions.length;
+    const remainingValid = validQuestions.filter(q => !usedIds.has(q.id));
     
     // Group by category for diversity
     const byCategory = new Map<string, RawQuestion[]>();
-    for (const q of validQuestions) {
+    for (const q of remainingValid) {
       const catId = q.category_id || 'unknown';
       if (!byCategory.has(catId)) byCategory.set(catId, []);
       byCategory.get(catId)!.push(q);
     }
     
-    // Round-robin pick from shuffled categories for diversity
+    // Round-robin pick from shuffled categories
     const categoryKeys = shuffleArray([...byCategory.keys()]);
     let roundRobinIndex = 0;
-    const usedIds = new Set<string>();
     
     while (selectedQuestions.length < count && roundRobinIndex < categoryKeys.length * count) {
       const catId = categoryKeys[roundRobinIndex % categoryKeys.length];
       const pool = byCategory.get(catId);
       if (pool && pool.length > 0) {
-        // Pick a random question from this category's pool
         const idx = Math.floor(Math.random() * pool.length);
         const q = pool[idx];
         if (!usedIds.has(q.id)) {
           usedIds.add(q.id);
           const cat = categoryMap.get(q.category_id || '');
           selectedQuestions.push(formatQuestion(q, cat?.name, cat?.category_id));
-          // Remove from pool so we don't pick it again
           pool.splice(idx, 1);
         }
       }
       roundRobinIndex++;
     }
     
-    // If still not enough, pick any remaining valid questions
+    // If still not enough, pick any remaining
     if (selectedQuestions.length < count) {
       usedFallbackLocal = true;
       const remaining = validQuestions.filter(q => !usedIds.has(q.id));
@@ -887,9 +907,16 @@ async function getMultiCategoryVSQuestions(
     }
   }
   
-  // Mark as seen globally
+  // Mark as seen globally + track media separately
   if (selectedQuestions.length > 0) {
     markQuestionsAsAskedGlobally(selectedQuestions.map(q => q.id));
+    // Track media questions separately for better rotation
+    const mediaIds = selectedQuestions
+      .filter(q => q.imageUrl || q.videoUrl || q.audioUrl)
+      .map(q => q.id);
+    if (mediaIds.length > 0) {
+      markMediaQuestionsSeen(mediaIds);
+    }
   }
   
   return {
