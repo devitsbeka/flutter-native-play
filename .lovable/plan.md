@@ -1,79 +1,33 @@
 
 
-# Auto-Start Game After Avatar Setup
+## Add Language Filter to Quality Review
 
-## Problem
-When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
+### Problem
+The Quality Review page (`/admin/review`) has no language filter. When you run a review, it fetches questions in all languages. The edge functions are now language-aware for prompts, but the client-side query doesn't filter by language -- so you can't review only English questions.
 
-## Solution
-Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
+### Changes
 
-## Changes
+#### 1. Add language filter to the Quality Review UI
+**File:** `src/pages/admin/QualityReview.tsx`
 
-### 1. `src/contexts/AvatarModalContext.tsx`
-- Add an optional `onComplete` callback to the context
-- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
-- Store the callback in a ref
-- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
+- Add a `languageFilter` state (default: `'all'`)
+- Add a Language dropdown in the filters section (next to Category, Status, etc.) with options: All, English, Georgian
+- Pass `languageFilter` to both `startReview()` and `loadSavedIssues()` calls
 
-### 2. `src/components/home/AvatarModal.tsx`
-- Accept a new optional `onComplete?: () => void` prop
-- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+#### 2. Update the hook to accept and use language filter
+**File:** `src/hooks/useQuestionQualityReview.ts`
 
-### 3. `src/pages/Index.tsx`
-- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
-  ```
-  openAvatarModal(() => navigate("/game"));
-  ```
+- Add `language?: string` to `ReviewOptions` interface
+- In `startReview()`: add `.eq('language', options.language)` to both the count query and the fetch query when language is specified
+- In `loadSavedIssues()`: add `.eq('language', options.language)` to the query when language is specified
 
-## Technical Details
+#### 3. No edge function changes needed
+The edge functions already read `language` from the database and use language-aware prompts (fixed in the previous update). The filtering just needs to happen at the query level so only English questions are sent for review.
 
-**AvatarModalContext changes:**
-```typescript
-interface AvatarModalContextType {
-  openAvatarModal: (onComplete?: () => void) => void;
-  closeAvatarModal: () => void;
-  isOpen: boolean;
-}
+### Files to Modify
 
-// Store pending callback in a ref
-const onCompleteRef = useRef<(() => void) | null>(null);
+| File | Change |
+|------|--------|
+| `src/pages/admin/QualityReview.tsx` | Add language dropdown filter UI |
+| `src/hooks/useQuestionQualityReview.ts` | Add `language` to `ReviewOptions` and filter queries |
 
-const openAvatarModal = useCallback((onComplete?: () => void) => {
-  onCompleteRef.current = onComplete || null;
-  setIsOpen(true);
-}, []);
-
-const closeAvatarModal = useCallback(() => {
-  setIsOpen(false);
-  onCompleteRef.current = null;
-}, []);
-
-// Pass onComplete to AvatarModal
-<AvatarModal
-  isOpen={isOpen}
-  onClose={closeAvatarModal}
-  onComplete={() => {
-    const cb = onCompleteRef.current;
-    setIsOpen(false);
-    onCompleteRef.current = null;
-    cb?.();
-  }}
-/>
-```
-
-**AvatarModal changes:**
-- New prop: `onComplete?: () => void`
-- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
-
-**Index.tsx change:**
-```typescript
-} else if (!profile?.avatar_url) {
-  openAvatarModal(() => navigate("/game"));
-}
-```
-
-## Files to edit
-1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
-2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
-3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
