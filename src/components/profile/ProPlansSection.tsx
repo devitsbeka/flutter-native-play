@@ -536,3 +536,80 @@ function TierCard({
     </motion.div>
   );
 }
+
+// Invite Card matching TierCard style
+function InviteCard({ sharing, onShare }: { sharing: boolean; onShare: () => void }) {
+  const { t } = useLanguage();
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative rounded-2xl p-5 overflow-hidden bg-card"
+      style={{
+        border: "2px solid rgba(236, 72, 153, 0.4)",
+        boxShadow: "0 4px 24px -4px rgba(147, 51, 234, 0.25)",
+      }}
+    >
+      {/* Shimmer Effect */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            background: "linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%)",
+            animation: "shimmer 3s infinite",
+            backgroundSize: "200% 200%",
+          }}
+        />
+      </div>
+
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, #EC4899 0%, #9333EA 100%)",
+              boxShadow: "0 4px 12px rgba(147, 51, 234, 0.25)",
+            }}
+          >
+            <Share2 className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-foreground leading-tight">{t("extra.inviteMiniTitle")}</h3>
+          </div>
+        </div>
+
+        <span
+          className="inline-block px-3 py-1.5 rounded-full text-xs font-bold text-white mb-4"
+          style={{ background: "linear-gradient(135deg, #EC4899, #9333EA)" }}
+        >
+          🎁 {t("extra.inviteMiniReward")}
+        </span>
+
+        <motion.button
+          onClick={onShare}
+          disabled={sharing}
+          className="w-full py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-70"
+          style={{
+            background: "linear-gradient(135deg, #EC4899 0%, #9333EA 100%)",
+            boxShadow: "0 4px 16px rgba(147, 51, 234, 0.25)",
+          }}
+          whileHover={{ scale: sharing ? 1 : 1.02 }}
+          whileTap={{ scale: sharing ? 1 : 0.98 }}
+        >
+          {sharing ? (
+            <><Loader2 className="w-4 h-4 animate-spin" />{t("extra.processingBtn")}</>
+          ) : (
+            <><Share2 className="w-4 h-4" />{t("extra.shareBtn")}</>
+          )}
+        </motion.button>
+      </div>
+
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: 200% 200%; }
+          100% { background-position: -200% -200%; }
+        }
+      `}</style>
+    </motion.div>
+  );
+}
