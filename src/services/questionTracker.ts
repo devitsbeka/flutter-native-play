@@ -11,6 +11,7 @@ const STORAGE_KEY = 'question_tracker';
 const MAX_TRACKED_PER_CATEGORY = 500; // Remember last 500 questions per category
 const GLOBAL_MAX_TRACKED = 1000; // Global limit across all categories
 const SEEN_MAX_TRACKED = 5000; // Track up to 5000 seen questions across all modes
+const MEDIA_SEEN_MAX_TRACKED = 500; // Track up to 500 media (image/video/audio) questions
 const RESET_THRESHOLD = 1.0; // Only reset when 100% of available questions have been asked
 const CATEGORY_SEEN_KEY_PREFIX = 'cat_'; // Prefix for category-wide tracking
 
@@ -19,6 +20,7 @@ interface TrackerData {
   categoryLevels: Record<string, string[]>; // "categoryId_levelNumber" -> questionIds
   global: string[]; // All asked question IDs (for VS mode)
   seen: string[]; // All questions ever shown to user (across all modes)
+  mediaSeen: string[]; // Media questions (image/video/audio) seen - separate tracking
   lastUpdated: number;
 }
 
@@ -34,12 +36,15 @@ function getTrackerData(): TrackerData {
       if (!parsed.categoryLevels) {
         parsed.categoryLevels = {};
       }
+      if (!parsed.mediaSeen) {
+        parsed.mediaSeen = [];
+      }
       return parsed;
     }
   } catch (e) {
     console.warn('Failed to parse question tracker data:', e);
   }
-  return { categories: {}, categoryLevels: {}, global: [], seen: [], lastUpdated: Date.now() };
+  return { categories: {}, categoryLevels: {}, global: [], seen: [], mediaSeen: [], lastUpdated: Date.now() };
 }
 
 function saveTrackerData(data: TrackerData): void {
