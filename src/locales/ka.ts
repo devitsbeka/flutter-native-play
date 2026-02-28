@@ -2254,6 +2254,8 @@ export const ka = {
     inviteBenefitRooms: "ოთახებში მონაწილეობა",
     inviteBenefitPosts: "პოსტების გამოქვეყნება",
     inviteBenefitDuration: "მოქმედებს 1 თვე",
+    inviteMiniTitle: "მოიწვიე მეგობრები და გახდით PRO მომხმარებლები",
+    inviteMiniReward: "10 დღიანი PRO საჩუქრად",
     byEmailTab: "ელ-ფოსტით",
     byLinkTab: "ლინკით",
     friendEmailLabel: "მეგობრის ელ-ფოსტა",

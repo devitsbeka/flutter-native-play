@@ -1,37 +1,79 @@
 
 
-## Add Mini "Invite Friends" Section Above PRO Plans
+# Auto-Start Game After Avatar Setup
 
-### Goal
-Add a compact referral banner above the PRO tier cards on the Profile page's PRO tab, showing "მოიწვიე მეგობრები და გახდით PRO მომხმარებლები" with a share button. This gives users a quick way to share their referral link without navigating elsewhere.
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-### Changes
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-#### 1. Update `src/components/profile/ProPlansSection.tsx`
+## Changes
 
-Add a new `InviteFriendsMiniCard` section at the top of the `ProPlansSection` component (before the tier cards), visible only when the user is **not** already PRO:
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-- A compact card with a purple-to-amber gradient background
-- Family/friends icon on the left
-- Text: "მოიწვიე მეგობრები და გახდით PRO მომხმარებლები" (localized via translation key)
-- "10 დღიანი PRO საჩუქრად" pill badge
-- A single "გაზიარება" (Share) button that:
-  - Generates a referral link via `useFriendInvites().createLinkInvite`
-  - Uses `navigator.share()` if available, otherwise copies to clipboard
-- Compact design (~80px height) so it doesn't push the PRO cards too far down
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-#### 2. Add translation keys in `src/locales/ka.ts` and `src/locales/en.ts`
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-- `extra.inviteMiniTitle`: "მოიწვიე მეგობრები და გახდით PRO მომხმარებლები" / "Invite friends and become PRO users"
-- `extra.inviteMiniReward`: "10 დღიანი PRO საჩუქრად" / "10 days PRO as gift"
-- `extra.shareBtn`: "გაზიარება" / "Share" (may already exist, will reuse if so)
+## Technical Details
 
-### Technical Details
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
 
-- The mini card will be rendered inside `ProPlansSection` at the top of the `isNotPro` scenario block (before the tier map)
-- Uses `useFriendInvites` hook for `createLinkInvite` to get/generate referral code
-- Share logic: `navigator.share({ url: referralUrl })` with clipboard fallback + toast
-- Styled with gradient background matching the invite modal aesthetic (purple-to-amber)
-- Uses `motion.div` for enter animation consistent with the rest of the section
-- Also shown for `isSoloPro` and `isFamilyPro` scenarios (everyone can invite)
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
 
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
+```
+
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
+
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
