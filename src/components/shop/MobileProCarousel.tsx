@@ -10,6 +10,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import shopBgVideo from "@/assets/shopbg.mp4";
 import shopBgVideoWebm from "@/assets/shopbg.webm";
+import crownIcon from "@/assets/crown-icon.png";
 
 type SimplifiedTier = "solo" | "family";
 
@@ -176,10 +177,11 @@ export function MobileProCarousel() {
                   </p>
 
                   <span
-                    className="inline-block self-start px-3 py-1.5 rounded-full text-xs font-bold text-white mb-auto"
+                    className="inline-flex items-center gap-1.5 self-start px-3 py-1.5 rounded-full text-xs font-bold text-white mb-auto"
                     style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}
                   >
-                    🎁 {t("extra.inviteMiniReward")}
+                    <img src={crownIcon} alt="" className="w-4 h-4" />
+                    10 დღიანი PRO
                   </span>
 
                   <button
