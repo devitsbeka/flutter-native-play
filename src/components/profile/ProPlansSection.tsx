@@ -573,7 +573,7 @@ function InviteCard({ sharing, onShare }: { sharing: boolean; onShare: () => voi
 
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-foreground bg-muted self-start">
             <img src={crownIcon} alt="" className="w-4 h-4" />
-            10 {t("extra.inviteMiniReward")}
+            10 დღიანი PRO
           </span>
 
           <motion.button
