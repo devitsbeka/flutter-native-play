@@ -7,6 +7,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  'ka': 'Georgian',
+  'en': 'English',
+  'fr': 'French',
+  'de': 'German',
+  'es': 'Spanish',
+  'it': 'Italian',
+  'pt': 'Portuguese',
+  'pt-br': 'Brazilian Portuguese',
+};
+
+function getLanguageName(code: string): string {
+  return LANGUAGE_NAMES[code] || LANGUAGE_NAMES['ka'];
+}
+
+function getGrammarDescription(lang: string): string {
+  if (lang === 'ka') return 'spelling, verb conjugation, case endings in Georgian';
+  if (lang === 'en') return 'spelling, grammar, punctuation in English';
+  return `spelling, grammar in ${getLanguageName(lang)}`;
+}
+
 interface ReviewData {
   grammar_issues: string[];
   uniqueness_issues: string[];
@@ -81,7 +102,10 @@ serve(async (req) => {
       ? question.incorrect_answers 
       : JSON.parse(question.incorrect_answers || '[]');
 
-    const prompt = `You are a Georgian language trivia question expert. Your task is to fix this question to achieve A-grade quality (90%+ score).
+    const langName = getLanguageName(question.language || 'ka');
+    const grammarDesc = getGrammarDescription(question.language || 'ka');
+
+    const prompt = `You are a ${langName} language trivia question expert. Your task is to fix this question to achieve A-grade quality (90%+ score).
 
 ORIGINAL QUESTION:
 Question: ${question.question_text}
@@ -97,18 +121,18 @@ RECOMMENDATIONS:
 ${reviewData.recommendations?.length ? reviewData.recommendations.join('\n') : 'None'}
 
 YOUR TASK:
-1. Fix all grammar issues (spelling, verb conjugation, case endings in Georgian)
+1. Fix all grammar issues (${grammarDesc})
 2. Ensure only ONE answer is definitively correct with no ambiguity
 3. Make incorrect answers clearly wrong but still plausible
 4. Improve question clarity and phrasing
 5. Keep the same topic and intent of the question
 
-IMPORTANT: All text must be in Georgian language. Only fix what needs fixing - don't change things that are already correct.
+IMPORTANT: All text must be in ${langName} language. Only fix what needs fixing - don't change things that are already correct.
 
 Return ONLY a valid JSON object (no markdown, no code blocks):
 {
-  "question_text": "Fixed question in Georgian",
-  "correct_answer": "Fixed correct answer in Georgian",
+  "question_text": "Fixed question in ${langName}",
+  "correct_answer": "Fixed correct answer in ${langName}",
   "incorrect_answers": ["Fixed incorrect 1", "Fixed incorrect 2", "Fixed incorrect 3"],
   "changes_made": ["Change 1", "Change 2"]
 }`;
@@ -187,14 +211,17 @@ Return ONLY a valid JSON object (no markdown, no code blocks):
     }
 
     // Re-review the question to get new grade
-    const reviewPrompt = `You are an expert Georgian language trivia evaluator. Analyze this question and provide quality scores.
+    const reviewLangName = getLanguageName(question.language || 'ka');
+    const reviewGrammarDesc = getGrammarDescription(question.language || 'ka');
+    
+    const reviewPrompt = `You are an expert ${reviewLangName} language trivia evaluator. Analyze this question and provide quality scores.
 
 Question: ${resolved.question_text}
 Correct Answer: ${resolved.correct_answer}
 Incorrect Answers: ${resolved.incorrect_answers.join(', ')}
 
 Evaluate based on:
-1. GRAMMAR (30% weight): Georgian spelling, verb conjugation, case endings, proper phrasing
+1. GRAMMAR (30% weight): ${reviewLangName} ${reviewGrammarDesc}
 2. ANSWER UNIQUENESS (40% weight): Only one answer is correct, no ambiguous options
 3. CLARITY (30% weight): Question is clear and unambiguous
 

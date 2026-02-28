@@ -6,12 +6,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  'ka': 'Georgian',
+  'en': 'English',
+  'fr': 'French',
+  'de': 'German',
+  'es': 'Spanish',
+  'it': 'Italian',
+  'pt': 'Portuguese',
+  'pt-br': 'Brazilian Portuguese',
+};
+
+function getLanguageName(code: string): string {
+  return LANGUAGE_NAMES[code] || LANGUAGE_NAMES['ka'];
+}
+
+function getGrammarDescription(lang: string): string {
+  if (lang === 'ka') return 'Georgian spelling, verb conjugation, case endings, and proper phrasing';
+  if (lang === 'en') return 'English spelling, grammar, punctuation, and proper phrasing';
+  return `${getLanguageName(lang)} spelling, grammar, and proper phrasing`;
+}
+
 interface Question {
   id: string;
   question_text: string;
   correct_answer: string;
   incorrect_answers: string[];
   category_id: string;
+  language: string;
 }
 
 interface ReviewResult {
@@ -38,14 +60,16 @@ function calculateGrade(score: number): 'A' | 'B' | 'C' | 'D' {
 }
 
 async function reviewQuestion(question: Question, apiKey: string): Promise<ReviewResult> {
-  const systemPrompt = `You are an expert Georgian language trivia question evaluator. You must analyze questions with extreme precision and return a JSON response.
+  const langName = getLanguageName(question.language);
+  const grammarDesc = getGrammarDescription(question.language);
+  
+  const systemPrompt = `You are an expert ${langName} language trivia question evaluator. You must analyze questions with extreme precision and return a JSON response.
 
 Evaluate each question on three criteria:
 
-1. GRAMMAR (30% weight): Check Georgian spelling, verb conjugation, case endings, and proper phrasing. Look for:
+1. GRAMMAR (30% weight): Check ${grammarDesc}. Look for:
    - Spelling errors
    - Incorrect verb forms
-   - Wrong case endings
    - Punctuation issues
    - Sentence structure problems
 
@@ -73,7 +97,7 @@ You MUST respond with valid JSON in this exact format:
   "recommendations": ["recommendation1", "recommendation2"]
 }`;
 
-  const userPrompt = `Analyze this Georgian trivia question:
+  const userPrompt = `Analyze this ${langName} trivia question:
 
 Question: ${question.question_text}
 Correct Answer: ${question.correct_answer}
@@ -183,7 +207,7 @@ serve(async (req) => {
     // Build query
     let query = supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, category_id')
+      .select('id, question_text, correct_answer, incorrect_answers, category_id, language')
       .eq('is_active', true)
       .limit(limit);
 
