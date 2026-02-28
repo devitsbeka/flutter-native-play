@@ -99,7 +99,9 @@ export function ProPlansSection({
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [purchasedTierName, setPurchasedTierName] = useState("");
+  const [sharing, setSharing] = useState(false);
   const { initiateProCheckout, isProcessing: purchasing } = useProPurchase();
+  const { createLinkInvite } = useFriendInvites();
 
   // Handle success callback from Stripe
   useEffect(() => {
