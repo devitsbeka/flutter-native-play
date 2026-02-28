@@ -24,6 +24,7 @@ export interface ReviewOptions {
   onlyProduction?: boolean;
   limit?: number;
   sourceMode?: 'last-added' | 'all';
+  language?: string;
 }
 
 export interface ReviewSummary {
@@ -66,6 +67,9 @@ export function useQuestionQualityReview() {
       if (options.onlyProduction) {
         countQuery = countQuery.eq('in_production', true);
       }
+      if (options.language && options.language !== 'all') {
+        countQuery = countQuery.eq('language', options.language);
+      }
 
       const { count } = await countQuery;
       const total = Math.min(count || 0, options.limit || 50);
@@ -91,6 +95,9 @@ export function useQuestionQualityReview() {
         }
         if (options.onlyProduction) {
           fetchQuery = fetchQuery.eq('in_production', true);
+        }
+        if (options.language && options.language !== 'all') {
+          fetchQuery = fetchQuery.eq('language', options.language);
         }
 
         const { data: questionBatch } = await fetchQuery;
@@ -291,6 +298,9 @@ export function useQuestionQualityReview() {
       }
       if (options.onlyProduction) {
         query = query.eq('in_production', true);
+      }
+      if (options.language && options.language !== 'all') {
+        query = query.eq('language', options.language);
       }
 
       const queryLimit = options.sourceMode === 'all' ? 1000 : (options.limit || 50);

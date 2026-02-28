@@ -41,6 +41,7 @@ export default function QualityReview() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<'grade' | 'score'>('grade');
+  const [languageFilter, setLanguageFilter] = useState<string>('all');
 
   const { 
     reviewing, 
@@ -107,6 +108,7 @@ export default function QualityReview() {
       onlyProduction: statusFilter === 'production',
       limit: sourceMode === 'all' ? 1000 : limit,
       sourceMode,
+      language: languageFilter,
     });
   };
 
@@ -118,6 +120,7 @@ export default function QualityReview() {
       onlyProduction: statusFilter === 'production',
       limit: sourceMode === 'all' ? 1000 : limit,
       sourceMode,
+      language: languageFilter,
     });
   };
 
@@ -267,6 +270,20 @@ export default function QualityReview() {
                 </Select>
               </div>
             )}
+
+            <div className="space-y-1.5">
+              <label className="text-sm text-muted-foreground">Language</label>
+              <Select value={languageFilter} onValueChange={setLanguageFilter}>
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="ka">Georgian</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="space-y-1.5">
               <label className="text-sm text-muted-foreground">Sort By</label>
