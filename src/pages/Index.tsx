@@ -69,6 +69,7 @@ import { useVipStatus } from "@/hooks/useVipStatus";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
 import { InviteFriendsModal, useInviteModalVisibility } from "@/components/home/InviteFriendsModal";
 import { FriendJoinedModal } from "@/components/home/FriendJoinedModal";
+import { ChangeNameModal } from "@/components/home/ChangeNameModal";
 
 import { useNotifications } from "@/hooks/useNotifications";
 import { 
@@ -206,6 +207,7 @@ export default function Index() {
   const [showGuestSignupPrompt, setShowGuestSignupPrompt] = useState(false);
   const [isAnimatingFromHome, setIsAnimatingFromHome] = useState(false);
   const [showWelcomeOnboarding, setShowWelcomeOnboarding] = useState(false);
+  const [showChangeNameModal, setShowChangeNameModal] = useState(false);
 
   // Show welcome onboarding for newly signed-up users (works for all signup paths)
   useEffect(() => {
@@ -766,6 +768,10 @@ export default function Index() {
           inviterName={friendModalInviterName}
         />
 
+        <ChangeNameModal
+          isOpen={showChangeNameModal}
+          onClose={() => setShowChangeNameModal(false)}
+        />
 
         {/* Content area */}
         <div className="flex-1 flex relative">
@@ -1080,9 +1086,15 @@ export default function Index() {
                   className="flex flex-col items-center mt-6 pointer-events-auto"
                 >
                   <div className="flex items-center justify-center gap-2.5">
-                    <span className="font-sans text-gray-800 capitalize font-black" style={{ fontSize: 28 }}>
+                    <motion.button
+                      onClick={() => setShowChangeNameModal(true)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="font-sans text-gray-800 capitalize font-black cursor-pointer"
+                      style={{ fontSize: 28 }}
+                    >
                       {profile?.nickname || t("game.guest")}
-                    </span>
+                    </motion.button>
                   </div>
                   <div className="flex items-center gap-6 mt-1">
                     <motion.button
@@ -1170,9 +1182,15 @@ export default function Index() {
                 className="flex flex-col items-center mt-11 pointer-events-auto"
               >
                 <div className="flex items-center justify-center gap-2.5">
-                  <span className="font-sans text-gray-800 capitalize font-black" style={{ fontSize: 32 }}>
+                  <motion.button
+                    onClick={() => setShowChangeNameModal(true)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="font-sans text-gray-800 capitalize font-black cursor-pointer"
+                    style={{ fontSize: 32 }}
+                  >
                     {profile?.nickname || t("game.guest")}
-                  </span>
+                  </motion.button>
                 </div>
                 <div className="flex items-center gap-6 mt-1">
                   <motion.button
@@ -1459,9 +1477,15 @@ export default function Index() {
                       {profile?.country_code && (
                         <span className="text-3xl">{getCountryFlag(profile.country_code)}</span>
                       )}
-                      <span className="font-slackey text-gray-800 capitalize font-black" style={{ fontSize: 32 }}>
+                      <motion.button
+                        onClick={() => setShowChangeNameModal(true)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="font-slackey text-gray-800 capitalize font-black cursor-pointer"
+                        style={{ fontSize: 32 }}
+                      >
                         {profile?.nickname || t("game.guest")}
-                      </span>
+                      </motion.button>
                     </div>
                     <div className="flex items-center gap-6 mt-1">
                       <motion.button
