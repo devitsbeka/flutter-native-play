@@ -181,7 +181,7 @@ export function MobileProCarousel() {
                     style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}
                   >
                     <img src={crownIcon} alt="" className="w-4 h-4" />
-                    10 დღიანი PRO
+                    {t("extra.tenDayPro")}
                   </span>
 
                   <button
