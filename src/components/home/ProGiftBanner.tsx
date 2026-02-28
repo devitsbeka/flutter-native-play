@@ -150,7 +150,7 @@ export function ProGiftModal({ open, onOpenChange, onClaimed, onDismiss }: ProGi
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            🎉 10 დღიანი PRO
+            🎉 {t("extra.tenDayPro")}
           </motion.h2>
 
           {/* Description */}
