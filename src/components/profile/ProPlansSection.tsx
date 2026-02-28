@@ -144,28 +144,27 @@ export function ProPlansSection({
 
   return (
     <div className="space-y-4">
-      {/* Invite Friends Card - matching TierCard style */}
-      <InviteCard sharing={sharing} onShare={async () => {
-        if (sharing) return;
-        setSharing(true);
-        try {
-          const referralCode = await createLinkInvite("friend_pro");
-          if (referralCode) {
-            const link = `${window.location.origin}/auth?ref=${referralCode}`;
-            const shareText = t("extra.getProFree");
-            if (navigator.share) {
-              try { await navigator.share({ title: "My Trivia", text: shareText, url: link }); } catch { /* cancelled */ }
-            } else {
-              await navigator.clipboard.writeText(link);
-              toast.success(t("extra.linkCopiedInvite"));
-            }
-          }
-        } finally { setSharing(false); }
-      }} />
-
       {/* SCENARIO 1: Not PRO - Show both tier cards */}
       {isNotPro && (
         <>
+          {/* Invite Friends Card */}
+          <InviteCard sharing={sharing} onShare={async () => {
+            if (sharing) return;
+            setSharing(true);
+            try {
+              const referralCode = await createLinkInvite("friend_pro");
+              if (referralCode) {
+                const link = `${window.location.origin}/auth?ref=${referralCode}`;
+                const shareText = t("extra.getProFree");
+                if (navigator.share) {
+                  try { await navigator.share({ title: "My Trivia", text: shareText, url: link }); } catch { /* cancelled */ }
+                } else {
+                  await navigator.clipboard.writeText(link);
+                  toast.success(t("extra.linkCopiedInvite"));
+                }
+              }
+            } finally { setSharing(false); }
+          }} />
           {PRO_TIERS.map((tier, index) => (
             <TierCard
               key={tier.id}
@@ -544,7 +543,7 @@ function InviteCard({ sharing, onShare }: { sharing: boolean; onShare: () => voi
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative rounded-2xl p-5 overflow-hidden bg-card"
+      className="relative rounded-2xl p-4 overflow-hidden bg-card"
       style={{
         border: "2px solid rgba(236, 72, 153, 0.4)",
         boxShadow: "0 4px 24px -4px rgba(147, 51, 234, 0.25)",
@@ -562,46 +561,47 @@ function InviteCard({ sharing, onShare }: { sharing: boolean; onShare: () => voi
         />
       </div>
 
-      <div className="relative z-10">
-        <div className="flex items-center gap-3 mb-4">
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center"
-            style={{
-              background: "linear-gradient(135deg, #EC4899 0%, #9333EA 100%)",
-              boxShadow: "0 4px 12px rgba(147, 51, 234, 0.25)",
-            }}
-          >
-            <Share2 className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-foreground leading-tight">{t("extra.inviteMiniTitle")}</h3>
-          </div>
-        </div>
-
-        <span
-          className="inline-block px-3 py-1.5 rounded-full text-xs font-bold text-white mb-4"
-          style={{ background: "linear-gradient(135deg, #EC4899, #9333EA)" }}
-        >
-          🎁 {t("extra.inviteMiniReward")}
-        </span>
-
-        <motion.button
-          onClick={onShare}
-          disabled={sharing}
-          className="w-full py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-70"
+      <div className="relative z-10 flex items-start gap-3">
+        {/* Left: Icon */}
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
           style={{
             background: "linear-gradient(135deg, #EC4899 0%, #9333EA 100%)",
-            boxShadow: "0 4px 16px rgba(147, 51, 234, 0.25)",
+            boxShadow: "0 4px 12px rgba(147, 51, 234, 0.25)",
           }}
-          whileHover={{ scale: sharing ? 1 : 1.02 }}
-          whileTap={{ scale: sharing ? 1 : 0.98 }}
         >
-          {sharing ? (
-            <><Loader2 className="w-4 h-4 animate-spin" />{t("extra.processingBtn")}</>
-          ) : (
-            <><Share2 className="w-4 h-4" />{t("extra.shareBtn")}</>
-          )}
-        </motion.button>
+          <Users className="w-6 h-6 text-white" />
+        </div>
+
+        {/* Right: Text + Badge + Button */}
+        <div className="flex flex-col gap-2 flex-1 min-w-0">
+          <h3 className="text-sm font-bold text-foreground leading-tight">{t("extra.inviteMiniTitle")}</h3>
+
+          <span
+            className="inline-block px-3 py-1 rounded-full text-xs font-bold text-white self-start"
+            style={{ background: "linear-gradient(135deg, #EC4899, #9333EA)" }}
+          >
+            🎁 10 {t("extra.inviteMiniReward")}
+          </span>
+
+          <motion.button
+            onClick={onShare}
+            disabled={sharing}
+            className="w-full py-2.5 rounded-xl font-semibold text-white text-sm flex items-center justify-center gap-2 disabled:opacity-70"
+            style={{
+              background: "linear-gradient(135deg, #EC4899 0%, #9333EA 100%)",
+              boxShadow: "0 4px 16px rgba(147, 51, 234, 0.25)",
+            }}
+            whileHover={{ scale: sharing ? 1 : 1.02 }}
+            whileTap={{ scale: sharing ? 1 : 0.98 }}
+          >
+            {sharing ? (
+              <><Loader2 className="w-4 h-4 animate-spin" />{t("extra.processingBtn")}</>
+            ) : (
+              <><Share2 className="w-4 h-4" />{t("extra.shareBtn")}</>
+            )}
+          </motion.button>
+        </div>
       </div>
 
       <style>{`
