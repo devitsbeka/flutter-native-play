@@ -171,9 +171,14 @@ export const useQuestionStudio = () => {
 
         if (rpcError) throw rpcError;
 
-        // Filter RPC results client-side for in_production and other filters
+        // Filter RPC results client-side for in_production, language, and other filters
         let results = (rpcData || []) as any[];
         results = results.filter((q: any) => (q.in_production ?? false) === inProd);
+        
+        // Apply language filter
+        if (language !== 'all') {
+          results = results.filter((q: any) => q.language === language);
+        }
 
         // Apply type filter
         if (filters.questionType) {
@@ -238,6 +243,10 @@ export const useQuestionStudio = () => {
           countQuery = countQuery.eq('category_id', selectedCategoryId);
         }
 
+        if (language !== 'all') {
+          countQuery = countQuery.eq('language', language);
+        }
+
         // Apply type filter
         if (filters.questionType) {
           switch (filters.questionType) {
@@ -279,6 +288,10 @@ export const useQuestionStudio = () => {
 
         if (selectedCategoryId) {
           dataQuery = dataQuery.eq('category_id', selectedCategoryId);
+        }
+
+        if (language !== 'all') {
+          dataQuery = dataQuery.eq('language', language);
         }
 
         // Apply type filter
@@ -351,7 +364,7 @@ export const useQuestionStudio = () => {
     } finally {
       setLoadingQuestions(false);
     }
-  }, [productionStatus, selectedCategoryId, questionSearch, filters, page]);
+  }, [productionStatus, selectedCategoryId, questionSearch, filters, page, language]);
 
   // Selection helpers
   const toggleSelection = useCallback((id: string, index: number, shiftKey: boolean) => {
