@@ -1,57 +1,79 @@
 
 
-## Add Language Filter to Question Studio
+# Auto-Start Game After Avatar Setup
 
-### Problem
-Question Studio currently shows all questions regardless of language. Georgian and English questions are mixed together in the list, making it hard to manage English-only content.
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-### Changes
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-#### 1. Update `StudioFilters` type and add language state
-**File:** `src/hooks/useQuestionStudio.ts`
+## Changes
 
-- Add `language` state (default: `'all'`, options: `'all'`, `'en'`, `'ka'`)
-- Apply `.eq('language', language)` filter to:
-  - The category counts query (`fetchCategories`) so counts reflect the selected language
-  - The count query in `fetchQuestions`
-  - The data query in `fetchQuestions`
-  - The RPC search path (client-side filter on `language` field since the RPC may not support it)
-- Expose `language` and `setLanguage` from the hook return
-- Add `language` to the `useEffect` dependencies that reset page/selection and trigger refetches
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-#### 2. Add language filter dropdown to the QuestionFilters component
-**File:** `src/components/admin/studio/QuestionFilters.tsx`
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-- Add a new "Language" section to the existing filter dropdown with radio options: All, English, Georgian
-- Accept `language` and `onLanguageChange` props
-- Include language in the active filter count badge
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-#### 3. Wire it up in QuestionStudio page
-**File:** `src/pages/admin/QuestionStudio.tsx`
+## Technical Details
 
-- No changes needed here since `QuestionList` already passes `filters` and `onFiltersChange` down to `QuestionFilters`
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
 
-### Alternative: Standalone dropdown vs inside filter menu
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
 
-Since the screenshot shows the filter button already exists in the question list header, the cleanest approach is to add a dedicated language dropdown **next to** the filter button (not inside it) for quick access, similar to how it was done in Quality Review. This makes language switching a one-click action.
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
 
-**Revised approach -- add standalone language selector in `QuestionList.tsx`:**
-- Add a small `<Select>` or segmented button (EN / KA / All) next to the filter button in the question list header
-- Pass `language` and `onLanguageChange` from the hook through props
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
 
-### Files to Modify
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
+```
 
-| File | Change |
-|------|--------|
-| `src/hooks/useQuestionStudio.ts` | Add `language` state, filter all queries by language, expose in return |
-| `src/components/admin/studio/QuestionList.tsx` | Add language selector dropdown next to the filter button |
-| `src/pages/admin/QuestionStudio.tsx` | Pass language props from hook to QuestionList |
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
 
-### How It Works
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
 
-1. Admin selects "EN" from the language dropdown in the question list header
-2. Category sidebar counts update to show only English question counts
-3. Question list shows only English questions
-4. Library/Production tab counts reflect English-only totals
-5. Switching back to "All" restores the full view
-
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button

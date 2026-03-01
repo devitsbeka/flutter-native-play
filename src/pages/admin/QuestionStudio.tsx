@@ -207,6 +207,8 @@ export default function QuestionStudio() {
             onSearchChange={studio.setQuestionSearch}
             filters={studio.filters}
             onFiltersChange={studio.setFilters}
+            language={studio.language}
+            onLanguageChange={studio.setLanguage}
             page={studio.page}
             pageSize={studio.pageSize}
             totalCount={studio.totalCount}
