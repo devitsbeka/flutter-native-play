@@ -92,6 +92,7 @@ export function QuestionList({
               <SelectItem value="en">🇬🇧 EN</SelectItem>
             </SelectContent>
           </Select>
+        </div>
         
         {/* Selection controls */}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
