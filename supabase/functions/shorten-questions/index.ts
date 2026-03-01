@@ -271,6 +271,8 @@ serve(async (req) => {
 შემოკლებული კითხვა:`
           : `You are a quiz question shortening expert.
 
+CRITICAL: The output MUST be in English. Do NOT translate the question into any other language. Only shorten - do not change the language.
+
 Task: Shorten the question to max ${MAX_LENGTH} characters.
 
 Strict rules:
@@ -280,7 +282,8 @@ Strict rules:
 4. Must end with a question mark (?)
 5. Must be a complete, understandable question without additional context
 6. Do not leave sentences incomplete - every word must contribute meaning
-7. Use correct grammar
+7. Use correct English grammar
+8. The output language MUST be English - never translate to another language
 
 Bad examples (do NOT do this):
 ❌ "What?" - incomplete, meaningless
@@ -379,6 +382,23 @@ Shortened question:`;
           });
           unshortenable++;
         } else if (aiResponse.length > 0) {
+          // Georgian character detection guard for English questions
+          const georgianPattern = /[\u10A0-\u10FF]/;
+          if (question.language === 'en' && georgianPattern.test(aiResponse)) {
+            console.log(`Question ${question.id}: English question got Georgian output, marking as failed`);
+            results.push({
+              id: question.id,
+              original: question.question_text,
+              shortened: aiResponse,
+              status: 'failed',
+              originalLength: question.question_text.length,
+              newLength: aiResponse.length,
+              qualityIssue: 'AI translated English to Georgian instead of shortening'
+            });
+            failed++;
+            continue;
+          }
+
           // Validate quality of shortened question
           const validation = isValidShortenedQuestion(aiResponse, question.question_text, question.language);
           

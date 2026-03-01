@@ -1,58 +1,79 @@
 
 
-## Fix: English Questions Being Translated to Georgian During Shortening
+# Auto-Start Game After Avatar Setup
 
-### Problem
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-30 English questions (`language = 'en'`) have `pending_question_text` containing Georgian text. The AI model ignored the English prompt and output Georgian instead of shortened English. These are sitting in the "Pending Review" tab, showing Georgian translations instead of shortened English questions.
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-### Root Cause
+## Changes
 
-The `shorten-questions` edge function correctly selects an English prompt for `language = 'en'` questions, but the prompt doesn't explicitly instruct the model to **keep the output in the same language**. The Gemini model, likely influenced by the app's Georgian-heavy context, outputs Georgian text.
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-### Fix (Two Parts)
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-#### 1. Clean up the 30 corrupted pending records (Database)
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-Reset the 30 English questions that got Georgian pending text so they can be re-processed:
+## Technical Details
 
-```sql
-UPDATE questions
-SET shorten_status = NULL,
-    pending_question_text = NULL,
-    original_question_text = NULL
-WHERE language = 'en'
-  AND shorten_status = 'pending_review'
-  AND pending_question_text ~ '[\u10A0-\u10FF]';
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
+
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
+
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
 ```
 
-#### 2. Harden the English prompt in the edge function
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
 
-**File:** `supabase/functions/shorten-questions/index.ts`
-
-Add an explicit language instruction to the English prompt (around line 272):
-
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
 ```
-CRITICAL: The output MUST be in English. Do NOT translate the question into another language.
-Only shorten - do not change the language.
-```
 
-Also add a **post-processing validation** after the AI response: if the question is `language = 'en'` but the AI output contains Georgian characters (`[\u10A0-\u10FF]`), reject it and mark as `failed` for retry, rather than saving corrupted data.
-
-**File:** `supabase/functions/shorten-answers/index.ts`
-
-Apply the same language guard to the answer shortening function's English prompt to prevent the same issue there.
-
-### Files to Modify
-
-| File | Change |
-|------|--------|
-| `supabase/functions/shorten-questions/index.ts` | Add "must stay in English" to prompt + post-AI Georgian detection guard |
-| `supabase/functions/shorten-answers/index.ts` | Same language guard for answer shortening |
-| Database | Reset 30 corrupted pending records |
-
-### How It Works After Fix
-
-1. The 30 corrupted records are reset to `shorten_status = NULL`, making them eligible for re-processing
-2. When re-processed, the updated prompt explicitly tells the AI to keep the same language
-3. If the AI still outputs Georgian for an English question, the validation guard catches it and marks it as `failed` instead of saving bad data
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
