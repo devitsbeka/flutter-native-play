@@ -1,94 +1,79 @@
 
 
-## Fix English Question Shortener: Translation + Count Issues
+# Auto-Start Game After Avatar Setup
 
-### Problems Found
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-1. **47 corrupted English answers in pending review** -- previous shortening runs translated English answers into Georgian (e.g., "Irving trial significance" became "ირვინგის პროცესი"). Approving these would save Georgian text into English questions.
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-2. **Pending review tab doesn't filter by language** -- `loadPendingQuestions()` (line 618-656) is missing the `languageFilter` check, so Georgian and English pending items are mixed together regardless of the language dropdown selection.
+## Changes
 
-3. **Edge functions hit 1,000-row limit** -- Both `shorten-questions` and `shorten-answers` edge functions fetch questions with a simple `.select()` (no pagination). With 2,073 English production questions still needing shortening, only the first 1,000 are ever seen. This is why the count appears low and many questions are never processed.
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-### Fix Plan
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-#### 1. Database Cleanup -- Reset 47 corrupted English pending answers
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-```sql
-UPDATE questions
-SET answer_shorten_status = NULL,
-    pending_correct_answer = NULL,
-    pending_incorrect_answers = NULL,
-    original_correct_answer = NULL,
-    original_incorrect_answers = NULL
-WHERE language = 'en'
-  AND answer_shorten_status = 'pending_review'
-  AND (
-    pending_correct_answer ~ '[\u10A0-\u10FF]'
-    OR pending_incorrect_answers::text ~ '[\u10A0-\u10FF]'
-  );
-```
+## Technical Details
 
-Also reset any corrupted English pending question text:
-
-```sql
-UPDATE questions
-SET shorten_status = NULL,
-    pending_question_text = NULL,
-    original_question_text = NULL
-WHERE language = 'en'
-  AND shorten_status = 'pending_review'
-  AND pending_question_text ~ '[\u10A0-\u10FF]';
-```
-
-#### 2. Fix `loadPendingQuestions` in `CombinedShortener.tsx`
-
-Add the missing language filter to the pending questions query (around line 627):
-
+**AvatarModalContext changes:**
 ```typescript
-if (languageFilter !== 'all') {
-  query = query.eq('language', languageFilter);
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
+
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
+
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
+```
+
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
 }
 ```
 
-#### 3. Add pagination to both edge functions
-
-**File: `supabase/functions/shorten-questions/index.ts`** (lines 146-168)
-
-Replace the single fetch with a paginated loop (batch of 1,000) to ensure all 7,000+ questions are considered:
-
-```typescript
-let allQuestions: Question[] = [];
-let page = 0;
-const FETCH_PAGE_SIZE = 1000;
-let hasMore = true;
-
-while (hasMore) {
-  const { data, error } = await query.range(page * FETCH_PAGE_SIZE, (page + 1) * FETCH_PAGE_SIZE - 1);
-  if (error) throw error;
-  if (data && data.length > 0) allQuestions.push(...data);
-  if (!data || data.length < FETCH_PAGE_SIZE) hasMore = false;
-  page++;
-}
-```
-
-**File: `supabase/functions/shorten-answers/index.ts`** (lines 74-107)
-
-Same paginated fetch pattern.
-
-### Files to Modify
-
-| File | Change |
-|------|--------|
-| Database | Reset 47 corrupted English pending answers + any corrupted pending questions |
-| `src/components/admin/CombinedShortener.tsx` | Add `languageFilter` to `loadPendingQuestions()` query |
-| `supabase/functions/shorten-questions/index.ts` | Paginate the question fetch to handle 7,000+ rows |
-| `supabase/functions/shorten-answers/index.ts` | Paginate the question fetch to handle 7,000+ rows |
-
-### Result After Fix
-
-- Pending review tab will correctly show only English (or Georgian) items based on the language filter
-- No more Georgian-translated text appearing when approving English questions
-- All 2,073+ long English production questions will be found and processed (not just the first 1,000)
-- Stats will accurately reflect the true count of questions needing work
-
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button

@@ -627,6 +627,10 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
       if (categoryId !== 'all') {
         query = query.eq('category_id', categoryId);
       }
+
+      if (languageFilter !== 'all') {
+        query = query.eq('language', languageFilter);
+      }
       
       if (!inProduction) {
         query = query.eq('in_production', false);
