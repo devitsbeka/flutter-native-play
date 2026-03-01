@@ -99,11 +99,21 @@ serve(async (req) => {
       query = query.eq("category_id", categoryId);
     }
 
-    const { data: allQuestions, error: fetchError } = await query;
-    
-    if (fetchError) {
-      console.error("Error fetching questions:", fetchError);
-      throw fetchError;
+    // Paginated fetch to handle 7000+ rows (Supabase default limit is 1000)
+    let allQuestions: any[] = [];
+    let page = 0;
+    const FETCH_PAGE_SIZE = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error: fetchError } = await query.range(page * FETCH_PAGE_SIZE, (page + 1) * FETCH_PAGE_SIZE - 1);
+      if (fetchError) {
+        console.error("Error fetching questions:", fetchError);
+        throw fetchError;
+      }
+      if (data && data.length > 0) allQuestions.push(...data);
+      if (!data || data.length < FETCH_PAGE_SIZE) hasMore = false;
+      page++;
     }
 
     // Filter to questions with long answers
