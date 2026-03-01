@@ -3,11 +3,18 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, ChevronLeft, ChevronRight, CheckSquare } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, CheckSquare, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StudioQuestion, StudioFilters, getQuestionType } from '@/hooks/useQuestionStudio';
 import { QuestionFilters } from './QuestionFilters';
 import { QuestionTypeIndicator } from './QuestionTypeIndicator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface QuestionListProps {
   questions: StudioQuestion[];
@@ -21,6 +28,8 @@ interface QuestionListProps {
   onSearchChange: (value: string) => void;
   filters: StudioFilters;
   onFiltersChange: (filters: StudioFilters) => void;
+  language: 'all' | 'en' | 'ka';
+  onLanguageChange: (language: 'all' | 'en' | 'ka') => void;
   page: number;
   pageSize: number;
   totalCount: number;
@@ -46,6 +55,8 @@ export function QuestionList({
   onSearchChange,
   filters,
   onFiltersChange,
+  language,
+  onLanguageChange,
   page,
   pageSize,
   totalCount,
@@ -70,7 +81,17 @@ export function QuestionList({
             />
           </div>
           <QuestionFilters filters={filters} onFiltersChange={onFiltersChange} />
-        </div>
+          <Select value={language} onValueChange={(v) => onLanguageChange(v as 'all' | 'en' | 'ka')}>
+            <SelectTrigger className="h-8 w-[90px] text-xs">
+              <Globe className="h-3.5 w-3.5 mr-1 shrink-0" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="ka">🇬🇪 KA</SelectItem>
+              <SelectItem value="en">🇬🇧 EN</SelectItem>
+            </SelectContent>
+          </Select>
         
         {/* Selection controls */}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
