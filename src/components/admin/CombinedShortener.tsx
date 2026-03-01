@@ -144,22 +144,45 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
       setStats(prev => ({ ...prev, loading: true }));
       
       try {
-        let query = supabase
-          .from('questions')
-          .select('id, question_text, correct_answer, incorrect_answers, shorten_status, answer_shorten_status, in_production, language')
-          .eq('is_active', true);
-        
-        if (categoryId !== 'all') {
-          query = query.eq('category_id', categoryId);
+        // Paginated fetch to bypass the 1,000-row default limit
+        const PAGE_SIZE = 1000;
+        let allQuestions: typeof questions = [];
+        let page = 0;
+        let hasMore = true;
+        type QRow = { id: string; question_text: string; correct_answer: string; incorrect_answers: unknown; shorten_status: string | null; answer_shorten_status: string | null; in_production: boolean | null; language: string };
+        let questions: QRow[] = [];
+
+        while (hasMore) {
+          let query = supabase
+            .from('questions')
+            .select('id, question_text, correct_answer, incorrect_answers, shorten_status, answer_shorten_status, in_production, language')
+            .eq('is_active', true);
+          
+          if (categoryId !== 'all') {
+            query = query.eq('category_id', categoryId);
+          }
+
+          if (languageFilter !== 'all') {
+            query = query.eq('language', languageFilter);
+          }
+
+          const from = page * PAGE_SIZE;
+          const to = from + PAGE_SIZE - 1;
+          const { data } = await query.range(from, to);
+
+          if (data && data.length > 0) {
+            allQuestions = [...allQuestions, ...data];
+          }
+
+          if (!data || data.length < PAGE_SIZE) {
+            hasMore = false;
+          }
+          page++;
         }
 
-        if (languageFilter !== 'all') {
-          query = query.eq('language', languageFilter);
-        }
-
-        const { data: questions } = await query;
+        questions = allQuestions as QRow[];
         
-        if (!questions) {
+        if (questions.length === 0) {
           setStats(prev => ({ ...prev, loading: false }));
           return;
         }
