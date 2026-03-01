@@ -251,6 +251,8 @@ ${answersToShorten.map((a, i) => `${i + 1}. "${a.answer}" (${a.answer.length} áƒ
           // Enhanced English prompt (also used as default for other languages)
           prompt = `You are a trivia quiz answer shortening expert. Your goal: make answers fit on mobile quiz buttons (max ${MAX_ANSWER_LENGTH} characters).
 
+CRITICAL: The output MUST be in English. Do NOT translate answers into any other language. Only shorten - do not change the language.
+
 Task: Shorten each answer to max ${MAX_ANSWER_LENGTH} characters. These are quiz answer OPTIONS, not explanations.
 
 âœ… GOOD shortenings (learn from these):
@@ -349,6 +351,25 @@ Respond ONLY in JSON:
         }
 
         if (!parsedResponse || !parsedResponse.shortened) {
+          results.push({
+            id: question.id,
+            questionText: question.question_text,
+            originalCorrect: question.correct_answer,
+            shortenedCorrect: null,
+            originalIncorrect: incorrectAnswers,
+            shortenedIncorrect: incorrectAnswers.map(() => null),
+            status: 'failed',
+            correctShortened: false,
+            incorrectShortenedCount: 0,
+          });
+          failed++;
+          continue;
+        }
+
+        // Georgian character detection guard for English questions
+        const georgianPattern = /[\u10A0-\u10FF]/;
+        if (question.language === 'en' && parsedResponse.shortened.some(s => georgianPattern.test(s.shortened))) {
+          console.log(`Question ${question.id}: English answers got Georgian output, marking as failed`);
           results.push({
             id: question.id,
             questionText: question.question_text,
