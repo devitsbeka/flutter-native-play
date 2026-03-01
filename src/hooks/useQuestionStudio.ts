@@ -634,7 +634,7 @@ export const useQuestionStudio = () => {
   useEffect(() => {
     setPage(0);
     clearSelection();
-  }, [productionStatus, selectedCategoryId, questionSearch, filters, clearSelection]);
+  }, [productionStatus, selectedCategoryId, questionSearch, filters, language, clearSelection]);
 
   // Initial fetch
   useEffect(() => {
@@ -661,6 +661,10 @@ export const useQuestionStudio = () => {
     setProductionStatus,
     libraryCounts,
     productionCounts,
+    
+    // Language
+    language,
+    setLanguage,
     
     // Categories
     categories: filteredCategories,
