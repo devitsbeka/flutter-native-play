@@ -52,6 +52,9 @@ export const useQuestionStudio = () => {
   // Tab state
   const [productionStatus, setProductionStatus] = useState<ProductionStatus>('library');
   
+  // Language filter
+  const [language, setLanguage] = useState<'all' | 'en' | 'ka'>('all');
+  
   // Category state
   const [categories, setCategories] = useState<CategoryWithCounts[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -98,9 +101,15 @@ export const useQuestionStudio = () => {
       if (catsError) throw catsError;
 
       // Fetch counts per category
-      const { data: countsData, error: countsError } = await supabase
+      let countsQuery = supabase
         .from('questions')
         .select('category_id, in_production');
+      
+      if (language !== 'all') {
+        countsQuery = countsQuery.eq('language', language);
+      }
+      
+      const { data: countsData, error: countsError } = await countsQuery;
       
       if (countsError) throw countsError;
 
@@ -141,7 +150,7 @@ export const useQuestionStudio = () => {
     } finally {
       setLoadingCategories(false);
     }
-  }, []);
+  }, [language]);
 
   // Fetch questions
   const fetchQuestions = useCallback(async () => {
