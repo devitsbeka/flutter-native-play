@@ -1,79 +1,69 @@
 
 
-# Auto-Start Game After Avatar Setup
+## Fix: Unshortenable Questions Cleanup
 
-## Problem
-When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
+### Problem
 
-## Solution
-Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
+99 questions are stuck with `shorten_status = 'unshortenable'`, shown in red. Two issues:
 
-## Changes
+1. **9 are already short enough** (≤67 chars) -- they were incorrectly flagged by the old 65-char limit. They just need their status cleared.
+2. **90 are still too long** (>67 chars) -- the AI failed to shorten them previously. They need to be re-queued.
+3. **96 of 99 are in production** -- players see these overlong questions right now.
+4. **Invalid outputs accepted** -- the screenshot shows a 73-char "shortened" result that should have been rejected by validation.
 
-### 1. `src/contexts/AvatarModalContext.tsx`
-- Add an optional `onComplete` callback to the context
-- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
-- Store the callback in a ref
-- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
+### Fix
 
-### 2. `src/components/home/AvatarModal.tsx`
-- Accept a new optional `onComplete?: () => void` prop
-- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+#### Step 1: Database cleanup
 
-### 3. `src/pages/Index.tsx`
-- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
-  ```
-  openAvatarModal(() => navigate("/game"));
-  ```
+Clear `shorten_status` for all 99 unshortenable questions so they re-enter the shortening queue:
 
-## Technical Details
-
-**AvatarModalContext changes:**
-```typescript
-interface AvatarModalContextType {
-  openAvatarModal: (onComplete?: () => void) => void;
-  closeAvatarModal: () => void;
-  isOpen: boolean;
-}
-
-// Store pending callback in a ref
-const onCompleteRef = useRef<(() => void) | null>(null);
-
-const openAvatarModal = useCallback((onComplete?: () => void) => {
-  onCompleteRef.current = onComplete || null;
-  setIsOpen(true);
-}, []);
-
-const closeAvatarModal = useCallback(() => {
-  setIsOpen(false);
-  onCompleteRef.current = null;
-}, []);
-
-// Pass onComplete to AvatarModal
-<AvatarModal
-  isOpen={isOpen}
-  onClose={closeAvatarModal}
-  onComplete={() => {
-    const cb = onCompleteRef.current;
-    setIsOpen(false);
-    onCompleteRef.current = null;
-    cb?.();
-  }}
-/>
+```sql
+UPDATE questions
+SET shorten_status = NULL
+WHERE shorten_status = 'unshortenable'
+  AND is_active = true;
 ```
 
-**AvatarModal changes:**
-- New prop: `onComplete?: () => void`
-- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+For the 9 that are already ≤67 chars, also mark them as properly shortened:
 
-**Index.tsx change:**
-```typescript
-} else if (!profile?.avatar_url) {
-  openAvatarModal(() => navigate("/game"));
+```sql
+UPDATE questions
+SET shorten_status = 'shortened'
+WHERE shorten_status IS NULL
+  AND LENGTH(question_text) <= 67
+  AND is_active = true
+  AND original_question_text IS NOT NULL;
+```
+
+#### Step 2: Fix validation in `shorten-questions` edge function
+
+The edge function must reject any AI output that is still over 67 characters. Add a strict post-processing check:
+
+```text
+if (shortenedText.length > 67) {
+  // Mark as failed, don't apply
+  status = 'unshortenable';
 }
 ```
 
-## Files to edit
-1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
-2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
-3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
+Currently the function may be accepting outputs without re-checking the final length after AI processing.
+
+#### Step 3: Fix the "shortened but still long" display bug
+
+The CombinedShortener UI shows questions with a green "shortened" badge even when the result exceeds 67 chars (like the 73-char example in the screenshot). Add a visual warning when a "shortened" result is still over the limit.
+
+### Files to Modify
+
+| File | Change |
+|------|--------|
+| Database | Reset 99 unshortenable records to NULL status |
+| `supabase/functions/shorten-questions/index.ts` | Add strict length validation on AI output -- reject anything >67 chars |
+| `src/components/admin/CombinedShortener.tsx` | Add warning indicator for shortened results that are still too long |
+
+### Result
+
+- 9 already-valid questions get proper "shortened" status immediately
+- 90 too-long questions re-enter the queue for another shortening attempt with the improved prompt
+- Future shortening runs won't accept invalid (>67 char) AI outputs
+- UI clearly shows when a shortened result is still problematic
+
