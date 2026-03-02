@@ -282,9 +282,10 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
           onPointerCancel={dragHandlers.onPointerUp as any}
         >
           {timeline.map((day, i) => {
-            // Show a gift circle after every 3rd day position in the timeline (1-indexed)
+            // Show a gift circle after every 3rd day position, only for today or future dates
             const dayPosition = i + 1; // 1-based position
-            const showGift = dayPosition % 3 === 0;
+            const isTodayOrFuture = day.date >= new Date(new Date().toDateString());
+            const showGift = dayPosition % 3 === 0 && isTodayOrFuture;
             const giftMilestone = showGift
               ? {
                   afterDay: dayPosition,
