@@ -51,6 +51,8 @@ import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
 import { GuestWelcomePanel } from "@/components/home/GuestWelcomePanel";
 import { DesktopGuestSplitLayout } from "@/components/home/DesktopGuestSplitLayout";
 import { WeeklyStreakRow } from "@/components/home/WeeklyStreakRow";
+import { TournamentBanner } from "@/components/home/TournamentBanner";
+import { UserInfoBar } from "@/components/home/UserInfoBar";
 import { GuestSignupPromptModal } from "@/components/home/GuestSignupPromptModal";
 import { lovable } from "@/integrations/lovable";
 import Lottie from "lottie-react";
