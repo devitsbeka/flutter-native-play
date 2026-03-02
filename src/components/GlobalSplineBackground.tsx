@@ -69,7 +69,7 @@ const FloatingOrb = ({ delay, x, y, size, duration }: { delay: number; x: number
 export function GlobalSplineBackground() {
   const location = useLocation();
   const isMobile = useIsBreakpointDown("md");
-  const blobVideo = useResponsiveVideo("/videos/floating-blob.mp4");
+  const bgRef = useRef<HTMLDivElement>(null);
   
   // Check if current page should show background (include team check here)
   const isTeamRoute = location.pathname.startsWith("/team");
@@ -111,6 +111,25 @@ export function GlobalSplineBackground() {
     })), [orbCount]
   );
 
+  // Sync background scroll with page scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!bgRef.current) return;
+      const scrollY = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (maxScroll <= 0) return;
+      const scrollPercent = scrollY / maxScroll;
+      const bgElement = bgRef.current.querySelector('img') as HTMLImageElement;
+      if (!bgElement) return;
+      const extraWidth = bgElement.naturalWidth * (window.innerHeight / bgElement.naturalHeight) - window.innerWidth;
+      if (extraWidth > 0) {
+        bgElement.style.transform = `translateX(${-scrollPercent * extraWidth}px)`;
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Don't render anything if not on allowed pages
   if (!shouldShow) {
     return null;
@@ -118,22 +137,18 @@ export function GlobalSplineBackground() {
 
   return (
     <>
-      {/* Video background */}
+      {/* Image background - full height, horizontally scrollable via page scroll */}
       <div 
-        className="fixed inset-0 pointer-events-none"
-        style={{ zIndex: 0, backgroundColor: '#F9DBFF' }}
+        ref={bgRef}
+        className="fixed inset-0 pointer-events-none overflow-hidden"
+        style={{ zIndex: 0 }}
       >
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: "blur(8px)" }}
-        >
-          <source src={blobVideo.webm} type="video/webm" />
-          <source src={blobVideo.mp4} type="video/mp4" />
-        </video>
+        <img
+          src={homeBg}
+          alt=""
+          className="h-full w-auto max-w-none"
+          style={{ minHeight: "100vh" }}
+        />
       </div>
       
       {/* White radial mask - transparent center, white edges - hidden on game/category pages */}
