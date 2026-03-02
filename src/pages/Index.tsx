@@ -50,6 +50,7 @@ import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
 import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
 import { GuestWelcomePanel } from "@/components/home/GuestWelcomePanel";
 import { DesktopGuestSplitLayout } from "@/components/home/DesktopGuestSplitLayout";
+import { WeeklyStreakRow } from "@/components/home/WeeklyStreakRow";
 import { GuestSignupPromptModal } from "@/components/home/GuestSignupPromptModal";
 import { lovable } from "@/integrations/lovable";
 
@@ -739,6 +740,11 @@ export default function Index() {
             ) : null}
           </div>
         </header>
+
+        {/* Weekly Streak Row - Authorized users only */}
+        {user && (
+          <WeeklyStreakRow onNewClick={() => navigate("/auth?mode=signup")} />
+        )}
 
         {/* Floating Gift Button (after invite modal dismissed OR pro gift dismissed) */}
         <AnimatePresence>
