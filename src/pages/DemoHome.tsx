@@ -51,6 +51,8 @@ import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
 import { GuestWelcomePanel } from "@/components/home/GuestWelcomePanel";
 import { DesktopGuestSplitLayout } from "@/components/home/DesktopGuestSplitLayout";
 import { WeeklyStreakRow } from "@/components/home/WeeklyStreakRow";
+import { TournamentBanner } from "@/components/home/TournamentBanner";
+import { UserInfoBar } from "@/components/home/UserInfoBar";
 import { GuestSignupPromptModal } from "@/components/home/GuestSignupPromptModal";
 import { lovable } from "@/integrations/lovable";
 import Lottie from "lottie-react";
@@ -749,9 +751,23 @@ export default function Index() {
           </div>
         </header>
 
+        {/* Tournament Banner - Authorized users only */}
+        {user && <TournamentBanner />}
+
         {/* Weekly Streak Row - Authorized users only */}
         {user && (
           <WeeklyStreakRow onNewClick={() => navigate("/team", { state: { openCreateRoom: true } })} />
+        )}
+
+        {/* User Info Bar - Authorized users only */}
+        {user && (
+          <UserInfoBar
+            profile={profile}
+            coins={coins}
+            gems={gems}
+            onNameClick={() => setShowChangeNameModal(true)}
+            onCurrencyClick={() => setIsGemShopOpen(true)}
+          />
         )}
 
         {/* Floating Gift Button (after invite modal dismissed OR pro gift dismissed) */}
