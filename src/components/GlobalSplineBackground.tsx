@@ -1,8 +1,10 @@
-import { useMemo, useRef, useCallback, useEffect } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useIsBreakpointDown } from "@/hooks/use-breakpoint";
 import homeBg from "@/assets/home-bg.jpeg";
+import { PingPongVideo } from "@/components/shared/PingPongVideo";
+import { MAP_VIDEOS } from "@/config/videoConfig";
 
 // Pages where the background should be visible
 const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/profile", "/auth", "/vip", "/power-ups"];
@@ -71,6 +73,8 @@ export function GlobalSplineBackground() {
   const isMobile = useIsBreakpointDown("md");
   const bgRef = useRef<HTMLDivElement>(null);
   
+  const isHomePage = location.pathname === "/";
+  
   // Check if current page should show background (include team check here)
   const isTeamRoute = location.pathname.startsWith("/team");
   const shouldShow = !isTeamRoute && BACKGROUND_PAGES.some(page => {
@@ -111,8 +115,9 @@ export function GlobalSplineBackground() {
     })), [orbCount]
   );
 
-  // Sync background scroll with page scroll
+  // Sync background scroll with page scroll (only for home page image)
   useEffect(() => {
+    if (!isHomePage) return;
     const handleScroll = () => {
       if (!bgRef.current) return;
       const scrollY = window.scrollY;
@@ -123,14 +128,13 @@ export function GlobalSplineBackground() {
       if (!bgElement) return;
       const extraWidth = bgElement.naturalWidth * (window.innerHeight / bgElement.naturalHeight) - window.innerWidth;
       if (extraWidth > 0) {
-        // Center the image, then shift based on scroll: from +half to -half
         const offset = (extraWidth / 2) - scrollPercent * extraWidth;
         bgElement.style.transform = `translateX(calc(-50% + ${offset}px))`;
       }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isHomePage]);
 
   // Don't render anything if not on allowed pages
   if (!shouldShow) {
@@ -139,19 +143,32 @@ export function GlobalSplineBackground() {
 
   return (
     <>
-      {/* Image background - full height, horizontally scrollable via page scroll */}
-      <div 
-        ref={bgRef}
-        className="fixed inset-0 pointer-events-none overflow-hidden"
-        style={{ zIndex: 0 }}
-      >
-        <img
-          src={homeBg}
-          alt=""
-          className="h-full w-auto max-w-none absolute left-1/2"
-          style={{ minHeight: "100vh", transform: "translateX(-50%)" }}
-        />
-      </div>
+      {/* Home page: Image background */}
+      {isHomePage && (
+        <div 
+          ref={bgRef}
+          className="fixed inset-0 pointer-events-none overflow-hidden"
+          style={{ zIndex: 0 }}
+        >
+          <img
+            src={homeBg}
+            alt=""
+            className="h-full w-auto max-w-none absolute left-1/2"
+            style={{ minHeight: "100vh", transform: "translateX(-50%)" }}
+          />
+        </div>
+      )}
+      
+      {/* Other pages: Video blob background */}
+      {!isHomePage && (
+        <div 
+          className="fixed inset-0 pointer-events-none overflow-hidden"
+          style={{ zIndex: 0 }}
+        >
+          <PingPongVideo src={MAP_VIDEOS.default} className="opacity-40" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/80" />
+        </div>
+      )}
       
       {/* White radial mask - TEMPORARILY HIDDEN */}
       
