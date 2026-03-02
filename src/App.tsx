@@ -112,7 +112,6 @@ const OnboardingPreview = lazy(() => import("./pages/OnboardingPreview"));
 const ChallengeLanding = lazy(() => import("./pages/ChallengeLanding"));
 const SampleDemoTV = lazy(() => import("./pages/SampleDemoTV"));
 const SampleDemoPlayer = lazy(() => import("./pages/SampleDemoPlayer"));
-const DemoHome = lazy(() => import("./pages/DemoHome"));
 
 const App = () => (
   <LanguageProvider>
@@ -141,7 +140,6 @@ const App = () => (
             <Suspense fallback={<PageSkeleton />}>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/demohome" element={<DemoHome />} />
                 <Route path="/loading" element={<Loading />} />
                 <Route path="/trivialoader" element={<TriviaLoader />} />
                 

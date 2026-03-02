@@ -1,10 +1,8 @@
-import { useMemo, useRef, useEffect } from "react";
+import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useIsBreakpointDown } from "@/hooks/use-breakpoint";
-import homeBg from "@/assets/home-bg.jpeg";
-import { PingPongVideo } from "@/components/shared/PingPongVideo";
-import { MAP_VIDEOS } from "@/config/videoConfig";
+import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 
 // Pages where the background should be visible
 const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/profile", "/auth", "/vip", "/power-ups"];
@@ -71,9 +69,7 @@ const FloatingOrb = ({ delay, x, y, size, duration }: { delay: number; x: number
 export function GlobalSplineBackground() {
   const location = useLocation();
   const isMobile = useIsBreakpointDown("md");
-  const bgRef = useRef<HTMLDivElement>(null);
-  
-  const isHomePage = location.pathname === "/";
+  const blobVideo = useResponsiveVideo("/videos/floating-blob.mp4");
   
   // Check if current page should show background (include team check here)
   const isTeamRoute = location.pathname.startsWith("/team");
@@ -115,27 +111,6 @@ export function GlobalSplineBackground() {
     })), [orbCount]
   );
 
-  // Sync background scroll with page scroll (only for home page image)
-  useEffect(() => {
-    if (!isHomePage) return;
-    const handleScroll = () => {
-      if (!bgRef.current) return;
-      const scrollY = window.scrollY;
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      if (maxScroll <= 0) return;
-      const scrollPercent = scrollY / maxScroll;
-      const bgElement = bgRef.current.querySelector('img') as HTMLImageElement;
-      if (!bgElement) return;
-      const extraWidth = bgElement.naturalWidth * (window.innerHeight / bgElement.naturalHeight) - window.innerWidth;
-      if (extraWidth > 0) {
-        const offset = (extraWidth / 2) - scrollPercent * extraWidth;
-        bgElement.style.transform = `translateX(calc(-50% + ${offset}px))`;
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isHomePage]);
-
   // Don't render anything if not on allowed pages
   if (!shouldShow) {
     return null;
@@ -143,34 +118,34 @@ export function GlobalSplineBackground() {
 
   return (
     <>
-      {/* Home page: Image background */}
-      {isHomePage && (
-        <div 
-          ref={bgRef}
-          className="fixed inset-0 pointer-events-none overflow-hidden"
-          style={{ zIndex: 0 }}
+      {/* Video background */}
+      <div 
+        className="fixed inset-0 pointer-events-none"
+        style={{ zIndex: 0, backgroundColor: '#F9DBFF' }}
+      >
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ filter: "blur(8px)" }}
         >
-          <img
-            src={homeBg}
-            alt=""
-            className="h-full w-auto max-w-none absolute left-1/2"
-            style={{ minHeight: "100vh", transform: "translateX(-50%)" }}
-          />
-        </div>
-      )}
+          <source src={blobVideo.webm} type="video/webm" />
+          <source src={blobVideo.mp4} type="video/mp4" />
+        </video>
+      </div>
       
-      {/* Other pages: Video blob background */}
-      {!isHomePage && (
+      {/* White radial mask - transparent center, white edges - hidden on game/category pages */}
+      {!shouldHideRadialMask && (
         <div 
-          className="fixed inset-0 pointer-events-none overflow-hidden"
-          style={{ zIndex: 0 }}
-        >
-          <PingPongVideo src={MAP_VIDEOS.default} className="opacity-40" />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/80" />
-        </div>
+          className="fixed inset-0 pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 0%, transparent 50%, rgba(255,255,255,0.15) 65%, rgba(255,255,255,0.35) 80%, rgba(255,255,255,0.7) 100%)",
+            zIndex: 1,
+          }}
+        />
       )}
-      
-      {/* White radial mask - TEMPORARILY HIDDEN */}
       
       {/* Floating orb particles - ambient background movement */}
       {shouldShowParticles && (

@@ -113,23 +113,6 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
   const [isPaused, setIsPaused] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedValues, setEditedValues] = useState<EditedValues>({});
-  const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
-
-  const markAsFixed = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('questions')
-        .update({ shorten_status: 'manual_ok' })
-        .eq('id', id);
-      if (error) throw error;
-      setApprovedIds(prev => new Set(prev).add(id));
-      toast({ title: 'Marked as fixed ✅' });
-      setStatsReloadKey(prev => prev + 1);
-    } catch (err) {
-      console.error('Mark as fixed error:', err);
-      toast({ title: 'Error marking as fixed', variant: 'destructive' });
-    }
-  };
 
   // Mixed-language fix state
   const [mixedLangProgress, setMixedLangProgress] = useState<{ status: 'idle' | 'running' | 'done'; fixed: number; skipped: number; remaining: number }>({ status: 'idle', fixed: 0, skipped: 0, remaining: 0 });
@@ -733,8 +716,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
                     <div
                       key={result.id}
                       className={`p-4 rounded-lg border ${
-                        approvedIds.has(result.id) ? 'border-green-200 bg-green-50 dark:bg-green-950/20'
-                        : result.overallStatus === 'shortened' ? 'border-green-200 bg-green-50 dark:bg-green-950/20' 
+                        result.overallStatus === 'shortened' ? 'border-green-200 bg-green-50 dark:bg-green-950/20' 
                         : result.overallStatus === 'partially' ? 'border-blue-200 bg-blue-50 dark:bg-blue-950/20'
                         : result.overallStatus === 'unshortenable' ? 'border-red-200 bg-red-50 dark:bg-red-950/20'
                         : 'border-amber-200 bg-amber-50 dark:bg-amber-950/20'
@@ -745,15 +727,13 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
                           <div className="flex items-center justify-between">
                             <Badge 
                               variant={
-                                approvedIds.has(result.id) ? 'default' :
                                 result.overallStatus === 'shortened' ? 'default' : 
                                 result.overallStatus === 'partially' ? 'secondary' :
                                 result.overallStatus === 'unshortenable' ? 'destructive' : 'outline'
                               }
-                              className={`text-xs ${approvedIds.has(result.id) ? 'bg-green-600' : ''}`}
+                              className="text-xs"
                             >
-                              {approvedIds.has(result.id) ? '✅ Fixed' :
-                               result.overallStatus === 'shortened' ? '✅ Applied' : 
+                              {result.overallStatus === 'shortened' ? '✅ Applied' : 
                                result.overallStatus === 'partially' ? 'ნაწილობრივ' :
                                result.overallStatus === 'unshortenable' ? 'შეუმოკლებადი' : 'შეცდომა'}
                             </Badge>
@@ -766,11 +746,6 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
                               {editingId !== result.id && (
                                 <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => startEdit(result)}>
                                   <Pencil className="h-3 w-3" />
-                                </Button>
-                              )}
-                              {!approvedIds.has(result.id) && (result.overallStatus === 'unshortenable' || result.overallStatus === 'failed' || (result.newQuestionLength && result.newQuestionLength > MAX_QUESTION_LENGTH)) && (
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-green-600 hover:text-green-700" onClick={() => markAsFixed(result.id)} title="Mark as fixed">
-                                  <CheckCircle className="h-3 w-3" />
                                 </Button>
                               )}
                               <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive hover:text-destructive" onClick={() => deleteQuestion(result.id)}>

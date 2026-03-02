@@ -75,11 +75,11 @@ export function getStreakBonus(streak: number): number {
 
 export function getStreakMilestones(): { days: number; bonus: number; reward: string }[] {
   return [
-    { days: 3, bonus: 15, reward: "15% XP Bonus" },
-    { days: 5, bonus: 30, reward: "30% XP Bonus" },
-    { days: 7, bonus: 50, reward: "50% XP Bonus + 🎁" },
-    { days: 14, bonus: 75, reward: "75% XP Bonus + 💎" },
-    { days: 30, bonus: 100, reward: "2x XP + Exclusive Badge" },
+    { days: 3, bonus: 15, reward: "15% XP ბონუსი" },
+    { days: 5, bonus: 30, reward: "30% XP ბონუსი" },
+    { days: 7, bonus: 50, reward: "50% XP ბონუსი + 🎁" },
+    { days: 14, bonus: 75, reward: "75% XP ბონუსი + 💎" },
+    { days: 30, bonus: 100, reward: "2x XP + ექსკლუზიური ბეჯი" },
   ];
 }
 

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, lazy, Suspense, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { trackSignupCompleted } from "@/lib/analytics";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,13 +50,8 @@ import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
 import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
 import { GuestWelcomePanel } from "@/components/home/GuestWelcomePanel";
 import { DesktopGuestSplitLayout } from "@/components/home/DesktopGuestSplitLayout";
-import { WeeklyStreakRow } from "@/components/home/WeeklyStreakRow";
 import { GuestSignupPromptModal } from "@/components/home/GuestSignupPromptModal";
 import { lovable } from "@/integrations/lovable";
-import Lottie from "lottie-react";
-import walkingManAnimationRaw from "@/assets/lottie/bearded-man-walking.json";
-import crownAnimation from "@/assets/lottie/crown.json";
-import { recolorLottie } from "@/utils/recolorLottie";
 
 import { toast } from "@/hooks/use-toast";
 import { t } from "@/lib/i18n";
@@ -178,11 +173,6 @@ const SideIconButton = ({
 
 export default function Index() {
   const navigate = useNavigate();
-  const purplePantsAnimation = useMemo(() => recolorLottie(walkingManAnimationRaw, [
-    { from: '#3A6566', to: '#583A66' },
-    { from: '#2F5153', to: '#3F2F53' },
-    { from: '#243E3C', to: '#32243E' },
-  ]), []);
   const { profile, user, fetchProfile, signUp, signUpWithUsername, signIn, signInWithUsername, signInWithGoogle, signInWithApple } = useAuth();
   const { t } = useLanguage();
   const { step, startOnboarding, setStep, hasCompletedOnboarding } = useOnboarding();
@@ -709,16 +699,17 @@ export default function Index() {
               )}
             </div>
             
-            {/* Center: Logo */}
+            {/* Center: Logo + Spotlight */}
             <div className="flex-1 flex justify-center md:justify-start items-center gap-4">
-              <MyTriviaLiveLogo />
+              {/* Logo - responsive sizing: sm on mobile/tablet, md on desktop */}
+              <MyTriviaLiveLogo responsive />
             </div>
             
-            {/* Right side: Search + Notification for users, Sign In for guests */}
+            {/* Right side: Search/Notification for users, Sign In for guests */}
             {user ? (
               <div className="flex items-center gap-1">
-                {/* Search button */}
-                <SpotlightSearch />
+                {/* Search button - visible on all screens */}
+                <SpotlightSearch variant="button" />
                 
                 {/* Bell icon with unread badge */}
                 <motion.button
@@ -748,11 +739,6 @@ export default function Index() {
             ) : null}
           </div>
         </header>
-
-        {/* Weekly Streak Row - Authorized users only */}
-        {user && (
-          <WeeklyStreakRow onNewClick={() => navigate("/team", { state: { openCreateRoom: true } })} />
-        )}
 
         {/* Floating Gift Button (after invite modal dismissed OR pro gift dismissed) */}
         <AnimatePresence>
@@ -792,7 +778,7 @@ export default function Index() {
           {/* Action Cards - Fixed Right Side Panel (Desktop only) */}
           {user && (
             <motion.div 
-              className="hidden lg:flex fixed right-4 lg:right-6 xl:right-8 top-60 z-20 pointer-events-auto"
+              className="hidden lg:flex fixed right-4 lg:right-6 xl:right-8 top-20 z-20 pointer-events-auto"
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2, type: "spring" }}

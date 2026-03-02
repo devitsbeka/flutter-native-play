@@ -3782,37 +3782,6 @@ export type Database = {
           weekly_xp: number
         }[]
       }
-      get_questions_sorted_by_length: {
-        Args: {
-          p_category_id?: string
-          p_difficulty?: string
-          p_has_icon?: string
-          p_in_production?: boolean
-          p_language?: string
-          p_limit?: number
-          p_offset?: number
-          p_question_type?: string
-          p_sort_mode?: string
-        }
-        Returns: {
-          audio_url: string
-          category_id: string
-          correct_answer: string
-          created_at: string
-          difficulty: string
-          icon_slug: string
-          id: string
-          image_url: string
-          in_production: boolean
-          incorrect_answers: Json
-          is_active: boolean
-          level_number: number
-          question_text: string
-          total_count: number
-          updated_at: string
-          video_url: string
-        }[]
-      }
       get_unread_counts_by_room: {
         Args: { p_rooms: Json; p_user_id: string }
         Returns: {

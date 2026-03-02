@@ -27,7 +27,7 @@ export interface StudioFilters {
   questionType: QuestionType | null;
   difficulty: 'easy' | 'medium' | 'hard' | null;
   hasIcon: boolean | null;
-  sortBy: 'newest' | 'oldest' | 'alphabetical' | 'longest_question' | 'longest_answer';
+  sortBy: 'newest' | 'oldest' | 'alphabetical';
 }
 
 export interface CategoryWithCounts {
@@ -67,7 +67,7 @@ export const useQuestionStudio = () => {
     questionType: null,
     difficulty: null,
     hasIcon: null,
-    sortBy: 'longest_question',
+    sortBy: 'newest',
   });
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
@@ -233,55 +233,7 @@ export const useQuestionStudio = () => {
         setQuestions(formatted);
         setPreviewIndex(0);
       } else {
-      // No search: use standard queries
-        
-        // For length-based sorts, use server-side RPC
-        if (filters.sortBy === 'longest_question' || filters.sortBy === 'longest_answer') {
-          console.log('[QuestionStudio] Calling RPC with sort mode:', filters.sortBy);
-          const { data: rpcData, error: rpcError } = await supabase.rpc('get_questions_sorted_by_length', {
-            p_sort_mode: filters.sortBy,
-            p_in_production: inProd,
-            p_category_id: selectedCategoryId ?? null,
-            p_language: language !== 'all' ? language : null,
-            p_question_type: filters.questionType ?? null,
-            p_difficulty: filters.difficulty ?? null,
-            p_has_icon: filters.hasIcon === null ? null : (filters.hasIcon ? 'with' : 'without'),
-            p_limit: PAGE_SIZE,
-            p_offset: offset,
-          });
-          console.log('[QuestionStudio] RPC response:', rpcData?.length, 'items, first:', (rpcData as any[])?.[0]?.question_text?.substring(0, 50));
-
-          if (rpcError) {
-            console.error('[QuestionStudio] RPC error:', rpcError.message, rpcError.details, rpcError.hint);
-            throw rpcError;
-          }
-
-          const results = (rpcData || []) as any[];
-          const serverTotalCount = results.length > 0 ? Number(results[0].total_count) : 0;
-          setTotalCount(serverTotalCount);
-
-          const formatted: StudioQuestion[] = results.map((q: any) => ({
-            id: q.id,
-            category_id: q.category_id,
-            question_text: q.question_text,
-            correct_answer: q.correct_answer,
-            incorrect_answers: Array.isArray(q.incorrect_answers) ? q.incorrect_answers as string[] : [],
-            difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
-            level_number: q.level_number || 1,
-            is_active: q.is_active ?? true,
-            in_production: q.in_production ?? false,
-            icon_slug: q.icon_slug,
-            image_url: q.image_url,
-            video_url: q.video_url,
-            audio_url: q.audio_url,
-            created_at: q.created_at || '',
-            updated_at: q.updated_at || '',
-          }));
-
-          setQuestions(formatted);
-          setPreviewIndex(0);
-        } else {
-        // Standard query for newest/oldest/alphabetical
+        // No search: use standard queries
         let countQuery = supabase
           .from('questions')
           .select('*', { count: 'exact', head: true })
@@ -295,6 +247,7 @@ export const useQuestionStudio = () => {
           countQuery = countQuery.eq('language', language);
         }
 
+        // Apply type filter
         if (filters.questionType) {
           switch (filters.questionType) {
             case 'video':
@@ -326,6 +279,7 @@ export const useQuestionStudio = () => {
         if (countError) throw countError;
         setTotalCount(count || 0);
 
+        // Build data query
         let dataQuery = supabase
           .from('questions')
           .select('id, category_id, question_text, correct_answer, incorrect_answers, difficulty, level_number, is_active, in_production, icon_slug, image_url, video_url, audio_url, created_at, updated_at')
@@ -340,6 +294,7 @@ export const useQuestionStudio = () => {
           dataQuery = dataQuery.eq('language', language);
         }
 
+        // Apply type filter
         if (filters.questionType) {
           switch (filters.questionType) {
             case 'video':
@@ -367,6 +322,7 @@ export const useQuestionStudio = () => {
           dataQuery = dataQuery.is('icon_slug', null);
         }
 
+        // Apply sorting
         switch (filters.sortBy) {
           case 'oldest':
             dataQuery = dataQuery.order('created_at', { ascending: true });
@@ -401,7 +357,6 @@ export const useQuestionStudio = () => {
 
         setQuestions(formatted);
         setPreviewIndex(0);
-        }
       }
     } catch (err) {
       console.error('Error fetching questions:', err);
