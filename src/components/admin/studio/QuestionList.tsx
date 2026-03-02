@@ -3,11 +3,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, ChevronLeft, ChevronRight, CheckSquare, Globe } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, CheckSquare, Globe, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StudioQuestion, StudioFilters, getQuestionType } from '@/hooks/useQuestionStudio';
 import { QuestionFilters } from './QuestionFilters';
 import { QuestionTypeIndicator } from './QuestionTypeIndicator';
+import { AlertTriangle } from 'lucide-react';
 import {
   Select,
   SelectContent,
