@@ -263,7 +263,7 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
             <Plus className="w-4 h-4" />
             {t("extra.newButton")}
           </motion.button>
-        </div>}
+        </div>
 
         {/* Scrollable streak days with drag + momentum */}
         <div
