@@ -1,79 +1,63 @@
 
 
-# Auto-Start Game After Avatar Setup
+## Sort Questions by Actual Character Length (Longest First)
 
-## Problem
-When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
+### Problem
+The current `get_overlong_questions` RPC groups questions into two buckets (overlong vs. not overlong) but doesn't rank within those groups by actual length. A 250-char question and a 68-char question appear in the same bucket with no ordering between them.
 
-## Solution
-Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
+### Solution
+Update the database function to sort by actual content length descending: first by question text length, then by the longest answer length.
 
-## Changes
+### Changes
 
-### 1. `src/contexts/AvatarModalContext.tsx`
-- Add an optional `onComplete` callback to the context
-- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
-- Store the callback in a ref
-- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
+**1. Update the `get_overlong_questions` database function**
 
-### 2. `src/components/home/AvatarModal.tsx`
-- Accept a new optional `onComplete?: () => void` prop
-- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+Replace the binary CASE sorting with continuous length-based sorting:
 
-### 3. `src/pages/Index.tsx`
-- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
-  ```
-  openAvatarModal(() => navigate("/game"));
-  ```
-
-## Technical Details
-
-**AvatarModalContext changes:**
-```typescript
-interface AvatarModalContextType {
-  openAvatarModal: (onComplete?: () => void) => void;
-  closeAvatarModal: () => void;
-  isOpen: boolean;
-}
-
-// Store pending callback in a ref
-const onCompleteRef = useRef<(() => void) | null>(null);
-
-const openAvatarModal = useCallback((onComplete?: () => void) => {
-  onCompleteRef.current = onComplete || null;
-  setIsOpen(true);
-}, []);
-
-const closeAvatarModal = useCallback(() => {
-  setIsOpen(false);
-  onCompleteRef.current = null;
-}, []);
-
-// Pass onComplete to AvatarModal
-<AvatarModal
-  isOpen={isOpen}
-  onClose={closeAvatarModal}
-  onComplete={() => {
-    const cb = onCompleteRef.current;
-    setIsOpen(false);
-    onCompleteRef.current = null;
-    cb?.();
-  }}
-/>
+```sql
+CREATE OR REPLACE FUNCTION get_overlong_questions(
+  p_category_id uuid DEFAULT NULL,
+  p_in_production boolean DEFAULT false,
+  p_language text DEFAULT NULL,
+  p_limit int DEFAULT 50,
+  p_offset int DEFAULT 0
+)
+RETURNS SETOF questions
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+  SELECT q.*
+  FROM questions q
+  LEFT JOIN LATERAL (
+    SELECT MAX(length(a)) AS max_ans_len
+    FROM jsonb_array_elements_text(q.incorrect_answers) AS a
+  ) ans ON true
+  WHERE q.in_production = p_in_production
+    AND (p_category_id IS NULL OR q.category_id = p_category_id)
+    AND (p_language IS NULL OR q.language = p_language)
+  ORDER BY
+    GREATEST(
+      length(q.question_text),
+      length(q.correct_answer) * 3,
+      COALESCE(ans.max_ans_len, 0) * 3
+    ) DESC,
+    length(q.question_text) DESC,
+    GREATEST(length(q.correct_answer), COALESCE(ans.max_ans_len, 0)) DESC,
+    q.created_at DESC
+  LIMIT p_limit OFFSET p_offset;
+$$;
 ```
 
-**AvatarModal changes:**
-- New prop: `onComplete?: () => void`
-- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+The sorting logic:
+- Primary: `GREATEST(question_length, answer_length * 3)` -- this ensures questions with very long text come first, but also surfaces answers that are disproportionately long (multiplied by 3 since answer limit is ~3x smaller than question limit)
+- Secondary: `length(question_text) DESC` -- among same "worst score", longest question wins
+- Tertiary: longest answer DESC
+- Fallback: newest first
 
-**Index.tsx change:**
-```typescript
-} else if (!profile?.avatar_url) {
-  openAvatarModal(() => navigate("/game"));
-}
-```
+**2. No frontend changes needed**
 
-## Files to edit
-1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
-2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
-3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
+The hook already calls this RPC as the default sort and displays the `AlertTriangle` icon for overlong items. The only change is the database function itself -- questions will now appear in true descending length order.
+
+### Files
+- **Database migration**: Update `get_overlong_questions` function
+
