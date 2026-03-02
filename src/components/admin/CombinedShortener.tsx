@@ -141,6 +141,43 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedValues, setEditedValues] = useState<EditedValues>({});
 
+  // Mixed-language fix state
+  const [mixedLangProgress, setMixedLangProgress] = useState<{ status: 'idle' | 'running' | 'done'; fixed: number; skipped: number; remaining: number }>({ status: 'idle', fixed: 0, skipped: 0, remaining: 0 });
+
+  const fixMixedLanguageQuestions = async () => {
+    setMixedLangProgress({ status: 'running', fixed: 0, skipped: 0, remaining: 0 });
+    let totalFixed = 0;
+    let totalSkipped = 0;
+    let remaining = 1;
+
+    try {
+      while (remaining > 0) {
+        const { data, error } = await supabase.functions.invoke('fix-mixed-language-questions', {
+          body: { limit: 100, batchSize: 10 }
+        });
+
+        if (error) throw error;
+
+        totalFixed += data.fixed || 0;
+        totalSkipped += data.skipped || 0;
+        remaining = data.remaining || 0;
+
+        setMixedLangProgress({ status: 'running', fixed: totalFixed, skipped: totalSkipped, remaining });
+
+        if (data.fixed === 0 && data.skipped === 0) break; // No progress, stop
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      setMixedLangProgress({ status: 'done', fixed: totalFixed, skipped: totalSkipped, remaining: 0 });
+      toast({ title: 'Mixed-language fix complete ✅', description: `Fixed: ${totalFixed}, Skipped: ${totalSkipped}` });
+      setStatsReloadKey(prev => prev + 1);
+    } catch (err) {
+      console.error('Mixed-language fix error:', err);
+      toast({ title: 'Error fixing mixed-language questions', variant: 'destructive' });
+      setMixedLangProgress(prev => ({ ...prev, status: 'idle' }));
+    }
+  };
+
   // Load stats
   useEffect(() => {
     const loadStats = async () => {
