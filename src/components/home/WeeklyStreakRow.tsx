@@ -309,7 +309,7 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
 
                   {/* Circle */}
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center relative ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center relative overflow-hidden ${
                       day.isToday ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
                     }`}
                     style={
@@ -318,16 +318,22 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
                             background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
                             boxShadow: "0 2px 6px rgba(253, 230, 138, 0.5)",
                           }
+                        : day.isToday
+                        ? {
+                            background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 50%, #C4B5FD 100%)",
+                            border: "none",
+                          }
                         : {
                             background: "hsl(var(--muted))",
                             border: "2px solid hsl(var(--border))",
                           }
                     }
                   >
+                    {day.isToday && <TodayParticles />}
                     {day.isCompleted ? (
-                      <Check className="w-4 h-4 text-amber-700" />
+                      <Check className="w-4 h-4 text-amber-700 relative z-10" />
                     ) : day.isToday ? (
-                      <span className="text-xs font-bold text-primary">?</span>
+                      <span className="text-sm font-bold text-primary relative z-10">?</span>
                     ) : day.date < new Date(new Date().toDateString()) ? (
                       <X className="w-4 h-4 text-muted-foreground/60" />
                     ) : (
@@ -337,7 +343,7 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
 
                   {/* Today indicator dot */}
                   {day.isToday && (
-                    <span className="text-[8px] font-bold text-primary mt-0.5">
+                    <span className="text-[10px] font-bold text-primary mt-0.5">
                       {t("extra.today")}
                     </span>
                   )}
