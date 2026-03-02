@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, lazy, Suspense, useMemo } from "react";
 import { trackSignupCompleted } from "@/lib/analytics";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -54,8 +54,9 @@ import { WeeklyStreakRow } from "@/components/home/WeeklyStreakRow";
 import { GuestSignupPromptModal } from "@/components/home/GuestSignupPromptModal";
 import { lovable } from "@/integrations/lovable";
 import Lottie from "lottie-react";
-import walkingManAnimation from "@/assets/lottie/bearded-man-walking.json";
+import walkingManAnimationRaw from "@/assets/lottie/bearded-man-walking.json";
 import crownAnimation from "@/assets/lottie/crown.json";
+import { recolorLottie } from "@/utils/recolorLottie";
 
 import { toast } from "@/hooks/use-toast";
 import { t } from "@/lib/i18n";
@@ -177,6 +178,11 @@ const SideIconButton = ({
 
 export default function Index() {
   const navigate = useNavigate();
+  const purplePantsAnimation = useMemo(() => recolorLottie(walkingManAnimationRaw, [
+    { from: '#3A6566', to: '#583A66' },
+    { from: '#2F5153', to: '#3F2F53' },
+    { from: '#243E3C', to: '#32243E' },
+  ]), []);
   const { profile, user, fetchProfile, signUp, signUpWithUsername, signIn, signInWithUsername, signInWithGoogle, signInWithApple } = useAuth();
   const { t } = useLanguage();
   const { step, startOnboarding, setStep, hasCompletedOnboarding } = useOnboarding();
@@ -784,7 +790,7 @@ export default function Index() {
         {/* Walking man Lottie at the bottom */}
         <div className="flex-1 flex items-end justify-center pointer-events-none" style={{ marginBottom: '143px' }}>
           <div className="w-[179px] h-[179px]" style={{ filter: 'brightness(1.2)' }}>
-            <Lottie animationData={walkingManAnimation} loop autoplay />
+            <Lottie animationData={purplePantsAnimation} loop autoplay />
           </div>
         </div>
 
