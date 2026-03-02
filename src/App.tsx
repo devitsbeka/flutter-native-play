@@ -111,6 +111,7 @@ const Docs = lazy(() => import("./pages/Docs"));
 const OnboardingPreview = lazy(() => import("./pages/OnboardingPreview"));
 const ChallengeLanding = lazy(() => import("./pages/ChallengeLanding"));
 const SampleDemoTV = lazy(() => import("./pages/SampleDemoTV"));
+const SampleDemoPlayer = lazy(() => import("./pages/SampleDemoPlayer"));
 const DemoHome = lazy(() => import("./pages/DemoHome"));
 
 const App = () => (
