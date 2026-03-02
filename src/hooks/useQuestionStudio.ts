@@ -237,17 +237,19 @@ export const useQuestionStudio = () => {
         
         // For length-based sorts, use server-side RPC
         if (filters.sortBy === 'longest_question' || filters.sortBy === 'longest_answer') {
+          console.log('[QuestionStudio] Calling RPC with sort mode:', filters.sortBy);
           const { data: rpcData, error: rpcError } = await supabase.rpc('get_questions_sorted_by_length', {
             p_sort_mode: filters.sortBy,
             p_in_production: inProd,
-            p_category_id: selectedCategoryId || undefined,
-            p_language: language !== 'all' ? language : undefined,
-            p_question_type: filters.questionType || undefined,
-            p_difficulty: filters.difficulty || undefined,
-            p_has_icon: filters.hasIcon === null ? undefined : (filters.hasIcon ? 'with' : 'without'),
+            p_category_id: selectedCategoryId ?? null,
+            p_language: language !== 'all' ? language : null,
+            p_question_type: filters.questionType ?? null,
+            p_difficulty: filters.difficulty ?? null,
+            p_has_icon: filters.hasIcon === null ? null : (filters.hasIcon ? 'with' : 'without'),
             p_limit: PAGE_SIZE,
             p_offset: offset,
           });
+          console.log('[QuestionStudio] RPC response:', rpcData?.length, 'items, first:', (rpcData as any[])?.[0]?.question_text?.substring(0, 50));
 
           if (rpcError) throw rpcError;
 
