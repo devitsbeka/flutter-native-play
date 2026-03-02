@@ -669,7 +669,7 @@ export default function Index() {
           setIsDailyRewardsOpen(true);
         }}
       />
-      {/* TEMPORARILY HIDDEN - Main layout with desktop navigation */}
+      {/* Main layout with desktop navigation */}
       <MainLayout
         onPlayClick={handlePlayClick}
         playsRemaining={user ? playsRemaining : guestPlaysRemaining}
@@ -678,12 +678,11 @@ export default function Index() {
         isVip={isVip}
         isGuest={!user}
         vipExpiresAt={subscription?.expires_at}
-        showPlayButton={false}
-        showBottomNav={false}
+        showPlayButton={true}
+        showBottomNav={!isSideMenuOpen}
         disableScroll
       >
-        {/* TEMPORARILY HIDDEN - all home UI content */}
-        <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible" style={{ display: 'none' }}>
+        <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
         <header className="relative z-20 px-4 py-3 safe-top border-b border-border/30">
           <div className="flex items-center justify-between gap-3">
             {/* Left side: Burger menu (mobile only) - Hidden for guests */}
