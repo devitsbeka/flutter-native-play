@@ -1,75 +1,79 @@
 
 
-## Show Overlong Questions First in Question Studio
+# Auto-Start Game After Avatar Setup
 
-### Goal
-Add a filter option in Question Studio that surfaces questions exceeding character limits (question text > 67 chars OR any answer > 25 chars) so admins can find and fix them without leaving the studio.
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-### Approach
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-**1. Create a database function (RPC) to find overlong questions**
+## Changes
 
-Create an RPC `get_overlong_questions` that returns question IDs where:
-- `length(question_text) > 67`, OR
-- `length(correct_answer) > 25`, OR
-- any element in `incorrect_answers` array has length > 25
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-This is necessary because Supabase client queries can't filter by string length or iterate JSONB array element lengths.
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-Parameters: `p_category_id` (optional), `p_in_production` (boolean), `p_language` (optional), `p_limit`, `p_offset`
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-Returns full question rows ordered with overlong questions first, then the rest by `created_at DESC`.
+## Technical Details
 
-**2. Add "Overlong" sort option to `StudioFilters`**
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
 
-In `src/hooks/useQuestionStudio.ts`:
-- Extend the `sortBy` type from `'newest' | 'oldest' | 'alphabetical'` to include `'overlong_first'`
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
 
-In `src/components/admin/studio/QuestionFilters.tsx`:
-- Add a new radio item "გრძელი პირველი" (Overlong first) under the sort section
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
 
-**3. Use the RPC when `sortBy === 'overlong_first'`**
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
 
-In `useQuestionStudio.ts` `fetchQuestions`:
-- When `sortBy` is `'overlong_first'` and there's no search query, call the new RPC instead of the standard Supabase query
-- The RPC handles pagination, category, language, and production status filters server-side
-- Apply remaining client-side filters (type, difficulty, hasIcon) after the RPC call
-
-### Technical Details
-
-**Database function SQL:**
-```sql
-CREATE OR REPLACE FUNCTION get_overlong_questions(
-  p_category_id uuid DEFAULT NULL,
-  p_in_production boolean DEFAULT false,
-  p_language text DEFAULT NULL,
-  p_limit int DEFAULT 50,
-  p_offset int DEFAULT 0
-)
-RETURNS SETOF questions
-LANGUAGE sql STABLE
-AS $$
-  SELECT *
-  FROM questions
-  WHERE in_production = p_in_production
-    AND (p_category_id IS NULL OR category_id = p_category_id)
-    AND (p_language IS NULL OR language = p_language)
-  ORDER BY
-    CASE WHEN length(question_text) > 67
-      OR length(correct_answer) > 25
-      OR EXISTS (
-        SELECT 1 FROM unnest(incorrect_answers) AS a(val)
-        WHERE length(a.val) > 25
-      )
-    THEN 0 ELSE 1 END,
-    created_at DESC
-  LIMIT p_limit OFFSET p_offset;
-$$;
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
 ```
 
-**Files to modify:**
-- `src/hooks/useQuestionStudio.ts` -- extend `sortBy` type, add RPC call branch
-- `src/components/admin/studio/QuestionFilters.tsx` -- add "გრძელი პირველი" sort option
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
 
-**Visual indicator:** In `QuestionList.tsx`, add a small warning badge (e.g., red dot or `AlertTriangle` icon) next to questions that exceed limits, so they're visually distinct even when scrolling.
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
 
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button

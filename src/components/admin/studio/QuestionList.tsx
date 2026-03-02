@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, ChevronLeft, ChevronRight, CheckSquare, Globe } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, CheckSquare, Globe, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StudioQuestion, StudioFilters, getQuestionType } from '@/hooks/useQuestionStudio';
 import { QuestionFilters } from './QuestionFilters';
@@ -132,6 +132,9 @@ export function QuestionList({
               const isSelected = selectedIds.has(question.id);
               const isPreview = index === previewIndex;
               const type = getQuestionType(question);
+              const isOverlong = question.question_text.length > 67 
+                || question.correct_answer.length > 25 
+                || question.incorrect_answers.some(a => a.length > 25);
 
               return (
                 <div
@@ -178,6 +181,9 @@ export function QuestionList({
                         <span className="text-[10px] text-muted-foreground">
                           🎨 {question.icon_slug}
                         </span>
+                      )}
+                      {isOverlong && (
+                        <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />
                       )}
                     </div>
                   </div>

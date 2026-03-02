@@ -3782,6 +3782,54 @@ export type Database = {
           weekly_xp: number
         }[]
       }
+      get_overlong_questions: {
+        Args: {
+          p_category_id?: string
+          p_in_production?: boolean
+          p_language?: string
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          ai_review_data: Json | null
+          ai_review_grade: string | null
+          ai_review_score: number | null
+          answer_shorten_status: string | null
+          audio_url: string | null
+          category_id: string
+          correct_answer: string
+          created_at: string | null
+          difficulty: string
+          icon_slug: string | null
+          id: string
+          image_url: string | null
+          in_production: boolean | null
+          incorrect_answers: Json
+          is_active: boolean | null
+          language: string
+          last_ai_review: string | null
+          last_quality_check: string | null
+          level_number: number | null
+          original_correct_answer: string | null
+          original_incorrect_answers: Json | null
+          original_question_text: string | null
+          pending_correct_answer: string | null
+          pending_incorrect_answers: Json | null
+          pending_question_text: string | null
+          quality_issues: Json | null
+          quality_status: string | null
+          question_text: string
+          shorten_status: string | null
+          updated_at: string | null
+          video_url: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "questions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_unread_counts_by_room: {
         Args: { p_rooms: Json; p_user_id: string }
         Returns: {

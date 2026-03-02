@@ -101,12 +101,13 @@ export function QuestionFilters({ filters, onFiltersChange }: QuestionFiltersPro
             value={filters.sortBy}
             onValueChange={(v) => onFiltersChange({ 
               ...filters, 
-              sortBy: v as 'newest' | 'oldest' | 'alphabetical' 
+              sortBy: v as 'newest' | 'oldest' | 'alphabetical' | 'overlong_first' 
             })}
           >
             <DropdownMenuRadioItem value="newest">უახლესი</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="oldest">უძველესი</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="alphabetical">ანბანით</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="overlong_first">⚠️ გრძელი პირველი</DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
