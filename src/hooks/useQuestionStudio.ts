@@ -323,7 +323,7 @@ export const useQuestionStudio = () => {
           dataQuery = dataQuery.is('icon_slug', null);
         }
 
-        // Apply sorting
+        // Apply server-side sorting (for non-length sorts)
         switch (filters.sortBy) {
           case 'oldest':
             dataQuery = dataQuery.order('created_at', { ascending: true });
