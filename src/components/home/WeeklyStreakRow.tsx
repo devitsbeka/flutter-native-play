@@ -282,16 +282,16 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
           onPointerCancel={dragHandlers.onPointerUp as any}
         >
           {timeline.map((day, i) => {
-            // Check if a gift milestone should appear after this day
-            // We track streak days completed. If streak = N, the Nth completed day
-            // triggers a gift if N is a multiple of 5.
-            // Render gift after the day circle that marks the 5th, 10th etc completed day.
-            const today = new Date();
-            const daysAgo = Math.floor((today.getTime() - day.date.getTime()) / (1000 * 60 * 60 * 24));
-            // This day's streak position (1-based) = currentStreak - daysAgo
-            const streakPosition = day.isCompleted ? currentStreak - daysAgo : 0;
-            const giftMilestone = streakPosition > 0 && streakPosition % 3 === 0
-              ? milestones.find(m => m.afterDay === streakPosition)
+            // Show a gift circle after every 3rd day position in the timeline (1-indexed)
+            const dayPosition = i + 1; // 1-based position
+            const showGift = dayPosition % 3 === 0;
+            const giftMilestone = showGift
+              ? {
+                  afterDay: dayPosition,
+                  bonus: 25,
+                  rewardKey: dayPosition >= 30 ? "milestoneDoubleXp" : dayPosition >= 10 ? "milestoneXpBonusGift" : "milestoneXpBonus",
+                  isUnlocked: currentStreak >= dayPosition,
+                }
               : null;
 
             return (
