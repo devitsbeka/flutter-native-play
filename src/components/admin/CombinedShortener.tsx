@@ -70,6 +70,7 @@ interface CombinedStats {
   pendingReview: number;
   needsRewrite: number;
   alreadyProcessed: number;
+  unshortenable: number;
   loading: boolean;
 }
 
@@ -102,7 +103,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
   const { toast } = useToast();
   
   const [categoryId, setCategoryId] = useState<string>('all');
-  const [inProduction, setInProduction] = useState<boolean>(false);
+  const [inProduction, setInProduction] = useState<boolean>(true);
   const [languageFilter, setLanguageFilter] = useState<string>('all');
   const [aggressiveMode, setAggressiveMode] = useState<boolean>(false);
   const [needsRewriteQuestions, setNeedsRewriteQuestions] = useState<PendingQuestion[]>([]);
@@ -125,6 +126,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
     pendingReview: 0,
     needsRewrite: 0,
     alreadyProcessed: 0,
+    unshortenable: 0,
     loading: false
   });
   
@@ -216,6 +218,18 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
         const alreadyProcessed = targetQuestions.filter(q => 
           q.shorten_status === 'shortened' || q.answer_shorten_status === 'shortened'
         );
+
+        // Questions marked unshortenable that are still long
+        const unshortenable = targetQuestions.filter(q => {
+          const incorrectAnswers = Array.isArray(q.incorrect_answers) 
+            ? q.incorrect_answers as string[]
+            : [];
+          const qUnshortenable = q.shorten_status === 'unshortenable' && q.question_text.length > MAX_QUESTION_LENGTH;
+          const aUnshortenable = q.answer_shorten_status === 'unshortenable' && (
+            q.correct_answer.length > MAX_ANSWER_LENGTH || incorrectAnswers.some(a => a.length > MAX_ANSWER_LENGTH)
+          );
+          return qUnshortenable || aUnshortenable;
+        });
         
         setStats({
           total: targetQuestions.length,
@@ -223,6 +237,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           pendingReview: pendingReview.length,
           needsRewrite: rewriteCount.length,
           alreadyProcessed: alreadyProcessed.length,
+          unshortenable: unshortenable.length,
           loading: false
         });
       } catch (err) {
@@ -830,7 +845,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Stats Display */}
-        <div className="grid grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 p-4 bg-muted/50 rounded-lg">
           <div 
             className={`text-center cursor-pointer p-2 rounded-lg transition-colors ${viewMode === 'shorten' ? '' : ''}`}
           >
@@ -869,12 +884,77 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
             <div className="text-xs text-muted-foreground">⚠️ Needs Rewrite</div>
           </div>
           <div className="text-center p-2">
+            <div className="text-2xl font-bold text-red-500">
+              {stats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : stats.unshortenable}
+            </div>
+            <div className="text-xs text-muted-foreground">🚫 Unshortenable</div>
+          </div>
+          <div className="text-center p-2">
             <div className="text-2xl font-bold text-green-500">
               {stats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : stats.alreadyProcessed}
             </div>
             <div className="text-xs text-muted-foreground">დამუშავებული</div>
           </div>
         </div>
+
+        {/* Reset Unshortenable */}
+        {stats.unshortenable > 0 && viewMode === 'shorten' && (
+          <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200">
+            <span className="text-sm text-muted-foreground">
+              {stats.unshortenable} questions marked unshortenable — reset to retry with AI?
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                try {
+                  let query = supabase
+                    .from('questions')
+                    .update({ shorten_status: null, answer_shorten_status: null })
+                    .eq('is_active', true)
+                    .eq('in_production', inProduction);
+                  
+                  if (categoryId !== 'all') {
+                    query = query.eq('category_id', categoryId);
+                  }
+                  if (languageFilter !== 'all') {
+                    query = query.eq('language', languageFilter);
+                  }
+                  
+                  // Reset both question and answer unshortenable statuses
+                  await supabase
+                    .from('questions')
+                    .update({ shorten_status: null })
+                    .eq('is_active', true)
+                    .eq('in_production', inProduction)
+                    .eq('shorten_status', 'unshortenable')
+                    .match(categoryId !== 'all' ? { category_id: categoryId } : {})
+                    .match(languageFilter !== 'all' ? { language: languageFilter } : {});
+
+                  await supabase
+                    .from('questions')
+                    .update({ answer_shorten_status: null })
+                    .eq('is_active', true)
+                    .eq('in_production', inProduction)
+                    .eq('answer_shorten_status', 'unshortenable')
+                    .match(categoryId !== 'all' ? { category_id: categoryId } : {})
+                    .match(languageFilter !== 'all' ? { language: languageFilter } : {});
+
+                  toast({ title: 'Reset complete ✅', description: `${stats.unshortenable} questions ready for retry` });
+                  // Trigger stats reload
+                  setStats(prev => ({ ...prev, loading: true }));
+                  setProgress(prev => ({ ...prev }));
+                } catch (err) {
+                  console.error('Reset unshortenable error:', err);
+                  toast({ title: 'Error', variant: 'destructive' });
+                }
+              }}
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              Reset ({stats.unshortenable})
+            </Button>
+          </div>
+        )}
 
         {/* Controls */}
         <div className="flex items-end gap-4 flex-wrap">
