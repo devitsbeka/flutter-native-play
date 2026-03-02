@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
 import { trackSignupCompleted } from "@/lib/analytics";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,6 +53,8 @@ import { DesktopGuestSplitLayout } from "@/components/home/DesktopGuestSplitLayo
 import { WeeklyStreakRow } from "@/components/home/WeeklyStreakRow";
 import { GuestSignupPromptModal } from "@/components/home/GuestSignupPromptModal";
 import { lovable } from "@/integrations/lovable";
+import Lottie from "lottie-react";
+import walkingManAnimation from "@/assets/lottie/bearded-man-walking.json";
 
 import { toast } from "@/hooks/use-toast";
 import { t } from "@/lib/i18n";
@@ -778,6 +780,13 @@ export default function Index() {
           isOpen={showChangeNameModal}
           onClose={() => setShowChangeNameModal(false)}
         />
+
+        {/* Walking man Lottie at the bottom */}
+        <div className="flex-1 flex items-end justify-center pointer-events-none">
+          <div className="w-32 h-32 mb-4">
+            <Lottie animationData={walkingManAnimation} loop autoplay />
+          </div>
+        </div>
 
         {/* Content area - TEMPORARILY HIDDEN */}
         <div className="flex-1 flex relative" style={{ display: 'none' }}>
