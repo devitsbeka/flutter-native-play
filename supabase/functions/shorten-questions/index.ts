@@ -5,7 +5,7 @@ import { getCorsHeaders } from "../_shared/cors.ts";
 const MAX_LENGTH = 65;
 const MIN_LENGTH = 15; // Minimum characters for a valid shortened question
 const MIN_WORDS = 3;   // Minimum word count
-const MIN_REDUCTION_RATIO = 0.25; // Shortened must be at least 25% of original
+const MIN_REDUCTION_RATIO = 0.15; // Shortened must be at least 15% of original
 const BATCH_SIZE = 10;
 
 interface Question {
@@ -46,8 +46,9 @@ function isValidShortenedQuestion(shortened: string, original: string, language:
     };
   }
   
-  // Must end with question mark
-  if (!trimmed.endsWith('?')) {
+  // Must end with question mark (handle trailing quotes/whitespace)
+  const cleanedEnd = trimmed.replace(/[\s'"'""]+$/, '');
+  if (!trimmed.endsWith('?') && !cleanedEnd.endsWith('?')) {
     return { 
       valid: false, 
       reason: 'no_question_mark', 

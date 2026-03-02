@@ -1,53 +1,79 @@
 
 
-## Fix: Overly Strict Validation Marking Good Shortened Questions as "Unshortenable"
+# Auto-Start Game After Avatar Setup
 
-### Problem
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-The AI successfully shortens questions to valid lengths, but the post-AI validation (`isValidShortenedQuestion`) rejects them with overly strict rules, marking them as `unshortenable`. There are 65 English production questions stuck in this state.
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-Breakdown by rejection reason:
+## Changes
 
-| Reason | Count | Issue |
-|--------|-------|-------|
-| No reason stored (AI returned `CANNOT_SHORTEN` or too long) | 47 | Legitimate -- AI couldn't do it |
-| `too_much_reduction` | 14 | Overly strict -- a 266-char question shortened to 50 chars is only 19% of original, but that's *correct* behavior for very long questions |
-| `no_question_mark` | 5 | Bug -- questions ending with quoted text like `'...them'?` confuse the check |
-| `incomplete_sentence` | 1 | Edge case |
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-### Root Cause
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-The `MIN_REDUCTION_RATIO = 0.25` rule means the shortened version must be at least 25% of the original length. For a 200+ character question shortened to 50 chars, that's only ~20-25%, which fails. But shortening a 200-char question to 50 chars is exactly what we want -- the rule penalizes the AI for doing a *good* job on very long questions.
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-### Fix
+## Technical Details
 
-**File: `supabase/functions/shorten-questions/index.ts`**
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
 
-1. **Relax `MIN_REDUCTION_RATIO`** from `0.25` to `0.15` -- allows aggressive shortening of very long questions while still catching cases where the AI strips away too much meaning.
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
 
-2. **Fix `no_question_mark` check** -- trim trailing whitespace and handle cases where `?` appears before a closing quote mark (e.g., `them'?`). The current check `trimmed.endsWith('?')` should work, so the issue is likely trailing whitespace or Unicode. Add `.replace(/\s+$/, '')` before checking.
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
 
-3. **Reset the 20 falsely-rejected questions** (14 `too_much_reduction` + 5 `no_question_mark` + 1 `incomplete_sentence`) back to `shorten_status = NULL` so they get re-processed with the relaxed rules.
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
 
-### Database Cleanup
-
-```sql
-UPDATE questions
-SET shorten_status = NULL,
-    quality_issues = NULL,
-    original_question_text = NULL
-WHERE language = 'en'
-  AND shorten_status = 'unshortenable'
-  AND is_active = true
-  AND quality_issues IS NOT NULL;
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
 ```
 
-This resets the 20 questions that were rejected by validation (not the 47 that the AI genuinely couldn't shorten).
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
 
-### Files to Modify
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
 
-| File | Change |
-|------|--------|
-| `supabase/functions/shorten-questions/index.ts` | Lower `MIN_REDUCTION_RATIO` to 0.15, fix question mark detection edge case |
-| Database | Reset 20 falsely-rejected questions |
-
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
