@@ -784,7 +784,7 @@ export default function Index() {
           {/* Action Cards - Fixed Right Side Panel (Desktop only) */}
           {user && (
             <motion.div 
-              className="hidden lg:flex fixed right-4 lg:right-6 xl:right-8 top-36 z-20 pointer-events-auto"
+              className="hidden lg:flex fixed right-4 lg:right-6 xl:right-8 top-60 z-20 pointer-events-auto"
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2, type: "spring" }}
