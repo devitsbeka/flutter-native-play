@@ -802,7 +802,9 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
                                     <span className="flex items-center gap-2 mt-1">
                                       <ArrowRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                                       <span className="font-medium">{result.shortenedQuestion}</span>
-                                      <span className="text-xs text-muted-foreground">({result.newQuestionLength})</span>
+                                      <span className={`text-xs ${(result.newQuestionLength || 0) > MAX_QUESTION_LENGTH ? 'text-red-500 font-bold' : 'text-muted-foreground'}`}>
+                                        ({result.newQuestionLength}){(result.newQuestionLength || 0) > MAX_QUESTION_LENGTH && ' ⚠️ still too long!'}
+                                      </span>
                                     </span>
                                   </div>
                                 ) : (
