@@ -189,12 +189,12 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
     return days;
   }, [currentStreak]);
 
-  // Gift milestones every 5 days of streak
+  // Gift milestones every 3 days of streak
   const milestones = useMemo(() => {
     const streakMilestones = getStreakMilestones();
     const gifts: GiftMilestone[] = [];
     
-    for (let d = 5; d <= Math.max(currentStreak + 10, 30); d += 5) {
+    for (let d = 3; d <= Math.max(currentStreak + 10, 30); d += 3) {
       const milestone = streakMilestones.find(m => m.days === d);
       let rewardKey = "milestoneXpBonus";
       let bonus = milestone?.bonus ?? 25;
@@ -290,7 +290,7 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
             const daysAgo = Math.floor((today.getTime() - day.date.getTime()) / (1000 * 60 * 60 * 24));
             // This day's streak position (1-based) = currentStreak - daysAgo
             const streakPosition = day.isCompleted ? currentStreak - daysAgo : 0;
-            const giftMilestone = streakPosition > 0 && streakPosition % 5 === 0
+            const giftMilestone = streakPosition > 0 && streakPosition % 3 === 0
               ? milestones.find(m => m.afterDay === streakPosition)
               : null;
 
@@ -357,25 +357,25 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 300, delay: 0.2 }}
                   >
-                    <span className="text-[10px] font-semibold text-purple-400">🎁</span>
+                    <span className="text-[10px] font-bold text-rose-500">Gift</span>
                     <motion.button
                       onClick={() => setSelectedGift(giftMilestone)}
                       className="w-10 h-10 rounded-full flex items-center justify-center"
                       style={
                         giftMilestone.isUnlocked
                           ? {
-                              background: "linear-gradient(180deg, #A78BFA 0%, #7C3AED 100%)",
-                              boxShadow: "0 3px 0 rgba(109,40,217,0.4), 0 4px 12px rgba(124,58,237,0.3)",
+                              background: "linear-gradient(180deg, #FB7185 0%, #E11D48 100%)",
+                              boxShadow: "0 3px 0 rgba(190,18,60,0.4), 0 4px 12px rgba(225,29,72,0.3)",
                             }
                           : {
-                              background: "hsl(var(--background))",
-                              border: "2px solid #A78BFA",
+                              background: "linear-gradient(180deg, #FFE4E6 0%, #FECDD3 100%)",
+                              border: "2px solid #FB7185",
                             }
                       }
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <Gift className={`w-4 h-4 ${giftMilestone.isUnlocked ? "text-white" : "text-purple-400"}`} />
+                      <Gift className={`w-4 h-4 ${giftMilestone.isUnlocked ? "text-white" : "text-rose-500"}`} />
                     </motion.button>
                   </motion.div>
                 )}
