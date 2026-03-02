@@ -751,9 +751,23 @@ export default function Index() {
           </div>
         </header>
 
+        {/* Tournament Banner - Authorized users only */}
+        {user && <TournamentBanner />}
+
         {/* Weekly Streak Row - Authorized users only */}
         {user && (
           <WeeklyStreakRow onNewClick={() => navigate("/team", { state: { openCreateRoom: true } })} />
+        )}
+
+        {/* User Info Bar - Authorized users only */}
+        {user && (
+          <UserInfoBar
+            profile={profile}
+            coins={coins}
+            gems={gems}
+            onNameClick={() => setShowChangeNameModal(true)}
+            onCurrencyClick={() => setIsGemShopOpen(true)}
+          />
         )}
 
         {/* Floating Gift Button (after invite modal dismissed OR pro gift dismissed) */}
