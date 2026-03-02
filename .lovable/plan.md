@@ -1,79 +1,60 @@
 
 
-# Auto-Start Game After Avatar Setup
+## Add Tournament Banner and User Info Section to Home Screen
 
-## Problem
-When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
+### What We're Building
+Based on your screenshot, we'll add two new visual sections to the home screen (for logged-in users):
 
-## Solution
-Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
+1. **Tournament Banner** -- placed between the header and the weekly streak row
+   - Left side: Trophy icon (Champions League style) with a countdown timer (12:08:58)
+   - Right side: Large green "Play with Friends" button
+   - Rounded container with subtle background
 
-## Changes
+2. **User Info Section** -- placed between the weekly streak row and the walking character
+   - Country flag (from user's profile)
+   - Bold username ("Beka")
+   - Coin balance with icon (e.g. "69K")
+   - Gem balance with icon (e.g. "1")
+   - Centered layout
 
-### 1. `src/contexts/AvatarModalContext.tsx`
-- Add an optional `onComplete` callback to the context
-- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
-- Store the callback in a ref
-- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
+### Technical Plan
 
-### 2. `src/components/home/AvatarModal.tsx`
-- Accept a new optional `onComplete?: () => void` prop
-- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+**1. Create `src/components/home/TournamentBanner.tsx`**
+- A new component that renders:
+  - A rounded container with a light/white background and subtle shadow
+  - Left: trophy emoji/icon + countdown timer (hardcoded initially, can be connected to a real timer later)
+  - Right: green gradient button labeled with the Georgian translation key for "Play with Friends" (using `useLanguage`)
+  - The green button navigates to `/team` with `{ openCreateRoom: true }` state (same as the existing "+ NEW" button behavior)
+- Uses `framer-motion` for entrance animation
+- Countdown timer uses `useState` + `useEffect` with `setInterval` to tick down from a configurable end time
 
-### 3. `src/pages/Index.tsx`
-- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
-  ```
-  openAvatarModal(() => navigate("/game"));
-  ```
+**2. Create `src/components/home/UserInfoBar.tsx`**
+- Displays centered below the streak row:
+  - Country flag using `getCountryFlag()` or flag emoji from profile's `country_code`
+  - Bold nickname text
+  - Coin icon + formatted coin count
+  - Gem icon + formatted gem count
+- Uses existing `coinIcon`/`gemIcon` assets and `formatCompactNumber` utility
+- Clickable name opens the change-name modal
+- Clickable coins/gems navigate to power-ups shop
 
-## Technical Details
+**3. Update `src/pages/Index.tsx`**
+- Import `TournamentBanner` and `UserInfoBar`
+- Insert `TournamentBanner` between the header (`</header>`) and the `WeeklyStreakRow` (around line 752)
+- Insert `UserInfoBar` after the `WeeklyStreakRow` (around line 755), before the walking man section
+- Pass required props: profile, coins, gems, navigation callbacks
+- Both sections only render for logged-in users (`user &&`)
 
-**AvatarModalContext changes:**
-```typescript
-interface AvatarModalContextType {
-  openAvatarModal: (onComplete?: () => void) => void;
-  closeAvatarModal: () => void;
-  isOpen: boolean;
-}
+### Visual Match to Screenshot
+- Tournament banner: white/light card, trophy on left, green button on right, same proportions as screenshot
+- User info: centered flag + name + currency row matching the screenshot layout
+- The walking man Lottie already exists at the bottom and stays as-is
+- The castle/landscape in the screenshot is the existing background image -- no changes needed there
 
-// Store pending callback in a ref
-const onCompleteRef = useRef<(() => void) | null>(null);
+### Files Changed
+| File | Action |
+|------|--------|
+| `src/components/home/TournamentBanner.tsx` | Create new |
+| `src/components/home/UserInfoBar.tsx` | Create new |
+| `src/pages/Index.tsx` | Add imports and render both components |
 
-const openAvatarModal = useCallback((onComplete?: () => void) => {
-  onCompleteRef.current = onComplete || null;
-  setIsOpen(true);
-}, []);
-
-const closeAvatarModal = useCallback(() => {
-  setIsOpen(false);
-  onCompleteRef.current = null;
-}, []);
-
-// Pass onComplete to AvatarModal
-<AvatarModal
-  isOpen={isOpen}
-  onClose={closeAvatarModal}
-  onComplete={() => {
-    const cb = onCompleteRef.current;
-    setIsOpen(false);
-    onCompleteRef.current = null;
-    cb?.();
-  }}
-/>
-```
-
-**AvatarModal changes:**
-- New prop: `onComplete?: () => void`
-- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
-
-**Index.tsx change:**
-```typescript
-} else if (!profile?.avatar_url) {
-  openAvatarModal(() => navigate("/game"));
-}
-```
-
-## Files to edit
-1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
-2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
-3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
