@@ -1,79 +1,56 @@
 
 
-# Auto-Start Game After Avatar Setup
+## Fix: TV Mode Game Start Stuck on "GO" Screen
 
-## Problem
-When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
+### Root Cause
 
-## Solution
-Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
+When a player joins a TV session via code entry (mytrivia.io/join), they become the host and see the Controller Lobby with a "Start Game" button. Clicking it does **nothing** because of a silent failure:
 
-## Changes
+1. The default category selection is "Random Mix" which sets `selectedCategory = null`
+2. `ControllerLobby` calls `startGame(selectedCategory?.id)` which passes `undefined`
+3. `startGame()` has a guard: `if (!categoryId && !userTriviaId) { return; }` -- silently exits
+4. The game never transitions from lobby to countdown -- stuck on "GO" screen
 
-### 1. `src/contexts/AvatarModalContext.tsx`
-- Add an optional `onComplete` callback to the context
-- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
-- Store the callback in a ref
-- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
+The `__mixed__` sentinel value (`"__mixed__"`) is used everywhere else in the app for "random from all categories" mode, but the TV Controller Lobby doesn't use it.
 
-### 2. `src/components/home/AvatarModal.tsx`
-- Accept a new optional `onComplete?: () => void` prop
-- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+### Fix
 
-### 3. `src/pages/Index.tsx`
-- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
-  ```
-  openAvatarModal(() => navigate("/game"));
-  ```
+**File: `src/components/controller/ControllerLobby.tsx`**
 
-## Technical Details
+Change the start game handler to pass `"__mixed__"` when no specific category is selected:
 
-**AvatarModalContext changes:**
-```typescript
-interface AvatarModalContextType {
-  openAvatarModal: (onComplete?: () => void) => void;
-  closeAvatarModal: () => void;
-  isOpen: boolean;
-}
-
-// Store pending callback in a ref
-const onCompleteRef = useRef<(() => void) | null>(null);
-
-const openAvatarModal = useCallback((onComplete?: () => void) => {
-  onCompleteRef.current = onComplete || null;
-  setIsOpen(true);
-}, []);
-
-const closeAvatarModal = useCallback(() => {
-  setIsOpen(false);
-  onCompleteRef.current = null;
-}, []);
-
-// Pass onComplete to AvatarModal
-<AvatarModal
-  isOpen={isOpen}
-  onClose={closeAvatarModal}
-  onComplete={() => {
-    const cb = onCompleteRef.current;
-    setIsOpen(false);
-    onCompleteRef.current = null;
-    cb?.();
-  }}
-/>
+```text
+Current:  startGame(selectedCategory?.id)
+Fixed:    startGame(selectedCategory?.id || '__mixed__')
 ```
 
-**AvatarModal changes:**
-- New prop: `onComplete?: () => void`
-- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+This single change makes "Random Mix" actually work. The `startGame` function in `TVGameContext` already handles `__mixed__` correctly (lines 2479-2522) -- it fetches random questions from all categories.
 
-**Index.tsx change:**
-```typescript
-} else if (!profile?.avatar_url) {
-  openAvatarModal(() => navigate("/game"));
+### Secondary Fix: Prevent Silent Failures
+
+**File: `src/contexts/TVGameContext.tsx`**
+
+Add a toast notification when `startGame` fails so the host gets feedback instead of the button appearing broken:
+
+```text
+if (!categoryId && !userTriviaId) {
+  tvLogError('startGame', 'No category ID or user trivia ID provided');
+  return;  // Currently silent -- user sees nothing
 }
 ```
 
-## Files to edit
-1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
-2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
-3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
+Change to import `toast` and show an error message so this class of bug is immediately visible during testing.
+
+### Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/components/controller/ControllerLobby.tsx` | Pass `'__mixed__'` as fallback when no category selected |
+| `src/contexts/TVGameContext.tsx` | Add toast feedback on `startGame` failure for debugging visibility |
+
+### Result
+
+- Clicking "Start Game" with "Random Mix" selected will actually start the game
+- Any future `startGame` failures will show a visible error instead of silently doing nothing
+- No changes to TV session creation, room management, or pairing flow needed -- those work correctly
+
