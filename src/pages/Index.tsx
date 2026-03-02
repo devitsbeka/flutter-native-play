@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
 import { trackSignupCompleted } from "@/lib/analytics";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,6 +53,8 @@ import { DesktopGuestSplitLayout } from "@/components/home/DesktopGuestSplitLayo
 import { WeeklyStreakRow } from "@/components/home/WeeklyStreakRow";
 import { GuestSignupPromptModal } from "@/components/home/GuestSignupPromptModal";
 import { lovable } from "@/integrations/lovable";
+import Lottie from "lottie-react";
+import walkingManAnimation from "@/assets/lottie/bearded-man-walking.json";
 
 import { toast } from "@/hooks/use-toast";
 import { t } from "@/lib/i18n";
