@@ -779,8 +779,8 @@ export default function Index() {
           onClose={() => setShowChangeNameModal(false)}
         />
 
-        {/* Content area */}
-        <div className="flex-1 flex relative">
+        {/* Content area - TEMPORARILY HIDDEN */}
+        <div className="flex-1 flex relative" style={{ display: 'none' }}>
           {/* Action Cards - Fixed Right Side Panel (Desktop only) */}
           {user && (
             <motion.div 
