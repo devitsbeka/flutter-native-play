@@ -1,40 +1,79 @@
 
 
-## Fix: Verify and Debug Length-Based Sorting
+# Auto-Start Game After Avatar Setup
 
-### Investigation Results
-I tested the database function `get_questions_sorted_by_length` directly and confirmed it works perfectly -- it returns the longest questions first (296 chars, 294 chars, 279 chars, etc.). The code in `useQuestionStudio.ts` also looks correct: it calls the RPC with proper `null` parameters when `sortBy === 'longest_question'`.
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-### Root Cause
-The most likely issue is that the latest code changes haven't taken effect in your preview yet. Each time changes were made, the preview needs to rebuild. If you're viewing a cached version of the app, you'll still see the old behavior.
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-### Plan
+## Changes
 
-**1. Add a visible character count to each question in the list**
-This way, even after the sort works, you can immediately confirm questions are ordered longest-first. In `QuestionList.tsx`, add a small character count badge next to each question (e.g., "296c") so you can visually verify the sort order.
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-**2. Add `is_active = true` filter to the RPC**
-The database function currently doesn't filter by `is_active`, which means it may include deactivated questions. Update the SQL function to add `AND q.is_active = true` to the WHERE clause.
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-**3. Add error logging if RPC fails**
-Currently, if the RPC call errors, it shows a generic toast. Add more specific error logging so we can see exactly what fails.
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-**4. Force a hard refresh approach**
-Add a timestamp or version indicator in the Question Studio header (e.g., "v2 - sorted by length") so you can confirm you're seeing the latest build.
+## Technical Details
 
-### Technical Details
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
 
-**File: `src/components/admin/studio/QuestionList.tsx`**
-- Add character count display: show `{question.question_text.length}c` badge next to each question
-- This gives immediate visual confirmation that sorting is working
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
 
-**Database migration**
-- Update `get_questions_sorted_by_length` to add `AND q.is_active = true` in the WHERE clause
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
 
-**File: `src/hooks/useQuestionStudio.ts`**
-- Add more detailed error logging around the RPC call
-- Remove the debug `console.log` statements once confirmed working
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
 
-### Expected Result
-After these changes, when you open Question Studio on the Production tab, you'll see questions ordered from longest to shortest, with character count badges like "296c", "294c", "279c" making the sort order immediately obvious.
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
+```
 
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
+
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button

@@ -251,7 +251,10 @@ export const useQuestionStudio = () => {
           });
           console.log('[QuestionStudio] RPC response:', rpcData?.length, 'items, first:', (rpcData as any[])?.[0]?.question_text?.substring(0, 50));
 
-          if (rpcError) throw rpcError;
+          if (rpcError) {
+            console.error('[QuestionStudio] RPC error:', rpcError.message, rpcError.details, rpcError.hint);
+            throw rpcError;
+          }
 
           const results = (rpcData || []) as any[];
           const serverTotalCount = results.length > 0 ? Number(results[0].total_count) : 0;
