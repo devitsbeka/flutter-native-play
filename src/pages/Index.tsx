@@ -669,7 +669,7 @@ export default function Index() {
           setIsDailyRewardsOpen(true);
         }}
       />
-      {/* Main layout with desktop navigation */}
+      {/* TEMPORARILY HIDDEN - Main layout with desktop navigation */}
       <MainLayout
         onPlayClick={handlePlayClick}
         playsRemaining={user ? playsRemaining : guestPlaysRemaining}
@@ -678,8 +678,8 @@ export default function Index() {
         isVip={isVip}
         isGuest={!user}
         vipExpiresAt={subscription?.expires_at}
-        showPlayButton={true}
-        showBottomNav={!isSideMenuOpen}
+        showPlayButton={false}
+        showBottomNav={false}
         disableScroll
       >
         {/* TEMPORARILY HIDDEN - all home UI content */}
