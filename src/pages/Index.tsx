@@ -54,8 +54,9 @@ import { WeeklyStreakRow } from "@/components/home/WeeklyStreakRow";
 import { GuestSignupPromptModal } from "@/components/home/GuestSignupPromptModal";
 import { lovable } from "@/integrations/lovable";
 import Lottie from "lottie-react";
-import walkingManAnimation from "@/assets/lottie/bearded-man-walking.json";
+import walkingManAnimationRaw from "@/assets/lottie/bearded-man-walking.json";
 import crownAnimation from "@/assets/lottie/crown.json";
+import { recolorLottie } from "@/utils/recolorLottie";
 
 import { toast } from "@/hooks/use-toast";
 import { t } from "@/lib/i18n";
@@ -784,7 +785,7 @@ export default function Index() {
         {/* Walking man Lottie at the bottom */}
         <div className="flex-1 flex items-end justify-center pointer-events-none" style={{ marginBottom: '143px' }}>
           <div className="w-[179px] h-[179px]" style={{ filter: 'brightness(1.2)' }}>
-            <Lottie animationData={walkingManAnimation} loop autoplay />
+            <Lottie animationData={purplePantsAnimation} loop autoplay />
           </div>
         </div>
 
