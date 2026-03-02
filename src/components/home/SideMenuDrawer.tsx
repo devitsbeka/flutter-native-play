@@ -179,6 +179,11 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
 
             {/* Scrollable Content */}
             <div className="relative z-10 flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
+              {/* Search Field */}
+              <div className="px-3 pt-3 pb-1">
+                <SpotlightSearch variant="input" />
+              </div>
+
               {/* User Profile Section */}
               <div className="p-3 border-b border-border/30">
                 {user ? (
