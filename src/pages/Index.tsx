@@ -709,16 +709,16 @@ export default function Index() {
               )}
             </div>
             
-            {/* Center: Crown Lottie */}
+            {/* Center: Logo */}
             <div className="flex-1 flex justify-center md:justify-start items-center gap-4">
-              <div className="w-12 h-12">
-                <Lottie animationData={crownAnimation} loop autoplay />
-              </div>
+              <MyTriviaLiveLogo />
             </div>
             
-            {/* Right side: Notification for users, Sign In for guests */}
+            {/* Right side: Search + Notification for users, Sign In for guests */}
             {user ? (
               <div className="flex items-center gap-1">
+                {/* Search button */}
+                <SpotlightSearch />
                 
                 {/* Bell icon with unread badge */}
                 <motion.button
@@ -787,15 +787,8 @@ export default function Index() {
           onClose={() => setShowChangeNameModal(false)}
         />
 
-        {/* Walking man Lottie at the bottom */}
-        <div className="flex-1 flex items-end justify-center pointer-events-none" style={{ marginBottom: '143px' }}>
-          <div className="w-[179px] h-[179px]" style={{ filter: 'brightness(1.2)' }}>
-            <Lottie animationData={purplePantsAnimation} loop autoplay />
-          </div>
-        </div>
-
-        {/* Content area - TEMPORARILY HIDDEN */}
-        <div className="flex-1 flex relative" style={{ display: 'none' }}>
+        {/* Content area */}
+        <div className="flex-1 flex relative">
           {/* Action Cards - Fixed Right Side Panel (Desktop only) */}
           {user && (
             <motion.div 
