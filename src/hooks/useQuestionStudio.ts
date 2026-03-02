@@ -356,6 +356,19 @@ export const useQuestionStudio = () => {
           updated_at: q.updated_at || '',
         }));
 
+        // Client-side sort by length for longest_question / longest_answer
+        if (filters.sortBy === 'longest_question') {
+          formatted.sort((a, b) => b.question_text.length - a.question_text.length);
+        } else if (filters.sortBy === 'longest_answer') {
+          formatted.sort((a, b) => {
+            const maxLen = (q: StudioQuestion) => Math.max(
+              q.correct_answer.length,
+              ...q.incorrect_answers.map(ans => ans.length)
+            );
+            return maxLen(b) - maxLen(a);
+          });
+        }
+
         setQuestions(formatted);
         setPreviewIndex(0);
       }
