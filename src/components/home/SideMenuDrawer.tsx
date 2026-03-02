@@ -14,6 +14,7 @@ import { usePlayGuard } from "@/contexts/PlayGuardContext";
 
 import { TeamMenuScreen } from "@/components/team/TeamMenuScreen";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
+import SpotlightSearch from "@/components/search/SpotlightSearch";
 
 interface SideMenuDrawerProps {
   isOpen: boolean;

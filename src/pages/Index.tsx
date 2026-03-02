@@ -55,6 +55,7 @@ import { GuestSignupPromptModal } from "@/components/home/GuestSignupPromptModal
 import { lovable } from "@/integrations/lovable";
 import Lottie from "lottie-react";
 import walkingManAnimation from "@/assets/lottie/bearded-man-walking.json";
+import crownAnimation from "@/assets/lottie/crown.json";
 
 import { toast } from "@/hooks/use-toast";
 import { t } from "@/lib/i18n";
