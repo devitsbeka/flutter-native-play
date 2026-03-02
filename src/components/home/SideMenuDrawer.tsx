@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, User, Play, Compass, Store, Trophy, Headphones, Settings, ChevronRight, LogOut, Pencil } from "lucide-react";
+import { ChevronLeft, User, Play, Compass, Store, Trophy, Headphones, Settings, ChevronRight, LogOut, Pencil, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -14,6 +14,7 @@ import { usePlayGuard } from "@/contexts/PlayGuardContext";
 
 import { TeamMenuScreen } from "@/components/team/TeamMenuScreen";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
+import SpotlightSearch from "@/components/search/SpotlightSearch";
 
 interface SideMenuDrawerProps {
   isOpen: boolean;
@@ -178,6 +179,11 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
 
             {/* Scrollable Content */}
             <div className="relative z-10 flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
+              {/* Search Field */}
+              <div className="px-3 pt-3 pb-1">
+                <SpotlightSearch variant="bar" />
+              </div>
+
               {/* User Profile Section */}
               <div className="p-3 border-b border-border/30">
                 {user ? (
