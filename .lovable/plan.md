@@ -1,44 +1,79 @@
 
 
-## Fix: Ensure RPC Parameters Use `null` Instead of `undefined`
+# Auto-Start Game After Avatar Setup
 
-### Root Cause
-The `fetchQuestions` function in `useQuestionStudio.ts` passes `undefined` for optional RPC parameters (lines 243-247). The Supabase JS client silently drops `undefined` params from the request body, meaning PostgreSQL never receives them. This can cause the RPC call to either fail silently or return unexpected results.
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-### Changes
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-**1. Update `src/hooks/useQuestionStudio.ts` (lines 240-250)**
+## Changes
 
-Replace all `|| undefined` with `|| null` in the RPC call to `get_questions_sorted_by_length`:
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
+
+## Technical Details
+
+**AvatarModalContext changes:**
 ```typescript
-const { data: rpcData, error: rpcError } = await supabase.rpc('get_questions_sorted_by_length', {
-  p_sort_mode: filters.sortBy,
-  p_in_production: inProd,
-  p_category_id: selectedCategoryId ?? null,
-  p_language: language !== 'all' ? language : null,
-  p_question_type: filters.questionType ?? null,
-  p_difficulty: filters.difficulty ?? null,
-  p_has_icon: filters.hasIcon === null ? null : (filters.hasIcon ? 'with' : 'without'),
-  p_limit: PAGE_SIZE,
-  p_offset: offset,
-});
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
+
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
+
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
 ```
 
-This ensures all parameters are explicitly sent to the database function, allowing PostgreSQL to properly evaluate the `IS NULL` checks in the WHERE clause.
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
 
-**2. Add error logging for debugging**
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
 
-Add a `console.log` before the RPC call to confirm it's being triggered, and log the response to verify sorting order. This can be removed after confirming the fix works.
-
-### Why This Will Work
-- PostgreSQL function's WHERE clause uses `p_category_id IS NULL OR ...` patterns
-- When Supabase JS omits `undefined` params, PostgreSQL uses the function defaults (`NULL`)
-- However, if Supabase JS sends fewer params than expected, it may fail to match the function signature entirely
-- Sending explicit `null` values ensures the correct function is called with all 9 parameters
-
-### No Other Changes Needed
-- The database function `get_questions_sorted_by_length` already exists and works correctly
-- The filter UI already has the sort options
-- Default sort is already `'longest_question'`
-
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
