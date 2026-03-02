@@ -1,57 +1,79 @@
 
 
-## Fix: Server-Side Sort by Question/Answer Length
+# Auto-Start Game After Avatar Setup
 
-### Problem
-The current approach fetches 50 questions sorted by `created_at DESC` from the database, then sorts those 50 by length on the client. This means you never actually see the globally longest questions -- you just see the 50 newest ones reshuffled. To see the longest questions across the entire database, the sorting must happen server-side before pagination.
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-### Solution
-Create a new database function (RPC) that sorts by `length(question_text)` or answer length, with proper pagination and all existing filters.
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-### Changes
+## Changes
 
-**1. Database migration: Create `get_questions_sorted_by_length` RPC**
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-```sql
-CREATE OR REPLACE FUNCTION get_questions_sorted_by_length(
-  p_sort_mode text DEFAULT 'longest_question',
-  p_in_production boolean DEFAULT false,
-  p_category_id uuid DEFAULT NULL,
-  p_language text DEFAULT NULL,
-  p_question_type text DEFAULT NULL,
-  p_difficulty text DEFAULT NULL,
-  p_has_icon text DEFAULT NULL,
-  p_limit int DEFAULT 50,
-  p_offset int DEFAULT 0
-)
-RETURNS TABLE (
-  id uuid, category_id uuid, question_text text, correct_answer text,
-  incorrect_answers jsonb, difficulty text, level_number int,
-  is_active boolean, in_production boolean, icon_slug text,
-  image_url text, video_url text, audio_url text,
-  created_at timestamptz, updated_at timestamptz, total_count bigint
-)
-LANGUAGE plpgsql STABLE SECURITY DEFINER
-SET search_path TO 'public'
-AS $$ ... $$;
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
+
+## Technical Details
+
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
+
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
+
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
 ```
 
-- Applies all filters (category, language, type, difficulty, icon) server-side
-- Sorts by `length(question_text) DESC` or max answer length DESC
-- Returns `total_count` in each row for pagination
-- Falls back to `created_at` for other sort modes
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
 
-**2. Update `src/hooks/useQuestionStudio.ts`**
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
 
-- For `longest_question` and `longest_answer` sort modes: call the new RPC instead of the standard query
-- Extract `total_count` from the first result row
-- Remove the client-side `.sort()` calls (no longer needed since the server handles it)
-- Keep standard Supabase query for other sort modes (`newest`, `oldest`, `alphabetical`)
-
-**3. No UI changes needed**
-
-The filter dropdown already has "Longest questions" and "Longest answers" options. The default `sortBy` is already `'longest_question'`.
-
-### Result
-When you open Question Studio, you'll immediately see the globally longest questions first (e.g., 250 chars, 249 chars, 248 chars...) without needing to click anything. Same for "Longest answers" sort.
-
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button

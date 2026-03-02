@@ -235,6 +235,48 @@ export const useQuestionStudio = () => {
       } else {
       // No search: use standard queries
         
+        // For length-based sorts, use server-side RPC
+        if (filters.sortBy === 'longest_question' || filters.sortBy === 'longest_answer') {
+          const { data: rpcData, error: rpcError } = await supabase.rpc('get_questions_sorted_by_length', {
+            p_sort_mode: filters.sortBy,
+            p_in_production: inProd,
+            p_category_id: selectedCategoryId || undefined,
+            p_language: language !== 'all' ? language : undefined,
+            p_question_type: filters.questionType || undefined,
+            p_difficulty: filters.difficulty || undefined,
+            p_has_icon: filters.hasIcon === null ? undefined : (filters.hasIcon ? 'with' : 'without'),
+            p_limit: PAGE_SIZE,
+            p_offset: offset,
+          });
+
+          if (rpcError) throw rpcError;
+
+          const results = (rpcData || []) as any[];
+          const serverTotalCount = results.length > 0 ? Number(results[0].total_count) : 0;
+          setTotalCount(serverTotalCount);
+
+          const formatted: StudioQuestion[] = results.map((q: any) => ({
+            id: q.id,
+            category_id: q.category_id,
+            question_text: q.question_text,
+            correct_answer: q.correct_answer,
+            incorrect_answers: Array.isArray(q.incorrect_answers) ? q.incorrect_answers as string[] : [],
+            difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
+            level_number: q.level_number || 1,
+            is_active: q.is_active ?? true,
+            in_production: q.in_production ?? false,
+            icon_slug: q.icon_slug,
+            image_url: q.image_url,
+            video_url: q.video_url,
+            audio_url: q.audio_url,
+            created_at: q.created_at || '',
+            updated_at: q.updated_at || '',
+          }));
+
+          setQuestions(formatted);
+          setPreviewIndex(0);
+        } else {
+        // Standard query for newest/oldest/alphabetical
         let countQuery = supabase
           .from('questions')
           .select('*', { count: 'exact', head: true })
@@ -248,7 +290,6 @@ export const useQuestionStudio = () => {
           countQuery = countQuery.eq('language', language);
         }
 
-        // Apply type filter
         if (filters.questionType) {
           switch (filters.questionType) {
             case 'video':
@@ -280,7 +321,6 @@ export const useQuestionStudio = () => {
         if (countError) throw countError;
         setTotalCount(count || 0);
 
-        // Build data query
         let dataQuery = supabase
           .from('questions')
           .select('id, category_id, question_text, correct_answer, incorrect_answers, difficulty, level_number, is_active, in_production, icon_slug, image_url, video_url, audio_url, created_at, updated_at')
@@ -295,7 +335,6 @@ export const useQuestionStudio = () => {
           dataQuery = dataQuery.eq('language', language);
         }
 
-        // Apply type filter
         if (filters.questionType) {
           switch (filters.questionType) {
             case 'video':
@@ -323,7 +362,6 @@ export const useQuestionStudio = () => {
           dataQuery = dataQuery.is('icon_slug', null);
         }
 
-        // Apply server-side sorting (for non-length sorts)
         switch (filters.sortBy) {
           case 'oldest':
             dataQuery = dataQuery.order('created_at', { ascending: true });
@@ -356,21 +394,9 @@ export const useQuestionStudio = () => {
           updated_at: q.updated_at || '',
         }));
 
-        // Client-side sort by length for longest_question / longest_answer
-        if (filters.sortBy === 'longest_question') {
-          formatted.sort((a, b) => b.question_text.length - a.question_text.length);
-        } else if (filters.sortBy === 'longest_answer') {
-          formatted.sort((a, b) => {
-            const maxLen = (q: StudioQuestion) => Math.max(
-              q.correct_answer.length,
-              ...q.incorrect_answers.map(ans => ans.length)
-            );
-            return maxLen(b) - maxLen(a);
-          });
-        }
-
         setQuestions(formatted);
         setPreviewIndex(0);
+        }
       }
     } catch (err) {
       console.error('Error fetching questions:', err);
