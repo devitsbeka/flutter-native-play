@@ -27,7 +27,7 @@ export interface StudioFilters {
   questionType: QuestionType | null;
   difficulty: 'easy' | 'medium' | 'hard' | null;
   hasIcon: boolean | null;
-  sortBy: 'newest' | 'oldest' | 'alphabetical' | 'overlong_first';
+  sortBy: 'newest' | 'oldest' | 'alphabetical' | 'longest_question' | 'longest_answer';
 }
 
 export interface CategoryWithCounts {
@@ -67,7 +67,7 @@ export const useQuestionStudio = () => {
     questionType: null,
     difficulty: null,
     hasIcon: null,
-    sortBy: 'overlong_first',
+    sortBy: 'longest_question',
   });
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
@@ -236,13 +236,14 @@ export const useQuestionStudio = () => {
       // No search: use standard queries
         
         // When sorting by overlong_first, use the RPC
-        if (filters.sortBy === 'overlong_first') {
+        if (filters.sortBy === 'longest_question' || filters.sortBy === 'longest_answer') {
           const { data: rpcData, error: rpcError } = await supabase.rpc('get_overlong_questions', {
             p_category_id: selectedCategoryId || undefined,
             p_in_production: inProd,
             p_language: language !== 'all' ? language : undefined,
             p_limit: PAGE_SIZE,
             p_offset: offset,
+            p_sort_mode: filters.sortBy,
           });
 
           if (rpcError) throw rpcError;
