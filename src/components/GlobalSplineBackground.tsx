@@ -123,7 +123,9 @@ export function GlobalSplineBackground() {
       if (!bgElement) return;
       const extraWidth = bgElement.naturalWidth * (window.innerHeight / bgElement.naturalHeight) - window.innerWidth;
       if (extraWidth > 0) {
-        bgElement.style.transform = `translateX(${-scrollPercent * extraWidth}px)`;
+        // Center the image, then shift based on scroll: from +half to -half
+        const offset = (extraWidth / 2) - scrollPercent * extraWidth;
+        bgElement.style.transform = `translateX(calc(-50% + ${offset}px))`;
       }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -146,8 +148,8 @@ export function GlobalSplineBackground() {
         <img
           src={homeBg}
           alt=""
-          className="h-full w-auto max-w-none"
-          style={{ minHeight: "100vh" }}
+          className="h-full w-auto max-w-none absolute left-1/2"
+          style={{ minHeight: "100vh", transform: "translateX(-50%)" }}
         />
       </div>
       
