@@ -146,8 +146,8 @@ export function GlobalSplineBackground() {
         <img
           src={homeBg}
           alt=""
-          className="h-full w-auto max-w-none"
-          style={{ minHeight: "100vh" }}
+          className="h-full w-auto max-w-none absolute left-1/2"
+          style={{ minHeight: "100vh", transform: "translateX(-50%)" }}
         />
       </div>
       
