@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
-const QUESTION_MAX_LENGTH = 65;
+const QUESTION_MAX_LENGTH = 67;
 const ANSWER_MAX_LENGTH = 20;
 
 function isGeorgian(text: string): boolean {
@@ -87,26 +87,37 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const batchSize = body.batchSize || 10;
-    const limit = body.limit || 100;
 
-    // Fetch mixed-language questions: Georgian question text + non-Georgian answers
-    const { data: questions, error } = await supabase
-      .from("questions")
-      .select("id, question_text, correct_answer, incorrect_answers, category_id, language")
-      .eq("language", "ka")
-      .eq("is_active", true)
-      .eq("in_production", true)
-      .limit(limit);
+    // Paginated fetch to get ALL ka production questions
+    const PAGE_SIZE = 1000;
+    let allKaQuestions: any[] = [];
+    let page = 0;
+    let hasMore = true;
 
-    if (error) throw error;
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from("questions")
+        .select("id, question_text, correct_answer, incorrect_answers, category_id, language")
+        .eq("language", "ka")
+        .eq("is_active", true)
+        .eq("in_production", true)
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+      if (error) throw error;
+      if (data && data.length > 0) allKaQuestions.push(...data);
+      if (!data || data.length < PAGE_SIZE) hasMore = false;
+      page++;
+    }
+
+    console.log(`Fetched ${allKaQuestions.length} total ka questions`);
 
     // Filter to only mixed-language: Georgian question, non-Georgian correct answer
-    const mixedQuestions = (questions || []).filter(q =>
+    const mixedQuestions = allKaQuestions.filter(q =>
       isGeorgian(q.question_text) && !isGeorgian(q.correct_answer)
     );
 
     if (mixedQuestions.length === 0) {
-      return new Response(JSON.stringify({ message: "No mixed-language questions found", fixed: 0, remaining: 0 }), {
+      return new Response(JSON.stringify({ message: "No mixed-language questions found", fixed: 0, skipped: 0, remaining: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -116,12 +127,13 @@ serve(async (req) => {
     let fixed = 0;
     let skipped = 0;
 
+    // Process ALL mixed questions (not just a limit)
     for (let i = 0; i < mixedQuestions.length; i += batchSize) {
       const batch = mixedQuestions.slice(i, i + batchSize);
-      console.log(`Translating batch ${Math.floor(i / batchSize) + 1}...`);
+      console.log(`Translating batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(mixedQuestions.length / batchSize)}...`);
 
       try {
-        const batchInput = batch.map((q, idx) => ({
+        const batchInput = batch.map((q: any, idx: number) => ({
           idx,
           question_text: q.question_text,
           incorrect_answers: Array.isArray(q.incorrect_answers) ? q.incorrect_answers as string[] : [],
@@ -169,6 +181,9 @@ serve(async (req) => {
             fixed++;
           }
         }
+
+        // Small delay between batches to avoid rate limiting
+        await new Promise(r => setTimeout(r, 300));
       } catch (batchError) {
         console.error(`Batch failed:`, batchError);
         skipped += batch.length;
