@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useCallback, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useIsBreakpointDown } from "@/hooks/use-breakpoint";
-import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
+import homeBg from "@/assets/home-bg.jpeg";
 
 // Pages where the background should be visible
 const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/profile", "/auth", "/vip", "/power-ups"];
