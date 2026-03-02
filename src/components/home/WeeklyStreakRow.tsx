@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Plus, Gift, Flame, Check } from "lucide-react";
+import { Plus, Gift, Flame, Check, X, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -228,7 +228,11 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
                       <Check className="w-4 h-4 text-amber-700" />
                     ) : day.isToday ? (
                       <span className="text-xs font-bold text-primary">?</span>
-                    ) : null}
+                    ) : day.date < new Date(new Date().toDateString()) ? (
+                      <X className="w-4 h-4 text-muted-foreground/60" />
+                    ) : (
+                      <Calendar className="w-3.5 h-3.5 text-muted-foreground/40" />
+                    )}
                   </div>
 
                   {/* Today indicator dot */}
