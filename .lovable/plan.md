@@ -1,35 +1,79 @@
 
 
-## Add "Mark as Fixed" Button to Shortener Results
+# Auto-Start Game After Avatar Setup
 
-### What changes
-Each result card in the CombinedShortener that shows "შემოკლებადი" (unshortenable) or has a "still too long" warning will get a new **"Fixed"** button. When clicked:
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-1. The card background turns **green** (same styling as successfully shortened items)
-2. The badge changes to a green "Fixed" state
-3. The question is marked as acceptable in the database (`shorten_status = 'manual_ok'` or similar) so it won't keep showing up as problematic
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-### Technical Details
+## Changes
 
-**File: `src/components/admin/CombinedShortener.tsx`**
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-1. **Add local state** to track manually approved question IDs:
-   ```typescript
-   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
-   ```
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-2. **Add `markAsFixed` handler** that:
-   - Updates the question in DB: sets `shorten_status = 'manual_ok'` so it's excluded from future shortening runs
-   - Adds the ID to `approvedIds` set
-   - Shows a success toast
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-3. **Update card styling** (lines ~716-723): Check if `approvedIds.has(result.id)` -- if so, use the green border/bg styling regardless of `overallStatus`
+## Technical Details
 
-4. **Update badge** (lines ~728-738): If approved, show a green "Fixed" badge with checkmark icon
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
 
-5. **Add "Fixed" button** next to the edit/delete buttons (lines ~740-754): A green-tinted button with a `CheckCircle` icon. Hidden once already approved. Visible for cards that are `unshortenable`, `failed`, or have `newQuestionLength > MAX_QUESTION_LENGTH`
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
 
-6. **Update stats reload** after marking as fixed so counts refresh
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
 
-This is purely a UI + single DB field update per question -- no AI calls, no edge functions needed.
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
 
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
+```
+
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
+
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
