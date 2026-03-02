@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils';
 import { StudioQuestion, StudioFilters, getQuestionType } from '@/hooks/useQuestionStudio';
 import { QuestionFilters } from './QuestionFilters';
 import { QuestionTypeIndicator } from './QuestionTypeIndicator';
-import { AlertTriangle } from 'lucide-react';
 import {
   Select,
   SelectContent,
