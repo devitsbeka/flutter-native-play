@@ -235,68 +235,6 @@ export const useQuestionStudio = () => {
       } else {
       // No search: use standard queries
         
-        // When sorting by overlong_first, use the RPC
-        if (filters.sortBy === 'longest_question' || filters.sortBy === 'longest_answer') {
-          const { data: rpcData, error: rpcError } = await supabase.rpc('get_overlong_questions', {
-            p_category_id: selectedCategoryId || undefined,
-            p_in_production: inProd,
-            p_language: language !== 'all' ? language : undefined,
-            p_limit: PAGE_SIZE,
-            p_offset: offset,
-            p_sort_mode: filters.sortBy,
-          });
-
-          if (rpcError) throw rpcError;
-
-          let results = (rpcData || []) as any[];
-
-          // Apply client-side filters (type, difficulty, hasIcon)
-          if (filters.questionType) {
-            results = results.filter((q: any) => {
-              switch (filters.questionType) {
-                case 'video': return !!q.video_url;
-                case 'audio': return !!q.audio_url && !q.video_url;
-                case 'image': return !!q.image_url && !q.video_url && !q.audio_url;
-                case 'text': return !q.image_url && !q.video_url && !q.audio_url;
-                default: return true;
-              }
-            });
-          }
-          if (filters.difficulty) {
-            results = results.filter((q: any) => q.difficulty === filters.difficulty);
-          }
-          if (filters.hasIcon === true) {
-            results = results.filter((q: any) => !!q.icon_slug);
-          } else if (filters.hasIcon === false) {
-            results = results.filter((q: any) => !q.icon_slug);
-          }
-
-          setTotalCount(results.length);
-
-          const formatted: StudioQuestion[] = results.map((q: any) => ({
-            id: q.id,
-            category_id: q.category_id,
-            question_text: q.question_text,
-            correct_answer: q.correct_answer,
-            incorrect_answers: Array.isArray(q.incorrect_answers) ? q.incorrect_answers as string[] : [],
-            difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
-            level_number: q.level_number || 1,
-            is_active: q.is_active ?? true,
-            in_production: q.in_production ?? false,
-            icon_slug: q.icon_slug,
-            image_url: q.image_url,
-            video_url: q.video_url,
-            audio_url: q.audio_url,
-            created_at: q.created_at || '',
-            updated_at: q.updated_at || '',
-          }));
-
-          setQuestions(formatted);
-          setPreviewIndex(0);
-          setLoadingQuestions(false);
-          return;
-        }
-
         let countQuery = supabase
           .from('questions')
           .select('*', { count: 'exact', head: true })
