@@ -167,6 +167,9 @@ export function QuestionList({
                       ) : (
                         question.question_text
                       )}
+                      <span className="ml-1 text-[10px] text-muted-foreground font-normal">
+                        {question.question_text.length}c
+                      </span>
                     </p>
                     <div className="flex items-center gap-1.5 mt-1.5">
                       <QuestionTypeIndicator type={type} />
