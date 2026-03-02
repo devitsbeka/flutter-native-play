@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, lazy, Suspense, useMemo } from "react";
 import { trackSignupCompleted } from "@/lib/analytics";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -178,6 +178,11 @@ const SideIconButton = ({
 
 export default function Index() {
   const navigate = useNavigate();
+  const purplePantsAnimation = useMemo(() => recolorLottie(walkingManAnimationRaw, [
+    { from: '#3A6566', to: '#583A66' },
+    { from: '#2F5153', to: '#3F2F53' },
+    { from: '#243E3C', to: '#32243E' },
+  ]), []);
   const { profile, user, fetchProfile, signUp, signUpWithUsername, signIn, signInWithUsername, signInWithGoogle, signInWithApple } = useAuth();
   const { t } = useLanguage();
   const { step, startOnboarding, setStep, hasCompletedOnboarding } = useOnboarding();
