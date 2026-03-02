@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Plus, ChevronDown } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,7 @@ interface DayData {
   isCompleted: boolean;
   isToday: boolean;
   isFuture: boolean;
-  rank: number | null; // null if no game played that day
+  rank: number | null;
 }
 
 const DAY_LABELS_EN = ["M", "T", "W", "T", "F", "S", "S"];
@@ -18,7 +18,7 @@ const DAY_LABELS_KA = ["ორ", "სა", "ოთ", "ხუ", "პა", "შა
 
 function getWeekDays(): Date[] {
   const now = new Date();
-  const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon...
+  const dayOfWeek = now.getDay();
   const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   const monday = new Date(now);
   monday.setDate(now.getDate() + mondayOffset);
@@ -43,7 +43,6 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
   const { language } = useLanguage();
   const dayLabels = language === "ka" ? DAY_LABELS_KA : DAY_LABELS_EN;
 
-  // Fetch this week's game plays to determine which days user played
   const { data: weekDays = [] } = useQuery({
     queryKey: ["weekly-streak-days", user?.id],
     queryFn: async (): Promise<DayData[]> => {
@@ -54,7 +53,6 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
       const weekEnd = new Date(days[6]);
       weekEnd.setHours(23, 59, 59, 999);
 
-      // Get all game plays this week
       const { data: plays } = await supabase
         .from("game_plays")
         .select("played_at, score")
@@ -63,7 +61,6 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
         .lte("played_at", weekEnd.toISOString())
         .order("played_at", { ascending: true });
 
-      // Get user's current league rank
       const { data: leagueData } = await supabase
         .from("user_league_data")
         .select("current_rank")
@@ -84,7 +81,6 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
         const isToday = dayStart.getTime() === today.getTime();
         const isFuture = dayStart.getTime() > today.getTime();
 
-        // Check if user played on this day
         const dayPlays = plays?.filter((p) => {
           const playDate = new Date(p.played_at);
           return playDate >= dayStart && playDate <= dayEnd;
@@ -97,7 +93,7 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
           isCompleted,
           isToday,
           isFuture,
-          rank: isCompleted ? currentRank : null, // Use current rank for completed days
+          rank: isCompleted ? currentRank : null,
         };
       });
     },
@@ -113,86 +109,77 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
       animate={{ opacity: 1, y: 0 }}
       className="w-full px-4 pt-2 pb-1 pointer-events-auto z-30 relative"
     >
-      <div
-        className="rounded-2xl px-4 py-3"
-        style={{
-          background: "rgba(255,255,255,0.85)",
-          backdropFilter: "blur(12px)",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-        }}
-      >
-        {/* Top row: Friends dropdown + NEW button */}
-        <div className="flex items-center justify-between mb-3">
-          <button className="flex items-center gap-1 text-base font-bold text-gray-800">
-            {language === "ka" ? "მეგობრები" : "Friends"}
-            <ChevronDown className="w-4 h-4 text-gray-500" />
-          </button>
-          <motion.button
-            onClick={onNewClick}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold text-gray-700"
-            style={{
-              background: "rgba(0,0,0,0.06)",
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+      {/* Top row: "Your streak" label + NEW button */}
+      <div className="flex items-center justify-between mb-2.5">
+        <span className="text-base font-bold text-foreground">
+          {language === "ka" ? "შენი სტრიქი" : "Your streak"}
+        </span>
+        <motion.button
+          onClick={onNewClick}
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold text-white"
+          style={{
+            background: "linear-gradient(180deg, #9C6ADE 0%, #7B4BBF 100%)",
+            boxShadow: "0 4px 0 #5B2FA0, 0 6px 12px rgba(124, 58, 237, 0.3)",
+          }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95, y: 2 }}
+        >
+          <Plus className="w-4 h-4" />
+          NEW
+        </motion.button>
+      </div>
+
+      {/* Day circles row */}
+      <div className="flex justify-between items-center gap-1">
+        {weekDays.map((day, i) => (
+          <motion.div
+            key={i}
+            className="flex flex-col items-center gap-1.5 flex-1"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: i * 0.04, type: "spring", stiffness: 300 }}
           >
-            <Plus className="w-4 h-4" />
-            NEW
-          </motion.button>
-        </div>
+            {/* Day label */}
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase">
+              {day.label}
+            </span>
 
-        {/* Day circles row */}
-        <div className="flex justify-between items-center gap-1">
-          {weekDays.map((day, i) => (
-            <motion.div
-              key={i}
-              className="flex flex-col items-center gap-1.5 flex-1"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: i * 0.04, type: "spring", stiffness: 300 }}
+            {/* Circle */}
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center relative"
+              style={
+                day.isCompleted
+                  ? {
+                      background:
+                        "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
+                      boxShadow: "0 2px 6px rgba(253, 230, 138, 0.5)",
+                    }
+                  : day.isToday
+                  ? {
+                      background: "rgba(0,0,0,0.04)",
+                      border: "2px dashed rgba(0,0,0,0.15)",
+                    }
+                  : {
+                      background: "rgba(0,0,0,0.04)",
+                    }
+              }
             >
-              {/* Day label */}
-              <span className="text-[11px] font-semibold text-gray-400 uppercase">
-                {day.label}
-              </span>
-
-              {/* Circle */}
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center relative"
-                style={
-                  day.isCompleted
-                    ? {
-                        background:
-                          "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
-                        boxShadow: "0 2px 6px rgba(253, 230, 138, 0.5)",
-                      }
-                    : day.isToday
-                    ? {
-                        background: "rgba(0,0,0,0.04)",
-                        border: "2px dashed rgba(0,0,0,0.15)",
-                      }
-                    : {
-                        background: "rgba(0,0,0,0.04)",
-                      }
-                }
-              >
-                {day.isCompleted && day.rank ? (
-                  <span
-                    className="text-[11px] font-black"
-                    style={{
-                      color: "#92400E",
-                      textShadow: "0 1px 0 rgba(255,255,255,0.4)",
-                    }}
-                  >
-                    {formatRank(day.rank)}
-                  </span>
-                ) : day.isToday ? (
-                  <span className="text-base font-bold text-gray-400">?</span>
-                ) : null}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              {day.isCompleted && day.rank ? (
+                <span
+                  className="text-[11px] font-black"
+                  style={{
+                    color: "#92400E",
+                    textShadow: "0 1px 0 rgba(255,255,255,0.4)",
+                  }}
+                >
+                  {formatRank(day.rank)}
+                </span>
+              ) : day.isToday ? (
+                <span className="text-base font-bold text-muted-foreground">?</span>
+              ) : null}
+            </div>
+          </motion.div>
+        ))}
       </div>
     </motion.div>
   );
