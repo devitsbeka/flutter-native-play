@@ -992,7 +992,35 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           </div>
         )}
 
-        {/* Controls */}
+        {/* Fix Mixed-Language Questions */}
+        {viewMode === 'shorten' && (
+          <div className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200">
+            <Globe className="h-4 w-4 text-amber-600" />
+            <span className="text-sm text-muted-foreground flex-1">
+              {mixedLangProgress.status === 'running' 
+                ? `Fixing... ${mixedLangProgress.fixed} fixed, ${mixedLangProgress.skipped} skipped, ${mixedLangProgress.remaining} remaining`
+                : mixedLangProgress.status === 'done'
+                ? `Done! Fixed ${mixedLangProgress.fixed}, skipped ${mixedLangProgress.skipped}`
+                : 'Fix Georgian questions with English answers — translate question text to English'
+              }
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={fixMixedLanguageQuestions}
+              disabled={mixedLangProgress.status === 'running'}
+            >
+              {mixedLangProgress.status === 'running' ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Globe className="h-3 w-3 mr-1" />
+              )}
+              {mixedLangProgress.status === 'running' ? 'Fixing...' : 'Fix Mixed Language'}
+            </Button>
+          </div>
+        )}
+
+
         <div className="flex items-end gap-4 flex-wrap">
           <div className="flex-1 min-w-[200px] space-y-2">
             <Label>კატეგორია</Label>
