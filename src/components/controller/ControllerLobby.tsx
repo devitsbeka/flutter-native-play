@@ -45,7 +45,7 @@ export const ControllerLobby: React.FC = () => {
   };
 
   const handleStartGame = () => {
-    startGame(selectedCategory?.id);
+    startGame(selectedCategory?.id || '__mixed__');
   };
 
   const { t } = useLanguage();

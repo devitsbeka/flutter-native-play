@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { t } from '@/utils/standaloneTranslation';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
@@ -2326,6 +2327,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Validate that either categoryId or userTriviaId is provided
     if (!categoryId && !userTriviaId) {
       tvLogError('startGame', 'No category ID or user trivia ID provided');
+      toast.error('Please select a category before starting');
       return;
     }
     
