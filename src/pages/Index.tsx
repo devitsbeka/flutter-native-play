@@ -743,7 +743,7 @@ export default function Index() {
 
         {/* Weekly Streak Row - Authorized users only */}
         {user && (
-          <WeeklyStreakRow onNewClick={() => navigate("/auth?mode=signup")} />
+          <WeeklyStreakRow onNewClick={() => navigate("/team", { state: { openCreateRoom: true } })} />
         )}
 
         {/* Floating Gift Button (after invite modal dismissed OR pro gift dismissed) */}
