@@ -67,7 +67,7 @@ export const useQuestionStudio = () => {
     questionType: null,
     difficulty: null,
     hasIcon: null,
-    sortBy: 'newest',
+    sortBy: 'overlong_first',
   });
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
