@@ -153,16 +153,7 @@ export function GlobalSplineBackground() {
         />
       </div>
       
-      {/* White radial mask - transparent center, white edges - hidden on game/category pages */}
-      {!shouldHideRadialMask && (
-        <div 
-          className="fixed inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 0%, transparent 50%, rgba(255,255,255,0.15) 65%, rgba(255,255,255,0.35) 80%, rgba(255,255,255,0.7) 100%)",
-            zIndex: 1,
-          }}
-        />
-      )}
+      {/* White radial mask - TEMPORARILY HIDDEN */}
       
       {/* Floating orb particles - ambient background movement */}
       {shouldShowParticles && (
