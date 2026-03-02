@@ -101,13 +101,14 @@ export function QuestionFilters({ filters, onFiltersChange }: QuestionFiltersPro
             value={filters.sortBy}
             onValueChange={(v) => onFiltersChange({ 
               ...filters, 
-              sortBy: v as 'newest' | 'oldest' | 'alphabetical' | 'overlong_first' 
+              sortBy: v as StudioFilters['sortBy']
             })}
           >
+            <DropdownMenuRadioItem value="longest_question">📏 გრძელი კითხვები</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="longest_answer">📏 გრძელი პასუხები</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="newest">უახლესი</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="oldest">უძველესი</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="alphabetical">ანბანით</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="overlong_first">⚠️ გრძელი პირველი</DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
