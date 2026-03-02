@@ -38,48 +38,95 @@ export function UserInfoBar({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: 0.1 }}
-      className={`flex items-center justify-center gap-3 mx-4 mt-3 ${className}`}
+      className={`flex items-center justify-center mx-4 mt-3 ${className}`}
+      style={{ gap: 8 }}
     >
       {/* Flag + Name */}
       <motion.button
         onClick={onNameClick}
         whileTap={{ scale: 0.96 }}
-        className="flex items-center gap-2 px-4 py-2 rounded-full"
         style={{
-          background: "rgba(255,255,255,0.9)",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)",
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: 0,
         }}
       >
-        <span className="text-lg">{flag}</span>
-        <span className="font-bold text-gray-800 text-sm">{profile.nickname}</span>
+        <span style={{ fontSize: 44, lineHeight: 1 }}>{flag}</span>
+        <span
+          style={{
+            color: "#1F2937",
+            fontSize: 32,
+            fontFamily: "'Slackey', cursive",
+            fontWeight: 400,
+            textTransform: "capitalize",
+            lineHeight: "48px",
+          }}
+        >
+          {profile.nickname}
+        </span>
       </motion.button>
+
+      {/* Spacer */}
+      <div style={{ width: 8 }} />
 
       {/* Coins */}
       <motion.button
         onClick={onCurrencyClick}
         whileTap={{ scale: 0.96 }}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-full"
         style={{
-          background: "rgba(255,255,255,0.9)",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)",
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: 0,
         }}
       >
-        <img src={coinIcon} alt="Coins" className="w-5 h-5" />
-        <span className="font-bold text-gray-800 text-sm">{formatCompactNumber(coins)}</span>
+        <img src={coinIcon} alt="Coins" style={{ width: 35, height: 35 }} />
+        <span
+          style={{
+            color: "#374151",
+            fontSize: 18,
+            fontFamily: "'Nunito', sans-serif",
+            fontWeight: 700,
+            lineHeight: "28px",
+          }}
+        >
+          {formatCompactNumber(coins)}
+        </span>
       </motion.button>
 
       {/* Gems */}
       <motion.button
         onClick={onCurrencyClick}
         whileTap={{ scale: 0.96 }}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-full"
         style={{
-          background: "rgba(255,255,255,0.9)",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)",
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: 0,
         }}
       >
-        <img src={gemIcon} alt="Gems" className="w-5 h-5" />
-        <span className="font-bold text-gray-800 text-sm">{formatCompactNumber(gems)}</span>
+        <img src={gemIcon} alt="Gems" style={{ width: 35, height: 35 }} />
+        <span
+          style={{
+            color: "#374151",
+            fontSize: 18,
+            fontFamily: "'Nunito', sans-serif",
+            fontWeight: 700,
+            lineHeight: "28px",
+          }}
+        >
+          {formatCompactNumber(gems)}
+        </span>
       </motion.button>
     </motion.div>
   );
