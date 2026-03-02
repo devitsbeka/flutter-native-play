@@ -1,72 +1,79 @@
 
 
-## Fix Mixed-Language Questions: Georgian Text + English Answers
+# Auto-Start Game After Avatar Setup
 
-### Problem
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-There are **729 production questions** tagged as `language: ka` (Georgian) where the question text is in Georgian but ALL answers are in English/Latin script. This creates an inconsistent user experience -- questions should be fully in one language.
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-### Data Breakdown
+## Changes
 
-| Situation | Count |
-|-----------|-------|
-| Georgian question + ALL English answers | 690 |
-| Georgian question + mixed answers (some Georgian, some English) | 39 |
-| Already have an English duplicate (same category + same correct answer) | 135 |
-| No English duplicate exists | 555 |
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-Top affected categories: Video Games (111), Social Media (75), Math (68), Technology (60), Programming (58), Pop Culture (37), Anime/Manga (35).
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-### Strategy
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-These questions need to be converted to fully English. Since the answers are already English, we only need to translate the Georgian question text to English.
+## Technical Details
 
-#### Step 1: Deactivate duplicates (135 questions)
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
 
-For the 135 questions that already have an English equivalent in the database, simply deactivate them to avoid redundancy:
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
 
-```sql
-UPDATE questions SET is_active = false
-WHERE id IN (
-  SELECT q1.id FROM questions q1
-  WHERE q1.language = 'ka' AND q1.is_active = true AND q1.in_production = true
-    AND q1.question_text ~ '[\u10A0-\u10FF]'
-    AND q1.correct_answer !~ '[\u10A0-\u10FF]'
-    AND EXISTS (
-      SELECT 1 FROM questions q2
-      WHERE q2.category_id = q1.category_id
-        AND q2.correct_answer = q1.correct_answer
-        AND q2.language = 'en' AND q2.is_active = true
-    )
-);
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
 ```
 
-#### Step 2: Create edge function to batch-translate remaining 594
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
 
-Create a new edge function `fix-mixed-language-questions` (adapted from the existing `restore-english-questions` pattern) that:
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
 
-1. Fetches questions where `language = 'ka'`, question text contains Georgian chars, and answers don't contain Georgian chars
-2. Translates only the question text to English using the AI gateway (answers are already English, so they stay as-is)
-3. For the 39 partially-mixed ones, also translates any Georgian incorrect answers
-4. Updates each question: sets `language = 'en'`, `in_production = false` (for review before going live)
-5. Processes in batches of 10 with character limit validation (65 chars question, 20 chars answer)
-
-#### Step 3: Add a trigger button in the admin UI
-
-Add a "Fix Mixed Language" action in the admin Tools area (or CombinedShortener) to invoke this function and track progress.
-
-### Files to Create/Modify
-
-| File | Change |
-|------|--------|
-| Database | Deactivate 135 duplicate questions |
-| `supabase/functions/fix-mixed-language-questions/index.ts` | New edge function to translate Georgian question text to English |
-| `src/components/admin/CombinedShortener.tsx` (or Tools area) | Add button to trigger the fix and show progress |
-
-### Result
-
-- All 729 mixed-language questions will be cleaned up
-- 135 duplicates deactivated
-- ~594 questions converted to fully English and moved to Library for review
-- No more Georgian-question + English-answer combinations in production
-
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button

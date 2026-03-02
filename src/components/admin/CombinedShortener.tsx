@@ -141,6 +141,43 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedValues, setEditedValues] = useState<EditedValues>({});
 
+  // Mixed-language fix state
+  const [mixedLangProgress, setMixedLangProgress] = useState<{ status: 'idle' | 'running' | 'done'; fixed: number; skipped: number; remaining: number }>({ status: 'idle', fixed: 0, skipped: 0, remaining: 0 });
+
+  const fixMixedLanguageQuestions = async () => {
+    setMixedLangProgress({ status: 'running', fixed: 0, skipped: 0, remaining: 0 });
+    let totalFixed = 0;
+    let totalSkipped = 0;
+    let remaining = 1;
+
+    try {
+      while (remaining > 0) {
+        const { data, error } = await supabase.functions.invoke('fix-mixed-language-questions', {
+          body: { limit: 100, batchSize: 10 }
+        });
+
+        if (error) throw error;
+
+        totalFixed += data.fixed || 0;
+        totalSkipped += data.skipped || 0;
+        remaining = data.remaining || 0;
+
+        setMixedLangProgress({ status: 'running', fixed: totalFixed, skipped: totalSkipped, remaining });
+
+        if (data.fixed === 0 && data.skipped === 0) break; // No progress, stop
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      setMixedLangProgress({ status: 'done', fixed: totalFixed, skipped: totalSkipped, remaining: 0 });
+      toast({ title: 'Mixed-language fix complete ✅', description: `Fixed: ${totalFixed}, Skipped: ${totalSkipped}` });
+      setStatsReloadKey(prev => prev + 1);
+    } catch (err) {
+      console.error('Mixed-language fix error:', err);
+      toast({ title: 'Error fixing mixed-language questions', variant: 'destructive' });
+      setMixedLangProgress(prev => ({ ...prev, status: 'idle' }));
+    }
+  };
+
   // Load stats
   useEffect(() => {
     const loadStats = async () => {
@@ -955,7 +992,35 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           </div>
         )}
 
-        {/* Controls */}
+        {/* Fix Mixed-Language Questions */}
+        {viewMode === 'shorten' && (
+          <div className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200">
+            <Globe className="h-4 w-4 text-amber-600" />
+            <span className="text-sm text-muted-foreground flex-1">
+              {mixedLangProgress.status === 'running' 
+                ? `Fixing... ${mixedLangProgress.fixed} fixed, ${mixedLangProgress.skipped} skipped, ${mixedLangProgress.remaining} remaining`
+                : mixedLangProgress.status === 'done'
+                ? `Done! Fixed ${mixedLangProgress.fixed}, skipped ${mixedLangProgress.skipped}`
+                : 'Fix Georgian questions with English answers — translate question text to English'
+              }
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={fixMixedLanguageQuestions}
+              disabled={mixedLangProgress.status === 'running'}
+            >
+              {mixedLangProgress.status === 'running' ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Globe className="h-3 w-3 mr-1" />
+              )}
+              {mixedLangProgress.status === 'running' ? 'Fixing...' : 'Fix Mixed Language'}
+            </Button>
+          </div>
+        )}
+
+
         <div className="flex items-end gap-4 flex-wrap">
           <div className="flex-1 min-w-[200px] space-y-2">
             <Label>კატეგორია</Label>
