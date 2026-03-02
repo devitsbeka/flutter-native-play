@@ -1,79 +1,64 @@
 
 
-# Auto-Start Game After Avatar Setup
+## Fix: Question Shortener Showing 0 When Long Questions Exist
 
-## Problem
-When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
+### Root Cause
 
-## Solution
-Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
+The shortener is actually working correctly for the selected category ("მსოფლიო ისტორია"). The database confirms all 12 long English questions in that category are already marked `unshortenable` -- meaning the AI previously tried to shorten them but couldn't get them under the 67-character limit. They correctly don't appear as "needs shortening."
 
-## Changes
+However, there are **three real problems**:
 
-### 1. `src/contexts/AvatarModalContext.tsx`
-- Add an optional `onComplete` callback to the context
-- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
-- Store the callback in a ref
-- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
+1. **Invisible "unshortenable" questions**: 251 long English production questions are marked `unshortenable` but this count appears nowhere in the UI. They vanish from the stats, making it seem like nothing needs work.
 
-### 2. `src/components/home/AvatarModal.tsx`
-- Accept a new optional `onComplete?: () => void` prop
-- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+2. **No way to retry**: Once marked `unshortenable`, these questions can never be re-processed. There's no reset/retry option.
 
-### 3. `src/pages/Index.tsx`
-- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
-  ```
-  openAvatarModal(() => navigate("/game"));
-  ```
+3. **2,018 questions DO need shortening across other categories**: When selecting "All Categories" + English + In Prod, the shortener should show 2,018 questions needing work. The specific category shown in the screenshot genuinely has 0, but 38 other categories have pending work.
 
-## Technical Details
+### Data Summary (English, In Production)
 
-**AvatarModalContext changes:**
-```typescript
-interface AvatarModalContextType {
-  openAvatarModal: (onComplete?: () => void) => void;
-  closeAvatarModal: () => void;
-  isOpen: boolean;
-}
+| Status | Count |
+|--------|-------|
+| Need shortening (null status, text > 67 chars) | 2,018 |
+| Marked unshortenable (still long) | 251 |
+| Already shortened (still long after shortening) | 736 |
+| Pending review | 90 |
+| Needs rewrite | 23 |
 
-// Store pending callback in a ref
-const onCompleteRef = useRef<(() => void) | null>(null);
+### Fix Plan
 
-const openAvatarModal = useCallback((onComplete?: () => void) => {
-  onCompleteRef.current = onComplete || null;
-  setIsOpen(true);
-}, []);
+#### 1. Add "Unshortenable" stat to the UI (`CombinedShortener.tsx`)
 
-const closeAvatarModal = useCallback(() => {
-  setIsOpen(false);
-  onCompleteRef.current = null;
-}, []);
+Add a new counter in the stats grid showing how many questions are marked `unshortenable`. This makes the invisible questions visible and lets the user understand where their long questions went.
 
-// Pass onComplete to AvatarModal
-<AvatarModal
-  isOpen={isOpen}
-  onClose={closeAvatarModal}
-  onComplete={() => {
-    const cb = onCompleteRef.current;
-    setIsOpen(false);
-    onCompleteRef.current = null;
-    cb?.();
-  }}
-/>
+#### 2. Add "Reset Unshortenable" button
+
+Add a button that resets `shorten_status` from `unshortenable` to `NULL` for questions matching the current filters (category, language, production status). This allows re-processing with potentially better AI prompts.
+
+#### 3. Default `inProduction` to `true`
+
+Change the initial state from `false` to `true` since the user always works with production questions. This avoids the confusing step of switching to "In Prod" every time.
+
+#### 4. Count `unshortenable` in `loadStats`
+
+Update the stats calculation to track `unshortenable` as a separate counter:
+
+```text
+const unshortenable = targetQuestions.filter(q =>
+  (q.shorten_status === 'unshortenable' && q.question_text.length > MAX_QUESTION_LENGTH) ||
+  (q.answer_shorten_status === 'unshortenable')
+);
 ```
 
-**AvatarModal changes:**
-- New prop: `onComplete?: () => void`
-- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+### Files to Modify
 
-**Index.tsx change:**
-```typescript
-} else if (!profile?.avatar_url) {
-  openAvatarModal(() => navigate("/game"));
-}
-```
+| File | Change |
+|------|--------|
+| `src/components/admin/CombinedShortener.tsx` | Add unshortenable stat + reset button, default to In Prod, update stats interface |
 
-## Files to edit
-1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
-2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
-3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
+### Result
+
+- User sees exactly where long questions are: needs work, unshortenable, pending, processed
+- "Reset" button allows retrying unshortenable questions
+- Selecting "All Categories" + English + In Prod shows the real 2,018 count
+- Default opens in "In Prod" mode matching the user's workflow
+
