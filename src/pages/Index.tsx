@@ -782,8 +782,8 @@ export default function Index() {
         />
 
         {/* Walking man Lottie at the bottom */}
-        <div className="flex-1 flex items-end justify-center pointer-events-none">
-          <div className="w-32 h-32 mb-4">
+        <div className="flex-1 flex items-end justify-center pointer-events-none" style={{ marginBottom: '80px' }}>
+          <div className="w-[179px] h-[179px]">
             <Lottie animationData={walkingManAnimation} loop autoplay />
           </div>
         </div>
