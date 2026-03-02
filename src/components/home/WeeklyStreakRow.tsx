@@ -156,11 +156,11 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
                     }
                   : day.isToday
                   ? {
-                      background: "rgba(0,0,0,0.04)",
-                      border: "2px dashed rgba(0,0,0,0.15)",
+                      background: "hsl(var(--background))",
+                      border: "2px dashed hsl(var(--muted-foreground) / 0.3)",
                     }
                   : {
-                      background: "rgba(0,0,0,0.04)",
+                      background: "hsl(var(--background))",
                     }
               }
             >
