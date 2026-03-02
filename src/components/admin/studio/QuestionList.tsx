@@ -132,6 +132,9 @@ export function QuestionList({
               const isSelected = selectedIds.has(question.id);
               const isPreview = index === previewIndex;
               const type = getQuestionType(question);
+              const isOverlong = question.question_text.length > 67 
+                || question.correct_answer.length > 25 
+                || question.incorrect_answers.some(a => a.length > 25);
 
               return (
                 <div
@@ -178,6 +181,9 @@ export function QuestionList({
                         <span className="text-[10px] text-muted-foreground">
                           🎨 {question.icon_slug}
                         </span>
+                      )}
+                      {isOverlong && (
+                        <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />
                       )}
                     </div>
                   </div>
