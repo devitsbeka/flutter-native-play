@@ -230,8 +230,8 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
         animate={{ opacity: 1, y: 0 }}
         className="w-full px-4 pt-2 pb-1 pointer-events-auto z-30 relative"
       >
-        {/* Top row: label + NEW button */}
-        <div className="flex items-center justify-between mb-2.5">
+        {/* Top row: label + NEW button - TEMPORARILY HIDDEN */}
+        {false && <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2">
             <Flame className="w-5 h-5 text-orange-500" />
             <span className="text-base font-bold text-foreground">
@@ -263,7 +263,7 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
             <Plus className="w-4 h-4" />
             {t("extra.newButton")}
           </motion.button>
-        </div>
+        </div>}
 
         {/* Scrollable streak days with drag + momentum */}
         <div
