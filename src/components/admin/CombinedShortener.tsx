@@ -107,6 +107,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
   const [languageFilter, setLanguageFilter] = useState<string>('all');
   const [aggressiveMode, setAggressiveMode] = useState<boolean>(false);
   const [needsRewriteQuestions, setNeedsRewriteQuestions] = useState<PendingQuestion[]>([]);
+  const [statsReloadKey, setStatsReloadKey] = useState(0);
   const [loadingNeedsRewrite, setLoadingNeedsRewrite] = useState(false);
   const [progress, setProgress] = useState<CombinedProgress>({
     total: 0,
@@ -247,7 +248,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
     };
 
     loadStats();
-  }, [categoryId, inProduction, languageFilter, progress.status]);
+  }, [categoryId, inProduction, languageFilter, progress.status, statsReloadKey]);
 
   const startShortening = async (testMode = false) => {
     setIsPaused(false);
@@ -941,9 +942,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
                     .match(languageFilter !== 'all' ? { language: languageFilter } : {});
 
                   toast({ title: 'Reset complete ✅', description: `${stats.unshortenable} questions ready for retry` });
-                  // Trigger stats reload
-                  setStats(prev => ({ ...prev, loading: true }));
-                  setProgress(prev => ({ ...prev }));
+                  setStatsReloadKey(prev => prev + 1);
                 } catch (err) {
                   console.error('Reset unshortenable error:', err);
                   toast({ title: 'Error', variant: 'destructive' });
