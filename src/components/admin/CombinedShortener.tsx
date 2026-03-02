@@ -845,7 +845,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Stats Display */}
-        <div className="grid grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 p-4 bg-muted/50 rounded-lg">
           <div 
             className={`text-center cursor-pointer p-2 rounded-lg transition-colors ${viewMode === 'shorten' ? '' : ''}`}
           >
