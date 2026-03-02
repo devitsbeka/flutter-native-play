@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus, Gift, Flame, Check, X, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,10 +19,116 @@ function jsDayToMonday(jsDay: number) {
 }
 
 interface GiftMilestone {
-  afterDay: number; // appears after this streak day
+  afterDay: number;
   bonus: number;
   rewardKey: string;
   isUnlocked: boolean;
+}
+
+// Floating particles inside the today circle
+function TodayParticles() {
+  const particles = useMemo(() => 
+    Array.from({ length: 6 }).map((_, i) => ({
+      x: 8 + Math.random() * 24,
+      y: 8 + Math.random() * 24,
+      size: 2 + Math.random() * 2,
+      delay: i * 0.4,
+      duration: 2 + Math.random() * 1.5,
+    })), []
+  );
+
+  return (
+    <>
+      {particles.map((p, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            width: p.size,
+            height: p.size,
+            left: p.x,
+            top: p.y,
+            background: "rgba(167, 139, 250, 0.6)",
+          }}
+          animate={{
+            y: [0, -6, 0],
+            opacity: [0.3, 0.8, 0.3],
+            scale: [1, 1.3, 1],
+          }}
+          transition={{
+            duration: p.duration,
+            repeat: Infinity,
+            delay: p.delay,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
+// Hook for momentum-based drag scrolling
+function useDragScroll(ref: React.RefObject<HTMLDivElement | null>) {
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+  const velocity = useRef(0);
+  const lastX = useRef(0);
+  const lastTime = useRef(0);
+  const animFrame = useRef(0);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    isDragging.current = true;
+    startX.current = e.clientX;
+    scrollLeft.current = el.scrollLeft;
+    lastX.current = e.clientX;
+    lastTime.current = Date.now();
+    velocity.current = 0;
+    cancelAnimationFrame(animFrame.current);
+    el.setPointerCapture(e.pointerId);
+    el.style.cursor = "grabbing";
+    el.style.scrollBehavior = "auto";
+  }, [ref]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isDragging.current || !ref.current) return;
+    const dx = e.clientX - startX.current;
+    ref.current.scrollLeft = scrollLeft.current - dx;
+    const now = Date.now();
+    const dt = now - lastTime.current;
+    if (dt > 0) {
+      velocity.current = (e.clientX - lastX.current) / dt;
+    }
+    lastX.current = e.clientX;
+    lastTime.current = now;
+  }, [ref]);
+
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    if (!isDragging.current || !ref.current) return;
+    isDragging.current = false;
+    ref.current.style.cursor = "";
+    ref.current.releasePointerCapture(e.pointerId);
+    
+    // Momentum scroll
+    const el = ref.current;
+    let v = velocity.current * 15; // amplify
+    const decel = 0.95;
+    const tick = () => {
+      if (Math.abs(v) < 0.5) return;
+      el.scrollLeft -= v;
+      v *= decel;
+      animFrame.current = requestAnimationFrame(tick);
+    };
+    tick();
+  }, [ref]);
+
+  useEffect(() => {
+    return () => cancelAnimationFrame(animFrame.current);
+  }, []);
+
+  return { onPointerDown, onPointerMove, onPointerUp };
 }
 
 export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
@@ -30,6 +136,7 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
   const { t } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedGift, setSelectedGift] = useState<GiftMilestone | null>(null);
+  const dragHandlers = useDragScroll(scrollRef);
 
   const { data: profile } = useQuery({
     queryKey: ["profile-streak", user?.id],
@@ -53,14 +160,10 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
     const today = new Date();
     const todayMondayIdx = jsDayToMonday(today.getDay());
 
-    // How many full weeks of streak behind us (plus current partial week)
     const totalWeeks = Math.max(Math.ceil(currentStreak / 7) + 1, 3);
 
-    // Start date = beginning of the earliest week we want to show
     const startDate = new Date(today);
-    // Go back to Monday of current week
     startDate.setDate(startDate.getDate() - todayMondayIdx);
-    // Then go back (totalWeeks - 1) more weeks
     startDate.setDate(startDate.getDate() - (totalWeeks - 1) * 7);
 
     const days: { date: Date; weekdayKey: string; isToday: boolean; isCompleted: boolean; dayIndex: number }[] = [];
@@ -71,7 +174,6 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
       const mondayIdx = jsDayToMonday(d.getDay());
       const isToday = d.toDateString() === today.toDateString();
       
-      // A day is completed if it's within the streak window (today and previous streak days)
       const daysAgo = Math.floor((today.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
       const isCompleted = daysAgo >= 0 && daysAgo < currentStreak;
 
@@ -92,7 +194,6 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
     const streakMilestones = getStreakMilestones();
     const gifts: GiftMilestone[] = [];
     
-    // Show milestones at 5, 10, 15, 20, 25, 30
     for (let d = 5; d <= Math.max(currentStreak + 10, 30); d += 5) {
       const milestone = streakMilestones.find(m => m.days === d);
       let rewardKey = "milestoneXpBonus";
@@ -119,11 +220,7 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
     return t(`extra.${gift.rewardKey}`, { percent: gift.bonus });
   }
 
-  // Find today's index to auto-scroll there
   const todayIndex = timeline.findIndex(d => d.isToday);
-
-  // Insert gift icons between day groups in the render
-  // Gift appears after every 5th streak day
   const giftAfterDays = new Set(milestones.map(m => m.afterDay));
 
   return (
@@ -168,18 +265,21 @@ export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
           </motion.button>
         </div>
 
-        {/* Scrollable streak days */}
+        {/* Scrollable streak days with drag + momentum */}
         <div
           ref={(el) => {
             (scrollRef as any).current = el;
-            // Auto-scroll to today
             if (el && todayIndex >= 0) {
               const scrollTo = Math.max(0, todayIndex * 52 - el.clientWidth / 2 + 26);
               el.scrollLeft = scrollTo;
             }
           }}
-          className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-hide"
-          style={{ scrollBehavior: "smooth" }}
+          className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-hide select-none touch-pan-x"
+          style={{ cursor: "grab" }}
+          onPointerDown={dragHandlers.onPointerDown}
+          onPointerMove={dragHandlers.onPointerMove}
+          onPointerUp={dragHandlers.onPointerUp}
+          onPointerCancel={dragHandlers.onPointerUp as any}
         >
           {timeline.map((day, i) => {
             // Check if a gift milestone should appear after this day
