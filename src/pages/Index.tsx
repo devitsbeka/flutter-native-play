@@ -781,6 +781,13 @@ export default function Index() {
           onClose={() => setShowChangeNameModal(false)}
         />
 
+        {/* Walking man Lottie at the bottom */}
+        <div className="flex-1 flex items-end justify-center pointer-events-none">
+          <div className="w-32 h-32 mb-4">
+            <Lottie animationData={walkingManAnimation} loop autoplay />
+          </div>
+        </div>
+
         {/* Content area - TEMPORARILY HIDDEN */}
         <div className="flex-1 flex relative" style={{ display: 'none' }}>
           {/* Action Cards - Fixed Right Side Panel (Desktop only) */}
