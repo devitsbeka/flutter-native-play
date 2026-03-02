@@ -702,17 +702,16 @@ export default function Index() {
               )}
             </div>
             
-            {/* Center: Logo + Spotlight */}
+            {/* Center: Crown Lottie */}
             <div className="flex-1 flex justify-center md:justify-start items-center gap-4">
-              {/* Logo - responsive sizing: sm on mobile/tablet, md on desktop */}
-              <MyTriviaLiveLogo responsive />
+              <div className="w-12 h-12">
+                <Lottie animationData={crownAnimation} loop autoplay />
+              </div>
             </div>
             
-            {/* Right side: Search/Notification for users, Sign In for guests */}
+            {/* Right side: Notification for users, Sign In for guests */}
             {user ? (
               <div className="flex items-center gap-1">
-                {/* Search button - visible on all screens */}
-                <SpotlightSearch variant="button" />
                 
                 {/* Bell icon with unread badge */}
                 <motion.button
