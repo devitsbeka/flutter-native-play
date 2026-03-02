@@ -1,186 +1,244 @@
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Gift, Flame, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { GameModal } from "@/components/ui/game-modal";
+import { getStreakMilestones } from "@/utils/levelCalculation";
 
-interface DayData {
-  label: string;
+interface StreakDayData {
+  dayNumber: number;
   isCompleted: boolean;
-  isToday: boolean;
-  isFuture: boolean;
-  rank: number | null;
+  isMilestone: boolean;
+  milestoneReward?: string;
+  milestoneBonus?: number;
 }
 
-const DAY_LABELS_EN = ["M", "T", "W", "T", "F", "S", "S"];
-const DAY_LABELS_KA = ["ორ", "სა", "ოთ", "ხუ", "პა", "შა", "კვ"];
+const MILESTONE_MAP = new Map<number, { bonus: number; rewardKey: string }>();
 
-function getWeekDays(): Date[] {
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + mondayOffset);
-  monday.setHours(0, 0, 0, 0);
-
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return d;
+function buildMilestoneMap() {
+  if (MILESTONE_MAP.size > 0) return;
+  const milestones = getStreakMilestones();
+  milestones.forEach((m) => {
+    let rewardKey = "milestoneXpBonus";
+    if (m.days >= 30) rewardKey = "milestoneDoubleXp";
+    else if (m.days >= 7) rewardKey = "milestoneXpBonusGift";
+    MILESTONE_MAP.set(m.days, { bonus: m.bonus, rewardKey });
   });
-}
-
-function formatRank(rank: number): string {
-  if (rank === 1) return "1st";
-  if (rank === 2) return "2nd";
-  if (rank === 3) return "3rd";
-  return `${rank}th`;
 }
 
 export function WeeklyStreakRow({ onNewClick }: { onNewClick?: () => void }) {
   const { user } = useAuth();
-  const { language } = useLanguage();
-  const dayLabels = language === "ka" ? DAY_LABELS_KA : DAY_LABELS_EN;
+  const { t } = useLanguage();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [selectedMilestone, setSelectedMilestone] = useState<StreakDayData | null>(null);
 
-  const { data: weekDays = [] } = useQuery({
-    queryKey: ["weekly-streak-days", user?.id],
-    queryFn: async (): Promise<DayData[]> => {
-      if (!user) return [];
+  buildMilestoneMap();
 
-      const days = getWeekDays();
-      const weekStart = days[0].toISOString();
-      const weekEnd = new Date(days[6]);
-      weekEnd.setHours(23, 59, 59, 999);
-
-      const { data: plays } = await supabase
-        .from("game_plays")
-        .select("played_at, score")
-        .eq("user_id", user.id)
-        .gte("played_at", weekStart)
-        .lte("played_at", weekEnd.toISOString())
-        .order("played_at", { ascending: true });
-
-      const { data: leagueData } = await supabase
-        .from("user_league_data")
-        .select("current_rank")
+  const { data: profile } = useQuery({
+    queryKey: ["profile-streak", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from("profiles")
+        .select("current_streak, best_streak")
         .eq("user_id", user.id)
         .single();
-
-      const currentRank = leagueData?.current_rank || null;
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      return days.map((day, i) => {
-        const dayStart = new Date(day);
-        dayStart.setHours(0, 0, 0, 0);
-        const dayEnd = new Date(day);
-        dayEnd.setHours(23, 59, 59, 999);
-
-        const isToday = dayStart.getTime() === today.getTime();
-        const isFuture = dayStart.getTime() > today.getTime();
-
-        const dayPlays = plays?.filter((p) => {
-          const playDate = new Date(p.played_at);
-          return playDate >= dayStart && playDate <= dayEnd;
-        }) || [];
-
-        const isCompleted = dayPlays.length > 0;
-
-        return {
-          label: dayLabels[i],
-          isCompleted,
-          isToday,
-          isFuture,
-          rank: isCompleted ? currentRank : null,
-        };
-      });
+      return data;
     },
     enabled: !!user,
     staleTime: 60000,
   });
 
+  const currentStreak = profile?.current_streak ?? 0;
+
+  // Build streak days: show up to max(currentStreak, 30) days, or at least 14 for visual appeal
+  const totalDays = Math.max(currentStreak + 7, 14);
+  const streakDays: StreakDayData[] = Array.from({ length: totalDays }, (_, i) => {
+    const dayNumber = i + 1;
+    const milestoneInfo = MILESTONE_MAP.get(dayNumber);
+    return {
+      dayNumber,
+      isCompleted: dayNumber <= currentStreak,
+      isMilestone: !!milestoneInfo,
+      milestoneReward: milestoneInfo?.rewardKey,
+      milestoneBonus: milestoneInfo?.bonus,
+    };
+  });
+
   if (!user) return null;
 
+  function getMilestoneRewardText(day: StreakDayData): string {
+    if (!day.milestoneReward || !day.milestoneBonus) return "";
+    if (day.milestoneReward === "milestoneDoubleXp") {
+      return t(`extra.${day.milestoneReward}`);
+    }
+    return t(`extra.${day.milestoneReward}`, { percent: day.milestoneBonus });
+  }
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full px-4 pt-2 pb-1 pointer-events-auto z-30 relative"
-    >
-      {/* Top row: "Your streak" label + NEW button */}
-      <div className="flex items-center justify-between mb-2.5">
-        <span className="text-base font-bold text-foreground">
-          {language === "ka" ? "შენი სტრიქი" : "Your streak"}
-        </span>
-        <motion.button
-          onClick={onNewClick}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold text-white"
-          style={{
-            background: "linear-gradient(180deg, #9C6ADE 0%, #7B4BBF 100%)",
-            boxShadow: "0 4px 0 #5B2FA0, 0 6px 12px rgba(124, 58, 237, 0.3)",
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95, y: 2 }}
-        >
-          <Plus className="w-4 h-4" />
-          NEW
-        </motion.button>
-      </div>
-
-      {/* Day circles row */}
-      <div className="flex justify-between items-center gap-1">
-        {weekDays.map((day, i) => (
-          <motion.div
-            key={i}
-            className="flex flex-col items-center gap-1.5 flex-1"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: i * 0.04, type: "spring", stiffness: 300 }}
-          >
-            {/* Day label */}
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase">
-              {day.label}
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full px-4 pt-2 pb-1 pointer-events-auto z-30 relative"
+      >
+        {/* Top row: label + NEW button */}
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center gap-2">
+            <Flame className="w-5 h-5 text-orange-500" />
+            <span className="text-base font-bold text-foreground">
+              {t("extra.yourStreak")}
             </span>
+            {currentStreak > 0 && (
+              <span
+                className="text-xs font-bold px-2 py-0.5 rounded-full"
+                style={{
+                  background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
+                  color: "#92400E",
+                  boxShadow: "0 2px 0 rgba(253,230,138,0.5)",
+                }}
+              >
+                {currentStreak} 🔥
+              </span>
+            )}
+          </div>
+          <motion.button
+            onClick={onNewClick}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold text-white"
+            style={{
+              background: "linear-gradient(180deg, #9C6ADE 0%, #7B4BBF 100%)",
+              boxShadow: "0 4px 0 #5B2FA0, 0 6px 12px rgba(124, 58, 237, 0.3)",
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95, y: 2 }}
+          >
+            <Plus className="w-4 h-4" />
+            {t("extra.newButton")}
+          </motion.button>
+        </div>
 
-            {/* Circle */}
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center relative"
-              style={
-                day.isCompleted
-                  ? {
-                      background:
-                        "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
-                      boxShadow: "0 2px 6px rgba(253, 230, 138, 0.5)",
-                    }
-                  : day.isToday
-                  ? {
-                      background: "hsl(var(--background))",
-                      border: "2px dashed hsl(var(--muted-foreground) / 0.3)",
-                    }
-                  : {
-                      background: "hsl(var(--background))",
-                    }
-              }
-            >
-              {day.isCompleted && day.rank ? (
-                <span
-                  className="text-[11px] font-black"
-                  style={{
-                    color: "#92400E",
-                    textShadow: "0 1px 0 rgba(255,255,255,0.4)",
-                  }}
-                >
-                  {formatRank(day.rank)}
+        {/* Scrollable streak days */}
+        <div
+          ref={scrollRef}
+          className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
+          style={{ scrollBehavior: "smooth" }}
+        >
+          {streakDays.map((day, i) => {
+            const isNext = day.dayNumber === currentStreak + 1;
+            return (
+              <motion.div
+                key={day.dayNumber}
+                className="flex flex-col items-center gap-1 flex-shrink-0"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: Math.min(i * 0.03, 0.5), type: "spring", stiffness: 300 }}
+              >
+                {/* Day label */}
+                <span className="text-[10px] font-semibold text-muted-foreground">
+                  {day.dayNumber}
                 </span>
-              ) : day.isToday ? (
-                <span className="text-base font-bold text-muted-foreground">?</span>
-              ) : null}
+
+                {/* Circle */}
+                <motion.button
+                  onClick={day.isMilestone ? () => setSelectedMilestone(day) : undefined}
+                  className="w-10 h-10 rounded-full flex items-center justify-center relative"
+                  style={
+                    day.isCompleted
+                      ? day.isMilestone
+                        ? {
+                            background: "linear-gradient(180deg, #A78BFA 0%, #7C3AED 100%)",
+                            boxShadow: "0 3px 0 rgba(109,40,217,0.4), 0 4px 12px rgba(124,58,237,0.3)",
+                          }
+                        : {
+                            background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
+                            boxShadow: "0 2px 6px rgba(253, 230, 138, 0.5)",
+                          }
+                      : day.isMilestone
+                        ? {
+                            background: "hsl(var(--background))",
+                            border: "2px solid #A78BFA",
+                          }
+                        : isNext
+                          ? {
+                              background: "hsl(var(--background))",
+                              border: "2px dashed hsl(var(--muted-foreground) / 0.3)",
+                            }
+                          : {
+                              background: "hsl(var(--muted) / 0.5)",
+                            }
+                  }
+                  whileHover={day.isMilestone ? { scale: 1.1 } : undefined}
+                  whileTap={day.isMilestone ? { scale: 0.95 } : undefined}
+                >
+                  {day.isCompleted && day.isMilestone ? (
+                    <Gift className="w-4 h-4 text-white" />
+                  ) : day.isCompleted ? (
+                    <Check className="w-4 h-4 text-amber-700" />
+                  ) : day.isMilestone ? (
+                    <Gift className="w-4 h-4 text-purple-400" />
+                  ) : isNext ? (
+                    <span className="text-xs font-bold text-muted-foreground">?</span>
+                  ) : null}
+                </motion.button>
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* Milestone reward modal */}
+      {selectedMilestone && (
+        <GameModal
+          isOpen={!!selectedMilestone}
+          onClose={() => setSelectedMilestone(null)}
+          variant="gold"
+          fullScreen={false}
+          icon={
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center"
+              style={{
+                background: selectedMilestone.isCompleted
+                  ? "linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%)"
+                  : "linear-gradient(135deg, #E9D5FF 0%, #C4B5FD 100%)",
+                boxShadow: selectedMilestone.isCompleted
+                  ? "0 5px 0 #5B21B6, inset 0 2px 4px rgba(255,255,255,0.3)"
+                  : "0 5px 0 #A78BFA",
+              }}
+            >
+              <Gift className={`w-8 h-8 ${selectedMilestone.isCompleted ? "text-white" : "text-purple-600"}`} />
             </div>
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
+          }
+          title={`${t("extra.streakDay")} ${selectedMilestone.dayNumber}`}
+          subtitle={t("extra.streakMilestoneReward")}
+        >
+          <div className="text-center space-y-4">
+            <div
+              className="mx-auto p-4 rounded-2xl"
+              style={{
+                background: selectedMilestone.isCompleted
+                  ? "linear-gradient(180deg, rgba(34,197,94,0.1) 0%, rgba(34,197,94,0.05) 100%)"
+                  : "linear-gradient(180deg, rgba(167,139,250,0.1) 0%, rgba(167,139,250,0.05) 100%)",
+                border: `2px solid ${selectedMilestone.isCompleted ? "rgba(34,197,94,0.3)" : "rgba(167,139,250,0.3)"}`,
+              }}
+            >
+              <span className="text-3xl mb-2 block">
+                {selectedMilestone.isCompleted ? "🎉" : "🎁"}
+              </span>
+              <p className="text-base font-bold text-foreground">
+                {getMilestoneRewardText(selectedMilestone)}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {selectedMilestone.isCompleted
+                  ? t("extra.milestoneUnlocked")
+                  : t("extra.milestoneLocked", { count: selectedMilestone.dayNumber - currentStreak })}
+              </p>
+            </div>
+          </div>
+        </GameModal>
+      )}
+    </>
   );
 }
