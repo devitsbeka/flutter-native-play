@@ -27,7 +27,7 @@ export interface StudioFilters {
   questionType: QuestionType | null;
   difficulty: 'easy' | 'medium' | 'hard' | null;
   hasIcon: boolean | null;
-  sortBy: 'newest' | 'oldest' | 'alphabetical';
+  sortBy: 'newest' | 'oldest' | 'alphabetical' | 'longest_question' | 'longest_answer';
 }
 
 export interface CategoryWithCounts {
