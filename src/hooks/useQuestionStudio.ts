@@ -27,7 +27,7 @@ export interface StudioFilters {
   questionType: QuestionType | null;
   difficulty: 'easy' | 'medium' | 'hard' | null;
   hasIcon: boolean | null;
-  sortBy: 'newest' | 'oldest' | 'alphabetical';
+  sortBy: 'newest' | 'oldest' | 'alphabetical' | 'longest_question' | 'longest_answer';
 }
 
 export interface CategoryWithCounts {
@@ -210,7 +210,57 @@ export const useQuestionStudio = () => {
           results.sort((a: any, b: any) => (a.created_at || '').localeCompare(b.created_at || ''));
         } else if (filters.sortBy === 'alphabetical') {
           results.sort((a: any, b: any) => (a.question_text || '').localeCompare(b.question_text || ''));
+        } else if (filters.sortBy === 'longest_question') {
+          results.sort((a: any, b: any) => (b.question_text || '').length - (a.question_text || '').length);
+        } else if (filters.sortBy === 'longest_answer') {
+          results.sort((a: any, b: any) => {
+            const maxLen = (q: any) => {
+              const answers = Array.isArray(q.incorrect_answers) ? q.incorrect_answers : [];
+              return Math.max(q.correct_answer?.length || 0, ...answers.map((a: string) => a?.length || 0));
+            };
+            return maxLen(b) - maxLen(a);
+          });
         }
+
+        const formatted: StudioQuestion[] = results.map((q: any) => ({
+          id: q.id,
+          category_id: q.category_id,
+          question_text: q.question_text,
+          correct_answer: q.correct_answer,
+          incorrect_answers: Array.isArray(q.incorrect_answers) ? q.incorrect_answers as string[] : [],
+          difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
+          level_number: q.level_number || 1,
+          is_active: q.is_active ?? true,
+          in_production: q.in_production ?? false,
+          icon_slug: q.icon_slug,
+          image_url: q.image_url,
+          video_url: q.video_url,
+          audio_url: q.audio_url,
+          created_at: q.created_at || '',
+          updated_at: q.updated_at || '',
+        }));
+
+        setQuestions(formatted);
+        setPreviewIndex(0);
+      } else if (filters.sortBy === 'longest_question' || filters.sortBy === 'longest_answer') {
+        // Use RPC for length-based sorting
+        const { data: rpcData, error: rpcError } = await supabase.rpc('get_questions_sorted_by_length', {
+          p_sort_mode: filters.sortBy,
+          p_in_production: inProd,
+          p_category_id: selectedCategoryId || null,
+          p_language: language === 'all' ? null : language,
+          p_difficulty: filters.difficulty || null,
+          p_question_type: filters.questionType || null,
+          p_has_icon: filters.hasIcon === null ? null : (filters.hasIcon ? 'with' : 'without'),
+          p_limit: PAGE_SIZE,
+          p_offset: offset,
+        });
+
+        if (rpcError) throw rpcError;
+
+        const results = (rpcData || []) as any[];
+        const tc = results.length > 0 ? Number(results[0].total_count) : 0;
+        setTotalCount(tc);
 
         const formatted: StudioQuestion[] = results.map((q: any) => ({
           id: q.id,

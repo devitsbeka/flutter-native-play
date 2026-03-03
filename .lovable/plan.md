@@ -1,60 +1,79 @@
 
 
-## Restore "Longest Questions/Answers" Sorting in Question Studio
+# Auto-Start Game After Avatar Setup
 
-### What Happened
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-The database RPC `get_questions_sorted_by_length` still exists and works, but the frontend lost the sorting options. The `StudioFilters` type only supports `'newest' | 'oldest' | 'alphabetical'` — the `'longest_question'` and `'longest_answer'` options were dropped during a previous refactor.
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-### Fix
+## Changes
 
-#### 1. Update `StudioFilters` type (`src/hooks/useQuestionStudio.ts`)
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-Extend `sortBy` union:
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
+
+## Technical Details
+
+**AvatarModalContext changes:**
 ```typescript
-sortBy: 'newest' | 'oldest' | 'alphabetical' | 'longest_question' | 'longest_answer';
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
+
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
+
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
 ```
 
-#### 2. Wire the RPC for length-based sorts (`src/hooks/useQuestionStudio.ts`)
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
 
-In the question fetch logic (both search and non-search paths), when `sortBy` is `'longest_question'` or `'longest_answer'`, call the existing `get_questions_sorted_by_length` RPC instead of the regular Supabase query. Pass current filters (category, language, difficulty, question type, has_icon, production status) and sort_mode.
-
-For the non-search path (~line 326), add cases to the switch:
+**Index.tsx change:**
 ```typescript
-case 'longest_question':
-case 'longest_answer':
-  // Use RPC instead of regular query
-  const { data: rpcData } = await supabase.rpc('get_questions_sorted_by_length', {
-    p_sort_mode: filters.sortBy,
-    p_in_production: isProductionMode,
-    p_category_id: selectedCategoryId || null,
-    p_language: language === 'all' ? null : language,
-    p_difficulty: filters.difficulty || null,
-    p_question_type: filters.questionType || null,
-    p_has_icon: filters.hasIcon === null ? null : (filters.hasIcon ? 'with' : 'without'),
-    p_limit: PAGE_SIZE,
-    p_offset: page * PAGE_SIZE,
-  });
-  // Extract total_count from first row, format results
-  break;
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
 ```
 
-For the search path (~line 208), apply client-side sort by `question_text.length` or max answer length.
-
-#### 3. Add sort options to the filter UI (`src/components/admin/studio/QuestionFilters.tsx`)
-
-Add two new items to the sort radio group:
-```tsx
-<DropdownMenuRadioItem value="longest_question">გრძელი კითხვები</DropdownMenuRadioItem>
-<DropdownMenuRadioItem value="longest_answer">გრძელი პასუხები</DropdownMenuRadioItem>
-```
-
-Update the type cast on line 104 to include the new values.
-
-### Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/hooks/useQuestionStudio.ts` | Extend `sortBy` type, add RPC call for length-based sorts |
-| `src/components/admin/studio/QuestionFilters.tsx` | Add two sort radio items, update type cast |
-
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
