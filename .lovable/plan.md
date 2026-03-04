@@ -1,53 +1,79 @@
 
 
-## Fix: Better Answer Shortening — Send All 4 Answers Together
+# Auto-Start Game After Avatar Setup
 
-### Problem
-The current approach only sends individual answers that exceed the character limit to the AI. This produces:
-1. **Inconsistent quality** — shortened answers don't match the style/tone of untouched answers
-2. **Poor results** — AI lacks context about the full answer set, can't balance them
-3. **Misses opportunities** — e.g. "Long real; short TV" is awkward but under 20 chars so it's kept
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-### Solution
-Change the prompt strategy: **always send ALL 4 answers to the AI** with the question, and ask it to produce a complete, balanced set of quiz-button-ready answers. This gives the AI full context to create coherent, high-quality answer options.
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-### Changes
+## Changes
 
-#### `supabase/functions/shorten-answers/index.ts`
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-1. **Send all 4 answers** (correct + 3 incorrect) to the AI, not just the long ones
-2. **New prompt**: Ask AI to rewrite the full answer set as concise, balanced quiz labels (max 20 chars each)
-3. **Always apply results** for all 4 answers — the AI optimizes the entire set
-4. **Use `response_format: { type: "json_object" }`** instead of hoping for clean JSON
-5. **Use a better model** (`google/gemini-2.5-flash`) with clearer instructions
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-New prompt approach:
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
+
+## Technical Details
+
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
+
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
+
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
 ```
-You are a trivia quiz answer editor. Given a question and its 4 answer options, 
-rewrite ALL answers as short, high-quality quiz button labels (max 20 chars each).
 
-Rules:
-- ALL 4 answers must be ≤20 characters
-- Answers should be similar in length and style (balanced)
-- Keep factual accuracy — don't change which answer is correct
-- Extract key concepts from sentences
-- Use well-known abbreviations only
-- If an answer is already good and short, keep it as-is
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
 
-Question: "..."
-Correct: "..."
-Incorrect 1: "..."
-Incorrect 2: "..."  
-Incorrect 3: "..."
-
-Return JSON: { "correct": "...", "incorrect": ["...", "...", "..."] }
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
 ```
 
-This is simpler, produces better results, and handles the full set as a unit.
-
-### Files to Modify
-
-| File | Change |
-|------|--------|
-| `supabase/functions/shorten-answers/index.ts` | Rewrite prompt to send all 4 answers, use `response_format: json_object`, apply all results |
-
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
