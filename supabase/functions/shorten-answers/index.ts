@@ -206,12 +206,25 @@ Incorrect 3: "${incorrectAnswers[2] || ''}"`;
           continue;
         }
 
-        // Georgian character guard for English questions
+        // Strict per-answer language consistency guard
         const georgianPattern = /[\u10A0-\u10FF]/;
+        const latinPattern = /[a-zA-Z]/;
+        const allOutputs = [parsed.correct, ...parsed.incorrect];
+        
         if (question.language === 'en') {
-          const allOutputs = [parsed.correct, ...parsed.incorrect];
-          if (allOutputs.some(s => georgianPattern.test(s))) {
-            console.log(`Question ${question.id}: English got Georgian output, skipping`);
+          // English questions: NO Georgian characters allowed in ANY answer
+          const georgianAnswers = allOutputs.filter(s => georgianPattern.test(s));
+          if (georgianAnswers.length > 0) {
+            console.log(`Question ${question.id}: English got ${georgianAnswers.length} Georgian answer(s), rejecting ALL: ${JSON.stringify(georgianAnswers)}`);
+            failed++;
+            results.push(makeFailResult(question, incorrectAnswers));
+            continue;
+          }
+        } else if (question.language === 'ka') {
+          // Georgian questions: ALL answers must contain Georgian, reject if any is Latin-only
+          const latinOnlyAnswers = allOutputs.filter(s => !georgianPattern.test(s) && latinPattern.test(s));
+          if (latinOnlyAnswers.length > 0) {
+            console.log(`Question ${question.id}: Georgian got ${latinOnlyAnswers.length} Latin-only answer(s), rejecting ALL: ${JSON.stringify(latinOnlyAnswers)}`);
             failed++;
             results.push(makeFailResult(question, incorrectAnswers));
             continue;
