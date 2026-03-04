@@ -302,8 +302,7 @@ Task: Shorten each answer to max ${MAX_ANSWER_LENGTH} characters. These are quiz
 ⚠️ Rules:
 - If the answer is a proper noun that's already minimal (e.g., "Leonardo da Vinci") → CANNOT_SHORTEN
 - If shortening would lose critical meaning → CANNOT_SHORTEN
-- Better to keep it long than to distort it`;
-          }
+- Better to keep it long than to distort it
 
 Question (for context): "${question.question_text}"
 
@@ -316,7 +315,7 @@ Respond ONLY in JSON:
     {"original": "...", "shortened": "..." or "CANNOT_SHORTEN"}
   ]
 }`;
-        }
+          }
 
         const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
