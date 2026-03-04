@@ -707,6 +707,11 @@ export const useQuestionStudio = () => {
 
   // Bulk shorten answers
   const [shortenProgress, setShortenProgress] = useState<{ processing: boolean; processed: number; total: number } | null>(null);
+  const [shortenedIds, setShortenedIds] = useState<Set<string>>(new Set());
+
+  const clearShortenedIds = useCallback(() => {
+    setShortenedIds(new Set());
+  }, []);
 
   const bulkShortenAnswers = useCallback(async (specificIds?: string[]) => {
     console.log('[SHORTEN] bulkShortenAnswers called with', specificIds?.length, 'ids:', specificIds?.slice(0, 3));
@@ -757,14 +762,19 @@ export const useQuestionStudio = () => {
 
       setShortenProgress(null);
       toast.success(`${totalShortened} პასუხი შემოკლდა (${totalProcessed} დამუშავდა)`);
-      clearSelection();
+      
+      // Mark shortened questions and keep selection visible
+      if (specificIds) {
+        setShortenedIds(new Set(specificIds));
+      }
+      // Don't clear selection — let user review results
       fetchQuestions();
     } catch (err) {
       console.error('Error shortening answers:', err);
       toast.error('პასუხების შემოკლება ვერ მოხერხდა');
       setShortenProgress(null);
     }
-  }, [productionStatus, language, selectedCategoryId, clearSelection, fetchQuestions]);
+  }, [productionStatus, language, selectedCategoryId, fetchQuestions]);
 
   return {
     // Tab
@@ -830,5 +840,7 @@ export const useQuestionStudio = () => {
     // Shorten
     bulkShortenAnswers,
     shortenProgress,
+    shortenedIds,
+    clearShortenedIds,
   };
 };

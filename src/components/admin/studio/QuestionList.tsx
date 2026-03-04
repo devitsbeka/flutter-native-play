@@ -35,6 +35,7 @@ interface QuestionListProps {
   totalCount: number;
   onPageChange: (page: number) => void;
   loading: boolean;
+  shortenedIds?: Set<string>;
 }
 
 const difficultyColors: Record<string, string> = {
@@ -62,6 +63,7 @@ export function QuestionList({
   totalCount,
   onPageChange,
   loading,
+  shortenedIds,
 }: QuestionListProps) {
   const totalPages = Math.ceil(totalCount / pageSize);
   const allSelected = questions.length > 0 && questions.every(q => selectedIds.has(q.id));
@@ -185,6 +187,11 @@ export function QuestionList({
                         )}>
                           {maxAnswerLen > 25 && <AlertTriangle className="h-2.5 w-2.5" />}
                           {maxAnswerLen}c
+                        </span>
+                      )}
+                      {shortenedIds?.has(question.id) && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary flex items-center gap-0.5">
+                          ✂ შემოკლდა
                         </span>
                       )}
                       {question.icon_slug && (
