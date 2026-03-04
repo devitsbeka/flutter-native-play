@@ -729,6 +729,7 @@ export const useQuestionStudio = () => {
             inProduction: inProd,
             language: lang || 'all',
             questionIds: specificIds,
+            aggressiveMode: !specificIds, // re-process when doing category-wide
           },
         });
 
