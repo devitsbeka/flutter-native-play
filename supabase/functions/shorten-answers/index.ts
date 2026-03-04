@@ -77,8 +77,10 @@ serve(async (req) => {
       .select("id, question_text, correct_answer, incorrect_answers, category_id, language")
       .eq("is_active", true);
 
-    // In aggressive mode, also re-process already-shortened answers that are still > threshold
-    if (aggressiveMode) {
+    // Skip status filter when specific questionIds are provided (user explicitly selected these)
+    if (questionIds && Array.isArray(questionIds) && questionIds.length > 0) {
+      // No status filter — process regardless of previous status
+    } else if (aggressiveMode) {
       query = query.or("answer_shorten_status.is.null,answer_shorten_status.eq.shortened");
     } else {
       query = query.is("answer_shorten_status", null);
