@@ -1,79 +1,49 @@
 
 
-# Auto-Start Game After Avatar Setup
+## Add "Shorten Long Answers" Feature to Question Studio
 
-## Problem
-When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
+### Problem
+Question Studio has no way to shorten answers. The CombinedShortener tool on the Tools page doesn't work. You want to sort by longest answers, see those questions, and shorten them in bulk — all from Question Studio.
 
-## Solution
-Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
+### Solution
+Add a **"Shorten Answers" bulk action button** to Question Studio that appears when questions are selected (or as a top-bar action). When clicked, it calls the existing `shorten-answers` edge function on the selected questions (or all visible questions with long answers).
 
-## Changes
+### Implementation
 
-### 1. `src/contexts/AvatarModalContext.tsx`
-- Add an optional `onComplete` callback to the context
-- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
-- Store the callback in a ref
-- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
+#### 1. Add a "Shorten Long Answers" button to `QuestionStudio.tsx`
+Add a new button in the top bar (next to "Bulk Generator") that:
+- Counts how many visible questions have answers > 20 chars
+- When clicked, processes them in batches through the `shorten-answers` edge function
+- Shows progress (processing count / total)
+- Refreshes the question list after completion
 
-### 2. `src/components/home/AvatarModal.tsx`
-- Accept a new optional `onComplete?: () => void` prop
-- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+#### 2. Add `bulkShortenAnswers` method to `useQuestionStudio.ts`
+New method that:
+- Finds all currently loaded questions with any answer > 20 characters
+- Calls `supabase.functions.invoke('shorten-answers', { body: { categoryId, inProduction, language } })`
+- Loops in batches until `done: true` or `remaining: 0`
+- Calls `refetch()` after completion
 
-### 3. `src/pages/Index.tsx`
-- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
-  ```
-  openAvatarModal(() => navigate("/game"));
-  ```
+#### 3. Show answer lengths in QuestionList items
+When sorted by `longest_answer`, display a small badge showing the max answer length on each question card so you can see which answers are too long.
 
-## Technical Details
+#### 4. Add to BulkActionsBar
+When questions are selected, add a "✨ Shorten Answers" action button that shortens only the selected questions' answers.
 
-**AvatarModalContext changes:**
-```typescript
-interface AvatarModalContextType {
-  openAvatarModal: (onComplete?: () => void) => void;
-  closeAvatarModal: () => void;
-  isOpen: boolean;
-}
+### Files to Modify
 
-// Store pending callback in a ref
-const onCompleteRef = useRef<(() => void) | null>(null);
+| File | Change |
+|------|--------|
+| `src/hooks/useQuestionStudio.ts` | Add `bulkShortenAnswers()` method that calls the edge function in a loop |
+| `src/pages/admin/QuestionStudio.tsx` | Add "Shorten Answers" button in top bar with progress state |
+| `src/components/admin/studio/QuestionList.tsx` | Show max answer length badge when sorted by `longest_answer` |
+| `src/components/admin/studio/BulkActionsBar.tsx` | Add "Shorten Answers" option to bulk actions |
 
-const openAvatarModal = useCallback((onComplete?: () => void) => {
-  onCompleteRef.current = onComplete || null;
-  setIsOpen(true);
-}, []);
+### Flow
+1. Open Question Studio → sort by "გრძელი პასუხები" (longest answers)
+2. See questions with answer length badges (e.g., "42 chars")
+3. Click "Shorten Answers" in top bar → processes ALL questions with long answers for current category/language/production filters
+4. Or: select specific questions → use bulk action "Shorten Answers" for just those
+5. Progress indicator shows batch count
+6. Questions refresh automatically after completion
 
-const closeAvatarModal = useCallback(() => {
-  setIsOpen(false);
-  onCompleteRef.current = null;
-}, []);
-
-// Pass onComplete to AvatarModal
-<AvatarModal
-  isOpen={isOpen}
-  onClose={closeAvatarModal}
-  onComplete={() => {
-    const cb = onCompleteRef.current;
-    setIsOpen(false);
-    onCompleteRef.current = null;
-    cb?.();
-  }}
-/>
-```
-
-**AvatarModal changes:**
-- New prop: `onComplete?: () => void`
-- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
-
-**Index.tsx change:**
-```typescript
-} else if (!profile?.avatar_url) {
-  openAvatarModal(() => navigate("/game"));
-}
-```
-
-## Files to edit
-1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
-2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
-3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
