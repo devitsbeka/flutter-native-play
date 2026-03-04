@@ -232,12 +232,14 @@ Incorrect 3: "${incorrectAnswers[2] || ''}"`;
         }
 
         // Validate and apply results
-        const newCorrect = parsed.correct.length <= MAX_ANSWER_LENGTH ? parsed.correct : question.correct_answer;
+        const newCorrect = (parsed.correct.length <= MAX_ANSWER_LENGTH || parsed.correct.length < question.correct_answer.length) 
+          ? parsed.correct : question.correct_answer;
         const correctWasShortened = newCorrect !== question.correct_answer;
         
         const newIncorrect = parsed.incorrect.map((ans, idx) => {
-          if (ans && ans.length <= MAX_ANSWER_LENGTH) return ans;
-          return incorrectAnswers[idx] || ans;
+          const original = incorrectAnswers[idx] || '';
+          if (ans && (ans.length <= MAX_ANSWER_LENGTH || ans.length < original.length)) return ans;
+          return original || ans;
         });
         const incorrectShortenedCount = newIncorrect.filter((ans, idx) => ans !== incorrectAnswers[idx]).length;
 
