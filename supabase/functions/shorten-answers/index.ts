@@ -234,7 +234,35 @@ ${answersToShorten.map((a, i) => `${i + 1}. "${a.answer}" (${a.answer.length} �
 }`;
         } else {
           // Enhanced English prompt (also used as default for other languages)
-          prompt = `You are a trivia quiz answer shortening expert. Your goal: make answers fit on mobile quiz buttons (max ${MAX_ANSWER_LENGTH} characters).
+          if (useSentenceRewritePrompt) {
+            prompt = `You are a trivia quiz answer shortening expert. These answers are FULL SENTENCES that need to be converted into concise quiz button labels (max ${MAX_ANSWER_LENGTH} characters).
+
+CRITICAL: The output MUST be in English. Do NOT translate answers into any other language.
+
+Task: Extract the KEY CONCEPT from each sentence answer and turn it into a short quiz button label (max ${MAX_ANSWER_LENGTH} characters).
+
+✅ GOOD transformations (learn from these):
+- "It reduces the learning rate gradually" → "Reduces learning rate"
+- "The process of photosynthesis occurs" → "Photosynthesis"
+- "Carbon dioxide is released into the atmosphere" → "CO₂ released"
+- "The model overfits to the outliers, leading to poor generalization" → "Overfits outliers"
+- "Gradient explosion or vanishing occurs, preventing effective learning" → "Gradient explosion"
+- "Adversarial perturbations are spontaneously generated within the model" → "Adversarial generation"
+- "It increases the number of parameters significantly" → "More parameters"
+- "The algorithm converges to a local minimum" → "Local minimum"
+
+🚫 Do NOT:
+- Keep the full sentence — extract the core concept only
+- Truncate words (e.g., "Alexander" → "Alexand" is WRONG)
+- Use obscure abbreviations
+- Change the factual meaning
+
+⚠️ Rules:
+- EVERY answer MUST be shortened to ≤${MAX_ANSWER_LENGTH} chars — no exceptions for sentences
+- Extract the noun phrase or key concept that makes this answer unique
+- If truly impossible without losing all meaning → CANNOT_SHORTEN`;
+          } else {
+            prompt = `You are a trivia quiz answer shortening expert. Your goal: make answers fit on mobile quiz buttons (max ${MAX_ANSWER_LENGTH} characters).
 
 CRITICAL: The output MUST be in English. Do NOT translate answers into any other language. Only shorten - do not change the language.
 
@@ -269,7 +297,8 @@ Task: Shorten each answer to max ${MAX_ANSWER_LENGTH} characters. These are quiz
 ⚠️ Rules:
 - If the answer is a proper noun that's already minimal (e.g., "Leonardo da Vinci") → CANNOT_SHORTEN
 - If shortening would lose critical meaning → CANNOT_SHORTEN
-- Better to keep it long than to distort it
+- Better to keep it long than to distort it`;
+          }
 
 Question (for context): "${question.question_text}"
 
@@ -417,16 +446,23 @@ Respond ONLY in JSON:
           unshortenable++;
         }
 
-        // Update database - store in PENDING columns for review
+        // Direct Apply mode: write shortened answers directly, archive originals
+        const updatePayload: Record<string, any> = {
+          answer_shorten_status: status,
+          original_correct_answer: question.correct_answer,
+          original_incorrect_answers: incorrectAnswers,
+        };
+
+        if (correctWasShortened) {
+          updatePayload.correct_answer = newCorrectAnswer;
+        }
+        if (incorrectShortenedCount > 0) {
+          updatePayload.incorrect_answers = newIncorrectAnswers;
+        }
+
         await supabase
           .from("questions")
-          .update({
-            pending_correct_answer: correctWasShortened ? newCorrectAnswer : null,
-            pending_incorrect_answers: incorrectShortenedCount > 0 ? newIncorrectAnswers : null,
-            answer_shorten_status: status === 'unshortenable' ? 'unshortenable' : 'pending_review',
-            original_correct_answer: question.correct_answer,
-            original_incorrect_answers: incorrectAnswers,
-          })
+          .update(updatePayload)
           .eq("id", question.id);
 
         results.push({
