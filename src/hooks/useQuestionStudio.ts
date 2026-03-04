@@ -684,6 +684,7 @@ export const useQuestionStudio = () => {
   useEffect(() => {
     setPage(0);
     clearSelection();
+    setShortenedIds(new Set());
   }, [productionStatus, selectedCategoryId, questionSearch, filters, language, clearSelection]);
 
   // Initial fetch
