@@ -57,7 +57,7 @@ serve(async (req) => {
   }
 
   try {
-    const { categoryId, testMode, inProduction, aggressiveMode, language } = await req.json();
+    const { categoryId, testMode, inProduction, aggressiveMode, language, questionIds } = await req.json();
     
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -97,6 +97,11 @@ serve(async (req) => {
     // Filter by category if specified
     if (categoryId && categoryId !== "all") {
       query = query.eq("category_id", categoryId);
+    }
+
+    // Filter by specific question IDs if provided
+    if (questionIds && Array.isArray(questionIds) && questionIds.length > 0) {
+      query = query.in("id", questionIds);
     }
 
     // Paginated fetch to handle 7000+ rows (Supabase default limit is 1000)
@@ -260,7 +265,19 @@ Task: Extract the KEY CONCEPT from each sentence answer and turn it into a short
 ⚠️ Rules:
 - EVERY answer MUST be shortened to ≤${MAX_ANSWER_LENGTH} chars — no exceptions for sentences
 - Extract the noun phrase or key concept that makes this answer unique
-- If truly impossible without losing all meaning → CANNOT_SHORTEN`;
+- If truly impossible without losing all meaning → CANNOT_SHORTEN
+
+Question (for context): "${question.question_text}"
+
+Answers to shorten:
+${answersToShorten.map((a, i) => `${i + 1}. "${a.answer}" (${a.answer.length} chars)`).join('\n')}
+
+Respond ONLY in JSON:
+{
+  "shortened": [
+    {"original": "...", "shortened": "..." or "CANNOT_SHORTEN"}
+  ]
+}`;
           } else {
             prompt = `You are a trivia quiz answer shortening expert. Your goal: make answers fit on mobile quiz buttons (max ${MAX_ANSWER_LENGTH} characters).
 
@@ -297,8 +314,7 @@ Task: Shorten each answer to max ${MAX_ANSWER_LENGTH} characters. These are quiz
 ⚠️ Rules:
 - If the answer is a proper noun that's already minimal (e.g., "Leonardo da Vinci") → CANNOT_SHORTEN
 - If shortening would lose critical meaning → CANNOT_SHORTEN
-- Better to keep it long than to distort it`;
-          }
+- Better to keep it long than to distort it
 
 Question (for context): "${question.question_text}"
 
@@ -311,6 +327,7 @@ Respond ONLY in JSON:
     {"original": "...", "shortened": "..." or "CANNOT_SHORTEN"}
   ]
 }`;
+          }
         }
 
         const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

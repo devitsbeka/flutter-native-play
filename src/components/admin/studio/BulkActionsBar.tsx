@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Rocket, Library, Trash2, ChevronDown, Copy, Palette, X } from 'lucide-react';
+import { Rocket, Library, Trash2, ChevronDown, Copy, Palette, X, Scissors } from 'lucide-react';
 import { useState } from 'react';
 import { ProductionStatus } from '@/hooks/useQuestionStudio';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,6 +28,8 @@ interface BulkActionsBarProps {
   onRemoveFromProduction: () => void;
   onDelete: () => void;
   onChangeDifficulty: (difficulty: 'easy' | 'medium' | 'hard') => void;
+  onShortenAnswers: () => void;
+  shortenDisabled?: boolean;
   onClearSelection: () => void;
 }
 
@@ -38,6 +40,8 @@ export function BulkActionsBar({
   onRemoveFromProduction,
   onDelete,
   onChangeDifficulty,
+  onShortenAnswers,
+  shortenDisabled,
   onClearSelection,
 }: BulkActionsBarProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -92,6 +96,17 @@ export function BulkActionsBar({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onShortenAnswers}
+              disabled={shortenDisabled}
+              className="gap-1.5"
+            >
+              <Scissors className="h-3.5 w-3.5" />
+              შემოკლება
+            </Button>
 
             <Button 
               size="sm" 
