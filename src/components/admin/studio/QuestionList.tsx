@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, ChevronLeft, ChevronRight, CheckSquare, Globe } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, CheckSquare, Globe, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StudioQuestion, StudioFilters, getQuestionType } from '@/hooks/useQuestionStudio';
 import { QuestionFilters } from './QuestionFilters';
@@ -133,6 +133,10 @@ export function QuestionList({
               const isPreview = index === previewIndex;
               const type = getQuestionType(question);
 
+              const allAnswers = [question.correct_answer, ...question.incorrect_answers];
+              const maxAnswerLen = Math.max(...allAnswers.map(a => (a || '').length));
+              const showAnswerLen = filters.sortBy === 'longest_answer';
+
               return (
                 <div
                   key={question.id}
@@ -174,6 +178,15 @@ export function QuestionList({
                         {question.difficulty === 'easy' ? 'მარტივი' : 
                          question.difficulty === 'medium' ? 'საშუალო' : 'რთული'}
                       </span>
+                      {showAnswerLen && (
+                        <span className={cn(
+                          "px-1.5 py-0.5 rounded text-[10px] font-medium flex items-center gap-0.5",
+                          maxAnswerLen > 25 ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"
+                        )}>
+                          {maxAnswerLen > 25 && <AlertTriangle className="h-2.5 w-2.5" />}
+                          {maxAnswerLen}c
+                        </span>
+                      )}
                       {question.icon_slug && (
                         <span className="text-[10px] text-muted-foreground">
                           🎨 {question.icon_slug}

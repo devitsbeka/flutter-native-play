@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Link2, Sparkles } from 'lucide-react';
+import { Plus, Link2, Sparkles, Scissors } from 'lucide-react';
 import { useQuestionStudio, StudioQuestion } from '@/hooks/useQuestionStudio';
 import { StudioTabs } from '@/components/admin/studio/StudioTabs';
 import { CategorySidebar } from '@/components/admin/studio/CategorySidebar';
@@ -166,6 +166,17 @@ export default function QuestionStudio() {
             <Sparkles className="h-4 w-4 mr-1" />
             Bulk Generator
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => studio.bulkShortenAnswers()}
+            disabled={!!studio.shortenProgress}
+          >
+            <Scissors className="h-4 w-4 mr-1" />
+            {studio.shortenProgress
+              ? `${studio.shortenProgress.processed}/${studio.shortenProgress.total}...`
+              : 'შემოკლება'}
+          </Button>
           <StudioTabs
             activeTab={studio.productionStatus}
             onTabChange={(tab) => {
@@ -242,6 +253,8 @@ export default function QuestionStudio() {
         onRemoveFromProduction={() => studio.bulkRemoveFromProduction(selectedArray)}
         onDelete={() => studio.bulkDelete(selectedArray)}
         onChangeDifficulty={(d) => studio.bulkChangeDifficulty(selectedArray, d)}
+        onShortenAnswers={() => studio.bulkShortenAnswers(selectedArray)}
+        shortenDisabled={!!studio.shortenProgress}
         onClearSelection={studio.clearSelection}
       />
 
