@@ -265,7 +265,19 @@ Task: Extract the KEY CONCEPT from each sentence answer and turn it into a short
 ⚠️ Rules:
 - EVERY answer MUST be shortened to ≤${MAX_ANSWER_LENGTH} chars — no exceptions for sentences
 - Extract the noun phrase or key concept that makes this answer unique
-- If truly impossible without losing all meaning → CANNOT_SHORTEN`;
+- If truly impossible without losing all meaning → CANNOT_SHORTEN
+
+Question (for context): "${question.question_text}"
+
+Answers to shorten:
+${answersToShorten.map((a, i) => `${i + 1}. "${a.answer}" (${a.answer.length} chars)`).join('\n')}
+
+Respond ONLY in JSON:
+{
+  "shortened": [
+    {"original": "...", "shortened": "..." or "CANNOT_SHORTEN"}
+  ]
+}`;
           } else {
             prompt = `You are a trivia quiz answer shortening expert. Your goal: make answers fit on mobile quiz buttons (max ${MAX_ANSWER_LENGTH} characters).
 
