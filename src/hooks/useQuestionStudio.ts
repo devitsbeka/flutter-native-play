@@ -723,16 +723,20 @@ export const useQuestionStudio = () => {
 
       while (iteration < MAX_ITERATIONS) {
         iteration++;
+        const payload = {
+          categoryId: catId || 'all',
+          inProduction: inProd,
+          language: lang || 'all',
+          questionIds: specificIds,
+          aggressiveMode: !specificIds,
+        };
+        console.log('[SHORTEN] Invoking shorten-answers, iteration', iteration, payload);
+        
         const { data, error } = await supabase.functions.invoke('shorten-answers', {
-          body: {
-            categoryId: catId || 'all',
-            inProduction: inProd,
-            language: lang || 'all',
-            questionIds: specificIds,
-            aggressiveMode: !specificIds, // re-process when doing category-wide
-          },
+          body: payload,
         });
 
+        console.log('[SHORTEN] Response:', { data, error });
         if (error) throw error;
 
         totalProcessed += data.processed || 0;

@@ -1,36 +1,79 @@
 
 
-## Fix "შემოკლება" (Shorten Answers) — Debugging & Fix
+# Auto-Start Game After Avatar Setup
 
-### Diagnosis
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-Edge function logs show only boot/shutdown — no request processing logs. This means either:
-1. The function receives the request but crashes before any logging
-2. The client-side code silently errors before making the call
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-### Plan
+## Changes
 
-#### 1. Add debugging logs to edge function (`supabase/functions/shorten-answers/index.ts`)
-Add `console.log` at key points:
-- Right after JSON parsing: log received params (`questionIds`, `categoryId`, `aggressiveMode`)
-- After query: log number of questions found and number with long answers
-- This will reveal if the function is called and what it finds
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-#### 2. Add debugging to client hook (`src/hooks/useQuestionStudio.ts`)
-Add `console.log` in `bulkShortenAnswers`:
-- Before the invoke call: log the IDs being sent
-- After the response: log the full `data` and `error` objects
-- This will reveal if the function is called and what it returns
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-#### 3. Redeploy the edge function
-Ensure the latest code (with `questionIds` support and status filter bypass) is actually live.
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-### Files to Modify
+## Technical Details
 
-| File | Change |
-|------|--------|
-| `supabase/functions/shorten-answers/index.ts` | Add console.log at start, after query, after filtering |
-| `src/hooks/useQuestionStudio.ts` | Add console.log in bulkShortenAnswers before/after invoke |
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
 
-This is a quick debug-first approach. Once we see the logs, we'll know exactly what's failing and can fix it immediately.
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
 
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
+```
+
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
+
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
