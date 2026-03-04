@@ -57,7 +57,14 @@ serve(async (req) => {
   }
 
   try {
-    const { categoryId, testMode, inProduction, aggressiveMode, language, questionIds } = await req.json();
+    const body = await req.json();
+    const { categoryId, testMode, inProduction, aggressiveMode, language, questionIds } = body;
+    
+    console.log("=== SHORTEN-ANSWERS REQUEST ===", JSON.stringify({
+      categoryId, inProduction, aggressiveMode, language,
+      questionIds: questionIds?.length || 0,
+      questionIdsSample: questionIds?.slice(0, 3),
+    }));
     
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -123,6 +130,8 @@ serve(async (req) => {
       page++;
     }
 
+    console.log(`=== FETCHED ${allQuestions.length} questions from DB ===`);
+
     // Filter to questions with long answers
     const questionsWithLongAnswers = (allQuestions || []).filter((q) => {
       const incorrectAnswers = Array.isArray(q.incorrect_answers) 
@@ -135,10 +144,13 @@ serve(async (req) => {
       return correctTooLong || anyIncorrectTooLong;
     });
 
+    console.log(`=== ${questionsWithLongAnswers.length} questions have long answers (threshold: ${threshold}) ===`);
+
     const limit = testMode ? Math.min(5, questionsWithLongAnswers.length) : BATCH_SIZE;
     const questionsToProcess = questionsWithLongAnswers.slice(0, limit);
 
     if (questionsToProcess.length === 0) {
+      console.log("=== NO QUESTIONS TO PROCESS, returning done ===");
       return new Response(
         JSON.stringify({
           done: true,
