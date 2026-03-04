@@ -264,7 +264,7 @@ export default function QuestionStudio() {
 
       {/* Edit Dialog */}
       <Dialog open={!!editingQuestion} onOpenChange={() => setEditingQuestion(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>კითხვის რედაქტირება</DialogTitle>
           </DialogHeader>
