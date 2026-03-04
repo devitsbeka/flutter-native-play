@@ -705,6 +705,61 @@ export const useQuestionStudio = () => {
   // Current preview question
   const previewQuestion = questions[previewIndex] || null;
 
+  // Bulk shorten answers
+  const [shortenProgress, setShortenProgress] = useState<{ processing: boolean; processed: number; total: number } | null>(null);
+
+  const bulkShortenAnswers = useCallback(async (specificIds?: string[]) => {
+    try {
+      const inProd = productionStatus === 'production';
+      const lang = language === 'all' ? undefined : language;
+      const catId = selectedCategoryId || undefined;
+
+      setShortenProgress({ processing: true, processed: 0, total: 0 });
+
+      let totalProcessed = 0;
+      let totalShortened = 0;
+      let iteration = 0;
+      const MAX_ITERATIONS = 50;
+
+      while (iteration < MAX_ITERATIONS) {
+        iteration++;
+        const { data, error } = await supabase.functions.invoke('shorten-answers', {
+          body: {
+            categoryId: catId || 'all',
+            inProduction: inProd,
+            language: lang || 'all',
+            questionIds: specificIds,
+          },
+        });
+
+        if (error) throw error;
+
+        totalProcessed += data.processed || 0;
+        totalShortened += data.shortened || 0;
+        const remaining = data.remaining || 0;
+
+        setShortenProgress({
+          processing: true,
+          processed: totalProcessed,
+          total: totalProcessed + remaining,
+        });
+
+        if (data.done || remaining === 0 || data.processed === 0) break;
+
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      setShortenProgress(null);
+      toast.success(`${totalShortened} პასუხი შემოკლდა (${totalProcessed} დამუშავდა)`);
+      clearSelection();
+      fetchQuestions();
+    } catch (err) {
+      console.error('Error shortening answers:', err);
+      toast.error('პასუხების შემოკლება ვერ მოხერხდა');
+      setShortenProgress(null);
+    }
+  }, [productionStatus, language, selectedCategoryId, clearSelection, fetchQuestions]);
+
   return {
     // Tab
     productionStatus,
@@ -762,63 +817,7 @@ export const useQuestionStudio = () => {
     addQuestion,
     bulkAddQuestions,
     
-  // Bulk shorten answers
-  const [shortenProgress, setShortenProgress] = useState<{ processing: boolean; processed: number; total: number } | null>(null);
-
-  const bulkShortenAnswers = useCallback(async (specificIds?: string[]) => {
-    try {
-      const inProd = productionStatus === 'production';
-      const lang = language === 'all' ? undefined : language;
-      const catId = selectedCategoryId || undefined;
-
-      setShortenProgress({ processing: true, processed: 0, total: 0 });
-
-      let totalProcessed = 0;
-      let totalShortened = 0;
-      let iteration = 0;
-      const MAX_ITERATIONS = 50;
-
-      while (iteration < MAX_ITERATIONS) {
-        iteration++;
-        const { data, error } = await supabase.functions.invoke('shorten-answers', {
-          body: {
-            categoryId: catId || 'all',
-            inProduction: inProd,
-            language: lang || 'all',
-            questionIds: specificIds,
-          },
-        });
-
-        if (error) throw error;
-
-        totalProcessed += data.processed || 0;
-        totalShortened += data.shortened || 0;
-        const remaining = data.remaining || 0;
-
-        setShortenProgress({
-          processing: true,
-          processed: totalProcessed,
-          total: totalProcessed + remaining,
-        });
-
-        if (data.done || remaining === 0 || data.processed === 0) break;
-
-        // Small delay between batches
-        await new Promise(r => setTimeout(r, 500));
-      }
-
-      setShortenProgress(null);
-      toast.success(`${totalShortened} პასუხი შემოკლდა (${totalProcessed} დამუშავდა)`);
-      clearSelection();
-      fetchQuestions();
-    } catch (err) {
-      console.error('Error shortening answers:', err);
-      toast.error('პასუხების შემოკლება ვერ მოხერხდა');
-      setShortenProgress(null);
-    }
-  }, [productionStatus, language, selectedCategoryId, clearSelection, fetchQuestions]);
-
-  // Refetch
+    // Refetch
     refetchCategories: fetchCategories,
     refetchQuestions: fetchQuestions,
     
