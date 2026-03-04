@@ -34,9 +34,11 @@ export function getCorsHeaders(req: Request): Record<string, string> {
   // Check if origin is in allowed list (also allow no origin for same-origin requests)
   // Additionally allow Lovable's preview domains under *.lovableproject.com.
   const isLovableProjectPreview = origin.endsWith('.lovableproject.com');
+  const isLovableAppPreview = origin.endsWith('.lovable.app');
   const isAllowed =
     !origin ||
     isLovableProjectPreview ||
+    isLovableAppPreview ||
     ALLOWED_ORIGINS.some((allowed) => origin === allowed || origin.startsWith(allowed));
   
   return {
