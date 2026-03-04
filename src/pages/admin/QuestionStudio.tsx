@@ -225,6 +225,7 @@ export default function QuestionStudio() {
             totalCount={studio.totalCount}
             onPageChange={studio.setPage}
             loading={studio.loadingQuestions}
+            shortenedIds={studio.shortenedIds}
           />
         </div>
 

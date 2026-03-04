@@ -1,30 +1,79 @@
 
 
-## Keep Shortened Questions Visible & Marked in Question Studio
+# Auto-Start Game After Avatar Setup
 
-### Problem
-After shortening, `clearSelection()` is called and `fetchQuestions()` reloads the list — the user loses track of which questions were just shortened and can't see the before/after results.
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-### Solution
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-Two changes:
+## Changes
 
-#### 1. Don't clear selection after shortening (`useQuestionStudio.ts`)
-- Remove `clearSelection()` call from `bulkShortenAnswers` 
-- After `fetchQuestions()`, keep the selected IDs intact so the user can still see which questions were processed
-- Update the local `questions` array in-place after shortening instead of just refetching (so the user sees changes immediately)
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-#### 2. Mark shortened questions visually in the list (`QuestionList.tsx`)
-- After shortening completes, store the set of just-shortened question IDs in state (e.g. `shortenedIds`)
-- In the question list, show a small visual indicator (e.g. a green "✂ შემოკლდა" badge) next to questions that were just shortened
-- This badge persists until the user navigates away or clears it manually
-- The preview panel already shows the current answer text, so the user can click through selected questions to review results
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-### Files to Modify
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-| File | Change |
-|------|--------|
-| `src/hooks/useQuestionStudio.ts` | Add `shortenedIds` state. In `bulkShortenAnswers`: remove `clearSelection()`, store processed IDs in `shortenedIds`, keep selection after refetch. Expose `shortenedIds` and `clearShortenedIds`. |
-| `src/components/admin/studio/QuestionList.tsx` | Accept `shortenedIds` prop, show a "✂ შემოკლდა" badge on questions in that set. |
-| `src/pages/admin/QuestionStudio.tsx` | Pass `shortenedIds` to `QuestionList`, call `clearShortenedIds` when appropriate (e.g. on page/filter change). |
+## Technical Details
 
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
+
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
+
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
+```
+
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
+
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
+
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
