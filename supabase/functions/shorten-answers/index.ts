@@ -162,35 +162,10 @@ serve(async (req) => {
           ? question.incorrect_answers as string[]
           : [];
 
-        // Check if any answers look like full sentences → flag for rewrite
+        // Check if any answers look like full sentences → use enhanced rewrite prompt
         const allAnswers = [question.correct_answer, ...incorrectAnswers];
         const hasSentenceAnswers = allAnswers.some(a => looksLikeSentence(a));
-        
-        if (hasSentenceAnswers && question.language === 'en') {
-          // Flag as needs_rewrite — question itself is poorly constructed
-          await supabase
-            .from("questions")
-            .update({ 
-              answer_shorten_status: "needs_rewrite",
-              original_correct_answer: question.correct_answer,
-              original_incorrect_answers: incorrectAnswers,
-            })
-            .eq("id", question.id);
-
-          results.push({
-            id: question.id,
-            questionText: question.question_text,
-            originalCorrect: question.correct_answer,
-            shortenedCorrect: null,
-            originalIncorrect: incorrectAnswers,
-            shortenedIncorrect: incorrectAnswers.map(() => null),
-            status: 'needs_rewrite',
-            correctShortened: false,
-            incorrectShortenedCount: 0,
-          });
-          needsRewrite++;
-          continue;
-        }
+        const useSentenceRewritePrompt = hasSentenceAnswers;
 
         // Identify which answers need shortening
         const correctNeedsShortening = question.correct_answer.length > threshold;
