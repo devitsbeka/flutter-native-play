@@ -1,79 +1,46 @@
 
 
-# Auto-Start Game After Avatar Setup
+## Fix: "შემოკლება" Button Does Nothing
 
-## Problem
-When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
+### Root Cause
 
-## Solution
-Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
+The edge function `shorten-answers` filters questions by `answer_shorten_status IS NULL` (line 84). Most questions with long answers already have a status set from previous processing runs (`shortened`, `partially_shortened`, `failed`, etc.), so they get **zero results** and the function returns immediately with `done: true, processed: 0`.
 
-## Changes
+The network request IS being made, but the response says "nothing to do" because all questions are already marked as processed.
 
-### 1. `src/contexts/AvatarModalContext.tsx`
-- Add an optional `onComplete` callback to the context
-- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
-- Store the callback in a ref
-- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
+### Fix (2 changes)
 
-### 2. `src/components/home/AvatarModal.tsx`
-- Accept a new optional `onComplete?: () => void` prop
-- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
+#### 1. Edge function: Skip status filter when specific `questionIds` are provided
+In `supabase/functions/shorten-answers/index.ts`, when `questionIds` array is passed, do NOT filter by `answer_shorten_status`. The user explicitly selected these questions, so process them regardless of previous status.
 
-### 3. `src/pages/Index.tsx`
-- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
-  ```
-  openAvatarModal(() => navigate("/game"));
-  ```
-
-## Technical Details
-
-**AvatarModalContext changes:**
 ```typescript
-interface AvatarModalContextType {
-  openAvatarModal: (onComplete?: () => void) => void;
-  closeAvatarModal: () => void;
-  isOpen: boolean;
-}
-
-// Store pending callback in a ref
-const onCompleteRef = useRef<(() => void) | null>(null);
-
-const openAvatarModal = useCallback((onComplete?: () => void) => {
-  onCompleteRef.current = onComplete || null;
-  setIsOpen(true);
-}, []);
-
-const closeAvatarModal = useCallback(() => {
-  setIsOpen(false);
-  onCompleteRef.current = null;
-}, []);
-
-// Pass onComplete to AvatarModal
-<AvatarModal
-  isOpen={isOpen}
-  onClose={closeAvatarModal}
-  onComplete={() => {
-    const cb = onCompleteRef.current;
-    setIsOpen(false);
-    onCompleteRef.current = null;
-    cb?.();
-  }}
-/>
-```
-
-**AvatarModal changes:**
-- New prop: `onComplete?: () => void`
-- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
-
-**Index.tsx change:**
-```typescript
-} else if (!profile?.avatar_url) {
-  openAvatarModal(() => navigate("/game"));
+// Only apply status filter when processing by category (no specific IDs)
+if (!questionIds || questionIds.length === 0) {
+  if (aggressiveMode) {
+    query = query.or("answer_shorten_status.is.null,answer_shorten_status.eq.shortened");
+  } else {
+    query = query.is("answer_shorten_status", null);
+  }
 }
 ```
 
-## Files to edit
-1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
-2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
-3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
+#### 2. Hook: Pass `aggressiveMode: true` from the top-bar button
+In `src/hooks/useQuestionStudio.ts`, when calling from the top bar (no `specificIds`), pass `aggressiveMode: true` so it re-processes questions that still have long answers even if they were previously marked.
+
+```typescript
+body: {
+  categoryId: catId || 'all',
+  inProduction: inProd,
+  language: lang || 'all',
+  questionIds: specificIds,
+  aggressiveMode: !specificIds, // re-process when doing category-wide
+},
+```
+
+### Files to Modify
+
+| File | Change |
+|------|--------|
+| `supabase/functions/shorten-answers/index.ts` | Skip `answer_shorten_status` filter when `questionIds` is provided |
+| `src/hooks/useQuestionStudio.ts` | Add `aggressiveMode: true` for top-bar (category-wide) shortening |
+
