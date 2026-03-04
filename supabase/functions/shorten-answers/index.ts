@@ -57,7 +57,7 @@ serve(async (req) => {
   }
 
   try {
-    const { categoryId, testMode, inProduction, aggressiveMode, language } = await req.json();
+    const { categoryId, testMode, inProduction, aggressiveMode, language, questionIds } = await req.json();
     
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -97,6 +97,11 @@ serve(async (req) => {
     // Filter by category if specified
     if (categoryId && categoryId !== "all") {
       query = query.eq("category_id", categoryId);
+    }
+
+    // Filter by specific question IDs if provided
+    if (questionIds && Array.isArray(questionIds) && questionIds.length > 0) {
+      query = query.in("id", questionIds);
     }
 
     // Paginated fetch to handle 7000+ rows (Supabase default limit is 1000)
