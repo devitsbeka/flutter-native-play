@@ -709,6 +709,7 @@ export const useQuestionStudio = () => {
   const [shortenProgress, setShortenProgress] = useState<{ processing: boolean; processed: number; total: number } | null>(null);
 
   const bulkShortenAnswers = useCallback(async (specificIds?: string[]) => {
+    console.log('[SHORTEN] bulkShortenAnswers called with', specificIds?.length, 'ids:', specificIds?.slice(0, 3));
     try {
       const inProd = productionStatus === 'production';
       const lang = language === 'all' ? undefined : language;

@@ -253,7 +253,10 @@ export default function QuestionStudio() {
         onRemoveFromProduction={() => studio.bulkRemoveFromProduction(selectedArray)}
         onDelete={() => studio.bulkDelete(selectedArray)}
         onChangeDifficulty={(d) => studio.bulkChangeDifficulty(selectedArray, d)}
-        onShortenAnswers={() => studio.bulkShortenAnswers(selectedArray)}
+        onShortenAnswers={() => {
+          console.log('[SHORTEN-CLICK] selectedArray:', selectedArray);
+          studio.bulkShortenAnswers(selectedArray);
+        }}
         shortenDisabled={!!studio.shortenProgress}
         onClearSelection={studio.clearSelection}
       />
