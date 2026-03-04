@@ -1,47 +1,79 @@
 
 
-## Fix Mixed-Language Answer Corruption from Shortening
+# Auto-Start Game After Avatar Setup
 
-### Root Cause
+## Problem
+When a user clicks Play but has no avatar, they're shown the avatar modal. After setting their avatar, they're just returned to the home screen instead of being taken directly into the game (VS screen / matchmaking).
 
-The screenshot shows an English question ("What fueled the 18th-century Industrial Revolution in Britain?") with Georgian incorrect answers ("მეცნიერული აღმოჩენა", "მოსახლეობის ზრდა"). This happened because:
+## Solution
+Add an `onComplete` callback to the avatar modal flow so that when triggered from the Play button, saving an avatar navigates the user to `/game` instead of just closing the modal.
 
-1. The shortening function processes all 4 answers together — if the AI returns some answers in Georgian for an English question, the current guard only catches it when **all** outputs are Georgian. It misses **partially** mixed output.
-2. The AI may also be "translating" short English answers into Georgian when the question has some existing Georgian content.
+## Changes
 
-### Plan
+### 1. `src/contexts/AvatarModalContext.tsx`
+- Add an optional `onComplete` callback to the context
+- Update `openAvatarModal` to accept an optional callback: `openAvatarModal(onComplete?: () => void)`
+- Store the callback in a ref
+- Pass an `onComplete` prop to `AvatarModal`; when avatar is saved, call `onComplete` (if set) instead of just closing
 
-#### 1. Fix corrupted questions immediately (DB query)
+### 2. `src/components/home/AvatarModal.tsx`
+- Accept a new optional `onComplete?: () => void` prop
+- In `saveAvatar`, `saveOriginalPhoto`, `selectPreviousAvatar`, and `selectDefaultAvatar` (the save functions that call `onClose()`) -- after successful save, call `onComplete()` if provided, otherwise call `onClose()`
 
-Run a query to find all English questions that now have Georgian characters in their answers, and restore them from the `original_correct_answer` / `original_incorrect_answers` backup columns.
+### 3. `src/pages/Index.tsx`
+- In `handlePlayClick`, when `!profile?.avatar_url`, pass a callback to `openAvatarModal` that navigates to `/game`:
+  ```
+  openAvatarModal(() => navigate("/game"));
+  ```
 
-```sql
--- Find English questions with Georgian answers and restore originals
-UPDATE questions 
-SET correct_answer = original_correct_answer,
-    incorrect_answers = original_incorrect_answers,
-    answer_shorten_status = NULL,
-    original_correct_answer = NULL,
-    original_incorrect_answers = NULL
-WHERE language = 'en'
-  AND answer_shorten_status IS NOT NULL
-  AND original_correct_answer IS NOT NULL
-  AND (
-    correct_answer ~ '[\u10A0-\u10FF]'
-    OR incorrect_answers::text ~ '[\u10A0-\u10FF]'
-  );
+## Technical Details
+
+**AvatarModalContext changes:**
+```typescript
+interface AvatarModalContextType {
+  openAvatarModal: (onComplete?: () => void) => void;
+  closeAvatarModal: () => void;
+  isOpen: boolean;
+}
+
+// Store pending callback in a ref
+const onCompleteRef = useRef<(() => void) | null>(null);
+
+const openAvatarModal = useCallback((onComplete?: () => void) => {
+  onCompleteRef.current = onComplete || null;
+  setIsOpen(true);
+}, []);
+
+const closeAvatarModal = useCallback(() => {
+  setIsOpen(false);
+  onCompleteRef.current = null;
+}, []);
+
+// Pass onComplete to AvatarModal
+<AvatarModal
+  isOpen={isOpen}
+  onClose={closeAvatarModal}
+  onComplete={() => {
+    const cb = onCompleteRef.current;
+    setIsOpen(false);
+    onCompleteRef.current = null;
+    cb?.();
+  }}
+/>
 ```
 
-#### 2. Harden the edge function (`supabase/functions/shorten-answers/index.ts`)
+**AvatarModal changes:**
+- New prop: `onComplete?: () => void`
+- In each save function, replace `onClose()` with: `onComplete ? onComplete() : onClose()`
 
-Strengthen the Georgian guard to check **each individual answer** instead of just checking if any output has Georgian:
+**Index.tsx change:**
+```typescript
+} else if (!profile?.avatar_url) {
+  openAvatarModal(() => navigate("/game"));
+}
+```
 
-- For English questions: reject if **any single** output answer contains Georgian characters
-- Add a per-answer language consistency check before writing to DB
-- Also add a guard for Georgian questions getting Latin-only answers
-
-| File | Change |
-|------|--------|
-| `supabase/functions/shorten-answers/index.ts` | Per-answer language validation, reject any mixed output |
-| Database migration | Restore corrupted English questions from backup columns |
-
+## Files to edit
+1. `src/contexts/AvatarModalContext.tsx` -- Add onComplete callback support
+2. `src/components/home/AvatarModal.tsx` -- Use onComplete when saving avatar
+3. `src/pages/Index.tsx` -- Pass navigate callback when opening avatar modal from play button
