@@ -17,6 +17,13 @@ const STORAGE_KEY = 'preferredLanguage';
 
 function getStoredLanguage(): string {
   try {
+    // Check for ?lang= query parameter (force override)
+    const params = new URLSearchParams(window.location.search);
+    const langParam = params.get('lang');
+    if (langParam && translations[langParam]) {
+      localStorage.setItem(STORAGE_KEY, langParam);
+      return langParam;
+    }
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored && translations[stored]) return stored;
   } catch {}
