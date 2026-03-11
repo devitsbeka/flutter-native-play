@@ -247,11 +247,13 @@ export const useAdminQuestions = (categoryId?: string | null, searchTerm?: strin
     }
 
     try {
+      const detectedLang = detectQuestionLanguage(question.question_text, question.correct_answer);
       const { data, error } = await supabase
         .from('questions')
         .insert({
           ...question,
           incorrect_answers: question.incorrect_answers,
+          language: detectedLang,
         })
         .select()
         .single();
