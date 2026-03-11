@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH, isQuestionComplete } from '@/utils/questionValidation';
+import { detectQuestionLanguage } from '@/utils/languageDetection';
 
 export interface AdminQuestion {
   id: string;
@@ -246,11 +247,13 @@ export const useAdminQuestions = (categoryId?: string | null, searchTerm?: strin
     }
 
     try {
+      const detectedLang = detectQuestionLanguage(question.question_text, question.correct_answer);
       const { data, error } = await supabase
         .from('questions')
         .insert({
           ...question,
           incorrect_answers: question.incorrect_answers,
+          language: detectedLang,
         })
         .select()
         .single();
@@ -301,9 +304,13 @@ export const useAdminQuestions = (categoryId?: string | null, searchTerm?: strin
 
   const bulkAddQuestions = async (questionsData: Omit<AdminQuestion, 'id' | 'created_at' | 'updated_at'>[]) => {
     try {
+      const withLang = questionsData.map(q => ({
+        ...q,
+        language: detectQuestionLanguage(q.question_text, q.correct_answer),
+      }));
       const { data, error } = await supabase
         .from('questions')
-        .insert(questionsData)
+        .insert(withLang)
         .select();
 
       if (error) throw error;

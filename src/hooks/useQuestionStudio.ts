@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { detectQuestionLanguage } from '@/utils/languageDetection';
 
 export type QuestionType = 'text' | 'image' | 'video' | 'audio';
 export type ProductionStatus = 'library' | 'production';
@@ -616,6 +617,7 @@ export const useQuestionStudio = () => {
   // Add new question
   const addQuestion = useCallback(async (question: Omit<StudioQuestion, 'id' | 'created_at' | 'updated_at' | 'is_active' | 'level_number'>) => {
     try {
+      const detectedLang = detectQuestionLanguage(question.question_text, question.correct_answer);
       const { data, error } = await supabase
         .from('questions')
         .insert({
@@ -631,6 +633,7 @@ export const useQuestionStudio = () => {
           image_url: question.image_url,
           video_url: question.video_url,
           audio_url: question.audio_url,
+          language: detectedLang,
         })
         .select()
         .single();
@@ -666,6 +669,7 @@ export const useQuestionStudio = () => {
           level_number: 1,
           is_active: true,
           in_production: false,
+          language: detectQuestionLanguage(q.question_text, q.correct_answer),
         })));
       
       if (error) throw error;
