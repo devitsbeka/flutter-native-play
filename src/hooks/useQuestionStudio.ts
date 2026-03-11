@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { detectQuestionLanguage } from '@/utils/languageDetection';
 
 export type QuestionType = 'text' | 'image' | 'video' | 'audio';
 export type ProductionStatus = 'library' | 'production';

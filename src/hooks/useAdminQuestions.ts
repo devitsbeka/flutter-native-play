@@ -304,9 +304,13 @@ export const useAdminQuestions = (categoryId?: string | null, searchTerm?: strin
 
   const bulkAddQuestions = async (questionsData: Omit<AdminQuestion, 'id' | 'created_at' | 'updated_at'>[]) => {
     try {
+      const withLang = questionsData.map(q => ({
+        ...q,
+        language: detectQuestionLanguage(q.question_text, q.correct_answer),
+      }));
       const { data, error } = await supabase
         .from('questions')
-        .insert(questionsData)
+        .insert(withLang)
         .select();
 
       if (error) throw error;
