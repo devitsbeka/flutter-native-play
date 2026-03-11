@@ -616,6 +616,7 @@ export const useQuestionStudio = () => {
   // Add new question
   const addQuestion = useCallback(async (question: Omit<StudioQuestion, 'id' | 'created_at' | 'updated_at' | 'is_active' | 'level_number'>) => {
     try {
+      const detectedLang = detectQuestionLanguage(question.question_text, question.correct_answer);
       const { data, error } = await supabase
         .from('questions')
         .insert({
@@ -631,6 +632,7 @@ export const useQuestionStudio = () => {
           image_url: question.image_url,
           video_url: question.video_url,
           audio_url: question.audio_url,
+          language: detectedLang,
         })
         .select()
         .single();
