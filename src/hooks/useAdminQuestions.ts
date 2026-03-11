@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH, isQuestionComplete } from '@/utils/questionValidation';
+import { detectQuestionLanguage } from '@/utils/languageDetection';
 
 export interface AdminQuestion {
   id: string;

@@ -668,6 +668,7 @@ export const useQuestionStudio = () => {
           level_number: 1,
           is_active: true,
           in_production: false,
+          language: detectQuestionLanguage(q.question_text, q.correct_answer),
         })));
       
       if (error) throw error;
