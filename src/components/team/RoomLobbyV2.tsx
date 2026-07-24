@@ -59,6 +59,7 @@ export function RoomLobbyV2() {
     leaveRoomPermanently,
     deleteRoom,
     startGame,
+    startNextFromQueue,
     loading,
     lastPlayedTriviaId,
     justReturnedFromResults,
@@ -251,12 +252,24 @@ export function RoomLobbyV2() {
   };
 
   const handleStartGame = async () => {
+    // When rounds are queued and no current category/trivia is selected
+    // (adding to the queue clears the room's current selection), start from
+    // the queue - startGame would otherwise pick RANDOM questions and leave
+    // the queued topics unconsumed
+    if (queue.length > 0 && !currentRoom?.category_id && !currentRoom?.user_trivia_id) {
+      setIsStarting(true);
+      playSound("button-click");
+      await startNextFromQueue();
+      setIsStarting(false);
+      return;
+    }
+
     // CRITICAL: Host-Observer policy for multiplayer rooms
     // - Library categories (category_id without user_trivia_id): Host ALWAYS plays
     // - Random categories (no category_id, no user_trivia_id): Host ALWAYS plays
     // - Open trivia (ღია): Host OBSERVES if they own it
     // - Closed trivia (დახურული): Host PLAYS if never played (plays_count=0), OBSERVES if already played
-    
+
     // Only check for observer mode if playing a user trivia (not library/random)
     if (currentRoom?.user_trivia_id && user?.id) {
       // Fetch the trivia to check ownership and play status
