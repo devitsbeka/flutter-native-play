@@ -357,9 +357,19 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           // Use refs for stable access (prevents stale closure issues)
           const currentPhase = phaseRef.current;
           const currentIsHost = isHostRef.current;
-          
+
+          // A new round can start while this player is still finishing the previous
+          // one (e.g. a slow player on the last question). Detect it via a changed
+          // game_id so they get pulled into the new round instead of finishing a
+          // dead round and polluting the room with a stale "finished" status.
+          const isNewGameWhilePlaying =
+            currentPhase === "playing" &&
+            !!updated.current_game_id &&
+            !!expectedGameIdRef.current &&
+            updated.current_game_id !== expectedGameIdRef.current;
+
           // Handle status changes
-          if (updated.status === "playing" && (currentPhase === "lobby" || currentPhase === "results")) {
+          if (updated.status === "playing" && (currentPhase === "lobby" || currentPhase === "results" || isNewGameWhilePlaying)) {
             // Non-host: fetch questions when game starts - USE shuffled_answers from DB
             if (!currentIsHost) {
               // CRITICAL: Clear local questions FIRST to prevent stale data showing
@@ -373,6 +383,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 currentRoom: updated, // Sync room state immediately
               }));
               
+              // CRITICAL: Reset OWN participant row for the new round. RLS blocks the
+              // host from resetting other players' rows, so without this the stale
+              // "finished" status/current_question from the previous round survives
+              // and can falsely mark the new game as completed.
+              if (user?.id) {
+                await supabase
+                  .from("room_participants")
+                  .update({ score: 0, current_question: 0, status: "playing" })
+                  .eq("room_id", roomId)
+                  .eq("user_id", user.id);
+              }
+
               // Get expected game_id FRESH from database (realtime payload could be stale)
               const { data: freshRoomCheck } = await supabase
                 .from("game_rooms")
@@ -525,8 +547,17 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 currentRoom: freshRoom as GameRoom,
               }));
               
+              // Reset OWN participant row (RLS blocks the host from doing it for us)
+              if (user?.id) {
+                await supabase
+                  .from("room_participants")
+                  .update({ score: 0, current_question: 0, status: "playing" })
+                  .eq("room_id", roomId)
+                  .eq("user_id", user.id);
+              }
+
               const expectedGameId = freshRoom.current_game_id;
-              
+
               // Wait for questions to be fully committed
               await new Promise(resolve => setTimeout(resolve, 800));
               
@@ -609,17 +640,17 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           if (payload.eventType === "UPDATE" && (payload.new as any).status === "finished") {
             const { data: allParticipants } = await supabase
               .from("room_participants")
-              .select("status, user_id")
+              .select("status, user_id, current_question")
               .eq("room_id", roomId);
-            
+
             if (allParticipants && allParticipants.length > 0) {
               // Get room to check host_is_observer
               const { data: roomCheck } = await supabase
                 .from("game_rooms")
-                .select("host_user_id, host_is_observer, status")
+                .select("host_user_id, host_is_observer, status, total_questions")
                 .eq("id", roomId)
                 .maybeSingle();
-              
+
               // Only proceed if the room is still "playing"
               if (roomCheck && roomCheck.status === "playing") {
                 const activePlayers = allParticipants.filter(p => {
@@ -627,8 +658,17 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   if (roomCheck.host_is_observer && p.user_id === roomCheck.host_user_id) return false;
                   return true;
                 });
-                
-                const allFinished = activePlayers.every(p => p.status === "finished");
+
+                // CRITICAL: RLS only lets each user update their OWN participant row,
+                // so cross-player resets at round start silently fail and a player can
+                // carry a stale "finished" status from the previous round. Require
+                // actual progress through the current round's questions before counting
+                // a player as finished, otherwise one answer into a new round the room
+                // gets marked completed and everyone is kicked to results.
+                const totalQ = roomCheck.total_questions || 5;
+                const allFinished = activePlayers.every(
+                  p => p.status === "finished" && (p.current_question || 0) >= totalQ
+                );
                 
                 if (allFinished) {
                   console.log(`[MP] All ${activePlayers.length} players finished - marking room completed`);
@@ -1513,9 +1553,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .select("status")
       .eq("id", roomId)
       .single();
-    
-    // Only update DB if not already in waiting state
-    if (currentRoomState?.status !== "waiting") {
+
+    // Only update DB if not already in waiting state.
+    // NEVER downgrade a "playing" room - another player may have already started
+    // the next round, and flipping it to "waiting" would derail their live game.
+    if (currentRoomState?.status !== "waiting" && currentRoomState?.status !== "playing") {
       // Reset room status to waiting
       // If queue is empty, clear category so lobby shows "აირჩიე კატეგორია"
       await supabase
@@ -1696,6 +1738,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             started_at: new Date().toISOString(),
             current_game_id: game?.id,
             host_is_observer: hostShouldObserve,
+            total_questions: questions.length,
           })
           .eq("id", roomId);
         
@@ -1835,6 +1878,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           started_at: new Date().toISOString(),
           current_game_id: game?.id,
           host_is_observer: hostShouldObserve,
+          total_questions: questions.length,
         })
         .eq("id", roomId);
       

@@ -360,21 +360,31 @@ export function GameResultsScreenV2() {
     
     // Add item to queue first
     await addToQueue(item);
-    
+
     // CRITICAL FIX: Reset room status to waiting, but DON'T set category fields
     // The queue items will be shown separately, and the first item
     // will become "current" only when the game starts
     // This prevents the duplicate display bug where category appears both as
     // "current" AND in the queue
-    await supabase
+    // Guard: never downgrade a "playing" room - another player may have already
+    // started the next round and this write would derail their live game
+    const { data: freshRoom } = await supabase
       .from("game_rooms")
-      .update({
-        status: "waiting",
-        category_id: null,      // Clear - no current category
-        category_name: null,    // Clear - show empty state
-        user_trivia_id: null,   // Clear - no current trivia
-      })
-      .eq("id", currentRoom.id);
+      .select("status")
+      .eq("id", currentRoom.id)
+      .single();
+
+    if (freshRoom?.status !== "playing") {
+      await supabase
+        .from("game_rooms")
+        .update({
+          status: "waiting",
+          category_id: null,      // Clear - no current category
+          category_name: null,    // Clear - show empty state
+          user_trivia_id: null,   // Clear - no current trivia
+        })
+        .eq("id", currentRoom.id);
+    }
     
     // Navigate to lobby (continueInRoom will see status is already "waiting" and skip redundant DB update)
     continueInRoom();
