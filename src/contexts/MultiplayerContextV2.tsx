@@ -353,10 +353,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   }, [state.phase]);
 
   const isHost = state.currentRoom?.host_user_id === user?.id;
-  const isHostRef = useRef(isHost);
-  useEffect(() => {
-    isHostRef.current = isHost;
-  }, [isHost]);
+  // NOTE: room-start sync no longer keys off isHost - any player can start a
+  // round, and initiator-vs-follower is tracked via expectedGameIdRef instead
 
   // Ref for current question index to avoid stale closure in subscriptions
   const currentQuestionIndexRef = useRef(state.currentQuestionIndex);
@@ -437,7 +435,6 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           
           // Use refs for stable access (prevents stale closure issues)
           const currentPhase = phaseRef.current;
-          const currentIsHost = isHostRef.current;
 
           // A new round can start while this player is still finishing the previous
           // one (e.g. a slow player on the last question). Detect it via a changed
@@ -449,10 +446,20 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             !!expectedGameIdRef.current &&
             updated.current_game_id !== expectedGameIdRef.current;
 
+          // ANY player can start a round (results-screen "Play again", queue),
+          // so the discriminator for "should this client sync into the game"
+          // is whether it INITIATED the round (initiators set expectedGameIdRef
+          // before flipping the room to playing) - NOT whether it is the host.
+          // Gating on isHost left the host stranded in the lobby whenever the
+          // other player started the next round.
+          const alreadySyncedThisGame =
+            !!updated.current_game_id &&
+            updated.current_game_id === expectedGameIdRef.current;
+
           // Handle status changes
           if (updated.status === "playing" && (currentPhase === "lobby" || currentPhase === "results" || isNewGameWhilePlaying)) {
-            // Non-host: fetch questions when game starts - USE shuffled_answers from DB
-            if (!currentIsHost) {
+            // Fetch questions when a game someone else started begins - USE shuffled_answers from DB
+            if (!alreadySyncedThisGame) {
               // CRITICAL: Clear local questions FIRST to prevent stale data showing
               setState(prev => ({
                 ...prev,
@@ -574,7 +581,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 // CRITICAL: Do NOT fallback to stale data - this causes the sync issue!
                 console.error(`[MP] Failed to fetch questions for game_id ${expectedGameId} after ${MAX_ATTEMPTS} attempts`);
                 toast.error(tStandalone("extra.mpSyncFailed"));
-                
+
+                // Clear the ref so a later event for this game retries the sync
+                // (alreadySyncedThisGame would otherwise skip it forever)
+                expectedGameIdRef.current = null;
+
                 // Return to lobby instead of playing with stale/wrong data
                 setState(prev => ({
                   ...prev,
@@ -616,10 +627,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           
           if (freshRoom && freshRoom.status === "playing") {
             const currentPhase = phaseRef.current;
-            const currentIsHost = isHostRef.current;
-            
-            // Only handle if we're in lobby/results and NOT the host
-            if ((currentPhase === "lobby" || currentPhase === "results") && !currentIsHost) {
+
+            // Sync any client (host included) that is in lobby/results while a
+            // game IT DID NOT INITIATE is playing - any player can start rounds
+            const alreadySyncedThisGame =
+              !!freshRoom.current_game_id &&
+              freshRoom.current_game_id === expectedGameIdRef.current;
+            if ((currentPhase === "lobby" || currentPhase === "results") && !alreadySyncedThisGame) {
               console.log(`[MP] Subscription connected, room already playing. Fetching questions...`);
               
               // Clear local state first
@@ -709,6 +723,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               } else {
                 console.error(`[MP] Initial sync: failed to fetch questions after ${MAX_ATTEMPTS} attempts`);
                 toast.error(tStandalone("extra.mpSyncFailed"));
+                // Clear the ref so a later event for this game retries the sync
+                expectedGameIdRef.current = null;
                 setState(prev => ({
                   ...prev,
                   phase: "lobby",
