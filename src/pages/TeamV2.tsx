@@ -287,7 +287,10 @@ function TeamContentV2() {
   // Show auth modal for guests on mount (but NOT if they have a join code - show guest modal instead)
   useEffect(() => {
     const joinCode = searchParams.get("join");
-    if (isGuest && !joinCode) {
+    // Once per session - re-prompting on every tab visit was hostile; the page
+    // itself already shows a sign-in prompt for guests
+    if (isGuest && !joinCode && !sessionStorage.getItem("auth_prompt_shown")) {
+      sessionStorage.setItem("auth_prompt_shown", "true");
       setShowAuthModal(true);
     }
   }, [isGuest, searchParams]);

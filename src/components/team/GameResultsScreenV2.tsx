@@ -221,15 +221,13 @@ export function GameResultsScreenV2() {
   }, [user, profile, myScore, myRank, isWin, currentRoom, updateProfile, rankedParticipants, addCoins, participants, maybeShowInterstitial]);
 
   // Auto-open challenge share modal
+  // Prefetch challenge-share data so the share button opens instantly.
+  // The modal itself no longer auto-opens - popping a share sheet over every
+  // round's results interrupted multi-round play.
   useEffect(() => {
     if (hasAutoOpenedChallenge.current || !currentRoom?.current_game_id || !user) return;
-    
-    // Check sessionStorage to only auto-open once per room session
-    const storageKey = `challenge_shown_${currentRoom.id}`;
-    if (sessionStorage.getItem(storageKey)) return;
-    
+
     hasAutoOpenedChallenge.current = true;
-    sessionStorage.setItem(storageKey, "1");
 
     const fetchAndOpen = async () => {
       // Fetch questions
@@ -248,8 +246,6 @@ export function GameResultsScreenV2() {
         .eq("user_id", user.id)
         .eq("is_correct", true);
       setMyCorrectAnswers(count ?? undefined);
-
-      setShowChallengeModal(true);
     };
     fetchAndOpen();
   }, [currentRoom, user]);

@@ -209,7 +209,10 @@ export default function Leaderboards() {
 
   // Show auth modal for guests on mount
   useEffect(() => {
-    if (isGuest) {
+    // Once per session (shared key with /team) - guests kept getting the same
+    // sign-in wall on every single tab navigation
+    if (isGuest && !sessionStorage.getItem("auth_prompt_shown")) {
+      sessionStorage.setItem("auth_prompt_shown", "true");
       setShowAuthModal(true);
     }
   }, [isGuest]);

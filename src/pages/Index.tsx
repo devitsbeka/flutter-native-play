@@ -48,9 +48,6 @@ import guestMascotVideo from "@/assets/guest-welcome-avatar.mp4";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
 import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
-import { GuestWelcomePanel } from "@/components/home/GuestWelcomePanel";
-import { DesktopGuestSplitLayout } from "@/components/home/DesktopGuestSplitLayout";
-import { GuestSignupPromptModal } from "@/components/home/GuestSignupPromptModal";
 import { lovable } from "@/integrations/lovable";
 
 import { toast } from "@/hooks/use-toast";
@@ -204,7 +201,6 @@ export default function Index() {
   const [showWatchAdModal, setShowWatchAdModal] = useState(false);
   const [showGuestMaxPlaysModal, setShowGuestMaxPlaysModal] = useState(false);
   const [showNotEnoughCoinsModal, setShowNotEnoughCoinsModal] = useState(false);
-  const [showGuestSignupPrompt, setShowGuestSignupPrompt] = useState(false);
   const [isAnimatingFromHome, setIsAnimatingFromHome] = useState(false);
   const [showWelcomeOnboarding, setShowWelcomeOnboarding] = useState(false);
   const [showChangeNameModal, setShowChangeNameModal] = useState(false);
@@ -222,7 +218,12 @@ export default function Index() {
 
       if (isNewSignup || createdAt > thirtyMinAgo) {
         localStorage.removeItem("mytrivia_is_new_signup");
-        const timer = setTimeout(() => setShowWelcomeOnboarding(true), 800);
+        const timer = setTimeout(() => {
+          // Mark seen at SHOW time - marking only on dismiss made the tour
+          // re-fire on every app open until the user completed it
+          localStorage.setItem("mytrivia_welcome_onboarding_seen", "true");
+          setShowWelcomeOnboarding(true);
+        }, 800);
         return () => clearTimeout(timer);
       }
       // For old accounts without the flag, do nothing — don't permanently mark as seen
@@ -231,22 +232,30 @@ export default function Index() {
 
   // Invite Friends Modal state
   const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading, showWelcomeOnboarding, freeGamesExhausted);
-  const [inviteDismissedThisSession, setInviteDismissedThisSession] = useState(false);
   const [friendJoinedModalOpen, setFriendJoinedModalOpen] = useState(false);
 
   const [friendModalVariant, setFriendModalVariant] = useState<"inviter" | "invited">("inviter");
   const [friendModalInviterName, setFriendModalInviterName] = useState<string | undefined>();
 
-  // Check for invited user referral welcome flag (set in Auth.tsx after signup via referral)
+  // Check for invited user referral welcome flag (set in Auth.tsx after signup via referral).
+  // One popup at a time: while the welcome tour is pending or visible, keep the
+  // flag and show this only after the tour is dismissed (they used to stack).
   useEffect(() => {
     const referralWelcome = sessionStorage.getItem("referral_welcome");
-    if (referralWelcome) {
-      sessionStorage.removeItem("referral_welcome");
-      setFriendModalVariant("invited");
-      setFriendModalInviterName(referralWelcome !== "true" ? referralWelcome : undefined);
-      setFriendJoinedModalOpen(true);
-    }
-  }, []);
+    if (!referralWelcome) return;
+    if (!user || !profile) return; // wait for profile so the tour check is accurate
+    if (showWelcomeOnboarding) return;
+
+    const welcomeSeen = !!localStorage.getItem("mytrivia_welcome_onboarding_seen");
+    const createdAt = profile.created_at ? new Date(profile.created_at).getTime() : 0;
+    const isFreshAccount = createdAt > Date.now() - 30 * 60 * 1000;
+    if (isFreshAccount && !welcomeSeen) return; // tour is about to open - defer
+
+    sessionStorage.removeItem("referral_welcome");
+    setFriendModalVariant("invited");
+    setFriendModalInviterName(referralWelcome !== "true" ? referralWelcome : undefined);
+    setFriendJoinedModalOpen(true);
+  }, [user, profile, showWelcomeOnboarding]);
 
   // Realtime subscription for inviter: detect when a friend accepts the invite
   useEffect(() => {
@@ -586,11 +595,6 @@ export default function Index() {
         isOpen={showWelcomeOnboarding}
         onClose={() => setShowWelcomeOnboarding(false)}
       />
-      <GuestSignupPromptModal 
-        isOpen={showGuestSignupPrompt} 
-        onClose={() => setShowGuestSignupPrompt(false)} 
-      />
-      
       
       {/* Other modals */}
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
@@ -740,9 +744,10 @@ export default function Index() {
           </div>
         </header>
 
-        {/* Floating Gift Button (after invite modal dismissed OR pro gift dismissed) */}
+        {/* Floating Gift Button - the non-blocking entry to the invite offer
+            (the modal no longer auto-opens; it interrupted every app open) */}
         <AnimatePresence>
-          {inviteDismissedThisSession && !isVip && !inviteModalVisible && !showWelcomeOnboarding ? (
+          {user && !isVip && !vipLoading && freeGamesExhausted && !inviteModalVisible && !showWelcomeOnboarding ? (
             <FloatingGiftButton onClick={() => setInviteModalVisible(true)} />
           ) : null}
         </AnimatePresence>
@@ -752,11 +757,10 @@ export default function Index() {
           open={inviteModalVisible}
           onOpenChange={setInviteModalVisible}
           onDismiss={() => {
+            // Just close. Chaining the play-limit modal here meant two forced
+            // popups back to back; the limit modal now appears only when the
+            // user actually tries to play (guardPlay / Game entry).
             dismissInvite();
-            setInviteDismissedThisSession(true);
-            if (!showWelcomeOnboarding && freeGamesExhausted && !isVip) {
-              setShowGuestMaxPlaysModal(true);
-            }
           }}
         />
 
