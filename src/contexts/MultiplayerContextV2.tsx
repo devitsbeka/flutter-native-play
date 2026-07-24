@@ -1761,6 +1761,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   // Start new round (any player can call this)
   const startNewRound = useCallback(async () => {
     if (!state.currentRoom || !user) return;
+    // Product rule: ONLY the host starts rounds. Non-host clients are pulled
+    // into host-started games via the room realtime subscription.
+    if (state.currentRoom.host_user_id !== user.id) {
+      console.warn("[MP] startNewRound blocked - only the host can start rounds");
+      return;
+    }
     
     const roomId = state.currentRoom.id;
     
@@ -2076,6 +2082,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   // This function DIRECTLY fetches questions with the new category to avoid race conditions
   const startNextFromQueue = useCallback(async () => {
     if (!state.currentRoom || !user) return;
+    // Product rule: ONLY the host starts rounds (see startNewRound)
+    if (state.currentRoom.host_user_id !== user.id) {
+      console.warn("[MP] startNextFromQueue blocked - only the host can start rounds");
+      return;
+    }
     
     const roomId = state.currentRoom.id;
     // FIX: Use fresh default for new rounds from queue
