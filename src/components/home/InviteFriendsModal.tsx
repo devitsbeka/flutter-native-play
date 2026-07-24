@@ -16,17 +16,14 @@ const SESSION_KEY = "invite_modal_dismissed";
 export function useInviteModalVisibility(isVip: boolean, vipLoading: boolean, suppress = false, freeGamesExhausted = false) {
   const { user } = useAuth();
   const [visible, setVisible] = useState(false);
+  void user;
 
-  useEffect(() => {
-    if (!user || vipLoading || isVip || suppress || !freeGamesExhausted) return;
-    try {
-      if (localStorage.getItem("cached_vip_status") === "true") return;
-    } catch {}
-    try {
-      if (sessionStorage.getItem(SESSION_KEY)) return;
-    } catch {}
-    setVisible(true);
-  }, [user, isVip, vipLoading, suppress, freeGamesExhausted]);
+  // NOTE: this modal no longer auto-opens on app open - it interrupted every
+  // session for free-tier users (and chained into the play-limit modal).
+  // The persistent FloatingGiftButton is the entry point instead; the eligibility
+  // params are kept so the button can decide when to render.
+  void suppress;
+  void freeGamesExhausted;
 
   // Auto-dismiss if VIP status loads after modal was already shown
   useEffect(() => {
