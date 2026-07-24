@@ -1326,6 +1326,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           }])
           .select()
           .single();
+        // RLS may block this insert (e.g. migration not applied for guest
+        // starters) - abort loudly instead of starting a round with no game id
+        if (!game) {
+          console.error("[MP] Failed to create room_games record - aborting round start");
+          toast.error(tStandalone("extra.mpGameStartFailed"));
+          return;
+        }
         
         // Store in room_questions for sync WITH game_id for validation
         const insertResults = await Promise.all(questions.map((q, index) => 
@@ -1503,6 +1510,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       }])
       .select()
       .single();
+    // RLS may block this insert (e.g. migration not applied for guest
+    // starters) - abort loudly instead of starting a round with no game id
+    if (!game) {
+      console.error("[MP] Failed to create room_games record - aborting round start");
+      toast.error(tStandalone("extra.mpGameStartFailed"));
+      return;
+    }
     
     // Store questions in parallel WITH shuffled_answers for sync AND game_id for validation
     const insertResults = await Promise.all(questions.map((q, index) => 
@@ -1839,6 +1853,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           }])
           .select()
           .single();
+        // RLS may block this insert (e.g. migration not applied for guest
+        // starters) - abort loudly instead of starting a round with no game id
+        if (!game) {
+          console.error("[MP] Failed to create room_games record - aborting round start");
+          toast.error(tStandalone("extra.mpGameStartFailed"));
+          return;
+        }
         
         // Insert fresh questions with new game_id
         const insertResults1 = await Promise.all(questions.map((q, index) => 
@@ -1973,6 +1994,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }])
         .select()
         .single();
+      // RLS may block this insert (e.g. migration not applied for guest
+      // starters) - abort loudly instead of starting a round with no game id
+      if (!game) {
+        console.error("[MP] Failed to create room_games record - aborting round start");
+        toast.error(tStandalone("extra.mpGameStartFailed"));
+        return;
+      }
       
       // Store questions WITH shuffled_answers, icon_slug, AND game_id for validation
       const insertResults2 = await Promise.all(questions.map((q, index) => 
@@ -2157,6 +2185,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             }])
             .select()
             .single();
+          // RLS may block this insert (e.g. migration not applied for guest
+          // starters) - abort loudly instead of starting a round with no game id
+          if (!game) {
+            console.error("[MP] Failed to create room_games record - aborting round start");
+            toast.error(tStandalone("extra.mpGameStartFailed"));
+            return;
+          }
           
           // Store in room_questions WITH game_id for validation
           const insertResults3 = await Promise.all(questions.map((q, index) => 
@@ -2320,6 +2355,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }])
         .select()
         .single();
+      // RLS may block this insert (e.g. migration not applied for guest
+      // starters) - abort loudly instead of starting a round with no game id
+      if (!game) {
+        console.error("[MP] Failed to create room_games record - aborting round start");
+        toast.error(tStandalone("extra.mpGameStartFailed"));
+        return;
+      }
       
       // Store questions with icon_slug AND game_id for validation
       const insertResults4 = await Promise.all(questions.map((q, index) => 
