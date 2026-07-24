@@ -104,6 +104,30 @@ const safeDeleteRoomQuestions = async (roomId: string): Promise<boolean> => {
   return verified;
 };
 
+// Reset ALL participants' round state at game start.
+// RLS on room_participants only allows updating your own row, so a direct
+// client-side update silently no-ops for other players. The SECURITY DEFINER
+// RPC resets every row; if the migration isn't applied yet we fall back to
+// the direct update (own row only - other clients self-reset on round entry).
+const resetAllParticipants = async (roomId: string, status: "playing" | "joined" = "playing") => {
+  // Cast needed until Supabase types are regenerated after the migration
+  // (supabase/migrations/20260724120000_reset_room_participants_rpc.sql) is applied
+  const { error } = await (supabase.rpc as unknown as (
+    fn: string,
+    args: Record<string, unknown>
+  ) => Promise<{ error: { message: string } | null }>)("reset_room_participants", {
+    p_room_id: roomId,
+    p_status: status,
+  });
+  if (error) {
+    console.error("[MP] reset_room_participants RPC failed, falling back to own-row reset:", error);
+    await supabase
+      .from("room_participants")
+      .update({ score: 0, current_question: 0, status })
+      .eq("room_id", roomId);
+  }
+};
+
 // Simplified 4-phase system
 export type GamePhase = "idle" | "lobby" | "playing" | "results";
 
@@ -881,16 +905,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           })
           .eq("id", room.id);
           
-        // Reset participant progress for new round
-        await supabase
-          .from("room_participants")
-          .update({ 
-            current_question: 0, 
-            score: 0, 
-            has_seen_results: false,
-            status: "joined" 
-          })
-          .eq("room_id", room.id);
+        // Reset participant progress for new round (RPC resets ALL rows;
+        // direct updates would be RLS-limited to the caller's own row)
+        await resetAllParticipants(room.id, "joined");
         
         // Update local room object
         room.status = "waiting";
@@ -1227,10 +1244,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         await new Promise(resolve => setTimeout(resolve, 150));
         
         // Reset ALL participant scores for fair game start
-        await supabase
-          .from("room_participants")
-          .update({ score: 0, current_question: 0, status: "playing" })
-          .eq("room_id", roomId);
+        await resetAllParticipants(roomId);
         
         // FIX: Immediately reset local participants to prevent stale auto-advance
         setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
@@ -1413,10 +1427,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     // CRITICAL: Also reset status to "playing" - a stale "finished" status from the
     // previous round makes the completion check mark the room "completed" as soon as
     // any player answers the first question, kicking everyone to results mid-game
-    await supabase
-      .from("room_participants")
-      .update({ score: 0, current_question: 0, status: "playing" })
-      .eq("room_id", roomId);
+    await resetAllParticipants(roomId);
 
     // FIX: Immediately reset local participants to prevent stale auto-advance
     setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0, status: "playing" as const })));
@@ -1676,10 +1687,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }
         
         // FIX: Reset ALL participants' scores (not just caller)
-        await supabase
-          .from("room_participants")
-          .update({ score: 0, current_question: 0, status: "playing" })
-          .eq("room_id", roomId);
+        await resetAllParticipants(roomId);
         
         // FIX: Immediately reset local participants to prevent stale auto-advance
         setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
@@ -1816,10 +1824,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       markQuestionsAsSeen(questions.map(q => q.id));
       
       // FIX: Reset ALL participants' scores (not just caller)
-      await supabase
-        .from("room_participants")
-        .update({ score: 0, current_question: 0, status: "playing" })
-        .eq("room_id", roomId);
+      await resetAllParticipants(roomId);
       
       // FIX: Immediately reset local participants to prevent stale auto-advance
       setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
@@ -2006,10 +2011,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           });
           
           // Reset ALL participant scores for fair game start
-          await supabase
-            .from("room_participants")
-            .update({ score: 0, current_question: 0, status: "playing" })
-            .eq("room_id", roomId);
+          await resetAllParticipants(roomId);
           
           // FIX: Immediately reset local participants to prevent stale auto-advance
           setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
@@ -2172,10 +2174,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
       
       // Reset ALL participants for fair game start
-      await supabase
-        .from("room_participants")
-        .update({ score: 0, current_question: 0, status: "playing" })
-        .eq("room_id", roomId);
+      await resetAllParticipants(roomId);
       
       // FIX: Immediately reset local participants to prevent stale auto-advance
       setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));

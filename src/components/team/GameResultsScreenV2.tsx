@@ -180,14 +180,18 @@ export function GameResultsScreenV2() {
             .eq("id", currentRoom.current_game_id);
         }
 
-        // Save to room_match_history for recent games display
-        await supabase
-          .from("room_match_history")
-          .insert({
-            room_id: currentRoom.id,
-            winner_user_id: rankedParticipants[0]?.user_id || null,
-            player_scores: playerScores,
-          });
+        // Save to room_match_history for recent games display.
+        // Host only - every device runs this effect, so without the guard
+        // an N-player round inserts N duplicate history rows
+        if (isHost) {
+          await supabase
+            .from("room_match_history")
+            .insert({
+              room_id: currentRoom.id,
+              winner_user_id: rankedParticipants[0]?.user_id || null,
+              player_scores: playerScores,
+            });
+        }
 
         // Update participant stats including cumulative total_score
         const winnerId = rankedParticipants[0]?.user_id;

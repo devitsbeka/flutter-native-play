@@ -296,10 +296,18 @@ export function RoomLobbyV2() {
   const handleRemoveParticipant = async (participantId: string) => {
     if (!currentRoom || !isHost) return;
     try {
-      await supabase
+      // RLS silently matches 0 rows when the delete isn't permitted,
+      // so verify via returned rows instead of assuming success
+      const { data: removed, error } = await supabase
         .from("room_participants")
         .delete()
-        .eq("id", participantId);
+        .eq("id", participantId)
+        .select("id");
+      if (error) throw error;
+      if (!removed || removed.length === 0) {
+        toast.error(t("extra.removePlayerFailed"));
+        return;
+      }
       toast.success(t("extra.playerRemoved"));
     } catch (error) {
       console.error("Remove participant error:", error);
