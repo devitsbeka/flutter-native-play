@@ -1370,15 +1370,20 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     await new Promise(resolve => setTimeout(resolve, 300));
     
     // Reset all participants scores
+    // CRITICAL: Also reset status to "playing" - a stale "finished" status from the
+    // previous round makes the completion check mark the room "completed" as soon as
+    // any player answers the first question, kicking everyone to results mid-game
     await supabase
       .from("room_participants")
-      .update({ score: 0, current_question: 0 })
+      .update({ score: 0, current_question: 0, status: "playing" })
       .eq("room_id", roomId);
-    
+
     // FIX: Immediately reset local participants to prevent stale auto-advance
-    setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
+    setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0, status: "playing" as const })));
     
     // Update room status (includes host_is_observer to prevent premature realtime trigger)
+    // Also sync total_questions - a stale count from a previous custom-trivia round
+    // breaks the "finished" detection when players re-enter the room
     await supabase
       .from("game_rooms")
       .update({
@@ -1386,9 +1391,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         started_at: new Date().toISOString(),
         current_game_id: game?.id,
         host_is_observer: hostShouldObserve,
+        total_questions: questions.length,
       })
       .eq("id", roomId);
-    
+
     setState(prev => ({
       ...prev,
       questions,
