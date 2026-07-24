@@ -17,15 +17,17 @@ export function usePlayLimit() {
   const [regenConsumedLocally, setRegenConsumedLocally] = useState(false);
   const prevLastRegenAtRef = useRef<string | null>(null);
 
-  // Tick every minute so countdown updates
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(interval);
-  }, []);
-
   const gamesPlayed = profile?.games_played || 0;
   const playsRemaining = Math.max(0, MAX_FREE_PLAYS - gamesPlayed);
   const freeGamesExhausted = playsRemaining <= 0;
+
+  // Tick every minute so countdown updates - only when a countdown is actually shown
+  useEffect(() => {
+    if (isVip || !freeGamesExhausted) return;
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(interval);
+  }, [isVip, freeGamesExhausted]);
 
   // Regeneration logic
   const profileRegenAt = (profile as any)?.last_play_regen_at ?? null;

@@ -156,18 +156,25 @@ export function getResponsiveVideoSrc(mp4Url: string): {
   webm: string;
   mp4: string;
 } {
-  return { webm: toWebmUrl(mp4Url), mp4: mp4Url };
+  return {
+    webm: isMobileViewport() ? toMobileWebmUrl(mp4Url) : toWebmUrl(mp4Url),
+    mp4: mp4Url,
+  };
 }
 
-// Get all video URLs for preloading (deduplicated)
-export function getAllVideoUrls(): string[] {
-  const allMp4Urls = [
-    ...Object.values(MAP_VIDEOS),
-    ...Object.values(CATEGORY_VIDEOS),
+// Get all video URLs for preloading (deduplicated, viewport-aware so the
+// SW cache list matches what playback actually requests).
+// categoryLimit caps how many category videos are included (map videos always included).
+export function getAllVideoUrls(categoryLimit?: number): string[] {
+  const categoryUrls = [...new Set(Object.values(CATEGORY_VIDEOS))];
+  const limitedCategoryUrls =
+    categoryLimit != null ? categoryUrls.slice(0, categoryLimit) : categoryUrls;
+  const uniqueMp4 = [
+    ...new Set([...Object.values(MAP_VIDEOS), ...limitedCategoryUrls]),
   ];
-  const uniqueMp4 = [...new Set(allMp4Urls)];
+  const toUrl = isMobileViewport() ? toMobileWebmUrl : toWebmUrl;
 
-  return uniqueMp4.map((url) => toWebmUrl(url));
+  return uniqueMp4.map((url) => toUrl(url));
 }
 
 // Get all MP4 URLs (for legacy/fallback preloading)
@@ -182,4 +189,44 @@ export function getAllMp4Urls(): string[] {
 // Get category image URL for instant display while video loads
 export function getCategoryImageUrl(categoryId: string): string | null {
   return CATEGORY_IMAGES[categoryId] || null;
+}
+
+// Keyword patterns for mapping free-form post subjects/hashtags to a themed
+// category video. Ordered most-specific first; keys must exist in CATEGORY_VIDEOS.
+const SUBJECT_CATEGORY_PATTERNS: Array<[RegExp, string]> = [
+  [/georgian\s*cuisine|khachapuri|khinkali/, "georgian_cuisine"],
+  [/georgian\s*histor/, "georgian_history"],
+  [/georgian\s*literat/, "georgian_literature"],
+  [/georgian|georgia|tbilisi|tradition|landmark|supra/, "georgian_culture"],
+  [/social\s*media|influencer|tiktok|instagram|youtube/, "social_media"],
+  [/celebrit|paparazzi|gossip/, "celebrities"],
+  [/movie|film|cinema/, "movies"],
+  [/\bmusic|\bsong/, "music"],
+  [/pop\s*culture|\btrend/, "pop_culture"],
+  [/\bmemes?\b/, "memes"],
+  [/anime|manga/, "anime"],
+  [/tv\s*show|series/, "tv_shows"],
+  [/video\s*game|gaming|esport/, "video_games"],
+  [/sport|football|soccer|basketball|olympic/, "sports"],
+  [/space|galaxy|astronom|planet/, "space"],
+  [/\banimal|wildlife/, "animals"],
+  [/cuisine|\bfood\b|cooking/, "world_cuisine"],
+  [/histor/, "world_history"],
+  [/geograph/, "geography"],
+  [/scien/, "science"],
+  [/tech|coding|programm|software/, "technology"],
+  [/\bart\b/, "art"],
+];
+
+// Map a post's subject/hashtags to a CATEGORY_VIDEOS key, or null if no match
+export function subjectToCategoryKey(
+  subject: string,
+  hashtags: string[] = []
+): string | null {
+  const text = `${subject} ${hashtags.join(" ")}`.toLowerCase().trim();
+  if (!text) return null;
+  for (const [pattern, key] of SUBJECT_CATEGORY_PATTERNS) {
+    if (pattern.test(text)) return key;
+  }
+  return null;
 }

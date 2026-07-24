@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
-import gemIcon from "@/assets/icons/icon-gem.png";
-import coinIcon from "@/assets/icons/icon-coin.png";
+import gemIcon from "@/assets/icons/icon-gem.webp";
+import coinIcon from "@/assets/icons/icon-coin.webp";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatPrice } from "@/utils/currency";
@@ -39,7 +39,6 @@ export function ShopItemCard({
   isPurchased = false,
   isLoading = false,
   canAfford = true,
-  index = 0,
   showDescription = true,
   onClick,
 }: ShopItemCardProps) {
@@ -85,30 +84,27 @@ export function ShopItemCard({
   const badgeStyle = badge ? BADGE_STYLES[badge] : null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.05 }}
+    <div
       className="relative pt-3"
+      // Skip offscreen rendering work while scrolling long shop lists
+      style={{ contentVisibility: "auto", containIntrinsicSize: "240px" } as React.CSSProperties}
     >
       {/* Badge - positioned on right */}
       {badgeStyle && !isPurchased && (
-        <motion.div
-          className="absolute top-0 right-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white z-10"
+        <div
+          className="absolute top-0 right-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white z-10 motion-safe:animate-pulse-soft"
           style={{
             background: badgeStyle.bg,
             boxShadow: badgeStyle.shadow,
           }}
-          animate={{ scale: [1, 1.03, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
         >
           {getBadgeText(badgeStyle.textKey)}
-        </motion.div>
+        </div>
       )}
 
       {/* Savings Badge - positioned on left */}
       {savings && !isPurchased && (
-        <motion.div
+        <div
           className="absolute top-0 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-amber-900 z-10"
           style={{
             background: "linear-gradient(180deg, hsl(50 95% 65%) 0%, hsl(45 90% 55%) 100%)",
@@ -116,7 +112,7 @@ export function ShopItemCard({
           }}
         >
           -{savings}%
-        </motion.div>
+        </div>
       )}
 
       <div
@@ -141,16 +137,11 @@ export function ShopItemCard({
         }}
       >
         {/* Icon - Top */}
-        <motion.div
-          className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center mb-1.5 sm:mb-2"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: index * 0.05 + 0.1 }}
-        >
+        <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center mb-1.5 sm:mb-2">
           <div className="[&>img]:w-full [&>img]:h-full [&>img]:object-contain [&>svg]:w-full [&>svg]:h-full">
             {icon}
           </div>
-        </motion.div>
+        </div>
 
         {/* Name */}
         <h3 className="text-gray-900 font-bold text-sm sm:text-base leading-tight mb-1">{name}</h3>
@@ -194,7 +185,7 @@ export function ShopItemCard({
             <>
               {/* Price Display */}
               <div className="flex items-center justify-center gap-1">
-                <img src={currencyIcon!} alt="" className="w-5 h-5 sm:w-6 sm:h-6" />
+                <img src={currencyIcon!} alt="" width={24} height={24} loading="lazy" decoding="async" className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span className="font-bold text-base sm:text-lg text-gray-800">{price}</span>
               </div>
               {/* Buy Button - only this is clickable */}
@@ -219,6 +210,6 @@ export function ShopItemCard({
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

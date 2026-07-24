@@ -13,6 +13,7 @@ interface QuizPowerUpBarProps {
   powerUps?: PowerUp[];
   onPowerUpClick?: (type: PowerUpType) => void;
   className?: string;
+  allowZeroClick?: boolean;
 }
 
 const defaultPowerUps: PowerUp[] = [
@@ -23,7 +24,7 @@ const defaultPowerUps: PowerUp[] = [
 ];
 
 const QuizPowerUpBar = React.forwardRef<HTMLDivElement, QuizPowerUpBarProps>(
-  ({ powerUps = defaultPowerUps, onPowerUpClick, className }, ref) => {
+  ({ powerUps = defaultPowerUps, onPowerUpClick, className, allowZeroClick }, ref) => {
     return (
       <motion.div
         ref={ref}
@@ -56,6 +57,7 @@ const QuizPowerUpBar = React.forwardRef<HTMLDivElement, QuizPowerUpBarProps>(
               type={powerUp.type}
               count={powerUp.count}
               state={powerUp.state}
+              allowZeroClick={allowZeroClick}
               onClick={() => onPowerUpClick?.(powerUp.type)}
             />
           </motion.div>

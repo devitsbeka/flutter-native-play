@@ -44,6 +44,8 @@ import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
+import { useAds } from "@/hooks/useAds";
+import { adService } from "@/services/adService";
 import { PowerUpEffectOverlay } from "@/components/game/PowerUpEffectOverlay";
 import { ActivePowerUpIndicator, PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
@@ -94,6 +96,14 @@ const SUCCESS_ICONS = [
 
 // Perfect score icon from icon library (Starfish Wizard)
 const PERFECT_SCORE_ICON = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/starfish-wizard.png";
+
+// Display labels for the earn-power-up-via-ad dialog (mirrors quiz-power-up-button labels)
+const POWER_UP_EARN_LABELS: Record<PowerUpType, string> = {
+  "5050": "50/50",
+  freeze: "Freeze",
+  replace: "Replace",
+  "time-drain": "Time+",
+};
 
 
 
@@ -156,7 +166,9 @@ export default function CategoryQuizPage() {
   const { toast: showToast } = useToast();
   
   // Power-up state
-  const { powerUps, usePowerUp: consumePowerUp } = useUserPowerUps();
+  const { powerUps, usePowerUp: consumePowerUp, addPowerUp } = useUserPowerUps();
+  const { maybeShowInterstitial } = useAds();
+  const [earnPowerUpType, setEarnPowerUpType] = useState<PowerUpType | null>(null);
   const [hiddenAnswers, setHiddenAnswers] = useState<string[]>([]);
   const [usedPowerUpsThisQuestion, setUsedPowerUpsThisQuestion] = useState<Set<PowerUpType>>(new Set());
   const [timerBonus, setTimerBonus] = useState(0);
@@ -350,7 +362,10 @@ export default function CategoryQuizPage() {
   useEffect(() => {
     if (showResults && !hasSaved.current && questions.length > 0) {
       hasSaved.current = true;
-      saveResults();
+      saveResults().then(() => {
+        // Interstitial cadence check now that this game counts as completed
+        void maybeShowInterstitial((profile?.games_played || 0) + 1);
+      });
     }
   }, [showResults]);
 
@@ -618,8 +633,11 @@ export default function CategoryQuizPage() {
     // Check if already used this question
     if (usedPowerUpsThisQuestion.has(type)) return;
 
-    // Check if user has any left
-    if (powerUps[type] <= 0) return;
+    // Out of stock: offer to earn one by watching a rewarded ad
+    if (powerUps[type] <= 0) {
+      if (user) setEarnPowerUpType(type);
+      return;
+    }
 
     // Consume power-up from database
     const success = await consumePowerUp(type);
@@ -686,7 +704,24 @@ export default function CategoryQuizPage() {
         break;
       }
     }
-  }, [questions, currentQuestionIndex, isAnswered, usedPowerUpsThisQuestion, powerUps, consumePowerUp, hiddenAnswers]);
+  }, [questions, currentQuestionIndex, isAnswered, usedPowerUpsThisQuestion, powerUps, consumePowerUp, hiddenAnswers, user]);
+
+  // Watch a rewarded ad to earn the missing power-up. addPowerUp persists to
+  // user_power_ups, so grant only when the ad actually rewarded — never fail open.
+  const handleWatchAdForPowerUp = useCallback(async () => {
+    const type = earnPowerUpType;
+    setEarnPowerUpType(null);
+    if (!type) return;
+    const adSuccess = await adService.showRewardedAdWithPreload();
+    if (!adSuccess) {
+      toast.error(t("modals.adFailed"));
+      return;
+    }
+    const ok = await addPowerUp(type, 1);
+    if (ok) {
+      toast.success(`+1 ${POWER_UP_EARN_LABELS[type]}`);
+    }
+  }, [earnPowerUpType, addPowerUp, t]);
 
   // Build power-ups for UI bar
   const powerUpsForUI = useMemo(() => {
@@ -1201,6 +1236,7 @@ export default function CategoryQuizPage() {
                 exit={{ opacity: 0 }}
               >
                 <QuizPowerUpBar
+                  allowZeroClick
                   powerUps={powerUpsForUI}
                   onPowerUpClick={handleUsePowerUp}
                 />
@@ -1233,6 +1269,34 @@ export default function CategoryQuizPage() {
               className="flex-1 m-0 bg-red-500 hover:bg-red-600 text-white"
             >
               {t("extra.quizExit")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Watch-ad-to-earn-power-up Dialog */}
+      <AlertDialog open={!!earnPowerUpType} onOpenChange={(open) => !open && setEarnPowerUpType(null)}>
+        <AlertDialogContent className="bg-white rounded-2xl border-0 max-w-[90%] sm:max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-center text-xl text-slate-800">
+              {t("modals.watchAd")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-slate-500">
+              {t("modals.watchAdGetPlays")}{" "}
+              <span className="font-bold text-slate-700">
+                +1 {earnPowerUpType ? POWER_UP_EARN_LABELS[earnPowerUpType] : ""}
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-3 sm:gap-3">
+            <AlertDialogCancel className="flex-1 m-0 bg-slate-100 border-0 text-slate-700 hover:bg-slate-200">
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleWatchAdForPowerUp}
+              className="flex-1 m-0 bg-emerald-500 hover:bg-emerald-600 text-white"
+            >
+              {t("modals.watchAd")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

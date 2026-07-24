@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toWebmUrl } from "@/config/videoConfig";
@@ -90,6 +90,22 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
   const touchEndX = useRef<number>(0);
   const isSwiping = useRef(false);
 
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isInView, setIsInView] = useState(true);
+
+  // Pause the background video while the carousel is scrolled offscreen
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const goTo = useCallback((index: number) => {
     setDirection(index > currentIndex ? 1 : -1);
     setCurrentIndex(index);
@@ -143,6 +159,17 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
 
   const slide = HERO_SLIDES[currentIndex];
 
+  // slide.id in deps: the keyed <video> remounts on every slide change
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (isInView) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [isInView, slide.id]);
+
   const variants = {
     enter: (direction: number) => ({
       x: direction > 0 ? 300 : -300,
@@ -159,7 +186,7 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
   };
 
   return (
-    <div className="relative px-[15px] mb-6 pt-3">
+    <div ref={containerRef} className="relative px-[15px] mb-6 pt-3">
       <div 
         className="relative overflow-hidden rounded-3xl touch-pan-y" 
         style={{ height: 400 }}
@@ -181,6 +208,7 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
           >
             {/* Video Background */}
             <video
+              ref={videoRef}
               autoPlay
               muted
               loop

@@ -3,7 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Heart } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
-import { CATEGORY_VIDEOS, toWebmUrl } from "@/config/videoConfig";
+import { CATEGORY_VIDEOS, getResponsiveVideoSrc } from "@/config/videoConfig";
 
 
 interface AirbnbCategoryCardProps {
@@ -63,12 +63,15 @@ function preloadCategoryPage() {
 // Prefetch a video URL via <link rel="prefetch"> - browser downloads in idle time
 const prefetchedVideos = new Set<string>();
 function prefetchVideo(videoUrl: string) {
-  if (!videoUrl || prefetchedVideos.has(videoUrl)) return;
-  prefetchedVideos.add(videoUrl);
+  if (!videoUrl) return;
+  // Prefetch the same responsive URL playback will request
+  const responsiveUrl = getResponsiveVideoSrc(videoUrl).webm;
+  if (prefetchedVideos.has(responsiveUrl)) return;
+  prefetchedVideos.add(responsiveUrl);
   const link = document.createElement("link");
   link.rel = "prefetch";
   link.as = "video";
-  link.href = toWebmUrl(videoUrl);
+  link.href = responsiveUrl;
   document.head.appendChild(link);
 }
 

@@ -4,18 +4,18 @@ import { AVATAR_FRAMES } from "@/hooks/useAvatarFrames";
 import { VipDuration } from "@/hooks/useVipStatus";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
 
-import fiftyFiftyIcon from "@/assets/powers/5050.png";
-import freezeIcon from "@/assets/powers/freeze.png";
-import replaceIcon from "@/assets/powers/replace.png";
-import timeDrainIcon from "@/assets/powers/time-drain.png";
-import coinIcon from "@/assets/icons/icon-coin.png";
-import gemIcon from "@/assets/icons/icon-gem.png";
-import iconStarterPack from "@/assets/icons/icon-starter-pack.png";
-import iconVipCrown from "@/assets/icons/icon-vip-crown.png";
-import iconPowersBottle from "@/assets/icons/icon-powers-bottle.png";
-import iconMagicOrb from "@/assets/icons/magic-orb.png";
-import iconMagicPortal from "@/assets/icons/magic-portal.png";
-import iconMagicForge from "@/assets/icons/magic-forge.png";
+import fiftyFiftyIcon from "@/assets/powers/5050.webp";
+import freezeIcon from "@/assets/powers/freeze.webp";
+import replaceIcon from "@/assets/powers/replace.webp";
+import timeDrainIcon from "@/assets/powers/time-drain.webp";
+import coinIcon from "@/assets/icons/icon-coin.webp";
+import gemIcon from "@/assets/icons/icon-gem.webp";
+import iconStarterPack from "@/assets/icons/icon-starter-pack.webp";
+import iconVipCrown from "@/assets/icons/icon-vip-crown.webp";
+import iconPowersBottle from "@/assets/icons/icon-powers-bottle.webp";
+import iconMagicOrb from "@/assets/icons/magic-orb.webp";
+import iconMagicPortal from "@/assets/icons/magic-portal.webp";
+import iconMagicForge from "@/assets/icons/magic-forge.webp";
 
 export interface ShopItem {
   id: string;
@@ -78,7 +78,7 @@ export function useShopData() {
         description: `2x ${t("shop.allPowers")} + 500 ${t("shop.coin")}`,
         price: 10,  // 8 powers + 1 gem worth of coins = 9, sell for 10 (slight premium for convenience)
         currency: "gems",
-        icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
+        icon: <img src={iconStarterPack} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "new",
       },
@@ -88,7 +88,7 @@ export function useShopData() {
         description: `5x ${t("shop.allPowers")} + 1000 ${t("shop.coin")}`,
         price: 20,  // 20 powers (20 gems) + 2 gems coins = 22, sell for 20 = 9% discount
         currency: "gems",
-        icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
+        icon: <img src={iconStarterPack} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "popular",
         savings: 10,
@@ -99,7 +99,7 @@ export function useShopData() {
         description: `10x ${t("shop.allPowers")} + 2500 ${t("shop.coin")}`,
         price: 35,  // 40 powers (40 gems) + 5 gems coins = 45, sell for 35 = 22% discount
         currency: "gems",
-        icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
+        icon: <img src={iconStarterPack} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "best-value",
         savings: 22,
@@ -114,7 +114,7 @@ export function useShopData() {
         description: `2x ${t("shop.allPowers")}`,
         price: 7,  // 8 powers worth 8 gems, sell for 7 = 12% discount
         currency: "gems",
-        icon: <img src={iconMagicOrb} alt="" className="w-[50px] h-[50px] object-contain" />,
+        icon: <img src={iconMagicOrb} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         savings: 12,
       },
@@ -124,7 +124,7 @@ export function useShopData() {
         description: `5x ${t("shop.allPowers")}`,
         price: 16,  // 20 powers worth 20 gems, sell for 16 = 20% discount
         currency: "gems",
-        icon: <img src={iconMagicPortal} alt="" className="w-[50px] h-[50px] object-contain" />,
+        icon: <img src={iconMagicPortal} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "popular",
         savings: 20,
@@ -135,7 +135,7 @@ export function useShopData() {
         description: `10x ${t("shop.allPowers")}`,
         price: 28,  // 40 powers worth 40 gems, sell for 28 = 30% discount
         currency: "gems",
-        icon: <img src={iconMagicForge} alt="" className="w-[50px] h-[50px] object-contain" />,
+        icon: <img src={iconMagicForge} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "best-value",
         savings: 30,
@@ -150,7 +150,7 @@ export function useShopData() {
         description: t("shop.vipBenefitsDay"),
         price: 30,  // 30 gems = 3 GEL
         currency: "gems",
-        icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
+        icon: <img src={iconVipCrown} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         vipDuration: "day",
       },
@@ -160,7 +160,7 @@ export function useShopData() {
         description: t("shop.vipBenefitsWeek"),
         price: 100,  // 100 gems = 10 GEL (vs 210 for 7 days = 52% savings)
         currency: "gems",
-        icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
+        icon: <img src={iconVipCrown} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "popular",
         savings: 52,
@@ -172,7 +172,7 @@ export function useShopData() {
         description: t("shop.vipBenefitsMonth"),
         price: 250,  // 250 gems = 25 GEL (vs 900 for 30 days = 72% savings)
         currency: "gems",
-        icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
+        icon: <img src={iconVipCrown} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "best-value",
         savings: 72,
@@ -189,7 +189,7 @@ export function useShopData() {
         description: t("shop.deletesWrongAnswers"),
         price: 3,  // 3 gems for 3 powers = 1 gem each (no discount for small qty)
         currency: "gems",
-        icon: <img src={fiftyFiftyIcon} alt="" className="w-8 h-8" />,
+        icon: <img src={fiftyFiftyIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(350 80% 60%) 0%, hsl(330 75% 55%) 100%)",
         powerType: "5050",
         amount: 3,
@@ -200,7 +200,7 @@ export function useShopData() {
         description: t("shop.freezesTime"),
         price: 3,
         currency: "gems",
-        icon: <img src={freezeIcon} alt="" className="w-8 h-8" />,
+        icon: <img src={freezeIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(190 90% 55%) 0%, hsl(210 80% 55%) 100%)",
         powerType: "freeze",
         amount: 3,
@@ -211,7 +211,7 @@ export function useShopData() {
         description: t("shop.replacesQuestion"),
         price: 3,
         currency: "gems",
-        icon: <img src={replaceIcon} alt="" className="w-8 h-8" />,
+        icon: <img src={replaceIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(150 75% 50%) 0%, hsl(140 70% 45%) 100%)",
         powerType: "replace",
         amount: 3,
@@ -222,7 +222,7 @@ export function useShopData() {
         description: t("shop.addsTime"),
         price: 3,
         currency: "gems",
-        icon: <img src={timeDrainIcon} alt="" className="w-8 h-8" />,
+        icon: <img src={timeDrainIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(270 70% 60%) 0%, hsl(280 65% 55%) 100%)",
         powerType: "time-drain",
         amount: 3,
@@ -234,7 +234,7 @@ export function useShopData() {
         description: `3× ${t("shop.eachPower")}`,
         price: 10,  // 12 powers worth 12 gems, sell for 10 = 17% discount
         currency: "gems",
-        icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+        icon: <img src={iconPowersBottle} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "linear-gradient(135deg, hsl(280 80% 60%) 0%, hsl(340 75% 55%) 100%)",
         badge: "popular",
         savings: 17,
@@ -262,7 +262,7 @@ export function useShopData() {
         description: t("shop.smallPackage"),
         price: 1,  // Exact rate: 500 coins = 1 gem
         currency: "gems",
-        icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+        icon: <img src={coinIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(45 90% 60%) 0%, hsl(40 85% 50%) 100%)",
         value: 500,
       },
@@ -272,7 +272,7 @@ export function useShopData() {
         description: `${t("shop.mediumPackage")}`,
         price: 3,  // 1500 coins = 3 gems (exact rate)
         currency: "gems",
-        icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+        icon: <img src={coinIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(40 90% 55%) 0%, hsl(35 85% 48%) 100%)",
         value: 1500,
       },
@@ -282,7 +282,7 @@ export function useShopData() {
         description: `${t("shop.largePackage")} +10%`,
         price: 9,  // 5000 coins = 10 gems, sell for 9 = 10% bonus
         currency: "gems",
-        icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+        icon: <img src={coinIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(35 90% 52%) 0%, hsl(25 85% 45%) 100%)",
         value: 5000,
         badge: "popular",
@@ -294,7 +294,7 @@ export function useShopData() {
         description: `${t("shop.megaPackage")} +20%`,
         price: 24,  // 15000 coins = 30 gems, sell for 24 = 20% bonus
         currency: "gems",
-        icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+        icon: <img src={coinIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(25 90% 50%) 0%, hsl(15 85% 45%) 100%)",
         value: 15000,
         badge: "best-value",
@@ -310,7 +310,7 @@ export function useShopData() {
         description: t("shop.smallPackage"),
         price: 1.19,
         currency: "lari",
-        icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
+        icon: <img src={gemIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(270 80% 60%) 0%, hsl(290 75% 55%) 100%)",
         value: 30,
       },
@@ -320,7 +320,7 @@ export function useShopData() {
         description: `${t("shop.mediumPackage")} +11%`,
         price: 3.59,
         currency: "lari",
-        icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
+        icon: <img src={gemIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(275 80% 58%) 0%, hsl(295 75% 52%) 100%)",
         value: 100,
         badge: "popular",
@@ -333,7 +333,7 @@ export function useShopData() {
         description: `${t("shop.largePackage")} +20%`,
         price: 9.99,
         currency: "lari",
-        icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
+        icon: <img src={gemIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(280 82% 55%) 0%, hsl(300 78% 50%) 100%)",
         value: 300,
         savings: 20,
@@ -345,7 +345,7 @@ export function useShopData() {
         description: `${t("shop.megaPackage")} +40%`,
         price: 19.99,
         currency: "lari",
-        icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
+        icon: <img src={gemIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(285 85% 52%) 0%, hsl(310 80% 48%) 100%)",
         value: 700,
         badge: "best-value",

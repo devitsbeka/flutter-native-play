@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useAds } from "@/hooks/useAds";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { supabase } from "@/integrations/supabase/client";
 import { ChallengeShareModal } from "@/components/challenge/ChallengeShareModal";
@@ -38,6 +39,7 @@ export function GameResultsScreenV2() {
   const { playSound, vibrate } = useSound();
   const { t } = useLanguage();
   const { addCoins } = useCurrency();
+  const { maybeShowInterstitial } = useAds();
   const [coinsEarned, setCoinsEarned] = useState(0);
   const { 
     myScore: localMyScore, 
@@ -156,10 +158,13 @@ export function GameResultsScreenV2() {
           games_played: (profile.games_played || 0) + 1,
           games_won: isWin ? (profile.games_won || 0) + 1 : profile.games_won,
           current_streak: isWin ? (profile.current_streak || 0) + 1 : 0,
-          best_streak: isWin 
+          best_streak: isWin
             ? Math.max(profile.best_streak || 0, (profile.current_streak || 0) + 1)
             : profile.best_streak,
         });
+
+        // Interstitial cadence check now that this game counts as completed
+        void maybeShowInterstitial((profile.games_played || 0) + 1);
 
         // Save to room_games
         const playerScores = rankedParticipants.map(p => ({
@@ -213,7 +218,7 @@ export function GameResultsScreenV2() {
 
       updateStats();
     }
-  }, [user, profile, myScore, myRank, isWin, currentRoom, updateProfile, rankedParticipants, addCoins, participants]);
+  }, [user, profile, myScore, myRank, isWin, currentRoom, updateProfile, rankedParticipants, addCoins, participants, maybeShowInterstitial]);
 
   // Auto-open challenge share modal
   useEffect(() => {

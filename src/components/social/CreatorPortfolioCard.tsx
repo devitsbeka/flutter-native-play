@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { motion } from "framer-motion";
 import { UserPlus, UserCheck, Clock, Eye, Play } from "lucide-react";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { TriviaPortfolioCard } from "./TriviaPortfolioCard";
 import { Creator } from "@/hooks/useExploreCreators";
 import { SamplePost } from "@/data/samplePosts";
-import { useFriends } from "@/hooks/useFriends";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { formatDistanceToNow } from "date-fns";
 import { ka, enUS } from "date-fns/locale";
@@ -29,6 +28,9 @@ interface CreatorPortfolioCardProps {
   userLikes?: string[];
   userSaves?: string[];
   userPlays?: string[];
+  // Hoisted from per-card useFriends() to the feed parent
+  sendFriendRequest: (friendId: string) => Promise<boolean>;
+  acceptFriendRequest: (friendshipId: string) => Promise<boolean>;
 }
 
 // Get country flag emoji from country code
@@ -41,8 +43,7 @@ function getCountryFlag(countryCode: string | null): string {
   return String.fromCodePoint(...codePoints);
 }
 
-export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onLikeTrivia, onSaveTrivia, userLikes = [], userSaves = [], userPlays = [] }: CreatorPortfolioCardProps) {
-  const { sendFriendRequest, acceptFriendRequest } = useFriends();
+function CreatorPortfolioCardComponent({ creator, onPlayTrivia, onViewProfile, onLikeTrivia, onSaveTrivia, userLikes = [], userSaves = [], userPlays = [], sendFriendRequest, acceptFriendRequest }: CreatorPortfolioCardProps) {
   const { openProfile } = usePlayerProfile();
   const { language, t } = useLanguage();
   const [friendshipStatus, setFriendshipStatus] = useState(creator.friendship_status);
@@ -134,6 +135,7 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
   return (
     <motion.div
       className="overflow-visible"
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '260px' }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -234,3 +236,5 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
     </motion.div>
   );
 }
+
+export const CreatorPortfolioCard = memo(CreatorPortfolioCardComponent);

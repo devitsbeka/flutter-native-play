@@ -30,6 +30,25 @@ import { CurrencyActionModal, CurrencyType } from "@/components/shop/CurrencyAct
 import { BuyCurrencyModal } from "@/components/shop/BuyCurrencyModal";
 import { NotEnoughGemsModal } from "@/components/home/NotEnoughGemsModal";
 
+const ALL_POWER_TYPES: PowerUpType[] = ["5050", "freeze", "replace", "time-drain"];
+
+// Single source of truth for bundle contents — the transaction log and the grant
+// step both read this so they can't drift. Coin amounts match the advertised
+// descriptions/pricing in useShopData (1 gem = 500 coins).
+const BUNDLE_CONTENTS: Record<string, { powers: number; coins: number }> = {
+  starter_bundle: { powers: 2, coins: 500 },
+  starter_bundle_medium: { powers: 5, coins: 1000 },
+  starter_bundle_large: { powers: 10, coins: 2500 },
+  power_bundle_small: { powers: 2, coins: 0 },
+  mega_power_bundle: { powers: 5, coins: 0 },
+  power_bundle_large: { powers: 10, coins: 0 },
+  power_combo_bundle: { powers: 3, coins: 0 },
+};
+
+const getBundleContents = (id: string): { powers: number; coins: number } =>
+  BUNDLE_CONTENTS[id] ??
+  { powers: id.includes("small") ? 2 : id.includes("large") ? 10 : 5, coins: 0 };
+
 export default function PowerUps() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -114,8 +133,14 @@ export default function PowerUps() {
       });
 
       if (spent) {
-        await addPowerUp(powerType, 1);
+        // Coins already spent — retry a failed grant once instead of silent loss
+        const granted =
+          (await addPowerUp(powerType, 1)) || (await addPowerUp(powerType, 1));
         await refetch();
+        if (!granted) {
+          notify.error(t("shop.purchaseFailed"));
+          return;
+        }
         playSound("reward");
         trackPowerUpPurchased({
           powerUpType: powerType,
@@ -175,34 +200,13 @@ export default function PowerUps() {
         productType = "frame";
       } else if (item.powerType && item.amount) {
         valueReceived = { [item.powerType]: item.amount };
-      } else if (item.id === "power_combo_bundle") {
-        valueReceived = { "5050": 3, freeze: 3, replace: 3, "time-drain": 3 };
-        productType = "bundle";
       } else if (item.id.includes("bundle")) {
-        let bundleAmount = 2;
-        let coinAmount = 0;
-        
-        if (item.id === "starter_bundle") {
-          bundleAmount = 2;
-          coinAmount = 200;
-        } else if (item.id === "starter_bundle_medium") {
-          bundleAmount = 5;
-          coinAmount = 500;
-        } else if (item.id === "starter_bundle_large") {
-          bundleAmount = 10;
-          coinAmount = 1000;
-        } else if (item.id.includes("small")) {
-          bundleAmount = 2;
-        } else if (item.id.includes("large")) {
-          bundleAmount = 10;
-        } else {
-          bundleAmount = 5;
-        }
-        valueReceived = { 
-          "5050": bundleAmount, 
-          freeze: bundleAmount, 
-          replace: bundleAmount, 
-          "time-drain": bundleAmount,
+        const { powers, coins: coinAmount } = getBundleContents(item.id);
+        valueReceived = {
+          "5050": powers,
+          freeze: powers,
+          replace: powers,
+          "time-drain": powers,
           ...(coinAmount > 0 ? { coins: coinAmount } : {})
         };
         productType = "bundle";
@@ -218,51 +222,37 @@ export default function PowerUps() {
         return;
       }
 
+      // Gems are already spent past this point — retry a failed power grant once
+      // rather than silently losing the purchase
+      const grantPowerUp = async (type: PowerUpType, amount: number): Promise<boolean> =>
+        (await addPowerUp(type, amount)) || (await addPowerUp(type, amount));
+
+      let grantFailed = false;
+
       if (item.value) {
-        await addCoins(item.value);
+        if (!(await addCoins(item.value))) grantFailed = true;
       } else if (item.vipDuration) {
         await activateVip(item.vipDuration);
       } else if (item.frameId) {
         await unlockFrame(item.frameId);
       } else if (item.powerType && item.amount) {
-        await addPowerUp(item.powerType, item.amount);
-        await refetch();
-      } else if (item.id === "power_combo_bundle") {
-        // All 4 powers × 3 each
-        await addPowerUp("5050", 3);
-        await addPowerUp("freeze", 3);
-        await addPowerUp("replace", 3);
-        await addPowerUp("time-drain", 3);
+        if (!(await grantPowerUp(item.powerType, item.amount))) grantFailed = true;
         await refetch();
       } else if (item.id.includes("bundle")) {
-        let bundleAmount = 2;
-        let coinAmount = 0;
-        
-        if (item.id === "starter_bundle") {
-          bundleAmount = 2;
-          coinAmount = 200;
-        } else if (item.id === "starter_bundle_medium") {
-          bundleAmount = 5;
-          coinAmount = 500;
-        } else if (item.id === "starter_bundle_large") {
-          bundleAmount = 10;
-          coinAmount = 1000;
-        } else if (item.id.includes("small")) {
-          bundleAmount = 2;
-        } else if (item.id.includes("large")) {
-          bundleAmount = 10;
-        } else {
-          bundleAmount = 5;
+        const { powers, coins: coinAmount } = getBundleContents(item.id);
+        for (const type of ALL_POWER_TYPES) {
+          if (!(await grantPowerUp(type, powers))) grantFailed = true;
         }
-        
-        await addPowerUp("5050", bundleAmount);
-        await addPowerUp("freeze", bundleAmount);
-        await addPowerUp("replace", bundleAmount);
-        await addPowerUp("time-drain", bundleAmount);
         if (coinAmount > 0) {
-          await addCoins(coinAmount);
+          if (!(await addCoins(coinAmount))) grantFailed = true;
         }
         await refetch();
+      }
+
+      if (grantFailed) {
+        notify.error(t("shop.purchaseFailed"));
+        setIsPurchasing(null);
+        return;
       }
 
       playSound("reward");

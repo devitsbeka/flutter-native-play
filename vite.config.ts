@@ -29,15 +29,22 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks(id: string) {
           // Stable vendor chunks: better long-term caching and keeps
-          // shared libs out of per-route chunks (confetti was inlined ~29x)
+          // shared libs out of per-route chunks (confetti was inlined ~29x).
+          // IMPORTANT: every React-DEPENDENT library must share ONE chunk with
+          // React itself - splitting them creates a circular chunk-init order
+          // and a blank screen ("reading 'forwardRef'" of undefined).
           if (id.includes("node_modules")) {
-            if (id.includes("react-router")) return "vendor-router";
-            if (/node_modules\/(react|react-dom|scheduler)\//.test(id)) return "vendor-react";
             if (id.includes("@supabase")) return "vendor-supabase";
             if (id.includes("posthog")) return "vendor-posthog";
-            if (id.includes("framer-motion")) return "vendor-motion";
-            if (id.includes("@radix-ui")) return "vendor-radix";
             if (id.includes("canvas-confetti")) return "vendor-confetti";
+            if (
+              /node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(id) ||
+              id.includes("@radix-ui") ||
+              id.includes("framer-motion") ||
+              id.includes("@remix-run")
+            ) {
+              return "vendor-react";
+            }
             return undefined;
           }
           // Translations change rarely; isolating them lets clients keep

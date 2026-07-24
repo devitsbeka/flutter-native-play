@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -376,21 +376,35 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
     }
   }, [user, fetchFriends]);
 
+  const value = useMemo(
+    () => ({
+      friends,
+      pendingRequests,
+      onlineUsers,
+      loading,
+      searchUsers,
+      sendFriendRequest,
+      acceptFriendRequest,
+      declineFriendRequest,
+      removeFriend,
+      refreshFriends: fetchFriends,
+    }),
+    [
+      friends,
+      pendingRequests,
+      onlineUsers,
+      loading,
+      searchUsers,
+      sendFriendRequest,
+      acceptFriendRequest,
+      declineFriendRequest,
+      removeFriend,
+      fetchFriends,
+    ]
+  );
+
   return (
-    <FriendsContext.Provider
-      value={{
-        friends,
-        pendingRequests,
-        onlineUsers,
-        loading,
-        searchUsers,
-        sendFriendRequest,
-        acceptFriendRequest,
-        declineFriendRequest,
-        removeFriend,
-        refreshFriends: fetchFriends,
-      }}
-    >
+    <FriendsContext.Provider value={value}>
       {children}
     </FriendsContext.Provider>
   );

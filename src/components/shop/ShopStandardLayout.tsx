@@ -1,5 +1,4 @@
 import { useRef, useEffect } from "react";
-import { motion } from "framer-motion";
 import { ShopSection, ShopItem } from "@/hooks/useShopData";
 import { ShopHeroCarousel } from "./ShopHeroCarousel";
 import { ShopProductGrid } from "./ShopProductGrid";
@@ -89,15 +88,12 @@ export function ShopStandardLayout({
       />
 
       {/* Product Sections */}
-      {displaySections.map((section, index) => (
-        <motion.div
+      {displaySections.map((section) => (
+        <div
           key={section.id}
           ref={(el) => {
             if (el) sectionRefs.current.set(section.id, el);
           }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
         >
           <ShopProductGrid
             sectionId={section.id}
@@ -109,7 +105,7 @@ export function ShopStandardLayout({
             isFrameUnlocked={isFrameUnlocked}
             onItemClick={handleItemClick}
           />
-        </motion.div>
+        </div>
       ))}
     </div>
   );

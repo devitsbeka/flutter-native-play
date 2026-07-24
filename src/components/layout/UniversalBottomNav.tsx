@@ -364,19 +364,59 @@ function VipBadge({ vipExpiresAt }: { vipExpiresAt?: string }) {
   useEffect(() => {
     if (!vipExpiresAt) return;
 
+    const DAY_MS = 24 * 60 * 60 * 1000;
+
     const calcTimeLeft = () => {
       const diff = new Date(vipExpiresAt).getTime() - Date.now();
       if (diff <= 0) return "";
-      if (diff > 24 * 60 * 60 * 1000) return ""; // more than 24h
+      if (diff > DAY_MS) return ""; // more than 24h
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
       return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
     };
 
-    setTimeLeft(calcTimeLeft());
-    const timer = setInterval(() => setTimeLeft(calcTimeLeft()), 1000);
-    return () => clearInterval(timer);
+    let interval: number | undefined;
+    let timeout: number | undefined;
+
+    const clearTimers = () => {
+      if (interval !== undefined) { clearInterval(interval); interval = undefined; }
+      if (timeout !== undefined) { clearTimeout(timeout); timeout = undefined; }
+    };
+
+    // Tick at 1s only inside the final 24h; before that a single timeout waits
+    // for the 24h boundary (setTimeout delay is clamped to the int32 max).
+    const schedule = () => {
+      clearTimers();
+      setTimeLeft(calcTimeLeft());
+      const diff = new Date(vipExpiresAt).getTime() - Date.now();
+      if (diff <= 0) return; // expired — badge shows ∞ / nothing to count
+      if (diff > DAY_MS) {
+        timeout = window.setTimeout(schedule, Math.min(diff - DAY_MS, 2_147_483_647));
+      } else {
+        interval = window.setInterval(() => setTimeLeft(calcTimeLeft()), 1000);
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        clearTimers();
+      } else {
+        schedule();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    if (document.hidden) {
+      setTimeLeft(calcTimeLeft());
+    } else {
+      schedule();
+    }
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      clearTimers();
+    };
   }, [vipExpiresAt]);
 
   return (

@@ -25,6 +25,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useAds } from "@/hooks/useAds";
 import { useIconLibrary } from "@/hooks/useIconLibrary";
 import iconCollections from "@/assets/icon-collections.png";
 import storyDice from "@/assets/story-dice.png";
@@ -113,6 +114,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const { createRoom, loading } = useMultiplayerV2();
   const { friends } = useFriends();
   const { sendInvitation, addInvitedParticipant } = useGameInvitations();
+  const { gateWithRewardedAd } = useAds();
   const { getIconForCategory } = useIconLibrary();
   
   const [categories, setCategories] = useState<Category[]>([]);
@@ -566,7 +568,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const handleCreate = async () => {
     if (!user) return;
     if (!hasValidSelection) return;
-    
+    if (isCreating) return;
+
     // Guard: Prevent room creation while name is still generating
     if (roomName === t("extra.loadingState") || isGeneratingName) {
       toast({
@@ -575,12 +578,27 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       });
       return;
     }
-    
+
+    // Lock BEFORE the ad gate - a double-tap during the ad would otherwise
+    // show two ads and create two rooms (performCreate re-sets and clears it)
+    setIsCreating(true);
+    try {
+      // Non-PRO users watch a rewarded ad before the room is created (fail-open)
+      await gateWithRewardedAd(performCreate);
+    } catch (error) {
+      console.error("Ad gate error:", error);
+      setIsCreating(false);
+    }
+  };
+
+  const performCreate = async () => {
+    if (!user) return;
+
     // Store friends to invite before creating room
     friendsToInviteRef.current = new Set(selectedFriends);
-    
+
     setIsCreating(true);
-    
+
     try {
       let room = null;
       

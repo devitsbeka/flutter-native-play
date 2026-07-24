@@ -126,7 +126,15 @@ export function useLeaderboardRewards(categoryId?: string) {
       }
 
       // Grant coins/gems via the delta-based currency RPC (stale-profile safe)
-      await addCurrency(reward.coins_rewarded, reward.gems_rewarded);
+      const granted = await addCurrency(reward.coins_rewarded, reward.gems_rewarded);
+      if (!granted) {
+        // Roll back the claim so the user can retry instead of losing the reward
+        await supabase
+          .from("category_weekly_rewards")
+          .update({ claimed_at: null })
+          .eq("id", rewardId);
+        return false;
+      }
 
       // If frame was rewarded, add to user_leaderboard_frames
       if (reward.frame_rewarded) {

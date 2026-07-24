@@ -1,22 +1,21 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useMemo, lazy, memo, Suspense } from "react";
 
 import { UserPlus, UserCheck, Clock, Play, Layers, Hourglass, Pencil } from "lucide-react";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
-import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Button } from "@/components/ui/button";
 import { PlayerInfo, CollectionItem } from "@/hooks/usePlayerFeedItems";
 import { SamplePost } from "@/data/samplePosts";
-import { useFriends } from "@/hooks/useFriends";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
-import bookmark3dIcon from "@/assets/icons/bookmark-3d.png";
+import bookmark3dIcon from "@/assets/icons/bookmark-3d.webp";
 import { formatDistanceToNow } from "date-fns";
 import { ka, enUS } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAdminRole } from "@/hooks/useAdminRole";
+import { PingPongVideo } from "@/components/shared/PingPongVideo";
+import { CATEGORY_VIDEOS, CATEGORY_IMAGES, subjectToCategoryKey } from "@/config/videoConfig";
 
 // Lazy load EditQuizModal for admin editing
 const EditQuizModal = lazy(() =>
@@ -33,6 +32,15 @@ interface PlayerFeedItemProps {
   isLiked?: boolean;
   isSaved?: boolean;
   isPlayed?: boolean;
+  // Hoisted from per-card hooks to the feed parent (see ExplorePortfolioFeed)
+  isAdmin: boolean;
+  isVip: boolean;
+  vipLoading: boolean;
+  regenPlayAvailable: boolean;
+  timeUntilNextPlay: string | null;
+  useRegenPlay: () => Promise<boolean>;
+  sendFriendRequest: (friendId: string) => Promise<boolean>;
+  acceptFriendRequest: (friendshipId: string) => Promise<boolean>;
 }
 
 // Get country flag emoji from country code
@@ -53,27 +61,32 @@ function getGradientProps(gradient: string) {
   return { style: undefined, className: `bg-gradient-to-br ${gradient}` };
 }
 
-export function PlayerFeedItem({ 
-  player, 
-  item, 
-  itemType, 
-  onPlayTrivia, 
-  onLike, 
-  onSave, 
-  isLiked = false, 
+function PlayerFeedItemComponent({
+  player,
+  item,
+  itemType,
+  onPlayTrivia,
+  onLike,
+  onSave,
+  isLiked = false,
   isSaved = false,
-  isPlayed = false 
+  isPlayed = false,
+  isAdmin,
+  isVip,
+  vipLoading,
+  regenPlayAvailable,
+  timeUntilNextPlay,
+  useRegenPlay,
+  sendFriendRequest,
+  acceptFriendRequest,
 }: PlayerFeedItemProps) {
   const navigate = useNavigate();
-  const { sendFriendRequest, acceptFriendRequest } = useFriends();
   const { openProfile } = usePlayerProfile();
   const { language, t } = useLanguage();
-  const { isAdmin } = useAdminRole();
   const [friendshipStatus, setFriendshipStatus] = useState(player.friendship_status);
   const [isLoading, setIsLoading] = useState(false);
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const { isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
 
   const handleAddFriend = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -207,10 +220,22 @@ export function PlayerFeedItem({
 
   const gradientProps = getGradientProps(coverGradient || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)");
 
+  // Themed cover video for posts without an uploaded cover image
+  const themedVideo = useMemo(() => {
+    if (coverImage || !triviaItem) return null;
+    const key = subjectToCategoryKey(triviaItem.subject, triviaItem.hashtags);
+    if (!key || !CATEGORY_VIDEOS[key]) return null;
+    return { src: CATEGORY_VIDEOS[key], poster: CATEGORY_IMAGES[key] };
+  }, [coverImage, triviaItem]);
+
   return (
     <div
       className="overflow-hidden"
-      style={{ touchAction: 'manipulation' }}
+      style={{
+        touchAction: 'manipulation',
+        contentVisibility: 'auto',
+        containIntrinsicSize: '260px',
+      }}
     >
       {/* Player Header */}
       <div className="p-3 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-t-2xl border border-border/30">
@@ -261,7 +286,24 @@ export function PlayerFeedItem({
         <div className="h-32 relative overflow-hidden">
           {coverImage ? (
             <>
-              <img src={coverImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <img
+                src={coverImage}
+                alt=""
+                width={480}
+                height={128}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/30" />
+            </>
+          ) : themedVideo ? (
+            <>
+              <PingPongVideo
+                src={themedVideo.src}
+                posterUrl={themedVideo.poster}
+                rootMargin="50px"
+              />
               <div className="absolute inset-0 bg-black/30" />
             </>
           ) : (
@@ -298,9 +340,13 @@ export function PlayerFeedItem({
                 onClick={handleLikeClick}
                 className="flex items-center gap-1.5 transition-all"
               >
-                <img 
-                  src={purpleHeartIcon} 
-                  alt="Like" 
+                <img
+                  src={purpleHeartIcon}
+                  alt="Like"
+                  width={26}
+                  height={26}
+                  loading="lazy"
+                  decoding="async"
                   className={`w-[26px] h-[26px] object-contain transition-all ${isLiked ? 'opacity-100' : 'opacity-60 grayscale'}`}
                 />
                 <span className={cn("text-[17px] font-medium", isLiked ? "text-foreground" : "text-muted-foreground")}>{likesCount || 0}</span>
@@ -311,9 +357,13 @@ export function PlayerFeedItem({
                 onClick={handleSaveClick}
                 className="flex items-center gap-1.5 transition-all"
               >
-                <img 
-                  src={bookmark3dIcon} 
-                  alt="Save" 
+                <img
+                  src={bookmark3dIcon}
+                  alt="Save"
+                  width={26}
+                  height={26}
+                  loading="lazy"
+                  decoding="async"
                   className={`w-[26px] h-[26px] object-contain transition-all ${isSaved ? 'opacity-100' : 'opacity-60 grayscale'}`}
                 />
                 <span className={cn("text-[17px] font-medium", isSaved ? "text-foreground" : "text-muted-foreground")}>{savesCount || 0}</span>
@@ -399,3 +449,5 @@ export function PlayerFeedItem({
     </div>
   );
 }
+
+export const PlayerFeedItem = memo(PlayerFeedItemComponent);

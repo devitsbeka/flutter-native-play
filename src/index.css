@@ -289,18 +289,18 @@
     font-family: var(--font-display);
   }
 
-  /* iOS 26 Liquid Glass Effect */
+  /* iOS 26 Liquid Glass Effect
+     Semi-opaque gradient instead of backdrop-filter: blur is too costly on
+     mobile GPUs during scroll; higher alpha keeps the same frosted look. */
   .liquid-glass {
     background: linear-gradient(
       135deg,
-      hsl(0 0% 100% / 0.65) 0%,
-      hsl(0 0% 100% / 0.55) 50%,
-      hsl(0 0% 100% / 0.6) 100%
+      hsl(0 0% 100% / 0.92) 0%,
+      hsl(220 30% 97% / 0.85) 50%,
+      hsl(0 0% 100% / 0.88) 100%
     );
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid hsl(0 0% 100% / 0.5);
-    box-shadow: 
+    box-shadow:
       0 8px 32px hsl(0 0% 0% / 0.1),
       inset 0 1px 0 hsl(0 0% 100% / 0.5),
       inset 0 -1px 0 hsl(0 0% 0% / 0.05);
@@ -309,12 +309,12 @@
   .dark .liquid-glass {
     background: linear-gradient(
       135deg,
-      hsl(0 0% 100% / 0.2) 0%,
-      hsl(0 0% 100% / 0.12) 50%,
-      hsl(0 0% 100% / 0.16) 100%
+      hsl(240 8% 42% / 0.85) 0%,
+      hsl(240 8% 36% / 0.8) 50%,
+      hsl(240 8% 40% / 0.82) 100%
     );
     border: 1px solid hsl(0 0% 100% / 0.25);
-    box-shadow: 
+    box-shadow:
       0 8px 32px hsl(0 0% 0% / 0.3),
       inset 0 1px 0 hsl(0 0% 100% / 0.25),
       inset 0 -1px 0 hsl(0 0% 0% / 0.2);
