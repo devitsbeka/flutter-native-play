@@ -37,31 +37,30 @@ export interface PlayerFeedItem {
   createdAt: string;
 }
 
-export function usePlayerFeedItems(
-  searchQuery: string = "",
-  filter: ExploreFilter = "all",
-  sort: ExploreSort = "recent"
-) {
-  const { user } = useAuth();
-
-  return useQuery({
-    queryKey: ["player-feed-items", user?.id, searchQuery, filter, sort],
-    queryFn: async (): Promise<PlayerFeedItem[]> => {
-      // Fetch all public posts
+// Exported so useExplorePrefetch can warm the exact same query
+export async function fetchPlayerFeedItems(
+  userId: string | undefined,
+  searchQuery: string,
+  filter: ExploreFilter,
+  sort: ExploreSort
+): Promise<PlayerFeedItem[]> {
+      // Fetch recent public posts
       const { data: posts, error: postsError } = await supabase
         .from("user_quiz_posts")
         .select("*")
         .eq("is_public", true)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(50);
 
       if (postsError) throw postsError;
 
-      // Fetch all public collections
+      // Fetch recent public collections
       const { data: collections, error: collectionsError } = await supabase
         .from("quiz_collections")
         .select("*")
         .eq("is_public", true)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(50);
 
       if (collectionsError) throw collectionsError;
 
@@ -83,12 +82,12 @@ export function usePlayerFeedItems(
 
       // Fetch friendship status for current user
       let friendships: { id: string; user_id: string; friend_id: string; status: string }[] = [];
-      if (user) {
+      if (userId) {
         const { data: friendshipData } = await supabase
           .from("friendships")
           .select("id, user_id, friend_id, status")
-          .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
-        
+          .or(`user_id.eq.${userId},friend_id.eq.${userId}`);
+
         friendships = friendshipData || [];
       }
 
@@ -113,7 +112,7 @@ export function usePlayerFeedItems(
           return { status: 'friends', id: friendship.id };
         } else if (friendship.status === 'pending') {
           return {
-            status: friendship.user_id === user?.id ? 'pending_sent' : 'pending_received',
+            status: friendship.user_id === userId ? 'pending_sent' : 'pending_received',
             id: friendship.id
           };
         }
@@ -218,7 +217,7 @@ export function usePlayerFeedItems(
       const friendIds = new Set(
         friendships
           .filter(f => f.status === 'accepted')
-          .map(f => f.user_id === user?.id ? f.friend_id : f.user_id)
+          .map(f => f.user_id === userId ? f.friend_id : f.user_id)
       );
 
       // Apply type filter (trivias/collections/friends)
@@ -317,7 +316,20 @@ export function usePlayerFeedItems(
       }
 
       return filteredItems;
-    },
+}
+
+export function usePlayerFeedItems(
+  searchQuery: string = "",
+  filter: ExploreFilter = "all",
+  sort: ExploreSort = "recent",
+  enabled: boolean = true
+) {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["player-feed-items", user?.id, searchQuery, filter, sort],
+    queryFn: () => fetchPlayerFeedItems(user?.id, searchQuery, filter, sort),
+    enabled,
     staleTime: 5 * 60 * 1000, // 5 minutes - content doesn't change frequently
     gcTime: 15 * 60 * 1000, // 15 minutes cache
     refetchOnMount: false,

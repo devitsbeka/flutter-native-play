@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo, useRef } from "react";
 
 // Sound effect types for the game
 export type SoundEffect = 
@@ -616,24 +616,41 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const value = useMemo(
+    () => ({
+      musicEnabled: settings.musicEnabled,
+      setMusicEnabled,
+      sfxEnabled: settings.sfxEnabled,
+      setSfxEnabled,
+      vibrationEnabled: settings.vibrationEnabled,
+      setVibrationEnabled,
+      volume: settings.volume,
+      setVolume,
+      playSound,
+      vibrate,
+      startBackgroundMusic,
+      stopBackgroundMusic,
+      isPlayingMusic,
+    }),
+    [
+      settings.musicEnabled,
+      setMusicEnabled,
+      settings.sfxEnabled,
+      setSfxEnabled,
+      settings.vibrationEnabled,
+      setVibrationEnabled,
+      settings.volume,
+      setVolume,
+      playSound,
+      vibrate,
+      startBackgroundMusic,
+      stopBackgroundMusic,
+      isPlayingMusic,
+    ]
+  );
+
   return (
-    <SoundContext.Provider
-      value={{
-        musicEnabled: settings.musicEnabled,
-        setMusicEnabled,
-        sfxEnabled: settings.sfxEnabled,
-        setSfxEnabled,
-        vibrationEnabled: settings.vibrationEnabled,
-        setVibrationEnabled,
-        volume: settings.volume,
-        setVolume,
-        playSound,
-        vibrate,
-        startBackgroundMusic,
-        stopBackgroundMusic,
-        isPlayingMusic,
-      }}
-    >
+    <SoundContext.Provider value={value}>
       {children}
     </SoundContext.Provider>
   );

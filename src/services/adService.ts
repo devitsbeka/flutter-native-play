@@ -6,12 +6,22 @@
 
 import { trackingService } from './trackingService';
 
-// AdMob Configuration
+// AdMob Configuration — every ad unit ID lives in this one object.
 const ADMOB_CONFIG = {
-  // Production ad unit IDs
-  rewardedAdUnitId: 'ca-app-pub-1329033152352928/8877032796',
+  rewarded: {
+    // Existing production rewarded ID used as default for both platforms.
+    // TODO(owner): supply a dedicated iOS rewarded ad unit ID if different from Android.
+    android: 'ca-app-pub-1329033152352928/8877032796',
+    ios: 'ca-app-pub-1329033152352928/8877032796',
+  },
+  interstitial: {
+    // TODO(owner): replace these Google TEST interstitial IDs with real per-platform unit IDs.
+    android: 'ca-app-pub-3940256099942544/1033173712',
+    ios: 'ca-app-pub-3940256099942544/4411468910',
+  },
   // Test ad unit IDs for development
   testRewardedAdUnitId: 'ca-app-pub-3940256099942544/5224354917',
+  testInterstitialAdUnitId: 'ca-app-pub-3940256099942544/1033173712',
 };
 
 interface AdReward {
@@ -33,17 +43,27 @@ class AdService {
   private isNative = false;
   private AdMob: any = null;
   private RewardAdPluginEvents: any = null;
+  private InterstitialAdPluginEvents: any = null;
   private isAdLoading = false;
   private isAdLoaded = false;
+  private isInterstitialLoading = false;
+  private isInterstitialLoaded = false;
   private listeners: any[] = [];
   private isVipUser = false;
   private ageGroup: string | null = null;
 
   /**
-   * Set VIP status - VIP users skip ads and get rewards automatically
+   * Set VIP status - VIP users skip ads and get rewards automatically.
+   * Synced from VipContext by the useAds hook.
    */
   setVipStatus(isVip: boolean) {
     this.isVipUser = isVip;
+  }
+
+  private getAdUnitId(kind: 'rewarded' | 'interstitial'): string {
+    const platform = (window as any).Capacitor?.getPlatform?.() || 'web';
+    const ids = ADMOB_CONFIG[kind];
+    return platform === 'ios' ? ids.ios : ids.android;
   }
 
   /**
@@ -95,6 +115,7 @@ class AdService {
           const admobModule = await import('@capacitor-community/admob');
           this.AdMob = admobModule.AdMob;
           this.RewardAdPluginEvents = admobModule.RewardAdPluginEvents;
+          this.InterstitialAdPluginEvents = admobModule.InterstitialAdPluginEvents;
           
           // Initialize tracking service and request ATT authorization
           await trackingService.initialize();
@@ -185,7 +206,7 @@ class AdService {
 
         const childSafety = this.getChildSafetyOptions();
         await this.AdMob.prepareRewardVideoAd({
-          adId: ADMOB_CONFIG.rewardedAdUnitId,
+          adId: this.getAdUnitId('rewarded'),
           isTesting: false,
           ...(childSafety.npa && { npa: childSafety.npa }),
         });
@@ -224,15 +245,21 @@ class AdService {
               }
             );
 
+            const removeAll = () => {
+              showedListener.remove();
+              dismissedListener.remove();
+              rewardedListener.remove();
+              failedListener.remove();
+            };
+
             const dismissedListener = await this.AdMob.addListener(
               this.RewardAdPluginEvents.Dismissed,
               () => {
                 this.isAdLoaded = false;
                 callbacks?.onAdDismissed?.();
-                showedListener.remove();
-                dismissedListener.remove();
-                rewardedListener.remove();
-                failedListener.remove();
+                removeAll();
+                // Dismissed without a reward — settle as false (no-op if already resolved true)
+                resolve(false);
               }
             );
 
@@ -248,14 +275,27 @@ class AdService {
               this.RewardAdPluginEvents.FailedToShow,
               (error: any) => {
                 callbacks?.onAdFailedToShow?.(error?.message || 'Failed to show ad');
+                removeAll();
                 resolve(false);
               }
             );
 
-            await this.AdMob.showRewardVideoAd();
+            try {
+              await this.AdMob.showRewardVideoAd();
+            } catch (error) {
+              // An unloaded ad rejects here without firing FailedToShow — settle the
+              // promise so callers (e.g. WatchAdModal spinner) never hang
+              this.isAdLoaded = false;
+              callbacks?.onAdFailedToShow?.((error as Error)?.message || 'Failed to show ad');
+              removeAll();
+              resolve(false);
+            }
           };
 
-          setupListeners();
+          setupListeners().catch((error) => {
+            console.error('Failed to set up rewarded ad listeners:', error);
+            resolve(false);
+          });
         });
       } else {
         // Web simulation - show fake ad
@@ -301,6 +341,126 @@ class AdService {
     }
 
     return this.showRewardedAd(callbacks);
+  }
+
+  private prepareInterstitialOnce(): Promise<boolean> {
+    return new Promise((resolve) => {
+      (async () => {
+        let loadedListener: any = null;
+        let failedListener: any = null;
+        const removeAll = () => {
+          loadedListener?.remove?.();
+          failedListener?.remove?.();
+        };
+        try {
+          loadedListener = await this.AdMob.addListener(
+            this.InterstitialAdPluginEvents.Loaded,
+            () => {
+              removeAll();
+              resolve(true);
+            }
+          );
+          failedListener = await this.AdMob.addListener(
+            this.InterstitialAdPluginEvents.FailedToLoad,
+            (error: any) => {
+              console.warn('Interstitial failed to load:', error?.message);
+              removeAll();
+              resolve(false);
+            }
+          );
+
+          const childSafety = this.getChildSafetyOptions();
+          await this.AdMob.prepareInterstitial({
+            adId: this.getAdUnitId('interstitial'),
+            isTesting: false,
+            ...(childSafety.npa && { npa: childSafety.npa }),
+          });
+        } catch (error) {
+          console.warn('prepareInterstitial threw:', error);
+          removeAll();
+          resolve(false);
+        }
+      })();
+    });
+  }
+
+  async prepareInterstitial(): Promise<boolean> {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    // Web has no interstitials — nothing to load
+    if (!this.isNative || !this.AdMob || !this.InterstitialAdPluginEvents) return false;
+    if (this.isInterstitialLoaded) return true;
+    if (this.isInterstitialLoading) return false;
+
+    this.isInterstitialLoading = true;
+    try {
+      // Retry once on load failure before giving up
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const loaded = await this.prepareInterstitialOnce();
+        if (loaded) {
+          this.isInterstitialLoaded = true;
+          return true;
+        }
+      }
+      return false;
+    } finally {
+      this.isInterstitialLoading = false;
+    }
+  }
+
+  /**
+   * Show an interstitial ad. Always settles: resolves true if the ad was shown
+   * and dismissed, false on any failure (never shown on web or for VIP users).
+   */
+  async showInterstitial(): Promise<boolean> {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    if (this.isVipUser) return false;
+    if (!this.isNative || !this.AdMob || !this.InterstitialAdPluginEvents) return false;
+
+    if (!this.isInterstitialLoaded) {
+      const loaded = await this.prepareInterstitial();
+      if (!loaded) return false;
+    }
+    this.isInterstitialLoaded = false;
+
+    return new Promise((resolve) => {
+      (async () => {
+        let dismissedListener: any = null;
+        let failedListener: any = null;
+        const removeAll = () => {
+          dismissedListener?.remove?.();
+          failedListener?.remove?.();
+        };
+        try {
+          dismissedListener = await this.AdMob.addListener(
+            this.InterstitialAdPluginEvents.Dismissed,
+            () => {
+              removeAll();
+              resolve(true);
+            }
+          );
+          failedListener = await this.AdMob.addListener(
+            this.InterstitialAdPluginEvents.FailedToShow,
+            (error: any) => {
+              console.warn('Interstitial failed to show:', error?.message);
+              removeAll();
+              resolve(false);
+            }
+          );
+
+          await this.AdMob.showInterstitial();
+        } catch (error) {
+          console.warn('showInterstitial threw:', error);
+          removeAll();
+          resolve(false);
+        }
+      })();
+    });
   }
 
   isAdReady(): boolean {

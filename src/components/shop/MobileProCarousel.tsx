@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { Crown, Users, Sparkles, Check, ChevronRight, Loader2, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -30,6 +30,29 @@ export function MobileProCarousel() {
   const [sharing, setSharing] = useState(false);
   const navigate = useNavigate();
   const currentTier = isVip ? subscription?.vip_tier : undefined;
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isInView, setIsInView] = useState(true);
+  const [isPageVisible, setIsPageVisible] = useState(() => typeof document === "undefined" || !document.hidden);
+  const isActive = isInView && isPageVisible;
+
+  // Pause video + auto-advance while scrolled offscreen or tab hidden
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const onVisibilityChange = () => setIsPageVisible(!document.hidden);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, []);
 
   const SLIDES = useMemo(() => [
     {
@@ -84,11 +107,12 @@ export function MobileProCarousel() {
   };
 
   useEffect(() => {
+    if (!isActive) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % SLIDES.length);
     }, 6000);
     return () => clearInterval(interval);
-  }, [SLIDES.length]);
+  }, [SLIDES.length, isActive]);
 
   const handleSwipe = useCallback((_: any, info: PanInfo) => {
     const swipeThreshold = 50;
@@ -131,8 +155,19 @@ export function MobileProCarousel() {
   const SlideIcon = slide.icon;
   const isInviteSlide = slide.type === "invite";
 
+  // slide.id in deps: the keyed <video> remounts on every slide change
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (isActive) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [isActive, slide.id]);
+
   return (
-    <div className="px-4 pt-4 pb-2 md:pb-4">
+    <div ref={containerRef} className="px-4 pt-4 pb-2 md:pb-4">
       <div className="relative overflow-hidden rounded-3xl cursor-pointer" onClick={handleCardClick}>
         <AnimatePresence mode="wait">
           <motion.div
@@ -266,7 +301,7 @@ export function MobileProCarousel() {
             </div>
 
             <div className="w-[35%] flex-shrink-0 relative overflow-hidden">
-              <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: "70% 20%" }}>
+              <video ref={videoRef} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: "70% 20%" }}>
                 <source src={shopBgVideoWebm} type="video/webm" />
                 <source src={shopBgVideo} type="video/mp4" />
               </video>

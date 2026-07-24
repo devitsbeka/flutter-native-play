@@ -104,6 +104,71 @@ const safeDeleteRoomQuestions = async (roomId: string): Promise<boolean> => {
   return verified;
 };
 
+// Reset ALL participants' round state at game start.
+// RLS on room_participants only allows updating your own row, so a direct
+// client-side update silently no-ops for other players. The SECURITY DEFINER
+// RPC resets every row; if the migration isn't applied yet we fall back to
+// the direct update (own row only - other clients self-reset on round entry).
+const resetAllParticipants = async (roomId: string, status: "playing" | "joined" = "playing") => {
+  // Cast needed until Supabase types are regenerated after the migration
+  // (supabase/migrations/20260724120000_reset_room_participants_rpc.sql) is applied
+  const { error } = await (supabase.rpc as unknown as (
+    fn: string,
+    args: Record<string, unknown>
+  ) => Promise<{ error: { message: string } | null }>)("reset_room_participants", {
+    p_room_id: roomId,
+    p_status: status,
+  });
+  if (error) {
+    console.error("[MP] reset_room_participants RPC failed, falling back to own-row reset:", error);
+    await supabase
+      .from("room_participants")
+      .update({ score: 0, current_question: 0, status })
+      .eq("room_id", roomId);
+  }
+};
+
+// Read-back barrier: non-host clients start fetching by game_id the moment
+// status flips to "playing", so every question row must be visible before that
+// write. A fixed setTimeout can't guarantee this - poll the actual count.
+const verifyQuestionsCommitted = async (
+  roomId: string,
+  gameId: string | null | undefined,
+  expectedCount: number
+): Promise<boolean> => {
+  if (!gameId) return false;
+  for (let i = 0; i < 10; i++) {
+    const { count } = await supabase
+      .from("room_questions")
+      .select("*", { count: "exact", head: true })
+      .eq("room_id", roomId)
+      .eq("game_id", gameId);
+    if (count === expectedCount) return true;
+    await new Promise(resolve => setTimeout(resolve, 300)); // max ~3s total
+  }
+  return false;
+};
+
+// Atomic score increment via SECURITY DEFINER RPC. Absolute-value score writes
+// race across devices (e.g. observer bonus vs answer points landing together)
+// and can clobber each other; the RPC applies the delta server-side. Falls back
+// to false if the migration (20260724130000_mp_sync_rpcs.sql) isn't applied yet.
+const incrementParticipantScore = async (roomId: string, delta: number): Promise<boolean> => {
+  // Cast needed until Supabase types are regenerated after the migration is applied
+  const { error } = await (supabase.rpc as unknown as (
+    fn: string,
+    args: Record<string, unknown>
+  ) => Promise<{ error: { message: string } | null }>)("increment_participant_score", {
+    p_room_id: roomId,
+    p_delta: delta,
+  });
+  if (error) {
+    console.error("[MP] increment_participant_score RPC failed, falling back to absolute write:", error);
+    return false;
+  }
+  return true;
+};
+
 // Simplified 4-phase system
 export type GamePhase = "idle" | "lobby" | "playing" | "results";
 
@@ -181,7 +246,9 @@ interface MultiplayerState {
   myScore: number;
   lastQuestionResult: { correct: boolean; points: number } | null;
   timePerQuestion: number;
-  opponentAnswers: Record<string, PlayerAnswer>;
+  // Keyed by question_index -> user_id so late-arriving realtime inserts are
+  // never dropped when a player has already advanced to the next question
+  opponentAnswers: Record<number, Record<string, PlayerAnswer>>;
   hostIsObserver: boolean; // Host can't answer but earns points from player mistakes
   observerBonusThisRound: number; // Accumulated observer bonus for current round
   lastPlayedTriviaId: string | null; // Track the last played trivia ID for "already played" indicator
@@ -192,6 +259,8 @@ interface MultiplayerContextType extends MultiplayerState {
   participants: RoomParticipant[];
   isHost: boolean;
   loading: boolean;
+  // Answers for the question currently on screen (derived from opponentAnswers)
+  currentOpponentAnswers: Record<string, PlayerAnswer>;
   
   // Actions
   createRoom: (categoryId?: string, categoryName?: string, customQuestions?: any[], roomName?: string | null, roomIcon?: string | null) => Promise<GameRoom | null>;
@@ -243,6 +312,7 @@ const MultiplayerContext = createContext<MultiplayerContextType>({
   participants: [],
   isHost: false,
   loading: false,
+  currentOpponentAnswers: {},
   createRoom: async () => { missingProvider(); return null; },
   enterRoom: async () => { missingProvider(); return false; },
   startGame: async () => missingProvider(),
@@ -338,6 +408,17 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     }
   }, []);
 
+  // Trailing debounce: bursts of participant events (round resets touch every
+  // row) would otherwise trigger a profile-join fetch per event
+  const fetchParticipantsDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debouncedFetchParticipants = useCallback((roomId: string) => {
+    if (fetchParticipantsDebounceRef.current) clearTimeout(fetchParticipantsDebounceRef.current);
+    fetchParticipantsDebounceRef.current = setTimeout(() => {
+      fetchParticipantsDebounceRef.current = null;
+      fetchParticipants(roomId);
+    }, 300);
+  }, [fetchParticipants]);
+
   // Subscribe to room changes
   useEffect(() => {
     if (!state.currentRoom?.id) return;
@@ -357,9 +438,19 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           // Use refs for stable access (prevents stale closure issues)
           const currentPhase = phaseRef.current;
           const currentIsHost = isHostRef.current;
-          
+
+          // A new round can start while this player is still finishing the previous
+          // one (e.g. a slow player on the last question). Detect it via a changed
+          // game_id so they get pulled into the new round instead of finishing a
+          // dead round and polluting the room with a stale "finished" status.
+          const isNewGameWhilePlaying =
+            currentPhase === "playing" &&
+            !!updated.current_game_id &&
+            !!expectedGameIdRef.current &&
+            updated.current_game_id !== expectedGameIdRef.current;
+
           // Handle status changes
-          if (updated.status === "playing" && (currentPhase === "lobby" || currentPhase === "results")) {
+          if (updated.status === "playing" && (currentPhase === "lobby" || currentPhase === "results" || isNewGameWhilePlaying)) {
             // Non-host: fetch questions when game starts - USE shuffled_answers from DB
             if (!currentIsHost) {
               // CRITICAL: Clear local questions FIRST to prevent stale data showing
@@ -373,14 +464,27 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 currentRoom: updated, // Sync room state immediately
               }));
               
+              // CRITICAL: Reset OWN participant row for the new round. RLS blocks the
+              // host from resetting other players' rows, so without this the stale
+              // "finished" status/current_question from the previous round survives
+              // and can falsely mark the new game as completed.
+              if (user?.id) {
+                await supabase
+                  .from("room_participants")
+                  .update({ score: 0, current_question: 0, status: "playing" })
+                  .eq("room_id", roomId)
+                  .eq("user_id", user.id);
+              }
+
               // Get expected game_id FRESH from database (realtime payload could be stale)
               const { data: freshRoomCheck } = await supabase
                 .from("game_rooms")
-                .select("current_game_id")
+                .select("current_game_id, total_questions")
                 .eq("id", roomId)
                 .maybeSingle();
-              
+
               const expectedGameId = freshRoomCheck?.current_game_id || updated.current_game_id;
+              const expectedTotal = freshRoomCheck?.total_questions || updated.total_questions || 0;
               
               // CRITICAL: Store expected game_id in ref so stale fetches can detect they're outdated
               expectedGameIdRef.current = expectedGameId;
@@ -413,17 +517,21 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   .order("question_index", { ascending: true });
                 
                 roomQuestions = data;
-                
-                if (roomQuestions && roomQuestions.length > 0) {
-                  console.log(`[MP] Found ${roomQuestions.length} questions matching game_id: ${expectedGameId}`);
+
+                // Only accept a COMPLETE set - a partial read means the host's
+                // inserts are still landing and would leave this client with
+                // fewer questions than everyone else
+                const fetchedCount = roomQuestions?.length || 0;
+                if (fetchedCount > 0 && (expectedTotal <= 0 || fetchedCount === expectedTotal)) {
+                  console.log(`[MP] Found ${fetchedCount}/${expectedTotal} questions matching game_id: ${expectedGameId}`);
                   validQuestionsFound = true;
                   break;
                 }
-                
+
                 // Wait and retry
                 await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
                 attempts++;
-                console.log(`[MP] Waiting for questions with game_id ${expectedGameId} (attempt ${attempts}/${MAX_ATTEMPTS})`);
+                console.log(`[MP] Waiting for ${expectedTotal} questions with game_id ${expectedGameId}, have ${fetchedCount} (attempt ${attempts}/${MAX_ATTEMPTS})`);
               }
               
               if (validQuestionsFound && roomQuestions && roomQuestions.length > 0) {
@@ -525,18 +633,32 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 currentRoom: freshRoom as GameRoom,
               }));
               
+              // Reset OWN participant row (RLS blocks the host from doing it for us)
+              if (user?.id) {
+                await supabase
+                  .from("room_participants")
+                  .update({ score: 0, current_question: 0, status: "playing" })
+                  .eq("room_id", roomId)
+                  .eq("user_id", user.id);
+              }
+
               const expectedGameId = freshRoom.current_game_id;
-              
+              const expectedTotal = freshRoom.total_questions || 0;
+
+              // Track expected game_id so isNewGameWhilePlaying detection works
+              // if another round starts while this client is mid-sync
+              expectedGameIdRef.current = expectedGameId;
+
               // Wait for questions to be fully committed
               await new Promise(resolve => setTimeout(resolve, 800));
-              
+
               // Fetch with retry logic
               let attempts = 0;
               const MAX_ATTEMPTS = 8;
               const RETRY_DELAY = 600;
               let roomQuestions: any[] | null = null;
               let validQuestionsFound = false;
-              
+
               while (attempts < MAX_ATTEMPTS && !validQuestionsFound) {
                 const { data } = await supabase
                   .from("room_questions")
@@ -544,14 +666,16 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   .eq("room_id", roomId)
                   .eq("game_id", expectedGameId)
                   .order("question_index", { ascending: true });
-                
+
                 roomQuestions = data;
-                
-                if (roomQuestions && roomQuestions.length > 0) {
+
+                // Only accept a COMPLETE set (partial reads = host still inserting)
+                const fetchedCount = roomQuestions?.length || 0;
+                if (fetchedCount > 0 && (expectedTotal <= 0 || fetchedCount === expectedTotal)) {
                   validQuestionsFound = true;
                   break;
                 }
-                
+
                 await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
                 attempts++;
               }
@@ -603,32 +727,50 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         "postgres_changes",
         { event: "*", schema: "public", table: "room_participants", filter: `room_id=eq.${roomId}` },
         async (payload) => {
-          fetchParticipants(roomId);
-          
-          // Check if all playing participants have finished → mark room completed
-          if (payload.eventType === "UPDATE" && (payload.new as any).status === "finished") {
+          debouncedFetchParticipants(roomId);
+
+          // Check if all playing participants have finished → mark room completed.
+          // Each client only reacts to its OWN "finished" transition - every player
+          // reports their own finish, so running the check for every event just
+          // multiplies identical queries and race windows.
+          if (
+            payload.eventType === "UPDATE" &&
+            (payload.new as any).status === "finished" &&
+            (payload.new as any).user_id === user?.id
+          ) {
             const { data: allParticipants } = await supabase
               .from("room_participants")
-              .select("status, user_id")
+              .select("status, user_id, current_question")
               .eq("room_id", roomId);
-            
+
             if (allParticipants && allParticipants.length > 0) {
               // Get room to check host_is_observer
               const { data: roomCheck } = await supabase
                 .from("game_rooms")
-                .select("host_user_id, host_is_observer, status")
+                .select("host_user_id, host_is_observer, status, total_questions")
                 .eq("id", roomId)
                 .maybeSingle();
-              
+
               // Only proceed if the room is still "playing"
               if (roomCheck && roomCheck.status === "playing") {
                 const activePlayers = allParticipants.filter(p => {
                   // Skip observer host
                   if (roomCheck.host_is_observer && p.user_id === roomCheck.host_user_id) return false;
+                  // Skip players who left mid-round - waiting on them blocks completion forever
+                  if (p.status === "disconnected") return false;
                   return true;
                 });
-                
-                const allFinished = activePlayers.every(p => p.status === "finished");
+
+                // CRITICAL: RLS only lets each user update their OWN participant row,
+                // so cross-player resets at round start silently fail and a player can
+                // carry a stale "finished" status from the previous round. Require
+                // actual progress through the current round's questions before counting
+                // a player as finished, otherwise one answer into a new round the room
+                // gets marked completed and everyone is kicked to results.
+                const totalQ = roomCheck.total_questions || 5;
+                const allFinished = activePlayers.every(
+                  p => p.status === "finished" && (p.current_question || 0) >= totalQ
+                );
                 
                 if (allFinished) {
                   console.log(`[MP] All ${activePlayers.length} players finished - marking room completed`);
@@ -677,11 +819,19 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         { event: "INSERT", schema: "public", table: "player_answers", filter: `room_id=eq.${roomId}` },
         (payload) => {
           const answer = payload.new as PlayerAnswer;
-          // Use ref to get current question index (avoid stale closure)
-          if (answer.user_id !== user?.id && answer.question_index === currentQuestionIndexRef.current) {
+          // Store EVERY opponent insert keyed by question_index - players advance
+          // at their own pace, so answers for past/future questions must not be
+          // dropped (they're read back when this client reaches that question)
+          if (answer.user_id !== user?.id) {
             setState(prev => ({
               ...prev,
-              opponentAnswers: { ...prev.opponentAnswers, [answer.user_id]: answer },
+              opponentAnswers: {
+                ...prev.opponentAnswers,
+                [answer.question_index]: {
+                  ...(prev.opponentAnswers[answer.question_index] || {}),
+                  [answer.user_id]: answer,
+                },
+              },
             }));
           }
         }
@@ -692,9 +842,15 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     // Initial fetch
     fetchParticipants(roomId);
-    
-    return () => cleanupChannels();
-  }, [state.currentRoom?.id, user?.id, fetchParticipants, cleanupChannels]); // Removed state.phase and isHost - use refs instead
+
+    return () => {
+      if (fetchParticipantsDebounceRef.current) {
+        clearTimeout(fetchParticipantsDebounceRef.current);
+        fetchParticipantsDebounceRef.current = null;
+      }
+      cleanupChannels();
+    };
+  }, [state.currentRoom?.id, user?.id, fetchParticipants, debouncedFetchParticipants, cleanupChannels]); // Removed state.phase and isHost - use refs instead
 
   // Generate room code
   const generateRoomCode = async (): Promise<string> => {
@@ -841,16 +997,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           })
           .eq("id", room.id);
           
-        // Reset participant progress for new round
-        await supabase
-          .from("room_participants")
-          .update({ 
-            current_question: 0, 
-            score: 0, 
-            has_seen_results: false,
-            status: "joined" 
-          })
-          .eq("room_id", room.id);
+        // Reset participant progress for new round (RPC resets ALL rows;
+        // direct updates would be RLS-limited to the caller's own row)
+        await resetAllParticipants(room.id, "joined");
         
         // Update local room object
         room.status = "waiting";
@@ -931,7 +1080,21 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             
             // Get current progress from participant
             const currentQuestion = existing.current_question || 0;
-            
+
+            // Track expected game_id so isNewGameWhilePlaying detection works
+            // for rejoining clients too
+            expectedGameIdRef.current = room.current_game_id;
+
+            // Rejoining a live round: clear a stale "disconnected" flag so the
+            // completion check counts us again
+            if ((existing as any).status === "disconnected") {
+              await supabase
+                .from("room_participants")
+                .update({ status: "playing" })
+                .eq("room_id", room.id)
+                .eq("user_id", user.id);
+            }
+
             setState(prev => ({
               ...prev,
               phase: "playing",
@@ -1166,31 +1329,22 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           }).select()
         ));
         
-        // Verify all inserts succeeded
+        // Abort BEFORE flipping status to "playing" if any insert failed or the
+        // full set isn't readable yet - otherwise non-hosts sync a partial round
         const failedInserts = insertResults.filter(r => r.error);
         if (failedInserts.length > 0) {
           console.error("[MP startGame] Some question inserts failed:", failedInserts.map(f => f.error));
+          toast.error(tStandalone("extra.mpGameStartFailed"));
+          return;
         }
-        
-        // Verify question count matches expected
-        const { count: insertedCount } = await supabase
-          .from("room_questions")
-          .select("*", { count: "exact", head: true })
-          .eq("room_id", roomId)
-          .eq("game_id", game?.id);
-        
-        if (insertedCount !== questions.length) {
-          console.error(`[MP startGame] Question count mismatch: expected ${questions.length}, got ${insertedCount}`);
+        if (!(await verifyQuestionsCommitted(roomId, game?.id, questions.length))) {
+          console.error(`[MP startGame] Questions not fully committed for game ${game?.id}, aborting round start`);
+          toast.error(tStandalone("extra.mpGameStartFailed"));
+          return;
         }
-        
-        // CRITICAL: Wait for DB commit before updating room status
-        await new Promise(resolve => setTimeout(resolve, 150));
-        
+
         // Reset ALL participant scores for fair game start
-        await supabase
-          .from("room_participants")
-          .update({ score: 0, current_question: 0, status: "playing" })
-          .eq("room_id", roomId);
+        await resetAllParticipants(roomId);
         
         // FIX: Immediately reset local participants to prevent stale auto-advance
         setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
@@ -1207,7 +1361,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             host_is_observer: shouldObserve,
           })
           .eq("id", roomId);
-        
+
+        // Track expected game_id so isNewGameWhilePlaying detection works for the host too
+        expectedGameIdRef.current = game?.id ?? null;
+
         setState(prev => ({
           ...prev,
           currentRoom: prev.currentRoom ? {
@@ -1349,34 +1506,25 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       }).select()
     ));
     
-    // Verify all inserts succeeded
+    // Abort BEFORE flipping status to "playing" if any insert failed or the
+    // full set isn't readable yet - otherwise non-hosts sync a partial round
     const failedInserts = insertResults.filter(r => r.error);
     if (failedInserts.length > 0) {
       console.error("[MP saveQuestionsAndStartGame] Some question inserts failed:", failedInserts.map(f => f.error));
+      toast.error(tStandalone("extra.mpGameStartFailed"));
+      return;
     }
-    
-    // Verify question count matches expected
-    const { count: insertedCount } = await supabase
-      .from("room_questions")
-      .select("*", { count: "exact", head: true })
-      .eq("room_id", roomId)
-      .eq("game_id", game?.id);
-    
-    if (insertedCount !== questions.length) {
-      console.error(`[MP saveQuestionsAndStartGame] Question count mismatch: expected ${questions.length}, got ${insertedCount}`);
+    if (!(await verifyQuestionsCommitted(roomId, game?.id, questions.length))) {
+      console.error(`[MP saveQuestionsAndStartGame] Questions not fully committed for game ${game?.id}, aborting round start`);
+      toast.error(tStandalone("extra.mpGameStartFailed"));
+      return;
     }
-    
-    // CRITICAL: Wait longer for DB commit before updating room status
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
+
     // Reset all participants scores
     // CRITICAL: Also reset status to "playing" - a stale "finished" status from the
     // previous round makes the completion check mark the room "completed" as soon as
     // any player answers the first question, kicking everyone to results mid-game
-    await supabase
-      .from("room_participants")
-      .update({ score: 0, current_question: 0, status: "playing" })
-      .eq("room_id", roomId);
+    await resetAllParticipants(roomId);
 
     // FIX: Immediately reset local participants to prevent stale auto-advance
     setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0, status: "playing" as const })));
@@ -1394,6 +1542,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         total_questions: questions.length,
       })
       .eq("id", roomId);
+
+    // Track expected game_id so isNewGameWhilePlaying detection works for the host too
+    expectedGameIdRef.current = game?.id ?? null;
 
     setState(prev => ({
       ...prev,
@@ -1440,12 +1591,22 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     // Update participant score (round to prevent floating point accumulation)
     const newScore = Math.round(state.myScore + points);
+    // Atomic delta via RPC so concurrent writes (e.g. observer bonus) can't be
+    // clobbered by an absolute score; fall back to the absolute write if the
+    // migration isn't applied yet
+    const scoreApplied = points > 0
+      ? await incrementParticipantScore(state.currentRoom.id, points)
+      : true;
     await supabase
       .from("room_participants")
-      .update({ score: newScore, current_question: state.currentQuestionIndex + 1 })
+      .update(
+        scoreApplied
+          ? { current_question: state.currentQuestionIndex + 1 }
+          : { score: newScore, current_question: state.currentQuestionIndex + 1 }
+      )
       .eq("room_id", state.currentRoom.id)
       .eq("user_id", user.id);
-    
+
     setState(prev => ({
       ...prev,
       myScore: newScore,
@@ -1471,22 +1632,33 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       await new Promise(resolve => setTimeout(resolve, 500));
       setState(prev => ({ ...prev, phase: "results" }));
     } else {
+      // Keep opponentAnswers - it's keyed per question_index, wiping it here
+      // would drop answers already received for upcoming questions
       setState(prev => ({
         ...prev,
         currentQuestionIndex: prev.currentQuestionIndex + 1,
         lastQuestionResult: null,
-        opponentAnswers: {},
       }));
     }
   }, [state.currentQuestionIndex, state.questions.length, state.currentRoom, user]);
 
   // Exit room (UI only - stay as participant)
   const exitRoom = useCallback(() => {
+    // Leaving mid-round: mark own row disconnected (fire-and-forget) so the
+    // remaining players' completion check doesn't wait on us forever
+    const roomId = state.currentRoom?.id;
+    if (phaseRef.current === "playing" && roomId && user) {
+      void supabase
+        .from("room_participants")
+        .update({ status: "disconnected" })
+        .eq("room_id", roomId)
+        .eq("user_id", user.id);
+    }
     // Clear room presence when exiting
     setRoomPresence(null);
     cleanupChannels();
     setState(initialState);
-  }, [cleanupChannels, setRoomPresence]);
+  }, [cleanupChannels, setRoomPresence, state.currentRoom?.id, user]);
 
   // Continue in room after results (go back to lobby)
   const continueInRoom = useCallback(async () => {
@@ -1513,9 +1685,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .select("status")
       .eq("id", roomId)
       .single();
-    
-    // Only update DB if not already in waiting state
-    if (currentRoomState?.status !== "waiting") {
+
+    // Only update DB if not already in waiting state.
+    // NEVER downgrade a "playing" room - another player may have already started
+    // the next round, and flipping it to "waiting" would derail their live game.
+    if (currentRoomState?.status !== "waiting" && currentRoomState?.status !== "playing") {
       // Reset room status to waiting
       // If queue is empty, clear category so lobby shows "აირჩიე კატეგორია"
       await supabase
@@ -1634,10 +1808,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }
         
         // FIX: Reset ALL participants' scores (not just caller)
-        await supabase
-          .from("room_participants")
-          .update({ score: 0, current_question: 0, status: "playing" })
-          .eq("room_id", roomId);
+        await resetAllParticipants(roomId);
         
         // FIX: Immediately reset local participants to prevent stale auto-advance
         setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
@@ -1668,26 +1839,20 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           }).select()
         ));
         
-        // Verify all inserts succeeded
+        // Abort BEFORE flipping status to "playing" if any insert failed or the
+        // full set isn't readable yet - otherwise non-hosts sync a partial round
         const failedInserts1 = insertResults1.filter(r => r.error);
         if (failedInserts1.length > 0) {
           console.error("[MP startNewRound/userTrivia] Some question inserts failed:", failedInserts1.map(f => f.error));
+          toast.error(tStandalone("extra.mpGameStartFailed"));
+          return;
         }
-        
-        // Verify question count matches expected
-        const { count: insertedCount1 } = await supabase
-          .from("room_questions")
-          .select("*", { count: "exact", head: true })
-          .eq("room_id", roomId)
-          .eq("game_id", game?.id);
-        
-        if (insertedCount1 !== questions.length) {
-          console.error(`[MP startNewRound/userTrivia] Question count mismatch: expected ${questions.length}, got ${insertedCount1}`);
+        if (!(await verifyQuestionsCommitted(roomId, game?.id, questions.length))) {
+          console.error(`[MP startNewRound/userTrivia] Questions not fully committed for game ${game?.id}, aborting round start`);
+          toast.error(tStandalone("extra.mpGameStartFailed"));
+          return;
         }
-        
-        // CRITICAL: Wait for DB commit before updating room status
-        await new Promise(resolve => setTimeout(resolve, 150));
-        
+
         // Update room status (after questions are committed, includes host_is_observer)
         await supabase
           .from("game_rooms")
@@ -1696,9 +1861,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             started_at: new Date().toISOString(),
             current_game_id: game?.id,
             host_is_observer: hostShouldObserve,
+            total_questions: questions.length,
           })
           .eq("id", roomId);
-        
+
+        // Track expected game_id so isNewGameWhilePlaying detection works for the caller too
+        expectedGameIdRef.current = game?.id ?? null;
+
         setState(prev => ({
           ...prev,
           questions,
@@ -1773,10 +1942,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       markQuestionsAsSeen(questions.map(q => q.id));
       
       // FIX: Reset ALL participants' scores (not just caller)
-      await supabase
-        .from("room_participants")
-        .update({ score: 0, current_question: 0, status: "playing" })
-        .eq("room_id", roomId);
+      await resetAllParticipants(roomId);
       
       // FIX: Immediately reset local participants to prevent stale auto-advance
       setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
@@ -1807,26 +1973,20 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }).select()
       ));
       
-      // Verify all inserts succeeded
+      // Abort BEFORE flipping status to "playing" if any insert failed or the
+      // full set isn't readable yet - otherwise non-hosts sync a partial round
       const failedInserts2 = insertResults2.filter(r => r.error);
       if (failedInserts2.length > 0) {
         console.error("[MP startNewRound/library] Some question inserts failed:", failedInserts2.map(f => f.error));
+        toast.error(tStandalone("extra.mpGameStartFailed"));
+        return;
       }
-      
-      // Verify question count matches expected
-      const { count: insertedCount2 } = await supabase
-        .from("room_questions")
-        .select("*", { count: "exact", head: true })
-        .eq("room_id", roomId)
-        .eq("game_id", game?.id);
-      
-      if (insertedCount2 !== questions.length) {
-        console.error(`[MP startNewRound/library] Question count mismatch: expected ${questions.length}, got ${insertedCount2}`);
+      if (!(await verifyQuestionsCommitted(roomId, game?.id, questions.length))) {
+        console.error(`[MP startNewRound/library] Questions not fully committed for game ${game?.id}, aborting round start`);
+        toast.error(tStandalone("extra.mpGameStartFailed"));
+        return;
       }
-      
-      // CRITICAL: Wait for DB commit before updating room status
-      await new Promise(resolve => setTimeout(resolve, 150));
-      
+
       // Update room status (after questions are committed, includes host_is_observer)
       await supabase
         .from("game_rooms")
@@ -1835,9 +1995,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           started_at: new Date().toISOString(),
           current_game_id: game?.id,
           host_is_observer: hostShouldObserve,
+          total_questions: questions.length,
         })
         .eq("id", roomId);
-      
+
+      // Track expected game_id so isNewGameWhilePlaying detection works for the caller too
+      expectedGameIdRef.current = game?.id ?? null;
+
       setState(prev => ({
         ...prev,
         questions,
@@ -1962,10 +2126,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           });
           
           // Reset ALL participant scores for fair game start
-          await supabase
-            .from("room_participants")
-            .update({ score: 0, current_question: 0, status: "playing" })
-            .eq("room_id", roomId);
+          await resetAllParticipants(roomId);
           
           // FIX: Immediately reset local participants to prevent stale auto-advance
           setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
@@ -1996,26 +2157,20 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             }).select()
           ));
           
-          // Verify all inserts succeeded
+          // Abort BEFORE flipping status to "playing" if any insert failed or the
+          // full set isn't readable yet - otherwise non-hosts sync a partial round
           const failedInserts3 = insertResults3.filter(r => r.error);
           if (failedInserts3.length > 0) {
             console.error("[MP startNextFromQueue/userTrivia] Some question inserts failed:", failedInserts3.map(f => f.error));
+            toast.error(tStandalone("extra.mpGameStartFailed"));
+            return;
           }
-          
-          // Verify question count matches expected
-          const { count: insertedCount3 } = await supabase
-            .from("room_questions")
-            .select("*", { count: "exact", head: true })
-            .eq("room_id", roomId)
-            .eq("game_id", game?.id);
-          
-          if (insertedCount3 !== questions.length) {
-            console.error(`[MP startNextFromQueue/userTrivia] Question count mismatch: expected ${questions.length}, got ${insertedCount3}`);
+          if (!(await verifyQuestionsCommitted(roomId, game?.id, questions.length))) {
+            console.error(`[MP startNextFromQueue/userTrivia] Questions not fully committed for game ${game?.id}, aborting round start`);
+            toast.error(tStandalone("extra.mpGameStartFailed"));
+            return;
           }
-          
-          // CRITICAL: Wait for DB commit before updating room status
-          await new Promise(resolve => setTimeout(resolve, 300)); // Increased from 150ms for better DB sync
-          
+
           // Update room (after questions are committed)
           await supabase
             .from("game_rooms")
@@ -2029,7 +2184,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               host_is_observer: hostShouldObserve,
             })
             .eq("id", roomId);
-          
+
+          // Track expected game_id so isNewGameWhilePlaying detection works for the caller too
+          expectedGameIdRef.current = game?.id ?? null;
+
           // Update state
           setState(prev => ({
             ...prev,
@@ -2128,10 +2286,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
       
       // Reset ALL participants for fair game start
-      await supabase
-        .from("room_participants")
-        .update({ score: 0, current_question: 0, status: "playing" })
-        .eq("room_id", roomId);
+      await resetAllParticipants(roomId);
       
       // FIX: Immediately reset local participants to prevent stale auto-advance
       setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
@@ -2165,26 +2320,20 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }).select()
       ));
       
-      // Verify all inserts succeeded
+      // Abort BEFORE flipping status to "playing" if any insert failed or the
+      // full set isn't readable yet - otherwise non-hosts sync a partial round
       const failedInserts4 = insertResults4.filter(r => r.error);
       if (failedInserts4.length > 0) {
         console.error("[MP startNextFromQueue/library] Some question inserts failed:", failedInserts4.map(f => f.error));
+        toast.error(tStandalone("extra.mpGameStartFailed"));
+        return;
       }
-      
-      // Verify question count matches expected
-      const { count: insertedCount4 } = await supabase
-        .from("room_questions")
-        .select("*", { count: "exact", head: true })
-        .eq("room_id", roomId)
-        .eq("game_id", game?.id);
-      
-      if (insertedCount4 !== questions.length) {
-        console.error(`[MP startNextFromQueue/library] Question count mismatch: expected ${questions.length}, got ${insertedCount4}`);
+      if (!(await verifyQuestionsCommitted(roomId, game?.id, questions.length))) {
+        console.error(`[MP startNextFromQueue/library] Questions not fully committed for game ${game?.id}, aborting round start`);
+        toast.error(tStandalone("extra.mpGameStartFailed"));
+        return;
       }
-      
-      // CRITICAL: Wait for DB commit before updating room status
-      await new Promise(resolve => setTimeout(resolve, 300)); // Increased from 150ms for better DB sync
-      
+
       // Update room with new category and game info (after questions are committed)
       await supabase
         .from("game_rooms")
@@ -2199,7 +2348,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           host_is_observer: hostShouldObserve,
         })
         .eq("id", roomId);
-      
+
+      // Track expected game_id so isNewGameWhilePlaying detection works for the caller too
+      expectedGameIdRef.current = game?.id ?? null;
+
       // Update state with new category and questions
       setState(prev => ({
         ...prev,
@@ -2309,14 +2461,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     const newScore = state.myScore + bonusAmount;
     const newBonusTotal = state.observerBonusThisRound + bonusAmount;
-    
-    // Update participant score in database
-    await supabase
-      .from("room_participants")
-      .update({ score: newScore })
-      .eq("room_id", state.currentRoom.id)
-      .eq("user_id", user.id);
-    
+
+    // Atomic delta via RPC (falls back to absolute write pre-migration)
+    const applied = await incrementParticipantScore(state.currentRoom.id, bonusAmount);
+    if (!applied) {
+      await supabase
+        .from("room_participants")
+        .update({ score: newScore })
+        .eq("room_id", state.currentRoom.id)
+        .eq("user_id", user.id);
+    }
+
+    // Keep local myScore optimistic
     setState(prev => ({
       ...prev,
       myScore: newScore,
@@ -2338,6 +2494,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     participants,
     isHost,
     loading,
+    currentOpponentAnswers: state.opponentAnswers[state.currentQuestionIndex] || {},
     createRoom,
     enterRoom,
     startGame,

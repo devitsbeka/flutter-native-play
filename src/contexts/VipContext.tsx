@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useMemo, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -220,21 +220,26 @@ export function VipProvider({ children }: { children: ReactNode }) {
   const isProPlus = (): boolean => subscription?.vip_tier === 'pro_plus';
   const getDailyRewardMultiplier = (): number => isProPlus() ? 1.5 : 1;
 
-  const value: VipContextType = {
-    subscription,
-    isVip,
-    loading,
-    activateVip,
-    getDaysRemaining,
-    getXpMultiplier,
-    getMaxDailySpins,
-    shouldSkipGameStake,
-    benefits: VIP_BENEFITS,
-    tierBenefits: getTierBenefits(),
-    isProPlus,
-    getDailyRewardMultiplier,
-    prices: VIP_PRICES,
-  };
+  // user included beyond the state deps because activateVip closes over it
+  const value: VipContextType = useMemo(
+    () => ({
+      subscription,
+      isVip,
+      loading,
+      activateVip,
+      getDaysRemaining,
+      getXpMultiplier,
+      getMaxDailySpins,
+      shouldSkipGameStake,
+      benefits: VIP_BENEFITS,
+      tierBenefits: getTierBenefits(),
+      isProPlus,
+      getDailyRewardMultiplier,
+      prices: VIP_PRICES,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [subscription, isVip, loading, user]
+  );
 
   return <VipContext.Provider value={value}>{children}</VipContext.Provider>;
 }

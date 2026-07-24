@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useCurrency } from "./useCurrency";
+import { useUserPowerUps, PowerUpType } from "./useUserPowerUps";
 import { useVipStatus } from "./useVipStatus";
 import { getMaxDailySpins, calculateXP } from "@/utils/vipMultipliers";
 
@@ -46,9 +47,12 @@ async function fetchSpinInfo(userId: string, isVip: boolean): Promise<DailySpinI
   return { canSpin: true, spinsUsed: 0, maxSpins: vipMaxSpins };
 }
 
+const SPIN_POWER_UP_TYPES: PowerUpType[] = ["5050", "freeze", "replace", "time-drain"];
+
 export function useRewards() {
   const { user, profile, updateProfile } = useAuth();
   const { addCoins, addGems, addCurrency } = useCurrency();
+  const { addPowerUp } = useUserPowerUps();
   const { isVip } = useVipStatus();
   const queryClient = useQueryClient();
 
@@ -76,25 +80,34 @@ export function useRewards() {
         reward_value: { label: result.label, value: result.value, type: result.type },
       }]);
 
-      const { data: existing } = await supabase
-        .from("user_daily_spins")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("spin_date", today)
-        .maybeSingle();
-
-      if (existing) {
-        await supabase
+      // Increment spins_used guarded by the expected value so parallel spins
+      // can't both write the same count; on a lost race, re-read and retry once.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const { data: existing } = await supabase
           .from("user_daily_spins")
-          .update({ spins_used: existing.spins_used + 1 })
-          .eq("id", existing.id);
-      } else {
-        await supabase.from("user_daily_spins").insert({
-          user_id: user.id,
-          spin_date: today,
-          spins_used: 1,
-          max_spins: 1,
-        });
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("spin_date", today)
+          .maybeSingle();
+
+        if (existing) {
+          const { data: updated } = await supabase
+            .from("user_daily_spins")
+            .update({ spins_used: existing.spins_used + 1 })
+            .eq("id", existing.id)
+            .eq("spins_used", existing.spins_used)
+            .select();
+          if (updated && updated.length > 0) break;
+        } else {
+          const { error: insertError } = await supabase.from("user_daily_spins").insert({
+            user_id: user.id,
+            spin_date: today,
+            spins_used: 1,
+            max_spins: 1,
+          });
+          if (!insertError) break;
+          // Parallel spin inserted the row first — retry via the update path
+        }
       }
 
       if (result.type === "xp" || result.type === "bonus") {
@@ -105,6 +118,10 @@ export function useRewards() {
         await addCoins(result.value);
       } else if (result.type === "gems") {
         await addGems(result.value);
+      } else if (result.type === "powerup") {
+        // Grant a random power-up (SPIN_REWARDS "powerup" segments were never granted)
+        const type = SPIN_POWER_UP_TYPES[Math.floor(Math.random() * SPIN_POWER_UP_TYPES.length)];
+        await addPowerUp(type, Math.max(1, result.value));
       }
 
       await invalidateSpinInfo();

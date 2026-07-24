@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -171,15 +171,18 @@ export function PendingChallengesProvider({ children }: { children: ReactNode })
     }
   }, []);
 
+  const value = useMemo(
+    () => ({
+      pendingChallenges,
+      loading,
+      refreshChallenges: fetchChallenges,
+      declineChallenge,
+    }),
+    [pendingChallenges, loading, fetchChallenges, declineChallenge]
+  );
+
   return (
-    <PendingChallengesContext.Provider
-      value={{
-        pendingChallenges,
-        loading,
-        refreshChallenges: fetchChallenges,
-        declineChallenge,
-      }}
-    >
+    <PendingChallengesContext.Provider value={value}>
       {children}
     </PendingChallengesContext.Provider>
   );

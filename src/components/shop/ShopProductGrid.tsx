@@ -30,9 +30,9 @@ export function ShopProductGrid({
   return (
     <motion.section
       className="mb-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
     >
       {/* Section Header */}
       <div className="px-[15px] mb-2">
@@ -44,8 +44,9 @@ export function ShopProductGrid({
       {/* Products Grid */}
       <div className="px-3 sm:px-4">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-2 md:gap-3">
-          {items.map((item, index) => {
-            const canAfford = gems >= item.price;
+          {items.map((item) => {
+            // Real-money (lari) packs are always purchasable — gems balance is irrelevant
+            const canAfford = item.currency === "lari" || gems >= item.price;
             const isPurchased = purchasedItems.has(item.id);
             const isFrameOwned = item.frameId
               ? isFrameUnlocked(item.frameId)
@@ -53,30 +54,23 @@ export function ShopProductGrid({
             const isOwned = isPurchased || isFrameOwned;
 
             return (
-              <motion.div
+              <ShopItemCard
                 key={item.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <ShopItemCard
-                  id={item.id}
-                  name={item.name}
-                  description={item.description}
-                  price={item.price}
-                  currency={item.currency}
-                  icon={item.icon}
-                  gradient={item.gradient}
-                  badge={item.badge ?? undefined}
-                  savings={item.savings}
-                  isPurchased={isOwned}
-                  isLoading={isPurchasing === item.id}
-                  canAfford={canAfford}
-                  index={index}
-                  showDescription={true}
-                  onClick={() => !isOwned && onItemClick(item)}
-                />
-              </motion.div>
+                id={item.id}
+                name={item.name}
+                description={item.description}
+                price={item.price}
+                currency={item.currency}
+                icon={item.icon}
+                gradient={item.gradient}
+                badge={item.badge ?? undefined}
+                savings={item.savings}
+                isPurchased={isOwned}
+                isLoading={isPurchasing === item.id}
+                canAfford={canAfford}
+                showDescription={true}
+                onClick={() => !isOwned && onItemClick(item)}
+              />
             );
           })}
         </div>

@@ -48,6 +48,7 @@ import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { useProGating } from "@/hooks/useProGating";
+import { useAds } from "@/hooks/useAds";
 import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
 import {
   UnifiedFiltersBar,
@@ -87,7 +88,8 @@ function TeamContentV2() {
   } = useGameInvitations();
   const { createRoom } = useMultiplayerV2();
   const queryClient = useQueryClient();
-  const { requirePro, showProModal, setShowProModal, gatedFeature } = useProGating();
+  const { showProModal, setShowProModal, gatedFeature } = useProGating();
+  const { gateWithRewardedAd } = useAds();
 
   // Auto-open PersonalTrivia from navigation state
   const [autoOpenPersonalTrivia, setAutoOpenPersonalTrivia] = useState(false);
@@ -141,29 +143,42 @@ function TeamContentV2() {
 
   const handleStartChallenge = async (categoryId: string, categoryName: string) => {
     if (!quickPlayFriend) return;
-    
-    setIsStartingChallenge(true);
-    try {
-      const room = await createRoom(categoryId, categoryName);
-      if (room) {
-        // Add friend as invited participant
-        await addInvitedParticipant(
-          room.id,
-          quickPlayFriend.friendId,
-          quickPlayFriend.nickname,
-          quickPlayFriend.avatarUrl,
-          quickPlayFriend.countryCode
-        );
-        
-        // Send invitation notification
-        await sendInvitation(quickPlayFriend.friendId, room.id);
-        
-        setShowQuickPlayModal(false);
-        setQuickPlayFriend(null);
+
+    // Room creation is gated behind a rewarded ad for non-PRO users (fail-open)
+    await gateWithRewardedAd(async () => {
+      if (!quickPlayFriend) return;
+      setIsStartingChallenge(true);
+      try {
+        const room = await createRoom(categoryId, categoryName);
+        if (room) {
+          // Add friend as invited participant
+          await addInvitedParticipant(
+            room.id,
+            quickPlayFriend.friendId,
+            quickPlayFriend.nickname,
+            quickPlayFriend.avatarUrl,
+            quickPlayFriend.countryCode
+          );
+
+          // Send invitation notification
+          await sendInvitation(quickPlayFriend.friendId, room.id);
+
+          setShowQuickPlayModal(false);
+          setQuickPlayFriend(null);
+        }
+      } finally {
+        setIsStartingChallenge(false);
       }
-    } finally {
-      setIsStartingChallenge(false);
-    }
+    });
+  };
+
+  // Shared by CreateRoomScreen callbacks: rewarded gate -> create room -> lobby
+  const gatedCreateRoomAndNavigate = async () => {
+    setShowCreateRoomScreen(false);
+    await gateWithRewardedAd(async () => {
+      const room = await createRoom();
+      if (room) navigate(`/team?room=${room.room_code}`);
+    });
   };
 
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
@@ -687,7 +702,7 @@ function TeamContentV2() {
                       filterOptions={roomFilterOptions}
                       searchQuery={roomsSearchQuery}
                       onSearchQueryChange={setRoomsSearchQuery}
-                      onAddClick={() => requirePro("rooms", () => setShowCreateModal(true))}
+                      onAddClick={() => setShowCreateModal(true)}
                       addButtonText={t("extra.addRoom")}
                     />
                   )}
@@ -702,7 +717,7 @@ function TeamContentV2() {
                       sortOptions={exploreSortOptions}
                       searchQuery={exploreSearchQuery}
                       onSearchQueryChange={setExploreSearchQuery}
-                      onAddClick={() => requirePro("trivia", () => setShowCreateTypeModal(true))}
+                      onAddClick={() => gateWithRewardedAd(() => setShowCreateTypeModal(true))}
                       addButtonText={t("extra.createTriviaBtn")}
                     />
                   )}
@@ -714,7 +729,7 @@ function TeamContentV2() {
                       filterOptions={myTriviaFilterOptions}
                       searchQuery={searchQuery}
                       onSearchQueryChange={setSearchQuery}
-                      onAddClick={() => requirePro("trivia", () => setShowCreateTypeModal(true))}
+                      onAddClick={() => gateWithRewardedAd(() => setShowCreateTypeModal(true))}
                       addButtonText={t("extra.feedCreateTriviaBtn")}
                     />
                   )}
@@ -736,7 +751,7 @@ function TeamContentV2() {
               {activeTab === "rooms" && (
                 <MyRoomsSection
                   hideTV 
-                  onCreateRoom={() => requirePro("rooms", () => setShowCreateModal(true))}
+                  onCreateRoom={() => setShowCreateModal(true)}
                   onShowAllRooms={() => setShowAllGamesModal(true)}
                   vertical
                   filter={roomsFilter}
@@ -760,7 +775,7 @@ function TeamContentV2() {
               {/* My Trivia Tab */}
               {activeTab === "my-content" && (
                 <MyTriviaTab
-                  onCreateQuiz={() => requirePro("trivia", () => setShowCreateTypeModal(true))}
+                  onCreateQuiz={() => gateWithRewardedAd(() => setShowCreateTypeModal(true))}
                   onPlay={(post, collectionPosts) => {
                     setPlayingQuiz({ post, collectionPosts });
                   }}
@@ -776,10 +791,12 @@ function TeamContentV2() {
           <TeamRightSidebar 
             onAcceptInvitation={handleAcceptInvitation}
             onJoinRoom={handleJoinFromInvitation}
-            onOpenTV={async () => {
-              const room = await createRoom();
-              if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
-            }}
+            onOpenTV={() =>
+              gateWithRewardedAd(async () => {
+                const room = await createRoom();
+                if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
+              })
+            }
             activeTab={activeTab}
             onViewAllRooms={() => handleTabChange("rooms")}
             onViewAllTrivias={() => handleTabChange("my-content")}
@@ -829,31 +846,11 @@ function TeamContentV2() {
         {showCreateRoomScreen && (
           <CreateRoomScreen
             onClose={() => setShowCreateRoomScreen(false)}
-            onSelectTrivia={async () => {
-              setShowCreateRoomScreen(false);
-              const room = await createRoom();
-              if (room) navigate(`/team?room=${room.room_code}`);
-            }}
-            onSelectCollection={async () => {
-              setShowCreateRoomScreen(false);
-              const room = await createRoom();
-              if (room) navigate(`/team?room=${room.room_code}`);
-            }}
-            onSelectPersonalTrivia={async () => {
-              setShowCreateRoomScreen(false);
-              const room = await createRoom();
-              if (room) navigate(`/team?room=${room.room_code}`);
-            }}
-            onSelectRandom={async () => {
-              setShowCreateRoomScreen(false);
-              const room = await createRoom();
-              if (room) navigate(`/team?room=${room.room_code}`);
-            }}
-            onSelectLibrary={async () => {
-              setShowCreateRoomScreen(false);
-              const room = await createRoom();
-              if (room) navigate(`/team?room=${room.room_code}`);
-            }}
+            onSelectTrivia={() => gatedCreateRoomAndNavigate()}
+            onSelectCollection={() => gatedCreateRoomAndNavigate()}
+            onSelectPersonalTrivia={() => gatedCreateRoomAndNavigate()}
+            onSelectRandom={() => gatedCreateRoomAndNavigate()}
+            onSelectLibrary={() => gatedCreateRoomAndNavigate()}
           />
         )}
         {showCreateModal && (

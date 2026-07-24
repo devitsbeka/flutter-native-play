@@ -7,6 +7,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatCompactNumber } from "@/lib/utils";
+import { REWARDS } from "@/config/rewardConfig";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
@@ -18,12 +19,12 @@ interface CurrencyExchangeModalProps {
   onClose: () => void;
 }
 
-// Exchange rates: 1 gem = 50 coins
-const COINS_PER_GEM = 50;
+// Canonical rate: 1 gem = 500 coins (rewardConfig.ts)
+const COINS_PER_GEM = REWARDS.GEM_TO_COINS_RATE;
 
 // Predefined exchange amounts
-const COIN_TO_GEM_PRESETS = [100, 250, 500, 1000];
-const GEM_TO_COIN_PRESETS = [2, 5, 10, 20];
+const COIN_TO_GEM_PRESETS = [500, 1500, 2500, 5000];
+const GEM_TO_COIN_PRESETS = [1, 2, 5, 10];
 
 type ExchangeDirection = "coins-to-gems" | "gems-to-coins";
 
@@ -33,7 +34,7 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
   const { t } = useLanguage();
   
   const [direction, setDirection] = useState<ExchangeDirection>("coins-to-gems");
-  const [amount, setAmount] = useState(100);
+  const [amount, setAmount] = useState(COINS_PER_GEM);
   const [isExchanging, setIsExchanging] = useState(false);
 
   const isCoinsToGems = direction === "coins-to-gems";
@@ -56,7 +57,7 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
   const handleDirectionSwitch = () => {
     playSound("button-click");
     setDirection(prev => prev === "coins-to-gems" ? "gems-to-coins" : "coins-to-gems");
-    setAmount(isCoinsToGems ? 2 : 100);
+    setAmount(isCoinsToGems ? 1 : COINS_PER_GEM);
   };
 
   const handlePresetClick = (preset: number) => {
@@ -65,13 +66,13 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
   };
 
   const handleIncrement = () => {
-    const step = isCoinsToGems ? 50 : 1;
+    const step = isCoinsToGems ? COINS_PER_GEM : 1;
     setAmount(prev => prev + step);
   };
 
   const handleDecrement = () => {
-    const step = isCoinsToGems ? 50 : 1;
-    const min = isCoinsToGems ? 50 : 1;
+    const step = isCoinsToGems ? COINS_PER_GEM : 1;
+    const min = isCoinsToGems ? COINS_PER_GEM : 1;
     setAmount(prev => Math.max(min, prev - step));
   };
 

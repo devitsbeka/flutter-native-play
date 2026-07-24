@@ -15,6 +15,7 @@ import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
+import { useAds } from "@/hooks/useAds";
 
 import { EditQuizModal } from "./EditQuizModal";
 import { EditRoundModal } from "./EditRoundModal";
@@ -591,56 +592,60 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { createRoom } = useMultiplayerV2();
+  const { gateWithRewardedAd } = useAds();
   const [isStartingTV, setIsStartingTV] = useState(false);
   const gradientProps = getGradientProps(post.cover_gradient);
   const tiltDirection = post.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
 
   const handlePlayOnTV = async () => {
     if (isStartingTV) return;
-    setIsStartingTV(true);
-    try {
-      const { data, error } = await supabase
-        .from("user_quiz_posts")
-        .select("questions, title, cover_image")
-        .eq("id", post.id)
-        .single();
+    // Room creation is gated behind a rewarded ad for non-PRO users (fail-open)
+    await gateWithRewardedAd(async () => {
+      setIsStartingTV(true);
+      try {
+        const { data, error } = await supabase
+          .from("user_quiz_posts")
+          .select("questions, title, cover_image")
+          .eq("id", post.id)
+          .single();
 
-      if (error || !data?.questions) {
-        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
-        return;
+        if (error || !data?.questions) {
+          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          return;
+        }
+
+        const customQuestions = (data.questions as any[]) || [];
+        if (!customQuestions.length) {
+          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          return;
+        }
+
+        // Create room with "My Trivia Party" as default room name, trivia title as category
+        const room = await createRoom(
+          "custom",
+          data.title || post.title || "My Trivia Party", // category_name (what's being played)
+          customQuestions,
+          "My Trivia Party", // room_name (always "My Trivia Party")
+          (data.cover_image as string | null) || null
+        );
+
+        if (room?.id && room?.room_code) {
+          // Update the game_rooms table with user_trivia_id for reference
+          // No need to add to room_category_queue - the room's category_name serves as round 1
+          await supabase
+            .from("game_rooms")
+            .update({ user_trivia_id: post.id })
+            .eq("id", room.id);
+
+          navigate(`/team?join=${room.room_code}&tv=1`);
+        }
+      } catch (e) {
+        console.error("Play on TV error:", e);
+        toast.error("ვერ მოხერხდა TV-ზე დაწყება");
+      } finally {
+        setIsStartingTV(false);
       }
-
-      const customQuestions = (data.questions as any[]) || [];
-      if (!customQuestions.length) {
-        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
-        return;
-      }
-
-      // Create room with "My Trivia Party" as default room name, trivia title as category
-      const room = await createRoom(
-        "custom",
-        data.title || post.title || "My Trivia Party", // category_name (what's being played)
-        customQuestions,
-        "My Trivia Party", // room_name (always "My Trivia Party")
-        (data.cover_image as string | null) || null
-      );
-
-      if (room?.id && room?.room_code) {
-        // Update the game_rooms table with user_trivia_id for reference
-        // No need to add to room_category_queue - the room's category_name serves as round 1
-        await supabase
-          .from("game_rooms")
-          .update({ user_trivia_id: post.id })
-          .eq("id", room.id);
-
-        navigate(`/team?join=${room.room_code}&tv=1`);
-      }
-    } catch (e) {
-      console.error("Play on TV error:", e);
-      toast.error("ვერ მოხერხდა TV-ზე დაწყება");
-    } finally {
-      setIsStartingTV(false);
-    }
+    });
   };
 
   return (
@@ -924,6 +929,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { createRoom } = useMultiplayerV2();
+  const { gateWithRewardedAd } = useAds();
   const [editingQuiz, setEditingQuiz] = useState<any>(null);
   const [editingRound, setEditingRound] = useState<any>(null);
   const [expandedCollectionId, setExpandedCollectionId] = useState<string | null>(null);
@@ -1015,94 +1021,102 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
 
   const handleCreateRoom = async () => {
     if (!playModeTrivia || isStartingRoom) return;
-    setIsStartingRoom(true);
-    try {
-      const { data, error } = await supabase
-        .from("user_quiz_posts")
-        .select("questions, title, cover_image")
-        .eq("id", playModeTrivia.id)
-        .single();
+    // Room creation is gated behind a rewarded ad for non-PRO users (fail-open)
+    await gateWithRewardedAd(async () => {
+      if (!playModeTrivia) return;
+      setIsStartingRoom(true);
+      try {
+        const { data, error } = await supabase
+          .from("user_quiz_posts")
+          .select("questions, title, cover_image")
+          .eq("id", playModeTrivia.id)
+          .single();
 
-      if (error || !data?.questions) {
-        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
-        return;
+        if (error || !data?.questions) {
+          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          return;
+        }
+
+        const customQuestions = (data.questions as any[]) || [];
+        if (!customQuestions.length) {
+          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          return;
+        }
+
+        const room = await createRoom(
+          "custom",
+          data.title || playModeTrivia.title || "My Trivia",
+          customQuestions,
+          "Trivia Room",
+          (data.cover_image as string | null) || null
+        );
+
+        if (room?.id && room?.room_code) {
+          await supabase
+            .from("game_rooms")
+            .update({ user_trivia_id: playModeTrivia.id })
+            .eq("id", room.id);
+
+          navigate(`/team?join=${room.room_code}`);
+        }
+      } catch (e) {
+        console.error("Create room error:", e);
+        toast.error("ოთახის შექმნა ვერ მოხერხდა");
+      } finally {
+        setIsStartingRoom(false);
+        setPlayModeTrivia(null);
       }
-
-      const customQuestions = (data.questions as any[]) || [];
-      if (!customQuestions.length) {
-        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
-        return;
-      }
-
-      const room = await createRoom(
-        "custom",
-        data.title || playModeTrivia.title || "My Trivia",
-        customQuestions,
-        "Trivia Room",
-        (data.cover_image as string | null) || null
-      );
-
-      if (room?.id && room?.room_code) {
-        await supabase
-          .from("game_rooms")
-          .update({ user_trivia_id: playModeTrivia.id })
-          .eq("id", room.id);
-
-        navigate(`/team?join=${room.room_code}`);
-      }
-    } catch (e) {
-      console.error("Create room error:", e);
-      toast.error("ოთახის შექმნა ვერ მოხერხდა");
-    } finally {
-      setIsStartingRoom(false);
-      setPlayModeTrivia(null);
-    }
+    });
   };
 
   const handlePlayTV = async () => {
     if (!playModeTrivia || isStartingRoom) return;
-    setIsStartingRoom(true);
-    try {
-      const { data, error } = await supabase
-        .from("user_quiz_posts")
-        .select("questions, title, cover_image")
-        .eq("id", playModeTrivia.id)
-        .single();
+    // Room creation is gated behind a rewarded ad for non-PRO users (fail-open)
+    await gateWithRewardedAd(async () => {
+      if (!playModeTrivia) return;
+      setIsStartingRoom(true);
+      try {
+        const { data, error } = await supabase
+          .from("user_quiz_posts")
+          .select("questions, title, cover_image")
+          .eq("id", playModeTrivia.id)
+          .single();
 
-      if (error || !data?.questions) {
-        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
-        return;
+        if (error || !data?.questions) {
+          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          return;
+        }
+
+        const customQuestions = (data.questions as any[]) || [];
+        if (!customQuestions.length) {
+          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          return;
+        }
+
+        const room = await createRoom(
+          "custom",
+          data.title || playModeTrivia.title || "My Trivia",
+          customQuestions,
+          "TV Trivia",
+          (data.cover_image as string | null) || null
+        );
+
+        if (room?.id && room?.room_code) {
+          await supabase
+            .from("game_rooms")
+            .update({ user_trivia_id: playModeTrivia.id })
+            .eq("id", room.id);
+
+          navigate(`/team?join=${room.room_code}&tv=1`);
+        }
+      } catch (e) {
+        console.error("TV mode error:", e);
+        toast.error(t("extra.tvModeStartError"));
+      } finally {
+        setIsStartingRoom(false);
+        setPlayModeTrivia(null);
       }
-
-      const customQuestions = (data.questions as any[]) || [];
-      if (!customQuestions.length) {
-        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
-        return;
-      }
-
-      const room = await createRoom(
-        "custom",
-        data.title || playModeTrivia.title || "My Trivia",
-        customQuestions,
-        "TV Trivia",
-        (data.cover_image as string | null) || null
-      );
-
-      if (room?.id && room?.room_code) {
-        await supabase
-          .from("game_rooms")
-          .update({ user_trivia_id: playModeTrivia.id })
-          .eq("id", room.id);
-
-        navigate(`/team?join=${room.room_code}&tv=1`);
-      }
-    } catch (e) {
-      console.error("TV mode error:", e);
-      toast.error(t("extra.tvModeStartError"));
-    } finally {
-      setIsStartingRoom(false);
-      setPlayModeTrivia(null);
-    }
+    });
   };
 
   // Track known item IDs to detect new items for tilt animation

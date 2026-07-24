@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useIsBreakpointDown } from "@/hooks/use-breakpoint";
@@ -23,7 +23,6 @@ const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: numbe
       width: size,
       height: size,
       background: "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.8) 30%, rgba(255,255,255,0.3) 60%, transparent 80%)",
-      boxShadow: "0 0 12px rgba(255,255,255,0.9), 0 0 20px rgba(255,255,255,0.5)",
     }}
     animate={{
       y: [0, -700 - Math.random() * 500],
@@ -49,7 +48,6 @@ const FloatingOrb = ({ delay, x, y, size, duration }: { delay: number; x: number
       width: size,
       height: size,
       background: "radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 50%, transparent 70%)",
-      filter: "blur(1px)",
     }}
     animate={{
       y: [0, -30, 0, 20, 0],
@@ -66,7 +64,7 @@ const FloatingOrb = ({ delay, x, y, size, duration }: { delay: number; x: number
   />
 );
 
-export function GlobalSplineBackground() {
+export const GlobalSplineBackground = memo(function GlobalSplineBackground() {
   const location = useLocation();
   const isMobile = useIsBreakpointDown("md");
   const blobVideo = useResponsiveVideo("/videos/floating-blob.mp4");
@@ -85,8 +83,8 @@ export function GlobalSplineBackground() {
   const shouldHideRadialMask = NO_RADIAL_MASK_PAGES.some(page => location.pathname.startsWith(page));
   
   // Reduce particle count on mobile for performance
-  const sparkleCount = isMobile ? 20 : 80;
-  const orbCount = isMobile ? 5 : 20;
+  const sparkleCount = isMobile ? 8 : 16;
+  const orbCount = isMobile ? 3 : 6;
   
   // Generate sparkle particles - reduced on mobile (hooks must be called unconditionally)
   const sparkles = useMemo(() =>
@@ -129,11 +127,17 @@ export function GlobalSplineBackground() {
           muted
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: "blur(8px)" }}
         >
           <source src={blobVideo.webm} type="video/webm" />
           <source src={blobVideo.mp4} type="video/mp4" />
         </video>
+        {/* Soft wash overlay — replaces the removed blur(8px) so the video stays subtle */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(180deg, rgba(249,219,255,0.5) 0%, rgba(249,219,255,0.3) 45%, rgba(249,219,255,0.5) 100%)",
+          }}
+        />
       </div>
       
       {/* White radial mask - transparent center, white edges - hidden on game/category pages */}
@@ -172,4 +176,4 @@ export function GlobalSplineBackground() {
       )}
     </>
   );
-}
+});

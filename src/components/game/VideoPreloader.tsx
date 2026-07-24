@@ -125,12 +125,16 @@ function requestSwCaching(urls: string[]): void {
   }
 }
 
+// Cap SW precache: map videos + first N category videos only.
+// Remaining videos load on demand (and get SW-cached at that point).
+const SW_PRECACHE_CATEGORY_LIMIT = 12;
+
 // Start preloading - optimized for instant app readiness
 export async function startVideoPreload(): Promise<void> {
   if (preloadingStarted) return;
   preloadingStarted = true;
 
-  const videoUrls = getAllVideoUrls();
+  const videoUrls = getAllVideoUrls(SW_PRECACHE_CATEGORY_LIMIT);
   const total = videoUrls.length;
   
   updateProgress(0, total, '');
@@ -163,8 +167,34 @@ export async function startVideoPreload(): Promise<void> {
   markComplete();
 }
 
-// Start preloading immediately when this module is imported
-startVideoPreload();
+// Skip background video precaching on constrained connections
+function shouldSkipPreload(): boolean {
+  const conn = (navigator as any).connection;
+  if (!conn) return false;
+  return Boolean(conn.saveData) || String(conn.effectiveType || "").includes("2g");
+}
+
+// Defer preloading past initial startup work instead of running at import time
+function scheduleVideoPreload(): void {
+  if (shouldSkipPreload()) {
+    // Don't burn data - mark ready immediately so splash/consumers proceed
+    preloadingStarted = true;
+    markComplete();
+    return;
+  }
+
+  const start = () => {
+    startVideoPreload();
+  };
+
+  if (typeof requestIdleCallback === "function") {
+    requestIdleCallback(start, { timeout: 3000 });
+  } else {
+    setTimeout(start, 3000);
+  }
+}
+
+scheduleVideoPreload();
 
 // Empty component for backward compatibility
 export function VideoPreloader() {

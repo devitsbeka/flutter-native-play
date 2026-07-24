@@ -20,19 +20,21 @@ export interface Creator {
 export function useExploreCreators(
   searchQuery: string = "",
   filter: ExploreFilter = "all",
-  sort: ExploreSort = "recent"
+  sort: ExploreSort = "recent",
+  enabled: boolean = true
 ) {
   const { user } = useAuth();
 
   return useQuery({
     queryKey: ["explore-creators", user?.id, searchQuery, filter, sort],
     queryFn: async (): Promise<Creator[]> => {
-      // Fetch all public posts
+      // Fetch recent public posts
       const { data: posts, error: postsError } = await supabase
         .from("user_quiz_posts")
         .select("*")
         .eq("is_public", true)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(50);
 
       if (postsError) throw postsError;
 
@@ -207,6 +209,7 @@ export function useExploreCreators(
 
       return filteredCreators;
     },
+    enabled,
     staleTime: 5 * 60 * 1000, // 5 minutes - content doesn't change frequently
     gcTime: 15 * 60 * 1000, // 15 minutes cache
     refetchOnMount: false,

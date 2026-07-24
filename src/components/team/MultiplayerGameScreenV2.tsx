@@ -39,7 +39,7 @@ export function MultiplayerGameScreenV2() {
     timePerQuestion,
     myScore,
     lastQuestionResult,
-    opponentAnswers,
+    currentOpponentAnswers,
     participants,
     exitRoom,
     currentRoom,
@@ -98,13 +98,15 @@ export function MultiplayerGameScreenV2() {
   }, [lastQuestionResult, playSound, vibrate]);
 
   const handleAnswer = useCallback((answer: string) => {
-    if (answerRevealed) return;
+    // selectedAnswer guard: the timer can still fire handleAnswer("") after a
+    // tap, which would insert a duplicate player_answers row
+    if (answerRevealed || selectedAnswer !== null) return;
     setSelectedAnswer(answer);
     // Play tap sound for True/False selection
     playSound("button-click");
     vibrate(30);
     submitAnswer(answer, timeRemaining);
-  }, [answerRevealed, submitAnswer, timeRemaining, playSound, vibrate]);
+  }, [answerRevealed, selectedAnswer, submitAnswer, timeRemaining, playSound, vibrate]);
 
   const handleNext = useCallback(() => {
     nextQuestion();
@@ -115,9 +117,10 @@ export function MultiplayerGameScreenV2() {
     navigate("/team");
   };
 
-  // Timer - skip for observers (they don't need to submit answers)
+  // Timer - skip for observers (they don't need to submit answers) and stop
+  // once an answer is in-flight (selectedAnswer set, reveal pending)
   useEffect(() => {
-    if (answerRevealed || (isHost && hostIsObserver)) return;
+    if (answerRevealed || selectedAnswer !== null || (isHost && hostIsObserver)) return;
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
@@ -130,7 +133,7 @@ export function MultiplayerGameScreenV2() {
     }, 100);
 
     return () => clearInterval(timer);
-  }, [answerRevealed, handleAnswer, isHost, hostIsObserver]);
+  }, [answerRevealed, selectedAnswer, handleAnswer, isHost, hostIsObserver]);
 
   // Get answer button state
   const getAnswerState = useCallback(
@@ -184,8 +187,8 @@ export function MultiplayerGameScreenV2() {
 
   const progressPercent = (timeRemaining / timePerQuestion) * 100;
 
-  // Count how many opponents have answered
-  const answeredCount = Object.keys(opponentAnswers).length;
+  // Count how many opponents have answered the current question
+  const answeredCount = Object.keys(currentOpponentAnswers).length;
 
   return (
     <div className="w-full h-[100dvh] bg-[#7E7BDC] overflow-hidden">
@@ -372,8 +375,8 @@ export function MultiplayerGameScreenV2() {
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               // Find opponents who chose this answer (only show when revealed)
-              const opponentsWhoChoseThis = answerRevealed 
-                ? Object.entries(opponentAnswers)
+              const opponentsWhoChoseThis = answerRevealed
+                ? Object.entries(currentOpponentAnswers)
                     .filter(([_, ans]) => ans.answer === answer)
                     .map(([userId]) => participants.find(p => p.user_id === userId))
                     .filter(Boolean)
@@ -405,7 +408,7 @@ export function MultiplayerGameScreenV2() {
                           key={opp?.id || i} 
                           className={cn(
                             "w-7 h-7 border-2",
-                            opponentAnswers[opp?.user_id || ""]?.is_correct ? "border-green-500" : "border-red-500"
+                            currentOpponentAnswers[opp?.user_id || ""]?.is_correct ? "border-green-500" : "border-red-500"
                           )}
                         >
                           <ResolvedAvatarImage src={opp?.avatar_url || undefined} />

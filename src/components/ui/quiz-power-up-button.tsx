@@ -18,6 +18,7 @@ interface QuizPowerUpButtonProps {
   state?: QuizPowerUpButtonState;
   onClick?: () => void;
   className?: string;
+  allowZeroClick?: boolean;
 }
 
 const powerUpConfig: Record<PowerUpType, { 
@@ -38,9 +39,10 @@ const POWER_UP_BADGE_GRADIENTS: Record<PowerUpType, string> = {
 };
 
 const QuizPowerUpButton = React.forwardRef<HTMLButtonElement, QuizPowerUpButtonProps>(
-  ({ type = "5050", count = 0, state = "default", onClick, className }, ref) => {
+  ({ type = "5050", count = 0, state = "default", onClick, className, allowZeroClick = false }, ref) => {
     const config = powerUpConfig[type];
-    const isDisabled = state === "disabled" || count === 0;
+    // allowZeroClick lets a screen offer "earn via ad" when the count is 0
+    const isDisabled = state === "disabled" || (count === 0 && !allowZeroClick);
     const isLoading = state === "loading";
 
     return (

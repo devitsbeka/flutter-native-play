@@ -71,20 +71,21 @@ export function MyRoomsSection({
   // Delete room handler
   const handleDeleteRoom = async (roomId: string) => {
     try {
-      // Delete related data first (cascade)
-      await supabase.from("player_answers").delete().eq("room_id", roomId);
-      await supabase.from("room_questions").delete().eq("room_id", roomId);
-      await supabase.from("room_chat_messages").delete().eq("room_id", roomId);
-      await supabase.from("room_participants").delete().eq("room_id", roomId);
-      await supabase.from("room_category_queue").delete().eq("room_id", roomId);
-      await supabase.from("game_invitations").delete().eq("room_id", roomId);
-      await supabase.from("room_games").delete().eq("room_id", roomId);
-      
-      // Delete the room
-      const { error } = await supabase.from("game_rooms").delete().eq("id", roomId);
-      
+      // Related tables cascade via ON DELETE CASCADE - no manual pre-deletes needed.
+      // RLS only lets the host delete a room; a non-host delete silently matches
+      // 0 rows with no error, so verify via the returned rows instead
+      const { data: deleted, error } = await supabase
+        .from("game_rooms")
+        .delete()
+        .eq("id", roomId)
+        .select("id");
+
       if (error) throw error;
-      
+      if (!deleted || deleted.length === 0) {
+        toast.error(t("extra.roomDeleteFailed"));
+        return;
+      }
+
       toast.success(t("extra.roomDeleted"));
       refreshRooms();
     } catch (error) {

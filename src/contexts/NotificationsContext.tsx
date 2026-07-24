@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSound } from '@/contexts/SoundContext';
@@ -236,22 +236,38 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const unreadCount = notifications.filter((n) => !n.read_at).length;
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.read_at).length,
+    [notifications]
+  );
+
+  const value = useMemo(
+    () => ({
+      notifications,
+      unreadCount,
+      loading,
+      isConnected,
+      markAsRead,
+      markAllAsRead,
+      deleteNotification,
+      clearAllNotifications,
+      refresh: fetchNotifications,
+    }),
+    [
+      notifications,
+      unreadCount,
+      loading,
+      isConnected,
+      markAsRead,
+      markAllAsRead,
+      deleteNotification,
+      clearAllNotifications,
+      fetchNotifications,
+    ]
+  );
 
   return (
-    <NotificationsContext.Provider
-      value={{
-        notifications,
-        unreadCount,
-        loading,
-        isConnected,
-        markAsRead,
-        markAllAsRead,
-        deleteNotification,
-        clearAllNotifications,
-        refresh: fetchNotifications,
-      }}
-    >
+    <NotificationsContext.Provider value={value}>
       {children}
     </NotificationsContext.Provider>
   );

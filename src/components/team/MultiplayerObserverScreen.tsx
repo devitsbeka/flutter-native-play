@@ -36,7 +36,7 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
     awardObserverBonus,
     nextQuestion,
     currentRoom,
-    opponentAnswers,
+    currentOpponentAnswers,
   } = useMultiplayerV2();
 
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -54,10 +54,10 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
   const sortedParticipants = [...participants].sort((a, b) => (b.score || 0) - (a.score || 0));
 
   // Count how many players have answered current question
-  const answeredCount = players.filter(p => opponentAnswers[p.user_id]).length;
-  
+  const answeredCount = players.filter(p => currentOpponentAnswers[p.user_id]).length;
+
   // Check if all players answered (to show correct answer)
-  const allAnswered = players.length > 0 && players.every(p => opponentAnswers[p.user_id]);
+  const allAnswered = players.length > 0 && players.every(p => currentOpponentAnswers[p.user_id]);
 
   // Reset timer on question change
   useEffect(() => {
@@ -100,11 +100,14 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
       for (const [qIndex, answers] of byQuestion.entries()) {
         const qKey = `q-${qIndex}`;
         if (processedAnswerIdsRef.current.has(qKey)) continue;
-        
+
         // Only process questions where all players have answered
         const uniqueRespondents = new Set(answers.map(a => a.user_id));
         if (uniqueRespondents.size < totalPlayers) continue;
-        
+
+        // Mark BEFORE awarding so an overlapping poll/advance pass can't double-award
+        processedAnswerIdsRef.current.add(qKey);
+
         // Count correct vs incorrect
         const correctCount = answers.filter(a => a.is_correct).length;
         const wrongCount = totalPlayers - correctCount;
@@ -118,20 +121,19 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
           const bonus = calculateObserverBonus(avgTime);
           newBonus += bonus;
         }
-        
-        processedAnswerIdsRef.current.add(qKey);
       }
-      
+
       if (newBonus > 0) {
         setBonusEarnedThisRound(prev => prev + newBonus);
         awardObserverBonus(newBonus);
       }
     };
-    
-    // Poll every 2 seconds
-    const interval = setInterval(pollAnswers, 2000);
+
+    // Slow reconciliation poll only - primary data arrives via the realtime
+    // opponentAnswers map; this just catches inserts the channel missed
+    const interval = setInterval(pollAnswers, 10000);
     pollAnswers(); // Initial poll
-    
+
     return () => clearInterval(interval);
   }, [currentRoom?.id, players.length, awardObserverBonus]);
 
@@ -178,7 +180,10 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
           for (const [qIndex, answers] of byQuestion.entries()) {
             const qKey = `q-${qIndex}`;
             if (processedAnswerIdsRef.current.has(qKey)) continue;
-            
+
+            // Mark BEFORE awarding so an overlapping poll pass can't double-award
+            processedAnswerIdsRef.current.add(qKey);
+
             // At final advance, process even if not all players answered (treat missing as wrong)
             const correctCount = answers.filter(a => a.is_correct).length;
             const wrongCount = totalPlayers - correctCount;
@@ -191,8 +196,6 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
               const bonus = calculateObserverBonus(avgTime);
               newBonus += bonus;
             }
-            
-            processedAnswerIdsRef.current.add(qKey);
           }
           
           if (newBonus > 0) {
@@ -211,7 +214,7 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
 
   // Helper to find players who picked a specific answer
   const getPlayersWhoChoseAnswer = (answer: string) => {
-    return Object.entries(opponentAnswers)
+    return Object.entries(currentOpponentAnswers)
       .filter(([_, ans]) => ans.answer === answer)
       .map(([userId]) => participants.find(p => p.user_id === userId))
       .filter(Boolean);

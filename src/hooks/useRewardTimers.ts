@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
@@ -73,11 +73,48 @@ export function useRewardTimers(): RewardTimers {
     gcTime: 10 * 60 * 1000,
   });
 
-  // Tick every second for countdown display
+  // Consumers that only read the canClaim booleans (e.g. Index) don't need a 1Hz
+  // tick — access to the countdown fields is detected via getters on the returned
+  // object, and only those instances upgrade to a 1s cadence.
+  const needsCountdownRef = useRef(false);
+  const [tickMs, setTickMs] = useState(30_000);
+
   useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(interval);
-  }, []);
+    if (needsCountdownRef.current && tickMs !== 1000) setTickMs(1000);
+  });
+
+  // Tick for countdown display — paused while the tab is hidden
+  useEffect(() => {
+    let interval: number | undefined;
+
+    const start = () => {
+      if (interval === undefined) {
+        interval = window.setInterval(() => setNow(new Date()), tickMs);
+      }
+    };
+    const stop = () => {
+      if (interval !== undefined) {
+        clearInterval(interval);
+        interval = undefined;
+      }
+    };
+    const handleVisibility = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        setNow(new Date()); // catch up immediately on return
+        start();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    if (!document.hidden) start();
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      stop();
+    };
+  }, [tickMs]);
 
   const dailyReset = useMemo(() => {
     const midnight = new Date(now);
@@ -101,14 +138,28 @@ export function useRewardTimers(): RewardTimers {
     await queryClient.invalidateQueries({ queryKey: [QUERY_KEY, user?.id] });
   };
 
+  // Getters mark this instance as needing per-second updates (ref write is
+  // idempotent and safe during render); the effect above picks it up.
   return {
     loading: isLoading,
     canClaimDaily,
-    dailyTimeLeft: dailyReset.timeLeft,
-    dailySecondsLeft: dailyReset.secondsLeft,
+    get dailyTimeLeft() {
+      needsCountdownRef.current = true;
+      return dailyReset.timeLeft;
+    },
+    get dailySecondsLeft() {
+      needsCountdownRef.current = true;
+      return dailyReset.secondsLeft;
+    },
     canClaimChest: chestCooldown.canClaim,
-    chestTimeLeft: chestCooldown.timeLeft,
-    chestSecondsLeft: chestCooldown.secondsLeft,
+    get chestTimeLeft() {
+      needsCountdownRef.current = true;
+      return chestCooldown.timeLeft;
+    },
+    get chestSecondsLeft() {
+      needsCountdownRef.current = true;
+      return chestCooldown.secondsLeft;
+    },
     refreshTimers,
   };
 }

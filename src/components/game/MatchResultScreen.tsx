@@ -21,6 +21,7 @@ import { ExhaustionIndicator } from "@/components/ui/exhaustion-indicator";
 import { useToast } from "@/hooks/use-toast";
 import { showMissionCompleteToast } from "@/components/mission/MissionCompleteToast";
 import { usePlayLimit, MAX_FREE_PLAYS } from "@/hooks/usePlayLimit";
+import { useAds } from "@/hooks/useAds";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { InviteFriendsModal } from "@/components/home/InviteFriendsModal";
 
@@ -243,6 +244,7 @@ export function MatchResultScreen() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { canPlay, isVip, loading: vipLoading, playsRemaining, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
+  const { maybeShowInterstitial } = useAds();
   
   // State for showing PRO upgrade modal when limit reached
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
@@ -384,10 +386,13 @@ export function MatchResultScreen() {
           games_played: (currentProfile.games_played || 0) + 1,
           games_won: isWin ? (currentProfile.games_won || 0) + 1 : currentProfile.games_won,
           current_streak: isWin ? (currentProfile.current_streak || 0) + 1 : 0,
-          best_streak: isWin 
+          best_streak: isWin
             ? Math.max(currentProfile.best_streak || 0, (currentProfile.current_streak || 0) + 1)
             : currentProfile.best_streak,
         });
+
+        // Interstitial cadence check now that this game counts as completed
+        void maybeShowInterstitial((currentProfile.games_played || 0) + 1);
 
         // Update total_correct_answers separately (not in updateProfile to avoid type issues)
         if (sessionCorrectAnswers > 0) {

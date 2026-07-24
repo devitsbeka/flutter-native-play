@@ -1,15 +1,14 @@
 import { useMemo } from "react";
-import { toWebmUrl } from "@/config/videoConfig";
+import { getResponsiveVideoSrc } from "@/config/videoConfig";
 
 /**
  * Returns WebM and MP4 source URLs for the current viewport.
- * Always uses standard 720px WebM with MP4 fallback.
+ * Mobile viewports get the 480px mobile WebM; desktop gets 720px WebM.
+ * MP4 is always the fallback.
  */
 export function useResponsiveVideo(mp4Url: string): {
   webm: string;
   mp4: string;
 } {
-  return useMemo(() => {
-    return { webm: toWebmUrl(mp4Url), mp4: mp4Url };
-  }, [mp4Url]);
+  return useMemo(() => getResponsiveVideoSrc(mp4Url), [mp4Url]);
 }

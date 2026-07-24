@@ -1,11 +1,22 @@
-import { createLovableConfig } from "lovable-agent-playwright-config/config";
+import { defineConfig } from "@playwright/test";
 
-export default createLovableConfig({
-	// Tests should be placed in the 'e2e' folder (default)
-	// Add your custom playwright configuration overrides here
-	// Example:
-	// timeout: 60000,
-	// use: {
-	//   baseURL: 'http://localhost:3000',
-	// },
+// Serves the prebuilt dist/ via vite preview — run `vite build` before `playwright test`.
+export default defineConfig({
+	testDir: "./e2e",
+	timeout: 60_000,
+	expect: { timeout: 10_000 },
+	reporter: "list",
+	use: {
+		baseURL: "http://127.0.0.1:4173",
+		viewport: { width: 1920, height: 1080 },
+		launchOptions: {
+			executablePath: "/opt/pw-browsers/chromium",
+		},
+	},
+	webServer: {
+		command: "npx vite preview --port 4173 --strictPort --host 127.0.0.1",
+		url: "http://127.0.0.1:4173",
+		reuseExistingServer: true,
+		timeout: 180_000,
+	},
 });

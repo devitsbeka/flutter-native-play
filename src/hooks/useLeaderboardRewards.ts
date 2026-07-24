@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useCurrency } from "./useCurrency";
 import { 
   WEEKLY_LEADERBOARD_REWARDS, 
   getRewardForRank,
@@ -44,7 +45,8 @@ export interface EarnedBadge {
 }
 
 export function useLeaderboardRewards(categoryId?: string) {
-  const { user, profile, updateProfile } = useAuth();
+  const { user } = useAuth();
+  const { addCurrency } = useCurrency();
   const [unclaimedRewards, setUnclaimedRewards] = useState<WeeklyReward[]>([]);
   const [earnedFrames, setEarnedFrames] = useState<EarnedFrame[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([]);
@@ -101,25 +103,38 @@ export function useLeaderboardRewards(categoryId?: string) {
 
   // Claim a weekly reward
   const claimReward = async (rewardId: string): Promise<boolean> => {
-    if (!user || !profile) return false;
+    if (!user) return false;
 
     const reward = unclaimedRewards.find((r) => r.id === rewardId);
     if (!reward) return false;
 
     try {
-      // Update claimed_at
-      const { error: updateError } = await supabase
+      // Atomically mark as claimed; the .is() guard makes double-claims a no-op
+      const { data: claimedRows, error: updateError } = await supabase
         .from("category_weekly_rewards")
         .update({ claimed_at: new Date().toISOString() })
-        .eq("id", rewardId);
+        .eq("id", rewardId)
+        .is("claimed_at", null)
+        .select();
 
       if (updateError) throw updateError;
 
-      // Add coins and gems to user profile
-      await updateProfile({
-        coins: (profile.coins || 0) + reward.coins_rewarded,
-        gems: (profile.gems || 0) + reward.gems_rewarded,
-      });
+      if (!claimedRows || claimedRows.length === 0) {
+        // Already claimed elsewhere — don't grant again
+        setUnclaimedRewards((prev) => prev.filter((r) => r.id !== rewardId));
+        return false;
+      }
+
+      // Grant coins/gems via the delta-based currency RPC (stale-profile safe)
+      const granted = await addCurrency(reward.coins_rewarded, reward.gems_rewarded);
+      if (!granted) {
+        // Roll back the claim so the user can retry instead of losing the reward
+        await supabase
+          .from("category_weekly_rewards")
+          .update({ claimed_at: null })
+          .eq("id", rewardId);
+        return false;
+      }
 
       // If frame was rewarded, add to user_leaderboard_frames
       if (reward.frame_rewarded) {
