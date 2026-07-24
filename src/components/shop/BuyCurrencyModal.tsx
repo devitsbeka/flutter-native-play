@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Sparkles, Clock } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ export function BuyCurrencyModal({
   currencyType,
 }: BuyCurrencyModalProps) {
   const { gems, spendGems, addCoins } = useCurrency();
+  const { addPowerUp } = useUserPowerUps();
   const { playSound } = useSound();
   const { t } = useLanguage();
   const [isPurchasing, setIsPurchasing] = useState<number | null>(null);
@@ -79,7 +81,7 @@ export function BuyCurrencyModal({
       const spent = await spendGems(pkg.gems, {
         productId: `coin_pack_${pkg.coins}`,
         productType: "coins",
-        valueReceived: { coins: pkg.coins },
+        valueReceived: { coins: pkg.coins, ...pkg.powers },
       });
       if (!spent) {
         setIsPurchasing(null);
@@ -87,7 +89,16 @@ export function BuyCurrencyModal({
       }
 
       await addCoins(pkg.coins);
-      
+
+      // Grant the advertised power-ups (retry once on failure)
+      let allPowersGranted = true;
+      for (const [type, count] of Object.entries(pkg.powers)) {
+        const powerType = type as PowerUpType;
+        const granted =
+          (await addPowerUp(powerType, count)) || (await addPowerUp(powerType, count));
+        if (!granted) allPowersGranted = false;
+      }
+
       playSound("reward");
       confetti({
         particleCount: 60,
@@ -95,11 +106,19 @@ export function BuyCurrencyModal({
         origin: { y: 0.6 },
         colors: ["#fbbf24", "#f59e0b", "#d97706"],
       });
-      
-      toast.success(t("shop.receivedCoinsAndPowers").replace("{coins}", String(pkg.coins)), {
-        icon: toastIcon(ICON_URLS.gift),
-      });
-      
+
+      if (allPowersGranted) {
+        toast.success(t("shop.receivedCoinsAndPowers").replace("{coins}", String(pkg.coins)), {
+          icon: toastIcon(ICON_URLS.gift),
+        });
+      } else {
+        // Powers didn't land — only advertise what was actually granted
+        toast.success(t("shop.plusCoins").replace("{amount}", String(pkg.coins)), {
+          icon: toastIcon(ICON_URLS.gift),
+        });
+        toast.error(t("shop.purchaseFailed"));
+      }
+
       onClose();
     } catch (error) {
       console.error("Purchase failed:", error);

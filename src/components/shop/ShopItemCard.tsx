@@ -33,6 +33,7 @@ export function ShopItemCard({
   price,
   currency,
   icon,
+  gradient,
   badge,
   savings,
   isPurchased = false,
@@ -45,6 +46,8 @@ export function ShopItemCard({
   const { t } = useLanguage();
   const currencyIcon = currency === "gems" ? gemIcon : currency === "coins" ? coinIcon : null;
   const isLari = currency === "lari";
+  // Per-item gradient for the buy button; "transparent" items keep the default purple
+  const hasCustomGradient = !!gradient && gradient !== "transparent";
 
   const BADGE_STYLES: Record<string, { textKey: string; bg: string; shadow: string }> = {
     popular: {
@@ -200,8 +203,12 @@ export function ShopItemCard({
                 disabled={isPurchased || isLoading}
                 className="px-5 py-2 rounded-full font-bold text-xs sm:text-sm text-white"
                 style={{
-                  background: "linear-gradient(180deg, #9359DD 0%, #7B3FC7 100%)",
-                  boxShadow: "0 3px 0 #5D2DA3",
+                  background: hasCustomGradient
+                    ? gradient
+                    : "linear-gradient(180deg, #9359DD 0%, #7B3FC7 100%)",
+                  boxShadow: hasCustomGradient
+                    ? "0 3px 0 rgb(0 0 0 / 0.25)"
+                    : "0 3px 0 #5D2DA3",
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95, y: 2 }}

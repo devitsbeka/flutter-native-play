@@ -51,6 +51,78 @@ async function fetchPowerUps(userId: string): Promise<Record<PowerUpType, number
   return { ...DEFAULT_POWER_UPS };
 }
 
+// Fallback for when the adjust_power_up migration isn't applied yet:
+// read the fresh server quantity, then conditionally write on top of it
+// (guarded by .eq("quantity", current) so concurrent writers can't be clobbered).
+async function fallbackAdjust(
+  userId: string,
+  type: PowerUpType,
+  delta: number
+): Promise<number | null> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { data: row, error: readError } = await supabase
+      .from("user_power_ups")
+      .select("quantity")
+      .eq("user_id", userId)
+      .eq("power_up_type", type)
+      .maybeSingle();
+
+    if (readError) {
+      console.error("Error reading power-up quantity:", readError);
+      return null;
+    }
+
+    const current = row?.quantity ?? 0;
+    const next = Math.max(0, current + delta);
+
+    if (!row) {
+      const { error: insertError } = await supabase
+        .from("user_power_ups")
+        .insert({ user_id: userId, power_up_type: type, quantity: next });
+      if (insertError) {
+        // Unique violation means another writer created the row — retry the update path
+        continue;
+      }
+      return next;
+    }
+
+    const { data: updated, error: updateError } = await supabase
+      .from("user_power_ups")
+      .update({ quantity: next })
+      .eq("user_id", userId)
+      .eq("power_up_type", type)
+      .eq("quantity", current)
+      .select("quantity");
+
+    if (updateError) {
+      console.error("Error updating power-up quantity:", updateError);
+      return null;
+    }
+    if (updated && updated.length > 0) return next;
+    // Lost the race against a concurrent write — re-read and retry once
+  }
+  return null;
+}
+
+// Atomic delta adjustment via SECURITY DEFINER RPC; returns the new quantity
+// or null if the RPC failed (e.g. migration not applied yet).
+async function adjustPowerUpRpc(type: PowerUpType, delta: number): Promise<number | null> {
+  // Cast needed until Supabase types are regenerated after the migration
+  // (supabase/migrations/20260724140000_power_up_rpc.sql) is applied
+  const { data, error } = await (supabase.rpc as unknown as (
+    fn: string,
+    args: Record<string, unknown>
+  ) => Promise<{ data: number | null; error: { message: string } | null }>)("adjust_power_up", {
+    p_type: type,
+    p_delta: delta,
+  });
+  if (error) {
+    console.warn("adjust_power_up RPC failed, falling back to direct update:", error.message);
+    return null;
+  }
+  return typeof data === "number" ? data : null;
+}
+
 export function useUserPowerUps() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -64,58 +136,44 @@ export function useUserPowerUps() {
     gcTime: 10 * 60 * 1000,
   });
 
+  const adjustPowerUp = useCallback(
+    async (type: PowerUpType, delta: number): Promise<number | null> => {
+      if (!user?.id) return null;
+
+      let newQuantity = await adjustPowerUpRpc(type, delta);
+      if (newQuantity === null) {
+        newQuantity = await fallbackAdjust(user.id, type, delta);
+      }
+      if (newQuantity === null) return null;
+
+      // Sync cache from the authoritative server value
+      const quantity = newQuantity;
+      queryClient.setQueryData<Record<PowerUpType, number>>(queryKey, (prev) =>
+        prev ? { ...prev, [type]: quantity } : prev
+      );
+      return quantity;
+    },
+    [user?.id, queryClient, queryKey]
+  );
+
   // Use a power-up (decrement quantity)
   const usePowerUp = useCallback(
     async (type: PowerUpType): Promise<boolean> => {
       if (!user?.id || powerUps[type] <= 0) return false;
-
-      const newQuantity = powerUps[type] - 1;
-
-      const { error: updateError } = await supabase
-        .from("user_power_ups")
-        .update({ quantity: newQuantity })
-        .eq("user_id", user.id)
-        .eq("power_up_type", type);
-
-      if (updateError) {
-        console.error("Error using power-up:", updateError);
-        return false;
-      }
-
-      // Optimistic update
-      queryClient.setQueryData<Record<PowerUpType, number>>(queryKey, (prev) =>
-        prev ? { ...prev, [type]: newQuantity } : prev
-      );
-      return true;
+      const newQuantity = await adjustPowerUp(type, -1);
+      return newQuantity !== null;
     },
-    [user?.id, powerUps, queryClient, queryKey]
+    [user?.id, powerUps, adjustPowerUp]
   );
 
   // Add power-ups (e.g., from rewards)
   const addPowerUp = useCallback(
     async (type: PowerUpType, amount: number): Promise<boolean> => {
-      if (!user?.id) return false;
-
-      const newQuantity = powerUps[type] + amount;
-
-      const { error: updateError } = await supabase
-        .from("user_power_ups")
-        .update({ quantity: newQuantity })
-        .eq("user_id", user.id)
-        .eq("power_up_type", type);
-
-      if (updateError) {
-        console.error("Error adding power-up:", updateError);
-        return false;
-      }
-
-      // Optimistic update
-      queryClient.setQueryData<Record<PowerUpType, number>>(queryKey, (prev) =>
-        prev ? { ...prev, [type]: newQuantity } : prev
-      );
-      return true;
+      if (!user?.id || amount <= 0) return false;
+      const newQuantity = await adjustPowerUp(type, amount);
+      return newQuantity !== null;
     },
-    [user?.id, powerUps, queryClient, queryKey]
+    [user?.id, adjustPowerUp]
   );
 
   const refetch = useCallback(() => {

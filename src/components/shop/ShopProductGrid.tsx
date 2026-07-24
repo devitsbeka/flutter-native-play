@@ -45,7 +45,8 @@ export function ShopProductGrid({
       <div className="px-3 sm:px-4">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-2 md:gap-3">
           {items.map((item, index) => {
-            const canAfford = gems >= item.price;
+            // Real-money (lari) packs are always purchasable — gems balance is irrelevant
+            const canAfford = item.currency === "lari" || gems >= item.price;
             const isPurchased = purchasedItems.has(item.id);
             const isFrameOwned = item.frameId
               ? isFrameUnlocked(item.frameId)

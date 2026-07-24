@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Crown, Zap, Star, Check } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
-import { useVipStatus, VipDuration, VIP_PRICES } from "@/hooks/useVipStatus";
+import { useVipStatus, VipDuration } from "@/hooks/useVipStatus";
+import { useShopData } from "@/hooks/useShopData";
+import { REWARDS } from "@/config/rewardConfig";
 import { useUserPowerUps } from "@/hooks/useUserPowerUps";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AvatarFrameShop } from "@/components/home/AvatarFrameShop";
@@ -39,23 +41,15 @@ interface ShopItem {
   amount?: number;
 }
 
+// NOTE: `price` values below are fallbacks only — the effective price is resolved
+// at render/purchase time from useShopData / rewardConfig (see getItemPrice).
 const SHOP_ITEMS: ShopItem[] = [
-  // Coin Packs
-  {
-    id: "coins_100",
-    nameKey: "100",
-    descriptionKey: "smallPackage",
-    price: 2,
-    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
-    category: "coins",
-    value: 100,
-    gradient: "from-yellow-300 to-amber-400",
-  },
+  // Coin Packs (1 gem = 500 coins, REWARDS.GEM_TO_COINS_RATE)
   {
     id: "coins_500",
     nameKey: "500",
-    descriptionKey: "mediumPackage",
-    price: 5,
+    descriptionKey: "smallPackage",
+    price: 1,
     icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
     category: "coins",
     value: 500,
@@ -64,8 +58,8 @@ const SHOP_ITEMS: ShopItem[] = [
   {
     id: "coins_1500",
     nameKey: "1500",
-    descriptionKey: "largePackage",
-    price: 12,
+    descriptionKey: "mediumPackage",
+    price: 3,
     icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
     category: "coins",
     value: 1500,
@@ -75,8 +69,8 @@ const SHOP_ITEMS: ShopItem[] = [
   {
     id: "coins_5000",
     nameKey: "5000",
-    descriptionKey: "megaPackage",
-    price: 35,
+    descriptionKey: "largePackage",
+    price: 9,
     icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
     category: "coins",
     value: 5000,
@@ -86,7 +80,7 @@ const SHOP_ITEMS: ShopItem[] = [
     id: "coins_10000",
     nameKey: "10000",
     descriptionKey: "hugePackage",
-    price: 60,
+    price: 20,
     icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
     category: "coins",
     value: 10000,
@@ -97,7 +91,7 @@ const SHOP_ITEMS: ShopItem[] = [
     id: "power_5050",
     nameKey: "5050x3",
     descriptionKey: "deletesWrongAnswers",
-    price: 8,
+    price: 3,
     icon: <img src={powerIcon5050} alt="" className="w-8 h-8" />,
     category: "powerup",
     gradient: "from-rose-400 to-pink-500",
@@ -108,7 +102,7 @@ const SHOP_ITEMS: ShopItem[] = [
     id: "power_freeze",
     nameKey: "freezex3",
     descriptionKey: "freezesTime",
-    price: 8,
+    price: 3,
     icon: <img src={powerIconFreeze} alt="" className="w-8 h-8" />,
     category: "powerup",
     gradient: "from-cyan-400 to-blue-500",
@@ -119,7 +113,7 @@ const SHOP_ITEMS: ShopItem[] = [
     id: "power_replace",
     nameKey: "replacex3",
     descriptionKey: "replacesQuestion",
-    price: 8,
+    price: 3,
     icon: <img src={powerIconReplace} alt="" className="w-8 h-8" />,
     category: "powerup",
     gradient: "from-emerald-400 to-green-500",
@@ -130,7 +124,7 @@ const SHOP_ITEMS: ShopItem[] = [
     id: "power_timedrain",
     nameKey: "timePlusx3",
     descriptionKey: "addsTime",
-    price: 8,
+    price: 3,
     icon: <TimeIcon size={32} />,
     category: "powerup",
     gradient: "from-violet-400 to-purple-500",
@@ -142,7 +136,7 @@ const SHOP_ITEMS: ShopItem[] = [
     id: "power_bundle_small",
     nameKey: "smallPackage",
     descriptionKey: "allPowers2x",
-    price: 8,
+    price: 7,
     icon: <Zap className="w-8 h-8 text-blue-400" />,
     category: "powerup",
     gradient: "from-sky-300 to-blue-400",
@@ -151,7 +145,7 @@ const SHOP_ITEMS: ShopItem[] = [
     id: "power_bundle",
     nameKey: "mediumPackage",
     descriptionKey: "allPowers5x",
-    price: 15,
+    price: 16,
     icon: <Zap className="w-8 h-8 text-blue-500" />,
     category: "powerup",
     gradient: "from-blue-400 to-cyan-500",
@@ -161,7 +155,7 @@ const SHOP_ITEMS: ShopItem[] = [
     id: "power_bundle_large",
     nameKey: "largePackage",
     descriptionKey: "allPowers10x",
-    price: 25,
+    price: 28,
     icon: <Zap className="w-8 h-8 text-indigo-500" />,
     category: "powerup",
     gradient: "from-indigo-500 to-purple-600",
@@ -171,7 +165,7 @@ const SHOP_ITEMS: ShopItem[] = [
     id: "vip_day",
     nameKey: "vipDay",
     descriptionKey: "vipBenefitsDay",
-    price: 5,
+    price: 30,
     icon: <Crown className="w-8 h-8 text-amber-400" />,
     category: "vip",
     gradient: "from-amber-300 to-yellow-500",
@@ -181,7 +175,7 @@ const SHOP_ITEMS: ShopItem[] = [
     id: "vip_week",
     nameKey: "vipWeek",
     descriptionKey: "vipBenefitsWeek",
-    price: 15,
+    price: 100,
     icon: <Crown className="w-8 h-8 text-amber-500" />,
     category: "vip",
     gradient: "from-purple-500 to-pink-500",
@@ -192,7 +186,7 @@ const SHOP_ITEMS: ShopItem[] = [
     id: "vip_month",
     nameKey: "vipMonth",
     descriptionKey: "vipBenefitsMonth",
-    price: 40,
+    price: 250,
     icon: <Star className="w-8 h-8 text-amber-400 fill-amber-400" />,
     category: "vip",
     gradient: "from-amber-400 to-pink-500",
@@ -231,12 +225,47 @@ const CATEGORY_KEYS = [
   { id: "frames", nameKey: "tabFrames", icon: "🎨" },
 ];
 
+// Local item ids whose canonical price lives under a different id in useShopData
+const CANONICAL_PRICE_IDS: Record<string, string> = {
+  power_5050: "power_5050_3",
+  power_freeze: "power_freeze_3",
+  power_replace: "power_replace_3",
+  power_timedrain: "power_timedrain_3",
+  power_bundle: "mega_power_bundle",
+  vip_week: "vip_week_deal",
+};
+
 export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalProps) {
   const { gems, spendGems, addCoins } = useCurrency();
   const { playSound } = useSound();
   const { activateVip, isVip, getDaysRemaining } = useVipStatus();
   const { addPowerUp } = useUserPowerUps();
+  const { SHOP_SECTIONS } = useShopData();
   const { t } = useLanguage();
+
+  // Gem prices sourced from useShopData so this modal can't drift from the main shop
+  const canonicalPrices = useMemo(() => {
+    const map = new Map<string, number>();
+    SHOP_SECTIONS.forEach((section) =>
+      section.items.forEach((i) => {
+        if (i.currency === "gems") map.set(i.id, i.price);
+      })
+    );
+    return map;
+  }, [SHOP_SECTIONS]);
+
+  const getItemPrice = (item: ShopItem): number => {
+    if (item.category === "vip" && item.vipDuration) {
+      const vipPrice = (REWARDS.VIP_PRICES as Record<string, number>)[item.vipDuration];
+      if (vipPrice !== undefined) return vipPrice;
+    }
+    const canonical = canonicalPrices.get(CANONICAL_PRICE_IDS[item.id] ?? item.id);
+    if (canonical !== undefined) return canonical;
+    if (item.category === "coins" && item.value) {
+      return Math.max(1, Math.round(item.value / REWARDS.GEM_TO_COINS_RATE));
+    }
+    return item.price;
+  };
   const [selectedCategory, setSelectedCategory] = useState(defaultCategory || "all");
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
   const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
@@ -253,7 +282,8 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
     : SHOP_ITEMS.filter(item => item.category === selectedCategory);
 
   const handlePurchase = async (item: ShopItem) => {
-    if (gems < item.price) {
+    const price = getItemPrice(item);
+    if (gems < price) {
       toast.error(t("extra.notEnoughGems"));
       playSound("wrong-answer");
       return;
@@ -283,7 +313,7 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
         }
       }
 
-      const spent = await spendGems(item.price, {
+      const spent = await spendGems(price, {
         productId: item.id,
         productType: item.category,
         valueReceived,
@@ -422,7 +452,8 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 {filteredItems.map((item, index) => {
-                  const canAfford = gems >= item.price;
+                  const price = getItemPrice(item);
+                  const canAfford = gems >= price;
                   const isPurchased = purchasedItems.has(item.id);
                   const isLoading = isPurchasing === item.id;
                   const isVipItem = item.category === "vip";
@@ -489,7 +520,7 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
                             <span className={`font-bold text-sm ${
                               canAfford ? "text-primary" : "text-muted-foreground"
                             }`}>
-                              {isLoading ? "..." : item.price}
+                              {isLoading ? "..." : price}
                             </span>
                           </div>
                         )}
