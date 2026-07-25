@@ -595,7 +595,22 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               }
             }
           } else if (updated.status === "completed") {
-            setState(prev => ({ ...prev, phase: "results" }));
+            // A "completed" event can be stale: a slow player finishing the
+            // PREVIOUS round can mark the room completed right as (or just
+            // after) the host starts the next one. If this client is already
+            // synced into a newer game, dropping to results would strand it
+            // there - the follow-up "playing" event is skipped as
+            // alreadySyncedThisGame. Only honor completions for the game this
+            // client is actually in.
+            const staleCompletion =
+              !!updated.current_game_id &&
+              !!expectedGameIdRef.current &&
+              updated.current_game_id !== expectedGameIdRef.current;
+            if (staleCompletion) {
+              console.log(`[MP] Ignoring stale completed event for game ${updated.current_game_id} (current: ${expectedGameIdRef.current})`);
+            } else {
+              setState(prev => ({ ...prev, phase: "results" }));
+            }
           } else if (updated.status === "cancelled") {
             toast.info(tStandalone("extra.mpRoomClosed"));
             setState(initialState);
@@ -763,12 +778,23 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               // Get room to check host_is_observer
               const { data: roomCheck } = await supabase
                 .from("game_rooms")
-                .select("host_user_id, host_is_observer, status, total_questions")
+                .select("host_user_id, host_is_observer, status, total_questions, current_game_id")
                 .eq("id", roomId)
                 .maybeSingle();
 
-              // Only proceed if the room is still "playing"
-              if (roomCheck && roomCheck.status === "playing") {
+              // The host can start the NEXT round while a slow player is still
+              // finishing the previous one, so the room goes straight from
+              // round-N "playing" to round-N+1 "playing" without ever leaving
+              // "playing". A finish of the OLD round must then not complete the
+              // room - it would kill the freshly started round and kick the
+              // players already synced into it back to results.
+              const finishedStaleGame =
+                !!roomCheck?.current_game_id &&
+                !!expectedGameIdRef.current &&
+                roomCheck.current_game_id !== expectedGameIdRef.current;
+
+              // Only proceed if the room is still "playing" the game WE finished
+              if (roomCheck && roomCheck.status === "playing" && !finishedStaleGame) {
                 const activePlayers = allParticipants.filter(p => {
                   // Skip observer host
                   if (roomCheck.host_is_observer && p.user_id === roomCheck.host_user_id) return false;
@@ -790,11 +816,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 
                 if (allFinished) {
                   console.log(`[MP] All ${activePlayers.length} players finished - marking room completed`);
-                  await supabase
+                  let completeQuery = supabase
                     .from("game_rooms")
                     .update({ status: "completed", completed_at: new Date().toISOString() })
                     .eq("id", roomId)
                     .eq("status", "playing"); // Prevent double-update race
+                  // CAS on the game id: if a new round started between our room
+                  // read and this write, match 0 rows instead of completing the
+                  // new round the instant it begins
+                  if (roomCheck.current_game_id) {
+                    completeQuery = completeQuery.eq("current_game_id", roomCheck.current_game_id);
+                  }
+                  await completeQuery;
                 }
               }
             }
@@ -957,6 +990,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }));
       }
       
+      expectedGameIdRef.current = null; // Fresh room - no game yet
       setState(prev => ({ ...prev, phase: "lobby", currentRoom: room as GameRoom }));
       setShowCreateModal(false);
       toast.success(tStandalone("extra.mpRoomCreated"));
@@ -1131,6 +1165,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             }));
           }
         } else {
+          // Align the game-id ref with the room's current game so stale ids
+          // from a previous room/round can't misclassify later status events
+          expectedGameIdRef.current = newPhase === "results" ? room.current_game_id : null;
           setState(prev => ({
             ...prev,
             phase: newPhase,
@@ -1163,7 +1200,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           country_code: profile.country_code,
           is_host: false,
         });
-        
+
+        expectedGameIdRef.current = null; // Joining fresh - not synced into any game
         setState(prev => ({ ...prev, phase: "lobby", currentRoom: room as GameRoom }));
       }
       
@@ -1687,6 +1725,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     // Clear room presence when exiting
     setRoomPresence(null);
     cleanupChannels();
+    expectedGameIdRef.current = null;
     setState(initialState);
   }, [cleanupChannels, setRoomPresence, state.currentRoom?.id, user]);
 
@@ -2518,6 +2557,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   // Reset multiplayer
   const resetMultiplayer = useCallback(() => {
     cleanupChannels();
+    expectedGameIdRef.current = null;
     setState(initialState);
     setParticipants([]);
   }, [cleanupChannels]);
