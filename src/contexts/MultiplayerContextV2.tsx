@@ -84,23 +84,24 @@ const safeDeleteRoomQuestions = async (roomId: string): Promise<boolean> => {
   
   let verified = false;
   for (let i = 0; i < 3; i++) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    // Verify immediately - the delete above already completed, so waiting
+    // before the first check just slows every round start down
     const { count } = await supabase
       .from("room_questions")
       .select("*", { count: "exact", head: true })
       .eq("room_id", roomId);
-    
+
     if (!count || count === 0) {
       verified = true;
       console.log(`[MP] Questions deleted and verified (attempt ${i + 1})`);
       break;
     }
-    
+
     console.warn(`[MP] ${count} questions still exist, retrying delete...`);
     await supabase.from("room_questions").delete().eq("room_id", roomId);
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
-  
+
   return verified;
 };
 
@@ -497,14 +498,14 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               expectedGameIdRef.current = expectedGameId;
               
               console.log(`[MP] Non-host fetching questions with verified game_id: ${expectedGameId}`);
-              
-              // Wait for questions to be fully committed by host (increased delay)
-              await new Promise(resolve => setTimeout(resolve, 800));
-              
-              // Fetch with retry logic AND game_id validation to handle race conditions
+
+              // No warm-up delay needed: every start path verifies the full
+              // question set is committed BEFORE flipping the room to
+              // "playing", so the first fetch normally succeeds immediately.
+              // The retry loop below covers the rare replication lag.
               let attempts = 0;
-              const MAX_ATTEMPTS = 8;  // Increased from 5
-              const RETRY_DELAY = 600; // Increased from 400
+              const MAX_ATTEMPTS = 10;
+              const RETRY_DELAY = 400;
               let roomQuestions: any[] | null = null;
               let validQuestionsFound = false;
               
@@ -548,12 +549,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   correctAnswer: q.correct_answer,
                   incorrectAnswers: q.incorrect_answers,
                   // Use stored shuffled_answers so all players see same order
-                  allAnswers: q.shuffled_answers && q.shuffled_answers.length > 0 
-                    ? q.shuffled_answers 
+                  allAnswers: q.shuffled_answers && q.shuffled_answers.length > 0
+                    ? q.shuffled_answers
                     : [...q.incorrect_answers, q.correct_answer],
                   difficulty: q.difficulty || "medium",
                   category: updated.category_name || "General",
                   iconSlug: q.icon_slug || undefined, // Include icon for custom questions
+                  // Media MUST survive the sync - image questions render the picture
+                  // instead of the question text, so dropping these leaves the
+                  // non-initiating player with an unanswerable text-only question
+                  imageUrl: q.image_url || undefined,
+                  videoUrl: q.video_url || undefined,
+                  audioUrl: q.audio_url || undefined,
                 }));
                 
                 console.log(`[MP] Non-host loaded ${questions.length} validated questions for game_id: ${expectedGameId}, host_is_observer: ${updated.host_is_observer}`);
@@ -678,13 +685,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               // if another round starts while this client is mid-sync
               expectedGameIdRef.current = expectedGameId;
 
-              // Wait for questions to be fully committed
-              await new Promise(resolve => setTimeout(resolve, 800));
-
-              // Fetch with retry logic
+              // No warm-up delay: question commit is verified before the room
+              // flips to "playing" (see verifyQuestionsCommitted) - fetch now,
+              // retry only on the rare replication lag
               let attempts = 0;
-              const MAX_ATTEMPTS = 8;
-              const RETRY_DELAY = 600;
+              const MAX_ATTEMPTS = 10;
+              const RETRY_DELAY = 400;
               let roomQuestions: any[] | null = null;
               let validQuestionsFound = false;
 
@@ -715,12 +721,15 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   question: q.question_text,
                   correctAnswer: q.correct_answer,
                   incorrectAnswers: q.incorrect_answers,
-                  allAnswers: q.shuffled_answers?.length > 0 
-                    ? q.shuffled_answers 
+                  allAnswers: q.shuffled_answers?.length > 0
+                    ? q.shuffled_answers
                     : [...q.incorrect_answers, q.correct_answer],
                   difficulty: q.difficulty || "medium",
                   category: freshRoom.category_name || "General",
                   iconSlug: q.icon_slug || undefined,
+                  imageUrl: q.image_url || undefined,
+                  videoUrl: q.video_url || undefined,
+                  audioUrl: q.audio_url || undefined,
                 }));
                 
                 console.log(`[MP] Initial sync: loaded ${questions.length} questions for game_id: ${expectedGameId}`);
@@ -999,6 +1008,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             difficulty: q.difficulty || "medium",
             shuffled_answers: shuffledAnswers,
             icon_slug: q.icon_slug || null, // Store custom icon for MyTrivia questions
+            image_url: q.image_url || null,
+            video_url: q.video_url || null,
+            audio_url: q.audio_url || null,
           });
         }));
       }
@@ -1884,6 +1896,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             difficulty: q.difficulty || "medium",
             category: categoryName,
             iconSlug: q.icon_slug || undefined,
+            imageUrl: q.image_url || undefined,
+            videoUrl: q.video_url || undefined,
+            audioUrl: q.audio_url || undefined,
           };
         });
         
@@ -1920,7 +1935,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }
         
         // Insert fresh questions with new game_id
-        const insertResults1 = await Promise.all(questions.map((q, index) => 
+        const insertResults1 = await Promise.all(questions.map((q, index) =>
           supabase.from("room_questions").insert({
             room_id: roomId,
             question_index: index,
@@ -1930,6 +1945,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             shuffled_answers: q.allAnswers,
             difficulty: q.difficulty,
             icon_slug: q.iconSlug || null,
+            image_url: q.imageUrl || null,
+            video_url: q.videoUrl || null,
+            audio_url: q.audioUrl || null,
             game_id: game?.id, // CRITICAL: Link to current game for non-host validation
           }).select()
         ));
@@ -2016,8 +2034,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         difficulty: q.difficulty,
         category: freshRoom.category_name || q.category || "General",
         iconSlug: q.iconSlug,
+        imageUrl: q.imageUrl || undefined,
+        videoUrl: q.videoUrl || undefined,
+        audioUrl: q.audioUrl || undefined,
       }));
-      
+
       // Clear old questions/answers with verification
       const deleteSuccess4 = await safeDeleteRoomQuestions(roomId);
       if (!deleteSuccess4) {
@@ -2061,7 +2082,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       }
       
       // Store questions WITH shuffled_answers, icon_slug, AND game_id for validation
-      const insertResults2 = await Promise.all(questions.map((q, index) => 
+      const insertResults2 = await Promise.all(questions.map((q, index) =>
         supabase.from("room_questions").insert({
           room_id: roomId,
           question_index: index,
@@ -2071,6 +2092,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           shuffled_answers: q.allAnswers,
           difficulty: q.difficulty,
           icon_slug: q.iconSlug || null,
+          image_url: q.imageUrl || null,
+          video_url: q.videoUrl || null,
+          audio_url: q.audioUrl || null,
           game_id: game?.id, // CRITICAL: Link to current game for non-host validation
         }).select()
       ));
@@ -2229,6 +2253,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               difficulty: q.difficulty || "medium",
               category: categoryName,
               iconSlug: q.icon_slug || undefined,
+              imageUrl: q.image_url || undefined,
+              videoUrl: q.video_url || undefined,
+              audioUrl: q.audio_url || undefined,
             };
           });
           
@@ -2257,7 +2284,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           }
           
           // Store in room_questions WITH game_id for validation
-          const insertResults3 = await Promise.all(questions.map((q, index) => 
+          const insertResults3 = await Promise.all(questions.map((q, index) =>
             supabase.from("room_questions").insert({
               room_id: roomId,
               question_index: index,
@@ -2267,6 +2294,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               difficulty: q.difficulty,
               shuffled_answers: q.allAnswers,
               icon_slug: q.iconSlug || null,
+              image_url: q.imageUrl || null,
+              video_url: q.videoUrl || null,
+              audio_url: q.audioUrl || null,
               game_id: game?.id, // CRITICAL: Link to current game for non-host validation
             }).select()
           ));
@@ -2386,6 +2416,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         difficulty: q.difficulty,
         category: newCategoryName,
         iconSlug: q.iconSlug,
+        imageUrl: q.imageUrl || undefined,
+        videoUrl: q.videoUrl || undefined,
+        audioUrl: q.audioUrl || undefined,
       }));
       
       // Clear old data with verification
@@ -2427,7 +2460,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       }
       
       // Store questions with icon_slug AND game_id for validation
-      const insertResults4 = await Promise.all(questions.map((q, index) => 
+      const insertResults4 = await Promise.all(questions.map((q, index) =>
         supabase.from("room_questions").insert({
           room_id: roomId,
           question_index: index,
@@ -2437,6 +2470,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           shuffled_answers: q.allAnswers,
           difficulty: q.difficulty,
           icon_slug: q.iconSlug || null,
+          image_url: q.imageUrl || null,
+          video_url: q.videoUrl || null,
+          audio_url: q.audioUrl || null,
           game_id: game?.id, // CRITICAL: Link to current game for non-host validation
         }).select()
       ));
