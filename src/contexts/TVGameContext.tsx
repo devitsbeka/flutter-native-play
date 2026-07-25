@@ -1747,6 +1747,21 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             }
           }
         }
+
+        // The TV lobby shows reserved "invited" seats from room_participants.
+        // Claim ours on join so the grayed-out ghost seat disappears instead
+        // of showing the same player twice (once joined, once "invited").
+        if (authUid && session.room_id) {
+          const { error: claimError } = await supabase
+            .from('room_participants')
+            .update({ status: 'joined' })
+            .eq('room_id', session.room_id)
+            .eq('user_id', authUid)
+            .eq('status', 'invited');
+          if (claimError) {
+            console.warn('[joinSession] Failed to claim invited seat:', claimError);
+          }
+        }
       }
 
       // Parse existing questions if any
