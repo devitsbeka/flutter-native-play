@@ -788,6 +788,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       }
     } catch (error) {
       console.error("Error creating room:", error);
+      // Surface the failure - a silent catch leaves the user staring at a
+      // button that "did nothing" with no way to tell it from a hang
+      toast({
+        title: t("common.error"),
+        description: t("extra.mpRoomCreateFailed") || "ოთახის შექმნა ვერ მოხერხდა",
+        variant: "destructive",
+      });
     } finally {
       setIsCreating(false);
     }

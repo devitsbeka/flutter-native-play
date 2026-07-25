@@ -928,13 +928,20 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       let finalRoomName: string | null = providedRoomName || null;
       let finalRoomIcon: string | null = providedRoomIcon || null;
       
-      // Only generate if not provided
+      // Only generate if not provided. The AI edge function is cosmetic - cap
+      // it at a few seconds so a cold start or hung request can't stall room
+      // creation behind an infinite spinner.
       if (!finalRoomName) {
         try {
-          const { data: nameData, error: nameError } = await supabase.functions.invoke('generate-room-name');
-          if (!nameError && nameData?.name) {
-            finalRoomName = nameData.name;
-            finalRoomIcon = nameData.icon_url || null;
+          const nameResult = await Promise.race([
+            supabase.functions.invoke('generate-room-name'),
+            new Promise<{ data: null; error: Error }>((resolve) =>
+              setTimeout(() => resolve({ data: null, error: new Error("room-name generation timed out") }), 6000)
+            ),
+          ]);
+          if (!nameResult.error && nameResult.data?.name) {
+            finalRoomName = nameResult.data.name;
+            finalRoomIcon = nameResult.data.icon_url || null;
           }
         } catch (e) {
           console.log('Using default room name, edge function failed:', e);
@@ -961,8 +968,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
       if (error) throw error;
       
-      // Add host as participant
-      await supabase.from("room_participants").insert({
+      // Add host as participant. A room whose host isn't a participant breaks
+      // everything downstream (completion checks, host transfer), so clean up
+      // and fail loudly instead of entering a half-created lobby.
+      const { error: hostInsertError } = await supabase.from("room_participants").insert({
         room_id: room.id,
         user_id: user.id,
         nickname: profile.nickname || "Player",
@@ -970,6 +979,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         country_code: profile.country_code,
         is_host: true,
       });
+      if (hostInsertError) {
+        await supabase.from("game_rooms").delete().eq("id", room.id);
+        throw hostInsertError;
+      }
 
       // If custom questions provided, store them immediately with icon_slug
       if (customQuestions && customQuestions.length > 0) {
