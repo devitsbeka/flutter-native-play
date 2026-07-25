@@ -328,9 +328,19 @@ export const TVLobbyScreenV2: React.FC = () => {
     }
   }, []);
 
-  // Combine active players with invited guests (invited shown with inactive styling)
+  // Combine active players with invited guests (invited shown with inactive
+  // styling). NOTE: player.id is the TV presence/device id, NOT an auth
+  // user_id - the two never match, so id-based dedupe alone let the same
+  // person appear twice (joined + grayed "invited" ghost). Dedupe by nickname
+  // against the joined players; the joinSession flow also promotes the
+  // invited row to "joined" in the DB, which removes the ghost at the source.
   const activePlayerIds = new Set(players.map(p => p.id));
-  const filteredInvitedGuests = invitedGuests.filter(g => !activePlayerIds.has(g.user_id));
+  const activeNicknames = new Set(players.map(p => p.nickname.trim().toLowerCase()));
+  const filteredInvitedGuests = invitedGuests.filter(
+    g =>
+      !activePlayerIds.has(g.user_id) &&
+      !activeNicknames.has((g.nickname || "").trim().toLowerCase())
+  );
   
   // Fill remaining slots with placeholders
   const playerSlots: Array<typeof players[0] | InvitedGuest | null> = [...players, ...filteredInvitedGuests];
