@@ -252,16 +252,38 @@ export function RoomLobbyV2() {
   };
 
   const handleStartGame = async () => {
+    if (!currentRoom) return;
+
     // When rounds are queued and no current category/trivia is selected
     // (adding to the queue clears the room's current selection), start from
     // the queue - startGame would otherwise pick RANDOM questions and leave
-    // the queued topics unconsumed
-    if (queue.length > 0 && !currentRoom?.category_id && !currentRoom?.user_trivia_id) {
-      setIsStarting(true);
-      playSound("button-click");
-      await startNextFromQueue();
-      setIsStarting(false);
-      return;
+    // the queued topics unconsumed.
+    // Branch on FRESH room data: local currentRoom lags behind the realtime
+    // event after the results screen clears the selection, so a quick Start
+    // tap would otherwise replay the just-finished category. While the
+    // previous round is still "playing" (a slow player hasn't finished yet)
+    // the room keeps that round's category - it's leftover state, not a new
+    // selection, so the queue wins there too.
+    if (queue.length > 0) {
+      const { data: freshRoom } = await supabase
+        .from("game_rooms")
+        .select("status, category_id, user_trivia_id")
+        .eq("id", currentRoom.id)
+        .maybeSingle();
+
+      const roundStillLive = freshRoom?.status === "playing";
+      const hasExplicitSelection =
+        !!(freshRoom ? (freshRoom.category_id || freshRoom.user_trivia_id)
+                     : (currentRoom.category_id || currentRoom.user_trivia_id)) &&
+        !roundStillLive;
+
+      if (!hasExplicitSelection) {
+        setIsStarting(true);
+        playSound("button-click");
+        await startNextFromQueue();
+        setIsStarting(false);
+        return;
+      }
     }
 
     // CRITICAL: Host-Observer policy for multiplayer rooms

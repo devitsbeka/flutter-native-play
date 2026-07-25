@@ -23,6 +23,12 @@ import { toast } from "sonner";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { CategoryPickerModal } from "./CategoryPickerModal";
 
+// Games whose results were already counted on this device. Module-level (not a
+// ref) because the results screen can remount for the SAME game (results ->
+// lobby -> results bounce while a slow player finishes) and a per-mount ref
+// would re-grant coins/stats and re-touch participant rows mid-next-round.
+const processedResultsGames = new Set<string>();
+
 interface RankedParticipant {
   user_id: string;
   nickname: string;
@@ -132,8 +138,13 @@ export function GameResultsScreenV2() {
 
   // Update stats and save game
   useEffect(() => {
-    if (user && profile && currentRoom && !hasUpdatedStats.current) {
+    // Key by game id so a remount for the same game can't double-count. Rooms
+    // without a game id (legacy/RLS-blocked inserts) keep the per-mount guard
+    // only - keying those by room id would block every later round's stats.
+    const statsKey = currentRoom?.current_game_id || null;
+    if (user && profile && currentRoom && !hasUpdatedStats.current && !(statsKey && processedResultsGames.has(statsKey))) {
       hasUpdatedStats.current = true;
+      if (statsKey) processedResultsGames.add(statsKey);
 
       const updateStats = async () => {
         // Calculate coins earned based on rank

@@ -74,6 +74,12 @@ export function useAds() {
    * Rewarded-ad gate: PRO/VIP and web users pass straight through; everyone
    * else watches a rewarded ad first. Ad failures retry once, then fail open —
    * onProceed always runs exactly once.
+   *
+   * The AdMob plugin's load/show promises can hang forever (no-fill without a
+   * FailedToLoad event, listener mismatch after a plugin update). The gate must
+   * never trap the user behind an infinite spinner, so it fails open when the
+   * ad hasn't actually SHOWN within a short deadline; once an ad is visibly
+   * playing it gets ample time to finish.
    */
   const gateWithRewardedAd = useCallback(
     async (onProceed: () => void | Promise<void>): Promise<void> => {
@@ -83,17 +89,51 @@ export function useAds() {
       }
 
       let dismissed = false;
+      let adShowed = false;
       const callbacks = {
+        onAdShowed: () => {
+          adShowed = true;
+        },
         onAdDismissed: () => {
           dismissed = true;
         },
       };
 
-      const succeeded = await adService.showRewardedAdWithPreload(callbacks);
-      if (!succeeded && !dismissed) {
-        // Genuine ad failure (not a user dismissal) — retry once, then fail open
-        await adService.showRewardedAdWithPreload(callbacks);
-      }
+      const runGate = async () => {
+        const succeeded = await adService.showRewardedAdWithPreload(callbacks);
+        if (!succeeded && !dismissed) {
+          // Genuine ad failure (not a user dismissal) — retry once, then fail open
+          await adService.showRewardedAdWithPreload(callbacks);
+        }
+      };
+
+      const AD_LOAD_DEADLINE_MS = 12_000; // ad never appeared — give up and proceed
+      const AD_WATCH_DEADLINE_MS = 120_000; // ad is on screen — allow a full watch
+
+      await new Promise<void>((resolve) => {
+        let settled = false;
+        const settle = () => {
+          if (!settled) {
+            settled = true;
+            clearInterval(watchdog);
+            resolve();
+          }
+        };
+
+        const startedAt = Date.now();
+        const watchdog = setInterval(() => {
+          const limit = adShowed ? AD_WATCH_DEADLINE_MS : AD_LOAD_DEADLINE_MS;
+          if (Date.now() - startedAt > limit) {
+            console.warn(`[Ads] Rewarded gate timed out after ${limit}ms (adShowed=${adShowed}) — failing open`);
+            settle();
+          }
+        }, 500);
+
+        runGate()
+          .catch((error) => console.error("[Ads] Rewarded gate error — failing open:", error))
+          .finally(settle);
+      });
+
       await onProceed();
     },
     [isVip]
