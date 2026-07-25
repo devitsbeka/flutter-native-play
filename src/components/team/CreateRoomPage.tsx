@@ -570,21 +570,22 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     if (!hasValidSelection) return;
     if (isCreating) return;
 
-    // Guard: Prevent room creation while name is still generating
-    if (roomName === t("extra.loadingState") || isGeneratingName) {
-      toast({
-        title: t("extra.pleaseWait"),
-        description: t("extra.roomNameGenerating"),
-      });
-      return;
-    }
+    // NOTE: no waiting for the AI room name - performCreate falls back to the
+    // default name if generation hasn't finished. The name is cosmetic and
+    // must never delay the game.
 
     // Lock BEFORE the ad gate - a double-tap during the ad would otherwise
     // show two ads and create two rooms (performCreate re-sets and clears it)
     setIsCreating(true);
     try {
-      // Non-PRO users watch a rewarded ad before the room is created (fail-open)
-      await gateWithRewardedAd(performCreate);
+      // Run the rewarded ad (native, non-PRO) and the room creation
+      // CONCURRENTLY: the room gets built behind the ad, so the user lands in
+      // the lobby the moment the ad closes instead of paying ad time PLUS
+      // creation time. On web/VIP the gate resolves instantly.
+      await Promise.all([
+        gateWithRewardedAd(async () => {}),
+        performCreate(),
+      ]);
     } catch (error) {
       console.error("Ad gate error:", error);
       setIsCreating(false);
@@ -596,6 +597,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
     // Store friends to invite before creating room
     friendsToInviteRef.current = new Set(selectedFriends);
+
+    // If the AI name hasn't arrived yet, create with the fallback name
+    // immediately - never make the user wait on a cosmetic edge function
+    const effectiveRoomName =
+      roomName === t("extra.loadingState") || isGeneratingName ? defaultFallback : roomName;
 
     setIsCreating(true);
 
@@ -610,15 +616,16 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           .eq("user_id", user.id)
           .single();
 
-        const { data: codeData } = await supabase.rpc("generate_room_code");
-        const roomCode = codeData || generateRoomCode();
-        
+        // Local code generation - the uniqueness RPC cost a round-trip for a
+        // collision chance of ~1 in a billion
+        const roomCode = generateRoomCode();
+
         const { data: createdRoom, error } = await supabase
           .from("game_rooms")
           .insert({
             room_code: roomCode,
             host_user_id: user.id,
-            room_name: roomName,
+            room_name: effectiveRoomName,
             room_icon: roomIcon,
             // Ensure lobby can render the initial selection (otherwise it appears empty)
             category_name: challengeTrivia.title,
@@ -662,15 +669,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             .eq("user_id", user.id)
             .single();
 
-          const { data: codeData } = await supabase.rpc("generate_room_code");
-          const roomCode = codeData || generateRoomCode();
-          
+          const roomCode = generateRoomCode();
+
           const { data: createdRoom, error } = await supabase
             .from("game_rooms")
             .insert({
               room_code: roomCode,
               host_user_id: user.id,
-              room_name: roomName,
+              room_name: effectiveRoomName,
               room_icon: roomIcon,
               category_name: customTriviaTitle,
               game_type: "async",
@@ -702,10 +708,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         } else {
           // Fallback to old behavior if no persisted trivia ID
           room = await createRoom(
-            "custom", 
+            "custom",
             customTriviaTitle || "Custom Trivia",
             customTriviaQuestions,
-            roomName,
+            effectiveRoomName,
             roomIcon
           );
 
@@ -715,7 +721,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         }
       } else if (selectedCategory) {
         // Create the room with selected category
-        room = await createRoom(selectedCategory.category_id, selectedCategory.name, undefined, roomName, roomIcon);
+        room = await createRoom(selectedCategory.category_id, selectedCategory.name, undefined, effectiveRoomName, roomIcon);
 
         if (room?.id) {
           await persistQueuedRounds(room.id);
@@ -774,7 +780,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             challengeUserId,
             "challenge",
             `${userProfile?.nickname || t("extra.friendFallback")} ${t("extra.invitedToGameMsg", { name: "" })}`,
-            roomName,
+            effectiveRoomName,
             {
               room_id: room.id,
               room_code: room.room_code,

@@ -913,10 +913,16 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     };
   }, [state.currentRoom?.id, user?.id, fetchParticipants, debouncedFetchParticipants, cleanupChannels]); // Removed state.phase and isHost - use refs instead
 
-  // Generate room code
-  const generateRoomCode = async (): Promise<string> => {
-    const { data } = await supabase.rpc("generate_room_code");
-    return data || Math.random().toString(36).substring(2, 8).toUpperCase();
+  // Generate room code locally - the server-side uniqueness RPC cost a full
+  // round-trip on every create for a collision chance of ~1 in a billion
+  // (32^6 codes). The insert below retries on a unique-constraint hit anyway.
+  const generateRoomCode = (): string => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
   };
 
   // Create room
@@ -934,12 +940,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     setLoading(true);
     try {
-      const roomCode = await generateRoomCode();
-      
       // Use provided room name/icon or generate new ones
       let finalRoomName: string | null = providedRoomName || null;
       let finalRoomIcon: string | null = providedRoomIcon || null;
-      
+
       // Only generate if not provided. The AI edge function is cosmetic - cap
       // it at a few seconds so a cold start or hung request can't stall room
       // creation behind an infinite spinner.
@@ -959,26 +963,36 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           console.log('Using default room name, edge function failed:', e);
         }
       }
-      
-      const { data: room, error } = await supabase
-        .from("game_rooms")
-        .insert({
-          host_user_id: user.id,
-          room_code: roomCode,
-          category_id: categoryId === "custom" ? null : categoryId,
-          category_name: categoryName,
-          status: "waiting",
-          is_permanent: true,
-          background_gradient: getRandomGradient(),
-          total_questions: customQuestions?.length || 5,
-          room_name: finalRoomName,
-          room_icon: finalRoomIcon,
-          last_activity_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
+
+      // Insert with a locally generated code; on the (astronomically rare)
+      // unique-constraint collision, regenerate and retry
+      let room: GameRoom | null = null;
+      let error: { code?: string; message?: string } | null = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const roomCode = generateRoomCode();
+        const res = await supabase
+          .from("game_rooms")
+          .insert({
+            host_user_id: user.id,
+            room_code: roomCode,
+            category_id: categoryId === "custom" ? null : categoryId,
+            category_name: categoryName,
+            status: "waiting",
+            is_permanent: true,
+            background_gradient: getRandomGradient(),
+            total_questions: customQuestions?.length || 5,
+            room_name: finalRoomName,
+            room_icon: finalRoomIcon,
+            last_activity_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+        error = res.error;
+        room = (res.data as unknown as GameRoom) ?? null;
+        if (!error || error.code !== "23505") break; // 23505 = unique violation (code collision)
+      }
+
+      if (error || !room) throw error ?? new Error("Room insert returned no row");
       
       // Add host as participant. A room whose host isn't a participant breaks
       // everything downstream (completion checks, host transfer), so clean up
