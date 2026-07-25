@@ -130,6 +130,27 @@ const App = () => (
                 <AvatarModalProvider>
                   <SplashScreen>
                     <TooltipProvider>
+            {/* TEMPORARY deploy canary - remove after confirming mytrivia.io
+                serves this build (added 2026-07-24 to test auto-deploy) */}
+            <div
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: 99999,
+                background: "#16a34a",
+                color: "#fff",
+                textAlign: "center",
+                fontSize: 12,
+                fontWeight: 700,
+                padding: "3px 8px",
+                paddingTop: "calc(3px + env(safe-area-inset-top))",
+              }}
+            >
+              ✅ NEW BUILD LIVE — deploy check 24 Jul (temporary banner)
+            </div>
+
             {/* Offline detection banner */}
             <OfflineBanner />
             
