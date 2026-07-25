@@ -79,10 +79,22 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
     const questionStyles = getQuestionStyles(questionText);
     const isLowTime = timerSeconds !== undefined && timerSeconds <= 5 && !isFrozen;
     const hasTopBadges = timerSeconds !== undefined || !!difficultyLabel;
-    const hasImage = !!imageUrl;
+
+    // Image questions hide the question text, so a failed image load MUST
+    // fall back to showing the text - otherwise the card is completely blank
+    // and the question is unanswerable. Track the load lifecycle per URL.
+    const [imageStatus, setImageStatus] = React.useState<"loading" | "loaded" | "error">("loading");
+    React.useEffect(() => {
+      setImageStatus("loading");
+    }, [imageUrl]);
+
+    const imageFailed = !!imageUrl && imageStatus === "error";
+    const hasImage = !!imageUrl && !imageFailed;
     const hasVideo = !!videoUrl;
     const hasAudio = !!audioUrl;
     const hasMedia = hasImage || hasVideo || hasAudio;
+    // Show the text whenever the image can't (or might never) speak for itself
+    const effectiveHideText = hideQuestionText && !imageFailed;
 
     return (
       <motion.div
@@ -101,14 +113,23 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       >
         {/* Image for Image Trivia questions */}
         {hasImage && !hasVideo && !hasAudio && (
-          <div className="w-full h-36 overflow-hidden bg-gray-100 flex items-start justify-center">
-            <img 
-              src={imageUrl!} 
-              alt="Question" 
-              className="w-full h-full object-contain object-top"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
+          <div className="w-full h-36 overflow-hidden bg-gray-100 relative flex items-start justify-center">
+            {/* Skeleton while the image downloads - a silently empty card
+                looks broken on slow connections */}
+            {imageStatus === "loading" && (
+              <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+            )}
+            <img
+              src={imageUrl!}
+              alt="Question"
+              className={cn(
+                "w-full h-full object-contain object-top relative",
+                imageStatus !== "loaded" && "opacity-0"
+              )}
+              loading="eager"
+              decoding="async"
+              onLoad={() => setImageStatus("loaded")}
+              onError={() => setImageStatus("error")}
             />
           </div>
         )}
@@ -217,8 +238,9 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
         )}
 
 
-        {/* Question Text - hide for image-only mode */}
-        {!hideQuestionText && (
+        {/* Question Text - hidden for image-only mode, but ALWAYS shown when
+            the image failed to load (the text is the only usable fallback) */}
+        {!effectiveHideText && (
           <div className={cn(
             "px-5 py-2 [@media(max-height:700px)]:py-1.5 [@media(max-height:600px)]:py-1 min-h-[80px] [@media(max-height:600px)]:min-h-[60px] flex items-center justify-center",
             // Reserve headroom for top badges (timer/difficulty) and/or an external overlapping icon

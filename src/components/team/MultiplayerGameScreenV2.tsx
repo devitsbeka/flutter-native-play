@@ -53,6 +53,18 @@ export function MultiplayerGameScreenV2() {
     return () => stopBackgroundMusic();
   }, [startBackgroundMusic, stopBackgroundMusic]);
 
+  // Preload every image of the round up front so image questions render
+  // instantly when reached instead of downloading on-screen (a slow or dead
+  // image otherwise leaves the player staring at an empty card)
+  useEffect(() => {
+    questions.forEach(q => {
+      if (q.imageUrl) {
+        const img = new Image();
+        img.src = q.imageUrl;
+      }
+    });
+  }, [questions]);
+
   const [timeRemaining, setTimeRemaining] = useState(timePerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerRevealed, setAnswerRevealed] = useState(false);
