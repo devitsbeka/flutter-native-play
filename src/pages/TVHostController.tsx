@@ -1128,7 +1128,9 @@ const TVHostController: React.FC = () => {
           )}
         </motion.div>
 
-        {/* Start Game Button */}
+        {/* Start Game Button - hidden while the category picker is open so it
+            can never cover the picker's own "choose"/"add to queue" buttons */}
+        {!showCategoryPicker && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent z-[100]">
           <ChunkyButton
             variant="primary"
@@ -1137,13 +1139,14 @@ const TVHostController: React.FC = () => {
             disabled={players.length < 1 || queue.length === 0}
           >
             <Play className="w-5 h-5 mr-2" />
-            {queue.length === 0 
-              ? 'დაამატე რაუნდები რიგში' 
-              : players.length < 1 
-                ? 'საჭიროა მინ. 1 მოთამაშე' 
+            {queue.length === 0
+              ? 'დაამატე რაუნდები რიგში'
+              : players.length < 1
+                ? 'საჭიროა მინ. 1 მოთამაშე'
                 : `დაწყება (${queue.length} რაუნდი)`}
           </ChunkyButton>
         </div>
+        )}
 
         {/* Category Picker Modal */}
         <CategoryPickerModal
