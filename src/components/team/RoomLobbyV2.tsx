@@ -138,6 +138,47 @@ export function RoomLobbyV2() {
     checkActiveSession();
   }, [currentRoom?.id, currentRoom?.tv_session_id, isHost, hasCheckedTVSession, navigate]);
 
+  // NON-host participants: when the room's game runs on a TV session, the
+  // regular lobby waits forever ("waiting for host...") because TV mode never
+  // flips the room's own status - the game lives in tv_sessions. Send them
+  // into the TV player join flow instead. Re-runs when tv_session_id lands
+  // via realtime, so players already sitting in the lobby get pulled in the
+  // moment the host opens TV mode.
+  useEffect(() => {
+    if (!currentRoom?.tv_session_id || isHost) return;
+    const tvSessionId = currentRoom.tv_session_id;
+    let cancelled = false;
+
+    const checkAndJoinTVSession = async () => {
+      try {
+        const { data: session } = await supabase
+          .from('tv_sessions')
+          .select('id, status, created_at')
+          .eq('id', tvSessionId)
+          .maybeSingle();
+        if (cancelled || !session) return;
+
+        // Same liveness rules as the host-side check above
+        const threeHoursAgo = Date.now() - 3 * 60 * 60 * 1000;
+        const sessionCreatedAt = session.created_at ? new Date(session.created_at).getTime() : 0;
+        const isExpired = sessionCreatedAt < threeHoursAgo;
+        const activeStatuses = ['waiting', 'paired', 'lobby', 'countdown', 'question', 'playing', 'reveal', 'round-intro', 'poll-suggest', 'poll-voting', 'poll-results', 'category-select'];
+
+        if (!isExpired && activeStatuses.includes(session.status || '')) {
+          console.log('[RoomLobbyV2] Active TV session detected, sending participant to TV join');
+          navigate(`/join/session/${session.id}`, { replace: true });
+        }
+      } catch (error) {
+        console.error('[RoomLobbyV2] Error checking TV session for participant:', error);
+      }
+    };
+
+    checkAndJoinTVSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentRoom?.tv_session_id, isHost, navigate]);
+
   const { matches } = useRoomMatchHistory(currentRoom?.id || null);
   const { queue, addToQueue, removeFromQueue, reorderQueue } = useRoomCategoryQueue(currentRoom?.id || null);
 
