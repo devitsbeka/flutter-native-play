@@ -79,8 +79,11 @@ const isRoomStale = (lastActivityAt: string | null, createdAt: string): boolean 
 
 // Helper to safely delete room questions with verification (prevents race condition)
 const safeDeleteRoomQuestions = async (roomId: string): Promise<boolean> => {
-  await supabase.from("room_questions").delete().eq("room_id", roomId);
-  await supabase.from("player_answers").delete().eq("room_id", roomId);
+  // Independent tables - delete in parallel to save a round-trip
+  await Promise.all([
+    supabase.from("room_questions").delete().eq("room_id", roomId),
+    supabase.from("player_answers").delete().eq("room_id", roomId),
+  ]);
   
   let verified = false;
   for (let i = 0; i < 3; i++) {
@@ -1501,18 +1504,22 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Handle __mixed__ category - triggers multi-category mode (getMultiCategoryVSQuestions)
       const isMixedCategory = freshRoom.category_id === "__mixed__";
       console.log('[startGame] Fetching questions for category:', freshRoom.category_id, freshRoom.category_name, 'isMixed:', isMixedCategory);
+      // Old-question cleanup is independent of the question fetch - overlap
+      // the two waits (the old rows belong to an already-finished round)
+      const pendingDelete = safeDeleteRoomQuestions(roomId);
       const result = await getQuestions({
         mode: 'vs',
         categorySlug: isMixedCategory ? undefined : (freshRoom.category_id || undefined),
         count: questionCount,
         excludeIds: usedIds,
       });
-      
+
       if (result.questions.length === 0) {
+        await pendingDelete;
         toast.error(tStandalone("extra.mpQuestionsNotFound"));
         return;
       }
-      
+
       // Map to TriviaQuestion format using FRESH category name
       const questions: TriviaQuestion[] = result.questions.map(q => ({
         id: q.id,
@@ -1527,19 +1534,21 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         videoUrl: q.videoUrl,
         audioUrl: q.audioUrl,
       }));
-      
-      // Update used_question_ids on game_rooms
-      const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
-      await supabase
-        .from("game_rooms")
-        .update({ used_question_ids: newUsedIds })
-        .eq("id", roomId);
-      
+
       // Mark questions as seen globally (unified tracking)
       markQuestionsAsSeen(questions.map(q => q.id));
-      
-      await saveQuestionsAndStartGame(roomId, questions, shouldObserve);
-      
+
+      // used_question_ids rides along on the final status update - no
+      // dedicated round-trip (and no extra realtime event) before the start
+      const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
+      await saveQuestionsAndStartGame(
+        roomId,
+        questions,
+        shouldObserve,
+        { used_question_ids: newUsedIds },
+        pendingDelete
+      );
+
       // Consume matching queue item if it exists (prevents "next round" showing played category)
       await consumeMatchingQueueItem(roomId, freshRoom.category_id, null);
       
@@ -1549,20 +1558,27 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     }
   }, [state.currentRoom, isHost, user]);
 
-  // Helper to save questions and update room status
+  // Helper to save questions and update room status.
+  // pendingDelete: callers can start safeDeleteRoomQuestions BEFORE fetching
+  // questions and pass the promise, overlapping the two network waits.
+  // extraRoomFields: merged into the final status update so bookkeeping like
+  // used_question_ids doesn't need its own round-trip (and its own spurious
+  // realtime event) before the round starts.
   const saveQuestionsAndStartGame = useCallback(async (
-    roomId: string, 
+    roomId: string,
     questions: TriviaQuestion[],
-    hostShouldObserve: boolean = false
+    hostShouldObserve: boolean = false,
+    extraRoomFields: Record<string, unknown> = {},
+    pendingDelete?: Promise<boolean>
   ) => {
     // Clear old questions/answers with verification
-    const deleteSuccess2 = await safeDeleteRoomQuestions(roomId);
+    const deleteSuccess2 = await (pendingDelete ?? safeDeleteRoomQuestions(roomId));
     if (!deleteSuccess2) {
       console.error("[MP saveQuestionsAndStartGame] Failed to delete old questions after retries");
       toast.error(tStandalone("extra.mpGameStartFailed"));
       return;
     }
-    
+
     // Create room_game record FIRST to get game_id
     const { data: game } = await supabase
       .from("room_games")
@@ -1580,25 +1596,37 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       toast.error(tStandalone("extra.mpGameStartFailed"));
       return;
     }
-    
-    // Store questions in parallel WITH shuffled_answers for sync AND game_id for validation
-    const insertResults = await Promise.all(questions.map((q, index) => 
-      supabase.from("room_questions").insert({
-        room_id: roomId,
-        question_index: index,
-        question_text: q.question,
-        correct_answer: q.correctAnswer,
-        incorrect_answers: q.incorrectAnswers,
-        shuffled_answers: q.allAnswers, // Store pre-shuffled order for all players
-        difficulty: q.difficulty,
-        icon_slug: q.iconSlug, // Store icon for display
-        image_url: q.imageUrl || null,
-        video_url: q.videoUrl || null,
-        audio_url: q.audioUrl || null,
-        game_id: game?.id, // CRITICAL: Link to current game for non-host validation
-      }).select()
-    ));
-    
+
+    // Store questions WITH shuffled_answers for sync AND game_id for
+    // validation. The participant reset is independent of the question rows -
+    // run it in the same batch; both only need to finish before the room
+    // flips to "playing" below.
+    // CRITICAL (reset): a stale "finished" status from the previous round
+    // makes the completion check mark the room "completed" as soon as any
+    // player answers the first question, kicking everyone to results mid-game
+    const [insertResults] = await Promise.all([
+      Promise.all(questions.map((q, index) =>
+        supabase.from("room_questions").insert({
+          room_id: roomId,
+          question_index: index,
+          question_text: q.question,
+          correct_answer: q.correctAnswer,
+          incorrect_answers: q.incorrectAnswers,
+          shuffled_answers: q.allAnswers, // Store pre-shuffled order for all players
+          difficulty: q.difficulty,
+          icon_slug: q.iconSlug, // Store icon for display
+          image_url: q.imageUrl || null,
+          video_url: q.videoUrl || null,
+          audio_url: q.audioUrl || null,
+          game_id: game?.id, // CRITICAL: Link to current game for non-host validation
+        }).select()
+      )),
+      resetAllParticipants(roomId),
+    ]);
+
+    // FIX: Immediately reset local participants to prevent stale auto-advance
+    setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0, status: "playing" as const })));
+
     // Abort BEFORE flipping status to "playing" if any insert failed or the
     // full set isn't readable yet - otherwise non-hosts sync a partial round
     const failedInserts = insertResults.filter(r => r.error);
@@ -1613,15 +1641,6 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       return;
     }
 
-    // Reset all participants scores
-    // CRITICAL: Also reset status to "playing" - a stale "finished" status from the
-    // previous round makes the completion check mark the room "completed" as soon as
-    // any player answers the first question, kicking everyone to results mid-game
-    await resetAllParticipants(roomId);
-
-    // FIX: Immediately reset local participants to prevent stale auto-advance
-    setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0, status: "playing" as const })));
-    
     // Update room status (includes host_is_observer to prevent premature realtime trigger)
     // Also sync total_questions - a stale count from a previous custom-trivia round
     // breaks the "finished" detection when players re-enter the room
@@ -1633,6 +1652,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         current_game_id: game?.id,
         host_is_observer: hostShouldObserve,
         total_questions: questions.length,
+        ...extraRoomFields,
       })
       .eq("id", roomId);
 
@@ -1867,14 +1887,17 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // This prevents stale questions from previous rounds when user switches trivia
       if (!freshRoom.category_id && freshRoom.user_trivia_id) {
         console.log('[startNewRound] User trivia detected, fetching fresh from user_quiz_posts:', freshRoom.user_trivia_id);
-        
+
+        // Old-round cleanup is independent of the trivia fetch - overlap them
+        const pendingDelete3 = safeDeleteRoomQuestions(roomId);
         const { data: triviaPost } = await supabase
           .from("user_quiz_posts")
           .select("questions, title")
           .eq("id", freshRoom.user_trivia_id)
           .single();
-        
+
         if (!triviaPost?.questions) {
+          await pendingDelete3;
           console.error('[startNewRound] Failed to load trivia questions');
           toast.error(tStandalone("extra.mpTriviaQuestionsNotFound"));
           return;
@@ -1902,20 +1925,15 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           };
         });
         
-        // Clear old answers and questions with verification
-        const deleteSuccess3 = await safeDeleteRoomQuestions(roomId);
+        // Clear old answers and questions with verification (started above,
+        // overlapped with the trivia fetch)
+        const deleteSuccess3 = await pendingDelete3;
         if (!deleteSuccess3) {
           console.error("[MP startNewRound/userTrivia] Failed to delete old questions after retries");
           toast.error(tStandalone("extra.mpGameStartFailed"));
           return;
         }
-        
-        // FIX: Reset ALL participants' scores (not just caller)
-        await resetAllParticipants(roomId);
-        
-        // FIX: Immediately reset local participants to prevent stale auto-advance
-        setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
-        
+
         // Create room_game record FIRST to get game_id
         const { data: game } = await supabase
           .from("room_games")
@@ -1933,25 +1951,33 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           toast.error(tStandalone("extra.mpGameStartFailed"));
           return;
         }
-        
-        // Insert fresh questions with new game_id
-        const insertResults1 = await Promise.all(questions.map((q, index) =>
-          supabase.from("room_questions").insert({
-            room_id: roomId,
-            question_index: index,
-            question_text: q.question,
-            correct_answer: q.correctAnswer,
-            incorrect_answers: q.incorrectAnswers,
-            shuffled_answers: q.allAnswers,
-            difficulty: q.difficulty,
-            icon_slug: q.iconSlug || null,
-            image_url: q.imageUrl || null,
-            video_url: q.videoUrl || null,
-            audio_url: q.audioUrl || null,
-            game_id: game?.id, // CRITICAL: Link to current game for non-host validation
-          }).select()
-        ));
-        
+
+        // Insert fresh questions with new game_id; the participant reset is
+        // independent - run in the same batch (both must finish before the
+        // room flips to "playing")
+        const [insertResults1] = await Promise.all([
+          Promise.all(questions.map((q, index) =>
+            supabase.from("room_questions").insert({
+              room_id: roomId,
+              question_index: index,
+              question_text: q.question,
+              correct_answer: q.correctAnswer,
+              incorrect_answers: q.incorrectAnswers,
+              shuffled_answers: q.allAnswers,
+              difficulty: q.difficulty,
+              icon_slug: q.iconSlug || null,
+              image_url: q.imageUrl || null,
+              video_url: q.videoUrl || null,
+              audio_url: q.audioUrl || null,
+              game_id: game?.id, // CRITICAL: Link to current game for non-host validation
+            }).select()
+          )),
+          resetAllParticipants(roomId),
+        ]);
+
+        // FIX: Immediately reset local participants to prevent stale auto-advance
+        setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
+
         // Abort BEFORE flipping status to "playing" if any insert failed or the
         // full set isn't readable yet - otherwise non-hosts sync a partial round
         const failedInserts1 = insertResults1.filter(r => r.error);
@@ -2009,17 +2035,20 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
       // Standard category room: use freshRoom already fetched above
       const usedIds = (freshRoom.used_question_ids as string[]) || [];
-      
-      // Fetch new questions from database using FRESH category
+
+      // Fetch new questions from database using FRESH category; overlap the
+      // independent old-round cleanup with the fetch
       console.log('[startNewRound] Fetching questions for category:', freshRoom.category_id);
+      const pendingDelete4 = safeDeleteRoomQuestions(roomId);
       const result = await getQuestions({
         mode: 'vs',
         categorySlug: freshRoom.category_id || undefined,
         count: questionCount,
         excludeIds: usedIds,
       });
-      
+
       if (result.questions.length === 0) {
+        await pendingDelete4;
         toast.error(tStandalone("extra.mpQuestionsNotFound"));
         return;
       }
@@ -2039,30 +2068,22 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         audioUrl: q.audioUrl || undefined,
       }));
 
-      // Clear old questions/answers with verification
-      const deleteSuccess4 = await safeDeleteRoomQuestions(roomId);
+      // Clear old questions/answers with verification (overlapped with the
+      // question fetch above)
+      const deleteSuccess4 = await pendingDelete4;
       if (!deleteSuccess4) {
         console.error("[MP startNewRound/library] Failed to delete old questions after retries");
         toast.error(tStandalone("extra.mpGameStartFailed"));
         return;
       }
-      
-      // Update used_question_ids on game_rooms
-      const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
-      await supabase
-        .from("game_rooms")
-        .update({ used_question_ids: newUsedIds })
-        .eq("id", roomId);
-      
+
       // Mark questions as seen globally
       markQuestionsAsSeen(questions.map(q => q.id));
-      
-      // FIX: Reset ALL participants' scores (not just caller)
-      await resetAllParticipants(roomId);
-      
-      // FIX: Immediately reset local participants to prevent stale auto-advance
-      setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
-      
+
+      // used_question_ids rides along on the final status update below - a
+      // dedicated write here cost a round-trip and a spurious realtime event
+      const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
+
       // Create room_game record FIRST to get game_id
       const { data: game } = await supabase
         .from("room_games")
@@ -2080,25 +2101,33 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         toast.error(tStandalone("extra.mpGameStartFailed"));
         return;
       }
-      
-      // Store questions WITH shuffled_answers, icon_slug, AND game_id for validation
-      const insertResults2 = await Promise.all(questions.map((q, index) =>
-        supabase.from("room_questions").insert({
-          room_id: roomId,
-          question_index: index,
-          question_text: q.question,
-          correct_answer: q.correctAnswer,
-          incorrect_answers: q.incorrectAnswers,
-          shuffled_answers: q.allAnswers,
-          difficulty: q.difficulty,
-          icon_slug: q.iconSlug || null,
-          image_url: q.imageUrl || null,
-          video_url: q.videoUrl || null,
-          audio_url: q.audioUrl || null,
-          game_id: game?.id, // CRITICAL: Link to current game for non-host validation
-        }).select()
-      ));
-      
+
+      // Store questions WITH shuffled_answers, icon_slug, AND game_id for
+      // validation; the participant reset is independent - same batch (both
+      // only need to finish before the room flips to "playing")
+      const [insertResults2] = await Promise.all([
+        Promise.all(questions.map((q, index) =>
+          supabase.from("room_questions").insert({
+            room_id: roomId,
+            question_index: index,
+            question_text: q.question,
+            correct_answer: q.correctAnswer,
+            incorrect_answers: q.incorrectAnswers,
+            shuffled_answers: q.allAnswers,
+            difficulty: q.difficulty,
+            icon_slug: q.iconSlug || null,
+            image_url: q.imageUrl || null,
+            video_url: q.videoUrl || null,
+            audio_url: q.audioUrl || null,
+            game_id: game?.id, // CRITICAL: Link to current game for non-host validation
+          }).select()
+        )),
+        resetAllParticipants(roomId),
+      ]);
+
+      // FIX: Immediately reset local participants to prevent stale auto-advance
+      setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
+
       // Abort BEFORE flipping status to "playing" if any insert failed or the
       // full set isn't readable yet - otherwise non-hosts sync a partial round
       const failedInserts2 = insertResults2.filter(r => r.error);
@@ -2122,6 +2151,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           current_game_id: game?.id,
           host_is_observer: hostShouldObserve,
           total_questions: questions.length,
+          used_question_ids: newUsedIds,
         })
         .eq("id", roomId);
 
@@ -2186,40 +2216,47 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     }
     
     try {
-      // Remove from queue first
-      await supabase
-        .from("room_category_queue")
-        .delete()
-        .eq("id", nextItem.id);
-      
-      // Reorder remaining queue items
-      const { data: remaining } = await supabase
-        .from("room_category_queue")
-        .select("id")
-        .eq("room_id", roomId)
-        .order("position", { ascending: true });
-      
-      if (remaining && remaining.length > 0) {
-        await Promise.all(
-          remaining.map((item, index) =>
-            supabase.from("room_category_queue")
-              .update({ position: index })
-              .eq("id", item.id)
-          )
-        );
-      }
-      
+      // Queue maintenance (remove the played item + reorder the rest) only
+      // affects queue DISPLAY, not the round being started - run it in the
+      // background and settle it just before the room flips to "playing"
+      const queueMaintenance = (async () => {
+        await supabase
+          .from("room_category_queue")
+          .delete()
+          .eq("id", nextItem.id);
+
+        const { data: remaining } = await supabase
+          .from("room_category_queue")
+          .select("id")
+          .eq("room_id", roomId)
+          .order("position", { ascending: true });
+
+        if (remaining && remaining.length > 0) {
+          await Promise.all(
+            remaining.map((item, index) =>
+              supabase.from("room_category_queue")
+                .update({ position: index })
+                .eq("id", item.id)
+            )
+          );
+        }
+      })().catch(e => console.error("[MP] Queue maintenance failed:", e));
+
+      // Old-round cleanup is independent of everything until the new
+      // question inserts - start it now and await before inserting
+      const pendingDelete5 = safeDeleteRoomQuestions(roomId);
+
       // Determine if host should observe (only for user trivia, not library categories)
       const currentUserIsHost = state.currentRoom.host_user_id === user.id;
       const hostShouldObserve = currentUserIsHost && nextItem.source_type === "user_trivia" && nextItem.user_trivia_id
         ? await shouldHostObserve(nextItem.user_trivia_id, user.id)
         : false;
-      
+
       console.log(`[startNextFromQueue] Observer mode: isHost=${currentUserIsHost}, sourceType=${nextItem.source_type}, shouldObserve=${hostShouldObserve}`);
-      
+
       // NOTE: host_is_observer is now merged into the final room update
       // to prevent premature realtime triggers that cause non-hosts to fetch stale data
-      
+
       // Handle custom trivia separately
       if (nextItem.source_type === "user_trivia" && nextItem.user_trivia_id) {
         const { data: triviaPost } = await supabase
@@ -2227,19 +2264,20 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .select("questions, title")
           .eq("id", nextItem.user_trivia_id)
           .single();
-        
+
         if (triviaPost?.questions) {
           const customQuestions = triviaPost.questions as any[];
           const categoryName = triviaPost.title || nextItem.category_name || "Custom";
-          
-          // Clear old data with verification
-          const deleteSuccess5 = await safeDeleteRoomQuestions(roomId);
+
+          // Clear old data with verification (started above, overlapped with
+          // the observer check and trivia fetch)
+          const deleteSuccess5 = await pendingDelete5;
           if (!deleteSuccess5) {
             console.error("[MP startNextFromQueue/userTrivia] Failed to delete old questions after retries");
             toast.error(tStandalone("extra.mpGameStartFailed"));
             return;
           }
-          
+
           // Build questions with proper format
           const questions: TriviaQuestion[] = customQuestions.map((q: any, index: number) => {
             const allAnswers = [q.correct_answer, ...(q.incorrect_answers || [])];
@@ -2258,13 +2296,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               audioUrl: q.audio_url || undefined,
             };
           });
-          
-          // Reset ALL participant scores for fair game start
-          await resetAllParticipants(roomId);
-          
-          // FIX: Immediately reset local participants to prevent stale auto-advance
-          setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
-          
+
           // Create room_game record FIRST to get game_id
           const { data: game } = await supabase
             .from("room_games")
@@ -2282,25 +2314,33 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             toast.error(tStandalone("extra.mpGameStartFailed"));
             return;
           }
-          
-          // Store in room_questions WITH game_id for validation
-          const insertResults3 = await Promise.all(questions.map((q, index) =>
-            supabase.from("room_questions").insert({
-              room_id: roomId,
-              question_index: index,
-              question_text: q.question,
-              correct_answer: q.correctAnswer,
-              incorrect_answers: q.incorrectAnswers,
-              difficulty: q.difficulty,
-              shuffled_answers: q.allAnswers,
-              icon_slug: q.iconSlug || null,
-              image_url: q.imageUrl || null,
-              video_url: q.videoUrl || null,
-              audio_url: q.audioUrl || null,
-              game_id: game?.id, // CRITICAL: Link to current game for non-host validation
-            }).select()
-          ));
-          
+
+          // Store in room_questions WITH game_id for validation; the
+          // participant reset is independent - same batch (both must finish
+          // before the room flips to "playing")
+          const [insertResults3] = await Promise.all([
+            Promise.all(questions.map((q, index) =>
+              supabase.from("room_questions").insert({
+                room_id: roomId,
+                question_index: index,
+                question_text: q.question,
+                correct_answer: q.correctAnswer,
+                incorrect_answers: q.incorrectAnswers,
+                difficulty: q.difficulty,
+                shuffled_answers: q.allAnswers,
+                icon_slug: q.iconSlug || null,
+                image_url: q.imageUrl || null,
+                video_url: q.videoUrl || null,
+                audio_url: q.audioUrl || null,
+                game_id: game?.id, // CRITICAL: Link to current game for non-host validation
+              }).select()
+            )),
+            resetAllParticipants(roomId),
+          ]);
+
+          // FIX: Immediately reset local participants to prevent stale auto-advance
+          setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
+
           // Abort BEFORE flipping status to "playing" if any insert failed or the
           // full set isn't readable yet - otherwise non-hosts sync a partial round
           const failedInserts3 = insertResults3.filter(r => r.error);
@@ -2314,6 +2354,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             toast.error(tStandalone("extra.mpGameStartFailed"));
             return;
           }
+
+          // Queue display must be settled before others sync in
+          await queueMaintenance;
 
           // Update room (after questions are committed)
           await supabase
@@ -2402,10 +2445,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       });
       
       if (result.questions.length === 0) {
+        await pendingDelete5;
         toast.error(tStandalone("extra.mpQuestionsNotFound"));
         return;
       }
-      
+
       // Map to TriviaQuestion format with iconSlug
       const questions: TriviaQuestion[] = result.questions.map(q => ({
         id: q.id,
@@ -2420,27 +2464,22 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         videoUrl: q.videoUrl || undefined,
         audioUrl: q.audioUrl || undefined,
       }));
-      
-      // Clear old data with verification
-      const deleteSuccess6 = await safeDeleteRoomQuestions(roomId);
+
+      // Clear old data with verification (started before the question fetch,
+      // the two network waits overlap)
+      const deleteSuccess6 = await pendingDelete5;
       if (!deleteSuccess6) {
         console.error("[MP startNextFromQueue/library] Failed to delete old questions after retries");
         toast.error(tStandalone("extra.mpGameStartFailed"));
         return;
       }
-      
-      // Update used_question_ids
+
+      // used_question_ids rides along on the final status update below
       const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
-      
-      // Reset ALL participants for fair game start
-      await resetAllParticipants(roomId);
-      
-      // FIX: Immediately reset local participants to prevent stale auto-advance
-      setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
-      
+
       // Mark questions as seen
       markQuestionsAsSeen(questions.map(q => q.id));
-      
+
       // Create room_game record FIRST to get game_id
       const { data: game } = await supabase
         .from("room_games")
@@ -2458,9 +2497,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         toast.error(tStandalone("extra.mpGameStartFailed"));
         return;
       }
-      
-      // Store questions with icon_slug AND game_id for validation
-      const insertResults4 = await Promise.all(questions.map((q, index) =>
+
+      // Store questions with icon_slug AND game_id for validation; the
+      // participant reset is independent - same batch (both must finish
+      // before the room flips to "playing")
+      const [insertResults4] = await Promise.all([
+        Promise.all(questions.map((q, index) =>
         supabase.from("room_questions").insert({
           room_id: roomId,
           question_index: index,
@@ -2475,8 +2517,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           audio_url: q.audioUrl || null,
           game_id: game?.id, // CRITICAL: Link to current game for non-host validation
         }).select()
-      ));
-      
+        )),
+        resetAllParticipants(roomId),
+      ]);
+
+      // FIX: Immediately reset local participants to prevent stale auto-advance
+      setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
+
       // Abort BEFORE flipping status to "playing" if any insert failed or the
       // full set isn't readable yet - otherwise non-hosts sync a partial round
       const failedInserts4 = insertResults4.filter(r => r.error);
@@ -2490,6 +2537,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         toast.error(tStandalone("extra.mpGameStartFailed"));
         return;
       }
+
+      // Queue display must be settled before others sync in
+      await queueMaintenance;
 
       // Update room with new category and game info (after questions are committed)
       await supabase
