@@ -63,6 +63,9 @@ interface TVGameState {
   currentRoundSuggesterId: string | null;
   currentRoundSuggesterNickname: string | null;
   currentRoundSuggesterAvatarUrl: string | null;
+  // Live auto-advance diagnostics (host only): "answered/expected" of the
+  // latest check, so a screenshot shows exactly why a question is waiting
+  advanceDebug: string | null;
 }
 
 interface TVGameContextType extends TVGameState {
@@ -184,6 +187,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     currentRoundSuggesterId: null,
     currentRoundSuggesterNickname: null,
     currentRoundSuggesterAvatarUrl: null,
+    advanceDebug: null,
   });
 
   const [isHost, setIsHost] = useState(false);
@@ -404,7 +408,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const connectedPlayerIds: string[] = [];
     
     Object.entries(presenceState).forEach(([key, presences]) => {
-      const rawPresence = presences[0] as Record<string, unknown> | undefined;
+      // Newest meta - a reconnecting device briefly carries a zombie meta first
+      const rawPresence = presences[presences.length - 1] as Record<string, unknown> | undefined;
       // Filter out system devices
       if (rawPresence && !systemDeviceIdentifiers.includes(key)) {
         const nickname = rawPresence.nickname as string | undefined;
@@ -802,6 +807,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.log('[AutoAdvance]', `${actualCount}/${expectedCount}`,
         everyActiveAnswered ? '→ ADVANCE (set)' : '→ waiting',
         { qi: current.currentQuestionIndex, required: requiredIds.length, ms: Date.now() - questionStartTime });
+
+      // Surface the live numbers so a stall is diagnosable from a screenshot:
+      // answers-in / expected count / DB-active roster / presence-answered
+      const presenceAnswered = connectedPlayers.filter(p => p.hasAnswered).length;
+      setState(prev => ({
+        ...prev,
+        advanceDebug: `${actualCount}/${expectedCount} · aqt:${requiredIds.length} · pres:${presenceAnswered}/${connectedPlayers.length}`,
+      }));
 
       if (everyActiveAnswered) {
         advanceToReveal('all active players answered');
@@ -2230,8 +2243,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const currentQIndex = stateRef.current.currentQuestionIndex;
 
         Object.entries(presenceState).forEach(([key, presences]) => {
-          const rawPresence = presences[0] as Record<string, unknown> | undefined;
-          
+          // CRITICAL: a key can carry MULTIPLE metas when a device reconnects
+          // (zombie socket + fresh socket). presences[0] is the OLDEST meta -
+          // its frozen hasAnswered=false made the player look unanswered for
+          // the rest of the game. Always read the NEWEST meta.
+          const rawPresence = presences[presences.length - 1] as Record<string, unknown> | undefined;
+
           // Filter out TV_DISPLAY and TV_MIRROR - they are not players
           // Check key, nickname, AND explicit flags for comprehensive filtering
           const systemDeviceKeys = ['TV_DISPLAY', 'TV_MIRROR'];
@@ -3384,6 +3401,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       currentRoundSuggesterId: null,
       currentRoundSuggesterNickname: null,
       currentRoundSuggesterAvatarUrl: null,
+      advanceDebug: null,
     });
     setIsHost(false);
     setMyPlayerId(null);
