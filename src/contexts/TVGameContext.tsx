@@ -1812,6 +1812,35 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           .eq('id', session.id);
       }
 
+      // ENFORCE UNIQUE NICKNAMES: TV-mode identity is the normalized nickname
+      // (podium spots, answer matching, and lobby dedupe all group by it), so
+      // two different people joining with the same name would be merged into
+      // one player. Rename the newcomer ("გიორგი 2") instead. Rows that are
+      // ours (same player_id or same auth user) are rejoins, not collisions.
+      let finalNickname = nickname;
+      if (!isTVDisplay) {
+        const normalize = (s: string) => (s || '').trim().toLowerCase();
+        const { data: existingRows } = await supabase
+          .from('tv_players')
+          .select('player_id, user_id, nickname, is_active')
+          .eq('tv_session_id', session.id);
+        const takenByOthers = new Set(
+          (existingRows || [])
+            .filter(r =>
+              r.player_id !== playerId &&
+              !(authUserId && r.user_id === authUserId) &&
+              r.is_active !== false
+            )
+            .map(r => normalize(r.nickname || ''))
+        );
+        if (takenByOthers.has(normalize(nickname))) {
+          let suffix = 2;
+          while (takenByOthers.has(normalize(`${nickname} ${suffix}`))) suffix++;
+          finalNickname = `${nickname} ${suffix}`;
+          tvLog('Nickname taken in session - renamed for uniqueness', { from: nickname, to: finalNickname });
+        }
+      }
+
       // CRITICAL: Register/update player in tv_players table for smooth rejoin after refresh
       // This ensures:
       // 1. RLS policies work for guests (poll suggestions, answers)
@@ -1844,9 +1873,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           // CRITICAL FIX: Also preserve/set user_id for authenticated players
           await supabase
             .from('tv_players')
-            .update({ 
+            .update({
               is_active: true, // Returning players are always active
-              nickname,
+              nickname: finalNickname,
               avatar_url: avatarUrl || null,
               user_id: authUid || (existingPlayer as any).user_id, // Preserve or set user_id
             })
@@ -1862,7 +1891,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               tv_session_id: session.id,
               user_id: authUid,
               player_id: playerId,
-              nickname,
+              nickname: finalNickname,
               avatar_url: avatarUrl || null,
               is_host: isHostPlayer,
               is_active: shouldBeActive, // Inactive if joining mid-game!
@@ -1958,7 +1987,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Setup subscriptions
       setupSessionSubscription(session.id);
       // CRITICAL: Pass the pre-computed playerId to prevent ID regeneration on refresh/reconnect
-      setupPresenceChannel(session.id, nickname, avatarUrl || null, isHostPlayer, isTVDisplay, playerId);
+      setupPresenceChannel(session.id, finalNickname, avatarUrl || null, isHostPlayer, isTVDisplay, playerId);
       setupAnswersSubscription(session.id);
 
       // CRITICAL FIX: Restore myAnswer from database on rejoin
