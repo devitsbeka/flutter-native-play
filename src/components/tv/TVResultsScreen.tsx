@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
+import { supabase } from '@/integrations/supabase/client';
 import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { Crown, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -13,11 +14,58 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 export const TVResultsScreen: React.FC = () => {
   const { t } = useLanguage();
-  const { players, code } = useTVGame();
+  const { players, code, sessionId } = useTVGame();
   const [showConfetti, setShowConfetti] = useState(false);
 
+  // Presence is volatile - if the TV's socket went stale during the game the
+  // presence list is empty/frozen and the podium rendered blank. The durable
+  // tv_players roster (scores persisted on every answer) is the fallback.
+  type DbResultRow = { player_id: string; nickname: string; avatar_url: string | null; is_host: boolean; current_round_score: number | null };
+  const [dbRoster, setDbRoster] = useState<DbResultRow[]>([]);
+  useEffect(() => {
+    if (!sessionId || sessionId === 'mock-session-id') return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('tv_players')
+        .select('player_id, nickname, avatar_url, is_host, current_round_score')
+        .eq('tv_session_id', sessionId);
+      if (!cancelled && data) {
+        const systemIds = ['TV_DISPLAY', 'TV_MIRROR'];
+        setDbRoster((data as DbResultRow[]).filter(
+          p => !systemIds.includes(p.player_id) && !systemIds.includes(p.nickname || '')
+        ));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId]);
+
+  // Merge: live presence entries win; DB roster fills in anyone missing
+  const presenceIds = new Set(players.map(p => p.id));
+  const dbOnlyPlayers = dbRoster
+    .filter(p => !presenceIds.has(p.player_id))
+    .map(p => ({
+      id: p.player_id,
+      nickname: p.nickname,
+      avatar_url: p.avatar_url,
+      score: p.current_round_score || 0,
+      hasAnswered: false,
+      lastAnswerCorrect: null,
+      lastAnswer: null,
+      isHost: p.is_host,
+    }));
+  // A frozen presence entry can also under-report the score - take the max
+  const mergedPlayers = players.map(p => {
+    const dbRow = dbRoster.find(r => r.player_id === p.id);
+    const dbScore = dbRow?.current_round_score || 0;
+    return dbScore > p.score ? { ...p, score: dbScore } : p;
+  });
+  const allPlayers = [...mergedPlayers, ...dbOnlyPlayers];
+
   // Sort players by score
-  const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+  const sortedPlayers = [...allPlayers].sort((a, b) => b.score - a.score);
   const podiumPlayers = sortedPlayers.slice(0, 3);
   const otherPlayers = sortedPlayers.slice(3);
 

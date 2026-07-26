@@ -2379,6 +2379,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Reset local score state
         setMyScore(0);
         setMyAnswer(null);
+        // Keep the durable tv_players score in sync (fire-and-forget)
+        if (!isTVDisplay) {
+          void supabase
+            .from('tv_players')
+            .update({ current_round_score: 0 })
+            .eq('tv_session_id', sessionId)
+            .eq('player_id', playerId);
+        }
         
         // Re-track with score: 0 if we have a presence channel
         if (presenceChannelRef.current) {
@@ -2924,6 +2932,18 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const newScore = myScore + points;
     setMyScore(newScore);
 
+    // Persist the running score on our tv_players row (fire-and-forget).
+    // Presence is volatile - a dead socket loses all scores, which left the
+    // TV results screen empty. The DB row is the durable fallback.
+    void supabase
+      .from('tv_players')
+      .update({ current_round_score: newScore })
+      .eq('tv_session_id', state.sessionId)
+      .eq('player_id', myPlayerId)
+      .then(({ error }) => {
+        if (error) console.warn('[submitAnswer] Failed to persist score to tv_players:', error);
+      });
+
     try {
       // Update presence first (most important for live display)
       if (presenceChannelRef.current) {
@@ -3336,6 +3356,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Reset local score
       setMyScore(0);
       setMyAnswer(null);
+      // Keep the durable tv_players score in sync (fire-and-forget)
+      if (state.sessionId && myPlayerId) {
+        void supabase
+          .from('tv_players')
+          .update({ current_round_score: 0 })
+          .eq('tv_session_id', state.sessionId)
+          .eq('player_id', myPlayerId);
+      }
 
       // Update session to category-select phase
       await supabase
@@ -3379,7 +3407,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error) {
       tvLogError('startDirectSelection', error);
     }
-  }, [state.sessionId]);
+  }, [state.sessionId, myPlayerId]);
 
   // Leave session
   const leaveSession = useCallback(() => {
