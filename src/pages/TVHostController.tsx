@@ -1446,22 +1446,12 @@ const TVHostController: React.FC = () => {
       </div>
 
       {hasAnswered ? (
-        // After answering - show confirmation and host controls
+        // After answering - show confirmation
         <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex-1 flex flex-col">
           <div className="flex-1 flex flex-col items-center justify-center">
             <Check className="w-16 h-16 text-green-400 mb-4" />
             <p className="text-white text-xl font-bold">პასუხი გაგზავნილია!</p>
             <p className="text-purple-300">დაველოდოთ სხვა მოთამაშეებს...</p>
-          </div>
-          
-          <div className="w-full mt-auto pb-4">
-            <ChunkyButton
-              variant="secondary"
-              className="w-full"
-              onClick={handleEndGame}
-            >
-              თამაშის დასრულება
-            </ChunkyButton>
           </div>
         </motion.div>
       ) : (
@@ -1476,10 +1466,10 @@ const TVHostController: React.FC = () => {
               className="w-full text-left justify-start"
             >
               <span className="inline-flex items-center gap-3">
-                <span 
+                <span
                   className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-bold text-sm flex-shrink-0"
-                  style={{ 
-                    background: ['#A855F7', '#7C3AED', '#6366F1', '#8B5CF6'][index] 
+                  style={{
+                    background: ['#A855F7', '#7C3AED', '#6366F1', '#8B5CF6'][index]
                   }}
                 >
                   {['A', 'B', 'C', 'D'][index]}
@@ -1490,6 +1480,18 @@ const TVHostController: React.FC = () => {
           ))}
         </div>
       )}
+
+      {/* Host control - ALWAYS available during the question, not just in the
+          brief window after answering */}
+      <div className="w-full mt-4 pb-4">
+        <ChunkyButton
+          variant="secondary"
+          className="w-full"
+          onClick={handleEndGame}
+        >
+          თამაშის დასრულება
+        </ChunkyButton>
+      </div>
     </div>
   );
 };
