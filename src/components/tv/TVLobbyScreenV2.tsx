@@ -44,6 +44,8 @@ export const TVLobbyScreenV2: React.FC = () => {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [invitedGuests, setInvitedGuests] = useState<InvitedGuest[]>([]);
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [hostUserId, setHostUserId] = useState<string | null>(null);
+  const [hostProfile, setHostProfile] = useState<{ user_id: string; nickname: string; avatar_url: string | null } | null>(null);
   
   // Auto-start countdown state
   const [autoStartCountdown, setAutoStartCountdown] = useState<number | null>(null);
@@ -123,11 +125,16 @@ export const TVLobbyScreenV2: React.FC = () => {
       if (!sessionId) return;
       const { data } = await supabase
         .from('tv_sessions')
-        .select('room_name, room_id')
+        .select('room_name, room_id, host_user_id')
         .eq('id', sessionId)
         .maybeSingle();
-      
+
       if (data) {
+        // Track the host so the TV can show them even before/without their
+        // controller being connected to the presence channel
+        if (data.host_user_id) {
+          setHostUserId(data.host_user_id);
+        }
         // Try to get room name from tv_sessions first
         if (data.room_name) {
           setRoomName(data.room_name);
@@ -161,6 +168,27 @@ export const TVLobbyScreenV2: React.FC = () => {
     };
     loadSessionData();
   }, [sessionId]);
+
+  // Resolve the host's profile so the TV can always render the host card.
+  // host_user_id may also be a device/player id for guest hosts - in that
+  // case there is no profile and no placeholder is shown (as before).
+  useEffect(() => {
+    if (!hostUserId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('user_id, nickname, avatar_url')
+        .eq('user_id', hostUserId)
+        .maybeSingle();
+      if (!cancelled && data) {
+        setHostProfile(data);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hostUserId]);
 
   // Fetch invited guests from room_participants
   useEffect(() => {
@@ -328,22 +356,47 @@ export const TVLobbyScreenV2: React.FC = () => {
     }
   }, []);
 
+  // The host must ALWAYS be visible on the TV, even when their controller
+  // isn't (yet) connected to the presence channel - e.g. still in the room
+  // lobby, mid-refresh, or a dropped connection. When no presence entry is
+  // recognizable as the host, render a crowned card from the session's own
+  // host profile.
+  const hostNickname = (hostProfile?.nickname || "").trim().toLowerCase();
+  const hostInPresence =
+    players.some(p => p.isHost) ||
+    (!!hostNickname && players.some(p => (p.nickname || "").trim().toLowerCase() === hostNickname));
+  const hostPlaceholder: typeof players =
+    !hostInPresence && hostProfile
+      ? [{
+          id: `HOST_${hostProfile.user_id}`,
+          nickname: hostProfile.nickname,
+          avatar_url: hostProfile.avatar_url,
+          score: 0,
+          hasAnswered: false,
+          lastAnswerCorrect: null,
+          lastAnswer: null,
+          isHost: true,
+          isActive: false,
+        }]
+      : [];
+
   // Combine active players with invited guests (invited shown with inactive
   // styling). NOTE: player.id is the TV presence/device id, NOT an auth
   // user_id - the two never match, so id-based dedupe alone let the same
   // person appear twice (joined + grayed "invited" ghost). Dedupe by nickname
   // against the joined players; the joinSession flow also promotes the
   // invited row to "joined" in the DB, which removes the ghost at the source.
-  const activePlayerIds = new Set(players.map(p => p.id));
-  const activeNicknames = new Set(players.map(p => p.nickname.trim().toLowerCase()));
+  const displayedPlayers = [...hostPlaceholder, ...players];
+  const activePlayerIds = new Set(displayedPlayers.map(p => p.id));
+  const activeNicknames = new Set(displayedPlayers.map(p => (p.nickname || "").trim().toLowerCase()));
   const filteredInvitedGuests = invitedGuests.filter(
     g =>
       !activePlayerIds.has(g.user_id) &&
       !activeNicknames.has((g.nickname || "").trim().toLowerCase())
   );
-  
+
   // Fill remaining slots with placeholders
-  const playerSlots: Array<typeof players[0] | InvitedGuest | null> = [...players, ...filteredInvitedGuests];
+  const playerSlots: Array<typeof players[0] | InvitedGuest | null> = [...displayedPlayers, ...filteredInvitedGuests];
   while (playerSlots.length < MAX_PLAYERS) {
     playerSlots.push(null);
   }
@@ -410,10 +463,11 @@ export const TVLobbyScreenV2: React.FC = () => {
           )}
         </div>
 
-        {/* Player Count + TV Icon */}
+        {/* Player Count + TV Icon (host card counts even before their
+            controller connects, so the number matches the grid) */}
         <div className="flex items-center gap-3 text-purple-200">
           <Users className="w-5 h-5" />
-          <span className="text-xl font-bold">{players.length}/{MAX_PLAYERS}</span>
+          <span className="text-xl font-bold">{displayedPlayers.length}/{MAX_PLAYERS}</span>
           <img src={retroTvIcon} alt="TV" className="w-12 h-12 object-contain" />
         </div>
       </div>
