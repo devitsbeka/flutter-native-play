@@ -306,16 +306,30 @@ export const TVLobbyScreenV2: React.FC = () => {
     previousPlayerCountRef.current = players.length;
   }, [players]);
 
-  // Auto-start countdown when minimum players join
+  // Auto-start countdown when minimum players join. Every NEWCOMER resets
+  // the countdown - with a big group (up to 8) joining one by one, a fixed
+  // 15s from the 2nd join would start the game while friends are still
+  // scanning the QR.
+  const lastAutoStartCountRef = useRef<number>(0);
   useEffect(() => {
     // Only run for host
     if (!isHost) return;
-    
+
+    const prevCount = lastAutoStartCountRef.current;
+    lastAutoStartCountRef.current = players.length;
+
     // Start countdown when we reach minimum players
     if (players.length >= MIN_PLAYERS_TO_START && autoStartCountdown === null) {
       setAutoStartCountdown(AUTO_START_DELAY);
+      return;
     }
-    
+
+    // A new player joined mid-countdown - restart the clock for the group
+    if (players.length > prevCount && autoStartCountdown !== null && autoStartCountdown > 0) {
+      setAutoStartCountdown(AUTO_START_DELAY);
+      return;
+    }
+
     // Cancel countdown if players drop below minimum
     if (players.length < MIN_PLAYERS_TO_START && autoStartCountdown !== null) {
       setAutoStartCountdown(null);
