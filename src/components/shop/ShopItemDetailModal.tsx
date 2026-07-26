@@ -258,8 +258,8 @@ export function ShopItemDetailModal({
               disabled={!canAfford || isLoading}
               className="flex items-center gap-2 px-8 py-3 rounded-2xl font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95"
               style={{
-                background: "linear-gradient(180deg, hsl(45 95% 60%) 0%, hsl(40 90% 50%) 100%)",
-                boxShadow: "0 4px 0 hsl(35 85% 40%), 0 6px 12px rgba(0,0,0,0.15)",
+                background: "#00DDA3",
+                boxShadow: "0 4px 0 #00A87C, 0 6px 12px rgba(0,0,0,0.15)",
               }}
             >
               <img src={currencyIcon} alt="" className="w-5 h-5" />
