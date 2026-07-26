@@ -718,6 +718,27 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const roundSuggesterId =
         (session as { current_round_suggester_id?: string | null }).current_round_suggester_id ?? null;
 
+      // ── Presence-based advance (primary) ────────────────────────────────
+      // Presence hasAnswered flags are per-question (the sync handler only
+      // sets them when answeredQuestionIndex matches the current question),
+      // so "every connected non-suggester player answered" is a safe, drift-
+      // immune signal - it doesn't depend on the locked count or on answer
+      // rows surviving unique-key collisions.
+      const connectedPlayers = current.players.filter(p => p.id !== roundSuggesterId);
+      if (connectedPlayers.length > 0 && connectedPlayers.every(p => p.hasAnswered)) {
+        console.log('[AutoAdvance] ✅ All', connectedPlayers.length, 'connected players answered (presence) → ADVANCE');
+        advanceToReveal('all connected players answered (presence)');
+        return;
+      }
+
+      // The locked count can exceed reality (paired-mode floor of 2, ghost
+      // rows, a flickered presence sample at question start). Never require
+      // more answers than there are actually-connected players.
+      if (connectedPlayers.length > 0 && expectedCount > connectedPlayers.length) {
+        console.log('[AutoAdvance] ⚖️ Clamping expectedCount', expectedCount, '→', connectedPlayers.length, '(live connections)');
+        expectedCount = connectedPlayers.length;
+      }
+
       // Fallback: if locked count is 0 (shouldn't happen), use live DB count
       if (expectedCount <= 0) {
         const systemIds = ['TV_DISPLAY', 'TV_MIRROR'];
@@ -2263,13 +2284,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         setState(prev => ({ ...prev, players: deduplicatedPlayers }));
 
-        // NOTE: Auto-advance logic has been moved to database-based answer counting.
-        // Presence sync is now ONLY used for UI updates (showing player states).
-        // This prevents race conditions where presence shows incomplete data and
-        // the host's answer causes immediate advancement.
-        // 
-        // See: player_answers table subscription + checkAllAnsweredFromDB() for auto-advance logic.
-        
+        // A presence update may be the LAST player's hasAnswered flag landing.
+        // Give state a tick to settle, then run the advance check (host only).
+        // The hasAnswered flags are per-question (answeredQuestionIndex guard
+        // above), so this cannot advance on stale previous-question flags.
+        if (isHostRef.current && stateRef.current.phase === 'question') {
+          setTimeout(() => checkAndAdvanceIfAllAnswered(), 100);
+        }
+
         tvLogPresence('sync', players.length, players.map(p => p.nickname));
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
