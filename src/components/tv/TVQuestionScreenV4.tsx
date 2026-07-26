@@ -113,31 +113,69 @@ export const TVQuestionScreenV4: React.FC = () => {
     };
   }, [sessionId, currentQuestionIndex]);
 
-  // Merge: live presence entries win (freshest status); DB roster fills in
-  // everyone else (host included) so nobody disappears from the TV
-  const presenceIds = new Set(players.map(p => p.id));
+  // ONE CARD PER PERSON. Re-bound devices leave multiple tv_players rows (and
+  // sometimes multiple presence entries) for the same human under the same
+  // nickname - rendering them all showed duplicate avatars and ghost
+  // "Player" cards. Identity for TV display = normalized nickname; answer
+  // status matches if ANY of the person's ids answered.
+  const norm = (s: string | null | undefined) => (s || '').trim().toLowerCase();
+  const idsByNickname = new Map<string, string[]>();
+  dbRoster.forEach(p => {
+    const key = norm(p.nickname);
+    idsByNickname.set(key, [...(idsByNickname.get(key) || []), p.player_id]);
+  });
+  const personAnswer = (primaryId: string, nickname: string | null | undefined): boolean | undefined => {
+    if (dbAnswers.has(primaryId)) return dbAnswers.get(primaryId);
+    for (const id of idsByNickname.get(norm(nickname)) || []) {
+      if (dbAnswers.has(id)) return dbAnswers.get(id);
+    }
+    return undefined;
+  };
+
+  // Presence entries win (freshest status), overlaid with DB answers when the
+  // presence flag is stale; dedupe presence by nickname (context already does,
+  // this is belt-and-suspenders)
+  const seenNicknames = new Set<string>();
+  const livePlayers = players
+    .filter(p => {
+      const key = norm(p.nickname);
+      if (seenNicknames.has(key)) return false;
+      seenNicknames.add(key);
+      return true;
+    })
+    .map(p => {
+      if (p.hasAnswered) return p;
+      const dbResult = personAnswer(p.id, p.nickname);
+      return dbResult !== undefined
+        ? { ...p, hasAnswered: true, lastAnswerCorrect: dbResult }
+        : p;
+    });
+
+  // DB roster fills in people with NO presence entry at all (host included);
+  // one card per nickname, never duplicating someone already on screen
   const rosterOnly = dbRoster
-    .filter(p => !presenceIds.has(p.player_id) && (p.is_active || p.is_host))
-    .map(p => ({
-      id: p.player_id,
-      nickname: p.nickname,
-      avatar_url: p.avatar_url,
-      score: p.current_round_score || 0,
-      hasAnswered: dbAnswers.has(p.player_id),
-      lastAnswerCorrect: dbAnswers.has(p.player_id) ? (dbAnswers.get(p.player_id) as boolean) : null,
-      lastAnswer: null,
-      isHost: p.is_host,
-      isActive: p.is_active,
-    }));
-  // Presence entries can go STALE (dead socket keeps last-known state) - if
-  // the DB has an answer for this question that presence doesn't know about,
-  // the DB wins. Without this, a frozen presence view kept players stuck in
-  // the wrong/waiting zones with outdated results.
-  const livePlayers = players.map(p =>
-    !p.hasAnswered && dbAnswers.has(p.id)
-      ? { ...p, hasAnswered: true, lastAnswerCorrect: dbAnswers.get(p.id) as boolean }
-      : p
-  );
+    .filter(p => (p.is_active || p.is_host) && !seenNicknames.has(norm(p.nickname)))
+    .filter(p => {
+      const key = norm(p.nickname);
+      if (seenNicknames.has(key)) return false;
+      seenNicknames.add(key);
+      return true;
+    })
+    .map(p => {
+      const dbResult = personAnswer(p.player_id, p.nickname);
+      return {
+        id: p.player_id,
+        nickname: p.nickname,
+        avatar_url: p.avatar_url,
+        score: p.current_round_score || 0,
+        hasAnswered: dbResult !== undefined,
+        lastAnswerCorrect: dbResult !== undefined ? dbResult : null,
+        lastAnswer: null,
+        isHost: p.is_host,
+        isActive: p.is_active,
+      };
+    });
+
   const allPlayers = [...livePlayers, ...rosterOnly];
 
   // Filter out the suggester from active players - they skip this round

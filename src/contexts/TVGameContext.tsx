@@ -786,9 +786,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
-      // Robust path: check the SET of players. If every currently-active,
-      // non-system player (minus the round suggester, who doesn't answer)
-      // has an answer in, advance - regardless of what the locked count says.
+      // Robust path: check the SET of PEOPLE, not rows. Re-bound devices leave
+      // multiple tv_players rows for the SAME human (same nickname, different
+      // player_id) - and a ghost row can never answer, which stalled every
+      // question to the timer. Group active rows by nickname: a person counts
+      // as answered when ANY of their ids has an answer in.
       const systemIds = ['TV_DISPLAY', 'TV_MIRROR'];
       const { data: activePlayers } = await supabase
         .from('tv_players')
@@ -796,28 +798,38 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('tv_session_id', current.sessionId)
         .eq('is_active', true);
 
-      const requiredIds = (activePlayers || [])
-        .filter(p => !systemIds.includes(p.player_id) && !systemIds.includes(p.nickname || ''))
-        .map(p => p.player_id)
-        .filter(id => id !== roundSuggesterId);
+      const idsByPerson = new Map<string, string[]>();
+      for (const p of activePlayers || []) {
+        if (systemIds.includes(p.player_id) || systemIds.includes(p.nickname || '')) continue;
+        if (p.player_id === roundSuggesterId) continue;
+        const person = (p.nickname || p.player_id).trim().toLowerCase();
+        idsByPerson.set(person, [...(idsByPerson.get(person) || []), p.player_id]);
+      }
+      const requiredPeople = [...idsByPerson.values()];
 
-      const everyActiveAnswered =
-        requiredIds.length > 0 && requiredIds.every(id => answeredIds.has(id));
+      const everyPersonAnswered =
+        requiredPeople.length > 0 &&
+        requiredPeople.every(ids => ids.some(id => answeredIds.has(id)));
+
+      // Distinct-people count also bounds the expected count - ghost rows
+      // inflate active_player_count and the paired-mode floor
+      const distinctPeopleAnswered =
+        requiredPeople.length > 0 && actualCount >= requiredPeople.length;
 
       console.log('[AutoAdvance]', `${actualCount}/${expectedCount}`,
-        everyActiveAnswered ? '→ ADVANCE (set)' : '→ waiting',
-        { qi: current.currentQuestionIndex, required: requiredIds.length, ms: Date.now() - questionStartTime });
+        everyPersonAnswered || distinctPeopleAnswered ? '→ ADVANCE (people)' : '→ waiting',
+        { qi: current.currentQuestionIndex, people: requiredPeople.length, ms: Date.now() - questionStartTime });
 
       // Surface the live numbers so a stall is diagnosable from a screenshot:
-      // answers-in / expected count / DB-active roster / presence-answered
+      // answers-in / expected count / distinct required people / presence-answered
       const presenceAnswered = connectedPlayers.filter(p => p.hasAnswered).length;
       setState(prev => ({
         ...prev,
-        advanceDebug: `${actualCount}/${expectedCount} · aqt:${requiredIds.length} · pres:${presenceAnswered}/${connectedPlayers.length}`,
+        advanceDebug: `${actualCount}/${expectedCount} · ppl:${requiredPeople.length} · pres:${presenceAnswered}/${connectedPlayers.length}`,
       }));
 
-      if (everyActiveAnswered) {
-        advanceToReveal('all active players answered');
+      if (everyPersonAnswered || distinctPeopleAnswered) {
+        advanceToReveal('all people answered');
       }
     } catch (err) {
       console.error('[AutoAdvance] Exception:', err);
