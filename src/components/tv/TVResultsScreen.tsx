@@ -42,10 +42,34 @@ export const TVResultsScreen: React.FC = () => {
     };
   }, [sessionId]);
 
-  // Merge: live presence entries win; DB roster fills in anyone missing
-  const presenceIds = new Set(players.map(p => p.id));
-  const dbOnlyPlayers = dbRoster
-    .filter(p => !presenceIds.has(p.player_id))
+  // ONE PODIUM SPOT PER PERSON: identity = normalized nickname. Re-bound
+  // devices leave duplicate rows/entries for the same human; take the best
+  // score across all of a person's entries (presence + every DB row).
+  const norm = (s: string | null | undefined) => (s || '').trim().toLowerCase();
+  const bestDbScoreByNickname = new Map<string, DbResultRow>();
+  dbRoster.forEach(p => {
+    const key = norm(p.nickname);
+    const existing = bestDbScoreByNickname.get(key);
+    if (!existing || (p.current_round_score || 0) > (existing.current_round_score || 0)) {
+      bestDbScoreByNickname.set(key, p);
+    }
+  });
+
+  const seenNicknames = new Set<string>();
+  const mergedPlayers = players
+    .filter(p => {
+      const key = norm(p.nickname);
+      if (seenNicknames.has(key)) return false;
+      seenNicknames.add(key);
+      return true;
+    })
+    .map(p => {
+      const dbScore = bestDbScoreByNickname.get(norm(p.nickname))?.current_round_score || 0;
+      return dbScore > p.score ? { ...p, score: dbScore } : p;
+    });
+
+  const dbOnlyPlayers = [...bestDbScoreByNickname.values()]
+    .filter(p => !seenNicknames.has(norm(p.nickname)))
     .map(p => ({
       id: p.player_id,
       nickname: p.nickname,
@@ -56,12 +80,6 @@ export const TVResultsScreen: React.FC = () => {
       lastAnswer: null,
       isHost: p.is_host,
     }));
-  // A frozen presence entry can also under-report the score - take the max
-  const mergedPlayers = players.map(p => {
-    const dbRow = dbRoster.find(r => r.player_id === p.id);
-    const dbScore = dbRow?.current_round_score || 0;
-    return dbScore > p.score ? { ...p, score: dbScore } : p;
-  });
   const allPlayers = [...mergedPlayers, ...dbOnlyPlayers];
 
   // Sort players by score
