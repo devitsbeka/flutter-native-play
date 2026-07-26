@@ -73,6 +73,7 @@ const TVHostController: React.FC = () => {
     resetGame,
     myPlayerId,
     currentRoundSuggesterId,
+    advanceDebug,
   } = useTVGame();
   
   // CRITICAL: Check if host is the suggester for this round (they can only observe)
@@ -1439,6 +1440,13 @@ const TVHostController: React.FC = () => {
           <span className="text-white font-bold text-sm">{myScore} ქულა</span>
         </div>
       </div>
+
+      {/* Auto-advance diagnostics: answered/expected · active-roster · presence.
+          Kept tiny but always visible so a screenshot of a stalled question
+          shows exactly which signal is wrong. */}
+      {advanceDebug && (
+        <p className="text-purple-400/50 text-[10px] text-center -mt-3 mb-2">{advanceDebug}</p>
+      )}
 
       {/* Question Card - Full question text like guest UI */}
       <div className="bg-white/10 rounded-xl p-4 mb-4">
