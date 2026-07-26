@@ -280,6 +280,7 @@ interface MultiplayerContextType extends MultiplayerState {
   deleteRoom: () => Promise<void>;
   resetMultiplayer: () => void;
   awardObserverBonus: (bonusAmount: number) => Promise<void>; // Award pre-calculated bonus to observer host
+  applyMissedTime: (awaySeconds: number) => Promise<{ skipped: number; finished: boolean }>; // Skip questions missed while the app was backgrounded
   
   // Modals
   showCreateModal: boolean;
@@ -330,6 +331,7 @@ const MultiplayerContext = createContext<MultiplayerContextType>({
   deleteRoom: async () => missingProvider(),
   resetMultiplayer: () => missingProvider(),
   awardObserverBonus: async () => missingProvider(),
+  applyMissedTime: async () => { missingProvider(); return { skipped: 0, finished: false }; },
   showCreateModal: false,
   setShowCreateModal: () => missingProvider(),
   showJoinModal: false,
@@ -1769,6 +1771,73 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     }
   }, [state.currentQuestionIndex, state.questions.length, state.currentRoom, user]);
 
+  // A locked/backgrounded phone must not pause the match for everyone else.
+  // Called when the app returns to the foreground mid-round: every full
+  // question-length (15s) spent away skips one question - recorded as an
+  // unanswered 0-point answer so opponents' progress views and the round
+  // completion check stay consistent - and the player resumes on the next
+  // unanswered question. Consuming all remaining questions finishes the round
+  // for them.
+  const applyMissedTime = useCallback(async (awaySeconds: number): Promise<{ skipped: number; finished: boolean }> => {
+    const none = { skipped: 0, finished: false };
+    if (!state.currentRoom || !user) return none;
+    if (state.phase !== "playing") return none;
+    if (isHost && state.hostIsObserver) return none; // Observers don't answer
+    const total = state.questions.length;
+    if (total === 0) return none;
+
+    // If the current question was already answered before the phone locked,
+    // the away time only affects the questions after it
+    const answeredCurrent = state.lastQuestionResult !== null;
+    const firstUnanswered = state.currentQuestionIndex + (answeredCurrent ? 1 : 0);
+    const questionsLeft = total - firstUnanswered;
+    if (questionsLeft <= 0) return none;
+
+    const skipCount = Math.min(Math.floor(awaySeconds / state.timePerQuestion), questionsLeft);
+    if (skipCount <= 0) return none;
+
+    const roomId = state.currentRoom.id;
+    const newIndex = firstUnanswered + skipCount;
+    const finished = newIndex >= total;
+
+    console.log(`[MP] Player away ${Math.round(awaySeconds)}s - skipping ${skipCount} question(s), resuming at ${newIndex}`);
+
+    // Record each skipped question as an empty answer (0 points)
+    await Promise.all(
+      Array.from({ length: skipCount }, (_, i) =>
+        supabase.from("player_answers").insert({
+          room_id: roomId,
+          user_id: user.id,
+          question_index: firstUnanswered + i,
+          answer: "",
+          is_correct: false,
+          time_remaining: 0,
+          points_earned: 0,
+        })
+      )
+    );
+
+    // Advance own progress; marking "finished" lets the (game-aware)
+    // completion check close the round when everyone is done
+    await supabase
+      .from("room_participants")
+      .update({
+        current_question: newIndex,
+        ...(finished ? { status: "finished" as const } : {}),
+      })
+      .eq("room_id", roomId)
+      .eq("user_id", user.id);
+
+    setState(prev => ({
+      ...prev,
+      currentQuestionIndex: Math.min(newIndex, total - 1),
+      lastQuestionResult: null,
+      ...(finished ? { phase: "results" as GamePhase } : {}),
+    }));
+
+    return { skipped: skipCount, finished };
+  }, [state.currentRoom, state.phase, state.questions.length, state.currentQuestionIndex, state.lastQuestionResult, state.timePerQuestion, state.hostIsObserver, isHost, user]);
+
   // Exit room (UI only - stay as participant)
   const exitRoom = useCallback(() => {
     // Leaving mid-round: mark own row disconnected (fire-and-forget) so the
@@ -2730,6 +2799,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     deleteRoom,
     resetMultiplayer,
     awardObserverBonus,
+    applyMissedTime,
     showCreateModal,
     setShowCreateModal,
     showJoinModal,
@@ -2752,6 +2822,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     deleteRoom,
     resetMultiplayer,
     awardObserverBonus,
+    applyMissedTime,
     showCreateModal,
     showJoinModal,
   ]);

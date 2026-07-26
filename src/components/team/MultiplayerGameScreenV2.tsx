@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,7 @@ import { ArrowLeft, ChevronUp, ChevronDown } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
@@ -45,6 +46,7 @@ export function MultiplayerGameScreenV2() {
     currentRoom,
     hostIsObserver,
     isHost,
+    applyMissedTime,
   } = useMultiplayerV2();
 
   // Start background music when game starts
@@ -69,6 +71,45 @@ export function MultiplayerGameScreenV2() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerRevealed, setAnswerRevealed] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+
+  // Locked/backgrounded phone: the match keeps moving without the player.
+  // JS timers freeze while the app is hidden, so on return we settle the
+  // debt: every full question-length away skips one question (recorded as
+  // unanswered); a shorter absence is deducted from the current timer.
+  const hiddenAtRef = useRef<number | null>(null);
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        hiddenAtRef.current = Date.now();
+        return;
+      }
+      if (document.visibilityState !== "visible" || hiddenAtRef.current === null) return;
+
+      const awaySeconds = (Date.now() - hiddenAtRef.current) / 1000;
+      hiddenAtRef.current = null;
+      if (isHost && hostIsObserver) return; // Observers don't answer
+
+      if (awaySeconds >= timePerQuestion) {
+        void applyMissedTime(awaySeconds).then(({ skipped, finished }) => {
+          if (skipped > 0) {
+            toast.info(
+              finished
+                ? `გამოტოვდა ${skipped} კითხვა — რაუნდი დასრულდა`
+                : `გამოტოვდა ${skipped} კითხვა`,
+              { duration: 4000 }
+            );
+          }
+        });
+      } else if (awaySeconds > 1 && !answerRevealed && selectedAnswer === null) {
+        // Short absence: the missed seconds come off the current question's
+        // clock (hitting zero auto-submits an empty answer via the timer)
+        setTimeRemaining(prev => Math.max(0, prev - awaySeconds));
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [applyMissedTime, timePerQuestion, answerRevealed, selectedAnswer, isHost, hostIsObserver]);
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
