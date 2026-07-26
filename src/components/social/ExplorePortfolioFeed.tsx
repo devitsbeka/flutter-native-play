@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Loader2, Users } from "lucide-react";
 import { usePlayerFeedItems } from "@/hooks/usePlayerFeedItems";
 import { useExploreCreators } from "@/hooks/useExploreCreators";
@@ -46,7 +50,26 @@ export function ExplorePortfolioFeed({
   onPlayQuiz,
 }: ExplorePortfolioFeedProps) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const isMobile = useIsMobileViewport();
+
+  // Searching in Explore also finds PLAYERS by nickname, not just posts
+  const trimmedQuery = searchQuery.trim();
+  const { data: matchedPlayers = [] } = useQuery({
+    queryKey: ["explore-player-search", trimmedQuery],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id, nickname, avatar_url, country_code")
+        .ilike("nickname", `%${trimmedQuery}%`)
+        .neq("nickname", "[წაშლილი]")
+        .limit(12);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: trimmedQuery.length >= 2,
+    staleTime: 30_000,
+  });
 
   // Only fetch the feed shape that will actually be rendered
   const { data: feedItems = [], isLoading: isFlatLoading } = usePlayerFeedItems(
@@ -104,6 +127,33 @@ export function ExplorePortfolioFeed({
 
   const isLoading = isMobile ? isFlatLoading : isGroupedLoading;
 
+  // Matched players render above the feed AND above the empty state, so a
+  // nickname search still finds people even when no posts match.
+  const playersSection = matchedPlayers.length > 0 && (
+    <div className="mb-4">
+      <h3 className="text-sm font-semibold text-muted-foreground mb-2 px-1">მოთამაშეები</h3>
+      <div className="flex gap-3 overflow-x-auto pb-2 px-1">
+        {matchedPlayers.map((player) => (
+          <button
+            key={player.user_id}
+            onClick={() => navigate(`/profile/${player.user_id}`)}
+            className="flex flex-col items-center gap-1.5 flex-shrink-0 w-20 focus:outline-none"
+          >
+            <SafeAvatar
+              avatarUrl={player.avatar_url}
+              fallback={player.nickname || "?"}
+              className="w-14 h-14 ring-2 ring-border"
+              fallbackClassName="bg-primary/10 text-primary"
+            />
+            <span className="text-xs text-foreground truncate w-full text-center">
+              {player.nickname}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4">
@@ -115,22 +165,26 @@ export function ExplorePortfolioFeed({
 
   if (totalCount === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-4">
-        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-          <Users className="w-8 h-8 text-muted-foreground" />
+      <>
+        {playersSection}
+        <div className="flex flex-col items-center justify-center py-16 gap-4">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <Users className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <div className="text-center">
+            <h3 className="font-semibold text-foreground mb-1">პოსტები ვერ მოიძებნა</h3>
+            <p className="text-sm text-muted-foreground">
+              {searchQuery ? "სცადეთ სხვა საძიებო სიტყვა" : "ჯერ არავის არ აქვს გამოქვეყნებული ტრივია"}
+            </p>
+          </div>
         </div>
-        <div className="text-center">
-          <h3 className="font-semibold text-foreground mb-1">პოსტები ვერ მოიძებნა</h3>
-          <p className="text-sm text-muted-foreground">
-            {searchQuery ? "სცადეთ სხვა საძიებო სიტყვა" : "ჯერ არავის არ აქვს გამოქვეყნებული ტრივია"}
-          </p>
-        </div>
-      </div>
+      </>
     );
   }
 
   return (
     <>
+      {playersSection}
       {isMobile ? (
         /* Mobile: Flattened feed - one player + one item per card */
         <div className="space-y-4">
