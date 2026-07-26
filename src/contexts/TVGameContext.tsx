@@ -241,6 +241,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Flag to prevent double-advance per question (reset on each new question)
   const hasAdvancedRef = useRef(false);
+  // Pending reveal->next-question advance timers, keyed by the reveal's
+  // question index so dep-churn effect re-runs can't cancel or duplicate them
+  const revealAdvanceRef = useRef<{ qIndex: number; timers: ReturnType<typeof setTimeout>[]; started: boolean } | null>(null);
 
   // Track when the current question started (for safety guard)
   // CRITICAL: Set to 0 during countdown/transitions to DISABLE auto-advance checks
@@ -1224,6 +1227,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (channelRef.current) supabase.removeChannel(channelRef.current);
       if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current);
       if (answersChannelRef.current) supabase.removeChannel(answersChannelRef.current);
+      if (revealAdvanceRef.current) {
+        revealAdvanceRef.current.timers.forEach(clearTimeout);
+        revealAdvanceRef.current = null;
+      }
     };
   }, []);
 
@@ -1422,34 +1429,36 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     if (!isHost) return;
     if (!state.sessionId) return;
-    if (state.phase !== 'reveal') return;
-
-    // Decide the reveal duration from the DATABASE answer count, not from
-    // presence: a stale/dead presence view showed "nobody answered" even when
-    // everyone had, silently turning every reveal into the 10s no-answer
-    // variant - that was the mysterious per-question 15s wait. Presence only
-    // serves as the optimistic fast value while the DB count loads.
-    let cancelled = false;
-    let t: ReturnType<typeof setTimeout> | null = null;
-
-    (async () => {
-      let anyPlayerAnswered = state.players.some(p => p.hasAnswered);
-      try {
-        const { count } = await supabase
-          .from('player_answers')
-          .select('*', { count: 'exact', head: true })
-          .eq('tv_session_id', state.sessionId)
-          .eq('question_index', state.currentQuestionIndex);
-        if ((count ?? 0) > 0) anyPlayerAnswered = true;
-      } catch {
-        // network hiccup - fall back to the presence-derived value
+    if (state.phase !== 'reveal') {
+      // Reveal is over (or never started) - drop any pending advance timers
+      if (revealAdvanceRef.current) {
+        revealAdvanceRef.current.timers.forEach(clearTimeout);
+        revealAdvanceRef.current = null;
       }
-      if (cancelled) return;
+      return;
+    }
 
-      const revealDuration = anyPlayerAnswered ? REVEAL_DURATION_MS : REVEAL_DURATION_LONG_MS;
-      console.log('[Reveal] ⏱️ Using reveal duration:', revealDuration, 'ms, anyAnswered:', anyPlayerAnswered);
+    const revealQIndex = state.currentQuestionIndex;
 
-      t = setTimeout(async () => {
+    // Dep churn (presence syncs, score updates) re-runs this effect DURING
+    // the same reveal. Never cancel or reschedule the pending advance for it -
+    // a previous version did, and combined with a network-gated schedule it
+    // froze the reveal permanently.
+    if (revealAdvanceRef.current?.qIndex === revealQIndex) return;
+    if (revealAdvanceRef.current) {
+      revealAdvanceRef.current.timers.forEach(clearTimeout);
+    }
+
+    const entry = { qIndex: revealQIndex, timers: [] as ReturnType<typeof setTimeout>[], started: false };
+    revealAdvanceRef.current = entry;
+
+    const advance = async () => {
+      // Stale-fire guards: only advance the reveal we were scheduled for,
+      // and only once
+      const s = stateRef.current;
+      if (s.phase !== 'reveal' || s.currentQuestionIndex !== revealQIndex) return;
+      if (entry.started) return;
+      entry.started = true;
       const nextIndex = state.currentQuestionIndex + 1;
       if (nextIndex >= state.questions.length) {
         // If this was the last round, end the game and show final leaderboard.
@@ -1538,13 +1547,42 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         wasInPreQuestionPhaseRef.current = true;
         console.log('[Next Question] ✅ Timer marked as initialized for question', nextIndex, ', wasInPreQuestionPhase set for non-host clients');
       }
-      }, revealDuration);
-    })();
-
-    return () => {
-      cancelled = true;
-      if (t) clearTimeout(t);
     };
+
+    // 1) Schedule the advance SYNCHRONOUSLY from the presence view - the
+    //    network can delay refinement below but can never block the advance
+    const presenceSaysAnswered = state.players.some(p => p.hasAnswered);
+    const initialDuration = presenceSaysAnswered ? REVEAL_DURATION_MS : REVEAL_DURATION_LONG_MS;
+    console.log('[Reveal] ⏱️ Scheduled advance in', initialDuration, 'ms (presence anyAnswered:', presenceSaysAnswered, ')');
+    entry.timers.push(setTimeout(advance, initialDuration));
+
+    // 2) Hard watchdog: no reveal may outlive the long duration + grace,
+    //    regardless of what else fails
+    entry.timers.push(setTimeout(advance, REVEAL_DURATION_LONG_MS + 4000));
+
+    // 3) Refinement: presence can be stale ("nobody answered" when everyone
+    //    did, which used to force the 10s reveal every question). If the DB
+    //    shows answers, shorten the pending long reveal to the short one.
+    if (!presenceSaysAnswered) {
+      supabase
+        .from('player_answers')
+        .select('*', { count: 'exact', head: true })
+        .eq('tv_session_id', state.sessionId)
+        .eq('question_index', revealQIndex)
+        .then(({ count }) => {
+          if ((count ?? 0) > 0 && revealAdvanceRef.current === entry && !entry.started) {
+            console.log('[Reveal] ⚡ DB shows answers - shortening reveal');
+            entry.timers.forEach(clearTimeout);
+            entry.timers.length = 0;
+            entry.timers.push(setTimeout(advance, REVEAL_DURATION_MS));
+            entry.timers.push(setTimeout(advance, REVEAL_DURATION_LONG_MS + 4000));
+          }
+        });
+    }
+
+    // NOTE: intentionally NO cleanup for dep-churn re-runs (the qIndex guard
+    // above makes them no-ops). The not-in-reveal branch and the provider
+    // unmount cleanup cancel the timers when the reveal genuinely ends.
   }, [isHost, state.sessionId, state.phase, state.currentQuestionIndex, state.questions.length, state.players, myPlayerId, myScore, startNextRoundFromQueueIfAny, prepareForPlaying]);
 
   // Create TV session (called by TV display)
