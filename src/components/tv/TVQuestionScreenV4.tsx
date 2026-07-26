@@ -129,7 +129,16 @@ export const TVQuestionScreenV4: React.FC = () => {
       isHost: p.is_host,
       isActive: p.is_active,
     }));
-  const allPlayers = [...players, ...rosterOnly];
+  // Presence entries can go STALE (dead socket keeps last-known state) - if
+  // the DB has an answer for this question that presence doesn't know about,
+  // the DB wins. Without this, a frozen presence view kept players stuck in
+  // the wrong/waiting zones with outdated results.
+  const livePlayers = players.map(p =>
+    !p.hasAnswered && dbAnswers.has(p.id)
+      ? { ...p, hasAnswered: true, lastAnswerCorrect: dbAnswers.get(p.id) as boolean }
+      : p
+  );
+  const allPlayers = [...livePlayers, ...rosterOnly];
 
   // Filter out the suggester from active players - they skip this round
   const activePlayers = allPlayers.filter(p => p.id !== currentRoundSuggesterId);

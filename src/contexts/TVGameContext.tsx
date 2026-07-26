@@ -1412,13 +1412,32 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!state.sessionId) return;
     if (state.phase !== 'reveal') return;
 
-    // Check if any player answered - if not, use longer reveal duration
-    const anyPlayerAnswered = state.players.some(p => p.hasAnswered);
-    const revealDuration = anyPlayerAnswered ? REVEAL_DURATION_MS : REVEAL_DURATION_LONG_MS;
-    
-    console.log('[Reveal] ⏱️ Using reveal duration:', revealDuration, 'ms, anyAnswered:', anyPlayerAnswered);
+    // Decide the reveal duration from the DATABASE answer count, not from
+    // presence: a stale/dead presence view showed "nobody answered" even when
+    // everyone had, silently turning every reveal into the 10s no-answer
+    // variant - that was the mysterious per-question 15s wait. Presence only
+    // serves as the optimistic fast value while the DB count loads.
+    let cancelled = false;
+    let t: ReturnType<typeof setTimeout> | null = null;
 
-    const t = setTimeout(async () => {
+    (async () => {
+      let anyPlayerAnswered = state.players.some(p => p.hasAnswered);
+      try {
+        const { count } = await supabase
+          .from('player_answers')
+          .select('*', { count: 'exact', head: true })
+          .eq('tv_session_id', state.sessionId)
+          .eq('question_index', state.currentQuestionIndex);
+        if ((count ?? 0) > 0) anyPlayerAnswered = true;
+      } catch {
+        // network hiccup - fall back to the presence-derived value
+      }
+      if (cancelled) return;
+
+      const revealDuration = anyPlayerAnswered ? REVEAL_DURATION_MS : REVEAL_DURATION_LONG_MS;
+      console.log('[Reveal] ⏱️ Using reveal duration:', revealDuration, 'ms, anyAnswered:', anyPlayerAnswered);
+
+      t = setTimeout(async () => {
       const nextIndex = state.currentQuestionIndex + 1;
       if (nextIndex >= state.questions.length) {
         // If this was the last round, end the game and show final leaderboard.
@@ -1507,9 +1526,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         wasInPreQuestionPhaseRef.current = true;
         console.log('[Next Question] ✅ Timer marked as initialized for question', nextIndex, ', wasInPreQuestionPhase set for non-host clients');
       }
-    }, revealDuration);
+      }, revealDuration);
+    })();
 
-    return () => clearTimeout(t);
+    return () => {
+      cancelled = true;
+      if (t) clearTimeout(t);
+    };
   }, [isHost, state.sessionId, state.phase, state.currentQuestionIndex, state.questions.length, state.players, myPlayerId, myScore, startNextRoundFromQueueIfAny, prepareForPlaying]);
 
   // Create TV session (called by TV display)
