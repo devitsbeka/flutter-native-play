@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
+import { supabase } from '@/integrations/supabase/client';
 import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { Check, X, Clock } from 'lucide-react';
 import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
@@ -20,10 +21,10 @@ const getAnswerLabels = (t: (key: string) => string) => [
 
 export const TVQuestionScreenV4: React.FC = () => {
   const { t } = useLanguage();
-  const { 
-    questions, 
-    currentQuestionIndex, 
-    timeRemaining, 
+  const {
+    questions,
+    currentQuestionIndex,
+    timeRemaining,
     players,
     categoryName,
     roomName,
@@ -33,21 +34,105 @@ export const TVQuestionScreenV4: React.FC = () => {
     currentRoundSuggesterId,
     currentRoundSuggesterNickname,
     currentRoundSuggesterAvatarUrl,
+    sessionId,
   } = useTVGame();
 
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length;
   const timerMax = 15;
   const timerPercent = (timeRemaining / timerMax) * 100;
-  
+
   // Check if this is a media-based question
   const hasImage = !!currentQuestion?.image_url;
   const hasVideo = !!currentQuestion?.video_url;
   const hasAudio = !!currentQuestion?.audio_url;
   const hasMedia = hasImage || hasVideo || hasAudio;
 
+  // ── DB-backed roster ──────────────────────────────────────────────────────
+  // Presence only knows about currently-connected devices, so a host or
+  // player whose phone is locked/refreshing simply vanished from the TV.
+  // The tv_players table is the durable roster: merge it in, and derive
+  // answer status for non-connected players from player_answers.
+  type RosterRow ={ player_id: string; nickname: string; avatar_url: string | null; is_host: boolean; current_round_score: number | null; is_active: boolean };
+  const [dbRoster, setDbRoster] = useState<RosterRow[]>([]);
+  const [dbAnswers, setDbAnswers] = useState<Map<string, boolean>>(new Map());
+
+  useEffect(() => {
+    if (!sessionId || sessionId === 'mock-session-id') return;
+    const systemIds = ['TV_DISPLAY', 'TV_MIRROR'];
+    const fetchRoster = async () => {
+      const { data } = await supabase
+        .from('tv_players')
+        .select('player_id, nickname, avatar_url, is_host, current_round_score, is_active')
+        .eq('tv_session_id', sessionId);
+      if (data) {
+        setDbRoster((data as RosterRow[]).filter(
+          p => !systemIds.includes(p.player_id) && !systemIds.includes(p.nickname || '')
+        ));
+      }
+    };
+    fetchRoster();
+    const channel = supabase
+      .channel(`tv-roster-${sessionId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tv_players', filter: `tv_session_id=eq.${sessionId}` }, fetchRoster)
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [sessionId]);
+
+  // Answers of the current question (user_id -> is_correct) for players whose
+  // live presence status isn't available
+  useEffect(() => {
+    if (!sessionId || sessionId === 'mock-session-id') return;
+    setDbAnswers(new Map());
+    let cancelled = false;
+    const fetchAnswers = async () => {
+      const { data } = await supabase
+        .from('player_answers')
+        .select('user_id, is_correct')
+        .eq('tv_session_id', sessionId)
+        .eq('question_index', currentQuestionIndex);
+      if (!cancelled && data) {
+        setDbAnswers(new Map(data.filter(a => a.user_id).map(a => [a.user_id as string, !!a.is_correct])));
+      }
+    };
+    fetchAnswers();
+    const channel = supabase
+      .channel(`tv-q-answers-${sessionId}-${currentQuestionIndex}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'player_answers', filter: `tv_session_id=eq.${sessionId}` }, (payload) => {
+        const row = payload.new as { user_id?: string; question_index?: number; is_correct?: boolean };
+        if (row.question_index === currentQuestionIndex && row.user_id) {
+          setDbAnswers(prev => new Map(prev).set(row.user_id!, !!row.is_correct));
+        }
+      })
+      .subscribe();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [sessionId, currentQuestionIndex]);
+
+  // Merge: live presence entries win (freshest status); DB roster fills in
+  // everyone else (host included) so nobody disappears from the TV
+  const presenceIds = new Set(players.map(p => p.id));
+  const rosterOnly = dbRoster
+    .filter(p => !presenceIds.has(p.player_id) && (p.is_active || p.is_host))
+    .map(p => ({
+      id: p.player_id,
+      nickname: p.nickname,
+      avatar_url: p.avatar_url,
+      score: p.current_round_score || 0,
+      hasAnswered: dbAnswers.has(p.player_id),
+      lastAnswerCorrect: dbAnswers.has(p.player_id) ? (dbAnswers.get(p.player_id) as boolean) : null,
+      lastAnswer: null,
+      isHost: p.is_host,
+      isActive: p.is_active,
+    }));
+  const allPlayers = [...players, ...rosterOnly];
+
   // Filter out the suggester from active players - they skip this round
-  const activePlayers = players.filter(p => p.id !== currentRoundSuggesterId);
+  const activePlayers = allPlayers.filter(p => p.id !== currentRoundSuggesterId);
 
   // Group players by their answer status for current question
   const correctPlayers = activePlayers.filter(p => p.hasAnswered && p.lastAnswerCorrect === true);
