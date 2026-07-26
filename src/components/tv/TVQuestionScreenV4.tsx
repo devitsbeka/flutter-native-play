@@ -56,6 +56,11 @@ export const TVQuestionScreenV4: React.FC = () => {
   type RosterRow ={ player_id: string; nickname: string; avatar_url: string | null; is_host: boolean; current_round_score: number | null; is_active: boolean };
   const [dbRoster, setDbRoster] = useState<RosterRow[]>([]);
   const [dbAnswers, setDbAnswers] = useState<Map<string, boolean>>(new Map());
+  // Failed question image -> show the question text instead (reset per question)
+  const [tvImageFailed, setTvImageFailed] = useState(false);
+  useEffect(() => {
+    setTvImageFailed(false);
+  }, [currentQuestionIndex]);
 
   useEffect(() => {
     if (!sessionId || sessionId === 'mock-session-id') return;
@@ -365,19 +370,26 @@ export const TVQuestionScreenV4: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          {/* Left 50%: Question text + Image */}
+          {/* Left 50%: Image, falling back to the question text if the image
+              fails to load (a hidden broken image left a blank half-screen
+              with no question to answer from) */}
           <div className="w-1/2 pr-4 flex flex-col justify-center">
-            {/* Image */}
-            <div className="flex-1 min-h-0 rounded-2xl overflow-hidden shadow-lg">
-              <img 
-                src={currentQuestion.image_url!} 
-                alt="Question" 
-                className="w-full h-full object-cover object-top"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
+            {tvImageFailed ? (
+              <div className="flex-1 min-h-0 rounded-2xl bg-white/95 shadow-lg flex items-center justify-center p-8">
+                <p className="text-[#2A2550] font-bold text-3xl text-center leading-snug">
+                  {currentQuestion.question_text}
+                </p>
+              </div>
+            ) : (
+              <div className="flex-1 min-h-0 rounded-2xl overflow-hidden shadow-lg">
+                <img
+                  src={currentQuestion.image_url!}
+                  alt="Question"
+                  className="w-full h-full object-cover object-top"
+                  onError={() => setTvImageFailed(true)}
+                />
+              </div>
+            )}
           </div>
           
           {/* Right 50%: Answers stacked vertically */}
