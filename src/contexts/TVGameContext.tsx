@@ -715,6 +715,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (sessionError || !session) return;
 
       let expectedCount = session.active_player_count ?? 0;
+      const roundSuggesterId =
+        (session as { current_round_suggester_id?: string | null }).current_round_suggester_id ?? null;
 
       // Fallback: if locked count is 0 (shouldn't happen), use live DB count
       if (expectedCount <= 0) {
@@ -728,8 +730,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           .not('nickname', 'in', `(${systemIds.join(',')})`);
 
         const live = liveCount ?? 0;
-        const suggesterId = (session as any).current_round_suggester_id as string | null;
-        expectedCount = suggesterId ? Math.max(1, live - 1) : live;
+        expectedCount = roundSuggesterId ? Math.max(1, live - 1) : live;
 
         if (expectedCount <= 0) {
           // No players at all — let timer handle it
@@ -737,23 +738,52 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
 
-      // Count answers for this question
-      const { count: answerCount, error: countError } = await supabase
+      // Fetch WHO answered this question (not just how many rows) - the raw
+      // row count vs active_player_count comparison stalls the whole room to
+      // the full timer whenever the two drift (a duplicate-key insert that
+      // produced no new row, a stale locked count, a ghost player row)
+      const { data: answerRows, error: answersError } = await supabase
         .from('player_answers')
-        .select('*', { count: 'exact', head: true })
+        .select('user_id')
         .eq('tv_session_id', current.sessionId)
         .eq('question_index', current.currentQuestionIndex);
 
-      if (countError) return;
+      if (answersError) return;
 
-      const actualCount = answerCount || 0;
+      const answeredIds = new Set((answerRows || []).map(r => r.user_id).filter(Boolean));
+      const actualCount = answeredIds.size;
+
+      // Fast path: distinct answerers reached the locked count
+      if (actualCount >= expectedCount && expectedCount > 0) {
+        console.log('[AutoAdvance]', `${actualCount}/${expectedCount}`, '→ ADVANCE (count)');
+        advanceToReveal('all players answered');
+        return;
+      }
+
+      // Robust path: check the SET of players. If every currently-active,
+      // non-system player (minus the round suggester, who doesn't answer)
+      // has an answer in, advance - regardless of what the locked count says.
+      const systemIds = ['TV_DISPLAY', 'TV_MIRROR'];
+      const { data: activePlayers } = await supabase
+        .from('tv_players')
+        .select('player_id, nickname')
+        .eq('tv_session_id', current.sessionId)
+        .eq('is_active', true);
+
+      const requiredIds = (activePlayers || [])
+        .filter(p => !systemIds.includes(p.player_id) && !systemIds.includes(p.nickname || ''))
+        .map(p => p.player_id)
+        .filter(id => id !== roundSuggesterId);
+
+      const everyActiveAnswered =
+        requiredIds.length > 0 && requiredIds.every(id => answeredIds.has(id));
 
       console.log('[AutoAdvance]', `${actualCount}/${expectedCount}`,
-        actualCount >= expectedCount ? '→ ADVANCE' : '→ waiting',
-        { qi: current.currentQuestionIndex, ms: Date.now() - questionStartTime });
+        everyActiveAnswered ? '→ ADVANCE (set)' : '→ waiting',
+        { qi: current.currentQuestionIndex, required: requiredIds.length, ms: Date.now() - questionStartTime });
 
-      if (actualCount >= expectedCount) {
-        advanceToReveal('all players answered');
+      if (everyActiveAnswered) {
+        advanceToReveal('all active players answered');
       }
     } catch (err) {
       console.error('[AutoAdvance] Exception:', err);
@@ -2869,7 +2899,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return { correct: isCorrect, points };
       }
 
-      const { error } = await supabase.from('player_answers').insert({
+      // Upsert on the (tv_session_id, user_id, question_index) unique key:
+      // question indices repeat across rounds in the same session, so a plain
+      // insert hits 23505 from round 2 onward whenever stale rows survive the
+      // between-round cleanup - the lost row then stalled auto-advance until
+      // the timer ran out
+      const { error } = await supabase.from('player_answers').upsert({
         tv_session_id: state.sessionId,
         room_id: roomIdToUse,
         user_id: myPlayerId,
@@ -2878,7 +2913,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         is_correct: isCorrect,
         points_earned: points,
         time_remaining: state.timeRemaining,
-      });
+      }, { onConflict: 'tv_session_id,user_id,question_index' });
 
       if (error) {
         tvLogError('submitAnswer DB insert', error);
