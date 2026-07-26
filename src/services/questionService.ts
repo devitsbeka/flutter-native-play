@@ -111,6 +111,42 @@ export function getPreferredLanguage(): string {
 /**
  * Shuffle array using Fisher-Yates
  */
+// Image questions are unanswerable without their image ("what's shown in the
+// picture?"), so a question whose image can't load must never enter a round.
+// Select questions from the pool, preload-validating any image (2.5s cap,
+// parallel per batch) and backfilling dropped ones from the remaining pool.
+async function selectWithValidImages<T extends { id: string; imageUrl?: string | null }>(
+  pool: T[],
+  count: number
+): Promise<T[]> {
+  const preloadOk = (url: string) =>
+    new Promise<boolean>(resolve => {
+      const img = new Image();
+      const timer = setTimeout(() => resolve(false), 2500);
+      img.onload = () => { clearTimeout(timer); resolve(true); };
+      img.onerror = () => { clearTimeout(timer); resolve(false); };
+      img.src = url;
+    });
+
+  const selected: T[] = [];
+  let index = 0;
+  while (selected.length < count && index < pool.length) {
+    const batch = pool.slice(index, index + (count - selected.length));
+    index += batch.length;
+    const checks = await Promise.all(
+      batch.map(async q => (q.imageUrl ? { q, ok: await preloadOk(q.imageUrl) } : { q, ok: true }))
+    );
+    for (const { q, ok } of checks) {
+      if (ok) {
+        selected.push(q);
+      } else {
+        console.warn('[questionService] Dropping question with unloadable image:', q.id);
+      }
+    }
+  }
+  return selected;
+}
+
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -447,7 +483,7 @@ async function getCategoryQuestions(
   }
   
   // Shuffle and select
-  const selected = shuffleArray(validQuestions).slice(0, count);
+  const selected = await selectWithValidImages(shuffleArray(validQuestions), count);
   
   // FIX: Mark as seen for CATEGORY (not level-specific)
   // This ensures questions won't repeat across any level
@@ -600,7 +636,7 @@ async function getTVQuestions(
   }
   
   // Shuffle and select
-  const selected = shuffleArray(validQuestions).slice(0, count);
+  const selected = await selectWithValidImages(shuffleArray(validQuestions), count);
   
   // Mark as asked
   if (selected.length > 0) {
@@ -745,7 +781,7 @@ async function getSingleCategoryVSQuestions(
     };
   }
   
-  const selected = shuffleArray(validQuestions).slice(0, count);
+  const selected = await selectWithValidImages(shuffleArray(validQuestions), count);
   
   // Mark as seen
   if (selected.length > 0) {
