@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { PROFILE_SELECT_COLUMNS } from "@/integrations/supabase/profileColumns";
 import { lovable } from "@/integrations/lovable/index";
 import { getCountryCodeFromIP } from "@/hooks/useGeoLocation";
 
@@ -64,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select(PROFILE_SELECT_COLUMNS)
         .eq("user_id", userId)
         .maybeSingle();
 
@@ -75,10 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       if (data) {
-        setProfile(data as Profile);
-        
+        // Explicit-column select degrades the client's inferred type to a
+        // generic; cast through unknown to the real Profile shape.
+        const profileData = data as unknown as Profile;
+        setProfile(profileData);
+
         // Auto-detect and set country code if not already set
-        if (!data.country_code) {
+        if (!profileData.country_code) {
           getCountryCodeFromIP().then(async (detectedCountry) => {
             if (detectedCountry) {
               const { data: updatedProfile } = await supabase
@@ -95,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         }
         profileFetchInProgressRef.current = null;
-        return data as Profile;
+        return profileData;
       }
 
       profileFetchInProgressRef.current = null;
