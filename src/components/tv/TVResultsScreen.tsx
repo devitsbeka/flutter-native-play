@@ -280,7 +280,7 @@ export const TVResultsScreen: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5 }}
-        className="pb-8 text-center flex-shrink-0"
+        className="pt-8 pb-8 text-center flex-shrink-0"
       >
         <p className="text-purple-300 text-lg">
           {t("extra.tvHostCanStartNew")}
