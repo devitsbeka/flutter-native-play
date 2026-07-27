@@ -82,8 +82,8 @@ exactly-once), timer expiry (host, CAS-guarded).
 - [x] 01 lifecycle
 - [x] 02 game start & rounds
 - [x] 03 question loop
-- [ ] 04 realtime & sync resilience
-- [ ] 05 TV display UI
+- [x] 04 realtime & sync resilience
+- [x] 05 TV display UI
 - [ ] 06 controllers UI
 - [ ] 07 database & security
 - [ ] 08 synthesis & fix backlog
