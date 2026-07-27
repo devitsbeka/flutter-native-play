@@ -413,6 +413,7 @@ export const TVQuestionScreenV4: React.FC = () => {
                 label={getAnswerLabels(t)[index]}
                 text={option}
                 disabled
+                largeText
                 className="w-full"
               />
             ))}
@@ -467,6 +468,7 @@ export const TVQuestionScreenV4: React.FC = () => {
               className="w-full pt-8"
               reserveTopSpace={!hasMedia}
               hideQuestionText={!!currentQuestion.image_url}
+              largeText
             />
           </div>
 
@@ -485,6 +487,7 @@ export const TVQuestionScreenV4: React.FC = () => {
                 label={getAnswerLabels(t)[index]}
                 text={option}
                 disabled
+                largeText
                 className="w-full h-full"
               />
             ))}
