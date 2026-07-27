@@ -24,6 +24,7 @@ import { UserPresenceTracker } from "@/components/UserPresenceTracker";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { Navigate } from "react-router-dom";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
+import { useFreshBuildGuard } from "@/hooks/useFreshBuildGuard";
 
 // Build-time flag for admin inclusion (default: included unless explicitly disabled)
 const INCLUDE_ADMIN = import.meta.env.VITE_INCLUDE_ADMIN !== 'false';
@@ -113,6 +114,12 @@ const ChallengeLanding = lazy(() => import("./pages/ChallengeLanding"));
 const SampleDemoTV = lazy(() => import("./pages/SampleDemoTV"));
 const SampleDemoPlayer = lazy(() => import("./pages/SampleDemoPlayer"));
 
+// Reloads long-open tabs when a newer build is deployed (at safe moments only)
+const FreshBuildGuard = () => {
+  useFreshBuildGuard();
+  return null;
+};
+
 const App = () => (
   <LanguageProvider>
     <AuthProvider>
@@ -137,6 +144,7 @@ const App = () => (
             <GlobalSplineBackground />
             
             <UserPresenceTracker />
+            <FreshBuildGuard />
             <Suspense fallback={<PageSkeleton />}>
               <Routes>
                 <Route path="/" element={<Index />} />
