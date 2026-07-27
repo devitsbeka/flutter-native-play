@@ -726,7 +726,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Sync the countdown to server time whenever we resync into a live question
       if (newPhase === 'question' && session.question_start_time) {
         const elapsed = Math.floor((Date.now() - new Date(session.question_start_time).getTime()) / 1000);
-        const remaining = Math.max(0, QUESTION_TIME - elapsed);
+        const remaining = Math.min(QUESTION_TIME, Math.max(0, QUESTION_TIME - elapsed));
         setState(prev => ({ ...prev, timeRemaining: remaining }));
       }
 
@@ -1408,7 +1408,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           if (session?.question_start_time) {
             const startTime = new Date(session.question_start_time).getTime();
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            const remaining = Math.max(0, QUESTION_TIME - elapsed);
+            const remaining = Math.min(QUESTION_TIME, Math.max(0, QUESTION_TIME - elapsed));
             
             setState(prev => ({ ...prev, timeRemaining: remaining }));
             console.log('[Visibility] ⏱️ Synced timer: elapsed', elapsed, 'remaining', remaining);
@@ -2354,7 +2354,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     'elapsed:', elapsed, 'giving full:', QUESTION_TIME);
                 } else if (elapsed >= EXTREME_LAG_THRESHOLD) {
                   // Definitely late or extreme lag - sync to server time
-                  timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
+                  timeRemaining = Math.min(QUESTION_TIME, Math.max(0, QUESTION_TIME - elapsed));
                   console.log('[Timer] ⚠️ Extreme lag/late join (elapsed >= 12s) - syncing for question', currentQuestionIdx, 
                     'elapsed:', elapsed, 'remaining:', timeRemaining);
                 } else {
@@ -2367,7 +2367,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                       'elapsed:', elapsed);
                   } else {
                     // Player wasn't tracked in pre-question phase - sync to server
-                    timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
+                    timeRemaining = Math.min(QUESTION_TIME, Math.max(0, QUESTION_TIME - elapsed));
                     console.log('[Timer] ⚠️ Not in pre-question phase (5-12s elapsed) - syncing for question', currentQuestionIdx, 
                       'elapsed:', elapsed, 'remaining:', timeRemaining);
                   }
