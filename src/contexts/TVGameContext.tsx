@@ -659,13 +659,26 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         questionsCount: questions.length,
         suggesterId: session.current_round_suggester_id,
       });
-      
+
+      // A resync can land on a DIFFERENT question than the one we last saw
+      // (missed realtime events, watchdog catch-up, return from lock screen).
+      // Per-question local state must reset with it, or the player keeps a
+      // stale locked answer and can never answer the new question.
+      const prevIndex = stateRef.current.currentQuestionIndex;
+      const newIndex = session.current_question_index ?? prevIndex;
+      const newPhase = mapDbStatusToPhase(session.status);
+      const questionChanged = newIndex !== prevIndex;
+
       // Update state with fetched data
       setState(prev => ({
         ...prev,
-        phase: mapDbStatusToPhase(session.status),
+        phase: newPhase,
         questions: questions.length > 0 ? questions : prev.questions,
-        currentQuestionIndex: session.current_question_index ?? prev.currentQuestionIndex,
+        currentQuestionIndex: newIndex,
+        // Old hasAnswered flags belong to the previous question
+        players: questionChanged
+          ? prev.players.map(p => ({ ...p, hasAnswered: false, lastAnswerCorrect: null, lastAnswer: null }))
+          : prev.players,
         categoryName: session.category_name || prev.categoryName,
         categoryIcon: session.category_icon || prev.categoryIcon,
         isPaired: session.is_paired ?? prev.isPaired,
@@ -677,7 +690,21 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         currentRoundSuggesterNickname: session.current_round_suggester_nickname ?? prev.currentRoundSuggesterNickname,
         currentRoundSuggesterAvatarUrl: session.current_round_suggester_avatar_url ?? prev.currentRoundSuggesterAvatarUrl,
       }));
-      
+
+      if (questionChanged) {
+        console.log('[refetchSessionData] 🔄 Question changed', prevIndex, '→', newIndex, '- resetting per-question state');
+        setMyAnswer(null);
+        hasAdvancedRef.current = false;
+        timerInitializedForQuestionRef.current = newIndex;
+      }
+
+      // Sync the countdown to server time whenever we resync into a live question
+      if (newPhase === 'question' && session.question_start_time) {
+        const elapsed = Math.floor((Date.now() - new Date(session.question_start_time).getTime()) / 1000);
+        const remaining = Math.max(0, QUESTION_TIME - elapsed);
+        setState(prev => ({ ...prev, timeRemaining: remaining }));
+      }
+
       console.log('[refetchSessionData] ✅ State updated with', questions.length, 'questions');
     } catch (err) {
       console.error('[refetchSessionData] Error:', err);
@@ -1412,9 +1439,65 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
     
     const interval = setInterval(heartbeatCheck, 5000);
-    
+
     return () => clearInterval(interval);
   }, [isHost, state.phase, state.sessionId, advanceToReveal]);
+
+  // ============================================================================
+  // SESSION SYNC WATCHDOG (non-host devices + TV display)
+  // Realtime sockets die silently - a device that stops receiving events sits
+  // frozen on an old question while the game moves on. Poll the session row
+  // (one tiny SELECT every 3s) and resync from the DB on real divergence.
+  // Hosts are excluded: they drive transitions, so their local state briefly
+  // LEADS the DB and a naive resync would yank them backwards.
+  // ============================================================================
+  const phaseMismatchCountRef = useRef(0);
+  useEffect(() => {
+    if (isHost) return;
+    if (!state.sessionId || state.sessionId === 'mock-session-id') return;
+    const watchedPhases: TVPhase[] = [
+      'question', 'reveal', 'countdown', 'round-intro',
+      'poll-suggest', 'poll-voting', 'poll-results', 'category-select',
+    ];
+    if (!watchedPhases.includes(state.phase)) return;
+
+    const interval = setInterval(async () => {
+      const s = stateRef.current;
+      if (!s.sessionId) return;
+      const { data } = await supabase
+        .from('tv_sessions')
+        .select('status, current_question_index')
+        .eq('id', s.sessionId)
+        .maybeSingle();
+      if (!data) return;
+
+      const dbIndex = data.current_question_index ?? 0;
+      const dbPhase = mapDbStatusToPhase(data.status);
+
+      // Behind on question index → resync immediately (DB truth is ahead)
+      if (dbIndex > s.currentQuestionIndex) {
+        phaseMismatchCountRef.current = 0;
+        console.log('[SyncWatchdog] ⚠️ Behind on question', s.currentQuestionIndex, '→', dbIndex, '- resyncing');
+        refetchSessionData(s.sessionId);
+        return;
+      }
+
+      // Phase divergence must persist for 2 consecutive samples (~6s) before
+      // resyncing - a single mismatch is usually just a transition in flight
+      if (dbPhase !== s.phase) {
+        phaseMismatchCountRef.current += 1;
+        if (phaseMismatchCountRef.current >= 2) {
+          phaseMismatchCountRef.current = 0;
+          console.log('[SyncWatchdog] ⚠️ Phase diverged (local:', s.phase, 'db:', dbPhase, ') - resyncing');
+          refetchSessionData(s.sessionId);
+        }
+      } else {
+        phaseMismatchCountRef.current = 0;
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isHost, state.sessionId, state.phase, refetchSessionData]);
 
   // NOTE: Presence-based auto-advance has been DISABLED.
   // Auto-advance logic is now handled by database-based answer counting via:
