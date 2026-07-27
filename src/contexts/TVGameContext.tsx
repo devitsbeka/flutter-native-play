@@ -247,6 +247,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Re-derives state.players from the live presence channel; re-run after a
   // question-index change so answers tracked during the transition count
   const presenceResyncRef = useRef<(() => void) | null>(null);
+  // True when the page went hidden during the current question - a wake-up
+  // tap must verify the server's question before being accepted
+  const pageWasHiddenRef = useRef(false);
 
   // Track when the current question started (for safety guard)
   // CRITICAL: Set to 0 during countdown/transitions to DISABLE auto-advance checks
@@ -699,6 +702,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMyAnswer(null);
         hasAdvancedRef.current = false;
         timerInitializedForQuestionRef.current = newIndex;
+        pageWasHiddenRef.current = false; // Resynced onto the live question
       }
 
       // Sync the countdown to server time whenever we resync into a live question
@@ -1345,6 +1349,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!state.sessionId) return;
     
     const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'hidden') {
+        // A hidden page freezes with the current question on screen - the
+        // next tap after waking must verify the server's question first
+        pageWasHiddenRef.current = true;
+        return;
+      }
       if (document.visibilityState === 'visible') {
         console.log('[Visibility] 👀 App returned to foreground');
         
@@ -1460,16 +1470,16 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [isHost, state.phase, state.sessionId, advanceToReveal]);
 
   // ============================================================================
-  // SESSION SYNC WATCHDOG (non-host devices + TV display)
+  // SESSION SYNC WATCHDOG (all devices)
   // Realtime sockets die silently - a device that stops receiving events sits
   // frozen on an old question while the game moves on. Poll the session row
   // (one tiny SELECT every 3s) and resync from the DB on real divergence.
-  // Hosts are excluded: they drive transitions, so their local state briefly
-  // LEADS the DB and a naive resync would yank them backwards.
+  // The HOST gets only the index-ahead resync: the host drives transitions so
+  // its local state briefly LEADS the DB (phase compare would yank it
+  // backwards), but the DB being AHEAD of the host is always a frozen host.
   // ============================================================================
   const phaseMismatchCountRef = useRef(0);
   useEffect(() => {
-    if (isHost) return;
     if (!state.sessionId || state.sessionId === 'mock-session-id') return;
     const watchedPhases: TVPhase[] = [
       'question', 'reveal', 'countdown', 'round-intro',
@@ -1499,8 +1509,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       // Phase divergence must persist for 2 consecutive samples (~6s) before
-      // resyncing - a single mismatch is usually just a transition in flight
-      if (dbPhase !== s.phase) {
+      // resyncing - a single mismatch is usually just a transition in flight.
+      // Non-host only: the host WRITES the status, so its local phase briefly
+      // leads the DB during every transition.
+      if (!isHostRef.current && dbPhase !== s.phase) {
         phaseMismatchCountRef.current += 1;
         if (phaseMismatchCountRef.current >= 2) {
           phaseMismatchCountRef.current = 0;
@@ -1514,6 +1526,53 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     return () => clearInterval(interval);
   }, [isHost, state.sessionId, state.phase, refetchSessionData]);
+
+  // ============================================================================
+  // SCREEN WAKE LOCK during active gameplay
+  // A phone whose screen dims freezes the app: the host engine dies (sessions
+  // strand in reveal) and players' taps land on stale questions. Hold a wake
+  // lock - like video apps do - so controller and TV stay awake while a game
+  // is running. Auto-released by the browser when hidden; re-acquired on
+  // return. No-op where unsupported.
+  // ============================================================================
+  useEffect(() => {
+    const activePhases: TVPhase[] = [
+      'question', 'reveal', 'countdown', 'round-intro',
+      'poll-suggest', 'poll-voting', 'poll-results', 'category-select',
+    ];
+    if (!state.sessionId || state.sessionId === 'mock-session-id') return;
+    if (!activePhases.includes(state.phase)) return;
+    if (!('wakeLock' in navigator)) return;
+
+    let sentinel: WakeLockSentinel | null = null;
+    let cancelled = false;
+    const acquire = async () => {
+      try {
+        const lock = await navigator.wakeLock.request('screen');
+        if (cancelled) {
+          lock.release().catch(() => {});
+          return;
+        }
+        sentinel = lock;
+      } catch {
+        // Unsupported/denied (e.g. low battery mode) - nothing we can do
+      }
+    };
+    acquire();
+
+    // The browser releases the lock whenever the page is hidden;
+    // re-acquire as soon as the player comes back
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') acquire();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', onVisible);
+      sentinel?.release().catch(() => {});
+    };
+  }, [state.sessionId, state.phase]);
 
   // NOTE: Presence-based auto-advance has been DISABLED.
   // Auto-advance logic is now handled by database-based answer counting via:
@@ -1639,6 +1698,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // when it receives the DB update (which may have significant elapsed time due to latency)
         timerInitializedForQuestionRef.current = nextIndex;
         hasAdvancedRef.current = false;
+        pageWasHiddenRef.current = false;
         
         // CRITICAL: For reveal→playing transitions, set wasInCountdown to true
         // All players who made it to reveal are present, not late joiners
@@ -2162,6 +2222,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             tvLog('New question (subscription)', { from: prevIndex, to: newData.current_question_index });
             setMyAnswer(null);
             hasAdvancedRef.current = false;  // Reset for new question
+            pageWasHiddenRef.current = false; // Fresh question on a live screen
             
             // TIMER FIX: Reset timer initialization tracker for new question
             timerInitializedForQuestionRef.current = null;
@@ -3132,6 +3193,35 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return { correct: false, points: 0 };
     }
 
+    // STALE-TAP GUARD: if this page was hidden during the question, the app
+    // was frozen and may still be SHOWING an old question - the tap would be
+    // recorded against the wrong index (invisible to the host, who then
+    // waits out the full timer). Verify the server's question first; on
+    // mismatch, resync instead of submitting.
+    if (pageWasHiddenRef.current && state.sessionId) {
+      try {
+        const { data: liveSession } = await supabase
+          .from('tv_sessions')
+          .select('current_question_index')
+          .eq('id', state.sessionId)
+          .maybeSingle();
+        pageWasHiddenRef.current = false;
+        if (
+          liveSession &&
+          typeof liveSession.current_question_index === 'number' &&
+          liveSession.current_question_index !== state.currentQuestionIndex
+        ) {
+          console.warn('[submitAnswer] ❌ Screen shows stale question', state.currentQuestionIndex,
+            '(live:', liveSession.current_question_index, ') - resyncing instead of submitting');
+          void refetchSessionData(state.sessionId);
+          return { correct: false, points: 0 };
+        }
+      } catch {
+        // Verification failed (offline blip) - fall through and submit;
+        // the answer still lands on OUR view of the question, as before
+      }
+    }
+
     const isCorrect = answer === currentQuestion.correct_answer;
     const points = calculatePoints(isCorrect, state.timeRemaining);
 
@@ -3259,7 +3349,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Still return result even if DB fails - presence update is more important
       return { correct: isCorrect, points };
     }
-  }, [state.sessionId, state.roomId, state.questions, state.currentQuestionIndex, state.timeRemaining, state.players, myPlayerId, myAnswer, myScore, isHost]);
+  }, [state.sessionId, state.roomId, state.questions, state.currentQuestionIndex, state.timeRemaining, state.players, myPlayerId, myAnswer, myScore, isHost, refetchSessionData]);
 
   // Mark ready for next round (host-only trigger)
   const markReady = useCallback(async () => {
