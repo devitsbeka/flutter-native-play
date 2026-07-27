@@ -84,6 +84,6 @@ exactly-once), timer expiry (host, CAS-guarded).
 - [x] 03 question loop
 - [x] 04 realtime & sync resilience
 - [x] 05 TV display UI
-- [ ] 06 controllers UI
-- [ ] 07 database & security
+- [x] 06 controllers UI
+- [x] 07 database & security
 - [ ] 08 synthesis & fix backlog
