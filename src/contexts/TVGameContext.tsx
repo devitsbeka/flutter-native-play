@@ -1743,49 +1743,39 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     };
 
-    // 1) Schedule the advance SYNCHRONOUSLY - the network can delay the
-    //    refinement below but can never block the advance. "Someone answered"
-    //    is known for sure when this client's own RPC reported the reveal
-    //    transition; presence is only a secondary hint (it goes stale on this
-    //    host's network and used to force the 10s reveal from ~Q3 onward).
+    // 1) Schedule the advance SYNCHRONOUSLY - and DEFAULT TO THE SHORT
+    //    reveal. The long 10s reading-time reveal applies ONLY when the DB
+    //    positively confirms nobody answered; uncertainty (failed query,
+    //    stale presence) must never cost the players 10 extra seconds.
     const rpcSaysAnswered =
       revealAllAnsweredRef.current?.qIndex === revealQIndex &&
       revealAllAnsweredRef.current?.round === stateRef.current.roundNumber;
-    const presenceSaysAnswered = rpcSaysAnswered || state.players.some(p => p.hasAnswered);
-    const initialDuration = presenceSaysAnswered ? REVEAL_DURATION_MS : REVEAL_DURATION_LONG_MS;
-    console.log('[Reveal] ⏱️ Scheduled advance in', initialDuration, 'ms (rpc:', rpcSaysAnswered, 'presence anyAnswered:', presenceSaysAnswered, ')');
-    entry.timers.push(setTimeout(advance, initialDuration));
+    const anyoneAnswered = rpcSaysAnswered || state.players.some(p => p.hasAnswered);
+    console.log('[Reveal] ⏱️ Scheduled SHORT advance (rpc:', rpcSaysAnswered, 'presence:', anyoneAnswered, ')');
+    entry.timers.push(setTimeout(advance, REVEAL_DURATION_MS));
 
     // 2) Hard watchdog: no reveal may outlive the long duration + grace,
     //    regardless of what else fails
     entry.timers.push(setTimeout(advance, REVEAL_DURATION_LONG_MS + 4000));
 
-    // 3) Refinement: when the provisional duration is the LONG one, ask the
-    //    DB (source of truth) whether anyone answered and shorten if so.
-    //    Retries once - a single failed request used to strand the full 10s.
-    if (initialDuration === REVEAL_DURATION_LONG_MS) {
-      const refine = (attempt: number) => {
-        supabase
-          .from('player_answers')
-          .select('*', { count: 'exact', head: true })
-          .eq('tv_session_id', state.sessionId)
-          .eq('question_index', revealQIndex)
-          .then(({ count, error }) => {
-            if (revealAdvanceRef.current !== entry || entry.started) return;
-            if (error) {
-              if (attempt < 2) setTimeout(() => refine(attempt + 1), 700);
-              return;
-            }
-            if ((count ?? 0) > 0) {
-              console.log('[Reveal] ⚡ DB shows answers - shortening reveal');
-              entry.timers.forEach(clearTimeout);
-              entry.timers.length = 0;
-              entry.timers.push(setTimeout(advance, REVEAL_DURATION_MS));
-              entry.timers.push(setTimeout(advance, REVEAL_DURATION_LONG_MS + 4000));
-            }
-          });
-      };
-      refine(1);
+    // 3) Only when nothing indicates an answer: ask the DB, and EXTEND to
+    //    the reading-time reveal only on a CONFIRMED zero.
+    if (!anyoneAnswered) {
+      supabase
+        .from('player_answers')
+        .select('*', { count: 'exact', head: true })
+        .eq('tv_session_id', state.sessionId)
+        .eq('question_index', revealQIndex)
+        .then(({ count, error }) => {
+          if (revealAdvanceRef.current !== entry || entry.started) return;
+          if (!error && (count ?? 0) === 0) {
+            console.log('[Reveal] Nobody answered (DB-confirmed) - extending to reading-time reveal');
+            entry.timers.forEach(clearTimeout);
+            entry.timers.length = 0;
+            entry.timers.push(setTimeout(advance, REVEAL_DURATION_LONG_MS));
+            entry.timers.push(setTimeout(advance, REVEAL_DURATION_LONG_MS + 4000));
+          }
+        });
     }
 
     // NOTE: intentionally NO cleanup for dep-churn re-runs (the qIndex guard
@@ -3434,10 +3424,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.log('[submitAnswer] Fetched roomId:', roomIdToUse);
       }
 
+      // Room-less TV sessions (TV opened directly, no room attached) are
+      // valid - answers are keyed by tv_session_id; room_id is optional
+      // context (nullable after the 20260728 migration). Bailing here used
+      // to silently drop EVERY answer in room-less games.
       if (!roomIdToUse) {
-        console.error('[submitAnswer] No roomId available - cannot insert answer');
-        tvLogError('submitAnswer', 'No roomId available');
-        return { correct: isCorrect, points };
+        console.warn('[submitAnswer] No roomId - inserting answer with tv_session_id only');
       }
 
       // Upsert on the (tv_session_id, user_id, question_index) unique key:
@@ -3447,7 +3439,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // the timer ran out
       const answerRow = {
         tv_session_id: state.sessionId,
-        room_id: roomIdToUse,
+        // Nullable after the 20260728 migration; generated types are stale
+        room_id: roomIdToUse as unknown as string,
         user_id: myPlayerId,
         question_index: state.currentQuestionIndex,
         answer,
