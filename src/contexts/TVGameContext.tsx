@@ -392,13 +392,28 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
 
-    await supabase
+    // CAS transition: only a LIVE question of this exact index may enter
+    // reveal. If the RPC (or anything else) already transitioned it, this
+    // becomes a no-op - the timer/fallback can never double-advance.
+    const { data: casRows } = await supabase
       .from('tv_sessions')
       .update({
         status: 'reveal',
         reveal_start_time: new Date().toISOString(),
       })
-      .eq('id', current.sessionId);
+      .eq('id', current.sessionId)
+      .in('status', ['playing', 'question'])
+      .eq('current_question_index', current.currentQuestionIndex)
+      .select('id');
+
+    console.log('[TVAdvance]', JSON.stringify({
+      session: current.sessionId,
+      question_index: current.currentQuestionIndex,
+      client: 'host',
+      action: 'question->reveal',
+      reason,
+      cas_won: !!casRows?.length,
+    }));
   }, []);
 
   //
@@ -1661,8 +1676,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const { expectedCount } = await prepareForPlaying(state.sessionId, nextIndex);
         console.log('[Next Question] ✅ UNIFIED preparation complete, expectedCount:', expectedCount);
         
-        // Transition to playing with verified count
-        await supabase
+        // Transition to playing with verified count. CAS on the reveal's own
+        // question index: a duplicate/late advance attempt (stale timer,
+        // watchdog echo) matches nothing and no-ops - exactly-once.
+        const { data: nextCasRows } = await supabase
           .from('tv_sessions')
           .update({
             status: 'playing',
@@ -1671,7 +1688,18 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             reveal_start_time: null,
             active_player_count: expectedCount,
           })
-          .eq('id', state.sessionId);
+          .eq('id', state.sessionId)
+          .eq('current_question_index', revealQIndex)
+          .select('id');
+
+        console.log('[TVAdvance]', JSON.stringify({
+          session: state.sessionId,
+          question_index: revealQIndex,
+          next_index: nextIndex,
+          client: 'host',
+          action: 'reveal->question',
+          cas_won: !!nextCasRows?.length,
+        }));
         
         // FIX P0: Set timing ref AFTER DB transition (not in prepareForPlaying)
         // This ensures the 2500ms safety window starts after all devices sync
@@ -3237,44 +3265,126 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Persist the running score on our tv_players row (fire-and-forget).
     // Presence is volatile - a dead socket loses all scores, which left the
     // TV results screen empty. The DB row is the durable fallback.
-    void supabase
-      .from('tv_players')
-      .update({ current_round_score: newScore })
-      .eq('tv_session_id', state.sessionId)
-      .eq('player_id', myPlayerId)
-      .then(({ error }) => {
-        if (error) console.warn('[submitAnswer] Failed to persist score to tv_players:', error);
-      });
+    const persistScore = () => {
+      void supabase
+        .from('tv_players')
+        .update({ current_round_score: newScore })
+        .eq('tv_session_id', state.sessionId)
+        .eq('player_id', myPlayerId)
+        .then(({ error }) => {
+          if (error) console.warn('[submitAnswer] Failed to persist score to tv_players:', error);
+        });
+    };
 
-    try {
-      // Update presence first (most important for live display).
-      // track() can silently fail on a flaky socket ('timed out'/'error') -
-      // without a retry the TV keeps showing this player as "waiting" for the
-      // whole question. Retry once shortly after; the DB answer row is the
-      // final backstop either way.
-      if (presenceChannelRef.current) {
-        const answeredPayload = {
-          nickname: state.players.find(p => p.id === myPlayerId)?.nickname || 'Player',
-          avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url,
-          score: newScore,
-          hasAnswered: true,
-          lastAnswerCorrect: isCorrect,
-          lastAnswer: answer,
-          answeredQuestionIndex: state.currentQuestionIndex, // Track which question this answer is for
-          answeredRound: stateRef.current.roundNumber, // Question indices REPEAT across rounds - round disambiguates
-          answeredTimeRemaining: state.timeRemaining, // Track time for observer bonus calculation
-          isHost,
-          isActive: true,
-        };
-        const trackStatus = await presenceChannelRef.current.track(answeredPayload).catch(() => 'error');
-        if (trackStatus !== 'ok') {
-          console.warn('[submitAnswer] Presence track failed:', trackStatus, '- retrying in 800ms');
-          setTimeout(() => {
-            presenceChannelRef.current?.track(answeredPayload).catch(() => {});
-          }, 800);
-        }
+    // Presence update - a display accelerator only, never part of the
+    // all-answered decision. track() can silently fail on a flaky socket;
+    // retry once, the committed DB row is the source of truth either way.
+    const trackAnswered = async () => {
+      if (!presenceChannelRef.current) return;
+      const answeredPayload = {
+        nickname: state.players.find(p => p.id === myPlayerId)?.nickname || 'Player',
+        avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url,
+        score: newScore,
+        hasAnswered: true,
+        lastAnswerCorrect: isCorrect,
+        lastAnswer: answer,
+        answeredQuestionIndex: state.currentQuestionIndex, // Track which question this answer is for
+        answeredRound: stateRef.current.roundNumber, // Question indices REPEAT across rounds - round disambiguates
+        answeredTimeRemaining: state.timeRemaining, // Track time for observer bonus calculation
+        isHost,
+        isActive: true,
+      };
+      const trackStatus = await presenceChannelRef.current.track(answeredPayload).catch(() => 'error');
+      if (trackStatus !== 'ok') {
+        console.warn('[submitAnswer] Presence track failed:', trackStatus, '- retrying in 800ms');
+        setTimeout(() => {
+          presenceChannelRef.current?.track(answeredPayload).catch(() => {});
+        }, 800);
+      }
+    };
+    void trackAnswered();
+
+    // ── AUTHORITATIVE PATH ──────────────────────────────────────────────
+    // One RPC locks the session row, commits the answer, decides
+    // "all answered" from committed rows only, and performs the reveal
+    // transition exactly once (CAS on status + question index). No client
+    // view of who answered is part of the decision.
+    type SubmitTvAnswerResult = {
+      accepted: boolean;
+      reason?: string;
+      live_question_index?: number;
+      live_status?: string;
+      all_answered?: boolean;
+      transitioned?: boolean;
+      expected_ids?: string[];
+      answered_ids?: string[];
+      room_id?: string | null;
+      committed_at?: string;
+    };
+    const submittedIndex = state.currentQuestionIndex;
+    const { data: rpcData, error: rpcError } = await (supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>
+    ) => Promise<{ data: unknown; error: { message: string } | null }>)('submit_tv_answer', {
+      p_session_id: state.sessionId,
+      p_player_id: myPlayerId,
+      p_question_index: submittedIndex,
+      p_answer: answer,
+      p_is_correct: isCorrect,
+      p_points: points,
+      p_time_remaining: state.timeRemaining,
+    });
+
+    if (!rpcError && rpcData) {
+      const result = rpcData as SubmitTvAnswerResult;
+      // Structured decision log - proves which state disagrees
+      console.log('[TVAnswer]', JSON.stringify({
+        session: state.sessionId,
+        room: result.room_id ?? state.roomId,
+        question_index: submittedIndex,
+        player: myPlayerId,
+        client: isHost ? 'host' : 'player',
+        accepted: result.accepted,
+        reason: result.reason ?? null,
+        expected_ids: result.expected_ids ?? null,
+        answered_ids: result.answered_ids ?? null,
+        all_answered: result.all_answered ?? null,
+        transitioned: result.transitioned ?? null,
+        live_status: result.live_status ?? null,
+        committed_at: result.committed_at ?? null,
+      }));
+
+      if (!result.accepted) {
+        // The server says this question is no longer live - undo the
+        // optimistic lock and resync so the player can answer the real one
+        console.warn('[submitAnswer] ❌ Server rejected tap (', result.reason,
+          ') - live question is', result.live_question_index, 'status', result.live_status);
+        setMyAnswer(null);
+        setMyScore(myScore);
+        void refetchSessionData(state.sessionId);
+        return { correct: false, points: 0 };
       }
 
+      persistScore();
+
+      // Reflect a DB-decided transition locally right away instead of
+      // waiting for the poll/realtime echo
+      if (result.transitioned) {
+        setState(prev => (
+          prev.currentQuestionIndex === submittedIndex && (prev.phase === 'question' || prev.phase === 'playing')
+            ? { ...prev, phase: 'reveal' }
+            : prev
+        ));
+      }
+      return { correct: isCorrect, points };
+    }
+
+    console.warn('[submitAnswer] submit_tv_answer RPC unavailable (', rpcError?.message,
+      ') - falling back to direct upsert path');
+
+    try {
+      // FALLBACK PATH (runs only until the migration is applied)
+      persistScore();
       // Record answer in database - use actual roomId for FK constraint
       // If roomId is not available, fetch it from the session
       let roomIdToUse = state.roomId;
