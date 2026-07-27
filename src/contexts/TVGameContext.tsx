@@ -764,9 +764,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // rows surviving unique-key collisions.
       const connectedPlayers = current.players.filter(p => p.id !== roundSuggesterId);
       if (connectedPlayers.length > 0 && connectedPlayers.every(p => p.hasAnswered)) {
-        console.log('[AutoAdvance] ✅ All', connectedPlayers.length, 'connected players answered (presence) → ADVANCE');
-        advanceToReveal('all connected players answered (presence)');
-        return;
+        // ANTI-CASCADE BRAKE: stale presence once made every question look
+        // instantly all-answered and the game auto-skipped a whole round in
+        // ~1s steps. Never advance on presence alone unless at least one
+        // real answer row exists for THIS question (or 4s+ elapsed, for the
+        // rare case where every row write failed).
+        const { count: brakeCount } = await supabase
+          .from('player_answers')
+          .select('*', { count: 'exact', head: true })
+          .eq('tv_session_id', current.sessionId)
+          .eq('question_index', current.currentQuestionIndex);
+        if ((brakeCount ?? 0) > 0 || timeSinceStart >= 4000) {
+          console.log('[AutoAdvance] ✅ All', connectedPlayers.length, 'connected players answered (presence) → ADVANCE');
+          advanceToReveal('all connected players answered (presence)');
+          return;
+        }
+        console.log('[AutoAdvance] ⚠️ Presence says all answered but 0 DB rows this question - holding (anti-cascade)');
       }
 
       // The locked count can exceed reality (paired-mode floor of 2, ghost
@@ -2439,6 +2452,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const players: TVPlayer[] = [];
 
         const currentQIndex = stateRef.current.currentQuestionIndex;
+        const currentRound = stateRef.current.roundNumber;
+        // An answer meta counts ONLY if it names the current question AND the
+        // current round - question indices repeat across rounds, and a
+        // round-1 "answered q0" meta surviving into round 2 made every
+        // question look instantly all-answered (1-second auto-skip cascade)
+        const metaAnsweredCurrent = (m: Record<string, unknown>): boolean =>
+          m.hasAnswered === true &&
+          (m.answeredQuestionIndex as number | undefined) === currentQIndex &&
+          (m.answeredRound === undefined || (m.answeredRound as number) === currentRound);
 
         Object.entries(presenceState).forEach(([key, presences]) => {
           // A key can carry MULTIPLE metas when a device reconnects (zombie
@@ -2449,7 +2471,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const metas = presences as unknown as Array<Record<string, unknown>>;
           let rawPresence: Record<string, unknown> | undefined = metas[metas.length - 1];
           for (const m of metas) {
-            if ((m.answeredQuestionIndex as number | undefined) === currentQIndex && m.hasAnswered === true) {
+            if (metaAnsweredCurrent(m)) {
               rawPresence = m;
               break;
             }
@@ -2464,9 +2486,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const isSystemDeviceByFlag = rawPresence?.isTVDisplay === true || rawPresence?.isSystemDevice === true;
           
           if (rawPresence && !isSystemDeviceByKey && !isSystemDeviceByNickname && !isSystemDeviceByFlag && 'nickname' in rawPresence) {
-            // Check if the answer is for the CURRENT question to prevent stale state display
-            const answeredQuestionIndex = rawPresence.answeredQuestionIndex as number | undefined;
-            const isCurrentQuestionAnswer = answeredQuestionIndex === currentQIndex;
+            // Answer state counts only for the CURRENT question of the
+            // CURRENT round (round-aware guard, same as the pick above)
+            const isCurrentQuestionAnswer = metaAnsweredCurrent(rawPresence);
             
             players.push({
               id: key,
@@ -3146,6 +3168,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           lastAnswerCorrect: isCorrect,
           lastAnswer: answer,
           answeredQuestionIndex: state.currentQuestionIndex, // Track which question this answer is for
+          answeredRound: stateRef.current.roundNumber, // Question indices REPEAT across rounds - round disambiguates
           answeredTimeRemaining: state.timeRemaining, // Track time for observer bonus calculation
           isHost,
           isActive: true,
