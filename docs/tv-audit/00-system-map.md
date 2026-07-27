@@ -86,4 +86,4 @@ exactly-once), timer expiry (host, CAS-guarded).
 - [x] 05 TV display UI
 - [x] 06 controllers UI
 - [x] 07 database & security
-- [ ] 08 synthesis & fix backlog
+- [x] 08 synthesis & fix backlog — AUDIT COMPLETE
