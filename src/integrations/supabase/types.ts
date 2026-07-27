@@ -1452,7 +1452,7 @@ export type Database = {
           is_correct: boolean
           points_earned: number
           question_index: number
-          room_id: string
+          room_id: string | null
           time_remaining: number
           tv_session_id: string | null
           user_id: string
@@ -1464,7 +1464,7 @@ export type Database = {
           is_correct: boolean
           points_earned?: number
           question_index: number
-          room_id: string
+          room_id?: string | null
           time_remaining: number
           tv_session_id?: string | null
           user_id: string
@@ -1476,7 +1476,7 @@ export type Database = {
           is_correct?: boolean
           points_earned?: number
           question_index?: number
-          room_id?: string
+          room_id?: string | null
           time_remaining?: number
           tv_session_id?: string | null
           user_id?: string
