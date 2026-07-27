@@ -13,6 +13,8 @@ interface QuizAnswerButtonProps {
   disabled?: boolean;
   showLabel?: boolean;
   className?: string;
+  /** TV screens are viewed from across the room - roughly doubles text size */
+  largeText?: boolean;
 }
 
 const stateStyles: Record<Exclude<QuizAnswerState, "loading" | "disabled">, {
@@ -60,7 +62,7 @@ const stateStyles: Record<Exclude<QuizAnswerState, "loading" | "disabled">, {
 };
 
 const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonProps>(
-  ({ state = "default", label = "A", text, onClick, disabled = false, showLabel = true, className }, ref) => {
+  ({ state = "default", label = "A", text, onClick, disabled = false, showLabel = true, className, largeText = false }, ref) => {
     const isLoading = state === "loading";
     const isDisabledState = state === "disabled";
     const styleKey = (isLoading || isDisabledState) ? "default" : state;
@@ -139,7 +141,9 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
             className={cn(
               "flex-1 px-3 break-words line-clamp-2",
               state === "next" ? "text-center" : "text-left",
-              text.length > 30 ? "text-sm" : "text-base"
+              largeText
+                ? (text.length > 30 ? "text-2xl" : "text-3xl")
+                : (text.length > 30 ? "text-sm" : "text-base")
             )}
             style={{ 
               color: styles.textColor,

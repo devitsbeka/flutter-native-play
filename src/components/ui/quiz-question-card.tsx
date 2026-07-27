@@ -40,16 +40,17 @@ interface QuizQuestionCardProps {
    * Hide question text - useful for image-only trivia where image speaks for itself
    */
   hideQuestionText?: boolean;
+  /** TV screens are viewed from across the room - roughly doubles text size */
+  largeText?: boolean;
 }
 
 // Dynamic font sizing based on question length
-// Questions are now max 65 chars, so we can use larger fonts
-function getQuestionStyles(text: string) {
+// Questions are now max 65 chars, so we can use larger fonts.
+// largeText (TV screens viewed from across the room) doubles the sizes.
+function getQuestionStyles(text: string, largeText = false) {
   const length = text.length;
-  if (length > 60) return { fontSize: "18px" };
-  if (length > 50) return { fontSize: "19px" };
-  if (length > 40) return { fontSize: "20px" };
-  return { fontSize: "20px" };  // Default 20px for short questions
+  const base = length > 60 ? 18 : length > 50 ? 19 : 20;
+  return { fontSize: `${largeText ? base * 2 : base}px` };
 }
 
 const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>(
@@ -71,12 +72,13 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       audioUrl,
       reserveTopSpace = false,
       hideQuestionText = false,
+      largeText = false,
     },
     ref
   ) => {
     const isLoading = state === "loading";
     const isFrozen = state === "frozen" && freezeTimeLeft > 0;
-    const questionStyles = getQuestionStyles(questionText);
+    const questionStyles = getQuestionStyles(questionText, largeText);
     const isLowTime = timerSeconds !== undefined && timerSeconds <= 5 && !isFrozen;
     const hasTopBadges = timerSeconds !== undefined || !!difficultyLabel;
 
