@@ -3024,9 +3024,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
 
     try {
-      // Update presence first (most important for live display)
+      // Update presence first (most important for live display).
+      // track() can silently fail on a flaky socket ('timed out'/'error') -
+      // without a retry the TV keeps showing this player as "waiting" for the
+      // whole question. Retry once shortly after; the DB answer row is the
+      // final backstop either way.
       if (presenceChannelRef.current) {
-        await presenceChannelRef.current.track({
+        const answeredPayload = {
           nickname: state.players.find(p => p.id === myPlayerId)?.nickname || 'Player',
           avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url,
           score: newScore,
@@ -3037,7 +3041,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           answeredTimeRemaining: state.timeRemaining, // Track time for observer bonus calculation
           isHost,
           isActive: true,
-        });
+        };
+        const trackStatus = await presenceChannelRef.current.track(answeredPayload).catch(() => 'error');
+        if (trackStatus !== 'ok') {
+          console.warn('[submitAnswer] Presence track failed:', trackStatus, '- retrying in 800ms');
+          setTimeout(() => {
+            presenceChannelRef.current?.track(answeredPayload).catch(() => {});
+          }, 800);
+        }
       }
 
       // Record answer in database - use actual roomId for FK constraint
