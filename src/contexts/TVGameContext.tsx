@@ -244,6 +244,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Pending reveal->next-question advance timers, keyed by the reveal's
   // question index so dep-churn effect re-runs can't cancel or duplicate them
   const revealAdvanceRef = useRef<{ qIndex: number; timers: ReturnType<typeof setTimeout>[]; started: boolean } | null>(null);
+  // Re-derives state.players from the live presence channel; re-run after a
+  // question-index change so answers tracked during the transition count
+  const presenceResyncRef = useRef<(() => void) | null>(null);
 
   // Track when the current question started (for safety guard)
   // CRITICAL: Set to 0 during countdown/transitions to DISABLE auto-advance checks
@@ -2166,8 +2169,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             // Log the player count from DB for debugging
             const dbPlayerCount = (newData as any).active_player_count as number | undefined;
             const isPaired = newData.is_paired ?? stateRef.current.isPaired;
-            console.log('[New Question] Started at', new Date().toISOString(), 
+            console.log('[New Question] Started at', new Date().toISOString(),
               'DB player count:', dbPlayerCount, 'isPaired:', isPaired);
+
+            // Re-evaluate presence under the NEW index (after state settles):
+            // an answer tracked moments before this update was judged against
+            // the old index and would otherwise stay invisible until the next
+            // unrelated presence event
+            setTimeout(() => presenceResyncRef.current?.(), 150);
 
             // Reset my presence for the new question so host does not treat me as already answered.
             if (presenceChannelRef.current && myPlayerId) {
@@ -2420,19 +2429,31 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       config: { presence: { key: playerId } },
     });
 
-    channel
-      .on('presence', { event: 'sync' }, () => {
+    // Extracted so it can ALSO run when the question index changes: an
+    // "answered" track that arrives while this device is still on the
+    // previous question gets evaluated against the OLD index and discarded -
+    // and with no later presence event nothing re-evaluates it, so the
+    // player stayed in the "waiting" zone until a fallback caught up.
+    const syncPlayersFromPresence = () => {
         const presenceState = channel.presenceState();
         const players: TVPlayer[] = [];
 
         const currentQIndex = stateRef.current.currentQuestionIndex;
 
         Object.entries(presenceState).forEach(([key, presences]) => {
-          // CRITICAL: a key can carry MULTIPLE metas when a device reconnects
-          // (zombie socket + fresh socket). presences[0] is the OLDEST meta -
-          // its frozen hasAnswered=false made the player look unanswered for
-          // the rest of the game. Always read the NEWEST meta.
-          const rawPresence = presences[presences.length - 1] as Record<string, unknown> | undefined;
+          // A key can carry MULTIPLE metas when a device reconnects (zombie
+          // socket + fresh socket) and their ORDER IS NOT GUARANTEED - any
+          // positional pick ([0] or [last]) sometimes reads the stale meta
+          // and freezes the player as "waiting". Select by CONTENT: prefer
+          // whichever meta answered the CURRENT question, else the last one.
+          const metas = presences as unknown as Array<Record<string, unknown>>;
+          let rawPresence: Record<string, unknown> | undefined = metas[metas.length - 1];
+          for (const m of metas) {
+            if ((m.answeredQuestionIndex as number | undefined) === currentQIndex && m.hasAnswered === true) {
+              rawPresence = m;
+              break;
+            }
+          }
 
           // Filter out TV_DISPLAY and TV_MIRROR - they are not players
           // Check key, nickname, AND explicit flags for comprehensive filtering
@@ -2472,7 +2493,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const seenNicknames = new Map<string, TVPlayer>();
         players.forEach(player => {
           const existing = seenNicknames.get(player.nickname);
-          if (!existing || player.score > existing.score || (player.score === existing.score && player.isActive)) {
+          if (!existing || player.score > existing.score || (player.score === existing.score && (player.isActive || player.hasAnswered))) {
             seenNicknames.set(player.nickname, player);
           }
         });
@@ -2495,7 +2516,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
 
         tvLogPresence('sync', players.length, players.map(p => p.nickname));
-      })
+    };
+    presenceResyncRef.current = syncPlayersFromPresence;
+
+    channel
+      .on('presence', { event: 'sync' }, syncPlayersFromPresence)
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
         tvLogPlayer('join', key, newPresences);
       })
