@@ -253,6 +253,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Latest server truth from the 1s sync poller - lets taps validate
   // against the live question with zero extra latency
   const lastDbSnapshotRef = useRef<{ index: number; phase: TVPhase; at: number } | null>(null);
+  // Set when our own RPC reported the all-answered reveal transition - the
+  // reveal duration can then be SHORT without consulting presence at all
+  const revealAllAnsweredRef = useRef<{ qIndex: number; round: number } | null>(null);
 
   // Track when the current question started (for safety guard)
   // CRITICAL: Set to 0 during countdown/transitions to DISABLE auto-advance checks
@@ -1740,35 +1743,49 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     };
 
-    // 1) Schedule the advance SYNCHRONOUSLY from the presence view - the
-    //    network can delay refinement below but can never block the advance
-    const presenceSaysAnswered = state.players.some(p => p.hasAnswered);
+    // 1) Schedule the advance SYNCHRONOUSLY - the network can delay the
+    //    refinement below but can never block the advance. "Someone answered"
+    //    is known for sure when this client's own RPC reported the reveal
+    //    transition; presence is only a secondary hint (it goes stale on this
+    //    host's network and used to force the 10s reveal from ~Q3 onward).
+    const rpcSaysAnswered =
+      revealAllAnsweredRef.current?.qIndex === revealQIndex &&
+      revealAllAnsweredRef.current?.round === stateRef.current.roundNumber;
+    const presenceSaysAnswered = rpcSaysAnswered || state.players.some(p => p.hasAnswered);
     const initialDuration = presenceSaysAnswered ? REVEAL_DURATION_MS : REVEAL_DURATION_LONG_MS;
-    console.log('[Reveal] ⏱️ Scheduled advance in', initialDuration, 'ms (presence anyAnswered:', presenceSaysAnswered, ')');
+    console.log('[Reveal] ⏱️ Scheduled advance in', initialDuration, 'ms (rpc:', rpcSaysAnswered, 'presence anyAnswered:', presenceSaysAnswered, ')');
     entry.timers.push(setTimeout(advance, initialDuration));
 
     // 2) Hard watchdog: no reveal may outlive the long duration + grace,
     //    regardless of what else fails
     entry.timers.push(setTimeout(advance, REVEAL_DURATION_LONG_MS + 4000));
 
-    // 3) Refinement: presence can be stale ("nobody answered" when everyone
-    //    did, which used to force the 10s reveal every question). If the DB
-    //    shows answers, shorten the pending long reveal to the short one.
-    if (!presenceSaysAnswered) {
-      supabase
-        .from('player_answers')
-        .select('*', { count: 'exact', head: true })
-        .eq('tv_session_id', state.sessionId)
-        .eq('question_index', revealQIndex)
-        .then(({ count }) => {
-          if ((count ?? 0) > 0 && revealAdvanceRef.current === entry && !entry.started) {
-            console.log('[Reveal] ⚡ DB shows answers - shortening reveal');
-            entry.timers.forEach(clearTimeout);
-            entry.timers.length = 0;
-            entry.timers.push(setTimeout(advance, REVEAL_DURATION_MS));
-            entry.timers.push(setTimeout(advance, REVEAL_DURATION_LONG_MS + 4000));
-          }
-        });
+    // 3) Refinement: when the provisional duration is the LONG one, ask the
+    //    DB (source of truth) whether anyone answered and shorten if so.
+    //    Retries once - a single failed request used to strand the full 10s.
+    if (initialDuration === REVEAL_DURATION_LONG_MS) {
+      const refine = (attempt: number) => {
+        supabase
+          .from('player_answers')
+          .select('*', { count: 'exact', head: true })
+          .eq('tv_session_id', state.sessionId)
+          .eq('question_index', revealQIndex)
+          .then(({ count, error }) => {
+            if (revealAdvanceRef.current !== entry || entry.started) return;
+            if (error) {
+              if (attempt < 2) setTimeout(() => refine(attempt + 1), 700);
+              return;
+            }
+            if ((count ?? 0) > 0) {
+              console.log('[Reveal] ⚡ DB shows answers - shortening reveal');
+              entry.timers.forEach(clearTimeout);
+              entry.timers.length = 0;
+              entry.timers.push(setTimeout(advance, REVEAL_DURATION_MS));
+              entry.timers.push(setTimeout(advance, REVEAL_DURATION_LONG_MS + 4000));
+            }
+          });
+      };
+      refine(1);
     }
 
     // NOTE: intentionally NO cleanup for dep-churn re-runs (the qIndex guard
@@ -3378,6 +3395,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       persistScore();
+
+      // Remember DB-confirmed answer state for this question - the reveal
+      // duration decision uses it instead of (possibly stale) presence
+      if (result.all_answered || result.transitioned) {
+        revealAllAnsweredRef.current = { qIndex: submittedIndex, round: stateRef.current.roundNumber };
+      }
 
       // Reflect a DB-decided transition locally right away instead of
       // waiting for the poll/realtime echo
