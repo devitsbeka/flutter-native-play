@@ -116,7 +116,7 @@ export const TVQuestionScreenV4: React.FC = () => {
         }
       })
       .subscribe();
-    const pollInterval = setInterval(fetchAnswers, 2000);
+    const pollInterval = setInterval(fetchAnswers, 1200);
     return () => {
       cancelled = true;
       clearInterval(pollInterval);
