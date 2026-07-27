@@ -786,17 +786,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // rows surviving unique-key collisions.
       const connectedPlayers = current.players.filter(p => p.id !== roundSuggesterId);
       if (connectedPlayers.length > 0 && connectedPlayers.every(p => p.hasAnswered)) {
-        // ANTI-CASCADE BRAKE: stale presence once made every question look
-        // instantly all-answered and the game auto-skipped a whole round in
-        // ~1s steps. Never advance on presence alone unless at least one
-        // real answer row exists for THIS question (or 4s+ elapsed, for the
-        // rare case where every row write failed).
+        // ANTI-CASCADE BRAKE: stale presence can claim everyone answered
+        // (carried-over flags right after a transition, zombie metas). A
+        // presence-only verdict NEVER advances without at least one real
+        // committed answer row for THIS question - a question nobody
+        // answered is closed by the 15s timer, nothing else. (A 4s escape
+        // hatch here once painted the correct answer green with zero
+        // answers in.)
         const { count: brakeCount } = await supabase
           .from('player_answers')
           .select('*', { count: 'exact', head: true })
           .eq('tv_session_id', current.sessionId)
           .eq('question_index', current.currentQuestionIndex);
-        if ((brakeCount ?? 0) > 0 || timeSinceStart >= 4000) {
+        if ((brakeCount ?? 0) > 0) {
           console.log('[AutoAdvance] ✅ All', connectedPlayers.length, 'connected players answered (presence) → ADVANCE');
           advanceToReveal('all connected players answered (presence)');
           return;
@@ -1708,12 +1710,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         
         // CRITICAL FIX: Update local state IMMEDIATELY for host to prevent "stuck" UI
         // The realtime subscription may have delays, so we update locally first
-        setState(prev => ({ 
-          ...prev, 
+        setState(prev => ({
+          ...prev,
           phase: 'question', // Map to 'question' phase (matches mapDbStatusToPhase)
           currentQuestionIndex: nextIndex,
           timeRemaining: QUESTION_TIME,
+          // The host skips the subscription's isNewQuestion reset (its local
+          // index already changed), so stale "everyone answered" flags from
+          // the previous question survived here and fooled the presence
+          // advance path. Reset explicitly.
+          players: prev.players.map(p => ({ ...p, hasAnswered: false, lastAnswerCorrect: null, lastAnswer: null })),
         }));
+        // Re-derive from live presence under the new index shortly after
+        setTimeout(() => presenceResyncRef.current?.(), 200);
         console.log('[Next Question] 📱 Host local state updated to question', nextIndex);
         
         // CRITICAL FIX: Mark timer as initialized for this question index
@@ -3159,9 +3168,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       // CRITICAL: Reset local timeRemaining to ensure host timer starts fresh
       // This must happen BEFORE the phase changes to 'question' which triggers the timer useEffect
+      // Also clear answered flags carried over from the previous round's last
+      // question - stale flags fool the presence advance path
       setState(prev => ({
         ...prev,
         timeRemaining: QUESTION_TIME,
+        players: prev.players.map(p => ({ ...p, hasAnswered: false, lastAnswerCorrect: null, lastAnswer: null })),
       }));
       
       // CRITICAL FIX: Mark timer as initialized for the ACTUAL question index from DB
