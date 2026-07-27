@@ -79,8 +79,8 @@ exactly-once), timer expiry (host, CAS-guarded).
 
 ## Audit run index
 
-- [x] 01 lifecycle (this run)
-- [ ] 02 game start & rounds
+- [x] 01 lifecycle
+- [x] 02 game start & rounds
 - [ ] 03 question loop
 - [ ] 04 realtime & sync resilience
 - [ ] 05 TV display UI
