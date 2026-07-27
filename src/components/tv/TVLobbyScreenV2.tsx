@@ -12,6 +12,7 @@ import retroTvIcon from '@/assets/retro-tv-colored.png';
 import triviaBuzzer from '@/assets/trivia-buzzer.png';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
 import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
+import { currentBuildLabel } from '@/hooks/useFreshBuildGuard';
 
 const MAX_PLAYERS = 8;
 const MIN_PLAYERS_TO_START = 2;
@@ -825,6 +826,11 @@ export const TVLobbyScreenV2: React.FC = () => {
           </motion.button>
         </motion.div>
       )}
+
+      {/* Build fingerprint - diagnosing "which code is this device running" */}
+      <span className="absolute bottom-1 left-2 text-purple-300/40 text-[10px] font-mono select-none">
+        {currentBuildLabel()}
+      </span>
 
       {/* Hint for non-hosts */}
       {!isHost && players.length > 0 && (

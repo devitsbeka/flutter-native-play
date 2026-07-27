@@ -8,16 +8,25 @@ import { useLocation } from "react-router-dom";
 // page is RUNNING against the one the server currently SERVES, and reloads
 // at a safe moment when they differ.
 
-const CHECK_INTERVAL_MS = 2 * 60 * 1000;
+const CHECK_INTERVAL_MS = 45 * 1000;
 
-// Never auto-reload in the middle of live gameplay - only on browse-y routes
-const SAFE_PREFIXES = ["/explore", "/leaderboards", "/shop", "/profile", "/settings"];
-const isSafeRoute = (pathname: string): boolean =>
-  pathname === "/" || SAFE_PREFIXES.some(p => pathname.startsWith(p));
+// The ONLY unsafe moment is an actively running game (question/reveal/
+// countdown phases - flagged by TVGameContext). Lobbies, menus, results:
+// all reconnect cleanly after a reload. The earlier route-based allowlist
+// left devices that lived on game screens all evening permanently stale.
+const isSafeMoment = (): boolean =>
+  !(window as unknown as { __liveGameActive?: boolean }).__liveGameActive;
 
 // Survives route changes: once a newer build is detected, reload at the
 // first safe opportunity
 let staleDetected = false;
+
+// Short human-readable fingerprint of the code THIS device is running -
+// rendered in lobby corners so build mismatches are visible at a glance
+export function currentBuildLabel(): string {
+  const b = runningBundle();
+  return b ? b.replace(/^index-/, "").replace(/\.js$/, "") : "dev";
+}
 
 function runningBundle(): string | null {
   const script = document.querySelector<HTMLScriptElement>('script[src*="assets/index-"]');
@@ -49,7 +58,7 @@ async function checkAndMaybeReload() {
     console.warn("[FreshBuild] New build deployed:", served, "(running:", current, ")");
   }
   staleDetected = true;
-  if (isSafeRoute(window.location.pathname)) {
+  if (isSafeMoment()) {
     console.warn("[FreshBuild] Reloading to pick up the new build");
     window.location.reload();
   }
@@ -58,10 +67,11 @@ async function checkAndMaybeReload() {
 export function useFreshBuildGuard() {
   const location = useLocation();
 
-  // Landing on a safe route while a newer build is known to exist → reload
+  // Any navigation while a newer build is known to exist → reload if no
+  // game is actively running
   useEffect(() => {
-    if (staleDetected && isSafeRoute(location.pathname)) {
-      console.warn("[FreshBuild] Safe route reached with stale build - reloading");
+    if (staleDetected && isSafeMoment()) {
+      console.warn("[FreshBuild] Stale build and no live game - reloading");
       window.location.reload();
     }
   }, [location.pathname]);
