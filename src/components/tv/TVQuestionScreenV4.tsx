@@ -103,17 +103,23 @@ export const TVQuestionScreenV4: React.FC = () => {
       }
     };
     fetchAnswers();
+    // Answers are UPSERTed - a write that lands on an existing row emits
+    // UPDATE, not INSERT, so listen to all events. The poll below also
+    // covers realtime drop-outs entirely (a missed event otherwise left a
+    // player stuck in the "waiting" zone until the timer ran out).
     const channel = supabase
       .channel(`tv-q-answers-${sessionId}-${currentQuestionIndex}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'player_answers', filter: `tv_session_id=eq.${sessionId}` }, (payload) => {
-        const row = payload.new as { user_id?: string; question_index?: number; is_correct?: boolean };
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'player_answers', filter: `tv_session_id=eq.${sessionId}` }, (payload) => {
+        const row = (payload.new || {}) as { user_id?: string; question_index?: number; is_correct?: boolean };
         if (row.question_index === currentQuestionIndex && row.user_id) {
           setDbAnswers(prev => new Map(prev).set(row.user_id!, !!row.is_correct));
         }
       })
       .subscribe();
+    const pollInterval = setInterval(fetchAnswers, 2000);
     return () => {
       cancelled = true;
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
   }, [sessionId, currentQuestionIndex]);
