@@ -3757,6 +3757,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_power_up: {
+        Args: { p_delta: number; p_type: string }
+        Returns: number
+      }
       format_display_name: { Args: { full_name: string }; Returns: string }
       generate_challenge_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
@@ -3827,6 +3831,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_participant_score: {
+        Args: { p_delta: number; p_room_id: string }
+        Returns: undefined
+      }
       increment_quiz_plays: { Args: { post_id: string }; Returns: undefined }
       is_tv_session_participant: {
         Args: { p_player_identifier: string; p_session_id: string }
@@ -3834,6 +3842,10 @@ export type Database = {
       }
       process_referral_reward: {
         Args: { p_invite_id: string; p_new_user_id: string }
+        Returns: undefined
+      }
+      reset_room_participants: {
+        Args: { p_room_id: string; p_status?: string }
         Returns: undefined
       }
       search_questions: {
@@ -3861,6 +3873,18 @@ export type Database = {
           updated_at: string
           video_url: string
         }[]
+      }
+      submit_tv_answer: {
+        Args: {
+          p_answer: string
+          p_is_correct: boolean
+          p_player_id: string
+          p_points: number
+          p_question_index: number
+          p_session_id: string
+          p_time_remaining: number
+        }
+        Returns: Json
       }
       update_user_currency: {
         Args: {
