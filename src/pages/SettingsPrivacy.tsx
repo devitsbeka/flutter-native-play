@@ -7,6 +7,7 @@ import { Shield, FileText, Download, Trash2, ChevronRight, Loader2, AlertTriangl
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { PROFILE_SELECT_COLUMNS } from "@/integrations/supabase/profileColumns";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -29,7 +30,7 @@ export default function SettingsPrivacy() {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("*")
+        .select(PROFILE_SELECT_COLUMNS)
         .eq("user_id", user.id)
         .single();
 

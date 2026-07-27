@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { PROFILE_SELECT_COLUMNS } from "@/integrations/supabase/profileColumns";
 import { useAuth } from "@/contexts/AuthContext";
 
 export interface InteractionLogItem {
@@ -89,11 +90,15 @@ export function usePlayerProfile(userId: string | null) {
         // Fetch profile
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("*")
+          .select(PROFILE_SELECT_COLUMNS)
           .eq("user_id", userId)
           .single();
 
         if (profileError) throw profileError;
+        // Explicit-column select degrades the inferred type to a generic
+        const profileTyped = profile as unknown as PlayerProfileData["profile"] & {
+          games_played?: number; games_won?: number; total_points?: number; best_streak?: number;
+        };
 
         // Fetch achievements
         const { data: achievements } = await supabase
@@ -206,21 +211,21 @@ export function usePlayerProfile(userId: string | null) {
           interactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         }
 
-        const gamesPlayed = profile?.games_played || 0;
-        const gamesWon = profile?.games_won || 0;
+        const gamesPlayed = profileTyped?.games_played || 0;
+        const gamesWon = profileTyped?.games_won || 0;
 
         setData({
-          profile,
+          profile: profileTyped,
           achievements: achievements || [],
           trivias: trivias || [],
           collections: collections || [],
           interactions: interactions.slice(0, 10), // Limit to 10 most recent
           stats: {
-            totalPoints: profile?.total_points || 0,
+            totalPoints: profileTyped?.total_points || 0,
             gamesPlayed,
             gamesWon,
             winRate: gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0,
-            bestStreak: profile?.best_streak || 0,
+            bestStreak: profileTyped?.best_streak || 0,
           },
           isFriend,
           friendshipStatus,
