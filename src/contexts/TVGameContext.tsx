@@ -1542,6 +1542,18 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => clearInterval(interval);
   }, [state.sessionId, state.phase, refetchSessionData]);
 
+  // Expose "a live game is running" to the FreshBuildGuard: stale-build
+  // reloads are safe anywhere EXCEPT during these phases (waiting in a
+  // lobby reconnects cleanly; mid-question must never reload)
+  useEffect(() => {
+    const activeGamePhases: TVPhase[] = ['question', 'reveal', 'countdown', 'round-intro'];
+    (window as unknown as { __liveGameActive?: boolean }).__liveGameActive =
+      !!state.sessionId && activeGamePhases.includes(state.phase);
+    return () => {
+      (window as unknown as { __liveGameActive?: boolean }).__liveGameActive = false;
+    };
+  }, [state.sessionId, state.phase]);
+
   // ============================================================================
   // SCREEN WAKE LOCK during active gameplay
   // A phone whose screen dims freezes the app: the host engine dies (sessions
