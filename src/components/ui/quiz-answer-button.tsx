@@ -142,7 +142,7 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
               "flex-1 px-3 break-words line-clamp-2",
               state === "next" ? "text-center" : "text-left",
               largeText
-                ? (text.length > 30 ? "text-2xl" : "text-3xl")
+                ? (text.length > 30 ? "text-[14px]" : "text-[18px]")
                 : (text.length > 30 ? "text-sm" : "text-base")
             )}
             style={{ 

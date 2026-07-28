@@ -50,7 +50,9 @@ interface QuizQuestionCardProps {
 function getQuestionStyles(text: string, largeText = false) {
   const length = text.length;
   const base = length > 60 ? 18 : length > 50 ? 19 : 20;
-  return { fontSize: `${largeText ? base * 2 : base}px` };
+  // TV (largeText) reads from across the room. 1.4x was tuned down from 2x -
+  // 2x crowded the card and left no room for the category icon.
+  return { fontSize: `${largeText ? Math.round(base * 1.4) : base}px` };
 }
 
 const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>(
@@ -249,8 +251,12 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             // Reduce top padding if we have media (no need for icon space)
             hasMedia && "pt-4",
             !hasMedia && hasTopBadges && !reserveTopSpace && "pt-16 [@media(max-height:700px)]:pt-14 [@media(max-height:600px)]:pt-12",
-            !hasMedia && hasTopBadges && reserveTopSpace && "pt-[90px] [@media(max-height:700px)]:pt-[74px] [@media(max-height:600px)]:pt-[66px]",
-            !hasMedia && !hasTopBadges && reserveTopSpace && "pt-[66px] [@media(max-height:700px)]:pt-[50px] [@media(max-height:600px)]:pt-[50px]"
+            !hasMedia && hasTopBadges && reserveTopSpace && !largeText && "pt-[90px] [@media(max-height:700px)]:pt-[74px] [@media(max-height:600px)]:pt-[66px]",
+            !hasMedia && !hasTopBadges && reserveTopSpace && !largeText && "pt-[66px] [@media(max-height:700px)]:pt-[50px] [@media(max-height:600px)]:pt-[50px]",
+            // TV renders a much larger category icon overlapping the top of the
+            // card, so it needs proportionally more clearance or the icon sits
+            // on the question text.
+            !hasMedia && reserveTopSpace && largeText && "pt-[118px] [@media(max-height:700px)]:pt-[100px]"
           )}>
             {isLoading ? (
               <div className="space-y-2 w-full">
