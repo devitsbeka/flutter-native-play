@@ -1,0 +1,35 @@
+-- Tier 0 · S-2 (step 2): block ANONYMOUS writes to session state.
+--
+-- Verified exploitable with nothing but the public key and a session id:
+--   * end a live game        (status 'playing' -> 'completed')
+--   * skip questions         (current_question_index 0 -> 9)
+-- Session ids are enumerable because tv_sessions is world-readable, so an
+-- attacker never had to be in the game.
+--
+-- Product rule (confirmed 2026-07-28): **only a logged-in user can host.**
+-- Therefore no legitimate `anon` client ever writes tv_sessions:
+--   * the TV display is anon but only READS session state (its writes are
+--     confined to presence + the answer RPC)
+--   * guest players answer through submit_tv_answer (SECURITY DEFINER,
+--     which bypasses RLS by design)
+--   * pairing/host controls run on the authenticated host's device
+--     (useTVDiscovery writes host_user_id = auth user id)
+--
+-- Table privileges and RLS are ANDed, so revoking the privilege blocks the
+-- write no matter how permissive the existing policies are - this does not
+-- depend on knowing their names.
+--
+-- REVERT (if any guest/TV path turns out to need it):
+--   GRANT UPDATE ON public.tv_sessions TO anon;
+
+REVOKE UPDATE ON public.tv_sessions FROM anon;
+
+-- Authenticated hosts keep full access (unchanged), and SECURITY DEFINER
+-- RPCs continue to work for guests.
+--
+-- STILL OPEN after this step (tracked in docs/tv-audit/07-database-security.md):
+--   * an AUTHENTICATED user can still write any session's state - closing
+--     that needs host-only policies, which in turn needs the host writes
+--     routed through RPCs (S-2 step 3)
+--   * tv_players.current_round_score remains client-writable until the
+--     observer bonus moves server-side (audit 03:M-1)
