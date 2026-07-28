@@ -78,7 +78,7 @@ export default function Flow() {
   const [knowledgeSources, setKnowledgeSources] = useState<KnowledgeSource[]>([]);
   const [isUserEditing, setIsUserEditing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const fetchStatsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fetchStatsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keyboard shortcuts
   useEffect(() => {

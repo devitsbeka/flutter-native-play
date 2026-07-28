@@ -46,7 +46,7 @@ export function useExternalDisplay() {
   });
   
   const presentationRef = useRef<PresentationConnection | null>(null);
-  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const checkIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Check if external display APIs are supported
   const checkSupport = useCallback(() => {

@@ -50,8 +50,8 @@ export function useDidYouKnow() {
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasInitialized = useRef(false);
 
   // Get current fact

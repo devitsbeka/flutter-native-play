@@ -18,7 +18,7 @@ const TVLobbyContent: React.FC = () => {
   const navigate = useNavigate();
   const { phase, code, createSession, players, sessionId, isPaired } = useTVGame();
   const lastRefreshRef = useRef<number>(Date.now());
-  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasInitializedRef = useRef(false);
   const hasRedirectedRef = useRef(false);
 

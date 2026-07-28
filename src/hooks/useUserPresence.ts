@@ -73,7 +73,7 @@ const detectCountryFromTimezone = (): string | null => {
 export const useUserPresence = () => {
   const { user, session } = useAuth();
   const location = useLocation();
-  const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countryCodeRef = useRef<string | null>(null);
   const isUpdatingRef = useRef(false);
   const currentRoomIdRef = useRef<string | null>(null);

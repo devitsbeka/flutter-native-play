@@ -50,7 +50,7 @@ export const TVLobbyScreenV2: React.FC = () => {
   
   // Auto-start countdown state
   const [autoStartCountdown, setAutoStartCountdown] = useState<number | null>(null);
-  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousPlayerCountRef = useRef<number>(0);
   
   // Track newly joined players for entrance animations
