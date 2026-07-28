@@ -1492,6 +1492,32 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (!isHostRef.current && (dbPhase !== s.phase || dbIndex !== s.currentQuestionIndex)) {
         console.log('[SyncPoll] ⚠️ Diverged (local', s.phase, s.currentQuestionIndex, 'vs db', dbPhase, dbIndex, ') - resyncing');
         refetchSessionData(s.sessionId);
+        return;
+      }
+
+      // HOST: excluding it from phase divergence entirely left a real hole -
+      // when the DB itself ended the question (submit_tv_answer's reveal
+      // transition) and the host's realtime missed it, the host stayed in
+      // 'question' forever. The reveal effect owns reveal->next and only runs
+      // in 'reveal', while the question heartbeat bails because the DB status
+      // is no longer 'playing' - so nothing advanced and the next question
+      // took ages. Within the SAME question, phases only ever move forward
+      // (question -> reveal -> results), so a DB phase further along than the
+      // host's is unambiguously the host being behind - never the host
+      // leading during its own transition.
+      const phaseRank: Record<string, number> = {
+        countdown: 1, question: 2, playing: 2, reveal: 3, results: 4, completed: 4,
+      };
+      const localRank = phaseRank[s.phase];
+      const remoteRank = phaseRank[dbPhase];
+      if (
+        isHostRef.current &&
+        dbIndex === s.currentQuestionIndex &&
+        localRank !== undefined && remoteRank !== undefined &&
+        remoteRank > localRank
+      ) {
+        console.log('[SyncPoll] ⚠️ Host behind on phase (local', s.phase, 'vs db', dbPhase, ') - resyncing');
+        refetchSessionData(s.sessionId);
       }
     }, 1000);
 
