@@ -1537,6 +1537,51 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [state.sessionId, state.phase]);
 
   // ============================================================================
+  // REVEAL -> NEXT QUESTION is driven by the DATABASE, nudged by EVERY device
+  // ============================================================================
+  // This transition used to belong exclusively to the host's phone, making it
+  // a single point of failure: if that one device lagged, backgrounded, or
+  // its socket blinked, everyone sat on the reveal (measured ~20s instead of
+  // 1.4s). Now the DB decides and performs it; any device may ask, and the
+  // session row lock + CAS make it exactly-once. The TV is mains-powered and
+  // never sleeps, so the game keeps moving even if every phone stalls.
+  // Runs on ALL devices - deliberately not host-gated.
+  // ============================================================================
+  useEffect(() => {
+    if (!state.sessionId || state.sessionId === 'mock-session-id') return;
+    if (state.phase !== 'reveal') return;
+
+    let cancelled = false;
+    const nudge = async () => {
+      if (cancelled) return;
+      try {
+        const { data } = await (supabase.rpc as unknown as (
+          fn: string, args: Record<string, unknown>
+        ) => Promise<{ data: unknown }>)('tv_advance_question', {
+          p_session_id: state.sessionId,
+        });
+        const r = data as { advanced?: boolean; next_index?: number; reason?: string } | null;
+        if (r?.advanced) {
+          console.log('[RevealAdvance] ✅ DB advanced to question', r.next_index);
+        }
+        // reason === 'round_end' needs no action here: the host's existing
+        // reveal effect owns round end (queue consumption + question fetch)
+      } catch {
+        // Never block the reveal on a failed nudge - the host's own timer
+        // and the watchdog remain as backstops
+      }
+    };
+
+    // Ask immediately, then keep asking until the DB says it's time
+    nudge();
+    const interval = setInterval(nudge, 700);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [state.sessionId, state.phase]);
+
+  // ============================================================================
   // SCREEN WAKE LOCK during active gameplay
   // A phone whose screen dims freezes the app: the host engine dies (sessions
   // strand in reveal) and players' taps land on stale questions. Hold a wake
