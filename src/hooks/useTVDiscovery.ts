@@ -26,7 +26,7 @@ export function useTVDiscovery() {
   const [connectionState, setConnectionState] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
   const [connectedSessionId, setConnectedSessionId] = useState<string | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Start scanning for nearby TVs via Supabase Realtime Presence
   const startScanning = useCallback(() => {

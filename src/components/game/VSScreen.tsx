@@ -84,7 +84,7 @@ export function VSScreen() {
   
   // Opponent slot state
   const [currentAvatar, setCurrentAvatar] = useState<string>(baseMascotAvatars[0]);
-  const opponentIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const opponentIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Mixed category constant
   const MIXED_CATEGORY = {
@@ -98,7 +98,7 @@ export function VSScreen() {
   const [categoryPool, setCategoryPool] = useState<typeof categories>([]);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<{id: string; name: string; videoUrl: string} | null>(null);
-  const categoryIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const categoryIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const categoryPoolSetForStageRef = useRef(false);
 
   // Player data

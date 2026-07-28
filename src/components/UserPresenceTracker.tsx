@@ -18,7 +18,7 @@ import logger from '@/utils/logger';
 export const UserPresenceTracker = () => {
   const { user, session } = useAuth();
   const location = useLocation();
-  const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isUpdatingRef = useRef(false);
 
   // Session tracking for analytics (separate from presence)

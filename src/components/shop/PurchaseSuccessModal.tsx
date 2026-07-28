@@ -41,7 +41,7 @@ export function PurchaseSuccessModal({
 }: PurchaseSuccessModalProps) {
   const { t } = useLanguage();
   const wasOpenRef = useRef(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Memoized close handler to ensure cleanup
   const handleClose = useCallback(() => {

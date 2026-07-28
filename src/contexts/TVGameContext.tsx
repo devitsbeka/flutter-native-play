@@ -195,7 +195,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [myScore, setMyScore] = useState(0);
   const [myAnswer, setMyAnswer] = useState<string | null>(null);
   
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const answersChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -2777,8 +2777,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // (This keeps queue = "future rounds" after game starts.)
       if (queueItems && queueItems.length > 0) {
         const first = [...queueItems]
-          .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
-          .at(0) as any;
+          .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))[0] as any;
 
         const firstMatchesCurrent = Boolean(
           (categoryId && first?.category_id === categoryId) ||

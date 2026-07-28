@@ -39,7 +39,7 @@ export function InteractiveBlobVideo({ iconUrl, iconSlug, videoSrc, isLocked, sh
   const [slotIndex, setSlotIndex] = useState(0);
   const [iconsPreloaded, setIconsPreloaded] = useState(false);
   const [slotSequence, setSlotSequence] = useState<number[]>([]);
-  const slotIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const slotIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const spinCountRef = useRef(0);
   
   // Get all category icons for slot animation
