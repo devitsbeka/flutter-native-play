@@ -1477,7 +1477,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (!s.sessionId) return;
       const { data } = await supabase
         .from('tv_sessions')
-        .select('status, current_question_index')
+        .select('status, current_question_index, question_start_time')
         .eq('id', s.sessionId)
         .maybeSingle();
       if (!data) return;
@@ -1485,6 +1485,34 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const dbIndex = data.current_question_index ?? 0;
       const dbPhase = mapDbStatusToPhase(data.status);
       lastDbSnapshotRef.current = { index: dbIndex, phase: dbPhase, at: Date.now() };
+
+      // QUESTION -> REVEAL on timeout is asked for by EVERY device, using the
+      // server's own question_start_time. It used to belong exclusively to the
+      // host phone's local 1s countdown, so a throttled/backgrounded host
+      // stretched a 15s question to 20-25s (its only backstop is a heartbeat
+      // that doesn't look until elapsed > 20s). The comparison below is just a
+      // cheap filter - the RPC re-checks against the database clock, so a
+      // device with a skewed clock simply gets 'too_early' and asks again next
+      // tick. Exactly-once is guaranteed by the row lock + CAS inside the RPC.
+      if ((data.status === 'playing' || data.status === 'question') && data.question_start_time) {
+        const elapsedMs = Date.now() - new Date(data.question_start_time).getTime();
+        if (elapsedMs >= QUESTION_TIME * 1000) {
+          void (supabase.rpc as unknown as (
+            fn: string, args: Record<string, unknown>
+          ) => Promise<{ data: unknown }>)('tv_expire_question', {
+            p_session_id: s.sessionId,
+            p_question_time: QUESTION_TIME,
+          }).then(({ data: res }) => {
+            const r = res as { expired?: boolean; question_index?: number } | null;
+            if (r?.expired) {
+              console.log('[SyncPoll] ⏱️ DB expired question', r.question_index, '- reveal started');
+            }
+          }).catch(() => {
+            // Never block the loop on a failed nudge - the host's local timer
+            // and heartbeat remain as backstops
+          });
+        }
+      }
 
       // Behind on question index → resync immediately (DB truth is ahead)
       if (dbIndex > s.currentQuestionIndex) {
