@@ -1748,10 +1748,25 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           });
         }
 
-        // UNIFIED: Use prepareForPlaying for consistent initialization
-        // This clears ALL answers (not just current question) and verifies player count
+        // UNIFIED: Use prepareForPlaying for consistent initialization.
+        //
+        // skipAnswerCleanup is NOT optional here. This path used to DELETE
+        // every answer row for the session as its first step, while the
+        // reveal was still running - and tv_advance_question decides the
+        // reveal length (1.4s vs the 10s reading-time reveal) by looking at
+        // exactly those rows. Measured live: a reveal that began with two
+        // answers in got wiped at t=1.4s, the next nudge counted zero, and
+        // the room sat there for 10.2 seconds. Answer cleanup now belongs to
+        // tv_advance_question alone, which does it inside the advance
+        // transaction, after the reveal length has been decided.
+        // Rows left behind for the finished question are harmless: every
+        // consumer (submit_tv_answer, checkAndAdvanceIfAllAnswered, the
+        // reveal count) filters by question_index, and the next DB advance
+        // clears them.
         console.log('[Next Question] 🎯 Using UNIFIED prepareForPlaying...');
-        const { expectedCount } = await prepareForPlaying(state.sessionId, nextIndex);
+        const { expectedCount } = await prepareForPlaying(state.sessionId, nextIndex, {
+          skipAnswerCleanup: true,
+        });
         console.log('[Next Question] ✅ UNIFIED preparation complete, expectedCount:', expectedCount);
         
         // Transition to playing with verified count. CAS on the reveal's own
