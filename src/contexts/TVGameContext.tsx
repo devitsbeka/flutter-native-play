@@ -3597,108 +3597,29 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return { correct: isCorrect, points };
     }
 
-    console.warn('[submitAnswer] submit_tv_answer RPC unavailable (', rpcError?.message,
-      ') - falling back to direct upsert path');
-
-    try {
-      // FALLBACK PATH (runs only until the migration is applied)
-      persistScore();
-      // Record answer in database - use actual roomId for FK constraint
-      // If roomId is not available, fetch it from the session
-      let roomIdToUse = state.roomId;
-      if (!roomIdToUse && state.sessionId) {
-        console.log('[submitAnswer] roomId not in state, fetching from DB...');
-        const { data: sessionData } = await supabase
-          .from('tv_sessions')
-          .select('room_id')
-          .eq('id', state.sessionId)
-          .maybeSingle();
-        roomIdToUse = sessionData?.room_id || null;
-        console.log('[submitAnswer] Fetched roomId:', roomIdToUse);
-      }
-
-      // Room-less TV sessions (TV opened directly, no room attached) are
-      // valid - answers are keyed by tv_session_id; room_id is optional
-      // context (nullable after the 20260728 migration). Bailing here used
-      // to silently drop EVERY answer in room-less games.
-      if (!roomIdToUse) {
-        console.warn('[submitAnswer] No roomId - inserting answer with tv_session_id only');
-      }
-
-      // Upsert on the (tv_session_id, user_id, question_index) unique key:
-      // question indices repeat across rounds in the same session, so a plain
-      // insert hits 23505 from round 2 onward whenever stale rows survive the
-      // between-round cleanup - the lost row then stalled auto-advance until
-      // the timer ran out
-      const answerRow = {
-        tv_session_id: state.sessionId,
-        // Nullable after the 20260728 migration; generated types are stale
-        room_id: roomIdToUse as unknown as string,
-        user_id: myPlayerId,
-        question_index: state.currentQuestionIndex,
-        answer,
-        is_correct: isCorrect,
-        points_earned: points,
-        time_remaining: state.timeRemaining,
-      };
-      let { error } = await supabase.from('player_answers')
-        .upsert(answerRow, { onConflict: 'tv_session_id,user_id,question_index' });
-
-      // A lost answer row stalls the whole room to the full timer - one
-      // failed write is worth a retry before giving up
-      if (error && error.code !== '23505') {
-        console.warn('[submitAnswer] ⚠️ Answer write failed:', error.message, '- retrying once');
-        await new Promise(resolve => setTimeout(resolve, 500));
-        ({ error } = await supabase.from('player_answers')
-          .upsert(answerRow, { onConflict: 'tv_session_id,user_id,question_index' }));
-      }
-
-      if (error) {
-        tvLogError('submitAnswer DB insert', error);
-        if (error.code !== '23505') {
-          // The row genuinely did not land - stop pretending it did
-          revertOptimisticAnswer(error.message || 'insert failed');
-          return { correct: false, points: 0 };
-        }
-        // IMPORTANT: Even on duplicate key error (23505), the answer exists in DB
-        // Still trigger the auto-advance check - this prevents stalls in True/False games
-        if (error.code === '23505') {
-          console.log('[AutoAdvance] ⚠️ Duplicate key error (23505) - answer already exists');
-          
-          // CRITICAL FIX: Set myAnswer anyway so UI shows "Answer Submitted" state
-          // This prevents users from seeing clickable buttons after a duplicate error
-          setMyAnswer(answer);
-          
-          if (isHostRef.current) {
-            console.log('[AutoAdvance] 🔄 Triggering check anyway to prevent stall...');
-            tvLog('Duplicate answer detected, triggering auto-advance check');
-            setTimeout(() => {
-              checkAndAdvanceIfAllAnswered();
-            }, 150);
-          }
-        }
-      } else {
-        console.log('[AutoAdvance] ✅ Answer inserted successfully', {
-          questionIndex: state.currentQuestionIndex,
-          isCorrect,
-          points,
-        });
-        // Belt-and-suspenders: trigger DB-based check after successful insert
-        // The realtime subscription will also trigger this, but this is faster
-        if (isHostRef.current) {
-          console.log('[AutoAdvance] 🔄 Host triggering immediate check after own answer...');
-          setTimeout(() => {
-            checkAndAdvanceIfAllAnswered();
-          }, 100);
-        }
-      }
-
-      return { correct: isCorrect, points };
-    } catch (error) {
-      tvLogError('submitAnswer', error);
-      revertOptimisticAnswer('exception');
-      return { correct: false, points: 0 };
-    }
+    // NO CLIENT-SIDE FALLBACK WRITE.
+    //
+    // This used to fall through to a direct upsert into player_answers when
+    // the RPC errored - a leftover from before submit_tv_answer existed. It
+    // is what forced player_answers to keep an INSERT policy permissive
+    // enough to let ANY caller write a row for ANY user_id (the scan's
+    // "Any room participant can insert answers as another player"). The RPC
+    // is SECURITY DEFINER, so it does not need that policy at all; the
+    // permissive policy existed only for this path.
+    //
+    // It also could not really help: reaching here means the round trip to
+    // the database failed, and a direct write is the same round trip. What
+    // it did instead was bypass the server's validation - no stale-question
+    // check, no server-owned scoring - and report success for a write that
+    // may never have been accepted.
+    //
+    // Failing honestly is better: the tap is released, the player can tap
+    // again, and the question still ends on the server's 15s timer.
+    console.error('[submitAnswer] submit_tv_answer failed (', rpcError?.message,
+      ') - releasing the tap rather than writing around the server');
+    revertOptimisticAnswer(rpcError?.message || 'rpc failed');
+    void refetchSessionData(state.sessionId);
+    return { correct: false, points: 0 };
   }, [state.sessionId, state.roomId, state.questions, state.currentQuestionIndex, state.timeRemaining, state.players, myPlayerId, myAnswer, myScore, isHost, refetchSessionData]);
 
   // Mark ready for next round (host-only trigger)
