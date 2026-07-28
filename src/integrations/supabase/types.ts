@@ -3948,6 +3948,7 @@ export type Database = {
         }
         Returns: Json
       }
+      tv_advance_question: { Args: { p_session_id: string }; Returns: Json }
       update_user_currency: {
         Args: {
           p_coins_delta?: number
