@@ -1,11 +1,18 @@
-// Explicit profile column list that OMITS the credential secret
-// `security_answer_hash`. That column is written at signup and verified
-// only server-side (edge function `reset-password-with-security`, service
-// role) - the client never needs to read it. Selecting columns explicitly
-// (instead of `*`) lets the database REVOKE SELECT on the hash from
-// anon/authenticated without breaking own-profile reads.
+// Explicit profile column list that OMITS the credential secrets
+// `security_answer_hash` and `security_question_id`. Both are written at
+// signup and used only server-side (edge function
+// `reset-password-with-security`, service role) - the client never needs to
+// read either. Selecting columns explicitly (instead of `*`) lets the
+// database withhold them from anon/authenticated without breaking
+// own-profile reads. Writes are unaffected: an UPDATE needs UPDATE
+// privilege on a column, not SELECT.
 //
-// Keep in sync with the `profiles` table columns (minus the secret).
+// `security_question_id` is omitted for the same reason: naming the
+// question that guards an account helps attack the reset flow, and the
+// client never reads it - ForgotPassword gets it from the
+// `reset-password-with-security` edge function. Signup writes it.
+//
+// Keep in sync with the `profiles` table columns (minus those two).
 export const PROFILE_SELECT_COLUMNS = [
   "id",
   "user_id",
@@ -28,7 +35,6 @@ export const PROFILE_SELECT_COLUMNS = [
   "last_play_regen_at",
   "referral_code",
   "referred_by_invite_id",
-  "security_question_id",
   "created_at",
   "updated_at",
 ].join(", ");
