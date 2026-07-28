@@ -246,11 +246,20 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Re-derives state.players from the live presence channel; re-run after a
   // question-index change so answers tracked during the transition count
   const presenceResyncRef = useRef<(() => void) | null>(null);
-  // This device's own nickname, remembered from join/presence setup. Tracking
-  // presence with a literal 'Player' fallback created a GHOST podium entry:
-  // displays group people by nickname, so the same human appeared twice - once
-  // correctly, and once as "Player" with 0 points.
+  // This device's own nickname, remembered from join/presence setup.
+  // NEVER fall back to a literal like 'Player' or 'Host' when re-tracking:
+  // displays group people by nickname, so an invented one becomes an extra
+  // human on screen - a third podium card with 0 points and no avatar in a
+  // two-person game. Empty is the honest answer, and the presence sync
+  // deliberately ignores entries that carry it.
   const myNicknameRef = useRef<string>('');
+
+  // Normalized nicknames of the DURABLE roster (tv_players). Presence is
+  // decoration; a presence entry with no tv_players row is not a person, no
+  // matter what nickname it carries. Empty = not loaded yet, in which case
+  // nothing is filtered (never hide a real player behind a pending fetch).
+  const rosterNicknamesRef = useRef<Set<string>>(new Set());
+  const normNickname = (s: string | null | undefined) => (s || '').trim().toLowerCase();
 
   // True when the page went hidden during the current question - a wake-up
   // tap must verify the server's question before being accepted
@@ -1350,7 +1359,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (presenceChannelRef.current && myPlayerId) {
           const me = stateRef.current.players.find(p => p.id === myPlayerId);
           await presenceChannelRef.current.track({
-            nickname: me?.nickname || myNicknameRef.current || 'Player',
+            nickname: me?.nickname || myNicknameRef.current || '',
             avatar_url: me?.avatar_url ?? null,
             score: me?.score ?? myScoreRef.current,
             hasAnswered: myAnswerRef.current !== null,
@@ -1558,6 +1567,52 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => clearInterval(interval);
   }, [state.sessionId, state.phase, refetchSessionData]);
 
+  // ============================================================================
+  // DURABLE ROSTER FEED - who is actually in this game
+  // ============================================================================
+  // state.players is derived from presence, and presence will happily carry an
+  // entry for a device that never became a player. That is how a third
+  // "Player" with 0 points and no avatar reached the podium of a two-person
+  // game. Keep the tv_players nicknames to hand so the presence sync can throw
+  // such entries away. Cheap: one select per session plus realtime deltas.
+  // ============================================================================
+  useEffect(() => {
+    if (!state.sessionId || state.sessionId === 'mock-session-id') return;
+    let cancelled = false;
+
+    const loadRoster = async () => {
+      const { data } = await supabase
+        .from('tv_players')
+        .select('nickname')
+        .eq('tv_session_id', state.sessionId);
+      if (cancelled || !data) return;
+      const next = new Set(
+        data.map(r => normNickname(r.nickname)).filter(Boolean)
+      );
+      const prev = rosterNicknamesRef.current;
+      const changed = next.size !== prev.size || [...next].some(n => !prev.has(n));
+      rosterNicknamesRef.current = next;
+      // A newly-loaded (or newly-shrunk) roster can retire entries the presence
+      // sync already accepted, so re-derive rather than wait for the next event.
+      if (changed) presenceResyncRef.current?.();
+    };
+
+    loadRoster();
+    const channel = supabase
+      .channel(`tv-roster-names-${state.sessionId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tv_players', filter: `tv_session_id=eq.${state.sessionId}` },
+        loadRoster
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [state.sessionId]);
+
   // Expose "a live game is running" to the FreshBuildGuard: stale-build
   // reloads are safe anywhere EXCEPT during these phases (waiting in a
   // lobby reconnects cleanly; mid-question must never reload)
@@ -1736,7 +1791,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMyAnswer(null);
         if (presenceChannelRef.current) {
           await presenceChannelRef.current.track({
-            nickname: state.players.find(p => p.id === myPlayerId)?.nickname || 'Host',
+            nickname: state.players.find(p => p.id === myPlayerId)?.nickname || myNicknameRef.current || '',
             avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url,
             score: myScore,
             hasAnswered: false,
@@ -2384,7 +2439,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               const me = stateRef.current.players.find((p) => p.id === myPlayerId);
               // Fire-and-forget: presence track is async, but we must not block the realtime callback.
               void presenceChannelRef.current.track({
-                nickname: me?.nickname || myNicknameRef.current || 'Player',
+                nickname: me?.nickname || myNicknameRef.current || '',
                 avatar_url: me?.avatar_url ?? null,
                 score: typeof me?.score === 'number' ? me.score : myScore,
                 hasAnswered: false,
@@ -2680,7 +2735,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           // inventing "Player" for it is exactly what produced the ghost
           // podium card. Skip it; the DB roster fallback covers real players.
           const presenceNickname = ((rawPresence?.nickname as string) || '').trim();
-          if (rawPresence && !isSystemDeviceByKey && !isSystemDeviceByNickname && !isSystemDeviceByFlag && presenceNickname) {
+          // ...and an entry whose nickname matches NOBODY in tv_players is not
+          // a person either. Suppressing the invented names at their source
+          // only covers the paths we know about; this covers the rest, because
+          // joining a game means getting a row - presence alone never does.
+          const roster = rosterNicknamesRef.current;
+          const isOnRoster = roster.size === 0 || roster.has(normNickname(presenceNickname));
+          if (rawPresence && !isSystemDeviceByKey && !isSystemDeviceByNickname && !isSystemDeviceByFlag && presenceNickname && isOnRoster) {
             // Answer state counts only for the CURRENT question of the
             // CURRENT round (round-aware guard, same as the pick above)
             const isCurrentQuestionAnswer = metaAnsweredCurrent(rawPresence);
@@ -3390,7 +3451,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const trackAnswered = async () => {
       if (!presenceChannelRef.current) return;
       const answeredPayload = {
-        nickname: state.players.find(p => p.id === myPlayerId)?.nickname || myNicknameRef.current || 'Player',
+        nickname: state.players.find(p => p.id === myPlayerId)?.nickname || myNicknameRef.current || '',
         avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url,
         score: newScore,
         hasAnswered: true,
@@ -3423,7 +3484,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setMyScore(myScore);
       if (presenceChannelRef.current) {
         void presenceChannelRef.current.track({
-          nickname: state.players.find(p => p.id === myPlayerId)?.nickname || myNicknameRef.current || 'Player',
+          nickname: state.players.find(p => p.id === myPlayerId)?.nickname || myNicknameRef.current || '',
           avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url,
           score: myScore,
           hasAnswered: false,
@@ -3650,7 +3711,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const myPlayer = state.players.find(p => p.id === myPlayerId);
       // Reset my presence flags (defensive) and move session to countdown.
       await presenceChannelRef.current.track({
-        nickname: myPlayer?.nickname || 'Host',
+        nickname: myPlayer?.nickname || myNicknameRef.current || '',
         avatar_url: myPlayer?.avatar_url,
         score: myScore,
         hasAnswered: false,
@@ -3712,7 +3773,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     const myPlayer = state.players.find(p => p.id === myPlayerId);
     await presenceChannelRef.current.track({
-      nickname: myPlayer?.nickname || myNicknameRef.current || 'Player',
+      nickname: myPlayer?.nickname || myNicknameRef.current || '',
       avatar_url: myPlayer?.avatar_url,
       score: myScore,
       hasAnswered: false,
@@ -3888,7 +3949,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (presenceChannelRef.current) {
         const myPlayer = state.players.find(p => p.id === myPlayerId);
         await presenceChannelRef.current.track({
-          nickname: myPlayer?.nickname || myNicknameRef.current || 'Player',
+          nickname: myPlayer?.nickname || myNicknameRef.current || '',
           avatar_url: myPlayer?.avatar_url,
           score: 0,  // Reset score
           hasAnswered: false,
