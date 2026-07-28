@@ -89,11 +89,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .from("profiles")
                 .update({ country_code: detectedCountry })
                 .eq("user_id", userId)
-                .select()
+                .select(PROFILE_SELECT_COLUMNS)
                 .single();
               
               if (updatedProfile) {
-                setProfile(updatedProfile as Profile);
+                setProfile(updatedProfile as unknown as Profile);
               }
             }
           });
@@ -353,11 +353,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from("profiles")
       .update(updates)
       .eq("user_id", user.id)
-      .select()
+      .select(PROFILE_SELECT_COLUMNS)
       .single();
 
     if (!error && data) {
-      setProfile(data as Profile);
+      setProfile(data as unknown as Profile);
     }
 
     return { data, error };
