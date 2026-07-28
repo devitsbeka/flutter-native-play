@@ -449,11 +449,11 @@ export const TVQuestionScreenV4: React.FC = () => {
             )}
             {/* Category/Question Icon - overlapping top of card (hide if media) */}
             {!hasMedia && (
-              <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20 w-24 h-24">
+              <div className="absolute left-1/2 -translate-x-1/2 -top-6 z-20 w-[154px] h-[154px]">
                 <DynamicIcon 
                   slug={currentQuestion?.icon_slug || undefined}
                   questionId={currentQuestion?.id}
-                  size={96}
+                  size={154}
                   className="drop-shadow-lg"
                   hideIfEmpty={false}
                 />
