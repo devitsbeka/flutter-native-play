@@ -2348,6 +2348,30 @@ export type Database = {
         }
         Relationships: []
       }
+      tv_observer_awards: {
+        Row: {
+          awarded_at: string
+          points: number
+          question_index: number
+          suggester_id: string
+          tv_session_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          points?: number
+          question_index: number
+          suggester_id: string
+          tv_session_id: string
+        }
+        Update: {
+          awarded_at?: string
+          points?: number
+          question_index?: number
+          suggester_id?: string
+          tv_session_id?: string
+        }
+        Relationships: []
+      }
       tv_players: {
         Row: {
           avatar_url: string | null
@@ -3761,6 +3785,10 @@ export type Database = {
         Args: { p_delta: number; p_type: string }
         Returns: number
       }
+      award_tv_observer_bonus: {
+        Args: { p_question_index: number; p_session_id: string }
+        Returns: Json
+      }
       format_display_name: { Args: { full_name: string }; Returns: string }
       generate_challenge_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
@@ -3848,6 +3876,7 @@ export type Database = {
         Args: { p_room_id: string; p_status?: string }
         Returns: undefined
       }
+      reset_tv_session_scores: { Args: { p_session_id: string }; Returns: Json }
       search_questions: {
         Args: {
           p_category_id?: string
