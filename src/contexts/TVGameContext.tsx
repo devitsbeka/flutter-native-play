@@ -3356,6 +3356,31 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
     void trackAnswered();
 
+    // An optimistic answer that never reaches the DB must NOT keep claiming
+    // success: the phone showed "answer sent" while the TV correctly showed
+    // the player as unanswered (the DB had no row). Undo the optimistic UI,
+    // restore the score, and tell presence we did NOT answer, so the player
+    // can simply tap again.
+    const revertOptimisticAnswer = (why: string) => {
+      console.warn('[submitAnswer] ❌ Answer did not persist (', why, ') - reverting so the player can retry');
+      setMyAnswer(null);
+      setMyScore(myScore);
+      if (presenceChannelRef.current) {
+        void presenceChannelRef.current.track({
+          nickname: state.players.find(p => p.id === myPlayerId)?.nickname || 'Player',
+          avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url,
+          score: myScore,
+          hasAnswered: false,
+          lastAnswerCorrect: null,
+          lastAnswer: null,
+          answeredQuestionIndex: undefined,
+          answeredRound: undefined,
+          isHost,
+          isActive: true,
+        }).catch(() => {});
+      }
+    };
+
     // ── AUTHORITATIVE PATH ──────────────────────────────────────────────
     // One RPC locks the session row, commits the answer, decides
     // "all answered" from committed rows only, and performs the reveal
@@ -3375,7 +3400,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       committed_at?: string;
     };
     const submittedIndex = state.currentQuestionIndex;
-    const { data: rpcData, error: rpcError } = await (supabase.rpc as unknown as (
+    const callSubmitRpc = () => (supabase.rpc as unknown as (
       fn: string,
       args: Record<string, unknown>
     ) => Promise<{ data: unknown; error: { message: string } | null }>)('submit_tv_answer', {
@@ -3387,6 +3412,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       p_points: points,
       p_time_remaining: state.timeRemaining,
     });
+
+    // Phones drop packets. One immediate retry turns most "my answer never
+    // registered" cases into a normal submission instead of a lost answer.
+    let { data: rpcData, error: rpcError } = await callSubmitRpc();
+    if (rpcError) {
+      console.warn('[submitAnswer] RPC failed once (', rpcError.message, ') - retrying');
+      await new Promise(resolve => setTimeout(resolve, 250));
+      ({ data: rpcData, error: rpcError } = await callSubmitRpc());
+    }
 
     if (!rpcError && rpcData) {
       const result = rpcData as SubmitTvAnswerResult;
@@ -3412,8 +3446,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // optimistic lock and resync so the player can answer the real one
         console.warn('[submitAnswer] ❌ Server rejected tap (', result.reason,
           ') - live question is', result.live_question_index, 'status', result.live_status);
-        setMyAnswer(null);
-        setMyScore(myScore);
+        revertOptimisticAnswer(result.reason || 'rejected');
         void refetchSessionData(state.sessionId);
         return { correct: false, points: 0 };
       }
@@ -3505,6 +3538,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (error) {
         tvLogError('submitAnswer DB insert', error);
+        if (error.code !== '23505') {
+          // The row genuinely did not land - stop pretending it did
+          revertOptimisticAnswer(error.message || 'insert failed');
+          return { correct: false, points: 0 };
+        }
         // IMPORTANT: Even on duplicate key error (23505), the answer exists in DB
         // Still trigger the auto-advance check - this prevents stalls in True/False games
         if (error.code === '23505') {
@@ -3541,8 +3579,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return { correct: isCorrect, points };
     } catch (error) {
       tvLogError('submitAnswer', error);
-      // Still return result even if DB fails - presence update is more important
-      return { correct: isCorrect, points };
+      revertOptimisticAnswer('exception');
+      return { correct: false, points: 0 };
     }
   }, [state.sessionId, state.roomId, state.questions, state.currentQuestionIndex, state.timeRemaining, state.players, myPlayerId, myAnswer, myScore, isHost, refetchSessionData]);
 
