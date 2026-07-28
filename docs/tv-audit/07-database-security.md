@@ -10,10 +10,18 @@ Severity S = security._
 |---|---|
 | READ tv_sessions / tv_players / player_answers / poll_* / queue | **all readable** |
 | READ profiles incl. `security_answer_hash`, `coins`, `gems`, `referral_code` | **all readable** |
-| PATCH tv_sessions.status directly (bypass RPC) | **204 — allowed** |
-| DELETE tv_players | **204 — allowed** |
-| PATCH another player's `current_round_score` → 99999 | **204 — CONFIRMED overwrote a real row** |
-| PATCH game_rooms | **allowed** |
+| PATCH tv_sessions.status `playing`→`completed` on a live game | **CONFIRMED allowed** |
+| PATCH tv_sessions.current_question_index 0→9 (skip a round) | **CONFIRMED allowed** |
+| PATCH another player's `current_round_score` → 99999 | **CONFIRMED allowed** |
+| DELETE tv_players | **BLOCKED by RLS** ✅ |
+| PATCH `profiles` (points/coins/currency) | **BLOCKED by RLS** ✅ |
+
+> **Correction (2026-07-28):** the first pass reported DELETE and `profiles`
+> writes as allowed based on `204` responses. PostgREST returns 204 even when
+> RLS filters the row set to nothing. Re-probed with `Prefer:
+> return=representation` (an echoed row proves the write landed): DELETE and
+> `profiles` writes are correctly BLOCKED. The three UPDATE exploits above are
+> real and were verified by reading the mutated value back.
 
 These are exploitable by anyone who opens devtools on mytrivia.io. The anon
 key is public by design — **RLS is the only defense, and it is effectively
@@ -29,15 +37,33 @@ the most serious — it's the credential-recovery secret. Fix: restrict
 never expose `security_answer_hash` to anon/authenticated-other. (This is
 almost certainly among Lovable's 16 warnings.)
 
-### S-2 (HIGH): TV tables are writable by anyone
-`tv_sessions`, `tv_players`, `game_rooms` accept anon UPDATE/DELETE with no
-policy check. Anyone can: end any live game (`status='completed'`), set any
-player's score, delete players, rename rooms. Guests legitimately need SOME
-writes (join, answer) — but state transitions must go through the
-SECURITY DEFINER RPCs only, and score/roster writes must be constrained
-(own row, or RPC-only). Fix: tighten UPDATE/DELETE policies to
-owner/host/self; route all session-state writes through RPCs; the score
-write should move server-side (the RPC already computes it).
+### S-2 (HIGH): TV tables accept arbitrary UPDATEs from anyone
+Scoped by re-probe to **UPDATE only** (DELETE/profiles are protected):
+anyone holding a session id can set any player's `current_round_score`,
+end a live game, or jump `current_question_index`. Inserts/deletes and
+`profiles` are fine.
+
+**Enabler:** `tv_sessions` is SELECTable by anon, so session ids can be
+*enumerated* — an attacker doesn't need to be in the game.
+
+**Why the fix is not trivial:** guest players have no `auth.uid()`, so RLS
+cannot distinguish "the host" from a stranger. Three viable designs:
+
+- **(a) Require hosts to be authenticated** → policies become
+  `USING (host_user_id = auth.uid())`. Strongest and simplest; needs the
+  product decision "can a logged-out guest host a TV game?" (rooms already
+  require auth, so this may already be true in practice).
+- **(b) Host token**: `tv_sessions.host_token` issued by an atomic
+  `tv_claim_host()` RPC (which also fixes 01:H-1), SELECT revoked on the
+  column; host writes go through RPCs carrying the token. Preserves guest
+  hosting; more machinery.
+- **(c) RPC-only state writes** for everything, table UPDATE revoked
+  wholesale. Cleanest end state, largest refactor.
+
+**Progress 2026-07-28:** scoring moved server-side (the RPC now owns
+`current_round_score`), removing the client's need to write it — a
+prerequisite for revoking that column. The remaining client-side score
+write is the observer bonus (see 03:M-1), so the revoke lands with that fix.
 
 ### S-3 (MED): player_answers insert policy is broad
 Insert is allowed whenever an active TV session exists (guest support) —
