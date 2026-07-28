@@ -253,14 +253,21 @@ export const TVQuestionScreenV4: React.FC = () => {
         totalRounds={totalRounds} 
         className="absolute right-3 top-1/2 -translate-y-1/2 z-30"
       />
-      {/* Player Status Bar - Three Zone Layout */}
-      <motion.div 
-        className="flex justify-between items-start w-full mb-3 flex-shrink-0 px-4 h-[86px]"
+      {/* Player Status Bar - Three Zone Layout.
+          pt-2 keeps the avatars off the very top of the screen; the extra
+          height keeps the same content box as before so nothing below shifts. */}
+      <motion.div
+        className="flex justify-between items-start w-full mb-3 flex-shrink-0 px-4 pt-2 h-[98px]"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        {/* Wrong Players (Red) - LEFT EDGE */}
-        <div className="flex gap-2 flex-1 basis-0 justify-start overflow-hidden">
+        {/* Wrong Players (Red) - LEFT EDGE.
+            min-w-0 (not overflow-hidden) is what keeps each zone at exactly a
+            third of the width regardless of how many avatars it holds - the
+            anti-shake guarantee. overflow-hidden did that too, but it also
+            clipped everything that paints outside an avatar's box: the ring,
+            the white border, the status badge at -top-1 and the glow. */}
+        <div className="flex gap-2 flex-1 basis-0 min-w-0 justify-start">
           <AnimatePresence mode="popLayout">
             {wrongPlayers.map((player) => (
               <motion.div 
@@ -271,10 +278,15 @@ export const TVQuestionScreenV4: React.FC = () => {
                 exit={{ scale: 0 }}
                 transition={{ type: "spring", bounce: 0.5 }}
               >
-                <SafeAvatar 
+                {/* bg-white + an inset image: avatar art whose subject reaches
+                    the edge of the source square (a sombrero brim, hair) was
+                    being sliced by the round mask. The inset reads as part of
+                    the white border. */}
+                <SafeAvatar
                   avatarUrl={player.avatar_url}
                   fallback={player.nickname}
-                  className="w-10 h-10 ring-3 ring-red-400 border-2 border-white"
+                  className="w-12 h-12 bg-white ring-3 ring-red-400 border-2 border-white"
+                  imageClassName="p-[3px]"
                   fallbackClassName="bg-red-500 text-white font-bold text-sm"
                 />
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
@@ -287,7 +299,7 @@ export const TVQuestionScreenV4: React.FC = () => {
         </div>
 
         {/* Waiting Players (Yellow) - CENTER - only show players who haven't answered */}
-        <div className="flex gap-2 flex-1 basis-0 justify-center overflow-hidden">
+        <div className="flex gap-2 flex-1 basis-0 min-w-0 justify-center">
           <AnimatePresence mode="popLayout">
             {waitingPlayers.map((player) => (
               <motion.div 
@@ -297,17 +309,21 @@ export const TVQuestionScreenV4: React.FC = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, transition: { duration: 0.2 } }}
               >
-                {/* Subtle outer glow */}
-                <div 
-                  className="absolute inset-0 rounded-full"
+                {/* Subtle outer glow. inset-0 stretched this over the avatar
+                    AND the score badge below it, so a rounded-full on a tall
+                    box painted a pill behind the avatar that read as a
+                    container the avatar was cropped into. Match the circle. */}
+                <div
+                  className="absolute top-0 left-0 w-12 h-12 rounded-full"
                   style={{
                     boxShadow: '0 0 12px 3px rgba(250, 204, 21, 0.4)',
                   }}
                 />
-                <SafeAvatar 
+                <SafeAvatar
                   avatarUrl={player.avatar_url}
                   fallback={player.nickname}
-                  className="w-10 h-10 ring-3 ring-yellow-400 border-2 border-white relative z-10"
+                  className="w-12 h-12 bg-white ring-3 ring-yellow-400 border-2 border-white relative z-10"
+                  imageClassName="p-[3px]"
                   fallbackClassName="bg-yellow-500 text-white font-bold text-sm"
                 />
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white z-20">
@@ -320,7 +336,7 @@ export const TVQuestionScreenV4: React.FC = () => {
         </div>
 
         {/* Correct Players (Green) - RIGHT EDGE */}
-        <div className="flex gap-2 flex-1 basis-0 justify-end overflow-hidden">
+        <div className="flex gap-2 flex-1 basis-0 min-w-0 justify-end">
           <AnimatePresence mode="popLayout">
             {correctPlayers.map((player) => (
               <motion.div 
@@ -331,10 +347,11 @@ export const TVQuestionScreenV4: React.FC = () => {
                 exit={{ scale: 0 }}
                 transition={{ type: "spring", bounce: 0.5 }}
               >
-                <SafeAvatar 
+                <SafeAvatar
                   avatarUrl={player.avatar_url}
                   fallback={player.nickname}
-                  className="w-10 h-10 ring-3 ring-green-400 border-2 border-white"
+                  className="w-12 h-12 bg-white ring-3 ring-green-400 border-2 border-white"
+                  imageClassName="p-[3px]"
                   fallbackClassName="bg-green-500 text-white font-bold text-sm"
                 />
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
