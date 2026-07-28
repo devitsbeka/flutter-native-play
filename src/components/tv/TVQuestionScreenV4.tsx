@@ -278,15 +278,15 @@ export const TVQuestionScreenV4: React.FC = () => {
                 exit={{ scale: 0 }}
                 transition={{ type: "spring", bounce: 0.5 }}
               >
-                {/* bg-white + an inset image: avatar art whose subject reaches
-                    the edge of the source square (a sombrero brim, hair) was
-                    being sliced by the round mask. The inset reads as part of
-                    the white border. */}
+                {/* Full-bleed image: insetting it made the artwork smaller
+                    than the round mask, so the source square's own edges
+                    showed through as a square inside the circle. The avatar
+                    fills the circle; the air comes from the larger size and
+                    the row padding instead. */}
                 <SafeAvatar
                   avatarUrl={player.avatar_url}
                   fallback={player.nickname}
-                  className="w-12 h-12 bg-white ring-3 ring-red-400 border-2 border-white"
-                  imageClassName="p-[3px]"
+                  className="w-12 h-12 ring-3 ring-red-400 border-2 border-white"
                   fallbackClassName="bg-red-500 text-white font-bold text-sm"
                 />
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
@@ -322,8 +322,7 @@ export const TVQuestionScreenV4: React.FC = () => {
                 <SafeAvatar
                   avatarUrl={player.avatar_url}
                   fallback={player.nickname}
-                  className="w-12 h-12 bg-white ring-3 ring-yellow-400 border-2 border-white relative z-10"
-                  imageClassName="p-[3px]"
+                  className="w-12 h-12 ring-3 ring-yellow-400 border-2 border-white relative z-10"
                   fallbackClassName="bg-yellow-500 text-white font-bold text-sm"
                 />
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white z-20">
@@ -350,8 +349,7 @@ export const TVQuestionScreenV4: React.FC = () => {
                 <SafeAvatar
                   avatarUrl={player.avatar_url}
                   fallback={player.nickname}
-                  className="w-12 h-12 bg-white ring-3 ring-green-400 border-2 border-white"
-                  imageClassName="p-[3px]"
+                  className="w-12 h-12 ring-3 ring-green-400 border-2 border-white"
                   fallbackClassName="bg-green-500 text-white font-bold text-sm"
                 />
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
