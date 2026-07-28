@@ -255,13 +255,13 @@ export const TVQuestionScreenV4: React.FC = () => {
       />
       {/* Player Status Bar - Three Zone Layout */}
       <motion.div 
-        className="flex justify-between items-center w-full mb-3 flex-shrink-0 px-4"
+        className="flex justify-between items-start w-full mb-3 flex-shrink-0 px-4 h-[86px]"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         {/* Wrong Players (Red) - LEFT EDGE */}
-        <div className="flex gap-2 min-w-[60px] justify-start">
-          <AnimatePresence>
+        <div className="flex gap-2 flex-1 basis-0 justify-start overflow-hidden">
+          <AnimatePresence mode="popLayout">
             {wrongPlayers.map((player) => (
               <motion.div 
                 key={player.id}
@@ -280,17 +280,15 @@ export const TVQuestionScreenV4: React.FC = () => {
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
                   <X className="w-3 h-3 text-white" />
                 </div>
-                {isReveal && (
-                  <span className="text-[10px] font-bold text-white bg-black/40 px-1.5 py-0.5 rounded-full mt-1">{Math.round(player.score)}</span>
-                )}
+                <span className={`text-[10px] font-bold text-white bg-black/40 px-1.5 py-0.5 rounded-full mt-1 ${isReveal ? '' : 'invisible'}`}>{Math.round(player.score)}</span>
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
 
         {/* Waiting Players (Yellow) - CENTER - only show players who haven't answered */}
-        <div className="flex gap-2 justify-center flex-1 min-w-0">
-          <AnimatePresence mode="sync">
+        <div className="flex gap-2 flex-1 basis-0 justify-center overflow-hidden">
+          <AnimatePresence mode="popLayout">
             {waitingPlayers.map((player) => (
               <motion.div 
                 key={player.id}
@@ -315,17 +313,15 @@ export const TVQuestionScreenV4: React.FC = () => {
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white z-20">
                   <Clock className="w-3 h-3 text-white" />
                 </div>
-                {isReveal && (
-                  <span className="text-[10px] font-bold text-white bg-black/40 px-1.5 py-0.5 rounded-full mt-1 relative z-10">{Math.round(player.score)}</span>
-                )}
+                <span className={`text-[10px] font-bold text-white bg-black/40 px-1.5 py-0.5 rounded-full mt-1 relative z-10 ${isReveal ? '' : 'invisible'}`}>{Math.round(player.score)}</span>
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
 
         {/* Correct Players (Green) - RIGHT EDGE */}
-        <div className="flex gap-2 min-w-[60px] justify-end">
-          <AnimatePresence>
+        <div className="flex gap-2 flex-1 basis-0 justify-end overflow-hidden">
+          <AnimatePresence mode="popLayout">
             {correctPlayers.map((player) => (
               <motion.div 
                 key={player.id}
@@ -344,9 +340,7 @@ export const TVQuestionScreenV4: React.FC = () => {
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
                   <Check className="w-3 h-3 text-white" />
                 </div>
-                {isReveal && (
-                  <span className="text-[10px] font-bold text-white bg-black/40 px-1.5 py-0.5 rounded-full mt-1">{Math.round(player.score)}</span>
-                )}
+                <span className={`text-[10px] font-bold text-white bg-black/40 px-1.5 py-0.5 rounded-full mt-1 ${isReveal ? '' : 'invisible'}`}>{Math.round(player.score)}</span>
               </motion.div>
             ))}
           </AnimatePresence>
