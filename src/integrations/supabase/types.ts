@@ -2725,6 +2725,7 @@ export type Database = {
           poll_start_time: string | null
           question_start_time: string | null
           questions: Json | null
+          reveal_answer_count: number | null
           reveal_start_time: string | null
           room_id: string | null
           room_name: string | null
@@ -2754,6 +2755,7 @@ export type Database = {
           poll_start_time?: string | null
           question_start_time?: string | null
           questions?: Json | null
+          reveal_answer_count?: number | null
           reveal_start_time?: string | null
           room_id?: string | null
           room_name?: string | null
@@ -2783,6 +2785,7 @@ export type Database = {
           poll_start_time?: string | null
           question_start_time?: string | null
           questions?: Json | null
+          reveal_answer_count?: number | null
           reveal_start_time?: string | null
           room_id?: string | null
           room_name?: string | null
