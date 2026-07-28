@@ -3350,6 +3350,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       expected_ids?: string[];
       answered_ids?: string[];
       room_id?: string | null;
+      player_total?: number | null;
       committed_at?: string;
     };
     const submittedIndex = state.currentQuestionIndex;
@@ -3396,7 +3397,16 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return { correct: false, points: 0 };
       }
 
-      persistScore();
+      // The RPC owns scoring now (server-side delta under the session lock),
+      // so the client never writes current_round_score on this path - one
+      // less client write to permit once that column gets locked down.
+      // Adopt the server's authoritative total when it comes back.
+      if (typeof result.player_total === 'number') {
+        setMyScore(result.player_total);
+      } else {
+        // Older DB without the score-owning RPC: keep the client write
+        persistScore();
+      }
 
       // Remember DB-confirmed answer state for this question - the reveal
       // duration decision uses it instead of (possibly stale) presence
