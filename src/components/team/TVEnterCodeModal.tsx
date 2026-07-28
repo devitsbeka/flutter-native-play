@@ -102,17 +102,38 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
       const trackerKey = `tv_${categoryUUID}`;
       markQuestionsAsAsked(trackerKey, formattedQuestions.map(q => q.id));
 
-      // Update the TV session - pair it with this host
+      // Claim the TV through the RPC rather than writing host_user_id
+      // directly. A bare UPDATE has no way to check the session is still
+      // unclaimed, so two phones typing the same code both "succeeded" and
+      // the second silently took the first host's TV. The RPC locks the row
+      // and CAS-claims it, so exactly one caller can win - and it only ever
+      // considers sessions that are live, waiting and unclaimed.
+      const { data: claimRaw, error: claimError } = await (supabase.rpc as unknown as (
+        fn: string, args: Record<string, unknown>
+      ) => Promise<{ data: unknown; error: unknown }>)('tv_claim_session', {
+        p_pairing_code: code,
+        p_room_id: roomId,
+      });
+      const claim = claimRaw as { claimed?: boolean; reason?: string; session_id?: string } | null;
+
+      if (claimError || !claim?.claimed) {
+        toast.error(
+          claim?.reason === 'not_authenticated'
+            ? 'ტელევიზორის დასაკავშირებლად გაიარე ავტორიზაცია'
+            : 'კოდი არ მოიძებნა ან უკვე დაკავშირებულია'
+        );
+        setIsConnecting(false);
+        return;
+      }
+
+      // The RPC's filter is stricter than the lookup above, so trust its pick.
+      const claimedSessionId = claim.session_id || session.id;
+
+      // Questions are written after the claim, as the confirmed host.
       const { error: updateError } = await supabase
         .from('tv_sessions')
-        .update({
-          host_user_id: user.id,
-          room_id: roomId,
-          is_paired: true,
-          status: 'paired',
-          questions: formattedQuestions as unknown as any,
-        })
-        .eq('id', session.id);
+        .update({ questions: formattedQuestions as unknown as any })
+        .eq('id', claimedSessionId);
 
       if (updateError) {
         throw updateError;
@@ -123,11 +144,11 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
         .from('game_rooms')
         .update({ 
           game_mode: 'tv_show',
-          tv_session_id: session.id 
+          tv_session_id: claimedSessionId 
         })
         .eq('id', roomId);
 
-      setSessionId(session.id);
+      setSessionId(claimedSessionId);
       setIsConnected(true);
 
       toast.success('წარმატებით დაკავშირდა!');
@@ -135,7 +156,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
       // Navigate to the host controller page (host controls the game, not plays as guest)
       setTimeout(() => {
         onOpenChange(false);
-        navigate(`/tv/host/${session.id}`);
+        navigate(`/tv/host/${claimedSessionId}`);
       }, 1500);
 
     } catch (error) {

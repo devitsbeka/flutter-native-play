@@ -101,27 +101,40 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
             categoryIcon = cat?.icon;
           }
 
-          // IMPORTANT: Update TV session FIRST to set host_user_id
-          // This is required for RLS policies to allow queue operations
-          const { error: updateSessionError } = await supabase
-            .from('tv_sessions')
-            .update({
-              host_user_id: user.id,
-              is_paired: true,
-              status: 'paired',
-              room_id: roomId,
-              room_name: roomName,
-              category_name: categoryName,
-              category_icon: categoryIcon,
-            })
-            .eq('id', session.id);
+          // Claim the TV atomically. This used to be a bare UPDATE setting
+          // host_user_id, which could not tell whether the session was still
+          // unclaimed - so two phones typing the same code both "succeeded"
+          // and the second silently took the first host's TV. The RPC locks
+          // the row and CAS-claims it (exactly one winner), and only
+          // considers sessions that are live, waiting and unclaimed - the
+          // old lookup happily matched long-expired abandoned rows.
+          const { data: claimRaw, error: claimError } = await (supabase.rpc as unknown as (
+            fn: string, args: Record<string, unknown>
+          ) => Promise<{ data: unknown; error: unknown }>)('tv_claim_session', {
+            p_pairing_code: code,
+            p_room_id: roomId,
+            p_room_name: roomName,
+            p_category_name: categoryName,
+            p_category_icon: categoryIcon,
+          });
+          const claim = claimRaw as { claimed?: boolean; reason?: string; session_id?: string } | null;
 
-          if (updateSessionError) {
-            console.error('[TVSetupInline] Failed to update TV session:', updateSessionError);
-            throw updateSessionError;
+          if (claimError || !claim?.claimed) {
+            console.error('[TVSetupInline] Claim refused:', claim?.reason, claimError);
+            toast.error(
+              claim?.reason === 'not_authenticated'
+                ? 'ტელევიზორის დასაკავშირებლად გაიარე ავტორიზაცია'
+                : 'კოდი არ მოიძებნა ან უკვე დაკავშირებულია'
+            );
+            setIsConnecting(false);
+            return;
           }
 
-          console.log('[TVSetupInline] TV session updated with host_user_id:', user.id);
+          // The RPC's candidate filter is stricter than the lookup above, so
+          // its pick - not the pre-check's - is the session we are hosting.
+          session.id = claim.session_id || session.id;
+
+          console.log('[TVSetupInline] TV session claimed by host:', user.id, session.id);
 
           // Also update the game room to link to this TV session
           const { error: updateRoomError } = await supabase
