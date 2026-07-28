@@ -36,13 +36,16 @@ joiners/rejoiners resync via refetch (clears stale locked answers).
 
 ## Findings
 
-### M-1: Observer bonus silently died with the RPC transition
+### M-1: Observer bonus silently died with the RPC transition — ✅ FIXED 2026-07-28
 The suggester's observer bonus is computed inside `advanceToReveal` — which
 no longer runs when the RPC performs the transition (the common fast path).
 Suggester rounds now only award the bonus when the timer/fallback advances.
-Fix direction: move observer-bonus computation into the RPC (it already
-holds answers + suggester id at transition time) or run it host-side on
-reveal entry regardless of who transitioned.
+**Fixed:** moved into `award_tv_observer_bonus()` (SECURITY DEFINER),
+called by `submit_tv_answer` at the moment the DB ends the question and by
+the client on the timer path; idempotent via the `tv_observer_awards`
+ledger. Verified live: 2 of 2 players wrong at t=9 and t=5 → avg 7 →
+135 points awarded once; a second call returns `already_evaluated` and the
+score stays 135. Formula parity with `tvScoring.ts` confirmed.
 
 ### M-2: Mid-question quitters stall the question to the timer
 The RPC's expected set = `tv_players.is_active` rows, refreshed only at

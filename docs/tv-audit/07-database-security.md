@@ -33,7 +33,7 @@ open on these tables.**
 |---|---|
 | **S-1** hash exposure | ✅ **FIXED & VERIFIED** — `SELECT` on the hash (and `SELECT *`) now returns `permission denied`; explicit-column reads and leaderboards still work; deployed bundle confirmed to carry the client-side column list |
 | **S-2** anon session tampering | ✅ **FIXED & VERIFIED** — ending a live game as anon returns `permission denied for table tv_sessions` |
-| **S-2** score tampering | ⚠️ **PARTIAL** — server now owns answer scoring (RPC returns `player_total`), but the column stays client-writable until the observer bonus moves server-side |
+| **S-2** score tampering | ✅ **FIXED & VERIFIED** — `current_round_score` is server-only; tampering returns `permission denied for table tv_players`, while nickname/avatar/is_active updates still work |
 | **S-2** authenticated tampering | ❌ OPEN — a logged-in user can still write any session's state (needs host writes routed through RPCs) |
 | **S-3** broad answer-insert policy | ❌ OPEN |
 | **S-4** zombie session cleanup | ❌ OPEN |
