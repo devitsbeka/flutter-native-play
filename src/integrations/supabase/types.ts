@@ -2405,6 +2405,42 @@ export type Database = {
         }
         Relationships: []
       }
+      tv_phase_events: {
+        Row: {
+          answer_count: number | null
+          at: string
+          from_status: string | null
+          id: number
+          question_index: number | null
+          question_start_time: string | null
+          reveal_start_time: string | null
+          to_status: string | null
+          tv_session_id: string
+        }
+        Insert: {
+          answer_count?: number | null
+          at?: string
+          from_status?: string | null
+          id?: number
+          question_index?: number | null
+          question_start_time?: string | null
+          reveal_start_time?: string | null
+          to_status?: string | null
+          tv_session_id: string
+        }
+        Update: {
+          answer_count?: number | null
+          at?: string
+          from_status?: string | null
+          id?: number
+          question_index?: number | null
+          question_start_time?: string | null
+          reveal_start_time?: string | null
+          to_status?: string | null
+          tv_session_id?: string
+        }
+        Relationships: []
+      }
       tv_players: {
         Row: {
           avatar_url: string | null
@@ -3949,6 +3985,10 @@ export type Database = {
         Returns: Json
       }
       tv_advance_question: { Args: { p_session_id: string }; Returns: Json }
+      tv_expire_question: {
+        Args: { p_question_time?: number; p_session_id: string }
+        Returns: Json
+      }
       update_user_currency: {
         Args: {
           p_coins_delta?: number
