@@ -30,7 +30,7 @@ export function ReferralAnalyticsWidget() {
       const [codesRes, invitesRes, dailyRes] = await Promise.all([
         supabase
           .from('profiles')
-          .select('*', { count: 'exact', head: true })
+          .select('user_id', { count: 'exact', head: true })
           .not('referral_code', 'is', null),
         supabase
           .from('friend_invites')
