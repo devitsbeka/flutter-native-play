@@ -3988,6 +3988,16 @@ export type Database = {
         Returns: Json
       }
       tv_advance_question: { Args: { p_session_id: string }; Returns: Json }
+      tv_claim_session: {
+        Args: {
+          p_category_icon?: string
+          p_category_name?: string
+          p_pairing_code: string
+          p_room_id?: string
+          p_room_name?: string
+        }
+        Returns: Json
+      }
       tv_expire_question: {
         Args: { p_question_time?: number; p_session_id: string }
         Returns: Json
