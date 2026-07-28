@@ -5,6 +5,7 @@ export const ka = {
   // Common / ზოგადი
   // ==========================================
   common: {
+    processing: "მუშავდება...",
     play: "თამაში",
     back: "უკან",
     next: "შემდეგი",
@@ -245,6 +246,7 @@ export const ka = {
   // Game / თამაში
   // ==========================================
   game: {
+    guest: "სტუმარი",
     playToEarn: "ითამაშე და მოაგროვე XP! ✨",
     levelProgress: "დონე {level} ({current} XP) / {next} XP",
     classicTrivia: "კლასიკური ტრივია",
@@ -525,6 +527,11 @@ export const ka = {
   // Avatar / ავატარი
   // ==========================================
   avatar: {
+    avatarDeleted: "ავატარი წაიშალა",
+    avatarReadyDesc: "შენი ახალი ავატარი მზადაა",
+    canCloseHint: "შეგიძლია დახურო ეს ფანჯარა — გენერაცია ფონურად გაგრძელდება",
+    generatingBackground: "ავატარი მუშავდება",
+    generatingBackgroundDesc: "შეგატყობინებთ როგორც კი მზად იქნება",
     title: "შენი ავატარი",
     subtitle: "შექმენი ან აირჩიე თამაშის ავატარი",
     aiTitle: "AI ავატარი",
@@ -566,6 +573,8 @@ export const ka = {
   // Errors / შეცდომები
   // ==========================================
   errors: {
+    deleteFailed: "წაშლა ვერ მოხერხდა",
+    failedToReadImage: "სურათის დამუშავება ვერ მოხერხდა",
     generic: "რაღაც შეცდომა მოხდა",
     network: "ინტერნეტთან კავშირი არ არის",
     tryAgain: "სცადე თავიდან",
@@ -862,6 +871,8 @@ export const ka = {
   // Team / გუნდი
   // ==========================================
   team: {
+    roomUpdated: "ოთახი განახლდა",
+    updateFailed: "განახლება ვერ მოხერხდა",
     newRoom: "ახალი ოთახი",
     roomName: "ოთახის სახელი",
     enterRoomName: "შეიყვანეთ ოთახის სახელი",
@@ -1443,7 +1454,25 @@ export const ka = {
   // ==========================================
   // Extra hardcoded strings
   // ==========================================
+  challenge: {
+    challenge: "გამოწვევა",
+  },
   extra: {
+    changeBtn2: "შეცვლა",
+    downloadDataSublabel: "ჩამოტვირთე შენი მონაცემების ასლი",
+    editorDeleteBtn: "წაშლა",
+    errorOccurred: "დაფიქსირდა შეცდომა",
+    frameNotEnoughGems: "არასაკმარისი ბრილიანტები",
+    framePreview: "გადახედვა",
+    frameVipOnly: "მხოლოდ VIP-ისთვის",
+    generatingStatus: "მუშავდება",
+    madeForYou: "შენთვის შექმნილი",
+    newQuestionsBeingPrepared: "ახალი კითხვები მზადდება",
+    noActiveGames: "აქტიური თამაშები არ არის",
+    privacyPolicySublabel: "როგორ ვიყენებთ შენს მონაცემებს",
+    termsSublabel: "მომსახურების პირობები",
+    triviaLabel2: "ტრივია",
+    understood: "გასაგებია",
     player: "მოთამაშე",
     players: "მოთამაშე",
     gameName: "თამაშის სახელი...",
@@ -3302,7 +3331,6 @@ export const ka = {
     tvNext: "შემდეგი:",
     tvPressControllerContinue: "დააჭირე კონტროლერზე გასაგრძელებლად",
     tvPressControllerNewRound: "ახალი რაუნდის დასაწყებად დააჭირე ღილაკს კონტროლერზე",
-    // tvRoundsFinished & tvQuiz exist above
     tvRoundFinished: "რაუნდი {n} დასრულდა",
     tvWaitGameStart: "მოელოდეთ თამაშის დაწყებას",
     tvPlayer: "მოთამაშე",
@@ -3348,6 +3376,7 @@ export const ka = {
     tvGameOverExcl: "თამაში დასრულდა!",
     tvYou: "(შენ)",
     tvWaitingNextRound: "შემდეგი რაუნდის მოლოდინი...",
+    tvRoundsFinished: "ყველა რაუნდი დასრულდა",
     tvNextRound: "შემდეგი რაუნდი",
     tvAddCategory: "კატეგორიის დამატება",
     tvStartPoll: "არჩევნების დაწყება",

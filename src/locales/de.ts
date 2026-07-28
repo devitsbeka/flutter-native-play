@@ -446,6 +446,7 @@ export const de: KaTranslations = {
     tvNextQuestionStarting: "Nächste Frage kommt...",
     tvRoundOver: "Runde Vorbei!", tvGameOverExcl: "Spiel Vorbei!",
     tvYou: "(du)", tvWaitingNextRound: "Warte auf nächste Runde...",
+    tvRoundsFinished: "Alle Runden beendet",
     tvNextRound: "Nächste Runde", tvAddCategory: "Kategorie Hinzufügen",
     tvStartPoll: "Abstimmung Starten", tvExit: "Beenden", tvPlayAgain: "Nochmal Spielen",
     tvSessionNotFound: "Sitzung nicht gefunden",

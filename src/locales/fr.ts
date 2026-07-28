@@ -477,6 +477,7 @@ export const fr: KaTranslations = {
     tvGameOverExcl: "Partie Terminée !",
     tvYou: "(vous)",
     tvWaitingNextRound: "En attente de la prochaine manche...",
+    tvRoundsFinished: "Toutes les manches sont terminées",
     tvNextRound: "Prochaine Manche",
     tvAddCategory: "Ajouter Catégorie",
     tvStartPoll: "Démarrer le Vote",

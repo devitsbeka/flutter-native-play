@@ -1208,6 +1208,7 @@ export const it: KaTranslations = {
     tvGameOverExcl: "Game Over!",
     tvYou: "(tu)",
     tvWaitingNextRound: "In attesa del prossimo round...",
+    tvRoundsFinished: "Tutti i round sono finiti",
     tvNextRound: "Prossimo Round",
     tvAddCategory: "Aggiungi Categoria",
     tvStartPoll: "Inizia Sondaggio",

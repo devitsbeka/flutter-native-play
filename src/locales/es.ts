@@ -647,6 +647,7 @@ export const es: KaTranslations = {
     tvGameOverExcl: "¡Juego Terminado!",
     tvYou: "(tú)",
     tvWaitingNextRound: "Esperando siguiente ronda...",
+    tvRoundsFinished: "Todas las rondas terminadas",
     tvNextRound: "Siguiente Ronda",
     tvAddCategory: "Añadir Categoría",
     tvStartPoll: "Iniciar Votación",
