@@ -2348,6 +2348,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tv_answer_rejections: {
+        Row: {
+          attempted_index: number
+          id: number
+          live_index: number | null
+          live_status: string | null
+          player_id: string
+          reason: string
+          rejected_at: string
+          tv_session_id: string
+        }
+        Insert: {
+          attempted_index: number
+          id?: number
+          live_index?: number | null
+          live_status?: string | null
+          player_id: string
+          reason: string
+          rejected_at?: string
+          tv_session_id: string
+        }
+        Update: {
+          attempted_index?: number
+          id?: number
+          live_index?: number | null
+          live_status?: string | null
+          player_id?: string
+          reason?: string
+          rejected_at?: string
+          tv_session_id?: string
+        }
+        Relationships: []
+      }
       tv_observer_awards: {
         Row: {
           awarded_at: string
