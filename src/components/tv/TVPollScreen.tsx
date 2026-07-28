@@ -261,14 +261,17 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
             : 'border-white/20'
       }`}
     >
-      {/* Leader crown */}
+      {/* Leader crown. -right-4 pushed it 16px past the card into a 12px grid
+          gap, landing it under the NEXT card's rank badge (z-10) - the leader's
+          crown sat half-covered by a "2". Keep it inside the card's own width,
+          and above every sibling. */}
       {isLeader && (
         <motion.div
           initial={{ scale: 0, rotate: -30 }}
           animate={{ scale: 1, rotate: 0 }}
-          className="absolute -top-4 -right-4"
+          className="absolute -top-4 right-0 z-30"
         >
-          <Crown className="w-10 h-10 text-yellow-500 fill-yellow-500" />
+          <Crown className="w-10 h-10 text-yellow-500 fill-yellow-500 drop-shadow-lg" />
         </motion.div>
       )}
 
