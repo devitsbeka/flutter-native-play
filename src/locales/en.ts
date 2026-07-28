@@ -7,6 +7,7 @@ export const en: KaTranslations = {
   // Common
   // ==========================================
   common: {
+    processing: "Processing...",
     play: "Play",
     back: "Back",
     next: "Next",
@@ -247,6 +248,7 @@ export const en: KaTranslations = {
   // Game
   // ==========================================
   game: {
+    guest: "Guest",
     playToEarn: "Play and earn XP! ✨",
     levelProgress: "Level {level} ({current} XP) / {next} XP",
     classicTrivia: "Classic Trivia",
@@ -527,6 +529,11 @@ export const en: KaTranslations = {
   // Avatar
   // ==========================================
   avatar: {
+    avatarDeleted: "Avatar deleted",
+    avatarReadyDesc: "Your new avatar is ready",
+    canCloseHint: "You can close this window — generation continues in the background",
+    generatingBackground: "Generating your avatar",
+    generatingBackgroundDesc: "We'll let you know as soon as it's ready",
     title: "Your Avatar",
     subtitle: "Create or choose a game avatar",
     aiTitle: "AI Avatar",
@@ -568,6 +575,8 @@ export const en: KaTranslations = {
   // Errors
   // ==========================================
   errors: {
+    deleteFailed: "Delete failed",
+    failedToReadImage: "Failed to process image",
     generic: "Something went wrong",
     network: "No internet connection",
     tryAgain: "Try again",
@@ -863,6 +872,8 @@ export const en: KaTranslations = {
   // Team
   // ==========================================
   team: {
+    roomUpdated: "Room updated",
+    updateFailed: "Update failed",
     newRoom: "New Room",
     roomName: "Room Name",
     enterRoomName: "Enter room name",
@@ -1444,7 +1455,25 @@ export const en: KaTranslations = {
   // ==========================================
   // Extra hardcoded strings
   // ==========================================
+  challenge: {
+    challenge: "Challenge",
+  },
   extra: {
+    changeBtn2: "Change",
+    downloadDataSublabel: "Download a copy of your data",
+    editorDeleteBtn: "Delete",
+    errorOccurred: "Something went wrong",
+    frameNotEnoughGems: "Not enough gems",
+    framePreview: "Preview",
+    frameVipOnly: "VIP only",
+    generatingStatus: "Generating",
+    madeForYou: "Made for you",
+    newQuestionsBeingPrepared: "New questions are being prepared",
+    noActiveGames: "No active games",
+    privacyPolicySublabel: "How we use your data",
+    termsSublabel: "Terms of service",
+    triviaLabel2: "Trivia",
+    understood: "Got it",
     player: "Player",
     players: "players",
     gameName: "Game name...",
@@ -3302,6 +3331,7 @@ export const en: KaTranslations = {
     tvGameOverExcl: "Game Over!",
     tvYou: "(you)",
     tvWaitingNextRound: "Waiting for next round...",
+    tvRoundsFinished: "All rounds finished",
     tvNextRound: "Next Round",
     tvAddCategory: "Add Category",
     tvStartPoll: "Start Poll",
