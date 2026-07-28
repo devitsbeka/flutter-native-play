@@ -8,13 +8,6 @@ interface SafeAvatarProps {
   fallback: string;
   className?: string;
   fallbackClassName?: string;
-  /**
-   * Extra classes for the image itself. Mainly for insetting the artwork
-   * inside the circle (e.g. "p-[4px]"): avatar art whose subject reaches the
-   * edge of the source square - a hat brim, hair - gets sliced by the round
-   * mask otherwise.
-   */
-  imageClassName?: string;
 }
 
 /**
@@ -30,7 +23,6 @@ export const SafeAvatar: React.FC<SafeAvatarProps> = ({
   fallback,
   className,
   fallbackClassName,
-  imageClassName,
 }) => {
   const [hasError, setHasError] = useState(false);
   
@@ -45,7 +37,6 @@ export const SafeAvatar: React.FC<SafeAvatarProps> = ({
       {!showFallback && (
         <AvatarImage
           src={resolvedUrl}
-          className={imageClassName}
           onError={() => setHasError(true)}
         />
       )}
