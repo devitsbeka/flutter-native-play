@@ -7,7 +7,6 @@ import { tvLog, tvLogPhase, tvLogPlayer, tvLogError, tvLogPresence, tvLogTimer }
 import { 
   calculatePoints, 
   calculateTimeRemaining,
-  calculateObserverBonus,
   getQuestionTime, 
   getSessionBinding, 
   setSessionBinding,
@@ -325,73 +324,30 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // wrong answers' time remaining), same range as a normal correct answer.
     // If majority answered correctly → no bonus.
     // ============================================================================
+    // Observer bonus is computed and awarded SERVER-SIDE (idempotent, one
+    // award per question). It used to be computed here, which meant it was
+    // silently skipped whenever the DB performed the question->reveal
+    // transition itself - i.e. on every fast question. The RPC covers that
+    // path; this call covers the timer/fallback path. Both are idempotent.
     const suggesterId = current.currentRoundSuggesterId;
     if (suggesterId) {
       try {
-        // Calculate observer points based on incorrect/unanswered players
-        // Rule: observer earns ONE question worth of points if MAJORITY answered wrong.
-        // Not per-player — a single bonus like any other player would earn.
-        const activePlayers = current.players.filter(p => p.id !== suggesterId && p.isActive !== false);
-        const wrongPlayers = activePlayers.filter(p => !p.hasAnswered || p.lastAnswerCorrect === false);
-        const incorrectCount = wrongPlayers.length;
-
-        const totalActive = activePlayers.length;
-        if (totalActive > 0 && incorrectCount > totalActive / 2) {
-          // Majority answered wrong → award a single question's worth of points
-          // Use average time remaining of wrong answers for fair time-based bonus
-          let totalTimeRemaining = 0;
-          for (const player of wrongPlayers) {
-            totalTimeRemaining += (player.answeredTimeRemaining ?? 0);
-          }
-          const avgTimeRemaining = incorrectCount > 0 ? totalTimeRemaining / incorrectCount : 0;
-          let observerBonus = calculateObserverBonus(avgTimeRemaining);
-          
-          console.log('[advanceToReveal] 🏆 OBSERVER BONUS CALC:', {
-            suggesterId: suggesterId.slice(0, 8),
-            incorrectCount,
-            totalActive,
-            bonus: observerBonus,
-          });
-          
-          // Only update score if bonus was earned
-          if (observerBonus > 0) {
-            // Update the suggester's score in presence (if they're in our player list)
-            const suggesterPlayer = current.players.find(p => p.id === suggesterId);
-            if (suggesterPlayer && presenceChannelRef.current) {
-              const newScore = (suggesterPlayer.score || 0) + observerBonus;
-              
-              // Track the updated score for the observer
-              await presenceChannelRef.current.track({
-                nickname: suggesterPlayer.nickname,
-                avatar_url: suggesterPlayer.avatar_url,
-                score: newScore,
-                hasAnswered: false, // Observer never "answers"
-                lastAnswerCorrect: null,
-                lastAnswer: null,
-                answeredQuestionIndex: undefined,
-                isHost: isHostRef.current,
-                isActive: true,
-                observerBonusEarned: observerBonus, // Track bonus for UI
-              });
-              
-              console.log('[advanceToReveal] ✅ Observer score updated:', {
-                nickname: suggesterPlayer.nickname,
-                oldScore: suggesterPlayer.score || 0,
-                bonus: observerBonus,
-                newScore,
-              });
-
-              // CRITICAL FIX: Sync observer bonus to local myScore
-              // Without this, all views using myScore show wrong values for the suggester
-              if (suggesterId === myPlayerIdRef.current) {
-                setMyScore(newScore);
-              }
-            }
+        const { data: bonusResult } = await (supabase.rpc as unknown as (
+          fn: string, args: Record<string, unknown>
+        ) => Promise<{ data: unknown; error: unknown }>)('award_tv_observer_bonus', {
+          p_session_id: current.sessionId,
+          p_question_index: current.currentQuestionIndex,
+        });
+        const bonus = bonusResult as { awarded?: boolean; points?: number } | null;
+        if (bonus?.awarded && bonus.points) {
+          console.log('[advanceToReveal] 🏆 Observer bonus awarded (server):', bonus.points);
+          if (suggesterId === myPlayerIdRef.current) {
+            setMyScore(prev => prev + (bonus.points || 0));
           }
         }
       } catch (err) {
-        console.error('[advanceToReveal] Failed to calculate observer bonus:', err);
-        // Non-blocking - don't fail the reveal transition
+        console.error('[advanceToReveal] Observer bonus RPC failed:', err);
+        // Non-blocking - never hold up the reveal transition
       }
     }
 
@@ -2700,14 +2656,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Reset local score state
         setMyScore(0);
         setMyAnswer(null);
-        // Keep the durable tv_players score in sync (fire-and-forget)
-        if (!isTVDisplay) {
-          void supabase
-            .from('tv_players')
-            .update({ current_round_score: 0 })
-            .eq('tv_session_id', sessionId)
-            .eq('player_id', playerId);
-        }
+        // The DB side is already zeroed server-side by the host's
+        // reset_tv_session_scores RPC - clients only mirror it locally, so
+        // none of them needs write access to the score column.
         
         // Re-track with score: 0 if we have a presence channel
         if (presenceChannelRef.current) {
@@ -3841,13 +3792,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Reset local score
       setMyScore(0);
       setMyAnswer(null);
-      // Keep the durable tv_players score in sync (fire-and-forget)
-      if (state.sessionId && myPlayerId) {
-        void supabase
-          .from('tv_players')
-          .update({ current_round_score: 0 })
-          .eq('tv_session_id', state.sessionId)
-          .eq('player_id', myPlayerId);
+      // Scores reset SERVER-SIDE for the whole session (one call, and no
+      // client needs write access to the score column)
+      if (state.sessionId) {
+        void (supabase.rpc as unknown as (
+          fn: string, args: Record<string, unknown>
+        ) => Promise<unknown>)('reset_tv_session_scores', { p_session_id: state.sessionId });
       }
 
       // Update session to category-select phase
