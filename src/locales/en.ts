@@ -3331,6 +3331,7 @@ export const en: KaTranslations = {
     tvGameOverExcl: "Game Over!",
     tvYou: "(you)",
     tvWaitingNextRound: "Waiting for next round...",
+    tvAnswerNotSent: "Answer didn't send - check your connection and try again",
     tvRoundsFinished: "All rounds finished",
     tvNextRound: "Next Round",
     tvAddCategory: "Add Category",

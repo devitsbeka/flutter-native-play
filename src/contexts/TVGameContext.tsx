@@ -3536,6 +3536,17 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // can simply tap again.
     const revertOptimisticAnswer = (why: string) => {
       console.warn('[submitAnswer] ❌ Answer did not persist (', why, ') - reverting so the player can retry');
+      // TELL THE PLAYER. This used to revert in silence, with only a console
+      // warning: the tap visibly undid itself and no reason was given, which
+      // is exactly the "I had time left but could not send my answer" report.
+      // The buttons come back live, so a retry is worth prompting - there are
+      // usually seconds left on the clock.
+      //
+      // Note the existing OfflineBanner cannot cover this: it keys off
+      // navigator.onLine, and a weak mobile connection stays "online" while
+      // requests time out. This fires on the actual failure, whatever the
+      // cause - dropped packet, timeout, or a rejected write.
+      toast.error(t('extra.tvAnswerNotSent'), { id: 'tv-answer-failed', duration: 4000 });
       setMyAnswer(null);
       setMyScore(myScore);
       if (presenceChannelRef.current) {

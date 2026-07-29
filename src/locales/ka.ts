@@ -3376,6 +3376,7 @@ export const ka = {
     tvGameOverExcl: "თამაში დასრულდა!",
     tvYou: "(შენ)",
     tvWaitingNextRound: "შემდეგი რაუნდის მოლოდინი...",
+    tvAnswerNotSent: "პასუხი ვერ გაიგზავნა - შეამოწმე ინტერნეტი და სცადე ხელახლა",
     tvRoundsFinished: "ყველა რაუნდი დასრულდა",
     tvNextRound: "შემდეგი რაუნდი",
     tvAddCategory: "კატეგორიის დამატება",
