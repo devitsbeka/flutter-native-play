@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, UserPlus, Swords, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play, Send, ArrowRight, Users, MoreVertical, UserMinus, Loader2, Camera, Plus, Pencil } from "lucide-react";
+import { ChevronLeft, UserPlus, Swords, Gamepad2, Check, Clock, Heart, Play, Send, ArrowRight, Users, MoreVertical, UserMinus, Loader2, Camera, Plus, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import iconTrophy from "@/assets/icon-trophy.png";
 import iconTrivia from "@/assets/trivia-buzzer.png";
@@ -365,42 +365,11 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                     </div>
                   )}
 
-                  {/* Stats Row - only visible to friends/self */}
-                  {canSeePrivateInfo && (
-                    <div className="flex items-center gap-4 mt-4 p-3 rounded-xl bg-card/50">
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center gap-1">
-                          <Gamepad2 className="w-4 h-4 text-primary" />
-                          <span className="font-bold text-foreground">{data.stats.gamesPlayed}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{t("extra.gamesPlayedStat")}</span>
-                      </div>
-                      <div className="w-px h-8 bg-border" />
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center gap-1">
-                          <Trophy className="w-4 h-4 text-primary" />
-                          <span className="font-bold text-foreground">{data.stats.gamesWon}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{t("extra.gamesWonStat")}</span>
-                      </div>
-                      <div className="w-px h-8 bg-border" />
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center gap-1">
-                          <Target className="w-4 h-4 text-primary" />
-                          <span className="font-bold text-foreground">{data.stats.winRate}%</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{t("extra.winRateStat")}</span>
-                      </div>
-                      <div className="w-px h-8 bg-border" />
-                      <div className="flex flex-col items-center">
-                        <div className="flex items-center gap-1">
-                          <Flame className="w-4 h-4 text-primary" />
-                          <span className="font-bold text-foreground">{data.stats.bestStreak}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{t("extra.streakStat")}</span>
-                      </div>
-                    </div>
-                  )}
+                  {/* The games/wins/win-rate/streak row used to sit here,
+                      shown to friends and to yourself. Removed from the public
+                      profile: a visitor is here to see who someone is and what
+                      they have made, not to be handed a scoreboard on them.
+                      Your own stats still live on your own profile page. */}
 
                   {/* Action Buttons */}
                   {!data.isCurrentUser && (
