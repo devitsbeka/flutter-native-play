@@ -184,7 +184,7 @@ export const TVResultsScreen: React.FC = () => {
       </motion.div>
 
       {/* Center stage - podium floats in the middle of the free space */}
-      <div className="flex-1 min-h-0 flex flex-col justify-center">
+      <div className="flex-1 min-h-0 flex flex-col justify-center items-center">
         {/* Podium */}
         <div className="flex items-end justify-center gap-8 flex-shrink-0">
           {podiumOrder.map((player, displayIndex) => {
@@ -199,10 +199,14 @@ export const TVResultsScreen: React.FC = () => {
                 transition={{ delay: displayIndex * 0.2 }}
                 className="flex flex-col items-center"
               >
-                {/* Player avatar */}
+                {/* Avatar with its trophy pinned to the bottom edge. Sitting the
+                    trophy ON the avatar costs no layout height at all - it is
+                    absolutely positioned - which is what keeps room for the
+                    places below the podium. mb-5 is the trophy's overhang plus
+                    a little air, so it never touches the name. */}
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="relative mb-3"
+                  className="relative mb-5"
                 >
                   <SafeAvatar
                     avatarUrl={player.avatar_url}
@@ -214,22 +218,20 @@ export const TVResultsScreen: React.FC = () => {
                     }`}
                     fallbackClassName="bg-purple-600 text-white text-2xl"
                   />
-                </motion.div>
-
-                {/* Name, with the trophy inline before it. The trophy used to be
-                    a 96px block stacked ABOVE the avatar, which ate the vertical
-                    space the 4th-6th places needed - and on a real TV pushed them
-                    off the bottom entirely. Inline it costs nothing. */}
-                <div className="flex items-center justify-center gap-2 mb-1 max-w-[15rem]">
                   <motion.img
                     initial={{ scale: 0, rotate: -20 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ delay: 0.6 + displayIndex * 0.2, type: 'spring' }}
                     src={actualRank === 0 ? goldMedal : actualRank === 1 ? silverMedal : bronzeMedal}
                     alt={actualRank === 0 ? 'Gold' : actualRank === 1 ? 'Silver' : 'Bronze'}
-                    className={`${actualRank === 0 ? 'w-10 h-10' : 'w-8 h-8'} object-contain drop-shadow-lg flex-shrink-0`}
+                    className={`${actualRank === 0 ? 'w-11 h-11' : 'w-9 h-9'} object-contain
+                      absolute left-1/2 -translate-x-1/2 -bottom-4 z-10
+                      drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]`}
                   />
-                  <p className="text-white font-bold text-2xl truncate">{player.nickname}</p>
+                </motion.div>
+
+                <div className="max-w-[13rem]">
+                  <p className="text-white font-bold text-2xl truncate mb-1">{player.nickname}</p>
                 </div>
                 <p className="text-purple-300 font-semibold text-lg mb-3">{player.score} {t("extra.tvPoints")}</p>
 
@@ -248,7 +250,7 @@ export const TVResultsScreen: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="max-w-4xl mx-auto w-full flex-shrink-0 mt-5"
+            className="max-w-4xl w-full flex-shrink-0 mt-6"
           >
             <h3 className="text-purple-300 text-base mb-2 text-center">{t("extra.tvOtherPlayers")}</h3>
             <div className="grid grid-cols-3 gap-2">
