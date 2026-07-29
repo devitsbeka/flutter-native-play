@@ -32,7 +32,14 @@ export function MainLayout({
   disableScroll = false,
 }: MainLayoutProps) {
   return (
-    <div className={`min-h-screen flex w-full ${className}`}>
+    // 100dvh, not 100vh. On iOS, 100vh is the LARGE viewport - the height the
+    // page would have if the browser chrome were hidden - so an h-screen
+    // scroll container is taller than what is actually on screen. The document
+    // then has somewhere to scroll, and scrolling it drags the whole shell up
+    // behind the status bar and Dynamic Island: the cropped top on refresh.
+    // dvh matches the visible area, so the document itself never scrolls and
+    // the sticky header stays where it belongs.
+    <div className={`min-h-[100dvh] flex w-full ${className}`}>
       {/* Desktop/Tablet Left Navigation */}
       <UnifiedDesktopNav
         onPlayClick={onPlayClick}
@@ -49,7 +56,7 @@ export function MainLayout({
         className={`flex-1 relative bg-transparent scrollbar-hide overflow-x-hidden ${
           disableScroll 
             ? 'h-[100dvh] overflow-hidden md:h-screen md:overflow-y-auto md:pb-0' 
-            : 'h-screen overflow-y-auto pb-24 md:pb-0'
+            : 'h-[100dvh] md:h-screen overflow-y-auto pb-24 md:pb-0'
         }`}
       >
         {children}
