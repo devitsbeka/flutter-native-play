@@ -223,7 +223,11 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
               "trivia_played",
               `${senderProfile?.nickname ? senderProfile.nickname : ""} played your trivia`,
               postData.title || undefined,
-              { post_id: postId, player_id: user.id }
+              // sender_nickname is what the notification list actually reads to
+              // fill {name}. Without it translateNotificationTitle falls back
+              // to the generic "someone played your trivia" - every time,
+              // because nothing ever wrote this field.
+              { post_id: postId, player_id: user.id, sender_nickname: senderProfile?.nickname ?? null }
             );
           }
         }

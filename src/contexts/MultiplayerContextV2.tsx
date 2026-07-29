@@ -38,7 +38,9 @@ const notifyTriviaCreator = async (userTriviaId: string, playerId: string) => {
       "trivia_played",
       tStandalone("extra.mpSomeonePlayedTrivia").replace("{name}", playerProfile?.nickname || "Someone"),
       triviaPost.title || undefined,
-      { post_id: userTriviaId, player_id: playerId }
+      // See QuizPlayModal: the list reads data.sender_nickname to fill {name},
+      // so writing the name only into the title text left it showing "someone".
+      { post_id: userTriviaId, player_id: playerId, sender_nickname: playerProfile?.nickname ?? null }
     );
   } catch (error) {
     console.error("Error notifying trivia creator:", error);
