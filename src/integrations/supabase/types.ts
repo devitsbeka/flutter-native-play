@@ -2651,6 +2651,51 @@ export type Database = {
           },
         ]
       }
+      tv_score_events: {
+        Row: {
+          at: string
+          id: number
+          is_correct: boolean | null
+          nickname: string | null
+          player_id: string
+          points: number | null
+          prev_points: number | null
+          question_index: number
+          roster_missing: boolean
+          round_number: number | null
+          running_total: number | null
+          tv_session_id: string
+        }
+        Insert: {
+          at?: string
+          id?: number
+          is_correct?: boolean | null
+          nickname?: string | null
+          player_id: string
+          points?: number | null
+          prev_points?: number | null
+          question_index: number
+          roster_missing?: boolean
+          round_number?: number | null
+          running_total?: number | null
+          tv_session_id: string
+        }
+        Update: {
+          at?: string
+          id?: number
+          is_correct?: boolean | null
+          nickname?: string | null
+          player_id?: string
+          points?: number | null
+          prev_points?: number | null
+          question_index?: number
+          roster_missing?: boolean
+          round_number?: number | null
+          running_total?: number | null
+          tv_session_id?: string
+        }
+        Relationships: []
+      }
       tv_session_queue: {
         Row: {
           category_id: string | null
@@ -3978,7 +4023,9 @@ export type Database = {
       submit_tv_answer: {
         Args: {
           p_answer: string
+          p_avatar_url?: string
           p_is_correct: boolean
+          p_nickname?: string
           p_player_id: string
           p_points: number
           p_question_index: number
