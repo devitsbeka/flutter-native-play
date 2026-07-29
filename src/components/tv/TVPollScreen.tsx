@@ -14,6 +14,7 @@ export const TVPollScreen: React.FC = () => {
   const { players, code, sessionId } = useTVGame();
   const {
     suggestions,
+    rankedSuggestions,
     pollPhase,
     pollStartTime,
     pollDuration,
@@ -52,6 +53,16 @@ export const TVPollScreen: React.FC = () => {
   const joinUrl = `${window.location.origin}/join/session/${sessionId}`;
 
   // Determine grid columns based on suggestion count
+  // The leading suggestion, from the vote-ordered list. Deliberately no crown
+  // while everything is on zero, and none on a tie for first - a crown that
+  // hops between tied cards is the jumpiness this change removes.
+  const leaderId = (() => {
+    const top = rankedSuggestions?.[0];
+    if (!top || top.vote_count <= 0) return null;
+    const tied = rankedSuggestions.filter(s => s.vote_count === top.vote_count).length > 1;
+    return tied ? null : top.id;
+  })();
+
   const getGridCols = () => {
     return 'grid-cols-4'; // Always 4 columns for TV
   };
@@ -146,8 +157,12 @@ export const TVPollScreen: React.FC = () => {
                   <SuggestionCard
                     key={suggestion.id}
                     suggestion={suggestion}
+                    // Position is the FROZEN suggestion order, so the badge is a
+                    // stable label rather than a live placing. The crown still
+                    // follows the actual leader, which now has to be looked up
+                    // rather than assumed to be first.
                     rank={index + 1}
-                    isLeader={index === 0 && pollPhase === 'voting'}
+                    isLeader={pollPhase === 'voting' && leaderId === suggestion.id}
                     showVotes={pollPhase === 'voting'}
                     hasVotes={suggestion.vote_count > 0}
                   />
