@@ -2337,6 +2337,35 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // CRITICAL FIX: Restore myAnswer from database on rejoin
       // This prevents the host from seeing clickable answer buttons when they've already answered
+      // RESTORE THIS PLAYER'S SCORE FROM THE DATABASE.
+      //
+      // myScore is React state initialised to 0, and nothing ever seeded it
+      // from tv_players - so any refresh or reconnect showed the player 0
+      // points for the rest of the game. The database was never actually
+      // wrong (tv_score_events for the 8-round session shows every player's
+      // running_total climbing monotonically, no drops), which is why the TV
+      // kept showing correct totals while the phone showed nothing. It was a
+      // display bug, but an alarming one - it looks exactly like losing your
+      // score.
+      //
+      // It was also one broken guard away from being real data loss:
+      // submitAnswer's persistScore() writes myScore + points straight to
+      // current_round_score, so a post-refresh submission would have written
+      // a single question's points over the whole accumulated total. The
+      // column-level grant lockdown is what has been silently refusing those
+      // writes. Seeding the value closes the display bug and removes the
+      // trap underneath it.
+      const { data: myRow } = await supabase
+        .from('tv_players')
+        .select('current_round_score')
+        .eq('tv_session_id', session.id)
+        .eq('player_id', playerId)
+        .maybeSingle();
+      if (typeof myRow?.current_round_score === 'number') {
+        setMyScore(myRow.current_round_score);
+        tvLog('Restored score from DB on join', { score: myRow.current_round_score });
+      }
+
       const currentQIdx = session.current_question_index || 0;
       if (session.status === 'playing' || session.status === 'reveal') {
         const { data: existingAnswer } = await supabase
