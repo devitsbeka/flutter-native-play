@@ -218,16 +218,23 @@ export const TVResultsScreen: React.FC = () => {
                     }`}
                     fallbackClassName="bg-purple-600 text-white text-2xl"
                   />
-                  <motion.img
-                    initial={{ scale: 0, rotate: -20 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ delay: 0.6 + displayIndex * 0.2, type: 'spring' }}
-                    src={actualRank === 0 ? goldMedal : actualRank === 1 ? silverMedal : bronzeMedal}
-                    alt={actualRank === 0 ? 'Gold' : actualRank === 1 ? 'Silver' : 'Bronze'}
-                    className={`${actualRank === 0 ? 'w-11 h-11' : 'w-9 h-9'} object-contain
-                      absolute left-1/2 -translate-x-1/2 -bottom-4 z-10
-                      drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]`}
-                  />
+                  {/* Positioning lives on this wrapper, NOT on the image.
+                      framer-motion writes its own `transform` for scale/rotate,
+                      which silently overwrites Tailwind's -translate-x-1/2 - so
+                      the trophy's LEFT EDGE ended up on the avatar's centre
+                      instead of its middle. Separating the two keeps the
+                      centring immune to whatever the animation does. */}
+                  <div className="absolute left-1/2 -translate-x-1/2 -bottom-4 z-10">
+                    <motion.img
+                      initial={{ scale: 0, rotate: -20 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ delay: 0.6 + displayIndex * 0.2, type: 'spring' }}
+                      src={actualRank === 0 ? goldMedal : actualRank === 1 ? silverMedal : bronzeMedal}
+                      alt={actualRank === 0 ? 'Gold' : actualRank === 1 ? 'Silver' : 'Bronze'}
+                      className={`${actualRank === 0 ? 'w-11 h-11' : 'w-9 h-9'} object-contain
+                        drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]`}
+                    />
+                  </div>
                 </motion.div>
 
                 <div className="max-w-[13rem]">
