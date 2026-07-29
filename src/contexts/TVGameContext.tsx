@@ -440,20 +440,25 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.log('[confirmActivePlayers] 🔄 Activated', connectedPlayerIds.length, 'connected players');
       }
       
-      // Step 2b: Deactivate players NOT in presence (quitters)
-      const { error: deactivateError } = await supabase
-        .from('tv_players')
-        .update({ is_active: false })
-        .eq('tv_session_id', sessionId)
-        .not('player_id', 'in', `(${connectedPlayerIds.join(',')})`)
-        .not('player_id', 'in', `(${systemDeviceIdentifiers.join(',')})`)
-        .not('nickname', 'in', `(${systemDeviceIdentifiers.join(',')})`);
-      
-      if (deactivateError) {
-        console.warn('[confirmActivePlayers] ⚠️ Deactivate error:', deactivateError);
-      } else {
-        console.log('[confirmActivePlayers] 🔄 Deactivated players not in presence (quitters)');
-      }
+      // NO DEACTIVATION FROM A SINGLE PRESENCE SAMPLE.
+      //
+      // This used to flip is_active=false for anyone missing from presence at
+      // this instant. Presence misses people constantly - a dimmed screen, a
+      // blinked socket, a device mid-reconnect - and an is_active=false player
+      // is dropped from submit_tv_answer's expected set, so the question ends
+      // without them. That is the "დრო ამოიწურა while my timer still had
+      // seconds" report: still in the game, still looking at the question,
+      // but no longer counted, so nobody waited.
+      //
+      // Live evidence: two players in the 8-player session ended the game
+      // with is_active=false and the two lowest scores.
+      //
+      // Players are activated here and stay active. Someone who genuinely
+      // walks away costs the room the 15s timer for that question - which
+      // tv_expire_question now enforces reliably - and that is the trade the
+      // product rule asks for: wait for everyone while there is time left.
+      console.log('[confirmActivePlayers] ✅ Activated', connectedPlayerIds.length,
+        '- no deactivation (presence is too lossy to remove a player mid-game)');
     } else {
       // Fallback: Presence is empty - don't modify is_active, just count current state
       console.log('[confirmActivePlayers] ⚠️ Presence returned 0 players - using existing is_active state from DB');
@@ -760,35 +765,32 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // so "every connected non-suggester player answered" is a safe, drift-
       // immune signal - it doesn't depend on the locked count or on answer
       // rows surviving unique-key collisions.
+      // WHO WE WAIT FOR COMES FROM THE ROSTER, NEVER FROM PRESENCE.
+      //
+      // Two shortcuts used to live here, and both ended the question early:
+      //
+      //   1. "every connected player has answered" - computed over
+      //      current.players, which is built from the presence channel. A
+      //      player whose screen dimmed or whose socket blinked is simply
+      //      absent from that list, so the test passed with fewer people and
+      //      the question ended while they still had time on the clock.
+      //
+      //   2. clamping expectedCount down to connectedPlayers.length - the
+      //      same volatile number, used to lower the bar directly.
+      //
+      // Both are host-only (this whole function is), which is why it looked
+      // like "it happens when the host answers first": the host's own answer
+      // triggers this check, and if anyone was missing from that instant's
+      // presence sample the room advanced without them. They then saw
+      // "დრო ამოიწურა" with seconds still showing, and their tap came back
+      // as a stale question.
+      //
+      // Presence is decoration. The set of people we owe a question to is
+      // the durable roster, and the 15s timer - now enforced server-side by
+      // tv_expire_question - is what handles anyone who genuinely left. If
+      // there is time on the clock, every player keeps the right to answer,
+      // right down to the last second.
       const connectedPlayers = current.players.filter(p => p.id !== roundSuggesterId);
-      if (connectedPlayers.length > 0 && connectedPlayers.every(p => p.hasAnswered)) {
-        // ANTI-CASCADE BRAKE: stale presence can claim everyone answered
-        // (carried-over flags right after a transition, zombie metas). A
-        // presence-only verdict NEVER advances without at least one real
-        // committed answer row for THIS question - a question nobody
-        // answered is closed by the 15s timer, nothing else. (A 4s escape
-        // hatch here once painted the correct answer green with zero
-        // answers in.)
-        const { count: brakeCount } = await supabase
-          .from('player_answers')
-          .select('*', { count: 'exact', head: true })
-          .eq('tv_session_id', current.sessionId)
-          .eq('question_index', current.currentQuestionIndex);
-        if ((brakeCount ?? 0) > 0) {
-          console.log('[AutoAdvance] ✅ All', connectedPlayers.length, 'connected players answered (presence) → ADVANCE');
-          advanceToReveal('all connected players answered (presence)');
-          return;
-        }
-        console.log('[AutoAdvance] ⚠️ Presence says all answered but 0 DB rows this question - holding (anti-cascade)');
-      }
-
-      // The locked count can exceed reality (paired-mode floor of 2, ghost
-      // rows, a flickered presence sample at question start). Never require
-      // more answers than there are actually-connected players.
-      if (connectedPlayers.length > 0 && expectedCount > connectedPlayers.length) {
-        console.log('[AutoAdvance] ⚖️ Clamping expectedCount', expectedCount, '→', connectedPlayers.length, '(live connections)');
-        expectedCount = connectedPlayers.length;
-      }
 
       // Fallback: if locked count is 0 (shouldn't happen), use live DB count
       if (expectedCount <= 0) {
