@@ -3539,6 +3539,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       answered_ids?: string[];
       room_id?: string | null;
       player_total?: number | null;
+      roster_repaired?: boolean;
       committed_at?: string;
     };
     const submittedIndex = state.currentQuestionIndex;
@@ -3553,6 +3554,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       p_is_correct: isCorrect,
       p_points: points,
       p_time_remaining: state.timeRemaining,
+      // Identity, so the server can recreate this player's tv_players row if
+      // it is missing. A failed INSERT at join time used to leave a player
+      // able to answer but unable to score for the rest of the game.
+      p_nickname: state.players.find(p => p.id === myPlayerId)?.nickname || myNicknameRef.current || null,
+      p_avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url || null,
     });
 
     // Phones drop packets. One immediate retry turns most "my answer never
@@ -3597,6 +3603,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // so the client never writes current_round_score on this path - one
       // less client write to permit once that column gets locked down.
       // Adopt the server's authoritative total when it comes back.
+      if (result.roster_repaired) {
+        console.warn('[submitAnswer] 🩹 Server recreated this player\'s roster row - ' +
+          'their join-time insert had failed, so scoring was silently dead until now');
+      }
+
       if (typeof result.player_total === 'number') {
         setMyScore(result.player_total);
       } else {
