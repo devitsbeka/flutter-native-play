@@ -2397,6 +2397,29 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             active_player_count?: number | null;
           };
 
+          // DROP STALE PAYLOADS. Within a round the question index only ever
+          // moves forward - tv_advance_question increments it under a lock and
+          // the phase log confirms the database never goes back. But realtime
+          // delivery is not ordered, so a payload for question N can arrive
+          // after the one for N+1. Applied blindly (as it was), that repainted
+          // the PREVIOUS question for about a second before the next event or
+          // the 1s poller corrected it - the "jumping questions" flicker.
+          //
+          // Only mid-round statuses are guarded: a legitimate reset to index 0
+          // happens at a new round, which arrives as round-intro/countdown or
+          // with a different round_number, and must still be applied.
+          const midRound = newData.status === 'playing' || newData.status === 'question' || newData.status === 'reveal';
+          const sameRound = (newData.round_number ?? stateRef.current.roundNumber) === stateRef.current.roundNumber;
+          if (
+            midRound && sameRound &&
+            typeof newData.current_question_index === 'number' &&
+            newData.current_question_index < stateRef.current.currentQuestionIndex
+          ) {
+            console.log('[Subscription] ⏮️ Ignoring stale payload for question',
+              newData.current_question_index, '- already on', stateRef.current.currentQuestionIndex);
+            return;
+          }
+
           // New question detection must happen BEFORE setState, and must also reset presence.
           // Otherwise, the host sees stale `hasAnswered: true` from the previous question and
           // immediately auto-advances through all remaining questions.
