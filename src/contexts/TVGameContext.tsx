@@ -3664,9 +3664,49 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
       markReadyInFlightRef.current = true;
       try {
+      // THE COUNTDOWN WRITE GOES FIRST.
+      //
+      // The host taps "ready" and nothing on screen changes, so they tap
+      // again, and again. This branch used to perform a presence track, a
+      // suggester lookup and confirmActivePlayers() - presence reads, two
+      // bulk UPDATEs, a sleep and a retry loop - BEFORE the one write the
+      // host is actually waiting for. That is four to six round trips, which
+      // on a phone with eight players is seconds of dead air.
+      //
+      // All of that was redundant: startPlaying() runs prepareForPlaying()
+      // when the countdown ends, and that already re-runs confirmActivePlayers
+      // AND applies the suggester adjustment, persisting active_player_count
+      // before the first question. Doing it here as well just delayed the
+      // transition. active_player_count is deliberately not written here -
+      // nothing reads it during the countdown, and prepareForPlaying sets the
+      // authoritative value moments later.
+      //
+      // CAS on round-intro: only a session still waiting may enter countdown,
+      // so a duplicate or late tap matches nothing and no-ops. That is what
+      // stops a queued round starting twice (countdown, a beat of the first
+      // question, countdown again) when a second call lands after
+      // startPlaying has already moved on.
+      const { data: countdownRows } = await supabase
+        .from('tv_sessions')
+        .update({ status: 'countdown' })
+        .eq('id', state.sessionId)
+        .eq('status', 'round-intro')
+        .select('id');
+
+      if (!countdownRows?.length) {
+        console.log('[markReady] ⏭️ Session already moved on - countdown write skipped (round did not restart)');
+        return;
+      }
+
+      // Local + presence bookkeeping now that the room is already moving.
+      setMyAnswer(null);
+      hasAdvancedRef.current = false;
+      // Auto-advance stays disabled during the countdown; startPlaying sets
+      // this once the question is actually live.
+      questionStartedAtRef.current = 0;
+
       const myPlayer = state.players.find(p => p.id === myPlayerId);
-      // Reset my presence flags (defensive) and move session to countdown.
-      await presenceChannelRef.current.track({
+      void presenceChannelRef.current.track({
         nickname: myPlayer?.nickname || myNicknameRef.current || '',
         avatar_url: myPlayer?.avatar_url,
         score: myScore,
@@ -3677,75 +3717,6 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isActive: true,
         isReadyForNextRound: false,
       });
-
-      setMyAnswer(null);
-      hasAdvancedRef.current = false;
-      
-      // CRITICAL: Set questionStartedAtRef = 0 to DISABLE auto-advance during countdown
-      // Only startPlaying will set it to Date.now() AFTER transitioning to 'playing'
-      questionStartedAtRef.current = 0;
-
-      // Check for suggester to potentially subtract from count
-      const { data: sessionData } = await supabase
-        .from('tv_sessions')
-        .select('current_round_suggester_id')
-        .eq('id', state.sessionId)
-        .single();
-
-      const suggesterId = (sessionData as any)?.current_round_suggester_id as string | null;
-
-      // CRITICAL: Use centralized confirmActivePlayers for robust player count verification
-      console.log('[markReady] 🔒 Using confirmActivePlayers for round 2+...');
-      let expectedPlayerCount = await confirmActivePlayers(state.sessionId);
-      
-      // Adjust for suggester skip rule
-      if (suggesterId) {
-        expectedPlayerCount = Math.max(1, expectedPlayerCount - 1);
-        console.log('[markReady] 👤 Adjusted for suggester:', {
-          suggesterId: suggesterId.substring(0, 8) + '...',
-          adjustedCount: expectedPlayerCount,
-        });
-        
-        // Update session with adjusted count
-        await supabase
-          .from('tv_sessions')
-          .update({ active_player_count: expectedPlayerCount })
-          .eq('id', state.sessionId);
-      }
-      
-      console.log('[markReady] ✅ Verified player count for round 2+:', expectedPlayerCount);
-
-      // CAS on round-intro: this write used to be unconditional, which is why
-      // a queued round started TWICE - countdown, first question for a beat,
-      // then countdown again. Measured live (tv_phase_events): on 12 of the
-      // queued rounds in one 8-player game the session went
-      // countdown -> playing and then playing -> countdown between 0.31s and
-      // 5.77s later, before finally starting for real.
-      //
-      // The gap is confirmActivePlayers() above: with 8 players it does
-      // presence reads, two bulk UPDATEs, a sleep and a verification loop, so
-      // a second markReady whose closure still says 'round-intro' can spend
-      // seconds in there and land its countdown write AFTER startPlaying has
-      // already moved the session to 'playing' - dragging a live question
-      // back to the countdown screen.
-      //
-      // Same rule as every other transition here: only a session still in
-      // round-intro may enter countdown. A late or duplicate call matches
-      // nothing and is a harmless no-op.
-      const { data: countdownRows } = await supabase
-        .from('tv_sessions')
-        .update({
-          status: 'countdown',
-          active_player_count: expectedPlayerCount, // Already set by confirmActivePlayers or adjusted above
-        })
-        .eq('id', state.sessionId)
-        .eq('status', 'round-intro')
-        .select('id');
-
-      if (!countdownRows?.length) {
-        console.log('[markReady] ⏭️ Session already moved on - countdown write skipped (round did not restart)');
-        return;
-      }
 
       tvLogPhase('round-intro', 'countdown', 'host ready');
       return;
