@@ -149,7 +149,19 @@ export function PingPongVideo({
   }, [isReady, isInView, videoError]);
 
   return (
-    <div ref={containerRef} className="absolute inset-0">
+    // pointer-events-none: this is decorative background only, never
+    // interactive. Without it the <video> swallows taps - on iOS a video
+    // element captures touches even with playsInline and no controls - so a
+    // tap on the artwork, which is most of a category card, never reached the
+    // card's own onClick. That is the "I had to tap several times to open a
+    // category" report: the taps that did work were the ones that happened to
+    // land on the title strip below the video.
+    //
+    // Every other overlay in AirbnbCategoryCard already sets this; the media
+    // layer was the one that did not. Applied here rather than at the call
+    // site so all seven usages get it - they are all backgrounds behind
+    // clickable cards.
+    <div ref={containerRef} className="absolute inset-0 pointer-events-none">
       {/* Poster image - shows instantly while video loads, stays visible on video error */}
       {posterUrl && !posterError && (
         <img
