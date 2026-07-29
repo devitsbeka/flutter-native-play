@@ -4000,26 +4000,21 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .delete()
         .eq('session_id', state.sessionId);
 
-      // Broadcast reset to all players
-      if (presenceChannelRef.current) {
-        await presenceChannelRef.current.send({
-          type: 'broadcast',
-          event: 'RESET_SCORES',
-          payload: {},
-        });
-        tvLog('Broadcasted RESET_SCORES for new game');
-      }
-
-      // Reset local score
-      setMyScore(0);
+      // SCORES ARE NOT RESET HERE.
+      //
+      // This function has exactly one caller: the "add a category" button on
+      // the game-over screen. That is a CONTINUATION - the players carry on
+      // with their running totals - so wiping the scores here was simply
+      // wrong. It used to broadcast RESET_SCORES, zero myScore locally and
+      // call reset_tv_session_scores for the whole session.
+      //
+      // In the 8-round session that surfaced this (e7110583), the totals did
+      // in fact carry over across the game boundary at 21:05:40, so the reset
+      // was already failing to take effect - it just was not obvious which
+      // behaviour was intended. Cumulative is intended, so the reset goes.
+      //
+      // Answers ARE still cleared above: those are per-question, not per-game.
       setMyAnswer(null);
-      // Scores reset SERVER-SIDE for the whole session (one call, and no
-      // client needs write access to the score column)
-      if (state.sessionId) {
-        void (supabase.rpc as unknown as (
-          fn: string, args: Record<string, unknown>
-        ) => Promise<unknown>)('reset_tv_session_scores', { p_session_id: state.sessionId });
-      }
 
       // Update session to category-select phase
       await supabase
