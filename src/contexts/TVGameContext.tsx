@@ -240,6 +240,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Flag to prevent double-advance per question (reset on each new question)
   const hasAdvancedRef = useRef(false);
+  // Re-entry guard for markReady's host branch (see the CAS note there)
+  const markReadyInFlightRef = useRef(false);
   // Pending reveal->next-question advance timers, keyed by the reveal's
   // question index so dep-churn effect re-runs can't cancel or duplicate them
   const revealAdvanceRef = useRef<{ qIndex: number; timers: ReturnType<typeof setTimeout>[]; started: boolean } | null>(null);
@@ -3629,6 +3631,16 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Host-only: the host decides when to start the next round.
     // No more waiting for every player to press a ready button.
     if (isHost && state.sessionId && state.phase === 'round-intro') {
+      // The slow player-count verification below leaves a wide window in
+      // which this can be entered a second time, so refuse re-entry outright.
+      // The CAS on the countdown write is the real guarantee; this just
+      // avoids doing all that work twice.
+      if (markReadyInFlightRef.current) {
+        console.log('[markReady] ⏭️ Already in flight - ignoring duplicate');
+        return;
+      }
+      markReadyInFlightRef.current = true;
+      try {
       const myPlayer = state.players.find(p => p.id === myPlayerId);
       // Reset my presence flags (defensive) and move session to countdown.
       await presenceChannelRef.current.track({
@@ -3680,16 +3692,43 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       console.log('[markReady] ✅ Verified player count for round 2+:', expectedPlayerCount);
 
-      await supabase
+      // CAS on round-intro: this write used to be unconditional, which is why
+      // a queued round started TWICE - countdown, first question for a beat,
+      // then countdown again. Measured live (tv_phase_events): on 12 of the
+      // queued rounds in one 8-player game the session went
+      // countdown -> playing and then playing -> countdown between 0.31s and
+      // 5.77s later, before finally starting for real.
+      //
+      // The gap is confirmActivePlayers() above: with 8 players it does
+      // presence reads, two bulk UPDATEs, a sleep and a verification loop, so
+      // a second markReady whose closure still says 'round-intro' can spend
+      // seconds in there and land its countdown write AFTER startPlaying has
+      // already moved the session to 'playing' - dragging a live question
+      // back to the countdown screen.
+      //
+      // Same rule as every other transition here: only a session still in
+      // round-intro may enter countdown. A late or duplicate call matches
+      // nothing and is a harmless no-op.
+      const { data: countdownRows } = await supabase
         .from('tv_sessions')
-        .update({ 
+        .update({
           status: 'countdown',
           active_player_count: expectedPlayerCount, // Already set by confirmActivePlayers or adjusted above
         })
-        .eq('id', state.sessionId);
+        .eq('id', state.sessionId)
+        .eq('status', 'round-intro')
+        .select('id');
+
+      if (!countdownRows?.length) {
+        console.log('[markReady] ⏭️ Session already moved on - countdown write skipped (round did not restart)');
+        return;
+      }
 
       tvLogPhase('round-intro', 'countdown', 'host ready');
       return;
+      } finally {
+        markReadyInFlightRef.current = false;
+      }
     }
     
     const myPlayer = state.players.find(p => p.id === myPlayerId);
