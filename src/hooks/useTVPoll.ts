@@ -139,12 +139,15 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
               const newSuggestion = payload.new as PollSuggestion;
               // Avoid duplicates
               if (prev.some(s => s.id === newSuggestion.id)) return prev;
-              return [...prev, newSuggestion].sort((a, b) => b.vote_count - a.vote_count);
+              // Insertion order only - display order comes from the memos
+              // below, which keep the grid frozen while people vote.
+              return [...prev, newSuggestion];
             });
           } else if (payload.eventType === 'UPDATE') {
+            // Update in place. Re-sorting here by vote_count is what used to
+            // shuffle the grid under people's thumbs on every incoming vote.
             setSuggestions(prev =>
               prev.map(s => s.id === payload.new.id ? payload.new as PollSuggestion : s)
-                .sort((a, b) => b.vote_count - a.vote_count)
             );
           } else if (payload.eventType === 'DELETE') {
             // Use payload.old.id - with REPLICA IDENTITY FULL this should work
@@ -915,13 +918,33 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
     return true;
   }, [sessionId, suggestions]);
 
-  // Sorted suggestions by vote count
-  const sortedSuggestions = useMemo(() => {
+  // ORDER IS FROZEN WHILE PEOPLE ARE VOTING.
+  //
+  // These used to be sorted by vote_count and re-sorted on every incoming
+  // vote, so a card moved out from under your thumb the moment someone else
+  // voted - you tapped one category and hit another. With framer-motion's
+  // layout animation on the cards, that reads as the whole grid jumping.
+  //
+  // Display order is now the order the suggestions were made: stable for the
+  // whole poll, identical on the TV and on every phone. Only the counts
+  // change. Ranking still exists - as a separate list - for the results
+  // screens and for working out who is leading.
+  const stableSuggestions = useMemo(() => {
+    return [...suggestions].sort((a, b) => {
+      const byTime = (a.created_at || '').localeCompare(b.created_at || '');
+      return byTime !== 0 ? byTime : a.id.localeCompare(b.id);
+    });
+  }, [suggestions]);
+
+  const rankedSuggestions = useMemo(() => {
     return [...suggestions].sort((a, b) => b.vote_count - a.vote_count);
   }, [suggestions]);
 
   return {
-    suggestions: sortedSuggestions,
+    suggestions: stableSuggestions,
+    // Vote-ordered, for results screens and leader highlighting. Never use
+    // this to lay out the voting grid - that is what caused the jumping.
+    rankedSuggestions,
     mySuggestion,
     mySuggestions,
     canAddMoreSuggestions,
