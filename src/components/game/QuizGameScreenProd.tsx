@@ -18,18 +18,7 @@ import { useAIIcon } from "@/hooks/useAIIcon";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useUserPowerUps, PowerUpType as DBPowerUpType } from "@/hooks/useUserPowerUps";
 import { ActivePowerUpIndicator, PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
-
-// Mascot avatars for opponent
-import mascotAvatar1 from "@/assets/avatars/mascot-avatar-1.png";
-import mascotAvatar2 from "@/assets/avatars/mascot-avatar-2.png";
-import mascotAvatar3 from "@/assets/avatars/mascot-avatar-3.png";
-import mascotAvatar4 from "@/assets/avatars/mascot-avatar-4.png";
-import mascotAvatar5 from "@/assets/avatars/mascot-avatar-5.png";
-import mascotAvatar6 from "@/assets/avatars/mascot-avatar-6.png";
-import mascotAvatar7 from "@/assets/avatars/mascot-avatar-7.png";
-import mascotAvatar8 from "@/assets/avatars/mascot-avatar-8.png";
-
-const mascotAvatars = [mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4, mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8];
+import { AnswerChoiceAvatars, type AnswerChooser } from "@/components/game/AnswerChoiceAvatars";
 
 const DIFFICULTY_COLORS: Record<string, string> = {
   easy: "bg-success",
@@ -55,6 +44,7 @@ export function QuizGameScreenProd() {
     lastAnswerCorrect,
     lastUserAnswer,
     lastOpponentAnswer,
+    lastOpponentCorrect,
     playerPowerUps,
     hiddenAnswers,
     replacedAnswer,
@@ -73,7 +63,6 @@ export function QuizGameScreenProd() {
   const [timeRemaining, setTimeRemaining] = useState(timePerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerRevealed, setAnswerRevealed] = useState(false);
-  const [opponentAvatarIndex] = useState(() => Math.floor(Math.random() * mascotAvatars.length));
   const [freezeTimeLeft, setFreezeTimeLeft] = useState(0);
 
   const currentQuestion = questions[currentQuestionIndex];
@@ -296,6 +285,23 @@ export function QuizGameScreenProd() {
     return isOpponentCorrect ? "correct" : "wrong";
   }, [answerRevealed, lastOpponentAnswer, currentQuestion]);
 
+  // The opponent's face, to be drawn on whichever answer they picked. Seeing
+  // that they were wrong says nothing about what they went for instead, and
+  // that is the part worth watching. Empty until the reveal, so it can never
+  // work as a hint.
+  const opponentChoosersFor = useCallback(
+    (answer: string): AnswerChooser[] => {
+      if (!opponent || !answerRevealed || lastOpponentAnswer !== answer) return [];
+      return [{
+        id: "opponent",
+        nickname: opponent.name,
+        avatarUrl: opponent.avatarUrl,
+        isCorrect: lastOpponentCorrect,
+      }];
+    },
+    [opponent, answerRevealed, lastOpponentAnswer, lastOpponentCorrect]
+  );
+
   if (!currentQuestion) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-[#7E7ADB]">
@@ -354,7 +360,7 @@ export function QuizGameScreenProd() {
 
           {/* Opponent (Right) */}
           <QuizPlayerAvatar
-            avatarUrl={mascotAvatars[opponentAvatarIndex]}
+            avatarUrl={opponent.avatarUrl}
             score={opponentScore}
             position="right"
             state={getOpponentState()}
@@ -426,7 +432,7 @@ export function QuizGameScreenProd() {
             return (
               <div
                 key={`${currentQuestionIndex}-${index}`}
-                className="flex-1"
+                className="flex-1 relative"
               >
                 <QuizTrueFalseButton
                   variant={isTrue ? "true" : "false"}
@@ -434,6 +440,7 @@ export function QuizGameScreenProd() {
                   onClick={() => handleAnswer(answer)}
                   disabled={answerRevealed}
                 />
+                <AnswerChoiceAvatars choosers={opponentChoosersFor(answer)} placement="corner" />
               </div>
             );
           })}
@@ -447,7 +454,7 @@ export function QuizGameScreenProd() {
             return (
               <div
                 key={`${currentQuestionIndex}-${index}`}
-                className="flex-shrink-0 w-full"
+                className="flex-shrink-0 w-full relative"
               >
                 <QuizAnswerButton
                   label={ANSWER_LABELS[index]}
@@ -457,6 +464,7 @@ export function QuizGameScreenProd() {
                   disabled={answerRevealed}
                   showLabel={true}
                 />
+                <AnswerChoiceAvatars choosers={opponentChoosersFor(answer)} />
               </div>
             );
           })}
