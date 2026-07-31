@@ -48,6 +48,22 @@ posthog.init(POSTHOG_KEY, {
     : undefined,
 });
 
+// Report crashes, not just behaviour.
+//
+// The React boundary at the root catches render errors; this catches the rest -
+// a rejected promise in a realtime handler, a throw inside a setTimeout, the
+// kind of failure that leaves the UI stuck rather than blank. Without it those
+// are only visible to a developer holding the phone.
+//
+// capture_console_errors is deliberately OFF: this codebase uses console.error
+// as ordinary logging (failed regen writes, swallowed insert warnings), and
+// promoting all of that to exception events would bury the real crashes.
+posthog.startExceptionAutocapture({
+  capture_unhandled_errors: true,
+  capture_unhandled_rejections: true,
+  capture_console_errors: false,
+});
+
 // If bootstrapped, immediately identify so the person profile is created with correct properties
 if (bootstrapIdentity) {
   posthog.identify(bootstrapIdentity.userId, {

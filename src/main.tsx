@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/providers/theme-provider";
 
 import App from "./App.tsx";
+import { AppErrorBoundary } from "@/components/shared/AppErrorBoundary";
 import "./index.css";
 
 // Register Service Worker for video caching
@@ -35,12 +36,16 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <ThemeProvider defaultTheme="light" storageKey="quiz-theme">
-          <App />
-        </ThemeProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    {/* Outermost on purpose: a provider that throws on mount takes the whole
+        tree with it, and that is exactly the crash worth catching. */}
+    <AppErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <ThemeProvider defaultTheme="light" storageKey="quiz-theme">
+            <App />
+          </ThemeProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </AppErrorBoundary>
   </React.StrictMode>
 );
