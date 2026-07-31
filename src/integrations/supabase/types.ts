@@ -1508,6 +1508,8 @@ export type Database = {
           country_code: string | null
           created_at: string
           current_streak: number | null
+          free_plays_used: number
+          free_plays_window_start: string | null
           games_played: number | null
           games_won: number | null
           gems: number
@@ -1535,6 +1537,8 @@ export type Database = {
           country_code?: string | null
           created_at?: string
           current_streak?: number | null
+          free_plays_used?: number
+          free_plays_window_start?: string | null
           games_played?: number | null
           games_won?: number | null
           gems?: number
@@ -1562,6 +1566,8 @@ export type Database = {
           country_code?: string | null
           created_at?: string
           current_streak?: number | null
+          free_plays_used?: number
+          free_plays_window_start?: string | null
           games_played?: number | null
           games_won?: number | null
           gems?: number
@@ -3906,6 +3912,7 @@ export type Database = {
         Args: { p_question_index: number; p_session_id: string }
         Returns: Json
       }
+      consume_free_play: { Args: never; Returns: Json }
       format_display_name: { Args: { full_name: string }; Returns: string }
       generate_challenge_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
