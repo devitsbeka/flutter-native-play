@@ -46,7 +46,7 @@ export const ControllerQuestion: React.FC = () => {
             </p>
             <div className="flex items-center justify-center gap-2 mt-2">
               <Clock className="w-4 h-4 text-purple-300" />
-              <span className="text-purple-300">{timeRemaining}{t("extra.secondsShort")}</span>
+              <span className="text-purple-300">{t("extra.secondsShort", { time: timeRemaining })}</span>
             </div>
           </div>
           <p className="text-purple-300 text-sm">{t("extra.tvWatchOnTV")}</p>
