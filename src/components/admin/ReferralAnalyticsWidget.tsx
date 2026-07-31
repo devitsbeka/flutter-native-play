@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, Link2, TrendingUp, UserCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { callRpc } from '@/integrations/supabase/rpc';
 import {
   BarChart,
   Bar,
@@ -28,10 +29,10 @@ export function ReferralAnalyticsWidget() {
   useEffect(() => {
     const fetchStats = async () => {
       const [codesRes, invitesRes, dailyRes] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('user_id', { count: 'exact', head: true })
-          .not('referral_code', 'is', null),
+        // Filtering profiles by referral_code is no longer permitted - that
+        // predicate needs SELECT on the column, and the column is exactly
+        // what was leaking. The gated economy function reports the flag.
+        callRpc<Array<{ has_referral_code: boolean }>>('admin_user_economy'),
         supabase
           .from('friend_invites')
           .select('status', { count: 'exact' }),
@@ -55,7 +56,7 @@ export function ReferralAnalyticsWidget() {
       });
 
       setStats({
-        usersWithCode: codesRes.count || 0,
+        usersWithCode: (codesRes.data ?? []).filter(r => r.has_referral_code).length,
         totalInvitesSent: totalInvites,
         acceptedInvites: accepted,
         conversionRate: totalInvites > 0 ? Math.round((accepted / totalInvites) * 100) : 0,

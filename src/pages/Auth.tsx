@@ -27,6 +27,7 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { ReturningUserPicker } from "@/components/auth/ReturningUserPicker";
+import { callRpc } from "@/integrations/supabase/rpc";
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -118,12 +119,11 @@ export default function Auth() {
           // Handle referral code if present
           if (referralCode && data?.user) {
             try {
-              // Look up inviter by permanent referral_code in profiles
-              const { data: inviterProfile } = await (supabase
-                .from('profiles')
-                .select('user_id, nickname') as any)
-                .eq('referral_code', referralCode)
-                .single();
+              // Resolve the code through the server. Reading profiles by
+              // referral_code directly is no longer permitted - that query
+              // shape was also what let anyone list every code in the table.
+              const { data: inviterProfile } = await callRpc<{ user_id: string; nickname: string | null }>(
+                'resolve_referral_code', { p_code: referralCode });
 
               if (inviterProfile) {
                 const inviterNickname = inviterProfile.nickname || "true";

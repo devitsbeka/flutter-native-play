@@ -20,12 +20,29 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { fetchAdminUserIds, isExcludedUser } from '@/lib/excludedUsers';
+
+/** One row of admin_user_economy() - the has_role-gated replacement for
+ *  selecting coins/gems straight off profiles. */
+interface AdminEconomyRow {
+  user_id: string;
+  nickname: string | null;
+  avatar_url: string | null;
+  country_code: string | null;
+  games_played: number | null;
+  games_won: number | null;
+  total_points: number | null;
+  coins: number | null;
+  gems: number | null;
+  has_referral_code: boolean;
+  created_at: string | null;
+}
 import { UserAnalyticsTable } from '@/components/admin/analytics/UserAnalyticsTable';
 import { CountryBreakdownChart } from '@/components/admin/analytics/CountryBreakdownChart';
 import { ActivityTimeline } from '@/components/admin/analytics/ActivityTimeline';
 import { StatsTab } from '@/components/admin/analytics/StatsTab';
 import { InsightsTab } from '@/components/admin/analytics/InsightsTab';
 import { UserDetailModal } from '@/components/admin/analytics/UserDetailModal';
+import { callRpc } from '@/integrations/supabase/rpc';
 
 export interface AnalyticsUser {
   user_id: string;
@@ -65,15 +82,19 @@ export default function UserAnalytics() {
   const fetchAllUsers = useCallback(async (showRefreshing = false) => {
     if (showRefreshing) setIsRefreshing(true);
     try {
-      const [adminIds, { data: profiles, error: profilesError }] = await Promise.all([
+      // gems is no longer selectable by the `authenticated` role (it leaked
+      // every player's balance to anyone with the anon key), so the admin
+      // dashboards read it through an explicitly has_role-gated function.
+      const [adminIds, { data: economy, error: profilesError }] = await Promise.all([
         fetchAdminUserIds(),
-        supabase
-          .from('profiles')
-          .select('user_id, nickname, avatar_url, country_code, games_played, games_won, created_at, coins, gems')
-          .order('created_at', { ascending: false }),
+        callRpc<AdminEconomyRow[]>('admin_user_economy'),
       ]);
 
       if (profilesError) throw profilesError;
+
+      const profiles = (economy ?? [])
+        .slice()
+        .sort((a, b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')));
 
       const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const { data: presenceData } = await supabase

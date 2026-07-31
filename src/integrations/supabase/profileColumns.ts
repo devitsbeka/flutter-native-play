@@ -12,7 +12,18 @@
 // client never reads it - ForgotPassword gets it from the
 // `reset-password-with-security` edge function. Signup writes it.
 //
-// Keep in sync with the `profiles` table columns (minus those two).
+// `gems` and `referral_code` are omitted for a different reason: they were
+// readable by ANYONE, because the anon key ships in the client bundle. A
+// single unauthenticated request returned every live referral code in the
+// product - the token that attributes a signup to someone. The database now
+// refuses both columns to anon and authenticated; the owner reads their own
+// through get_my_private_profile(), and signup resolves a code it was handed
+// through resolve_referral_code().
+//
+// `coins` deliberately stays: the league leaderboard renders other players'
+// coins and promotes tiers off them, so it is a public score by design.
+//
+// Keep in sync with the `profiles` table columns (minus the four above).
 export const PROFILE_SELECT_COLUMNS = [
   "id",
   "user_id",
@@ -31,9 +42,7 @@ export const PROFILE_SELECT_COLUMNS = [
   "current_streak",
   "best_streak",
   "coins",
-  "gems",
   "last_play_regen_at",
-  "referral_code",
   "referred_by_invite_id",
   "created_at",
   "updated_at",
