@@ -12,7 +12,7 @@ interface PlayGuardContextValue {
    * Call before any game-starting action.
    * Returns true if user can play (VIP or has remaining plays).
    * If user can't play, it shows the PlayLimitModal and returns false.
-   * Auto-consumes regen play when allowing play with exhausted free games.
+   * Does not spend the play - /game does that when the game starts.
    */
   guardPlay: (onAllow?: () => void) => boolean;
   /**
@@ -37,10 +37,8 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const {
     canPlay,
-    isVip,
     loading: vipLoading,
     regenPlayAvailable,
-    freeGamesExhausted,
     timeUntilNextPlay,
     useRegenPlay,
   } = usePlayLimit();
@@ -58,21 +56,19 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
       // Never block while VIP status is still loading
       if (vipLoading) return true;
 
-      if (canPlay) {
-        // If user can play but only via regen (free games exhausted), consume the regen
-        // This is fire-and-forget: useRegenPlay immediately sets local state to block double-use
-        if (freeGamesExhausted && regenPlayAvailable && !isVip) {
-          useRegenPlay();
-        }
-        return true;
-      }
+      // Deliberately does NOT spend the play. Every caller of guardPlay
+      // navigates to /game, and Game.tsx spends it there - the one place a
+      // game actually begins. Spending here as well would cost two plays
+      // for one game. (The old code got away with double-consuming because
+      // it only stamped a timestamp, which is idempotent; a counter is not.)
+      if (canPlay) return true;
 
       // User can't play — show invite modal first, then play limit modal on dismiss
       onAllowRef.current = onAllow;
       setShowInviteModal(true);
       return false;
     },
-    [user, canPlay, vipLoading, freeGamesExhausted, regenPlayAvailable, isVip, useRegenPlay],
+    [user, canPlay, vipLoading],
   );
 
   const guardCategoryPlay = useCallback(

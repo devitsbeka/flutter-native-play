@@ -243,7 +243,7 @@ export function MatchResultScreen() {
   const { exhaustionInfo } = useTrivia();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { canPlay, isVip, loading: vipLoading, playsRemaining, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
+  const { canPlay, isVip, loading: vipLoading, playsRemaining, windowMode, regenPlayAvailable, timeUntilNextPlay, useRegenPlay, consumePlay } = usePlayLimit();
   const { maybeShowInterstitial } = useAds();
   
   // State for showing PRO upgrade modal when limit reached
@@ -284,14 +284,20 @@ export function MatchResultScreen() {
       return;
     }
 
-    // Check if user can play another game (lifetime limit for non-PRO)
-    // Note: games_played is updated after game completion, so we need to account for the game just played
-    const gamesPlayedAfterThisGame = (profile?.games_played || 0) + 1;
-    if (!isVip && !vipLoading && gamesPlayedAfterThisGame >= MAX_FREE_PLAYS) {
+    // Can they start another one?
+    //
+    // Under the window rule the play just finished was already spent at its
+    // start, so playsRemaining is current and speaks for itself. Under the
+    // old rule the count comes from games_played, which is only written
+    // after the game completes - so the game just played still has to be
+    // subtracted by hand.
+    const remainingAfterThisGame = windowMode ? playsRemaining : playsRemaining - 1;
+    if (!isVip && !vipLoading && remainingAfterThisGame <= 0) {
       setShowInviteModal(true);
       return;
     }
-    
+
+    void consumePlay();
     startMatchmaking();
   };
 
