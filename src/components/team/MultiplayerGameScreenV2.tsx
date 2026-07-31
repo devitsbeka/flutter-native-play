@@ -18,6 +18,7 @@ import { QuizTrueFalseButton, QuizTrueFalseState } from "@/components/ui/quiz-tr
 import { cn } from "@/lib/utils";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { MultiplayerObserverScreen } from "./MultiplayerObserverScreen";
+import { AnswerChoiceAvatars, type AnswerChooser } from "@/components/game/AnswerChoiceAvatars";
 
 export function MultiplayerGameScreenV2() {
   const navigate = useNavigate();
@@ -204,7 +205,29 @@ export function MultiplayerGameScreenV2() {
     },
     [answerRevealed, currentQuestion, selectedAnswer]
   );
-  
+
+  // Everyone who picked this answer, for the avatar badge on the answer row.
+  // Empty until the local player has committed, so it never leaks the answer.
+  const choosersFor = useCallback(
+    (answer: string): AnswerChooser[] => {
+      if (!answerRevealed) return [];
+      const out: AnswerChooser[] = [];
+      for (const [userId, submitted] of Object.entries(currentOpponentAnswers)) {
+        if (submitted.answer !== answer) continue;
+        const participant = participants.find(p => p.user_id === userId);
+        if (!participant) continue;
+        out.push({
+          id: participant.id || userId,
+          nickname: participant.nickname,
+          avatarUrl: participant.avatar_url,
+          isCorrect: submitted.is_correct,
+        });
+      }
+      return out;
+    },
+    [answerRevealed, currentOpponentAnswers, participants]
+  );
+
   // Check if this is a True/False question
   const isTrueFalseQuestion = useMemo(() => {
     if (!currentQuestion?.allAnswers) return false;
@@ -409,7 +432,7 @@ export function MultiplayerGameScreenV2() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex-1"
+                  className="flex-1 relative"
                 >
                   <QuizTrueFalseButton
                     variant={isTrue ? "true" : "false"}
@@ -417,6 +440,7 @@ export function MultiplayerGameScreenV2() {
                     onClick={() => handleAnswer(answer)}
                     disabled={answerRevealed}
                   />
+                  <AnswerChoiceAvatars choosers={choosersFor(answer)} placement="corner" />
                 </motion.div>
               );
             })}
@@ -427,14 +451,6 @@ export function MultiplayerGameScreenV2() {
         <div className="flex-1 px-4 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 overflow-y-auto min-h-0">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
-              // Find opponents who chose this answer (only show when revealed)
-              const opponentsWhoChoseThis = answerRevealed
-                ? Object.entries(currentOpponentAnswers)
-                    .filter(([_, ans]) => ans.answer === answer)
-                    .map(([userId]) => participants.find(p => p.user_id === userId))
-                    .filter(Boolean)
-                : [];
-
               return (
                 <motion.div
                   key={`${currentQuestionIndex}-${index}`}
@@ -452,31 +468,8 @@ export function MultiplayerGameScreenV2() {
                     disabled={answerRevealed}
                     showLabel={true}
                   />
-                  
-                  {/* Opponent avatars overlay */}
-                  {opponentsWhoChoseThis.length > 0 && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex -space-x-1.5">
-                      {opponentsWhoChoseThis.slice(0, 4).map((opp, i) => (
-                        <Avatar 
-                          key={opp?.id || i} 
-                          className={cn(
-                            "w-7 h-7 border-2",
-                            currentOpponentAnswers[opp?.user_id || ""]?.is_correct ? "border-green-500" : "border-red-500"
-                          )}
-                        >
-                          <ResolvedAvatarImage src={opp?.avatar_url || undefined} />
-                          <AvatarFallback className="bg-purple-500 text-white text-[10px]">
-                            {opp?.nickname?.charAt(0) || "?"}
-                          </AvatarFallback>
-                        </Avatar>
-                      ))}
-                      {opponentsWhoChoseThis.length > 4 && (
-                        <div className="w-7 h-7 rounded-full bg-white/80 flex items-center justify-center text-[10px] text-slate-600 border-2 border-slate-300">
-                          +{opponentsWhoChoseThis.length - 4}
-                        </div>
-                      )}
-                    </div>
-                  )}
+
+                  <AnswerChoiceAvatars choosers={choosersFor(answer)} />
                 </motion.div>
               );
             })}
