@@ -19,6 +19,38 @@ export interface PowerUpState {
   usedThisQuestion: boolean;
 }
 
+/**
+ * What the opponent is going to do on the current question, decided when the
+ * question opens instead of when the player taps.
+ *
+ * The old code rolled all of this inside answerQuestion(), which meant the
+ * opponent did not exist until the player had already finished: there was no
+ * moment during the question at which they could be said to be playing, and
+ * so nothing to show. Deciding it up front gives them a clock, and a clock is
+ * what makes them feel like someone sitting across the table.
+ */
+export interface OpponentTurn {
+  correct: boolean;
+  answer: string;
+  /** Seconds still on the clock at the moment they commit. */
+  atRemaining: number;
+}
+
+/** 70% right, committing somewhere in the middle of the clock - unchanged odds. */
+function planOpponentTurn(question: TriviaQuestion, timePerQuestion: number): OpponentTurn {
+  const correct = Math.random() < 0.7;
+  let answer = question.correctAnswer;
+  if (!correct) {
+    const wrong = question.allAnswers.filter(a => a !== question.correctAnswer);
+    answer = wrong[Math.floor(Math.random() * wrong.length)] ?? question.correctAnswer;
+  }
+  return {
+    correct,
+    answer,
+    atRemaining: timePerQuestion * (0.3 + Math.random() * 0.5),
+  };
+}
+
 interface GameState {
   phase: GamePhase;
   opponent: FakeOpponent | null;
@@ -38,6 +70,11 @@ interface GameState {
   lastOpponentAnswer: string | null;
   lastUserAnswer: string | null;
   preparationProgress: number;
+
+  /** The opponent's plan for the question on screen. */
+  opponentTurn: OpponentTurn | null;
+  /** True once their clock has run down to it and they have locked in. */
+  opponentAnswered: boolean;
   
   // Power-up state
   playerPowerUps: PowerUpState[];
@@ -56,6 +93,8 @@ interface GameContextType extends GameState {
   startMatchmaking: (categoryId?: string) => Promise<void>;
   beginPlaying: (categoryId: string, preloadedQuestions?: TriviaQuestion[]) => Promise<void>;
   answerQuestion: (answer: string, timeRemaining: number) => void;
+  /** Called by the game screen when the opponent's clock runs down to their commit point. */
+  opponentCommits: () => void;
   nextQuestion: () => void;
   finishMatch: () => void;
   resetGame: () => void;
@@ -90,7 +129,9 @@ const initialState: GameState = {
   lastOpponentAnswer: null,
   lastUserAnswer: null,
   preparationProgress: 0,
-  
+  opponentTurn: null,
+  opponentAnswered: false,
+
   // Power-up initial state
   playerPowerUps: defaultPowerUps.map(p => ({ ...p })),
   opponentPowerUps: defaultPowerUps.map(p => ({ ...p })),
@@ -237,6 +278,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         lastOpponentCorrect: null,
         lastOpponentAnswer: null,
         lastUserAnswer: null,
+        opponentTurn: planOpponentTurn(questions[0], prev.timePerQuestion),
+        opponentAnswered: false,
         // Reset power-ups for new match
         playerPowerUps: defaultPowerUps.map(p => ({ ...p })),
         opponentPowerUps: defaultPowerUps.map(p => ({ ...p })),
@@ -309,14 +352,37 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           // Also freeze opponent (optional bonus effect)
           updates.opponentFrozen = true;
           updates.opponentFreezeEndTime = Date.now() + 10000;
+          // Push their commit ten seconds later and spoil the answer. This
+          // used to be applied at scoring time, where it was invisible; now
+          // that they answer on a clock the player gets to watch the freeze
+          // land. An opponent who has ALREADY locked in is left alone -
+          // rewriting a commit the player just watched happen would read as
+          // a glitch rather than a power-up.
+          if (!prev.opponentAnswered && prev.opponentTurn) {
+            const wrong = currentQuestion.allAnswers.filter(a => a !== currentQuestion.correctAnswer);
+            updates.opponentTurn = {
+              correct: false,
+              // Move them off the right answer as well, or the reveal would
+              // show them sitting on it while scored wrong.
+              answer: prev.opponentTurn.correct
+                ? (wrong[Math.floor(Math.random() * wrong.length)] ?? prev.opponentTurn.answer)
+                : prev.opponentTurn.answer,
+              atRemaining: Math.max(0, prev.opponentTurn.atRemaining - 10),
+            };
+          }
           break;
         }
         case "replace": {
           // Skip to the next question
           if (prev.currentQuestionIndex < prev.questions.length - 1) {
-            updates.currentQuestionIndex = prev.currentQuestionIndex + 1;
+            const skipTo = prev.currentQuestionIndex + 1;
+            updates.currentQuestionIndex = skipTo;
             updates.hiddenAnswers = [];
             updates.replacedAnswer = null;
+            // A new question means a new turn for the opponent too - the old
+            // plan names an answer that does not exist on this one.
+            updates.opponentTurn = planOpponentTurn(prev.questions[skipTo], prev.timePerQuestion);
+            updates.opponentAnswered = false;
             // Reset power-up usage for new question
             updates.playerPowerUps = prev.playerPowerUps.map(p => ({ ...p, usedThisQuestion: false }));
             updates.opponentPowerUps = prev.opponentPowerUps.map(p => ({ ...p, usedThisQuestion: false }));
@@ -372,25 +438,19 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         difficulty: currentQuestion.difficulty,
       });
 
-      const opponentCorrect = prev.opponentFrozen ? false : Math.random() < 0.7;
-      const opponentTime = prev.timePerQuestion * (0.3 + Math.random() * 0.5);
+      // The opponent's turn was decided when this question opened, so their
+      // answer and their timing are the same ones the player has been
+      // watching - not a fresh roll made at the instant of this tap.
+      const turn = prev.opponentTurn ?? planOpponentTurn(currentQuestion, prev.timePerQuestion);
+      const opponentCorrect = turn.correct;
+      const opponentAnswer = turn.answer;
       const opponentPoints = calculateScore(
         opponentCorrect,
-        opponentTime,
+        turn.atRemaining,
         prev.timePerQuestion,
         currentQuestion.difficulty,
         0
       );
-
-      // Determine opponent's answer
-      let opponentAnswer: string;
-      if (opponentCorrect) {
-        opponentAnswer = currentQuestion.correctAnswer;
-      } else {
-        // Pick a random wrong answer
-        const wrongAnswers = currentQuestion.allAnswers.filter(a => a !== currentQuestion.correctAnswer);
-        opponentAnswer = wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)];
-      }
 
       const newUserAnswerHistory = [...prev.userAnswerHistory, { correct: isCorrect, points }];
       const newOpponentAnswerHistory = [...prev.opponentAnswerHistory, { correct: opponentCorrect, points: opponentPoints }];
@@ -413,8 +473,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         opponentProgress: newOpponentProgress,
         userAnswerHistory: newUserAnswerHistory,
         opponentAnswerHistory: newOpponentAnswerHistory,
+        opponentAnswered: true,
       };
     });
+  }, []);
+
+  /**
+   * The opponent locks in. Only flips the flag the UI watches - the points
+   * are still priced in answerQuestion off the same plan, so a player who
+   * taps first and a player who waits get the same opponent either way.
+   */
+  const opponentCommits = useCallback(() => {
+    setState(prev => (prev.opponentAnswered ? prev : { ...prev, opponentAnswered: true }));
   }, []);
 
   const nextQuestion = useCallback(() => {
@@ -443,6 +513,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         lastOpponentCorrect: null,
         lastOpponentAnswer: null,
         lastUserAnswer: null,
+        opponentTurn: planOpponentTurn(prev.questions[nextIndex], prev.timePerQuestion),
+        opponentAnswered: false,
         // Reset per-question power-up state
         playerPowerUps: prev.playerPowerUps.map(p => ({ ...p, usedThisQuestion: false })),
         activePowerUp: null,
@@ -484,6 +556,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         startMatchmaking,
         beginPlaying,
         answerQuestion,
+        opponentCommits,
         nextQuestion,
         finishMatch,
         resetGame,

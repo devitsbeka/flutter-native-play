@@ -45,6 +45,9 @@ export function QuizGameScreenProd() {
     lastUserAnswer,
     lastOpponentAnswer,
     lastOpponentCorrect,
+    opponentTurn,
+    opponentAnswered,
+    opponentCommits,
     playerPowerUps,
     hiddenAnswers,
     replacedAnswer,
@@ -158,6 +161,15 @@ export function QuizGameScreenProd() {
 
     return () => clearInterval(interval);
   }, [phase, answerRevealed, currentQuestion, currentQuestionIndex, playerTimerFrozen, playerFreezeEndTime]);
+
+  // Watch the opponent's clock. When it reaches the second they were always
+  // going to answer on, they lock in - visibly, while the question is still
+  // live. Their choice stays hidden until the reveal; showing it here would
+  // be a 70%-accurate hint.
+  useEffect(() => {
+    if (!opponent || answerRevealed || opponentAnswered || !opponentTurn) return;
+    if (timeRemaining <= opponentTurn.atRemaining) opponentCommits();
+  }, [opponent, answerRevealed, opponentAnswered, opponentTurn, timeRemaining, opponentCommits]);
 
   const handleAnswer = useCallback(
     (answer: string | null) => {
@@ -280,10 +292,10 @@ export function QuizGameScreenProd() {
 
   // Get opponent avatar state
   const getOpponentState = useCallback(() => {
-    if (!answerRevealed) return "default";
+    if (!answerRevealed) return opponentAnswered ? "active" : "default";
     const isOpponentCorrect = lastOpponentAnswer === currentQuestion?.correctAnswer;
     return isOpponentCorrect ? "correct" : "wrong";
-  }, [answerRevealed, lastOpponentAnswer, currentQuestion]);
+  }, [answerRevealed, opponentAnswered, lastOpponentAnswer, currentQuestion]);
 
   // The opponent's face, to be drawn on whichever answer they picked. Seeing
   // that they were wrong says nothing about what they went for instead, and
@@ -359,13 +371,30 @@ export function QuizGameScreenProd() {
           />
 
           {/* Opponent (Right) */}
-          <QuizPlayerAvatar
-            avatarUrl={opponent.avatarUrl}
-            score={opponentScore}
-            position="right"
-            state={getOpponentState()}
-            size="default"
-          />
+          <div className="relative">
+            <QuizPlayerAvatar
+              avatarUrl={opponent.avatarUrl}
+              score={opponentScore}
+              position="right"
+              state={getOpponentState()}
+              size="default"
+            />
+            {/* They just locked in and you have not - the whole point of
+                giving them a clock is that you can feel this happen. */}
+            <AnimatePresence>
+              {opponentAnswered && !answerRevealed && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6, scale: 0.8 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 24 }}
+                  className="absolute -top-2 right-0 whitespace-nowrap rounded-full bg-[#83F7DA] px-2 py-0.5 text-[10px] font-bold text-[#1E6A58] shadow-md"
+                >
+                  {t("game.answered")}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       )}
 
