@@ -40,7 +40,7 @@ export const CompactGenerationCard = memo(function CompactGenerationCard({
     if (notification.status === 'generating') {
       const remaining = Math.max(0, notification.estimatedTime - elapsedTime);
       if (remaining > 0) {
-        return `~${remaining} ${t('extra.secondsShort')}`;
+        return `~${t('extra.secondsShort', { time: remaining })}`;
       }
       return `${t('extra.generatingStatus')}...`;
     }
