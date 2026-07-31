@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef, Re
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { PROFILE_SELECT_COLUMNS } from "@/integrations/supabase/profileColumns";
+import { callRpc } from "@/integrations/supabase/rpc";
 import { lovable } from "@/integrations/lovable/index";
 import { getCountryCodeFromIP } from "@/hooks/useGeoLocation";
 
@@ -19,7 +20,10 @@ export interface Profile {
   current_streak: number;
   best_streak: number;
   coins: number;
+  /** Not in the profile SELECT - merged in from get_my_private_profile(). */
   gems: number;
+  /** Same: owner-only, never readable for another player. */
+  referral_code?: string | null;
   has_face_photo: boolean | null;
   created_at: string;
 }
@@ -43,10 +47,44 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * The owner's own gems and referral code, which the profile SELECT can no
+ * longer carry - the database refuses those two columns to every client role
+ * now, because handing them out for OTHER players leaked all 161 referral
+ * codes to anyone holding the anon key (i.e. anyone).
+ *
+ * Merged back onto the profile object so `profile.gems` keeps working at all
+ * ~30 call sites. Returns an empty object rather than throwing: this runs on
+ * every profile load, and the front end deploys separately from the
+ * migration, so it must tolerate the function not existing yet.
+ */
+async function fetchPrivateProfileFields(): Promise<Partial<Profile>> {
+  try {
+    const { data, error } = await callRpc<{ gems?: number; referral_code?: string | null }>(
+      "get_my_private_profile",
+    );
+    if (error || !data) return {};
+    return { gems: data.gems ?? 0, referral_code: data.referral_code ?? null } as Partial<Profile>;
+  } catch {
+    return {};
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+
+  // UPDATE ... RETURNING re-selects the profile columns, and those no longer
+  // carry gems or referral_code. Replacing the object wholesale would blank
+  // the player's gem balance on every profile write, so carry them over.
+  const setProfileKeepingPrivate = useCallback((next: Profile) => {
+    setProfile(prev => ({
+      ...next,
+      gems: prev?.gems ?? next.gems ?? 0,
+      referral_code: prev?.referral_code ?? next.referral_code ?? null,
+    }));
+  }, []);
   const [loading, setLoading] = useState(true);
   
   // Track local updates to prevent duplicate realtime updates
@@ -78,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data) {
         // Explicit-column select degrades the client's inferred type to a
         // generic; cast through unknown to the real Profile shape.
-        const profileData = data as unknown as Profile;
+        const profileData = { ...(data as unknown as Profile), ...(await fetchPrivateProfileFields()) };
         setProfile(profileData);
 
         // Auto-detect and set country code if not already set
@@ -93,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .single();
               
               if (updatedProfile) {
-                setProfile(updatedProfile as unknown as Profile);
+                setProfileKeepingPrivate(updatedProfile as unknown as Profile);
               }
             }
           });
@@ -109,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profileFetchInProgressRef.current = null;
       return null;
     }
-  }, []);
+  }, [setProfileKeepingPrivate]);
 
   useEffect(() => {
     // Set up auth state listener FIRST - keep it synchronous!
@@ -357,7 +395,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .single();
 
     if (!error && data) {
-      setProfile(data as unknown as Profile);
+      setProfileKeepingPrivate(data as unknown as Profile);
     }
 
     return { data, error };

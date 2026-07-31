@@ -104,15 +104,27 @@ const OnboardingWelcomePreview = INCLUDE_ADMIN ? lazy(() => import("./pages/Onbo
 // Shop pages
 const ShopSuccess = lazy(() => import("./pages/shop/Success"));
 const ShopCancel = lazy(() => import("./pages/shop/Cancel"));
-const Styleguide = lazy(() => import("./pages/Styleguide"));
-const AllButtons = lazy(() => import("./pages/AllButtons"));
-const ModalsShowcase = lazy(() => import("./pages/ModalsShowcase"));
-const TVScreensShowcase = lazy(() => import("./pages/TVScreensShowcase"));
-const Docs = lazy(() => import("./pages/Docs"));
-const OnboardingPreview = lazy(() => import("./pages/OnboardingPreview"));
+// Internal design-system and documentation pages. These were reachable in
+// production by anyone who typed the URL, and /docs in particular renders the
+// full internal map: 79 tables, every RPC, every edge function, every hook.
+// RLS still guards the data, but there is no reason to hand out the blueprint.
+//
+// Excluded at BUILD time rather than route-guarded, because a guarded route
+// still ships the chunk - and the chunk is the leak. Set
+// VITE_INCLUDE_DEV_PAGES=true to get them back in a production build.
+const INCLUDE_DEV_PAGES = import.meta.env.DEV || import.meta.env.VITE_INCLUDE_DEV_PAGES === 'true';
+
+const Styleguide = INCLUDE_DEV_PAGES ? lazy(() => import("./pages/Styleguide")) : null;
+const AllButtons = INCLUDE_DEV_PAGES ? lazy(() => import("./pages/AllButtons")) : null;
+const ModalsShowcase = INCLUDE_DEV_PAGES ? lazy(() => import("./pages/ModalsShowcase")) : null;
+const TVScreensShowcase = INCLUDE_DEV_PAGES ? lazy(() => import("./pages/TVScreensShowcase")) : null;
+const Docs = INCLUDE_DEV_PAGES ? lazy(() => import("./pages/Docs")) : null;
+const OnboardingPreview = INCLUDE_DEV_PAGES ? lazy(() => import("./pages/OnboardingPreview")) : null;
+const SampleDemoTV = INCLUDE_DEV_PAGES ? lazy(() => import("./pages/SampleDemoTV")) : null;
+const SampleDemoPlayer = INCLUDE_DEV_PAGES ? lazy(() => import("./pages/SampleDemoPlayer")) : null;
+
+// Not a dev page - this is the public landing for a shared challenge link.
 const ChallengeLanding = lazy(() => import("./pages/ChallengeLanding"));
-const SampleDemoTV = lazy(() => import("./pages/SampleDemoTV"));
-const SampleDemoPlayer = lazy(() => import("./pages/SampleDemoPlayer"));
 
 // Reloads long-open tabs when a newer build is deployed (at safe moments only)
 const FreshBuildGuard = () => {
@@ -217,15 +229,15 @@ const App = () => (
                 )}
                 <Route path="/shop/success" element={<ShopSuccess />} />
                 <Route path="/shop/cancel" element={<ShopCancel />} />
-                <Route path="/styleguide" element={<Styleguide />} />
-                <Route path="/all-buttons" element={<AllButtons />} />
-                <Route path="/modals" element={<ModalsShowcase />} />
-                <Route path="/tv-showcase" element={<TVScreensShowcase />} />
-                <Route path="/docs" element={<Docs />} />
-                <Route path="/onboarding-preview" element={<OnboardingPreview />} />
+                {INCLUDE_DEV_PAGES && Styleguide && <Route path="/styleguide" element={<Styleguide />} />}
+                {INCLUDE_DEV_PAGES && AllButtons && <Route path="/all-buttons" element={<AllButtons />} />}
+                {INCLUDE_DEV_PAGES && ModalsShowcase && <Route path="/modals" element={<ModalsShowcase />} />}
+                {INCLUDE_DEV_PAGES && TVScreensShowcase && <Route path="/tv-showcase" element={<TVScreensShowcase />} />}
+                {INCLUDE_DEV_PAGES && Docs && <Route path="/docs" element={<Docs />} />}
+                {INCLUDE_DEV_PAGES && OnboardingPreview && <Route path="/onboarding-preview" element={<OnboardingPreview />} />}
+                {INCLUDE_DEV_PAGES && SampleDemoTV && <Route path="/sampledemotv" element={<SampleDemoTV />} />}
+                {INCLUDE_DEV_PAGES && SampleDemoPlayer && <Route path="/sampledemoplayer" element={<SampleDemoPlayer />} />}
                 <Route path="/challenge/:code" element={<ChallengeLanding />} />
-                <Route path="/sampledemotv" element={<SampleDemoTV />} />
-                <Route path="/sampledemoplayer" element={<SampleDemoPlayer />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               </Suspense>

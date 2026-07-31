@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { callRpc } from "@/integrations/supabase/rpc";
 
 export interface PurchaseTransaction {
   id: string;
@@ -244,12 +245,16 @@ export function useEconomyHealth() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["economy-health"],
     queryFn: async () => {
-      // Get total coins and gems in circulation from profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("coins, gems, total_points, games_played");
-      
+      // gems is no longer selectable by any client role - read the totals
+      // through the has_role-gated economy function instead.
+      const { data: economy, error: profilesError } = await callRpc<Array<{
+        coins: number | null; gems: number | null;
+        total_points: number | null; games_played: number | null;
+      }>>("admin_user_economy");
+
       if (profilesError) throw profilesError;
+
+      const profiles = economy ?? [];
 
       const totalCoins = profiles?.reduce((sum, p) => sum + (p.coins || 0), 0) || 0;
       const totalGems = profiles?.reduce((sum, p) => sum + (p.gems || 0), 0) || 0;

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { callRpc } from "@/integrations/supabase/rpc";
 
 export interface FriendInvite {
   id: string;
@@ -85,15 +86,12 @@ export function useFriendInvites() {
     if (!user) return null;
 
     try {
-      // Check if user already has a permanent referral code in profiles
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('referral_code')
-        .eq('user_id', user.id)
-        .single();
-
-      if (profile?.referral_code) {
-        return profile.referral_code;
+      // Own referral code. Read through the RPC because the column is no
+      // longer selectable by any client role - see profileColumns.ts.
+      const { data: mine } = await callRpc<{ referral_code?: string | null }>('get_my_private_profile');
+      const existingCode = mine?.referral_code;
+      if (existingCode) {
+        return existingCode;
       }
 
       // Generate and save a new permanent code
