@@ -15,7 +15,7 @@ function GameContent() {
   const [searchParams] = useSearchParams();
   const categoryId = searchParams.get("category");
   const { user, loading: authLoading } = useAuth();
-  const { canPlay, isVip, freeGamesExhausted, regenPlayAvailable, timeUntilNextPlay, useRegenPlay, loading: playLimitLoading } = usePlayLimit();
+  const { canPlay, isVip, freeGamesExhausted, regenPlayAvailable, timeUntilNextPlay, useRegenPlay, consumePlay, loading: playLimitLoading } = usePlayLimit();
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guestModalBlocking, setGuestModalBlocking] = useState(false);
@@ -73,14 +73,14 @@ function GameContent() {
       return;
     }
 
-    // If user can play but only via regen, consume it first
-    if (freeGamesExhausted && regenPlayAvailable && !isVip) {
-      useRegenPlay(); // fire-and-forget, local state blocks double-use immediately
-    }
+    // Spend the play. Fire-and-forget: consumePlay advances its own local
+    // count first, so a double-start cannot spend one play twice, and it
+    // never refuses on a network failure - the player was already told yes.
+    void consumePlay();
 
     setGameStarted(true);
     startMatchmaking(categoryId || undefined);
-  }, [phase, dataReady, gameStarted, blocked, user, canPlay, isVip, freeGamesExhausted, regenPlayAvailable, useRegenPlay, startMatchmaking, categoryId]);
+  }, [phase, dataReady, gameStarted, blocked, user, canPlay, consumePlay, startMatchmaking, categoryId]);
 
   // Phases that have their own full-screen background
   const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result" || phase === "match-result";
