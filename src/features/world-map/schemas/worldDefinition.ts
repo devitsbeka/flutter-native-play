@@ -47,6 +47,10 @@ export interface MapNodeDefinition {
   /** Position relative to the owning region's origin. */
   position: Vec3;
   label: string;
+  /** Emoji shown on the map marker (crisp DOM rendering, like the mock). */
+  icon?: string;
+  /** Earned stars (0-3) shown in a bubble above completed markers. */
+  stars?: number;
   reward?: RewardDefinition;
   prerequisiteIds?: string[];
   /** Route target when the node is actioned from the details panel. */
