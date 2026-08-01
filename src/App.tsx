@@ -31,6 +31,7 @@ const INCLUDE_ADMIN = import.meta.env.VITE_INCLUDE_ADMIN !== 'false';
 
 // Eagerly loaded pages (critical path)
 import Index from "./pages/Index";
+import { GameShell } from "@/components/layout/GameShell";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Loading from "./pages/Loading";
@@ -163,17 +164,17 @@ const App = () => (
                 <Route path="/loading" element={<Loading />} />
                 <Route path="/trivialoader" element={<TriviaLoader />} />
                 
-                <Route path="/power-ups" element={<PowerUps />} />
+                <Route path="/power-ups" element={<GameShell title="მაღაზია"><PowerUps /></GameShell>} />
                 <Route path="/category/:categoryId" element={<CategoryPage />} />
                 <Route path="/play/:categoryId/:levelId" element={<CategoryQuizPage />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/leaderboards" element={<Leaderboards />} />
-                <Route path="/profile" element={<Profile />} />
+                <Route path="/leaderboards" element={<GameShell title="რეიტინგი"><Leaderboards /></GameShell>} />
+                <Route path="/profile" element={<GameShell title="პროფილი"><Profile /></GameShell>} />
                 <Route path="/profile/:userId" element={<PublicProfile />} />
                 <Route path="/world" element={<WorldHome />} />
                 <Route path="/game" element={<Game />} />
-                <Route path="/team" element={<TeamV2 />} />
+                <Route path="/team" element={<GameShell title="ონლაინ თამაში"><TeamV2 /></GameShell>} />
                 <Route path="/trivia/:triviaId" element={<TriviaLobby />} />
                 <Route path="/collection/:collectionId" element={<CollectionLobby />} />
                 <Route path="/room/:code" element={<RoomRedirect />} />
@@ -185,8 +186,8 @@ const App = () => (
                 <Route path="/join/:code" element={<TVJoin />} />
                 <Route path="/controller/:code" element={<Navigate to="/join" replace />} />
                 <Route path="/vip" element={<VIP />} />
-                <Route path="/discover" element={<Discover />} />
-                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/discover" element={<GameShell title="აღმოჩენა"><Discover /></GameShell>} />
+                <Route path="/notifications" element={<GameShell title="ცნობები"><Notifications /></GameShell>} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/privacy-policy-en" element={<PrivacyPolicyEN />} />
                 <Route path="/terms" element={<TermsOfService />} />

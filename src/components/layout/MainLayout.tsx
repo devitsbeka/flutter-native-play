@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { UnifiedDesktopNav } from "./UnifiedDesktopNav";
 import { UniversalBottomNav } from "./UniversalBottomNav";
+import { useInGameShell } from "./GameShellContext";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -31,6 +32,20 @@ export function MainLayout({
   className = "",
   disableScroll = false,
 }: MainLayoutProps) {
+  const embedded = useInGameShell();
+
+  // Inside the GameShell the rail, header and world canvas are provided by
+  // the shell itself — render only the page content in a local scroller.
+  if (embedded) {
+    return (
+      <div className={`h-full w-full ${className}`}>
+        <main className="h-full w-full overflow-y-auto overflow-x-hidden scrollbar-hide bg-transparent">
+          {children}
+        </main>
+      </div>
+    );
+  }
+
   return (
     // 100dvh, not 100vh. On iOS, 100vh is the LARGE viewport - the height the
     // page would have if the browser chrome were hidden - so an h-screen
