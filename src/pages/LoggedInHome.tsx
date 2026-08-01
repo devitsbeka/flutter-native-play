@@ -156,7 +156,7 @@ function MapPin({
 // Friend avatar with gradient ring and status dot (nodes 2114:7694..7733)
 function FriendItem({ left, img, name, onClick }: { left: number; img: string; name: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="absolute flex flex-col gap-[8px] h-[88px] items-center top-[82px] w-[64px] z-10" style={{ left }}>
+    <button type="button" onClick={onClick} className="absolute flex flex-col gap-[8px] h-[88px] items-center top-[102px] w-[64px] z-10" style={{ left }}>
       <div className="relative shrink-0 size-[64px]">
         <div
           className="absolute left-0 top-0 rounded-full size-[64px]"
@@ -517,18 +517,6 @@ export function LoggedInHome({
             </div>
           </div>
 
-          {/* World menu button (node 2113:7030) */}
-          <button
-            type="button"
-            aria-label="მენიუ"
-            onClick={onMenu}
-            className="absolute bg-[rgba(110,105,134,0.15)] flex items-center justify-center left-[348px] rounded-[999px] size-[40px] top-[30px] z-10"
-          >
-            <div className="relative shrink-0 size-[20px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={gridIcon} />
-            </div>
-          </button>
-
           {/* Top-right compact stats */}
           <HeaderStat left={stageW - 390} img={coinNew} value={coins.toLocaleString("en-US")} onClick={onShop} label="ქულა" />
           <HeaderStat left={stageW - 232} img={gemNew} value={gems.toLocaleString("en-US")} onClick={onShop} label="ალმასი" />
@@ -609,14 +597,27 @@ export function LoggedInHome({
             <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.638px_0px_0px_white]" />
           </button>
 
-          {/* Header: world title + level badge (left-aligned) + separator */}
-          <p className="[word-break:break-word] absolute font-['Google_Sans','Nunito',sans-serif] leading-[38px] left-[117px] not-italic opacity-[0.99] text-[22px] text-[rgba(31,41,55,0.6)] top-[31px] tracking-[-0.16px] whitespace-nowrap z-10 pointer-events-none">
-            სამყარო ალფა
-          </p>
-          <div className="absolute border-[#6e6985] border-[1.78px] border-solid flex h-[19.583px] items-center justify-center left-[288px] min-w-[19.583px] px-[7.121px] py-[1.78px] rounded-[8900.613px] top-[40px] z-10 pointer-events-none">
-            <p className="[word-break:break-word] font-['Nunito'] font-bold leading-[14.242px] relative shrink-0 text-[#6e6986] text-[10.682px] tracking-[-0.1424px] whitespace-nowrap">
-              დონე I
+          {/* Header: world title + level badge + menu button in one evenly
+              spaced, vertically centered row */}
+          <div className="absolute flex gap-[16px] items-center left-[117px] top-[30px] z-10">
+            <p className="[word-break:break-word] font-['Google_Sans','Nunito',sans-serif] leading-[38px] not-italic opacity-[0.99] text-[22px] text-[rgba(31,41,55,0.6)] tracking-[-0.16px] whitespace-nowrap pointer-events-none">
+              სამყარო ალფა
             </p>
+            <div className="border-[#6e6985] border-[1.78px] border-solid flex h-[19.583px] items-center justify-center min-w-[19.583px] px-[7.121px] py-[1.78px] rounded-[8900.613px] shrink-0">
+              <p className="[word-break:break-word] font-['Nunito'] font-bold leading-[14.242px] relative shrink-0 text-[#6e6986] text-[10.682px] tracking-[-0.1424px] whitespace-nowrap">
+                დონე I
+              </p>
+            </div>
+            <button
+              type="button"
+              aria-label="მენიუ"
+              onClick={onMenu}
+              className="bg-[rgba(110,105,134,0.15)] flex items-center justify-center rounded-[999px] shrink-0 size-[40px]"
+            >
+              <div className="relative shrink-0 size-[20px]">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={gridIcon} />
+              </div>
+            </button>
           </div>
           <div className="absolute flex h-[37px] items-center justify-center left-[463px] top-[31px] w-0 pointer-events-none z-10">
             <div className="flex-none rotate-90">
@@ -629,7 +630,7 @@ export function LoggedInHome({
           </div>
 
           {/* Friends row, starting from the left content column */}
-          <button type="button" onClick={onAddFriend} className="absolute flex flex-col gap-[8px] h-[88px] items-center left-[117px] top-[82px] w-[64px] z-10">
+          <button type="button" onClick={onAddFriend} className="absolute flex flex-col gap-[8px] h-[88px] items-center left-[117px] top-[102px] w-[64px] z-10">
             <div
               className="border-2 border-[#c084fc] border-dashed flex items-center justify-center relative rounded-full shrink-0 size-[64px]"
               style={{ backgroundImage: "linear-gradient(135deg, rgb(243, 232, 255) 0%, rgb(233, 213, 255) 100%)" }}
