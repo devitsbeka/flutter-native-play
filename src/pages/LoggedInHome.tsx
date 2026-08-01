@@ -121,7 +121,10 @@ export function LoggedInHome({
   ];
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-[#f9dbff]">
+    // z-10 lifts the page above GlobalSplineBackground's fixed overlays
+    // (white radial mask at z-1, particles at z-2/3) which otherwise paint
+    // a white fade over the whole homepage.
+    <div className="fixed inset-0 overflow-hidden bg-[#f9dbff] z-10">
       <div
         className="absolute left-0 top-1/2 origin-top-left"
         style={{
@@ -159,8 +162,10 @@ export function LoggedInHome({
               maskImage: "linear-gradient(to bottom, transparent 0px, black 140px)",
             }}
           />
-          {/* Sidebar content (node 2109:2315) */}
-          <div className="absolute h-[946px] left-0 top-0 w-[1400px] z-[1]">
+          {/* Sidebar content (node 2109:2315). No z-index: it spans the full
+              stage width, and lifting it would block clicks on later siblings
+              (nav rail, mini avatar); DOM order already stacks it correctly. */}
+          <div className="absolute h-[946px] left-0 top-0 w-[1400px]">
             {/* Avatar rings (node 2112:6787) */}
             <div className="absolute contents left-[117px] top-[194.5px]">
               <div className="absolute border-[23.057px] border-[rgba(255,255,255,0.95)] border-solid left-[117px] pointer-events-none rounded-[9606.182px] shadow-[0px_5.764px_15.371px_0px_rgba(0,0,0,0.12)] size-[269px] top-[194.5px]">
@@ -421,7 +426,7 @@ export function LoggedInHome({
           {/* World map (node 2113:6964). The artwork extends beyond the
               942px design crop; on wide screens the container grows to the
               stage edge and reveals the rest instead of clipping it. */}
-          <div className="absolute h-[947px] left-[458px] top-0 z-[1]" style={{ width: mapW }}>
+          <div className="absolute h-[947px] left-[458px] top-0" style={{ width: mapW }}>
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <img
                 alt=""
