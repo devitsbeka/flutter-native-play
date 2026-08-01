@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Lock } from "lucide-react";
 
 import worldMap from "@/assets/figma-home/world-map.jpg";
 import avatarPhoto from "@/assets/figma-home/avatar-photo.png";
@@ -37,7 +38,6 @@ const DESIGN_W = 1400;
 const DESIGN_H = 946;
 
 const CARD_GRADIENT = "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))";
-const CHIP_GRADIENT = "linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(254,254,254,0.8))";
 // Sidebar panel wash (node 2113:7452)
 const SIDEBAR_GRADIENT =
   "linear-gradient(-81.66296290800389deg, rgba(255, 255, 255, 0) 25.343%, rgba(243, 229, 255, 0.8) 128.15%)";
@@ -87,44 +87,68 @@ function CountBadge({ left, top }: { left: number; top: number }) {
   );
 }
 
-// Coin / gem stat circle (nodes 2109:2360, 2113:7484)
-function StatCircle({ left, bg, img, onClick, label }: { left: number; bg: string; img: string; onClick: () => void; label: string }) {
+// Compact coin / gem stat in the top-right header
+function HeaderStat({ left, img, value, onClick, label }: { left: number; img: string; value: string; onClick: () => void; label: string }) {
   return (
     <button
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="absolute flex items-center justify-center rounded-full size-[40px] top-[126px] drop-shadow-[0px_2px_4px_rgba(0,0,0,0.08)]"
-      style={{ left, backgroundColor: bg }}
+      className="absolute flex gap-[10px] h-[36px] items-center top-[32px] z-10"
+      style={{ left }}
     >
-      <div className="h-[32px] relative shrink-0 w-[40px]">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <img alt="" className="absolute h-[125%] left-0 max-w-none top-[-12.5%] w-full" src={img} />
-        </div>
+      <div className="h-[28px] relative shrink-0 w-[28px]">
+        <img alt="" className="absolute inset-0 max-w-none object-contain pointer-events-none size-full" src={img} />
       </div>
+      <span className="font-['Nunito'] font-bold leading-[28px] text-[#374151] text-[18px] tracking-[-0.16px] whitespace-nowrap">
+        {value}
+      </span>
     </button>
   );
 }
 
-// Category chip over the map (nodes 2114:7517/7538/7544/7552)
-function CategoryChip({ top, width, label, onClick }: { top: number; width: number; label: string; onClick: () => void }) {
+// Category pin placed on the world map. Unlocked pins show a gem and reveal
+// their name on hover; locked pins show a padlock and don't navigate.
+function MapPin({
+  left,
+  top,
+  label,
+  locked,
+  onClick,
+}: {
+  left: number;
+  top: number;
+  label: string;
+  locked?: boolean;
+  onClick?: () => void;
+}) {
   return (
     <button
       type="button"
-      onClick={onClick}
-      className="absolute border-[#e8e0f5] border-[1.907px] border-solid h-[34.934px] left-[499px] overflow-hidden rounded-[33.048px] shadow-[0px_3.814px_0px_0px_#d8d0e8,0px_5.721px_15.257px_0px_rgba(0,0,0,0.1)] z-10"
-      style={{ top, width }}
+      aria-label={locked ? `${label} — ჩაკეტილია` : label}
+      aria-disabled={locked}
+      onClick={locked ? undefined : onClick}
+      className={`group absolute flex h-[40px] items-center justify-center min-w-[46px] px-[10px] rounded-[20px] shadow-[0px_4px_10px_rgba(0,0,0,0.18),0px_1px_0px_rgba(255,255,255,0.8)_inset] z-10 transition-colors duration-300 ${
+        locked
+          ? "bg-[rgba(255,255,255,0.92)] cursor-not-allowed"
+          : "bg-[rgba(255,255,255,0.95)] hover:bg-gradient-to-r hover:from-white hover:to-[#d6f5e8]"
+      }`}
+      style={{ left, top }}
     >
-      <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[33.048px]" style={{ background: CHIP_GRADIENT }} />
-      <p className="[word-break:break-word] absolute font-['Nunito'] font-normal leading-[19.071px] left-[41.18px] text-[#1f2937] text-[13.35px] top-[6.24px] tracking-[-0.1526px] whitespace-nowrap">
-        {label}
-      </p>
-      <div className="absolute h-[22.358px] left-[8.57px] top-[3.92px] w-[27.947px]">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <img alt="" className="absolute h-[125%] left-0 max-w-none top-[-12.5%] w-full" src={gemNew} />
-        </div>
-      </div>
-      <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.907px_0px_0px_white]" />
+      {locked ? (
+        <Lock className="size-[18px]" fill="#fbbf24" stroke="#d97706" strokeWidth={1.5} />
+      ) : (
+        <>
+          <div className="h-[22px] relative shrink-0 w-[27px]">
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <img alt="" className="absolute h-[125%] left-0 max-w-none top-[-12.5%] w-full" src={gemNew} />
+            </div>
+          </div>
+          <span className="font-['Nunito'] font-bold max-w-0 opacity-0 overflow-hidden text-[#1f6f52] text-[13.35px] tracking-[-0.15px] transition-all duration-300 whitespace-nowrap group-hover:max-w-[140px] group-hover:ml-[7px] group-hover:opacity-100">
+            {label}
+          </span>
+        </>
+      )}
     </button>
   );
 }
@@ -208,11 +232,20 @@ export function LoggedInHome({
     { img: friendTiko, name: "თიკო" },
   ];
 
-  const chips = [
-    { label: "დღის მისიები", top: 236, width: 149.053, onClick: onMissions },
-    { label: "კინო", top: 284.908, width: 90.829, onClick: () => navigate("/discover") },
-    { label: "მუსიკა", top: 331.487, width: 103.638, onClick: () => navigate("/discover") },
-    { label: "ტექნოლოგიები", top: 378.066, width: 160.697, onClick: () => navigate("/discover") },
+  // The map image is drawn 1420.5px wide (947 * 3:2) whenever the map window
+  // is narrower than that; past it, object-cover scales the artwork up from
+  // the top-left, so pin anchors scale by the same factor to stay on their islands.
+  const mapK = Math.max(1, mapW / 1420.5);
+
+  const pins = [
+    { label: "კინო", x: 743, y: 445, onClick: () => navigate("/discover") },
+    { label: "მუსიკა", x: 964, y: 592, onClick: () => navigate("/discover") },
+    { label: "ტექნოლოგიები", x: 705, y: 708, onClick: () => navigate("/discover") },
+    { label: "დღის მისიები", x: 1213, y: 795, onClick: onMissions },
+    { label: "ისტორია", x: 1087, y: 273, locked: true },
+    { label: "გეოგრაფია", x: 1017, y: 343, locked: true },
+    { label: "სპორტი", x: 1160, y: 326, locked: true },
+    { label: "ხელოვნება", x: 1069, y: 435, locked: true },
   ];
 
   return (
@@ -235,26 +268,6 @@ export function LoggedInHome({
             className="absolute h-[946px] left-0 top-0 w-[458px] overflow-hidden"
             style={{ backgroundImage: SIDEBAR_GRADIENT }}
           >
-            {/* Stat card backdrops (nodes 2113:7456, 2113:7481) */}
-            <button
-              type="button"
-              aria-label="მაღაზია"
-              onClick={onShop}
-              className="absolute border-[1.638px] border-[rgba(198,170,228,0.57)] border-solid h-[64px] left-[102px] overflow-hidden rounded-bl-[28px] rounded-tl-[28px] shadow-[0px_4.913px_13.102px_0px_#eedcff] top-[115px] w-[165px]"
-            />
-            <button
-              type="button"
-              aria-label="მაღაზია"
-              onClick={onShop}
-              className="absolute h-[64px] left-[265px] top-[115px] w-[146px]"
-            >
-              <div
-                aria-hidden
-                className="absolute border-[1.638px] border-[rgba(198,170,228,0.57)] border-solid inset-0 overflow-hidden rounded-bl-[28px] rounded-tl-[28px] shadow-[0px_4.913px_13.102px_0px_#eedcff]"
-                style={{ transform: "scaleX(-1)" }}
-              />
-            </button>
-
             {/* Avatar rings (node 2112:6787) */}
             <div className="absolute border-[23.057px] border-[rgba(255,255,255,0.95)] border-solid left-[117px] pointer-events-none rounded-[9606.182px] shadow-[0px_5.764px_15.371px_0px_rgba(0,0,0,0.12)] size-[269px] top-[211px]">
               <div
@@ -404,22 +417,6 @@ export function LoggedInHome({
               </p>
             </div>
 
-            {/* Coins / gems stats (nodes 2112:6909-6914, 2109:2360, 2113:7484) */}
-            <p className="-translate-x-1/2 [word-break:break-word] absolute font-['Nunito'] font-bold leading-[28px] left-[200px] pointer-events-none text-[#374151] text-[18px] text-center top-[141.05px] tracking-[-0.16px] whitespace-nowrap">
-              {coins.toLocaleString("en-US")}
-            </p>
-            <p className="[word-break:break-word] absolute font-['Nunito'] font-normal leading-[16.377px] left-[172px] pointer-events-none text-[#1f2937] text-[11.464px] top-[124px] tracking-[-0.131px] whitespace-nowrap">
-              ქულა:
-            </p>
-            <StatCircle left={117} bg="#f3e7cb" img={coinNew} onClick={onShop} label="ქულა" />
-            <StatCircle left={278} bg="#c6aae4" img={gemNew} onClick={onShop} label="ალმასი" />
-            <p className="-translate-x-1/2 [word-break:break-word] absolute font-['Nunito'] font-bold leading-[28px] left-[340px] pointer-events-none text-[#374151] text-[18px] text-center top-[141.05px] tracking-[-0.16px] whitespace-nowrap">
-              {gems.toLocaleString("en-US")}
-            </p>
-            <p className="[word-break:break-word] absolute font-['Nunito'] font-normal leading-[16.377px] left-[327px] pointer-events-none text-[#1f2937] text-[11.464px] top-[124px] tracking-[-0.131px] whitespace-nowrap">
-              ალმასი
-            </p>
-
             {/* Level pill (node 2112:6915) */}
             <button
               type="button"
@@ -525,15 +522,19 @@ export function LoggedInHome({
             type="button"
             aria-label="მენიუ"
             onClick={onMenu}
-            className="absolute bg-[rgba(110,105,134,0.15)] flex items-center justify-center left-[378px] rounded-[999px] size-[40px] top-[18px] z-10"
+            className="absolute bg-[rgba(110,105,134,0.15)] flex items-center justify-center left-[348px] rounded-[999px] size-[40px] top-[30px] z-10"
           >
             <div className="relative shrink-0 size-[20px]">
               <img alt="" className="absolute block inset-0 max-w-none size-full" src={gridIcon} />
             </div>
           </button>
 
+          {/* Top-right compact stats */}
+          <HeaderStat left={stageW - 390} img={coinNew} value={coins.toLocaleString("en-US")} onClick={onShop} label="ქულა" />
+          <HeaderStat left={stageW - 232} img={gemNew} value={gems.toLocaleString("en-US")} onClick={onShop} label="ალმასი" />
+
           {/* Notifications (node 2113:7016) */}
-          <div className="absolute flex flex-col items-start top-[18px] z-10" style={{ left: stageW - 75 }}>
+          <div className="absolute flex flex-col items-start top-[30px] z-10" style={{ left: stageW - 90 }}>
             <button
               type="button"
               aria-label="ცნობები"
@@ -608,17 +609,16 @@ export function LoggedInHome({
             <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.638px_0px_0px_white]" />
           </button>
 
-          {/* Greeting (node 2113:7023) */}
-          <div className="[word-break:break-word] absolute font-['Google_Sans','Nunito',sans-serif] left-[100px] not-italic text-[28px] top-[19px] tracking-[-0.16px] whitespace-nowrap z-10 pointer-events-none">
-            <p className="leading-[38px] mb-0 text-[rgba(31,41,55,0.6)]">გამარჯობა</p>
-            <p className="leading-[38px] text-[#1f2937]">{nickname}!</p>
-          </div>
-
-          {/* World title (node 2113:7028) + separator (node 2113:7454) */}
-          <p className="[word-break:break-word] absolute font-['Google_Sans','Nunito',sans-serif] leading-[38px] left-[499px] not-italic opacity-[0.99] text-[22px] text-[rgba(31,41,55,0.6)] top-[19px] tracking-[-0.16px] whitespace-nowrap z-10 pointer-events-none">
+          {/* Header: world title + level badge (left-aligned) + separator */}
+          <p className="[word-break:break-word] absolute font-['Google_Sans','Nunito',sans-serif] leading-[38px] left-[117px] not-italic opacity-[0.99] text-[22px] text-[rgba(31,41,55,0.6)] top-[31px] tracking-[-0.16px] whitespace-nowrap z-10 pointer-events-none">
             სამყარო ალფა
           </p>
-          <div className="absolute flex h-[37px] items-center justify-center left-[463px] top-[21px] w-0 pointer-events-none z-10">
+          <div className="absolute border-[#6e6985] border-[1.78px] border-solid flex h-[19.583px] items-center justify-center left-[288px] min-w-[19.583px] px-[7.121px] py-[1.78px] rounded-[8900.613px] top-[40px] z-10 pointer-events-none">
+            <p className="[word-break:break-word] font-['Nunito'] font-bold leading-[14.242px] relative shrink-0 text-[#6e6986] text-[10.682px] tracking-[-0.1424px] whitespace-nowrap">
+              დონე I
+            </p>
+          </div>
+          <div className="absolute flex h-[37px] items-center justify-center left-[463px] top-[31px] w-0 pointer-events-none z-10">
             <div className="flex-none rotate-90">
               <div className="h-0 relative w-[37px]">
                 <div className="absolute inset-[-1px_0_0_0]">
@@ -628,15 +628,8 @@ export function LoggedInHome({
             </div>
           </div>
 
-          {/* World level badge (node 2113:7046) */}
-          <div className="absolute border-[#6e6985] border-[1.78px] border-solid flex h-[19.583px] items-center justify-center left-[670px] min-w-[19.583px] px-[7.121px] py-[1.78px] rounded-[8900.613px] top-[30px] z-10 pointer-events-none">
-            <p className="[word-break:break-word] font-['Nunito'] font-bold leading-[14.242px] relative shrink-0 text-[#6e6986] text-[10.682px] tracking-[-0.1424px] whitespace-nowrap">
-              დონე I
-            </p>
-          </div>
-
-          {/* Friends row (node 2114:7744) */}
-          <button type="button" onClick={onAddFriend} className="absolute flex flex-col gap-[8px] h-[88px] items-center left-[499px] top-[82px] w-[64px] z-10">
+          {/* Friends row, starting from the left content column */}
+          <button type="button" onClick={onAddFriend} className="absolute flex flex-col gap-[8px] h-[88px] items-center left-[117px] top-[82px] w-[64px] z-10">
             <div
               className="border-2 border-[#c084fc] border-dashed flex items-center justify-center relative rounded-full shrink-0 size-[64px]"
               style={{ backgroundImage: "linear-gradient(135deg, rgb(243, 232, 255) 0%, rgb(233, 213, 255) 100%)" }}
@@ -650,12 +643,21 @@ export function LoggedInHome({
             </p>
           </button>
           {friends.map((f, i) => (
-            <FriendItem key={f.name} left={499 + 80 * (i + 1)} img={f.img} name={f.name} onClick={() => navigate("/team")} />
+            <FriendItem key={f.name} left={117 + 109 * (i + 1)} img={f.img} name={f.name} onClick={() => navigate("/team")} />
           ))}
 
-          {/* Category chips (nodes 2114:7528/7542/7543/7551) */}
-          {chips.map((c) => (
-            <CategoryChip key={c.label} top={c.top} width={c.width} label={c.label} onClick={c.onClick} />
+          {/* Category pins on the world map: unlocked reveal their name on
+              hover, locked show a padlock. Pin coordinates scale with the map
+              artwork when it grows past its design crop on wide screens. */}
+          {pins.map((p) => (
+            <MapPin
+              key={p.label}
+              left={458 + (p.x - 458) * mapK}
+              top={p.y * mapK}
+              label={p.label}
+              locked={p.locked}
+              onClick={p.onClick}
+            />
           ))}
         </div>
       </div>
