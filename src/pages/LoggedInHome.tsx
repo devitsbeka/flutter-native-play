@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock } from "lucide-react";
+import { WorldMap } from "@/features/world-map/WorldMap";
 
 import worldMap from "@/assets/figma-home/world-map.jpg";
 import avatarPhoto from "@/assets/figma-home/avatar-photo.png";
@@ -262,11 +263,45 @@ export function LoggedInHome({
           transformOrigin: "left center",
         }}
       >
-        <div className="absolute inset-0 overflow-hidden bg-[#ddc2f9]">
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Interactive 3D world, full-bleed behind the whole stage so the
+              sidebar fades into it. The previous static artwork plus DOM pins
+              remain as the no-WebGL / error fallback. */}
+          <div className="absolute h-[947px] left-0 top-0 overflow-hidden" style={{ width: stageW }}>
+            <WorldMap
+              resolutionBoost={Math.min(2, Math.max(1, scale))}
+              onMissions={onMissions}
+              onDiscover={() => navigate("/discover")}
+              onPlay={onPlay}
+              fallback={
+                <div className="absolute top-0 h-[947px]" style={{ left: 458, width: mapW }}>
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <img
+                      alt=""
+                      className="absolute h-full w-full max-w-none top-0 left-0 object-cover"
+                      style={{ objectPosition: "left top" }}
+                      src={worldMap}
+                    />
+                  </div>
+                  {pins.map((p) => (
+                    <MapPin
+                      key={p.label}
+                      left={(p.x - 458) * mapK}
+                      top={p.y * mapK}
+                      label={p.label}
+                      locked={p.locked}
+                      onClick={p.onClick}
+                    />
+                  ))}
+                </div>
+              }
+            />
+          </div>
+
           {/* Sidebar panel (node 2113:7452) */}
           <div
             className="absolute h-[946px] left-0 top-0 w-[458px] overflow-hidden"
-            style={{ backgroundImage: SIDEBAR_GRADIENT }}
+            style={{ backgroundImage: `linear-gradient(to right, rgba(236,220,252,0.97) 0%, rgba(236,220,252,0.92) 55%, rgba(236,220,252,0.55) 84%, rgba(236,220,252,0) 100%), ${SIDEBAR_GRADIENT}` }}
           >
             {/* Avatar rings (node 2112:6787) */}
             <div className="absolute border-[23.057px] border-[rgba(255,255,255,0.95)] border-solid left-[117px] pointer-events-none rounded-[9606.182px] shadow-[0px_5.764px_15.371px_0px_rgba(0,0,0,0.12)] size-[269px] top-[211px]">
@@ -503,20 +538,6 @@ export function LoggedInHome({
             ))}
           </button>
 
-          {/* World map (node 2113:6964). The artwork extends beyond the
-              942px design crop; on wide screens the container grows to the
-              stage edge and reveals the rest instead of clipping it. */}
-          <div className="absolute h-[947px] left-[458px] top-0" style={{ width: mapW }}>
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <img
-                alt=""
-                className="absolute h-full w-full max-w-none top-0 left-0 object-cover"
-                style={{ objectPosition: "left top" }}
-                src={worldMap}
-              />
-            </div>
-          </div>
-
           {/* Top-right compact stats */}
           <HeaderStat left={stageW - 390} img={coinNew} value={coins.toLocaleString("en-US")} onClick={onShop} label="ქულა" />
           <HeaderStat left={stageW - 232} img={gemNew} value={gems.toLocaleString("en-US")} onClick={onShop} label="ალმასი" />
@@ -644,22 +665,9 @@ export function LoggedInHome({
             </p>
           </button>
           {friends.map((f, i) => (
-            <FriendItem key={f.name} left={117 + 109 * (i + 1)} img={f.img} name={f.name} onClick={() => navigate("/team")} />
+            <FriendItem key={f.name} left={117 + 103 * (i + 1)} img={f.img} name={f.name} onClick={() => navigate("/team")} />
           ))}
 
-          {/* Category pins on the world map: unlocked reveal their name on
-              hover, locked show a padlock. Pin coordinates scale with the map
-              artwork when it grows past its design crop on wide screens. */}
-          {pins.map((p) => (
-            <MapPin
-              key={p.label}
-              left={458 + (p.x - 458) * mapK}
-              top={p.y * mapK}
-              label={p.label}
-              locked={p.locked}
-              onClick={p.onClick}
-            />
-          ))}
         </div>
       </div>
     </div>
