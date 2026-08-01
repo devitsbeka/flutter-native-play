@@ -1,0 +1,213 @@
+/* DOM overlays for the interactive world map. Text stays HTML so Georgian
+   glyphs render crisply at every zoom level. */
+
+.wm-node-html {
+  pointer-events: none;
+}
+
+.wm-pill {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition:
+    background 0.3s ease,
+    transform 0.15s ease,
+    box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.wm-pill:hover,
+.wm-pill:focus-visible {
+  background: linear-gradient(to right, #ffffff, #d6f5e8);
+  transform: translateY(-2px);
+}
+
+.wm-pill:focus-visible {
+  outline: 3px solid #a855f7;
+  outline-offset: 2px;
+}
+
+.wm-pill-locked {
+  background: rgba(255, 255, 255, 0.92);
+  cursor: not-allowed;
+}
+
+.wm-pill-locked:hover {
+  background: rgba(255, 255, 255, 0.92);
+  transform: none;
+}
+
+.wm-pill-selected {
+  box-shadow:
+    0 0 0 3px rgba(168, 85, 247, 0.55),
+    0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+.wm-pill-done {
+  opacity: 0.88;
+}
+
+.wm-pill-gem {
+  position: relative;
+  width: 27px;
+  height: 22px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.wm-pill-gem img {
+  position: absolute;
+  top: -12.5%;
+  left: 0;
+  width: 100%;
+  height: 125%;
+  max-width: none;
+}
+
+.wm-pill-label {
+  font-family: "Nunito", sans-serif;
+  font-weight: 700;
+  font-size: 13.35px;
+  letter-spacing: -0.15px;
+  color: #1f6f52;
+  white-space: nowrap;
+  max-width: 0;
+  margin-left: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-width 0.3s ease,
+    opacity 0.3s ease,
+    margin-left 0.3s ease;
+}
+
+.wm-pill-locked .wm-pill-label {
+  color: #6b7280;
+}
+
+.wm-pill-label-open,
+.wm-pill:focus-visible .wm-pill-label {
+  max-width: 160px;
+  margin-left: 7px;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wm-pill,
+  .wm-pill-label {
+    transition: none;
+  }
+}
+
+/* Node details panel */
+.wm-panel {
+  width: 300px;
+  max-width: calc(100% - 48px);
+  border-radius: 20px;
+  border: 1.5px solid #e8e0f5;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 3px 0 #d8d0e8,
+    0 8px 24px rgba(0, 0, 0, 0.16);
+  padding: 16px;
+  font-family: "Nunito", sans-serif;
+}
+
+/* Anchored above the clicked node inside the scene overlay. */
+.wm-panel-anchored {
+  pointer-events: auto;
+  transform: translateY(-58%);
+}
+
+.wm-panel h3 {
+  font-size: 17px;
+  font-weight: 800;
+  color: #1f2937;
+  margin: 0 0 4px;
+}
+
+.wm-panel p {
+  font-size: 12.5px;
+  color: #6b7280;
+  margin: 0 0 12px;
+  line-height: 1.45;
+}
+
+.wm-panel-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.wm-panel-play {
+  flex: 1;
+  height: 42px;
+  border-radius: 21px;
+  border: 2px solid #34d399;
+  background: linear-gradient(to bottom, #6ee7b7, #10b981 50%, #059669);
+  box-shadow:
+    0 3px 0 #047857,
+    inset 0 2px 0 rgba(255, 255, 255, 0.35);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+}
+
+.wm-panel-play:focus-visible,
+.wm-panel-close:focus-visible {
+  outline: 3px solid #a855f7;
+  outline-offset: 2px;
+}
+
+.wm-panel-close {
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 21px;
+  border: 1.5px solid #d5d0d8;
+  background: #fff;
+  color: #6e6986;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.wm-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #e8d5fb 0%, #ddc2f9 55%, #cfe9f5 100%);
+  transition: opacity 0.5s ease;
+}
+
+.wm-loading-dot {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.6);
+  border-top-color: #a855f7;
+  animation: wm-spin 0.9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wm-loading-dot {
+    animation: none;
+  }
+}
+
+@keyframes wm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
