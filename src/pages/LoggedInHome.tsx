@@ -35,19 +35,22 @@ const RADIAL_VIGNETTE =
 
 const CARD_GRADIENT = "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))";
 
-function useFitScale() {
-  const [scale, setScale] = useState(() =>
-    typeof window === "undefined"
-      ? 1
-      : Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H),
-  );
+// Scale the 946px-tall design to the viewport, anchored to the left edge.
+// On screens wider than the 1400px canvas the stage grows so the world map
+// fills the remaining width (the map artwork extends beyond its design crop).
+function useStage() {
+  const calc = () => {
+    if (typeof window === "undefined") return { scale: 1, stageW: DESIGN_W };
+    const scale = Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
+    return { scale, stageW: Math.max(DESIGN_W, Math.ceil(window.innerWidth / scale)) };
+  };
+  const [stage, setStage] = useState(calc);
   useEffect(() => {
-    const onResize = () =>
-      setScale(Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H));
+    const onResize = () => setStage(calc());
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-  return scale;
+  return stage;
 }
 
 function VerticalLine({ left }: { left: number }) {
@@ -106,7 +109,8 @@ export function LoggedInHome({
   onPlay,
 }: LoggedInHomeProps) {
   const navigate = useNavigate();
-  const scale = useFitScale();
+  const { scale, stageW } = useStage();
+  const mapW = stageW - 458;
 
   const navItems = [
     { icon: navHome, top: 291, path: "/", label: "მთავარი" },
@@ -119,11 +123,12 @@ export function LoggedInHome({
   return (
     <div className="fixed inset-0 overflow-hidden bg-[#f9dbff]">
       <div
-        className="absolute left-1/2 top-1/2"
+        className="absolute left-0 top-1/2 origin-top-left"
         style={{
-          width: DESIGN_W,
+          width: stageW,
           height: DESIGN_H,
-          transform: `translate(-50%, -50%) scale(${scale})`,
+          transform: `translateY(-50%) scale(${scale})`,
+          transformOrigin: "left center",
         }}
       >
         <div className="absolute inset-0 overflow-hidden">
@@ -143,11 +148,19 @@ export function LoggedInHome({
             />
           </div>
 
-          {/* Sidebar content over radial vignette (node 2109:2315) */}
+          {/* Radial vignette (node 2109:2315). Kept behind all content (z-0)
+              and masked out near the top so its white edge glow never washes
+              over the header texts. */}
           <div
-            className="absolute h-[946px] left-0 top-0 w-[1400px]"
-            style={{ backgroundImage: RADIAL_VIGNETTE }}
-          >
+            className="absolute h-[946px] left-0 top-0 w-[1400px] pointer-events-none z-0"
+            style={{
+              backgroundImage: RADIAL_VIGNETTE,
+              WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 140px)",
+              maskImage: "linear-gradient(to bottom, transparent 0px, black 140px)",
+            }}
+          />
+          {/* Sidebar content (node 2109:2315) */}
+          <div className="absolute h-[946px] left-0 top-0 w-[1400px] z-[1]">
             {/* Avatar rings (node 2112:6787) */}
             <div className="absolute contents left-[117px] top-[194.5px]">
               <div className="absolute border-[23.057px] border-[rgba(255,255,255,0.95)] border-solid left-[117px] pointer-events-none rounded-[9606.182px] shadow-[0px_5.764px_15.371px_0px_rgba(0,0,0,0.12)] size-[269px] top-[194.5px]">
@@ -405,22 +418,29 @@ export function LoggedInHome({
             </div>
           ))}
 
-          {/* World map (node 2113:6964) */}
-          <div className="absolute h-[947px] left-[458px] top-0 w-[942px]">
+          {/* World map (node 2113:6964). The artwork extends beyond the
+              942px design crop; on wide screens the container grows to the
+              stage edge and reveals the rest instead of clipping it. */}
+          <div className="absolute h-[947px] left-[458px] top-0 z-[1]" style={{ width: mapW }}>
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <img alt="" className="absolute h-full left-[-0.03%] max-w-none top-0 w-[150.8%]" src={worldMap} />
+              <img
+                alt=""
+                className="absolute h-full w-full max-w-none top-0 left-0 object-cover"
+                style={{ objectPosition: "left top" }}
+                src={worldMap}
+              />
             </div>
           </div>
 
           {/* World menu button (node 2113:7030) */}
-          <div className="absolute bg-[rgba(110,105,134,0.15)] flex items-center justify-center left-[489px] rounded-[999px] size-[40px] top-[18px]">
+          <div className="absolute bg-[rgba(110,105,134,0.15)] flex items-center justify-center left-[489px] rounded-[999px] size-[40px] top-[18px] z-10">
             <div className="relative shrink-0 size-[20px]">
               <img alt="" className="absolute block inset-0 max-w-none size-full" src={gridIcon} />
             </div>
           </div>
 
           {/* Notifications (node 2113:7016) */}
-          <div className="absolute flex flex-col items-start left-[1325px] top-[18px]">
+          <div className="absolute flex flex-col items-start top-[18px] z-10" style={{ left: stageW - 75 }}>
             <button
               type="button"
               aria-label="ცნობები"
@@ -445,7 +465,10 @@ export function LoggedInHome({
           </div>
 
           {/* World selector pill (node 2113:7015) */}
-          <div className="absolute border-[#e8e0f5] border-[1.638px] border-solid h-[60px] left-[791px] overflow-hidden rounded-[28.38px] shadow-[0px_3.275px_0px_0px_#d8d0e8,0px_4.913px_13.102px_0px_rgba(0,0,0,0.1)] top-[818px] w-[317px]">
+          <div
+            className="absolute border-[#e8e0f5] border-[1.638px] border-solid h-[60px] overflow-hidden rounded-[28.38px] shadow-[0px_3.275px_0px_0px_#d8d0e8,0px_4.913px_13.102px_0px_rgba(0,0,0,0.1)] top-[818px] w-[317px] z-10"
+            style={{ left: 458 + mapW / 2 - 138 }}
+          >
             <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[28.38px]" style={{ background: CARD_GRADIENT }} />
             <div className="absolute contents left-[13.36px] mix-blend-luminosity top-[4.36px]">
               <div className="absolute h-[47px] left-[15px] mix-blend-luminosity opacity-[0.19] top-[6px] w-[74px]">
@@ -490,18 +513,18 @@ export function LoggedInHome({
           </div>
 
           {/* Greeting (node 2113:7023) */}
-          <div className="[word-break:break-word] absolute font-['Google_Sans','Nunito',sans-serif] left-[100px] not-italic text-[28px] top-[19px] tracking-[-0.16px] whitespace-nowrap">
+          <div className="[word-break:break-word] absolute font-['Google_Sans','Nunito',sans-serif] left-[100px] not-italic text-[28px] top-[19px] tracking-[-0.16px] whitespace-nowrap z-10">
             <p className="leading-[38px] mb-0 text-[rgba(31,41,55,0.6)]">გამარჯობა</p>
             <p className="leading-[38px] text-[#1f2937]">{nickname}!</p>
           </div>
 
           {/* World title (node 2113:7028) */}
-          <p className="[word-break:break-word] absolute font-['Google_Sans','Nunito',sans-serif] leading-[38px] left-[542px] not-italic opacity-[0.99] text-[22px] text-[rgba(31,41,55,0.6)] top-[19px] tracking-[-0.16px] whitespace-nowrap">
+          <p className="[word-break:break-word] absolute font-['Google_Sans','Nunito',sans-serif] leading-[38px] left-[542px] not-italic opacity-[0.99] text-[22px] text-[rgba(31,41,55,0.6)] top-[19px] tracking-[-0.16px] whitespace-nowrap z-10">
             სამყარო ალფა
           </p>
 
           {/* World level badge (node 2113:7046) */}
-          <div className="absolute border-[#6e6985] border-[1.78px] border-solid flex h-[19.583px] items-center justify-center left-[713px] min-w-[19.583px] px-[7.121px] py-[1.78px] rounded-[8900.613px] top-[30px]">
+          <div className="absolute border-[#6e6985] border-[1.78px] border-solid flex h-[19.583px] items-center justify-center left-[713px] min-w-[19.583px] px-[7.121px] py-[1.78px] rounded-[8900.613px] top-[30px] z-10">
             <p className="[word-break:break-word] font-['Nunito'] font-bold leading-[14.242px] relative shrink-0 text-[#6e6986] text-[10.682px] tracking-[-0.1424px] whitespace-nowrap">
               დონე I
             </p>
