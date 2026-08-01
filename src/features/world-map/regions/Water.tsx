@@ -3,8 +3,8 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { worldColors, worldMaterials } from "../components/materials";
 
-const WATER_SIZE = 300;
-const WATER_SEGMENTS = 42;
+const WATER_SIZE = 900;
+const WATER_SEGMENTS = 48;
 const WAVE_HEIGHT = 0.55;
 
 /**

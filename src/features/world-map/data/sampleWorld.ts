@@ -36,6 +36,7 @@ export const sampleWorld: WorldDefinition = {
           state: "completed",
           position: [-26, 0, 14],
           label: "კინო",
+          stars: 3,
           action: { kind: "discover" },
         },
         {
@@ -52,6 +53,7 @@ export const sampleWorld: WorldDefinition = {
           state: "completed",
           position: [-9, 0, 12],
           label: "მუსიკა",
+          stars: 2,
           action: { kind: "discover" },
         },
         {
@@ -102,15 +104,16 @@ export const sampleWorld: WorldDefinition = {
         { id: "route-locked", through: ["n6", "n7", "n8"], state: "locked" },
       ],
       landmarks: [
-        { id: "shrine", kind: "rewardShrine", position: [-21, 0, 1], scale: 0.9 },
-        { id: "tower", kind: "triviaTower", position: [3, 0, 12], rotationY: 0.6 },
-        { id: "ruin", kind: "ruin", position: [-4, 0, -6], scale: 0.9 },
-        { id: "castle", kind: "castle", position: [29, 0, -9], rotationY: -0.5 },
-        { id: "house-a", kind: "house", position: [-27, 0, 5], rotationY: 0.5 },
-        { id: "house-b", kind: "house", position: [-13, 0, 16], rotationY: -0.7, scale: 0.9 },
-        { id: "house-c", kind: "house", position: [22, 0, 4], rotationY: 1.9, scale: 0.95 },
-        { id: "windmill", kind: "windmill", position: [12, 0, 16], rotationY: -0.4 },
-        { id: "temple", kind: "temple", position: [1, 0, -14], rotationY: 0.3 },
+        // Each stop on the route is staged beside its own scene.
+        { id: "cinema-house", kind: "house", position: [-29, 0, 10], rotationY: 0.5 },
+        { id: "shrine", kind: "rewardShrine", position: [-21, 0, 2], scale: 0.9 },
+        { id: "music-ruin", kind: "ruin", position: [-12, 0, 16], scale: 0.95 },
+        { id: "missions-tower", kind: "triviaTower", position: [2.5, 0, 7.5], rotationY: 0.6 },
+        { id: "tech-windmill", kind: "windmill", position: [11, 0, 13], rotationY: -0.4 },
+        { id: "chest-house", kind: "house", position: [18.5, 0, 3.5], rotationY: 1.9, scale: 0.95 },
+        { id: "history-temple", kind: "temple", position: [23.5, 0, -4], rotationY: 0.3 },
+        { id: "boss-castle", kind: "castle", position: [29.5, 0, -12], rotationY: -0.5 },
+        { id: "village-house", kind: "house", position: [-6, 0, -12], rotationY: -0.7, scale: 0.9 },
       ],
     },
     {

@@ -48,7 +48,12 @@ export default function WorldMapCanvas({
   return (
     <div
       className="absolute inset-0 transition-opacity duration-700"
-      style={{ opacity: ready ? 1 : 0 }}
+      style={{
+        opacity: ready ? 1 : 0,
+        // Sky-to-sea backdrop matching the scene horizon, so the world's
+        // background always fills the viewport even past the water mesh.
+        background: "linear-gradient(180deg, #ddc2f9 0%, #cfd0ee 38%, #a5d6e4 78%, #93d4e2 100%)",
+      }}
       data-testid="world-map-canvas"
     >
       <Canvas

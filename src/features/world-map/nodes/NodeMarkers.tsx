@@ -2,21 +2,20 @@ import { useMemo, useRef } from "react";
 import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { Lock } from "lucide-react";
-import gemNew from "@/assets/figma-home/gem-new.png";
 import {
   GeneratedWorld,
   MapNodeDefinition,
   NodeState,
 } from "../schemas/worldDefinition";
 import { worldMaterials } from "../components/materials";
+import { lockIcon, resolveCategoryIcon, starIcon } from "../assets/categoryIcons";
 import { useProgressionStore, useSelectionStore } from "../state/worldStore";
 
 function nodeStateOf(node: MapNodeDefinition, overrides: Record<string, NodeState>): NodeState {
   return overrides[node.id] ?? node.state;
 }
 
-/** Stone pedestal under each progression marker, pulsing softly when available. */
+/** Stone pedestal under each marker, pulsing softly when available. */
 function Pedestal({ state, animate }: { state: NodeState; animate: boolean }) {
   const ringRef = useRef<THREE.Mesh>(null!);
   const available = state === "available" || state === "active";
@@ -42,6 +41,18 @@ function Pedestal({ state, animate }: { state: NodeState; animate: boolean }) {
   );
 }
 
+/** Star badge sized like the Figma spec: 1 star 30px, 2 stars 24px, 3 stars 19px. */
+function StarBadge({ stars }: { stars: number }) {
+  const size = stars >= 3 ? 19 : stars === 2 ? 24 : 30;
+  return (
+    <span className="wm-badge" aria-hidden>
+      {Array.from({ length: Math.min(3, stars) }, (_, i) => (
+        <img key={i} alt="" src={starIcon} style={{ width: size, height: size }} />
+      ))}
+    </span>
+  );
+}
+
 interface NodeMarkersProps {
   world: GeneratedWorld;
   animate: boolean;
@@ -49,9 +60,10 @@ interface NodeMarkersProps {
 }
 
 /**
- * 3D pedestals + crisp DOM pill overlays (Georgian text stays HTML, never a
- * WebGL texture). The pills are real buttons: hover, focus, keyboard and
- * touch all work natively, and screen readers get name + state.
+ * Category markers: rendered 3D icons from the Thiings registry (resolved by
+ * label keywords — nothing hardcoded per node) with the Figma badge pill
+ * floating above: earned stars, or a lock for gated nodes. All text and
+ * controls are DOM: crisp Georgian labels, keyboard, screen readers.
  */
 export function NodeMarkers({ world, animate, onNodeClick }: NodeMarkersProps) {
   const overrides = useProgressionStore((s) => s.nodeStates);
@@ -66,51 +78,55 @@ export function NodeMarkers({ world, animate, onNodeClick }: NodeMarkersProps) {
 
   return (
     <group>
-      {nodes.map((node) => {
+      {nodes.map((node, index) => {
         const position = world.nodeWorldPositions[node.id];
         const state = nodeStateOf(node, overrides);
         const locked = state === "locked";
         const done = state === "completed" || state === "claimed";
+        const available = state === "available" || state === "active";
         const hovered = hoveredNodeId === node.id;
         const selected = selectedNodeId === node.id;
+        const stars = Math.min(3, node.stars ?? 0);
+        const icon = resolveCategoryIcon(node.label, node.icon);
         return (
           <group key={node.id} position={position}>
-            <group position={[0, hovered && !locked ? 0.25 : 0, 0]}>
-              <Pedestal state={state} animate={animate} />
-            </group>
-            <Html
-              center
-              position={[0, 1.7, 0]}
-              zIndexRange={[30, 10]}
-              // DOM pill: state is communicated by icon + text, not color only.
-              wrapperClass="wm-node-html"
-            >
-              <button
-                type="button"
-                aria-label={locked ? `${node.label} — ჩაკეტილია` : `${node.label} — ${done ? "დასრულებულია" : "ხელმისაწვდომია"}`}
-                aria-disabled={locked}
-                data-state={state}
-                onMouseEnter={() => hover(node.id)}
-                onMouseLeave={() => hover(null)}
-                onFocus={() => hover(node.id)}
-                onBlur={() => hover(null)}
-                onClick={() => onNodeClick(node)}
-                className={`wm-pill group ${locked ? "wm-pill-locked" : ""} ${selected ? "wm-pill-selected" : ""} ${
-                  done ? "wm-pill-done" : ""
-                }`}
+            <Pedestal state={state} animate={animate} />
+            <Html center position={[0, 2.9, 0]} zIndexRange={[30, 10]} wrapperClass="wm-node-html">
+              <div
+                className={`wm-marker ${animate ? "wm-marker-enter" : ""}`}
+                style={{ animationDelay: `${index * 70}ms` }}
               >
                 {locked ? (
-                  <Lock className="size-[18px] shrink-0" fill="#fbbf24" stroke="#d97706" strokeWidth={1.5} />
-                ) : (
-                  <span className="wm-pill-gem">
-                    <img alt="" src={gemNew} />
+                  <span className="wm-badge" aria-hidden>
+                    <img alt="" src={lockIcon} style={{ width: 30, height: 30 }} />
                   </span>
-                )}
-                <span className={`wm-pill-label ${hovered || selected ? "wm-pill-label-open" : ""}`}>
+                ) : stars > 0 ? (
+                  <StarBadge stars={stars} />
+                ) : null}
+                <button
+                  type="button"
+                  aria-label={
+                    locked
+                      ? `${node.label} — ჩაკეტილია`
+                      : `${node.label} — ${done ? `დასრულებულია, ${stars} ვარსკვლავი` : "ხელმისაწვდომია"}`
+                  }
+                  aria-disabled={locked}
+                  data-state={state}
+                  onMouseEnter={() => hover(node.id)}
+                  onMouseLeave={() => hover(null)}
+                  onFocus={() => hover(node.id)}
+                  onBlur={() => hover(null)}
+                  onClick={() => onNodeClick(node)}
+                  className={`wm-icon-btn ${locked ? "wm-icon-locked" : ""} ${selected ? "wm-icon-selected" : ""} ${
+                    available && animate ? "wm-icon-available" : ""
+                  }`}
+                >
+                  <img alt="" className="wm-cat-icon" src={icon} draggable={false} />
+                </button>
+                <span className={`wm-marker-label ${hovered || selected ? "wm-marker-label-open" : ""}`}>
                   {node.label}
-                  {done ? " ✓" : ""}
                 </span>
-              </button>
+              </div>
             </Html>
           </group>
         );
