@@ -605,9 +605,33 @@ export default function Index() {
           playsRemaining={playsRemaining}
           unreadCount={unreadCount}
           onPlay={handlePlayClick}
+          onMissions={() => setShowMissionsModal(true)}
+          onPowers={() => setShowMyPowersModal(true)}
+          onLevel={() => setShowLevelModal(true)}
+          onShop={() => setIsGemShopOpen(true)}
+          onAvatar={() => openAvatarModal()}
+          onAddFriend={() => setInviteModalVisible(true)}
+          onMenu={() => setIsSideMenuOpen(true)}
         />
-        {/* Modals reachable from the play flow */}
+        {/* Modals reachable from the homepage */}
         <SignupOnboardingModal />
+        <SideMenuDrawer isOpen={isSideMenuOpen} onClose={() => setIsSideMenuOpen(false)} />
+        <MissionsModal isOpen={showMissionsModal} onClose={() => setShowMissionsModal(false)} />
+        <MyPowersModal isOpen={showMyPowersModal} onClose={() => setShowMyPowersModal(false)} />
+        <GemShopModal isOpen={isGemShopOpen} onClose={() => setIsGemShopOpen(false)} />
+        <LevelInfoModal
+          isOpen={showLevelModal}
+          onClose={() => setShowLevelModal(false)}
+          levelInfo={levelInfo}
+          onContinue={() => {
+            setShowLevelModal(false);
+            if (user && !canPlay && !isVip) {
+              setInviteModalVisible(true);
+              return;
+            }
+            navigate("/game");
+          }}
+        />
         <InviteFriendsModal
           open={inviteModalVisible}
           onOpenChange={setInviteModalVisible}
