@@ -106,6 +106,11 @@ export const sampleWorld: WorldDefinition = {
         { id: "tower", kind: "triviaTower", position: [3, 0, 12], rotationY: 0.6 },
         { id: "ruin", kind: "ruin", position: [-4, 0, -6], scale: 0.9 },
         { id: "castle", kind: "castle", position: [29, 0, -9], rotationY: -0.5 },
+        { id: "house-a", kind: "house", position: [-27, 0, 5], rotationY: 0.5 },
+        { id: "house-b", kind: "house", position: [-13, 0, 16], rotationY: -0.7, scale: 0.9 },
+        { id: "house-c", kind: "house", position: [22, 0, 4], rotationY: 1.9, scale: 0.95 },
+        { id: "windmill", kind: "windmill", position: [12, 0, 16], rotationY: -0.4 },
+        { id: "temple", kind: "temple", position: [1, 0, -14], rotationY: 0.3 },
       ],
     },
     {
@@ -119,7 +124,7 @@ export const sampleWorld: WorldDefinition = {
       density: { trees: 0.35, rocks: 0.4 },
       nodes: [],
       paths: [],
-      landmarks: [],
+      landmarks: [{ id: "islet-house", kind: "house", position: [0.5, 0, 0.5], rotationY: 2.4, scale: 0.85 }],
     },
     {
       id: "islet-east",

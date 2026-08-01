@@ -15,7 +15,14 @@ export type NodeType =
 
 export type NodeState = "locked" | "available" | "active" | "completed" | "claimed";
 
-export type LandmarkKind = "triviaTower" | "castle" | "rewardShrine" | "ruin";
+export type LandmarkKind =
+  | "triviaTower"
+  | "castle"
+  | "rewardShrine"
+  | "ruin"
+  | "house"
+  | "windmill"
+  | "temple";
 
 export interface CameraDefinition {
   /** Initial look-at point in world units. */

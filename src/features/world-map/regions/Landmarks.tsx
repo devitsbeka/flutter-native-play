@@ -92,11 +92,89 @@ function Ruin() {
   );
 }
 
+/** Cozy cottage: plastered walls, pitched roof, chimney and a door. */
+function House() {
+  return (
+    <group>
+      <mesh material={worldMaterials.stoneWarm} position={[0, 0.85, 0]} castShadow>
+        <boxGeometry args={[2.2, 1.7, 1.8]} />
+      </mesh>
+      <mesh material={worldMaterials.roof} position={[0, 2.05, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
+        <coneGeometry args={[1.85, 1.2, 4]} />
+      </mesh>
+      <mesh material={worldMaterials.wood} position={[0, 0.55, 0.92]}>
+        <boxGeometry args={[0.5, 1.1, 0.08]} />
+      </mesh>
+      <mesh material={worldMaterials.stoneCool} position={[0.7, 2.35, -0.4]} castShadow>
+        <boxGeometry args={[0.3, 0.9, 0.3]} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Windmill with slowly turning blades. */
+function Windmill() {
+  const bladesRef = useRef<THREE.Group>(null!);
+  useFrame((state) => {
+    if (bladesRef.current) bladesRef.current.rotation.z = state.clock.elapsedTime * 0.5;
+  });
+  return (
+    <group>
+      <mesh material={worldMaterials.stoneWarm} position={[0, 1.7, 0]} castShadow>
+        <cylinderGeometry args={[0.95, 1.35, 3.4, 8]} />
+      </mesh>
+      <mesh material={worldMaterials.roof} position={[0, 3.75, 0]} castShadow>
+        <coneGeometry args={[1.1, 1.1, 8]} />
+      </mesh>
+      <group ref={bladesRef} position={[0, 3.1, 1.05]}>
+        {[0, Math.PI / 2].map((angle) => (
+          <mesh key={angle} material={worldMaterials.wood} rotation={[0, 0, angle]} castShadow>
+            <boxGeometry args={[4.2, 0.35, 0.08]} />
+          </mesh>
+        ))}
+        <mesh material={worldMaterials.gold} position={[0, 0, 0.06]}>
+          <sphereGeometry args={[0.18, 8, 8]} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+/** Small columned temple with a pediment roof. */
+function Temple() {
+  return (
+    <group>
+      <mesh material={worldMaterials.stoneCool} position={[0, 0.25, 0]} receiveShadow>
+        <boxGeometry args={[3.6, 0.5, 2.8]} />
+      </mesh>
+      {[-1.3, 1.3].map((x) =>
+        [-0.95, 0.95].map((z) => (
+          <mesh key={`${x}${z}`} material={worldMaterials.stoneWarm} position={[x, 1.35, z]} castShadow>
+            <cylinderGeometry args={[0.22, 0.26, 1.8, 8]} />
+          </mesh>
+        )),
+      )}
+      <mesh material={worldMaterials.stoneCool} position={[0, 2.45, 0]} castShadow>
+        <boxGeometry args={[3.8, 0.4, 3]} />
+      </mesh>
+      <mesh material={worldMaterials.roof} position={[0, 3, 0]} rotation={[0, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.01, 2.35, 0.9, 4, 1]} />
+      </mesh>
+      <mesh material={worldMaterials.purple} position={[0, 1.1, 0]}>
+        <octahedronGeometry args={[0.4, 0]} />
+      </mesh>
+    </group>
+  );
+}
+
 const landmarkComponents: Record<LandmarkDefinition["kind"], () => JSX.Element> = {
   triviaTower: TriviaTower,
   castle: Castle,
   rewardShrine: RewardShrine,
   ruin: Ruin,
+  house: House,
+  windmill: Windmill,
+  temple: Temple,
 };
 
 /** Deterministic snow-capped mountain cluster behind a region. */

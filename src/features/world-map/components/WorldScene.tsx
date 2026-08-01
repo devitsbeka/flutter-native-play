@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import { GeneratedWorld, MapNodeDefinition } from "../schemas/worldDefinition";
-import { worldColors, worldMaterials } from "./materials";
+import { worldColors } from "./materials";
 import { qualityProfiles } from "../utils/deviceQuality";
 import { useQualityStore } from "../state/worldStore";
 import { Island } from "../regions/Island";
+import { Water } from "../regions/Water";
 import { Vegetation } from "../regions/Vegetation";
 import { Landmarks } from "../regions/Landmarks";
 import { Clouds } from "../regions/Clouds";
@@ -18,21 +19,6 @@ interface WorldSceneProps {
   reducedMotion: boolean;
   onNodeClick: (node: MapNodeDefinition) => void;
   panel: NodePanelData | null;
-}
-
-/** Turquoise sea plane far below the floating islands. */
-function Water() {
-  return (
-    <group>
-      <mesh material={worldMaterials.water} rotation={[-Math.PI / 2, 0, 0]} position={[0, -14, 0]}>
-        <circleGeometry args={[130, 48]} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -13.9, 6]}>
-        <ringGeometry args={[24, 60, 48]} />
-        <meshStandardMaterial color={worldColors.waterDeep} transparent opacity={0.35} roughness={0.4} />
-      </mesh>
-    </group>
-  );
 }
 
 export function WorldScene({ world, reducedMotion, onNodeClick, panel }: WorldSceneProps) {
@@ -58,7 +44,7 @@ export function WorldScene({ world, reducedMotion, onNodeClick, panel }: WorldSc
         shadow-bias={-0.0004}
       />
       <CameraRig definition={world.def.camera} reducedMotion={reducedMotion} />
-      <Water />
+      <Water animate={!reducedMotion} />
       {world.regions.map((region) => (
         <group key={region.def.id}>
           <Island region={region} />
