@@ -27,6 +27,7 @@ import { SignupOnboardingModal } from "@/components/onboarding/SignupOnboardingM
 import { WelcomeOnboardingOverlay } from "@/components/onboarding/WelcomeOnboardingOverlay";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
+import { LoggedInHome } from "@/pages/LoggedInHome";
 import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
 
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
@@ -587,6 +588,53 @@ export default function Index() {
   const currentStreak = profile?.current_streak || 0;
   const levelInfo = calculateLevel(profile?.total_points || 0);
   const showAnimatePrompt = !isAnimatingFromHome && !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
+
+  // Logged-in homepage: exact implementation of the Figma design
+  // (Food-App file, node 2113:7047). Guests keep the existing homepage.
+  if (user) {
+    return (
+      <>
+        <LoggedInHome
+          nickname={profile?.nickname || t("game.guest")}
+          avatarUrl={profile?.avatar_url}
+          coins={coins}
+          gems={gems}
+          level={levelInfo.level}
+          xpCurrent={levelInfo.xpInCurrentLevel}
+          xpTotal={levelInfo.xpNeededForNextLevel}
+          playsRemaining={playsRemaining}
+          unreadCount={unreadCount}
+          onPlay={handlePlayClick}
+        />
+        {/* Modals reachable from the play flow */}
+        <SignupOnboardingModal />
+        <InviteFriendsModal
+          open={inviteModalVisible}
+          onOpenChange={setInviteModalVisible}
+          onDismiss={() => dismissInvite()}
+        />
+        <NotEnoughCoinsModal
+          isOpen={showNotEnoughCoinsModal}
+          onClose={() => setShowNotEnoughCoinsModal(false)}
+          currentCoins={coins}
+          requiredCoins={stakeAmount}
+          userGems={gems}
+          onExchangeGems={handleExchangeGems}
+          onOpenDailyRewards={() => {
+            setShowNotEnoughCoinsModal(false);
+            setIsDailyRewardsOpen(true);
+          }}
+        />
+        <DailyRewardsModal
+          isOpen={isDailyRewardsOpen}
+          onClose={() => setIsDailyRewardsOpen(false)}
+          currentStreak={currentStreak || 1}
+          onClaim={() => setIsDailyRewardsOpen(false)}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       {/* Onboarding modals */}
