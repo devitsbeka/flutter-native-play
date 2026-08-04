@@ -23,15 +23,11 @@ directory = "./dist"
 not_found_handling = "single-page-application"
 
 # ---------------------------------------------------------------------------
-# CUTOVER — leave commented until you are ready to move traffic off the old
-# host. Until then every deploy is reachable at the workers.dev URL printed by
-# wrangler, so the live site is untouched while you verify.
-#
-# Uncommenting requires the mytrivia.io zone to be in the same Cloudflare
-# account; Cloudflare then creates and manages the DNS records itself, so do
-# not also point the records at the old host by hand.
+# Production domains. Cloudflare creates and manages the DNS records for these
+# itself, so do not also point them at another origin by hand. To roll back,
+# comment this block out and redeploy, then repoint DNS at the old host.
 # ---------------------------------------------------------------------------
-# routes = [
-#   { pattern = "mytrivia.io", custom_domain = true },
-#   { pattern = "www.mytrivia.io", custom_domain = true },
-# ]
+routes = [
+  { pattern = "mytrivia.io", custom_domain = true },
+  { pattern = "www.mytrivia.io", custom_domain = true },
+]
