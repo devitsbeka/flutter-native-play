@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { factCheckQuestions } from "../_shared/factCheck.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 // App-wide character limits - strict for gameplay display
 const QUESTION_MAX_LENGTH = 70;
@@ -267,9 +268,8 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!AI_API_KEY) {
+      throw new Error("AI_API_KEY is not configured");
     }
 
     const isTrueFalse = answerFormat === "true_false";
@@ -338,14 +338,14 @@ Return ONLY valid JSON.`;
 
     console.log(`Mode: ${mode}, Subject: ${subject}, Format: ${answerFormat}`);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(AI_CHAT_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${AI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: aiModel("google/gemini-2.5-flash"),
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
@@ -356,7 +356,7 @@ Return ONLY valid JSON.`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Lovable AI error:", errorText);
+      console.error("AI gateway error:", errorText);
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "სისტემა დატვირთულია. სცადეთ მოგვიანებით." }),

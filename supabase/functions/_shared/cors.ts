@@ -4,25 +4,33 @@
  * Security: Only allows requests from known origins instead of '*'
  */
 
-// Allowed origins for CORS
+// Allowed origins for CORS.
+//
+// Exact matches only — no wildcard suffixes. A previous version allowed every
+// subdomain of the old hosting platform, which handed CORS access to this
+// backend to any project on it, and compared with startsWith, so
+// "https://mytrivia.io.example.com" was accepted as "https://mytrivia.io".
+//
+// Extra origins can be added at deploy time via the CORS_EXTRA_ORIGINS secret
+// (comma-separated), so preview deployments never require a code change.
 const ALLOWED_ORIGINS = [
-  // Production - Custom domain
+  // Production - custom domain
   'https://mytrivia.io',
   'https://www.mytrivia.io',
-  // Production - Lovable domain
-  'https://flutter-native-play.lovable.app',
-  // Preview
-  'https://id-preview--f54c9281-c7aa-40a4-8ea7-4b75d0ffa3d4.lovable.app',
-  // Lovable internal preview domain (varies per project/session)
-  'https://f54c9281-c7aa-40a4-8ea7-4b75d0ffa3d4.lovableproject.com',
   // Capacitor iOS
   'capacitor://localhost',
-  // Capacitor Android / Local development
+  // Capacitor Android
   'http://localhost',
+  // Local development
   'http://localhost:5173',
   'http://localhost:8080',
   'http://localhost:8100',
 ];
+
+const EXTRA_ORIGINS = (Deno.env.get('CORS_EXTRA_ORIGINS') || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 /**
  * Get CORS headers based on the request origin
@@ -30,17 +38,13 @@ const ALLOWED_ORIGINS = [
  */
 export function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get('Origin') || '';
-  
-  // Check if origin is in allowed list (also allow no origin for same-origin requests)
-  // Additionally allow Lovable's preview domains under *.lovableproject.com.
-  const isLovableProjectPreview = origin.endsWith('.lovableproject.com');
-  const isLovableAppPreview = origin.endsWith('.lovable.app');
+
+  // Allow no origin (same-origin / native requests) and exact allowlist hits.
   const isAllowed =
     !origin ||
-    isLovableProjectPreview ||
-    isLovableAppPreview ||
-    ALLOWED_ORIGINS.some((allowed) => origin === allowed || origin.startsWith(allowed));
-  
+    ALLOWED_ORIGINS.includes(origin) ||
+    EXTRA_ORIGINS.includes(origin);
+
   return {
     'Access-Control-Allow-Origin': isAllowed ? (origin || '*') : ALLOWED_ORIGINS[0],
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',

@@ -24,7 +24,7 @@ export const ARCHITECTURE_OVERVIEW: ArchitectureSection = {
   title: 'System Architecture Overview',
   titleKa: 'სისტემის არქიტექტურის მიმოხილვა',
   description: `
-This is a Georgian trivia game application built with React, TypeScript, and Supabase (Lovable Cloud).
+This is a Georgian trivia game application built with React, TypeScript, and Supabase.
 The application supports multiple game modes, real-time multiplayer, user-generated content, and monetization.
 
 **Tech Stack:**
@@ -35,10 +35,10 @@ The application supports multiple game modes, real-time multiplayer, user-genera
 - Mobile: Capacitor (iOS/Android hybrid)
 - Payments: Stripe + RevenueCat (for mobile IAP)
 - Push: Firebase Cloud Messaging
-- AI: Lovable AI (for content generation)
+- AI: AI gateway (for content generation)
   `,
   descriptionKa: `
-ეს არის ქართული ტრივია თამაშის აპლიკაცია, აგებული React, TypeScript და Supabase (Lovable Cloud) ტექნოლოგიებზე.
+ეს არის ქართული ტრივია თამაშის აპლიკაცია, აგებული React, TypeScript და Supabase ტექნოლოგიებზე.
 აპლიკაცია მხარს უჭერს მრავალ თამაშის რეჟიმს, რეალურ დროში მულტიპლეიერს, მომხმარებლის მიერ შექმნილ კონტენტს და მონეტიზაციას.
 
 **ტექნოლოგიური სტეკი:**
@@ -49,7 +49,7 @@ The application supports multiple game modes, real-time multiplayer, user-genera
 - მობილური: Capacitor (iOS/Android ჰიბრიდი)
 - გადახდები: Stripe + RevenueCat (მობილური IAP-სთვის)
 - Push შეტყობინებები: Firebase Cloud Messaging
-- AI: Lovable AI (კონტენტის გენერაციისთვის)
+- AI: AI gateway (კონტენტის გენერაციისთვის)
   `,
   diagram: `
 graph TD
@@ -76,7 +76,7 @@ graph TD
         T[Stripe] --> U[Web Payments]
         V[RevenueCat] --> W[Mobile IAP]
         X[Firebase] --> Y[Push Notifications]
-        Z[Lovable AI] --> AA[Content Generation]
+        Z[AI gateway] --> AA[Content Generation]
     end
     
     A --> J

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,9 +34,8 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!AI_API_KEY) {
+      throw new Error("AI_API_KEY is not configured");
     }
 
     const lang = language || 'ka';
@@ -74,14 +74,14 @@ Return ONLY a valid JSON object (no markdown, no code blocks):
   "changes_made": ["Change 1", "Change 2"]
 }`;
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch(AI_CHAT_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${AI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: aiModel('google/gemini-2.5-flash'),
         messages: [{ role: 'user', content: fixPrompt }],
         temperature: 0.3,
       }),
@@ -126,14 +126,14 @@ Return ONLY a valid JSON object:
   "recommendations": []
 }`;
 
-    const reviewResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const reviewResponse = await fetch(AI_CHAT_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${AI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: aiModel('google/gemini-2.5-flash'),
         messages: [{ role: 'user', content: reviewPrompt }],
         temperature: 0.2,
       }),

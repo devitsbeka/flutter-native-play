@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 const LANGUAGE_NAMES: Record<string, string> = {
   'ka': 'Georgian (ქართული)',
@@ -352,9 +353,8 @@ serve(async (req) => {
   try {
     const { categoryId, categoryName, language, difficulty, count, topic, knowledgeSources } = await req.json();
     
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    if (!AI_API_KEY) {
+      throw new Error('AI_API_KEY is not configured');
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -505,14 +505,14 @@ Return ONLY valid JSON with this structure:
 
       console.log(`Generating chunk ${chunkIndex + 1}/${chunks}: ${chunkCount} questions in ${language} for category ${categoryName}`);
 
-      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const response = await fetch(AI_CHAT_URL, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Authorization': `Bearer ${AI_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: aiModel('google/gemini-2.5-flash'),
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },

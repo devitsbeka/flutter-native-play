@@ -135,7 +135,7 @@ serve(async (req) => {
     }
 
     // Get origin for success/cancel URLs
-    const origin = req.headers.get("origin") || "https://flutter-native-play.lovable.app";
+    const origin = req.headers.get("origin") || "https://mytrivia.io";
 
     // Create Stripe Checkout session with enhanced product details
     const session = await stripe.checkout.sessions.create({

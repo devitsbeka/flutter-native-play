@@ -2,6 +2,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { factCheckQuestions } from "../_shared/factCheck.ts";
+import { AI_CHAT_URL, AI_API_KEY } from "../_shared/ai.ts";
 
 // Quality constants - must match frontend
 const QUESTION_MAX_LENGTH = 65;
@@ -431,19 +432,18 @@ ${iconKeywordMappings}
   }
 ]`;
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!AI_API_KEY) {
+      throw new Error("AI_API_KEY is not configured");
     }
 
     // Use gemini-2.5-pro for better instruction following (especially with researched facts)
     const modelToUse = hasResearchedFacts ? "google/gemini-2.5-pro" : "google/gemini-2.5-pro";
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(AI_CHAT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${AI_API_KEY}`,
       },
       body: JSON.stringify({
         model: modelToUse,

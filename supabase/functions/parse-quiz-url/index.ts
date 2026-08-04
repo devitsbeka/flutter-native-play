@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -80,8 +81,7 @@ serve(async (req) => {
     }
 
     // Step 2: Use AI to extract questions
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
+    if (!AI_API_KEY) {
       return new Response(
         JSON.stringify({ success: false, error: 'AI სერვისი არ არის კონფიგურირებული' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -136,14 +136,14 @@ If absolutely no questions can be found, return: {"questions": [], "extraction_n
 
     console.log('Calling AI to extract questions...');
     
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch(AI_CHAT_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${AI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: aiModel('google/gemini-2.5-flash'),
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Extract ALL quiz questions from this web content. Look carefully for any question-answer patterns:\n\n${content.slice(0, 20000)}` }

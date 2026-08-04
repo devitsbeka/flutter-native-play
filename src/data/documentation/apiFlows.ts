@@ -125,11 +125,11 @@ export const API_FLOWS = [
   },
   {
     name: "AI Avatar Generation Flow",
-    description: "Generating AI avatars via Lovable AI",
+    description: "Generating AI avatars via AI gateway",
     diagram: `graph TD
     A[User Uploads Photo] --> B[Upload to Storage]
     B --> C[Call generate-avatar]
-    C --> D[Send to Lovable AI]
+    C --> D[Send to AI gateway]
     D --> E{Generation Success?}
     E -->|Yes| F[Save to Storage]
     F --> G[Insert avatar_generations]
@@ -144,7 +144,7 @@ export const API_FLOWS = [
       "1. User uploads source photo",
       "2. Photo stored in Supabase Storage",
       "3. generate-avatar edge function called",
-      "4. Lovable AI processes image with prompt",
+      "4. AI gateway processes image with prompt",
       "5. Generated avatar saved to storage",
       "6. Record created in avatar_generations",
       "7. Profile updated with new avatar URL",

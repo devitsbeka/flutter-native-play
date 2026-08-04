@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -19,9 +20,8 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      console.error('LOVABLE_API_KEY is not configured');
+    if (!AI_API_KEY) {
+      console.error('AI_API_KEY is not configured');
       return new Response(
         JSON.stringify({ error: 'API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -33,14 +33,14 @@ serve(async (req) => {
     // Create a prompt for image generation based on the question
     const imagePrompt = `Create a simple, colorful illustration for a trivia question. Category: ${category}. Question topic: ${question}. Style: Clean, modern, educational illustration with vibrant colors. No text or words in the image. Square format, suitable for a mobile quiz game.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(AI_CHAT_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${AI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
+        model: aiModel('google/gemini-2.5-flash-image-preview'),
         messages: [
           { role: 'user', content: imagePrompt }
         ],

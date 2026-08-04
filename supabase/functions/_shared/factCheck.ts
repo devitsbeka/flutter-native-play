@@ -1,4 +1,5 @@
 import { getCorsHeaders } from "./cors.ts";
+import { AI_CHAT_URL, AI_API_KEY } from "./ai.ts";
 
 export type FactCheckItem = {
   question_text: string;
@@ -80,7 +81,7 @@ True/False rule:
     minConfidence,
   };
 
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const resp = await fetch(AI_CHAT_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -148,9 +149,8 @@ export async function factCheckQuestions(opts: {
     return { results: [], corsHeaders };
   }
 
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) {
-    throw new Error("LOVABLE_API_KEY is not configured");
+  if (!AI_API_KEY) {
+    throw new Error("AI_API_KEY is not configured");
   }
 
   // Run BOTH model families in parallel for cross-validation
@@ -162,7 +162,7 @@ export async function factCheckQuestions(opts: {
       context,
       model: PRIMARY_MODEL,
       minConfidence,
-      apiKey: LOVABLE_API_KEY,
+      apiKey: AI_API_KEY,
       temperature: 0,
     }),
     runSingleFactCheck({
@@ -170,7 +170,7 @@ export async function factCheckQuestions(opts: {
       context,
       model: SECONDARY_MODEL,
       minConfidence,
-      apiKey: LOVABLE_API_KEY,
+      apiKey: AI_API_KEY,
       // openai/gpt-5-mini only supports default temperature (1)
     }),
   ]);

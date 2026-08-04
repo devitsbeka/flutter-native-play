@@ -10,6 +10,7 @@ import { Copy, Check, Share2 } from "lucide-react";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import crownIcon from "@/assets/icons/icon-vip-crown.png";
 import groupOfPeopleIcon from "@/assets/icons/group-of-people.png";
+import { siteUrl } from "@/config/site";
 
 const SESSION_KEY = "invite_modal_dismissed";
 
@@ -74,7 +75,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
     setGenerating(true);
     const code = await createLinkInvite("standard");
     if (code) {
-      setReferralLink(`https://flutter-native-play.lovable.app/auth?ref=${code}&mode=signup`);
+      setReferralLink(siteUrl(`auth?ref=${code}&mode=signup`));
     }
     setGenerating(false);
   };

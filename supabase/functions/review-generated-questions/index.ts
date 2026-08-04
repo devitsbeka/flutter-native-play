@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -144,14 +145,14 @@ ${existingList || '(No existing questions in this category)'}
 Evaluate grammar, answer uniqueness, clarity, AND check if this question is a semantic duplicate of any existing question. Be VERY strict on duplicate detection - even subtle rephrasing of the same knowledge should be flagged.`;
 
   try {
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(AI_CHAT_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: aiModel("google/gemini-2.5-flash"),
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
@@ -273,9 +274,8 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!AI_API_KEY) {
+      throw new Error("AI_API_KEY is not configured");
     }
 
     // Fetch existing questions for semantic duplicate detection (only for Georgian)
@@ -320,7 +320,7 @@ serve(async (req) => {
           const existing = categoryId
             ? existingQuestions
             : (q.category_id ? existingByCategory[q.category_id] || [] : []);
-          return reviewQuestionWithDuplicateCheck(q, existing, LOVABLE_API_KEY);
+          return reviewQuestionWithDuplicateCheck(q, existing, AI_API_KEY);
         })
       );
       results.push(...batchResults);
