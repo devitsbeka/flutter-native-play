@@ -14,6 +14,11 @@
 name = "mytrivia"
 compatibility_date = "2026-08-04"
 
+# Keep the workers.dev URL alive as a fallback and staging target. Declaring
+# `routes` turns this off by default, which takes the Worker offline entirely
+# if the custom-domain attach fails.
+workers_dev = true
+
 # ---------------------------------------------------------------------------
 # Production domains. Cloudflare creates and manages the DNS records for these
 # itself, so do not also point them at another origin by hand. To roll back,
