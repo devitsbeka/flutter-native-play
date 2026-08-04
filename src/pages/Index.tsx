@@ -67,6 +67,8 @@ import { useVipStatus } from "@/hooks/useVipStatus";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
 import { InviteFriendsModal, useInviteModalVisibility } from "@/components/home/InviteFriendsModal";
 import { FriendJoinedModal } from "@/components/home/FriendJoinedModal";
+import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
+import { InviteFriendsModal as AddFriendsModal } from "@/components/team/InviteFriendsModal";
 import { ChangeNameModal } from "@/components/home/ChangeNameModal";
 
 import { useNotifications } from "@/hooks/useNotifications";
@@ -209,6 +211,7 @@ export default function Index() {
   const [isAnimatingFromHome, setIsAnimatingFromHome] = useState(false);
   const [showWelcomeOnboarding, setShowWelcomeOnboarding] = useState(false);
   const [showChangeNameModal, setShowChangeNameModal] = useState(false);
+  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
 
   // Show welcome onboarding for newly signed-up users (works for all signup paths)
   useEffect(() => {
@@ -762,8 +765,8 @@ export default function Index() {
         disableScroll
       >
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
-        <header className="relative z-20 px-4 py-3 safe-top border-b border-border/30">
-          <div className="flex items-center justify-between gap-3">
+        <header className="relative z-20 px-4 py-3 md:pt-4 safe-top border-b border-border/30">
+          <div className="flex items-center justify-between gap-3 md:min-h-12">
             {/* Left side: Burger menu (mobile only) - Hidden for guests */}
             <div className="flex items-center gap-2">
               {/* Burger Menu - Mobile Only, Hidden for Guests */}
@@ -819,6 +822,23 @@ export default function Index() {
             ) : null}
           </div>
         </header>
+
+        {/* Friends strip - logged-in users, horizontally scrollable (mobile + desktop).
+            Right padding on lg+ keeps it clear of the fixed action cards panel. */}
+        {user && (
+          <div className="relative z-20 px-4 pt-2 lg:pr-[300px] xl:pr-[330px]">
+            <FriendsStoriesBar
+              onAddFriendClick={() => setShowAddFriendModal(true)}
+              onFriendClick={() => {}}
+            />
+          </div>
+        )}
+
+        {/* Add Friend Modal for the friends strip */}
+        <AddFriendsModal
+          isOpen={showAddFriendModal}
+          onClose={() => setShowAddFriendModal(false)}
+        />
 
         {/* Floating Gift Button - the non-blocking entry to the invite offer
             (the modal no longer auto-opens; it interrupted every app open) */}
