@@ -14,6 +14,19 @@
 name = "mytrivia"
 compatibility_date = "2026-08-04"
 
+# ---------------------------------------------------------------------------
+# Production domains. Cloudflare creates and manages the DNS records for these
+# itself, so do not also point them at another origin by hand. To roll back,
+# comment this block out and redeploy, then repoint DNS at the old host.
+#
+# Must stay ABOVE [assets]: keys written after a TOML section header belong to
+# that section, and `routes` nested under [assets] is silently ignored.
+# ---------------------------------------------------------------------------
+routes = [
+  { pattern = "mytrivia.io", custom_domain = true },
+  { pattern = "www.mytrivia.io", custom_domain = true },
+]
+
 [assets]
 directory = "./dist"
 
@@ -21,13 +34,3 @@ directory = "./dist"
 # than a 404, so deep links like /dev/v2, /profile and /challenge/:code load
 # the app instead of an error page.
 not_found_handling = "single-page-application"
-
-# ---------------------------------------------------------------------------
-# Production domains. Cloudflare creates and manages the DNS records for these
-# itself, so do not also point them at another origin by hand. To roll back,
-# comment this block out and redeploy, then repoint DNS at the old host.
-# ---------------------------------------------------------------------------
-routes = [
-  { pattern = "mytrivia.io", custom_domain = true },
-  { pattern = "www.mytrivia.io", custom_domain = true },
-]
