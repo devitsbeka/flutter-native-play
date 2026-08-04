@@ -1,0 +1,51 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One production deploy at a time; a newer push supersedes an in-flight one.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # The build ships ~280 MB of video. Cloudflare uploads only changed files
+    # after the first deploy, but that first one is slow.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Check deploy credentials are configured
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$TOKEN" ] || [ -z "$ACCOUNT" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID must be set as repository secrets."
+            exit 1
+          fi
+
+      - run: npm ci
+
+      - run: npm run test
+
+      - name: Build
+        run: npm run build
+        # Supabase URL and the (public) anon key come from the committed .env.
+        # If .env is ever removed from the repo, add them as secrets and pass
+        # them here as VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY.
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
