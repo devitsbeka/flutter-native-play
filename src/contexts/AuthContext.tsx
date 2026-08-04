@@ -4,7 +4,8 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { PROFILE_SELECT_COLUMNS } from "@/integrations/supabase/profileColumns";
 import { callRpc } from "@/integrations/supabase/rpc";
-import { lovable } from "@/integrations/lovable/index";
+import { oauth } from "@/integrations/oauth";
+import { APP_BUNDLE_ID } from "@/config/site";
 import { getCountryCodeFromIP } from "@/hooks/useGeoLocation";
 
 export interface Profile {
@@ -303,7 +304,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
         
         const result = await SignInWithApple.authorize({
-          clientId: 'app.lovable.f54c9281c7aa40a48ea74b75d0ffa3d4',
+          clientId: APP_BUNDLE_ID,
           redirectURI: 'https://sqwpzezkhpqkdyltvsim.supabase.co/auth/v1/callback',
           scopes: 'email name',
         });
@@ -332,8 +333,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { data: null, error: new Error('Apple Sign In cancelled') };
       }
       
-      // Web fallback — use Lovable OAuth
-      const result = await lovable.auth.signInWithOAuth("apple", {
+      // Web fallback — Supabase OAuth redirect
+      const result = await oauth.auth.signInWithOAuth("apple", {
         redirect_uri: window.location.origin,
       });
       
@@ -350,7 +351,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
+      const result = await oauth.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
       

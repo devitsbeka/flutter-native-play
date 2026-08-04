@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -12,7 +13,6 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -35,15 +35,15 @@ serve(async (req) => {
       try {
         console.log(`Generating cover for room ${room.room_code}`);
 
-        // Generate image using Lovable AI
-        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        // Generate image using AI gateway
+        const aiResponse = await fetch(AI_CHAT_URL, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${lovableApiKey}`,
+            Authorization: `Bearer ${AI_API_KEY}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash-image-preview",
+            model: aiModel("google/gemini-2.5-flash-image-preview"),
             messages: [
               {
                 role: "user",

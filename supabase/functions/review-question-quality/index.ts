@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -106,14 +107,14 @@ Incorrect Answers: ${JSON.stringify(question.incorrect_answers)}
 Evaluate grammar, answer uniqueness, and clarity. Be strict - quality matters.`;
 
   try {
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(AI_CHAT_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: aiModel("google/gemini-3-flash-preview"),
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
@@ -195,9 +196,8 @@ serve(async (req) => {
   try {
     const { categoryId, questionIds, onlyProduction, limit = 20, saveResults = true } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!AI_API_KEY) {
+      throw new Error("AI_API_KEY is not configured");
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -242,7 +242,7 @@ serve(async (req) => {
     for (let i = 0; i < questions.length; i += batchSize) {
       const batch = questions.slice(i, i + batchSize);
       const batchResults = await Promise.all(
-        batch.map(q => reviewQuestion(q as Question, LOVABLE_API_KEY))
+        batch.map(q => reviewQuestion(q as Question, AI_API_KEY))
       );
       results.push(...batchResults);
       

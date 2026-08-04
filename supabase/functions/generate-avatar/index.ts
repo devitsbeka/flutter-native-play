@@ -1,8 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { AI_CHAT_URL, AI_API_KEY } from "../_shared/ai.ts";
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -44,8 +44,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!AI_API_KEY) {
+      throw new Error("AI_API_KEY is not configured");
     }
 
     const { imageUrl }: AvatarRequest = await req.json();
@@ -54,7 +54,7 @@ serve(async (req) => {
       throw new Error("imageUrl is required");
     }
 
-    console.log("Starting avatar generation with Lovable AI for:", imageUrl.substring(0, 100));
+    console.log("Starting avatar generation with AI gateway for:", imageUrl.substring(0, 100));
 
     // Fetch settings from database
     let prompt = DEFAULT_PROMPT;
@@ -82,11 +82,11 @@ serve(async (req) => {
       }
     }
 
-    // Use Lovable AI's image editing model
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Use AI gateway's image editing model
+    const response = await fetch(AI_CHAT_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${AI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -114,14 +114,14 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Lovable AI error:", response.status, errorText);
+      console.error("AI gateway error:", response.status, errorText);
       throw new Error(`AI API error: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
     console.log("Generation complete");
 
-    // Extract the generated image from Lovable AI response
+    // Extract the generated image from AI gateway response
     const generatedImage = result.choices?.[0]?.message?.images?.[0]?.image_url?.url;
     
     if (!generatedImage) {

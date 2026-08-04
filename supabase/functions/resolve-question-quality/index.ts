@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -137,15 +138,15 @@ Return ONLY a valid JSON object (no markdown, no code blocks):
   "changes_made": ["Change 1", "Change 2"]
 }`;
 
-    // Call Lovable AI
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Call AI gateway
+    const aiResponse = await fetch(AI_CHAT_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
+        'Authorization': `Bearer ${AI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: aiModel('google/gemini-2.5-flash'),
         messages: [
           { role: 'user', content: prompt }
         ],
@@ -236,14 +237,14 @@ Return ONLY a valid JSON object:
   "recommendations": []
 }`;
 
-    const reviewResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const reviewResponse = await fetch(AI_CHAT_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
+        'Authorization': `Bearer ${AI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: aiModel('google/gemini-2.5-flash'),
         messages: [{ role: 'user', content: reviewPrompt }],
         temperature: 0.2,
       }),

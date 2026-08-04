@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -185,7 +186,7 @@ async function generateQuestions(
 დააბრუნე მხოლოდ JSON მასივი, სხვა ტექსტის გარეშე.`;
 
   const response = await fetch(
-    "https://ai.gateway.lovable.dev/v1/chat/completions",
+    AI_CHAT_URL,
     {
       method: "POST",
       headers: {
@@ -193,7 +194,7 @@ async function generateQuestions(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: aiModel("google/gemini-2.5-flash"),
         messages: [
           {
             role: "system",
@@ -244,9 +245,8 @@ serve(async (req) => {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY not configured");
+    if (!AI_API_KEY) {
+      throw new Error("AI_API_KEY not configured");
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -264,7 +264,7 @@ serve(async (req) => {
       for (const topic of account.standaloneTopics) {
         try {
           console.log(`  Generating standalone: "${topic.title}"...`);
-          const questions = await generateQuestions(LOVABLE_API_KEY, topic.subject, 7);
+          const questions = await generateQuestions(AI_API_KEY, topic.subject, 7);
           const gradient = STANDALONE_GRADIENTS[gradientIndex % STANDALONE_GRADIENTS.length];
           gradientIndex++;
 
@@ -344,7 +344,7 @@ serve(async (req) => {
             const round = coll.rounds[i];
             try {
               console.log(`    Generating round ${i + 1}: "${round.title}"...`);
-              const questions = await generateQuestions(LOVABLE_API_KEY, round.subject, 7);
+              const questions = await generateQuestions(AI_API_KEY, round.subject, 7);
 
               const { data: post, error: roundError } = await supabase
                 .from("user_quiz_posts")

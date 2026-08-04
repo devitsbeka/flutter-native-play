@@ -49,7 +49,7 @@ import guestMascotVideo from "@/assets/guest-welcome-avatar.mp4";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
 import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
-import { lovable } from "@/integrations/lovable";
+import { oauth } from "@/integrations/oauth";
 
 import { toast } from "@/hooks/use-toast";
 import { t } from "@/lib/i18n";
@@ -455,7 +455,7 @@ export default function Index() {
   const handleGuestGoogleSignIn = useCallback(async () => {
     setIsAuthLoading(true);
     try {
-      await lovable.auth.signInWithOAuth("google", {
+      await oauth.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
     } finally {
@@ -466,7 +466,7 @@ export default function Index() {
   const handleGuestAppleSignIn = useCallback(async () => {
     setIsAuthLoading(true);
     try {
-      await lovable.auth.signInWithOAuth("apple", {
+      await oauth.auth.signInWithOAuth("apple", {
         redirect_uri: window.location.origin,
       });
     } finally {

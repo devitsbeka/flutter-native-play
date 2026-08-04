@@ -25,7 +25,7 @@ export const ALL_EDGE_FUNCTIONS_FULL: EdgeFunctionDocFull[] = [
   {
     name: "generate-avatar",
     path: "supabase/functions/generate-avatar",
-    description: "Generates AI avatar from user photo using Lovable AI.",
+    description: "Generates AI avatar from user photo using AI gateway.",
     category: "Avatar",
     method: "POST",
     auth: "required",

@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 const GEORGIAN_GRAMMAR_EXPERT_PROMPT = `შენ ხარ ქართული ენის გრამატიკის ექსპერტი. შენი ამოცანაა გადაამოწმო და გაასწორო ქართული ტექსტი.
 
@@ -123,9 +124,8 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!AI_API_KEY) {
+      throw new Error("AI_API_KEY is not configured");
     }
 
     // Filter out empty texts
@@ -156,14 +156,14 @@ ${validTexts.map((t: string, i: number) => `${i + 1}. "${t}"`).join('\n')}
 
     console.log(`Verifying Georgian grammar for ${validTexts.length} texts...`);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(AI_CHAT_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${AI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: aiModel("google/gemini-2.5-flash"),
         messages: [
           { role: "system", content: GEORGIAN_GRAMMAR_EXPERT_PROMPT },
           { role: "user", content: userPrompt }

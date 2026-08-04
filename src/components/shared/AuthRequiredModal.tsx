@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useCamera } from "@/hooks/useCamera";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { lovable } from "@/integrations/lovable";
+import { oauth } from "@/integrations/oauth";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { SinglePlayVideo } from "@/components/shared/SinglePlayVideo";
@@ -163,7 +163,7 @@ export function AuthRequiredModal({
       if (returnToPath) {
         localStorage.setItem('authReturnTo', returnToPath);
       }
-      const result = await lovable.auth.signInWithOAuth("google", {
+      const result = await oauth.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
       if (result.error) {
@@ -179,7 +179,7 @@ export function AuthRequiredModal({
       if (returnToPath) {
         localStorage.setItem('authReturnTo', returnToPath);
       }
-      const result = await lovable.auth.signInWithOAuth("apple", {
+      const result = await oauth.auth.signInWithOAuth("apple", {
         redirect_uri: window.location.origin,
       });
       if (result.error) {

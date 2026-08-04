@@ -1,14 +1,9 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.f54c9281c7aa40a48ea74b75d0ffa3d4',
-  appName: 'World Quizzes',
+  appId: 'io.mytrivia.app',
+  appName: 'MyTrivia',
   webDir: 'dist',
-  // PRODUCTION: Comment out this server block before building for TestFlight/App Store
-  // server: {
-  //   url: 'https://f54c9281-c7aa-40a4-8ea7-4b75d0ffa3d4.lovableproject.com?forceHideBadge=true',
-  //   cleartext: true,
-  // },
   ios: {
     minVersion: '14.0',
     contentInset: 'automatic',

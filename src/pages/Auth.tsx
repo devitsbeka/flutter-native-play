@@ -15,7 +15,7 @@ import { translateErrorMessage } from "@/utils/errorTranslations";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trackSignupCompleted, trackLoginCompleted, trackAuthFailed, trackOAuthInitiated } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
+import { oauth } from "@/integrations/oauth";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -209,7 +209,7 @@ export default function Auth() {
       if (returnTo) {
         localStorage.setItem('authReturnTo', returnTo);
       }
-      const { error } = await lovable.auth.signInWithOAuth("apple", {
+      const { error } = await oauth.auth.signInWithOAuth("apple", {
         redirect_uri: window.location.origin,
       });
       if (error) {

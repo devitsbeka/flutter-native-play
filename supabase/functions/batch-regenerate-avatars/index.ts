@@ -1,10 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { AI_CHAT_URL, AI_API_KEY } from "../_shared/ai.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const FAL_KEY = Deno.env.get("FAL_KEY");
 
 const DEFAULT_PROMPT = `Transform this photo into a high-quality SEMI-REALISTIC 3D rendered portrait with subtle beautification.
@@ -56,10 +56,10 @@ async function generateStaticAvatar(imageUrl: string): Promise<string> {
     console.log("Using default settings");
   }
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const response = await fetch(AI_CHAT_URL, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      "Authorization": `Bearer ${AI_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -105,7 +105,7 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     console.log(`Processing user ${user_id}`);
 
-    // Step 1: Generate static avatar using Lovable AI (same as generate-avatar)
+    // Step 1: Generate static avatar using AI gateway (same as generate-avatar)
     console.log("Step 1: Generating static avatar...");
     const base64Url = await generateStaticAvatar(original_image_url);
     console.log("Static avatar generated");

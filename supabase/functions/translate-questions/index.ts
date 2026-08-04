@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 const LANGUAGE_NAMES: Record<string, string> = {
   'ka': 'Georgian (ქართული)',
@@ -78,14 +79,14 @@ Return ONLY valid JSON:
   ]
 }`;
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch(AI_CHAT_URL, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: aiModel('google/gemini-2.5-flash'),
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -157,9 +158,8 @@ serve(async (req) => {
   try {
     const { questions, targetLanguages, sourceLanguage } = await req.json();
     
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    if (!AI_API_KEY) {
+      throw new Error('AI_API_KEY is not configured');
     }
 
     if (!questions || !Array.isArray(questions) || questions.length === 0) {
@@ -186,7 +186,7 @@ serve(async (req) => {
 
       for (const chunk of chunks) {
         try {
-          const translated = await translateBatch(chunk, targetLang, LOVABLE_API_KEY);
+          const translated = await translateBatch(chunk, targetLang, AI_API_KEY);
           allTranslations.push(...translated);
         } catch (error) {
           console.error(`Error translating chunk to ${targetLang}:`, error);

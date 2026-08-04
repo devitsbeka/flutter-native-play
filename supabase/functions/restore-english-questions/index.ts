@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 const CATEGORY_ID = "b9a45cde-fa7a-47e4-bdd2-35b58085b95d";
 const QUESTION_MAX_LENGTH = 65;
@@ -48,14 +49,14 @@ Return ONLY valid JSON:
   ]
 }`;
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const response = await fetch(AI_CHAT_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: aiModel("google/gemini-2.5-flash"),
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
     }),
@@ -84,7 +85,7 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const apiKey = Deno.env.get("LOVABLE_API_KEY")!;
+    const apiKey = AI_API_KEY;
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // Fetch corrupted questions

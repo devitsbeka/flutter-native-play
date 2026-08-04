@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Share2, Copy, Check, Loader2 } from "lucide-react";
 import danceFloorIcon from "@/assets/dance-floor-3.png";
+import { siteUrl } from "@/config/site";
 
 interface ChallengeQuestion {
   question_text: string;
@@ -68,7 +69,7 @@ export function ChallengeShareModal({
 
       if (error) throw error;
 
-      const url = `https://mytrivia.io/challenge/${data.code}`;
+      const url = siteUrl(`challenge/${data.code}`);
       setChallengeUrl(url);
     } catch (err) {
       console.error("Failed to create challenge link:", err);

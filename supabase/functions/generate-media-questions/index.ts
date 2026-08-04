@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, handleCorsPrelight } from "../_shared/cors.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
 serve(async (req) => {
   const corsResponse = handleCorsPrelight(req);
@@ -18,7 +18,7 @@ serve(async (req) => {
       );
     }
 
-    if (!LOVABLE_API_KEY) {
+    if (!AI_API_KEY) {
       return new Response(
         JSON.stringify({ success: false, error: "AI not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -30,14 +30,14 @@ serve(async (req) => {
     const systemPrompt = getSystemPrompt(questionType, mediaUrl);
     const userPrompt = getUserPrompt(title, content, questionType, questionCount);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(AI_CHAT_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${AI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: aiModel("google/gemini-3-flash-preview"),
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
