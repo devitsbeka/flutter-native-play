@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -321,13 +321,44 @@ function TeamContentV2() {
     localStorage.removeItem("pending_challenge_link");
   }, [user]);
 
-  // Handle join code from URL
+  // Track room membership so a lingering ?room= code can't auto-rejoin the
+  // user right after they leave; also strip the code from the URL on leave.
+  const wasInRoomRef = useRef(false);
   useEffect(() => {
-    const joinCode = searchParams.get("join");
-    if (!joinCode || phase !== "idle") return;
+    if (phase !== "idle") {
+      wasInRoomRef.current = true;
+      return;
+    }
+    if (!wasInRoomRef.current) return;
+    if (searchParams.has("room") || searchParams.has("join")) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("room");
+      next.delete("join");
+      setSearchParams(next, { replace: true });
+      // Keep the ref set until the params are actually gone, so the join
+      // effect (which sees the same pre-strip params this render) stays
+      // blocked from re-joining the room that was just left.
+      return;
+    }
+    // Back at idle with a clean URL: re-arm so a future invite link works.
+    wasInRoomRef.current = false;
+  }, [phase, searchParams, setSearchParams]);
+
+  // Handle join code from URL. ?join= is the invite flow (consumed after
+  // joining); ?room= stays in the URL so a refresh mid-lobby rejoins the room.
+  // Each code is attempted once — without this, a ?room= code that fails to
+  // join (expired room) would retry on every render forever.
+  const attemptedJoinCodeRef = useRef<string | null>(null);
+  useEffect(() => {
+    const joinCode = searchParams.get("join") || searchParams.get("room");
+    if (!joinCode || phase !== "idle" || wasInRoomRef.current) return;
 
     if (user) {
-      // Authenticated user: join directly
+      // Authenticated user: join directly (once per code — the guest branch
+      // below must stay re-runnable, it re-triggers this effect after
+      // anonymous sign-in)
+      if (attemptedJoinCodeRef.current === joinCode) return;
+      attemptedJoinCodeRef.current = joinCode;
       (async () => {
         await enterRoom(joinCode);
         const next = new URLSearchParams(searchParams);
@@ -638,7 +669,6 @@ function TeamContentV2() {
                 <div className="py-2">
                   <FriendsStoriesBar
                     onAddFriendClick={() => setShowAddFriendModal(true)}
-                    onFriendClick={() => {}}
                     onShowAllFriends={() => setShowAllFriendsModal(true)}
                   />
                 </div>

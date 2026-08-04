@@ -303,7 +303,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
       await navigator.share({ text });
     } else {
       await navigator.clipboard.writeText(text);
-      toast.success("Link copied!");
+      toast.success(t("extra.linkCopiedToast"));
     }
   };
 

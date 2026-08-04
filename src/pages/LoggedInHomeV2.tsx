@@ -567,11 +567,10 @@ export function LoggedInHomeV2({
             )}
           </div>
 
-          {/* World selector pill (node 2113:7015) */}
-          <button
-            type="button"
-            aria-label="სამყაროს არჩევა"
-            onClick={() => navigate("/world")}
+          {/* World selector pill (node 2113:7015) — decorative for now; the
+              /world page was removed, so this no longer navigates anywhere */}
+          <div
+            aria-hidden
             className="absolute border-[#e8e0f5] border-[1.638px] border-solid h-[60px] overflow-hidden rounded-[28.38px] shadow-[0px_3.275px_0px_0px_#d8d0e8,0px_4.913px_13.102px_0px_rgba(0,0,0,0.1)] top-[818px] w-[317px] z-20"
             style={{ left: 458 + mapW / 2 - 138 }}
           >
@@ -616,7 +615,7 @@ export function LoggedInHomeV2({
               <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.638px_0px_0px_white]" />
             </div>
             <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.638px_0px_0px_white]" />
-          </button>
+          </div>
 
           {/* Header: world title + level badge + menu button in one evenly
               spaced, vertically centered row */}

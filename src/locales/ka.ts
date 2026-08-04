@@ -3493,7 +3493,7 @@ export const ka = {
     referralWelcome: "მოგესალმებით!",
     referralInvited: "მოწვეული ხარ!",
     referralSignup: "დარეგისტრირდი და მიიღე PRO სტატუსი უფასოდ",
-    accountNotExist: "ამ მონაცემებით ანგარიში არ არსებობს. შექმენი ანგარიში ერთი დაჭერით!",
+    accountNotExist: "პაროლი არასწორია ან ამ მონაცემებით ანგარიში არ არსებობს. სცადე თავიდან, ან შექმენი ახალი ანგარიში ერთი დაჭერით!",
     createAccountAction: "ანგარიშის შექმნა",
     creatingAccount: "იქმნება...",
     alreadyRegistered: "ეს მომხმარებელი უკვე რეგისტრირებულია",

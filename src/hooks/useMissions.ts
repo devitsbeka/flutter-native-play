@@ -390,7 +390,7 @@ function subscribeRealtime(userId: string, onUpdate: (mission: Mission) => void)
 const EMPTY_MISSIONS: MissionsData = { daily: [], weekly: [] };
 
 export function useMissions() {
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, updateProfile, setProfileLocal } = useAuth();
   const queryClient = useQueryClient();
   const queryKey = ["missions", user?.id];
 
@@ -512,12 +512,35 @@ export function useMissions() {
           .update({ reward_claimed: true })
           .eq("id", mission.id);
 
-        // Add rewards to profile
-        await updateProfile({
-          total_points: (profile.total_points || 0) + mission.reward_xp,
-          coins: (profile.coins || 0) + mission.reward_coins,
-          gems: (profile.gems || 0) + mission.reward_gems,
-        });
+        // Grant coins/gems atomically via the delta RPC. An absolute
+        // read-modify-write off the in-memory profile loses rewards: the
+        // client cannot read the gems column back (wallet columns are
+        // locked), so profile.gems is stale and each claim overwrites the
+        // previous one's gems.
+        if (mission.reward_coins > 0 || mission.reward_gems > 0) {
+          const { data: currencyData, error: currencyError } = await supabase.rpc(
+            "update_user_currency",
+            {
+              p_user_id: user.id,
+              p_coins_delta: mission.reward_coins || 0,
+              p_gems_delta: mission.reward_gems || 0,
+            }
+          );
+          if (currencyError) throw currencyError;
+          if (currencyData && currencyData.length > 0) {
+            setProfileLocal({
+              coins: currencyData[0].new_coins,
+              gems: currencyData[0].new_gems,
+            });
+          }
+        }
+
+        // XP is not wallet-locked, so updateProfile handles it safely
+        if (mission.reward_xp > 0) {
+          await updateProfile({
+            total_points: (profile.total_points || 0) + mission.reward_xp,
+          });
+        }
 
         // Add power-up if any
         if (mission.reward_power_up && mission.reward_power_up_count > 0) {
@@ -587,7 +610,7 @@ export function useMissions() {
         return { success: false, coins: 0, gems: 0, xp: 0, powerUp: null, powerUpCount: 0 };
       }
     },
-    [user, profile, dailyMissions, weeklyMissions, updateProfile, queryClient]
+    [user, profile, dailyMissions, weeklyMissions, updateProfile, setProfileLocal, queryClient]
   );
 
   const refreshMissions = useCallback(() => {

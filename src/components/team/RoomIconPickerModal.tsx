@@ -535,7 +535,7 @@ export function RoomIconPickerModal({
                     ))
                   ) : displayIcons.length === 0 && searchQuery.trim() ? (
                     <div className="col-span-4 py-12 text-center text-muted-foreground text-sm">
-                      აიკონი ვერ მოიძებნა
+                      {t("extra.iconNotFound")}
                     </div>
                   ) : (
                     displayIcons.map((icon, index) => (

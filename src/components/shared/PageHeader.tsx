@@ -1,6 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface PageHeaderProps {
   title: string;
@@ -18,14 +18,22 @@ export function PageHeader({
   className = "",
 }: PageHeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleBack = () => {
     if (onBack) {
       onBack();
-    } else if (window.history.length > 1) {
+      return;
+    }
+    // location.key is "default" when this page is the first in-app history
+    // entry — e.g. after an external redirect back from Stripe checkout.
+    // navigate(-1) would return to the external page (which bounces the user
+    // right back here in a loop), so go home instead. window.history.length
+    // can't detect this: it counts the external pages too.
+    if (location.key !== "default") {
       navigate(-1);
     } else {
-      navigate('/profile');
+      navigate("/");
     }
   };
 

@@ -111,7 +111,9 @@ export function ProPlansSection({
     if (subscriptionStatus === "success") {
       setPurchasedTierName("PRO");
       setShowSuccessModal(true);
-      // Clean up URL params
+    }
+    if (subscriptionStatus) {
+      // Clean up URL params (both success and cancelled returns from Stripe)
       searchParams.delete("subscription");
       searchParams.delete("session_id");
       setSearchParams(searchParams, { replace: true });

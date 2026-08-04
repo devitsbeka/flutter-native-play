@@ -161,8 +161,8 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
       if (error) throw error;
 
       toast({
-        title: "შენახულია! ✓",
-        description: "ცვლილებები წარმატებით შეინახა",
+        title: t("extra.savedToast"),
+        description: t("extra.changesSavedDesc"),
       });
 
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
@@ -198,8 +198,8 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
       if (error) throw error;
 
       toast({
-        title: "წაიშალა",
-        description: isCollection ? "კოლექცია წარმატებით წაიშალა" : "Trivia წარმატებით წაიშალა",
+        title: t("extra.deletedToast"),
+        description: isCollection ? t("extra.collectionDeletedDesc") : t("extra.triviaDeletedDesc"),
       });
 
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
@@ -208,8 +208,8 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
     } catch (error) {
       console.error("Error deleting:", error);
       toast({
-        title: "შეცდომა",
-        description: "წაშლა ვერ მოხერხდა",
+        title: t("extra.errorTitle"),
+        description: t("extra.deleteFailedToast"),
         variant: "destructive",
       });
     } finally {

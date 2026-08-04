@@ -270,10 +270,13 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
   const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
 
-  // Reset category when modal opens with a default
+  // Reset state when modal opens. The component stays mounted across
+  // open/close, so without clearing purchasedItems a consumable bought once
+  // (e.g. a coin pack) stayed marked "purchased" and unbuyable all session.
   useEffect(() => {
-    if (isOpen && defaultCategory) {
-      setSelectedCategory(defaultCategory);
+    if (isOpen) {
+      if (defaultCategory) setSelectedCategory(defaultCategory);
+      setPurchasedItems(new Set());
     }
   }, [isOpen, defaultCategory]);
 

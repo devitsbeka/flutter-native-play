@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 interface CreatorPortfolioCardProps {
   creator: Creator;
   onPlayTrivia: (trivia: SamplePost) => void;
-  onViewProfile: (creator: Creator) => void;
   onLikeTrivia?: (trivia: SamplePost) => void;
   onSaveTrivia?: (trivia: SamplePost) => void;
   userLikes?: string[];
@@ -43,7 +42,7 @@ function getCountryFlag(countryCode: string | null): string {
   return String.fromCodePoint(...codePoints);
 }
 
-function CreatorPortfolioCardComponent({ creator, onPlayTrivia, onViewProfile, onLikeTrivia, onSaveTrivia, userLikes = [], userSaves = [], userPlays = [], sendFriendRequest, acceptFriendRequest }: CreatorPortfolioCardProps) {
+function CreatorPortfolioCardComponent({ creator, onPlayTrivia, onLikeTrivia, onSaveTrivia, userLikes = [], userSaves = [], userPlays = [], sendFriendRequest, acceptFriendRequest }: CreatorPortfolioCardProps) {
   const { openProfile } = usePlayerProfile();
   const { language, t } = useLanguage();
   const [friendshipStatus, setFriendshipStatus] = useState(creator.friendship_status);
@@ -178,7 +177,7 @@ function CreatorPortfolioCardComponent({ creator, onPlayTrivia, onViewProfile, o
             variant="ghost" 
             size="sm" 
             className="gap-1.5 hidden md:flex"
-            onClick={() => onViewProfile(creator)}
+            onClick={() => openProfile(creator.user_id)}
           >
             <Eye className="w-4 h-4" />
             <span>{t("extra.profileBtnLabel")}</span>

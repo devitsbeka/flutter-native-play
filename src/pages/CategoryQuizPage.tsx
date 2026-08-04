@@ -420,8 +420,13 @@ export default function CategoryQuizPage() {
           const powerUpTypes = REWARDS.LEVEL_UP_POWER_UP_TYPES;
           const randomPowerUp = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
           
-          // Add coins
-          addCurrency(levelUpCoins, 0);
+          // Add coins — await and retry once so a transient network blip at
+          // the level-up moment doesn't silently swallow the reward the
+          // celebration screen is about to show
+          const coinsCredited = await addCurrency(levelUpCoins, 0);
+          if (!coinsCredited) {
+            await addCurrency(levelUpCoins, 0);
+          }
           
           // Credit the random power-up to database
           const { data: existingPowerUp } = await supabase

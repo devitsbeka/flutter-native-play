@@ -526,6 +526,9 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
   }, [weeklyApi]);
 
   const handleClaimMission = async (missionId: string) => {
+    // One claim at a time — a second claim started while the first is in
+    // flight would compute XP off the same stale profile snapshot.
+    if (claimingId !== null) return;
     setClaimingId(missionId);
     playSound("reward");
     
