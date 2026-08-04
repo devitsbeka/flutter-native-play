@@ -18,22 +18,33 @@ than from Frankfurt or Istanbul.
 | `public/_headers` | Cache and security headers; Vite copies it into `dist/`. |
 | `.github/workflows/deploy.yml` | Builds and deploys on every push to `main`. |
 
+## Current state
+
+The migration is **complete**. `mytrivia.io` and `www.mytrivia.io` are custom
+domains on the `mytrivia` Worker in the `Dev@itsbeka.com` Cloudflare account,
+alongside `mytrivia.mytrivia.workers.dev` as a fallback and staging URL.
+
+The old host injected a vendor badge and an analytics script into the served
+HTML; Cloudflare serves the build untouched, so the shell went from 12,943
+bytes to 3,197 and is now byte-identical to `dist/index.html`.
+
 ## One-time setup
 
-### 1. Cloudflare account and API token
+### 1. Cloudflare API token
 
-Create a Cloudflare account if you do not have one, then make a deploy token
-at **My Profile → API Tokens → Create Token**, using the *Edit Cloudflare
-Workers* template. It needs:
+Create a deploy token at **My Profile → API Tokens** (a *user* page — it is
+not under Workers or under the domain). Use the *Edit Cloudflare Workers*
+template, then add one more permission:
 
-- Account → Workers Scripts → **Edit**
-- Account → Account Settings → **Read**
-- Zone → Workers Routes → **Edit** (only once you attach the custom domain)
+- Zone → **DNS** → **Edit**, scoped to the `mytrivia.io` zone
 
-Copy the token — it is shown once.
+The template alone is not enough. Attaching a custom domain writes DNS
+records, and a token without that permission fails at the last step with
+`Authentication error [code: 10000]` on `/zones/<id>/workers/routes` — after
+any conflicting record has already been removed, i.e. mid-outage.
 
-Your account ID is on the right-hand side of any Cloudflare dashboard page,
-or from `npx wrangler whoami`.
+Copy the token; it is shown once. The account ID is on the right-hand side of
+any dashboard page, or from `npx wrangler whoami`.
 
 ### 2. Repository secrets
 
@@ -42,50 +53,53 @@ In GitHub → Settings → Secrets and variables → Actions, add:
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
 
-The workflow fails fast with a clear message if either is missing.
+The workflow fails fast with a clear message if either is missing. Every push
+to `main` then deploys automatically; there is no publish button anywhere.
 
-### 3. First deploy (does not touch the live site)
+### 3. Attaching a custom domain
 
-Push to `main`, or run the workflow manually from the Actions tab. Wrangler
-prints a `*.workers.dev` URL. The custom domain is still commented out in
-`wrangler.toml`, so mytrivia.io keeps being served by the old host — nothing
-is at risk yet.
+Cloudflare refuses to attach a hostname that already has DNS records it did
+not create:
 
-The first deploy uploads ~408 MB and is slow. Later deploys only upload
-changed files.
+```
+Hostname 'mytrivia.io' already has externally managed DNS records
+(A, CNAME, etc). Delete them first. [code: 100117]
+```
 
-### 4. Verify on the workers.dev URL
+Moving a zone into Cloudflare imports the existing records, so the record
+pointing at the previous host must be deleted first — and the site is
+unreachable from that moment until the attach completes. Delete the record
+and deploy back to back, at a quiet hour.
 
-Before moving any traffic, check on that URL:
+If the token turns out to lack the DNS permission, attach the domain from the
+dashboard instead: **Workers & Pages → mytrivia → Settings → Domains &
+Routes → Add → Custom domain**. That path uses your login rather than a
+token and restores service immediately.
 
-- The homepage loads and you can sign in with **Google and Apple** (both are
-  enabled on the Supabase project; the redirect allowlist is the thing to
-  confirm — see below).
-- Deep links work directly: `/profile`, `/leaderboards`, `/dev/v2`, and a
+Note that the zone overview page shows "No Workers connected" even when
+custom domains are attached — that panel counts Workers **Routes** only.
+Check **Workers & Pages → mytrivia → Domains** for the real state.
+
+### 4. Verify after any cutover
+
+- Deep links resolve directly: `/profile`, `/leaderboards`, `/dev/v2`, and a
   `/challenge/<code>` link.
-- A quiz plays end to end, and videos load.
+- Sign-in works with **Google and Apple**. Both are enabled on the Supabase
+  project; the thing to confirm is that the origin is listed under Supabase →
+  Authentication → URL Configuration → Redirect URLs. Add the workers.dev URL
+  there too if testing against it.
+- A quiz plays end to end and videos load.
 
-**Add the workers.dev URL to Supabase** first, or OAuth will bounce to the
-wrong place: Supabase → Authentication → URL Configuration → Redirect URLs.
-Add `https://mytrivia.io` and `https://www.mytrivia.io` there too, so they
-are ready before the cutover.
+### 5. Rollback
 
-### 5. Cut over
+Comment out the `routes` block and redeploy, then point DNS back at the old
+host. Or use **Workers → Deployments → Rollback** in the dashboard to return
+to a previous version instantly.
 
-1. Move the `mytrivia.io` zone into your Cloudflare account (Add a site, then
-   change nameservers at your registrar). DNS propagation is the slow part.
-2. Uncomment the `routes` block in `wrangler.toml` and push. Cloudflare
-   creates and manages the DNS records itself — do not also point records at
-   the old host by hand.
-3. Confirm the site loads from the new deployment and the Lovable badge is
-   gone. That badge is injected by the old host at serve time, not by our
-   code, so it disappears with the move.
-
-### 6. Rollback
-
-Re-comment the `routes` block and repoint DNS at the previous host, or use
-**Workers → Deployments → Rollback** in the Cloudflare dashboard to return to
-the previous version instantly.
+`workers_dev = true` is set deliberately: declaring `routes` otherwise
+disables the workers.dev route, so a failed custom-domain attach leaves the
+Worker with no route at all and takes the site down entirely rather than
+merely leaving the custom domain unattached.
 
 ## Caching
 
