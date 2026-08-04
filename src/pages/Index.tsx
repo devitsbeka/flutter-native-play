@@ -27,7 +27,6 @@ import { SignupOnboardingModal } from "@/components/onboarding/SignupOnboardingM
 import { WelcomeOnboardingOverlay } from "@/components/onboarding/WelcomeOnboardingOverlay";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
-import { LoggedInHome } from "@/pages/LoggedInHome";
 import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
 import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
 
@@ -594,15 +593,12 @@ export default function Index() {
   const levelInfo = calculateLevel(profile?.total_points || 0);
   const showAnimatePrompt = !isAnimatingFromHome && !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
 
-  // Logged-in homepage: exact implementation of the Figma design
-  // (Food-App file, node 2113:7047). Guests keep the existing homepage.
-  if (user) {
-    // /dev/v2 previews the 3D world-map homepage; the stable version stays
-    // on the main route.
-    const HomeVariant = isDevV2 ? LoggedInHomeV2 : LoggedInHome;
+  // /dev/v2 previews the 3D world-map homepage for logged-in users; the
+  // regular responsive homepage below serves the main route.
+  if (user && isDevV2) {
     return (
       <>
-        <HomeVariant
+        <LoggedInHomeV2
           nickname={profile?.nickname || t("game.guest")}
           avatarUrl={profile?.avatar_url}
           coins={coins}
