@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { trackSignupCompleted } from "@/lib/analytics";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Bell, Check, Clock, Mail, Menu } from "lucide-react";
@@ -28,6 +28,7 @@ import { WelcomeOnboardingOverlay } from "@/components/onboarding/WelcomeOnboard
 import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { LoggedInHome } from "@/pages/LoggedInHome";
+import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
 import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
 
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
@@ -171,6 +172,10 @@ const SideIconButton = ({
 
 export default function Index() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // /dev/v2 serves the experimental 3D world-map homepage; "/" keeps the
+  // stable pre-game-map version.
+  const isDevV2 = location.pathname === "/dev/v2";
   const { profile, user, fetchProfile, signUp, signUpWithUsername, signIn, signInWithUsername, signInWithGoogle, signInWithApple } = useAuth();
   const { t } = useLanguage();
   const { step, startOnboarding, setStep, hasCompletedOnboarding } = useOnboarding();
@@ -592,9 +597,12 @@ export default function Index() {
   // Logged-in homepage: exact implementation of the Figma design
   // (Food-App file, node 2113:7047). Guests keep the existing homepage.
   if (user) {
+    // /dev/v2 previews the 3D world-map homepage; the stable version stays
+    // on the main route.
+    const HomeVariant = isDevV2 ? LoggedInHomeV2 : LoggedInHome;
     return (
       <>
-        <LoggedInHome
+        <HomeVariant
           nickname={profile?.nickname || t("game.guest")}
           avatarUrl={profile?.avatar_url}
           coins={coins}
