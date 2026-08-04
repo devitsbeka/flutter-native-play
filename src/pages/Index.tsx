@@ -181,7 +181,7 @@ export default function Index() {
   const { t } = useLanguage();
   const { step, startOnboarding, setStep, hasCompletedOnboarding } = useOnboarding();
   const { openAvatarModal } = useAvatarModal();
-  const { coins, gems, addCoins, spendGems } = useCurrency();
+  const { coins, gems, addCoins, exchangeGemsForCoins } = useCurrency();
   const { powerUps } = useUserPowerUps();
   const { totalStars } = useTotalStars();
   const { canClaimDaily, canClaimChest } = useRewardTimers();
@@ -393,25 +393,28 @@ export default function Index() {
     }
   }, [user, profile, navigate, openAvatarModal, isVip, canPlay, hasEnoughCoins, regenPlayAvailable, playsRemaining, useRegenPlay]);
 
-  // Handle exchange gems for coins
+  // Handle exchange gems for coins — single atomic RPC (a separate
+  // spend-then-add pair could take the gems and never deliver the coins),
+  // guarded against double-taps while the request is in flight.
+  const isExchangingGemsRef = useRef(false);
   const handleExchangeGems = useCallback(async () => {
+    if (isExchangingGemsRef.current) return;
     const gemsNeeded = Math.ceil((stakeAmount - coins) / REWARDS.GEM_TO_COINS_RATE);
-    if (gems >= gemsNeeded) {
-      const coinsToAdd = gemsNeeded * REWARDS.GEM_TO_COINS_RATE;
-      const success = await spendGems(gemsNeeded);
-      if (success) {
-        await addCoins(coinsToAdd);
-        setShowNotEnoughCoinsModal(false);
-      }
-    }
-  }, [stakeAmount, coins, gems, spendGems, addCoins]);
+    if (gemsNeeded <= 0 || gems < gemsNeeded) return;
 
-  // Handle watch ad for coins
-  const handleWatchAdForCoins = useCallback(async () => {
-    // In a real implementation, this would show an ad and then add coins
-    await addCoins(REWARDS.AD_WATCH_COINS);
-    setShowNotEnoughCoinsModal(false);
-  }, [addCoins]);
+    isExchangingGemsRef.current = true;
+    try {
+      const coinsToAdd = gemsNeeded * REWARDS.GEM_TO_COINS_RATE;
+      const success = await exchangeGemsForCoins(gemsNeeded, coinsToAdd);
+      if (success) {
+        setShowNotEnoughCoinsModal(false);
+      } else {
+        toast({ title: t("shop.purchaseFailed"), variant: "destructive" });
+      }
+    } finally {
+      isExchangingGemsRef.current = false;
+    }
+  }, [stakeAmount, coins, gems, exchangeGemsForCoins]);
 
   // Guest welcome panel handlers
   const handleGuestCreateAccount = useCallback(async (username: string, password: string) => {

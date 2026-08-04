@@ -32,7 +32,7 @@ export function getStreakBonus(streak: number) {
 }
 
 export function useMissionStreak() {
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, updateProfile, setProfileLocal } = useAuth();
   const [streak, setStreak] = useState<MissionStreak | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -166,12 +166,32 @@ export function useMissionStreak() {
         .update({ streak_bonus_claimed: true })
         .eq("id", streak.id);
 
-      // Award rewards
-      await updateProfile({
-        coins: (profile.coins || 0) + bonus.coins,
-        gems: (profile.gems || 0) + bonus.gems,
-        total_points: (profile.total_points || 0) + bonus.xp,
-      });
+      // Award coins/gems atomically via the delta RPC — an absolute write
+      // off the in-memory profile overwrites gems granted by other claims
+      // (the client can't read the locked gems column back).
+      if (bonus.coins > 0 || bonus.gems > 0) {
+        const { data: currencyData, error: currencyError } = await supabase.rpc(
+          "update_user_currency",
+          {
+            p_user_id: user.id,
+            p_coins_delta: bonus.coins || 0,
+            p_gems_delta: bonus.gems || 0,
+          }
+        );
+        if (currencyError) throw currencyError;
+        if (currencyData && currencyData.length > 0) {
+          setProfileLocal({
+            coins: currencyData[0].new_coins,
+            gems: currencyData[0].new_gems,
+          });
+        }
+      }
+
+      if (bonus.xp > 0) {
+        await updateProfile({
+          total_points: (profile.total_points || 0) + bonus.xp,
+        });
+      }
 
       setStreak({ ...streak, streak_bonus_claimed: true });
 

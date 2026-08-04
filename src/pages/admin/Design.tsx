@@ -28,7 +28,6 @@ const Profile = lazy(() => import("@/pages/Profile"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const VIP = lazy(() => import("@/pages/VIP"));
 const PowerUps = lazy(() => import("@/pages/PowerUps"));
-const WorldHome = lazy(() => import("@/pages/WorldHome"));
 const Support = lazy(() => import("@/pages/Support"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const PrivacyPolicyEN = lazy(() => import("@/pages/PrivacyPolicyEN"));
@@ -180,7 +179,6 @@ const pageCategories: CategoryDefinition[] = [
     titleGe: "თამაშის ფლოუ",
     icon: "🎮",
     pages: [
-      { id: "world", label: "World Map", labelGe: "მსოფლიო რუკა", Component: WorldHome, route: "/world" },
       { id: "category", label: "Category Detail", labelGe: "კატეგორია", Component: CategoryPage, route: "/category/science" },
       { id: "quiz", label: "Quiz Game", labelGe: "ქვიზი", Component: CategoryQuizPage, route: "/play/science/1" },
       { id: "game", label: "Quick Game", labelGe: "სწრაფი თამაში", Component: Game, route: "/game" },

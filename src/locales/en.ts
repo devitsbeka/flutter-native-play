@@ -3463,7 +3463,7 @@ export const en: KaTranslations = {
     referralWelcome: "Welcome!",
     referralInvited: "You've been invited!",
     referralSignup: "Sign up and get free PRO status",
-    accountNotExist: "No account exists with these credentials. Create one with one click!",
+    accountNotExist: "The password is incorrect or no account exists with these credentials. Try again, or create a new account with one click!",
     createAccountAction: "Create Account",
     creatingAccount: "Creating...",
     alreadyRegistered: "This user is already registered",

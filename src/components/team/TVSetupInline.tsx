@@ -44,7 +44,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
         .maybeSingle();
 
       if (error || !session) {
-        toast.error('კოდი არ მოიძებნა ან უკვე დაკავშირებულია');
+        toast.error(t('extra.tvCodeNotFound'));
         setIsConnecting(false);
         return;
       }
@@ -124,7 +124,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
             toast.error(
               claim?.reason === 'not_authenticated'
                 ? 'ტელევიზორის დასაკავშირებლად გაიარე ავტორიზაცია'
-                : 'კოდი არ მოიძებნა ან უკვე დაკავშირებულია'
+                : t('extra.tvCodeNotFound')
             );
             setIsConnecting(false);
             return;
@@ -279,7 +279,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
               
             if (insertQueueError) {
               console.error('[TVSetupInline] FAILED to seed tv_session_queue:', insertQueueError);
-              toast.error('Queue sync failed - check console');
+              toast.error(t('common.error'));
             } else {
               console.log('[TVSetupInline] SUCCESS - Seeded tv_session_queue:', insertedRows);
             }
@@ -304,7 +304,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
       }
 
       setIsConnected(true);
-      toast.success('წარმატებით დაკავშირდა!');
+      toast.success(t('extra.tvConnectedToast'));
 
       setTimeout(() => {
         onComplete();

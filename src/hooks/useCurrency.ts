@@ -165,6 +165,38 @@ export function useCurrency() {
     }
   };
 
+  // Exchange gems for coins in a single atomic RPC call. Two separate
+  // spend/add calls could debit the gems and then fail to credit the coins.
+  const exchangeGemsForCoins = async (
+    gemsAmount: number,
+    coinsAmount: number
+  ): Promise<boolean> => {
+    if (!user || gemsAmount <= 0 || coinsAmount <= 0) return false;
+
+    try {
+      const { data, error } = await supabase.rpc('update_user_currency', {
+        p_user_id: user.id,
+        p_coins_delta: coinsAmount,
+        p_gems_delta: -gemsAmount,
+      });
+
+      if (error) {
+        if (error.message?.includes('Insufficient')) {
+          return false;
+        }
+        throw error;
+      }
+
+      if (data && data.length > 0) {
+        setProfileLocal({ coins: data[0].new_coins, gems: data[0].new_gems });
+      }
+      return true;
+    } catch (error) {
+      console.error("Error exchanging gems for coins:", error);
+      return false;
+    }
+  };
+
   // Check if user can afford coins
   const canAffordCoins = (amount: number): boolean => coins >= amount;
 
@@ -206,6 +238,7 @@ export function useCurrency() {
     canAffordCoins,
     canAffordGems,
     addCurrency,
+    exchangeGemsForCoins,
     logTransaction,
   };
 }

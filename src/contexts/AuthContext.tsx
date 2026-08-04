@@ -229,7 +229,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
 
           if (payload.new) {
-            setProfile(payload.new as Profile);
+            // Realtime payloads can't carry the wallet-locked columns
+            // (gems, referral_code), so a wholesale replace would zero the
+            // gem balance — merge while keeping the private fields.
+            setProfileKeepingPrivate(payload.new as Profile);
           }
         }
       )
@@ -238,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, setProfileKeepingPrivate]);
 
   const signUp = async (email: string, password: string, nickname: string) => {
     const redirectUrl = `${window.location.origin}/`;

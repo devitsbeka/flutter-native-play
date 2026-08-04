@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -28,7 +28,12 @@ export default function Profile() {
   const { t } = useLanguage();
   const { subscription, isVip } = useVipStatus();
   const { openAvatarModal } = useAvatarModal();
-  const [activeTab, setActiveTab] = useState("PRO");
+  const [searchParams] = useSearchParams();
+  // Many places deep-link to /profile?tab=PRO (paywalls) or ?tab=Stats —
+  // honor the param instead of relying on the default happening to match.
+  const [activeTab, setActiveTab] = useState(() =>
+    searchParams.get("tab")?.toLowerCase() === "stats" ? "Stats" : "PRO"
+  );
   const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 

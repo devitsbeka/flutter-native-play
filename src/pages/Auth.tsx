@@ -491,7 +491,10 @@ export default function Auth() {
       <AlertDialog open={showAccountPrompt} onOpenChange={(open) => { if (!autoRegistering) setShowAccountPrompt(open); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("extra.userNotFound")}</AlertDialogTitle>
+            {/* Supabase returns the same error for a wrong password and a
+                missing account, so never assert "user not found" here — a
+                typo'd password would read as "your account is gone" */}
+            <AlertDialogTitle>{t("auth.invalidCredentials")}</AlertDialogTitle>
             <AlertDialogDescription>
               {t("extra.accountNotExist")}
             </AlertDialogDescription>

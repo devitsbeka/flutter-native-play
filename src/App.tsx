@@ -46,7 +46,6 @@ const TeamV2 = lazy(() => import("./pages/TeamV2"));
 const Discover = lazy(() => import("./pages/Discover"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const CategoryQuizPage = lazy(() => import("./pages/CategoryQuizPage"));
-const WorldHome = lazy(() => import("./pages/WorldHome"));
 const Game = lazy(() => import("./pages/Game"));
 const TriviaLobby = lazy(() => import("./pages/TriviaLobby"));
 const CollectionLobby = lazy(() => import("./pages/CollectionLobby"));
@@ -174,7 +173,6 @@ const App = () => (
                 <Route path="/leaderboards" element={<Leaderboards />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/:userId" element={<PublicProfile />} />
-                <Route path="/world" element={<WorldHome />} />
                 <Route path="/game" element={<Game />} />
                 <Route path="/team" element={<TeamV2 />} />
                 <Route path="/trivia/:triviaId" element={<TriviaLobby />} />
