@@ -95,7 +95,7 @@ function HeaderStat({ left, img, value, onClick, label }: { left: number; img: s
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="absolute flex gap-[10px] h-[36px] items-center top-[32px] z-10"
+      className="absolute flex gap-[10px] h-[36px] items-center top-[32px] z-30"
       style={{ left }}
     >
       <div className="h-[28px] relative shrink-0 w-[28px]">
@@ -157,7 +157,7 @@ function MapPin({
 // Friend avatar with gradient ring and status dot (nodes 2114:7694..7733)
 function FriendItem({ left, img, name, onClick }: { left: number; img: string; name: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="absolute flex flex-col gap-[8px] h-[88px] items-center top-[102px] w-[64px] z-10" style={{ left }}>
+    <button type="button" onClick={onClick} className="absolute flex flex-col gap-[8px] h-[88px] items-center top-[102px] w-[64px] z-30" style={{ left }}>
       <div className="relative shrink-0 size-[64px]">
         <div
           className="absolute left-0 top-0 rounded-full size-[64px]"
@@ -300,7 +300,7 @@ export function LoggedInHome({
 
           {/* Sidebar panel (node 2113:7452) */}
           <div
-            className="absolute h-[946px] left-0 top-0 w-[458px] overflow-hidden"
+            className="absolute h-[946px] left-0 top-0 w-[458px] overflow-hidden z-20"
             style={{ backgroundImage: `linear-gradient(to right, rgba(236,220,252,0.97) 0%, rgba(236,220,252,0.92) 55%, rgba(236,220,252,0.55) 84%, rgba(236,220,252,0) 100%), ${SIDEBAR_GRADIENT}` }}
           >
             {/* Avatar rings (node 2112:6787) */}
@@ -505,7 +505,7 @@ export function LoggedInHome({
             type="button"
             aria-label="პროფილი"
             onClick={() => navigate("/profile")}
-            className="absolute bg-[#f3f4f6] flex items-center justify-center left-[16px] overflow-hidden rounded-[14998.5px] size-[32px] top-[896px]"
+            className="absolute bg-[#f3f4f6] flex items-center justify-center left-[16px] overflow-hidden rounded-[14998.5px] size-[32px] top-[896px] z-30"
           >
             <div className="relative shrink-0 size-[36px]">
               <img alt={nickname} className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={avatarUrl || avatarSmall} />
@@ -519,7 +519,7 @@ export function LoggedInHome({
               type="button"
               aria-label={item.label}
               onClick={() => navigate(item.path)}
-              className="absolute flex items-center justify-center left-[20px] size-[24px]"
+              className="absolute flex items-center justify-center left-[20px] size-[24px] z-30"
               style={{ top: item.top }}
             >
               <img alt="" className="block max-w-none size-[24px]" src={item.icon} />
@@ -529,7 +529,7 @@ export function LoggedInHome({
             type="button"
             aria-label="მენიუ"
             onClick={onMenu}
-            className="absolute left-[16px] top-[545px] size-[32px]"
+            className="absolute left-[16px] top-[545px] size-[32px] z-30"
           >
             {[7.25, 13.25, 19.25].map((top) => (
               <div key={top} className="absolute h-[1.5px] left-[7.25px] w-[17.5px]" style={{ top }}>
@@ -543,7 +543,7 @@ export function LoggedInHome({
           <HeaderStat left={stageW - 232} img={gemNew} value={gems.toLocaleString("en-US")} onClick={onShop} label="ალმასი" />
 
           {/* Notifications (node 2113:7016) */}
-          <div className="absolute flex flex-col items-start top-[30px] z-10" style={{ left: stageW - 90 }}>
+          <div className="absolute flex flex-col items-start top-[30px] z-30" style={{ left: stageW - 90 }}>
             <button
               type="button"
               aria-label="ცნობები"
@@ -572,7 +572,7 @@ export function LoggedInHome({
             type="button"
             aria-label="სამყაროს არჩევა"
             onClick={() => navigate("/world")}
-            className="absolute border-[#e8e0f5] border-[1.638px] border-solid h-[60px] overflow-hidden rounded-[28.38px] shadow-[0px_3.275px_0px_0px_#d8d0e8,0px_4.913px_13.102px_0px_rgba(0,0,0,0.1)] top-[818px] w-[317px] z-10"
+            className="absolute border-[#e8e0f5] border-[1.638px] border-solid h-[60px] overflow-hidden rounded-[28.38px] shadow-[0px_3.275px_0px_0px_#d8d0e8,0px_4.913px_13.102px_0px_rgba(0,0,0,0.1)] top-[818px] w-[317px] z-20"
             style={{ left: 458 + mapW / 2 - 138 }}
           >
             <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[28.38px]" style={{ background: CARD_GRADIENT }} />
@@ -620,7 +620,7 @@ export function LoggedInHome({
 
           {/* Header: world title + level badge + menu button in one evenly
               spaced, vertically centered row */}
-          <div className="absolute flex gap-[16px] items-center left-[117px] top-[30px] z-10">
+          <div className="absolute flex gap-[16px] items-center left-[117px] top-[30px] z-30">
             <p className="[word-break:break-word] font-['Google_Sans','Nunito',sans-serif] leading-[38px] not-italic opacity-[0.99] text-[22px] text-[rgba(31,41,55,0.6)] tracking-[-0.16px] whitespace-nowrap pointer-events-none">
               სამყარო ალფა
             </p>
@@ -651,7 +651,7 @@ export function LoggedInHome({
           </div>
 
           {/* Friends row, starting from the left content column */}
-          <button type="button" onClick={onAddFriend} className="absolute flex flex-col gap-[8px] h-[88px] items-center left-[117px] top-[102px] w-[64px] z-10">
+          <button type="button" onClick={onAddFriend} className="absolute flex flex-col gap-[8px] h-[88px] items-center left-[117px] top-[102px] w-[64px] z-30">
             <div
               className="border-2 border-[#c084fc] border-dashed flex items-center justify-center relative rounded-full shrink-0 size-[64px]"
               style={{ backgroundImage: "linear-gradient(135deg, rgb(243, 232, 255) 0%, rgb(233, 213, 255) 100%)" }}

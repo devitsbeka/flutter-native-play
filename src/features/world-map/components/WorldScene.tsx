@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { GeneratedWorld, MapNodeDefinition } from "../schemas/worldDefinition";
 import { worldColors } from "./materials";
@@ -25,6 +25,8 @@ interface WorldSceneProps {
 }
 
 export function WorldScene({ world, reducedMotion, onNodeClick, panel }: WorldSceneProps) {
+  const highCloudsRef = useRef<THREE.Object3D | null>(null);
+  const lowCloudsRef = useRef<THREE.Object3D | null>(null);
   const tier = useQualityStore((s) => s.tier);
   const profile = qualityProfiles[tier];
 
@@ -66,9 +68,9 @@ export function WorldScene({ world, reducedMotion, onNodeClick, panel }: WorldSc
         </group>
       ))}
       <Paths paths={world.paths} />
-      <Clouds clouds={world.clouds} count={profile.cloudCount} animate={!reducedMotion} />
+      <Clouds clouds={world.clouds} count={profile.cloudCount} animate={!reducedMotion} occluderRef={highCloudsRef} />
       {profile.lowCloudCount > 0 && (
-        <Clouds clouds={lowClouds} count={profile.lowCloudCount} animate={!reducedMotion} />
+        <Clouds clouds={lowClouds} count={profile.lowCloudCount} animate={!reducedMotion} occluderRef={lowCloudsRef} />
       )}
       {profile.shardDensity > 0 &&
         world.regions.map((region) => <Shards key={`${region.def.id}-shards`} region={region} density={profile.shardDensity} />)}
@@ -85,7 +87,7 @@ export function WorldScene({ world, reducedMotion, onNodeClick, panel }: WorldSc
           ))}
         </group>
       )}
-      <NodeMarkers world={world} animate={!reducedMotion} onNodeClick={onNodeClick} />
+      <NodeMarkers world={world} animate={!reducedMotion} onNodeClick={onNodeClick} occluders={[highCloudsRef, lowCloudsRef]} />
       {panel && <NodePanel data={panel} position={world.nodeWorldPositions[panel.node.id]} />}
     </>
   );

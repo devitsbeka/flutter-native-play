@@ -34,7 +34,18 @@ const yAxis = new THREE.Vector3(0, 1, 0);
  * Instanced drifting cloud layer. Drift is applied by mutating instance
  * matrices in the frame loop — no React state is touched per frame.
  */
-export function Clouds({ clouds, count, animate }: { clouds: ScatterInstance[]; count: number; animate: boolean }) {
+export function Clouds({
+  clouds,
+  count,
+  animate,
+  occluderRef,
+}: {
+  clouds: ScatterInstance[];
+  count: number;
+  animate: boolean;
+  /** Receives the instanced mesh so DOM markers can occlude against it. */
+  occluderRef?: React.MutableRefObject<THREE.Object3D | null>;
+}) {
   const ref = useRef<THREE.InstancedMesh>(null!);
   const visible = useMemo(() => clouds.slice(0, count), [clouds, count]);
 
@@ -68,5 +79,14 @@ export function Clouds({ clouds, count, animate }: { clouds: ScatterInstance[]; 
     ref.current.instanceMatrix.needsUpdate = true;
   });
 
-  return <instancedMesh ref={ref} args={[cloudGeometry, worldMaterials.cloud, Math.max(1, visible.length)]} frustumCulled={false} />;
+  return (
+    <instancedMesh
+      ref={(mesh) => {
+        ref.current = mesh as THREE.InstancedMesh;
+        if (occluderRef) occluderRef.current = mesh;
+      }}
+      args={[cloudGeometry, worldMaterials.cloud, Math.max(1, visible.length)]}
+      frustumCulled={false}
+    />
+  );
 }
