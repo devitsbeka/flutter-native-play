@@ -112,7 +112,7 @@ export function GameShell({ title, children }: GameShellProps) {
 
           {/* 458px content panel fading into the world */}
           <div
-            className="absolute h-[946px] left-0 top-0 w-[458px]"
+            className="absolute h-[946px] left-0 top-0 w-[458px] z-20"
             style={{ backgroundImage: SIDEBAR_GRADIENT } as CSSProperties}
           >
             <div className="absolute left-[19px] top-[14px] w-[26px] h-[18px]">
@@ -134,7 +134,7 @@ export function GameShell({ title, children }: GameShellProps) {
               aria-label={item.label}
               aria-current={isActive(item.path) ? "page" : undefined}
               onClick={() => navigate(item.path)}
-              className={`absolute flex items-center justify-center left-[14px] rounded-full size-[36px] transition-colors ${
+              className={`absolute flex items-center justify-center left-[14px] rounded-full size-[36px] transition-colors z-30 ${
                 isActive(item.path) ? "bg-[rgba(168,85,247,0.18)]" : "hover:bg-[rgba(168,85,247,0.08)]"
               }`}
               style={{ top: item.top - 6 }}
@@ -142,7 +142,7 @@ export function GameShell({ title, children }: GameShellProps) {
               <img alt="" className="block max-w-none size-[24px]" src={item.icon} />
             </button>
           ))}
-          <button type="button" aria-label="მენიუ" onClick={() => setMenuOpen(true)} className="absolute left-[16px] top-[545px] size-[32px]">
+          <button type="button" aria-label="მენიუ" onClick={() => setMenuOpen(true)} className="absolute left-[16px] top-[545px] size-[32px] z-30">
             {[7.25, 13.25, 19.25].map((top) => (
               <div key={top} className="absolute h-[1.5px] left-[7.25px] w-[17.5px]" style={{ top }}>
                 <img alt="" className="block max-w-none size-full" src={menuLine} />
@@ -155,13 +155,13 @@ export function GameShell({ title, children }: GameShellProps) {
             type="button"
             aria-label="პროფილი"
             onClick={() => navigate("/profile")}
-            className="absolute bg-[#f3f4f6] flex items-center justify-center left-[16px] overflow-hidden rounded-full size-[32px] top-[896px]"
+            className="absolute bg-[#f3f4f6] flex items-center justify-center left-[16px] overflow-hidden rounded-full size-[32px] top-[896px] z-30"
           >
             <img alt="" className="max-w-none object-cover size-[36px]" src={profile?.avatar_url || avatarSmall} />
           </button>
 
           {/* Header: page title + menu, stats right — same row as homepage */}
-          <div className="absolute flex gap-[16px] items-center left-[117px] top-[30px] z-10">
+          <div className="absolute flex gap-[16px] items-center left-[117px] top-[30px] z-30">
             <p className="font-['Google_Sans','Nunito',sans-serif] leading-[38px] not-italic text-[22px] text-[rgba(31,41,55,0.6)] tracking-[-0.16px] whitespace-nowrap pointer-events-none">
               {title}
             </p>
@@ -176,7 +176,7 @@ export function GameShell({ title, children }: GameShellProps) {
           </div>
           <HeaderStat left={stageW - 390} img={coinNew} value={coins.toLocaleString("en-US")} onClick={() => navigate("/power-ups")} label="ქულა" />
           <HeaderStat left={stageW - 232} img={gemNew} value={gems.toLocaleString("en-US")} onClick={() => navigate("/power-ups")} label="ალმასი" />
-          <div className="absolute flex flex-col items-start top-[30px] z-10" style={{ left: stageW - 90 }}>
+          <div className="absolute flex flex-col items-start top-[30px] z-30" style={{ left: stageW - 90 }}>
             <button
               type="button"
               aria-label="ცნობები"
@@ -215,7 +215,7 @@ function VerticalLine({ left }: { left: number }) {
 
 function HeaderStat({ left, img, value, onClick, label }: { left: number; img: string; value: string; onClick: () => void; label: string }) {
   return (
-    <button type="button" aria-label={label} onClick={onClick} className="absolute flex gap-[10px] h-[36px] items-center top-[32px] z-10" style={{ left }}>
+    <button type="button" aria-label={label} onClick={onClick} className="absolute flex gap-[10px] h-[36px] items-center top-[32px] z-30" style={{ left }}>
       <div className="h-[28px] relative shrink-0 w-[28px]">
         <img alt="" className="absolute inset-0 max-w-none object-contain pointer-events-none size-full" src={img} />
       </div>

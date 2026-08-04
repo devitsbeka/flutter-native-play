@@ -57,6 +57,8 @@ interface NodeMarkersProps {
   world: GeneratedWorld;
   animate: boolean;
   onNodeClick: (node: MapNodeDefinition) => void;
+  /** Cloud meshes that should hide markers drifting behind them. */
+  occluders: React.MutableRefObject<THREE.Object3D | null>[];
 }
 
 /**
@@ -65,7 +67,7 @@ interface NodeMarkersProps {
  * floating above: earned stars, or a lock for gated nodes. All text and
  * controls are DOM: crisp Georgian labels, keyboard, screen readers.
  */
-export function NodeMarkers({ world, animate, onNodeClick }: NodeMarkersProps) {
+export function NodeMarkers({ world, animate, onNodeClick, occluders }: NodeMarkersProps) {
   const overrides = useProgressionStore((s) => s.nodeStates);
   const hover = useSelectionStore((s) => s.hover);
   const hoveredNodeId = useSelectionStore((s) => s.hoveredNodeId);
@@ -91,7 +93,7 @@ export function NodeMarkers({ world, animate, onNodeClick }: NodeMarkersProps) {
         return (
           <group key={node.id} position={position}>
             <Pedestal state={state} animate={animate} />
-            <Html center position={[0, 2.9, 0]} zIndexRange={[30, 10]} wrapperClass="wm-node-html">
+            <Html center position={[0, 2.9, 0]} zIndexRange={[15, 5]} occlude={occluders} wrapperClass="wm-node-html">
               <div
                 className={`wm-marker ${animate ? "wm-marker-enter" : ""}`}
                 style={{ animationDelay: `${index * 70}ms` }}

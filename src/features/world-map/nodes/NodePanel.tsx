@@ -25,7 +25,7 @@ export function NodePanel({ data, position }: { data: NodePanelData; position: V
   }, [data.node.id]);
 
   return (
-    <Html center position={[position[0], position[1] + 2.6, position[2]]} zIndexRange={[60, 40]} wrapperClass="wm-node-html">
+    <Html center position={[position[0], position[1] + 2.6, position[2]]} zIndexRange={[19, 16]} wrapperClass="wm-node-html">
       <div
         ref={ref}
         className="wm-panel wm-panel-anchored"
