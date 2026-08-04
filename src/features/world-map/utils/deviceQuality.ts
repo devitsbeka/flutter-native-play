@@ -21,12 +21,15 @@ export interface QualityProfile {
   shadows: boolean;
   treeDensity: number;
   cloudCount: number;
+  shardDensity: number;
+  lowCloudCount: number;
+  mist: boolean;
 }
 
 export const qualityProfiles: Record<QualityTier, QualityProfile> = {
-  low: { dprCeiling: 1, shadows: false, treeDensity: 0.55, cloudCount: 6 },
-  medium: { dprCeiling: 1.5, shadows: true, treeDensity: 0.8, cloudCount: 10 },
-  high: { dprCeiling: 2, shadows: true, treeDensity: 1, cloudCount: 14 },
+  low: { dprCeiling: 1, shadows: false, treeDensity: 0.55, cloudCount: 6, shardDensity: 0.4, lowCloudCount: 0, mist: false },
+  medium: { dprCeiling: 1.5, shadows: true, treeDensity: 0.8, cloudCount: 10, shardDensity: 0.7, lowCloudCount: 4, mist: true },
+  high: { dprCeiling: 2, shadows: true, treeDensity: 1, cloudCount: 14, shardDensity: 1, lowCloudCount: 7, mist: true },
 };
 
 export function prefersReducedMotion(): boolean {

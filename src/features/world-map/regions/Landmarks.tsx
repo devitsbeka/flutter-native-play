@@ -5,24 +5,27 @@ import { GeneratedRegion, LandmarkDefinition } from "../schemas/worldDefinition"
 import { worldMaterials } from "../components/materials";
 import { childSeed, createRng, range } from "../procedural/seededRandom";
 
-/** Trivia tower: stacked stone drums, timber balcony and a conical roof. */
+/** Trivia tower: stone drums under two tiered bronze roofs and a thin spire. */
 function TriviaTower() {
   return (
     <group>
       <mesh material={worldMaterials.stoneWarm} position={[0, 1.4, 0]} castShadow>
         <cylinderGeometry args={[1.15, 1.45, 2.8, 10]} />
       </mesh>
-      <mesh material={worldMaterials.wood} position={[0, 3.0, 0]} castShadow>
-        <cylinderGeometry args={[1.35, 1.15, 0.5, 10]} />
+      <mesh material={worldMaterials.bronze} position={[0, 3.05, 0]} castShadow>
+        <coneGeometry args={[1.7, 0.8, 10]} />
       </mesh>
-      <mesh material={worldMaterials.stoneWarm} position={[0, 3.9, 0]} castShadow>
-        <cylinderGeometry args={[0.9, 1.05, 1.6, 10]} />
+      <mesh material={worldMaterials.stoneCool} position={[0, 3.8, 0]} castShadow>
+        <cylinderGeometry args={[0.85, 1, 1.4, 10]} />
       </mesh>
-      <mesh material={worldMaterials.roof} position={[0, 5.4, 0]} castShadow>
-        <coneGeometry args={[1.35, 1.8, 10]} />
+      <mesh material={worldMaterials.bronze} position={[0, 4.9, 0]} castShadow>
+        <coneGeometry args={[1.25, 1.1, 10]} />
       </mesh>
-      <mesh material={worldMaterials.gold} position={[0, 6.5, 0]}>
-        <sphereGeometry args={[0.22, 10, 8]} />
+      <mesh material={worldMaterials.bronze} position={[0, 6, 0]}>
+        <cylinderGeometry args={[0.06, 0.1, 1.4, 6]} />
+      </mesh>
+      <mesh material={worldMaterials.gold} position={[0, 6.8, 0]}>
+        <sphereGeometry args={[0.2, 10, 8]} />
       </mesh>
     </group>
   );
@@ -35,16 +38,22 @@ function Castle() {
       <mesh material={worldMaterials.stoneCool} position={[0, 1.2, 0]} castShadow>
         <boxGeometry args={[3.4, 2.4, 2.6]} />
       </mesh>
-      <mesh material={worldMaterials.roof} position={[0, 2.9, 0]} castShadow>
-        <boxGeometry args={[3.7, 1, 2.9]} />
+      <mesh material={worldMaterials.bronze} position={[0, 2.9, 0]} castShadow>
+        <boxGeometry args={[3.7, 0.55, 2.9]} />
+      </mesh>
+      <mesh material={worldMaterials.bronze} position={[0, 3.45, 0]} castShadow>
+        <boxGeometry args={[2.9, 0.5, 2.2]} />
       </mesh>
       {[-1.6, 1.6].map((x) => (
         <group key={x} position={[x, 0, 1.1]}>
           <mesh material={worldMaterials.stoneWarm} position={[0, 1.8, 0]} castShadow>
             <cylinderGeometry args={[0.55, 0.65, 3.6, 8]} />
           </mesh>
-          <mesh material={worldMaterials.roof} position={[0, 4, 0]} castShadow>
-            <coneGeometry args={[0.75, 1.2, 8]} />
+          <mesh material={worldMaterials.bronze} position={[0, 3.95, 0]} castShadow>
+            <coneGeometry args={[0.78, 1.1, 8]} />
+          </mesh>
+          <mesh material={worldMaterials.bronze} position={[0, 4.9, 0]}>
+            <cylinderGeometry args={[0.045, 0.08, 0.9, 6]} />
           </mesh>
         </group>
       ))}
@@ -65,7 +74,7 @@ function RewardShrine() {
       <mesh material={worldMaterials.stoneWarm} position={[0, 0.35, 0]} castShadow>
         <cylinderGeometry args={[1.3, 1.55, 0.7, 12]} />
       </mesh>
-      <mesh material={worldMaterials.stoneCool} position={[0, 0.9, 0]}>
+      <mesh material={worldMaterials.bronze} position={[0, 0.9, 0]}>
         <cylinderGeometry args={[0.9, 1.1, 0.5, 12]} />
       </mesh>
       <mesh ref={gemRef} material={worldMaterials.purple} position={[0, 2.05, 0]} castShadow>
@@ -99,8 +108,11 @@ function House() {
       <mesh material={worldMaterials.stoneWarm} position={[0, 0.85, 0]} castShadow>
         <boxGeometry args={[2.2, 1.7, 1.8]} />
       </mesh>
-      <mesh material={worldMaterials.roof} position={[0, 2.05, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
-        <coneGeometry args={[1.85, 1.2, 4]} />
+      <mesh material={worldMaterials.bronze} position={[0, 1.95, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
+        <coneGeometry args={[1.95, 0.7, 4]} />
+      </mesh>
+      <mesh material={worldMaterials.bronze} position={[0, 2.5, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
+        <coneGeometry args={[1.25, 0.75, 4]} />
       </mesh>
       <mesh material={worldMaterials.wood} position={[0, 0.55, 0.92]}>
         <boxGeometry args={[0.5, 1.1, 0.08]} />
@@ -123,8 +135,11 @@ function Windmill() {
       <mesh material={worldMaterials.stoneWarm} position={[0, 1.7, 0]} castShadow>
         <cylinderGeometry args={[0.95, 1.35, 3.4, 8]} />
       </mesh>
-      <mesh material={worldMaterials.roof} position={[0, 3.75, 0]} castShadow>
-        <coneGeometry args={[1.1, 1.1, 8]} />
+      <mesh material={worldMaterials.bronze} position={[0, 3.65, 0]} castShadow>
+        <coneGeometry args={[1.2, 0.7, 8]} />
+      </mesh>
+      <mesh material={worldMaterials.bronze} position={[0, 4.25, 0]} castShadow>
+        <coneGeometry args={[0.7, 0.7, 8]} />
       </mesh>
       <group ref={bladesRef} position={[0, 3.1, 1.05]}>
         {[0, Math.PI / 2].map((angle) => (
@@ -157,8 +172,14 @@ function Temple() {
       <mesh material={worldMaterials.stoneCool} position={[0, 2.45, 0]} castShadow>
         <boxGeometry args={[3.8, 0.4, 3]} />
       </mesh>
-      <mesh material={worldMaterials.roof} position={[0, 3, 0]} rotation={[0, 0, 0]} castShadow>
-        <cylinderGeometry args={[0.01, 2.35, 0.9, 4, 1]} />
+      <mesh material={worldMaterials.bronze} position={[0, 2.75, 0]} castShadow>
+        <sphereGeometry args={[1.15, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
+      </mesh>
+      <mesh material={worldMaterials.bronze} position={[0, 3.9, 0]}>
+        <cylinderGeometry args={[0.05, 0.09, 0.8, 6]} />
+      </mesh>
+      <mesh material={worldMaterials.gold} position={[0, 4.35, 0]}>
+        <sphereGeometry args={[0.14, 8, 6]} />
       </mesh>
       <mesh material={worldMaterials.purple} position={[0, 1.1, 0]}>
         <octahedronGeometry args={[0.4, 0]} />

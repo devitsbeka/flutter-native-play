@@ -40,8 +40,8 @@ export function Water({ animate }: { animate: boolean }) {
 
   return (
     <group>
-      <mesh ref={meshRef} geometry={geometry} material={worldMaterials.water} position={[0, -14, 0]} />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -13.2, 6]}>
+      <mesh ref={meshRef} geometry={geometry} material={worldMaterials.water} position={[0, -8, 0]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -7.4, 6]}>
         <ringGeometry args={[24, 60, 48]} />
         <meshStandardMaterial color={worldColors.waterDeep} transparent opacity={0.25} roughness={0.4} />
       </mesh>
