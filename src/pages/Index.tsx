@@ -482,12 +482,12 @@ export default function Index() {
     if (!user || !profile) return;
     
     if (!profile.has_face_photo) {
-      toast({ title: "გთხოვთ ატვირთოთ ფოტო სახით", description: "ანიმაციისთვის საჭიროა ფოტო, რომელზეც სახე ჩანს" });
+      toast({ title: t("extra.photoFaceRequiredTitle"), description: t("extra.photoFaceRequiredDesc") });
       return;
     }
     
     setIsAnimatingFromHome(true);
-    toast({ title: "ანიმაცია იწყება...", description: "1-2 წუთი დასჭირდება" });
+    toast({ title: t("extra.animationStartingTitle"), description: t("extra.animationStartingDesc") });
     
     try {
       // Check if current avatar has an AI-generated version
@@ -502,7 +502,7 @@ export default function Index() {
 
       // If no AI-generated avatar exists, generate one first
       if (!imageUrl) {
-        toast({ title: "AI ავატარი გენერირდება...", description: "გთხოვთ დაელოდოთ" });
+        toast({ title: t("extra.aiAvatarGenerating"), description: t("extra.pleaseWaitDesc") });
 
         const { data: genData, error: genError } = await supabase.functions.invoke("generate-avatar", {
           body: { imageUrl: profile.avatar_url },
@@ -565,7 +565,7 @@ export default function Index() {
           if (pollData?.success && pollData?.videoUrl) {
             clearInterval(pollInterval);
             await fetchProfile(user.id);
-            toast({ title: "✨ ანიმაცია მზადაა!" });
+            toast({ title: t("extra.animationReadyToast") });
             // Trigger confetti
             try {
               const confetti = (await import("canvas-confetti")).default;
@@ -574,7 +574,7 @@ export default function Index() {
           } else if (pollData?.error) {
             clearInterval(pollInterval);
             setIsAnimatingFromHome(false);
-            toast({ title: "ანიმაცია ვერ მოხერხდა", description: pollData.error, variant: "destructive" });
+            toast({ title: t("extra.animationFailedToast"), description: pollData.error, variant: "destructive" });
           }
         } catch (e) {
           console.error("Polling error:", e);
@@ -590,7 +590,7 @@ export default function Index() {
     } catch (err: any) {
       console.error("Animation error:", err);
       setIsAnimatingFromHome(false);
-      toast({ title: "ანიმაცია ვერ მოხერხდა", description: err.message, variant: "destructive" });
+      toast({ title: t("extra.animationFailedToast"), description: err.message, variant: "destructive" });
     }
   }, [user, profile, fetchProfile]);
 

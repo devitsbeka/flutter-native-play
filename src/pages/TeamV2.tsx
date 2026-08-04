@@ -372,7 +372,7 @@ function TeamContentV2() {
       (async () => {
         const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
         if (anonError || !anonData.user) {
-          toast.error("შესვლა ვერ მოხერხდა");
+          toast.error(t("extra.signInFailedToast"));
           setPendingGuestJoinCode(null);
           return;
         }
@@ -395,7 +395,7 @@ function TeamContentV2() {
       // Sign in anonymously to get a real user_id
       const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
       if (anonError || !anonData.user) {
-        toast.error("შესვლა ვერ მოხერხდა");
+        toast.error(t("extra.signInFailedToast"));
         return;
       }
 
@@ -414,7 +414,7 @@ function TeamContentV2() {
       // Don't clear pendingGuestJoinCode yet - let the URL param handle re-join
     } catch (error) {
       console.error("Guest join error:", error);
-      toast.error("ოთახში შესვლა ვერ მოხერხდა");
+      toast.error(t("extra.mpJoinFailed"));
     }
   };
 
@@ -493,7 +493,7 @@ function TeamContentV2() {
           
           setPreviewPost(post);
         } catch (err) {
-          toast.error("შეცდომა მოხდა");
+          toast.error(t("extra.errorOccurredToast"));
         }
       })();
     }
@@ -513,7 +513,7 @@ function TeamContentV2() {
             .single();
           
           if (collError || !collection) {
-            toast.error("კოლექცია ვერ მოიძებნა");
+            toast.error(t("extra.collectionNotFound"));
             return;
           }
           
@@ -524,7 +524,7 @@ function TeamContentV2() {
             .order("round_number", { ascending: true });
           
           if (!rounds || rounds.length === 0) {
-            toast.error("კოლექციაში რაუნდები ვერ მოიძებნა");
+            toast.error(t("extra.collectionRoundsNotFound"));
             return;
           }
           
@@ -553,7 +553,7 @@ function TeamContentV2() {
           
           setPlayingQuiz({ post: posts[0], collectionPosts: posts });
         } catch (err) {
-          toast.error("შეცდომა მოხდა");
+          toast.error(t("extra.errorOccurredToast"));
         }
       })();
     }
@@ -980,14 +980,14 @@ function TeamContentV2() {
           }]);
           
           if (error) {
-            toast.error("შეცდომა შენახვისას");
+            toast.error(t("extra.saveErrorToast"));
             console.error(error);
             return;
           }
           
           setShowPersonalTriviaModal(false);
           setActiveTab("my-content");
-          toast.success("MyTrivia Party შენახულია!");
+          toast.success(t("extra.myTriviaPartySaved"));
         }}
       />
       <CreateBlindTriviaModal

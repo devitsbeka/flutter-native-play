@@ -70,10 +70,10 @@ export function ShopItemCard({
 
   const getBadgeText = (badgeKey: string): string => {
     const badgeTexts: Record<string, string> = {
-      popular: t("common.popular") || "პოპულარული",
-      bestValue: t("common.bestValue") || "საუკეთესო ფასი",
-      limited: t("common.limited") || "შეზღუდული",
-      new: t("common.new") || "ახალი",
+      popular: t("common.popular"),
+      bestValue: t("common.bestValue"),
+      limited: t("common.limited"),
+      new: t("common.new"),
     };
     return badgeTexts[badgeKey] || badgeKey;
   };
@@ -155,7 +155,7 @@ export function ShopItemCard({
           {isPurchased ? (
             <div className="flex items-center justify-center gap-1 text-success font-bold text-sm px-4 py-2 rounded-full bg-success/10">
               <Check className="w-5 h-5" />
-              <span>{t("common.owned") || "შეძენილი"}</span>
+              <span>{t("common.owned")}</span>
             </div>
           ) : isLoading ? (
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />

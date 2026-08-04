@@ -95,8 +95,8 @@ export function MultiplayerGameScreenV2() {
           if (skipped > 0) {
             toast.info(
               finished
-                ? `${skipped} კითხვა გამოტოვე — რაუნდი დასრულდა`
-                : `${skipped} კითხვა გამოტოვე`,
+                ? t("extra.questionsSkippedRoundOver", { count: skipped })
+                : t("extra.questionsSkipped", { count: skipped }),
               { duration: 4000 }
             );
           }

@@ -141,9 +141,9 @@ export default function TriviaLobby() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground">ტრივია ვერ მოიძებნა</p>
+          <p className="text-muted-foreground">{t("extra.triviaNotFound")}</p>
           <button onClick={handleBack} className="text-primary mt-2 underline">
-            უკან დაბრუნება
+            {t("extra.goBack")}
           </button>
         </div>
       </div>
@@ -248,8 +248,8 @@ export default function TriviaLobby() {
               {leaderboard.length === 0 ? (
                 <div className="py-12 text-center">
                   <img src={pushButton3d} alt="" className="w-10 h-10 object-contain grayscale opacity-50 mx-auto mb-3" />
-                  <p className="text-muted-foreground text-sm">ჯერ არავის უთამაშია</p>
-                  <p className="text-muted-foreground/70 text-xs mt-1">იყავი პირველი!</p>
+                  <p className="text-muted-foreground text-sm">{t("extra.noOnePlayedTrivia")}</p>
+                  <p className="text-muted-foreground/70 text-xs mt-1">{t("leaderboard.beTheFirst")}</p>
                 </div>
               ) : (
                 leaderboard.map((entry, index) => {
@@ -322,7 +322,7 @@ export default function TriviaLobby() {
                           }}
                           className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-bold whitespace-nowrap disabled:opacity-50"
                         >
-                          {isRemoving ? "იშლება..." : "წაშლა"}
+                          {isRemoving ? t("extra.deletingLabel") : t("extra.deleteBtn")}
                         </motion.button>
                       ) : (
                         <motion.div

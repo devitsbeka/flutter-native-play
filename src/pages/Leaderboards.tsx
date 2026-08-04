@@ -232,7 +232,7 @@ export default function Leaderboards() {
         <div className="px-4 py-3 bg-background/95 backdrop-blur-md border-b border-border/30">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
-              {language === 'ka' ? 'რეიტინგი' : 'Leaderboard'}
+              {t("extra.ratingTitle")}
             </h1>
             <HeaderActions />
           </div>
@@ -362,7 +362,7 @@ export default function Leaderboards() {
                   ) : leaderboard.length === 0 ? (
                     <div className="text-center py-8">
                       <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
+                      <p className="text-sm text-muted-foreground">{t("extra.nobodyYet")}</p>
                     </div>
                   ) : (
                     leaderboard.map((entry, index) => {
@@ -555,7 +555,7 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
               ) : leaderboard.length === 0 ? (
                 <div className="text-center py-8">
                   <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
+                  <p className="text-sm text-muted-foreground">{t("extra.nobodyYet")}</p>
                 </div>
               ) : (
                 leaderboard.map((entry, index) => {
@@ -708,7 +708,7 @@ function TabletLeaderboards({
               ) : leaderboard.length === 0 ? (
                 <div className="text-center py-8">
                   <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
+                  <p className="text-sm text-muted-foreground">{t("extra.nobodyYet")}</p>
                 </div>
               ) : (
                 leaderboard.map((entry, index) => {
@@ -803,7 +803,7 @@ function DesktopLeagueColumn({
           ) : leaderboard.length === 0 ? (
             <div className="text-center py-8">
               <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
+              <p className="text-sm text-muted-foreground">{t("extra.nobodyYet")}</p>
             </div>
           ) : (
             leaderboard.slice(0, 10).map((entry, index) => {
@@ -915,7 +915,7 @@ function MobileLeagueCard({
         {leaderboard.length === 0 ? (
           <div className="text-center py-8">
             <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
+            <p className="text-sm text-muted-foreground">{t("extra.nobodyYet")}</p>
           </div>
         ) : (
           leaderboard.slice(0, 10).map((entry, index) => {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Trash2, AlertTriangle, Loader2, Shield, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -104,7 +104,7 @@ export default function DeleteAccount() {
             <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
             <p className="text-sm text-foreground">
               This action is <strong>permanent and irreversible</strong>. All data will be removed within 30 days as per our{" "}
-              <a href="/privacy-policy-en" className="text-primary underline">Privacy Policy</a>.
+              <Link to="/privacy-policy-en" className="text-primary underline">Privacy Policy</Link>.
             </p>
           </div>
         </div>

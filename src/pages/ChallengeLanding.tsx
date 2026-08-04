@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
@@ -49,6 +49,7 @@ function shuffleAnswers(correct: string, incorrect: string[]): string[] {
 
 export default function ChallengeLanding() {
   const { code } = useParams<{ code: string }>();
+  const navigate = useNavigate();
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -457,7 +458,7 @@ export default function ChallengeLanding() {
               className="w-full"
               onClick={() => {
                 const returnTo = roomCode ? `/team?join=${roomCode}` : "/team";
-                window.location.href = `/auth?mode=signup&returnTo=${encodeURIComponent(returnTo)}`;
+                navigate(`/auth?mode=signup&returnTo=${encodeURIComponent(returnTo)}`);
               }}
               icon={<ArrowRight className="w-5 h-5" />}
             >
