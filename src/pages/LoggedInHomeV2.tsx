@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock } from "lucide-react";
+import { WorldMap } from "@/features/world-map/WorldMap";
 
 import worldMap from "@/assets/figma-home/world-map.jpg";
 import avatarPhoto from "@/assets/figma-home/avatar-photo.png";
@@ -94,7 +95,7 @@ function HeaderStat({ left, img, value, onClick, label }: { left: number; img: s
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="absolute flex gap-[10px] h-[36px] items-center top-[32px] z-10"
+      className="absolute flex gap-[10px] h-[36px] items-center top-[32px] z-30"
       style={{ left }}
     >
       <div className="h-[28px] relative shrink-0 w-[28px]">
@@ -156,7 +157,7 @@ function MapPin({
 // Friend avatar with gradient ring and status dot (nodes 2114:7694..7733)
 function FriendItem({ left, img, name, onClick }: { left: number; img: string; name: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="absolute flex flex-col gap-[8px] h-[88px] items-center top-[102px] w-[64px] z-10" style={{ left }}>
+    <button type="button" onClick={onClick} className="absolute flex flex-col gap-[8px] h-[88px] items-center top-[102px] w-[64px] z-30" style={{ left }}>
       <div className="relative shrink-0 size-[64px]">
         <div
           className="absolute left-0 top-0 rounded-full size-[64px]"
@@ -173,7 +174,7 @@ function FriendItem({ left, img, name, onClick }: { left: number; img: string; n
   );
 }
 
-interface LoggedInHomeProps {
+interface LoggedInHomeV2Props {
   nickname: string;
   avatarUrl?: string | null;
   coins: number;
@@ -193,7 +194,7 @@ interface LoggedInHomeProps {
   onMenu: () => void;
 }
 
-export function LoggedInHome({
+export function LoggedInHomeV2({
   nickname,
   avatarUrl,
   coins,
@@ -211,7 +212,7 @@ export function LoggedInHome({
   onAvatar,
   onAddFriend,
   onMenu,
-}: LoggedInHomeProps) {
+}: LoggedInHomeV2Props) {
   const navigate = useNavigate();
   const { scale, stageW } = useStage();
   const mapW = stageW - 458;
@@ -262,11 +263,45 @@ export function LoggedInHome({
           transformOrigin: "left center",
         }}
       >
-        <div className="absolute inset-0 overflow-hidden bg-[#ddc2f9]">
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Interactive 3D world, full-bleed behind the whole stage so the
+              sidebar fades into it. The previous static artwork plus DOM pins
+              remain as the no-WebGL / error fallback. */}
+          <div className="absolute h-[947px] left-0 top-0 overflow-hidden" style={{ width: stageW }}>
+            <WorldMap
+              resolutionBoost={Math.min(2, Math.max(1, scale))}
+              onMissions={onMissions}
+              onDiscover={() => navigate("/discover")}
+              onPlay={onPlay}
+              fallback={
+                <div className="absolute top-0 h-[947px]" style={{ left: 458, width: mapW }}>
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <img
+                      alt=""
+                      className="absolute h-full w-full max-w-none top-0 left-0 object-cover"
+                      style={{ objectPosition: "left top" }}
+                      src={worldMap}
+                    />
+                  </div>
+                  {pins.map((p) => (
+                    <MapPin
+                      key={p.label}
+                      left={(p.x - 458) * mapK}
+                      top={p.y * mapK}
+                      label={p.label}
+                      locked={p.locked}
+                      onClick={p.onClick}
+                    />
+                  ))}
+                </div>
+              }
+            />
+          </div>
+
           {/* Sidebar panel (node 2113:7452) */}
           <div
-            className="absolute h-[946px] left-0 top-0 w-[458px] overflow-hidden"
-            style={{ backgroundImage: SIDEBAR_GRADIENT }}
+            className="absolute h-[946px] left-0 top-0 w-[458px] overflow-hidden z-20"
+            style={{ backgroundImage: `linear-gradient(to right, rgba(236,220,252,0.97) 0%, rgba(236,220,252,0.92) 55%, rgba(236,220,252,0.55) 84%, rgba(236,220,252,0) 100%), ${SIDEBAR_GRADIENT}` }}
           >
             {/* Avatar rings (node 2112:6787) */}
             <div className="absolute border-[23.057px] border-[rgba(255,255,255,0.95)] border-solid left-[117px] pointer-events-none rounded-[9606.182px] shadow-[0px_5.764px_15.371px_0px_rgba(0,0,0,0.12)] size-[269px] top-[211px]">
@@ -470,7 +505,7 @@ export function LoggedInHome({
             type="button"
             aria-label="პროფილი"
             onClick={() => navigate("/profile")}
-            className="absolute bg-[#f3f4f6] flex items-center justify-center left-[16px] overflow-hidden rounded-[14998.5px] size-[32px] top-[896px]"
+            className="absolute bg-[#f3f4f6] flex items-center justify-center left-[16px] overflow-hidden rounded-[14998.5px] size-[32px] top-[896px] z-30"
           >
             <div className="relative shrink-0 size-[36px]">
               <img alt={nickname} className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={avatarUrl || avatarSmall} />
@@ -484,7 +519,7 @@ export function LoggedInHome({
               type="button"
               aria-label={item.label}
               onClick={() => navigate(item.path)}
-              className="absolute flex items-center justify-center left-[20px] size-[24px]"
+              className="absolute flex items-center justify-center left-[20px] size-[24px] z-30"
               style={{ top: item.top }}
             >
               <img alt="" className="block max-w-none size-[24px]" src={item.icon} />
@@ -494,7 +529,7 @@ export function LoggedInHome({
             type="button"
             aria-label="მენიუ"
             onClick={onMenu}
-            className="absolute left-[16px] top-[545px] size-[32px]"
+            className="absolute left-[16px] top-[545px] size-[32px] z-30"
           >
             {[7.25, 13.25, 19.25].map((top) => (
               <div key={top} className="absolute h-[1.5px] left-[7.25px] w-[17.5px]" style={{ top }}>
@@ -503,26 +538,12 @@ export function LoggedInHome({
             ))}
           </button>
 
-          {/* World map (node 2113:6964). The artwork extends beyond the
-              942px design crop; on wide screens the container grows to the
-              stage edge and reveals the rest instead of clipping it. */}
-          <div className="absolute h-[947px] left-[458px] top-0" style={{ width: mapW }}>
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <img
-                alt=""
-                className="absolute h-full w-full max-w-none top-0 left-0 object-cover"
-                style={{ objectPosition: "left top" }}
-                src={worldMap}
-              />
-            </div>
-          </div>
-
           {/* Top-right compact stats */}
           <HeaderStat left={stageW - 390} img={coinNew} value={coins.toLocaleString("en-US")} onClick={onShop} label="ქულა" />
           <HeaderStat left={stageW - 232} img={gemNew} value={gems.toLocaleString("en-US")} onClick={onShop} label="ალმასი" />
 
           {/* Notifications (node 2113:7016) */}
-          <div className="absolute flex flex-col items-start top-[30px] z-10" style={{ left: stageW - 90 }}>
+          <div className="absolute flex flex-col items-start top-[30px] z-30" style={{ left: stageW - 90 }}>
             <button
               type="button"
               aria-label="ცნობები"
@@ -551,7 +572,7 @@ export function LoggedInHome({
             type="button"
             aria-label="სამყაროს არჩევა"
             onClick={() => navigate("/world")}
-            className="absolute border-[#e8e0f5] border-[1.638px] border-solid h-[60px] overflow-hidden rounded-[28.38px] shadow-[0px_3.275px_0px_0px_#d8d0e8,0px_4.913px_13.102px_0px_rgba(0,0,0,0.1)] top-[818px] w-[317px] z-10"
+            className="absolute border-[#e8e0f5] border-[1.638px] border-solid h-[60px] overflow-hidden rounded-[28.38px] shadow-[0px_3.275px_0px_0px_#d8d0e8,0px_4.913px_13.102px_0px_rgba(0,0,0,0.1)] top-[818px] w-[317px] z-20"
             style={{ left: 458 + mapW / 2 - 138 }}
           >
             <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[28.38px]" style={{ background: CARD_GRADIENT }} />
@@ -599,7 +620,7 @@ export function LoggedInHome({
 
           {/* Header: world title + level badge + menu button in one evenly
               spaced, vertically centered row */}
-          <div className="absolute flex gap-[16px] items-center left-[117px] top-[30px] z-10">
+          <div className="absolute flex gap-[16px] items-center left-[117px] top-[30px] z-30">
             <p className="[word-break:break-word] font-['Google_Sans','Nunito',sans-serif] leading-[38px] not-italic opacity-[0.99] text-[22px] text-[rgba(31,41,55,0.6)] tracking-[-0.16px] whitespace-nowrap pointer-events-none">
               სამყარო ალფა
             </p>
@@ -630,7 +651,7 @@ export function LoggedInHome({
           </div>
 
           {/* Friends row, starting from the left content column */}
-          <button type="button" onClick={onAddFriend} className="absolute flex flex-col gap-[8px] h-[88px] items-center left-[117px] top-[102px] w-[64px] z-10">
+          <button type="button" onClick={onAddFriend} className="absolute flex flex-col gap-[8px] h-[88px] items-center left-[117px] top-[102px] w-[64px] z-30">
             <div
               className="border-2 border-[#c084fc] border-dashed flex items-center justify-center relative rounded-full shrink-0 size-[64px]"
               style={{ backgroundImage: "linear-gradient(135deg, rgb(243, 232, 255) 0%, rgb(233, 213, 255) 100%)" }}
@@ -644,26 +665,13 @@ export function LoggedInHome({
             </p>
           </button>
           {friends.map((f, i) => (
-            <FriendItem key={f.name} left={117 + 109 * (i + 1)} img={f.img} name={f.name} onClick={() => navigate("/team")} />
+            <FriendItem key={f.name} left={117 + 103 * (i + 1)} img={f.img} name={f.name} onClick={() => navigate("/team")} />
           ))}
 
-          {/* Category pins on the world map: unlocked reveal their name on
-              hover, locked show a padlock. Pin coordinates scale with the map
-              artwork when it grows past its design crop on wide screens. */}
-          {pins.map((p) => (
-            <MapPin
-              key={p.label}
-              left={458 + (p.x - 458) * mapK}
-              top={p.y * mapK}
-              label={p.label}
-              locked={p.locked}
-              onClick={p.onClick}
-            />
-          ))}
         </div>
       </div>
     </div>
   );
 }
 
-export default LoggedInHome;
+export default LoggedInHomeV2;
