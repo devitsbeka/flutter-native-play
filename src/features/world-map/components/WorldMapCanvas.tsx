@@ -59,6 +59,10 @@ export default function WorldMapCanvas({
       <Canvas
         shadows={qualityProfiles[tier].shadows}
         dpr={dpr}
+        // The canvas lives inside a CSS-scaled stage; measure by layout size
+        // (offsetWidth/Height), not the transformed bounding rect, or the
+        // canvas under-fills the stage whenever the scale drops below 1.
+        resize={{ offsetSize: true }}
         camera={{ fov: 32, near: 1, far: 400, position: [20, 80, 70] }}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         onCreated={({ gl }) => {
