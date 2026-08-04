@@ -52,7 +52,7 @@ export default function WorldMapCanvas({
         opacity: ready ? 1 : 0,
         // Sky-to-sea backdrop matching the scene horizon, so the world's
         // background always fills the viewport even past the water mesh.
-        background: "linear-gradient(180deg, #ddc2f9 0%, #cfd0ee 38%, #a5d6e4 78%, #93d4e2 100%)",
+        background: "linear-gradient(180deg, #e6cff5 0%, #dcccf0 40%, #a9dcea 80%, #98d8e8 100%)",
       }}
       data-testid="world-map-canvas"
     >

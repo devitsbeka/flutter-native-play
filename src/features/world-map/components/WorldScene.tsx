@@ -5,6 +5,7 @@ import { worldColors } from "./materials";
 import { qualityProfiles } from "../utils/deviceQuality";
 import { useQualityStore } from "../state/worldStore";
 import { Island } from "../regions/Island";
+import { Shards } from "../regions/Shards";
 import { Water } from "../regions/Water";
 import { Vegetation } from "../regions/Vegetation";
 import { Landmarks } from "../regions/Landmarks";
@@ -13,6 +14,9 @@ import { Paths } from "../paths/Paths";
 import { NodeMarkers } from "../nodes/NodeMarkers";
 import { NodePanel, NodePanelData } from "../nodes/NodePanel";
 import { CameraRig } from "../camera/CameraRig";
+import { worldMaterials } from "./materials";
+import { childSeed, createRng, range } from "../procedural/seededRandom";
+import { ScatterInstance } from "../schemas/worldDefinition";
 
 interface WorldSceneProps {
   world: GeneratedWorld;
@@ -25,7 +29,18 @@ export function WorldScene({ world, reducedMotion, onNodeClick, panel }: WorldSc
   const tier = useQualityStore((s) => s.tier);
   const profile = qualityProfiles[tier];
 
-  const fog = useMemo(() => new THREE.Fog(worldColors.sky, 135, 260), []);
+  const fog = useMemo(() => new THREE.Fog(worldColors.fogPink, 135, 260), []);
+
+  // Low cloud puffs hugging cliff bases and drifting through the channels.
+  const lowClouds = useMemo<ScatterInstance[]>(() => {
+    const rng = createRng(childSeed(world.def.seed, "low-clouds"));
+    return Array.from({ length: 8 }, () => ({
+      position: [range(rng, -45, 50), range(rng, -7, -2), range(rng, -25, 28)] as [number, number, number],
+      scale: range(rng, 0.9, 1.8),
+      rotationY: range(rng, 0, Math.PI * 2),
+      tint: rng(),
+    }));
+  }, [world.def.seed]);
 
   return (
     <>
@@ -54,6 +69,24 @@ export function WorldScene({ world, reducedMotion, onNodeClick, panel }: WorldSc
       ))}
       <Paths paths={world.paths} />
       <Clouds clouds={world.clouds} count={profile.cloudCount} animate={!reducedMotion} />
+      {profile.lowCloudCount > 0 && (
+        <Clouds clouds={lowClouds} count={profile.lowCloudCount} animate={!reducedMotion} />
+      )}
+      {profile.shardDensity > 0 &&
+        world.regions.map((region) => <Shards key={`${region.def.id}-shards`} region={region} density={profile.shardDensity} />)}
+      {profile.mist && (
+        <group>
+          {[
+            [-20, -12.5, 10, 90],
+            [25, -13.5, -8, 110],
+            [0, -14.5, 30, 100],
+          ].map(([x, y, z, size], i) => (
+            <mesh key={i} material={worldMaterials.mist} rotation={[-Math.PI / 2, 0, 0]} position={[x, y, z]}>
+              <planeGeometry args={[size, size * 0.7]} />
+            </mesh>
+          ))}
+        </group>
+      )}
       <NodeMarkers world={world} animate={!reducedMotion} onNodeClick={onNodeClick} />
       {panel && <NodePanel data={panel} position={world.nodeWorldPositions[panel.node.id]} />}
     </>
