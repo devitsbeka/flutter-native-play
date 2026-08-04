@@ -6,7 +6,6 @@ import { qualityProfiles } from "../utils/deviceQuality";
 import { useQualityStore } from "../state/worldStore";
 import { Island } from "../regions/Island";
 import { Shards } from "../regions/Shards";
-import { Water } from "../regions/Water";
 import { Vegetation } from "../regions/Vegetation";
 import { Landmarks } from "../regions/Landmarks";
 import { Clouds } from "../regions/Clouds";
@@ -59,7 +58,6 @@ export function WorldScene({ world, reducedMotion, onNodeClick, panel }: WorldSc
         shadow-bias={-0.0004}
       />
       <CameraRig definition={world.def.camera} reducedMotion={reducedMotion} />
-      <Water animate={!reducedMotion} />
       {world.regions.map((region) => (
         <group key={region.def.id}>
           <Island region={region} />
