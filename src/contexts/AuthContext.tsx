@@ -366,13 +366,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (!error) {
-      setUser(null);
-      setSession(null);
-      setProfile(null);
+    try {
+      let { error } = await supabase.auth.signOut();
+      if (error) {
+        // The server refused the global logout (stale/revoked session or a
+        // non-JSON gateway response). The user still asked to leave, so fall
+        // back to a local-only sign-out, and if even that errors, purge the
+        // cached session so a reload can't restore it.
+        ({ error } = await supabase.auth.signOut({ scope: 'local' }));
+        if (error) {
+          Object.keys(localStorage)
+            .filter((key) => key.startsWith('sb-') && key.includes('-auth-token'))
+            .forEach((key) => localStorage.removeItem(key));
+        }
+      }
+    } catch (err) {
+      console.error('Sign out error:', err);
     }
-    return { error };
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+    return { error: null };
   };
 
   // Local-only profile state update (no DB write) — used by useCurrency after RPC calls
