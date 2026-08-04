@@ -257,7 +257,7 @@ export default function Notifications() {
         if (data?.post_id) {
           navigate(`/trivia/${data.post_id}`);
         } else {
-          navigate('/discover?tab=my-trivia');
+          navigate('/team?tab=my-content');
         }
         break;
       case 'reward':

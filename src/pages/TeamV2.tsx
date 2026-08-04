@@ -638,7 +638,6 @@ function TeamContentV2() {
                 <div className="py-2">
                   <FriendsStoriesBar
                     onAddFriendClick={() => setShowAddFriendModal(true)}
-                    onFriendClick={() => {}}
                     onShowAllFriends={() => setShowAllFriendsModal(true)}
                   />
                 </div>

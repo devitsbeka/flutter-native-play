@@ -829,7 +829,6 @@ export default function Index() {
           <div className="relative z-20 px-4 pt-2 lg:pr-[300px] xl:pr-[330px]">
             <FriendsStoriesBar
               onAddFriendClick={() => setShowAddFriendModal(true)}
-              onFriendClick={() => {}}
             />
           </div>
         )}

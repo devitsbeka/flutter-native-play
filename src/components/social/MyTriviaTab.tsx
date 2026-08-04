@@ -637,7 +637,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             .update({ user_trivia_id: post.id })
             .eq("id", room.id);
 
-          navigate(`/team?join=${room.room_code}&tv=1`);
+          navigate(`/team?join=${room.room_code}&tvMode=true`);
         }
       } catch (e) {
         console.error("Play on TV error:", e);
@@ -1107,7 +1107,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
             .update({ user_trivia_id: playModeTrivia.id })
             .eq("id", room.id);
 
-          navigate(`/team?join=${room.room_code}&tv=1`);
+          navigate(`/team?join=${room.room_code}&tvMode=true`);
         }
       } catch (e) {
         console.error("TV mode error:", e);

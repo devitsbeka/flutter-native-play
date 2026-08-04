@@ -141,7 +141,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
           duration: 4000,
         });
         onClose();
-        navigate('/explore?tab=my-trivia');
+        navigate('/team?tab=my-content');
       }).catch(() => {
         toast.error(t("notificationsPanel.copyFailed"));
       });
@@ -326,7 +326,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
         if (data?.post_id) {
           navigate(`/trivia/${data.post_id}`);
         } else {
-          navigate('/discover?tab=my-trivia');
+          navigate('/team?tab=my-content');
         }
         break;
       case 'reward':

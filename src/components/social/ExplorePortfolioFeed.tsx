@@ -220,7 +220,6 @@ export function ExplorePortfolioFeed({
               key={creator.user_id}
               creator={creator}
               onPlayTrivia={onPlayQuiz}
-              onViewProfile={() => {}}
               onLikeTrivia={(trivia) => toggleLike(trivia.id)}
               onSaveTrivia={(trivia) => toggleSave(trivia.id)}
               userLikes={userLikes}

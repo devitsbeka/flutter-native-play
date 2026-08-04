@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from 'framer-motion';
 import { Trophy, Star, RotateCcw, Home, Crown } from 'lucide-react';
@@ -25,6 +26,7 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
   const { players: contextPlayers, leaveSession } = useTVGame();
   const [showConfetti, setShowConfetti] = useState(false);
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   // Use props if provided, otherwise fall back to context
   const players = propPlayers && propPlayers.length > 0 ? propPlayers : contextPlayers;
@@ -71,7 +73,7 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
       propExit();
     } else {
       leaveSession();
-      window.location.href = '/team';
+      navigate('/team');
     }
   };
 

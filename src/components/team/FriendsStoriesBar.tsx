@@ -17,7 +17,7 @@ function StaticPlaceholder({ className }: { className?: string }) {
 
 interface FriendsStoriesBarProps {
   onAddFriendClick: () => void;
-  onFriendClick: (friend: Friend) => void;
+  onFriendClick?: (friend: Friend) => void;
   onShowAllFriends?: () => void;
 }
 
@@ -89,7 +89,9 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
                 key={friend.id}
                 friend={friend}
                 index={index}
-                onClick={() => onFriendClick(friend)}
+                onClick={() =>
+                  onFriendClick ? onFriendClick(friend) : openProfile(friend.friendId)
+                }
                 onProfileClick={openProfile}
               />
             ))
