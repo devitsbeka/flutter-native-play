@@ -49,3 +49,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Match the wrangler version pinned in package.json — the action
+          # otherwise installs wrangler 3.x, which predates assets-only
+          # Workers support used by wrangler.toml.
+          wranglerVersion: "4.118.0"
