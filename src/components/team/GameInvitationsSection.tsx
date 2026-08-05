@@ -21,7 +21,7 @@ export function GameInvitationsSection({ onAcceptInvitation, onJoinRoom }: GameI
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-emerald-600">
           <Mail className="w-4 h-4" />
-          <span className="text-sm font-bold tracking-wide">მოწვევები</span>
+          <span className="text-sm font-bold tracking-wide">{t("extra.invitationsLabel")}</span>
         </div>
         <div className="animate-pulse rounded-2xl bg-emerald-100 h-24" />
       </div>
@@ -41,7 +41,7 @@ export function GameInvitationsSection({ onAcceptInvitation, onJoinRoom }: GameI
       <div className="flex items-center gap-2 text-emerald-600">
         <Mail className="w-4 h-4 animate-pulse" />
         <span className="text-sm font-bold tracking-wide">
-          თამაშის მოწვევები ({pendingInvitations.length})
+          {t("extra.gameInvitations")} ({pendingInvitations.length})
         </span>
         <Zap className="w-3 h-3 text-emerald-500 animate-pulse" />
       </div>
@@ -86,15 +86,15 @@ function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps
       const diff = expires - now;
 
       if (diff <= 0) {
-        return "ვადა ამოიწურა";
+        return t("extra.expiredLabel");
       }
 
       const minutes = Math.floor(diff / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      
+
       if (minutes > 60) {
         const hours = Math.floor(minutes / 60);
-        return `${hours}სთ ${minutes % 60}წთ`;
+        return t("extra.giHoursMinutes", { h: hours, m: minutes % 60 });
       }
       return `${minutes}:${seconds.toString().padStart(2, "0")}`;
     };
@@ -105,7 +105,7 @@ function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [invitation.expires_at]);
+  }, [invitation.expires_at, t]);
 
   const handleDecline = async () => {
     setIsDeclining(true);
@@ -113,7 +113,7 @@ function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps
     setIsDeclining(false);
   };
 
-  const isExpired = timeLeft === "ვადა ამოიწურა";
+  const isExpired = timeLeft === t("extra.expiredLabel");
   if (isExpired) return null;
 
   return (
@@ -196,19 +196,19 @@ function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <p className="font-bold text-slate-800 truncate">
-              {invitation.sender?.nickname || "მეგობარი"}
+              {invitation.sender?.nickname || t("extra.friend")}
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-medium">
               {t("extra.newBadge")}
             </span>
           </div>
           
-          <p className="text-emerald-600 text-sm font-medium mb-1">გიწვევს თამაშში!</p>
+          <p className="text-emerald-600 text-sm font-medium mb-1">{t("extra.invitesYouToPlay")}</p>
           
           <div className="flex items-center gap-3 text-sm text-slate-600">
             <span className="flex items-center gap-1">
               <Gamepad2 className="w-3.5 h-3.5" />
-              {invitation.room?.category_name || "ზოგადი"}
+              {invitation.room?.category_name || t("extra.generalLabel")}
             </span>
             <span className="flex items-center gap-1 text-xs text-slate-500">
               <Clock className="w-3 h-3" />
@@ -225,7 +225,7 @@ function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps
           icon={<Gamepad2 className="w-4 h-4" />}
           className="min-w-[100px]"
         >
-          შესვლა!
+          {t("extra.joinBtnExcl")}
         </ChunkyButton>
       </div>
     </motion.div>

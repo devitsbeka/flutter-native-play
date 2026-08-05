@@ -4084,6 +4084,14 @@ export const en: KaTranslations = {
     welcomeOnboardingStep3Desc: "Create a room, pick categories, and share the link — your friends join instantly for a live match.",
     welcomeOnboardingStep4Title: "Create Your Trivia",
     welcomeOnboardingStep4Desc: "Just describe a topic and AI generates a custom quiz for you in seconds. Play anything you imagine!",
+    // AddRoundToCollectionModal
+    arcRoundDefaultTitle: "Round {n}",
+    arcTopicTikTokTrends: "TikTok Trends",
+    arcTopicSuperCars: "Supercars",
+    // GameInvitationsSection
+    giHoursMinutes: "{h}h {m}m",
+    // ClaimRewardsModal
+    crmAllClaimed: "All rewards claimed! 🎉",
   },
 
   systemErrors: {

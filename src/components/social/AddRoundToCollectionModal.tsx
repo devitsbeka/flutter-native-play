@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import confetti from "canvas-confetti";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -42,30 +43,30 @@ const COVER_GRADIENTS = [
 
 // Creative topic pool - specific, fun topics that inspire users
 const TRIVIA_TOPIC_POOL = [
-  { label: "Friends", icon_slug: "television" },
-  { label: "Star Wars", icon_slug: "rocket" },
-  { label: "Marvel", icon_slug: "superhero" },
-  { label: "Harry Potter", icon_slug: "magic-wand" },
-  { label: "Game of Thrones", icon_slug: "crown" },
-  { label: "Breaking Bad", icon_slug: "chemistry" },
-  { label: "Netflix სერიალები", icon_slug: "film-reel" },
-  { label: "Disney ფილმები", icon_slug: "castle" },
-  { label: "NBA ლეგენდები", icon_slug: "basketball" },
-  { label: "ჩემპიონთა ლიგა", icon_slug: "trophy" },
-  { label: "Formula 1", icon_slug: "racing-car" },
-  { label: "K-Pop", icon_slug: "music-note" },
-  { label: "Taylor Swift", icon_slug: "microphone" },
-  { label: "BTS", icon_slug: "star" },
-  { label: "მემები", icon_slug: "smiley" },
-  { label: "TikTok ტრენდები", icon_slug: "smartphone" },
-  { label: "Minecraft", icon_slug: "cube" },
-  { label: "ანიმე", icon_slug: "ninja" },
-  { label: "კოსმოსი", icon_slug: "planet" },
-  { label: "ფსიქოლოგია", icon_slug: "brain" },
-  { label: "საქართველოს ისტორია", icon_slug: "flag" },
-  { label: "ქართული კერძები", icon_slug: "food" },
-  { label: "ცხოველები", icon_slug: "paw" },
-  { label: "სუპერ მანქანები", icon_slug: "sports-car" },
+  { labelKey: "Friends", icon_slug: "television" },
+  { labelKey: "Star Wars", icon_slug: "rocket" },
+  { labelKey: "Marvel", icon_slug: "superhero" },
+  { labelKey: "Harry Potter", icon_slug: "magic-wand" },
+  { labelKey: "Game of Thrones", icon_slug: "crown" },
+  { labelKey: "Breaking Bad", icon_slug: "chemistry" },
+  { labelKey: "extra.topicNetflixShows", icon_slug: "film-reel", isTranslationKey: true },
+  { labelKey: "extra.topicDisneyMovies", icon_slug: "castle", isTranslationKey: true },
+  { labelKey: "extra.topicNBALegends", icon_slug: "basketball", isTranslationKey: true },
+  { labelKey: "extra.topicChampionsLeague", icon_slug: "trophy", isTranslationKey: true },
+  { labelKey: "Formula 1", icon_slug: "racing-car" },
+  { labelKey: "K-Pop", icon_slug: "music-note" },
+  { labelKey: "Taylor Swift", icon_slug: "microphone" },
+  { labelKey: "BTS", icon_slug: "star" },
+  { labelKey: "extra.topicMemes", icon_slug: "smiley", isTranslationKey: true },
+  { labelKey: "extra.arcTopicTikTokTrends", icon_slug: "smartphone", isTranslationKey: true },
+  { labelKey: "Minecraft", icon_slug: "cube" },
+  { labelKey: "extra.inspirationalAnime", icon_slug: "ninja", isTranslationKey: true },
+  { labelKey: "extra.inspirationalSpace", icon_slug: "planet", isTranslationKey: true },
+  { labelKey: "extra.topicPsychology", icon_slug: "brain", isTranslationKey: true },
+  { labelKey: "extra.topicGeorgianHistory", icon_slug: "flag", isTranslationKey: true },
+  { labelKey: "extra.topicGeorgianFood", icon_slug: "food", isTranslationKey: true },
+  { labelKey: "extra.topicAnimals", icon_slug: "paw", isTranslationKey: true },
+  { labelKey: "extra.arcTopicSuperCars", icon_slug: "sports-car", isTranslationKey: true },
 ];
 
 interface TopicSuggestion {
@@ -83,6 +84,7 @@ export function AddRoundToCollectionModal({
   onRoundCreated 
 }: AddRoundToCollectionModalProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -117,18 +119,21 @@ export function AddRoundToCollectionModal({
       .in("slug", iconSlugs);
     
     const iconMap = new Map(icons?.map(i => [i.slug, i.icon_url]) || []);
-    
+
     setTopicSuggestions(
-      selected.map(topic => ({
-        label: topic.label,
-        value: topic.label,
-        icon_slug: topic.icon_slug,
-        icon_url: iconMap.get(topic.icon_slug) || null
-      }))
+      selected.map(topic => {
+        const label = topic.isTranslationKey ? t(topic.labelKey) : topic.labelKey;
+        return {
+          label,
+          value: label,
+          icon_slug: topic.icon_slug,
+          icon_url: iconMap.get(topic.icon_slug) || null
+        };
+      })
     );
-    
+
     setIsLoadingTopics(false);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (open) {
@@ -143,7 +148,7 @@ export function AddRoundToCollectionModal({
     setQuestionCount(10);
     setAnswerFormat("4_answers");
     setQuestions([]);
-    setTitle(`რაუნდი ${roundNumber}`);
+    setTitle(t("extra.arcRoundDefaultTitle", { n: roundNumber }));
     setGenerationProgress(0);
     setSelectedGradient(COVER_GRADIENTS[Math.floor(Math.random() * COVER_GRADIENTS.length)]);
   };
@@ -173,11 +178,11 @@ export function AddRoundToCollectionModal({
       
       const generatedQuestions = data?.questions || [];
       if (!generatedQuestions.length) {
-        throw new Error("კითხვები ვერ დაგენერირდა");
+        throw new Error(t("extra.questionsGenFailed"));
       }
 
       setQuestions(generatedQuestions);
-      setTitle(data?.suggestedTitle || `რაუნდი ${roundNumber}: ${subject}`);
+      setTitle(data?.suggestedTitle || t("extra.roundFallbackTitle", { n: roundNumber, subject }));
       
       // Auto-save after generation
       setTimeout(() => saveRound(generatedQuestions, data?.suggestedTitle), 300);
@@ -185,8 +190,8 @@ export function AddRoundToCollectionModal({
       clearInterval(progressInterval);
       console.error("Error generating quiz:", error);
       toast({
-        title: "შეცდომა 😕",
-        description: error instanceof Error ? error.message : "კითხვების გენერაცია ვერ მოხერხდა",
+        title: t("extra.errorEmoji"),
+        description: error instanceof Error ? error.message : t("extra.editorGenerationFailed"),
         variant: "destructive",
       });
       setIsGenerating(false);
@@ -196,8 +201,8 @@ export function AddRoundToCollectionModal({
   const saveRound = async (generatedQuestions: GeneratedQuestion[], suggestedTitle?: string) => {
     if (!user) {
       toast({
-        title: "შესვლა საჭიროა",
-        description: "გთხოვთ შეხვიდეთ თქვენს ანგარიშში",
+        title: t("extra.loginRequiredTitle"),
+        description: t("extra.loginRequiredDesc"),
         variant: "destructive",
       });
       setIsGenerating(false);
@@ -207,7 +212,7 @@ export function AddRoundToCollectionModal({
     setIsPosting(true);
     try {
       const iconSlug = generatedQuestions[0]?.icon_slug || null;
-      const finalTitle = suggestedTitle || `რაუნდი ${roundNumber}: ${subject}`;
+      const finalTitle = suggestedTitle || t("extra.roundFallbackTitle", { n: roundNumber, subject });
 
       const { error } = await supabase.from("user_quiz_posts").insert([{
         user_id: user.id,
@@ -232,8 +237,8 @@ export function AddRoundToCollectionModal({
       });
 
       toast({
-        title: "წარმატება! 🎉",
-        description: `რაუნდი ${roundNumber} დაემატა!`,
+        title: t("extra.successRoundTitle"),
+        description: t("extra.roundAddedDesc", { n: roundNumber }),
       });
 
       // Invalidate collection quizzes query
@@ -244,8 +249,8 @@ export function AddRoundToCollectionModal({
     } catch (error) {
       console.error("Error saving round:", error);
       toast({
-        title: "შეცდომა",
-        description: "რაუნდის შენახვა ვერ მოხერხდა",
+        title: t("common.error"),
+        description: t("extra.roundSaveError"),
         variant: "destructive",
       });
     } finally {
@@ -268,14 +273,14 @@ export function AddRoundToCollectionModal({
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/20 mb-4">
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-1">რაუნდი {roundNumber} ✨</h3>
-              <p className="text-sm text-purple-200">რა თემაზე გსურს კითხვები?</p>
+              <h3 className="text-xl font-bold text-white mb-1">{t("extra.roundNTitle", { n: roundNumber })}</h3>
+              <p className="text-sm text-purple-200">{t("extra.whatTopicQuestion")}</p>
             </div>
 
             {/* Topic suggestions with refresh */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-purple-200">💡 იდეები:</span>
+                <span className="text-xs text-purple-200">{t("extra.ideasLabel")}</span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -284,7 +289,7 @@ export function AddRoundToCollectionModal({
                   className="h-6 px-2 text-xs text-purple-200 hover:text-white hover:bg-white/10"
                 >
                   <RefreshCw className={`w-3 h-3 mr-1 ${isLoadingTopics ? 'animate-spin' : ''}`} />
-                  სხვა
+                  {t("extra.otherTopicsBtn")}
                 </Button>
               </div>
 
@@ -324,14 +329,14 @@ export function AddRoundToCollectionModal({
                 <div className="w-full border-t border-white/20" />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-transparent px-3 text-xs text-purple-200">ან ჩაწერე</span>
+                <span className="bg-transparent px-3 text-xs text-purple-200">{t("extra.orWriteLabel")}</span>
               </div>
             </div>
 
             <Input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="მაგ: Friends TV Show, NBA, K-Pop..."
+              placeholder={t("extra.topicPlaceholder")}
               className="text-center text-lg h-14 rounded-xl bg-white/10 border-white/20 text-white placeholder:text-purple-300"
             />
 
@@ -340,7 +345,7 @@ export function AddRoundToCollectionModal({
               disabled={!subject.trim()}
               className="w-full"
             >
-              შემდეგი
+              {t("extra.nextStepBtn")}
               <ChevronRight className="w-5 h-5 ml-2" />
             </ChunkyButton>
           </motion.div>
@@ -355,8 +360,8 @@ export function AddRoundToCollectionModal({
             className="space-y-5"
           >
             <div className="text-center">
-              <h3 className="text-xl font-bold text-white mb-1">რამდენი კითხვა? 🤔</h3>
-              <p className="text-sm text-purple-200">აირჩიე რაოდენობა</p>
+              <h3 className="text-xl font-bold text-white mb-1">{t("extra.howManyQuestions")}</h3>
+              <p className="text-sm text-purple-200">{t("extra.chooseCountLabel")}</p>
             </div>
 
             <div className="flex justify-center gap-3">
@@ -380,10 +385,10 @@ export function AddRoundToCollectionModal({
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <ChevronLeft className="w-4 h-4 mr-2" />
-                უკან
+                {t("extra.backStepBtn")}
               </Button>
               <ChunkyButton onClick={() => setStep(3)} className="flex-1">
-                შემდეგი
+                {t("extra.nextStepBtn")}
                 <ChevronRight className="w-5 h-5 ml-2" />
               </ChunkyButton>
             </div>
@@ -399,8 +404,8 @@ export function AddRoundToCollectionModal({
             className="space-y-5"
           >
             <div className="text-center">
-              <h3 className="text-xl font-bold text-white mb-1">ფორმატი ⚡</h3>
-              <p className="text-sm text-purple-200">როგორი კითხვები გინდა?</p>
+              <h3 className="text-xl font-bold text-white mb-1">{t("extra.formatTitle")}</h3>
+              <p className="text-sm text-purple-200">{t("extra.whatFormatQuestions")}</p>
             </div>
 
             <div className="space-y-3">
@@ -418,8 +423,8 @@ export function AddRoundToCollectionModal({
                   <img src={bullseyeIcon} alt="" className="w-10 h-10 object-contain" />
                 </div>
                 <div className="flex-1">
-                  <div className="font-semibold text-white">4 ვარიანტი</div>
-                  <div className="text-sm text-purple-200">კლასიკური Quiz ფორმატი</div>
+                  <div className="font-semibold text-white">{t("extra.fourOptionsLabel")}</div>
+                  <div className="text-sm text-purple-200">{t("extra.classicQuizFormat")}</div>
                 </div>
                 {answerFormat === "4_answers" && (
                   <Check className="w-5 h-5 text-white" />
@@ -440,8 +445,8 @@ export function AddRoundToCollectionModal({
                   <img src={checkmarkIcon} alt="" className="w-10 h-10 object-contain" />
                 </div>
                 <div className="flex-1">
-                  <div className="font-semibold text-white">მართალი / მცდარი</div>
-                  <div className="text-sm text-purple-200">სწრაფი True/False</div>
+                  <div className="font-semibold text-white">{t("extra.trueFalseFormat")}</div>
+                  <div className="text-sm text-purple-200">{t("extra.fastTrueFalse")}</div>
                 </div>
                 {answerFormat === "true_false" && (
                   <Check className="w-5 h-5 text-white" />
@@ -452,18 +457,18 @@ export function AddRoundToCollectionModal({
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <ChevronLeft className="w-4 h-4 mr-2" />
-                უკან
+                {t("extra.backStepBtn")}
               </Button>
               <ChunkyButton onClick={generateQuestions} disabled={isGenerating || isPosting} className="flex-1">
                 {isGenerating || isPosting ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    {isPosting ? "ინახება..." : `${Math.round(generationProgress)}%`}
+                    {isPosting ? t("extra.savingProgressLabel") : `${Math.round(generationProgress)}%`}
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5 mr-2" />
-                    გენერაცია
+                    {t("extra.generateBtn2")}
                   </>
                 )}
               </ChunkyButton>
