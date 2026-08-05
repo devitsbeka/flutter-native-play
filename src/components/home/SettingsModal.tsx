@@ -109,7 +109,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <Globe className="h-5 w-5 text-primary" />
             </div>
-            <h3 className="font-semibold text-foreground">{t("settings.language") || "ენა"}</h3>
+            <h3 className="font-semibold text-foreground">{t("settings.language")}</h3>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {languages.filter(l => ['ka', 'en', 'fr', 'de', 'es', 'it', 'pt'].includes(l.code)).map(lang => (

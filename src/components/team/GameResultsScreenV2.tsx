@@ -569,7 +569,7 @@ export function GameResultsScreenV2() {
             transition={{ delay: 0.5 }}
             className="p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
           >
-            <p className="text-white/50 text-xs mb-2">შემდეგი რაუნდი:</p>
+            <p className="text-white/50 text-xs mb-2">{t("extra.nextRoundLabel")}</p>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
                 {nextQueueItem.category_id === "__mixed__" ? (
@@ -583,13 +583,13 @@ export function GameResultsScreenV2() {
                   )}
               </div>
               <span className="flex-1 text-white font-medium truncate">
-                {nextQueueItem.source_type === "random" 
-                  ? "შემთხვევითი" 
-                  : nextQueueItem.category_name || "კატეგორია"}
+                {nextQueueItem.source_type === "random"
+                  ? t("extra.randomOption")
+                  : nextQueueItem.category_name || t("extra.categoryType")}
               </span>
               {queue.length > 1 && (
                 <span className="text-white/40 text-sm flex items-center gap-1">
-                  +{queue.length - 1} მეტი
+                  +{queue.length - 1} {t("extra.moreCount")}
                   <ChevronRight className="w-4 h-4" />
                 </span>
               )}

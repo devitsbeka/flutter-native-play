@@ -113,24 +113,24 @@ export function EditQuestionDialog({
 
               {/* Question Text */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-white/80">კითხვა</Label>
+                <Label className="text-sm font-medium text-white/80">{t("extra.questionLabel")}</Label>
                 <Textarea
                   value={questionText}
                   onChange={(e) => setQuestionText(e.target.value)}
-                  placeholder="შეიყვანეთ კითხვა..."
+                  placeholder={t("extra.enterQuestion")}
                   className="min-h-[100px] resize-none text-base bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-white/30"
                 />
               </div>
 
               {/* Correct Answer - Game style */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-emerald-300">✓ სწორი პასუხი</Label>
+                <Label className="text-sm font-medium text-emerald-300">✓ {t("extra.correctAnswerLabel")}</Label>
                 <div className="relative">
                   <div className="absolute inset-0 bg-emerald-700 rounded-xl translate-y-1" />
                   <Input
                     value={correctAnswer}
                     onChange={(e) => setCorrectAnswer(e.target.value)}
-                    placeholder="სწორი პასუხი"
+                    placeholder={t("extra.correctAnswerPlaceholder")}
                     className="relative h-12 bg-emerald-500 border-0 text-white placeholder:text-emerald-200 font-semibold"
                   />
                 </div>
@@ -139,7 +139,7 @@ export function EditQuestionDialog({
               {/* Incorrect Answers (only for 4_answers format) */}
               {answerFormat === "4_answers" && (
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-red-300">✗ არასწორი პასუხები</Label>
+                  <Label className="text-sm font-medium text-red-300">✗ {t("extra.incorrectAnswersLabel")}</Label>
                   <div className="space-y-2.5">
                     {incorrectAnswers.map((answer, idx) => (
                       <div key={idx} className="relative">
@@ -153,7 +153,7 @@ export function EditQuestionDialog({
                           <Input
                             value={answer}
                             onChange={(e) => updateIncorrectAnswer(idx, e.target.value)}
-                            placeholder={`არასწორი პასუხი ${idx + 1}`}
+                            placeholder={t("extra.incorrectAnswerPlaceholder", { n: idx + 1 })}
                             className="h-12 bg-white border-0 text-slate-700 placeholder:text-slate-400 pl-14 font-medium"
                           />
                         </div>

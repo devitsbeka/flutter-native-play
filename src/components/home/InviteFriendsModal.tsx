@@ -121,7 +121,7 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
             to { --border-angle: 360deg; }
           }
         `}</style>
-        <DialogTitle className="sr-only">მეგობრების მოწვევა</DialogTitle>
+        <DialogTitle className="sr-only">{t("extra.inviteFriendsTitle")}</DialogTitle>
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

@@ -369,9 +369,9 @@ export default function CategoryPage() {
             <div className="flex items-center gap-3">
               <img src={crystalHourglass} alt="Coming soon" className="w-12 h-12 object-contain" />
               <div>
-                <h3 className="font-bold text-slate-800">{t('category.allCompleted') || 'გილოცავ!'}</h3>
+                <h3 className="font-bold text-slate-800">{t('category.allCompleted')}</h3>
                 <p className="text-sm text-slate-600">
-                  {t('category.newLevelsSoon') || 'ყველა დონე გაიარე! მალე ახალი დონეები დაემატება...'}
+                  {t('category.newLevelsSoon')}
                 </p>
               </div>
             </div>

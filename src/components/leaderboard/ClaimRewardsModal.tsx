@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Coins, Gem, Gift, Sparkles, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 import { useLeaderboardRewards, WeeklyReward } from "@/hooks/useLeaderboardRewards";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { EXCLUSIVE_FRAMES, LEADERBOARD_BADGES } from "@/config/leaderboardRewards";
 import { Button } from "@/components/ui/button";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -19,6 +20,7 @@ export function ClaimRewardsModal({
   onOpenChange,
   categoryNames = {}
 }: ClaimRewardsModalProps) {
+  const { t } = useLanguage();
   const { unclaimedRewards, claimReward, loading } = useLeaderboardRewards();
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [claimedIds, setClaimedIds] = useState<Set<string>>(new Set());
@@ -92,7 +94,7 @@ export function ClaimRewardsModal({
             </button>
             <div className="flex items-center gap-2">
               <Gift className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-bold text-foreground">კვირის ჯილდოები</h2>
+              <h2 className="text-lg font-bold text-foreground">{t("extra.weeklyRewards")}</h2>
             </div>
           </div>
 
@@ -108,9 +110,9 @@ export function ClaimRewardsModal({
                   <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
                 </div>
                 <p className="text-muted-foreground">
-                  {claimedIds.size > 0 
-                    ? "ყველა ჯილდო მიღებულია! 🎉" 
-                    : "ახალი ჯილდოები არ გაქვს"}
+                  {claimedIds.size > 0
+                    ? t("extra.crmAllClaimed")
+                    : t("extra.noNewRewards")}
                 </p>
               </div>
             ) : (
@@ -121,7 +123,7 @@ export function ClaimRewardsModal({
                   animate={{ opacity: 1, y: 0 }}
                   className="p-4 rounded-xl bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20"
                 >
-                  <p className="text-sm text-muted-foreground mb-2">მთლიანი ჯილდოები:</p>
+                  <p className="text-sm text-muted-foreground mb-2">{t("extra.totalRewardsLabel")}</p>
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       <Coins className="h-5 w-5 text-amber-500" />
@@ -145,7 +147,7 @@ export function ClaimRewardsModal({
                     className="w-full"
                   >
                     <Gift className="h-4 w-4 mr-2" />
-                    მიიღე ყველა
+                    {t("extra.claimAllBtn")}
                   </ChunkyButton>
                 )}
 
@@ -172,10 +174,10 @@ export function ClaimRewardsModal({
                             <span className="text-2xl">{getRankEmoji(reward.final_rank)}</span>
                             <div>
                               <p className="font-bold">
-                                #{reward.final_rank} ადგილი
+                                {t("extra.placeNLabel", { rank: reward.final_rank })}
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                {categoryNames[reward.category_id] || "კატეგორია"}
+                                {categoryNames[reward.category_id] || t("extra.categoryFallback")}
                               </p>
                             </div>
                           </div>
@@ -216,7 +218,7 @@ export function ClaimRewardsModal({
                             ) : (
                               <>
                                 <Gift className="h-4 w-4 mr-2" />
-                                მიიღე
+                                {t("extra.claimBtn")}
                               </>
                             )}
                           </Button>

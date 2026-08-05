@@ -289,6 +289,7 @@ export const ka = {
       easy: "მარტივი",
       medium: "საშუალო",
       hard: "რთული",
+      mixed: "შერეული",
     },
     labelA: "ა",
     labelB: "ბ",
@@ -1723,6 +1724,20 @@ export const ka = {
     shareBtn: "გაზიარება",
     friendsInvited: "{count} მეგობარი მოწვეული",
     nextRounds: "შემდეგი რაუნდები:",
+    signInFailedToast: "შესვლა ვერ მოხერხდა",
+    collectionRoundsNotFound: "კოლექციაში რაუნდები ვერ მოიძებნა",
+    saveErrorToast: "შეცდომა შენახვისას",
+    myTriviaPartySaved: "MyTrivia Party შენახულია!",
+    noOnePlayedTrivia: "ჯერ არავის უთამაშია",
+    photoFaceRequiredTitle: "გთხოვთ ატვირთოთ ფოტო სახით",
+    photoFaceRequiredDesc: "ანიმაციისთვის საჭიროა ფოტო, რომელზეც სახე ჩანს",
+    animationStartingTitle: "ანიმაცია იწყება...",
+    animationStartingDesc: "1-2 წუთი დასჭირდება",
+    pleaseWaitDesc: "გთხოვთ დაელოდოთ",
+    animationReadyToast: "✨ ანიმაცია მზადაა!",
+    animationFailedToast: "ანიმაცია ვერ მოხერხდა",
+    questionsSkippedRoundOver: "{count} კითხვა გამოტოვე — რაუნდი დასრულდა",
+    questionsSkipped: "{count} კითხვა გამოტოვე",
     collectionLabel: "კოლექცია",
     triviaLabel: "ტრივია",
     questionsCount: "{count} კითხვა",
@@ -4098,6 +4113,14 @@ export const ka = {
     welcomeOnboardingStep3Desc: "შექმენი ოთახი, აირჩიე კატეგორიები და გაუზიარე ლინკი — მეგობრები მომენტალურად შემოუერთდებიან.",
     welcomeOnboardingStep4Title: "შექმენი შენი ტრივია",
     welcomeOnboardingStep4Desc: "უბრალოდ აღწერე თემა და AI შექმნის შენთვის კითხვებს წამებში. ითამაშე რაც მოგესურვება!",
+    // AddRoundToCollectionModal
+    arcRoundDefaultTitle: "რაუნდი {n}",
+    arcTopicTikTokTrends: "TikTok ტრენდები",
+    arcTopicSuperCars: "სუპერ მანქანები",
+    // GameInvitationsSection
+    giHoursMinutes: "{h}სთ {m}წთ",
+    // ClaimRewardsModal
+    crmAllClaimed: "ყველა ჯილდო მიღებულია! 🎉",
   },
 
   // ==========================================

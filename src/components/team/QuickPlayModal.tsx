@@ -55,7 +55,7 @@ export function QuickPlayModal({
       onClose={onClose}
       icon={headerIcon}
       title={friend.nickname}
-      subtitle={friend.isOnline ? "ონლაინ" : "ოფლაინ"}
+      subtitle={friend.isOnline ? t("extra.onlineStatus") : t("extra.offlineStatus")}
       variant="primary"
     >
       {/* Game Mode Indicator */}
@@ -78,12 +78,12 @@ export function QuickPlayModal({
           {friend.isOnline ? (
             <>
               <Zap className="w-4 h-4" />
-              რეალ-ტაიმ თამაში
+              {t("extra.realtimeGame")}
             </>
           ) : (
             <>
               <Clock className="w-4 h-4" />
-              ასინქრონული გამოწვევა (48 საათი)
+              {t("extra.asyncChallenge")}
             </>
           )}
         </div>
@@ -92,9 +92,9 @@ export function QuickPlayModal({
       {/* Category Type Tabs */}
       <div className="flex gap-2 mb-4">
         {[
-          { type: "classic" as const, label: "კლასიკა", icon: "📚" },
-          { type: "fun" as const, label: "გართობა", icon: "🎮" },
-          { type: "educational" as const, label: "სწავლა", icon: "🎓" },
+          { type: "classic" as const, label: t("extra.classicTab"), icon: "📚" },
+          { type: "fun" as const, label: t("extra.funTab"), icon: "🎮" },
+          { type: "educational" as const, label: t("extra.learningTab"), icon: "🎓" },
         ].map(({ type, label, icon }) => (
           <motion.button
             key={type}

@@ -291,6 +291,7 @@ export const en: KaTranslations = {
       easy: "Easy",
       medium: "Medium",
       hard: "Hard",
+      mixed: "Mixed",
     },
     labelA: "A",
     labelB: "B",
@@ -1724,6 +1725,20 @@ export const en: KaTranslations = {
     shareBtn: "Share",
     friendsInvited: "{count} friend(s) invited",
     nextRounds: "Next rounds:",
+    signInFailedToast: "Sign-in failed",
+    collectionRoundsNotFound: "No rounds found in this collection",
+    saveErrorToast: "Error while saving",
+    myTriviaPartySaved: "MyTrivia Party saved!",
+    noOnePlayedTrivia: "No one has played yet",
+    photoFaceRequiredTitle: "Please upload a photo with a face",
+    photoFaceRequiredDesc: "Animation needs a photo where a face is visible",
+    animationStartingTitle: "Animation starting...",
+    animationStartingDesc: "It will take 1-2 minutes",
+    pleaseWaitDesc: "Please wait",
+    animationReadyToast: "✨ Animation ready!",
+    animationFailedToast: "Animation failed",
+    questionsSkippedRoundOver: "{count} questions skipped — round over",
+    questionsSkipped: "{count} questions skipped",
     collectionLabel: "Collection",
     triviaLabel: "Trivia",
     questionsCount: "{count} question",
@@ -4069,6 +4084,14 @@ export const en: KaTranslations = {
     welcomeOnboardingStep3Desc: "Create a room, pick categories, and share the link — your friends join instantly for a live match.",
     welcomeOnboardingStep4Title: "Create Your Trivia",
     welcomeOnboardingStep4Desc: "Just describe a topic and AI generates a custom quiz for you in seconds. Play anything you imagine!",
+    // AddRoundToCollectionModal
+    arcRoundDefaultTitle: "Round {n}",
+    arcTopicTikTokTrends: "TikTok Trends",
+    arcTopicSuperCars: "Supercars",
+    // GameInvitationsSection
+    giHoursMinutes: "{h}h {m}m",
+    // ClaimRewardsModal
+    crmAllClaimed: "All rewards claimed! 🎉",
   },
 
   systemErrors: {

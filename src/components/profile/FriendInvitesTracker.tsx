@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Mail, Link2, Clock, CheckCircle2, XCircle, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFriendInvites, FriendInvite } from "@/hooks/useFriendInvites";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 import { ka } from "date-fns/locale";
 
@@ -10,6 +11,7 @@ interface FriendInvitesTrackerProps {
 }
 
 export function FriendInvitesTracker({ className }: FriendInvitesTrackerProps) {
+  const { t } = useLanguage();
   const { invites, loading, getInviteStatus } = useFriendInvites();
 
   if (loading) {
@@ -17,7 +19,7 @@ export function FriendInvitesTracker({ className }: FriendInvitesTrackerProps) {
       <div className={cn("space-y-3", className)}>
         <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Mail className="w-5 h-5 text-primary" />
-          ჩემი მოწვევები
+          {t("extra.myInvitations")}
         </h3>
         <div className="space-y-2">
           {[1, 2].map((i) => (
@@ -33,11 +35,11 @@ export function FriendInvitesTracker({ className }: FriendInvitesTrackerProps) {
       <div className={cn("space-y-3", className)}>
         <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Mail className="w-5 h-5 text-primary" />
-          ჩემი მოწვევები
+          {t("extra.myInvitations")}
         </h3>
         <div className="bg-muted/30 rounded-xl p-6 text-center">
           <p className="text-muted-foreground text-sm">
-            ჯერ არცერთი მოწვევა არ გაგიგზავნიათ
+            {t("extra.noInvitesSent")}
           </p>
         </div>
       </div>
@@ -48,7 +50,7 @@ export function FriendInvitesTracker({ className }: FriendInvitesTrackerProps) {
     switch (status) {
       case 'accepted':
         return {
-          label: 'მიღებული',
+          label: t("extra.acceptedStatus"),
           icon: CheckCircle2,
           bgColor: 'bg-green-500/10',
           textColor: 'text-green-500',
@@ -56,7 +58,7 @@ export function FriendInvitesTracker({ className }: FriendInvitesTrackerProps) {
         };
       case 'expired':
         return {
-          label: 'ვადაგასული',
+          label: t("extra.expiredStatus"),
           icon: XCircle,
           bgColor: 'bg-destructive/10',
           textColor: 'text-destructive',
@@ -64,7 +66,7 @@ export function FriendInvitesTracker({ className }: FriendInvitesTrackerProps) {
         };
       default:
         return {
-          label: 'მოლოდინში',
+          label: t("extra.pendingStatus"),
           icon: Clock,
           bgColor: 'bg-amber-500/10',
           textColor: 'text-amber-500',
@@ -93,7 +95,7 @@ export function FriendInvitesTracker({ className }: FriendInvitesTrackerProps) {
     >
       <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
         <Mail className="w-5 h-5 text-primary" />
-        ჩემი მოწვევები
+        {t("extra.myInvitations")}
         <span className="text-sm font-normal text-muted-foreground">
           ({invites.length})
         </span>
@@ -134,7 +136,7 @@ export function FriendInvitesTracker({ className }: FriendInvitesTrackerProps) {
                   <p className="text-sm font-medium text-foreground truncate">
                     {isLink ? (
                       <span className="flex items-center gap-1">
-                        <span className="text-muted-foreground">ლინკი:</span>
+                        <span className="text-muted-foreground">{t("extra.linkLabel")}</span>
                         <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
                           {invite.referral_code}
                         </code>
@@ -146,9 +148,9 @@ export function FriendInvitesTracker({ className }: FriendInvitesTrackerProps) {
                   <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                     <Calendar className="w-3 h-3" />
                     {status === 'accepted' && invite.accepted_at ? (
-                      <span>შემოვიდა: {formatDate(invite.accepted_at)}</span>
+                      <span>{t("extra.joinedDateLabel")} {formatDate(invite.accepted_at)}</span>
                     ) : (
-                      <span>გაგზავნილი: {formatDate(invite.created_at)}</span>
+                      <span>{t("extra.sentDateLabel")} {formatDate(invite.created_at)}</span>
                     )}
                   </div>
                 </div>

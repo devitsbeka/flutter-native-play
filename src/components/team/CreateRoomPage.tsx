@@ -411,7 +411,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     setQueuedRounds((prev) => [...prev, { ...item, tmpId }]);
     toast({
-      title: t("extra.addedToQueue") || "Added to queue",
+      title: t("extra.addedToQueue"),
       description: `${item.category_name || t("extra.randomOption")}`,
     });
   };
@@ -798,7 +798,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       // button that "did nothing" with no way to tell it from a hang
       toast({
         title: t("common.error"),
-        description: t("extra.mpRoomCreateFailed") || "ოთახის შექმნა ვერ მოხერხდა",
+        description: t("extra.mpRoomCreateFailed"),
         variant: "destructive",
       });
     } finally {
@@ -985,7 +985,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       <div className="w-[52px] h-[52px] rounded-full bg-primary/10 flex items-center justify-center">
                         <span className="text-base text-primary font-bold">+{acceptedFriends.length - 10}</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">მეტი</span>
+                      <span className="text-xs text-muted-foreground">{t("extra.moreCount")}</span>
                     </motion.button>
                   )}
                 </div>
@@ -1000,7 +1000,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 whileTap={{ scale: 0.99 }}
               >
                 <UserPlus className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm text-foreground">აპში მეგობრები</span>
+                <span className="text-sm text-foreground">{t("extra.appFriends")}</span>
               </motion.button>
               <motion.button
                 onClick={handleShareInviteLink}
@@ -1009,14 +1009,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                 whileTap={{ scale: 0.99 }}
               >
                 <Share2 className="w-5 h-5 text-primary" />
-                <span className="text-sm text-primary font-medium">გაზიარება</span>
+                <span className="text-sm text-primary font-medium">{t("extra.shareBtn")}</span>
               </motion.button>
             </div>
           )}
           
           {selectedFriends.size > 0 && (
             <p className="text-xs text-primary mt-1.5">
-              {selectedFriends.size} მეგობარი მოწვეული
+              {t("extra.friendsInvited", { count: selectedFriends.size })}
             </p>
           )}
         </div>

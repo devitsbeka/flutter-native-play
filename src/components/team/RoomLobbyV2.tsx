@@ -433,11 +433,11 @@ export function RoomLobbyV2() {
         })
         .eq("id", currentRoom.id);
       
-      toast.success(t("team.roomUpdated") || "ოთახი განახლდა");
+      toast.success(t("team.roomUpdated"));
       setShowIconPicker(false);
     } catch (error) {
       console.error("Error updating room:", error);
-      toast.error(t("team.updateFailed") || "განახლება ვერ მოხერხდა");
+      toast.error(t("team.updateFailed"));
     }
   };
 
