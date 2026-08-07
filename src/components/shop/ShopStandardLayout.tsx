@@ -1,6 +1,5 @@
 import { useRef, useEffect } from "react";
 import { ShopSection, ShopItem } from "@/hooks/useShopData";
-import { ShopHeroCarousel } from "./ShopHeroCarousel";
 import { ShopProductGrid } from "./ShopProductGrid";
 import { MobileProCarousel } from "./MobileProCarousel";
 import { MyPowersSection } from "./MyPowersSection";
@@ -54,13 +53,6 @@ export function ShopStandardLayout({
     }
   }, [initialScrollSection]);
 
-  const handleSlideClick = (sectionId: string) => {
-    const ref = sectionRefs.current.get(sectionId);
-    if (ref) {
-      ref.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
   const handleItemClick = async (item: ShopItem) => {
     // Directly purchase without opening detail modal
     await onItemClick(item);
@@ -71,12 +63,8 @@ export function ShopStandardLayout({
 
   return (
     <div className="flex-1 pb-8">
-      {/* Hero Carousel - Desktop only / PRO Carousel - Mobile/Tablet */}
-      {isDesktop ? (
-        <ShopHeroCarousel onSlideClick={handleSlideClick} />
-      ) : (
-        <MobileProCarousel />
-      )}
+      {/* PRO Carousel - Mobile/Tablet only (the desktop hero banner was removed) */}
+      {!isDesktop && <MobileProCarousel />}
 
       {/* My Powers Section - individual purchase */}
       <MyPowersSection
