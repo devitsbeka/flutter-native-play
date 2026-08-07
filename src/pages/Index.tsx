@@ -1545,10 +1545,10 @@ export default function Index() {
                     className="pointer-events-auto cursor-pointer"
                     onClick={() => user ? openAvatarModal() : navigate("/auth")}
                   >
-                    <AvatarCircle 
-                      avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
+                    <AvatarCircle
+                      avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar}
                       animatedAvatarUrl={user ? profile?.animated_avatar_url : defaultGuestAvatarAnimated}
-                      size={280} 
+                      size={238}
                       coins={user ? coins : 0}
                       gems={user ? gems : 0}
                       level={user ? levelInfo.level : 1}
