@@ -12,6 +12,7 @@ import { shuffleArray } from "@/utils/shuffle";
 import { getSeenQuestionIds, markQuestionsAsSeen } from "@/services/questionTracker";
 import { useUserPresence } from "@/hooks/useUserPresence";
 import { createNotification } from "@/hooks/useNotifications";
+import { calculatePoints } from "@/utils/scoring";
 
 // Helper to notify trivia creator when their trivia is played in multiplayer
 const notifyTriviaCreator = async (userTriviaId: string, playerId: string) => {
@@ -1707,7 +1708,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     if (!currentQuestion) return;
     
     const isCorrect = answer === currentQuestion.correctAnswer;
-    const points = isCorrect ? Math.round(100 + timeRemaining * 10) : 0;
+    const points = calculatePoints(isCorrect, timeRemaining);
     
     // Save answer
     await supabase.from("player_answers").insert({

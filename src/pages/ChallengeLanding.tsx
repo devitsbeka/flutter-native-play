@@ -15,6 +15,7 @@ import angryBoyIcon from "@/assets/icons/angry-boy.png";
 import confettiPopperIcon from "@/assets/icons/confetti-popper.png";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import { calculatePoints } from "@/utils/scoring";
 
 const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
 const TIME_PER_QUESTION = 15;
@@ -150,8 +151,8 @@ export default function ChallengeLanding() {
 
       const isCorrect = answer === currentQuestion.correct_answer;
       if (isCorrect) {
-        const timeBonus = Math.round((timeRemaining / TIME_PER_QUESTION) * 50);
-        const earnedPoints = 100 + timeBonus;
+        // Unified scoring policy — same value as rooms/solo/TV
+        const earnedPoints = calculatePoints(true, timeRemaining);
         setPlayerScore((s) => s + earnedPoints);
         setCorrectCount((c) => c + 1);
       }

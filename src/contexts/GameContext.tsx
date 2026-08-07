@@ -36,9 +36,38 @@ export interface OpponentTurn {
   atRemaining: number;
 }
 
-/** 70% right, committing somewhere in the middle of the clock - unchanged odds. */
-function planOpponentTurn(question: TriviaQuestion, timePerQuestion: number): OpponentTurn {
-  const correct = Math.random() < 0.7;
+/**
+ * Bot strength, rolled once per match so games swing: a weak bot is
+ * beatable by anyone, a strong one answers fast and accurately enough to
+ * beat a decent player. Accuracy gets a small per-question jitter so two
+ * games against the same tier don't play identically.
+ */
+export type BotSkill = "weak" | "average" | "strong";
+
+const BOT_SKILL_PROFILES: Record<
+  BotSkill,
+  { accuracy: number; commitMin: number; commitMax: number }
+> = {
+  // commitMin/commitMax are fractions of the clock still remaining when the
+  // bot locks in — higher fractions mean faster answers and bigger time bonus.
+  weak: { accuracy: 0.45, commitMin: 0.1, commitMax: 0.45 },
+  average: { accuracy: 0.65, commitMin: 0.25, commitMax: 0.6 },
+  strong: { accuracy: 0.85, commitMin: 0.45, commitMax: 0.85 },
+};
+
+export function rollBotSkill(): BotSkill {
+  const r = Math.random();
+  return r < 1 / 3 ? "weak" : r < 2 / 3 ? "average" : "strong";
+}
+
+function planOpponentTurn(
+  question: TriviaQuestion,
+  timePerQuestion: number,
+  skill: BotSkill = "average"
+): OpponentTurn {
+  const profile = BOT_SKILL_PROFILES[skill];
+  const accuracy = Math.min(0.95, Math.max(0.2, profile.accuracy + (Math.random() * 0.1 - 0.05)));
+  const correct = Math.random() < accuracy;
   let answer = question.correctAnswer;
   if (!correct) {
     const wrong = question.allAnswers.filter(a => a !== question.correctAnswer);
@@ -47,7 +76,8 @@ function planOpponentTurn(question: TriviaQuestion, timePerQuestion: number): Op
   return {
     correct,
     answer,
-    atRemaining: timePerQuestion * (0.3 + Math.random() * 0.5),
+    atRemaining:
+      timePerQuestion * (profile.commitMin + Math.random() * (profile.commitMax - profile.commitMin)),
   };
 }
 
@@ -75,6 +105,8 @@ interface GameState {
   opponentTurn: OpponentTurn | null;
   /** True once their clock has run down to it and they have locked in. */
   opponentAnswered: boolean;
+  /** Bot strength for this match, rolled fresh each matchmaking. */
+  opponentSkill: BotSkill;
   
   // Power-up state
   playerPowerUps: PowerUpState[];
@@ -131,6 +163,7 @@ const initialState: GameState = {
   preparationProgress: 0,
   opponentTurn: null,
   opponentAnswered: false,
+  opponentSkill: "average",
 
   // Power-up initial state
   playerPowerUps: defaultPowerUps.map(p => ({ ...p })),
@@ -192,9 +225,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // Reset mission tracker for new game session
     missionTracker.resetSession();
     
-    // Generate opponent immediately
+    // Generate opponent immediately, with a freshly rolled strength so some
+    // matches are easy wins and others are genuinely losable
     const opponent = generateFakeOpponent();
-    
+    const opponentSkill = rollBotSkill();
+
     // Short delay for slot animation to start (0.8s instead of 2s)
     await new Promise(resolve => setTimeout(resolve, 800));
     
@@ -202,6 +237,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       ...prev, 
       phase: "vs-screen",
       opponent,
+      opponentSkill,
       userProgress: 0,
       opponentProgress: 0,
       userAnswerHistory: [],
@@ -278,7 +314,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         lastOpponentCorrect: null,
         lastOpponentAnswer: null,
         lastUserAnswer: null,
-        opponentTurn: planOpponentTurn(questions[0], prev.timePerQuestion),
+        opponentTurn: planOpponentTurn(questions[0], prev.timePerQuestion, prev.opponentSkill),
         opponentAnswered: false,
         // Reset power-ups for new match
         playerPowerUps: defaultPowerUps.map(p => ({ ...p })),
@@ -381,7 +417,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
             updates.replacedAnswer = null;
             // A new question means a new turn for the opponent too - the old
             // plan names an answer that does not exist on this one.
-            updates.opponentTurn = planOpponentTurn(prev.questions[skipTo], prev.timePerQuestion);
+            updates.opponentTurn = planOpponentTurn(prev.questions[skipTo], prev.timePerQuestion, prev.opponentSkill);
             updates.opponentAnswered = false;
             // Reset power-up usage for new question
             updates.playerPowerUps = prev.playerPowerUps.map(p => ({ ...p, usedThisQuestion: false }));
@@ -419,13 +455,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const categoryId = currentQuestion.categoryId || currentQuestion.category;
       missionTracker.recordCategoryPlayed(categoryId);
 
-      const points = calculateScore(
-        isCorrect,
-        timeRemaining,
-        prev.timePerQuestion,
-        currentQuestion.difficulty,
-        prev.streak
-      );
+      const points = calculateScore(isCorrect, timeRemaining);
 
       // PostHog: track question answered
       posthog.capture("pvp_question_answered", {
@@ -441,16 +471,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       // The opponent's turn was decided when this question opened, so their
       // answer and their timing are the same ones the player has been
       // watching - not a fresh roll made at the instant of this tap.
-      const turn = prev.opponentTurn ?? planOpponentTurn(currentQuestion, prev.timePerQuestion);
+      const turn = prev.opponentTurn ?? planOpponentTurn(currentQuestion, prev.timePerQuestion, prev.opponentSkill);
       const opponentCorrect = turn.correct;
       const opponentAnswer = turn.answer;
-      const opponentPoints = calculateScore(
-        opponentCorrect,
-        turn.atRemaining,
-        prev.timePerQuestion,
-        currentQuestion.difficulty,
-        0
-      );
+      const opponentPoints = calculateScore(opponentCorrect, turn.atRemaining);
 
       const newUserAnswerHistory = [...prev.userAnswerHistory, { correct: isCorrect, points }];
       const newOpponentAnswerHistory = [...prev.opponentAnswerHistory, { correct: opponentCorrect, points: opponentPoints }];
@@ -513,7 +537,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         lastOpponentCorrect: null,
         lastOpponentAnswer: null,
         lastUserAnswer: null,
-        opponentTurn: planOpponentTurn(prev.questions[nextIndex], prev.timePerQuestion),
+        opponentTurn: planOpponentTurn(prev.questions[nextIndex], prev.timePerQuestion, prev.opponentSkill),
         opponentAnswered: false,
         // Reset per-question power-up state
         playerPowerUps: prev.playerPowerUps.map(p => ({ ...p, usedThisQuestion: false })),

@@ -147,29 +147,49 @@ export function GameResultsScreenV2() {
       if (statsKey) processedResultsGames.add(statsKey);
 
       const updateStats = async () => {
-        // Calculate coins earned based on rank
+        // Unified reward policy. A room with a single player is practice:
+        // XP still counts, but there is no opponent to beat, so no coin
+        // bonus, no recorded win and no streak — otherwise a solo "room"
+        // is a free coin/win farm.
+        const playerCount = participants.length;
+        const isPractice = playerCount <= 1;
+        const countsAsWin = isWin && !isPractice;
+
+        // Placement coins scale with how many opponents were actually
+        // beaten, so winning an 8-player room pays more than a duel.
         let earnedCoins = 0;
-        if (myRank === 1) {
-          earnedCoins = REWARDS.MULTIPLAYER_1ST_COINS + myScore;
-        } else if (myRank === 2) {
-          earnedCoins = REWARDS.MULTIPLAYER_2ND_COINS + Math.floor(myScore / 2);
-        } else if (myRank === 3) {
-          earnedCoins = REWARDS.MULTIPLAYER_3RD_COINS + Math.floor(myScore / 2);
-        } else {
-          earnedCoins = REWARDS.MULTIPLAYER_PARTICIPATION_COINS;
+        if (!isPractice) {
+          const playersBeaten = Math.max(0, playerCount - myRank);
+          if (myRank === 1) {
+            earnedCoins =
+              Math.min(
+                REWARDS.MULTIPLAYER_WIN_COINS_PER_BEATEN * playersBeaten,
+                REWARDS.MULTIPLAYER_1ST_COINS
+              ) + myScore;
+          } else if (myRank === 2 || myRank === 3) {
+            earnedCoins = Math.floor(myScore / 2);
+          } else {
+            earnedCoins = REWARDS.MULTIPLAYER_PARTICIPATION_COINS;
+          }
         }
         setCoinsEarned(earnedCoins);
 
-        // Add coins
-        await addCoins(earnedCoins);
+        if (earnedCoins > 0) {
+          await addCoins(earnedCoins);
+        }
 
-        // Update profile stats
+        // Update profile stats — XP is placement-independent: every player
+        // banks their raw score in every mode.
         await updateProfile({
           total_points: (profile.total_points || 0) + myScore,
           games_played: (profile.games_played || 0) + 1,
-          games_won: isWin ? (profile.games_won || 0) + 1 : profile.games_won,
-          current_streak: isWin ? (profile.current_streak || 0) + 1 : 0,
-          best_streak: isWin
+          games_won: countsAsWin ? (profile.games_won || 0) + 1 : profile.games_won,
+          current_streak: countsAsWin
+            ? (profile.current_streak || 0) + 1
+            : isPractice
+              ? profile.current_streak
+              : 0,
+          best_streak: countsAsWin
             ? Math.max(profile.best_streak || 0, (profile.current_streak || 0) + 1)
             : profile.best_streak,
         });
@@ -209,27 +229,41 @@ export function GameResultsScreenV2() {
             });
         }
 
-        // Update participant stats including cumulative total_score
-        const winnerId = rankedParticipants[0]?.user_id;
-        for (const p of participants) {
-          const isWinner = p.user_id === winnerId;
-          const participantScore = rankedParticipants.find(rp => rp.user_id === p.user_id)?.score || 0;
+        // Update participant stats including cumulative total_score.
+        // Host only: previously every device wrote every participant's row
+        // from its own (possibly stale) snapshot — N players meant N
+        // overlapping read-modify-writes of the same cumulative totals,
+        // which could double-count or roll back scores.
+        if (isHost) {
+          const winnerId = rankedParticipants[0]?.user_id;
+          for (const p of participants) {
+            const isWinner = p.user_id === winnerId;
+            const participantScore = rankedParticipants.find(rp => rp.user_id === p.user_id)?.score || 0;
+            await supabase
+              .from("room_participants")
+              .update({
+                total_wins: isWinner ? (p.total_wins || 0) + 1 : p.total_wins || 0,
+                total_rounds_played: (p.total_rounds_played || 0) + 1,
+                total_score: (p.total_score || 0) + participantScore, // Add to cumulative score
+                last_played_at: new Date().toISOString(),
+              })
+              .eq("id", p.id);
+          }
+        }
+
+        // Every device still marks only its own "seen results" flag
+        const myRow = participants.find(p => p.user_id === user.id);
+        if (myRow) {
           await supabase
             .from("room_participants")
-            .update({
-              total_wins: isWinner ? (p.total_wins || 0) + 1 : p.total_wins || 0,
-              total_rounds_played: (p.total_rounds_played || 0) + 1,
-              total_score: (p.total_score || 0) + participantScore, // Add to cumulative score
-              last_played_at: new Date().toISOString(),
-              has_seen_results: p.user_id === user.id,
-            })
-            .eq("id", p.id);
+            .update({ has_seen_results: true })
+            .eq("id", myRow.id);
         }
       };
 
       updateStats();
     }
-  }, [user, profile, myScore, myRank, isWin, currentRoom, updateProfile, rankedParticipants, addCoins, participants, maybeShowInterstitial]);
+  }, [user, profile, myScore, myRank, isWin, isHost, currentRoom, updateProfile, rankedParticipants, addCoins, participants, maybeShowInterstitial]);
 
   // Auto-open challenge share modal
   // Prefetch challenge-share data so the share button opens instantly.

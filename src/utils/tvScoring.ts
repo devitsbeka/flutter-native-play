@@ -1,40 +1,15 @@
 /**
- * Unified TV Game Scoring Utility
- * 
- * Centralizes score calculation to ensure consistency between
- * TVHostController and TVGameContext.
- */
-
-const BASE_POINTS = 100;
-const TIME_BONUS_MULTIPLIER = 5;
-const QUESTION_TIME_SECONDS = 15;
-
-/**
- * Calculate points for an answer
- * @param isCorrect - Whether the answer was correct
- * @param timeRemaining - Seconds remaining when answer was submitted
- * @returns Points earned (0 for incorrect answers)
- */
-export const calculatePoints = (isCorrect: boolean, timeRemaining: number): number => {
-  if (!isCorrect) return 0;
-  
-  // Ensure timeRemaining is within valid range
-  const clampedTime = Math.max(0, Math.min(timeRemaining, QUESTION_TIME_SECONDS));
-  
-  // Math.round to prevent floating point precision issues from timer decrements
-  return Math.round(BASE_POINTS + (clampedTime * TIME_BONUS_MULTIPLIER));
-};
-
-/**
- * Calculate observer bonus when a player answers incorrectly or times out
- * Observer earns the same as a correct answer at the given speed (100-175 range)
+ * TV Game Scoring Utility
  *
- * @param avgTimeRemaining - Average seconds remaining across wrong/timed-out answers
- * @returns Bonus points for observer (same range as a correct player answer)
+ * Scoring itself comes from the app-wide unified policy in utils/scoring —
+ * TV pays the same points for the same answer as every other mode. This
+ * module keeps the TV-specific helpers (server-time sync, session bindings)
+ * and re-exports the shared formulas for existing TV call sites.
  */
-export const calculateObserverBonus = (avgTimeRemaining: number): number => {
-  return calculatePoints(true, avgTimeRemaining);
-};
+
+import { calculatePoints, calculateObserverBonus, QUESTION_TIME_SECONDS } from "./scoring";
+
+export { calculatePoints, calculateObserverBonus };
 
 /**
  * Calculate time remaining from server start time

@@ -402,8 +402,15 @@ export function useCategoryProgress() {
           }
         }
 
-        // Update profile stats
-        const pointsEarned = score * 10 + stars * 20;
+        // Update profile stats — XP only for a first completion or an
+        // improved score, and only for the improvement itself. Without this
+        // gate, replaying an already-beaten level re-awarded the full
+        // points every single time (free XP farming).
+        const prevScore = existingProgress?.score || 0;
+        const prevStars = existingProgress?.stars_earned || 0;
+        const pointsEarned = shouldUpdate
+          ? Math.max(0, (score - prevScore) * 10 + Math.max(0, stars - prevStars) * 20)
+          : 0;
 
         const { data: currentProfile } = await supabase
           .from("profiles")
