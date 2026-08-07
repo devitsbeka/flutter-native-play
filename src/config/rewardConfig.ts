@@ -93,10 +93,15 @@ export const REWARDS = {
   },
 
   // ===== MULTIPLAYER STAKE REWARDS =====
-  MULTIPLAYER_1ST_COINS: 1000,  // Winner takes all (stake × 2)
+  // Winner bonus scales with opponents actually beaten:
+  //   min(WIN_COINS_PER_BEATEN × playersBeaten, 1ST_COINS cap) + own score.
+  // 2nd/3rd get half their score; everyone else gets the participation
+  // amount. Solo rooms are practice and pay no coins at all.
+  MULTIPLAYER_1ST_COINS: 1000,        // Cap for the placement bonus
+  MULTIPLAYER_WIN_COINS_PER_BEATEN: 500,
   MULTIPLAYER_2ND_COINS: 0,
   MULTIPLAYER_3RD_COINS: 0,
-  MULTIPLAYER_PARTICIPATION_COINS: 0,
+  MULTIPLAYER_PARTICIPATION_COINS: 100,
 
   // ===== FEED TRIVIA REWARDS (casual play from social feed) =====
   FEED_TRIVIA_XP_PER_CORRECT: 5,

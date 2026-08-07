@@ -146,24 +146,7 @@ export function useTrivia() {
   };
 }
 
-// Scoring algorithm
-export function calculateScore(
-  isCorrect: boolean,
-  timeRemaining: number,
-  maxTime: number,
-  difficulty: "easy" | "medium" | "hard",
-  streak: number
-): number {
-  if (!isCorrect) return 0;
-
-  const basePoints = {
-    easy: 100,
-    medium: 150,
-    hard: 200,
-  };
-
-  const timeBonus = Math.floor((timeRemaining / maxTime) * basePoints[difficulty] * 0.5);
-  const streakMultiplier = 1 + Math.min(streak, 5) * 0.05;
-
-  return Math.floor((basePoints[difficulty] + timeBonus) * streakMultiplier);
-}
+// Scoring: the app-wide unified policy (100 + secondsRemaining × 10) —
+// solo matches pay exactly what multiplayer rooms, TV and challenges pay
+// for the same answer. Difficulty and streak no longer change the value.
+export { calculatePoints as calculateScore } from "@/utils/scoring";
