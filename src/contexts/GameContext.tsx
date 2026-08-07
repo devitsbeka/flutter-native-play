@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import { FakeOpponent, generateFakeOpponent } from "@/data/opponents";
 import { TriviaQuestion, useTrivia, calculateScore } from "@/hooks/useTrivia";
+import { FIRST_ANSWER_BONUS } from "@/utils/scoring";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
 import { missionTracker } from "@/services/missionTracker";
 import posthog from "posthog-js";
@@ -455,7 +456,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const categoryId = currentQuestion.categoryId || currentQuestion.category;
       missionTracker.recordCategoryPlayed(categoryId);
 
-      const points = calculateScore(isCorrect, timeRemaining);
+      // The opponent's plan was fixed when the question opened, so "who was
+      // first" compares the player's tap against the bot's committed moment:
+      // more clock remaining = answered earlier. First correct gets the
+      // flat bonus on top of the unified formula.
+      const plannedTurn =
+        prev.opponentTurn ?? planOpponentTurn(currentQuestion, prev.timePerQuestion, prev.opponentSkill);
+      const playerWasFirstCorrect =
+        isCorrect && (!plannedTurn.correct || timeRemaining > plannedTurn.atRemaining);
+      const botWasFirstCorrect =
+        plannedTurn.correct && (!isCorrect || plannedTurn.atRemaining >= timeRemaining);
+
+      const points =
+        calculateScore(isCorrect, timeRemaining) +
+        (playerWasFirstCorrect ? FIRST_ANSWER_BONUS : 0);
 
       // PostHog: track question answered
       posthog.capture("pvp_question_answered", {
@@ -471,10 +485,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       // The opponent's turn was decided when this question opened, so their
       // answer and their timing are the same ones the player has been
       // watching - not a fresh roll made at the instant of this tap.
-      const turn = prev.opponentTurn ?? planOpponentTurn(currentQuestion, prev.timePerQuestion, prev.opponentSkill);
+      const turn = plannedTurn;
       const opponentCorrect = turn.correct;
       const opponentAnswer = turn.answer;
-      const opponentPoints = calculateScore(opponentCorrect, turn.atRemaining);
+      const opponentPoints =
+        calculateScore(opponentCorrect, turn.atRemaining) +
+        (botWasFirstCorrect ? FIRST_ANSWER_BONUS : 0);
 
       const newUserAnswerHistory = [...prev.userAnswerHistory, { correct: isCorrect, points }];
       const newOpponentAnswerHistory = [...prev.opponentAnswerHistory, { correct: opponentCorrect, points: opponentPoints }];
