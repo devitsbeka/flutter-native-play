@@ -15,6 +15,13 @@ export const BASE_POINTS = 100;
 export const TIME_BONUS_MULTIPLIER = 10;
 export const QUESTION_TIME_SECONDS = 15;
 
+/**
+ * Flat bonus for the outright FIRST correct answer on a question. The time
+ * bonus already rewards speed continuously; this rewards winning the race —
+ * when everyone answers correctly, who was first still matters.
+ */
+export const FIRST_ANSWER_BONUS = 25;
+
 export const calculatePoints = (isCorrect: boolean, timeRemaining: number): number => {
   if (!isCorrect) return 0;
 

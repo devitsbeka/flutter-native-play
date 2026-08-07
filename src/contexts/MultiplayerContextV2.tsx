@@ -12,7 +12,7 @@ import { shuffleArray } from "@/utils/shuffle";
 import { getSeenQuestionIds, markQuestionsAsSeen } from "@/services/questionTracker";
 import { useUserPresence } from "@/hooks/useUserPresence";
 import { createNotification } from "@/hooks/useNotifications";
-import { calculatePoints } from "@/utils/scoring";
+import { calculatePoints, FIRST_ANSWER_BONUS } from "@/utils/scoring";
 
 // Helper to notify trivia creator when their trivia is played in multiplayer
 const notifyTriviaCreator = async (userTriviaId: string, playerId: string) => {
@@ -1708,8 +1708,31 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     if (!currentQuestion) return;
     
     const isCorrect = answer === currentQuestion.correctAnswer;
-    const points = calculatePoints(isCorrect, timeRemaining);
-    
+
+    // First-correct bonus: the claim table's primary key decides the race —
+    // exactly one correct answerer per question gets the insert through.
+    // Rooms without a game id (legacy) simply skip the bonus.
+    let firstCorrectBonus = 0;
+    const gameId = state.currentRoom.current_game_id;
+    if (isCorrect && gameId) {
+      try {
+        const { data: claim } = await (supabase as any)
+          .from("room_first_correct")
+          .upsert(
+            { game_id: gameId, question_index: state.currentQuestionIndex, user_id: user.id },
+            { onConflict: "game_id,question_index", ignoreDuplicates: true }
+          )
+          .select();
+        if (claim && claim.length > 0) {
+          firstCorrectBonus = FIRST_ANSWER_BONUS;
+        }
+      } catch {
+        // Table not migrated yet — play on without the bonus
+      }
+    }
+
+    const points = calculatePoints(isCorrect, timeRemaining) + firstCorrectBonus;
+
     // Save answer
     await supabase.from("player_answers").insert({
       room_id: state.currentRoom.id,
