@@ -1,3 +1,4 @@
+import { siteUrl } from "@/config/site";
 import { motion } from "framer-motion";
 import groupIcon from "@/assets/group-of-people.png";
 import crownIcon from "@/assets/crown-icon.png";
@@ -158,7 +159,7 @@ export function ProPlansSection({
             try {
               const referralCode = await createLinkInvite("friend_pro");
               if (referralCode) {
-                const link = `${window.location.origin}/auth?ref=${referralCode}`;
+                const link = siteUrl(`/auth?mode=signup&ref=${referralCode}`);
                 const shareText = t("extra.getProFree");
                 if (navigator.share) {
                   try { await navigator.share({ title: "My Trivia", text: shareText, url: link }); } catch { /* cancelled */ }

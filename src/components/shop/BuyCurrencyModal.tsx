@@ -1,5 +1,6 @@
 import { toastIcon, ICON_URLS } from "@/lib/toast-icons";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Sparkles, Clock } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
@@ -31,6 +32,7 @@ export function BuyCurrencyModal({
   const { addPowerUp } = useUserPowerUps();
   const { playSound } = useSound();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [isPurchasing, setIsPurchasing] = useState<number | null>(null);
 
   const isCoins = currencyType === "coins";
@@ -128,7 +130,9 @@ export function BuyCurrencyModal({
     }
   };
 
-  // Gems purchase - placeholder for future real money purchases
+  // Gems are bought with real money — send the user to the live gem
+  // packages section of the shop (previously this was a "coming soon"
+  // dead end even though Stripe gem checkout already works).
   if (!isCoins) {
     return (
       <GameModal
@@ -140,9 +144,19 @@ export function BuyCurrencyModal({
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
             <Sparkles className="w-8 h-8 text-primary" />
           </div>
-          <p className="text-center text-muted-foreground">
-            {t("shop.gemsPurchaseSoon")}
-          </p>
+          <button
+            onClick={() => {
+              onClose();
+              navigate("/power-ups?section=gems-lari");
+            }}
+            className="px-6 py-3 rounded-full font-bold text-primary-foreground"
+            style={{
+              background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.9) 100%)",
+              boxShadow: "0 2px 0 hsl(var(--primary)/0.3), 0 2px 8px hsl(var(--primary)/0.2)",
+            }}
+          >
+            {t("shop.buyGems")}
+          </button>
         </div>
       </GameModal>
     );

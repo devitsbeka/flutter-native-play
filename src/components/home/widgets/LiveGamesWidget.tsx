@@ -137,7 +137,7 @@ export function LiveGamesWidget() {
       {/* Footer link */}
       {rooms.length > 0 && (
         <button
-          onClick={() => navigate("/rooms")}
+          onClick={() => navigate("/team?tab=rooms")}
           className="w-full mt-3 text-center text-[13px] font-medium text-primary hover:underline"
         >
           {t("extra.allRooms", { count: rooms.length })}

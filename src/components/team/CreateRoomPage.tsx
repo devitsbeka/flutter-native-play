@@ -35,6 +35,7 @@ import iconGroupOfPeople from "@/assets/group-of-people.png";
 import stickerAlbum from "@/assets/sticker-album.png";
 import { PreRoomQueuePreview } from "@/components/team/PreRoomQueuePreview";
 import { getRandomGradient } from "@/config/roomGradients";
+import { siteUrl } from "@/config/site";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Json } from "@/integrations/supabase/types";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
@@ -452,12 +453,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     navigator.clipboard.writeText(text);
   };
 
-  // Generate and share invite link
+  // Share a link to the team page. The room doesn't exist yet at this
+  // point, so there is no room code to embed — the previous version shared
+  // a random made-up code that nothing could ever redeem. siteUrl keeps the
+  // link on the production domain even from the native app.
   const handleShareInviteLink = async () => {
-    const baseUrl = window.location.origin;
-    const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     const categoryName = selectedCategory?.name || "Trivia";
-    const inviteLink = `${baseUrl}/join?invite=${inviteCode}`;
+    const inviteLink = siteUrl("/team");
     
     if (navigator.share) {
       try {
