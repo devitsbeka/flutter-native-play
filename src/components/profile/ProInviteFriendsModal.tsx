@@ -1,3 +1,4 @@
+import { siteUrl } from "@/config/site";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Users, Mail, Send, Check, Gift, Link2, Copy, Share2 } from "lucide-react";
@@ -49,7 +50,7 @@ export function ProInviteFriendsModal({
     try {
       const referralCode = await createLinkInvite(`friend_${currentTier}`);
       if (referralCode) {
-        const link = `${window.location.origin}/auth?ref=${referralCode}`;
+        const link = siteUrl(`/auth?mode=signup&ref=${referralCode}`);
         setGeneratedLink(link);
         onInviteSent?.();
         toast.success(t("extra.linkCreated"));

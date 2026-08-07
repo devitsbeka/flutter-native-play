@@ -184,7 +184,6 @@ function TeamContentV2() {
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showAllGamesModal, setShowAllGamesModal] = useState(false);
-  const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
     const tabFromUrl = searchParams.get("tab");
@@ -258,7 +257,6 @@ function TeamContentV2() {
   const [showCreateRoomScreen, setShowCreateRoomScreen] = useState(false);
   const [showTVModal, setShowTVModal] = useState(false);
   const [showCategorySelectorModal, setShowCategorySelectorModal] = useState(false);
-  const [isEditingRound, setIsEditingRound] = useState(false);
   const [pendingRandomPlay, setPendingRandomPlay] = useState(false);
   const [preSelectedCategory, setPreSelectedCategory] = useState<{
     id: string;

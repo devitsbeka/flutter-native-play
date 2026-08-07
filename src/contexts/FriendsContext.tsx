@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ export const FriendsContext = createContext<FriendsContextValue | null>(null);
 
 export function FriendsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
@@ -108,11 +110,11 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
 
       if (!isInitialLoad.current && newPendingRequests.length > previousPendingCount.current) {
         const newRequest = newPendingRequests[newPendingRequests.length - 1];
-        toast.info(`${newRequest.nickname} გთხოვს მეგობრობას! 🤝`, {
+        toast.info(`${t("extra.friendRequestReceived", { name: newRequest.nickname })} 🤝`, {
           duration: 5000,
           action: {
-            label: "ნახვა",
-            onClick: () => {},
+            label: t("extra.viewAction"),
+            onClick: () => navigate("/notifications"),
           },
         });
       }

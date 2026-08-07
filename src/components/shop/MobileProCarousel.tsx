@@ -1,3 +1,4 @@
+import { siteUrl } from "@/config/site";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { Crown, Users, Sparkles, Check, ChevronRight, Loader2, Share2 } from "lucide-react";
@@ -135,7 +136,7 @@ export function MobileProCarousel() {
     try {
       const referralCode = await createLinkInvite("friend_pro");
       if (referralCode) {
-        const link = `${window.location.origin}/auth?ref=${referralCode}`;
+        const link = siteUrl(`/auth?mode=signup&ref=${referralCode}`);
         const shareText = t("extra.getProFree");
         if (navigator.share) {
           try {

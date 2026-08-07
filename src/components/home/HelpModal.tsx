@@ -26,7 +26,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
     {
       icon: Mail,
       label: t("help.email"),
-      sublabel: "support@worldquizzes.com",
+      sublabel: "support@mytrivia.io",
       action: () => window.open("mailto:support@mytrivia.io", "_blank"),
     },
     {

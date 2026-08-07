@@ -27,7 +27,7 @@ export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
 
   const handleGoToShop = () => {
     onClose();
-    setTimeout(() => navigate("/power-ups?tab=powers"), 100);
+    setTimeout(() => navigate("/power-ups?section=powers"), 100);
   };
 
   return (

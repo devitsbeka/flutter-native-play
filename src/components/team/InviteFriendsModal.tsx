@@ -1,3 +1,4 @@
+import { siteUrl } from "@/config/site";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -152,7 +153,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     fetchPendingOutgoing();
   }, [user?.id, isOpen]);
   
-  const appLink = inviteLink || `${window.location.origin}/team`;
+  const appLink = inviteLink || siteUrl("/team");
   const shareMessage = t("extra.shareMessage");
   const encodedMessage = encodeURIComponent(shareMessage);
   const encodedLink = encodeURIComponent(appLink);

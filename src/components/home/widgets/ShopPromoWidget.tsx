@@ -13,7 +13,7 @@ export function ShopPromoWidget() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, duration: 0.3, ease: "easeOut" }}
       whileTap={{ y: 2 }}
-      onClick={() => navigate("/shop")}
+      onClick={() => navigate("/power-ups")}
       className="relative overflow-hidden rounded-2xl p-4 cursor-pointer group bg-card border border-border/60"
       style={{
         boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
