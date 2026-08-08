@@ -125,8 +125,12 @@ export function VipProvider({ children }: { children: ReactNode }) {
           const isActive = isAfter(new Date(data.expires_at), new Date());
           setIsVip(isActive);
           try { localStorage.setItem(VIP_CACHE_KEY, String(isActive)); } catch {}
-        } else if (sessionStorage.getItem("referral_welcome") && retryCount < 2) {
-          setTimeout(() => fetchVipStatus(retryCount + 1), 1500);
+        } else if (retryCount < 2) {
+          // "No row" on a fresh load can be an auth race — the query fires
+          // before the session token is fully attached and RLS hides the row.
+          // Re-check before revoking a cached PRO state, otherwise the badge
+          // flickers off on refresh and returns seconds later.
+          setTimeout(() => fetchVipStatus(retryCount + 1), 1200);
           return;
         } else {
           setSubscription(null);
