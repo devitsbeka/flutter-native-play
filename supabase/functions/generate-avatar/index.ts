@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
-import { AI_CHAT_URL, AI_API_KEY } from "../_shared/ai.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -119,14 +119,21 @@ serve(async (req) => {
       }
     }
 
-    // fal.ai GPT Image 2 path (preferred when configured)
+    // fal.ai GPT Image 2 path (preferred when configured). fal failures —
+    // exhausted balance, rate limits, model outages — fall through to the
+    // AI gateway below instead of failing the whole generation.
     if (FAL_KEY) {
-      const falImage = await generateWithFal(prompt, imageUrl);
-      console.log("Avatar generated successfully via fal.ai");
-      return new Response(
-        JSON.stringify({ success: true, avatarUrl: falImage }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      try {
+        const falImage = await generateWithFal(prompt, imageUrl);
+        console.log("Avatar generated successfully via fal.ai");
+        return new Response(
+          JSON.stringify({ success: true, avatarUrl: falImage }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (falError) {
+        if (!AI_API_KEY) throw falError;
+        console.error("fal.ai failed, falling back to AI gateway:", falError);
+      }
     }
 
     // Use AI gateway's image editing model
@@ -137,7 +144,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: model,
+        model: aiModel(model),
         messages: [
           {
             role: "user",
@@ -158,14 +165,14 @@ serve(async (req) => {
         modalities: ["image", "text"],
         // Gemini image output config via the OpenAI-compat extension
         // namespace: 2K costs the same as the default 1K on Nano Banana Pro,
-        // and a hard 16:9 beats prompt-steering the aspect ratio. Gateways
-        // that don't know the field ignore it.
-        extra_body: {
-          google: {
-            image_config: {
-              aspect_ratio: "16:9",
-              image_size: "2K"
-            }
+        // and a hard 16:9 beats prompt-steering the aspect ratio. Providers
+        // that don't know the field ignore it. (OpenAI SDKs merge extra_body
+        // into the request root — with raw fetch the "google" key goes at the
+        // top level, never wrapped in a literal "extra_body" field.)
+        google: {
+          image_config: {
+            aspect_ratio: "16:9",
+            image_size: "2K"
           }
         }
       })
