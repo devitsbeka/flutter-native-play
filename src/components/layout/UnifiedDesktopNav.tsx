@@ -12,7 +12,9 @@ import {
   Lock,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useVipStatus } from "@/hooks/useVipStatus";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
+import crownIcon from "@/assets/crown-icon.png";
 
 import { useNavigationPrefetch } from "@/hooks/useNavigationPrefetch";
 import { Avatar } from "@/components/shared/Avatar";
@@ -60,6 +62,9 @@ export function UnifiedDesktopNav({
   const navigate = useNavigate();
   const location = useLocation();
   const { profile, user, signOut } = useAuth();
+  // PRO badge/stroke on the profile button — read from the VIP context rather
+  // than the isVip prop, which not every page passes down
+  const { isVip: isProUser } = useVipStatus();
   const { pendingChallenges } = usePendingChallenges();
   const pendingCount = pendingChallenges?.length || 0;
   const { prefetchRoute } = useNavigationPrefetch();
@@ -287,7 +292,9 @@ export function UnifiedDesktopNav({
           {/* Tablet rail: avatar only */}
           <div className="md:flex lg:hidden items-center justify-center">
             <div
-              className="relative rounded-full p-1 w-12 h-12 aspect-square flex items-center justify-center cursor-pointer"
+              className={`relative rounded-full p-1 w-12 h-12 aspect-square flex items-center justify-center cursor-pointer ${
+                isProUser ? "ring-2 ring-[#E3BC37]" : ""
+              }`}
               style={{
                 background: "linear-gradient(145deg, #FFFFFF 0%, #F5F3FA 100%)",
                 boxShadow:
@@ -324,7 +331,11 @@ export function UnifiedDesktopNav({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="w-6 h-6 flex items-center justify-center">
+            <div
+              className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                isProUser ? "ring-2 ring-[#E3BC37]" : ""
+              }`}
+            >
               <Avatar
                 imageUrl={profile?.avatar_url || undefined}
                 emoji={profile?.nickname?.charAt(0) || "👤"}
@@ -335,6 +346,9 @@ export function UnifiedDesktopNav({
             <span className="text-[15px] font-medium truncate flex-1 text-left">
               {profile?.nickname || t("extra.guestUser")}
             </span>
+            {isProUser && (
+              <img src={crownIcon} alt="PRO" className="w-5 h-5 shrink-0 select-none" draggable={false} />
+            )}
           </motion.button>
         </div>
       </nav>
