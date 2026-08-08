@@ -2863,6 +2863,7 @@ export const ka = {
     ssEnterCommand: "შეიყვანე ბრძანება...",
     ssQuickActions: "სწრაფი მოქმედებები",
     ssCreateNewRoom: "ახალი ოთახის შექმნა",
+    ssViewAll: "ყველა",
     ssDescNewRoom: "შექმენი ოთახი და მოიწვიე მეგობრები",
     ssDescSettings: "ენა, ანგარიში და პარამეტრები",
     ssDescProfile: "შენი სტატისტიკა და მიღწევები",

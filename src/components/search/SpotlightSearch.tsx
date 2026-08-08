@@ -264,6 +264,27 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
     navigate(`/collection/${collectionId}`);
   };
 
+  // Section heading with roomier typography and a right-aligned "all" link
+  // that jumps to the full list for that section
+  const groupHeading = (label: string, onAll?: () => void) => (
+    <div className="flex items-center justify-between py-1.5">
+      <span className="text-sm font-semibold text-foreground/80">{label}</span>
+      {onAll && (
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            handleOpenChange(false);
+            onAll();
+          }}
+          className="text-xs font-semibold text-primary hover:underline"
+        >
+          {t("extra.ssViewAll")}
+        </button>
+      )}
+    </div>
+  );
+
   // Handle input change - open modal when typing
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -441,7 +462,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
 
             {/* Commands Group (when starts with /) */}
             {isCommand && filteredCommands.length > 0 && (
-              <CommandGroup heading={t("extra.ssCommands")}>
+              <CommandGroup heading={groupHeading(t("extra.ssCommands"))}>
                 {filteredCommands.map((cmd) => (
                   <CommandItem 
                     key={cmd.command}
@@ -463,7 +484,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             {/* Quick Actions (when no query) */}
             {!isCommand && !query && (
               <>
-                <CommandGroup heading={t("extra.ssQuickActions")}>
+                <CommandGroup heading={groupHeading(t("extra.ssQuickActions"))}>
                   <CommandItem 
                     onSelect={() => handleCommandSelect(COMMANDS[0])}
                     className="flex items-center gap-3 cursor-pointer"
@@ -501,7 +522,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
 
             {/* Categories */}
             {!isCommand && filteredCategories.length > 0 && (
-              <CommandGroup heading={t("extra.ssCategories")}>
+              <CommandGroup heading={groupHeading(t("extra.ssCategories"), () => navigate("/discover"))}>
                 {filteredCategories.map((category) => (
                   <CommandItem 
                     key={category.id}
@@ -531,7 +552,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             {!isCommand && filteredFriends.length > 0 && (
               <>
                 <CommandSeparator />
-                <CommandGroup heading={t("extra.ssFriends")}>
+                <CommandGroup heading={groupHeading(t("extra.ssFriends"), () => navigate("/team"))}>
                   {filteredFriends.slice(0, 5).map((friend) => (
                     <CommandItem 
                       key={friend.id}
@@ -561,7 +582,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             {!isCommand && filteredRooms.length > 0 && (
               <>
                 <CommandSeparator />
-                <CommandGroup heading={t("extra.ssGameRooms")}>
+                <CommandGroup heading={groupHeading(t("extra.ssGameRooms"), () => navigate("/team?tab=rooms"))}>
                   {filteredRooms.slice(0, 5).map((room) => (
                     <CommandItem 
                       key={room.id}
@@ -599,7 +620,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             {!isCommand && filteredTrivias.length > 0 && (
               <>
                 <CommandSeparator />
-                <CommandGroup heading={t("extra.cpMyTrivias")}>
+                <CommandGroup heading={groupHeading(t("extra.cpMyTrivias"), () => navigate("/team?tab=my-content"))}>
                   {filteredTrivias.slice(0, 5).map((trivia) => (
                     <CommandItem
                       key={trivia.id}
@@ -630,7 +651,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             {!isCommand && (
               <>
                 <CommandSeparator />
-                <CommandGroup heading={t("extra.ssShop")}>
+                <CommandGroup heading={groupHeading(t("extra.ssShop"), () => navigate("/power-ups"))}>
                   <CommandItem 
                     onSelect={() => { setOpen(false); navigate("/power-ups"); }}
                     className="flex items-center gap-3 cursor-pointer"
