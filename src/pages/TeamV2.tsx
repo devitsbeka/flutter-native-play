@@ -267,6 +267,15 @@ function TeamContentV2() {
   const [exploreFilter, setExploreFilter] = useState<ExploreFilter>("all");
   const [exploreSort, setExploreSort] = useState<ExploreSort>("recent");
   const [exploreSearchQuery, setExploreSearchQuery] = useState("");
+
+  // Switching a filter/sort keeps the old scroll offset, which leaves the
+  // first result's header hidden under the sticky friends/tabs/filter stack —
+  // reset the scroll so refiltered content starts fully visible
+  useEffect(() => {
+    document.getElementById("main-scroll-container")?.scrollTo({ top: 0 });
+    document.getElementById("team-main-content")?.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
+  }, [exploreFilter, exploreSort, roomsFilter, sortFilter]);
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [personalTriviaDraftId, setPersonalTriviaDraftId] = useState<string | null>(null);
   const [showTeamMenu, setShowTeamMenu] = useState(false);
