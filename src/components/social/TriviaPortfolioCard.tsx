@@ -169,23 +169,18 @@ export function TriviaPortfolioCard({
             </button>
           </div>
           
-          {/* Play Button - text pill when not played, icon circle when played */}
-          {isPlayed ? (
-            <button 
-              onClick={handlePlayClick}
-              className="w-9 h-9 rounded-full bg-purple-500 flex items-center justify-center transition-colors hover:bg-purple-600"
-            >
+          {/* Play Button - icon-only circle; the hourglass hints at the
+              play limit for non-VIP players who haven't played this one */}
+          <button
+            onClick={handlePlayClick}
+            className="w-9 h-9 rounded-full bg-purple-500 flex items-center justify-center transition-colors hover:bg-purple-600"
+          >
+            {isPlayed || isVip || vipLoading ? (
               <Play className="w-4 h-4 text-white fill-white" />
-            </button>
-          ) : (
-            <button 
-              onClick={handlePlayClick}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-background border-2 border-purple-500 rounded-full transition-colors hover:bg-purple-50 dark:hover:bg-purple-500/10"
-            >
-              {isVip ? <Play className="w-4 h-4 text-purple-500" /> : <Hourglass className="w-4 h-4 text-purple-500" />}
-              <span className="text-sm font-semibold text-purple-500">{t("extra.playBtn")}</span>
-            </button>
-          )}
+            ) : (
+              <Hourglass className="w-4 h-4 text-white" />
+            )}
+          </button>
         </div>
       </div>
 
