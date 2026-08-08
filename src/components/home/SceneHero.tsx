@@ -5,56 +5,34 @@ import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 
 interface SceneHeroProps {
-  sceneUrl: string;
   level: number;
   xpCurrent: number;
   xpTotal: number;
   xpProgress: number; // 0..100
   coins: number;
   gems: number;
-  onSceneClick: () => void;
   onCoinsClick: () => void;
   onGemsClick: () => void;
   playButton: ReactNode;
 }
 
-// The personalized 16:9 scene as the homepage hero: artwork fills the area
-// with softly faded edges, and the stats the AvatarCircle used to carry
-// float over it as glass chips — level+XP on the left, currencies on the
-// right — leaving the character as the focal point.
+// Floating overlay for the personalized scene homepage: the artwork itself is
+// rendered full-bleed at the page root; this component carries the stats the
+// AvatarCircle used to show as glass chips — level+XP on the left, currencies
+// on the right — leaving the character as the focal point.
 export function SceneHero({
-  sceneUrl,
   level,
   xpCurrent,
   xpTotal,
   xpProgress,
   coins,
   gems,
-  onSceneClick,
   onCoinsClick,
   onGemsClick,
   playButton,
 }: SceneHeroProps) {
   return (
-    <div className="relative w-full h-full">
-      {/* Scene artwork - soft mask so it melts into the app background */}
-      <motion.img
-        src={sceneUrl}
-        alt=""
-        initial={{ opacity: 0, scale: 1.02 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6 }}
-        onClick={onSceneClick}
-        className="absolute inset-0 w-full h-full object-cover object-center cursor-pointer select-none"
-        draggable={false}
-        style={{
-          maskImage:
-            "radial-gradient(ellipse 92% 90% at 50% 48%, black 62%, transparent 100%)",
-          WebkitMaskImage:
-            "radial-gradient(ellipse 92% 90% at 50% 48%, black 62%, transparent 100%)",
-        }}
-      />
-
+    <div className="relative w-full h-full pointer-events-none">
       {/* Left: level shield + XP */}
       <motion.div
         initial={{ opacity: 0, x: -16 }}

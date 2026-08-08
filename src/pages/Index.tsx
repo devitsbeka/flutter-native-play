@@ -793,6 +793,19 @@ export default function Index() {
         disableScroll
       >
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
+        {/* Personalized scene as the full-bleed page background (xl+); the
+            header, friends strip and cards float over it */}
+        {user && sceneUrl && (
+          <motion.img
+            src={sceneUrl}
+            alt=""
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="hidden xl:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
+            draggable={false}
+          />
+        )}
         <header className="relative z-20 px-4 py-3 md:pt-4 safe-top border-b border-border/30 lg:border-b-0">
           <div className="flex items-center justify-between gap-3 md:min-h-12">
             {/* Left side: Burger menu (mobile only) - Hidden for guests */}
@@ -1282,23 +1295,21 @@ export default function Index() {
 
             </div>}
 
-            {/* xl+ layout: personalized scene hero when one exists - LOGGED IN USERS ONLY */}
+            {/* xl+ layout: floating stats over the full-bleed scene - LOGGED IN USERS ONLY */}
             {user && sceneUrl && (
               <motion.div
-                className="hidden xl:block w-full h-full pr-[300px] pointer-events-auto"
+                className="hidden xl:block w-full h-full pr-[300px] pointer-events-none"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
               >
                 <SceneHero
-                  sceneUrl={sceneUrl}
                   level={levelInfo.level}
                   xpCurrent={levelInfo.xpInCurrentLevel}
                   xpTotal={levelInfo.xpNeededForNextLevel}
                   xpProgress={levelInfo.progress}
                   coins={coins}
                   gems={gems}
-                  onSceneClick={() => openAvatarModal()}
                   onCoinsClick={() => navigate("/power-ups?section=coins")}
                   onGemsClick={() => navigate("/power-ups?section=gems-lari")}
                   playButton={

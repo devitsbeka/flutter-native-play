@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminRole } from "@/hooks/useAdminRole";
-import { SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";
+import { SCENE_AVATAR_MODEL, SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";
 
 // The generate-avatar edge function reads its prompt from the
 // ai_generation_settings table, which only admins can write (RLS). The deploy
@@ -20,16 +20,16 @@ export function AdminAIPromptSync() {
       try {
         const { data: settings } = await supabase
           .from("ai_generation_settings")
-          .select("id, prompt")
+          .select("id, prompt, model")
           .eq("setting_type", "avatar_static")
           .maybeSingle();
 
         if (!settings) return;
-        if (settings.prompt === SCENE_AVATAR_PROMPT) return;
+        if (settings.prompt === SCENE_AVATAR_PROMPT && settings.model === SCENE_AVATAR_MODEL) return;
 
         const { error } = await supabase
           .from("ai_generation_settings")
-          .update({ prompt: SCENE_AVATAR_PROMPT })
+          .update({ prompt: SCENE_AVATAR_PROMPT, model: SCENE_AVATAR_MODEL })
           .eq("id", settings.id);
 
         if (error) {
