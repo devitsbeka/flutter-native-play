@@ -1906,6 +1906,7 @@ export const en: KaTranslations = {
     playBtn: "Play",
     playsLabel: "Plays",
     playedLabel: "Played",
+    avatarChooseBtn: "Choose",
     answersCount: "Answers",
     topicsLabel: "Topics",
     roundLabel: "Round",

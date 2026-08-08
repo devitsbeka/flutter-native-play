@@ -1905,6 +1905,7 @@ export const ka = {
     playBtn: "ითამაშე",
     playsLabel: "ნათამაშები",
     playedLabel: "ნათამაშები",
+    avatarChooseBtn: "არჩევა",
     answersCount: "პასუხი",
     topicsLabel: "თემატიკა",
     roundLabel: "რაუნდი",

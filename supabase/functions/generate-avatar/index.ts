@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
-import { AI_CHAT_URL, AI_API_KEY } from "../_shared/ai.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -15,6 +15,9 @@ interface AvatarRequest {
   // "scene" (default): 16:9 homepage hero scene using the DB prompt.
   // "portrait": square public mini avatar of the same stylized character.
   mode?: "scene" | "portrait";
+  // Optional prompt override for testing/admin flows; the synced
+  // ai_generation_settings prompt remains the default.
+  prompt?: string;
 }
 
 // The public circle avatar: same character language as the scene, but a
@@ -105,7 +108,7 @@ serve(async (req) => {
       throw new Error("AI_API_KEY is not configured");
     }
 
-    const { imageUrl, mode = "scene" }: AvatarRequest = await req.json();
+    const { imageUrl, mode = "scene", prompt: promptOverride }: AvatarRequest = await req.json();
 
     if (!imageUrl) {
       throw new Error("imageUrl is required");
@@ -116,6 +119,7 @@ serve(async (req) => {
     // Fetch settings from database
     let prompt = DEFAULT_PROMPT;
     let model = DEFAULT_MODEL;
+    let promptSource = "default";
 
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       try {
@@ -130,6 +134,7 @@ serve(async (req) => {
         if (!error && settings) {
           prompt = settings.prompt || DEFAULT_PROMPT;
           model = settings.model || DEFAULT_MODEL;
+          promptSource = "db";
           console.log("Using database settings for avatar generation");
         } else {
           console.log("Using default settings, DB error:", error?.message);
@@ -139,19 +144,32 @@ serve(async (req) => {
       }
     }
 
-    // Portraits use their fixed prompt; scenes use the DB-configured one
-    if (mode === "portrait") {
-      prompt = PORTRAIT_PROMPT;
+    if (promptOverride) {
+      prompt = promptOverride;
+      promptSource = "override";
     }
 
-    // fal.ai GPT Image 2 path (preferred when configured)
+    // Portraits use their fixed prompt; scenes use the DB/override one
+    if (mode === "portrait") {
+      prompt = PORTRAIT_PROMPT;
+      promptSource = "portrait";
+    }
+
+    // fal.ai GPT Image 2 path (preferred when configured). fal failures —
+    // exhausted balance, rate limits, model outages — fall through to the
+    // AI gateway below instead of failing the whole generation.
     if (FAL_KEY) {
-      const falImage = await generateWithFal(prompt, imageUrl, mode);
-      console.log("Avatar generated successfully via fal.ai");
-      return new Response(
-        JSON.stringify({ success: true, avatarUrl: falImage }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      try {
+        const falImage = await generateWithFal(prompt, imageUrl, mode);
+        console.log("Avatar generated successfully via fal.ai");
+        return new Response(
+          JSON.stringify({ success: true, avatarUrl: falImage, promptSource }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (falError) {
+        if (!AI_API_KEY) throw falError;
+        console.error("fal.ai failed, falling back to AI gateway:", falError);
+      }
     }
 
     // Use AI gateway's image editing model
@@ -162,7 +180,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: model,
+        model: aiModel(model),
         messages: [
           {
             role: "user",
@@ -183,14 +201,14 @@ serve(async (req) => {
         modalities: ["image", "text"],
         // Gemini image output config via the OpenAI-compat extension
         // namespace: 2K costs the same as the default 1K on Nano Banana Pro,
-        // and a hard 16:9 beats prompt-steering the aspect ratio. Gateways
-        // that don't know the field ignore it.
-        extra_body: {
-          google: {
-            image_config: {
-              aspect_ratio: "16:9",
-              image_size: "2K"
-            }
+        // and a hard 16:9 beats prompt-steering the aspect ratio. Providers
+        // that don't know the field ignore it. (OpenAI SDKs merge extra_body
+        // into the request root — with raw fetch the "google" key goes at the
+        // top level, never wrapped in a literal "extra_body" field.)
+        google: {
+          image_config: {
+            aspect_ratio: mode === "portrait" ? "1:1" : "16:9",
+            image_size: mode === "portrait" ? "1K" : "2K"
           }
         }
       })
@@ -216,9 +234,10 @@ serve(async (req) => {
     console.log("Avatar generated successfully");
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         avatarUrl: generatedImage, // This is a base64 data URL
+        promptSource,
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
