@@ -1,14 +1,12 @@
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Sparkles, Settings, HelpCircle, Shield, FileText, LogOut, ChevronRight } from "lucide-react";
+import { Settings, HelpCircle, Shield, FileText, LogOut, ChevronRight } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { getRankFromPoints } from "@/data/opponents";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { useAvatarModal } from "@/contexts/AvatarModalContext";
-import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProPlansSection, ProTier } from "@/components/profile/ProPlansSection";
 import { AvatarReel } from "@/components/profile/AvatarReel";
@@ -28,7 +26,6 @@ export default function Profile() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { subscription, isVip } = useVipStatus();
-  const { openAvatarModal } = useAvatarModal();
   const [searchParams] = useSearchParams();
   // Many places deep-link to /profile?tab=PRO (paywalls) or ?tab=Stats —
   // honor the param instead of relying on the default happening to match.
@@ -38,8 +35,6 @@ export default function Profile() {
     if (tab === "settings") return "Settings";
     return "PRO";
   });
-  const [showVideo, setShowVideo] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Get current tier from subscription - only if actively VIP
   const currentTier = isVip ? (subscription?.vip_tier as ProTier | undefined) : undefined;
@@ -100,59 +95,9 @@ export default function Profile() {
               className="mb-6"
             >
               <div className="flex flex-col items-center">
-                {/* Avatar carousel: presets flank the selected avatar, which
-                    always sits in the middle with the bold ring */}
-                <AvatarReel
-                  center={
-                    <motion.button
-                      onClick={() => openAvatarModal()}
-                      className="relative cursor-pointer group"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onMouseEnter={() => {
-                        if (profile.animated_avatar_url && videoRef.current) {
-                          setShowVideo(true);
-                          videoRef.current.currentTime = 0;
-                          videoRef.current.play().catch(console.error);
-                        }
-                      }}
-                      onMouseLeave={() => setShowVideo(false)}
-                    >
-                      {/* Static Avatar */}
-                      <div className="relative w-32 h-32 md:w-36 md:h-36 rounded-full border-4 border-white ring-4 ring-primary overflow-hidden transition-all group-hover:ring-primary/80 bg-white">
-                        <img
-                          src={resolveAvatarUrl(profile.avatar_url) || "/placeholder.svg"}
-                          alt="Avatar"
-                          className="w-full h-full object-cover"
-                          style={{ opacity: showVideo && profile.animated_avatar_url ? 0 : 1, transition: "opacity 0.3s" }}
-                        />
-                        {/* Animated video overlay */}
-                        {profile.animated_avatar_url && (
-                          <video
-                            ref={videoRef}
-                            src={profile.animated_avatar_url}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            style={{ opacity: showVideo ? 1 : 0, transition: "opacity 0.3s" }}
-                            muted
-                            playsInline
-                            loop
-                            preload="auto"
-                          />
-                        )}
-
-                        {/* Hover overlay with edit hint */}
-                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Sparkles className="w-8 h-8 text-white" />
-                        </div>
-                      </div>
-
-                      {/* Edit badge - always visible */}
-                      <div className="absolute -bottom-1 -right-1 p-2 bg-primary rounded-full shadow-lg">
-                        <Sparkles className="w-4 h-4 text-primary-foreground" />
-                      </div>
-                    </motion.button>
-                  }
-                />
+                {/* Avatar carousel: the strip drags left/right, whatever
+                    settles in the middle is the selected avatar */}
+                <AvatarReel />
                 <h2 className="text-xl font-bold text-foreground mt-4">
                   {profile.nickname}
                 </h2>
