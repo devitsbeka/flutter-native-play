@@ -10,6 +10,13 @@ const DEFAULT_SETTINGS = {
   movement_amplitude: "small",
 };
 
+// Homepage scene idle-loop (mode "scene"): Kling v2.5 turbo pro animates the
+// user's generated 16:9 scene into a seamlessly repeatable ambient video.
+// The client passes the source-controlled prompt (src/config/
+// sceneAnimationPrompt.ts); this copy is only the fallback.
+const SCENE_LOOP_ENDPOINT = "https://queue.fal.run/fal-ai/kling-video/v2.5-turbo/pro/image-to-video";
+const SCENE_LOOP_PROMPT = "Create a perfectly seamless, infinitely repeatable idle animation loop. The final frame must match the first frame exactly in composition, character pose, facial expression, camera position, lighting, object positions, and environment state, with no visible jump when repeated. Keep the scene calm and nearly still, with subtle premium-quality ambient animation only. The character remains seated in the same relaxed pose with gentle breathing, one subtle blink, and slight head micro-movement. Camera completely locked. All motion cyclic, returning to the exact starting state so the video repeats indefinitely with zero perceptible cut.";
+
 async function fetchAnimationSettings(supabase: any): Promise<{ prompt: string; settings: typeof DEFAULT_SETTINGS }> {
   try {
     const { data, error } = await supabase
@@ -43,7 +50,9 @@ async function checkAndUpload(
   responseUrl: string,
   supabase: any,
   userId: string,
-  falKey: string
+  falKey: string,
+  mode?: string,
+  sceneImageUrl?: string
 ): Promise<{ success: boolean; videoUrl?: string; error?: string }> {
   console.log("Checking Fal.ai status at:", statusUrl);
   
@@ -90,7 +99,9 @@ async function checkAndUpload(
     const videoUint8Array = new Uint8Array(videoArrayBuffer);
 
     // Upload to Supabase storage
-    const fileName = `${userId}/animated_avatar_${Date.now()}.mp4`;
+    const fileName = mode === "scene"
+      ? `${userId}/scene_loop_${Date.now()}.mp4`
+      : `${userId}/animated_avatar_${Date.now()}.mp4`;
     console.log("Uploading to Supabase storage:", fileName);
 
     const { error: uploadError } = await supabase.storage
@@ -112,6 +123,27 @@ async function checkAndUpload(
 
     const publicVideoUrl = publicUrlData.publicUrl;
     console.log("Public video URL:", publicVideoUrl);
+
+    // Scene loop: attach the video to the scene's generation row — the
+    // homepage prefers a scene's animated_avatar_url over its still image.
+    // The profile's own avatar/animation fields are untouched.
+    if (mode === "scene") {
+      if (!sceneImageUrl) {
+        throw new Error("Missing sceneImageUrl for scene loop result");
+      }
+      const { error: sceneError } = await supabase
+        .from("avatar_generations")
+        .update({ animated_avatar_url: publicVideoUrl })
+        .eq("user_id", userId)
+        .eq("avatar_url", sceneImageUrl);
+
+      if (sceneError) {
+        console.error("Scene generation update error:", sceneError);
+        throw new Error(`Scene update failed: ${sceneError.message}`);
+      }
+
+      return { success: true, videoUrl: publicVideoUrl };
+    }
 
     // Update profile
     const { error: updateError } = await supabase
@@ -172,14 +204,14 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body = await req.json();
-    const { imageUrl, userId, requestId, statusUrl, responseUrl } = body;
-    
+    const { imageUrl, userId, requestId, statusUrl, responseUrl, mode, promptOverride } = body;
+
     console.log("Request body:", JSON.stringify(body));
 
     // If we have statusUrl and responseUrl, we're polling for status
     if (statusUrl && responseUrl && userId) {
       console.log("Polling for status with URLs:", { statusUrl, responseUrl });
-      const result = await checkAndUpload(statusUrl, responseUrl, supabase, userId, falKey);
+      const result = await checkAndUpload(statusUrl, responseUrl, supabase, userId, falKey, mode, imageUrl);
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -189,6 +221,49 @@ serve(async (req) => {
     if (!imageUrl || !userId) {
       console.log("Missing required fields:", { imageUrl: !!imageUrl, userId: !!userId });
       throw new Error("Missing imageUrl or userId");
+    }
+
+    // Scene idle-loop: Kling v2.5 turbo pro over the user's homepage scene
+    if (mode === "scene") {
+      console.log("Starting scene loop with Kling for image:", imageUrl.substring(0, 100));
+      const submitRes = await fetch(SCENE_LOOP_ENDPOINT, {
+        method: "POST",
+        headers: {
+          Authorization: `Key ${falKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: promptOverride || SCENE_LOOP_PROMPT,
+          image_url: imageUrl,
+          duration: "5",
+          negative_prompt: "blur, distort, low quality, camera movement, zoom, scene change",
+          cfg_scale: 0.5,
+        }),
+      });
+
+      if (!submitRes.ok) {
+        const errorText = await submitRes.text();
+        console.error("Kling submission failed:", submitRes.status, errorText);
+        throw new Error(`Kling submission failed: ${submitRes.status} - ${errorText}`);
+      }
+
+      const submitData = await submitRes.json();
+      console.log("Kling API response:", JSON.stringify(submitData));
+
+      if (!submitData.request_id || !submitData.status_url || !submitData.response_url) {
+        throw new Error("Missing request_id or URLs in Kling response");
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          requestId: submitData.request_id,
+          statusUrl: submitData.status_url,
+          responseUrl: submitData.response_url,
+          status: "processing",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     console.log("Starting avatar animation with Fal.ai for image:", imageUrl.substring(0, 100));

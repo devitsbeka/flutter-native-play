@@ -21,6 +21,7 @@ import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { generatePublicPortrait } from "@/utils/portraitAvatar";
+import { SCENE_ANIMATION_PROMPT } from "@/config/sceneAnimationPrompt";
 
 // Import mascot avatars
 import mascotAvatar1 from '@/assets/avatars/mascot-avatar-1.png';
@@ -714,8 +715,24 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
     }
   };
 
-  const animateAvatar = async () => {
-    if (!profile?.avatar_url || !user) {
+  // Animate the current homepage scene into a seamless idle-loop video
+  // (Kling v2.5 turbo pro via the animate-avatar edge function). The loop
+  // replaces the static scene on the homepage; the still stays as poster.
+  const animateScene = async () => {
+    if (!user) return;
+    // Resolve the scene fresh from the DB (same pick order as the homepage:
+    // explicitly selected first, else newest) — component state can lag
+    // right after a new scene is saved.
+    const { data: scene } = await supabase
+      .from("avatar_generations")
+      .select("avatar_url")
+      .eq("user_id", user.id)
+      .like("avatar_url", "%/scene_%")
+      .order("is_current", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!scene?.avatar_url) {
       toast.error(t("errors.noAvatarToAnimate"));
       return;
     }
@@ -723,113 +740,40 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
     setIsAnimating(true);
 
     try {
-      // Check if the current avatar is already AI-generated
-      const { data: existingGen } = await supabase
-        .from('avatar_generations')
-        .select('id, avatar_url')
-        .eq('user_id', user.id)
-        .eq('is_current', true)
-        .single();
-
-      let imageUrlToAnimate = profile.avatar_url;
-
-      // If no AI-generated record exists for this avatar, generate one first
-      if (!existingGen) {
-        if (isLimitReached) {
-          toast.error(t("extra.avatarMaxGenReachedShort"));
-          setIsAnimating(false);
-          return;
-        }
-        toast.info(t("extra.avatarAiGenerating"), { duration: 10000 });
-
-        // Call generate-avatar with the current raw photo
-        const { data: genData, error: genError } = await supabase.functions.invoke("generate-avatar", {
-          body: { imageUrl: profile.avatar_url },
-        });
-
-        if (genError) throw new Error(genError.message);
-        if (!genData?.success || !genData?.avatarUrl) throw new Error(genData?.error || "Failed to generate AI avatar");
-
-        // Save the AI-generated avatar (same logic as saveAvatar)
-        const response = await fetch(genData.avatarUrl);
-        const blob = await response.blob();
-        const fileName = `${user.id}/avatar_${Date.now()}.png`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("avatars")
-          .upload(fileName, blob, { upsert: true, contentType: 'image/png' });
-
-        if (uploadError) throw new Error(`Failed to save AI avatar: ${uploadError.message}`);
-
-        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(fileName);
-        const aiAvatarUrl = urlData.publicUrl;
-
-        // Update avatar_generations table (portrait rows only — the chosen
-        // scene keeps its flag)
-        await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id).not('avatar_url', 'like', '%/scene_%');
-        await supabase.from('avatar_generations').insert({
-          user_id: user.id,
-          avatar_url: aiAvatarUrl,
-          source_image_url: profile.avatar_url,
-          is_current: true,
-        });
-
-        // Update profile to use AI avatar
-        await updateProfile({ avatar_url: aiAvatarUrl });
-
-        imageUrlToAnimate = aiAvatarUrl;
-        toast.success(t("extra.avatarAiCreated"), { duration: 3000 });
-      }
-
-      // Now animate the AI-generated avatar
       toast.info(t("avatar.startingAnimation"), { duration: 5000 });
 
       const { data, error } = await supabase.functions.invoke("animate-avatar", {
-        body: { 
-          imageUrl: imageUrlToAnimate,
-          userId: user.id
+        body: {
+          mode: "scene",
+          imageUrl: scene.avatar_url,
+          userId: user.id,
+          promptOverride: SCENE_ANIMATION_PROMPT,
         },
       });
 
       if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || "Failed to start animation");
 
-      // If completed immediately (unlikely)
-      if (data.videoUrl) {
-        await updateProfile({ animated_avatar_url: data.videoUrl });
-        toast.success(t("avatar.avatarAnimated"), { duration: 5000 });
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#A855F7", "#EC4899", "#3B82F6"],
-        });
-        setIsAnimating(false);
-        return;
-      }
-
-      // Get polling info
-      const requestId = data.requestId;
-      const statusUrl = data.statusUrl;
-      const responseUrl = data.responseUrl;
-      
+      const { requestId, statusUrl, responseUrl } = data;
       if (!requestId || !statusUrl || !responseUrl) {
         throw new Error("No request ID or URLs received");
       }
 
       toast.info(t("avatar.animationStarted"), { duration: 3000 });
 
-      // Poll every 5 seconds for up to 3 minutes (36 attempts)
-      const maxAttempts = 36;
+      // Kling takes a few minutes — poll every 5 seconds for up to 8 minutes
+      const maxAttempts = 96;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
 
         const { data: statusData, error: statusError } = await supabase.functions.invoke("animate-avatar", {
-          body: { 
+          body: {
+            mode: "scene",
+            imageUrl: scene.avatar_url,
+            userId: user.id,
             requestId,
             statusUrl,
             responseUrl,
-            userId: user.id
           },
         });
 
@@ -846,22 +790,23 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
             origin: { y: 0.6 },
             colors: ["#A855F7", "#EC4899", "#3B82F6"],
           });
-          // Profile is updated by the edge function, trigger a refresh
-          window.location.reload();
+          // The homepage picks the loop up through the scene query
+          queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
+          loadGenerations();
+          setIsAnimating(false);
           return;
         }
 
-        // Show progress every 15 seconds (every 3rd attempt)
-        if ((attempt + 1) % 3 === 0) {
+        // Show progress every 30 seconds (every 6th attempt)
+        if ((attempt + 1) % 6 === 0) {
           toast.info(t("avatar.stillProcessing", { time: Math.round((attempt + 1) * 5 / 60) }), { duration: 2000 });
         }
       }
 
       toast.error(t("avatar.animationTakingLong"));
-
     } catch (error) {
-      console.error("Error animating avatar:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to animate avatar");
+      console.error("Error animating scene:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to animate scene");
     } finally {
       setIsAnimating(false);
     }
@@ -869,6 +814,10 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
 
   // Content based on step
   const renderContent = () => {
+    // The scene the animate button would bring to life (selected, else newest)
+    const sceneRows = generations.filter((g) => g.avatar_url.includes("/scene_"));
+    const currentScene = sceneRows.find((g) => g.is_current) || sceneRows[0] || null;
+
     if (step === "gallery") {
       return (
         <div className="space-y-4">
@@ -894,11 +843,12 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
             </div>
             <p className="text-sm text-muted-foreground">{t("avatar.uploadEncouragement")}</p>
             
-            {/* Animate Avatar Button - PRO gated, only for user-uploaded photos */}
-            {!isCurrentAvatarMascot && profile?.avatar_url && (
+            {/* Animate Scene Button - PRO gated; turns the current homepage
+                scene into a seamless idle-loop video */}
+            {currentScene && (
               isVip ? (
                 <motion.button
-                  onClick={animateAvatar}
+                  onClick={animateScene}
                   disabled={isAnimating}
                   className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 text-xs font-medium text-primary hover:from-primary/30 hover:to-accent/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   whileHover={{ scale: 1.02 }}
@@ -912,7 +862,7 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                   ) : (
                     <>
                       <Sparkles className="w-3 h-3" />
-                      <span>{profile?.animated_avatar_url ? t("avatar.reAnimate") : t("avatar.animateAvatar")}</span>
+                      <span>{currentScene?.animated_avatar_url ? t("avatar.reAnimate") : t("avatar.animateAvatar")}</span>
                     </>
                   )}
                 </motion.button>
@@ -1381,7 +1331,7 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                 size="md"
                 onClick={async () => {
                   await saveAvatar();
-                  animateAvatar();
+                  animateScene();
                 }}
                 disabled={isLoading || isAnimating}
                 className="w-full"
