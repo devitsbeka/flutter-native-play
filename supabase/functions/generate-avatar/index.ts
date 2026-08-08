@@ -108,7 +108,19 @@ serve(async (req) => {
             ]
           }
         ],
-        modalities: ["image", "text"]
+        modalities: ["image", "text"],
+        // Gemini image output config via the OpenAI-compat extension
+        // namespace: 2K costs the same as the default 1K on Nano Banana Pro,
+        // and a hard 16:9 beats prompt-steering the aspect ratio. Gateways
+        // that don't know the field ignore it.
+        extra_body: {
+          google: {
+            image_config: {
+              aspect_ratio: "16:9",
+              image_size: "2K"
+            }
+          }
+        }
       })
     });
 
