@@ -48,18 +48,19 @@ interface SpotlightSearchProps {
   variant?: "bar" | "button";
 }
 
-// Command definitions - labels will be resolved via t() at render time
+// Command definitions - labels/descriptions resolved via t() at render time.
+// The slash command string still powers filtering but is no longer displayed.
 const COMMAND_KEYS = [
-  { command: "/newroom", labelKey: "extra.ssCreateNewRoom", icon: Plus, action: "create-room" as const },
-  { command: "/settings", labelKey: "extra.ssSettings", icon: Settings, action: "navigate" as const, path: "/settings" },
-  { command: "/profile", labelKey: "extra.ssMyProfile", icon: User, action: "navigate" as const, path: "/profile" },
-  { command: "/play", labelKey: "extra.ssStartGame", icon: Gamepad2, action: "navigate" as const, path: "/game" },
-  { command: "/shop", labelKey: "extra.ssShop", icon: Store, action: "navigate" as const, path: "/power-ups" },
-  { command: "/leaderboard", labelKey: "extra.ssLeaderboard", icon: Trophy, action: "navigate" as const, path: "/leaderboards" },
-  { command: "/notifications", labelKey: "extra.ssNotifications", icon: Bell, action: "navigate" as const, path: "/notifications" },
-  { command: "/help", labelKey: "extra.ssHelp", icon: HelpCircle, action: "navigate" as const, path: "/support" },
-  { command: "/team", labelKey: "extra.ssTeam", icon: Users, action: "navigate" as const, path: "/team" },
-  { command: "/logout", labelKey: "extra.ssLogout", icon: LogOut, action: "logout" as const },
+  { command: "/newroom", labelKey: "extra.ssCreateNewRoom", descKey: "extra.ssDescNewRoom", icon: Plus, action: "create-room" as const },
+  { command: "/settings", labelKey: "extra.ssSettings", descKey: "extra.ssDescSettings", icon: Settings, action: "navigate" as const, path: "/settings" },
+  { command: "/profile", labelKey: "extra.ssMyProfile", descKey: "extra.ssDescProfile", icon: User, action: "navigate" as const, path: "/profile" },
+  { command: "/play", labelKey: "extra.ssStartGame", descKey: "extra.ssDescPlay", icon: Gamepad2, action: "navigate" as const, path: "/game" },
+  { command: "/shop", labelKey: "extra.ssShop", descKey: "extra.ssDescShop", icon: Store, action: "navigate" as const, path: "/power-ups" },
+  { command: "/leaderboard", labelKey: "extra.ssLeaderboard", descKey: "extra.ssDescLeaderboard", icon: Trophy, action: "navigate" as const, path: "/leaderboards" },
+  { command: "/notifications", labelKey: "extra.ssNotifications", descKey: "extra.ssDescNotifications", icon: Bell, action: "navigate" as const, path: "/notifications" },
+  { command: "/help", labelKey: "extra.ssHelp", descKey: "extra.ssDescHelp", icon: HelpCircle, action: "navigate" as const, path: "/support" },
+  { command: "/team", labelKey: "extra.ssTeam", descKey: "extra.ssDescTeam", icon: Users, action: "navigate" as const, path: "/team" },
+  { command: "/logout", labelKey: "extra.ssLogout", descKey: "extra.ssDescLogout", icon: LogOut, action: "logout" as const },
 ];
 
 const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = "bar" }) => {
@@ -77,8 +78,8 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
   const { t } = useLanguage();
   
   // Resolve command labels with current language
-  const COMMANDS = useMemo(() => 
-    COMMAND_KEYS.map(cmd => ({ ...cmd, label: t(cmd.labelKey) })),
+  const COMMANDS = useMemo(() =>
+    COMMAND_KEYS.map(cmd => ({ ...cmd, label: t(cmd.labelKey), description: t(cmd.descKey) })),
     [t]
   );
   
@@ -452,7 +453,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                     </div>
                     <div className="flex flex-col">
                       <span className="font-medium">{cmd.label}</span>
-                      <span className="text-xs text-muted-foreground font-mono">{cmd.command}</span>
+                      <span className="text-xs text-muted-foreground">{cmd.description}</span>
                     </div>
                   </CommandItem>
                 ))}
