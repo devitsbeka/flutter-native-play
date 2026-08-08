@@ -55,6 +55,12 @@ export const VIP_BENEFITS_BY_TIER = {
 // Cache key for localStorage
 const VIP_CACHE_KEY = "cached_vip_status";
 
+// Admin accounts get lifetime PRO (a concrete far-future date — the client
+// parses expires_at with new Date(), which can't handle 'infinity').
+const LIFETIME_EXPIRES_AT = "2126-01-01T00:00:00.000Z";
+const isLifetime = (expiresAt: string) =>
+  new Date(expiresAt).getTime() >= new Date("2100-01-01T00:00:00Z").getTime();
+
 interface VipContextType {
   subscription: VipSubscription | null;
   isVip: boolean;
@@ -128,7 +134,43 @@ export function VipProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    // Admins keep lifetime PRO so every PRO feature is testable on the real
+    // account. RLS lets a user write only their own subscription row, so this
+    // self-grant runs client-side on login and heals itself if the row is
+    // ever removed or shortened.
+    const ensureAdminLifetimePro = async () => {
+      const { data: adminRole } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!adminRole) return;
+
+      const { data: existing } = await supabase
+        .from("vip_subscriptions")
+        .select("expires_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (existing && isLifetime(existing.expires_at)) return;
+
+      const { error } = existing
+        ? await supabase
+            .from("vip_subscriptions")
+            .update({ vip_tier: "pro", expires_at: LIFETIME_EXPIRES_AT })
+            .eq("user_id", user.id)
+        : await supabase
+            .from("vip_subscriptions")
+            .insert({ user_id: user.id, vip_tier: "pro", expires_at: LIFETIME_EXPIRES_AT });
+      if (error) {
+        console.error("[VipContext] Admin lifetime PRO self-grant failed:", error);
+        return;
+      }
+      fetchVipStatus();
+    };
+
     fetchVipStatus();
+    ensureAdminLifetimePro();
 
     const channel = supabase
       .channel("vip-status-realtime")
