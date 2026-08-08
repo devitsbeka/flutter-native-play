@@ -39,7 +39,7 @@ Render the face as a polished 3D CG interpretation of the person — the same re
 Pose and wardrobe are FIXED: the character sits relaxed on the bean bag, leaning back comfortably, one hand holding a purple mug decorated with a small gold crown, the other hand resting on their knee, smiling warmly at the camera. They wear a purple hoodie with a small gold crown motif on the chest, dark charcoal joggers, and purple-and-gold sneakers.
 
 CAMERA AND ZOOM — FIXED
-Wide 16:9 hero composition, eye-level, straight-on. The full platform with all props is visible; the seated character occupies roughly 25–30% of the frame width, centered horizontally, with generous airy negative space above and to the sides. Do not zoom in closer than this; do not crop the platform, the stool, the cube or the trophy.
+Wide 16:9 hero composition, eye-level, straight-on, with the camera pulled comfortably back. The full platform with all props is visible with clear margin around it; the seated character occupies roughly 20–25% of the frame width, centered horizontally, with generous airy negative space above, below and to the sides — the platform and character together fill only about the central two-thirds of the frame. Do not zoom in closer than this; do not crop the platform, the stool, the cube or the trophy.
 
 ART DIRECTION
 Premium stylized 3D illustration. Soft rounded geometry, beautiful character sculpting, high-quality global illumination, soft subsurface skin shading, gentle volumetric light. Bright, light, optimistic mood — pastel lavender, lilac, pink, mint and cream palette with subtle gold accents. Highly polished casual-game production quality.
