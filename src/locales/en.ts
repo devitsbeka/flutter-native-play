@@ -1859,6 +1859,7 @@ export const en: KaTranslations = {
     roomStatusNew: "New",
     roomStatusCompleted: "Completed",
     roomStatusWaiting: "Waiting",
+    roomStatusOnline: "Online",
     // How it works
     howItWorksTitle: "How does it work?",
     howItWorksFunGuaranteed: "Fun is guaranteed! 🎉",
