@@ -39,7 +39,9 @@ interface SceneHeroProps {
   onGemsClick: () => void;
   onLevelClick: () => void;
   onMissionsClick: () => void;
-  playButton: ReactNode;
+  // Optional — Index renders the play button outside this overlay so it can
+  // center on the full content area (this overlay is right-padded 300px)
+  playButton?: ReactNode;
 }
 
 // Floating overlay for the personalized scene homepage: the artwork itself is
@@ -238,10 +240,12 @@ export function SceneHero({
         </button>
       </motion.div>
 
-      {/* Bottom center: play button */}
-      <div className="absolute bottom-[6%] left-1/2 -translate-x-1/2 pointer-events-auto">
-        {playButton}
-      </div>
+      {/* Bottom center: play button (when not rendered by the page itself) */}
+      {playButton && (
+        <div className="absolute bottom-[6%] left-1/2 -translate-x-1/2 pointer-events-auto">
+          {playButton}
+        </div>
+      )}
     </div>
   );
 }
