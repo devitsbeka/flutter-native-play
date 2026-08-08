@@ -14,6 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getCountryFlag } from "@/data/opponents";
+import { countryCoordinates } from "@/lib/countryCoordinates";
 import { formatCompactNumber } from "@/lib/utils";
 
 type Scope = "local" | "global";
@@ -183,7 +184,13 @@ function BoardRow({
 
 // The player's country, named in the app language (e.g. საქართველო, not
 // "Country"); falls back to the generic tab label for unknown codes.
+// Georgian names come from the app's own country data — browsers often ship
+// no 'ka' locale data for Intl.DisplayNames and silently fall back to English.
 function localCountryName(countryCode: string, language: string, fallback: string): string {
+  if (language === "ka") {
+    const name = countryCoordinates[countryCode.toLowerCase()]?.name;
+    if (name) return name;
+  }
   try {
     return new Intl.DisplayNames([language], { type: "region" }).of(countryCode.toUpperCase()) || fallback;
   } catch {
