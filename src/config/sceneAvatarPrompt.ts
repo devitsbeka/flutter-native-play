@@ -4,6 +4,11 @@
 // ai_generation_settings table (setting_type 'avatar_static'); the
 // AdminAIPromptSync component keeps that row in sync with this file, so
 // editing this file is the way to change the prompt.
+// Image model for scene generation, resolved by the AI gateway (OpenRouter
+// model id). GPT Image 2 leads on identity preservation from a reference
+// photo; "bytedance-seed/seedream-4.5" is the strong alternative.
+export const SCENE_AVATAR_MODEL = "openai/gpt-image-2";
+
 export const SCENE_AVATAR_PROMPT = `Create a premium stylized 3D game-avatar scene using the uploaded face photo as the identity reference.
 
 The main character must clearly resemble the person in the uploaded photo. Preserve their recognizable facial identity and important attributes including face shape, skin tone, hairstyle, hair texture, hair color, eyebrows, eyes, nose, facial hair, and general facial proportions. The result should feel unmistakably like a stylized game-character version of the same person, not a generic replacement.
