@@ -307,13 +307,17 @@ export function AvatarReel() {
               {t("extra.avatarChooseBtn")}
             </button>
           )}
-          <button
-            onClick={() => openAvatarModal()}
-            className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg"
-            aria-label="Avatar studio"
-          >
-            <Sparkles className="w-4 h-4 text-primary-foreground" />
-          </button>
+          {/* Studio (generate/animate) only makes sense for the player's own
+              avatars — the preset mascots can't be animated */}
+          {items[centerIdx].kind !== "preset" && (
+            <button
+              onClick={() => openAvatarModal()}
+              className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg"
+              aria-label="Avatar studio"
+            >
+              <Sparkles className="w-4 h-4 text-primary-foreground" />
+            </button>
+          )}
         </div>
       )}
     </div>
