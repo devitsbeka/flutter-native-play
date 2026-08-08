@@ -105,7 +105,6 @@ export default function Profile() {
                   {rank?.name || t("profile.beginner")}
                 </p>
               </div>
-
             </motion.div>
 
             <div className="px-6 relative max-w-[700px] md:max-w-[600px] mx-auto w-full pb-8">

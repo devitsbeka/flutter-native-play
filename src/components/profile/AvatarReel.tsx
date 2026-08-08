@@ -14,6 +14,9 @@ interface ReelItem {
   id: string;
   path: string;
   price: number; // 0 = free
+  kind: "preset" | "generated" | "custom";
+  genId?: string; // avatar_generations row id, kind "generated" only
+  animatedUrl?: string | null;
 }
 
 // Canonical /src/assets paths — stable across builds, resolveAvatarUrl()
@@ -23,12 +26,14 @@ const REEL_AVATARS: ReelItem[] = [
     id: `mascot-avatar-${n}`,
     path: `/src/assets/avatars/mascot-avatar-${n}.png`,
     price: 0,
+    kind: "preset" as const,
   })),
   // Premium set, priced in gems (gems themselves are bought with real money)
   ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({
     id: `bot-avatar-${n}`,
     path: `/src/assets/avatars/bot-avatar-${n}.png`,
     price: n <= 4 ? 30 : n <= 7 ? 50 : 80,
+    kind: "preset" as const,
   })),
 ];
 
@@ -49,8 +54,10 @@ export function AvatarReel() {
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
   const [busyId, setBusyId] = useState<string | null>(null);
   const [centerIdx, setCenterIdx] = useState(0);
-  // A custom (uploaded/AI) avatar isn't a preset — pin it as the first slot
-  // for the session so the user can always scroll back to it.
+  // The user's own AI-generated/animated avatars (avatar_generations rows)
+  const [generated, setGenerated] = useState<ReelItem[]>([]);
+  // An uploaded photo avatar isn't a preset or a generation — pin it as the
+  // first slot for the session so the user can always scroll back to it.
   const [customUrl, setCustomUrl] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -71,48 +78,65 @@ export function AvatarReel() {
       });
   }, [user]);
 
-  useEffect(() => {
-    const url = profile?.avatar_url;
-    if (!url || customUrl) return;
-    const resolved = resolveAvatarUrl(url);
-    if (!REEL_AVATARS.some((a) => resolveAvatarUrl(a.path) === resolved)) {
-      setCustomUrl(url);
-    }
-  }, [profile?.avatar_url, customUrl]);
-
-  // The player's AI-generated avatar history — these are their own avatars,
-  // so they lead the reel ahead of every preset.
-  const [generatedUrls, setGeneratedUrls] = useState<string[]>([]);
+  // Load the user's generated avatars so they ride the carousel too
   useEffect(() => {
     if (!user) return;
     supabase
       .from("avatar_generations")
-      .select("avatar_url")
+      .select("id, avatar_url, animated_avatar_url")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(12)
       .then(({ data }) => {
-        setGeneratedUrls(((data || []).map((d) => d.avatar_url).filter(Boolean) as string[]));
+        if (data) {
+          setGenerated(
+            data.map((g) => ({
+              id: `gen-${g.id}`,
+              genId: g.id,
+              path: g.avatar_url,
+              animatedUrl: g.animated_avatar_url,
+              price: 0,
+              kind: "generated" as const,
+            }))
+          );
+        }
       });
   }, [user]);
 
+  useEffect(() => {
+    const url = profile?.avatar_url;
+    if (!url || customUrl) return;
+    const resolved = resolveAvatarUrl(url);
+    if (
+      !REEL_AVATARS.some((a) => resolveAvatarUrl(a.path) === resolved) &&
+      !generated.some((g) => g.path === url)
+    ) {
+      setCustomUrl(url);
+    }
+  }, [profile?.avatar_url, customUrl, generated]);
+
   const items: ReelItem[] = useMemo(() => {
+    // The player's own avatars (uploaded + AI-generated), deduped by
+    // resolved URL — they lead the reel ahead of every preset.
     const seen = new Set<string>();
-    const customs: ReelItem[] = [];
-    for (const url of [customUrl, ...generatedUrls]) {
-      if (!url) continue;
-      const key = resolveAvatarUrl(url) || url;
+    const own: ReelItem[] = [];
+    const candidates: ReelItem[] = [
+      ...(customUrl ? [{ id: "custom", path: customUrl, price: 0, kind: "custom" as const }] : []),
+      ...generated,
+    ];
+    for (const item of candidates) {
+      const key = resolveAvatarUrl(item.path) || item.path;
       if (seen.has(key)) continue;
       seen.add(key);
-      customs.push({ id: `custom-${customs.length}`, path: url, price: 0 });
+      own.push(item);
     }
     // Own avatars first, premium set next, basic mascots last
     return [
-      ...customs,
+      ...own,
       ...REEL_AVATARS.filter((a) => a.price > 0),
       ...REEL_AVATARS.filter((a) => a.price === 0),
     ];
-  }, [customUrl, generatedUrls]);
+  }, [customUrl, generated]);
 
   const currentResolved = resolveAvatarUrl(profile?.avatar_url);
   const resolveItem = (item: ReelItem) => resolveAvatarUrl(item.path) || item.path;
@@ -145,9 +169,18 @@ export function AvatarReel() {
   const applyAvatar = async (item: ReelItem) => {
     setBusyId(item.id);
     try {
-      const patch = item.id.startsWith("custom")
-        ? { avatar_url: item.path }
-        : { avatar_url: item.path, animated_avatar_url: null, has_face_photo: false };
+      // Generated avatars keep their animation and is_current bookkeeping,
+      // mirroring the avatar studio's "use previous avatar" flow
+      if (item.kind === "generated" && user) {
+        await supabase.from("avatar_generations").update({ is_current: false }).eq("user_id", user.id);
+        await supabase.from("avatar_generations").update({ is_current: true }).eq("id", item.genId!);
+      }
+      const patch =
+        item.kind === "custom"
+          ? { avatar_url: item.path }
+          : item.kind === "generated"
+            ? { avatar_url: item.path, animated_avatar_url: item.animatedUrl || null }
+            : { avatar_url: item.path, animated_avatar_url: null, has_face_photo: false };
       const result = await updateProfile(patch as any);
       if (result?.error) throw result.error;
       toast.success(t("avatar.avatarUpdated"));
