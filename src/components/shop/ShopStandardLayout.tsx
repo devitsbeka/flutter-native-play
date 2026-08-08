@@ -3,7 +3,6 @@ import { ShopSection, ShopItem } from "@/hooks/useShopData";
 import { ShopProductGrid } from "./ShopProductGrid";
 import { MobileProCarousel } from "./MobileProCarousel";
 import { MyPowersSection } from "./MyPowersSection";
-import { useIsBreakpointUp } from "@/hooks/use-breakpoint";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
 
 
@@ -36,7 +35,6 @@ export function ShopStandardLayout({
 }: ShopStandardLayoutProps) {
   const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const hasScrolled = useRef(false);
-  const isDesktop = useIsBreakpointUp("xl");
 
   // Scroll to initial section on mount
   useEffect(() => {
@@ -63,8 +61,11 @@ export function ShopStandardLayout({
 
   return (
     <div className="flex-1 pb-8">
-      {/* PRO Carousel - Mobile/Tablet only (the desktop hero banner was removed) */}
-      {!isDesktop && <MobileProCarousel />}
+      {/* PRO Carousel - phones only. Tablet and desktop open straight with
+          My Powers; on desktop the PRO banner lives in the right sidebar. */}
+      <div className="md:hidden">
+        <MobileProCarousel />
+      </div>
 
       {/* My Powers Section - individual purchase */}
       <MyPowersSection
