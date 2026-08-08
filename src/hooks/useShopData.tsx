@@ -12,9 +12,7 @@ import coinIcon from "@/assets/icons/icon-coin.webp";
 import gemIcon from "@/assets/icons/icon-gem.webp";
 import iconStarterPack from "@/assets/icons/icon-starter-pack.webp";
 import iconVipCrown from "@/assets/icons/icon-vip-crown.webp";
-import iconPowersBottle from "@/assets/icons/icon-powers-bottle.webp";
 import iconMagicOrb from "@/assets/icons/magic-orb.webp";
-import iconMagicPortal from "@/assets/icons/magic-portal.webp";
 import iconMagicForge from "@/assets/icons/magic-forge.webp";
 
 export interface ShopItem {
@@ -123,17 +121,6 @@ export function useShopData() {
         savings: 12,
       },
       {
-        id: "mega_power_bundle",
-        name: t("shop.powerPackPortal"),
-        description: `5x ${t("shop.allPowers")}`,
-        price: 16,  // 20 powers worth 20 gems, sell for 16 = 20% discount
-        currency: "gems",
-        icon: <img src={iconMagicPortal} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
-        gradient: "linear-gradient(135deg, #A78BFA 0%, #8B5CF6 50%, #6D28D9 100%)",
-        vibrant: true,
-        savings: 20,
-      },
-      {
         id: "power_bundle_large",
         name: t("shop.powerPackForge"),
         description: `10x ${t("shop.allPowers")}`,
@@ -147,17 +134,8 @@ export function useShopData() {
     ];
 
     // VIP Section - aligned with rewardConfig.ts VIP_PRICES
+    // (no 1-day option — week and month keep the section an even pair)
     const VIP_PROMO_ITEMS: ShopItem[] = [
-      {
-        id: "vip_day",
-        name: t("shop.vipDay"),
-        description: t("shop.vipBenefitsDay"),
-        price: 30,  // 30 gems = 3 GEL
-        currency: "gems",
-        icon: <img src={iconVipCrown} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
-        gradient: "transparent",
-        vipDuration: "day",
-      },
       {
         id: "vip_week_deal",
         name: t("shop.vipWeek"),
@@ -230,18 +208,6 @@ export function useShopData() {
         gradient: "linear-gradient(135deg, hsl(270 70% 60%) 0%, hsl(280 65% 55%) 100%)",
         powerType: "time-drain",
         amount: 3,
-      },
-      // Power Combo Bundle - all 4 powers ×3 at a discount
-      {
-        id: "power_combo_bundle",
-        name: t("shop.allPowers"),
-        description: `3× ${t("shop.eachPower")}`,
-        price: 10,  // 12 powers worth 12 gems, sell for 10 = 17% discount
-        currency: "gems",
-        icon: <img src={iconPowersBottle} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
-        gradient: "linear-gradient(135deg, hsl(280 80% 60%) 0%, hsl(340 75% 55%) 100%)",
-        vibrant: true,
-        savings: 17,
       },
     ];
 
