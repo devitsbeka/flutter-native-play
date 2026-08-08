@@ -281,12 +281,13 @@ export default function CategoryPage() {
         {/* White overlay container - positioned to straddle video/content boundary - Desktop/Tablet only */}
         <div className="relative px-5 -mt-10 z-20 hidden md:block md:px-20 lg:px-28">
           <div className="max-w-3xl mx-auto">
-            <div 
-              className="flex items-center justify-between px-6 py-4 rounded-2xl"
+            <div
+              className="flex items-center justify-between px-6 py-4 rounded-[24px]"
+              // Main page card recipe — lavender-white, #e8e0f5 border, chunky lip
               style={{
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
-                boxShadow: '0 4px 20px -2px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.8), inset 0 1px 0 0 rgba(255,255,255,1)',
-                border: '1px solid rgba(0,0,0,0.06)',
+                background: 'rgba(252,247,255,0.92)',
+                boxShadow: '0 3.6px 0 0 #d8d0e8, 0 5.4px 14.5px 0 rgba(0,0,0,0.1), inset 0 1.8px 0 0 #ffffff',
+                border: '1.5px solid #e8e0f5',
               }}
             >
               <h1 className="text-2xl font-bold text-slate-800">{category.name}</h1>
@@ -305,12 +306,12 @@ export default function CategoryPage() {
         {/* Floating Tabs - positioned to straddle video/content boundary - Mobile only */}
         <div className="relative px-5 -mt-7 z-20 md:hidden">
           <div className="max-w-3xl mx-auto">
-            <div 
-              className="flex gap-1 rounded-2xl p-1.5"
+            <div
+              className="flex gap-1 rounded-[24px] p-1.5"
               style={{
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
-                boxShadow: '0 4px 20px -2px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.8), inset 0 1px 0 0 rgba(255,255,255,1)',
-                border: '1px solid rgba(0,0,0,0.06)',
+                background: 'rgba(252,247,255,0.92)',
+                boxShadow: '0 3.6px 0 0 #d8d0e8, 0 5.4px 14.5px 0 rgba(0,0,0,0.1), inset 0 1.8px 0 0 #ffffff',
+                border: '1.5px solid #e8e0f5',
               }}
             >
               <button
@@ -403,8 +404,11 @@ export default function CategoryPage() {
                 if (isProLocked) return "linear-gradient(135deg, #F3E8FF, #E9D5FF)";
                 if (!isUnlocked) return "linear-gradient(135deg, #E2E8F0, #CBD5E1)";
                 if (isCompleted && stars > 0) return getCompletedGradient(stars);
-                return "linear-gradient(135deg, #FFFFFF, #F1F5F9)";
+                return "rgba(252,247,255,0.92)";
               };
+
+              const isNeutralTile =
+                !isComingSoon && !isProLocked && isUnlocked && !(isCompleted && stars > 0);
               
               return (
                 <motion.button
@@ -428,9 +432,12 @@ export default function CategoryPage() {
                           : ""
                   }`}
                   style={{
-                    boxShadow: isUnlocked && !isComingSoon && !isProLocked
-                      ? "0 4px 0 0 hsl(0 0% 0% / 0.15), 0 6px 12px -4px hsl(0 0% 0% / 0.2)"
-                      : "0 2px 0 0 hsl(0 0% 0% / 0.05)",
+                    boxShadow: isNeutralTile
+                      ? "0 3.6px 0 0 #d8d0e8, 0 5.4px 14.5px 0 rgba(0,0,0,0.1), inset 0 1.8px 0 0 #ffffff"
+                      : isUnlocked && !isComingSoon && !isProLocked
+                        ? "0 4px 0 0 hsl(0 0% 0% / 0.15), 0 6px 12px -4px hsl(0 0% 0% / 0.2), inset 0 1.8px 0 0 rgba(255,255,255,0.35)"
+                        : "0 2px 0 0 hsl(0 0% 0% / 0.05)",
+                    border: isNeutralTile ? "1.5px solid #e8e0f5" : undefined,
                     background: getLevelBackground(),
                   }}
                 >
