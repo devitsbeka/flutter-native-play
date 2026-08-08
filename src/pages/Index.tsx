@@ -47,6 +47,7 @@ import coinIcon from "@/assets/icons/icon-coin.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
 import handGestureIcon from "@/assets/icons/hand-gesture.png";
 import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
+import defaultKingScene from "@/assets/scenes/default-trivia-king.webp";
 import guestMascotVideo from "@/assets/guest-welcome-avatar.mp4";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
@@ -620,8 +621,11 @@ export default function Index() {
   const levelInfo = calculateLevel(profile?.total_points || 0);
 
   // Personalized 16:9 homepage scene (generated from the user's photo) —
-  // when present it replaces the classic centered avatar hero on xl+
-  const { data: sceneUrl } = useUserScene(user?.id);
+  // when present it replaces the classic centered avatar hero on xl+.
+  // Users without their own scene get the default Trivia King scene, which
+  // is clickable like a personal one so they can generate theirs.
+  const { data: sceneUrl, isLoading: sceneLoading } = useUserScene(user?.id);
+  const effectiveSceneUrl = sceneUrl || (user && !sceneLoading ? defaultKingScene : null);
   const showAnimatePrompt = !isAnimatingFromHome && !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
 
   // /dev/v2 previews the 3D world-map homepage for logged-in users; the
@@ -793,20 +797,29 @@ export default function Index() {
         disableScroll
       >
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
-        {/* Personalized scene as the full-bleed page background (xl+); the
-            header, friends strip and cards float over it. Clicking the scene
-            itself opens the avatar studio so the character can be changed. */}
-        {user && sceneUrl && (
-          <motion.img
-            src={sceneUrl}
-            alt=""
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            onClick={() => openAvatarModal()}
-            className="hidden xl:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none cursor-pointer"
-            draggable={false}
-          />
+        {/* Personalized scene (or the default Trivia King scene) as the
+            full-bleed page background (xl+); the header, friends strip and
+            cards float over it. A dedicated transparent overlay makes the
+            whole scene clickable — it opens the avatar studio so the user
+            can upload a selfie and generate their own scene. */}
+        {user && effectiveSceneUrl && (
+          <>
+            <motion.img
+              src={effectiveSceneUrl}
+              alt=""
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6 }}
+              className="hidden xl:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
+              draggable={false}
+            />
+            <button
+              type="button"
+              aria-label={t("avatar.title")}
+              onClick={() => openAvatarModal()}
+              className="hidden xl:block absolute inset-0 z-0 w-full h-full cursor-pointer bg-transparent"
+            />
+          </>
         )}
         <header className="relative z-20 px-4 py-3 md:pt-4 safe-top border-b border-border/30 lg:border-b-0">
           <div className="flex items-center justify-between gap-3 md:min-h-12">
@@ -1300,7 +1313,7 @@ export default function Index() {
             </div>}
 
             {/* xl+ layout: floating stats over the full-bleed scene - LOGGED IN USERS ONLY */}
-            {user && sceneUrl && (
+            {user && effectiveSceneUrl && (
               <motion.div
                 className="hidden xl:block w-full h-full pr-[300px] pointer-events-none"
                 initial={{ opacity: 0 }}
@@ -1336,7 +1349,7 @@ export default function Index() {
             )}
 
             {/* xl+ layout: Avatar centered - LOGGED IN USERS ONLY */}
-            {user && !sceneUrl && <motion.div
+            {user && !effectiveSceneUrl && <motion.div
               className="hidden xl:flex flex-col items-center justify-center w-full h-full px-4 -ml-[170px]"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
