@@ -209,9 +209,11 @@ export default function Leaderboards() {
         message={t("extra.signInForLeaderboard")}
       />
 
-      <div className="min-h-screen w-full max-w-[100vw] flex flex-col overflow-x-hidden bg-background">
+      {/* Transparent root so the app's global background shows through; the
+          page itself never scrolls — only the board card's row list does. */}
+      <div className="h-[100dvh] md:h-screen w-full max-w-[100vw] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="sticky top-0 z-50 px-4 py-3 bg-background/95 backdrop-blur-md border-b border-border/30">
+        <div className="shrink-0 z-50 px-4 py-3 bg-background/95 backdrop-blur-md border-b border-border/30">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
               {t("extra.ratingTitle")}
@@ -220,7 +222,7 @@ export default function Leaderboards() {
           </div>
         </div>
 
-        <div className="flex-1 w-full max-w-xl mx-auto px-4 pt-5 pb-24 md:pb-10">
+        <div className="flex-1 min-h-0 w-full max-w-xl mx-auto px-4 pt-5 pb-24 md:pb-8 flex flex-col">
           {/* Title banner */}
           <motion.div
             initial={{ y: -10, opacity: 0 }}
@@ -267,38 +269,42 @@ export default function Leaderboards() {
             })}
           </div>
 
-          {/* Board card */}
+          {/* Board card - fills the remaining height; only the row list
+              inside scrolls (scrollbar hidden) */}
           <div
-            className="rounded-[28px] p-3.5 space-y-2"
+            className="flex-1 min-h-0 rounded-[28px] p-3.5 flex flex-col"
             style={{
               background: "linear-gradient(180deg, #8B7BE8 0%, #6C5CD9 100%)",
               boxShadow: "0 6px 0 #5243B0, 0 14px 34px rgba(108,92,217,0.4)",
             }}
           >
-            {isLoading && entries.length === 0 ? (
-              Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-12 rounded-full bg-white/15 animate-pulse" />
-              ))
-            ) : entries.length === 0 ? (
-              <div className="py-12 text-center">
-                <p className="text-white font-bold">{t("extra.nobodyYet")}</p>
-                <p className="text-white/70 text-sm mt-1">{t("leaderboard.beTheFirst")}</p>
-              </div>
-            ) : (
-              entries.map((entry) => (
-                <BoardRow
-                  key={entry.user_id}
-                  entry={entry}
-                  isMe={entry.user_id === user?.id}
-                  onOpenProfile={openProfile}
-                  youLabel={`${profile?.nickname || t("leaderboard.you")}`}
-                />
-              ))
-            )}
+            <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide space-y-2">
+              {isLoading && entries.length === 0 ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="h-12 rounded-full bg-white/15 animate-pulse" />
+                ))
+              ) : entries.length === 0 ? (
+                <div className="py-12 text-center">
+                  <p className="text-white font-bold">{t("extra.nobodyYet")}</p>
+                  <p className="text-white/70 text-sm mt-1">{t("leaderboard.beTheFirst")}</p>
+                </div>
+              ) : (
+                entries.map((entry) => (
+                  <BoardRow
+                    key={entry.user_id}
+                    entry={entry}
+                    isMe={entry.user_id === user?.id}
+                    onOpenProfile={openProfile}
+                    youLabel={`${profile?.nickname || t("leaderboard.you")}`}
+                  />
+                ))
+              )}
+            </div>
 
-            {/* Own rank when outside the visible top 50 */}
+            {/* Own rank when outside the visible top 50 - pinned below the
+                scrolling list so it's always in view */}
             {needsOwnRank && myRank && (
-              <div className="pt-1.5 border-t border-white/20">
+              <div className="shrink-0 pt-2 mt-1.5 border-t border-white/20">
                 <BoardRow
                   entry={{
                     user_id: user!.id,
