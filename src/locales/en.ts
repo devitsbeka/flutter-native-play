@@ -543,6 +543,8 @@ export const en: KaTranslations = {
     currentAvatar: "Current Avatar",
     previousAvatars: "Previous Avatars",
     myAvatars: "My Avatars",
+    myScenes: "My Scenes",
+    newScene: "New Scene",
     defaultAvatars: "Default Avatars",
     createNew: "Create New Avatar",
     takeSelfie: "Selfie",

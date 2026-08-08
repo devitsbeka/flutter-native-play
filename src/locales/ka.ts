@@ -541,6 +541,8 @@ export const ka = {
     currentAvatar: "მიმდინარე ავატარი",
     previousAvatars: "წინა ავატარები",
     myAvatars: "ჩემი ავატარები",
+    myScenes: "ჩემი სცენები",
+    newScene: "ახალი სცენა",
     defaultAvatars: "ნაგულისხმევი ავატარები",
     createNew: "ახალი ავატარის შექმნა",
     takeSelfie: "სელფი",

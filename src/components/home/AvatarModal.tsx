@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2, Crown, Lock } from "lucide-react";
+import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2, Crown, Lock, Plus } from "lucide-react";
 
 // Import 3D icons for avatar flow
 import iconScissors from '@/assets/icons/icon-scissors.png';
@@ -476,6 +476,30 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
     }
   };
 
+  // Scene generations live in the same history table; picking one only flips
+  // is_current (the homepage scene), never the circular profile avatar.
+  const isSceneUrl = (url: string) => url.includes("/scene_");
+
+  const selectScene = async (gen: AvatarGeneration) => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      await supabase.from("avatar_generations").update({ is_current: false }).eq("user_id", user.id);
+      const { error } = await supabase.from("avatar_generations").update({ is_current: true }).eq("id", gen.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
+      setSelectedForAction(null);
+      toast.success(t("avatar.avatarUpdated"));
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      finishAndClose();
+    } catch (error) {
+      console.error("Error selecting scene:", error);
+      toast.error(t("errors.generic"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const selectPreviousAvatar = async (avatarUrl: string) => {
     if (!user) return;
     
@@ -534,8 +558,9 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
         await updateProfile({ avatar_url: null, animated_avatar_url: null });
       }
       
-      // Refresh the list
+      // Refresh the list and the homepage scene (a current scene may be gone)
       await loadGenerations();
+      queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
       setSelectedForAction(null);
       toast.success(t("avatar.avatarDeleted"));
     } catch (error) {
@@ -860,12 +885,65 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
             className="hidden"
           />
 
-          {/* My Generated Avatars */}
-          {generations.length > 0 && (
+          {/* My Scenes - homepage scene generations. Picking one makes it the
+              active homepage scene; the plus tile starts a new generation
+              from a different selfie/photo. */}
+          <div>
+            <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myScenes")}</p>
+            <div className="grid grid-cols-2 gap-2">
+              <motion.button
+                onClick={() => {
+                  if (isLimitReached) {
+                    toast.error(t("extra.avatarMaxGenReachedShort"));
+                    return;
+                  }
+                  fileInputRef.current?.click();
+                }}
+                disabled={isLoading || isProcessingFile}
+                className="aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-50"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Plus className="w-6 h-6 text-primary" />
+                <span className="text-xs text-muted-foreground">{t("avatar.newScene")}</span>
+              </motion.button>
+              {generations.filter((g) => isSceneUrl(g.avatar_url)).map((gen) => (
+                <motion.button
+                  key={gen.id}
+                  onClick={() => setSelectedForAction(selectedForAction === gen.id ? null : gen.id)}
+                  disabled={isLoading}
+                  className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
+                    selectedForAction === gen.id
+                      ? "border-primary ring-2 ring-primary/30"
+                      : gen.is_current
+                        ? "border-primary"
+                        : "border-border hover:border-primary/50"
+                  } disabled:opacity-50`}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <img src={gen.avatar_url} alt="Scene" className="w-full h-full object-cover" />
+                  {gen.is_current && selectedForAction !== gen.id && (
+                    <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                  {selectedForAction === gen.id && (
+                    <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                      <Check className="w-5 h-5 text-primary" />
+                    </div>
+                  )}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* My Generated Avatars (portrait/photo generations only) */}
+          {generations.some((g) => !isSceneUrl(g.avatar_url)) && (
             <div>
               <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myAvatars")}</p>
               <div className="grid grid-cols-5 gap-2">
-                {generations.slice(0, 10).map((gen) => (
+                {generations.filter((g) => !isSceneUrl(g.avatar_url)).slice(0, 10).map((gen) => (
                   <motion.button
                     key={gen.id}
                     onClick={() => setSelectedForAction(
@@ -873,18 +951,18 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                     )}
                     disabled={isLoading}
                     className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
-                      selectedForAction === gen.id 
-                        ? "border-primary ring-2 ring-primary/30" 
-                        : gen.is_current 
-                          ? "border-primary" 
+                      selectedForAction === gen.id
+                        ? "border-primary ring-2 ring-primary/30"
+                        : gen.is_current
+                          ? "border-primary"
                           : "border-border hover:border-primary/50"
                     } disabled:opacity-50`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <img 
-                      src={gen.avatar_url} 
-                      alt="Avatar" 
+                    <img
+                      src={gen.avatar_url}
+                      alt="Avatar"
                       className="w-full h-full object-cover"
                     />
                     {gen.is_current && selectedForAction !== gen.id && (
@@ -900,45 +978,50 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                   </motion.button>
                 ))}
               </div>
-              
-              {/* Action buttons when avatar is selected */}
-              <AnimatePresence>
-                {selectedForAction && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="flex justify-center gap-4 mt-3"
-                  >
-                    <motion.button
-                      onClick={() => {
-                        const gen = generations.find(g => g.id === selectedForAction);
-                        if (gen) deleteAvatar(gen.id, gen.avatar_url);
-                      }}
-                      disabled={isLoading}
-                      className="w-12 h-12 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors disabled:opacity-50"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Trash2 className="w-5 h-5 text-destructive" />
-                    </motion.button>
-                    <motion.button
-                      onClick={() => {
-                        const gen = generations.find(g => g.id === selectedForAction);
-                        if (gen) selectPreviousAvatar(gen.avatar_url);
-                      }}
-                      disabled={isLoading}
-                      className="w-12 h-12 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors disabled:opacity-50"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Check className="w-5 h-5 text-primary" />
-                    </motion.button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           )}
+
+          {/* Action buttons when a scene or avatar is selected: apply / delete */}
+          <AnimatePresence>
+            {selectedForAction && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex justify-center gap-4 mt-3"
+              >
+                <motion.button
+                  onClick={() => {
+                    const gen = generations.find(g => g.id === selectedForAction);
+                    if (gen) deleteAvatar(gen.id, gen.avatar_url);
+                  }}
+                  disabled={isLoading}
+                  className="w-12 h-12 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors disabled:opacity-50"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Trash2 className="w-5 h-5 text-destructive" />
+                </motion.button>
+                <motion.button
+                  onClick={() => {
+                    const gen = generations.find(g => g.id === selectedForAction);
+                    if (!gen) return;
+                    if (isSceneUrl(gen.avatar_url)) {
+                      selectScene(gen);
+                    } else {
+                      selectPreviousAvatar(gen.avatar_url);
+                    }
+                  }}
+                  disabled={isLoading}
+                  className="w-12 h-12 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors disabled:opacity-50"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Check className="w-5 h-5 text-primary" />
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Default Avatars */}
           <div>
