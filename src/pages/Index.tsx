@@ -1333,19 +1333,25 @@ export default function Index() {
                   onMissionsClick={() => setShowMissionsModal(true)}
                   onCoinsClick={() => navigate("/power-ups?section=coins")}
                   onGemsClick={() => navigate("/power-ups?section=gems-lari")}
-                  playButton={
-                    <DesktopPlayButtonLarge
-                      onClick={handlePlayClick}
-                      playsRemaining={playsRemaining}
-                      maxPlays={maxPlays}
-                      canPlay={canPlay}
-                      isVip={isVip}
-                      isGuest={false}
-                      onboardingId="play"
-                    />
-                  }
                 />
               </motion.div>
+            )}
+
+            {/* xl+ scene: play button centered on the CONTENT area (outside
+                the right-padded SceneHero overlay), so it stays in the middle
+                whether the sidebar is expanded or collapsed */}
+            {user && effectiveSceneUrl && (
+              <div className="hidden xl:block absolute bottom-[6%] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+                <DesktopPlayButtonLarge
+                  onClick={handlePlayClick}
+                  playsRemaining={playsRemaining}
+                  maxPlays={maxPlays}
+                  canPlay={canPlay}
+                  isVip={isVip}
+                  isGuest={false}
+                  onboardingId="play"
+                />
+              </div>
             )}
 
             {/* xl+ layout: Avatar centered - LOGGED IN USERS ONLY */}
