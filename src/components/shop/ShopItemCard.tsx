@@ -19,6 +19,8 @@ export interface ShopItemCardProps {
   gradient: string;
   badge?: ShopItemBadge;
   savings?: number;
+  /** Fill the card with its gradient (hero bundles) instead of the neutral surface. */
+  vibrant?: boolean;
   isPurchased?: boolean;
   isLoading?: boolean;
   canAfford?: boolean;
@@ -35,8 +37,10 @@ export function ShopItemCard({
   price,
   currency,
   icon,
+  gradient,
   badge,
   savings,
+  vibrant = false,
   isPurchased = false,
   isLoading = false,
   canAfford = true,
@@ -47,6 +51,9 @@ export function ShopItemCard({
   const { t } = useLanguage();
   const currencyIcon = currency === "gems" ? gemIcon : currency === "coins" ? coinIcon : null;
   const isLari = currency === "lari";
+  // Hero bundles opt in to their own gradient fill so they stand apart from
+  // the regular lavender-white content cards; white text rides on top of it.
+  const hasGradient = vibrant && !!gradient && gradient !== "transparent";
 
   // Shared by both the vertical and the featured horizontal layout
   const actionBlock = isPurchased ? (
@@ -63,7 +70,7 @@ export function ShopItemCard({
       ) : (
         <div className="flex items-center justify-center gap-1">
           <img src={currencyIcon!} alt="" width={24} height={24} loading="lazy" decoding="async" className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="font-bold text-sm sm:text-base text-gray-800">{price}</span>
+          <span className={`font-bold text-sm sm:text-base ${hasGradient ? "text-white drop-shadow-sm" : "text-gray-800"}`}>{price}</span>
         </div>
       )}
       <motion.button
@@ -99,36 +106,45 @@ export function ShopItemCard({
 
         <div
           className={cn(
-            "w-full rounded-[24px] transition-all relative overflow-hidden flex items-center gap-3 text-left",
-            "px-3.5 sm:px-4 py-3.5 min-h-[100px]",
-            !isPurchased && canAfford && "liquid-glass"
+            "w-full rounded-[24px] transition-all relative overflow-hidden flex items-center gap-4 text-left",
+            "px-4 sm:px-6 py-5",
+            hasGradient ? "min-h-[132px]" : "min-h-[100px]",
+            !isPurchased && canAfford && !hasGradient && "liquid-glass"
           )}
           style={{
             background: isPurchased
               ? "linear-gradient(180deg, hsl(150 70% 92%) 0%, hsl(145 65% 85%) 100%)"
               : !canAfford
               ? "hsl(var(--muted))"
+              : hasGradient
+              ? gradient
               : undefined,
             boxShadow: isPurchased
               ? "0 4px 0 hsl(145 60% 70%)"
               : !canAfford
               ? "0 3px 0 hsl(var(--border))"
+              : hasGradient
+              ? "0 3.6px 0 0 rgba(0,0,0,0.22), 0 8px 24px rgba(102,51,153,0.25), inset 0 1.8px 0 0 rgba(255,255,255,0.35)"
               : undefined,
-            border: isPurchased ? "2px solid hsl(145 70% 50%)" : undefined,
+            border: isPurchased
+              ? "2px solid hsl(145 70% 50%)"
+              : hasGradient
+              ? "1.5px solid rgba(255,255,255,0.35)"
+              : undefined,
           }}
         >
-          <div className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 flex items-center justify-center">
-            <div className="[&>img]:w-full [&>img]:h-full [&>img]:object-contain [&>svg]:w-full [&>svg]:h-full">
+          <div className={cn("shrink-0 flex items-center justify-center", hasGradient ? "w-16 h-16 sm:w-20 sm:h-20" : "w-12 h-12 sm:w-14 sm:h-14")}>
+            <div className="[&>img]:w-full [&>img]:h-full [&>img]:object-contain [&>svg]:w-full [&>svg]:h-full drop-shadow-md">
               {icon}
             </div>
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900 font-bold text-sm sm:text-base leading-tight mb-0.5">{name}</h3>
+            <h3 className={cn("font-bold leading-tight mb-0.5", hasGradient ? "text-white drop-shadow-sm text-base sm:text-lg" : "text-gray-900 text-sm sm:text-base")}>{name}</h3>
             {showDescription && description && (
-              <p className="text-gray-500 text-[11px] sm:text-xs leading-snug line-clamp-2">{description}</p>
+              <p className={cn("text-[11px] sm:text-xs leading-snug line-clamp-2", hasGradient ? "text-white/85" : "text-gray-500")}>{description}</p>
             )}
           </div>
-          <div className="shrink-0 flex flex-col items-center gap-1">{actionBlock}</div>
+          <div className="shrink-0 flex flex-col items-center gap-1.5">{actionBlock}</div>
         </div>
       </div>
     );
@@ -158,20 +174,28 @@ export function ShopItemCard({
           "w-full rounded-[24px] transition-all relative overflow-hidden flex flex-col items-center text-center",
           "px-2.5 sm:px-3 p-3",
           "h-[188px] sm:h-[198px]",
-          !isPurchased && canAfford && "liquid-glass"
+          !isPurchased && canAfford && !hasGradient && "liquid-glass"
         )}
         style={{
           background: isPurchased
             ? "linear-gradient(180deg, hsl(150 70% 92%) 0%, hsl(145 65% 85%) 100%)"
             : !canAfford
             ? "hsl(var(--muted))"
+            : hasGradient
+            ? gradient
             : undefined,
           boxShadow: isPurchased
             ? "0 4px 0 hsl(145 60% 70%)"
             : !canAfford
             ? "0 3px 0 hsl(var(--border))"
+            : hasGradient
+            ? "0 3.6px 0 0 rgba(0,0,0,0.22), 0 8px 24px rgba(102,51,153,0.25), inset 0 1.8px 0 0 rgba(255,255,255,0.35)"
             : undefined,
-          border: isPurchased ? "2px solid hsl(145 70% 50%)" : undefined,
+          border: isPurchased
+            ? "2px solid hsl(145 70% 50%)"
+            : hasGradient
+            ? "1.5px solid rgba(255,255,255,0.35)"
+            : undefined,
         }}
       >
         {/* Icon - Top */}
@@ -182,12 +206,12 @@ export function ShopItemCard({
         </div>
 
         {/* Name */}
-        <h3 className="text-gray-900 font-bold text-[13px] sm:text-sm leading-tight mb-0.5">{name}</h3>
+        <h3 className={cn("font-bold text-[13px] sm:text-sm leading-tight mb-0.5", hasGradient ? "text-white drop-shadow-sm" : "text-gray-900")}>{name}</h3>
 
         {/* Description - flex-1 to push price section to bottom */}
         {showDescription && description && (
           <div className="flex-1 flex items-start">
-            <p className="text-gray-500 text-[11px] sm:text-xs leading-snug line-clamp-2 w-full">{description}</p>
+            <p className={cn("text-[11px] sm:text-xs leading-snug line-clamp-2 w-full", hasGradient ? "text-white/85" : "text-gray-500")}>{description}</p>
           </div>
         )}
 

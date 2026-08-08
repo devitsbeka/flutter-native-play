@@ -293,7 +293,7 @@ export function SceneHero({
         >
           <div
             aria-hidden
-            className="absolute inset-0 pointer-events-none rounded-[21px]"
+            className="absolute inset-0 pointer-events-none rounded-[inherit]"
             style={{ backgroundImage: "linear-gradient(to bottom, #ebdbfe, #e3caff 50%, #d5abff)" }}
           />
           <p className="absolute left-[64.72px] top-[17.72px] font-['Inter'] font-semibold text-[14px] text-[#282a2a] whitespace-nowrap">
@@ -317,7 +317,7 @@ export function SceneHero({
         >
           <div
             aria-hidden
-            className="absolute inset-0 pointer-events-none rounded-[21px]"
+            className="absolute inset-0 pointer-events-none rounded-[inherit]"
             style={{ backgroundImage: "linear-gradient(to bottom, #fbe7d4, #eedcca 50%, #ecc89d)" }}
           />
           <p className="absolute left-[64.72px] top-[18.72px] font-['Inter'] font-semibold text-[14px] text-[#282a2a] whitespace-nowrap">
