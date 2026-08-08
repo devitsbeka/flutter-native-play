@@ -146,19 +146,6 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
     }
   };
 
-  // Custom header icon - power bottle only, coins moved to header right
-  const headerIcon = (
-    <div className="flex flex-col items-center gap-2">
-      <motion.img
-        src={powerIcon}
-        alt="Powers"
-        className="w-14 h-14 object-contain drop-shadow-md"
-        animate={{ y: [0, -3, 0] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-      />
-    </div>
-  );
-
   // Coin balance pill in header right side (like main page)
   const headerRight = (
     <div className="flex items-center gap-1.5 bg-muted/60 rounded-full px-3 py-1.5">
@@ -173,14 +160,13 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      icon={headerIcon}
       title={t('shop.powerShop')}
+      titleIcon={<img src={powerIcon} alt="" className="w-6 h-6 object-contain" />}
       subtitle={t('shop.buyPowers')}
       showSparkles
       headerActions={headerRight}
-      className="-mt-[50px]"
     >
-      <div className="relative pt-[70px]">
+      <div className="relative">
         {/* Power-up preview */}
         <div className="bg-muted/30 rounded-2xl border border-border p-3 mb-3">
           <PowerUpDemoPreview
