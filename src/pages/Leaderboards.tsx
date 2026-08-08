@@ -67,8 +67,8 @@ function useFunLeaderboard(scope: Scope, countryCode?: string | null) {
 }
 
 // The signed-in player's rank when they fall outside the visible top 50.
-// Admin accounts are excluded from the public board, so their pinned row is
-// skipped entirely — otherwise it would claim a rank the list contradicts.
+// Admin accounts stay hidden from the public list, but still get their own
+// pinned row: the rank they would hold among the ranked (non-admin) players.
 function useMyRank(
   scope: Scope,
   countryCode: string | null | undefined,
@@ -81,7 +81,6 @@ function useMyRank(
     queryFn: async (): Promise<number | null> => {
       const { data: adminData } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
       const adminIds = (adminData || []).map((r) => r.user_id);
-      if (myUserId && adminIds.includes(myUserId)) return null;
 
       let query = supabase
         .from("profiles")
