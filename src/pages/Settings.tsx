@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Mail, Globe, User, Lock, HelpCircle, Shield, Trash2, ChevronRight, Loader2, Check, Languages } from "lucide-react";
+import { Mail, Globe, User, Lock, HelpCircle, Shield, Trash2, ChevronRight, Loader2, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
@@ -18,15 +18,13 @@ import { supabase } from "@/integrations/supabase/client";
 export default function Settings() {
   const navigate = useNavigate();
   const { user, profile, updateProfile, fetchProfile } = useAuth();
-  const { t, language, setLanguage, languages, currentLanguage } = useLanguage();
+  const { t } = useLanguage();
   const { toast } = useToast();
 
   // Modal states
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showCountryModal, setShowCountryModal] = useState(false);
 
-  // Language state
-  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
 
   // Name change states
   const [isNameOpen, setIsNameOpen] = useState(false);
@@ -155,49 +153,6 @@ export default function Settings() {
             </motion.button>
           )}
 
-
-          {/* Language Row */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.07 }}
-          >
-            <Collapsible open={isLanguageOpen} onOpenChange={setIsLanguageOpen}>
-              <CollapsibleTrigger asChild>
-                <button className="w-full flex items-center gap-4 p-4 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors">
-                  <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                    <Languages className="w-6 h-6 text-indigo-500" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <span className="font-medium text-foreground block">{t("settings.language")}</span>
-                    <span className="text-sm text-muted-foreground flex items-center gap-2">
-                      <span className="text-lg">{currentLanguage.flag}</span>
-                      {currentLanguage.nativeName}
-                    </span>
-                  </div>
-                  <ChevronRight className={`w-5 h-5 text-muted-foreground transition-transform ${isLanguageOpen ? 'rotate-90' : ''}`} />
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="px-4 pb-4">
-                <div className="mt-3 grid grid-cols-2 gap-2 bg-secondary/30 rounded-xl p-4">
-                  {languages.filter(l => ['ka', 'en', 'fr', 'de', 'es', 'it', 'pt'].includes(l.code)).map(lang => (
-                    <button
-                      key={lang.code}
-                      onClick={() => setLanguage(lang.code)}
-                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all border ${
-                        language === lang.code
-                          ? 'border-primary bg-primary/10 text-foreground'
-                          : 'border-border bg-card text-muted-foreground hover:border-primary/50'
-                      }`}
-                    >
-                      <span className="text-lg">{lang.flag}</span>
-                      <span className="truncate">{lang.nativeName}</span>
-                    </button>
-                  ))}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </motion.div>
 
           {/* Divider */}
           <div className="h-px bg-border/50 my-4" />
