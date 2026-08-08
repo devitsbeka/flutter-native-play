@@ -161,15 +161,24 @@ export function GameModal({
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[100] flex flex-col"
             style={{
-              background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
+              background: "linear-gradient(180deg, #FDFAFF 0%, #F6E8FF 100%)",
               paddingBottom: "env(safe-area-inset-bottom)",
             }}
           >
+            {/* Ambient brand blobs - the same soft bubble background the rest
+                of the app floats on, instead of a flat white sheet */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
+              <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-purple-300/30 blur-3xl" />
+              <div className="absolute top-1/3 -right-28 w-[28rem] h-[28rem] rounded-full bg-violet-300/25 blur-3xl" />
+              <div className="absolute bottom-[-6rem] left-1/4 w-96 h-96 rounded-full bg-emerald-200/30 blur-3xl" />
+              <div className="absolute top-2/3 left-[-5rem] w-72 h-72 rounded-full bg-pink-200/30 blur-3xl" />
+            </div>
+
             {/* Fixed Header */}
-            <motion.div 
-              className="sticky top-0 z-10 flex items-center h-14 px-2 border-b border-gray-200/60"
+            <motion.div
+              className="sticky top-0 z-10 flex items-center h-14 px-2 border-b border-purple-900/10 backdrop-blur-md"
               style={{
-                background: "linear-gradient(180deg, #FFFFFF 0%, #FAFAFA 100%)",
+                background: "rgba(255,255,255,0.72)",
               }}
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
