@@ -3,7 +3,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, Mail, X, Clock, Zap } from "lucide-react";
 import { useGameInvitations, GameInvitation } from "@/hooks/useGameInvitations";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 
