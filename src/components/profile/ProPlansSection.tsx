@@ -2,8 +2,6 @@ import { siteUrl } from "@/config/site";
 import { motion } from "framer-motion";
 import groupIcon from "@/assets/group-of-people.png";
 import crownIcon from "@/assets/crown-icon.png";
-import shopBgVideo from "@/assets/shopbg.mp4";
-import shopBgVideoWebm from "@/assets/shopbg.webm";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp, Share2, Check, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -287,8 +285,8 @@ export function ProPlansSection({
 }
 
 
-// Banner card matching the shop PRO banners: gradient panel with the tier
-// info on the left and the mascot video filling the right side.
+// Banner card matching the shop PRO banners: full-width gradient panel with
+// the tier info, benefits and CTA.
 function ProBannerCard({
   tier,
   index = 0,
@@ -298,7 +296,7 @@ function ProBannerCard({
   benefits,
   button,
   children,
-  minHeightClass = "min-h-[280px]",
+  minHeightClass = "",
 }: {
   tier: TierConfig;
   index?: number;
@@ -339,7 +337,7 @@ function ProBannerCard({
         </div>
       )}
 
-      <div className="w-[65%] p-5 z-10 flex flex-col">
+      <div className="w-full p-5 z-10 flex flex-col">
         <div className="flex flex-wrap items-center gap-3 mb-2">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -397,13 +395,6 @@ function ProBannerCard({
             )}
           </button>
         )}
-      </div>
-
-      <div className="w-[35%] flex-shrink-0 relative overflow-hidden">
-        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: "70% 20%" }}>
-          <source src={shopBgVideoWebm} type="video/webm" />
-          <source src={shopBgVideo} type="video/mp4" />
-        </video>
       </div>
     </motion.div>
   );

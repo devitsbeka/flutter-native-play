@@ -153,36 +153,30 @@ export default function Profile() {
 
             </motion.div>
 
-            {/* Tabs - pills matching the leaderboard scope tabs */}
-            <div className="flex items-center justify-center gap-2 mb-6">
-              {[
-                { id: "Stats", label: t("profile.statistics") },
-                { id: "PRO", label: getProLabel() },
-              ].map((tab) => {
-                const active = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={cn(
-                      "px-5 py-2.5 rounded-full font-black transition-all",
-                      active ? "text-amber-900" : "text-white/80 hover:text-white"
-                    )}
-                    style={
-                      active
-                        ? {
-                            background: "linear-gradient(180deg, #FDE047 0%, #FACC15 100%)",
-                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
-                          }
-                        : {
-                            background: "rgba(124, 111, 224, 0.55)",
-                          }
-                    }
-                  >
-                    {tab.label}
-                  </button>
-                );
-              })}
+            {/* Tabs - segmented switcher */}
+            <div className="flex justify-center mb-6">
+              <div className="inline-flex items-center p-1 rounded-full bg-white/70 backdrop-blur-sm border border-border/40 shadow-sm">
+                {[
+                  { id: "Stats", label: t("profile.statistics") },
+                  { id: "PRO", label: getProLabel() },
+                ].map((tab) => {
+                  const active = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={cn(
+                        "px-5 py-2 rounded-full text-sm font-bold transition-all",
+                        active
+                          ? "bg-primary text-primary-foreground shadow-md"
+                          : "text-foreground/60 hover:text-foreground"
+                      )}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
 
