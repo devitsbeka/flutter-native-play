@@ -318,8 +318,9 @@ export default function PowerUps() {
             </div>
           </div>
 
-          {/* Right 40% (lg+): the looping trivia king scene */}
-          <div className="hidden lg:block lg:w-[40%] relative overflow-hidden">
+          {/* Right 40% (lg+): the looping trivia king scene, pinned to the
+              viewport — it never scrolls, only the shop content does */}
+          <div className="hidden lg:block lg:w-[40%] sticky top-0 self-start h-[100dvh] md:h-screen overflow-hidden">
             <video
               src={TRIVIA_KING_SCENE_VIDEO}
               autoPlay

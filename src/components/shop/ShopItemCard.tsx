@@ -80,11 +80,22 @@ export function ShopItemCard({
 
   const badgeStyle = badge ? BADGE_STYLES[badge] : null;
 
+  // Badged items are the store's hero deals — they get a colored ring + glow
+  // so they pop like featured offers in game shops.
+  const dealRing =
+    !isPurchased && badge === "best-value"
+      ? "ring-2 ring-amber-400/90 shadow-[0_10px_28px_-8px_rgba(245,158,11,0.55)]"
+      : !isPurchased && badge === "popular"
+        ? "ring-2 ring-pink-400/90 shadow-[0_10px_28px_-8px_rgba(236,72,153,0.5)]"
+        : !isPurchased && badge === "limited"
+          ? "ring-2 ring-orange-400/90 shadow-[0_10px_28px_-8px_rgba(249,115,22,0.5)]"
+          : "";
+
   return (
     <div
       className="relative pt-3"
       // Skip offscreen rendering work while scrolling long shop lists
-      style={{ contentVisibility: "auto", containIntrinsicSize: "240px" } as React.CSSProperties}
+      style={{ contentVisibility: "auto", containIntrinsicSize: "210px" } as React.CSSProperties}
     >
       {/* Badge - positioned on right */}
       {badgeStyle && !isPurchased && (
@@ -115,9 +126,10 @@ export function ShopItemCard({
       <div
         className={cn(
           "w-full rounded-2xl transition-all relative overflow-hidden flex flex-col items-center text-center",
-          "px-3 sm:px-4 p-4",
-          "h-[200px] sm:h-[220px]",
-          !isPurchased && canAfford && "liquid-glass"
+          "px-2.5 sm:px-3 p-3",
+          "h-[172px] sm:h-[186px]",
+          !isPurchased && canAfford && "liquid-glass",
+          dealRing
         )}
         style={{
           background: isPurchased
@@ -134,19 +146,19 @@ export function ShopItemCard({
         }}
       >
         {/* Icon - Top */}
-        <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center mb-1.5 sm:mb-2">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center mb-1">
           <div className="[&>img]:w-full [&>img]:h-full [&>img]:object-contain [&>svg]:w-full [&>svg]:h-full">
             {icon}
           </div>
         </div>
 
         {/* Name */}
-        <h3 className="text-gray-900 font-bold text-sm sm:text-base leading-tight mb-1">{name}</h3>
-        
+        <h3 className="text-gray-900 font-bold text-[13px] sm:text-sm leading-tight mb-0.5">{name}</h3>
+
         {/* Description - flex-1 to push price section to bottom */}
         {showDescription && description && (
           <div className="flex-1 flex items-start">
-            <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 w-full">{description}</p>
+            <p className="text-gray-500 text-[11px] sm:text-xs line-clamp-1 w-full">{description}</p>
           </div>
         )}
 
@@ -162,12 +174,12 @@ export function ShopItemCard({
           ) : isLari ? (
             <>
               {/* Price Display */}
-              <span className="font-bold text-lg sm:text-xl text-pink-600 dark:text-pink-400">{formatPrice(price)}</span>
+              <span className="font-bold text-base sm:text-lg text-pink-600 dark:text-pink-400">{formatPrice(price)}</span>
               {/* Buy Button - only this is clickable */}
               <motion.button
                 onClick={onClick}
                 disabled={isPurchased || isLoading}
-                className="px-5 py-2 rounded-full font-bold text-xs sm:text-sm text-white"
+                className="px-4 py-1.5 rounded-full font-bold text-xs text-white"
                 style={{
                   background: "#00DDA3",
                   boxShadow: "0 3px 0 #00A87C",
@@ -182,14 +194,14 @@ export function ShopItemCard({
             <>
               {/* Price Display */}
               <div className="flex items-center justify-center gap-1">
-                <img src={currencyIcon!} alt="" width={24} height={24} loading="lazy" decoding="async" className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="font-bold text-base sm:text-lg text-gray-800">{price}</span>
+                <img src={currencyIcon!} alt="" width={24} height={24} loading="lazy" decoding="async" className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="font-bold text-sm sm:text-base text-gray-800">{price}</span>
               </div>
               {/* Buy Button - only this is clickable */}
               <motion.button
                 onClick={onClick}
                 disabled={isPurchased || isLoading}
-                className="px-5 py-2 rounded-full font-bold text-xs sm:text-sm text-white"
+                className="px-4 py-1.5 rounded-full font-bold text-xs text-white"
                 style={{
                   background: "#00DDA3",
                   boxShadow: "0 3px 0 #00A87C",

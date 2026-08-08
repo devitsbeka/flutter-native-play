@@ -29,21 +29,22 @@ export function ShopProductGrid({
 
   return (
     <motion.section
-      className="mb-6"
+      className="mx-3 sm:mx-4 mb-4 rounded-3xl border border-white/60 bg-white/55 p-2.5 sm:p-3 backdrop-blur-sm shadow-[0_8px_24px_rgba(102,51,153,0.08)]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Section Header */}
-      <div className="px-[15px] mb-2">
-        <h2 className="text-lg font-display font-bold text-foreground/90 drop-shadow-sm">
+      {/* Section Header - game-shop style accent bar */}
+      <div className="mb-2 flex items-center gap-2 px-1">
+        <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-fuchsia-400 to-purple-600" />
+        <h2 className="text-base font-display font-bold text-foreground/90">
           {title}
         </h2>
       </div>
 
       {/* Products Grid */}
-      <div className="px-3 sm:px-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-2 md:gap-3">
+      <div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-2">
           {items.map((item) => {
             // Real-money (lari) packs are always purchasable — gems balance is irrelevant
             const canAfford = item.currency === "lari" || gems >= item.price;
