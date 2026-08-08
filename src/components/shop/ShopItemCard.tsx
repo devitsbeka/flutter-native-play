@@ -108,7 +108,8 @@ export function ShopItemCard({
           className={cn(
             "w-full rounded-[24px] transition-all relative overflow-hidden flex items-center gap-4 text-left",
             "px-4 sm:px-6 py-5",
-            hasGradient ? "min-h-[132px]" : "min-h-[100px]",
+            // Full-row widgets (deals, bundles, VIP month...) share one height
+            "min-h-[250px]",
             !isPurchased && canAfford && !hasGradient && "liquid-glass"
           )}
           style={{
@@ -124,7 +125,7 @@ export function ShopItemCard({
               : !canAfford
               ? "0 3px 0 hsl(var(--border))"
               : hasGradient
-              ? "0 3.6px 0 0 rgba(0,0,0,0.22), 0 8px 24px rgba(102,51,153,0.25), inset 0 1.8px 0 0 rgba(255,255,255,0.35)"
+              ? "0 3.6px 0 0 rgba(0,0,0,0.22), inset 0 1.8px 0 0 rgba(255,255,255,0.35)"
               : undefined,
             border: isPurchased
               ? "2px solid hsl(145 70% 50%)"
@@ -133,7 +134,7 @@ export function ShopItemCard({
               : undefined,
           }}
         >
-          <div className={cn("shrink-0 flex items-center justify-center", hasGradient ? "w-16 h-16 sm:w-20 sm:h-20" : "w-12 h-12 sm:w-14 sm:h-14")}>
+          <div className={cn("shrink-0 flex items-center justify-center", hasGradient ? "w-20 h-20 sm:w-24 sm:h-24" : "w-16 h-16 sm:w-20 sm:h-20")}>
             <div className="[&>img]:w-full [&>img]:h-full [&>img]:object-contain [&>svg]:w-full [&>svg]:h-full drop-shadow-md">
               {icon}
             </div>
@@ -189,7 +190,7 @@ export function ShopItemCard({
             : !canAfford
             ? "0 3px 0 hsl(var(--border))"
             : hasGradient
-            ? "0 3.6px 0 0 rgba(0,0,0,0.22), 0 8px 24px rgba(102,51,153,0.25), inset 0 1.8px 0 0 rgba(255,255,255,0.35)"
+            ? "0 3.6px 0 0 rgba(0,0,0,0.22), inset 0 1.8px 0 0 rgba(255,255,255,0.35)"
             : undefined,
           border: isPurchased
             ? "2px solid hsl(145 70% 50%)"

@@ -70,7 +70,7 @@ function DealCard({
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl p-3 sm:p-3.5 text-white shadow-[0_10px_28px_-10px_rgba(88,28,135,0.55)]"
+      className="relative flex min-h-[250px] flex-col overflow-hidden rounded-[24px] p-4 sm:p-5 text-white"
       style={{ background: gradient }}
     >
       {/* soft highlight blob so the card doesn't read flat */}
@@ -128,8 +128,9 @@ function DealCard({
         </span>
       </div>
 
-      {/* Price row: struck full price → deal price → buy */}
-      <div className="relative mt-3 flex items-center justify-between gap-2">
+      {/* Price row: struck full price → deal price → buy, pinned to the
+          card bottom so the taller layout stays balanced */}
+      <div className="relative mt-auto flex items-center justify-between gap-2 pt-3">
         <div className="flex items-baseline gap-2">
           <span className="flex items-center gap-1 text-sm text-white/60 line-through decoration-2">
             <img src={gemIcon} alt="" className="h-3.5 w-3.5 object-contain opacity-60" />
