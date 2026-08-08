@@ -59,11 +59,11 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canA
                 alt=""
                 className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 object-contain"
               />
-              <span className="font-bold text-base text-foreground text-center leading-tight -mb-1">
-                {t(POWER_UP_NAME_KEYS[type])}
-              </span>
-              <span className="font-bold text-lg text-foreground">
+              <span className="font-bold text-lg text-foreground -mb-1">
                 {count}
+              </span>
+              <span className="font-normal text-sm text-foreground text-center leading-tight">
+                {t(POWER_UP_NAME_KEYS[type])}
               </span>
               <button
                 onClick={(e) => { e.stopPropagation(); onCardClick?.(type); }}
