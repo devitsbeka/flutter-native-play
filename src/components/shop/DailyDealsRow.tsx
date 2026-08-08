@@ -70,7 +70,7 @@ function DealCard({
 
   return (
     <div
-      className="relative flex min-h-[250px] flex-col overflow-hidden rounded-[24px] p-4 sm:p-5 text-white"
+      className="relative flex min-h-[172px] flex-col overflow-hidden rounded-[24px] p-4 sm:p-5 text-white"
       style={{ background: gradient }}
     >
       {/* soft highlight blob so the card doesn't read flat */}
@@ -98,8 +98,8 @@ function DealCard({
         </span>
       </div>
 
-      {/* Name + discount */}
-      <div className="relative mt-2.5 flex items-center gap-2">
+      {/* Name + discount — centered in the card */}
+      <div className="relative mt-2.5 flex items-center justify-center gap-2 text-center">
         <h3 className="font-display text-lg font-bold leading-none">{t(deal.nameKey)}</h3>
         <span
           className="rounded-full px-2 py-0.5 text-[11px] font-extrabold text-amber-900"
@@ -112,8 +112,8 @@ function DealCard({
         </span>
       </div>
 
-      {/* Bundle contents: powers + coins + gems */}
-      <div className="relative mt-2.5 flex flex-wrap items-center gap-1.5">
+      {/* Bundle contents: powers + coins + gems — centered */}
+      <div className="relative mt-2.5 flex flex-wrap items-center justify-center gap-1.5">
         <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-2.5 py-1.5 text-xs font-bold backdrop-blur-[2px]">
           <img src={powersIcon} alt="" className="h-5 w-5 object-contain" />
           {deal.contents.powers}× {t("shop.allPowers")}
@@ -205,7 +205,7 @@ export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick }: Dai
           deal={hourlyDeal}
           label={t("shop.hourlyDeal")}
           remainingLabel={formatRemaining(nextHour - now, false)}
-          gradient="linear-gradient(135deg, #EAB308 0%, #84CC16 45%, #16A34A 100%)"
+          gradient="linear-gradient(135deg, #FBBF24 0%, #F59E0B 55%, #EA7C0C 100%)"
           chipClass="bg-black/25"
           urgent
           isPurchased={purchasedItems.has(hourlyDeal.id)}

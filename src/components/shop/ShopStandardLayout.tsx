@@ -98,14 +98,13 @@ export function ShopStandardLayout({
         </div>
       ))}
 
-      {/* Rotating daily + hourly bundle deals — closing row, centered */}
-      <div className="mx-auto w-full max-w-3xl">
-        <DailyDealsRow
-          purchasedItems={purchasedItems}
-          isPurchasing={isPurchasing}
-          onItemClick={handleItemClick}
-        />
-      </div>
+      {/* Rotating daily + hourly bundle deals — closing row, aligned with
+          the product grids above (same side margins) */}
+      <DailyDealsRow
+        purchasedItems={purchasedItems}
+        isPurchasing={isPurchasing}
+        onItemClick={handleItemClick}
+      />
     </div>
   );
 }
