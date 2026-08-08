@@ -21,7 +21,7 @@ import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
-import { ShopRightSidebar } from "@/components/shop/ShopRightSidebar";
+import guestMascotVideo from "@/assets/guest-welcome-avatar.mp4";
 
 import { ShopStandardLayout } from "@/components/shop/ShopStandardLayout";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
@@ -295,8 +295,8 @@ export default function PowerUps() {
         </div>
 
         <div className="flex flex-1 min-h-0">
-          {/* Main Content Area */}
-          <div className="flex-1 relative pb-24 md:pb-0 bg-transparent scroll-smooth scrollbar-hide xl:mr-[320px] overflow-y-auto">
+          {/* Main Content Area - 60% on lg+, full width below */}
+          <div className="flex-1 lg:max-w-[60%] relative pb-24 md:pb-0 bg-transparent scroll-smooth scrollbar-hide overflow-y-auto">
             <GlobalSplineBackground />
 
             {/* Standard Shop Layout - Hero carousel + product grids */}
@@ -317,8 +317,18 @@ export default function PowerUps() {
             </div>
           </div>
 
-          {/* Desktop Right Sidebar - Shows on xl screens only */}
-          <ShopRightSidebar />
+          {/* Right 40% (lg+): the trivia king mascot, same looping video as
+              the guest home screen */}
+          <div className="hidden lg:block lg:w-[40%] relative overflow-hidden">
+            <video
+              src={guestMascotVideo}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
+          </div>
         </div>
       </div>
 
