@@ -213,10 +213,10 @@ export function UnifiedDesktopNav({
             </button>
             <button
               onClick={toggleCollapsed}
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-[#6b7280] hover:text-[#0f1729] hover:bg-muted/60 transition-colors"
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-[#0f1729] hover:bg-muted/60 transition-colors"
               aria-label="Expand sidebar"
             >
-              <PanelLeft className="w-5 h-5" strokeWidth={1.5} />
+              <PanelLeft className="w-6 h-6" strokeWidth={2} />
             </button>
           </div>
         ) : (
@@ -226,10 +226,10 @@ export function UnifiedDesktopNav({
             </button>
             <button
               onClick={toggleCollapsed}
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-[#6b7280] hover:text-[#0f1729] hover:bg-muted/60 transition-colors"
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-[#0f1729] hover:bg-muted/60 transition-colors"
               aria-label="Collapse sidebar"
             >
-              <PanelLeft className="w-5 h-5" strokeWidth={1.5} />
+              <PanelLeft className="w-6 h-6" strokeWidth={2} />
             </button>
           </div>
         )}
