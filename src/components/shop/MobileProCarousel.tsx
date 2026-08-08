@@ -61,8 +61,8 @@ export function MobileProCarousel() {
       id: "invite" as const,
       name: t("extra.inviteMiniTitle"),
       icon: Share2,
-      gradient: "linear-gradient(135deg, #E3BC37 0%, #9333EA 100%)",
-      shadow: "#7C3AED",
+      gradient: "linear-gradient(135deg, #FFDD55 0%, #FFC93C 55%, #FFAA00 100%)",
+      shadow: "#E09600",
     },
     {
       type: "pro" as SlideType,
