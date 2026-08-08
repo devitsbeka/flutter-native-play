@@ -980,9 +980,11 @@ export default function Index() {
             {/* GUEST: Show avatar + play button (no auth wall) */}
             {!user && (
               <>
-                {/* Desktop: Guest sees centered avatar with play button */}
+                {/* Desktop below xl: Guest sees centered avatar with play
+                    button. On xl+ the guest gets the same scene layout as
+                    logged-in users (guest-adapted), so this hero hides. */}
                 <motion.div
-                  className="hidden md:flex flex-col items-center justify-center w-full h-full pointer-events-auto"
+                  className="hidden md:flex xl:hidden flex-col items-center justify-center w-full h-full pointer-events-auto"
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.5, type: "spring" }}
@@ -1317,8 +1319,10 @@ export default function Index() {
 
             </div>}
 
-            {/* xl+ layout: floating stats over the full-bleed scene - LOGGED IN USERS ONLY */}
-            {user && (sceneUrl || showDefaultScene) && (
+            {/* xl+ layout: floating stats over the full-bleed scene. Guests
+                get the same layout in a guest-adapted state — every locked
+                interaction routes to auth. */}
+            {(sceneUrl || showDefaultScene) && (
               <motion.div
                 className="hidden xl:block w-full h-full pr-[300px] pointer-events-none"
                 initial={{ opacity: 0 }}
@@ -1326,35 +1330,57 @@ export default function Index() {
                 transition={{ duration: 0.5 }}
               >
                 <SceneHero
-                  nickname={profile?.nickname || t("game.guest")}
-                  level={levelInfo.level}
-                  xpCurrent={levelInfo.xpInCurrentLevel}
-                  xpTotal={levelInfo.xpNeededForNextLevel}
-                  coins={coins}
-                  gems={gems}
-                  missionsCount={incompleteMissions}
-                  onNameClick={() => setShowChangeNameModal(true)}
-                  onLevelClick={() => setShowLevelModal(true)}
-                  onMissionsClick={() => setShowMissionsModal(true)}
-                  onCoinsClick={() => navigate("/power-ups?section=coins")}
-                  onGemsClick={() => navigate("/power-ups?section=gems-lari")}
-                  onSceneClick={() => openAvatarModal()}
+                  nickname={user ? profile?.nickname || t("game.guest") : t("game.guest")}
+                  level={user ? levelInfo.level : 1}
+                  xpCurrent={user ? levelInfo.xpInCurrentLevel : 0}
+                  xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
+                  coins={user ? coins : 0}
+                  gems={user ? gems : 0}
+                  missionsCount={user ? incompleteMissions : 0}
+                  onNameClick={user ? () => setShowChangeNameModal(true) : () => navigate("/auth")}
+                  onLevelClick={user ? () => setShowLevelModal(true) : () => navigate("/auth")}
+                  onMissionsClick={user ? () => setShowMissionsModal(true) : () => navigate("/auth")}
+                  onCoinsClick={user ? () => navigate("/power-ups?section=coins") : () => navigate("/auth")}
+                  onGemsClick={user ? () => navigate("/power-ups?section=gems-lari") : () => navigate("/auth")}
+                  onSceneClick={user ? () => openAvatarModal() : () => navigate("/auth?mode=signup")}
                 />
               </motion.div>
+            )}
+
+            {/* xl+ scene: guest auth CTAs floating above the play button */}
+            {!user && showDefaultScene && (
+              <div className="hidden xl:flex absolute bottom-[17%] left-1/2 -translate-x-1/2 z-20 items-center gap-3 pointer-events-auto">
+                <motion.button
+                  onClick={() => navigate("/auth")}
+                  className="px-5 py-2.5 rounded-full bg-white border border-border shadow-md text-sm font-semibold text-foreground"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {t("common.signIn")}
+                </motion.button>
+                <motion.button
+                  onClick={() => navigate("/auth?mode=signup")}
+                  className="px-5 py-2.5 rounded-full bg-primary shadow-md text-sm font-semibold text-primary-foreground"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {t("extra.joinFreeBtn")}
+                </motion.button>
+              </div>
             )}
 
             {/* xl+ scene: play button centered on the CONTENT area (outside
                 the right-padded SceneHero overlay), so it stays in the middle
                 whether the sidebar is expanded or collapsed */}
-            {user && (sceneUrl || showDefaultScene) && (
+            {(sceneUrl || showDefaultScene) && (
               <div className="hidden xl:block absolute bottom-[6%] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
                 <DesktopPlayButtonLarge
                   onClick={handlePlayClick}
-                  playsRemaining={playsRemaining}
-                  maxPlays={maxPlays}
-                  canPlay={canPlay}
+                  playsRemaining={user ? playsRemaining : guestPlaysRemaining}
+                  maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
+                  canPlay={user ? canPlay : guestPlaysRemaining > 0}
                   isVip={isVip}
-                  isGuest={false}
+                  isGuest={!user}
                   onboardingId="play"
                 />
               </div>
