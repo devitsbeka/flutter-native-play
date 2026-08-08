@@ -204,6 +204,22 @@ export default function Leaderboards() {
   const needsOwnRank = !!user && !!profile && entries.length > 0 && !myEntry;
   const { data: myRank } = useMyRank(scope, countryCode, profile?.coins ?? 0, user?.id, needsOwnRank);
 
+  // Pin the player's own row below the list whenever it isn't visible without
+  // scrolling: ranked past the first ~10 rows, or outside the top 50 entirely.
+  const pinnedEntry: BoardEntry | null =
+    myEntry && myEntry.rank > 10
+      ? myEntry
+      : needsOwnRank && myRank
+        ? {
+            user_id: user!.id,
+            nickname: profile?.nickname || t("leaderboard.you"),
+            avatar_url: profile?.avatar_url || null,
+            coins: profile?.coins || 0,
+            country_code: countryCode,
+            rank: myRank,
+          }
+        : null;
+
   // Guests get one sign-in nudge per session (shared key with /team)
   useEffect(() => {
     if (!user && !sessionStorage.getItem("auth_prompt_shown")) {
@@ -288,9 +304,18 @@ export default function Leaderboards() {
           </div>
 
           {/* Board - fills the remaining height with no panel behind the rows;
-              only the row list inside scrolls (scrollbar hidden) */}
-          <div className="flex-1 min-h-0 rounded-[28px] p-3.5 flex flex-col">
-            <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide space-y-2">
+              only the row list inside scrolls (scrollbar hidden). Rows fade out
+              at the scroll edges instead of clipping hard. */}
+          <div className="flex-1 min-h-0 rounded-[28px] px-3.5 flex flex-col">
+            <div
+              className="flex-1 min-h-0 overflow-y-auto scrollbar-hide space-y-2 py-4"
+              style={{
+                maskImage:
+                  "linear-gradient(to bottom, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)",
+              }}
+            >
               {isLoading && entries.length === 0 ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <div key={i} className="h-14 rounded-full bg-white/15 animate-pulse" />
@@ -313,19 +338,12 @@ export default function Leaderboards() {
               )}
             </div>
 
-            {/* Own rank when outside the visible top 50 - pinned below the
+            {/* Own rank when not visible without scrolling - pinned below the
                 scrolling list so it's always in view */}
-            {needsOwnRank && myRank && (
-              <div className="shrink-0 pt-2 mt-1.5 border-t border-white/20">
+            {pinnedEntry && (
+              <div className="shrink-0 pb-2">
                 <BoardRow
-                  entry={{
-                    user_id: user!.id,
-                    nickname: profile?.nickname || t("leaderboard.you"),
-                    avatar_url: profile?.avatar_url || null,
-                    coins: profile?.coins || 0,
-                    country_code: countryCode,
-                    rank: myRank,
-                  }}
+                  entry={pinnedEntry}
                   isMe
                   onOpenProfile={openProfile}
                   youLabel={profile?.nickname || t("leaderboard.you")}
