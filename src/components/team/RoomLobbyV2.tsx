@@ -3,7 +3,8 @@ import { createPortal } from "react-dom";
 import retroTvIcon from "@/assets/images/retro-tv.png";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Share2, ArrowLeft, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut, Plus } from "lucide-react";
+import { Share2, ArrowLeft, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut, Plus, BellRing } from "lucide-react";
+import { createNotification } from "@/hooks/useNotifications";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { isRoomActive } from "@/hooks/useMyRooms";
 import { RoomIconPickerModal } from "./RoomIconPickerModal";
@@ -275,6 +276,43 @@ export function RoomLobbyV2() {
 
   const handleTVModeToggle = (checked: boolean) => {
     setIsTVModeEnabled(checked);
+  };
+
+  // Non-host: ping the host to start the game. In-app the host gets a
+  // clickable popup (plus the notification sound the realtime insert already
+  // plays); away from the app a push goes out best-effort. Cooldown stops spam.
+  const [pingCooldown, setPingCooldown] = useState(false);
+  const handlePingHost = async () => {
+    if (!currentRoom || !user || pingCooldown) return;
+    setPingCooldown(true);
+    setTimeout(() => setPingCooldown(false), 30_000);
+
+    const senderName = profile?.nickname || "";
+    const title = t("extra.pingHostNotifTitle").replace("{name}", senderName || "...");
+    await createNotification(
+      currentRoom.host_user_id,
+      "room_ping",
+      title,
+      currentRoom.room_name || undefined,
+      {
+        room_id: currentRoom.id,
+        room_code: currentRoom.room_code,
+        sender_nickname: senderName,
+      }
+    );
+    // Push for hosts away from the app; fails quietly if push isn't configured
+    supabase.functions
+      .invoke("send-push-notification", {
+        body: {
+          user_ids: [currentRoom.host_user_id],
+          title,
+          body: currentRoom.room_name || "",
+          data: { room_code: currentRoom.room_code },
+          notification_type: "custom",
+        },
+      })
+      .catch(() => {});
+    toast.success(t("extra.pingHostSent"));
   };
 
   const handleTVSetupComplete = () => {
@@ -925,7 +963,17 @@ export function RoomLobbyV2() {
               );
             })()
           ) : (
-            <div className="text-center py-2">
+            <div className="text-center py-2 space-y-3">
+              <ChunkyButton
+                variant="white"
+                size="lg"
+                className="w-full"
+                onClick={handlePingHost}
+                disabled={pingCooldown}
+                icon={<BellRing className="w-5 h-5" />}
+              >
+                {pingCooldown ? t("extra.pingHostSent") : t("extra.pingHostBtn")}
+              </ChunkyButton>
               <motion.div
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 2, repeat: Infinity }}

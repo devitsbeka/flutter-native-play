@@ -47,7 +47,7 @@ export default function Notifications() {
 
   // Tab category mapping
   const TAB_TYPES: Record<'games' | 'social' | 'trivia', string[]> = {
-    games: ['room_invite', 'game_started', 'challenge', 'game_result'],
+    games: ['room_invite', 'game_started', 'challenge', 'game_result', 'room_ping'],
     social: ['friend_request', 'friend_accepted'],
     trivia: ['trivia_liked', 'trivia_saved', 'trivia_played'],
   };
@@ -237,6 +237,7 @@ export default function Notifications() {
         navigate('/team');
         break;
       case 'challenge':
+      case 'room_ping':
         if (data?.room_code) {
           navigate(`/team?join=${data.room_code}`);
         } else {

@@ -47,6 +47,7 @@ export function translateNotificationTitle(
     'trivia_played': 'extra.playedYourTrivia',
     'trivia_liked': 'extra.likedYourTrivia',
     'trivia_saved': 'extra.savedYourTrivia',
+    'room_ping': 'extra.pingHostNotifTitle',
   };
 
   const translationKey = titleMap[type];
