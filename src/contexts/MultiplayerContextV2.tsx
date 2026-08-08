@@ -945,29 +945,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     setLoading(true);
     try {
-      // Use provided room name/icon or generate new ones
-      let finalRoomName: string | null = providedRoomName || null;
-      let finalRoomIcon: string | null = providedRoomIcon || null;
-
-      // Only generate if not provided. The AI edge function is cosmetic - cap
-      // it at a few seconds so a cold start or hung request can't stall room
-      // creation behind an infinite spinner.
-      if (!finalRoomName) {
-        try {
-          const nameResult = await Promise.race([
-            supabase.functions.invoke('generate-room-name'),
-            new Promise<{ data: null; error: Error }>((resolve) =>
-              setTimeout(() => resolve({ data: null, error: new Error("room-name generation timed out") }), 6000)
-            ),
-          ]);
-          if (!nameResult.error && nameResult.data?.name) {
-            finalRoomName = nameResult.data.name;
-            finalRoomIcon = nameResult.data.icon_url || null;
-          }
-        } catch (e) {
-          console.log('Using default room name, edge function failed:', e);
-        }
-      }
+      // Use provided room name/icon if given. When absent, the room is
+      // created immediately with no name (the lobby shows a default) and
+      // the cosmetic AI name arrives in the background — waiting on the
+      // edge function here used to stall every room creation for up to 6
+      // seconds on cold starts.
+      const finalRoomName: string | null = providedRoomName || null;
+      const finalRoomIcon: string | null = providedRoomIcon || null;
 
       // Insert with a locally generated code; on the (astronomically rare)
       // unique-constraint collision, regenerate and retry
@@ -1037,6 +1021,23 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }));
       }
       
+      // Fill in the AI-generated name after the fact; the lobby's realtime
+      // subscription on game_rooms picks the update up automatically.
+      if (!finalRoomName) {
+        const createdRoomId = room.id;
+        void supabase.functions
+          .invoke('generate-room-name')
+          .then(({ data, error: nameError }) => {
+            if (!nameError && data?.name) {
+              return supabase
+                .from("game_rooms")
+                .update({ room_name: data.name, room_icon: data.icon_url || null })
+                .eq("id", createdRoomId);
+            }
+          })
+          .catch((e) => console.log('Room name generation skipped:', e));
+      }
+
       expectedGameIdRef.current = null; // Fresh room - no game yet
       setState(prev => ({ ...prev, phase: "lobby", currentRoom: room as GameRoom }));
       setShowCreateModal(false);

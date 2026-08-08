@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Tv, Users, Trophy, ChevronRight } from "lucide-react";
+import { Tv, Users, Trophy, ChevronRight, Loader2 } from "lucide-react";
 import { GameInvitationsSection } from "./GameInvitationsSection";
 import { ActiveRoomsWidget } from "./widgets/ActiveRoomsWidget";
 import { MyTriviasWidget } from "./widgets/MyTriviasWidget";
@@ -14,15 +14,17 @@ interface TeamRightSidebarProps {
   onAcceptInvitation: (invitationId: string) => Promise<string | null>;
   onJoinRoom: (roomCode: string) => void;
   onOpenTV: () => void;
+  isConnectingTV?: boolean;
   activeTab: string;
   onViewAllRooms: () => void;
   onViewAllTrivias: () => void;
 }
 
-export function TeamRightSidebar({ 
-  onAcceptInvitation, 
+export function TeamRightSidebar({
+  onAcceptInvitation,
   onJoinRoom,
   onOpenTV,
+  isConnectingTV = false,
   activeTab,
   onViewAllRooms,
   onViewAllTrivias,
@@ -66,10 +68,10 @@ export function TeamRightSidebar({
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-foreground text-sm">
-                  დიდ ეკრანზე თამაში
+                  {t("extra.playOnBigScreenTitle")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  ითამაშე მეგობრებთან ერთად TV-ზე
+                  {t("extra.playWithFriendsTv")}
                 </p>
               </div>
             </div>
@@ -77,17 +79,22 @@ export function TeamRightSidebar({
             {/* CTA Button - matching account switcher dropdown style */}
             <motion.button
               onClick={onOpenTV}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-foreground transition-colors"
+              disabled={isConnectingTV}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-foreground transition-colors disabled:opacity-70"
               style={{
                 background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
                 boxShadow: "0 3px 0 #D8D0E8, 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1)",
                 border: "2px solid #E8E0F5",
               }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: isConnectingTV ? 1 : 1.02 }}
+              whileTap={{ scale: isConnectingTV ? 1 : 0.98 }}
             >
-              <Tv className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">TV-სთან დაკავშირება</span>
+              {isConnectingTV ? (
+                <Loader2 className="w-4 h-4 text-primary animate-spin" />
+              ) : (
+                <Tv className="w-4 h-4 text-primary" />
+              )}
+              <span className="text-sm font-medium">{t("extra.connectToTv")}</span>
             </motion.button>
           </div>
         </motion.div>

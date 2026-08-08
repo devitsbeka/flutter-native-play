@@ -2361,6 +2361,7 @@ export const ka = {
     defaultGameRoom: "თამაშის ოთახი",
     allRoomsBtn: "ყველა ოთახი",
     playWithFriendsTv: "ითამაშე მეგობრებთან ერთად TV-ზე",
+    playOnBigScreenTitle: "დიდ ეკრანზე თამაში",
     nobodyYet: "ჯერ არავინ",
     // Room Lobby
     playerRemovedFromRoom: "მოთამაშე წაიშალა ოთახიდან",
