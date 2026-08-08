@@ -247,8 +247,10 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
     const participants = participantsByRoom.get(room.id) || [];
     const tvData = room.tv_session_id ? tvSessionMap.get(room.tv_session_id) : null;
 
+    // The viewer is online by definition — include them so their own avatar
+    // ring and the all-online badge don't contradict the friends carousel
     const onlineParticipants = participants
-      .filter(p => onlineUserIds.has(p.user_id) && p.user_id !== userId)
+      .filter(p => p.user_id === userId || onlineUserIds.has(p.user_id))
       .map(p => ({ user_id: p.user_id, nickname: p.nickname, avatar_url: getFreshAvatar(p.user_id, p.avatar_url) }));
 
     const roomPath = `/room/${room.id}`;
@@ -295,7 +297,7 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
         is_host: p.is_host || false,
       })),
       online_participants: onlineParticipants,
-      has_others_online: onlineParticipants.length > 0,
+      has_others_online: onlineParticipants.some(p => p.user_id !== userId),
       in_room_participants: inRoomParticipants,
       has_players_in_room: inRoomParticipants.length > 0,
       has_recent_activity: hasRecentActivity,

@@ -1858,6 +1858,7 @@ export const ka = {
     roomStatusNew: "ახალი",
     roomStatusCompleted: "დასრულდა",
     roomStatusWaiting: "მოლოდინი",
+    roomStatusOnline: "ონლაინ",
     // How it works
     howItWorksTitle: "როგორ მუშაობს?",
     howItWorksFunGuaranteed: "გართობა გარანტირებულია! 🎉",

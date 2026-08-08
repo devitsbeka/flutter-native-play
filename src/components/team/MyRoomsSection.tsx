@@ -340,6 +340,12 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
   // Rooms that were ever played on TV keep their session id; live ones have
   // an active status — either way the footer gets a TV marker.
   const playedOnTV = !!room.tv_session_id || hasTVSession;
+
+  // Every player in the room is online right now — the waiting badge
+  // becomes a green "online" badge
+  const allPlayersOnline =
+    room.participants.length > 0 &&
+    room.participants.every(p => room.online_participants.some(op => op.user_id === p.user_id));
   
   // For display: use TV active players if there's an active TV session with players
   const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
@@ -513,6 +519,11 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
                       {t("extra.roomStatusCompleted")}
                     </span>
+                  ) : allPlayersOnline ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                      {t("extra.roomStatusOnline")}
+                    </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
@@ -652,6 +663,12 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
   // Rooms that were ever played on TV keep their session id; live ones have
   // an active status — either way the footer gets a TV marker.
   const playedOnTV = !!room.tv_session_id || hasTVSession;
+
+  // Every player in the room is online right now — the waiting badge
+  // becomes a green "online" badge
+  const allPlayersOnline =
+    room.participants.length > 0 &&
+    room.participants.every(p => room.online_participants.some(op => op.user_id === p.user_id));
   
   // For display: use TV active players if there's an active TV session
   const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
@@ -781,6 +798,11 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
               ) : isCompleted ? (
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
                   {t("extra.roomStatusCompleted")}
+                </span>
+              ) : allPlayersOnline ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  {t("extra.roomStatusOnline")}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
