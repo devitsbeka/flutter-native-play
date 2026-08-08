@@ -11,6 +11,7 @@ import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProPlansSection, ProTier } from "@/components/profile/ProPlansSection";
+import { AvatarReel } from "@/components/profile/AvatarReel";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { PageHeader } from "@/components/shared/PageHeader";
 
@@ -152,6 +153,9 @@ export default function Profile() {
               </div>
 
             </motion.div>
+
+            {/* Preset avatar reel - tap to switch, premium ones cost gems */}
+            <AvatarReel />
 
             {/* Tabs - segmented switcher */}
             <div className="flex justify-center mb-6">
