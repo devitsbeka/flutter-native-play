@@ -21,7 +21,8 @@ import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
-import guestMascotVideo from "@/assets/guest-welcome-avatar.mp4";
+// Served from public/ - not bundled, streams straight from the CDN
+const TRIVIA_KING_SCENE_VIDEO = "/videos/trivia-king-scene.mp4";
 
 import { ShopStandardLayout } from "@/components/shop/ShopStandardLayout";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
@@ -317,11 +318,10 @@ export default function PowerUps() {
             </div>
           </div>
 
-          {/* Right 40% (lg+): the trivia king mascot, same looping video as
-              the guest home screen */}
+          {/* Right 40% (lg+): the looping trivia king scene */}
           <div className="hidden lg:block lg:w-[40%] relative overflow-hidden">
             <video
-              src={guestMascotVideo}
+              src={TRIVIA_KING_SCENE_VIDEO}
               autoPlay
               loop
               muted
