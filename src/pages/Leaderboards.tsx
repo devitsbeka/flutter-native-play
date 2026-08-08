@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -236,6 +236,33 @@ export default function Leaderboards() {
   const countryCode = profile?.country_code || null;
   const [scope, setScope] = useState<Scope>(countryCode ? "local" : "global");
 
+  // The page itself never scrolls — forward mouse-wheel input from anywhere
+  // on it (background, trophies, tabs) into the board list, so scrolling
+  // isn't limited to the row area. Wheels inside the list scroll natively.
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const forwardWheel = (e: React.WheelEvent) => {
+    const list = listRef.current;
+    if (!list || list.contains(e.target as Node)) return;
+    list.scrollTop += e.deltaY;
+  };
+  // Same for touch drags that start outside the list
+  const lastTouchY = useRef<number | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    const list = listRef.current;
+    if (!list || list.contains(e.target as Node)) return;
+    lastTouchY.current = e.touches[0].clientY;
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    const list = listRef.current;
+    if (!list || lastTouchY.current === null) return;
+    const y = e.touches[0].clientY;
+    list.scrollTop += lastTouchY.current - y;
+    lastTouchY.current = y;
+  };
+  const onTouchEnd = () => {
+    lastTouchY.current = null;
+  };
+
   // Profiles load async — once the country is known, prefer the local tab
   // as the landing view (only if the user hasn't tabbed around yet).
   const [scopeTouched, setScopeTouched] = useState(false);
@@ -291,7 +318,13 @@ export default function Leaderboards() {
 
       {/* Fixed to the viewport; only the board card's row list scrolls.
           The classic three-trophies illustration is the page background. */}
-      <div className="relative h-[100dvh] md:h-screen w-full max-w-[100vw] flex flex-col overflow-hidden">
+      <div
+        className="relative h-[100dvh] md:h-screen w-full max-w-[100vw] flex flex-col overflow-hidden"
+        onWheel={forwardWheel}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         <img
           src={bgLeader}
           alt=""
@@ -355,6 +388,7 @@ export default function Leaderboards() {
               at the scroll edges instead of clipping hard. */}
           <div className="flex-1 min-h-0 rounded-[28px] px-3.5 flex flex-col">
             <div
+              ref={listRef}
               className="flex-1 min-h-0 overflow-y-auto scrollbar-hide space-y-3 py-4"
               style={{
                 maskImage:
