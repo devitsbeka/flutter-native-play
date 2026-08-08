@@ -480,6 +480,66 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
   // is_current (the homepage scene), never the circular profile avatar.
   const isSceneUrl = (url: string) => url.includes("/scene_");
 
+  // Horizontal scenes ticker: touch scrolls natively with momentum; mouse
+  // gets drag-to-scroll with velocity tracking and an inertia glide.
+  const scenesRowRef = useRef<HTMLDivElement | null>(null);
+  const sceneDrag = useRef({ down: false, moved: false, startX: 0, startScroll: 0, lastX: 0, lastT: 0, v: 0, raf: 0 });
+
+  const scenesPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
+    const el = scenesRowRef.current;
+    if (!el) return;
+    cancelAnimationFrame(sceneDrag.current.raf);
+    sceneDrag.current = {
+      down: true,
+      moved: false,
+      startX: e.clientX,
+      startScroll: el.scrollLeft,
+      lastX: e.clientX,
+      lastT: performance.now(),
+      v: 0,
+      raf: 0,
+    };
+  };
+
+  const scenesPointerMove = (e: React.PointerEvent) => {
+    const s = sceneDrag.current;
+    if (!s.down) return;
+    const el = scenesRowRef.current;
+    if (!el) return;
+    const dx = e.clientX - s.startX;
+    if (Math.abs(dx) > 4) s.moved = true;
+    el.scrollLeft = s.startScroll - dx;
+    const now = performance.now();
+    const dt = now - s.lastT;
+    if (dt > 0) {
+      s.v = (e.clientX - s.lastX) / dt;
+      s.lastX = e.clientX;
+      s.lastT = now;
+    }
+  };
+
+  const scenesPointerUp = () => {
+    const s = sceneDrag.current;
+    if (!s.down) return;
+    s.down = false;
+    const el = scenesRowRef.current;
+    if (el) {
+      let velocity = s.v * 16; // px per ~frame
+      const glide = () => {
+        if (Math.abs(velocity) < 0.5) return;
+        el.scrollLeft -= velocity;
+        velocity *= 0.95;
+        s.raf = requestAnimationFrame(glide);
+      };
+      s.raf = requestAnimationFrame(glide);
+    }
+    // Let the click that follows pointerup see the moved flag, then reset it
+    window.setTimeout(() => {
+      sceneDrag.current.moved = false;
+    }, 50);
+  };
+
   const selectScene = async (gen: AvatarGeneration) => {
     if (!user) return;
     setIsLoading(true);
@@ -890,9 +950,18 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
               from a different selfie/photo. */}
           <div>
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myScenes")}</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div
+              ref={scenesRowRef}
+              onPointerDown={scenesPointerDown}
+              onPointerMove={scenesPointerMove}
+              onPointerUp={scenesPointerUp}
+              onPointerLeave={scenesPointerUp}
+              onDragStart={(e) => e.preventDefault()}
+              className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1 cursor-grab active:cursor-grabbing select-none"
+            >
               <motion.button
                 onClick={() => {
+                  if (sceneDrag.current.moved) return;
                   if (isLimitReached) {
                     toast.error(t("extra.avatarMaxGenReachedShort"));
                     return;
@@ -900,7 +969,7 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                   fileInputRef.current?.click();
                 }}
                 disabled={isLoading || isProcessingFile}
-                className="aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-50"
+                className="w-48 shrink-0 aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-50"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -910,9 +979,12 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
               {generations.filter((g) => isSceneUrl(g.avatar_url)).map((gen) => (
                 <motion.button
                   key={gen.id}
-                  onClick={() => setSelectedForAction(selectedForAction === gen.id ? null : gen.id)}
+                  onClick={() => {
+                    if (sceneDrag.current.moved) return;
+                    setSelectedForAction(selectedForAction === gen.id ? null : gen.id);
+                  }}
                   disabled={isLoading}
-                  className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
+                  className={`relative w-48 shrink-0 aspect-video rounded-xl overflow-hidden border-2 transition-all ${
                     selectedForAction === gen.id
                       ? "border-primary ring-2 ring-primary/30"
                       : gen.is_current
@@ -922,7 +994,7 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                 >
-                  <img src={gen.avatar_url} alt="Scene" className="w-full h-full object-cover" />
+                  <img src={gen.avatar_url} alt="Scene" className="w-full h-full object-cover pointer-events-none" draggable={false} />
                   {gen.is_current && selectedForAction !== gen.id && (
                     <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow">
                       <Check className="w-3 h-3 text-white" />
