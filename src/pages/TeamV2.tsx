@@ -297,6 +297,15 @@ function TeamContentV2() {
 
 
 
+  // Warm up the Supabase connection and auth token as soon as the page
+  // mounts. The first API call after idling (expired token, stale socket
+  // from laptop sleep) otherwise pays the refresh/reconnect cost — or hangs
+  // outright — exactly when the user clicks "create room" or the TV button.
+  useEffect(() => {
+    void supabase.auth.getSession();
+    void supabase.from("game_rooms").select("id").limit(1).maybeSingle();
+  }, []);
+
   // Link pending challenge attempt to user after registration
   useEffect(() => {
     if (!user) return;
@@ -827,10 +836,24 @@ function TeamContentV2() {
               if (isConnectingTV) return;
               setIsConnectingTV(true);
               try {
-                await gateWithRewardedAd(async () => {
-                  const room = await createRoom();
-                  if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
-                });
+                // Race against a deadline: a hung request (stale socket
+                // after sleep, dead connection) otherwise spins forever and
+                // only a page refresh recovers. On timeout the button
+                // resets and an immediate retry usually succeeds on a
+                // fresh connection.
+                await Promise.race([
+                  gateWithRewardedAd(async () => {
+                    const room = await createRoom();
+                    if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
+                  }),
+                  new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error("tv-connect-timeout")), 12000)
+                  ),
+                ]);
+              } catch (e) {
+                if (e instanceof Error && e.message === "tv-connect-timeout") {
+                  toast.error(t("extra.errorOccurredToast"));
+                }
               } finally {
                 setIsConnectingTV(false);
               }
