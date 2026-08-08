@@ -68,6 +68,7 @@ import { WatchAdModal } from "@/components/home/WatchAdModal";
 import { InviteFriendsModal, useInviteModalVisibility } from "@/components/home/InviteFriendsModal";
 import { FriendJoinedModal } from "@/components/home/FriendJoinedModal";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
+import { PlayOptionsModal } from "@/components/home/PlayOptionsModal";
 import { InviteFriendsModal as AddFriendsModal } from "@/components/team/InviteFriendsModal";
 import { ChangeNameModal } from "@/components/home/ChangeNameModal";
 
@@ -212,6 +213,7 @@ export default function Index() {
   const [showWelcomeOnboarding, setShowWelcomeOnboarding] = useState(false);
   const [showChangeNameModal, setShowChangeNameModal] = useState(false);
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [showPlayOptions, setShowPlayOptions] = useState(false);
 
   // Show welcome onboarding for newly signed-up users (works for all signup paths)
   useEffect(() => {
@@ -355,8 +357,10 @@ export default function Index() {
     }
   }, [useRegenPlay, navigate]);
 
-  // Handle play button click - check auth status and plays remaining
-  const handlePlayClick = useCallback(async () => {
+  // Start a quick match: the /game flow matches against a random opponent
+  // and the VS screen rolls a random category automatically.
+  const startQuickGame = useCallback(async () => {
+    setShowPlayOptions(false);
     if (!user) {
       // Guest user - check if they have plays remaining
       if (hasReachedGuestPlayLimit()) {
@@ -392,6 +396,21 @@ export default function Index() {
       navigate("/game");
     }
   }, [user, profile, navigate, openAvatarModal, isVip, canPlay, hasEnoughCoins, regenPlayAvailable, playsRemaining, useRegenPlay]);
+
+  // The main play button first offers a choice: quick match or play with
+  // friends. Guests skip the chooser — rooms need an account anyway.
+  const handlePlayClick = useCallback(() => {
+    if (user) {
+      setShowPlayOptions(true);
+    } else {
+      void startQuickGame();
+    }
+  }, [user, startQuickGame]);
+
+  const handlePlayWithFriends = useCallback(() => {
+    setShowPlayOptions(false);
+    navigate("/team", { state: { openCreateRoom: true } });
+  }, [navigate]);
 
   // Handle exchange gems for coins — single atomic RPC (a separate
   // spend-then-add pair could take the gems and never deliver the coins),
@@ -848,6 +867,14 @@ export default function Index() {
         <AddFriendsModal
           isOpen={showAddFriendModal}
           onClose={() => setShowAddFriendModal(false)}
+        />
+
+        {/* Play options: quick match vs play with friends */}
+        <PlayOptionsModal
+          isOpen={showPlayOptions}
+          onClose={() => setShowPlayOptions(false)}
+          onQuickGame={() => void startQuickGame()}
+          onPlayWithFriends={handlePlayWithFriends}
         />
 
         {/* Floating Gift Button - the non-blocking entry to the invite offer

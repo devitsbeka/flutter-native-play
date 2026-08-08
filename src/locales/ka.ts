@@ -2363,6 +2363,10 @@ export const ka = {
     allRoomsBtn: "ყველა ოთახი",
     playWithFriendsTv: "ითამაშე მეგობრებთან ერთად TV-ზე",
     playOnBigScreenTitle: "დიდ ეკრანზე თამაში",
+    playQuickGame: "სწრაფი თამაში",
+    playQuickGameDesc: "შემთხვევითი მოწინააღმდეგე და კატეგორია",
+    playFriendsGame: "მეგობრებთან თამაში",
+    playFriendsGameDesc: "შექმენი ოთახი და მოიწვიე მეგობრები",
     nobodyYet: "ჯერ არავინ",
     // Room Lobby
     playerRemovedFromRoom: "მოთამაშე წაიშალა ოთახიდან",
