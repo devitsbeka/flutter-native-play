@@ -287,10 +287,11 @@ export function AirbnbCategoryCard({
                <div className={`relative z-10 px-4 ${isFull ? 'pb-4 pt-12' : 'pb-3 pt-10'}`}>
                 {/* Progress bar with integrated count */}
                 <div
-                  className={`relative isolate z-0 rounded-full ${isFull ? 'h-6' : 'h-5'} border-[2.5px] border-white/70 overflow-visible`}
+                  className={`relative isolate z-0 rounded-full ${isFull ? 'h-6' : 'h-5'} border-[2px] border-[#e8e0f5] overflow-visible`}
+                  // Track uses the main page pill recipe (lavender border + lip)
                   style={{
-                    background: 'rgba(255,255,255,0.5)',
-                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.08), 0 3px 0 rgba(0,0,0,0.06)',
+                    background: 'rgba(252,247,255,0.8)',
+                    boxShadow: '0 3px 0 #d8d0e8, inset 0 1.8px 0 0 #ffffff',
                   }}
                 >
                   {/* Inner clip layer */}
