@@ -198,7 +198,7 @@ export function UnifiedDesktopNav({
         {/* Logo - at top (wide sidebar only; the tablet rail is too narrow) */}
         <button
           onClick={() => navigate("/")}
-          className="hidden lg:flex px-4 mb-5 items-center cursor-pointer"
+          className="hidden lg:flex px-4 mb-4 items-center cursor-pointer"
           aria-label="MyTrivia"
         >
           <img
@@ -208,6 +208,9 @@ export function UnifiedDesktopNav({
             draggable={false}
           />
         </button>
+
+        {/* Subtle separator between logo and navigation */}
+        <div className="hidden lg:block mx-4 mb-4 border-t border-purple-900/10" />
 
         {/* Main Navigation */}
         <div className="px-2 lg:px-3 space-y-1">
@@ -232,6 +235,16 @@ export function UnifiedDesktopNav({
             );
           })}
 
+          {/* More menu - sits with the nav items rather than pinned at the bottom */}
+          <motion.button
+            onClick={() => setIsMoreModalOpen(true)}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Menu className="w-6 h-6" strokeWidth={1.5} />
+            <span className="text-[15px] hidden lg:inline">{t("extra.navMore")}</span>
+          </motion.button>
         </div>
 
         {/* Promo Card - Desktop only, guests only */}
@@ -275,19 +288,8 @@ export function UnifiedDesktopNav({
           </div>
         )}
 
-        {/* Bottom Section - More menu + profile */}
+        {/* Bottom Section - profile */}
         <div className={`px-2 lg:px-3 space-y-2 ${profile ? 'mt-auto' : ''}`}>
-          {/* More Menu */}
-          <motion.button
-            onClick={() => setIsMoreModalOpen(true)}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Menu className="w-6 h-6" strokeWidth={1.5} />
-            <span className="text-[15px] hidden lg:inline">{t("extra.navMore")}</span>
-          </motion.button>
-
           {/* Profile Button - at the very bottom */}
           {/* Tablet rail: avatar only */}
           <div className="md:flex lg:hidden items-center justify-center">
