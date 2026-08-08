@@ -19,7 +19,6 @@ import triviaIcon from "@/assets/icons/trivia-buzzer-8.png";
 import trophyIcon from "@/assets/icons/trophy-2.png";
 import percentIcon from "@/assets/icons/percentage-discount.png";
 import trophyShelfIcon from "@/assets/icons/trophy-shelf.png";
-import crownIcon from "@/assets/icons/crown-5.png";
 
 
 export default function Profile() {
@@ -154,39 +153,36 @@ export default function Profile() {
 
             </motion.div>
 
-            {/* Tabs */}
-            <div className="flex gap-2 mb-6">
-              {/* Statistics Tab */}
-              <button
-                onClick={() => setActiveTab("Stats")}
-                className={cn(
-                  "flex-1 py-3 rounded-full font-semibold text-sm transition-colors",
-                  activeTab === "Stats"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-secondary-foreground"
-                )}
-              >
-                {t("profile.statistics")}
-              </button>
-              
-              {/* PRO Title with Crown - clickable */}
-              <button
-                onClick={() => setActiveTab("PRO")}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-3 rounded-full transition-colors",
-                  activeTab === "PRO"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-transparent"
-                )}
-              >
-                <img src={crownIcon} alt="" className="w-6 h-6" />
-                <span className={cn(
-                  "font-semibold text-sm",
-                  activeTab === "PRO" ? "text-primary-foreground" : "text-foreground"
-                )}>
-                  {getProLabel()}
-                </span>
-              </button>
+            {/* Tabs - pills matching the leaderboard scope tabs */}
+            <div className="flex items-center justify-center gap-2 mb-6">
+              {[
+                { id: "Stats", label: t("profile.statistics") },
+                { id: "PRO", label: getProLabel() },
+              ].map((tab) => {
+                const active = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={cn(
+                      "px-5 py-2.5 rounded-full font-black transition-all",
+                      active ? "text-amber-900" : "text-white/80 hover:text-white"
+                    )}
+                    style={
+                      active
+                        ? {
+                            background: "linear-gradient(180deg, #FDE047 0%, #FACC15 100%)",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
+                          }
+                        : {
+                            background: "rgba(124, 111, 224, 0.55)",
+                          }
+                    }
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
 
 

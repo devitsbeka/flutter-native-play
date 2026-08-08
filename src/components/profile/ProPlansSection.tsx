@@ -2,9 +2,10 @@ import { siteUrl } from "@/config/site";
 import { motion } from "framer-motion";
 import groupIcon from "@/assets/group-of-people.png";
 import crownIcon from "@/assets/crown-icon.png";
+import shopBgVideo from "@/assets/shopbg.mp4";
+import shopBgVideoWebm from "@/assets/shopbg.webm";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp, Share2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp, Share2, Check, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
 import { useFriendInvites } from "@/hooks/useFriendInvites";
@@ -24,12 +25,10 @@ interface TierConfig {
   price: number;
   friendInvites: number;
   xpMultiplier: number;
+  icon: React.ElementType;
   gradient: string;
-  borderColor: string;
+  depthColor: string;
   glowColor: string;
-  accentColor: string;
-  lightBg: string;
-  buttonGradient: string;
   popular?: boolean;
   benefits: {
     icon: React.ElementType;
@@ -39,6 +38,8 @@ interface TierConfig {
   }[];
 }
 
+// Colors mirror the shop PRO banners (MobileProCarousel / ShopRightSidebar):
+// solo PRO is the pink card, friends PRO the purple one.
 export const PRO_TIERS: TierConfig[] = [
   {
     id: 'pro',
@@ -47,12 +48,10 @@ export const PRO_TIERS: TierConfig[] = [
     price: 3.99,
     friendInvites: 1,
     xpMultiplier: 2,
-    gradient: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)',
-    borderColor: 'rgba(147, 51, 234, 0.4)',
-    glowColor: 'rgba(147, 51, 234, 0.25)',
-    accentColor: '#9333EA',
-    lightBg: 'rgba(147, 51, 234, 0.1)',
-    buttonGradient: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)',
+    icon: Crown,
+    gradient: 'linear-gradient(135deg, #EC4899 0%, #DB2777 50%, #BE185D 100%)',
+    depthColor: '#9D174D',
+    glowColor: 'rgba(219, 39, 119, 0.25)',
     benefits: [
       { icon: Zap, text: 'extra.xpBonus' },
       { icon: Shield, text: 'extra.noAds' },
@@ -67,12 +66,10 @@ export const PRO_TIERS: TierConfig[] = [
     price: 7.99,
     friendInvites: 5,
     xpMultiplier: 2,
-    gradient: 'linear-gradient(135deg, #F59E0B 0%, #FB923C 100%)',
-    borderColor: 'rgba(245, 158, 11, 0.4)',
-    glowColor: 'rgba(245, 158, 11, 0.25)',
-    accentColor: '#F59E0B',
-    lightBg: 'rgba(245, 158, 11, 0.1)',
-    buttonGradient: 'linear-gradient(135deg, #F59E0B 0%, #FB923C 100%)',
+    icon: Users,
+    gradient: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 50%, #5B21B6 100%)',
+    depthColor: '#4C1D95',
+    glowColor: 'rgba(109, 40, 217, 0.25)',
     popular: true,
     benefits: [
       { icon: Zap, text: 'extra.xpBonus' },
@@ -91,8 +88,8 @@ interface ProPlansSectionProps {
   subscriptionExpiryDate?: string;
 }
 
-export function ProPlansSection({ 
-  currentTier, 
+export function ProPlansSection({
+  currentTier,
   friendInvitesRemaining = 0,
   subscriptionStartDate,
   subscriptionExpiryDate
@@ -124,11 +121,11 @@ export function ProPlansSection({
   const handleUpgrade = async (tier: ProTier) => {
     const tierConfig = PRO_TIERS.find(t => t.id === tier);
     if (!tierConfig) return;
-    
+
     // Map tier to ProTierId (handle 'standard' as 'pro')
     const proTierId: ProTierId = tier === "standard" ? "pro" : (tier === "pro_master" ? "pro_plus" : tier as ProTierId);
     const result = await initiateProCheckout(proTierId);
-    
+
     if (result.success) {
       setPurchasedTierName(tierConfig.nameKa);
       // Don't show modal here for web - it will show after redirect
@@ -137,7 +134,6 @@ export function ProPlansSection({
 
   const proTier = PRO_TIERS.find(t => t.id === 'pro')!;
   const familyTier = PRO_TIERS.find(t => t.id === 'pro_plus')!;
-  const currentTierConfig = PRO_TIERS.find(t => t.id === currentTier);
 
   // Determine which scenario to show
   // 'standard' tier from DB = basic PRO (solo)
@@ -146,6 +142,19 @@ export function ProPlansSection({
   const isNotPro = !currentTier;
   const isSoloPro = currentTier === 'pro' || currentTier === 'standard';
   const isFamilyPro = currentTier === 'pro_plus' || currentTier === 'pro_master';
+
+  const expiryText = subscriptionExpiryDate
+    ? t("extra.proExpiry", { date: format(new Date(subscriptionExpiryDate), 'dd.MM.yyyy') })
+    : t("extra.proUnlimited");
+
+  const tierBenefits = (tier: TierConfig) =>
+    tier.benefits.map(b => (b.count ? t(b.text, { count: b.count }) : t(b.text)));
+
+  // Same list, but the friend-invites line calls out how many more than solo
+  const upgradeBenefits = familyTier.benefits.map(b => {
+    const base = b.count ? t(b.text, { count: b.count }) : t(b.text);
+    return b.icon === Users ? `${base} (4 ${t("extra.moreExcl") || "more!"})` : base;
+  });
 
   return (
     <div className="space-y-4">
@@ -171,12 +180,18 @@ export function ProPlansSection({
             } finally { setSharing(false); }
           }} />
           {PRO_TIERS.map((tier, index) => (
-            <TierCard
+            <ProBannerCard
               key={tier.id}
               tier={tier}
               index={index}
-              onPurchase={() => handleUpgrade(tier.id)}
-              purchasing={purchasing}
+              badge={tier.popular ? "top" : undefined}
+              price={tier.price}
+              benefits={tierBenefits(tier)}
+              button={{
+                label: t("extra.buyBtn"),
+                onClick: () => handleUpgrade(tier.id),
+                loading: purchasing,
+              }}
             />
           ))}
         </>
@@ -185,203 +200,67 @@ export function ProPlansSection({
       {/* SCENARIO 2: PRO Solo - Show current status + upgrade to Family */}
       {isSoloPro && (
         <>
-          {/* Current tier mini status */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl p-4 bg-card border-2"
-            style={{
-              borderColor: proTier.borderColor,
-              boxShadow: `0 4px 20px ${proTier.glowColor}`,
+          {/* Current tier status banner */}
+          <ProBannerCard
+            tier={proTier}
+            badge="active"
+            subtitle={expiryText}
+            minHeightClass="min-h-[120px]"
+          />
+
+          {/* Upgrade to Family banner */}
+          <ProBannerCard
+            tier={familyTier}
+            index={1}
+            badge="upgrade"
+            price={familyTier.price}
+            benefits={upgradeBenefits}
+            button={{
+              label: t("extra.upgradeBtn"),
+              onClick: () => handleUpgrade('pro_plus'),
+              loading: purchasing,
             }}
-          >
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ background: proTier.gradient }}
-              >
-                <Crown className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-lg font-bold text-foreground">PRO</p>
-                  <span 
-                    className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                    style={{ background: proTier.lightBg, color: proTier.accentColor }}
-                  >
-                    {t("extra.proActive")}
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {subscriptionExpiryDate 
-                    ? t("extra.proExpiry", { date: format(new Date(subscriptionExpiryDate), 'dd.MM.yyyy') })
-                    : t("extra.proUnlimited")}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Upgrade to Family card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="relative rounded-2xl p-5 overflow-hidden bg-card"
-            style={{
-              border: `2px solid ${familyTier.borderColor}`,
-              boxShadow: `0 4px 24px -4px ${familyTier.glowColor}`,
-            }}
-          >
-            {/* Upgrade badge */}
-            <div className="absolute top-0 right-0">
-              <div 
-                className="text-white text-xs font-bold px-3 py-1 rounded-bl-xl flex items-center gap-1"
-                style={{ background: familyTier.gradient }}
-              >
-                <ArrowUp className="w-3 h-3" />
-                {t("extra.upgradeBtn")}
-              </div>
-            </div>
-
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ 
-                    background: familyTier.gradient,
-                    boxShadow: `0 4px 12px ${familyTier.glowColor}`,
-                  }}
-                >
-                  <Crown className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-foreground">{t("extra.friendProName")}</h3>
-                  <p className="text-2xl font-bold text-foreground">
-                    {getPriceDisplay(familyTier.price).symbol}{getPriceDisplay(familyTier.price).value}{getPriceDisplay(familyTier.price).suffix}<span className="text-sm text-muted-foreground font-normal">{getPriceDisplay(familyTier.price).monthLabel}</span>
-                  </p>
-                </div>
-              </div>
-
-              {/* Key benefits for upgrade */}
-              <div className="space-y-2 mb-4">
-                {familyTier.benefits.map((benefit, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div 
-                      className="w-5 h-5 rounded-full flex items-center justify-center"
-                      style={{ background: familyTier.lightBg }}
-                    >
-                      <benefit.icon className="w-3 h-3" style={{ color: familyTier.accentColor }} />
-                    </div>
-                    <span className={cn(
-                      "text-sm",
-                      benefit.highlight ? "text-foreground font-medium" : "text-muted-foreground"
-                    )}>
-                      {t(benefit.text, benefit.count ? { count: benefit.count } : undefined)}
-                      {benefit.icon === Users && ` (4 ${t("extra.moreExcl") || "more!"})`}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <motion.button
-                onClick={() => handleUpgrade('pro_plus')}
-                disabled={purchasing}
-                className="w-full py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-70"
-                style={{ 
-                  background: familyTier.buttonGradient,
-                  boxShadow: `0 4px 16px ${familyTier.glowColor}`,
-                }}
-                whileHover={{ scale: purchasing ? 1 : 1.02 }}
-                whileTap={{ scale: purchasing ? 1 : 0.98 }}
-              >
-                {purchasing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    {t("extra.processingBtn")}
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    {t("extra.upgradeBtn")}
-                  </>
-                )}
-              </motion.button>
-            </div>
-          </motion.div>
+          />
         </>
       )}
 
       {/* SCENARIO 3: PRO Family - Show invite management */}
       {isFamilyPro && (
         <>
-          {/* Family status card with invite panel */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl p-5 bg-card border-2"
-            style={{
-              borderColor: familyTier.borderColor,
-              boxShadow: `0 4px 20px ${familyTier.glowColor}`,
-            }}
+          <ProBannerCard
+            tier={familyTier}
+            badge="active"
+            subtitle={expiryText}
+            minHeightClass="min-h-[180px]"
           >
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-14 h-14 rounded-xl flex items-center justify-center"
-                    style={{ background: familyTier.gradient }}
-                  >
-                    <Crown className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xl font-bold text-foreground">{t("extra.friendProName")}</p>
-                      <span 
-                        className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                        style={{ background: familyTier.lightBg, color: familyTier.accentColor }}
-                      >
-                        {t("extra.proActive")}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {subscriptionExpiryDate 
-                        ? t("extra.proExpiry", { date: format(new Date(subscriptionExpiryDate), 'dd.MM.yyyy') })
-                        : t("extra.proUnlimited")}
-                    </p>
-                  </div>
-                </div>
+            {/* Invites Section */}
+            <div className="rounded-xl p-3 mt-3" style={{ background: "rgba(255,255,255,0.15)" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-4 h-4 text-white" />
+                <span className="font-medium text-white text-sm">{t("extra.proInviteFriendsLabel")}</span>
               </div>
-
-              {/* Invites Section */}
-              <div 
-                className="rounded-xl p-4"
-                style={{ background: familyTier.lightBg }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5" style={{ color: familyTier.accentColor }} />
-                    <span className="font-medium text-foreground">{t("extra.proInviteFriendsLabel")}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground">
-                      {t("extra.proInvitesLeft", { count: friendInvitesRemaining })}
-                    </span>
-                    {friendInvitesRemaining > 0 && (
-                      <motion.button
-                        onClick={() => setShowInviteModal(true)}
-                        className="px-4 py-2 rounded-full text-white text-sm font-medium"
-                        style={{ background: familyTier.gradient }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        {t("extra.proInviteAction")}
-                      </motion.button>
-                    )}
-                  </div>
-                </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs text-white/80">
+                  {t("extra.proInvitesLeft", { count: friendInvitesRemaining })}
+                </span>
+                {friendInvitesRemaining > 0 && (
+                  <motion.button
+                    onClick={() => setShowInviteModal(true)}
+                    className="px-4 py-1.5 rounded-full text-sm font-bold"
+                    style={{
+                      background: "rgba(255,255,255,0.95)",
+                      color: familyTier.depthColor,
+                      boxShadow: "0 2px 0 rgba(0,0,0,0.15)",
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {t("extra.proInviteAction")}
+                  </motion.button>
+                )}
               </div>
             </div>
-          </motion.div>
+          </ProBannerCard>
 
           {/* Friend invites tracker */}
           <FriendInvitesTracker />
@@ -408,135 +287,124 @@ export function ProPlansSection({
 }
 
 
-// Extracted TierCard component for cleaner code
-function TierCard({ 
-  tier, 
-  index, 
-  onPurchase, 
-  purchasing 
-}: { 
-  tier: TierConfig; 
-  index: number; 
-  onPurchase: () => void; 
-  purchasing: boolean;
+// Banner card matching the shop PRO banners: gradient panel with the tier
+// info on the left and the mascot video filling the right side.
+function ProBannerCard({
+  tier,
+  index = 0,
+  badge,
+  subtitle,
+  price,
+  benefits,
+  button,
+  children,
+  minHeightClass = "min-h-[280px]",
+}: {
+  tier: TierConfig;
+  index?: number;
+  badge?: "top" | "upgrade" | "active";
+  subtitle?: string;
+  price?: number;
+  benefits?: string[];
+  button?: { label: string; onClick?: () => void; loading?: boolean; active?: boolean };
+  children?: React.ReactNode;
+  minHeightClass?: string;
 }) {
   const { t } = useLanguage();
+  const TierIcon = tier.icon;
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="relative rounded-2xl p-5 overflow-hidden bg-card"
+      className={`relative rounded-2xl overflow-hidden flex ${minHeightClass}`}
       style={{
-        border: `2px solid ${tier.borderColor}`,
-        boxShadow: `0 4px 24px -4px ${tier.glowColor}`,
+        background: tier.gradient,
+        boxShadow: `0 6px 0 ${tier.depthColor}, 0 10px 20px ${tier.glowColor}`,
       }}
     >
-      {/* Popular Badge */}
-      {tier.popular && (
-        <div className="absolute top-0 right-0">
-          <div 
-            className="text-white text-xs font-bold px-3 py-1 rounded-bl-xl"
-            style={{ background: tier.gradient }}
-          >
-            {t("extra.popularLabel")}
-          </div>
+      {badge === "top" && (
+        <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl shadow-lg flex items-center gap-1 z-10">
+          <Sparkles className="w-3 h-3" /> TOP
+        </div>
+      )}
+      {badge === "upgrade" && (
+        <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl shadow-lg flex items-center gap-1 z-10">
+          <ArrowUp className="w-3 h-3" /> {t("extra.upgradeBtn")}
+        </div>
+      )}
+      {badge === "active" && (
+        <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl shadow-lg flex items-center gap-1 z-10">
+          <Check className="w-3 h-3" /> {t("extra.activeStatus")}
         </div>
       )}
 
-      {/* Shimmer Effect */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div 
-          className="absolute inset-0 opacity-10"
-          style={{
-            background: `linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%)`,
-            animation: 'shimmer 3s infinite',
-            backgroundSize: '200% 200%',
-          }}
-        />
-      </div>
+      <div className="w-[65%] p-5 z-10 flex flex-col">
+        <div className="flex flex-wrap items-center gap-3 mb-2">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "rgba(255,255,255,0.2)", boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)" }}
+          >
+            <TierIcon className="w-5 h-5 text-white" />
+          </div>
+          <h3 className="text-base md:text-lg font-bold text-white">
+            {tier.id === 'pro' ? t("extra.proName") : t("extra.friendProName")}
+          </h3>
+        </div>
 
-      <div className="relative z-10">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-4">
-          <div 
-            className="w-12 h-12 rounded-xl flex items-center justify-center"
-            style={{ 
-              background: tier.gradient,
-              boxShadow: `0 4px 12px ${tier.glowColor}`,
+        {price !== undefined && (
+          <div className="flex items-baseline gap-1 mb-2">
+            <span className="text-xl font-black text-white">
+              {getPriceDisplay(price).symbol}{getPriceDisplay(price).value}{getPriceDisplay(price).suffix}
+            </span>
+            <span className="text-xs text-white/70">{getPriceDisplay(price).monthLabel}</span>
+          </div>
+        )}
+
+        {subtitle && <p className="text-sm text-white/80">{subtitle}</p>}
+
+        {benefits && benefits.length > 0 && (
+          <ul className="flex flex-col gap-1.5 mt-3 mb-auto">
+            {benefits.map((benefit, i) => (
+              <li key={i} className="flex items-start gap-2 text-white/90">
+                <Check className="w-3.5 h-3.5 text-white/80 flex-shrink-0 mt-0.5" />
+                <span className="text-xs md:text-sm leading-tight">{benefit}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {children}
+
+        {button && (
+          <button
+            type="button"
+            onClick={button.onClick}
+            disabled={button.active || button.loading}
+            className="w-full py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed mt-4"
+            style={{
+              background: button.active ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.95)",
+              color: button.active ? "rgba(255,255,255,0.6)" : tier.depthColor,
+              boxShadow: button.active ? "none" : "0 3px 0 rgba(0,0,0,0.15)",
             }}
           >
-            <Crown className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-foreground">{tier.id === 'pro' ? t("extra.proName") : t("extra.friendProName")}</h3>
-            <p className="text-2xl font-bold text-foreground">
-              {getPriceDisplay(tier.price).symbol}{getPriceDisplay(tier.price).value}{getPriceDisplay(tier.price).suffix}<span className="text-sm text-muted-foreground font-normal">{getPriceDisplay(tier.price).monthLabel}</span>
-            </p>
-          </div>
-        </div>
-
-        {/* Benefits */}
-        <div className="space-y-2 mb-4">
-          {tier.benefits.map((benefit, i) => (
-            <div 
-              key={i} 
-              className={cn(
-                "flex items-center gap-2",
-                benefit.highlight && "font-medium"
-              )}
-            >
-              <div 
-                className="w-5 h-5 rounded-full flex items-center justify-center"
-                style={{ background: tier.lightBg }}
-              >
-                <benefit.icon 
-                  className="w-3 h-3"
-                  style={{ color: tier.accentColor }}
-                />
-              </div>
-              <span className={cn(
-                "text-sm",
-                benefit.highlight ? "text-foreground" : "text-muted-foreground"
-              )}>
-                {benefit.count ? t(benefit.text, { count: benefit.count }) : t(benefit.text)}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Action Button */}
-        <motion.button
-          onClick={onPurchase}
-          disabled={purchasing}
-          className="w-full py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-70"
-          style={{ 
-            background: tier.buttonGradient,
-            boxShadow: `0 4px 16px ${tier.glowColor}`,
-          }}
-          whileHover={{ scale: purchasing ? 1 : 1.02 }}
-          whileTap={{ scale: purchasing ? 1 : 0.98 }}
-        >
-          {purchasing ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              {t("extra.processingBtn")}
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4" />
-              {t("extra.buyBtn")}
-            </>
-          )}
-        </motion.button>
+            {button.active ? (
+              <><Check className="w-4 h-4" />{button.label}</>
+            ) : button.loading ? (
+              <><Loader2 className="w-4 h-4 animate-spin" />{t("extra.processingBtn")}</>
+            ) : (
+              <>{button.label}<ChevronRight className="w-4 h-4" /></>
+            )}
+          </button>
+        )}
       </div>
 
-      <style>{`
-        @keyframes shimmer {
-          0% { background-position: 200% 200%; }
-          100% { background-position: -200% -200%; }
-        }
-      `}</style>
+      <div className="w-[35%] flex-shrink-0 relative overflow-hidden">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: "70% 20%" }}>
+          <source src={shopBgVideoWebm} type="video/webm" />
+          <source src={shopBgVideo} type="video/mp4" />
+        </video>
+      </div>
     </motion.div>
   );
 }
