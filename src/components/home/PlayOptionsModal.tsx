@@ -25,16 +25,18 @@ export function PlayOptionsModal({
   const options = [
     {
       id: "quick",
-      emoji: "⚡",
-      tileBg: "linear-gradient(180deg, #6EE7B7 0%, #34D399 100%)",
+      emoji: "🕹️",
+      cardBg: "linear-gradient(135deg, #4ADE80 0%, #34D399 45%, #14B8A6 100%)",
+      shadow: "0 8px 20px rgba(20,184,166,0.35), inset 0 1px 0 rgba(255,255,255,0.4)",
       title: t("extra.playQuickGame"),
       desc: t("extra.playQuickGameDesc"),
       onClick: onQuickGame,
     },
     {
       id: "friends",
-      emoji: "👥",
-      tileBg: "linear-gradient(180deg, #C4B5FD 0%, #A78BFA 100%)",
+      emoji: "🤗",
+      cardBg: "linear-gradient(135deg, #A78BFA 0%, #818CF8 45%, #3B82F6 100%)",
+      shadow: "0 8px 20px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.4)",
       title: t("extra.playFriendsGame"),
       desc: t("extra.playFriendsGameDesc"),
       onClick: onPlayWithFriends,
@@ -53,17 +55,18 @@ export function PlayOptionsModal({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={option.onClick}
-            className="w-full flex items-center gap-4 p-4 rounded-2xl bg-muted/50 border border-border/40 hover:bg-muted transition-colors text-left"
+            className="w-full flex items-center gap-4 p-4 rounded-2xl hover:brightness-105 transition-all text-left"
+            style={{ background: option.cardBg, boxShadow: option.shadow }}
           >
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
-              style={{ background: option.tileBg, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)" }}
+              className="w-12 h-12 rounded-xl flex items-center justify-center text-3xl shrink-0"
+              style={{ background: "rgba(255,255,255,0.22)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)" }}
             >
               {option.emoji}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-foreground">{option.title}</p>
-              <p className="text-sm text-muted-foreground">{option.desc}</p>
+              <p className="font-bold text-white drop-shadow-sm">{option.title}</p>
+              <p className="text-sm text-white/85">{option.desc}</p>
             </div>
           </motion.button>
         ))}
