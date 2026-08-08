@@ -149,11 +149,11 @@ export default function Profile() {
                       }}
                       maxLength={20}
                       autoFocus
-                      className="font-sans text-gray-800 capitalize font-black text-center bg-white/80 border border-border/50 rounded-xl px-3 h-11 outline-none focus:ring-2 focus:ring-primary/40 max-w-[240px]"
+                      className="font-slackey text-gray-800 capitalize font-black text-center bg-white/80 border border-border/50 rounded-xl px-3 h-11 outline-none focus:ring-2 focus:ring-primary/40 max-w-[240px]"
                       style={{ fontSize: 24 }}
                     />
                   ) : (
-                    <h2 className="font-sans text-gray-800 capitalize font-black" style={{ fontSize: 28 }}>
+                    <h2 className="font-slackey text-gray-800 capitalize font-black" style={{ fontSize: 28 }}>
                       {profile.nickname}
                     </h2>
                   )}
