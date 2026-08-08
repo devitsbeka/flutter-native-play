@@ -406,6 +406,7 @@ export const en: KaTranslations = {
   leaderboard: {
     title: "Leaderboard",
     global: "Global",
+    localTab: "Local",
     friends: "Friends",
     weekly: "Weekly",
     allTime: "All Time",
