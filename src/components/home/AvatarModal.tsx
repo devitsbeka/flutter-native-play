@@ -401,9 +401,9 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
         }
       }
 
-      // Save to avatar_generations table (the current row is what the
-      // homepage scene hero reads)
-      await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id);
+      // Save to avatar_generations table (the current SCENE row is what the
+      // homepage hero reads — only scene rows lose their flag here)
+      await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id).like('avatar_url', '%/scene_%');
 
       await supabase.from('avatar_generations').insert({
         user_id: user.id,
@@ -551,11 +551,49 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
     }, 50);
   };
 
+  // Shared apply/delete action row, rendered directly under the section of
+  // the item the user tapped (scenes ticker or avatars grid).
+  const selectedGen = generations.find((g) => g.id === selectedForAction) || null;
+  const renderGenActions = () =>
+    selectedGen && (
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: "auto" }}
+        className="flex justify-center gap-4 mt-3"
+      >
+        <motion.button
+          onClick={() => deleteAvatar(selectedGen.id, selectedGen.avatar_url)}
+          disabled={isLoading}
+          className="w-12 h-12 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors disabled:opacity-50"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Trash2 className="w-5 h-5 text-destructive" />
+        </motion.button>
+        <motion.button
+          onClick={() => {
+            if (isSceneUrl(selectedGen.avatar_url)) {
+              selectScene(selectedGen);
+            } else {
+              selectPreviousAvatar(selectedGen.avatar_url);
+            }
+          }}
+          disabled={isLoading}
+          className="w-12 h-12 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors disabled:opacity-50"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Check className="w-5 h-5 text-primary" />
+        </motion.button>
+      </motion.div>
+    );
+
   const selectScene = async (gen: AvatarGeneration) => {
     if (!user) return;
     setIsLoading(true);
     try {
-      await supabase.from("avatar_generations").update({ is_current: false }).eq("user_id", user.id);
+      // Only scene rows swap their flag — the current portrait keeps its own
+      await supabase.from("avatar_generations").update({ is_current: false }).eq("user_id", user.id).like("avatar_url", "%/scene_%");
       const { error } = await supabase.from("avatar_generations").update({ is_current: true }).eq("id", gen.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
@@ -579,9 +617,9 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
       // Find the generation record to get its animated_avatar_url
       const generation = generations.find(g => g.avatar_url === avatarUrl);
       
-      // Update all to not current
-      await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id);
-      
+      // Update portraits to not current — scene rows keep their selection
+      await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id).not('avatar_url', 'like', '%/scene_%');
+
       // Set selected as current
       await supabase.from('avatar_generations').update({ is_current: true }).eq('avatar_url', avatarUrl);
       
@@ -726,8 +764,9 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
         const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(fileName);
         const aiAvatarUrl = urlData.publicUrl;
 
-        // Update avatar_generations table
-        await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id);
+        // Update avatar_generations table (portrait rows only — the chosen
+        // scene keeps its flag)
+        await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id).not('avatar_url', 'like', '%/scene_%');
         await supabase.from('avatar_generations').insert({
           user_id: user.id,
           avatar_url: aiAvatarUrl,
@@ -1019,6 +1058,9 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                 </motion.button>
               ))}
             </div>
+
+            {/* Apply/delete for the tapped scene - right under the ticker */}
+            {selectedGen && isSceneUrl(selectedGen.avatar_url) && renderGenActions()}
           </div>
 
           {/* My Generated Avatars (portrait/photo generations only) */}
@@ -1061,50 +1103,11 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                   </motion.button>
                 ))}
               </div>
+
+              {/* Apply/delete for the tapped avatar - right under the grid */}
+              {selectedGen && !isSceneUrl(selectedGen.avatar_url) && renderGenActions()}
             </div>
           )}
-
-          {/* Action buttons when a scene or avatar is selected: apply / delete */}
-          <AnimatePresence>
-            {selectedForAction && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="flex justify-center gap-4 mt-3"
-              >
-                <motion.button
-                  onClick={() => {
-                    const gen = generations.find(g => g.id === selectedForAction);
-                    if (gen) deleteAvatar(gen.id, gen.avatar_url);
-                  }}
-                  disabled={isLoading}
-                  className="w-12 h-12 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors disabled:opacity-50"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Trash2 className="w-5 h-5 text-destructive" />
-                </motion.button>
-                <motion.button
-                  onClick={() => {
-                    const gen = generations.find(g => g.id === selectedForAction);
-                    if (!gen) return;
-                    if (isSceneUrl(gen.avatar_url)) {
-                      selectScene(gen);
-                    } else {
-                      selectPreviousAvatar(gen.avatar_url);
-                    }
-                  }}
-                  disabled={isLoading}
-                  className="w-12 h-12 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors disabled:opacity-50"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Check className="w-5 h-5 text-primary" />
-                </motion.button>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           {/* Default Avatars */}
           <div>

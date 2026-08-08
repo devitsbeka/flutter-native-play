@@ -58,6 +58,8 @@ export function AvatarReel() {
       .from("avatar_generations")
       .select("id, avatar_url, animated_avatar_url")
       .eq("user_id", user.id)
+      // Scene generations belong to the homepage, not the circle avatar reel
+      .not("avatar_url", "like", "%/scene_%")
       .order("created_at", { ascending: false })
       .limit(12)
       .then(({ data }) => {
@@ -137,9 +139,10 @@ export function AvatarReel() {
     setBusyId(item.id);
     try {
       // Generated avatars keep their animation and is_current bookkeeping,
-      // mirroring the avatar studio's "use previous avatar" flow
+      // mirroring the avatar studio's "use previous avatar" flow. Only
+      // portrait rows swap flags — the chosen homepage scene keeps its own.
       if (item.kind === "generated" && user) {
-        await supabase.from("avatar_generations").update({ is_current: false }).eq("user_id", user.id);
+        await supabase.from("avatar_generations").update({ is_current: false }).eq("user_id", user.id).not("avatar_url", "like", "%/scene_%");
         await supabase.from("avatar_generations").update({ is_current: true }).eq("id", item.genId!);
       }
       const patch =
