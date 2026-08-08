@@ -156,7 +156,7 @@ export function FeedFiltersBar({
                     align="start" 
                     className="w-48 bg-popover border border-border shadow-lg z-50"
                   >
-                    <DropdownMenuRadioGroup value={sortFilter} onValueChange={(v) => onSortFilterChange(v as SortFilter)}>
+                    <DropdownMenuRadioGroup value={sortFilter} onValueChange={(v) => { scrollToTop(); onSortFilterChange(v as SortFilter); }}>
                       {filterOptions.map((option) => (
                         <DropdownMenuRadioItem 
                           key={option.value} 

@@ -131,7 +131,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
                 {filterOptions.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
-                    onClick={() => onFilterChange(option.value)}
+                    onClick={() => { scrollToTop(); onFilterChange(option.value); }}
                     className={`py-3 text-[15px] ${filter === option.value ? "bg-primary/10 text-primary" : ""}`}
                   >
                     <div className="flex items-center gap-2 w-full">
@@ -148,7 +148,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
                     {sortOptions.map((option) => (
                       <DropdownMenuItem
                         key={option.value}
-                        onClick={() => onSortChange(option.value)}
+                        onClick={() => { scrollToTop(); onSortChange(option.value); }}
                         className={`py-3 text-[15px] ${sort === option.value ? "bg-primary/10 text-primary" : ""}`}
                       >
                         <div className="flex items-center gap-2 w-full">

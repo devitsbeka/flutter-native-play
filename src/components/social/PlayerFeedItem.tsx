@@ -230,7 +230,7 @@ function PlayerFeedItemComponent({
 
   return (
     <div
-      className="overflow-hidden"
+      className="overflow-hidden rounded-2xl border-2 border-primary/30 shadow-sm"
       style={{
         touchAction: 'manipulation',
         contentVisibility: 'auto',
@@ -238,7 +238,7 @@ function PlayerFeedItemComponent({
       }}
     >
       {/* Player Header */}
-      <div className="p-3 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-t-2xl border border-border/30">
+      <div className="p-3 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           {/* Avatar - Clickable to open profile */}
           <div 
@@ -277,8 +277,8 @@ function PlayerFeedItemComponent({
       </div>
       
       {/* Content Card */}
-      <div 
-        className="rounded-xl overflow-hidden cursor-pointer"
+      <div
+        className="overflow-hidden cursor-pointer"
         style={{ touchAction: 'manipulation' }}
         onClick={handleCardClick}
       >
@@ -331,7 +331,7 @@ function PlayerFeedItemComponent({
         </div>
         
         {/* Bottom Section with Stats and Actions */}
-        <div className="p-3 bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-b-xl border border-t-0 border-border/30">
+        <div className="p-3 bg-white/60 dark:bg-card/60 backdrop-blur-sm">
           <div className="flex items-center justify-between">
             {/* Stats - Like and Save */}
             <div className="flex items-center gap-6">
