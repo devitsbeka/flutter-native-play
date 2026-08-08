@@ -48,52 +48,6 @@ export function ShopItemCard({
   const currencyIcon = currency === "gems" ? gemIcon : currency === "coins" ? coinIcon : null;
   const isLari = currency === "lari";
 
-  const BADGE_STYLES: Record<string, { textKey: string; bg: string; shadow: string }> = {
-    popular: {
-      textKey: "popular",
-      bg: "linear-gradient(135deg, hsl(340 80% 55%) 0%, hsl(25 90% 55%) 100%)",
-      shadow: "0 2px 0 hsl(340 70% 40%)",
-    },
-    "best-value": {
-      textKey: "bestValue",
-      bg: "linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(160 60% 40%) 100%)",
-      shadow: "0 2px 0 hsl(142 60% 30%)",
-    },
-    limited: {
-      textKey: "limited",
-      bg: "linear-gradient(135deg, hsl(25 95% 55%) 0%, hsl(0 80% 50%) 100%)",
-      shadow: "0 2px 0 hsl(15 80% 40%)",
-    },
-    new: {
-      textKey: "new",
-      bg: "linear-gradient(135deg, hsl(200 80% 50%) 0%, hsl(180 70% 45%) 100%)",
-      shadow: "0 2px 0 hsl(200 70% 35%)",
-    },
-  };
-
-  const getBadgeText = (badgeKey: string): string => {
-    const badgeTexts: Record<string, string> = {
-      popular: t("common.popular"),
-      bestValue: t("common.bestValue"),
-      limited: t("common.limited"),
-      new: t("common.new"),
-    };
-    return badgeTexts[badgeKey] || badgeKey;
-  };
-
-  const badgeStyle = badge ? BADGE_STYLES[badge] : null;
-
-  // Badged items are the store's hero deals — they get a colored ring + glow
-  // so they pop like featured offers in game shops.
-  const dealRing =
-    !isPurchased && badge === "best-value"
-      ? "ring-2 ring-amber-400/90 shadow-[0_10px_28px_-8px_rgba(245,158,11,0.55)]"
-      : !isPurchased && badge === "popular"
-        ? "ring-2 ring-pink-400/90 shadow-[0_10px_28px_-8px_rgba(236,72,153,0.5)]"
-        : !isPurchased && badge === "limited"
-          ? "ring-2 ring-orange-400/90 shadow-[0_10px_28px_-8px_rgba(249,115,22,0.5)]"
-          : "";
-
   // Shared by both the vertical and the featured horizontal layout
   const actionBlock = isPurchased ? (
     <div className="flex items-center justify-center gap-1 text-success font-bold text-sm px-4 py-2 rounded-full bg-success/10">
@@ -131,14 +85,6 @@ export function ShopItemCard({
   if (featured) {
     return (
       <div className="relative pt-3">
-        {badgeStyle && !isPurchased && (
-          <div
-            className="absolute top-0 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white z-10 motion-safe:animate-pulse-soft"
-            style={{ background: badgeStyle.bg, boxShadow: badgeStyle.shadow }}
-          >
-            {getBadgeText(badgeStyle.textKey)}
-          </div>
-        )}
         {savings && !isPurchased && (
           <div
             className="absolute top-0 left-3 px-2 py-0.5 rounded-full text-[10px] font-bold text-amber-900 z-10"
@@ -153,10 +99,9 @@ export function ShopItemCard({
 
         <div
           className={cn(
-            "w-full rounded-2xl transition-all relative overflow-hidden flex items-center gap-3 text-left",
+            "w-full rounded-[24px] transition-all relative overflow-hidden flex items-center gap-3 text-left",
             "px-3.5 sm:px-4 py-3.5 min-h-[100px]",
-            !isPurchased && canAfford && "liquid-glass",
-            dealRing
+            !isPurchased && canAfford && "liquid-glass"
           )}
           style={{
             background: isPurchased
@@ -195,19 +140,6 @@ export function ShopItemCard({
       // Skip offscreen rendering work while scrolling long shop lists
       style={{ contentVisibility: "auto", containIntrinsicSize: "226px" } as React.CSSProperties}
     >
-      {/* Badge - positioned on right */}
-      {badgeStyle && !isPurchased && (
-        <div
-          className="absolute top-0 right-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white z-10 motion-safe:animate-pulse-soft"
-          style={{
-            background: badgeStyle.bg,
-            boxShadow: badgeStyle.shadow,
-          }}
-        >
-          {getBadgeText(badgeStyle.textKey)}
-        </div>
-      )}
-
       {/* Savings Badge - positioned on left */}
       {savings && !isPurchased && (
         <div
@@ -223,11 +155,10 @@ export function ShopItemCard({
 
       <div
         className={cn(
-          "w-full rounded-2xl transition-all relative overflow-hidden flex flex-col items-center text-center",
+          "w-full rounded-[24px] transition-all relative overflow-hidden flex flex-col items-center text-center",
           "px-2.5 sm:px-3 p-3",
           "h-[188px] sm:h-[198px]",
-          !isPurchased && canAfford && "liquid-glass",
-          dealRing
+          !isPurchased && canAfford && "liquid-glass"
         )}
         style={{
           background: isPurchased
