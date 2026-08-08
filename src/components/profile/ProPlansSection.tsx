@@ -350,27 +350,30 @@ function ProBannerCard({
           </h3>
         </div>
 
-        {price !== undefined && (
-          <div className="flex items-baseline gap-1 mb-2">
-            <span className="text-xl font-black text-white">
-              {getPriceDisplay(price).symbol}{getPriceDisplay(price).value}{getPriceDisplay(price).suffix}
-            </span>
-            <span className="text-xs text-white/70">{getPriceDisplay(price).monthLabel}</span>
-          </div>
-        )}
+        {/* Indented to line up with the title text (icon width + gap) */}
+        <div className="pl-[52px] mb-auto">
+          {price !== undefined && (
+            <div className="flex items-baseline gap-1 mb-2">
+              <span className="text-xl font-black text-white">
+                {getPriceDisplay(price).symbol}{getPriceDisplay(price).value}{getPriceDisplay(price).suffix}
+              </span>
+              <span className="text-xs text-white/70">{getPriceDisplay(price).monthLabel}</span>
+            </div>
+          )}
 
-        {subtitle && <p className="text-sm text-white/80">{subtitle}</p>}
+          {subtitle && <p className="text-sm text-white/80">{subtitle}</p>}
 
-        {benefits && benefits.length > 0 && (
-          <ul className="flex flex-col gap-1.5 mt-3 mb-auto">
-            {benefits.map((benefit, i) => (
-              <li key={i} className="flex items-start gap-2 text-white/90">
-                <Check className="w-3.5 h-3.5 text-white/80 flex-shrink-0 mt-0.5" />
-                <span className="text-xs md:text-sm leading-tight">{benefit}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+          {benefits && benefits.length > 0 && (
+            <ul className="flex flex-col gap-1.5 mt-3">
+              {benefits.map((benefit, i) => (
+                <li key={i} className="flex items-start gap-2 text-white/90">
+                  <Check className="w-3.5 h-3.5 text-white/80 flex-shrink-0 mt-0.5" />
+                  <span className="text-xs md:text-sm leading-tight">{benefit}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
         {children}
 
