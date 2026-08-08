@@ -9,6 +9,7 @@ import { Search, Check, Globe, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { translateErrorMessage } from "@/utils/errorTranslations";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { languageForCountry } from "@/utils/countryLanguage";
 
 interface CountrySelectModalProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ export function CountrySelectModal({ isOpen, onClose, currentCountryCode }: Coun
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const { updateProfile } = useAuth();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
 
   // Get flag emoji from country code
   const getFlagEmoji = (countryCode: string) => {
@@ -78,6 +79,14 @@ export function CountrySelectModal({ isOpen, onClose, currentCountryCode }: Coun
     
     try {
       await updateProfile({ country_code: countryCode });
+
+      // The app language (and with it the question language) follows the
+      // country: USA → English, Georgia → Georgian, Brazil → Portuguese…
+      const countryLanguage = languageForCountry(countryCode);
+      if (countryLanguage !== language) {
+        setLanguage(countryLanguage);
+      }
+
       toast({
         title: t("extra.countrySuccess"),
         description: t("extra.countryChanged"),
