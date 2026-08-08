@@ -768,7 +768,7 @@ export default function Index() {
         disableScroll
       >
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
-        <header className="relative z-20 px-4 py-3 md:pt-4 safe-top border-b border-border/30">
+        <header className="relative z-20 px-4 py-3 md:pt-4 safe-top border-b border-border/30 lg:border-b-0">
           <div className="flex items-center justify-between gap-3 md:min-h-12">
             {/* Left side: Burger menu (mobile only) - Hidden for guests */}
             <div className="flex items-center gap-2">
@@ -830,12 +830,17 @@ export default function Index() {
         </header>
 
         {/* Friends strip - logged-in users, horizontally scrollable (mobile + desktop).
-            Right padding on lg+ keeps it clear of the fixed action cards panel. */}
+            Right padding on lg+ keeps it clear of the fixed action cards panel.
+            On lg+ the logo lives in the sidebar, leaving the header row empty, so the
+            strip is pulled up into it; pointer-events pass through the padded right
+            zone so the header's search/bell buttons stay clickable. */}
         {user && (
-          <div className="relative z-20 px-4 pt-2 lg:pr-[300px] xl:pr-[330px]">
-            <FriendsStoriesBar
-              onAddFriendClick={() => setShowAddFriendModal(true)}
-            />
+          <div className="relative z-20 px-4 pt-2 lg:-mt-16 lg:pointer-events-none lg:pr-[300px] xl:pr-[330px]">
+            <div className="lg:pointer-events-auto">
+              <FriendsStoriesBar
+                onAddFriendClick={() => setShowAddFriendModal(true)}
+              />
+            </div>
           </div>
         )}
 
