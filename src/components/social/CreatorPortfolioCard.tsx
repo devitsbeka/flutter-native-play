@@ -10,13 +10,6 @@ import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { formatDistanceToNow } from "date-fns";
 import { ka, enUS } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext 
-} from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 
 interface CreatorPortfolioCardProps {
@@ -204,32 +197,24 @@ function CreatorPortfolioCardComponent({ creator, onPlayTrivia, onLikeTrivia, on
           ))}
         </div>
         
-        {/* Tablet & Desktop: Horizontal Carousel */}
-        <div className="hidden md:block overflow-visible w-full max-w-full py-3">
-          <Carousel
-            opts={{
-              align: "start",
-              dragFree: true,
-              containScroll: "trimSnaps",
-            }}
-            className="w-full overflow-visible"
-          >
-            <CarouselContent className="-ml-3 overflow-visible">
-              {creator.trivias.map((trivia) => (
-                <CarouselItem key={trivia.id} className="pl-3 basis-auto py-2">
-                  <TriviaPortfolioCard
-                    trivia={trivia}
-                    onPlay={onPlayTrivia}
-                    onLike={onLikeTrivia}
-                    onSave={onSaveTrivia}
-                    isLiked={userLikes.includes(trivia.id)}
-                    isSaved={userSaves.includes(trivia.id)}
-                    isPlayed={userPlays.includes(trivia.id)}
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
+        {/* Tablet & Desktop: native horizontal scroll — wheel, trackpad and
+            drag all work, unlike the embla carousel this replaces */}
+        <div className="hidden md:block w-full max-w-full py-3">
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide py-2 px-1 -mx-1">
+            {creator.trivias.map((trivia) => (
+              <div key={trivia.id} className="flex-shrink-0">
+                <TriviaPortfolioCard
+                  trivia={trivia}
+                  onPlay={onPlayTrivia}
+                  onLike={onLikeTrivia}
+                  onSave={onSaveTrivia}
+                  isLiked={userLikes.includes(trivia.id)}
+                  isSaved={userSaves.includes(trivia.id)}
+                  isPlayed={userPlays.includes(trivia.id)}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </motion.div>
