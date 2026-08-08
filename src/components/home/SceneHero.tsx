@@ -10,7 +10,6 @@ import chestDaily from "@/assets/figma-home/chest-daily.png";
 import checkStreak from "@/assets/figma-home/check-streak.svg";
 import xDay from "@/assets/figma-home/x-day.svg";
 import timerLine from "@/assets/figma-home/timer-line.svg";
-import streakGlow from "@/assets/figma-home/streak-card-glow.svg";
 import shieldOuter from "@/assets/figma-home/shield-outer.svg";
 import shieldInner from "@/assets/figma-home/shield-inner.svg";
 
@@ -200,21 +199,14 @@ export function SceneHero({
           </p>
         </button>
 
-        {/* Weekly streak glass card (node 601:1555) */}
+        {/* Weekly streak frosted card (node 601:1555) — clean glass: soft
+            blur, bright translucent fill, crisp light edge. The design's
+            raw blurred-border recipe turns into a murky gray ring outside
+            Figma's masking, so it's distilled to what it looks like. */}
         <div
-          className="absolute left-[-1px] top-[178px] h-[96px] w-[300px] overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.8)]"
-          style={{ boxShadow: CARD_SHADOW }}
+          className="absolute left-[-1px] top-[178px] h-[96px] w-[300px] overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.55)] backdrop-blur-xl border-[1.5px] border-solid border-white/70"
+          style={{ boxShadow: `${CARD_SHADOW}, inset 0px 1.5px 0px rgba(255,255,255,0.8)` }}
         >
-          {/* Glassmorphism layers (nodes 601:1560..1566) */}
-          <div className="absolute inset-0 rounded-[24px] backdrop-blur-[51.28px] bg-[rgba(84,84,84,0.1)]" />
-          <div className="absolute left-[5.79px] top-[6.84px] h-[82.05px] w-[287.41px]">
-            <div className="absolute inset-[-8.33%_-2.38%]">
-              <img alt="" className="block max-w-none size-full" src={streakGlow} />
-            </div>
-          </div>
-          <div className="absolute inset-0 rounded-[24px] border-[1.14px] border-solid border-[rgba(0,0,0,0.8)] blur-[4.56px] mix-blend-multiply" />
-          <div className="absolute inset-0 rounded-[24px] border-[1.14px] border-solid border-[rgba(255,255,255,0.8)] blur-[1.71px] mix-blend-plus-lighter" />
-          <div className="absolute inset-0 rounded-[24px] border-[1.14px] border-solid border-[rgba(255,255,255,0.2)] blur-[1.71px] mix-blend-plus-lighter" />
 
           {DAY_LABELS.map((label, i) => {
             const state = dayState(SLOT_WEEKDAYS[i]);
