@@ -627,7 +627,9 @@ export default function Index() {
   // when present it replaces the classic centered avatar hero on xl+.
   // Anyone without their own generated scene — guests and logged-in users
   // alike, even with custom avatars — gets the default Trivia King loop.
-  const { data: sceneUrl, isLoading: sceneLoading } = useUserScene(user?.id);
+  const { data: userScene, isLoading: sceneLoading } = useUserScene(user?.id);
+  const sceneUrl = userScene?.imageUrl || null;
+  const sceneVideoUrl = userScene?.videoUrl || null;
   const showDefaultScene = !sceneUrl && !(user && sceneLoading);
   const showAnimatePrompt = !isAnimatingFromHome && !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
 
@@ -804,7 +806,22 @@ export default function Index() {
             full-bleed page background (xl+); the header, friends strip and
             cards float over it. Clicks are caught by SceneHero's catcher
             layer, not here — background layers never receive them. */}
-        {sceneUrl ? (
+        {sceneUrl && sceneVideoUrl ? (
+          /* Seamless idle-loop video generated from the scene — poster keeps
+             the still visible until the video is ready to play */
+          <motion.video
+            src={sceneVideoUrl}
+            poster={sceneUrl}
+            autoPlay
+            loop
+            muted
+            playsInline
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="hidden xl:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
+          />
+        ) : sceneUrl ? (
           <motion.img
             src={sceneUrl}
             alt=""
