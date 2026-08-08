@@ -130,6 +130,7 @@ function TeamContentV2() {
   } | null>(null);
   const [showQuickPlayModal, setShowQuickPlayModal] = useState(false);
   const [isStartingChallenge, setIsStartingChallenge] = useState(false);
+  const [isConnectingTV, setIsConnectingTV] = useState(false);
 
   const handleQuickPlay = (friend: {
     friendId: string;
@@ -819,15 +820,22 @@ function TeamContentV2() {
           </div>
 
           {/* Desktop Right Sidebar - Shows on xl screens only */}
-          <TeamRightSidebar 
+          <TeamRightSidebar
             onAcceptInvitation={handleAcceptInvitation}
             onJoinRoom={handleJoinFromInvitation}
-            onOpenTV={() =>
-              gateWithRewardedAd(async () => {
-                const room = await createRoom();
-                if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
-              })
-            }
+            onOpenTV={async () => {
+              if (isConnectingTV) return;
+              setIsConnectingTV(true);
+              try {
+                await gateWithRewardedAd(async () => {
+                  const room = await createRoom();
+                  if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
+                });
+              } finally {
+                setIsConnectingTV(false);
+              }
+            }}
+            isConnectingTV={isConnectingTV}
             activeTab={activeTab}
             onViewAllRooms={() => handleTabChange("rooms")}
             onViewAllTrivias={() => handleTabChange("my-content")}
