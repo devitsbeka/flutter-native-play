@@ -5,9 +5,46 @@ import { AI_CHAT_URL, AI_API_KEY } from "../_shared/ai.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+// When set, scene generation goes through fal.ai's GPT Image 2 edit endpoint
+// instead of the chat-completions gateway. Set with:
+//   npx supabase secrets set FAL_KEY=<key>
+const FAL_KEY = Deno.env.get('FAL_KEY');
 
 interface AvatarRequest {
   imageUrl: string;
+}
+
+// GPT Image 2 on fal: reference-image edit, high quality, 16:9 close to
+// 1920x1080 (fal requires dimensions in multiples of 16, so 1088).
+async function generateWithFal(prompt: string, imageUrl: string): Promise<string> {
+  const response = await fetch("https://fal.run/openai/gpt-image-2/edit", {
+    method: "POST",
+    headers: {
+      "Authorization": `Key ${FAL_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      prompt,
+      image_urls: [imageUrl],
+      image_size: { width: 1920, height: 1088 },
+      quality: "high",
+      num_images: 1,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("fal.ai error:", response.status, errorText);
+    throw new Error(`fal.ai error: ${response.status} - ${errorText}`);
+  }
+
+  const result = await response.json();
+  const url = result?.images?.[0]?.url;
+  if (!url) {
+    console.error("Could not extract image from fal result:", JSON.stringify(result).substring(0, 500));
+    throw new Error("Could not extract generated image from fal response");
+  }
+  return url;
 }
 
 // Default prompt if database fetch fails
@@ -44,7 +81,7 @@ serve(async (req) => {
   }
 
   try {
-    if (!AI_API_KEY) {
+    if (!AI_API_KEY && !FAL_KEY) {
       throw new Error("AI_API_KEY is not configured");
     }
 
@@ -54,7 +91,7 @@ serve(async (req) => {
       throw new Error("imageUrl is required");
     }
 
-    console.log("Starting avatar generation with AI gateway for:", imageUrl.substring(0, 100));
+    console.log("Starting avatar generation for:", imageUrl.substring(0, 100));
 
     // Fetch settings from database
     let prompt = DEFAULT_PROMPT;
@@ -80,6 +117,16 @@ serve(async (req) => {
       } catch (dbError) {
         console.log("Using default settings due to DB fetch error:", dbError);
       }
+    }
+
+    // fal.ai GPT Image 2 path (preferred when configured)
+    if (FAL_KEY) {
+      const falImage = await generateWithFal(prompt, imageUrl);
+      console.log("Avatar generated successfully via fal.ai");
+      return new Response(
+        JSON.stringify({ success: true, avatarUrl: falImage }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Use AI gateway's image editing model
