@@ -39,6 +39,10 @@ interface SceneHeroProps {
   onGemsClick: () => void;
   onLevelClick: () => void;
   onMissionsClick: () => void;
+  /** Click anywhere on the scene itself (outside widgets) — opens the
+      avatar studio. Must live HERE, in the topmost overlay layer: clicks
+      never reach the background image through the app's wrapper divs. */
+  onSceneClick?: () => void;
   // Optional — Index renders the play button outside this overlay so it can
   // center on the full content area (this overlay is right-padded 300px)
   playButton?: ReactNode;
@@ -61,6 +65,7 @@ export function SceneHero({
   onGemsClick,
   onLevelClick,
   onMissionsClick,
+  onSceneClick,
   playButton,
 }: SceneHeroProps) {
   const { streak, currentStreak } = useMissionStreak();
@@ -84,6 +89,17 @@ export function SceneHero({
 
   return (
     <div className="relative w-full h-full pointer-events-none">
+      {/* Scene click-catcher: first child so every widget rendered after it
+          stays on top and keeps its own clicks */}
+      {onSceneClick && (
+        <button
+          type="button"
+          aria-label="შეცვალე სცენა"
+          onClick={onSceneClick}
+          className="absolute inset-0 pointer-events-auto cursor-pointer"
+        />
+      )}
+
       {/* Left widget stack (Figma group 601:961) */}
       <motion.div
         initial={{ opacity: 0, x: -16 }}

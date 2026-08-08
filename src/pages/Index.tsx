@@ -47,7 +47,9 @@ import coinIcon from "@/assets/icons/icon-coin.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
 import handGestureIcon from "@/assets/icons/hand-gesture.png";
 import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
-import defaultKingScene from "@/assets/scenes/default-trivia-king.webp";
+// Default Trivia King scene loop — everyone who hasn't explicitly generated
+// their own scene sees this (guests included), regardless of custom avatars.
+const DEFAULT_SCENE_VIDEO = "/videos/trivia-king-scene.mp4";
 import guestMascotVideo from "@/assets/guest-welcome-avatar.mp4";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
@@ -622,10 +624,10 @@ export default function Index() {
 
   // Personalized 16:9 homepage scene (generated from the user's photo) —
   // when present it replaces the classic centered avatar hero on xl+.
-  // Users without their own scene get the default Trivia King scene, which
-  // is clickable like a personal one so they can generate theirs.
+  // Anyone without their own generated scene — guests and logged-in users
+  // alike, even with custom avatars — gets the default Trivia King loop.
   const { data: sceneUrl, isLoading: sceneLoading } = useUserScene(user?.id);
-  const effectiveSceneUrl = sceneUrl || (user && !sceneLoading ? defaultKingScene : null);
+  const showDefaultScene = !sceneUrl && !(user && sceneLoading);
   const showAnimatePrompt = !isAnimatingFromHome && !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
 
   // /dev/v2 previews the 3D world-map homepage for logged-in users; the
@@ -797,30 +799,33 @@ export default function Index() {
         disableScroll
       >
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
-        {/* Personalized scene (or the default Trivia King scene) as the
+        {/* Personalized scene (or the default Trivia King loop) as the
             full-bleed page background (xl+); the header, friends strip and
-            cards float over it. A dedicated transparent overlay makes the
-            whole scene clickable — it opens the avatar studio so the user
-            can upload a selfie and generate their own scene. */}
-        {user && effectiveSceneUrl && (
-          <>
-            <motion.img
-              src={effectiveSceneUrl}
-              alt=""
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6 }}
-              className="hidden xl:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
-              draggable={false}
-            />
-            <button
-              type="button"
-              aria-label={t("avatar.title")}
-              onClick={() => openAvatarModal()}
-              className="hidden xl:block absolute inset-0 z-0 w-full h-full cursor-pointer bg-transparent"
-            />
-          </>
-        )}
+            cards float over it. Clicks are caught by SceneHero's catcher
+            layer, not here — background layers never receive them. */}
+        {sceneUrl ? (
+          <motion.img
+            src={sceneUrl}
+            alt=""
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="hidden xl:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
+            draggable={false}
+          />
+        ) : showDefaultScene ? (
+          <motion.video
+            src={DEFAULT_SCENE_VIDEO}
+            autoPlay
+            loop
+            muted
+            playsInline
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="hidden xl:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
+          />
+        ) : null}
         <header className="relative z-20 px-4 py-3 md:pt-4 safe-top border-b border-border/30 lg:border-b-0">
           <div className="flex items-center justify-between gap-3 md:min-h-12">
             {/* Left side: Burger menu (mobile only) - Hidden for guests */}
@@ -1313,7 +1318,7 @@ export default function Index() {
             </div>}
 
             {/* xl+ layout: floating stats over the full-bleed scene - LOGGED IN USERS ONLY */}
-            {user && effectiveSceneUrl && (
+            {user && (sceneUrl || showDefaultScene) && (
               <motion.div
                 className="hidden xl:block w-full h-full pr-[300px] pointer-events-none"
                 initial={{ opacity: 0 }}
@@ -1333,6 +1338,7 @@ export default function Index() {
                   onMissionsClick={() => setShowMissionsModal(true)}
                   onCoinsClick={() => navigate("/power-ups?section=coins")}
                   onGemsClick={() => navigate("/power-ups?section=gems-lari")}
+                  onSceneClick={() => openAvatarModal()}
                 />
               </motion.div>
             )}
@@ -1340,7 +1346,7 @@ export default function Index() {
             {/* xl+ scene: play button centered on the CONTENT area (outside
                 the right-padded SceneHero overlay), so it stays in the middle
                 whether the sidebar is expanded or collapsed */}
-            {user && effectiveSceneUrl && (
+            {user && (sceneUrl || showDefaultScene) && (
               <div className="hidden xl:block absolute bottom-[6%] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
                 <DesktopPlayButtonLarge
                   onClick={handlePlayClick}
@@ -1354,8 +1360,9 @@ export default function Index() {
               </div>
             )}
 
-            {/* xl+ layout: Avatar centered - LOGGED IN USERS ONLY */}
-            {user && !effectiveSceneUrl && <motion.div
+            {/* xl+ layout: Avatar centered - only while the scene query is
+                still loading (any resolved state shows a scene now) */}
+            {user && !sceneUrl && !showDefaultScene && <motion.div
               className="hidden xl:flex flex-col items-center justify-center w-full h-full px-4 -ml-[170px]"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
