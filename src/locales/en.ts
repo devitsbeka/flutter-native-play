@@ -2864,6 +2864,7 @@ export const en: KaTranslations = {
     ssEnterCommand: "Enter a command...",
     ssQuickActions: "Quick Actions",
     ssCreateNewRoom: "Create New Room",
+    ssViewAll: "All",
     ssDescNewRoom: "Create a room and invite friends",
     ssDescSettings: "Language, account and preferences",
     ssDescProfile: "Your stats and achievements",
