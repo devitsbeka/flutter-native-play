@@ -216,7 +216,7 @@ export function UnifiedDesktopNav({
               className="flex items-center justify-center w-8 h-8 rounded-lg text-[#0f1729] hover:bg-muted/60 transition-opacity opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"
               aria-label="Expand sidebar"
             >
-              <PanelLeft className="w-5 h-5" strokeWidth={2} />
+              <PanelLeft className="w-4 h-4" strokeWidth={2} />
             </button>
           </div>
         ) : (
@@ -229,7 +229,7 @@ export function UnifiedDesktopNav({
               className="flex items-center justify-center w-8 h-8 rounded-lg text-[#0f1729] hover:bg-muted/60 transition-colors"
               aria-label="Collapse sidebar"
             >
-              <PanelLeft className="w-6 h-6" strokeWidth={2} />
+              <PanelLeft className="w-4 h-4" strokeWidth={2} />
             </button>
           </div>
         )}
