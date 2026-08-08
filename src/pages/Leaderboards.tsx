@@ -162,18 +162,20 @@ function BoardRow({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(entry.rank * 0.02, 0.4) }}
       onClick={() => !isMe && onOpenProfile(entry.user_id)}
-      className={`w-full flex items-center gap-2.5 rounded-full pl-2 pr-4 py-2 text-left ${
+      className={`w-full flex items-center gap-2.5 rounded-[24px] pl-2 pr-4 py-2 text-left ${
         isMe ? "" : "hover:brightness-105 active:scale-[0.99]"
       } transition-all`}
+      // Same soft card treatment as the main page widgets: rounded-24
+      // translucent lavender-white with the purple-tinted double shadow
       style={
         isMe
           ? {
               background: "linear-gradient(180deg, #9061F9 0%, #6D3FE0 100%)",
-              boxShadow: "0 3px 0 #4C2AA6, 0 4px 14px rgba(109,63,224,0.45), inset 0 1px 0 rgba(255,255,255,0.35)",
+              boxShadow: "0px 2px 8px 0px rgba(102,51,153,0.12), 0px 8px 24px 0px rgba(102,51,153,0.28)",
             }
           : {
-              background: "linear-gradient(180deg, rgba(217,255,240,0.85) 0%, rgba(255,255,255,0.96) 100%)",
-              boxShadow: "0 3px 0 #E2F1EB, inset 0 1px 0 rgba(255,255,255,0.35)",
+              background: "rgba(252,247,255,0.8)",
+              boxShadow: "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgba(102,51,153,0.12)",
             }
       }
     >
@@ -198,10 +200,10 @@ function BoardRow({
           transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: entry.rank * 0.3 }}
         />
       )}
-      <span className={`flex-1 min-w-0 truncate font-black text-[15px] ${isMe ? "text-white drop-shadow-sm" : "text-slate-700"}`}>
+      <span className={`flex-1 min-w-0 truncate font-black text-[15px] ${isMe ? "text-white drop-shadow-sm" : "text-[#402666]"}`}>
         {isMe ? youLabel : entry.nickname} {flag && <span className="text-sm">{flag}</span>}
       </span>
-      <span className={`flex items-center gap-1.5 font-black text-[15px] shrink-0 ${isMe ? "text-white drop-shadow-sm" : "text-slate-700"}`}>
+      <span className={`flex items-center gap-1.5 font-black text-[15px] shrink-0 ${isMe ? "text-white drop-shadow-sm" : "text-[#402666]"}`}>
         <img src={coinIcon} alt="" className="w-5 h-5 object-contain select-none" draggable={false} />
         {formatCompactNumber(entry.coins)}
       </span>
