@@ -33,6 +33,9 @@ A soft, light, airy pastel world:
 THE CHARACTER
 Adapt the person from the reference photo into a charming, high-end stylized 3D game character (subtly larger head, expressive friendly eyes, clean rounded forms, detailed hair, soft skin shading — premium casual-game quality, never childish, plastic, uncanny or hyper-realistic).
 
+FACE STYLIZATION — CRITICAL
+The face must be FULLY RE-SCULPTED in the same playful stylized 3D toon language as the rest of the character — NEVER a photographic or photorealistic face placed on a stylized body. Simplify the facial planes into soft rounded toon forms: slightly enlarged expressive eyes, simplified nose and lips, smooth even stylized skin with soft subsurface shading, stylized groomed hair and facial hair (sculpted clumps, not photo texture). No skin pores, no photographic skin texture, no camera-real lighting on the face. At the same time the likeness must stay unmistakable — same face shape, same hairstyle and hair color, same facial hair silhouette, same eyebrows, same skin tone and distinctive features — like a premium animated-movie caricature of this exact person: clearly them, but clearly a character.
+
 Pose and wardrobe are FIXED: the character sits relaxed on the bean bag, leaning back comfortably, one hand holding a purple mug decorated with a small gold crown, the other hand resting on their knee, smiling warmly at the camera. They wear a purple hoodie with a small gold crown motif on the chest, dark charcoal joggers, and purple-and-gold sneakers.
 
 CAMERA AND ZOOM — FIXED

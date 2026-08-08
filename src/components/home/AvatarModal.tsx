@@ -381,9 +381,10 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
 
       const finalUrl = urlData.publicUrl;
 
-      // The public circle avatar: a mini stylized portrait of the same
-      // character as the scene, generated from the uploaded photo. Falls
-      // back to the photo itself if portrait generation fails.
+      // The public circle avatar starts as the uploaded photo so the apply
+      // is instant; the mini stylized portrait is a SECOND AI generation
+      // (~1-2 minutes), so it runs in the background after the modal closes
+      // and swaps in quietly when ready.
       let profileAvatarUrl: string | null = null;
       if (uploadedImage) {
         try {
@@ -394,8 +395,6 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
             .upload(photoFileName, photoBlob, { upsert: true, contentType: 'image/png' });
           if (!photoError) {
             profileAvatarUrl = supabase.storage.from("avatars").getPublicUrl(photoFileName).data.publicUrl;
-            const portraitUrl = await generatePublicPortrait(user.id, profileAvatarUrl);
-            if (portraitUrl) profileAvatarUrl = portraitUrl;
           }
         } catch (photoErr) {
           console.warn("Saving original photo failed, keeping current avatar:", photoErr);
@@ -422,6 +421,18 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
 
       toast.success(t("avatar.avatarSaved"));
       finishAndClose();
+
+      // Background portrait generation — never blocks the apply. When it
+      // lands, the circle avatar upgrades from the raw photo to the
+      // stylized portrait of the same character.
+      if (profileAvatarUrl) {
+        const photoUrl = profileAvatarUrl;
+        void generatePublicPortrait(user.id, photoUrl).then((portraitUrl) => {
+          if (portraitUrl) {
+            void updateProfile({ avatar_url: portraitUrl } as any);
+          }
+        });
+      }
 
     } catch (error) {
       console.error("Error saving avatar:", error);
