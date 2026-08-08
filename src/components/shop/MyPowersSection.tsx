@@ -52,7 +52,7 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canA
             <div
               key={type}
               onClick={() => onCardClick?.(type)}
-              className="relative flex flex-col items-center gap-3 px-3 pt-7 pb-4 rounded-2xl liquid-glass cursor-pointer active:scale-95 transition-transform"
+              className="relative flex flex-col items-center gap-3 px-3 pt-7 pb-4 rounded-[24px] liquid-glass cursor-pointer active:scale-95 transition-transform"
             >
               <img
                 src={POWER_UP_ICONS[type]}

@@ -290,21 +290,16 @@
     font-family: var(--font-display);
   }
 
-  /* iOS 26 Liquid Glass Effect
-     Semi-opaque gradient instead of backdrop-filter: blur is too costly on
-     mobile GPUs during scroll; higher alpha keeps the same frosted look. */
+  /* Shop card surface — the same soft lavender-white card recipe the main
+     page widgets use (SceneHero profile card), so the shop and homepage read
+     as one system when switching between them. */
   .liquid-glass {
-    background: linear-gradient(
-      135deg,
-      hsl(0 0% 100% / 0.92) 0%,
-      hsl(220 30% 97% / 0.85) 50%,
-      hsl(0 0% 100% / 0.88) 100%
-    );
-    border: 1px solid hsl(0 0% 100% / 0.5);
+    background: rgba(252, 247, 255, 0.8);
+    border: 1.5px solid #e8e0f5;
     box-shadow:
-      0 8px 32px hsl(0 0% 0% / 0.1),
-      inset 0 1px 0 hsl(0 0% 100% / 0.5),
-      inset 0 -1px 0 hsl(0 0% 0% / 0.05);
+      0px 2px 8px 0px rgba(102, 51, 153, 0.06),
+      0px 8px 24px 0px rgba(102, 51, 153, 0.12),
+      inset 0px 1.8px 0px 0px hsl(0 0% 100%);
   }
 
   .dark .liquid-glass {
