@@ -65,9 +65,9 @@ export function PlayOptionsModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          // Heavy blur + white wash melts the page widgets into the artwork,
-          // leaving just the background mood behind the two choices
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 px-6 bg-white/40 backdrop-blur-2xl"
+          // Light blur + faint wash — the main page background stays clearly
+          // visible behind the two choices, just softened enough for contrast
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 px-6 bg-white/15 backdrop-blur-[6px]"
           onClick={onClose}
         >
           <motion.h2
