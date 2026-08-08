@@ -27,6 +27,7 @@ import { SignupOnboardingModal } from "@/components/onboarding/SignupOnboardingM
 import { WelcomeOnboardingOverlay } from "@/components/onboarding/WelcomeOnboardingOverlay";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { SceneHero } from "@/components/home/SceneHero";
+import { SceneSidebar } from "@/components/home/SceneSidebar";
 import { useUserScene } from "@/hooks/useUserScene";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
@@ -956,7 +957,7 @@ export default function Index() {
           {/* Action Cards - Fixed Right Side Panel (Desktop only) */}
           {user && (
             <motion.div 
-              className="hidden lg:flex fixed right-4 lg:right-6 xl:right-8 top-20 z-20 pointer-events-auto"
+              className="hidden lg:flex xl:hidden fixed right-4 lg:right-6 top-20 z-20 pointer-events-auto"
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2, type: "spring" }}
@@ -1336,14 +1337,28 @@ export default function Index() {
                   xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
                   coins={user ? coins : 0}
                   gems={user ? gems : 0}
-                  missionsCount={user ? incompleteMissions : 0}
                   onNameClick={user ? () => setShowChangeNameModal(true) : () => navigate("/auth")}
                   onLevelClick={user ? () => setShowLevelModal(true) : () => navigate("/auth")}
                   onMissionsClick={user ? () => setShowMissionsModal(true) : () => navigate("/auth")}
                   onCoinsClick={user ? () => navigate("/power-ups?section=coins") : () => navigate("/auth")}
                   onGemsClick={user ? () => navigate("/power-ups?section=gems-lari") : () => navigate("/auth")}
+                  onGiftClick={user ? () => setIsDailyRewardsOpen(true) : () => navigate("/auth")}
+                  onChestClick={user ? () => setIsChestModalOpen(true) : () => navigate("/auth")}
                   onSceneClick={user ? () => openAvatarModal() : () => navigate("/auth?mode=signup")}
                 />
+              </motion.div>
+            )}
+
+            {/* xl+ scene: functional right sidebar (Figma 601:1104) — live
+                invitation, continue-playing categories, quick play */}
+            {user && (sceneUrl || showDefaultScene) && (
+              <motion.div
+                className="hidden xl:block absolute right-[28px] top-[53px] z-20 pointer-events-auto"
+                initial={{ opacity: 0, x: 16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, type: "spring" }}
+              >
+                <SceneSidebar onQuickPlay={handlePlayClick} />
               </motion.div>
             )}
 
@@ -1369,10 +1384,10 @@ export default function Index() {
               </div>
             )}
 
-            {/* xl+ scene: play button centered on the CONTENT area (outside
-                the right-padded SceneHero overlay), so it stays in the middle
-                whether the sidebar is expanded or collapsed */}
-            {(sceneUrl || showDefaultScene) && (
+            {/* xl+ scene: guests keep the big centered play CTA; logged-in
+                users play via the sidebar's quick-play button (Figma
+                601:1104 has no centered button) */}
+            {!user && (sceneUrl || showDefaultScene) && (
               <div className="hidden xl:block absolute bottom-[6%] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
                 <DesktopPlayButtonLarge
                   onClick={handlePlayClick}
