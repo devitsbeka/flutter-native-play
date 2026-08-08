@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 
@@ -22,20 +23,25 @@ const REEL_AVATARS: ReelItem[] = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
   kind: "preset" as const,
 }));
 
-const SLOT_WIDTH = 88; // layout width of one carousel slot, px
-const CENTER_SCALE = 2.05; // middle avatar enlargement while previewing
+const SLOT_WIDTH = 104; // layout width of one carousel slot, px
+const BROWSE_SCALE = 1.25; // gentle center enlargement while scrolling
+const FOCUS_SCALE = 1.9; // full enlargement after an explicit tap
 
-// Snap carousel: dragging the strip left/right only PREVIEWS — the centered
-// item enlarges with the bold stroke, and a tap on it makes it the actual
-// avatar. The actual avatar keeps a persistent check badge wherever it sits,
-// so it stays visible mid-drag. Order: the player's own avatars (uploaded /
-// AI-generated) first, then the mascot presets.
+// Snap carousel: dragging only browses (the centered item enlarges gently —
+// pure transform, no layout shifts, so the scroll stays fast). Tapping an
+// avatar focuses it: it grows fully and shows the "choose" chip plus the
+// avatar-studio (magic) button; the next drag dismisses the focus. The
+// actual avatar keeps a persistent check badge wherever it sits. Order: the
+// player's own avatars (uploaded / AI-generated) first, then the presets.
 export function AvatarReel() {
   const { user, profile, updateProfile } = useAuth();
+  const { openAvatarModal } = useAvatarModal();
   const { t } = useLanguage();
 
   const [busyId, setBusyId] = useState<string | null>(null);
   const [centerIdx, setCenterIdx] = useState(0);
+  // Index the user explicitly tapped — unlocks the choose/studio actions
+  const [focusedIdx, setFocusedIdx] = useState<number | null>(null);
   // The user's own AI-generated/animated avatars (avatar_generations rows)
   const [generated, setGenerated] = useState<ReelItem[]>([]);
   // An uploaded photo avatar isn't a preset or a generation — pin it as the
@@ -177,16 +183,12 @@ export function AvatarReel() {
     setCenterIdx(nearestIndex());
   };
 
+  // Tapping focuses the avatar (centering it if needed) and reveals the
+  // choose/studio actions — applying happens only through the chip
   const handleItemClick = (idx: number) => {
     if (dragState.current.moved || busyId) return;
-    if (idx !== centerIdx) {
-      centerItem(idx);
-      return;
-    }
-    const item = items[idx];
-    if (resolveItem(item) !== currentResolved) {
-      void applyAvatar(item);
-    }
+    setFocusedIdx(idx);
+    if (idx !== centerIdx) centerItem(idx);
   };
 
   // Mouse drag-to-scroll (touch scrolls natively); snap is suspended during
@@ -205,7 +207,10 @@ export function AvatarReel() {
     const c = containerRef.current;
     if (!c) return;
     const dx = e.clientX - s.startX;
-    if (Math.abs(dx) > 4) s.moved = true;
+    if (Math.abs(dx) > 4) {
+      s.moved = true;
+      setFocusedIdx(null);
+    }
     c.scrollLeft = s.startScroll - dx;
   };
 
@@ -233,6 +238,7 @@ export function AvatarReel() {
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerLeave={endDrag}
+        onTouchMove={() => setFocusedIdx(null)}
         onDragStart={(e) => e.preventDefault()}
         className="flex items-center h-40 overflow-x-auto scrollbar-hide snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none"
         style={{
@@ -242,6 +248,7 @@ export function AvatarReel() {
       >
         {items.map((item, idx) => {
           const isCenter = idx === centerIdx;
+          const isFocused = isCenter && focusedIdx === idx;
           const isSelected = idx === selectedIdx;
           const src = resolveItem(item);
           const isBusy = busyId === item.id;
@@ -250,19 +257,12 @@ export function AvatarReel() {
               key={item.id}
               ref={(el) => (itemRefs.current[idx] = el)}
               onClick={() => handleItemClick(idx)}
-              className="relative shrink-0 h-full snap-center flex items-center justify-center transition-[margin] duration-200"
-              style={{
-                width: SLOT_WIDTH,
-                zIndex: isCenter ? 10 : 1,
-                // Widen the centered slot so the enlarged avatar keeps clear
-                // air between itself and its small neighbors
-                marginLeft: isCenter ? 28 : 0,
-                marginRight: isCenter ? 28 : 0,
-              }}
+              className="relative shrink-0 h-full snap-center flex items-center justify-center"
+              style={{ width: SLOT_WIDTH, zIndex: isCenter ? 10 : 1 }}
             >
               <div
                 className={`relative rounded-full transition-transform duration-200 ease-out ${isBusy ? "animate-pulse" : ""}`}
-                style={{ transform: `scale(${isCenter ? CENTER_SCALE : 1})` }}
+                style={{ transform: `scale(${isCenter ? (isFocused ? FOCUS_SCALE : BROWSE_SCALE) : 1})` }}
               >
                 <div
                   className={`w-16 h-16 rounded-full overflow-hidden bg-white ${
@@ -292,15 +292,29 @@ export function AvatarReel() {
         })}
       </div>
 
-      {/* Confirm chip — shows while the previewed (centered) avatar isn't
-          the applied one; tapping it (or the avatar itself) applies it */}
-      {items[centerIdx] && centerIdx !== selectedIdx && !busyId && (
-        <button
-          onClick={() => handleItemClick(centerIdx)}
-          className="absolute left-1/2 -translate-x-1/2 bottom-1 z-20 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-[13px] font-bold shadow-lg whitespace-nowrap"
-        >
-          {t("extra.avatarChooseBtn")}
-        </button>
+      {/* Actions for the tapped avatar: "choose" applies it (hidden when
+          it's already the applied one), the magic button opens the avatar
+          studio (generate / animate). Dragging dismisses both. */}
+      {focusedIdx !== null && focusedIdx === centerIdx && items[centerIdx] && !busyId && (
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-0 z-20 flex items-center gap-2">
+          {centerIdx !== selectedIdx && (
+            <button
+              onClick={() => {
+                void applyAvatar(items[centerIdx]).then(() => setFocusedIdx(null));
+              }}
+              className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-[13px] font-bold shadow-lg whitespace-nowrap"
+            >
+              {t("extra.avatarChooseBtn")}
+            </button>
+          )}
+          <button
+            onClick={() => openAvatarModal()}
+            className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg"
+            aria-label="Avatar studio"
+          >
+            <Sparkles className="w-4 h-4 text-primary-foreground" />
+          </button>
+        </div>
       )}
     </div>
   );
