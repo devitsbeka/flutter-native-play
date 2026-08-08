@@ -87,16 +87,16 @@ export default function Profile() {
             {/* Header spacer */}
             <div className="pt-12 pb-20 px-6" />
 
-            <div className="px-6 -mt-16 relative max-w-[700px] md:max-w-[600px] mx-auto w-full pb-8">
-            {/* Avatar Card */}
+            {/* Avatar card — the carousel spans the full page width (outside
+                the constrained column below) so wide screens show more slots;
+                it starts centered on the selected avatar and dragging only
+                browses, selection stays tap-only */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6"
+              className="-mt-16 relative w-full mb-6"
             >
               <div className="flex flex-col items-center">
-                {/* Avatar carousel: the strip drags left/right, whatever
-                    settles in the middle is the selected avatar */}
                 <AvatarReel />
                 <h2 className="text-xl font-bold text-foreground mt-4">
                   {profile.nickname}
@@ -108,6 +108,7 @@ export default function Profile() {
 
             </motion.div>
 
+            <div className="px-6 relative max-w-[700px] md:max-w-[600px] mx-auto w-full pb-8">
             {/* Tabs - segmented switcher */}
             <div className="flex justify-center mb-6">
               <div className="inline-flex items-center p-1 rounded-full bg-white/70 backdrop-blur-sm border border-border/40 shadow-sm">

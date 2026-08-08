@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,13 +33,13 @@ const REEL_AVATARS: ReelItem[] = [
 ];
 
 const SLOT_WIDTH = 88; // layout width of one carousel slot, px
-const SETTLE_MS = 250; // scroll quiet time before the centered avatar applies
 
-// Snap carousel: the whole strip drags left/right, the middle slot is the
-// selection — whatever settles there (free or already owned) becomes the
-// avatar and wears the bold stroke. Unowned premium avatars settle in the
-// middle without applying; tapping them buys with gems (ledger:
-// purchase_transactions, product_type "avatar") and equips.
+// Snap carousel: the strip drags left/right for browsing; the centered item
+// enlarges, but selection happens only on an explicit tap — the actually
+// selected avatar keeps a persistent badge wherever it sits in the strip.
+// Order: the player's own avatars (uploaded / AI-generated) come first, the
+// premium set next, and the basic mascots last. Unowned premium avatars are
+// bought with gems on tap (ledger: purchase_transactions, type "avatar").
 export function AvatarReel() {
   const { user, profile, updateProfile } = useAuth();
   const { spendGems, canAffordGems } = useCurrency();
@@ -55,8 +55,6 @@ export function AvatarReel() {
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const settleTimer = useRef<number | null>(null);
-  const suppressSettle = useRef(true);
   const dragState = useRef({ startX: 0, startScroll: 0, dragging: false, moved: false });
 
   useEffect(() => {
@@ -82,10 +80,39 @@ export function AvatarReel() {
     }
   }, [profile?.avatar_url, customUrl]);
 
-  const items: ReelItem[] = useMemo(
-    () => [...(customUrl ? [{ id: "custom", path: customUrl, price: 0 }] : []), ...REEL_AVATARS],
-    [customUrl]
-  );
+  // The player's AI-generated avatar history — these are their own avatars,
+  // so they lead the reel ahead of every preset.
+  const [generatedUrls, setGeneratedUrls] = useState<string[]>([]);
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("avatar_generations")
+      .select("avatar_url")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(12)
+      .then(({ data }) => {
+        setGeneratedUrls(((data || []).map((d) => d.avatar_url).filter(Boolean) as string[]));
+      });
+  }, [user]);
+
+  const items: ReelItem[] = useMemo(() => {
+    const seen = new Set<string>();
+    const customs: ReelItem[] = [];
+    for (const url of [customUrl, ...generatedUrls]) {
+      if (!url) continue;
+      const key = resolveAvatarUrl(url) || url;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      customs.push({ id: `custom-${customs.length}`, path: url, price: 0 });
+    }
+    // Own avatars first, premium set next, basic mascots last
+    return [
+      ...customs,
+      ...REEL_AVATARS.filter((a) => a.price > 0),
+      ...REEL_AVATARS.filter((a) => a.price === 0),
+    ];
+  }, [customUrl, generatedUrls]);
 
   const currentResolved = resolveAvatarUrl(profile?.avatar_url);
   const resolveItem = (item: ReelItem) => resolveAvatarUrl(item.path) || item.path;
@@ -99,39 +126,28 @@ export function AvatarReel() {
     c.scrollTo({ left: target, behavior: smooth ? "smooth" : "auto" });
   }, []);
 
-  // Center the selected avatar on mount (and when the pinned custom slot
-  // appears and shifts indexes) without triggering an auto-apply.
+  // Start centered on the selected avatar (re-run when the custom/generated
+  // slots load in and shift indexes).
   useEffect(() => {
     const idx = selectedIdx >= 0 ? selectedIdx : 0;
     setCenterIdx(idx);
-    suppressSettle.current = true;
     centerItem(idx, false);
-    const timer = window.setTimeout(() => {
-      suppressSettle.current = false;
-    }, 400);
-    return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customUrl]);
+  }, [items.length]);
 
   // Re-center when the avatar changes from outside (e.g. the avatar studio)
   useEffect(() => {
     if (selectedIdx < 0 || selectedIdx === centerIdx) return;
-    suppressSettle.current = true;
     centerItem(selectedIdx);
-    const timer = window.setTimeout(() => {
-      suppressSettle.current = false;
-    }, 600);
-    return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentResolved]);
 
   const applyAvatar = async (item: ReelItem) => {
     setBusyId(item.id);
     try {
-      const patch =
-        item.id === "custom"
-          ? { avatar_url: item.path }
-          : { avatar_url: item.path, animated_avatar_url: null, has_face_photo: false };
+      const patch = item.id.startsWith("custom")
+        ? { avatar_url: item.path }
+        : { avatar_url: item.path, animated_avatar_url: null, has_face_photo: false };
       const result = await updateProfile(patch as any);
       if (result?.error) throw result.error;
       toast.success(t("avatar.avatarUpdated"));
@@ -194,21 +210,10 @@ export function AvatarReel() {
     return best;
   };
 
-  // Whatever settles in the middle becomes the avatar — except unowned
-  // premium ones, which wait for an explicit tap so gems never auto-spend.
-  const handleSettle = (idx: number) => {
-    if (suppressSettle.current || busyId || !user) return;
-    const item = items[idx];
-    if (!item || resolveItem(item) === currentResolved) return;
-    if (item.price !== 0 && !ownedIds.has(item.id)) return;
-    void applyAvatar(item);
-  };
-
+  // Scrolling only browses — selection is an explicit tap, so dragging
+  // through the strip can never change the avatar by accident.
   const handleScroll = () => {
-    const best = nearestIndex();
-    setCenterIdx(best);
-    if (settleTimer.current) window.clearTimeout(settleTimer.current);
-    settleTimer.current = window.setTimeout(() => handleSettle(best), SETTLE_MS);
+    setCenterIdx(nearestIndex());
   };
 
   const handleItemClick = (idx: number) => {
@@ -279,6 +284,7 @@ export function AvatarReel() {
       >
         {items.map((item, idx) => {
           const isCenter = idx === centerIdx;
+          const isSelected = idx === selectedIdx;
           const src = resolveItem(item);
           const isOwned = item.price === 0 || ownedIds.has(item.id);
           const isBusy = busyId === item.id;
@@ -296,7 +302,11 @@ export function AvatarReel() {
               >
                 <div
                   className={`w-16 h-16 rounded-full overflow-hidden bg-white ${
-                    isCenter ? "border-[3px] border-white ring-2 ring-primary" : "border-2 border-white/80"
+                    isCenter
+                      ? "border-[3px] border-white ring-2 ring-primary"
+                      : isSelected
+                        ? "border-2 border-white ring-2 ring-emerald-500"
+                        : "border-2 border-white/80"
                   }`}
                   style={{
                     boxShadow: isCenter ? "0 4px 14px rgba(0,0,0,0.18)" : "0 2px 8px rgba(0,0,0,0.12)",
@@ -304,6 +314,14 @@ export function AvatarReel() {
                 >
                   <img src={src} alt="" className="w-full h-full object-cover select-none" draggable={false} />
                 </div>
+
+                {/* Persistent marker on the ACTUAL selected avatar, wherever
+                    it sits — the enlarged middle slot is just browsing */}
+                {isSelected && (
+                  <div className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center z-10">
+                    <Check className="w-3 h-3 text-white" strokeWidth={3.5} />
+                  </div>
+                )}
 
                 {/* Gem price pill for premium avatars not yet owned */}
                 {!isOwned && (
