@@ -1701,14 +1701,22 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     }));
   }, []);
 
+  // Correct answers in the current round, tracked client-side (resets on the
+  // round's first question). Used to record the player's result on the trivia
+  // leaderboard (quiz_post_plays) when a custom-trivia round finishes.
+  const correctAnswersRef = useRef(0);
+
   // Submit answer
   const submitAnswer = useCallback(async (answer: string, timeRemaining: number) => {
     if (!state.currentRoom || !user) return;
-    
+
     const currentQuestion = state.questions[state.currentQuestionIndex];
     if (!currentQuestion) return;
-    
+
     const isCorrect = answer === currentQuestion.correctAnswer;
+    correctAnswersRef.current = state.currentQuestionIndex === 0
+      ? (isCorrect ? 1 : 0)
+      : correctAnswersRef.current + (isCorrect ? 1 : 0);
 
     // First-correct bonus: the claim table's primary key decides the race —
     // exactly one correct answerer per question gets the insert through.
@@ -1783,7 +1791,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .eq("room_id", state.currentRoom.id)
           .eq("user_id", user.id);
       }
-      
+
+      // Custom-trivia rounds bump plays_count at start but never wrote the
+      // quiz_post_plays row the trivia leaderboard reads — record this
+      // player's result now (observer hosts didn't answer, so skip them).
+      if (state.currentRoom?.user_trivia_id && user && !(isHost && state.hostIsObserver)) {
+        void supabase.from("quiz_post_plays").insert({
+          user_id: user.id,
+          post_id: state.currentRoom.user_trivia_id,
+          score: correctAnswersRef.current,
+        });
+      }
+
       // Wait for score to propagate (increased from 200ms to allow observer bonus to sync)
       await new Promise(resolve => setTimeout(resolve, 500));
       setState(prev => ({ ...prev, phase: "results" }));
@@ -1796,7 +1815,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         lastQuestionResult: null,
       }));
     }
-  }, [state.currentQuestionIndex, state.questions.length, state.currentRoom, user]);
+  }, [state.currentQuestionIndex, state.questions.length, state.currentRoom, state.hostIsObserver, isHost, user]);
 
   // A locked/backgrounded phone must not pause the match for everyone else.
   // Called when the app returns to the foreground mid-round: every full
@@ -1854,6 +1873,15 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       })
       .eq("room_id", roomId)
       .eq("user_id", user.id);
+
+    // Finishing by skip still counts as a play on the trivia leaderboard
+    if (finished && state.currentRoom.user_trivia_id) {
+      void supabase.from("quiz_post_plays").insert({
+        user_id: user.id,
+        post_id: state.currentRoom.user_trivia_id,
+        score: correctAnswersRef.current,
+      });
+    }
 
     setState(prev => ({
       ...prev,
