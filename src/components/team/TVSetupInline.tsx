@@ -321,10 +321,13 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: 'auto' }}
-      exit={{ opacity: 0, height: 0 }}
-      className="w-full max-w-md mx-auto overflow-hidden mb-6"
+      // Margin animates with the height — leaving it static (mb-6) made the
+      // content below jump by 24px at the start/end of the reveal
+      initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+      animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
+      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="w-full max-w-md mx-auto overflow-hidden"
     >
       <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
         <AnimatePresence mode="wait">
