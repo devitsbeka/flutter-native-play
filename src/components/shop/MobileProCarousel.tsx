@@ -61,7 +61,7 @@ export function MobileProCarousel() {
       id: "invite" as const,
       name: t("extra.inviteMiniTitle"),
       icon: Share2,
-      gradient: "linear-gradient(135deg, #EC4899 0%, #9333EA 100%)",
+      gradient: "linear-gradient(135deg, #E3BC37 0%, #9333EA 100%)",
       shadow: "#7C3AED",
     },
     {
