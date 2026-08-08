@@ -12,6 +12,7 @@ import { useShopData, ShopItem } from "@/hooks/useShopData";
 import { useShopPageData } from "@/hooks/useShopPageData";
 import { useGemPurchase } from "@/hooks/useGemPurchase";
 import { REWARDS } from "@/config/rewardConfig";
+import { ALL_SHOP_DEALS } from "@/config/shopDeals";
 
 import { trackPowerUpPurchased, trackShopItemPurchased } from "@/lib/analytics";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -35,8 +36,9 @@ const ALL_POWER_TYPES: PowerUpType[] = ["5050", "freeze", "replace", "time-drain
 
 // Single source of truth for bundle contents — the transaction log and the grant
 // step both read this so they can't drift. Coin amounts match the advertised
-// descriptions/pricing in useShopData (1 gem = 500 coins).
-const BUNDLE_CONTENTS: Record<string, { powers: number; coins: number }> = {
+// descriptions/pricing in useShopData (1 gem = 500 coins). Rotating daily/hourly
+// deal bundles come from shopDeals.ts so the deal cards can't drift either.
+const BUNDLE_CONTENTS: Record<string, { powers: number; coins: number; gems?: number }> = {
   starter_bundle: { powers: 2, coins: 500 },
   starter_bundle_medium: { powers: 5, coins: 1000 },
   starter_bundle_large: { powers: 10, coins: 2500 },
@@ -44,9 +46,12 @@ const BUNDLE_CONTENTS: Record<string, { powers: number; coins: number }> = {
   mega_power_bundle: { powers: 5, coins: 0 },
   power_bundle_large: { powers: 10, coins: 0 },
   power_combo_bundle: { powers: 3, coins: 0 },
+  ...Object.fromEntries(ALL_SHOP_DEALS.map((deal) => [deal.id, deal.contents])),
 };
 
-const getBundleContents = (id: string): { powers: number; coins: number } =>
+const isBundleId = (id: string) => id.includes("bundle") || id.startsWith("deal_");
+
+const getBundleContents = (id: string): { powers: number; coins: number; gems?: number } =>
   BUNDLE_CONTENTS[id] ??
   { powers: id.includes("small") ? 2 : id.includes("large") ? 10 : 5, coins: 0 };
 
@@ -62,7 +67,7 @@ export default function PowerUps() {
   const { data: shopData } = useShopPageData();
   
   const { addPowerUp, refetch } = useUserPowerUps();
-  const { gems, coins, spendGems, spendCoins, canAffordCoins, addCoins } = useCurrency();
+  const { gems, coins, spendGems, spendCoins, canAffordCoins, addCoins, addGems } = useCurrency();
   const { activateVip } = useVipStatus();
   const { unlockFrame } = useAvatarFrames();
   const { playSound } = useSound();
@@ -201,14 +206,15 @@ export default function PowerUps() {
         productType = "frame";
       } else if (item.powerType && item.amount) {
         valueReceived = { [item.powerType]: item.amount };
-      } else if (item.id.includes("bundle")) {
-        const { powers, coins: coinAmount } = getBundleContents(item.id);
+      } else if (isBundleId(item.id)) {
+        const { powers, coins: coinAmount, gems: gemAmount = 0 } = getBundleContents(item.id);
         valueReceived = {
           "5050": powers,
           freeze: powers,
           replace: powers,
           "time-drain": powers,
-          ...(coinAmount > 0 ? { coins: coinAmount } : {})
+          ...(coinAmount > 0 ? { coins: coinAmount } : {}),
+          ...(gemAmount > 0 ? { gems: gemAmount } : {})
         };
         productType = "bundle";
       }
@@ -239,13 +245,16 @@ export default function PowerUps() {
       } else if (item.powerType && item.amount) {
         if (!(await grantPowerUp(item.powerType, item.amount))) grantFailed = true;
         await refetch();
-      } else if (item.id.includes("bundle")) {
-        const { powers, coins: coinAmount } = getBundleContents(item.id);
+      } else if (isBundleId(item.id)) {
+        const { powers, coins: coinAmount, gems: gemAmount = 0 } = getBundleContents(item.id);
         for (const type of ALL_POWER_TYPES) {
           if (!(await grantPowerUp(type, powers))) grantFailed = true;
         }
         if (coinAmount > 0) {
           if (!(await addCoins(coinAmount))) grantFailed = true;
+        }
+        if (gemAmount > 0) {
+          if (!(await addGems(gemAmount))) grantFailed = true;
         }
         await refetch();
       }

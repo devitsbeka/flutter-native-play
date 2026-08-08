@@ -1,0 +1,217 @@
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Timer, Zap } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { ShopItem } from "@/hooks/useShopData";
+import { DAILY_DEALS, HOURLY_DEALS, ShopDeal, dealSavings } from "@/config/shopDeals";
+import { cn } from "@/lib/utils";
+
+import gemIcon from "@/assets/icons/icon-gem.webp";
+import coinIcon from "@/assets/icons/icon-coin.webp";
+import powersIcon from "@/assets/icons/icon-powers-bottle.webp";
+
+// Affordability isn't checked here on purpose — the page-level purchase
+// handler already routes an underfunded tap to the NotEnoughGems modal.
+interface DailyDealsRowProps {
+  purchasedItems: Set<string>;
+  isPurchasing: string | null;
+  onItemClick: (item: ShopItem) => void;
+}
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+function formatRemaining(ms: number, withHours: boolean): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return withHours ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+
+// Converts a deal into a ShopItem so the page's existing purchase pipeline
+// (spendGems → bundle grant via BUNDLE_CONTENTS) handles it unchanged.
+function dealToShopItem(deal: ShopDeal, name: string): ShopItem {
+  return {
+    id: deal.id,
+    name,
+    description: "",
+    price: deal.price,
+    currency: "gems",
+    icon: <img src={powersIcon} alt="" className="w-8 h-8 object-contain" />,
+    gradient: "transparent",
+  };
+}
+
+interface DealCardProps {
+  deal: ShopDeal;
+  label: string;
+  remainingLabel: string;
+  gradient: string;
+  chipClass: string;
+  urgent?: boolean;
+  isPurchased: boolean;
+  isLoading: boolean;
+  onBuy: () => void;
+}
+
+function DealCard({
+  deal,
+  label,
+  remainingLabel,
+  gradient,
+  chipClass,
+  urgent = false,
+  isPurchased,
+  isLoading,
+  onBuy,
+}: DealCardProps) {
+  const { t } = useLanguage();
+  const savings = dealSavings(deal);
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl p-3 sm:p-3.5 text-white shadow-[0_10px_28px_-10px_rgba(88,28,135,0.55)]"
+      style={{ background: gradient }}
+    >
+      {/* soft highlight blob so the card doesn't read flat */}
+      <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
+
+      {/* Header: deal type + live countdown */}
+      <div className="relative flex items-center justify-between gap-2">
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide",
+            chipClass
+          )}
+        >
+          {urgent ? <Zap className="h-3 w-3" /> : null}
+          {label}
+        </span>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 rounded-full bg-black/25 px-2.5 py-1 text-[11px] font-bold tabular-nums",
+            urgent && "motion-safe:animate-pulse"
+          )}
+        >
+          <Timer className="h-3.5 w-3.5" />
+          {remainingLabel}
+        </span>
+      </div>
+
+      {/* Name + discount */}
+      <div className="relative mt-2.5 flex items-center gap-2">
+        <h3 className="font-display text-lg font-bold leading-none">{t(deal.nameKey)}</h3>
+        <span
+          className="rounded-full px-2 py-0.5 text-[11px] font-extrabold text-amber-900"
+          style={{
+            background: "linear-gradient(180deg, hsl(50 95% 65%) 0%, hsl(45 90% 55%) 100%)",
+            boxShadow: "0 2px 0 hsl(40 80% 45%)",
+          }}
+        >
+          -{savings}%
+        </span>
+      </div>
+
+      {/* Bundle contents: powers + coins + gems */}
+      <div className="relative mt-2.5 flex flex-wrap items-center gap-1.5">
+        <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-2.5 py-1.5 text-xs font-bold backdrop-blur-[2px]">
+          <img src={powersIcon} alt="" className="h-5 w-5 object-contain" />
+          {deal.contents.powers}× {t("shop.allPowers")}
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-2.5 py-1.5 text-xs font-bold backdrop-blur-[2px]">
+          <img src={coinIcon} alt="" className="h-5 w-5 object-contain" />
+          {deal.contents.coins.toLocaleString()}
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-2.5 py-1.5 text-xs font-bold backdrop-blur-[2px]">
+          <img src={gemIcon} alt="" className="h-5 w-5 object-contain" />
+          {deal.contents.gems}
+        </span>
+      </div>
+
+      {/* Price row: struck full price → deal price → buy */}
+      <div className="relative mt-3 flex items-center justify-between gap-2">
+        <div className="flex items-baseline gap-2">
+          <span className="flex items-center gap-1 text-sm text-white/60 line-through decoration-2">
+            <img src={gemIcon} alt="" className="h-3.5 w-3.5 object-contain opacity-60" />
+            {deal.wasPrice}
+          </span>
+          <span className="flex items-center gap-1 text-xl font-extrabold">
+            <img src={gemIcon} alt="" className="h-5 w-5 object-contain" />
+            {deal.price}
+          </span>
+        </div>
+
+        {isLoading ? (
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
+        ) : (
+          <motion.button
+            onClick={onBuy}
+            disabled={isPurchased}
+            className="rounded-full px-5 py-2 text-sm font-bold text-white disabled:opacity-60"
+            style={{ background: "#00DDA3", boxShadow: "0 3px 0 #00A87C" }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95, y: 2 }}
+          >
+            {isPurchased ? t("common.owned") : t("shop.buy")}
+          </motion.button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick }: DailyDealsRowProps) {
+  const { t } = useLanguage();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Same offer for everyone at the same moment: index derives from wall time
+  const dailyDeal = DAILY_DEALS[Math.floor(now / 86_400_000) % DAILY_DEALS.length];
+  const hourlyDeal = HOURLY_DEALS[Math.floor(now / 3_600_000) % HOURLY_DEALS.length];
+
+  const nextMidnight = new Date(now);
+  nextMidnight.setHours(24, 0, 0, 0);
+  const nextHour = (Math.floor(now / 3_600_000) + 1) * 3_600_000;
+
+  return (
+    <motion.section
+      className="mx-3 sm:mx-4 mb-4 rounded-3xl border border-white/60 bg-white/55 p-2.5 sm:p-3 backdrop-blur-sm shadow-[0_8px_24px_rgba(102,51,153,0.08)]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="mb-2 flex items-center gap-2 px-1">
+        <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-amber-400 to-orange-500" />
+        <h2 className="text-base font-display font-bold text-foreground/90">{t("shop.deals")}</h2>
+      </div>
+
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <DealCard
+          deal={dailyDeal}
+          label={t("shop.dailyDeal")}
+          remainingLabel={formatRemaining(nextMidnight.getTime() - now, true)}
+          gradient="linear-gradient(135deg, #8B5CF6 0%, #7C3AED 45%, #C026D3 100%)"
+          chipClass="bg-white/25"
+          isPurchased={purchasedItems.has(dailyDeal.id)}
+          isLoading={isPurchasing === dailyDeal.id}
+          onBuy={() => onItemClick(dealToShopItem(dailyDeal, t(dailyDeal.nameKey)))}
+        />
+        <DealCard
+          deal={hourlyDeal}
+          label={t("shop.hourlyDeal")}
+          remainingLabel={formatRemaining(nextHour - now, false)}
+          gradient="linear-gradient(135deg, #F97316 0%, #EF4444 55%, #E11D48 100%)"
+          chipClass="bg-black/25"
+          urgent
+          isPurchased={purchasedItems.has(hourlyDeal.id)}
+          isLoading={isPurchasing === hourlyDeal.id}
+          onBuy={() => onItemClick(dealToShopItem(hourlyDeal, t(hourlyDeal.nameKey)))}
+        />
+      </div>
+    </motion.section>
+  );
+}

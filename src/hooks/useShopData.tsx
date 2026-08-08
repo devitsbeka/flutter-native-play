@@ -259,7 +259,7 @@ export function useShopData() {
       {
         id: "coins_500",
         name: `500 ${t("shop.coin")}`,
-        description: t("shop.smallPackage"),
+        description: t("shop.coinsDescSmall"),
         price: 1,  // Exact rate: 500 coins = 1 gem
         currency: "gems",
         icon: <img src={coinIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
@@ -269,7 +269,7 @@ export function useShopData() {
       {
         id: "coins_1500",
         name: `1500 ${t("shop.coin")}`,
-        description: `${t("shop.mediumPackage")}`,
+        description: t("shop.coinsDescMedium"),
         price: 3,  // 1500 coins = 3 gems (exact rate)
         currency: "gems",
         icon: <img src={coinIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
@@ -279,7 +279,7 @@ export function useShopData() {
       {
         id: "coins_5000",
         name: `5000 ${t("shop.coin")}`,
-        description: `${t("shop.largePackage")} +10%`,
+        description: t("shop.coinsDescLarge"),
         price: 9,  // 5000 coins = 10 gems, sell for 9 = 10% bonus
         currency: "gems",
         icon: <img src={coinIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
@@ -291,7 +291,7 @@ export function useShopData() {
       {
         id: "coins_15000",
         name: `15000 ${t("shop.coin")}`,
-        description: `${t("shop.megaPackage")} +20%`,
+        description: t("shop.coinsDescMega"),
         price: 24,  // 15000 coins = 30 gems, sell for 24 = 20% bonus
         currency: "gems",
         icon: <img src={coinIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
@@ -307,7 +307,7 @@ export function useShopData() {
       {
         id: "gems_30",
         name: "30",
-        description: t("shop.smallPackage"),
+        description: t("shop.gemsDescSmall"),
         price: 1.19,
         currency: "lari",
         icon: <img src={gemIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
@@ -317,7 +317,7 @@ export function useShopData() {
       {
         id: "gems_100",
         name: "100 +11",
-        description: `${t("shop.mediumPackage")} +11%`,
+        description: t("shop.gemsDescMedium"),
         price: 3.59,
         currency: "lari",
         icon: <img src={gemIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
@@ -330,7 +330,7 @@ export function useShopData() {
       {
         id: "gems_300",
         name: "300 +60",
-        description: `${t("shop.largePackage")} +20%`,
+        description: t("shop.gemsDescLarge"),
         price: 9.99,
         currency: "lari",
         icon: <img src={gemIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
@@ -342,7 +342,7 @@ export function useShopData() {
       {
         id: "gems_700",
         name: "700 +200",
-        description: `${t("shop.megaPackage")} +40%`,
+        description: t("shop.gemsDescMega"),
         price: 19.99,
         currency: "lari",
         icon: <img src={gemIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,

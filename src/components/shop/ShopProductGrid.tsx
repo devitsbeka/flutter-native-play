@@ -44,7 +44,8 @@ export function ShopProductGrid({
 
       {/* Products Grid */}
       <div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-2">
+        {/* 2 per line on phones, 4 on wide screens — never an awkward 3 */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
           {items.map((item) => {
             // Real-money (lari) packs are always purchasable — gems balance is irrelevant
             const canAfford = item.currency === "lari" || gems >= item.price;

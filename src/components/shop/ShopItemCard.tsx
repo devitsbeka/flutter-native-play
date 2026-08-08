@@ -95,7 +95,7 @@ export function ShopItemCard({
     <div
       className="relative pt-3"
       // Skip offscreen rendering work while scrolling long shop lists
-      style={{ contentVisibility: "auto", containIntrinsicSize: "210px" } as React.CSSProperties}
+      style={{ contentVisibility: "auto", containIntrinsicSize: "226px" } as React.CSSProperties}
     >
       {/* Badge - positioned on right */}
       {badgeStyle && !isPurchased && (
@@ -127,7 +127,7 @@ export function ShopItemCard({
         className={cn(
           "w-full rounded-2xl transition-all relative overflow-hidden flex flex-col items-center text-center",
           "px-2.5 sm:px-3 p-3",
-          "h-[172px] sm:h-[186px]",
+          "h-[188px] sm:h-[198px]",
           !isPurchased && canAfford && "liquid-glass",
           dealRing
         )}
@@ -158,7 +158,7 @@ export function ShopItemCard({
         {/* Description - flex-1 to push price section to bottom */}
         {showDescription && description && (
           <div className="flex-1 flex items-start">
-            <p className="text-gray-500 text-[11px] sm:text-xs line-clamp-1 w-full">{description}</p>
+            <p className="text-gray-500 text-[11px] sm:text-xs leading-snug line-clamp-2 w-full">{description}</p>
           </div>
         )}
 

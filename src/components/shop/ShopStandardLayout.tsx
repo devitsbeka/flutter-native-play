@@ -3,6 +3,7 @@ import { ShopSection, ShopItem } from "@/hooks/useShopData";
 import { ShopProductGrid } from "./ShopProductGrid";
 import { MobileProCarousel } from "./MobileProCarousel";
 import { MyPowersSection } from "./MyPowersSection";
+import { DailyDealsRow } from "./DailyDealsRow";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
 
 
@@ -66,6 +67,13 @@ export function ShopStandardLayout({
       <div className="md:hidden">
         <MobileProCarousel />
       </div>
+
+      {/* Rotating daily + hourly bundle deals — the shop's hero row */}
+      <DailyDealsRow
+        purchasedItems={purchasedItems}
+        isPurchasing={isPurchasing}
+        onItemClick={handleItemClick}
+      />
 
       {/* My Powers Section - individual purchase */}
       <MyPowersSection
