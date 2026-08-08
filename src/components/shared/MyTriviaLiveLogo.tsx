@@ -1,4 +1,3 @@
-import { LiveBadge } from "@/components/social/LiveBadge";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import logoDark from "@/assets/mytrivia-logo.svg";
 import logoLight from "@/assets/mytrivia-logo-light.svg";
@@ -12,10 +11,10 @@ interface MyTriviaLiveLogoProps {
 
 // height is the rendered height of the SVG logo (crown + wordmark)
 const sizeConfig = {
-  sm: { height: 30, badgeSize: "sm" as const },
-  md: { height: 34, badgeSize: "md" as const },
-  lg: { height: 48, badgeSize: "lg" as const },
-  xl: { height: 56, badgeSize: "xl" as const },
+  sm: { height: 38 },
+  md: { height: 42 },
+  lg: { height: 60 },
+  xl: { height: 70 },
 };
 
 export function MyTriviaLiveLogo({ 
@@ -58,9 +57,6 @@ export function MyTriviaLiveLogo({
         style={{ height: config.height }}
         draggable={false}
       />
-      <span className="flex items-center shrink-0" style={{ marginTop: '-2px' }}>
-        <LiveBadge size={config.badgeSize} />
-      </span>
     </div>
   );
 }
