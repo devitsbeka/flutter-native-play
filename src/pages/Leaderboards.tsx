@@ -162,7 +162,7 @@ function BoardRow({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(entry.rank * 0.02, 0.4) }}
       onClick={() => !isMe && onOpenProfile(entry.user_id)}
-      className={`w-full flex items-center gap-2.5 rounded-full pl-2 pr-4 py-1.5 text-left ${
+      className={`w-full flex items-center gap-2.5 rounded-full pl-2 pr-4 py-2 text-left ${
         isMe ? "" : "hover:brightness-105 active:scale-[0.99]"
       } transition-all`}
       style={
@@ -275,9 +275,9 @@ export default function Leaderboards() {
 
   const tabs: { id: Scope; label: string }[] = [
     ...(countryCode
-      ? [{ id: "local" as Scope, label: `${localCountryName(countryCode, language, t("leaderboard.localTab"))} ${getCountryFlag(countryCode)}` }]
+      ? [{ id: "local" as Scope, label: localCountryName(countryCode, language, t("leaderboard.localTab")) }]
       : []),
-    { id: "global", label: `${t("leaderboard.global")} 🌍` },
+    { id: "global", label: t("leaderboard.global") },
   ];
 
   return (
@@ -319,8 +319,8 @@ export default function Leaderboards() {
         </div>
 
         <div className="relative flex-1 min-h-0 w-full max-w-xl mx-auto px-4 pt-5 pb-24 md:pb-8 flex flex-col">
-          {/* Tabs - centered */}
-          <div className="flex items-end justify-center gap-1 px-2">
+          {/* Tabs - centered pills */}
+          <div className="flex items-center justify-center gap-2 px-2">
             {tabs.map((tab) => {
               const active = scope === tab.id;
               return (
@@ -330,8 +330,8 @@ export default function Leaderboards() {
                     setScopeTouched(true);
                     setScope(tab.id);
                   }}
-                  className={`px-5 rounded-t-2xl font-black transition-all ${
-                    active ? "py-2.5 text-amber-900" : "py-2 text-white/80 hover:text-white"
+                  className={`px-5 py-2.5 rounded-full font-black transition-all ${
+                    active ? "text-amber-900" : "text-white/80 hover:text-white"
                   }`}
                   style={
                     active
@@ -355,7 +355,7 @@ export default function Leaderboards() {
               at the scroll edges instead of clipping hard. */}
           <div className="flex-1 min-h-0 rounded-[28px] px-3.5 flex flex-col">
             <div
-              className="flex-1 min-h-0 overflow-y-auto scrollbar-hide space-y-2 py-4"
+              className="flex-1 min-h-0 overflow-y-auto scrollbar-hide space-y-3 py-4"
               style={{
                 maskImage:
                   "linear-gradient(to bottom, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)",
@@ -365,7 +365,7 @@ export default function Leaderboards() {
             >
               {isLoading && entries.length === 0 ? (
                 Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="h-14 rounded-full bg-white/50 animate-pulse" />
+                  <div key={i} className="h-[60px] rounded-full bg-white/50 animate-pulse" />
                 ))
               ) : entries.length === 0 ? (
                 <div className="py-12 text-center">

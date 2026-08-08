@@ -39,7 +39,7 @@ export function TeamRightSidebar({
   return (
     <>
       <WeeklyChallengeModal open={showChallengeModal} onOpenChange={setShowChallengeModal} />
-    <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] sticky top-0 h-screen border-l border-border/50 bg-background/50 backdrop-blur-sm">
+    <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] sticky top-16 h-[calc(100vh-4rem)] border-l border-border/50 bg-background/50 backdrop-blur-sm">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Game Invitations Widget */}
         <GameInvitationsSection
@@ -54,13 +54,6 @@ export function TeamRightSidebar({
           transition={{ delay: 0.1 }}
           className="space-y-3"
         >
-          <div className="flex items-center gap-2 text-primary">
-            <Tv className="w-4 h-4" />
-            <span className="text-sm font-bold tracking-wide">
-              TV-ზე თამაში
-            </span>
-          </div>
-
           <div className="p-4 rounded-2xl bg-gradient-to-br from-muted/80 to-muted/40 border border-border/50">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-14 h-14 rounded-xl flex items-center justify-center">

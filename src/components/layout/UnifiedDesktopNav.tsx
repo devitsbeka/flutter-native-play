@@ -8,7 +8,6 @@ import {
   Store,
   Trophy,
   Users,
-  Menu,
   Lock,
   ChevronsLeft,
   ChevronsRight,
@@ -27,8 +26,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MoreMenuModal } from "@/components/home/MoreMenuModal";
-
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -63,7 +60,7 @@ export function UnifiedDesktopNav({
 }: UnifiedDesktopNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { profile, user, signOut } = useAuth();
+  const { profile, user } = useAuth();
   // PRO badge/stroke on the profile button — read from the VIP context rather
   // than the isVip prop, which not every page passes down
   const { isVip: isProUser } = useVipStatus();
@@ -95,19 +92,12 @@ export function UnifiedDesktopNav({
   };
 
   // Modal states
-  const [isMoreModalOpen, setIsMoreModalOpen] = useState(false);
-
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingNavPath, setPendingNavPath] = useState<string | null>(null);
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
   };
 
   // Prefetch route data and code on hover
@@ -265,16 +255,6 @@ export function UnifiedDesktopNav({
             );
           })}
 
-          {/* More menu - sits with the nav items rather than pinned at the bottom */}
-          <motion.button
-            onClick={() => setIsMoreModalOpen(true)}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Menu className="w-6 h-6" strokeWidth={1.5} />
-            <span className={`text-[15px] hidden ${collapsed ? "" : "lg:inline"}`}>{t("extra.navMore")}</span>
-          </motion.button>
         </div>
 
         {/* Promo Card - Desktop only, guests only */}
@@ -385,14 +365,6 @@ export function UnifiedDesktopNav({
         </div>
       </nav>
 
-
-      {/* More Menu Modal */}
-      <MoreMenuModal
-        isOpen={isMoreModalOpen}
-        onClose={() => setIsMoreModalOpen(false)}
-        onNavigate={navigate}
-        onSignOut={handleSignOut}
-      />
 
       {/* Auth Required Modal */}
       <AuthRequiredModal

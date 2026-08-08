@@ -29,6 +29,8 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { useCategories } from "@/hooks/useCategories";
+import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
+import { getGradientById } from "@/config/roomGradients";
 import { useFriends } from "@/hooks/useFriends";
 import { useMyRooms } from "@/hooks/useMyRooms";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
@@ -469,7 +471,6 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                       <Plus className="w-4 h-4 text-white" />
                     </div>
                     <span>{t("extra.ssCreateNewRoom")}</span>
-                    <span className="ml-auto text-xs text-muted-foreground font-mono">/newroom</span>
                   </CommandItem>
                   <CommandItem 
                     onSelect={() => { 
@@ -506,11 +507,13 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                     onSelect={() => handleCategorySelect(category.id)}
                     className="flex items-center gap-3 cursor-pointer"
                   >
-                    <div 
-                      className="flex items-center justify-center w-8 h-8 rounded-lg"
-                      style={{ backgroundColor: category.color + "20" }}
-                    >
-                      <Sparkles className="w-4 h-4" style={{ color: category.color }} />
+                    <div className="flex items-center justify-center w-8 h-8 shrink-0">
+                      <QuizCategoryIcon
+                        iconSlug={category.icon_slug ?? undefined}
+                        imageUrl={category.image_url ?? undefined}
+                        categoryId={category.id}
+                        size={30}
+                      />
                     </div>
                     <span>{category.name}</span>
                     {category.totalLevels && (
@@ -564,8 +567,15 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                       onSelect={() => handleRoomSelect(room.room_code)}
                       className="flex items-center gap-3 cursor-pointer"
                     >
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500">
-                        <Gamepad2 className="w-4 h-4 text-white" />
+                      <div
+                        className="flex items-center justify-center w-8 h-8 rounded-lg overflow-hidden shrink-0"
+                        style={{ background: getGradientById(room.background_gradient)?.gradient }}
+                      >
+                        {room.room_icon ? (
+                          <img src={room.room_icon} alt="" className="w-5 h-5 object-contain" />
+                        ) : (
+                          <Gamepad2 className="w-4 h-4 text-white" />
+                        )}
                       </div>
                       <div className="flex flex-col">
                         <span>{room.room_name || room.room_code}</span>
@@ -576,6 +586,37 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                       {room.status === "playing" && (
                         <span className="ml-auto px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
                           {t("extra.ssOngoing")}
+                        </span>
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </>
+            )}
+
+            {/* My Trivias - with their real covers */}
+            {!isCommand && filteredTrivias.length > 0 && (
+              <>
+                <CommandSeparator />
+                <CommandGroup heading={t("extra.cpMyTrivias")}>
+                  {filteredTrivias.slice(0, 5).map((trivia) => (
+                    <CommandItem
+                      key={trivia.id}
+                      onSelect={() => handleTriviaSelect(trivia.id)}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
+                      <div
+                        className="w-8 h-8 rounded-lg overflow-hidden shrink-0"
+                        style={{ background: trivia.cover_gradient || "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" }}
+                      >
+                        {trivia.cover_image && (
+                          <img src={trivia.cover_image} alt="" className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                      <span className="truncate">{trivia.title}</span>
+                      {typeof trivia.question_count === "number" && trivia.question_count > 0 && (
+                        <span className="ml-auto text-xs text-muted-foreground shrink-0">
+                          {t("extra.questionsCount", { count: trivia.question_count })}
                         </span>
                       )}
                     </CommandItem>

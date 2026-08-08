@@ -218,6 +218,7 @@ export const en: KaTranslations = {
     party: "Party",
     otherGames: "Other Games",
     settings: "Settings",
+    accountSettings: "Account Management",
     help: "Help",
     privacy: "Privacy",
     signOut: "Sign Out",

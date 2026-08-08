@@ -642,35 +642,37 @@ function TeamContentV2() {
 
   return (
     <MainLayout showPlayButton={false} showBottomNav={!isCreationModalOpen}>
+      {/* Full-width header - spans above the right sidebar too, icons on the
+          right like every other page header */}
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/30">
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
+          {/* Left: Logo - aligned to left edge (lg+ shows it in the sidebar) */}
+          <div className="flex items-center gap-4 lg:hidden">
+            <MyTriviaLiveLogo responsive />
+          </div>
+
+          <div className="flex items-center gap-1 ml-auto">
+            {/* QR Scanner */}
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowQRScanner(true)}
+              className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
+            >
+              <ScanLine className="w-5 h-5 text-gray-600" />
+            </motion.button>
+
+            <HeaderActions />
+          </div>
+        </div>
+      </div>
+
       {/* Flex wrapper for main content + right sidebar */}
       <div className="flex min-h-full">
         {/* Main Content Area */}
         <div id="team-main-content" className="flex-1 flex flex-col pb-24 lg:pb-0 bg-background min-w-0">
-          {/* STICKY: Title, Buttons, Friends Bar, Tabs */}
-          <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md w-full max-w-full">
-              <div className="px-4 py-3 border-b border-border/30">
-                <div className="flex items-center justify-between gap-3">
-                  {/* Left: Logo - aligned to left edge (lg+ shows it in the sidebar) */}
-                  <div className="flex items-center gap-4 lg:hidden">
-                    <MyTriviaLiveLogo responsive />
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    {/* QR Scanner */}
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => setShowQRScanner(true)}
-                      className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
-                    >
-                      <ScanLine className="w-5 h-5 text-gray-600" />
-                    </motion.button>
-
-                    <HeaderActions />
-                  </div>
-                </div>
-              </div>
-
+          {/* STICKY: Friends Bar, Tabs - sits below the page header */}
+          <div className="sticky top-16 z-20 bg-background/95 backdrop-blur-md w-full max-w-full">
               <div className="px-4">
 
                 {/* Friends Bar - show on all tabs */}

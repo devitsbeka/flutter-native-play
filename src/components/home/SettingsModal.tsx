@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Lock, Loader2, Globe } from "lucide-react";
+import { User, Lock, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
@@ -17,7 +17,7 @@ interface SettingsModalProps {
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { user, profile, fetchProfile } = useAuth();
   const { notify } = useNotificationModal();
-  const { t, language, setLanguage, languages, currentLanguage } = useLanguage();
+  const { t } = useLanguage();
 
   const [nickname, setNickname] = useState(profile?.nickname || "");
   const [newPassword, setNewPassword] = useState("");
@@ -103,37 +103,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       hideFooter
     >
       <div className="space-y-6">
-        {/* Language Section */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Globe className="h-5 w-5 text-primary" />
-            </div>
-            <h3 className="font-semibold text-foreground">{t("settings.language")}</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {languages.filter(l => ['ka', 'en', 'fr', 'de', 'es', 'it', 'pt'].includes(l.code)).map(lang => (
-              <button
-                key={lang.code}
-                onClick={() => setLanguage(lang.code)}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all border ${
-                  language === lang.code
-                    ? 'border-primary bg-primary/10 text-foreground'
-                    : 'border-border bg-card text-muted-foreground hover:border-primary/50'
-                }`}
-              >
-                <span className="text-lg">{lang.flag}</span>
-                <span className="truncate">{lang.nativeName}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
         {/* Edit Name Section */}
         <div className="space-y-3">
           <div className="flex items-center gap-3">
