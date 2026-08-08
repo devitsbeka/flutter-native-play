@@ -404,7 +404,7 @@ export const ka = {
   leaderboard: {
     title: "ლიდერბორდი",
     global: "გლობალური",
-    localTab: "ადგილობრივი",
+    localTab: "ქვეყანა",
     friends: "მეგობრები",
     weekly: "კვირის",
     allTime: "ყველა დროის",

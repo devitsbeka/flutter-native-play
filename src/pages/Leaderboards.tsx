@@ -110,7 +110,9 @@ function RankBadge({ rank }: { rank: number }) {
         <img src={starIcon} alt="" className="absolute inset-0 w-full h-full object-contain select-none" draggable={false} />
         <span
           className="relative font-black text-white text-lg"
-          style={{ textShadow: "0 1px 2px rgba(146,64,14,0.7)", marginTop: "-1px" }}
+          // The star art tilts right, putting its optical center left of the
+          // geometric one — nudge the number to sit on the star's body.
+          style={{ textShadow: "0 1px 2px rgba(146,64,14,0.7)", marginTop: "-1px", marginLeft: "-3px" }}
         >
           {rank}
         </span>
