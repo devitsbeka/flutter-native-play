@@ -871,9 +871,11 @@ export default function Index() {
             Right padding on lg+ keeps it clear of the fixed action cards panel.
             On lg+ the logo lives in the sidebar, leaving the header row empty, so the
             strip is pulled up into it; pointer-events pass through the padded right
-            zone so the header's search/bell buttons stay clickable. */}
+            zone so the header's search/bell buttons stay clickable. The -mt is tuned
+            so the avatars land 16px below the page top — the same offset the reel
+            has inside the rooms page header, keeping the two pages in sync. */}
         {user && (
-          <div className="relative z-20 px-4 pt-2 lg:-mt-16 lg:pointer-events-none lg:pr-[300px] xl:pr-[330px]">
+          <div className="relative z-20 px-4 lg:-mt-[68px] lg:pointer-events-none lg:pr-[300px] xl:pr-[330px]">
             <div className="lg:pointer-events-auto">
               <FriendsStoriesBar
                 onAddFriendClick={() => setShowAddFriendModal(true)}
