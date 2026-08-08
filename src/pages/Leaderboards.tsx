@@ -172,7 +172,7 @@ function BoardRow({
               boxShadow: "0 3px 0 #4C2AA6, 0 4px 14px rgba(109,63,224,0.45), inset 0 1px 0 rgba(255,255,255,0.35)",
             }
           : {
-              background: "linear-gradient(180deg, rgba(217,255,240,0.62) 0%, rgba(255,255,255,0.86) 100%)",
+              background: "linear-gradient(180deg, rgba(217,255,240,0.85) 0%, rgba(255,255,255,0.96) 100%)",
               boxShadow: "0 3px 0 #E2F1EB, inset 0 1px 0 rgba(255,255,255,0.35)",
             }
       }

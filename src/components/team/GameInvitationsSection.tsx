@@ -3,7 +3,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, Mail, X, Clock, Zap } from "lucide-react";
 import { useGameInvitations, GameInvitation } from "@/hooks/useGameInvitations";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 
@@ -113,6 +112,17 @@ function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps
     setIsDeclining(false);
   };
 
+  const [isAccepting, setIsAccepting] = useState(false);
+  const handleAccept = async () => {
+    if (isAccepting || isDeclining) return;
+    setIsAccepting(true);
+    try {
+      await onAccept();
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
   const isExpired = timeLeft === t("extra.expiredLabel");
   if (isExpired) return null;
 
@@ -122,11 +132,16 @@ function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9, x: -100 }}
+      onClick={handleAccept}
+      role="button"
+      whileTap={{ scale: 0.98 }}
       className={cn(
-        "relative p-4 rounded-2xl backdrop-blur-sm",
+        "relative p-4 rounded-2xl backdrop-blur-sm cursor-pointer",
         "bg-gradient-to-r from-emerald-50 to-green-50",
         "border-2 border-emerald-400",
-        "shadow-[0_0_15px_rgba(16,185,129,0.3),0_0_30px_rgba(16,185,129,0.15)]"
+        "shadow-[0_0_15px_rgba(16,185,129,0.3),0_0_30px_rgba(16,185,129,0.15)]",
+        "hover:brightness-[1.03] transition-[filter]",
+        isAccepting && "opacity-70 pointer-events-none"
       )}
     >
       {/* Animated glow border */}
@@ -150,7 +165,10 @@ function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps
 
       {/* Decline button in top right */}
       <motion.button
-        onClick={handleDecline}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDecline();
+        }}
         disabled={isDeclining}
         className={cn(
           "absolute top-2 right-2 z-10 p-1.5 rounded-full transition-colors",
@@ -217,16 +235,6 @@ function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps
           </div>
         </div>
 
-        {/* Accept Button */}
-        <ChunkyButton
-          variant="success"
-          size="sm"
-          onClick={onAccept}
-          icon={<Gamepad2 className="w-4 h-4" />}
-          className="min-w-[100px]"
-        >
-          {t("extra.joinBtnExcl")}
-        </ChunkyButton>
       </div>
     </motion.div>
   );
