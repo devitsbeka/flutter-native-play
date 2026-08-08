@@ -469,7 +469,6 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                       <Plus className="w-4 h-4 text-white" />
                     </div>
                     <span>{t("extra.ssCreateNewRoom")}</span>
-                    <span className="ml-auto text-xs text-muted-foreground font-mono">/newroom</span>
                   </CommandItem>
                   <CommandItem 
                     onSelect={() => { 
