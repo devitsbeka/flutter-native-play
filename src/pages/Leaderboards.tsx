@@ -106,10 +106,10 @@ function RankBadge({ rank }: { rank: number }) {
   // everyone else keeps a quiet translucent circle.
   if (rank <= 3) {
     return (
-      <div className="relative shrink-0 w-11 h-11 flex items-center justify-center">
+      <div className="relative shrink-0 w-14 h-14 flex items-center justify-center">
         <img src={starIcon} alt="" className="absolute inset-0 w-full h-full object-contain select-none" draggable={false} />
         <span
-          className="relative font-black text-white text-[15px]"
+          className="relative font-black text-white text-lg"
           style={{ textShadow: "0 1px 2px rgba(146,64,14,0.7)", marginTop: "-1px" }}
         >
           {rank}
@@ -118,7 +118,7 @@ function RankBadge({ rank }: { rank: number }) {
     );
   }
   return (
-    <div className="shrink-0 w-9 h-9 mx-1 rounded-full flex items-center justify-center font-black text-white/90 text-sm"
+    <div className="shrink-0 w-9 h-9 mx-[10px] rounded-full flex items-center justify-center font-black text-white/90 text-sm"
       style={{ background: "rgba(255,255,255,0.18)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)" }}
     >
       {rank}
@@ -160,7 +160,7 @@ function BoardRow({
       }
     >
       <RankBadge rank={entry.rank} />
-      <div className="w-9 h-9 rounded-full bg-white p-[2px] shrink-0 shadow-sm">
+      <div className="w-11 h-11 rounded-full bg-white p-[2px] shrink-0 shadow-sm">
         <div className="w-full h-full rounded-full overflow-hidden">
           <SmartAvatar
             avatarUrl={entry.avatar_url}
@@ -287,19 +287,13 @@ export default function Leaderboards() {
             })}
           </div>
 
-          {/* Board card - fills the remaining height; only the row list
-              inside scrolls (scrollbar hidden) */}
-          <div
-            className="flex-1 min-h-0 rounded-[28px] p-3.5 flex flex-col"
-            style={{
-              background: "linear-gradient(180deg, #8B7BE8 0%, #6C5CD9 100%)",
-              boxShadow: "0 6px 0 #5243B0, 0 14px 34px rgba(108,92,217,0.4)",
-            }}
-          >
+          {/* Board - fills the remaining height with no panel behind the rows;
+              only the row list inside scrolls (scrollbar hidden) */}
+          <div className="flex-1 min-h-0 rounded-[28px] p-3.5 flex flex-col">
             <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide space-y-2">
               {isLoading && entries.length === 0 ? (
                 Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="h-12 rounded-full bg-white/15 animate-pulse" />
+                  <div key={i} className="h-14 rounded-full bg-white/15 animate-pulse" />
                 ))
               ) : entries.length === 0 ? (
                 <div className="py-12 text-center">
