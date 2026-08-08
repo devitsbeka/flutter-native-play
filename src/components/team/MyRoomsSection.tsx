@@ -12,7 +12,6 @@ import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
 import { supabase } from "@/integrations/supabase/client";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { Capacitor } from "@capacitor/core";
-import roomCoverPlaceholder from "@/assets/room-cover-placeholder.png";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 import { LiveBadge } from "@/components/social/LiveBadge";
@@ -363,7 +362,6 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
     : room.participants;
   
   // Always use the placeholder image
-  const coverImage = roomCoverPlaceholder;
   
   // Get gradient preset based on index
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
@@ -446,25 +444,6 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
             enableNoise={false}
             className="relative px-2.5 pb-2.5 pt-6 rounded-2xl"
           >
-            {/* Cover image with radial fade - flip based on index for variety */}
-            <div 
-              className="absolute inset-0 opacity-40 overflow-hidden"
-              style={{
-                maskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
-                WebkitMaskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
-              }}
-            >
-              <div 
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: `url(${coverImage})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  transform: `scaleX(${index % 2 === 0 ? 1 : -1}) scaleY(${index % 4 < 2 ? 1 : -1})`,
-                }}
-              />
-            </div>
-            
             {/* Top row - Avatars left, Status badge + menu right */}
             <div className="relative z-10 px-2 pb-4">
               <div className="flex items-start justify-between mb-8">
@@ -685,7 +664,6 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
       }))
     : room.participants;
   
-  const coverImage = roomCoverPlaceholder;
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
   const handleDragEnd = (_: any, info: PanInfo) => {
@@ -763,24 +741,6 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
             className="relative w-full h-full p-3 flex flex-col"
           >
             {/* Cover image with radial fade */}
-            <div 
-              className="absolute inset-0 opacity-30 overflow-hidden"
-              style={{
-                maskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
-                WebkitMaskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
-              }}
-            >
-              <div 
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: `url(${coverImage})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  transform: `scaleX(${index % 2 === 0 ? 1 : -1})`,
-                }}
-              />
-            </div>
-            
             {/* Top Row: Status Badge + Menu */}
             <div className="relative z-10 flex items-start justify-between">
               {/* Badge priority: TV > LIVE > New > Completed > Waiting */}
