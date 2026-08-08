@@ -105,7 +105,7 @@ function useMyRank(
   });
 }
 
-function RankBadge({ rank }: { rank: number }) {
+function RankBadge({ rank, onLight = false }: { rank: number; onLight?: boolean }) {
   // Top three get the golden star with the number set inside it;
   // everyone else keeps a quiet translucent circle.
   if (rank <= 3) {
@@ -124,8 +124,14 @@ function RankBadge({ rank }: { rank: number }) {
     );
   }
   return (
-    <div className="shrink-0 w-9 h-9 mx-[10px] rounded-full flex items-center justify-center font-black text-white/90 text-sm"
-      style={{ background: "rgba(255,255,255,0.18)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)" }}
+    <div
+      className={`shrink-0 w-9 h-9 mx-[10px] rounded-full flex items-center justify-center font-black text-sm ${
+        onLight ? "text-slate-500" : "text-white/90"
+      }`}
+      style={{
+        background: onLight ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.18)",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
+      }}
     >
       {rank}
     </div>
@@ -166,12 +172,12 @@ function BoardRow({
               boxShadow: "0 3px 0 #4C2AA6, 0 4px 14px rgba(109,63,224,0.45), inset 0 1px 0 rgba(255,255,255,0.35)",
             }
           : {
-              background: "linear-gradient(180deg, #79D8B2 0%, #4FBE92 100%)",
-              boxShadow: "0 3px 0 #339970, inset 0 1px 0 rgba(255,255,255,0.35)",
+              background: "linear-gradient(180deg, rgba(217,255,240,0.62) 0%, rgba(255,255,255,0.86) 100%)",
+              boxShadow: "0 3px 0 #E2F1EB, inset 0 1px 0 rgba(255,255,255,0.35)",
             }
       }
     >
-      <RankBadge rank={entry.rank} />
+      <RankBadge rank={entry.rank} onLight={!isMe} />
       <div className="w-11 h-11 rounded-full bg-white p-[2px] shrink-0 shadow-sm">
         <div className="w-full h-full rounded-full overflow-hidden">
           <SmartAvatar
@@ -192,10 +198,10 @@ function BoardRow({
           transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: entry.rank * 0.3 }}
         />
       )}
-      <span className="flex-1 min-w-0 truncate font-black text-white text-[15px] drop-shadow-sm">
+      <span className={`flex-1 min-w-0 truncate font-black text-[15px] ${isMe ? "text-white drop-shadow-sm" : "text-slate-700"}`}>
         {isMe ? youLabel : entry.nickname} {flag && <span className="text-sm">{flag}</span>}
       </span>
-      <span className="flex items-center gap-1.5 font-black text-white text-[15px] drop-shadow-sm shrink-0">
+      <span className={`flex items-center gap-1.5 font-black text-[15px] shrink-0 ${isMe ? "text-white drop-shadow-sm" : "text-slate-700"}`}>
         <img src={coinIcon} alt="" className="w-5 h-5 object-contain select-none" draggable={false} />
         {formatCompactNumber(entry.coins)}
       </span>
@@ -359,12 +365,12 @@ export default function Leaderboards() {
             >
               {isLoading && entries.length === 0 ? (
                 Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="h-14 rounded-full bg-white/15 animate-pulse" />
+                  <div key={i} className="h-14 rounded-full bg-white/50 animate-pulse" />
                 ))
               ) : entries.length === 0 ? (
                 <div className="py-12 text-center">
-                  <p className="text-white font-bold">{t("extra.nobodyYet")}</p>
-                  <p className="text-white/70 text-sm mt-1">{t("leaderboard.beTheFirst")}</p>
+                  <p className="text-slate-600 font-bold">{t("extra.nobodyYet")}</p>
+                  <p className="text-slate-500 text-sm mt-1">{t("leaderboard.beTheFirst")}</p>
                 </div>
               ) : (
                 entries.map((entry) => (
