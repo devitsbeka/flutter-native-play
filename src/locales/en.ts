@@ -2364,6 +2364,10 @@ export const en: KaTranslations = {
     allRoomsBtn: "All Rooms",
     playWithFriendsTv: "Play with friends on TV",
     playOnBigScreenTitle: "Play on the big screen",
+    playQuickGame: "Quick game",
+    playQuickGameDesc: "Random opponent and category",
+    playFriendsGame: "Play with friends",
+    playFriendsGameDesc: "Create a room and invite friends",
     nobodyYet: "Nobody yet",
     // Room Lobby
     playerRemovedFromRoom: "Player removed from room",
