@@ -17,6 +17,13 @@ const POWER_UP_ICONS: Record<PowerUpType, string> = {
 
 const POWER_UP_ORDER: PowerUpType[] = ["5050", "freeze", "replace", "time-drain"];
 
+const POWER_UP_NAME_KEYS: Record<PowerUpType, string> = {
+  "5050": "powerups.fiftyFifty.name",
+  freeze: "powerups.freeze.name",
+  replace: "powerups.replace.name",
+  "time-drain": "powerups.timeDrain.name",
+};
+
 interface MyPowersSectionProps {
   powerUps: Record<PowerUpType, number>;
   onPurchaseSingle: (powerType: PowerUpType) => Promise<void>;
@@ -47,11 +54,14 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canA
               onClick={() => onCardClick?.(type)}
               className="relative flex flex-col items-center gap-3 px-3 pt-7 pb-4 rounded-2xl liquid-glass cursor-pointer active:scale-95 transition-transform"
             >
-              <img 
-                src={POWER_UP_ICONS[type]} 
-                alt="" 
-                className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 object-contain" 
+              <img
+                src={POWER_UP_ICONS[type]}
+                alt=""
+                className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 object-contain"
               />
+              <span className="font-bold text-base text-foreground text-center leading-tight -mb-1">
+                {t(POWER_UP_NAME_KEYS[type])}
+              </span>
               <span className="font-bold text-lg text-foreground">
                 {count}
               </span>
