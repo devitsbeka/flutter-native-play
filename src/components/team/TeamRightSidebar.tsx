@@ -18,6 +18,8 @@ interface TeamRightSidebarProps {
   activeTab: string;
   onViewAllRooms: () => void;
   onViewAllTrivias: () => void;
+  /** Height of the page header the sidebar sits below, px */
+  topOffset?: number;
 }
 
 export function TeamRightSidebar({
@@ -28,6 +30,7 @@ export function TeamRightSidebar({
   activeTab,
   onViewAllRooms,
   onViewAllTrivias,
+  topOffset = 64,
 }: TeamRightSidebarProps) {
   const { t } = useLanguage();
   const { friends, onlineUsers } = useFriends();
@@ -39,7 +42,10 @@ export function TeamRightSidebar({
   return (
     <>
       <WeeklyChallengeModal open={showChallengeModal} onOpenChange={setShowChallengeModal} />
-    <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] sticky top-16 h-[calc(100vh-4rem)] border-l border-border/50 bg-background/50 backdrop-blur-sm">
+    <aside
+      className="hidden xl:flex flex-col w-[320px] min-w-[320px] sticky border-l border-border/50 bg-background/50 backdrop-blur-sm"
+      style={{ top: topOffset, height: `calc(100vh - ${topOffset}px)` }}
+    >
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Game Invitations Widget */}
         <GameInvitationsSection

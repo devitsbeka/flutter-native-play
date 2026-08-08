@@ -186,6 +186,21 @@ function TeamContentV2() {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showAllGamesModal, setShowAllGamesModal] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
+
+  // The page header hosts the friends reel, so its height varies by
+  // breakpoint/content — measure it so the sticky tab bar and the right
+  // sidebar can sit exactly below it.
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(64);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const update = () => setHeaderHeight(el.offsetHeight);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   const [activeTab, setActiveTab] = useState(() => {
     const tabFromUrl = searchParams.get("tab");
     return tabFromUrl === "explore" || tabFromUrl === "my-content" || tabFromUrl === "rooms"
@@ -643,15 +658,24 @@ function TeamContentV2() {
   return (
     <MainLayout showPlayButton={false} showBottomNav={!isCreationModalOpen}>
       {/* Full-width header - spans above the right sidebar too, icons on the
-          right like every other page header */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/30">
-        <div className="flex items-center justify-between gap-3 px-4 py-3">
+          right like every other page header; the friends reel rides the same
+          row on md+ so it sits as high as possible */}
+      <div ref={headerRef} className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/30">
+        <div className="flex items-center gap-3 px-4 py-2">
           {/* Left: Logo - aligned to left edge (lg+ shows it in the sidebar) */}
-          <div className="flex items-center gap-4 lg:hidden">
+          <div className="flex items-center gap-4 lg:hidden shrink-0">
             <MyTriviaLiveLogo responsive />
           </div>
 
-          <div className="flex items-center gap-1 ml-auto">
+          {/* Friends reel - shares the header row on md+ */}
+          <div className="hidden md:block flex-1 min-w-0">
+            <FriendsStoriesBar
+              onAddFriendClick={() => setShowAddFriendModal(true)}
+              onShowAllFriends={() => setShowAllFriendsModal(true)}
+            />
+          </div>
+
+          <div className="flex items-center gap-1 ml-auto shrink-0">
             {/* QR Scanner */}
             <motion.button
               whileHover={{ scale: 1.1 }}
@@ -665,26 +689,22 @@ function TeamContentV2() {
             <HeaderActions />
           </div>
         </div>
+
+        {/* Mobile: the reel gets its own row under the icons */}
+        <div className="md:hidden px-4">
+          <FriendsStoriesBar
+            onAddFriendClick={() => setShowAddFriendModal(true)}
+            onShowAllFriends={() => setShowAllFriendsModal(true)}
+          />
+        </div>
       </div>
 
       {/* Flex wrapper for main content + right sidebar */}
       <div className="flex min-h-full">
         {/* Main Content Area */}
         <div id="team-main-content" className="flex-1 flex flex-col pb-24 lg:pb-0 bg-background min-w-0">
-          {/* STICKY: Friends Bar, Tabs - sits below the page header */}
-          <div className="sticky top-16 z-20 bg-background/95 backdrop-blur-md w-full max-w-full">
-              <div className="px-4">
-
-                {/* Friends Bar - show on all tabs */}
-                <div className="py-2">
-                  <FriendsStoriesBar
-                    onAddFriendClick={() => setShowAddFriendModal(true)}
-                    onShowAllFriends={() => setShowAllFriendsModal(true)}
-                  />
-                </div>
-
-              </div>
-
+          {/* STICKY: Tabs - sits below the page header */}
+          <div className="sticky z-20 bg-background/95 backdrop-blur-md w-full max-w-full" style={{ top: headerHeight }}>
               {/* Unified Tab Bar - Full Width */}
               <div className="px-4 w-full md:max-w-[1115px] mx-auto pt-3 pb-2 overflow-hidden">
                 <div className="flex items-center justify-between gap-3">
@@ -832,6 +852,7 @@ function TeamContentV2() {
 
           {/* Desktop Right Sidebar - Shows on xl screens only */}
           <TeamRightSidebar
+            topOffset={headerHeight}
             onAcceptInvitation={handleAcceptInvitation}
             onJoinRoom={handleJoinFromInvitation}
             onOpenTV={async () => {

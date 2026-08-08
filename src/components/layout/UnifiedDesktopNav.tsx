@@ -9,8 +9,7 @@ import {
   Trophy,
   Users,
   Lock,
-  ChevronsLeft,
-  ChevronsRight,
+  PanelLeft,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useVipStatus } from "@/hooks/useVipStatus";
@@ -204,30 +203,36 @@ export function UnifiedDesktopNav({
     <>
       <nav className={`hidden md:flex flex-col w-[72px] min-w-[72px] ${collapsed ? "" : "lg:w-[220px] lg:min-w-[220px]"} h-screen sticky top-0 border-r border-purple-900/20 bg-white/50 backdrop-blur-xl pt-[14px] lg:pt-4 pb-4 transition-all duration-200 z-50`}>
 
-        {/* Collapse toggle (lg+): wide -> top-right corner, collapsed -> centered */}
-        <button
-          onClick={toggleCollapsed}
-          className={`hidden lg:flex items-center justify-center w-7 h-7 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors ${
-            collapsed ? "mx-auto mb-3" : "absolute top-4 right-2"
-          }`}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
-        </button>
-
-        {/* Logo - at top (wide sidebar only; the rail is too narrow) */}
-        <button
-          onClick={() => navigate("/")}
-          className={`${collapsed ? "hidden" : "hidden lg:flex"} px-4 mb-4 items-center cursor-pointer`}
-          aria-label="MyTrivia"
-        >
-          <img
-            src={logoDark}
-            alt="MyTrivia"
-            className="h-10 w-auto select-none"
-            draggable={false}
-          />
-        </button>
+        {/* Logo + collapse toggle (lg+). Expanded: wordmark left, panel
+            toggle right. Collapsed: crown-only logo with the centered
+            toggle stacked under it. */}
+        {collapsed ? (
+          <div className="hidden lg:flex flex-col items-center gap-2 mb-4">
+            <button onClick={() => navigate("/")} aria-label="MyTrivia" className="cursor-pointer">
+              <img src={crownIcon} alt="MyTrivia" className="h-8 w-8 object-contain select-none" draggable={false} />
+            </button>
+            <button
+              onClick={toggleCollapsed}
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              aria-label="Expand sidebar"
+            >
+              <PanelLeft className="w-5 h-5" strokeWidth={1.5} />
+            </button>
+          </div>
+        ) : (
+          <div className="hidden lg:flex items-center justify-between px-4 mb-4">
+            <button onClick={() => navigate("/")} aria-label="MyTrivia" className="flex items-center cursor-pointer">
+              <img src={logoDark} alt="MyTrivia" className="h-10 w-auto select-none" draggable={false} />
+            </button>
+            <button
+              onClick={toggleCollapsed}
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              aria-label="Collapse sidebar"
+            >
+              <PanelLeft className="w-5 h-5" strokeWidth={1.5} />
+            </button>
+          </div>
+        )}
 
         {/* Subtle separator between logo and navigation */}
         <div className={`${collapsed ? "hidden" : "hidden lg:block"} mx-4 mb-4 border-t border-purple-900/10`} />
