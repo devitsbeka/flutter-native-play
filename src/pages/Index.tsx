@@ -1050,9 +1050,12 @@ export default function Index() {
 
             {/* md to xl layout: Avatar centered (cards now fixed on right side) - LOGGED IN USERS ONLY */}
             {user && <div className="hidden md:flex xl:hidden items-center justify-center w-full h-full px-4 lg:-ml-[170px]">
-              {/* Avatar + Info */}
-              <motion.div 
-                className="flex flex-col items-center"
+              {/* Avatar + Info. Below lg the action bubbles hang 75px above the
+                  avatar (top: -75); pad the centered block so they stay inside
+                  this overflow-hidden area instead of clipping under the
+                  friends strip. */}
+              <motion.div
+                className="flex flex-col items-center pt-20 lg:pt-0"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, type: "spring" }}

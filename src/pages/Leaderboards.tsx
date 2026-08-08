@@ -182,9 +182,19 @@ function BoardRow({
   );
 }
 
+// The player's country, named in the app language (e.g. საქართველო, not
+// "Country"); falls back to the generic tab label for unknown codes.
+function localCountryName(countryCode: string, language: string, fallback: string): string {
+  try {
+    return new Intl.DisplayNames([language], { type: "region" }).of(countryCode.toUpperCase()) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function Leaderboards() {
   const { user, profile } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { openProfile } = usePlayerProfile();
   const navigate = useNavigate();
   const location = useLocation();
@@ -231,7 +241,9 @@ export default function Leaderboards() {
   }, [user]);
 
   const tabs: { id: Scope; label: string }[] = [
-    ...(countryCode ? [{ id: "local" as Scope, label: `${t("leaderboard.localTab")} ${getCountryFlag(countryCode)}` }] : []),
+    ...(countryCode
+      ? [{ id: "local" as Scope, label: `${localCountryName(countryCode, language, t("leaderboard.localTab"))} ${getCountryFlag(countryCode)}` }]
+      : []),
     { id: "global", label: `${t("leaderboard.global")} 🌍` },
   ];
 
