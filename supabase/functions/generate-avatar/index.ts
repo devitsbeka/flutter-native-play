@@ -12,11 +12,31 @@ const FAL_KEY = Deno.env.get('FAL_KEY');
 
 interface AvatarRequest {
   imageUrl: string;
+  // "scene" (default): 16:9 homepage hero scene using the DB prompt.
+  // "portrait": square public mini avatar of the same stylized character.
+  mode?: "scene" | "portrait";
 }
 
-// GPT Image 2 on fal: reference-image edit, high quality, 16:9 close to
-// 1920x1080 (fal requires dimensions in multiples of 16, so 1088).
-async function generateWithFal(prompt: string, imageUrl: string): Promise<string> {
+// The public circle avatar: same character language as the scene, but a
+// centered square head-and-shoulders portrait.
+const PORTRAIT_PROMPT = `Create a square stylized 3D game avatar portrait using the uploaded face photo as the identity reference.
+
+Head and shoulders, centered, facing the viewer with a warm confident smile.
+
+Preserve the person's recognizable facial identity: face shape, skin tone, hairstyle, hair color, facial hair, eyebrows, eyes, nose, lips and proportions. The result should clearly resemble the same person as a polished stylized 3D game character, not a photorealistic human and not a generic replacement.
+
+Use the premium casual-game character language of the MyTrivia avatar scenes: soft rounded forms, subtly larger head, expressive eyes, detailed stylized hair, soft skin shading, polished 3D rendering. Not childish, not plastic, not uncanny.
+
+Dress the character in a premium purple hoodie with a small gold crown accent.
+
+Soft pastel lavender radial background (#E9CCFF) with a gentle vignette, nothing else in frame.
+
+No text, no UI, no logos, no frame, no watermark.`;
+
+// GPT Image 2 on fal: reference-image edit. Scenes render 16:9 close to
+// 1920x1080 (fal requires multiple-of-16 dimensions, so 1088); portraits
+// render square at medium quality — plenty for the circle avatar sizes.
+async function generateWithFal(prompt: string, imageUrl: string, mode: "scene" | "portrait"): Promise<string> {
   const response = await fetch("https://fal.run/openai/gpt-image-2/edit", {
     method: "POST",
     headers: {
@@ -26,8 +46,8 @@ async function generateWithFal(prompt: string, imageUrl: string): Promise<string
     body: JSON.stringify({
       prompt,
       image_urls: [imageUrl],
-      image_size: { width: 1920, height: 1088 },
-      quality: "high",
+      image_size: mode === "portrait" ? { width: 1024, height: 1024 } : { width: 1920, height: 1088 },
+      quality: mode === "portrait" ? "medium" : "high",
       num_images: 1,
     }),
   });
@@ -85,13 +105,13 @@ serve(async (req) => {
       throw new Error("AI_API_KEY is not configured");
     }
 
-    const { imageUrl }: AvatarRequest = await req.json();
+    const { imageUrl, mode = "scene" }: AvatarRequest = await req.json();
 
     if (!imageUrl) {
       throw new Error("imageUrl is required");
     }
 
-    console.log("Starting avatar generation for:", imageUrl.substring(0, 100));
+    console.log(`Starting avatar generation (${mode}) for:`, imageUrl.substring(0, 100));
 
     // Fetch settings from database
     let prompt = DEFAULT_PROMPT;
@@ -119,9 +139,14 @@ serve(async (req) => {
       }
     }
 
+    // Portraits use their fixed prompt; scenes use the DB-configured one
+    if (mode === "portrait") {
+      prompt = PORTRAIT_PROMPT;
+    }
+
     // fal.ai GPT Image 2 path (preferred when configured)
     if (FAL_KEY) {
-      const falImage = await generateWithFal(prompt, imageUrl);
+      const falImage = await generateWithFal(prompt, imageUrl, mode);
       console.log("Avatar generated successfully via fal.ai");
       return new Response(
         JSON.stringify({ success: true, avatarUrl: falImage }),

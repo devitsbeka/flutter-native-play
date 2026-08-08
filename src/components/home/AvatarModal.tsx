@@ -20,6 +20,7 @@ import { t } from "@/lib/i18n";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { generatePublicPortrait } from "@/utils/portraitAvatar";
 
 // Import mascot avatars
 import mascotAvatar1 from '@/assets/avatars/mascot-avatar-1.png';
@@ -380,8 +381,9 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
 
       const finalUrl = urlData.publicUrl;
 
-      // The circular avatars keep showing the person — store the original
-      // uploaded photo as the profile avatar alongside the scene
+      // The public circle avatar: a mini stylized portrait of the same
+      // character as the scene, generated from the uploaded photo. Falls
+      // back to the photo itself if portrait generation fails.
       let profileAvatarUrl: string | null = null;
       if (uploadedImage) {
         try {
@@ -392,6 +394,8 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
             .upload(photoFileName, photoBlob, { upsert: true, contentType: 'image/png' });
           if (!photoError) {
             profileAvatarUrl = supabase.storage.from("avatars").getPublicUrl(photoFileName).data.publicUrl;
+            const portraitUrl = await generatePublicPortrait(user.id, profileAvatarUrl);
+            if (portraitUrl) profileAvatarUrl = portraitUrl;
           }
         } catch (photoErr) {
           console.warn("Saving original photo failed, keeping current avatar:", photoErr);

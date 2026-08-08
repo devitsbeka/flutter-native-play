@@ -2,9 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 // The user's personalized 16:9 homepage scene, if they have generated one.
-// Scenes are saved as `scene_<ts>.png` files and recorded as the current row
-// in avatar_generations — the filename marker distinguishes them from the
-// square portrait avatars older generations produced.
+// Scenes are saved as `scene_<ts>.png` files in avatar_generations; the
+// newest scene row wins regardless of is_current, so switching the public
+// mini avatar on the profile never changes the homepage background.
 export function useUserScene(userId: string | undefined) {
   return useQuery({
     queryKey: ["user-scene", userId],
@@ -14,10 +14,11 @@ export function useUserScene(userId: string | undefined) {
         .from("avatar_generations")
         .select("avatar_url")
         .eq("user_id", userId)
-        .eq("is_current", true)
+        .like("avatar_url", "%/scene_%")
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
-      const url = data?.avatar_url || null;
-      return url && url.includes("/scene_") ? url : null;
+      return data?.avatar_url || null;
     },
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
