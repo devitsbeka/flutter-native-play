@@ -794,7 +794,8 @@ export default function Index() {
       >
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
         {/* Personalized scene as the full-bleed page background (xl+); the
-            header, friends strip and cards float over it */}
+            header, friends strip and cards float over it. Clicking the scene
+            itself opens the avatar studio so the character can be changed. */}
         {user && sceneUrl && (
           <motion.img
             src={sceneUrl}
@@ -802,7 +803,8 @@ export default function Index() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="hidden xl:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
+            onClick={() => openAvatarModal()}
+            className="hidden xl:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none cursor-pointer"
             draggable={false}
           />
         )}

@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
+import { X } from "lucide-react";
 import { formatCompactNumber } from "@/lib/utils";
 import { useMissionStreak } from "@/hooks/useMissionStreak";
 import coinChunky from "@/assets/figma-home/coin-chunky.png";
@@ -16,10 +17,14 @@ const CARD_SHADOW = "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgb
 const STAT_SHADOW = "0px 3.62px 0px 0px #d8d0e8, 0px 5.43px 14.48px 0px rgba(0,0,0,0.1)";
 const STAT_GRADIENT = "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))";
 
-// Streak strip geometry from the design (circle lefts / label centers)
+// Streak strip geometry from the design (circle lefts / label centers).
+// The design has no Friday slot — Mon..Thu, then Sat, Sunday is the gift.
 const CIRCLE_X = [21.88, 63.19, 105.44, 148.63, 189.01];
 const LABEL_X = [35.5, 77.07, 119.06, 163.13, 202.89];
 const DAY_LABELS = ["ორშ", "სამ", "ოთხ", "ხუთ", "შაბ"];
+const SLOT_WEEKDAYS = [0, 1, 2, 3, 5]; // 0 = Monday
+
+type DayState = "done" | "failed" | "pending";
 
 interface SceneHeroProps {
   nickname: string;
@@ -56,8 +61,24 @@ export function SceneHero({
   onMissionsClick,
   playButton,
 }: SceneHeroProps) {
-  const { currentStreak } = useMissionStreak();
-  const doneCount = Math.min(Math.max(currentStreak, 0), DAY_LABELS.length);
+  const { streak, currentStreak } = useMissionStreak();
+
+  // Per-day streak state for the current week: a day is "done" when the
+  // running streak covers it, "failed" when it's already past and wasn't,
+  // and "pending" when it's today (not yet done) or still ahead.
+  const today = new Date();
+  const todayIdx = (today.getDay() + 6) % 7; // 0 = Monday
+  const lastDone = streak?.last_completion_date || null;
+  const dayState = (weekday: number): DayState => {
+    if (weekday > todayIdx) return "pending";
+    if (lastDone && currentStreak > 0) {
+      const dayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (todayIdx - weekday));
+      const last = new Date(`${lastDone}T00:00:00`);
+      const diff = Math.round((last.getTime() - dayDate.getTime()) / 86_400_000);
+      if (diff >= 0 && diff < currentStreak) return "done";
+    }
+    return weekday === todayIdx ? "pending" : "failed";
+  };
 
   return (
     <div className="relative w-full h-full pointer-events-none">
@@ -156,26 +177,28 @@ export function SceneHero({
           style={{ boxShadow: CARD_SHADOW }}
         >
           {DAY_LABELS.map((label, i) => {
-            const done = i < doneCount;
+            const state = dayState(SLOT_WEEKDAYS[i]);
+            const isToday = SLOT_WEEKDAYS[i] === todayIdx;
             return (
               <div key={label} className="contents">
                 <div
-                  className={`absolute top-[21.99px] flex size-[27.33px] items-center justify-center rounded-full border-[2.73px] border-solid border-white ${
-                    done
-                      ? "bg-[#10b981] drop-shadow-[0px_16.4px_10.93px_rgba(10,13,18,0.08)]"
-                      : "bg-[#e2d7e9] drop-shadow-[0px_16.4px_10.93px_rgba(10,13,18,0.08)]"
-                  }`}
+                  className={`absolute top-[21.99px] flex size-[27.33px] items-center justify-center rounded-full border-[2.73px] border-solid border-white drop-shadow-[0px_16.4px_10.93px_rgba(10,13,18,0.08)] ${
+                    state === "done" ? "bg-[#10b981]" : "bg-[#e2d7e9]"
+                  } ${isToday ? "ring-2 ring-[#9061f9]/70 ring-offset-1 ring-offset-[#fcf7ff]" : ""}`}
                   style={{ left: CIRCLE_X[i] }}
                 >
-                  {done && (
+                  {state === "done" && (
                     <div className="relative size-[16.4px]">
                       <img alt="" className="absolute block inset-0 max-w-none size-full" src={checkStreak} />
                     </div>
                   )}
+                  {state === "failed" && (
+                    <X className="size-[14px] text-[#b7a5c4]" strokeWidth={3} />
+                  )}
                 </div>
                 <p
                   className={`absolute top-[58.19px] -translate-x-1/2 text-center text-[13.15px] font-semibold text-[#402666] whitespace-nowrap ${
-                    done ? "" : "opacity-50"
+                    state === "done" || isToday ? "" : "opacity-50"
                   }`}
                   style={{ left: LABEL_X[i] }}
                 >
@@ -201,13 +224,13 @@ export function SceneHero({
           className="absolute left-0 top-[300px] h-[60px] w-[298px] overflow-hidden rounded-[24px] bg-[#fcf7ff] text-left"
           style={{ boxShadow: CARD_SHADOW }}
         >
-          <div className="absolute left-[19.65px] top-[18.45px] size-[29.07px] rotate-[1.86deg] shadow-[0px_2.51px_3.76px_0px_rgba(0,0,0,0.07),0px_1.25px_2.51px_0px_rgba(0,0,0,0.06)]">
+          <div className="absolute left-[19.65px] top-1/2 -translate-y-1/2 size-[29.07px] rotate-[1.86deg]">
             <img alt="" className="absolute inset-0 max-w-none object-contain pointer-events-none size-full" src={missionsCrystal} />
           </div>
-          <p className="absolute left-[56px] top-[22.81px] text-[14px] font-semibold text-[#402666] whitespace-nowrap">
+          <p className="absolute left-[56px] top-1/2 -translate-y-1/2 text-[14px] font-semibold text-[#402666] whitespace-nowrap">
             მისიები
           </p>
-          <div className="absolute left-[251px] top-[21.14px] flex h-[20.71px] w-[29px] items-center justify-center rounded-full border-[1.475px] border-solid border-[#d5d0d8]">
+          <div className="absolute left-[251px] top-1/2 flex h-[20.71px] w-[29px] -translate-y-1/2 items-center justify-center rounded-full border-[1.475px] border-solid border-[#d5d0d8]">
             <p className="font-['Nunito'] font-bold text-[11.6px] leading-[11.8px] tracking-[-0.118px] text-[#9783a3] whitespace-nowrap">
               {missionsCount}
             </p>
