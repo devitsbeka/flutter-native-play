@@ -335,6 +335,10 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
   // LIVE badge: Players in room, no TV
   const showTVBadge = hasPlayersInRoom && hasTVSession;
   const showLiveBadge = hasPlayersInRoom && !hasTVSession;
+
+  // Rooms that were ever played on TV keep their session id; live ones have
+  // an active status — either way the footer gets a TV marker.
+  const playedOnTV = !!room.tv_session_id || hasTVSession;
   
   // For display: use TV active players if there's an active TV session with players
   const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
@@ -566,6 +570,7 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
             <div className="bg-white/15 backdrop-blur-md border border-white/20 px-4 py-3 rounded-xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
+                  {playedOnTV && <QuizCategoryIcon iconSlug="retro-tv" size={18} className="w-[18px] h-[18px]" />}
                   <Users className="w-4 h-4 text-white/80" />
                   <span className="text-sm font-bold text-white">{displayPlayerCount}</span>
                 </div>
@@ -640,6 +645,10 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
   // Badge logic: TV badge if players in room + TV connected, LIVE if players in room without TV
   const showTVBadge = hasPlayersInRoom && hasTVSession;
   const showLiveBadge = hasPlayersInRoom && !hasTVSession;
+
+  // Rooms that were ever played on TV keep their session id; live ones have
+  // an active status — either way the footer gets a TV marker.
+  const playedOnTV = !!room.tv_session_id || hasTVSession;
   
   // For display: use TV active players if there's an active TV session
   const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
@@ -825,12 +834,19 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
             {/* Bottom: Glass container with player count + avatars */}
             <div className="relative z-10">
               <div className="bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2.5 flex items-center justify-between">
-                {/* Left: Player count (use TV active players if available) */}
-                <div className="flex items-center gap-2 bg-white/20 rounded-lg px-2.5 py-1.5">
-                  <Users className="w-4 h-4 text-white" />
-                  <span className="text-white font-bold text-sm">
-                    {displayPlayerCount}
-                  </span>
+                {/* Left: TV marker (played or live on TV) + player count (TV active players if available) */}
+                <div className="flex items-center gap-1.5">
+                  {playedOnTV && (
+                    <div className="flex items-center bg-white/20 rounded-lg px-2 py-1.5">
+                      <QuizCategoryIcon iconSlug="retro-tv" size={18} className="w-[18px] h-[18px]" />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 bg-white/20 rounded-lg px-2.5 py-1.5">
+                    <Users className="w-4 h-4 text-white" />
+                    <span className="text-white font-bold text-sm">
+                      {displayPlayerCount}
+                    </span>
+                  </div>
                 </div>
                 
                 {/* Right: Avatars (use TV players if session is active) */}
