@@ -9,6 +9,8 @@ import {
   Trophy,
   Users,
   Lock,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useVipStatus } from "@/hooks/useVipStatus";
@@ -72,6 +74,23 @@ export function UnifiedDesktopNav({
   // Guest detection
   const isGuest = !user && !profile;
   
+  // Collapsed: the wide (lg+) sidebar shrinks to the icon rail; persisted
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("sidebar_collapsed") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      try {
+        localStorage.setItem("sidebar_collapsed", prev ? "0" : "1");
+      } catch { /* ignore */ }
+      return !prev;
+    });
+  };
+
   // Modal states
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingNavPath, setPendingNavPath] = useState<string | null>(null);
@@ -169,12 +188,12 @@ export function UnifiedDesktopNav({
                 </span>
               )}
             </div>
-            {/* Label - hidden on small tablet (md), visible on larger tablet/desktop (lg) */}
-            <span className="text-[15px] hidden lg:inline">{label}</span>
+            {/* Label - hidden on small tablet (md) and when collapsed */}
+            <span className={`text-[15px] hidden ${collapsed ? "" : "lg:inline"}`}>{label}</span>
           </motion.button>
         </TooltipTrigger>
-        {/* Tooltip only shows on small tablet (md) where label is hidden */}
-        <TooltipContent side="right" className="lg:hidden">
+        {/* Tooltip shows wherever the label is hidden */}
+        <TooltipContent side="right" className={collapsed ? "" : "lg:hidden"}>
           {isLocked ? `${label} 🔒` : label}
         </TooltipContent>
       </Tooltip>
@@ -183,12 +202,23 @@ export function UnifiedDesktopNav({
 
   return (
     <>
-      <nav className="hidden md:flex flex-col w-[72px] lg:w-[220px] min-w-[72px] lg:min-w-[220px] h-screen sticky top-0 border-r border-purple-900/20 bg-white/50 backdrop-blur-xl pt-[14px] lg:pt-4 pb-4 transition-all duration-200 z-50">
+      <nav className={`hidden md:flex flex-col w-[72px] min-w-[72px] ${collapsed ? "" : "lg:w-[220px] lg:min-w-[220px]"} h-screen sticky top-0 border-r border-purple-900/20 bg-white/50 backdrop-blur-xl pt-[14px] lg:pt-4 pb-4 transition-all duration-200 z-50`}>
 
-        {/* Logo - at top (wide sidebar only; the tablet rail is too narrow) */}
+        {/* Collapse toggle (lg+): wide -> top-right corner, collapsed -> centered */}
+        <button
+          onClick={toggleCollapsed}
+          className={`hidden lg:flex items-center justify-center w-7 h-7 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors ${
+            collapsed ? "mx-auto mb-3" : "absolute top-4 right-2"
+          }`}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
+        </button>
+
+        {/* Logo - at top (wide sidebar only; the rail is too narrow) */}
         <button
           onClick={() => navigate("/")}
-          className="hidden lg:flex px-4 mb-4 items-center cursor-pointer"
+          className={`${collapsed ? "hidden" : "hidden lg:flex"} px-4 mb-4 items-center cursor-pointer`}
           aria-label="MyTrivia"
         >
           <img
@@ -200,7 +230,7 @@ export function UnifiedDesktopNav({
         </button>
 
         {/* Subtle separator between logo and navigation */}
-        <div className="hidden lg:block mx-4 mb-4 border-t border-purple-900/10" />
+        <div className={`${collapsed ? "hidden" : "hidden lg:block"} mx-4 mb-4 border-t border-purple-900/10`} />
 
         {/* Main Navigation */}
         <div className="px-2 lg:px-3 space-y-1">
@@ -229,7 +259,7 @@ export function UnifiedDesktopNav({
 
         {/* Promo Card - Desktop only, guests only */}
         {!profile && (
-          <div className="hidden lg:block px-3 mt-auto mb-4">
+          <div className={`${collapsed ? "hidden" : "hidden lg:block"} px-3 mt-auto mb-4`}>
             <motion.button
               onClick={() => navigate("/auth")}
               initial={{ opacity: 0, y: 10 }}
@@ -271,8 +301,8 @@ export function UnifiedDesktopNav({
         {/* Bottom Section - profile */}
         <div className={`px-2 lg:px-3 space-y-2 ${profile ? 'mt-auto' : ''}`}>
           {/* Profile Button - at the very bottom */}
-          {/* Tablet rail: avatar only */}
-          <div className="md:flex lg:hidden items-center justify-center">
+          {/* Icon rail (tablet, or collapsed desktop): avatar only */}
+          <div className={`md:flex ${collapsed ? "" : "lg:hidden"} items-center justify-center`}>
             <div
               className={`relative rounded-full p-1 w-12 h-12 aspect-square flex items-center justify-center cursor-pointer ${
                 isProUser ? "ring-2 ring-[#E3BC37]" : ""
@@ -304,7 +334,7 @@ export function UnifiedDesktopNav({
               prefetchRoute("/profile");
               navigate("/profile");
             }}
-            className="hidden lg:flex w-full items-center gap-3 px-3 py-2.5 rounded-full text-foreground transition-colors"
+            className={`${collapsed ? "hidden" : "hidden lg:flex"} w-full items-center gap-3 px-3 py-2.5 rounded-full text-foreground transition-colors`}
             style={{
               background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
               boxShadow: "0 3px 0 #D8D0E8, 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1)",
