@@ -216,6 +216,7 @@ export const ka = {
     party: "Party",
     otherGames: "სხვა თამაშები",
     settings: "პარამეტრები",
+    accountSettings: "ანგარიშის მართვა",
     help: "დახმარება",
     privacy: "კონფიდენციალურობა",
     signOut: "გამოსვლა",

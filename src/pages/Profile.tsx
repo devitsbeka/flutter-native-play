@@ -246,7 +246,7 @@ export default function Profile() {
                 className="space-y-3"
               >
                 {[
-                  { icon: Settings, label: t("menu.settings"), path: "/settings" },
+                  { icon: Settings, label: t("menu.accountSettings"), path: "/settings" },
                   { icon: HelpCircle, label: t("menu.help"), path: "/support" },
                   { icon: Shield, label: t("menu.privacy"), path: "/privacy-policy" },
                   { icon: FileText, label: t("extra.termsOfService"), path: "/terms" },
