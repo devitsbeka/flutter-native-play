@@ -3,6 +3,7 @@ import { ShopItem } from "@/hooks/useShopData";
 import { ShopItemCard } from "./ShopItemCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PowerUpsSummary } from "./PowerUpsSummary";
+import { cn } from "@/lib/utils";
 
 interface ShopProductGridProps {
   sectionId?: string;
@@ -27,9 +28,16 @@ export function ShopProductGrid({
 }: ShopProductGridProps) {
   const { t } = useLanguage();
 
+  const count = items.length;
+  // Rows must hold 1, 2 or 4 cards — never 3. Sections whose count works out
+  // evenly (or leaves a single leftover) get 4 columns on desktop; otherwise
+  // they stay 2-wide. An odd last item stretches into a full-width featured
+  // card instead of dangling in a half-empty row.
+  const fourCols = count % 4 === 0 || count % 4 === 1;
+
   return (
     <motion.section
-      className="mx-3 sm:mx-4 mb-4 rounded-3xl border border-white/60 bg-white/55 p-2.5 sm:p-3 backdrop-blur-sm shadow-[0_8px_24px_rgba(102,51,153,0.08)]"
+      className="mx-3 sm:mx-4 mb-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -43,21 +51,23 @@ export function ShopProductGrid({
       </div>
 
       {/* Products Grid */}
-      <div>
-        {/* 2 per line on phones, 4 on wide screens — never an awkward 3 */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-          {items.map((item) => {
-            // Real-money (lari) packs are always purchasable — gems balance is irrelevant
-            const canAfford = item.currency === "lari" || gems >= item.price;
-            const isPurchased = purchasedItems.has(item.id);
-            const isFrameOwned = item.frameId
-              ? isFrameUnlocked(item.frameId)
-              : false;
-            const isOwned = isPurchased || isFrameOwned;
+      <div className={cn("grid grid-cols-2 gap-2", fourCols && "lg:grid-cols-4")}>
+        {items.map((item, index) => {
+          // Real-money (lari) packs are always purchasable — gems balance is irrelevant
+          const canAfford = item.currency === "lari" || gems >= item.price;
+          const isPurchased = purchasedItems.has(item.id);
+          const isFrameOwned = item.frameId
+            ? isFrameUnlocked(item.frameId)
+            : false;
+          const isOwned = isPurchased || isFrameOwned;
+          const isFeatured = index === count - 1 && count % 2 === 1;
 
-            return (
+          return (
+            <div
+              key={item.id}
+              className={cn(isFeatured && "col-span-2", isFeatured && fourCols && "lg:col-span-4")}
+            >
               <ShopItemCard
-                key={item.id}
                 id={item.id}
                 name={item.name}
                 description={item.description}
@@ -71,11 +81,12 @@ export function ShopProductGrid({
                 isLoading={isPurchasing === item.id}
                 canAfford={canAfford}
                 showDescription={true}
+                featured={isFeatured}
                 onClick={() => !isOwned && onItemClick(item)}
               />
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
     </motion.section>
   );

@@ -179,7 +179,7 @@ export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick }: Dai
 
   return (
     <motion.section
-      className="mx-3 sm:mx-4 mb-4 rounded-3xl border border-white/60 bg-white/55 p-2.5 sm:p-3 backdrop-blur-sm shadow-[0_8px_24px_rgba(102,51,153,0.08)]"
+      className="mx-3 sm:mx-4 mb-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}

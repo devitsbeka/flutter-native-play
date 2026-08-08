@@ -24,6 +24,8 @@ export interface ShopItemCardProps {
   canAfford?: boolean;
   index?: number;
   showDescription?: boolean;
+  /** Full-row horizontal card — used when a section's odd last item stretches across the row. */
+  featured?: boolean;
   onClick: () => void;
 }
 
@@ -39,6 +41,7 @@ export function ShopItemCard({
   isLoading = false,
   canAfford = true,
   showDescription = true,
+  featured = false,
   onClick,
 }: ShopItemCardProps) {
   const { t } = useLanguage();
@@ -90,6 +93,101 @@ export function ShopItemCard({
         : !isPurchased && badge === "limited"
           ? "ring-2 ring-orange-400/90 shadow-[0_10px_28px_-8px_rgba(249,115,22,0.5)]"
           : "";
+
+  // Shared by both the vertical and the featured horizontal layout
+  const actionBlock = isPurchased ? (
+    <div className="flex items-center justify-center gap-1 text-success font-bold text-sm px-4 py-2 rounded-full bg-success/10">
+      <Check className="w-5 h-5" />
+      <span>{t("common.owned")}</span>
+    </div>
+  ) : isLoading ? (
+    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  ) : (
+    <>
+      {isLari ? (
+        <span className="font-bold text-base sm:text-lg text-pink-600 dark:text-pink-400">{formatPrice(price)}</span>
+      ) : (
+        <div className="flex items-center justify-center gap-1">
+          <img src={currencyIcon!} alt="" width={24} height={24} loading="lazy" decoding="async" className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="font-bold text-sm sm:text-base text-gray-800">{price}</span>
+        </div>
+      )}
+      <motion.button
+        onClick={onClick}
+        disabled={isPurchased || isLoading}
+        className="px-4 py-1.5 rounded-full font-bold text-xs text-white"
+        style={{
+          background: "#00DDA3",
+          boxShadow: "0 3px 0 #00A87C",
+        }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95, y: 2 }}
+      >
+        {t('shop.buy')}
+      </motion.button>
+    </>
+  );
+
+  if (featured) {
+    return (
+      <div className="relative pt-3">
+        {badgeStyle && !isPurchased && (
+          <div
+            className="absolute top-0 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white z-10 motion-safe:animate-pulse-soft"
+            style={{ background: badgeStyle.bg, boxShadow: badgeStyle.shadow }}
+          >
+            {getBadgeText(badgeStyle.textKey)}
+          </div>
+        )}
+        {savings && !isPurchased && (
+          <div
+            className="absolute top-0 left-3 px-2 py-0.5 rounded-full text-[10px] font-bold text-amber-900 z-10"
+            style={{
+              background: "linear-gradient(180deg, hsl(50 95% 65%) 0%, hsl(45 90% 55%) 100%)",
+              boxShadow: "0 2px 0 hsl(40 80% 45%)",
+            }}
+          >
+            -{savings}%
+          </div>
+        )}
+
+        <div
+          className={cn(
+            "w-full rounded-2xl transition-all relative overflow-hidden flex items-center gap-3 text-left",
+            "px-3.5 sm:px-4 py-3.5 min-h-[100px]",
+            !isPurchased && canAfford && "liquid-glass",
+            dealRing
+          )}
+          style={{
+            background: isPurchased
+              ? "linear-gradient(180deg, hsl(150 70% 92%) 0%, hsl(145 65% 85%) 100%)"
+              : !canAfford
+              ? "hsl(var(--muted))"
+              : undefined,
+            boxShadow: isPurchased
+              ? "0 4px 0 hsl(145 60% 70%)"
+              : !canAfford
+              ? "0 3px 0 hsl(var(--border))"
+              : undefined,
+            border: isPurchased ? "2px solid hsl(145 70% 50%)" : undefined,
+          }}
+        >
+          <div className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 flex items-center justify-center">
+            <div className="[&>img]:w-full [&>img]:h-full [&>img]:object-contain [&>svg]:w-full [&>svg]:h-full">
+              {icon}
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900 font-bold text-sm sm:text-base leading-tight mb-0.5">{name}</h3>
+            {showDescription && description && (
+              <p className="text-gray-500 text-[11px] sm:text-xs leading-snug line-clamp-2">{description}</p>
+            )}
+          </div>
+          <div className="shrink-0 flex flex-col items-center gap-1">{actionBlock}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -162,58 +260,8 @@ export function ShopItemCard({
           </div>
         )}
 
-        {/* Price / Status - Bottom */}
-        <div className="mt-auto w-full flex flex-col items-center gap-0.5">
-          {isPurchased ? (
-            <div className="flex items-center justify-center gap-1 text-success font-bold text-sm px-4 py-2 rounded-full bg-success/10">
-              <Check className="w-5 h-5" />
-              <span>{t("common.owned")}</span>
-            </div>
-          ) : isLoading ? (
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          ) : isLari ? (
-            <>
-              {/* Price Display */}
-              <span className="font-bold text-base sm:text-lg text-pink-600 dark:text-pink-400">{formatPrice(price)}</span>
-              {/* Buy Button - only this is clickable */}
-              <motion.button
-                onClick={onClick}
-                disabled={isPurchased || isLoading}
-                className="px-4 py-1.5 rounded-full font-bold text-xs text-white"
-                style={{
-                  background: "#00DDA3",
-                  boxShadow: "0 3px 0 #00A87C",
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95, y: 2 }}
-              >
-                {t('shop.buy')}
-              </motion.button>
-            </>
-          ) : (
-            <>
-              {/* Price Display */}
-              <div className="flex items-center justify-center gap-1">
-                <img src={currencyIcon!} alt="" width={24} height={24} loading="lazy" decoding="async" className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="font-bold text-sm sm:text-base text-gray-800">{price}</span>
-              </div>
-              {/* Buy Button - only this is clickable */}
-              <motion.button
-                onClick={onClick}
-                disabled={isPurchased || isLoading}
-                className="px-4 py-1.5 rounded-full font-bold text-xs text-white"
-                style={{
-                  background: "#00DDA3",
-                  boxShadow: "0 3px 0 #00A87C",
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95, y: 2 }}
-              >
-                {t('shop.buy')}
-              </motion.button>
-            </>
-          )}
-        </div>
+        {/* Price / Status - Bottom (buy button is the only clickable part) */}
+        <div className="mt-auto w-full flex flex-col items-center gap-0.5">{actionBlock}</div>
       </div>
     </div>
   );

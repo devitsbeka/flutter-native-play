@@ -338,6 +338,10 @@ export default function PowerUps() {
               playsInline
               className="absolute inset-0 w-full h-full object-cover object-center"
             />
+            {/* Soft fades so the pinned video melts into the page instead of a hard cut */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-[#f7ebfb] via-[#f7ebfb]/45 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#fdf8fe]/95 via-[#fbf2fd]/45 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#f7ebfb]/70 to-transparent" />
           </div>
         </div>
       </div>
