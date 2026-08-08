@@ -158,11 +158,11 @@ export function UnifiedDesktopNav({
             onClick={onClick}
             data-onboarding-id={onboardingId}
             className={`
-              w-full flex items-center gap-3 px-3 py-3 rounded-xl
+              w-full flex items-center gap-3 px-3 py-3 rounded-[16px]
               transition-all duration-200
-              ${active 
-                ? 'text-foreground font-medium' 
-                : 'text-muted-foreground hover:text-foreground'
+              ${active
+                ? 'text-[#0f1729] font-medium'
+                : 'text-[#6b7280] font-normal hover:text-[#0f1729]'
               }
               ${isLocked ? 'opacity-60' : ''}
             `}
@@ -171,8 +171,8 @@ export function UnifiedDesktopNav({
           >
             <div className="relative flex items-center justify-center w-6 h-6">
               {children ? children : Icon ? (
-                <Icon 
-                  className={`w-6 h-6 transition-all ${active ? 'text-primary' : ''}`}
+                <Icon
+                  className="w-6 h-6 transition-all"
                   strokeWidth={active ? 2 : 1.5}
                 />
               ) : null}

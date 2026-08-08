@@ -1,110 +1,218 @@
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { formatCompactNumber } from "@/lib/utils";
-import coinIcon from "@/assets/icons/icon-coin.png";
-import gemIcon from "@/assets/icons/icon-gem.png";
+import { useMissionStreak } from "@/hooks/useMissionStreak";
+import coinChunky from "@/assets/figma-home/coin-chunky.png";
+import gemChunky from "@/assets/figma-home/gem-chunky.png";
+import giftWeekly from "@/assets/figma-home/gift-weekly.png";
+import missionsCrystal from "@/assets/figma-home/missions-crystal.png";
+import checkStreak from "@/assets/figma-home/check-streak.svg";
+import shieldOuter from "@/assets/figma-home/shield-outer.svg";
+import shieldInner from "@/assets/figma-home/shield-inner.svg";
+
+// Figma: Hom / node 596:42 — left widget stack (group 601:961).
+// Cards share one shadow; the chunky stat buttons share another.
+const CARD_SHADOW = "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgba(102,51,153,0.12)";
+const STAT_SHADOW = "0px 3.62px 0px 0px #d8d0e8, 0px 5.43px 14.48px 0px rgba(0,0,0,0.1)";
+const STAT_GRADIENT = "linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(254,254,254,0.5))";
+
+// Streak strip geometry from the design (circle lefts / label centers)
+const CIRCLE_X = [21.88, 63.19, 105.44, 148.63, 189.01];
+const LABEL_X = [35.5, 77.07, 119.06, 163.13, 202.89];
+const DAY_LABELS = ["ორშ", "სამ", "ოთხ", "ხუთ", "შაბ"];
 
 interface SceneHeroProps {
+  nickname: string;
   level: number;
   xpCurrent: number;
   xpTotal: number;
-  xpProgress: number; // 0..100
   coins: number;
   gems: number;
+  missionsCount: number;
+  onNameClick: () => void;
   onCoinsClick: () => void;
   onGemsClick: () => void;
+  onLevelClick: () => void;
+  onMissionsClick: () => void;
   playButton: ReactNode;
 }
 
 // Floating overlay for the personalized scene homepage: the artwork itself is
-// rendered full-bleed at the page root; this component carries the stats the
-// AvatarCircle used to show as glass chips — level+XP on the left, currencies
-// on the right — leaving the character as the focal point.
+// rendered full-bleed at the page root; this component carries the left
+// widget stack from the Figma home (profile card + level shield, weekly
+// streak, missions row) and the bottom-center play button.
 export function SceneHero({
+  nickname,
   level,
   xpCurrent,
   xpTotal,
-  xpProgress,
   coins,
   gems,
+  missionsCount,
+  onNameClick,
   onCoinsClick,
   onGemsClick,
+  onLevelClick,
+  onMissionsClick,
   playButton,
 }: SceneHeroProps) {
+  const { currentStreak } = useMissionStreak();
+  const doneCount = Math.min(Math.max(currentStreak, 0), DAY_LABELS.length);
+
   return (
     <div className="relative w-full h-full pointer-events-none">
-      {/* Left: level shield + XP */}
+      {/* Left widget stack (Figma group 601:961) */}
       <motion.div
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.25, type: "spring" }}
-        className="absolute left-[6%] top-[34%] pointer-events-auto"
+        className="absolute left-[56px] top-[53px] h-[360px] w-[332px] pointer-events-auto"
       >
+        {/* Profile card (node 601:883) */}
         <div
-          className="rounded-2xl px-5 py-4 text-center backdrop-blur-md"
-          style={{
-            background: "rgba(255,255,255,0.72)",
-            boxShadow: "0 8px 28px rgba(109,63,224,0.16), inset 0 1px 0 rgba(255,255,255,0.9)",
-          }}
+          className="absolute left-0 top-0 h-[176px] w-[298px] overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.8)]"
+          style={{ boxShadow: CARD_SHADOW }}
         >
-          <div
-            className="mx-auto w-16 h-16 rounded-2xl flex flex-col items-center justify-center text-white mb-2.5"
+          <button
+            type="button"
+            onClick={onNameClick}
+            className="absolute left-[19px] top-[19px] font-['Slackey'] capitalize text-[32px] leading-[48px] tracking-[-0.16px] text-[#402666] whitespace-nowrap"
+          >
+            {nickname}
+          </button>
+          <p className="absolute left-[23px] top-[66px] text-[14px] font-semibold text-[#402666] whitespace-nowrap">
+            {xpCurrent.toLocaleString("en-US")} / {xpTotal.toLocaleString("en-US")} XP
+          </p>
+
+          {/* Coins (node 601:904) */}
+          <button
+            type="button"
+            onClick={onCoinsClick}
+            className="absolute left-[14px] top-[104px] h-[53.05px] w-[128.94px] rounded-[18px] border-[1.81px] border-solid border-[#e8e0f5]"
+            style={{ boxShadow: STAT_SHADOW }}
+          >
+            <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[18px]" style={{ background: STAT_GRADIENT }} />
+            <div className="absolute left-[9.61px] top-[3.43px] size-[39.79px]">
+              <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={coinChunky} />
+            </div>
+            <p className="absolute left-[82.42px] top-[9.24px] -translate-x-1/2 font-['Nunito'] font-black text-[19.9px] leading-[30.95px] tracking-[-0.18px] text-[#334155] whitespace-nowrap">
+              {formatCompactNumber(coins)}
+            </p>
+            <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.81px_0px_0px_white]" />
+          </button>
+
+          {/* Gems (node 601:907) */}
+          <button
+            type="button"
+            onClick={onGemsClick}
+            className="absolute left-[151.06px] top-[104px] h-[53.05px] w-[128.94px] rounded-[18px] border-[1.81px] border-solid border-[#e8e0f5]"
+            style={{ boxShadow: STAT_SHADOW }}
+          >
+            <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[18px]" style={{ background: STAT_GRADIENT }} />
+            <div className="absolute left-[8.14px] top-[4.82px] size-[39.79px]">
+              <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={gemChunky} />
+            </div>
+            <p className="absolute left-[82.42px] top-[9.24px] -translate-x-1/2 font-['Nunito'] font-black text-[19.9px] leading-[30.95px] tracking-[-0.18px] text-[#334155] whitespace-nowrap">
+              {formatCompactNumber(gems)}
+            </p>
+            <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.81px_0px_0px_white]" />
+          </button>
+        </div>
+
+        {/* Level shield (node 596:345) - overlaps the card's top-right corner */}
+        <button
+          type="button"
+          aria-label={`დონე ${level}`}
+          onClick={onLevelClick}
+          className="absolute left-[249.97px] top-0 z-10 h-[93px] w-[82.06px]"
+        >
+          <div className="absolute left-[7.66px] top-[-10.42px] h-[103.94px] w-[74.4px] pointer-events-none">
+            <div className="absolute inset-[0.37%_0_1.86%_0]">
+              <img alt="" className="block max-w-none size-full" src={shieldOuter} />
+            </div>
+          </div>
+          <div className="absolute left-[12.04px] top-[-4.65px] h-[92.29px] w-[65.65px] pointer-events-none">
+            <div className="absolute inset-[-6.89%_-16.25%_-16.67%_-16.25%]">
+              <img alt="" className="block max-w-none size-full" src={shieldInner} />
+            </div>
+          </div>
+          <p
+            className="absolute left-[44.52px] top-[6.02px] -translate-x-1/2 text-[35px] font-bold tracking-[-1.75px] text-white whitespace-nowrap"
             style={{
-              background: "linear-gradient(180deg, #9061F9 0%, #6D3FE0 100%)",
-              boxShadow: "0 3px 0 #4C2AA6",
+              fontFamily: "'Intel One Mono', 'Nunito', monospace",
+              textShadow: "0px 2.19px 2.19px rgba(0,0,0,0.3), 0px 4.38px 6.57px rgba(0,0,0,0.15)",
             }}
           >
-            <span className="font-black text-2xl leading-none">{level}</span>
-            <span className="text-[10px] font-bold opacity-80">დონე</span>
+            {level}
+          </p>
+          <p className="absolute left-[44.81px] top-[49.78px] -translate-x-1/2 text-[9.85px] font-bold text-[rgba(255,255,255,0.7)] whitespace-nowrap">
+            დონე
+          </p>
+        </button>
+
+        {/* Weekly streak card (node 599:37) */}
+        <div
+          className="absolute left-0 top-[190px] h-[99px] w-[298px] overflow-hidden rounded-[24px] bg-[#fcf7ff]"
+          style={{ boxShadow: CARD_SHADOW }}
+        >
+          {DAY_LABELS.map((label, i) => {
+            const done = i < doneCount;
+            return (
+              <div key={label} className="contents">
+                <div
+                  className={`absolute top-[21.99px] flex size-[27.33px] items-center justify-center rounded-full border-[2.73px] border-solid border-white ${
+                    done
+                      ? "bg-[#10b981] drop-shadow-[0px_16.4px_10.93px_rgba(10,13,18,0.08)]"
+                      : "bg-[#e2d7e9] drop-shadow-[0px_16.4px_10.93px_rgba(10,13,18,0.08)]"
+                  }`}
+                  style={{ left: CIRCLE_X[i] }}
+                >
+                  {done && (
+                    <div className="relative size-[16.4px]">
+                      <img alt="" className="absolute block inset-0 max-w-none size-full" src={checkStreak} />
+                    </div>
+                  )}
+                </div>
+                <p
+                  className={`absolute top-[58.19px] -translate-x-1/2 text-center text-[13.15px] font-semibold text-[#402666] whitespace-nowrap ${
+                    done ? "" : "opacity-50"
+                  }`}
+                  style={{ left: LABEL_X[i] }}
+                >
+                  {label}
+                </p>
+              </div>
+            );
+          })}
+
+          {/* Sunday gift (node 601:901) */}
+          <div className="absolute left-[224.69px] top-[15px] size-[41.31px]">
+            <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={giftWeekly} />
           </div>
-          <div className="w-28 h-2 rounded-full bg-purple-200/80 overflow-hidden">
-            <div
-              className="h-full rounded-full"
-              style={{
-                width: `${Math.min(100, Math.max(0, xpProgress))}%`,
-                background: "linear-gradient(90deg, #9061F9, #6D3FE0)",
-              }}
-            />
-          </div>
-          <p className="mt-1.5 text-xs font-bold text-slate-600">
-            {xpCurrent.toLocaleString()} / {xpTotal.toLocaleString()} XP
+          <p className="absolute left-[244.89px] top-[58.19px] -translate-x-1/2 text-center text-[13.15px] font-semibold text-[#402666] whitespace-nowrap">
+            კვ
           </p>
         </div>
-      </motion.div>
 
-      {/* Right: currency chips */}
-      <motion.div
-        initial={{ opacity: 0, x: 16 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.3, type: "spring" }}
-        className="absolute right-[6%] top-[36%] flex flex-col gap-3 pointer-events-auto"
-      >
-        <motion.button
-          onClick={onCoinsClick}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-2.5 rounded-full pl-1.5 pr-4 py-1.5 backdrop-blur-md"
-          style={{
-            background: "rgba(255,255,255,0.72)",
-            boxShadow: "0 6px 20px rgba(109,63,224,0.14), inset 0 1px 0 rgba(255,255,255,0.9)",
-          }}
+        {/* Missions row (node 601:407) */}
+        <button
+          type="button"
+          onClick={onMissionsClick}
+          className="absolute left-0 top-[300px] h-[60px] w-[298px] overflow-hidden rounded-[24px] bg-[#fcf7ff] text-left"
+          style={{ boxShadow: CARD_SHADOW }}
         >
-          <img src={coinIcon} alt="" className="w-9 h-9" />
-          <span className="font-black text-slate-700 text-lg">{formatCompactNumber(coins)}</span>
-        </motion.button>
-        <motion.button
-          onClick={onGemsClick}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-2.5 rounded-full pl-1.5 pr-4 py-1.5 backdrop-blur-md"
-          style={{
-            background: "rgba(255,255,255,0.72)",
-            boxShadow: "0 6px 20px rgba(109,63,224,0.14), inset 0 1px 0 rgba(255,255,255,0.9)",
-          }}
-        >
-          <img src={gemIcon} alt="" className="w-9 h-9" />
-          <span className="font-black text-slate-700 text-lg">{formatCompactNumber(gems)}</span>
-        </motion.button>
+          <div className="absolute left-[19.65px] top-[18.45px] size-[29.07px] rotate-[1.86deg] shadow-[0px_2.51px_3.76px_0px_rgba(0,0,0,0.07),0px_1.25px_2.51px_0px_rgba(0,0,0,0.06)]">
+            <img alt="" className="absolute inset-0 max-w-none object-contain pointer-events-none size-full" src={missionsCrystal} />
+          </div>
+          <p className="absolute left-[56px] top-[22.81px] text-[14px] font-semibold text-[#402666] whitespace-nowrap">
+            მისიები
+          </p>
+          <div className="absolute left-[251px] top-[21.14px] flex h-[20.71px] w-[29px] items-center justify-center rounded-full border-[1.475px] border-solid border-[#d5d0d8]">
+            <p className="font-['Nunito'] font-bold text-[11.6px] leading-[11.8px] tracking-[-0.118px] text-[#9783a3] whitespace-nowrap">
+              {missionsCount}
+            </p>
+          </div>
+        </button>
       </motion.div>
 
       {/* Bottom center: play button */}

@@ -1304,12 +1304,16 @@ export default function Index() {
                 transition={{ duration: 0.5 }}
               >
                 <SceneHero
+                  nickname={profile?.nickname || t("game.guest")}
                   level={levelInfo.level}
                   xpCurrent={levelInfo.xpInCurrentLevel}
                   xpTotal={levelInfo.xpNeededForNextLevel}
-                  xpProgress={levelInfo.progress}
                   coins={coins}
                   gems={gems}
+                  missionsCount={incompleteMissions}
+                  onNameClick={() => setShowChangeNameModal(true)}
+                  onLevelClick={() => setShowLevelModal(true)}
+                  onMissionsClick={() => setShowMissionsModal(true)}
                   onCoinsClick={() => navigate("/power-ups?section=coins")}
                   onGemsClick={() => navigate("/power-ups?section=gems-lari")}
                   playButton={
