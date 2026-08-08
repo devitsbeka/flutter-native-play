@@ -4,12 +4,12 @@
 // ai_generation_settings table (setting_type 'avatar_static'); the
 // AdminAIPromptSync component keeps that row in sync with this file, so
 // editing this file is the way to change the prompt.
-// Image model for scene generation, resolved by the AI gateway. The prod
-// gateway rejected "openai/gpt-image-2" (generate-avatar 500s), so this stays
-// on the Gemini image model every provider branch supports. To use GPT Image 2
-// or Seedream, point AI_GATEWAY_URL at an OpenRouter-compatible endpoint in
-// Supabase secrets first, then switch this id.
-export const SCENE_AVATAR_MODEL = "google/gemini-2.5-flash-image-preview";
+// Image model for scene generation, resolved by the AI gateway. Nano Banana
+// Pro (Gemini 3 Pro Image) is Google's top image model — strong identity
+// preservation from reference photos, 2K output — and being a Google model it
+// resolves on every provider branch, unlike OpenRouter-only ids ("openai/
+// gpt-image-2" made generate-avatar 500 on the prod gateway).
+export const SCENE_AVATAR_MODEL = "google/gemini-3-pro-image-preview";
 
 export const SCENE_AVATAR_PROMPT = `Create a premium stylized 3D game-avatar scene using the uploaded face photo as the identity reference.
 
