@@ -12,6 +12,9 @@ const FAL_KEY = Deno.env.get('FAL_KEY');
 
 interface AvatarRequest {
   imageUrl: string;
+  // Optional prompt override for testing/admin flows; the synced
+  // ai_generation_settings prompt remains the default.
+  prompt?: string;
 }
 
 // GPT Image 2 on fal: reference-image edit, high quality, 16:9 close to
@@ -85,7 +88,7 @@ serve(async (req) => {
       throw new Error("AI_API_KEY is not configured");
     }
 
-    const { imageUrl }: AvatarRequest = await req.json();
+    const { imageUrl, prompt: promptOverride }: AvatarRequest = await req.json();
 
     if (!imageUrl) {
       throw new Error("imageUrl is required");
@@ -96,6 +99,7 @@ serve(async (req) => {
     // Fetch settings from database
     let prompt = DEFAULT_PROMPT;
     let model = DEFAULT_MODEL;
+    let promptSource = "default";
 
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       try {
@@ -110,6 +114,7 @@ serve(async (req) => {
         if (!error && settings) {
           prompt = settings.prompt || DEFAULT_PROMPT;
           model = settings.model || DEFAULT_MODEL;
+          promptSource = "db";
           console.log("Using database settings for avatar generation");
         } else {
           console.log("Using default settings, DB error:", error?.message);
@@ -117,6 +122,11 @@ serve(async (req) => {
       } catch (dbError) {
         console.log("Using default settings due to DB fetch error:", dbError);
       }
+    }
+
+    if (promptOverride) {
+      prompt = promptOverride;
+      promptSource = "override";
     }
 
     // fal.ai GPT Image 2 path (preferred when configured). fal failures —
@@ -127,7 +137,7 @@ serve(async (req) => {
         const falImage = await generateWithFal(prompt, imageUrl);
         console.log("Avatar generated successfully via fal.ai");
         return new Response(
-          JSON.stringify({ success: true, avatarUrl: falImage }),
+          JSON.stringify({ success: true, avatarUrl: falImage, promptSource }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } catch (falError) {
@@ -198,9 +208,10 @@ serve(async (req) => {
     console.log("Avatar generated successfully");
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         avatarUrl: generatedImage, // This is a base64 data URL
+        promptSource,
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

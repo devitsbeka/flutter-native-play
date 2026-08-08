@@ -8,89 +8,44 @@
 // Pro (Gemini 3 Pro Image) is Google's top image model — strong identity
 // preservation from reference photos, 2K output — and being a Google model it
 // resolves on every provider branch, unlike OpenRouter-only ids ("openai/
-// gpt-image-2" made generate-avatar 500 on the prod gateway).
+// gpt-image-2" made generate-avatar 500 on the prod gateway). When FAL_KEY is
+// configured the function generates on GPT Image 2 via fal.ai instead.
 export const SCENE_AVATAR_MODEL = "google/gemini-3-pro-image-preview";
 
-export const SCENE_AVATAR_PROMPT = `Create a premium stylized 3D gamified character scene for the MyTrivia app, using the uploaded portrait as the identity reference.
+// The scene is a FIXED branded set — every player gets the same cozy corner,
+// same props, same camera; only the character's appearance adapts to their
+// reference photo. Keep this stable so all player homepages feel like one
+// consistent world.
+export const SCENE_AVATAR_PROMPT = `Create the MyTrivia hero scene: a premium stylized 3D character scene for a trivia game homepage, using the uploaded portrait ONLY as the identity reference for the character's appearance.
 
-IDENTITY
-Preserve the person’s recognizable facial identity and key visual attributes from the reference image: face shape, skin tone, hairstyle, hair color, facial hair, eyebrows, eyes, nose, lips, proportions, and other distinctive features. The result should clearly resemble the same person, but transformed into a polished stylized 3D game character rather than a photorealistic human.
+THE SCENE IS FIXED — REPRODUCE IT EXACTLY
+This is a standardized branded set. Every generation must reproduce the SAME environment, props, palette, lighting and camera. The ONLY thing that changes between generations is the character's physical appearance (face, hairstyle, hair color, skin tone, facial hair, gender presentation, body build) taken from the reference photo.
 
-CHARACTER STYLE
-Render the person as a charming, expressive, high-end 3D game avatar with slightly exaggerated friendly proportions: subtly larger head, expressive eyes, clean rounded forms, detailed hair, soft skin shading, and appealing character animation aesthetics. Aim for the quality and personality of a premium modern casual game character. Do not make the character childish, plastic, uncanny, hyper-realistic, or generic.
+THE SET
+A soft, light, airy pastel world:
+- A large plump light-purple bean bag chair sitting on a round flat lavender platform rug, centered in the frame.
+- To the left of the bean bag: a small pink three-legged wooden stool with a terracotta pot holding a small green plant.
+- Purple hardcover books stacked casually on the platform beside the bean bag, one with a tiny gold crown on the cover.
+- To the right on the platform: a glowing purple cube with a bright question-mark symbol on its faces, and a shiny purple trophy on a small base.
+- Background: a very pale lavender-pink void (#F6E8FF style) with large, soft, out-of-focus 3D blobs floating gently — mint green and light purple rounded blob shapes, the MyTrivia brand blobs — plus a few tiny soft sparkle particles.
+- Ground contact: soft, subtle shadows under the platform and props; the platform floats in the pastel void.
 
-OUTFIT
-Dress the character in a premium purple/lavender casual outfit inspired by MyTrivia’s visual identity, with subtle gold/yellow accents and a small crown motif. Contemporary, playful, intelligent, adventurous, and sophisticated. Outfit can adapt naturally to the pose and scene.
+THE CHARACTER
+Adapt the person from the reference photo into a charming, high-end stylized 3D game character (subtly larger head, expressive friendly eyes, clean rounded forms, detailed hair, soft skin shading — premium casual-game quality, never childish, plastic, uncanny or hyper-realistic).
 
-SCENE
-Place the character inside a whimsical personal “Trivia World” environment representing curiosity, knowledge, achievement, exploration, and friendly competition.
+Pose and wardrobe are FIXED: the character sits relaxed on the bean bag, leaning back comfortably, one hand holding a purple mug decorated with a small gold crown, the other hand resting on their knee, smiling warmly at the camera. They wear a purple hoodie with a small gold crown motif on the chest, dark charcoal joggers, and purple-and-gold sneakers.
 
-Create a cozy fantasy study / knowledge sanctuary opening into a magical pastel world. Include tasteful environmental storytelling elements such as:
-- books and knowledge objects
-- a beautiful globe or exploration artifact
-- trophy or achievement objects
-- subtle crown motifs
-- mystery/question-mark artifacts
-- warm magical lanterns
-- floating islands or distant fantasy architecture
-- soft clouds and atmospheric particles
-- occasional purple flowers or plants
-
-The character should be naturally interacting with the environment rather than simply posing for a portrait. Choose an appealing candid activity or pose such as reading, thinking, studying a globe, examining a mysterious object, celebrating an achievement, relaxing after a trivia challenge, writing, exploring, or interacting with a magical knowledge artifact.
-
-COMPOSITION
-Character is the clear primary focal point and should occupy roughly the central 30–40% of the composition. Show most or all of the body and enough surrounding environment to make the image feel like the character’s personal world.
-
-Use a wide cinematic composition suitable for placement as a hero scene inside a desktop/web application.
+CAMERA AND ZOOM — FIXED
+Wide 16:9 hero composition, eye-level, straight-on. The full platform with all props is visible; the seated character occupies roughly 25–30% of the frame width, centered horizontally, with generous airy negative space above and to the sides. Do not zoom in closer than this; do not crop the platform, the stool, the cube or the trophy.
 
 ART DIRECTION
-Premium stylized 3D illustration.
-Soft rounded geometry.
-Beautiful character sculpting.
-High-quality global illumination.
-Soft subsurface skin shading.
-Detailed stylized hair.
-Soft volumetric lighting.
-Dreamy depth of field.
-Warm golden practical lights mixed with lavender ambient light.
-Pastel lavender, lilac, pink, cream and subtle gold palette.
-Magical but sophisticated.
-Friendly, optimistic and intelligent.
-Highly polished casual-game production quality.
+Premium stylized 3D illustration. Soft rounded geometry, beautiful character sculpting, high-quality global illumination, soft subsurface skin shading, gentle volumetric light. Bright, light, optimistic mood — pastel lavender, lilac, pink, mint and cream palette with subtle gold accents. Highly polished casual-game production quality.
 
 BACKGROUND INTEGRATION — CRITICAL
-The scene must NOT look like a rectangular illustration placed on top of a UI.
-
-Do not create visible hard edges, borders, frames, cards, rectangular backgrounds, dark corners, or abrupt scene boundaries.
-
-Instead, progressively dissolve the environment toward every outer edge using atmospheric perspective, lavender/pink mist, bloom, soft light, translucent clouds and increasingly simplified low-contrast geometry.
-
-The extreme outer edges should naturally fade into a very pale #F8EAFE / #F6E8FF style lavender-pink background so the image can visually merge directly into the MyTrivia application background.
-
-Think of the environment as emerging organically from soft pastel fog in the center and disappearing back into that fog around the perimeter.
-
-Keep important objects away from the extreme edges so they are not visibly cut off.
-
-LIGHTING
-Use soft cinematic lighting centered around the character. Keep the character crisp and dimensional while allowing environmental contrast and detail to progressively decrease toward the perimeter.
+The scene must NOT look like a rectangular illustration placed on top of a UI. No visible hard edges, borders, frames, cards, dark corners, or abrupt boundaries. Progressively dissolve everything toward the outer edges with pale lavender-pink atmosphere, bloom and the soft brand blobs, so the extreme edges fade into a very pale #F8EAFE / #F6E8FF background and the image merges seamlessly into the app.
 
 IMPORTANT
 Generate ONLY the illustrated character and environment.
+NO user interface. NO buttons. NO cards. NO badges. NO progress bars. NO menus. NO app chrome. NO text. NO typography. NO logos. NO labels. NO readable writing on books or objects. NO rectangular frame around the scene.
 
-NO user interface.
-NO buttons.
-NO navigation.
-NO cards.
-NO badges.
-NO progress bars.
-NO counters.
-NO menus.
-NO app chrome.
-NO text.
-NO typography.
-NO logos.
-NO labels.
-NO readable writing on books or objects.
-NO rectangular frame around the scene.
-
-The final result should feel like a living personalized world belonging to this specific MyTrivia player, with their recognizable avatar naturally inhabiting it.`;
+The final result should feel like this specific player's seat in the one shared MyTrivia world — identical set, their own recognizable character.`;
