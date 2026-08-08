@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Settings, HelpCircle, Shield, FileText, LogOut, ChevronRight } from "lucide-react";
+import { Settings, HelpCircle, Shield, FileText, LogOut, ChevronRight, Pencil, Check, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { translateErrorMessage } from "@/utils/errorTranslations";
 
 import { useAuth } from "@/hooks/useAuth";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -22,7 +25,7 @@ import trophyShelfIcon from "@/assets/icons/trophy-shelf.png";
 
 
 export default function Profile() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, fetchProfile } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { subscription, isVip } = useVipStatus();
@@ -35,6 +38,41 @@ export default function Profile() {
     if (tab === "settings") return "Settings";
     return "PRO";
   });
+
+  // Inline nickname editing — quick access next to the name, mirroring
+  // ChangeNameModal's save path (direct profiles update + refetch)
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [savingName, setSavingName] = useState(false);
+
+  const startNameEdit = () => {
+    setNameDraft(profile?.nickname || "");
+    setEditingName(true);
+  };
+
+  const saveName = async () => {
+    const trimmed = nameDraft.trim();
+    if (!user || savingName) return;
+    if (!trimmed || trimmed === profile?.nickname) {
+      setEditingName(false);
+      return;
+    }
+    setSavingName(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ nickname: trimmed })
+        .eq("user_id", user.id);
+      if (error) throw error;
+      await fetchProfile(user.id);
+      toast.success(t("settings.nameChanged"));
+      setEditingName(false);
+    } catch (error: any) {
+      toast.error(translateErrorMessage(error.message) || t("errors.generic"));
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   // Get current tier from subscription - only if actively VIP
   const currentTier = isVip ? (subscription?.vip_tier as ProTier | undefined) : undefined;
@@ -98,9 +136,42 @@ export default function Profile() {
             >
               <div className="flex flex-col items-center">
                 <AvatarReel />
-                <h2 className="text-xl font-bold text-foreground mt-4">
-                  {profile.nickname}
-                </h2>
+                {/* Nickname in the main page's hero font, with inline
+                    edit/save quick access on the right */}
+                <div className="flex items-center gap-2 mt-4">
+                  {editingName ? (
+                    <input
+                      value={nameDraft}
+                      onChange={(e) => setNameDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") void saveName();
+                        if (e.key === "Escape") setEditingName(false);
+                      }}
+                      maxLength={20}
+                      autoFocus
+                      className="font-sans text-gray-800 capitalize font-black text-center bg-white/80 border border-border/50 rounded-xl px-3 h-11 outline-none focus:ring-2 focus:ring-primary/40 max-w-[240px]"
+                      style={{ fontSize: 24 }}
+                    />
+                  ) : (
+                    <h2 className="font-sans text-gray-800 capitalize font-black" style={{ fontSize: 28 }}>
+                      {profile.nickname}
+                    </h2>
+                  )}
+                  <button
+                    onClick={() => (editingName ? void saveName() : startNameEdit())}
+                    disabled={savingName}
+                    aria-label={editingName ? t("common.save") : t("settings.editName")}
+                    className="w-9 h-9 rounded-full bg-white/70 border border-border/40 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-white transition-colors shrink-0"
+                  >
+                    {savingName ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : editingName ? (
+                      <Check className="w-4 h-4 text-emerald-600" strokeWidth={3} />
+                    ) : (
+                      <Pencil className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
                 <p className={cn("text-sm font-medium", rank?.color || "text-muted-foreground")}>
                   {rank?.name || t("profile.beginner")}
                 </p>

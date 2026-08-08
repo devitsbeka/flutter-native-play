@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Sparkles } from "lucide-react";
+import { Check } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 
@@ -33,7 +32,6 @@ const CENTER_SCALE = 2.05; // middle avatar enlargement while previewing
 // AI-generated) first, then the mascot presets.
 export function AvatarReel() {
   const { user, profile, updateProfile } = useAuth();
-  const { openAvatarModal } = useAvatarModal();
   const { t } = useLanguage();
 
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -252,8 +250,15 @@ export function AvatarReel() {
               key={item.id}
               ref={(el) => (itemRefs.current[idx] = el)}
               onClick={() => handleItemClick(idx)}
-              className="relative shrink-0 h-full snap-center flex items-center justify-center"
-              style={{ width: SLOT_WIDTH, zIndex: isCenter ? 10 : 1 }}
+              className="relative shrink-0 h-full snap-center flex items-center justify-center transition-[margin] duration-200"
+              style={{
+                width: SLOT_WIDTH,
+                zIndex: isCenter ? 10 : 1,
+                // Widen the centered slot so the enlarged avatar keeps clear
+                // air between itself and its small neighbors
+                marginLeft: isCenter ? 28 : 0,
+                marginRight: isCenter ? 28 : 0,
+              }}
             >
               <div
                 className={`relative rounded-full transition-transform duration-200 ease-out ${isBusy ? "animate-pulse" : ""}`}
@@ -287,15 +292,16 @@ export function AvatarReel() {
         })}
       </div>
 
-      {/* Avatar studio (upload / AI) - pinned to the center slot */}
-      <button
-        onClick={() => openAvatarModal()}
-        className="absolute left-1/2 top-1/2 z-20 p-2 bg-primary rounded-full shadow-lg"
-        style={{ transform: "translate(34px, 30px)" }}
-        aria-label="Edit avatar"
-      >
-        <Sparkles className="w-4 h-4 text-primary-foreground" />
-      </button>
+      {/* Confirm chip — shows while the previewed (centered) avatar isn't
+          the applied one; tapping it (or the avatar itself) applies it */}
+      {items[centerIdx] && centerIdx !== selectedIdx && !busyId && (
+        <button
+          onClick={() => handleItemClick(centerIdx)}
+          className="absolute left-1/2 -translate-x-1/2 bottom-1 z-20 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-[13px] font-bold shadow-lg whitespace-nowrap"
+        >
+          {t("extra.avatarChooseBtn")}
+        </button>
+      )}
     </div>
   );
 }
