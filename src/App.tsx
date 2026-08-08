@@ -21,6 +21,7 @@ import { SplashScreen } from "@/components/SplashScreen";
 import "@/components/game/VideoPreloader";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { UserPresenceTracker } from "@/components/UserPresenceTracker";
+import { AdminAIPromptSync } from "@/components/system/AdminAIPromptSync";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { Navigate } from "react-router-dom";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
@@ -155,6 +156,7 @@ const App = () => (
             <GlobalSplineBackground />
             
             <UserPresenceTracker />
+            <AdminAIPromptSync />
             <FreshBuildGuard />
             <Suspense fallback={<PageSkeleton />}>
               <Routes>
