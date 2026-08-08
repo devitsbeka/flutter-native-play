@@ -5,6 +5,7 @@ import { useNotificationModalContext } from "@/contexts/NotificationModalContext
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { t } from "@/lib/i18n";
+import { generatePublicPortrait } from "@/utils/portraitAvatar";
 
 export type GenerationType = "avatar" | "cover";
 
@@ -190,9 +191,10 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
                   is_current: true,
                 });
 
-                // Circles keep showing the person: the uploaded photo becomes
-                // the profile avatar, the scene goes to the homepage hero
-                await updateProfile({ avatar_url: imageUrl, has_face_photo: true } as any);
+                // The public circle avatar: a mini stylized portrait of the
+                // same character; falls back to the uploaded photo
+                const portraitUrl = await generatePublicPortrait(user.id, imageUrl);
+                await updateProfile({ avatar_url: portraitUrl || imageUrl, has_face_photo: true } as any);
                 queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
                 toast.success(t("avatar.avatarSaved"));
 
