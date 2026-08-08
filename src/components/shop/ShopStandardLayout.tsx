@@ -68,13 +68,6 @@ export function ShopStandardLayout({
         <MobileProCarousel />
       </div>
 
-      {/* Rotating daily + hourly bundle deals — the shop's hero row */}
-      <DailyDealsRow
-        purchasedItems={purchasedItems}
-        isPurchasing={isPurchasing}
-        onItemClick={handleItemClick}
-      />
-
       {/* My Powers Section - individual purchase */}
       <MyPowersSection
         powerUps={powerUps ?? { "5050": 0, freeze: 0, replace: 0, "time-drain": 0 }}
@@ -104,6 +97,15 @@ export function ShopStandardLayout({
           />
         </div>
       ))}
+
+      {/* Rotating daily + hourly bundle deals — closing row, centered */}
+      <div className="mx-auto w-full max-w-3xl">
+        <DailyDealsRow
+          purchasedItems={purchasedItems}
+          isPurchasing={isPurchasing}
+          onItemClick={handleItemClick}
+        />
+      </div>
     </div>
   );
 }

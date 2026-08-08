@@ -205,7 +205,7 @@ export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick }: Dai
           deal={hourlyDeal}
           label={t("shop.hourlyDeal")}
           remainingLabel={formatRemaining(nextHour - now, false)}
-          gradient="linear-gradient(135deg, #F97316 0%, #EF4444 55%, #E11D48 100%)"
+          gradient="linear-gradient(135deg, #EAB308 0%, #84CC16 45%, #16A34A 100%)"
           chipClass="bg-black/25"
           urgent
           isPurchased={purchasedItems.has(hourlyDeal.id)}

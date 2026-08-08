@@ -29,11 +29,9 @@ export function ShopProductGrid({
   const { t } = useLanguage();
 
   const count = items.length;
-  // Rows must hold 1, 2 or 4 cards — never 3. Sections whose count works out
-  // evenly (or leaves a single leftover) get 4 columns on desktop; otherwise
-  // they stay 2-wide. An odd last item stretches into a full-width featured
-  // card instead of dangling in a half-empty row.
-  const fourCols = count % 4 === 0 || count % 4 === 1;
+  // Rows hold 2 or 4 cards — no full-width featured rows. Sections that
+  // divide into fours get 4 columns on desktop; pairs stay 2-wide.
+  const fourCols = count % 4 === 0;
 
   return (
     <motion.section
@@ -43,9 +41,9 @@ export function ShopProductGrid({
       transition={{ duration: 0.3 }}
     >
       {/* Section Header - game-shop style accent bar */}
-      <div className="mb-2 flex items-center gap-2 px-1">
-        <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-fuchsia-400 to-purple-600" />
-        <h2 className="text-base font-display font-bold text-foreground/90">
+      <div className="mb-3 mt-2 flex items-center gap-2.5 px-1">
+        <span className="h-6 w-1.5 rounded-full bg-gradient-to-b from-fuchsia-400 to-purple-600" />
+        <h2 className="text-lg md:text-xl font-display font-bold text-foreground">
           {title}
         </h2>
       </div>
@@ -60,13 +58,9 @@ export function ShopProductGrid({
             ? isFrameUnlocked(item.frameId)
             : false;
           const isOwned = isPurchased || isFrameOwned;
-          const isFeatured = index === count - 1 && count % 2 === 1;
 
           return (
-            <div
-              key={item.id}
-              className={cn(isFeatured && "col-span-2", isFeatured && fourCols && "lg:col-span-4")}
-            >
+            <div key={item.id}>
               <ShopItemCard
                 id={item.id}
                 name={item.name}
@@ -82,7 +76,6 @@ export function ShopProductGrid({
                 isLoading={isPurchasing === item.id}
                 canAfford={canAfford}
                 showDescription={true}
-                featured={isFeatured}
                 onClick={() => !isOwned && onItemClick(item)}
               />
             </div>
