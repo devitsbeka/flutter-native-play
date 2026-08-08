@@ -6,6 +6,10 @@ import { ArrowLeft } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import bgLeader from "@/assets/bgleader.png";
 import starIcon from "@/assets/thiings/star.png";
+import trophyGold from "@/assets/trophy-gold.png";
+import trophySilver from "@/assets/trophy-silver.png";
+import trophyBronze from "@/assets/trophy-bronze.png";
+import coinIcon from "@/assets/icons/icon-coin.png";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -128,6 +132,12 @@ function RankBadge({ rank }: { rank: number }) {
   );
 }
 
+const TROPHY_BY_RANK: Record<number, string> = {
+  1: trophyGold,
+  2: trophySilver,
+  3: trophyBronze,
+};
+
 function BoardRow({
   entry,
   isMe,
@@ -172,11 +182,22 @@ function BoardRow({
           />
         </div>
       </div>
+      {TROPHY_BY_RANK[entry.rank] && (
+        <motion.img
+          src={TROPHY_BY_RANK[entry.rank]}
+          alt=""
+          className="w-6 h-6 object-contain shrink-0 drop-shadow select-none"
+          draggable={false}
+          animate={{ x: [0, 3, -3, 2, 0], rotate: [0, -8, 8, -4, 0] }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: entry.rank * 0.3 }}
+        />
+      )}
       <span className="flex-1 min-w-0 truncate font-black text-white text-[15px] drop-shadow-sm">
         {isMe ? youLabel : entry.nickname} {flag && <span className="text-sm">{flag}</span>}
       </span>
-      <span className="flex items-center gap-1 font-black text-white text-[15px] drop-shadow-sm shrink-0">
-        🏆 {formatCompactNumber(entry.coins)}
+      <span className="flex items-center gap-1.5 font-black text-white text-[15px] drop-shadow-sm shrink-0">
+        <img src={coinIcon} alt="" className="w-5 h-5 object-contain select-none" draggable={false} />
+        {formatCompactNumber(entry.coins)}
       </span>
     </motion.button>
   );
