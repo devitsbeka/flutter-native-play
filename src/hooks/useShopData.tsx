@@ -27,6 +27,9 @@ export interface ShopItem {
   gradient: string;
   badge?: "popular" | "best-value" | "limited" | "new" | null;
   savings?: number;
+  /** Render the card filled with its gradient (hero bundles) instead of the
+      neutral lavender-white surface. */
+  vibrant?: boolean;
   vipDuration?: VipDuration;
   powerType?: PowerUpType;
   amount?: number;
@@ -110,34 +113,35 @@ export function useShopData() {
     const MEGA_POWERS_ITEMS: ShopItem[] = [
       {
         id: "power_bundle_small",
-        name: t("shop.smallPackage"),
+        name: t("shop.powerPackOrb"),
         description: `2x ${t("shop.allPowers")}`,
         price: 7,  // 8 powers worth 8 gems, sell for 7 = 12% discount
         currency: "gems",
         icon: <img src={iconMagicOrb} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
-        gradient: "transparent",
+        gradient: "linear-gradient(135deg, #34D399 0%, #10B981 50%, #0F9488 100%)",
+        vibrant: true,
         savings: 12,
       },
       {
         id: "mega_power_bundle",
-        name: t("shop.mediumPackage"),
+        name: t("shop.powerPackPortal"),
         description: `5x ${t("shop.allPowers")}`,
         price: 16,  // 20 powers worth 20 gems, sell for 16 = 20% discount
         currency: "gems",
         icon: <img src={iconMagicPortal} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
-        gradient: "transparent",
-        badge: "popular",
+        gradient: "linear-gradient(135deg, #A78BFA 0%, #8B5CF6 50%, #6D28D9 100%)",
+        vibrant: true,
         savings: 20,
       },
       {
         id: "power_bundle_large",
-        name: t("shop.largePackage"),
+        name: t("shop.powerPackForge"),
         description: `10x ${t("shop.allPowers")}`,
         price: 28,  // 40 powers worth 40 gems, sell for 28 = 30% discount
         currency: "gems",
         icon: <img src={iconMagicForge} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
-        gradient: "transparent",
-        badge: "best-value",
+        gradient: "linear-gradient(135deg, #FBBF24 0%, #F59E0B 55%, #EA580C 100%)",
+        vibrant: true,
         savings: 30,
       },
     ];
@@ -236,7 +240,7 @@ export function useShopData() {
         currency: "gems",
         icon: <img src={iconPowersBottle} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
         gradient: "linear-gradient(135deg, hsl(280 80% 60%) 0%, hsl(340 75% 55%) 100%)",
-        badge: "popular",
+        vibrant: true,
         savings: 17,
       },
     ];

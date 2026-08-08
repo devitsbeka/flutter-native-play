@@ -77,6 +77,7 @@ export function ShopProductGrid({
                 gradient={item.gradient}
                 badge={item.badge ?? undefined}
                 savings={item.savings}
+                vibrant={item.vibrant}
                 isPurchased={isOwned}
                 isLoading={isPurchasing === item.id}
                 canAfford={canAfford}
