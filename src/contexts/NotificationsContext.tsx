@@ -1,7 +1,11 @@
 import { createContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSound } from '@/contexts/SoundContext';
+import { translateNotificationTitle } from '@/utils/notificationTranslations';
+import { t as tStandalone } from '@/utils/standaloneTranslation';
 
 export type NotificationType =
   | 'new_message'
@@ -23,7 +27,8 @@ export type NotificationType =
   | 'subscription'
   | 'system'
   | 'welcome'
-  | 'ai_generation';
+  | 'ai_generation'
+  | 'room_ping';
 
 export interface Notification {
   id: string;
@@ -53,6 +58,7 @@ export const NotificationsContext = createContext<NotificationsContextType | und
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { playSound } = useSound();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
@@ -107,6 +113,23 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           const newNotification = payload.new as Notification;
           setNotifications((prev) => [newNotification, ...prev]);
           playSound('notification');
+          // A room ping is a call to action right now — surface it as a
+          // clickable popup that drops the host straight into the room
+          if (newNotification.type === 'room_ping') {
+            const roomCode = (newNotification.data as Record<string, unknown>)?.room_code as string | undefined;
+            toast(
+              translateNotificationTitle('room_ping', newNotification.title, newNotification.data),
+              {
+                duration: 10000,
+                action: roomCode
+                  ? {
+                      label: tStandalone('extra.pingHostOpenRoom'),
+                      onClick: () => navigate(`/team?join=${roomCode}`),
+                    }
+                  : undefined,
+              }
+            );
+          }
         }
       )
       .on(
@@ -156,7 +179,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       supabase.removeChannel(channel);
       setIsConnected(false);
     };
-  }, [user, fetchNotifications, playSound]);
+  }, [user, fetchNotifications, playSound, navigate]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     if (!user) return;

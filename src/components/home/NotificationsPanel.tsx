@@ -304,6 +304,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
         navigate('/team');
         break;
       case 'challenge':
+      case 'room_ping':
         onClose();
         if (data?.room_code) {
           navigate(`/team?join=${data.room_code}`);
