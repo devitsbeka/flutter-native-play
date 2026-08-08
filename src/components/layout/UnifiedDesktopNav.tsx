@@ -213,23 +213,23 @@ export function UnifiedDesktopNav({
             </button>
             <button
               onClick={toggleCollapsed}
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-[#002B63] hover:bg-muted/60 transition-colors"
               aria-label="Expand sidebar"
             >
-              <PanelLeft className="w-5 h-5" strokeWidth={1.5} />
+              <PanelLeft className="w-[18px] h-[18px]" strokeWidth={2.5} />
             </button>
           </div>
         ) : (
-          <div className="hidden lg:flex items-center justify-between px-4 mb-4">
+          <div className="hidden lg:flex items-center justify-between pl-4 pr-2 mb-4">
             <button onClick={() => navigate("/")} aria-label="MyTrivia" className="flex items-center cursor-pointer">
               <img src={logoDark} alt="MyTrivia" className="h-10 w-auto select-none" draggable={false} />
             </button>
             <button
               onClick={toggleCollapsed}
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-[#002B63] hover:bg-muted/60 transition-colors"
               aria-label="Collapse sidebar"
             >
-              <PanelLeft className="w-5 h-5" strokeWidth={1.5} />
+              <PanelLeft className="w-[18px] h-[18px]" strokeWidth={2.5} />
             </button>
           </div>
         )}
