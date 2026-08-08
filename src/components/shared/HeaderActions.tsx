@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Bell } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { NotificationsPanel } from "@/components/home/NotificationsPanel";
+import SpotlightSearch from "@/components/search/SpotlightSearch";
 
 interface HeaderActionsProps {
   className?: string;
@@ -15,6 +16,7 @@ export function HeaderActions({ className = "" }: HeaderActionsProps) {
   return (
     <>
       <div className={`flex items-center gap-1 ${className}`}>
+        <SpotlightSearch variant="button" />
         <motion.button
           className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
           whileHover={{ scale: 1.1 }}
