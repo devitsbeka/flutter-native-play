@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -24,8 +24,7 @@ const REEL_AVATARS: ReelItem[] = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
 }));
 
 const SLOT_WIDTH = 104; // layout width of one carousel slot, px
-const BROWSE_SCALE = 1.25; // gentle center enlargement while scrolling
-const FOCUS_SCALE = 1.9; // full enlargement after an explicit tap
+const CENTER_SCALE = 2; // the middle avatar is twice the size of the others
 
 // Snap carousel: dragging only browses (the centered item enlarges gently —
 // pure transform, no layout shifts, so the scroll stays fast). Tapping an
@@ -160,6 +159,28 @@ export function AvatarReel() {
     }
   };
 
+  // Remove one of the player's own avatars from the reel (generated rows are
+  // deleted from history; an uploaded custom is just unpinned). The applied
+  // avatar and presets can't be removed.
+  const removeItem = async (item: ReelItem) => {
+    setBusyId(item.id);
+    try {
+      if (item.kind === "generated" && item.genId) {
+        const { error } = await supabase.from("avatar_generations").delete().eq("id", item.genId);
+        if (error) throw error;
+        setGenerated((prev) => prev.filter((g) => g.id !== item.id));
+      } else if (item.kind === "custom") {
+        setCustomUrl(null);
+      }
+      setFocusedIdx(null);
+    } catch (error) {
+      console.error("Avatar remove failed:", error);
+      toast.error(t("errors.generic"));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const nearestIndex = () => {
     const c = containerRef.current;
     if (!c) return 0;
@@ -248,7 +269,6 @@ export function AvatarReel() {
       >
         {items.map((item, idx) => {
           const isCenter = idx === centerIdx;
-          const isFocused = isCenter && focusedIdx === idx;
           const isSelected = idx === selectedIdx;
           const src = resolveItem(item);
           const isBusy = busyId === item.id;
@@ -262,7 +282,7 @@ export function AvatarReel() {
             >
               <div
                 className={`relative rounded-full transition-transform duration-200 ease-out ${isBusy ? "animate-pulse" : ""}`}
-                style={{ transform: `scale(${isCenter ? (isFocused ? FOCUS_SCALE : BROWSE_SCALE) : 1})` }}
+                style={{ transform: `scale(${isCenter ? CENTER_SCALE : 1})` }}
               >
                 <div
                   className={`w-16 h-16 rounded-full overflow-hidden bg-white ${
@@ -296,7 +316,20 @@ export function AvatarReel() {
           it's already the applied one), the magic button opens the avatar
           studio (generate / animate). Dragging dismisses both. */}
       {focusedIdx !== null && focusedIdx === centerIdx && items[centerIdx] && !busyId && (
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-0 z-20 flex items-center gap-2">
+        <>
+          {/* Remove — top-right of the enlarged avatar; own avatars only,
+              and never the one currently in use */}
+          {items[centerIdx].kind !== "preset" && centerIdx !== selectedIdx && (
+            <button
+              onClick={() => void removeItem(items[centerIdx])}
+              aria-label="Remove avatar"
+              className="absolute z-30 w-7 h-7 rounded-full bg-white text-red-500 border border-border/40 shadow-md flex items-center justify-center hover:bg-red-50 transition-colors"
+              style={{ left: "calc(50% + 34px)", top: 14 }}
+            >
+              <X className="w-4 h-4" strokeWidth={3} />
+            </button>
+          )}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-0 z-20 flex items-center gap-2">
           {centerIdx !== selectedIdx && (
             <button
               onClick={() => {
@@ -318,7 +351,8 @@ export function AvatarReel() {
               <Sparkles className="w-4 h-4 text-primary-foreground" />
             </button>
           )}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
