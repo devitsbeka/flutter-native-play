@@ -204,19 +204,19 @@ export function UnifiedDesktopNav({
       <nav className={`hidden md:flex flex-col w-[72px] min-w-[72px] ${collapsed ? "" : "lg:w-[220px] lg:min-w-[220px]"} h-screen sticky top-0 border-r border-purple-900/20 bg-white/50 backdrop-blur-xl pt-[14px] lg:pt-4 pb-4 transition-all duration-200 z-50`}>
 
         {/* Logo + collapse toggle (lg+). Expanded: wordmark left, panel
-            toggle right. Collapsed: crown-only logo with the centered
-            toggle stacked under it. */}
+            toggle right. Collapsed: crown-only logo; the expand toggle
+            stays hidden and fades in when hovering the logo area. */}
         {collapsed ? (
-          <div className="hidden lg:flex flex-col items-center gap-2 mb-4">
+          <div className="group hidden lg:flex flex-col items-center gap-2 mb-4">
             <button onClick={() => navigate("/")} aria-label="MyTrivia" className="cursor-pointer">
               <img src={crownIcon} alt="MyTrivia" className="h-8 w-8 object-contain select-none" draggable={false} />
             </button>
             <button
               onClick={toggleCollapsed}
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-[#0f1729] hover:bg-muted/60 transition-colors"
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-[#0f1729] hover:bg-muted/60 transition-opacity opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"
               aria-label="Expand sidebar"
             >
-              <PanelLeft className="w-6 h-6" strokeWidth={2} />
+              <PanelLeft className="w-5 h-5" strokeWidth={2} />
             </button>
           </div>
         ) : (
