@@ -1,5 +1,7 @@
 import { LiveBadge } from "@/components/social/LiveBadge";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
+import logoDark from "@/assets/mytrivia-logo.svg";
+import logoLight from "@/assets/mytrivia-logo-light.svg";
 
 interface MyTriviaLiveLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -8,11 +10,12 @@ interface MyTriviaLiveLogoProps {
   className?: string;
 }
 
+// height is the rendered height of the SVG logo (crown + wordmark)
 const sizeConfig = {
-  sm: { fontSize: 26, badgeSize: "sm" as const },
-  md: { fontSize: 28, badgeSize: "md" as const },
-  lg: { fontSize: 40, badgeSize: "lg" as const },
-  xl: { fontSize: 48, badgeSize: "xl" as const },
+  sm: { height: 30, badgeSize: "sm" as const },
+  md: { height: 34, badgeSize: "md" as const },
+  lg: { height: 48, badgeSize: "lg" as const },
+  xl: { height: 56, badgeSize: "xl" as const },
 };
 
 export function MyTriviaLiveLogo({ 
@@ -36,12 +39,11 @@ export function MyTriviaLiveLogo({
   }
   
   const config = sizeConfig[effectiveSize];
-  const colorClass = textColor === "light" ? "text-white" : "text-black";
 
   return (
-<div 
+<div
       className={`flex flex-row flex-nowrap items-center gap-2 shrink-0 ${className}`}
-      style={{ 
+      style={{
         display: 'inline-flex',
         flexWrap: 'nowrap',
         width: 'fit-content',
@@ -49,17 +51,13 @@ export function MyTriviaLiveLogo({
         maxWidth: 'fit-content',
       }}
     >
-      <span 
-        className={`font-slackey ${colorClass} leading-none whitespace-nowrap`}
-        style={{ 
-          fontSize: config.fontSize,
-          textShadow: textColor === "light" 
-            ? '0 2px 4px rgba(0,0,0,0.3)' 
-            : 'none',
-        }}
-      >
-        MyTrivia
-      </span>
+      <img
+        src={textColor === "light" ? logoLight : logoDark}
+        alt="MyTrivia"
+        className="w-auto shrink-0 select-none"
+        style={{ height: config.height }}
+        draggable={false}
+      />
       <span className="flex items-center shrink-0" style={{ marginTop: '-2px' }}>
         <LiveBadge size={config.badgeSize} />
       </span>
