@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import bgLeader from "@/assets/bgleader.png";
+import starIcon from "@/assets/thiings/star.png";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -62,17 +66,32 @@ function useFunLeaderboard(scope: Scope, countryCode?: string | null) {
   });
 }
 
-// The signed-in player's rank when they fall outside the visible top 50
-function useMyRank(scope: Scope, countryCode: string | null | undefined, myCoins: number | undefined, enabled: boolean) {
+// The signed-in player's rank when they fall outside the visible top 50.
+// Admin accounts are excluded from the public board, so their pinned row is
+// skipped entirely — otherwise it would claim a rank the list contradicts.
+function useMyRank(
+  scope: Scope,
+  countryCode: string | null | undefined,
+  myCoins: number | undefined,
+  myUserId: string | undefined,
+  enabled: boolean
+) {
   return useQuery({
-    queryKey: ["fun-leaderboard-my-rank", scope, countryCode, myCoins],
-    queryFn: async (): Promise<number> => {
+    queryKey: ["fun-leaderboard-my-rank", scope, countryCode, myCoins, myUserId],
+    queryFn: async (): Promise<number | null> => {
+      const { data: adminData } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+      const adminIds = (adminData || []).map((r) => r.user_id);
+      if (myUserId && adminIds.includes(myUserId)) return null;
+
       let query = supabase
         .from("profiles")
         .select("user_id", { count: "exact", head: true })
         .gt("coins", myCoins ?? 0);
       if (scope === "local" && countryCode) {
         query = query.eq("country_code", countryCode);
+      }
+      if (adminIds.length > 0) {
+        query = query.not("user_id", "in", `(${adminIds.join(",")})`);
       }
       const { count } = await query;
       return (count ?? 0) + 1;
@@ -82,31 +101,27 @@ function useMyRank(scope: Scope, countryCode: string | null | undefined, myCoins
   });
 }
 
-const RANK_STYLES: Record<number, { bg: string; shadow: string }> = {
-  1: { bg: "linear-gradient(180deg, #FFE066 0%, #F5B301 100%)", shadow: "0 2px 0 #C88A00" },
-  2: { bg: "linear-gradient(180deg, #E8E8F0 0%, #B9BDCB 100%)", shadow: "0 2px 0 #8E93A6" },
-  3: { bg: "linear-gradient(180deg, #F2B27C 0%, #C97C3A 100%)", shadow: "0 2px 0 #9A5A24" },
-};
-
 function RankBadge({ rank }: { rank: number }) {
-  const special = RANK_STYLES[rank];
-  return (
-    <div className="relative shrink-0 w-9 h-9 flex items-center justify-center">
-      {rank === 1 && (
-        <span className="absolute -top-3 text-sm rotate-[-12deg] drop-shadow">👑</span>
-      )}
-      <div
-        className={`w-9 h-9 rounded-full flex items-center justify-center font-black ${
-          special ? "text-white text-base" : "text-white/90 text-sm"
-        }`}
-        style={
-          special
-            ? { background: special.bg, boxShadow: special.shadow }
-            : { background: "rgba(255,255,255,0.18)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)" }
-        }
-      >
-        {rank}
+  // Top three get the golden star with the number set inside it;
+  // everyone else keeps a quiet translucent circle.
+  if (rank <= 3) {
+    return (
+      <div className="relative shrink-0 w-11 h-11 flex items-center justify-center">
+        <img src={starIcon} alt="" className="absolute inset-0 w-full h-full object-contain select-none" draggable={false} />
+        <span
+          className="relative font-black text-white text-[15px]"
+          style={{ textShadow: "0 1px 2px rgba(146,64,14,0.7)", marginTop: "-1px" }}
+        >
+          {rank}
+        </span>
       </div>
+    );
+  }
+  return (
+    <div className="shrink-0 w-9 h-9 mx-1 rounded-full flex items-center justify-center font-black text-white/90 text-sm"
+      style={{ background: "rgba(255,255,255,0.18)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)" }}
+    >
+      {rank}
     </div>
   );
 }
@@ -169,6 +184,8 @@ export default function Leaderboards() {
   const { user, profile } = useAuth();
   const { t } = useLanguage();
   const { openProfile } = usePlayerProfile();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const countryCode = profile?.country_code || null;
@@ -185,7 +202,7 @@ export default function Leaderboards() {
 
   const myEntry = user ? entries.find((e) => e.user_id === user.id) : undefined;
   const needsOwnRank = !!user && !!profile && entries.length > 0 && !myEntry;
-  const { data: myRank } = useMyRank(scope, countryCode, profile?.coins ?? 0, needsOwnRank);
+  const { data: myRank } = useMyRank(scope, countryCode, profile?.coins ?? 0, user?.id, needsOwnRank);
 
   // Guests get one sign-in nudge per session (shared key with /team)
   useEffect(() => {
@@ -209,37 +226,38 @@ export default function Leaderboards() {
         message={t("extra.signInForLeaderboard")}
       />
 
-      {/* Transparent root so the app's global background shows through; the
-          page itself never scrolls — only the board card's row list does. */}
-      <div className="h-[100dvh] md:h-screen w-full max-w-[100vw] flex flex-col overflow-hidden">
+      {/* Fixed to the viewport; only the board card's row list scrolls.
+          The classic three-trophies illustration is the page background. */}
+      <div className="relative h-[100dvh] md:h-screen w-full max-w-[100vw] flex flex-col overflow-hidden">
+        <img
+          src={bgLeader}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover object-[center_30%] pointer-events-none select-none"
+          draggable={false}
+        />
+
         {/* Header */}
-        <div className="shrink-0 z-50 px-4 py-3 bg-background/95 backdrop-blur-md border-b border-border/30">
+        <div className="relative shrink-0 z-50 px-4 py-3 bg-background/95 backdrop-blur-md border-b border-border/30">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
-              {t("extra.ratingTitle")}
-            </h1>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => (location.key !== "default" ? navigate(-1) : navigate("/"))}
+                className="md:hidden w-10 h-10 -ml-1 rounded-full bg-white/80 shadow-sm flex items-center justify-center text-slate-700"
+                aria-label="Back"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
+                {t("extra.ratingTitle")}
+              </h1>
+            </div>
             <HeaderActions />
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 w-full max-w-xl mx-auto px-4 pt-5 pb-24 md:pb-8 flex flex-col">
-          {/* Title banner */}
-          <motion.div
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="mx-auto w-fit px-8 py-2.5 rounded-full mb-5"
-            style={{
-              background: "linear-gradient(180deg, #F472A0 0%, #E1447A 100%)",
-              boxShadow: "0 3px 0 #B22C5C, 0 6px 16px rgba(225,68,122,0.4), inset 0 1px 0 rgba(255,255,255,0.4)",
-            }}
-          >
-            <span className="font-display font-black text-white text-lg uppercase tracking-widest drop-shadow">
-              {t("leaderboard.title")}
-            </span>
-          </motion.div>
-
-          {/* Tabs */}
-          <div className="flex items-end gap-1 px-2">
+        <div className="relative flex-1 min-h-0 w-full max-w-xl mx-auto px-4 pt-5 pb-24 md:pb-8 flex flex-col">
+          {/* Tabs - centered */}
+          <div className="flex items-end justify-center gap-1 px-2">
             {tabs.map((tab) => {
               const active = scope === tab.id;
               return (
