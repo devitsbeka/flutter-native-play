@@ -82,6 +82,20 @@ export function RoomLobbyV2() {
   const [willBeObserver, setWillBeObserver] = useState(false); // Pre-calculate if host will be observer
   const prevParticipantsRef = useRef<string[]>([]);
 
+  // The TV entry points create the room first — mounting this lobby — and only
+  // then navigate to ?tvMode=true, so the mount-time initializer above misses
+  // the param. React to it arriving late as well, opening the toggle and the
+  // TV pairing (code entry) section. The param is consumed so switching the
+  // toggle off afterwards isn't re-forced on by the lingering URL.
+  useEffect(() => {
+    if (searchParams.get("tvMode") === "true") {
+      setIsTVModeEnabled(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete("tvMode");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   // Detect and handle TV session when host returns to room
   // - Active session: redirect to controller
   // - Expired/inactive session: clear and stay in lobby
