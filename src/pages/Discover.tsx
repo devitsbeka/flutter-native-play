@@ -145,27 +145,28 @@ export default function Discover() {
     });
   }, [categories, favorites, progressMap, newLevelCategories]);
 
-  // Popular categories — seeded shuffle, stable for the day
+  // Popular categories — a curated dozen of the topics people actually
+  // search and play the most (cinema, TV, music, sports...), in that order.
+  // Replaces the old daily shuffle that surfaced niche picks like geology.
   const popularCategories = useMemo(() => {
-    if (categories.length === 0) return [];
-
-    const today = new Date();
-    const dailySeed = today.getFullYear() * 10000 +
-                      (today.getMonth() + 1) * 100 +
-                      today.getDate();
-
-    const seededRandom = (seed: number) => {
-      const x = Math.sin(seed) * 10000;
-      return x - Math.floor(x);
-    };
-
-    const shuffled = [...categories];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(seededRandom(dailySeed + i) * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-
-    return shuffled.slice(0, 15);
+    const POPULAR_IDS = [
+      "movies",
+      "tv_series",
+      "music",
+      "sports",
+      "world_history",
+      "geography",
+      "science",
+      "pop_culture",
+      "video_games",
+      "celebrities",
+      "animals",
+      "fun_facts",
+    ];
+    const byId = new Map(categories.map((c) => [c.id, c]));
+    return POPULAR_IDS.map((id) => byId.get(id)).filter(
+      (c): c is NonNullable<typeof c> => Boolean(c)
+    );
   }, [categories]);
 
   // Recently viewed from localStorage
