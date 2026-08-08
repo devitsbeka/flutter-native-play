@@ -160,15 +160,16 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
             label: t("avatar.useAsProfile"),
             onClick: async () => {
               try {
-                // Download and re-upload to storage
+                // The generated artifact is a 16:9 homepage scene — save it
+                // under the scene_ marker the homepage hero reads
                 const response = await fetch(avatarUrl);
                 const avatarBlob = await response.blob();
-                
-                const finalFileName = `${user.id}/avatar_${Date.now()}.png`;
-                
+
+                const finalFileName = `${user.id}/scene_${Date.now()}.png`;
+
                 const { error: saveError } = await supabase.storage
                   .from("avatars")
-                  .upload(finalFileName, avatarBlob, { 
+                  .upload(finalFileName, avatarBlob, {
                     upsert: true,
                     contentType: 'image/png'
                   });
@@ -181,16 +182,20 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
 
                 // Save to avatar_generations table
                 await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id);
-                
+
                 await supabase.from('avatar_generations').insert({
                   user_id: user.id,
                   avatar_url: finalUrlData.publicUrl,
+                  source_image_url: imageUrl,
                   is_current: true,
                 });
 
-                await updateProfile({ avatar_url: finalUrlData.publicUrl });
+                // Circles keep showing the person: the uploaded photo becomes
+                // the profile avatar, the scene goes to the homepage hero
+                await updateProfile({ avatar_url: imageUrl, has_face_photo: true } as any);
+                queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
                 toast.success(t("avatar.avatarSaved"));
-                
+
                 onComplete?.(finalUrlData.publicUrl);
               } catch (err) {
                 console.error("Error saving avatar:", err);

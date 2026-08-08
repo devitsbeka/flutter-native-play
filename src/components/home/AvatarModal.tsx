@@ -19,6 +19,7 @@ import confetti from "canvas-confetti";
 import { t } from "@/lib/i18n";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Import mascot avatars
 import mascotAvatar1 from '@/assets/avatars/mascot-avatar-1.png';
@@ -75,6 +76,7 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
   const { user, profile, updateProfile } = useAuth();
   const { isVip } = useVipStatus();
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
 
   // Detect if current avatar is a preset mascot/bot avatar
   const isCurrentAvatarMascot = (() => {
@@ -354,15 +356,16 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
     setIsLoading(true);
 
     try {
-      // Download and re-upload to our storage
+      // The generated artifact is a 16:9 homepage scene — save it under the
+      // scene_ marker the homepage hero looks for
       const response = await fetch(urlToSave);
       const blob = await response.blob();
-      
-      const fileName = `${user.id}/avatar_${Date.now()}.png`;
-      
+
+      const fileName = `${user.id}/scene_${Date.now()}.png`;
+
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(fileName, blob, { 
+        .upload(fileName, blob, {
           upsert: true,
           contentType: 'image/png'
         });
@@ -377,18 +380,41 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
 
       const finalUrl = urlData.publicUrl;
 
-      // Save to avatar_generations table
+      // The circular avatars keep showing the person — store the original
+      // uploaded photo as the profile avatar alongside the scene
+      let profileAvatarUrl: string | null = null;
+      if (uploadedImage) {
+        try {
+          const photoBlob = await (await fetch(uploadedImage)).blob();
+          const photoFileName = `${user.id}/photo_${Date.now()}.png`;
+          const { error: photoError } = await supabase.storage
+            .from("avatars")
+            .upload(photoFileName, photoBlob, { upsert: true, contentType: 'image/png' });
+          if (!photoError) {
+            profileAvatarUrl = supabase.storage.from("avatars").getPublicUrl(photoFileName).data.publicUrl;
+          }
+        } catch (photoErr) {
+          console.warn("Saving original photo failed, keeping current avatar:", photoErr);
+        }
+      }
+
+      // Save to avatar_generations table (the current row is what the
+      // homepage scene hero reads)
       await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id);
-      
+
       await supabase.from('avatar_generations').insert({
         user_id: user.id,
         avatar_url: finalUrl,
-        source_image_url: uploadedImage || null,
+        source_image_url: profileAvatarUrl,
         is_current: true,
       });
 
-      // Update profile - AI-generated avatar implies face was present
-      await updateProfile({ avatar_url: finalUrl, has_face_photo: true } as any);
+      // Update profile - AI generation implies a face was present
+      await updateProfile({
+        ...(profileAvatarUrl ? { avatar_url: profileAvatarUrl } : {}),
+        has_face_photo: true,
+      } as any);
+      queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
 
       toast.success(t("avatar.avatarSaved"));
       finishAndClose();

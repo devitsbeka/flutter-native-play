@@ -26,6 +26,8 @@ import { PowerUpDetailModal, PowerUpType } from "@/components/game/PowerUpDetail
 import { SignupOnboardingModal } from "@/components/onboarding/SignupOnboardingModal";
 import { WelcomeOnboardingOverlay } from "@/components/onboarding/WelcomeOnboardingOverlay";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
+import { SceneHero } from "@/components/home/SceneHero";
+import { useUserScene } from "@/hooks/useUserScene";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
 import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
@@ -616,6 +618,10 @@ export default function Index() {
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
   const levelInfo = calculateLevel(profile?.total_points || 0);
+
+  // Personalized 16:9 homepage scene (generated from the user's photo) —
+  // when present it replaces the classic centered avatar hero on xl+
+  const { data: sceneUrl } = useUserScene(user?.id);
   const showAnimatePrompt = !isAnimatingFromHome && !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
 
   // /dev/v2 previews the 3D world-map homepage for logged-in users; the
@@ -1276,8 +1282,42 @@ export default function Index() {
 
             </div>}
 
+            {/* xl+ layout: personalized scene hero when one exists - LOGGED IN USERS ONLY */}
+            {user && sceneUrl && (
+              <motion.div
+                className="hidden xl:block w-full h-full pr-[300px] pointer-events-auto"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <SceneHero
+                  sceneUrl={sceneUrl}
+                  level={levelInfo.level}
+                  xpCurrent={levelInfo.xpInCurrentLevel}
+                  xpTotal={levelInfo.xpNeededForNextLevel}
+                  xpProgress={levelInfo.progress}
+                  coins={coins}
+                  gems={gems}
+                  onSceneClick={() => openAvatarModal()}
+                  onCoinsClick={() => navigate("/power-ups?section=coins")}
+                  onGemsClick={() => navigate("/power-ups?section=gems-lari")}
+                  playButton={
+                    <DesktopPlayButtonLarge
+                      onClick={handlePlayClick}
+                      playsRemaining={playsRemaining}
+                      maxPlays={maxPlays}
+                      canPlay={canPlay}
+                      isVip={isVip}
+                      isGuest={false}
+                      onboardingId="play"
+                    />
+                  }
+                />
+              </motion.div>
+            )}
+
             {/* xl+ layout: Avatar centered - LOGGED IN USERS ONLY */}
-            {user && <motion.div 
+            {user && !sceneUrl && <motion.div
               className="hidden xl:flex flex-col items-center justify-center w-full h-full px-4 -ml-[170px]"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
