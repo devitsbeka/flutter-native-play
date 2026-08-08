@@ -77,6 +77,8 @@ interface GameModalProps {
   iconEmoji?: string;
   iconSrc?: string;
   title: React.ReactNode;
+  // Small icon shown next to the title in the fullScreen header bar
+  titleIcon?: React.ReactNode;
   subtitle?: string;
   children?: React.ReactNode;
   footer?: React.ReactNode;
@@ -109,6 +111,7 @@ export function GameModal({
   iconEmoji,
   iconSrc,
   title,
+  titleIcon,
   subtitle,
   children,
   footer,
@@ -149,7 +152,19 @@ export function GameModal({
   const handleClose = onClose || (() => {});
   const handleBack = onBack || onClose || (() => {});
 
-  // Full-screen modal layout
+  // Escape always dismisses an open modal (same as the back/close buttons)
+  React.useEffect(() => {
+    if (!isOpen || !onClose) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
+
+  // Full-screen modal layout: edge-to-edge on mobile; on md+ it becomes a
+  // centered panel over a dimmed backdrop (~60% of the page) so the page
+  // underneath stays visible.
   if (fullScreen) {
     return (
       <AnimatePresence mode="wait">
@@ -159,7 +174,16 @@ export function GameModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[100] flex flex-col"
+            className="fixed inset-0 z-[100] flex md:items-center md:justify-center md:bg-black/50 md:backdrop-blur-[2px] md:p-6"
+            onClick={!disableBackdropClick && onClose ? handleClose : undefined}
+          >
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 380, damping: 32 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative flex flex-col w-full h-full md:h-auto md:max-h-[85vh] md:w-[60%] md:min-w-[560px] md:max-w-3xl md:rounded-3xl md:overflow-hidden md:shadow-2xl"
             style={{
               background: "linear-gradient(180deg, #FDFAFF 0%, #F6E8FF 100%)",
               paddingBottom: "env(safe-area-inset-bottom)",
@@ -194,8 +218,9 @@ export function GameModal({
                 <ChevronLeft className="w-6 h-6 text-gray-700" />
               </motion.button>
               
-              {/* Centered title */}
-              <div className="flex-1 text-center px-2">
+              {/* Centered title (with optional small icon) */}
+              <div className="flex-1 flex items-center justify-center gap-2 px-2 min-w-0">
+                {titleIcon}
                 <h1 className="font-display text-lg font-bold text-gray-900 truncate">
                   {title}
                 </h1>
@@ -316,6 +341,7 @@ export function GameModal({
                 </div>
               </motion.div>
             )}
+          </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
