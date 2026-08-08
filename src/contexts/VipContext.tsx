@@ -61,6 +61,12 @@ const LIFETIME_EXPIRES_AT = "2126-01-01T00:00:00.000Z";
 const isLifetime = (expiresAt: string) =>
   new Date(expiresAt).getTime() >= new Date("2100-01-01T00:00:00Z").getTime();
 
+// Individually granted lifetime PRO accounts (self-granted on their own
+// login, like admins — RLS only lets a user write their own subscription row)
+const LIFETIME_PRO_USER_IDS = new Set<string>([
+  "a22491af-e2a1-4072-bee0-a2f804393a77", // beka
+]);
+
 interface VipContextType {
   subscription: VipSubscription | null;
   isVip: boolean;
@@ -134,18 +140,20 @@ export function VipProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    // Admins keep lifetime PRO so every PRO feature is testable on the real
-    // account. RLS lets a user write only their own subscription row, so this
-    // self-grant runs client-side on login and heals itself if the row is
-    // ever removed or shortened.
+    // Admins and individually granted accounts keep lifetime PRO. RLS lets a
+    // user write only their own subscription row, so this self-grant runs
+    // client-side on login and heals itself if the row is ever removed or
+    // shortened.
     const ensureAdminLifetimePro = async () => {
-      const { data: adminRole } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      if (!adminRole) return;
+      if (!LIFETIME_PRO_USER_IDS.has(user.id)) {
+        const { data: adminRole } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        if (!adminRole) return;
+      }
 
       const { data: existing } = await supabase
         .from("vip_subscriptions")
