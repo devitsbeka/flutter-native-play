@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import type { ShopPageData } from "@/hooks/useShopPageData";
 
 export type PowerUpType = "5050" | "freeze" | "replace" | "time-drain";
 
@@ -151,6 +152,11 @@ export function useUserPowerUps() {
       queryClient.setQueryData<Record<PowerUpType, number>>(queryKey, (prev) =>
         prev ? { ...prev, [type]: quantity } : prev
       );
+      // The shop page renders counts from its consolidated query — keep it in
+      // sync too, or purchases don't show up there until a hard refresh.
+      queryClient.setQueryData<ShopPageData>(["shopPageData", user.id], (prev) =>
+        prev ? { ...prev, powerUps: { ...prev.powerUps, [type]: quantity } } : prev
+      );
       return quantity;
     },
     [user?.id, queryClient, queryKey]
@@ -178,7 +184,8 @@ export function useUserPowerUps() {
 
   const refetch = useCallback(() => {
     queryClient.invalidateQueries({ queryKey });
-  }, [queryClient, queryKey]);
+    queryClient.invalidateQueries({ queryKey: ["shopPageData", user?.id] });
+  }, [queryClient, queryKey, user?.id]);
 
   return {
     powerUps,
