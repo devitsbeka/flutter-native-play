@@ -714,18 +714,20 @@ function TeamContentV2() {
         <div id="team-main-content" className="flex-1 flex flex-col pb-24 lg:pb-0 bg-background min-w-0">
           {/* STICKY: Tabs - sits below the page header */}
           <div className="sticky z-20 bg-background/95 backdrop-blur-md w-full max-w-full" style={{ top: headerHeight }}>
-              {/* Unified Tab Bar - Full Width */}
+              {/* Unified Tab Bar - compact left-aligned tabs on md+, with the
+                  create button pinned to the right edge of the same row;
+                  mobile keeps full-width equal tabs (create stays in the
+                  filter bar there) */}
               <div className="px-4 w-full md:max-w-[1115px] mx-auto pt-3 pb-2 overflow-hidden">
                 <div className="flex items-center justify-between gap-3">
-                  {/* Tab container - takes available space */}
-                  <div 
-                    className="relative flex-1 flex rounded-2xl bg-muted p-1.5"
+                  {/* Tab container */}
+                  <div
+                    className="relative flex-1 md:flex-initial md:w-fit flex rounded-2xl bg-muted p-1.5"
                     style={{
                       boxShadow: "inset 0 2px 4px hsl(0 0% 0% / 0.05)",
                     }}
                   >
-                    {/* Tabs with equal distribution */}
-                     {[
+                    {[
                       { id: "explore", label: t("extra.tabExplore") },
                       { id: "rooms", label: t("extra.tabRooms") },
                       { id: "my-content", label: t("extra.tabMyTrivia") },
@@ -739,7 +741,7 @@ function TeamContentV2() {
                             }
                           }}
                           onClick={() => handleTabPress(tab.id)}
-                          className={`touch-manipulation relative flex-1 min-w-0 flex items-center justify-center gap-2 rounded-xl px-2 py-2 sm:px-4 sm:py-2.5 text-[13px] sm:text-sm font-semibold transition-colors ${
+                          className={`touch-manipulation relative flex-1 md:flex-none min-w-0 flex items-center justify-center gap-2 rounded-xl px-2 py-2 sm:px-4 sm:py-2.5 md:px-5 text-[13px] sm:text-sm font-semibold transition-colors ${
                           activeTab === tab.id
                             ? "text-foreground"
                             : "text-muted-foreground hover:text-foreground"
@@ -759,6 +761,24 @@ function TeamContentV2() {
                       </button>
                     ))}
                   </div>
+
+                  {/* Create button - right edge, aligned with the tabs (md+) */}
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() =>
+                      activeTab === "rooms"
+                        ? setShowCreateModal(true)
+                        : gateWithRewardedAd(() => setShowCreateTypeModal(true))
+                    }
+                    className="hidden md:flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-primary text-primary-foreground shadow-sm shrink-0 text-sm font-bold"
+                  >
+                    {activeTab === "rooms"
+                      ? t("extra.addRoom")
+                      : activeTab === "my-content"
+                        ? t("extra.feedCreateTriviaBtn")
+                        : t("extra.createTriviaBtn")}
+                  </motion.button>
                 </div>
               </div>
 

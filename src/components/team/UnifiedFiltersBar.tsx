@@ -164,13 +164,14 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
 
             <div className="flex-1 min-w-0" />
 
-            {/* Add button - right side */}
+            {/* Add button - right side (mobile only; on md+ the create button
+                lives in the tab row, aligned to the tabs) */}
             {onAddClick && (
               <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 onClick={onAddClick}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0"
+                className="flex md:hidden items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0"
               >
                 <span className="text-[13px] font-bold">{defaultAddText}</span>
               </motion.button>
