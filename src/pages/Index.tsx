@@ -788,7 +788,10 @@ export default function Index() {
             {/* Center: Logo + Spotlight */}
             <div className="flex-1 flex justify-center md:justify-start items-center gap-4">
               {/* Logo - responsive sizing: sm on mobile/tablet, md on desktop */}
-              <MyTriviaLiveLogo responsive />
+              {/* lg+ shows the logo in the left sidebar instead */}
+              <div className="lg:hidden">
+                <MyTriviaLiveLogo responsive />
+              </div>
             </div>
             
             {/* Right side: Search/Notification for users, Sign In for guests */}

@@ -650,8 +650,8 @@ function TeamContentV2() {
           <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md w-full max-w-full">
               <div className="px-4 py-3 border-b border-border/30">
                 <div className="flex items-center justify-between gap-3">
-                  {/* Left: Logo - aligned to left edge */}
-                  <div className="flex items-center gap-4">
+                  {/* Left: Logo - aligned to left edge (lg+ shows it in the sidebar) */}
+                  <div className="flex items-center gap-4 lg:hidden">
                     <MyTriviaLiveLogo responsive />
                   </div>
 
