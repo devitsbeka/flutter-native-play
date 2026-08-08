@@ -296,9 +296,10 @@
   .liquid-glass {
     background: rgba(252, 247, 255, 0.8);
     border: 1.5px solid #e8e0f5;
+    /* No large blurred drop shadow — on the light purple page it reads as a
+       smudged second card behind the container. */
     box-shadow:
       0px 2px 8px 0px rgba(102, 51, 153, 0.06),
-      0px 8px 24px 0px rgba(102, 51, 153, 0.12),
       inset 0px 1.8px 0px 0px hsl(0 0% 100%);
   }
 
