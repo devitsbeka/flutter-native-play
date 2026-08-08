@@ -4,10 +4,12 @@
 // ai_generation_settings table (setting_type 'avatar_static'); the
 // AdminAIPromptSync component keeps that row in sync with this file, so
 // editing this file is the way to change the prompt.
-// Image model for scene generation, resolved by the AI gateway (OpenRouter
-// model id). GPT Image 2 leads on identity preservation from a reference
-// photo; "bytedance-seed/seedream-4.5" is the strong alternative.
-export const SCENE_AVATAR_MODEL = "openai/gpt-image-2";
+// Image model for scene generation, resolved by the AI gateway. The prod
+// gateway rejected "openai/gpt-image-2" (generate-avatar 500s), so this stays
+// on the Gemini image model every provider branch supports. To use GPT Image 2
+// or Seedream, point AI_GATEWAY_URL at an OpenRouter-compatible endpoint in
+// Supabase secrets first, then switch this id.
+export const SCENE_AVATAR_MODEL = "google/gemini-2.5-flash-image-preview";
 
 export const SCENE_AVATAR_PROMPT = `Create a premium stylized 3D game-avatar scene using the uploaded face photo as the identity reference.
 
