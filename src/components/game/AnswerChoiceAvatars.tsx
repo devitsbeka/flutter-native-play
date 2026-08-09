@@ -53,13 +53,17 @@ export function AnswerChoiceAvatars({
       initial={{ opacity: 0, scale: 0.6 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: "spring", stiffness: 500, damping: 28 }}
+      // The -50% lift must ride inside framer's transform: the animated
+      // scale writes an inline transform that overrides any Tailwind
+      // translate class, which used to leave the badge hanging below centre.
+      style={placement === "inline" ? { y: "-50%" } : undefined}
       className={cn(
         "absolute flex -space-x-1.5 pointer-events-none z-10",
         // The answer button's wrapper includes a 4px 3D depth lip below the
         // face, so the wrapper's 50% line sits 2px below the visual centre
         // of the face — offset by that to land exactly mid-face.
         placement === "inline"
-          ? "right-3 top-[calc(50%-2px)] -translate-y-1/2"
+          ? "right-3 top-[calc(50%-2px)]"
           : "top-1.5 right-1.5",
         className
       )}
