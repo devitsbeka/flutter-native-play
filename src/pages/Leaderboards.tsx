@@ -71,7 +71,6 @@ function useFunLeaderboard(scope: Scope, countryCode?: string | null) {
     },
     staleTime: 60_000,
     gcTime: 5 * 60_000,
-    placeholderData: (prev) => prev,
   });
 }
 
