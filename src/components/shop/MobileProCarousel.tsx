@@ -1,6 +1,5 @@
 import { siteUrl } from "@/config/site";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { Crown, Users, Sparkles, Check, ChevronRight, Loader2, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
@@ -123,22 +122,35 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
     return { text: t("extra.purchaseBtn"), isActive: false };
   };
 
+  // Native scroll-snap reel: swiping is the browser's own smooth scrolling.
+  // Auto-advance only steps in after 8s without the user touching the reel.
+  const reelRef = useRef<HTMLDivElement | null>(null);
+  const lastInteraction = useRef(0);
+
+  const scrollToIndex = useCallback((index: number) => {
+    const el = reelRef.current;
+    if (!el) return;
+    el.scrollTo({ left: index * el.clientWidth, behavior: "smooth" });
+  }, []);
+
+  const onReelScroll = useCallback(() => {
+    const el = reelRef.current;
+    if (!el) return;
+    const idx = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
+    setCurrentIndex(Math.min(SLIDES.length - 1, Math.max(0, idx)));
+  }, [SLIDES.length]);
+
   useEffect(() => {
     if (!isActive) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % SLIDES.length);
+      if (Date.now() - lastInteraction.current < 8000) return;
+      const el = reelRef.current;
+      if (!el) return;
+      const idx = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
+      scrollToIndex((idx + 1) % SLIDES.length);
     }, 6000);
     return () => clearInterval(interval);
-  }, [SLIDES.length, isActive]);
-
-  const handleSwipe = useCallback((_: any, info: PanInfo) => {
-    const swipeThreshold = 50;
-    if (info.offset.x < -swipeThreshold) {
-      setCurrentIndex((prev) => Math.min(prev + 1, SLIDES.length - 1));
-    } else if (info.offset.x > swipeThreshold) {
-      setCurrentIndex((prev) => Math.max(prev - 1, 0));
-    }
-  }, [SLIDES.length]);
+  }, [SLIDES.length, isActive, scrollToIndex]);
 
   const handleCardClick = () => { navigate('/profile?tab=PRO'); };
   const handleUpgrade = async (tierId: SimplifiedTier) => {
@@ -168,28 +180,27 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
     }
   };
 
-  const slide = SLIDES[currentIndex];
-  const SlideIcon = slide.icon;
-  const isInviteSlide = slide.type === "invite";
-  const isDealSlide = slide.type === "deal";
-  const activeDeal = slide.id === "deal-daily" ? dailyDeal : hourlyDeal;
 
   return (
     <div ref={containerRef} className="px-4 pt-4 pb-2 md:pb-4">
-      <div className={`relative overflow-hidden rounded-3xl ${isDealSlide ? "" : "cursor-pointer"}`} onClick={isDealSlide ? undefined : handleCardClick}>
-        <AnimatePresence mode="wait">
-          <motion.div
+      <div
+        ref={reelRef}
+        onScroll={onReelScroll}
+        onPointerDown={() => { lastInteraction.current = Date.now(); }}
+        onTouchStart={() => { lastInteraction.current = Date.now(); }}
+        className="flex snap-x snap-mandatory overflow-x-auto scrollbar-hide gap-3 rounded-3xl"
+      >
+        {SLIDES.map((slide) => {
+          const SlideIcon = slide.icon;
+          const isInviteSlide = slide.type === "invite";
+          const isDealSlide = slide.type === "deal";
+          const activeDeal = slide.id === "deal-daily" ? dailyDeal : hourlyDeal;
+          return (
+          <div
             key={slide.id}
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.3 }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.3}
-            onDragEnd={handleSwipe}
-            className="relative rounded-2xl overflow-hidden flex min-h-[280px] md:min-h-[300px]"
-            style={{ background: "gradient" in slide ? slide.gradient : "transparent", opacity: isProcessing ? 0.7 : 1, touchAction: "pan-y" }}
+            onClick={isDealSlide ? undefined : handleCardClick}
+            className={`relative w-full shrink-0 snap-center rounded-2xl overflow-hidden flex min-h-[280px] md:min-h-[300px] ${isDealSlide ? "" : "cursor-pointer"}`}
+            style={{ background: "gradient" in slide ? slide.gradient : "transparent", opacity: isProcessing ? 0.7 : 1 }}
           >
             {isDealSlide ? (
               <DealCard
@@ -323,16 +334,19 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
             </div>
             </>
             )}
-          </motion.div>
-        </AnimatePresence>
+          </div>
+          );
+        })}
       </div>
 
-      <div className="flex flex-col items-center gap-1 mt-2">
+      {/* relative z-10: the background blob layer paints over plain
+          (non-stacking-context) elements and was swallowing the dots */}
+      <div className="relative z-10 flex flex-col items-center gap-1 mt-2">
         <div className="flex justify-center gap-2">
           {SLIDES.map((_, index) => (
             <button
               key={index}
-              onClick={() => setCurrentIndex(index)}
+              onClick={() => { lastInteraction.current = Date.now(); scrollToIndex(index); }}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex ? "bg-purple-500 w-6" : "bg-muted-foreground/30 hover:bg-muted-foreground/50"}`}
             />
           ))}
