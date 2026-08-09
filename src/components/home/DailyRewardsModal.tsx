@@ -61,10 +61,9 @@ const celebrateClaim = () => {
 function RewardPill({ icon, value }: { icon: string; value: number }) {
   return (
     <div
-      className="flex h-[46px] items-center gap-1.5 rounded-[16px] px-3"
+      className="flex h-[46px] items-center gap-2 rounded-[16px] px-5"
       style={{
         background: "linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.25) 100%)",
-        border: "1.5px solid rgba(255,255,255,0.7)",
         boxShadow: "0 3px 10px rgba(0,0,0,0.15), inset 0 1.5px 0 rgba(255,255,255,0.6)",
         backdropFilter: "blur(4px)",
       }}
@@ -113,7 +112,6 @@ function DayRewardCard({
       className="relative flex h-[260px] w-[272px] flex-shrink-0 snap-center flex-col items-center justify-between rounded-[24px] px-3 py-6"
       style={{
         background: cardGradient(index),
-        border: "1.5px solid #D6399C",
         filter: isLocked ? "saturate(0.75) brightness(1.05)" : undefined,
       }}
     >
@@ -132,7 +130,7 @@ function DayRewardCard({
       {isClaimed ? (
         <div
           className="flex h-[50px] w-[144px] items-center justify-center gap-1.5 rounded-[18px]"
-          style={{ background: "rgba(255,255,255,0.3)", border: "0.5px solid rgba(255,255,255,0.5)" }}
+          style={{ background: "rgba(255,255,255,0.3)" }}
         >
           <Check className="h-5 w-5 text-white" />
           <span className="text-base font-bold text-white">{t("dailyRewards.claimed")}</span>
@@ -140,7 +138,7 @@ function DayRewardCard({
       ) : isLocked ? (
         <div
           className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
-          style={{ background: "rgba(255,255,255,0.25)", border: "0.5px solid rgba(255,255,255,0.4)" }}
+          style={{ background: "rgba(255,255,255,0.25)" }}
         >
           <Lock className="h-5 w-5 text-white/80" />
         </div>
@@ -154,7 +152,6 @@ function DayRewardCard({
           className="h-[50px] w-[144px] rounded-[18px] text-lg font-bold text-black disabled:opacity-60"
           style={{
             background: "linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(254,254,254,0.6) 100%)",
-            border: "0.5px solid #BFCDDE",
           }}
         >
           {t("dailyRewards.claim")}
@@ -253,8 +250,11 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
   useEffect(() => {
     if (isOpen && scrollContainerRef.current) {
       const container = scrollContainerRef.current;
+      // Card i's center = px-6 edge padding (24) + i * (272 card + 16 gap)
+      // + half a card; subtracting half the viewport centers it exactly, so
+      // both peeking neighbors show through with equal gaps.
       const cardWidth = 272 + 16; // w-[272px] + gap-4 (16px)
-      const scrollPosition = currentDay * cardWidth - container.offsetWidth / 2 + cardWidth / 2;
+      const scrollPosition = 24 + currentDay * cardWidth + 136 - container.offsetWidth / 2;
       setTimeout(() => {
         container.scrollTo({ left: Math.max(0, scrollPosition), behavior: "smooth" });
       }, 100);
