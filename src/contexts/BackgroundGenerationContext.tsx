@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { t } from "@/lib/i18n";
 import { generatePublicPortrait } from "@/utils/portraitAvatar";
+import { SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";
 
 export type GenerationType = "avatar" | "cover";
 
@@ -141,7 +142,7 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
 
         // Generate avatar via edge function
         const { data, error } = await supabase.functions.invoke("generate-avatar", {
-          body: { imageUrl },
+          body: { imageUrl, prompt: SCENE_AVATAR_PROMPT },
         });
 
         if (error) throw new Error(error.message);

@@ -32,6 +32,7 @@ import mascotAvatar5 from '@/assets/avatars/mascot-avatar-5.png';
 import mascotAvatar6 from '@/assets/avatars/mascot-avatar-6.png';
 import mascotAvatar7 from '@/assets/avatars/mascot-avatar-7.png';
 import mascotAvatar8 from '@/assets/avatars/mascot-avatar-8.png';
+import { SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";
 
 const DEFAULT_AVATARS = [
   mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4,
@@ -379,7 +380,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
       // Generate avatar via edge function
       const { data, error } = await supabase.functions.invoke("generate-avatar", {
-        body: { imageUrl },
+        body: { imageUrl, prompt: SCENE_AVATAR_PROMPT },
       });
 
       if (error) throw new Error(error.message);

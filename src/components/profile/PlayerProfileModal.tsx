@@ -20,6 +20,7 @@ import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 import { MASCOT_USER_IDS } from "@/lib/excludedUsers";
 import { CreateQuizModal } from "@/components/social/CreateQuizModal";
 import { AdminProfileEditor } from "@/components/profile/AdminProfileEditor";
+import { SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";
 
 import {
   DropdownMenu,
@@ -196,7 +197,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
       toast.info(t("extra.aiAvatarGenerating"), { duration: 10000 });
 
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-avatar", {
-        body: { imageUrl: rawPublicUrl },
+        body: { imageUrl: rawPublicUrl, prompt: SCENE_AVATAR_PROMPT },
       });
 
       if (aiError || !aiData?.success) {
