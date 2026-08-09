@@ -878,40 +878,46 @@ export default function Index() {
             Mounted only when the viewport is actually xl, so smaller
             screens never download the media. */}
         {!isSceneViewport ? null : sceneUrl ? (
-          /* Generated 16:9 scene: a single width-driven full-bleed layer.
-             The artwork always spans the exact viewport width, anchored to
-             the bottom. On screens squarer than 16:9 it renders shorter
-             than the viewport and its mask-faded top edge melts into the
-             light page background (whole scene visible, scaled down); on
-             screens wider than 16:9 the excess height crops off the top
-             via the container's overflow-hidden. No side cropping at any
-             size, so edge props never get cut. */
+          /* Generated 16:9 scene: the sharp artwork lives strictly in the
+             band BELOW the friends reel (top 230px), bottom-anchored and
+             centered, so the subject's head can never sit under the reel.
+             A blurred copy of the same artwork fills the whole page behind
+             it — no hard edges on any aspect ratio, and edge props are
+             never cut. */
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
             className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none overflow-hidden"
           >
-            {sceneVideoUrl ? (
-              /* Seamless idle-loop video — poster keeps the still visible
-                 until the video is ready to play */
-              <video
-                src={sceneVideoUrl}
-                poster={sceneUrl}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="absolute inset-x-0 bottom-0 w-full h-auto aspect-video object-cover object-[center_bottom] [mask-image:linear-gradient(to_bottom,transparent_0,black_200px)]"
-              />
-            ) : (
-              <img
-                src={sceneUrl}
-                alt=""
-                className="absolute inset-x-0 bottom-0 w-full h-auto aspect-video object-cover object-[center_bottom] [mask-image:linear-gradient(to_bottom,transparent_0,black_200px)]"
-                draggable={false}
-              />
-            )}
+            <img
+              src={sceneUrl}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110"
+              draggable={false}
+            />
+            <div className="absolute left-0 right-0 top-[230px] bottom-0 flex items-end justify-center">
+              {sceneVideoUrl ? (
+                /* Seamless idle-loop video — poster keeps the still visible
+                   until the video is ready to play */
+                <video
+                  src={sceneVideoUrl}
+                  poster={sceneUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="max-h-full max-w-full aspect-video object-contain"
+                />
+              ) : (
+                <img
+                  src={sceneUrl}
+                  alt=""
+                  className="max-h-full max-w-full aspect-video object-contain"
+                  draggable={false}
+                />
+              )}
+            </div>
           </motion.div>
         ) : showDefaultScene && user ? (
           <motion.video

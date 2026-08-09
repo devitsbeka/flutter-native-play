@@ -468,9 +468,12 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
         is_current: true,
       });
 
-      // Update profile - AI generation implies a face was present
+      // Update profile - AI generation implies a face was present. The old
+      // animated avatar belongs to the previous face, so it retires too —
+      // surfaces that prefer the animation would otherwise keep showing
+      // the old avatar.
       await updateProfile({
-        ...(profileAvatarUrl ? { avatar_url: profileAvatarUrl } : {}),
+        ...(profileAvatarUrl ? { avatar_url: profileAvatarUrl, animated_avatar_url: null } : {}),
         has_face_photo: true,
       } as any);
       queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
@@ -485,7 +488,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
         const photoUrl = profileAvatarUrl;
         void generatePublicPortrait(user.id, photoUrl).then((portraitUrl) => {
           if (portraitUrl) {
-            void updateProfile({ avatar_url: portraitUrl } as any);
+            void updateProfile({ avatar_url: portraitUrl, animated_avatar_url: null } as any);
           }
         });
       }
