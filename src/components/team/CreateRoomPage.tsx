@@ -9,6 +9,8 @@ import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
+import bubbleBgVideo from "@/assets/shopbg.mp4";
+import bubbleBgVideoWebm from "@/assets/shopbg.webm";
 import { createNotification } from "@/hooks/useNotifications";
 // Room names are AI-generated via edge function during room creation
 import { TVPlayModal } from "@/components/team/TVPlayModal";
@@ -823,8 +825,24 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-background flex flex-col"
+      className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden"
     >
+      {/* Bubble background video behind the whole page, washed light so the
+          form stays readable (negative z paints it under the content) */}
+      <div className="absolute inset-0 -z-10 pointer-events-none" aria-hidden>
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="h-full w-full object-cover"
+        >
+          <source src={bubbleBgVideoWebm} type="video/webm" />
+          <source src={bubbleBgVideo} type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-[rgba(252,247,255,0.7)]" />
+      </div>
+
       {/* Header - simplified */}
       <div className="border-b border-border/30">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-4">
