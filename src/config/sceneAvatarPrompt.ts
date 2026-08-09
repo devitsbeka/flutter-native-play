@@ -31,7 +31,10 @@ A soft, light, airy pastel world:
 - Ground contact: soft, subtle shadows under the platform and props; the platform floats in the pastel void.
 
 THE CHARACTER
-Adapt the person from the reference photo into a charming, high-end stylized 3D game character (subtly larger head, expressive friendly eyes, clean rounded forms, detailed hair, soft skin shading — premium casual-game quality, never childish, plastic, uncanny or hyper-realistic).
+Adapt the person from the reference photo into a charming, high-end stylized 3D game character (expressive friendly eyes, clean rounded forms, detailed hair, soft skin shading — premium casual-game quality, never childish, plastic, uncanny or hyper-realistic).
+
+BODY PROPORTIONS — CRITICAL
+Natural adult head-to-body proportions: the head is about 1/6.5 of the character's full height, matching the body's scale exactly. The head must NEVER look enlarged, inflated or oversized relative to the torso and limbs — absolutely no bobblehead or chibi effect. Face, head and body all share one consistent realistic-stylized scale.
 
 FACE STYLIZATION — CRITICAL
 Render the face as a polished 3D CG interpretation of the person — the same render language as the rest of the character, never a photograph pasted onto a stylized body, but also never a cartoon. Keep natural adult facial proportions: normal-sized eyes, real nose and lip shapes, true face geometry. Stylize only the surface treatment: smooth idealized CG skin with soft subsurface shading instead of photographic pores and blemishes, cleanly groomed sculpted hair and facial hair instead of photo texture, and soft even studio light on the face instead of camera-real lighting. Think of a high-end animated-feature or AAA game cinematic version of this exact person — the likeness unmistakable (same face shape, hairstyle, hair color, facial hair silhouette, eyebrows, skin tone, distinctive features), realistic proportions, just rendered as beautiful clean CG rather than photography. Avoid both extremes: no photoreal skin texture, and no toon exaggeration, oversized eyes or caricature.
@@ -39,7 +42,10 @@ Render the face as a polished 3D CG interpretation of the person — the same re
 Pose and wardrobe are FIXED: the character sits relaxed on the bean bag, leaning back comfortably, one hand holding a purple mug decorated with a small gold crown, the other hand resting on their knee, smiling warmly at the camera. They wear a purple hoodie with a small gold crown motif on the chest, dark charcoal joggers, and purple-and-gold sneakers.
 
 CAMERA AND ZOOM — FIXED
-Wide 16:9 hero composition, eye-level, straight-on, with the camera pulled comfortably back. The full platform with all props is visible with clear margin around it; the seated character occupies roughly 20–25% of the frame width, centered horizontally, with generous airy negative space above, below and to the sides — the platform and character together fill only about the central two-thirds of the frame. Do not zoom in closer than this; do not crop the platform, the stool, the cube or the trophy.
+Wide 16:9 hero composition, eye-level, straight-on, with the camera pulled far back. The full platform with all props is visible with a wide margin around it; the seated character occupies roughly 15–18% of the frame width and no more than 55% of the frame height, centered horizontally, with generous airy negative space above, below and to the sides. Do not zoom in closer than this; do not crop the platform, the stool, the cube or the trophy.
+
+SAFE AREA — CRITICAL
+The outer 15% of the frame on EVERY side (top, bottom, left, right) must contain ONLY pale atmosphere, soft blobs and empty pastel void — no part of the character, platform or props may enter it. All meaningful content stays inside the central 70% of the frame. The app displays this artwork on many screen sizes and freely crops or fades any edge, so anything near an edge will be lost — compose as if the edges do not exist.
 
 ART DIRECTION
 Premium stylized 3D illustration. Soft rounded geometry, beautiful character sculpting, high-quality global illumination, soft subsurface skin shading, gentle volumetric light. Bright, light, optimistic mood — pastel lavender, lilac, pink, mint and cream palette with subtle gold accents. Highly polished casual-game production quality.
