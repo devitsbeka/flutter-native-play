@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -71,7 +71,6 @@ function useFunLeaderboard(scope: Scope, countryCode?: string | null) {
     },
     staleTime: 60_000,
     gcTime: 5 * 60_000,
-    placeholderData: (prev) => prev,
   });
 }
 
@@ -146,31 +145,32 @@ const TROPHY_BY_RANK: Record<number, string> = {
   3: trophyBronze,
 };
 
-function BoardRow({
-  entry,
-  isMe,
-  onOpenProfile,
-  youLabel,
-}: {
+// forwardRef is required by AnimatePresence popLayout — it measures and
+// re-parents exiting rows through the ref, and layout FLIP breaks without it.
+const BoardRow = forwardRef<HTMLButtonElement, {
   entry: BoardEntry;
   isMe: boolean;
   onOpenProfile: (userId: string) => void;
   youLabel: string;
-}) {
+}>(function BoardRow({ entry, isMe, onOpenProfile, youLabel }, ref) {
   const flag = entry.country_code ? getCountryFlag(entry.country_code) : "";
   return (
     <motion.button
+      ref={ref}
       // layout keys the FLIP re-arrangement on tab switches: rows that stay
-      // glide to their new rank, newcomers rise in from below, leavers drop
+      // glide to their new rank, newcomers rise in from below, leavers drop.
+      // No CSS transition classes here — they fight framer's per-frame
+      // transform updates and freeze the glide.
       layout
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 60, scale: 0.96 }}
       transition={{ type: "spring", stiffness: 320, damping: 30 }}
+      whileTap={isMe ? undefined : { scale: 0.99 }}
       onClick={() => !isMe && onOpenProfile(entry.user_id)}
       className={`w-full flex items-center gap-2.5 rounded-[18px] pl-2 pr-4 py-2 text-left ${
-        isMe ? "" : "hover:brightness-105 active:scale-[0.99]"
-      } transition-all`}
+        isMe ? "" : "hover:brightness-105 transition-[filter]"
+      }`}
       // The main page stat-pill treatment: white translucent gradient,
       // light lavender border, chunky bottom lip and white inset highlight
       style={
@@ -219,7 +219,7 @@ function BoardRow({
       </span>
     </motion.button>
   );
-}
+});
 
 // The player's country, named in the app language (e.g. საქართველო, not
 // "Country"); falls back to the generic tab label for unknown codes.
