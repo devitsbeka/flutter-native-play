@@ -230,7 +230,7 @@ function PlayerFeedItemComponent({
 
   return (
     <div
-      className="overflow-hidden rounded-2xl border-2 border-primary/30 shadow-sm"
+      className="overflow-hidden rounded-2xl border border-primary/15 shadow-sm"
       style={{
         touchAction: 'manipulation',
         contentVisibility: 'auto',

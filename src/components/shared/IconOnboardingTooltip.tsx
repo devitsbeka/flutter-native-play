@@ -48,7 +48,7 @@ export function IconOnboardingTooltip() {
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
           className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 pointer-events-none"
         >
-          <div className="relative bg-white text-slate-700 px-3.5 py-2.5 rounded-xl shadow-lg border border-slate-200/80 whitespace-nowrap">
+          <div className="relative bg-white text-slate-700 px-3.5 py-2.5 rounded-xl shadow-lg border border-slate-200/80 max-w-[min(78vw,290px)]">
             <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-l border-t border-slate-200/80 rotate-45" />
             <div className="flex items-center gap-2">
               <ImageIcon className="w-4 h-4 text-violet-500 shrink-0" />
