@@ -630,12 +630,15 @@ export const ka = {
   // ==========================================
   missions: {
     title: "მისიები",
-    subtitle: "შეასრულე მისიები და აიღე ჯილდოები!",
+    subtitle: "შეასრულე მისიები და მიიღე ჯილდოები",
     daily: "დღის",
     weekly: "კვირის",
     achievements: "მიღწევები",
     streak: "სტრიქი",
     days: "დღე",
+    progress: "პროგრესი",
+    completedLabel: "შესრულებული",
+    continueBtn: "გაგრძელება",
     claimReward: "მიიღე ჯილდო",
     claimed: "აღებულია",
     received: "მიღებულია!",

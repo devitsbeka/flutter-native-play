@@ -162,7 +162,7 @@ export default function CategoryQuizPage() {
   const { addCurrency } = useCurrency();
   
   // Mission tracking
-  const { updateMissionProgress } = useMissions();
+  const { trackMissionEvent } = useMissions();
   const { toast: showToast } = useToast();
   
   // Power-up state
@@ -540,20 +540,22 @@ export default function CategoryQuizPage() {
           }
         };
 
-        // Update correct answers mission
+        // Events advance both the daily and weekly mission variants
+        (await trackMissionEvent("game_played", 1)).forEach(handleMissionResult);
+
         if (score > 0) {
-          const result = await updateMissionProgress("answer_correct", score);
-          handleMissionResult(result);
+          (await trackMissionEvent("correct_answers", score)).forEach(handleMissionResult);
         }
-        
-        // Update categories played mission (1 category per quiz)
-        const catResult = await updateMissionProgress("play_categories", 1);
-        handleMissionResult(catResult);
-        
-        // Update win games mission if passed (at least 1 star)
+
+        (await trackMissionEvent("categories_played", 1)).forEach(handleMissionResult);
+
         if (result.stars >= 1) {
-          const winResult = await updateMissionProgress("win_games", 1);
-          handleMissionResult(winResult);
+          (await trackMissionEvent("game_won", 1)).forEach(handleMissionResult);
+
+          // Perfect run: every question in the level answered correctly
+          if (questions.length > 0 && score === questions.length) {
+            (await trackMissionEvent("perfect_win", 1)).forEach(handleMissionResult);
+          }
         }
       }
     } else if (user) {

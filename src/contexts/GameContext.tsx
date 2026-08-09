@@ -449,6 +449,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const isCorrect = answer === currentQuestion.correctAnswer;
 
       // Track mission progress
+      missionTracker.recordAnswer();
       if (isCorrect) {
         missionTracker.recordCorrectAnswer();
       }

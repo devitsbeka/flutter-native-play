@@ -21,6 +21,7 @@ import { ControllerPollScreen } from '@/components/controller/ControllerPollScre
 import { ControllerPollResults } from '@/components/controller/ControllerPollResults';
 import { ControllerDirectSelection } from '@/components/controller/ControllerDirectSelection';
 import { useTVPoll } from '@/hooks/useTVPoll';
+import { useMissions } from '@/hooks/useMissions';
 import { RoomIconPickerModal } from '@/components/team/RoomIconPickerModal';
 
 interface Category {
@@ -80,6 +81,18 @@ const TVHostController: React.FC = () => {
   // This only applies to user trivias - library categories should NEVER trigger observer mode
   // The currentRoundSuggesterId should be null for library categories (set in startGame/startNextRound)
   const isSuggester = myPlayerId && currentRoundSuggesterId && myPlayerId === currentRoundSuggesterId;
+
+  // Missions: playing on the big screen counts once per TV session, the
+  // moment actual gameplay starts
+  const { trackMissionEvent } = useMissions();
+  const hasTrackedTvPlay = useRef(false);
+  useEffect(() => {
+    if (hasTrackedTvPlay.current) return;
+    if (contextPhase === 'question' || contextPhase === 'playing' || contextPhase === 'countdown') {
+      hasTrackedTvPlay.current = true;
+      void trackMissionEvent('tv_played', 1);
+    }
+  }, [contextPhase, trackMissionEvent]);
   
   // Debug logging for observer state
   console.log('[HostObserver] 🎯 Suggester check:', {

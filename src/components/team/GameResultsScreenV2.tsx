@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
+import { useMissions } from "@/hooks/useMissions";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -46,6 +47,7 @@ export function GameResultsScreenV2() {
   const { t } = useLanguage();
   const { addCoins } = useCurrency();
   const { maybeShowInterstitial } = useAds();
+  const { trackMissionEvent } = useMissions();
   const [coinsEarned, setCoinsEarned] = useState(0);
   const { 
     myScore: localMyScore, 
@@ -173,6 +175,12 @@ export function GameResultsScreenV2() {
           }
         }
         setCoinsEarned(earnedCoins);
+
+        // Missions: every room game counts as played; a real (non-practice)
+        // room is a game with friends; ranked wins advance win missions
+        void trackMissionEvent("game_played", 1);
+        if (!isPractice) void trackMissionEvent("friend_game", 1);
+        if (countsAsWin) void trackMissionEvent("game_won", 1);
 
         if (earnedCoins > 0) {
           await addCoins(earnedCoins);

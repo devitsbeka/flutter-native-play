@@ -237,7 +237,7 @@ export function MatchResultScreen() {
   const { user, profile, updateProfile } = useAuth();
   const { addCoins } = useCurrency();
   const { playSound } = useSound();
-  const { updateMissionProgress } = useMissions();
+  const { trackMissionEvent } = useMissions();
   const { t } = useLanguage();
   const { awardWin, awardDraw, awardLose, netWinProfit, netLoss } = useGameStake();
   const { exhaustionInfo } = useTrivia();
@@ -460,22 +460,25 @@ export function MatchResultScreen() {
           }
         };
         
-        // Update correct answers mission
+        // Every finished game counts, plus the specific outcomes — events
+        // advance both the daily and the weekly variants at once
+        (await trackMissionEvent("game_played", 1)).forEach(handleMissionResult);
+
         if (sessionData.correctAnswers > 0) {
-          const result = await updateMissionProgress("answer_correct", sessionData.correctAnswers);
-          handleMissionResult(result);
+          (await trackMissionEvent("correct_answers", sessionData.correctAnswers)).forEach(handleMissionResult);
         }
-        
-        // Update win games mission
+
         if (isWin) {
-          const result = await updateMissionProgress("win_games", 1);
-          handleMissionResult(result);
+          (await trackMissionEvent("game_won", 1)).forEach(handleMissionResult);
+
+          // Perfect game: won without a single wrong answer
+          if (sessionData.totalAnswers > 0 && sessionData.correctAnswers === sessionData.totalAnswers) {
+            (await trackMissionEvent("perfect_win", 1)).forEach(handleMissionResult);
+          }
         }
-        
-        // Update categories played mission
+
         if (sessionData.categoriesPlayed > 0) {
-          const result = await updateMissionProgress("play_categories", sessionData.categoriesPlayed);
-          handleMissionResult(result);
+          (await trackMissionEvent("categories_played", sessionData.categoriesPlayed)).forEach(handleMissionResult);
         }
       };
 
