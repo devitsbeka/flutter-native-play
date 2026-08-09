@@ -348,13 +348,13 @@ export default function Leaderboards() {
         <img
           src={bgLeaderGeorgia}
           alt=""
-          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none transition-[opacity,filter] duration-[400ms] ease-out ${scope === "global" ? "opacity-0 blur-md" : "opacity-100 blur-0"}`}
+          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none transition-[opacity,filter] duration-[800ms] ease-out ${scope === "global" ? "opacity-0 blur-md" : "opacity-100 blur-0"}`}
           draggable={false}
         />
         <img
           src={bgLeaderGlobal}
           alt=""
-          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none transition-[opacity,filter] duration-[400ms] ease-out ${scope === "global" ? "opacity-100 blur-0" : "opacity-0 blur-md"}`}
+          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none transition-[opacity,filter] duration-[800ms] ease-out ${scope === "global" ? "opacity-100 blur-0" : "opacity-0 blur-md"}`}
           draggable={false}
         />
 
