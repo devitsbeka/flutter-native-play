@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useState, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 import { MASCOT_USER_IDS } from "@/lib/excludedUsers";
 import { CreateQuizModal } from "@/components/social/CreateQuizModal";
 import { AdminProfileEditor } from "@/components/profile/AdminProfileEditor";
@@ -75,6 +76,7 @@ const ACHIEVEMENT_ICONS: Record<string, string> = {
 
 export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileModalProps) {
   const { user } = useAuth();
+  const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
   const { isAdmin } = useAdminRole();
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -261,10 +263,28 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-background flex flex-col"
+            className="fixed inset-0 z-[100] bg-background flex flex-col overflow-hidden p-4"
           >
+            {/* Bubble background video + soft wash, same as the room page */}
+            <div className="absolute inset-0 -z-10 pointer-events-none" aria-hidden>
+              <video autoPlay muted loop playsInline className="h-full w-full object-cover">
+                <source src={bubbleVideo.webm} type="video/webm" />
+                <source src={bubbleVideo.mp4} type="video/mp4" />
+              </video>
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(249,219,255,0.5) 0%, rgba(249,219,255,0.3) 45%, rgba(249,219,255,0.5) 100%)",
+                }}
+              />
+            </div>
+
+            {/* Frosted popup panel wrapping header + profile content */}
+            <div className="relative m-auto flex max-h-full w-full max-w-[740px] md:max-w-[640px] flex-col overflow-hidden rounded-[24px] border border-white/70 bg-white/60 backdrop-blur-xl shadow-[0_12px_40px_rgba(104,71,204,0.18)]">
+
             {/* Fixed Header */}
-            <div className="flex-shrink-0 sticky top-0 z-10 bg-background border-b border-border">
+            <div className="flex-shrink-0 sticky top-0 z-10 border-b border-border/40">
               <div className="flex items-center h-14 px-4 max-w-[700px] md:max-w-[600px] mx-auto w-full">
                 <motion.button
                   onClick={onClose}
@@ -617,6 +637,9 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 </div>
               </div>
             )}
+
+            {/* End of frosted popup panel */}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
