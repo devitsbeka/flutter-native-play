@@ -245,10 +245,15 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
                   </p>
 
                   <span
-                    className="inline-flex items-center gap-2 self-start px-4 py-2.5 rounded-full text-sm font-bold text-white mb-auto"
-                    style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}
+                    className="inline-flex items-center gap-2.5 self-start px-5 py-3 rounded-full text-base font-bold mb-auto"
+                    // White chip so the gold crown reads against the orange card
+                    style={{
+                      background: "rgba(255,255,255,0.95)",
+                      color: "#7C3AED",
+                      boxShadow: "0 3px 0 rgba(0,0,0,0.15)",
+                    }}
                   >
-                    <img src={crownIcon} alt="" className="w-6 h-6" />
+                    <img src={crownIcon} alt="" className="w-7 h-7" />
                     {t("extra.tenDayPro")}
                   </span>
 
