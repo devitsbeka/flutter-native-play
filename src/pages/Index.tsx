@@ -68,6 +68,35 @@ const HOME_GREETING_KEYS = [
   "extra.homeGreeting6",
 ];
 
+// Alternating header greeting: "გამარჯობა, {name}!" swaps with the rotating
+// nice message every 8 seconds, crossfading between the two. Guests (no
+// nickname) just keep the nice message.
+function HeaderGreeting({ nickname }: { nickname?: string | null }) {
+  const { t } = useLanguage();
+  const [showNice, setShowNice] = useState(!nickname);
+  useEffect(() => {
+    if (!nickname) return;
+    const id = setInterval(() => setShowNice((v) => !v), 8000);
+    return () => clearInterval(id);
+  }, [nickname]);
+  const nice = t(HOME_GREETING_KEYS[Math.floor(Date.now() / 21_600_000) % HOME_GREETING_KEYS.length]);
+  const text = !nickname || showNice ? nice : t("extra.homeGreetingHi").replace("{name}", nickname);
+  return (
+    <AnimatePresence mode="wait">
+      <motion.h1
+        key={text}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.35 }}
+        className="font-display text-xl font-bold text-[#402666] truncate"
+      >
+        {text}
+      </motion.h1>
+    </AnimatePresence>
+  );
+}
+
 // The scene background only shows on lg+ (desktop + tablet landscape) —
 // mounting the <video>/<img> at all sizes made phones download megabytes of
 // media that CSS then hid.
@@ -898,11 +927,10 @@ export default function Index() {
               <div className="lg:hidden">
                 <MyTriviaLiveLogo responsive />
               </div>
-              {/* lg+: a rotating greeting takes the logo's place — it changes
-                  every 6 hours (same slot for everyone) */}
-              <h1 className="hidden lg:block font-display text-xl font-bold text-[#402666] truncate">
-                {t(HOME_GREETING_KEYS[Math.floor(Date.now() / 21_600_000) % HOME_GREETING_KEYS.length])}
-              </h1>
+              {/* lg+: an alternating greeting takes the logo's place */}
+              <div className="hidden lg:block min-w-0">
+                <HeaderGreeting nickname={user ? profile?.nickname : null} />
+              </div>
             </div>
             
             {/* Right side: Search/Notification for users, Sign In for guests */}
@@ -1397,6 +1425,7 @@ export default function Index() {
                   onGiftClick={user ? () => setIsDailyRewardsOpen(true) : () => navigate("/auth")}
                   onChestClick={user ? () => setIsChestModalOpen(true) : () => navigate("/auth")}
                   onSceneClick={user ? () => openAvatarModal() : () => navigate("/auth?mode=signup")}
+                  onQuickPlay={user ? handlePlayClick : undefined}
                 />
               </motion.div>
             )}
@@ -1405,7 +1434,7 @@ export default function Index() {
                 invitation, continue-playing categories, quick play */}
             {user && (sceneUrl || showDefaultScene) && (
               <motion.div
-                className="hidden md:block absolute right-3 xl:right-[28px] top-[53px] z-20 pointer-events-auto"
+                className="hidden lg:block absolute right-3 xl:right-[28px] top-[53px] z-20 pointer-events-auto"
                 initial={{ opacity: 0, x: 16 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3, type: "spring" }}

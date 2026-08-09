@@ -1929,6 +1929,7 @@ export const en: KaTranslations = {
     playsLabel: "Plays",
     playedLabel: "Played",
     avatarChooseBtn: "Choose",
+    homeGreetingHi: "Hi, {name}! 👋",
     homeGreeting1: "Hi! Have a great day ✨",
     homeGreeting2: "Good luck today! 🍀",
     homeGreeting3: "Ready for a new victory? 🏆",

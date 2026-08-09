@@ -1928,6 +1928,7 @@ export const ka = {
     playsLabel: "ნათამაშები",
     playedLabel: "ნათამაშები",
     avatarChooseBtn: "არჩევა",
+    homeGreetingHi: "გამარჯობა, {name}! 👋",
     homeGreeting1: "გამარჯობა! კარგი დღე გისურვებ ✨",
     homeGreeting2: "წარმატებები დღეს! 🍀",
     homeGreeting3: "მზად ხარ ახალი გამარჯვებისთვის? 🏆",
