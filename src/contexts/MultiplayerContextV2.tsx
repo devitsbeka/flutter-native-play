@@ -905,9 +905,34 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .subscribe();
     
     channelsRef.current = [roomChannel, participantsChannel, profilesChannel, answersChannel];
-    
+
     // Initial fetch
     fetchParticipants(roomId);
+
+    // Backfill answers already in the table. In async play — a friend
+    // playing after the host already finished — the host's rows predate this
+    // subscription, so no INSERT event will ever deliver them. Rows are
+    // wiped on every round start (safeDeleteRoomQuestions), so everything
+    // here belongs to the current round.
+    void supabase
+      .from("player_answers")
+      .select("*")
+      .eq("room_id", roomId)
+      .then(({ data }) => {
+        if (!data || data.length === 0) return;
+        setState(prev => {
+          const merged = { ...prev.opponentAnswers };
+          for (const row of data as PlayerAnswer[]) {
+            if (row.user_id === user?.id) continue;
+            merged[row.question_index] = {
+              ...(merged[row.question_index] || {}),
+              // Live events win over the backfill for the same user+question
+              [row.user_id]: merged[row.question_index]?.[row.user_id] || row,
+            };
+          }
+          return { ...prev, opponentAnswers: merged };
+        });
+      });
 
     return () => {
       if (fetchParticipantsDebounceRef.current) {
