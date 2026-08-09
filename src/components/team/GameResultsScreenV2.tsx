@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
-import xpIcon from "@/assets/icons/icon-xp.png";
+import xpIcon from "@/assets/level/xp-spark.png";
 import { toast } from "sonner";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { CategoryPickerModal } from "./CategoryPickerModal";

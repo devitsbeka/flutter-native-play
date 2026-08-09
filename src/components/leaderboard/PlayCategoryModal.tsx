@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import iconGem from "@/assets/icons/icon-gem.png";
-import iconXp from "@/assets/icons/icon-xp.png";
+import iconXp from "@/assets/level/xp-spark.png";
 
 interface PlayCategoryModalProps {
   open: boolean;
