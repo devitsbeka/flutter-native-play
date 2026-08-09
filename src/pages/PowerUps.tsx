@@ -38,7 +38,7 @@ const ALL_POWER_TYPES: PowerUpType[] = ["5050", "freeze", "replace", "time-drain
 // step both read this so they can't drift. Coin amounts match the advertised
 // descriptions/pricing in useShopData (1 gem = 500 coins). Rotating daily/hourly
 // deal bundles come from shopDeals.ts so the deal cards can't drift either.
-const BUNDLE_CONTENTS: Record<string, { powers: number; coins: number; gems?: number }> = {
+const BUNDLE_CONTENTS: Record<string, { powers: number; coins: number; gems?: number; vip?: "day" | "week" }> = {
   starter_bundle: { powers: 2, coins: 500 },
   starter_bundle_medium: { powers: 5, coins: 1000 },
   starter_bundle_large: { powers: 10, coins: 2500 },
@@ -51,7 +51,7 @@ const BUNDLE_CONTENTS: Record<string, { powers: number; coins: number; gems?: nu
 
 const isBundleId = (id: string) => id.includes("bundle") || id.startsWith("deal_");
 
-const getBundleContents = (id: string): { powers: number; coins: number; gems?: number } =>
+const getBundleContents = (id: string): { powers: number; coins: number; gems?: number; vip?: "day" | "week" } =>
   BUNDLE_CONTENTS[id] ??
   { powers: id.includes("small") ? 2 : id.includes("large") ? 10 : 5, coins: 0 };
 
@@ -207,14 +207,15 @@ export default function PowerUps() {
       } else if (item.powerType && item.amount) {
         valueReceived = { [item.powerType]: item.amount };
       } else if (isBundleId(item.id)) {
-        const { powers, coins: coinAmount, gems: gemAmount = 0 } = getBundleContents(item.id);
+        const { powers, coins: coinAmount, gems: gemAmount = 0, vip } = getBundleContents(item.id);
         valueReceived = {
           "5050": powers,
           freeze: powers,
           replace: powers,
           "time-drain": powers,
           ...(coinAmount > 0 ? { coins: coinAmount } : {}),
-          ...(gemAmount > 0 ? { gems: gemAmount } : {})
+          ...(gemAmount > 0 ? { gems: gemAmount } : {}),
+          ...(vip ? { vip_days: vip } : {})
         };
         productType = "bundle";
       }
@@ -246,7 +247,7 @@ export default function PowerUps() {
         if (!(await grantPowerUp(item.powerType, item.amount))) grantFailed = true;
         await refetch();
       } else if (isBundleId(item.id)) {
-        const { powers, coins: coinAmount, gems: gemAmount = 0 } = getBundleContents(item.id);
+        const { powers, coins: coinAmount, gems: gemAmount = 0, vip } = getBundleContents(item.id);
         for (const type of ALL_POWER_TYPES) {
           if (!(await grantPowerUp(type, powers))) grantFailed = true;
         }
@@ -255,6 +256,9 @@ export default function PowerUps() {
         }
         if (gemAmount > 0) {
           if (!(await addGems(gemAmount))) grantFailed = true;
+        }
+        if (vip) {
+          await activateVip(vip);
         }
         await refetch();
       }

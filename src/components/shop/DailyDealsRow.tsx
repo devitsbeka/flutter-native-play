@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import gemIcon from "@/assets/icons/icon-gem.webp";
 import coinIcon from "@/assets/icons/icon-coin.webp";
 import powersIcon from "@/assets/icons/icon-powers-bottle.webp";
+import vipCrownIcon from "@/assets/icons/icon-vip-crown.webp";
 
 // Affordability isn't checked here on purpose — the page-level purchase
 // handler already routes an underfunded tap to the NotEnoughGems modal.
@@ -70,7 +71,7 @@ function DealCard({
 
   return (
     <div
-      className="relative flex min-h-[246px] flex-col overflow-hidden rounded-[24px] p-4 sm:p-5 text-white"
+      className="relative flex min-h-[209px] flex-col overflow-hidden rounded-[24px] p-4 sm:p-5 text-white"
       style={{ background: gradient }}
     >
       {/* soft highlight blob so the card doesn't read flat */}
@@ -114,8 +115,14 @@ function DealCard({
         </span>
       </div>
 
-      {/* Bundle contents: powers + coins + gems — centered */}
+      {/* Bundle contents: PRO time + powers + coins — centered */}
       <div className="flex flex-wrap items-center justify-center gap-1.5">
+        {deal.contents.vip && (
+          <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-2.5 py-1.5 text-xs font-bold backdrop-blur-[2px]">
+            <img src={vipCrownIcon} alt="" className="h-5 w-5 object-contain" />
+            {deal.contents.vip === "week" ? t("shop.vipWeek") : t("shop.vipDay")}
+          </span>
+        )}
         <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-2.5 py-1.5 text-xs font-bold backdrop-blur-[2px]">
           <img src={powersIcon} alt="" className="h-5 w-5 object-contain" />
           {deal.contents.powers}× {t("shop.allPowers")}
@@ -123,10 +130,6 @@ function DealCard({
         <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-2.5 py-1.5 text-xs font-bold backdrop-blur-[2px]">
           <img src={coinIcon} alt="" className="h-5 w-5 object-contain" />
           {deal.contents.coins.toLocaleString()}
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-2.5 py-1.5 text-xs font-bold backdrop-blur-[2px]">
-          <img src={gemIcon} alt="" className="h-5 w-5 object-contain" />
-          {deal.contents.gems}
         </span>
       </div>
       </div>
@@ -192,9 +195,10 @@ export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick }: Dai
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="mb-2 flex items-center gap-2 px-1">
-        <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-amber-400 to-orange-500" />
-        <h2 className="text-base font-display font-bold text-foreground/90">{t("shop.deals")}</h2>
+      {/* relative z-10 keeps the title above the background blobs */}
+      <div className="relative z-10 mb-3 mt-2 flex items-center gap-2.5 px-1">
+        <span className="h-6 w-1.5 rounded-full bg-gradient-to-b from-amber-400 to-orange-500" />
+        <h2 className="text-lg md:text-xl font-display font-bold text-foreground">{t("shop.deals")}</h2>
       </div>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
