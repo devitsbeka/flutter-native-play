@@ -13,11 +13,11 @@ import inviteDecline from "@/assets/figma-home/invite-decline.png";
 // invite card, "continue playing" card, quick-play button. All three are
 // live: real invitations, real category progress, real play action.
 const CARD_SHADOW = "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgba(102,51,153,0.12)";
-// Card titles use Noto Sans Georgian ExtraCondensed (wdth 62.5) per design.
+// Card titles: the design's ExtraCondensed Georgian face renders squished
+// in browsers, so titles use the app's regular Nunito bold instead.
 const TITLE_STYLE: React.CSSProperties = {
-  fontFamily: "'Noto Sans Georgian', 'Nunito', sans-serif",
-  fontStretch: "62.5%",
-  fontWeight: 600,
+  fontFamily: "'Nunito', sans-serif",
+  fontWeight: 700,
 };
 
 interface SceneSidebarProps {

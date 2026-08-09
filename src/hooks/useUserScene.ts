@@ -9,6 +9,28 @@ export interface UserScene {
   videoUrl: string | null;
 }
 
+// Last known scene per user, so a page refresh paints the scene instantly
+// instead of flashing the fallback hero while the query round-trips.
+const cacheKey = (userId: string) => `user_scene_${userId}`;
+
+function readSceneCache(userId: string): UserScene | null {
+  try {
+    const raw = localStorage.getItem(cacheKey(userId));
+    return raw ? (JSON.parse(raw) as UserScene) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSceneCache(userId: string, scene: UserScene | null) {
+  try {
+    if (scene) localStorage.setItem(cacheKey(userId), JSON.stringify(scene));
+    else localStorage.removeItem(cacheKey(userId));
+  } catch {
+    /* storage full/blocked — cache is best-effort */
+  }
+}
+
 // The user's personalized 16:9 homepage scene, if they have generated one.
 // Scenes are saved as `scene_<ts>.png` files in avatar_generations. The
 // explicitly selected scene (is_current) wins; with no explicit selection
@@ -29,10 +51,15 @@ export function useUserScene(userId: string | undefined) {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (!data?.avatar_url) return null;
-      return { imageUrl: data.avatar_url, videoUrl: data.animated_avatar_url || null };
+      const scene = data?.avatar_url
+        ? { imageUrl: data.avatar_url, videoUrl: data.animated_avatar_url || null }
+        : null;
+      writeSceneCache(userId, scene);
+      return scene;
     },
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
+    // Painted immediately on mount while the fresh copy loads
+    placeholderData: () => (userId ? readSceneCache(userId) : null),
   });
 }
