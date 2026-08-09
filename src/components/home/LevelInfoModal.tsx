@@ -1,28 +1,20 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LevelInfo, getLevelRewards } from "@/utils/levelCalculation";
+import { LevelInfo } from "@/utils/levelCalculation";
+import { REWARDS } from "@/config/rewardConfig";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 // 3D icons from the Figma level modal
 import iconGift from "@/assets/level/gift.png";
 import iconXpSpark from "@/assets/level/xp-spark.png";
 import iconPowerBottle from "@/assets/level/power-bottle.png";
-import iconCrown from "@/assets/level/crown.png";
-import iconFrame from "@/assets/level/frame.png";
+import coinIcon from "@/assets/icons/icon-coin.png";
 
 interface LevelInfoModalProps {
   isOpen: boolean;
   onClose: () => void;
   levelInfo: LevelInfo;
   onContinue?: () => void;
-}
-
-// Icon for a special-reward line: avatars get the picture frame, status/VIP
-// rewards the crown, everything else the sparkle
-function specialRewardIcon(label: string): string {
-  if (label.includes("ავატარ")) return iconFrame;
-  if (label.includes("VIP") || label.includes("PRO") || label.includes("სტატუსი")) return iconCrown;
-  return iconXpSpark;
 }
 
 const innerCardStyle = {
@@ -32,7 +24,6 @@ const innerCardStyle = {
 
 export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: LevelInfoModalProps) {
   const { t } = useLanguage();
-  const nextLevelRewards = getLevelRewards(levelInfo.level + 1);
 
   // Escape dismisses the modal, same as backdrop click
   useEffect(() => {
@@ -44,19 +35,12 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: Level
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen, onClose]);
 
-  // Reward rows for the 2-column grid, each with its Figma icon
+  // Only what a level-up actually credits (see MatchResultScreen /
+  // CategoryQuizPage): fixed coins and one random power-up
   const rewardItems: { icon: string; label: string }[] = [
-    { icon: iconXpSpark, label: `${nextLevelRewards.xpBonus} XP ${t("modals.xpBonus")}` },
+    { icon: coinIcon, label: `${REWARDS.LEVEL_UP_COINS} ${t("modals.coin")}` },
+    { icon: iconPowerBottle, label: `1 ${t("modals.randomPower")}` },
   ];
-  if (nextLevelRewards.powerUps > 0) {
-    rewardItems.push({ icon: iconPowerBottle, label: `${nextLevelRewards.powerUps} ${t("modals.powers")}` });
-  }
-  if (nextLevelRewards.spinTickets > 0) {
-    rewardItems.push({ icon: iconGift, label: `${nextLevelRewards.spinTickets} ${t("modals.spinTickets")}` });
-  }
-  for (const special of nextLevelRewards.specialRewards) {
-    rewardItems.push({ icon: specialRewardIcon(special), label: special });
-  }
 
   return (
     <AnimatePresence mode="wait">
@@ -125,7 +109,7 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: Level
                   <img src={iconGift} alt="" width={44} height={44} className="shrink-0" />
                   <div>
                     <p className="font-display text-2xl font-bold leading-none text-[#1E1B2E]">
-                      {levelInfo.level + 1}
+                      {t("modals.levelLabel")} {levelInfo.level + 1}
                     </p>
                     <p className="mt-1 text-sm text-slate-600">{t("modals.nextLevelRewardsHint")}</p>
                   </div>

@@ -83,25 +83,8 @@ export function getStreakMilestones(): { days: number; bonus: number; reward: st
   ];
 }
 
-export interface LevelRewards {
-  xpBonus: number;
-  powerUps: number;
-  spinTickets: number;
-  specialRewards: string[];
-}
-
-export function getLevelRewards(level: number): LevelRewards {
-  const specialRewards: string[] = [];
-  
-  if (level >= 5) specialRewards.push("ახალი ავატარები");
-  if (level >= 10) specialRewards.push("ექსკლუზიური ბეჯები");
-  if (level >= 15) specialRewards.push("VIP უფასო დღე");
-  if (level >= 20) specialRewards.push("ლეგენდარული სტატუსი");
-  
-  return {
-    xpBonus: level * 25,
-    powerUps: level >= 3 ? Math.floor(level / 3) : 0,
-    spinTickets: level >= 5 ? Math.floor(level / 5) : 0,
-    specialRewards,
-  };
-}
+// NOTE: level-up rewards are what MatchResultScreen / CategoryQuizPage
+// actually credit: REWARDS.LEVEL_UP_COINS + one random power-up. The old
+// getLevelRewards helper here advertised bonuses (spin tickets, avatars,
+// VIP days, statuses) that nothing ever granted — removed so the UI can't
+// promise them again.

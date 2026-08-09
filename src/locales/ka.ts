@@ -1029,6 +1029,7 @@ export const ka = {
     continueGame: "თამაშის გაგრძელება",
     xpProgress: "XP პროგრესი",
     nextLevelRewardsHint: "შემდეგ დონეზე შეგიძლია მიიღო",
+    randomPower: "შემთხვევითი ძალა",
     maxLevelReached: "შენ მიაღწიე მაქსიმალურ დონეს! 🎉",
     xpToNextLevel: "დარჩა {amount} XP შემდეგ დონემდე",
     totalXp: "სულ XP",

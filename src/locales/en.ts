@@ -1030,6 +1030,7 @@ export const en: KaTranslations = {
     continueGame: "Continue Game",
     xpProgress: "XP Progress",
     nextLevelRewardsHint: "At the next level you can get",
+    randomPower: "random power-up",
     maxLevelReached: "You've reached the maximum level! 🎉",
     xpToNextLevel: "{amount} XP left to next level",
     totalXp: "Total XP",
