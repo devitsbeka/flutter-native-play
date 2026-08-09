@@ -57,6 +57,21 @@ import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
 import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
 import { oauth } from "@/integrations/oauth";
 
+// The scene background only shows on xl+ — mounting the <video>/<img> at all
+// sizes made phones/tablets download megabytes of media that CSS then hid.
+function useIsXlViewport(): boolean {
+  const [isXl, setIsXl] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1280px)").matches
+  );
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1280px)");
+    const onChange = (e: MediaQueryListEvent) => setIsXl(e.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+  return isXl;
+}
+
 import { toast } from "@/hooks/use-toast";
 import { t } from "@/lib/i18n";
 import { formatCompactNumber } from "@/lib/utils";
@@ -628,6 +643,7 @@ export default function Index() {
   // Anyone without their own generated scene — guests and logged-in users
   // alike, even with custom avatars — gets the default Trivia King loop.
   const { data: userScene, isLoading: sceneLoading } = useUserScene(user?.id);
+  const isXlViewport = useIsXlViewport();
   const sceneUrl = userScene?.imageUrl || null;
   const sceneVideoUrl = userScene?.videoUrl || null;
   const showDefaultScene = !sceneUrl && !(user && sceneLoading);
@@ -805,8 +821,10 @@ export default function Index() {
         {/* Personalized scene (or the default Trivia King loop) as the
             full-bleed page background (xl+); the header, friends strip and
             cards float over it. Clicks are caught by SceneHero's catcher
-            layer, not here — background layers never receive them. */}
-        {sceneUrl && sceneVideoUrl ? (
+            layer, not here — background layers never receive them.
+            Mounted only when the viewport is actually xl, so smaller
+            screens never download the media. */}
+        {!isXlViewport ? null : sceneUrl && sceneVideoUrl ? (
           /* Seamless idle-loop video generated from the scene — poster keeps
              the still visible until the video is ready to play */
           <motion.video

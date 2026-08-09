@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tv, Grid3X3, Users, Trophy, Zap, Globe } from 'lucide-react';
-import splashBackground from '@/assets/loading-bg.png';
+import splashBackground from '@/assets/loading-bg.webp';
 import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 import { useLanguage } from '@/contexts/LanguageContext';
 
