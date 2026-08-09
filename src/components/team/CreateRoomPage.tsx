@@ -850,11 +850,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         />
       </div>
 
-      {/* Frosted white column behind the form so the content reads clearly
-          over the blobs (still -z, above the video, below the content) */}
+      {/* Frosted white panel behind the form — floats like a popup: inset
+          from top/bottom, 24px corners (still -z: above video, below content) */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-1/2 -z-10 w-full max-w-[740px] md:max-w-[560px] -translate-x-1/2 border-x border-white/60 bg-white/60 backdrop-blur-xl"
+        className="pointer-events-none absolute inset-y-4 left-1/2 -z-10 w-full max-w-[740px] md:max-w-[560px] -translate-x-1/2 rounded-[24px] border border-white/70 bg-white/60 backdrop-blur-xl shadow-[0_12px_40px_rgba(104,71,204,0.18)]"
       />
 
       {/* Header - simplified */}
