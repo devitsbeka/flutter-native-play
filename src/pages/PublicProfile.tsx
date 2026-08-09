@@ -1,11 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
-import { PageSkeleton } from "@/components/PageSkeleton";
 
 /**
  * Public Profile Page
- * 
+ *
  * This page handles direct navigation to /profile/:userId
  * It opens the PlayerProfileModal and provides a fallback UI
  */
@@ -15,8 +14,9 @@ export default function PublicProfile() {
   const { openProfile, currentProfileUserId, closeProfile } = usePlayerProfile();
   const hasOpened = useRef(false);
 
-  // Open the profile modal when the page loads
-  useEffect(() => {
+  // Open the profile modal BEFORE the browser paints — with a regular
+  // effect the route's fallback page flashed for a frame or two first
+  useLayoutEffect(() => {
     if (userId && userId !== currentProfileUserId) {
       hasOpened.current = true;
       openProfile(userId);
@@ -41,6 +41,8 @@ export default function PublicProfile() {
     }
   }, [currentProfileUserId, navigate]);
 
-  // Show loading skeleton while modal opens
-  return <PageSkeleton />;
+  // The modal opens over this route pre-paint, so the page itself renders
+  // nothing — the global background shows through instead of a skeleton
+  // page flashing behind the modal
+  return null;
 }
