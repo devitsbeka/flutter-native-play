@@ -534,19 +534,30 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                   </AnimatePresence>
                 </div>
 
-                {/* Friends Grid - Show in pre-room selection mode when not searching */}
-                {isPreRoomMode && acceptedFriends.length > 0 && !searchQuery && (
+                {/* Friends grid — shown both when picking friends before a
+                    room and when inviting into an existing one. Inviting from
+                    a room used to hide it, leaving only search and share
+                    links even though the friends were right there. */}
+                {(isPreRoomMode || isRoomInviteMode) && acceptedFriends.length > 0 && !searchQuery && (
                   <div className={`space-y-3 ${narrow}`}>
                     <p className="text-sm font-medium text-white/80 px-1">{t("extra.yourFriends")}</p>
                     <div className="grid grid-cols-4 gap-2 max-h-[240px] overflow-y-auto">
                       {acceptedFriends.map((friend) => {
                         const isSelected = selectedFriends?.has(friend.friendId) || false;
+                        const isInvited = sentRequests.has(friend.friendId);
+                        const isInviting = invitingUser === friend.friendId;
+                        const marked = isSelected || isInvited;
                         return (
                           <motion.button
                             key={friend.friendId}
-                            onClick={() => onFriendSelect?.(friend.friendId)}
-                            className={`flex flex-col items-center p-2.5 rounded-xl transition-all ${
-                              isSelected 
+                            onClick={() =>
+                              isPreRoomMode
+                                ? onFriendSelect?.(friend.friendId)
+                                : handleInviteToRoom(friend.friendId)
+                            }
+                            disabled={isInviting || isInvited}
+                            className={`flex flex-col items-center p-2.5 rounded-xl transition-all disabled:opacity-70 ${
+                              marked
                                 ? "bg-white/25 ring-2 ring-white" 
                                 : "bg-white/10 hover:bg-white/15"
                             }`}
@@ -560,7 +571,12 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                 className="w-12 h-12 border border-white/20"
                                 fallbackClassName="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold"
                               />
-                              {isSelected && (
+                              {isInviting && (
+                                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
+                                  <Loader2 className="w-4 h-4 text-white animate-spin" />
+                                </div>
+                              )}
+                              {marked && !isInviting && (
                                 <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-white rounded-full flex items-center justify-center">
                                   <Check className="w-3 h-3 text-primary" />
                                 </div>
@@ -576,8 +592,8 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                   </div>
                 )}
 
-                {/* No friends message in pre-room mode */}
-                {isPreRoomMode && acceptedFriends.length === 0 && !searchQuery && (
+                {/* No friends yet */}
+                {(isPreRoomMode || isRoomInviteMode) && acceptedFriends.length === 0 && !searchQuery && (
                   <div className={`text-center py-6 ${narrow}`}>
                     <p className="text-white/70 text-sm mb-2">{t("extra.noFriendsYetShort")}</p>
                     <p className="text-white/50 text-xs">{t("extra.searchAndAddAbove")}</p>
