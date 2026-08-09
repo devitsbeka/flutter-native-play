@@ -23,6 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { MAP_VIDEOS } from "@/config/videoConfig";
+import { useMissions } from "@/hooks/useMissions";
 
 interface InviteFriendsModalProps {
   isOpen: boolean;
@@ -117,7 +118,8 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   
   const { searchUsers, sendFriendRequest, friends } = useFriends();
   const { user } = useAuth();
-  
+  const { trackMissionEvent } = useMissions();
+
   // Memoize friendIds to prevent infinite re-renders
   const friendIds = useMemo(
     () => new Set(friends.map(f => f.friendId)),
@@ -197,6 +199,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
       if (success) {
         setSentRequests(prev => new Set([...prev, userId]));
         setPendingOutgoingIds(prev => new Set([...prev, userId]));
+        void trackMissionEvent("friend_invited", 1);
       }
     } catch (error) {
       console.error("[InviteFriendsModal] sendFriendRequest error:", error);

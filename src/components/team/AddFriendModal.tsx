@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useMissions } from "@/hooks/useMissions";
 
 interface AddFriendModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
   const [pendingOutgoingIds, setPendingOutgoingIds] = useState<Set<string>>(new Set());
   const { searchUsers, sendFriendRequest, friends } = useFriends();
   const { user } = useAuth();
+  const { trackMissionEvent } = useMissions();
 
   // Memoize friend IDs to prevent infinite re-renders
   const friendIds = useMemo(
@@ -87,6 +89,7 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
     if (success) {
       setSentRequests(prev => new Set([...prev, userId]));
       setPendingOutgoingIds(prev => new Set([...prev, userId]));
+      void trackMissionEvent("friend_invited", 1);
     }
   };
 

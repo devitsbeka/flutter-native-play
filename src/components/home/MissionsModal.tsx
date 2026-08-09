@@ -4,9 +4,28 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Check, Sparkles, Star } from "lucide-react";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
-import { useMissions, getMissionEmoji } from "@/hooks/useMissions";
+import { useMissions, getMissionIcon, type MissionIconKey } from "@/hooks/useMissions";
 import { useMissionStreak } from "@/hooks/useMissionStreak";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+// 3D mission icons from the Figma set
+import iconCheck from "@/assets/missions/check.png";
+import iconMap from "@/assets/missions/map.png";
+import iconTarget from "@/assets/missions/target.png";
+import iconShoe from "@/assets/missions/shoe.png";
+import iconTrophy from "@/assets/missions/trophy.png";
+import iconTv from "@/assets/missions/tv.png";
+import iconHearts from "@/assets/missions/hearts.png";
+
+const MISSION_ICONS: Record<MissionIconKey, string> = {
+  check: iconCheck,
+  map: iconMap,
+  target: iconTarget,
+  shoe: iconShoe,
+  trophy: iconTrophy,
+  tv: iconTv,
+  hearts: iconHearts,
+};
 
 // Power-up icons for reward chips
 import power5050 from "@/assets/powers/5050.png";
@@ -116,23 +135,27 @@ function MissionCard({ mission, t }: { mission: Mission; t: (key: string) => str
 
   return (
     <div
-      className="rounded-[20px] bg-white p-4"
+      className="flex min-h-[290px] flex-col rounded-[20px] bg-white p-5"
       style={{
         border: "2px solid #F2AEDC",
         boxShadow: "0 3px 0 0 #F4D4E9, inset 0 1.5px 0 0 #fff",
       }}
     >
-      {/* Emoji + title + description */}
-      <div className="text-xl leading-none">{getMissionEmoji(mission.mission_id)}</div>
-      <h3 className="mt-1.5 font-display text-base font-bold text-[#402666]">
+      {/* Icon + title + description */}
+      <img
+        src={MISSION_ICONS[getMissionIcon(mission.mission_id)]}
+        alt=""
+        className="h-11 w-11 object-contain"
+      />
+      <h3 className="mt-2.5 font-display text-lg font-bold text-[#402666]">
         {mission.mission_title}
       </h3>
       {mission.mission_description && (
-        <p className="mt-0.5 text-xs text-slate-500">{mission.mission_description}</p>
+        <p className="mt-1 text-sm text-slate-500">{mission.mission_description}</p>
       )}
 
       {/* Progress */}
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-auto flex items-center justify-between pt-4">
         {isComplete ? (
           <span className="flex items-center gap-1 text-xs font-bold text-emerald-600">
             <Check className="h-3.5 w-3.5" />
@@ -267,9 +290,9 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
               {/* One-card carousel */}
               <div className="relative mt-3.5">
                 {loading ? (
-                  <div className="h-44 animate-pulse rounded-[20px] bg-white/70" />
+                  <div className="h-[290px] animate-pulse rounded-[20px] bg-white/70" />
                 ) : !mission ? (
-                  <div className="flex h-44 items-center justify-center rounded-[20px] bg-white/70 text-sm text-slate-400">
+                  <div className="flex h-[290px] items-center justify-center rounded-[20px] bg-white/70 text-sm text-slate-400">
                     {t("missions.noMissions")}
                   </div>
                 ) : (
