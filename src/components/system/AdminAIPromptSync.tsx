@@ -18,24 +18,45 @@ export function AdminAIPromptSync() {
 
     (async () => {
       try {
-        const { data: settings } = await supabase
+        const { data: settings, error: readError } = await supabase
           .from("ai_generation_settings")
           .select("id, prompt, model")
           .eq("setting_type", "avatar_static")
           .maybeSingle();
 
-        if (!settings) return;
-        if (settings.prompt === SCENE_AVATAR_PROMPT && settings.model === SCENE_AVATAR_MODEL) return;
+        if (readError) {
+          console.error("[AdminAIPromptSync] Could not read settings row:", readError);
+          return;
+        }
 
-        const { error } = await supabase
-          .from("ai_generation_settings")
-          .update({ prompt: SCENE_AVATAR_PROMPT, model: SCENE_AVATAR_MODEL })
-          .eq("id", settings.id);
+        if (settings?.prompt === SCENE_AVATAR_PROMPT && settings?.model === SCENE_AVATAR_MODEL) {
+          console.log("[AdminAIPromptSync] Scene prompt already up to date");
+          return;
+        }
+
+        // The row may not exist yet (fresh project / renamed setting_type).
+        // Bailing there used to leave generation on the stale built-in prompt
+        // forever, so create it instead of returning.
+        const { error } = settings
+          ? await supabase
+              .from("ai_generation_settings")
+              .update({ prompt: SCENE_AVATAR_PROMPT, model: SCENE_AVATAR_MODEL })
+              .eq("id", settings.id)
+          : await supabase
+              .from("ai_generation_settings")
+              .insert({
+                setting_type: "avatar_static",
+                prompt: SCENE_AVATAR_PROMPT,
+                model: SCENE_AVATAR_MODEL,
+                is_active: true,
+              });
 
         if (error) {
           console.error("[AdminAIPromptSync] Failed to sync scene prompt:", error);
         } else {
-          console.log("[AdminAIPromptSync] Scene avatar prompt synced");
+          console.log(
+            `[AdminAIPromptSync] Scene avatar prompt ${settings ? "updated" : "created"} (${SCENE_AVATAR_PROMPT.length} chars)`
+          );
         }
       } catch (e) {
         console.error("[AdminAIPromptSync] Sync error:", e);
