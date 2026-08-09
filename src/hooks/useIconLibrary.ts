@@ -192,8 +192,10 @@ function getIconUrl(fileName: string): string {
   return `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${fileName}`;
 }
 
-// Local icon library JSON (storage fetch removed — was always returning 400)
-const ICON_LIBRARY_LOCAL_PATH = '/data/icon-library-meta.json';
+// Local icon library JSON (storage fetch removed — was always returning 400).
+// The slim variant carries slug/file_name/category/tags/title — half the
+// bytes of the full admin metadata file, which admin pages still fetch.
+const ICON_LIBRARY_LOCAL_PATH = '/data/icon-index-slim.json';
 
 // Load icons from local JSON file
 async function loadIconIndex(): Promise<IconItem[]> {

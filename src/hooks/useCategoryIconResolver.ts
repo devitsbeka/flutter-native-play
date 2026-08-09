@@ -9,12 +9,13 @@ let memoryCache: Record<string, string> = {};
 let iconIndex: Array<{ slug: string; tags: string[]; title: string }> = [];
 let indexLoaded = false;
 
-// Load icon index from JSON
+// Load icon index from JSON (slim variant — slug/tags/title only, half the
+// size of the full admin metadata file)
 async function loadIconIndex(): Promise<void> {
   if (indexLoaded) return;
-  
+
   try {
-    const response = await fetch('/data/icon-library-meta.json');
+    const response = await fetch('/data/icon-index-slim.json');
     if (response.ok) {
       const data = await response.json();
       // JSON uses "items" not "icons"
@@ -106,31 +107,36 @@ function saveCache(cache: Record<string, string>): void {
 
 // Preload and resolve all category icons
 export async function preloadCategoryIcons(categoryIds: string[]): Promise<Record<string, string>> {
-  await loadIconIndex();
-  
   const cache = loadCache();
   const resolved: Record<string, string> = { ...cache };
-  let updated = false;
-  
-  for (const categoryId of categoryIds) {
-    if (!resolved[categoryId]) {
+
+  // Only pay for the icon index download when something actually needs
+  // resolving — with a warm localStorage cache this fetches nothing.
+  const unresolved = categoryIds.filter((id) => !resolved[id]);
+  if (unresolved.length > 0) {
+    await loadIconIndex();
+    let updated = false;
+    for (const categoryId of unresolved) {
       const iconUrl = resolveCategoryIcon(categoryId);
       if (iconUrl) {
         resolved[categoryId] = iconUrl;
         updated = true;
       }
     }
+    if (updated) {
+      saveCache(resolved);
+    }
+  } else {
+    memoryCache = resolved;
   }
-  
-  if (updated) {
-    saveCache(resolved);
-  }
-  
-  // Preload images in background
-  const urls = Object.values(resolved);
-  urls.forEach(url => {
-    const img = new Image();
-    img.src = url;
+
+  // Warm only the icons this caller asked about — not the whole cache
+  categoryIds.forEach((id) => {
+    const url = resolved[id];
+    if (url) {
+      const img = new Image();
+      img.src = url;
+    }
   });
 
   return resolved;
