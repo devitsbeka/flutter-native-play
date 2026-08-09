@@ -551,6 +551,7 @@ export const en: KaTranslations = {
     uploadPhoto: "Upload",
     reAnimate: "Re-animate",
     animateAvatar: "Animate",
+    facePhotoHint: "Upload a photo where your face is clearly visible 📸",
     animating: "Processing...",
     description: "Take a selfie or upload a photo to create your 3D avatar",
     positionFace: "Position your face in the frame",

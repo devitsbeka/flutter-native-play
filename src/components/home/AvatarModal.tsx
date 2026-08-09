@@ -931,6 +931,7 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
           ) : (
             <>
               <p className="text-xs text-muted-foreground mb-1">{t("avatar.remainingGen", { remaining: remainingGenerations, max: maxPerType })}</p>
+              <p className="text-xs text-muted-foreground mb-2">{t("avatar.facePhotoHint")}</p>
               <div className="flex gap-3">
                 <motion.button
                   onClick={startCamera}
@@ -946,10 +947,9 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                   <span className="text-xs text-muted-foreground">{t("avatar.takeSelfie")}</span>
                 </motion.button>
 
-                <motion.button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isProcessingFile}
-                  className={`flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all ${isProcessingFile ? 'opacity-50' : ''}`}
+                <motion.label
+                  htmlFor="avatar-file-input"
+                  className={`flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isProcessingFile ? 'opacity-50 pointer-events-none' : ''}`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -968,18 +968,19 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                       <span className="text-xs text-muted-foreground">{t("avatar.uploadPhoto")}</span>
                     </>
                   )}
-                </motion.button>
+                </motion.label>
               </div>
             </>
           )}
           </div>
 
           <input
+            id="avatar-file-input"
             ref={fileInputRef}
             type="file"
             accept="image/*,.heic,.heif"
             onChange={handleFileSelect}
-            className="hidden"
+            className="sr-only"
           />
 
           {/* My Scenes - homepage scene generations. Picking one makes it the
@@ -991,22 +992,25 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                 scroll row. First the new-scene tile, then the default mascot
                 scene, then the generated ones. */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              <motion.button
-                onClick={() => {
-                  if (isLimitReached) {
-                    toast.error(t("extra.avatarMaxGenReachedShort"));
-                    return;
-                  }
-                  fileInputRef.current?.click();
-                }}
-                disabled={isLoading || isProcessingFile}
-                className="aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-50"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Plus className="w-6 h-6 text-primary" />
-                <span className="text-xs text-muted-foreground">{t("avatar.newScene")}</span>
-              </motion.button>
+              {isLimitReached ? (
+                <motion.button
+                  onClick={() => toast.error(t("extra.avatarMaxGenReachedShort"))}
+                  className="aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 opacity-50"
+                >
+                  <Plus className="w-6 h-6 text-primary" />
+                  <span className="text-xs text-muted-foreground">{t("avatar.newScene")}</span>
+                </motion.button>
+              ) : (
+                <motion.label
+                  htmlFor="avatar-file-input"
+                  className={`aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isLoading || isProcessingFile ? "opacity-50 pointer-events-none" : ""}`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Plus className="w-6 h-6 text-primary" />
+                  <span className="text-xs text-muted-foreground">{t("avatar.newScene")}</span>
+                </motion.label>
+              )}
               <motion.button
                 onClick={selectDefaultScene}
                 disabled={isLoading}
