@@ -113,9 +113,17 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Load avatar generations
+  // Load avatar generations + reset transient state: the component stays
+  // mounted while closed, so a close mid-generation used to leave
+  // isLoading/isProcessingFile stuck true and every button disabled on
+  // reopen.
   useEffect(() => {
     if (isOpen && user) {
+      setIsLoading(false);
+      setIsProcessingFile(false);
+      setIsAnimating(false);
+      setSelectedForAction(null);
+      setStep("gallery");
       loadGenerations();
     }
   }, [isOpen, user]);
@@ -290,8 +298,18 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
     }
   };
 
-  const isLimitReached = generations.length >= MAX_AVATAR_GENERATIONS;
-  const remainingGenerations = MAX_AVATAR_GENERATIONS - generations.length;
+  // Scenes and portraits count against SEPARATE caps (PRO: 5 + 5) — they
+  // used to share one, so a few scenes silently blocked new avatars. One
+  // full generation produces both a scene and a portrait, so creating a new
+  // one needs room on both sides.
+  const maxPerType = isVip ? MAX_AVATAR_GENERATIONS : 2;
+  const sceneCount = generations.filter((g) => g.avatar_url.includes("/scene_")).length;
+  const portraitCount = generations.length - sceneCount;
+  const isLimitReached = sceneCount >= maxPerType || portraitCount >= maxPerType;
+  const remainingGenerations = Math.max(
+    0,
+    Math.min(maxPerType - sceneCount, maxPerType - portraitCount)
+  );
 
   const generateAvatar = async () => {
     if (!uploadedImage || !user) return;
@@ -908,11 +926,11 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.createNew")}</p>
           {isLimitReached ? (
             <div className="flex items-center justify-center py-3 px-4 rounded-xl bg-muted/50 border border-border">
-              <p className="text-xs text-muted-foreground text-center">{t("avatar.maxGenReached", { max: MAX_AVATAR_GENERATIONS })}</p>
+              <p className="text-xs text-muted-foreground text-center">{t("avatar.maxGenReached", { max: maxPerType })}</p>
             </div>
           ) : (
             <>
-              <p className="text-xs text-muted-foreground mb-1">{t("avatar.remainingGen", { remaining: remainingGenerations, max: MAX_AVATAR_GENERATIONS })}</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("avatar.remainingGen", { remaining: remainingGenerations, max: maxPerType })}</p>
               <div className="flex gap-3">
                 <motion.button
                   onClick={startCamera}
