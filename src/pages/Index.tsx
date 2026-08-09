@@ -982,7 +982,17 @@ export default function Index() {
             the full-bleed guest scene */}
         {!user && showDefaultScene && (
           <DesktopGuestLanding
-            onGoogle={() => void signInWithGoogle()}
+            onGoogle={async () => {
+              const { error } = await signInWithGoogle();
+              // On success the browser redirects to Google; only failures land here.
+              if (error) {
+                toast({
+                  title: t("extra.googleSignInError"),
+                  description: error.message,
+                  variant: "destructive",
+                });
+              }
+            }}
             onFacebook={() => navigate("/auth?mode=signup")}
             onSms={() => navigate("/auth?mode=signup")}
             onEmailContinue={(email) =>
