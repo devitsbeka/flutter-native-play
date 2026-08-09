@@ -165,10 +165,12 @@ export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
       {continueRows.length > 0 && (
         <div
           className="relative w-[298px] shrink-0 overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.8)]"
-          style={{ height: 254 - (3 - continueRows.length) * 70, boxShadow: CARD_SHADOW }}
+          // Roomier card: rows start lower, sit 72px apart and leave a
+          // bottom margin instead of ending flush with the edge
+          style={{ height: 66 + continueRows.length * 72, boxShadow: CARD_SHADOW }}
         >
           <p
-            className="absolute left-[18px] top-[14px] text-[16px] uppercase leading-[16px] tracking-[-0.16px] text-[#402666] whitespace-nowrap"
+            className="absolute left-[18px] top-[16px] text-[14px] uppercase leading-[14px] tracking-[-0.16px] text-[#402666] whitespace-nowrap"
             style={TITLE_STYLE}
           >
             გააგრძელე თამაში
@@ -181,7 +183,7 @@ export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
                 type="button"
                 onClick={() => navigate(`/category/${row.category.id}`)}
                 className="group absolute left-0 h-[62px] w-full text-left"
-                style={{ top: 45 + i * 70 }}
+                style={{ top: 52 + i * 72 }}
               >
                 <div className="absolute left-[14px] top-[7px] size-[48px] overflow-hidden rounded-[12px]">
                   {img ? (
