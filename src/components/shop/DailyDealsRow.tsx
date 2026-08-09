@@ -70,7 +70,7 @@ function DealCard({
 
   return (
     <div
-      className="relative flex min-h-[172px] flex-col overflow-hidden rounded-[24px] p-4 sm:p-5 text-white"
+      className="relative flex min-h-[224px] flex-col overflow-hidden rounded-[24px] p-4 sm:p-5 text-white"
       style={{ background: gradient }}
     >
       {/* soft highlight blob so the card doesn't read flat */}
@@ -148,8 +148,13 @@ function DealCard({
           <motion.button
             onClick={onBuy}
             disabled={isPurchased}
-            className="rounded-full px-5 py-2 text-sm font-bold text-white disabled:opacity-60"
-            style={{ background: "#00DDA3", boxShadow: "0 3px 0 #00A87C" }}
+            className="rounded-full px-5 py-2 text-sm font-bold text-[#402666] disabled:opacity-60"
+            // White chunky pill, same recipe as the main page stat pills
+            style={{
+              background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
+              boxShadow: "0 3px 0 #D8D0E8, 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 #FFFFFF",
+              border: "2px solid #E8E0F5",
+            }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95, y: 2 }}
           >
