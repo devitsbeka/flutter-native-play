@@ -80,10 +80,12 @@ export function ShopItemCard({
       <motion.button
         onClick={onClick}
         disabled={isPurchased || isLoading}
-        className="px-4 py-1.5 rounded-full font-bold text-xs text-white"
+        className="px-4 py-1.5 rounded-full font-bold text-xs text-[#402666]"
+        // White chunky pill, same recipe as the main page stat pills
         style={{
-          background: "#00DDA3",
-          boxShadow: "0 3px 0 #00A87C",
+          background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
+          boxShadow: "0 3px 0 #D8D0E8, 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 #FFFFFF",
+          border: "2px solid #E8E0F5",
         }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95, y: 2 }}
