@@ -281,8 +281,28 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
     setIsProcessingFile(true);
 
     try {
-      // Use canvas compression - handles HEIC, resizes, and converts to JPEG
-      const dataUrl = await compressImage(file, 1024, 0.85);
+      // Canvas compression resizes + converts to JPEG. HEIC/HEIF (iPhone/Mac
+      // photos) can't be decoded by <img> outside Safari, so on failure they
+      // are converted with heic2any (lazy-loaded) and retried.
+      let dataUrl: string;
+      try {
+        dataUrl = await compressImage(file, 1024, 0.85);
+      } catch (firstError) {
+        const looksHeic =
+          /\.(heic|heif)$/i.test(file.name) ||
+          file.type === "image/heic" ||
+          file.type === "image/heif" ||
+          file.type === "";
+        if (!looksHeic) throw firstError;
+        const { default: heic2any } = await import("heic2any");
+        const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+        const jpegBlob = Array.isArray(converted) ? converted[0] : converted;
+        dataUrl = await compressImage(
+          new File([jpegBlob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }),
+          1024,
+          0.85
+        );
+      }
       setUploadedImage(dataUrl);
       setStep("upload");
       
