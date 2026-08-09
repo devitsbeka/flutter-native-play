@@ -41,6 +41,8 @@ interface MissionTier {
 // A mission template: {n} in title/description is replaced with the tier's
 // target. Beginners (few games played) get softer targets and rewards than
 // advanced players.
+export type MissionIconKey = "check" | "map" | "target" | "shoe" | "trophy" | "tv" | "hearts";
+
 interface PoolMission {
   mission_id: string;
   title: string;
@@ -50,7 +52,7 @@ interface PoolMission {
   power_up?: string | null;
   power_up_count?: number;
   color_theme: ColorTheme;
-  emoji: string;
+  icon: MissionIconKey;
 }
 
 // Mission color themes for UI
@@ -129,7 +131,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up: "5050",
     power_up_count: 1,
     color_theme: "emerald",
-    emoji: "👟",
+    icon: "shoe",
   },
   {
     mission_id: "answer_correct",
@@ -140,7 +142,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up: "freeze",
     power_up_count: 1,
     color_theme: "blue",
-    emoji: "✅",
+    icon: "check",
   },
   {
     mission_id: "win_games",
@@ -151,7 +153,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up: "5050",
     power_up_count: 1,
     color_theme: "purple",
-    emoji: "🏆",
+    icon: "trophy",
   },
   {
     mission_id: "play_categories",
@@ -162,7 +164,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up: "freeze",
     power_up_count: 1,
     color_theme: "orange",
-    emoji: "🗺️",
+    icon: "map",
   },
   {
     mission_id: "perfect_round",
@@ -173,7 +175,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up: "replace",
     power_up_count: 1,
     color_theme: "rose",
-    emoji: "🎯",
+    icon: "target",
   },
   {
     mission_id: "play_friend",
@@ -184,7 +186,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up: "replace",
     power_up_count: 1,
     color_theme: "cyan",
-    emoji: "🤝",
+    icon: "hearts",
   },
   {
     mission_id: "play_tv",
@@ -195,7 +197,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up: "time-drain",
     power_up_count: 1,
     color_theme: "amber",
-    emoji: "📺",
+    icon: "tv",
   },
 ];
 
@@ -209,7 +211,7 @@ const WEEKLY_POOL: PoolMission[] = [
     power_up: "5050",
     power_up_count: 3,
     color_theme: "purple",
-    emoji: "👑",
+    icon: "trophy",
   },
   {
     mission_id: "weekly_answers",
@@ -220,7 +222,18 @@ const WEEKLY_POOL: PoolMission[] = [
     power_up: "freeze",
     power_up_count: 2,
     color_theme: "cyan",
-    emoji: "🧠",
+    icon: "check",
+  },
+  {
+    mission_id: "weekly_invite_friend",
+    title: "მეგობრობა",
+    description: "დაამატე {n} ახალი მეგობარი",
+    beginner: { target: 1, xp: 80, coins: 150, gems: 2 },
+    advanced: { target: 2, xp: 100, coins: 200, gems: 3 },
+    power_up: "5050",
+    power_up_count: 1,
+    color_theme: "rose",
+    icon: "hearts",
   },
   {
     mission_id: "weekly_categories",
@@ -231,7 +244,7 @@ const WEEKLY_POOL: PoolMission[] = [
     power_up: "replace",
     power_up_count: 2,
     color_theme: "amber",
-    emoji: "🧭",
+    icon: "map",
   },
   {
     mission_id: "weekly_perfect",
@@ -242,7 +255,7 @@ const WEEKLY_POOL: PoolMission[] = [
     power_up: "time-drain",
     power_up_count: 2,
     color_theme: "rose",
-    emoji: "💯",
+    icon: "target",
   },
   {
     mission_id: "weekly_friend_games",
@@ -253,7 +266,7 @@ const WEEKLY_POOL: PoolMission[] = [
     power_up: "time-drain",
     power_up_count: 2,
     color_theme: "emerald",
-    emoji: "🎉",
+    icon: "hearts",
   },
   {
     mission_id: "weekly_play_games",
@@ -264,7 +277,7 @@ const WEEKLY_POOL: PoolMission[] = [
     power_up: "replace",
     power_up_count: 2,
     color_theme: "blue",
-    emoji: "🔥",
+    icon: "shoe",
   },
 ];
 
@@ -320,7 +333,8 @@ export type MissionEvent =
   | "categories_played"
   | "perfect_win"
   | "friend_game"
-  | "tv_played";
+  | "tv_played"
+  | "friend_invited";
 
 const EVENT_MISSIONS: Record<MissionEvent, string[]> = {
   game_played: ["play_games", "weekly_play_games"],
@@ -330,6 +344,7 @@ const EVENT_MISSIONS: Record<MissionEvent, string[]> = {
   perfect_win: ["perfect_round", "weekly_perfect"],
   friend_game: ["play_friend", "weekly_friend_games"],
   tv_played: ["play_tv"],
+  friend_invited: ["weekly_invite_friend"],
 };
 
 // Export mission helpers for UI
@@ -339,9 +354,9 @@ export function getMissionTheme(missionId: string) {
   return mission ? MISSION_THEMES[mission.color_theme] : MISSION_THEMES.blue;
 }
 
-export function getMissionEmoji(missionId: string): string {
+export function getMissionIcon(missionId: string): MissionIconKey {
   const all = [...DAILY_POOL, ...WEEKLY_POOL];
-  return all.find((m) => m.mission_id === missionId)?.emoji || "⭐";
+  return all.find((m) => m.mission_id === missionId)?.icon || "check";
 }
 
 export function getMissionType(missionId: string): "daily" | "weekly" {
