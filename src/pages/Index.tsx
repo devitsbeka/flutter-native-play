@@ -877,31 +877,45 @@ export default function Index() {
             layer, not here — background layers never receive them.
             Mounted only when the viewport is actually xl, so smaller
             screens never download the media. */}
-        {!isSceneViewport ? null : sceneUrl && sceneVideoUrl ? (
-          /* Seamless idle-loop video generated from the scene — poster keeps
-             the still visible until the video is ready to play */
-          <motion.video
-            src={sceneVideoUrl}
-            poster={sceneUrl}
-            autoPlay
-            loop
-            muted
-            playsInline
+        {!isSceneViewport ? null : sceneUrl ? (
+          /* Generated 16:9 scene, resolution-aware: the artwork fits inside
+             the viewport (contain, anchored to the bottom so the friends
+             reel never covers the subject) while a blurred copy of itself
+             fills whatever the aspect difference leaves uncovered. On true
+             16:9 screens the two layers coincide and it looks full-bleed. */
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="hidden md:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
-          />
-        ) : sceneUrl ? (
-          <motion.img
-            src={sceneUrl}
-            alt=""
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            className="hidden md:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
-            draggable={false}
-          />
+            className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none"
+          >
+            <img
+              src={sceneUrl}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110"
+              draggable={false}
+            />
+            {sceneVideoUrl ? (
+              /* Seamless idle-loop video — poster keeps the still visible
+                 until the video is ready to play */
+              <video
+                src={sceneVideoUrl}
+                poster={sceneUrl}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-contain object-[center_bottom]"
+              />
+            ) : (
+              <img
+                src={sceneUrl}
+                alt=""
+                className="absolute inset-0 w-full h-full object-contain object-[center_bottom]"
+                draggable={false}
+              />
+            )}
+          </motion.div>
         ) : showDefaultScene && user ? (
           <motion.video
             src={DEFAULT_SCENE_VIDEO}

@@ -100,6 +100,13 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [selectedForAction, setSelectedForAction] = useState<string | null>(null);
+  // "default" = the Trivia King mascot loop backs the homepage instead of a
+  // generated scene; anything else = the picked generated scene. Local
+  // preference, read by useUserScene.
+  const [scenePref, setScenePref] = useState<string | null>(null);
+  useEffect(() => {
+    if (isOpen && user) setScenePref(localStorage.getItem(`scene_pref_${user.id}`));
+  }, [isOpen, user]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -589,6 +596,16 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
       </motion.div>
     );
 
+  // Picking the mascot tile: the homepage falls back to the default Trivia
+  // King loop; generated scenes keep their rows untouched for switching back.
+  const selectDefaultScene = () => {
+    if (!user) return;
+    localStorage.setItem(`scene_pref_${user.id}`, "default");
+    setScenePref("default");
+    queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
+    toast.success(t("avatar.avatarUpdated"));
+  };
+
   const selectScene = async (gen: AvatarGeneration) => {
     if (!user) return;
     setIsLoading(true);
@@ -597,6 +614,8 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
       await supabase.from("avatar_generations").update({ is_current: false }).eq("user_id", user.id).like("avatar_url", "%/scene_%");
       const { error } = await supabase.from("avatar_generations").update({ is_current: true }).eq("id", gen.id);
       if (error) throw error;
+      localStorage.setItem(`scene_pref_${user.id}`, "generated");
+      setScenePref("generated");
       queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
       setSelectedForAction(null);
       toast.success(t("avatar.avatarUpdated"));
@@ -950,18 +969,12 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
               from a different selfie/photo. */}
           <div>
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myScenes")}</p>
-            <div
-              ref={scenesRowRef}
-              onPointerDown={scenesPointerDown}
-              onPointerMove={scenesPointerMove}
-              onPointerUp={scenesPointerUp}
-              onPointerLeave={scenesPointerUp}
-              onDragStart={(e) => e.preventDefault()}
-              className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1 cursor-grab active:cursor-grabbing select-none"
-            >
+            {/* Wrapping grid — every tile always fully visible, no cropped
+                scroll row. First the new-scene tile, then the default mascot
+                scene, then the generated ones. */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <motion.button
                 onClick={() => {
-                  if (sceneDrag.current.moved) return;
                   if (isLimitReached) {
                     toast.error(t("extra.avatarMaxGenReachedShort"));
                     return;
@@ -969,25 +982,50 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                   fileInputRef.current?.click();
                 }}
                 disabled={isLoading || isProcessingFile}
-                className="w-48 shrink-0 aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-50"
+                className="aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-50"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <Plus className="w-6 h-6 text-primary" />
                 <span className="text-xs text-muted-foreground">{t("avatar.newScene")}</span>
               </motion.button>
+              <motion.button
+                onClick={selectDefaultScene}
+                disabled={isLoading}
+                className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
+                  scenePref === "default"
+                    ? "border-primary ring-2 ring-primary/30"
+                    : "border-border hover:border-primary/50"
+                } disabled:opacity-50`}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <video
+                  src="/videos/trivia-king-scene.mp4"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover pointer-events-none"
+                />
+                <span className="absolute bottom-1 left-1 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-bold text-white">
+                  MyTrivia
+                </span>
+                {scenePref === "default" && (
+                  <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                )}
+              </motion.button>
               {generations.filter((g) => isSceneUrl(g.avatar_url)).map((gen) => (
                 <motion.button
                   key={gen.id}
-                  onClick={() => {
-                    if (sceneDrag.current.moved) return;
-                    setSelectedForAction(selectedForAction === gen.id ? null : gen.id);
-                  }}
+                  onClick={() => setSelectedForAction(selectedForAction === gen.id ? null : gen.id)}
                   disabled={isLoading}
-                  className={`relative w-48 shrink-0 aspect-video rounded-xl overflow-hidden border-2 transition-all ${
+                  className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
                     selectedForAction === gen.id
                       ? "border-primary ring-2 ring-primary/30"
-                      : gen.is_current
+                      : gen.is_current && scenePref !== "default"
                         ? "border-primary"
                         : "border-border hover:border-primary/50"
                   } disabled:opacity-50`}
@@ -995,7 +1033,7 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                   whileTap={{ scale: 0.97 }}
                 >
                   <img src={gen.avatar_url} alt="Scene" className="w-full h-full object-cover pointer-events-none" draggable={false} />
-                  {gen.is_current && selectedForAction !== gen.id && (
+                  {gen.is_current && scenePref !== "default" && selectedForAction !== gen.id && (
                     <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow">
                       <Check className="w-3 h-3 text-white" />
                     </div>
