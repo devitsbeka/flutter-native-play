@@ -124,8 +124,10 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "play_games",
     title: "მარათონელი",
     description: "ითამაშე {n} თამაში დღეს",
-    beginner: { target: 3, xp: 25, coins: 60, gems: 0 },
+    beginner: { target: 3, xp: 25, coins: 60, gems: 1 },
     advanced: { target: 5, xp: 35, coins: 80, gems: 1 },
+    power_up: "5050",
+    power_up_count: 1,
     color_theme: "emerald",
     emoji: "👟",
   },
@@ -135,6 +137,8 @@ const DAILY_POOL: PoolMission[] = [
     description: "გაეცი {n} სწორი პასუხი",
     beginner: { target: 10, xp: 30, coins: 50, gems: 1 },
     advanced: { target: 25, xp: 45, coins: 90, gems: 1 },
+    power_up: "freeze",
+    power_up_count: 1,
     color_theme: "blue",
     emoji: "✅",
   },
@@ -177,6 +181,8 @@ const DAILY_POOL: PoolMission[] = [
     description: "ითამაშე მეგობრებთან ერთად ოთახში",
     beginner: { target: 1, xp: 40, coins: 80, gems: 1 },
     advanced: { target: 1, xp: 40, coins: 80, gems: 1 },
+    power_up: "replace",
+    power_up_count: 1,
     color_theme: "cyan",
     emoji: "🤝",
   },
@@ -186,6 +192,8 @@ const DAILY_POOL: PoolMission[] = [
     description: "ითამაშე TV-ზე მეგობრებთან ერთად",
     beginner: { target: 1, xp: 50, coins: 100, gems: 2 },
     advanced: { target: 1, xp: 50, coins: 100, gems: 2 },
+    power_up: "time-drain",
+    power_up_count: 1,
     color_theme: "amber",
     emoji: "📺",
   },
@@ -242,6 +250,8 @@ const WEEKLY_POOL: PoolMission[] = [
     description: "ითამაშე {n} თამაში მეგობრებთან",
     beginner: { target: 2, xp: 140, coins: 300, gems: 5 },
     advanced: { target: 5, xp: 190, coins: 450, gems: 8 },
+    power_up: "time-drain",
+    power_up_count: 2,
     color_theme: "emerald",
     emoji: "🎉",
   },
@@ -251,6 +261,8 @@ const WEEKLY_POOL: PoolMission[] = [
     description: "ითამაშე {n} თამაში ამ კვირაში",
     beginner: { target: 10, xp: 120, coins: 300, gems: 4 },
     advanced: { target: 25, xp: 170, coins: 450, gems: 7 },
+    power_up: "replace",
+    power_up_count: 2,
     color_theme: "blue",
     emoji: "🔥",
   },
@@ -347,6 +359,43 @@ function getWeekStart(): string {
 
 // ---------- Fetch function ----------
 
+// Rows created before a reward-tuning change keep stale reward columns;
+// realign unfinished rows with the current pool so what the card shows is
+// what completion actually grants. (Completed rows keep what was paid out.)
+async function syncRewardColumns(
+  rows: { [key: string]: unknown }[],
+  defs: PoolMission[],
+  tier: "beginner" | "advanced"
+) {
+  const updates: PromiseLike<unknown>[] = [];
+  for (const row of rows) {
+    if (row.completed) continue;
+    const def = defs.find((d) => d.mission_id === row.mission_id);
+    if (!def) continue;
+    const t = def[tier];
+    const powerUp = def.power_up || null;
+    const powerUpCount = def.power_up_count || 0;
+    if (
+      row.reward_xp !== t.xp ||
+      row.reward_coins !== t.coins ||
+      row.reward_gems !== t.gems ||
+      row.reward_power_up !== powerUp ||
+      row.reward_power_up_count !== powerUpCount
+    ) {
+      const fresh = {
+        reward_xp: t.xp,
+        reward_coins: t.coins,
+        reward_gems: t.gems,
+        reward_power_up: powerUp,
+        reward_power_up_count: powerUpCount,
+      };
+      Object.assign(row, fresh);
+      updates.push(supabase.from("user_missions").update(fresh).eq("id", row.id as string));
+    }
+  }
+  if (updates.length > 0) await Promise.all(updates);
+}
+
 async function fetchMissions(userId: string, gamesPlayed: number): Promise<MissionsData> {
   const today = new Date().toISOString().split("T")[0];
   const weekStart = getWeekStart();
@@ -410,6 +459,11 @@ async function fetchMissions(userId: string, gamesPlayed: number): Promise<Missi
       .eq("mission_type", "weekly");
     weekly = refreshedWeekly || [];
   }
+
+  await Promise.all([
+    syncRewardColumns(daily, dailyDefs, tier),
+    syncRewardColumns(weekly, weeklyDefs, tier),
+  ]);
 
   // Show only the current rotation (older same-day rows from a previous
   // rotation stay in the table but leave the UI)
