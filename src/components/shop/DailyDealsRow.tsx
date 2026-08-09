@@ -197,7 +197,6 @@ export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick }: Dai
     >
       {/* relative z-10 keeps the title above the background blobs */}
       <div className="relative z-10 mb-3 mt-2 flex items-center gap-2.5 px-1">
-        <span className="h-6 w-1.5 rounded-full bg-gradient-to-b from-amber-400 to-orange-500" />
         <h2 className="text-lg md:text-xl font-display font-bold text-foreground">{t("shop.deals")}</h2>
       </div>
 
