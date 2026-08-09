@@ -1,4 +1,5 @@
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,11 @@ const FloatingStar = React.memo(({ index }: { index: number }) => {
     </motion.div>
   );
 });
+
+// Modals must escape ancestors that establish a containing block for fixed
+// positioning (content-visibility, contain, transform) or they get clipped
+const portal = (node: React.ReactNode) =>
+  typeof document === "undefined" ? node : createPortal(node, document.body);
 
 export type GameModalVariant = "primary" | "success" | "gold" | "info";
 
@@ -166,7 +172,10 @@ export function GameModal({
   // centered panel over a dimmed backdrop (~60% of the page) so the page
   // underneath stays visible.
   if (fullScreen) {
-    return (
+    // Portalled to <body>: an ancestor with content-visibility/contain or a
+    // transform becomes the containing block for fixed children, which
+    // clipped modals rendered inside feed cards
+    return portal(
       <AnimatePresence mode="wait">
         {isOpen && (
           <motion.div
@@ -441,7 +450,7 @@ export function GameModal({
   }
 
   // Original card modal layout (when fullScreen is false)
-  return (
+  return portal(
     <AnimatePresence mode="wait">
       {isOpen && (
         <motion.div
