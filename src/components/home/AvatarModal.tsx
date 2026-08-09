@@ -124,6 +124,9 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   // it could be saved (any photo, always "nothing changed").
   const generationInFlight = useRef(false);
   const wasOpen = useRef(false);
+  // The scene generated in this session, already uploaded and recorded.
+  // Applying it later only has to flip which scene is current.
+  const storedScene = useRef<{ sceneUrl: string; sourceUrl: string | null } | null>(null);
   useEffect(() => {
     if (isOpen && !wasOpen.current && !generationInFlight.current) {
       setIsLoading(false);
@@ -389,7 +392,32 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || "Failed to generate avatar");
 
-      setGeneratedAvatar(data.avatarUrl);
+      // Persist the scene IMMEDIATELY. It used to live only in component
+      // state until the user pressed save, so any interruption — closing the
+      // modal, the auto-reopen, a re-render — silently threw the finished
+      // generation away and the scenes list looked untouched.
+      const sceneResponse = await fetch(data.avatarUrl);
+      const sceneBlob = await sceneResponse.blob();
+      const sceneFileName = `${user.id}/scene_${Date.now()}.png`;
+      const { error: sceneUploadError } = await supabase.storage
+        .from("avatars")
+        .upload(sceneFileName, sceneBlob, { upsert: true, contentType: "image/png" });
+      if (sceneUploadError) throw new Error(`Failed to store scene: ${sceneUploadError.message}`);
+
+      const storedSceneUrl = supabase.storage.from("avatars").getPublicUrl(sceneFileName).data.publicUrl;
+
+      // Recorded but NOT current yet — applying it is still the user's call
+      await supabase.from("avatar_generations").insert({
+        user_id: user.id,
+        avatar_url: storedSceneUrl,
+        source_image_url: imageUrl,
+        is_current: false,
+      });
+
+      storedScene.current = { sceneUrl: storedSceneUrl, sourceUrl: imageUrl };
+      await loadGenerations();
+
+      setGeneratedAvatar(storedSceneUrl);
       setStep("preview");
       
       confetti({
@@ -417,60 +445,58 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     setIsLoading(true);
 
     try {
-      // The generated artifact is a 16:9 homepage scene — save it under the
-      // scene_ marker the homepage hero looks for
-      const response = await fetch(urlToSave);
-      const blob = await response.blob();
+      // Generation already stored this scene, so applying it just flips the
+      // current flag — no re-upload, and nothing to lose if this step never
+      // happens.
+      const alreadyStored = storedScene.current?.sceneUrl === urlToSave;
 
-      const fileName = `${user.id}/scene_${Date.now()}.png`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(fileName, blob, {
-          upsert: true,
-          contentType: 'image/png'
-        });
-
-      if (uploadError) {
-        throw new Error(`Failed to save avatar: ${uploadError.message}`);
-      }
-
-      const { data: urlData } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(fileName);
-
-      const finalUrl = urlData.publicUrl;
-
-      // The raw photo is kept only as the generation's source record — it is
-      // never published as the public avatar. The circle keeps the previous
-      // avatar until the stylized portrait (generated FROM THE SCENE, so it
-      // matches the character and art style) lands a minute later.
-      let sourcePhotoUrl: string | null = null;
-      if (uploadedImage) {
-        try {
-          const photoBlob = await (await fetch(uploadedImage)).blob();
-          const photoFileName = `${user.id}/photo_${Date.now()}.png`;
-          const { error: photoError } = await supabase.storage
-            .from("avatars")
-            .upload(photoFileName, photoBlob, { upsert: true, contentType: 'image/png' });
-          if (!photoError) {
-            sourcePhotoUrl = supabase.storage.from("avatars").getPublicUrl(photoFileName).data.publicUrl;
-          }
-        } catch (photoErr) {
-          console.warn("Saving source photo failed:", photoErr);
+      if (!alreadyStored) {
+        const response = await fetch(urlToSave);
+        const blob = await response.blob();
+        const fileName = `${user.id}/scene_${Date.now()}.png`;
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(fileName, blob, { upsert: true, contentType: 'image/png' });
+        if (uploadError) {
+          throw new Error(`Failed to save avatar: ${uploadError.message}`);
         }
+        storedScene.current = {
+          sceneUrl: supabase.storage.from("avatars").getPublicUrl(fileName).data.publicUrl,
+          sourceUrl: null,
+        };
       }
 
-      // Save to avatar_generations table (the current SCENE row is what the
-      // homepage hero reads — only scene rows lose their flag here)
-      await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id).like('avatar_url', '%/scene_%');
+      const finalUrl = storedScene.current!.sceneUrl;
 
-      await supabase.from('avatar_generations').insert({
-        user_id: user.id,
-        avatar_url: finalUrl,
-        source_image_url: sourcePhotoUrl,
-        is_current: true,
-      });
+      // Make this the current scene. The row already exists (generation
+      // recorded it), so this only moves the flag; a row is inserted only for
+      // the legacy path where the scene was not stored during generation.
+      await supabase
+        .from('avatar_generations')
+        .update({ is_current: false })
+        .eq('user_id', user.id)
+        .like('avatar_url', '%/scene_%');
+
+      const { data: existingRow } = await supabase
+        .from('avatar_generations')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('avatar_url', finalUrl)
+        .maybeSingle();
+
+      if (existingRow) {
+        await supabase
+          .from('avatar_generations')
+          .update({ is_current: true })
+          .eq('id', existingRow.id);
+      } else {
+        await supabase.from('avatar_generations').insert({
+          user_id: user.id,
+          avatar_url: finalUrl,
+          source_image_url: storedScene.current!.sourceUrl,
+          is_current: true,
+        });
+      }
 
       // Update profile - AI generation implies a face was present. The old
       // animated avatar belongs to the previous face, so it retires too —
