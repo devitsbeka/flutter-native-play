@@ -82,12 +82,17 @@ export function usePlayerProfile(userId: string | null) {
       return;
     }
 
+    // Ignore results that land after the modal switched to another user
+    let cancelled = false;
+
     async function fetchProfile() {
       setLoading(true);
       setError(null);
 
       try {
-        // Fetch profile
+        // Phase 1 — the profile row alone. The header (avatar, name, score)
+        // renders from this immediately; the old flow chained up to eight
+        // round-trips before showing anything.
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select(PROFILE_SELECT_COLUMNS)
@@ -100,15 +105,40 @@ export function usePlayerProfile(userId: string | null) {
           games_played?: number; games_won?: number; total_points?: number; best_streak?: number;
         };
 
-        // Fetch achievements
-        const { data: achievements } = await supabase
+        const gamesPlayed = profileTyped?.games_played || 0;
+        const gamesWon = profileTyped?.games_won || 0;
+
+        const base: PlayerProfileData = {
+          profile: profileTyped,
+          achievements: [],
+          trivias: [],
+          collections: [],
+          interactions: [],
+          stats: {
+            totalPoints: profileTyped?.total_points || 0,
+            gamesPlayed,
+            gamesWon,
+            winRate: gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0,
+            bestStreak: profileTyped?.best_streak || 0,
+          },
+          isFriend: false,
+          friendshipStatus: 'none',
+          friendshipId: null,
+          isCurrentUser: user?.id === userId,
+        };
+
+        if (cancelled) return;
+        setData(base);
+        setLoading(false);
+
+        // Phase 2 — everything else in parallel, merged in when it arrives
+        const achievementsQ = supabase
           .from("user_achievements")
           .select("*")
           .eq("user_id", userId)
           .order("unlocked_at", { ascending: false });
 
-        // Fetch public trivias
-        const { data: trivias } = await supabase
+        const triviasQ = supabase
           .from("user_quiz_posts")
           .select("id, title, description, cover_image, icon_slug, plays_count, likes_count, created_at")
           .eq("user_id", userId)
@@ -116,8 +146,7 @@ export function usePlayerProfile(userId: string | null) {
           .order("created_at", { ascending: false })
           .limit(10);
 
-        // Fetch collections
-        const { data: collections } = await supabase
+        const collectionsQ = supabase
           .from("quiz_collections")
           .select("id, title, description, cover_image, cover_gradient, plays_count, likes_count")
           .eq("user_id", userId)
@@ -125,40 +154,33 @@ export function usePlayerProfile(userId: string | null) {
           .order("created_at", { ascending: false })
           .limit(10);
 
-        // Check friendship status
-        let friendshipStatus: 'none' | 'pending' | 'accepted' | 'sent' = 'none';
-        let friendshipId: string | null = null;
-        let isFriend = false;
-
-        if (user && user.id !== userId) {
+        const friendshipP = (async () => {
+          if (!user || user.id === userId) return null;
           const { data: friendship } = await supabase
             .from("friendships")
             .select("*")
             .or(`and(user_id.eq.${user.id},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${user.id})`)
             .maybeSingle();
+          return friendship;
+        })();
 
-          if (friendship) {
-            friendshipId = friendship.id;
-            if (friendship.status === 'accepted') {
-              friendshipStatus = 'accepted';
-              isFriend = true;
-            } else if (friendship.status === 'pending') {
-              friendshipStatus = friendship.user_id === user.id ? 'sent' : 'pending';
-            }
-          }
-        }
+        const interactionsP = (async (): Promise<InteractionLogItem[]> => {
+          if (!user || user.id === userId) return [];
+          const interactions: InteractionLogItem[] = [];
 
-        // Fetch interaction history between current user and profile user
-        const interactions: InteractionLogItem[] = [];
-        
-        if (user && user.id !== userId) {
-          // Fetch game invitations between the two users
-          const { data: invitations } = await supabase
-            .from("game_invitations")
-            .select("id, sender_id, receiver_id, status, created_at, room:game_rooms(category_name)")
-            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${user.id})`)
-            .order("created_at", { ascending: false })
-            .limit(10);
+          // Invitations and shared rooms are independent — run both at once
+          const [{ data: invitations }, { data: sharedRooms }] = await Promise.all([
+            supabase
+              .from("game_invitations")
+              .select("id, sender_id, receiver_id, status, created_at, room:game_rooms(category_name)")
+              .or(`and(sender_id.eq.${user.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${user.id})`)
+              .order("created_at", { ascending: false })
+              .limit(10),
+            supabase
+              .from("room_participants")
+              .select("room_id, joined_at")
+              .eq("user_id", userId),
+          ]);
 
           if (invitations) {
             for (const inv of invitations) {
@@ -174,12 +196,6 @@ export function usePlayerProfile(userId: string | null) {
               });
             }
           }
-
-          // Fetch rooms where both users are participants
-          const { data: sharedRooms } = await supabase
-            .from("room_participants")
-            .select("room_id, joined_at")
-            .eq("user_id", userId);
 
           if (sharedRooms && sharedRooms.length > 0) {
             const roomIds = sharedRooms.map(r => r.room_id);
@@ -207,39 +223,54 @@ export function usePlayerProfile(userId: string | null) {
             }
           }
 
-          // Sort by timestamp descending
           interactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+          return interactions;
+        })();
+
+        const [
+          { data: achievements },
+          { data: trivias },
+          { data: collections },
+          friendship,
+          interactions,
+        ] = await Promise.all([achievementsQ, triviasQ, collectionsQ, friendshipP, interactionsP]);
+
+        let friendshipStatus: 'none' | 'pending' | 'accepted' | 'sent' = 'none';
+        let friendshipId: string | null = null;
+        let isFriend = false;
+        if (friendship) {
+          friendshipId = friendship.id;
+          if (friendship.status === 'accepted') {
+            friendshipStatus = 'accepted';
+            isFriend = true;
+          } else if (friendship.status === 'pending') {
+            friendshipStatus = friendship.user_id === user!.id ? 'sent' : 'pending';
+          }
         }
 
-        const gamesPlayed = profileTyped?.games_played || 0;
-        const gamesWon = profileTyped?.games_won || 0;
-
+        if (cancelled) return;
         setData({
-          profile: profileTyped,
+          ...base,
           achievements: achievements || [],
           trivias: trivias || [],
           collections: collections || [],
-          interactions: interactions.slice(0, 10), // Limit to 10 most recent
-          stats: {
-            totalPoints: profileTyped?.total_points || 0,
-            gamesPlayed,
-            gamesWon,
-            winRate: gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0,
-            bestStreak: profileTyped?.best_streak || 0,
-          },
+          interactions: interactions.slice(0, 10),
           isFriend,
           friendshipStatus,
           friendshipId,
-          isCurrentUser: user?.id === userId,
         });
       } catch (err) {
+        if (cancelled) return;
         setError(err instanceof Error ? err : new Error("Failed to fetch profile"));
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
     fetchProfile();
+    return () => {
+      cancelled = true;
+    };
   }, [userId, user?.id, refreshKey]);
 
   return { data, loading, error, refetch };
