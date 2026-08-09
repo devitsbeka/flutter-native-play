@@ -724,8 +724,9 @@ function TeamContentV2() {
               {/* Unified Tab Bar - compact left-aligned tabs on md+, with the
                   create button pinned to the right edge of the same row;
                   mobile keeps full-width equal tabs (create stays in the
-                  filter bar there) */}
-              <div className="px-4 w-full md:max-w-[1115px] mx-auto pt-3 pb-2 overflow-hidden">
+                  filter bar there). Full-width like the content below, so
+                  tabs sit flush left and the CTA flush right. */}
+              <div className="px-4 w-full pt-3 pb-2 overflow-hidden">
                 <div className="flex items-center gap-3">
                   {/* Tab container */}
                   <div
