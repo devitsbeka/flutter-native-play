@@ -143,7 +143,7 @@ export function CategorySelectorModal({
       {/* Categories Grid - use flex-1 to fill remaining space */}
       <div className="flex-1 overflow-y-auto -mx-5 px-5 pb-safe">
         <div className="max-w-[700px] md:max-w-[800px] lg:max-w-[900px] mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 pb-8">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
               <div
