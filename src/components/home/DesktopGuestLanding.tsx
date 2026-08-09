@@ -31,9 +31,10 @@ const HEADING_FONT = {
   fontWeight: 600,
 };
 
-// Full-bleed background for the guest scene: the design shows the exported
-// still (image 647) rather than the animated loop, under the edge vignette.
-export function DesktopGuestSceneBackground() {
+// Full-bleed background for the guest scene: the animated Trivia King loop
+// under the design's edge vignette; the exported still (image 647) keeps
+// the frame visible until the video is ready.
+export function DesktopGuestSceneBackground({ videoSrc }: { videoSrc: string }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -41,11 +42,14 @@ export function DesktopGuestSceneBackground() {
       transition={{ duration: 0.6 }}
       className="hidden md:block absolute inset-0 z-0 bg-[#f9dbff] select-none"
     >
-      <img
-        src={heroScene}
-        alt=""
+      <video
+        src={videoSrc}
+        poster={heroScene}
+        autoPlay
+        loop
+        muted
+        playsInline
         className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
-        draggable={false}
       />
       <div
         aria-hidden

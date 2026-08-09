@@ -904,9 +904,9 @@ export default function Index() {
             className="hidden md:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
           />
         ) : showDefaultScene ? (
-          /* Figma 612:1888 — guests get the exported Trivia King still with
-             the white edge vignette instead of the animated loop */
-          <DesktopGuestSceneBackground />
+          /* Figma 612:1888 — guests get the animated Trivia King loop under
+             the white edge vignette (exported still as the poster) */
+          <DesktopGuestSceneBackground videoSrc={DEFAULT_SCENE_VIDEO} />
         ) : null}
         <header className="relative z-20 px-4 py-3 md:pt-4 safe-top border-b border-border/30 lg:border-b-0">
           <div className="flex items-center justify-between gap-3 md:min-h-12">
