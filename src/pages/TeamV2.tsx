@@ -676,20 +676,13 @@ function TeamContentV2() {
             <MyTriviaLiveLogo responsive />
           </div>
 
-          {/* Friends reel - shares the header row only on lg+, where the
-              logo lives in the sidebar; on narrower widths the logo + icons
-              keep the row and the reel drops to its own row below */}
-          <div className="hidden lg:block flex-1 min-w-0">
-            <FriendsStoriesBar
-              onAddFriendClick={() => setShowAddFriendModal(true)}
-              onShowAllFriends={() => setShowAllFriendsModal(true)}
-            />
-          </div>
+          {/* lg+: the sidebar holds the logo, so the header leads with the
+              page title; the friends reel lives on its own row below */}
+          <h1 className="hidden lg:block font-display text-xl font-bold text-[#402666] truncate">
+            {t("extra.navOnlineGame")}
+          </h1>
 
-          {/* Icons pin to the row TOP on lg+ (the reel makes this row tall,
-              centering would sink them) — mt-3 lands their centers at the
-              same 40px-from-page-top spot the home header puts them */}
-          <div className="flex items-center gap-1 ml-auto shrink-0 lg:self-start lg:mt-3">
+          <div className="flex items-center gap-1 ml-auto shrink-0">
             {/* QR Scanner */}
             <motion.button
               whileHover={{ scale: 1.1 }}
@@ -704,8 +697,8 @@ function TeamContentV2() {
           </div>
         </div>
 
-        {/* Below lg: the reel gets its own row under the logo + icons */}
-        <div className="lg:hidden px-4">
+        {/* Friends reel: its own full-width row under the header, all sizes */}
+        <div className="px-4">
           <FriendsStoriesBar
             onAddFriendClick={() => setShowAddFriendModal(true)}
             onShowAllFriends={() => setShowAllFriendsModal(true)}
