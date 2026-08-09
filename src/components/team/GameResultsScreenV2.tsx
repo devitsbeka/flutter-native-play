@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useMissions } from "@/hooks/useMissions";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -48,6 +49,7 @@ export function GameResultsScreenV2() {
   const { addCoins } = useCurrency();
   const { maybeShowInterstitial } = useAds();
   const { trackMissionEvent } = useMissions();
+  const { openProfile } = usePlayerProfile();
   const [coinsEarned, setCoinsEarned] = useState(0);
   const { 
     myScore: localMyScore, 
@@ -564,8 +566,12 @@ export function GameResultsScreenV2() {
                   p.isMe ? "bg-white/20" : ""
                 )}
               >
-                {/* Avatar with crown for winner */}
-                <div className="relative">
+                {/* Avatar with crown for winner — tap opens the player's profile */}
+                <div
+                  className={cn("relative", !p.isMe && "cursor-pointer active:scale-95 transition-transform")}
+                  onClick={!p.isMe ? () => openProfile(p.user_id) : undefined}
+                  role={!p.isMe ? "button" : undefined}
+                >
                   <SafeAvatar 
                     avatarUrl={p.avatar_url}
                     fallback={p.nickname || "?"}

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
 import { hasReachedGuestPlayLimit, recordGuestPlay } from "@/hooks/useGuestPlays";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -89,25 +90,21 @@ const FloatingConfetti = () => {
 const PlayerCard = ({ 
   avatarUrl, 
   name,
-  coinBalance,
-  level,
   isWinner,
   winnerLabel,
   coinChange,
-  formatNumber,
   score,
   correctSummary,
+  onAvatarClick,
 }: { 
   avatarUrl?: string | null; 
   name: string;
-  coinBalance: number;
-  level: number;
   isWinner: boolean;
   winnerLabel: string;
-  formatNumber: (n: number) => string;
   coinChange?: number;
   score: number;
   correctSummary: string;
+  onAvatarClick?: () => void;
 }) => (
   <motion.div 
     className="flex flex-col items-center"
@@ -140,8 +137,10 @@ const PlayerCard = ({
       )}
       
       {/* Avatar with border */}
-      <div 
-        className="rounded-2xl p-1 w-[88px] h-[88px] flex items-center justify-center"
+      <div
+        onClick={onAvatarClick}
+        role={onAvatarClick ? "button" : undefined}
+        className={`rounded-2xl p-1 w-[88px] h-[88px] flex items-center justify-center ${onAvatarClick ? "cursor-pointer active:scale-95 transition-transform" : ""}`}
         style={{
           background: isWinner 
             ? "linear-gradient(135deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)"
@@ -201,23 +200,6 @@ const PlayerCard = ({
       <span className="text-white/70 text-xs font-semibold">{correctSummary}</span>
     </motion.div>
     
-    {/* Coin Balance */}
-    <motion.div
-      initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      transition={{ delay: 0.5, type: "spring" }}
-      className="flex flex-col items-center mt-1"
-    >
-      <div className="flex items-center gap-1.5">
-        <img src={coinIcon} alt="" className="w-4 h-4" />
-        <span className="text-lg font-black" style={{ color: "#F5A623" }}>
-          {formatNumber(coinBalance)}
-        </span>
-      </div>
-      <span className="text-white/70 text-xs font-medium">
-        (Lvl.{level})
-      </span>
-    </motion.div>
 
     {/* Coin change badge - moved below */}
     <div className="h-8 flex items-center justify-center mt-2">
@@ -250,6 +232,7 @@ const PlayerCard = ({
 export function MatchResultScreen() {
   const { userScore, opponentScore, opponent, resetGame, startMatchmaking, userAnswerHistory, opponentAnswerHistory } = useGame();
   const { user, profile, updateProfile } = useAuth();
+  const { openProfile } = usePlayerProfile();
   const { addCoins } = useCurrency();
   const { playSound } = useSound();
   const { trackMissionEvent } = useMissions();
@@ -512,8 +495,6 @@ export function MatchResultScreen() {
   }, [user?.id]);
 
   // Calculate user level
-  const userLevel = calculateLevel(profile?.total_points || 0).level;
-  const opponentLevel = Math.floor(Math.random() * 5) + 1; // Mock opponent level
 
   // Get result text based on outcome
   const getResultText = () => {
@@ -631,26 +612,21 @@ export function MatchResultScreen() {
             <PlayerCard 
               avatarUrl={profile?.avatar_url} 
               name={profile?.nickname || t("game.you")}
-              coinBalance={profile?.coins || 0}
-              level={userLevel}
               isWinner={isWin}
               winnerLabel={t("game.winner")}
               coinChange={isLose ? -Math.abs(netLoss) : isWin ? netWinProfit : undefined}
-              formatNumber={formatCompactNumber}
               score={userScore}
               correctSummary={`${userCorrect}/${totalQuestions} ${t("modals.correctAnswers")}`}
+              onAvatarClick={user ? () => openProfile(user.id) : undefined}
             />
 
             {/* Opponent */}
             <PlayerCard 
               avatarUrl={opponent?.avatarUrl} 
               name={opponent?.name || t("game.opponent")}
-              coinBalance={opponent?.points || 0}
-              level={opponentLevel}
               isWinner={!isWin && !isDraw}
               winnerLabel={t("game.winner")}
               coinChange={isLose ? Math.abs(netLoss) : isWin ? -netWinProfit : undefined}
-              formatNumber={formatCompactNumber}
               score={opponentScore}
               correctSummary={`${opponentCorrect}/${totalQuestions} ${t("modals.correctAnswers")}`}
             />
