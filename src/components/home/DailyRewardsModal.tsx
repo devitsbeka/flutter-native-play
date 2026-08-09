@@ -163,6 +163,61 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
   const [showFlyingGems, setShowFlyingGems] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Mouse-drag scrolling with momentum for the day-cards row. Touch keeps
+  // native scrolling; snap is lifted while dragging (assigning scrollLeft
+  // under "snap mandatory" fights the browser and feels broken) and light
+  // proximity snapping returns once the momentum settles.
+  const drag = useRef({ down: false, moved: false, startX: 0, startScroll: 0, lastX: 0, lastT: 0, v: 0, raf: 0 });
+
+  const dragPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    cancelAnimationFrame(drag.current.raf);
+    el.style.scrollSnapType = "none";
+    drag.current = { down: true, moved: false, startX: e.clientX, startScroll: el.scrollLeft, lastX: e.clientX, lastT: performance.now(), v: 0, raf: 0 };
+  };
+
+  const dragPointerMove = (e: React.PointerEvent) => {
+    const s = drag.current;
+    if (!s.down) return;
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const dx = e.clientX - s.startX;
+    if (Math.abs(dx) > 5) s.moved = true;
+    el.scrollLeft = s.startScroll - dx;
+    const now = performance.now();
+    const dt = now - s.lastT;
+    if (dt > 0) s.v = (s.lastX - e.clientX) / dt;
+    s.lastX = e.clientX;
+    s.lastT = now;
+  };
+
+  const dragPointerUp = () => {
+    const s = drag.current;
+    if (!s.down) return;
+    s.down = false;
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    let v = s.v * 16;
+    const glide = () => {
+      if (Math.abs(v) < 0.5) {
+        el.style.scrollSnapType = "x proximity";
+        return;
+      }
+      el.scrollLeft += v;
+      v *= 0.92;
+      s.raf = requestAnimationFrame(glide);
+    };
+    s.raf = requestAnimationFrame(glide);
+    // A real drag must not trigger the card's claim button on release
+    if (s.moved) {
+      const swallow = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
+      el.addEventListener("click", swallow, { capture: true, once: true });
+      setTimeout(() => el.removeEventListener("click", swallow, { capture: true } as any), 0);
+    }
+  };
+
   const currentDay = Math.min((currentStreak - 1) % 7, 6);
   const vipMultiplier = getDailyRewardMultiplier();
 
@@ -273,8 +328,12 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
               {/* Day cards — next card peeks in from the right */}
               <div
                 ref={scrollContainerRef}
-                className="scrollbar-hide mt-6 flex gap-4 overflow-x-auto px-6 pb-2"
-                style={{ scrollSnapType: "x mandatory" }}
+                className="scrollbar-hide mt-6 flex cursor-grab select-none gap-4 overflow-x-auto px-6 pb-2 active:cursor-grabbing"
+                style={{ scrollSnapType: "x proximity" }}
+                onPointerDown={dragPointerDown}
+                onPointerMove={dragPointerMove}
+                onPointerUp={dragPointerUp}
+                onPointerLeave={dragPointerUp}
               >
                 {dailyRewards.map((reward, index) => (
                   <DayRewardCard
