@@ -549,6 +549,7 @@ export const ka = {
     uploadPhoto: "ატვირთვა",
     reAnimate: "ხელახლა ანიმაცია",
     animateAvatar: "ანიმაცია",
+    facePhotoHint: "ატვირთე ფოტო, სადაც სახე კარგად და ნათლად ჩანს 📸",
     animating: "მიმდინარეობს...",
     description: "გადაიღე სელფი ან ატვირთე ფოტო შენი 3D ავატარის შესაქმნელად",
     positionFace: "მოათავსე სახე ჩარჩოში",
