@@ -9,8 +9,6 @@ import { useFriendInvites } from "@/hooks/useFriendInvites";
 import { getPriceDisplay } from "@/utils/currency";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
-import shopBgVideo from "@/assets/shopbg.mp4";
-import shopBgVideoWebm from "@/assets/shopbg.webm";
 import crownIcon from "@/assets/crown-icon.png";
 
 type SimplifiedTier = "solo" | "family";
@@ -32,7 +30,6 @@ export function MobileProCarousel() {
   const navigate = useNavigate();
   const currentTier = isVip ? subscription?.vip_tier : undefined;
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isInView, setIsInView] = useState(true);
   const [isPageVisible, setIsPageVisible] = useState(() => typeof document === "undefined" || !document.hidden);
   const isActive = isInView && isPageVisible;
@@ -156,17 +153,6 @@ export function MobileProCarousel() {
   const SlideIcon = slide.icon;
   const isInviteSlide = slide.type === "invite";
 
-  // slide.id in deps: the keyed <video> remounts on every slide change
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (isActive) {
-      video.play().catch(() => {});
-    } else {
-      video.pause();
-    }
-  }, [isActive, slide.id]);
-
   return (
     <div ref={containerRef} className="px-4 pt-4 pb-2 md:pb-4">
       <div className="relative overflow-hidden rounded-3xl cursor-pointer" onClick={handleCardClick}>
@@ -198,7 +184,7 @@ export function MobileProCarousel() {
               </div>
             )}
 
-            <div className="w-[65%] p-5 z-10 flex flex-col">
+            <div className="w-full p-5 z-10 flex flex-col">
               {isInviteSlide ? (
                 /* Invite slide content */
                 <>
@@ -301,12 +287,6 @@ export function MobileProCarousel() {
               )}
             </div>
 
-            <div className="w-[35%] flex-shrink-0 relative overflow-hidden">
-              <video ref={videoRef} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: "70% 20%" }}>
-                <source src={shopBgVideoWebm} type="video/webm" />
-                <source src={shopBgVideo} type="video/mp4" />
-              </video>
-            </div>
           </motion.div>
         </AnimatePresence>
       </div>
