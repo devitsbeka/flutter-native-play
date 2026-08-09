@@ -10,6 +10,8 @@ import { getPriceDisplay } from "@/utils/currency";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import crownIcon from "@/assets/crown-icon.png";
+import { DealCard, dealToShopItem, useLiveDeals, DAILY_DEAL_GRADIENT, HOURLY_DEAL_GRADIENT } from "./DailyDealsRow";
+import type { ShopItem } from "@/hooks/useShopData";
 
 type SimplifiedTier = "solo" | "family";
 
@@ -18,10 +20,17 @@ const SIDEBAR_TO_STRIPE_TIER: Record<SimplifiedTier, ProTierId> = {
   family: "pro_plus",
 };
 
-type SlideType = "invite" | "solo" | "family";
+type SlideType = "invite" | "solo" | "family" | "deal";
 
-export function MobileProCarousel() {
+interface MobileProCarouselProps {
+  purchasedItems: Set<string>;
+  isPurchasing: string | null;
+  onItemClick: (item: ShopItem) => void;
+}
+
+export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }: MobileProCarouselProps) {
   const { t } = useLanguage();
+  const { dailyDeal, hourlyDeal, dailyRemaining, hourlyRemaining } = useLiveDeals();
   const [currentIndex, setCurrentIndex] = useState(0);
   const { subscription, isVip } = useVipStatus();
   const { initiateProCheckout, isProcessing } = useProPurchase();
@@ -54,12 +63,22 @@ export function MobileProCarousel() {
 
   const SLIDES = useMemo(() => [
     {
+      type: "deal" as SlideType,
+      id: "deal-daily" as const,
+      icon: Crown,
+    },
+    {
+      type: "deal" as SlideType,
+      id: "deal-hourly" as const,
+      icon: Crown,
+    },
+    {
       type: "invite" as SlideType,
       id: "invite" as const,
       name: t("extra.inviteMiniTitle"),
       icon: Share2,
-      gradient: "linear-gradient(135deg, #FFDD55 0%, #FFC93C 55%, #FFAA00 100%)",
-      shadow: "#E09600",
+      gradient: "linear-gradient(135deg, #FB923C 0%, #F97316 50%, #EA580C 100%)",
+      shadow: "#C2410C",
     },
     {
       type: "pro" as SlideType,
@@ -152,10 +171,12 @@ export function MobileProCarousel() {
   const slide = SLIDES[currentIndex];
   const SlideIcon = slide.icon;
   const isInviteSlide = slide.type === "invite";
+  const isDealSlide = slide.type === "deal";
+  const activeDeal = slide.id === "deal-daily" ? dailyDeal : hourlyDeal;
 
   return (
     <div ref={containerRef} className="px-4 pt-4 pb-2 md:pb-4">
-      <div className="relative overflow-hidden rounded-3xl cursor-pointer" onClick={handleCardClick}>
+      <div className={`relative overflow-hidden rounded-3xl ${isDealSlide ? "" : "cursor-pointer"}`} onClick={isDealSlide ? undefined : handleCardClick}>
         <AnimatePresence mode="wait">
           <motion.div
             key={slide.id}
@@ -168,8 +189,22 @@ export function MobileProCarousel() {
             dragElastic={0.3}
             onDragEnd={handleSwipe}
             className="relative rounded-2xl overflow-hidden flex min-h-[280px] md:min-h-[300px]"
-            style={{ background: slide.gradient, opacity: isProcessing ? 0.7 : 1, touchAction: "pan-y" }}
+            style={{ background: "gradient" in slide ? slide.gradient : "transparent", opacity: isProcessing ? 0.7 : 1, touchAction: "pan-y" }}
           >
+            {isDealSlide ? (
+              <DealCard
+                deal={activeDeal}
+                label={slide.id === "deal-daily" ? t("shop.dailyDeal") : t("shop.hourlyDeal")}
+                remainingLabel={slide.id === "deal-daily" ? dailyRemaining : hourlyRemaining}
+                gradient={slide.id === "deal-daily" ? DAILY_DEAL_GRADIENT : HOURLY_DEAL_GRADIENT}
+                chipClass="bg-white/25"
+                urgent={slide.id === "deal-hourly"}
+                isPurchased={purchasedItems.has(activeDeal.id)}
+                isLoading={isPurchasing === activeDeal.id}
+                onBuy={() => onItemClick(dealToShopItem(activeDeal, t(activeDeal.nameKey)))}
+              />
+            ) : (
+            <>
             {/* Popular badge for family tier */}
             {'popular' in slide && slide.popular && currentTier !== "family" && (
               <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl shadow-lg flex items-center gap-1 z-10">
@@ -286,7 +321,8 @@ export function MobileProCarousel() {
                 </>
               )}
             </div>
-
+            </>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
