@@ -44,7 +44,6 @@ export function ShopProductGrid({
           text above GlobalSplineBackground's blobs, which otherwise paint over
           plain (non-stacking-context) text and swallow the titles. */}
       <div className="relative z-10 mb-3 mt-2 flex items-center gap-2.5 px-1">
-        <span className="h-6 w-1.5 rounded-full bg-gradient-to-b from-fuchsia-400 to-purple-600" />
         <h2 className="text-lg md:text-xl font-display font-bold text-foreground">
           {title}
         </h2>
