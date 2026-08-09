@@ -29,20 +29,22 @@ const dailyRewards = [
   { day: 7, coins: 300, gems: 5 },
 ];
 
-// Per-day card gradients: teal anchor into a different vivid end color each
-// day, like the Figma set (day 1 blue, day 2 purple, day 3 orange, ...)
-const DAY_GRADIENT_ENDS = [
-  "#0166F3", // 1 blue
-  "#CB01F3", // 2 purple
-  "#F39A01", // 3 orange
-  "#F3016B", // 4 rose
-  "#01B5F3", // 5 cyan
-  "#5B01F3", // 6 indigo
-  "#F3C401", // 7 gold
+// Per-day card gradients: bright same-family color pairs — cross-family
+// blends (teal into rose etc.) muddy out in the middle and read dark
+const DAY_GRADIENTS: [string, string][] = [
+  ["#34D399", "#2563EB"], // 1 teal → blue
+  ["#A78BFA", "#D946EF"], // 2 violet → fuchsia
+  ["#FBBF24", "#F97316"], // 3 amber → orange
+  ["#FB7185", "#EC4899"], // 4 coral → pink
+  ["#22D3EE", "#3B82F6"], // 5 cyan → blue
+  ["#818CF8", "#A855F7"], // 6 indigo → violet
+  ["#FDE047", "#F59E0B"], // 7 gold
 ];
 
-const cardGradient = (index: number) =>
-  `linear-gradient(215deg, #2AA671 15%, ${DAY_GRADIENT_ENDS[index % DAY_GRADIENT_ENDS.length]} 88%)`;
+const cardGradient = (index: number) => {
+  const [from, to] = DAY_GRADIENTS[index % DAY_GRADIENTS.length];
+  return `linear-gradient(215deg, ${from} 0%, ${to} 100%)`;
+};
 
 const celebrateClaim = () => {
   confetti({
@@ -54,18 +56,29 @@ const celebrateClaim = () => {
   });
 };
 
-// Salmon-pink reward pill from the Figma card (coin/gem icon + amount)
+// Bright frosted reward pill (coin/gem icon + amount) — needs to shine
+// against every card gradient
 function RewardPill({ icon, value }: { icon: string; value: number }) {
   return (
     <div
       className="flex h-[46px] items-center gap-1.5 rounded-[16px] px-3"
       style={{
-        background: "linear-gradient(180deg, #DC875F 0%, #D8518A 100%)",
-        border: "0.5px solid rgba(255,255,255,0.4)",
+        background: "linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.25) 100%)",
+        border: "1.5px solid rgba(255,255,255,0.7)",
+        boxShadow: "0 3px 10px rgba(0,0,0,0.15), inset 0 1.5px 0 rgba(255,255,255,0.6)",
+        backdropFilter: "blur(4px)",
       }}
     >
-      <img src={icon} alt="" className="shrink-0" width={30} height={30} />
-      <span className="font-display text-lg font-black text-white">{value}</span>
+      <img
+        src={icon}
+        alt=""
+        className="shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
+        width={30}
+        height={30}
+      />
+      <span className="font-display text-lg font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
+        {value}
+      </span>
     </div>
   );
 }
@@ -101,7 +114,7 @@ function DayRewardCard({
       style={{
         background: cardGradient(index),
         border: "1.5px solid #D6399C",
-        filter: isLocked ? "saturate(0.55) brightness(1.02)" : undefined,
+        filter: isLocked ? "saturate(0.75) brightness(1.05)" : undefined,
       }}
     >
       {/* Day label */}

@@ -212,8 +212,10 @@ export function SceneHero({
             blur, bright translucent fill, crisp light edge. The design's
             raw blurred-border recipe turns into a murky gray ring outside
             Figma's masking, so it's distilled to what it looks like. */}
-        <div
-          className="absolute left-[-1px] top-[178px] h-[96px] w-[300px] overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.55)] backdrop-blur-xl border-[1.5px] border-solid border-white/70"
+        <button
+          type="button"
+          onClick={onGiftClick}
+          className="absolute left-[-1px] top-[178px] h-[96px] w-[300px] cursor-pointer overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.55)] backdrop-blur-xl border-[1.5px] border-solid border-white/70 text-left"
           style={{ boxShadow: `${CARD_SHADOW}, inset 0px 1.5px 0px rgba(255,255,255,0.8)` }}
         >
 
@@ -285,14 +287,14 @@ export function SceneHero({
             );
           })}
 
-          {/* Sunday gift (node 601:1207) */}
-          <button type="button" onClick={onGiftClick} className="absolute left-[238.8px] top-[15px] h-[41.31px] w-[41.44px]">
+          {/* Sunday gift (node 601:1207) — the whole strip is the button now */}
+          <div className="absolute left-[238.8px] top-[15px] h-[41.31px] w-[41.44px]">
             <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={giftWeekly} />
-          </button>
+          </div>
           <p className="absolute left-[260.06px] top-[58.05px] -translate-x-1/2 text-center text-[13.15px] leading-[19.73px] font-semibold tracking-[-0.16px] text-[#402666] whitespace-nowrap">
             კვ
           </p>
-        </div>
+        </button>
 
         {/* დღის მისიები (node 601:1570) */}
         <button
