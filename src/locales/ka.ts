@@ -1028,6 +1028,7 @@ export const ka = {
     orBecomeVip: "ან გახდი VIP უსაზღვრო თამაშებისთვის",
     continueGame: "თამაშის გაგრძელება",
     xpProgress: "XP პროგრესი",
+    nextLevelRewardsHint: "შემდეგ დონეზე შეგიძლია მიიღო",
     maxLevelReached: "შენ მიაღწიე მაქსიმალურ დონეს! 🎉",
     xpToNextLevel: "დარჩა {amount} XP შემდეგ დონემდე",
     totalXp: "სულ XP",

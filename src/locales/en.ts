@@ -1029,6 +1029,7 @@ export const en: KaTranslations = {
     orBecomeVip: "or become VIP for unlimited plays",
     continueGame: "Continue Game",
     xpProgress: "XP Progress",
+    nextLevelRewardsHint: "At the next level you can get",
     maxLevelReached: "You've reached the maximum level! 🎉",
     xpToNextLevel: "{amount} XP left to next level",
     totalXp: "Total XP",
