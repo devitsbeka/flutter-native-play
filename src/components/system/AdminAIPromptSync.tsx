@@ -45,6 +45,9 @@ export function AdminAIPromptSync() {
           : await supabase
               .from("ai_generation_settings")
               .insert({
+                // name is NOT NULL in the table — omitting it failed typecheck
+                // and would have been rejected by the database at runtime
+                name: "Scene avatar",
                 setting_type: "avatar_static",
                 prompt: SCENE_AVATAR_PROMPT,
                 model: SCENE_AVATAR_MODEL,
