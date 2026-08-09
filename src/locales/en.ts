@@ -1930,7 +1930,7 @@ export const en: KaTranslations = {
     playedLabel: "Played",
     avatarChooseBtn: "Choose",
     homeGreetingHi: "Hi, {name}! 👋",
-    homeGreeting1: "Hi! Have a great day ✨",
+    homeGreeting1: "Have a great day! ✨",
     homeGreeting2: "Good luck today! 🍀",
     homeGreeting3: "Ready for a new victory? 🏆",
     homeGreeting4: "Today is your day! ⭐",
