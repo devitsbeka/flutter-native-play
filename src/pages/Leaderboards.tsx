@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import bgLeader from "@/assets/bgleader.png";
+import bgLeaderGlobal from "@/assets/bgleader-global.webp";
 import starIcon from "@/assets/thiings/star.png";
 import trophyGold from "@/assets/trophy-gold.png";
 import trophySilver from "@/assets/trophy-silver.png";
@@ -329,10 +330,19 @@ export default function Leaderboards() {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
+        {/* Scope-matched backdrop: Georgian landmarks locally, world landmarks
+            globally — both stay mounted so switching tabs crossfades instead
+            of flashing a re-download */}
         <img
           src={bgLeader}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover object-[center_30%] pointer-events-none select-none"
+          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] pointer-events-none select-none transition-opacity duration-500 ${scope === "global" ? "opacity-0" : "opacity-100"}`}
+          draggable={false}
+        />
+        <img
+          src={bgLeaderGlobal}
+          alt=""
+          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] pointer-events-none select-none transition-opacity duration-500 ${scope === "global" ? "opacity-100" : "opacity-0"}`}
           draggable={false}
         />
 
