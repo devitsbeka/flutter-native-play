@@ -203,6 +203,22 @@ export const es: KaTranslations = {
   playLimit: { ...en.playLimit, limitReached: "Límite de juegos alcanzado", becomeProDescription: "Hazte PRO y juega ilimitado, crea tus propias trivias y mucho más.", unlimitedGames: "Juegos ilimitados", exclusiveFeatures: "Funciones exclusivas", becomePro: "Hazte PRO", freePlayReady: "¡Juego gratis listo!", playNow: "Jugar ahora", nextFreePlay: "Siguiente juego gratis: {time}", freePlayInterval: "1 juego gratis cada 3 horas" },
   notificationsPanel: { ...en.notificationsPanel, activity: "Actividad", gamesTab: "Juegos", socialTab: "Amigos", triviaTab: "Trivia", noNotifications: "Sin notificaciones", noGamesNotifications: "Sin notificaciones de juegos", noSocialNotifications: "Sin notificaciones de amigos", noTriviaNotifications: "Sin notificaciones de trivia", viewAll: "Ver todo", friendRequestAccepted: "¡Solicitud de amistad aceptada!", friendRequestDeclined: "Solicitud rechazada", inviteDeclined: "Invitación rechazada", errorOccurred: "Ocurrió un error", urlCopied: "¡URL copiada!", copyFailed: "Error al copiar", avatarAlreadySet: "¡Avatar ya configurado!", roomNotFound: "Sala no encontrada", navigationFailed: "No se pudo navegar al juego" },
   extra: {
+    // Desktop logged-out landing (Figma 612:1888)
+    landingPlayersCount: "100,000+ jugadores",
+    landingJoinFreeHeading: "Únete\ngratis",
+    landingJoinFree: "Únete gratis",
+    landingJoinSubtitle: "Únete a miles de jugadores de 🇬🇪 Georgia",
+    landingGoogleSignIn: "Iniciar sesión con Google",
+    landingOrEmail: "o escribe tu correo",
+    landingOnlyOnMyTrivia: "Solo en MyTrivia",
+    landingFeature1Title: "Tu trivia",
+    landingFeature1Desc: "Crea tu personaje y tu propio mundo.",
+    landingFeature2Title: "100+ categorías",
+    landingFeature2Desc: "Miles de preguntas sobre todo lo que te interesa.",
+    landingFeature3Title: "Clasificación y premios",
+    landingFeature3Desc: "Compite con otros, sube de nivel y gana recompensas.",
+    landingFeature4Title: "Juega con amigos",
+    landingFeature4Desc: "Crea una sala y organiza una fiesta de trivia.",
     ...en.extra,
     // Core
     player: "Jugador", players: "jugadores", gameName: "Nombre del juego...", myTrivia: "Mi Trivia", create: "Crear",

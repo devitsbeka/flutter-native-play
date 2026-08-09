@@ -49,6 +49,22 @@ export const fr: KaTranslations = {
   notificationsPanel: { ...en.notificationsPanel, activity: "Activité", gamesTab: "Jeux", socialTab: "Amis", triviaTab: "Trivia", noNotifications: "Pas de notifications", noGamesNotifications: "Pas de notifications de jeux", noSocialNotifications: "Pas de notifications d'amis", noTriviaNotifications: "Pas de notifications de trivia", viewAll: "Voir tout", friendRequestAccepted: "Demande d'ami acceptée!", friendRequestDeclined: "Demande refusée", inviteDeclined: "Invitation refusée", errorOccurred: "Une erreur est survenue", urlCopied: "URL copiée!", copyFailed: "Échec de la copie", avatarAlreadySet: "Avatar déjà défini!", roomNotFound: "Salle introuvable", navigationFailed: "Impossible de naviguer vers le jeu" },
   team: { ...en.team, newRoom: "Nouvelle salle", roomName: "Nom de la salle", enterRoomName: "Entrez le nom de la salle", randomName: "Nom aléatoire", category: "Catégorie", random: "Aléatoire", inviteFriends: "Inviter des amis ({count} sélectionnés)", online: "En ligne", offline: "Hors ligne", noFriendsYet: "Pas encore d'amis", addFriendsHint: "Ajoutez des amis après la partie pour les inviter", showMore: "Afficher plus", showLess: "Afficher moins", newPlayerJoined: "Nouveau joueur rejoint!", linkCopied: "Lien copié!", copyFailed: "Échec de la copie", shareFailed: "Échec du partage", deleteRoomConfirm: "Êtes-vous sûr de vouloir supprimer cette salle?", copyLink: "Copier le lien", share: "Partager", chat: "Chat", noMessagesYet: "Pas encore de messages", noMessages: "Pas encore de messages", writeMessagePlaceholder: "Écrire un message...", editRoom: "Modifier la salle", changeBackground: "Changer le fond", startGame: "Démarrer la partie", waitingForPlayers: "En attente de {count} joueurs", waitingForHost: "En attente de l'hôte pour démarrer...", leaveRoom: "Quitter la salle", nameUpdated: "Nom mis à jour!", nameUpdateFailed: "Échec de la mise à jour du nom", roomChats: "Chats de salle", roomsCount: "{count} salles", selectRoomForChat: "Sélectionnez une salle pour voir le chat", roomClosed: "Salle fermée", roomCreated: "Salle créée!", challengeSent: "Défi envoyé!", roomCreateFailed: "Échec de la création de la salle", friendWillPlayLater: "Votre ami jouera plus tard!", players: "Joueurs", host: "Hôte", ready: "Prêt", notReady: "Pas prêt", leaveConfirmTitle: "Quitter?", leaveConfirmMessage: "Vous pouvez quitter et revenir plus tard, ou quitter définitivement.", exitKeepRoom: "Quitter (rester dans la salle)", leavePermanently: "Quitter définitivement", multiplayer: "Multijoueur", signInToPlay: "Connectez-vous pour jouer avec des amis", onlineGame: "Jeu en ligne", friends: "Amis", yourRooms: "Vos salles", noActiveRooms: "Vous n'avez aucune salle active", inProgress: "En cours", room: "Salle", continue: "Continuer", join: "Rejoindre", recentGames: "Parties récentes", noGamesYet: "Pas encore de parties", game: "Partie", add: "Ajouter", all: "Toutes", chooseBackground: "Choisir le fond", pickRoomColors: "Choisissez les couleurs de la salle", backgroundChanged: "Fond changé!", backgroundChangeFailed: "Impossible de changer le fond" },
   extra: {
+    // Desktop logged-out landing (Figma 612:1888)
+    landingPlayersCount: "100 000+ joueurs",
+    landingJoinFreeHeading: "Rejoins-nous\ngratuitement",
+    landingJoinFree: "Rejoins-nous gratuitement",
+    landingJoinSubtitle: "Rejoins des milliers de joueurs de 🇬🇪 Géorgie",
+    landingGoogleSignIn: "Connexion avec Google",
+    landingOrEmail: "ou saisis ton e-mail",
+    landingOnlyOnMyTrivia: "Seulement sur MyTrivia",
+    landingFeature1Title: "Ton trivia",
+    landingFeature1Desc: "Crée ton personnage et ton propre monde.",
+    landingFeature2Title: "100+ catégories",
+    landingFeature2Desc: "Des milliers de questions sur tout ce qui t'intéresse.",
+    landingFeature3Title: "Classement et prix",
+    landingFeature3Desc: "Affronte les autres, progresse et gagne des récompenses.",
+    landingFeature4Title: "Joue avec des amis",
+    landingFeature4Desc: "Crée un salon et organise une soirée trivia.",
     ...en.extra,
     // Core
     player: "Joueur", players: "joueurs", gameName: "Nom du jeu...", myTrivia: "Mon Trivia", create: "Créer",
