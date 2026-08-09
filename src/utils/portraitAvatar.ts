@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { PORTRAIT_AVATAR_PROMPT } from "@/config/portraitAvatarPrompt";
 
 // Generates the public mini avatar — a square stylized portrait — and stores
 // it in the avatars bucket. The source is the generated SCENE, so the face in
@@ -10,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 export async function generatePublicPortrait(userId: string, photoUrl: string): Promise<string | null> {
   try {
     const { data, error } = await supabase.functions.invoke("generate-avatar", {
-      body: { imageUrl: photoUrl, mode: "portrait" },
+      body: { imageUrl: photoUrl, mode: "portrait", prompt: PORTRAIT_AVATAR_PROMPT },
     });
     if (error || !data?.success || !data.avatarUrl) return null;
 

@@ -4,6 +4,8 @@
 // ai_generation_settings table (setting_type 'avatar_static'); the
 // AdminAIPromptSync component keeps that row in sync with this file, so
 // editing this file is the way to change the prompt.
+import { CHARACTER_RENDER_STYLE } from "./characterStyle";
+
 // Image model for scene generation, resolved by the AI gateway. Nano Banana
 // Pro (Gemini 3 Pro Image) is Google's top image model — strong identity
 // preservation from reference photos, 2K output — and being a Google model it
@@ -42,8 +44,7 @@ Render a realistically proportioned adult body. The head must read SMALL against
 Build the figure body-first: sculpt a full-size adult torso, arms and legs, then place a proportionally SMALL head on it. If in doubt, make the head smaller — an oversized head instantly ruins the image.
 Absolutely forbidden: bobblehead, chibi, caricature, doll or big-head-small-body looks; an inflated cranium; a head that dominates the silhouette. The head, face and body all share one consistent realistic-stylized scale.
 
-FACE STYLIZATION — CRITICAL
-Render the face as a polished 3D CG interpretation of the person — the same render language as the rest of the character, never a photograph pasted onto a stylized body, but also never a cartoon. Keep natural adult facial proportions: normal-sized eyes, real nose and lip shapes, true face geometry. Stylize only the surface treatment: smooth idealized CG skin with soft subsurface shading instead of photographic pores and blemishes, cleanly groomed sculpted hair and facial hair instead of photo texture, and soft even studio light on the face instead of camera-real lighting. Think of a high-end animated-feature or AAA game cinematic version of this exact person — the likeness unmistakable (same face shape, hairstyle, hair color, facial hair silhouette, eyebrows, skin tone, distinctive features), realistic proportions, just rendered as beautiful clean CG rather than photography. Avoid both extremes: no photoreal skin texture, and no toon exaggeration, oversized eyes or caricature.
+${CHARACTER_RENDER_STYLE}
 
 Pose and wardrobe are FIXED: the character sits relaxed on the bean bag, leaning back comfortably, one hand holding a purple mug decorated with a small gold crown, the other hand resting on their knee, smiling warmly at the camera. They wear a purple hoodie with a small gold crown motif on the chest, dark charcoal joggers, and purple-and-gold sneakers.
 
