@@ -52,6 +52,18 @@ import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
 // Default Trivia King scene loop — everyone who hasn't explicitly generated
 // their own scene sees this (guests included), regardless of custom avatars.
 const DEFAULT_SCENE_VIDEO = "/videos/trivia-king-scene.mp4";
+
+// Feathers the generated scene's top and side edges into the page
+// background (bottom stays solid — the artwork grounds there). Both masks
+// intersect so every edge fades independently.
+const SCENE_EDGE_FADE: React.CSSProperties = {
+  maskImage:
+    "linear-gradient(to right, transparent 0, black 7%, black 93%, transparent 100%), linear-gradient(to bottom, transparent 0, black 12%)",
+  WebkitMaskImage:
+    "linear-gradient(to right, transparent 0, black 7%, black 93%, transparent 100%), linear-gradient(to bottom, transparent 0, black 12%)",
+  maskComposite: "intersect",
+  WebkitMaskComposite: "source-in",
+};
 import guestMascotVideo from "@/assets/guest-welcome-avatar.mp4";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
@@ -878,24 +890,17 @@ export default function Index() {
             Mounted only when the viewport is actually xl, so smaller
             screens never download the media. */}
         {!isSceneViewport ? null : sceneUrl ? (
-          /* Generated 16:9 scene: the sharp artwork lives strictly in the
-             band BELOW the friends reel (top 230px), bottom-anchored and
-             centered, so the subject's head can never sit under the reel.
-             A blurred copy of the same artwork fills the whole page behind
-             it — no hard edges on any aspect ratio, and edge props are
-             never cut. */
+          /* Generated 16:9 scene: the whole artwork fits in the band BELOW
+             the friends reel (top 230px), bottom-anchored and centered, so
+             the subject can never sit under the reel and nothing is
+             cropped at any resolution. Its top and side edges feather into
+             the page's own pastel background - no fill layers, no seams. */
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
             className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none overflow-hidden"
           >
-            <img
-              src={sceneUrl}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110"
-              draggable={false}
-            />
             <div className="absolute left-0 right-0 top-[230px] bottom-0 flex items-end justify-center">
               {sceneVideoUrl ? (
                 /* Seamless idle-loop video — poster keeps the still visible
@@ -908,6 +913,7 @@ export default function Index() {
                   muted
                   playsInline
                   className="max-h-full max-w-full aspect-video object-contain"
+                  style={SCENE_EDGE_FADE}
                 />
               ) : (
                 <img
@@ -915,6 +921,7 @@ export default function Index() {
                   alt=""
                   className="max-h-full max-w-full aspect-video object-contain"
                   draggable={false}
+                  style={SCENE_EDGE_FADE}
                 />
               )}
             </div>
