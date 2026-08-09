@@ -878,12 +878,14 @@ export default function Index() {
             Mounted only when the viewport is actually xl, so smaller
             screens never download the media. */}
         {!isSceneViewport ? null : sceneUrl ? (
-          /* Generated 16:9 scene: a single full-bleed layer covering the
-             whole page (cover, anchored to the bottom so the subject stays
-             visible and aspect-ratio excess crops off the top). The top edge
-             mask-fades to transparent so the artwork melts into the light
-             page background under the header/friends reel — no seam, no
-             blurred duplicate layer. */
+          /* Generated 16:9 scene: a single width-driven full-bleed layer.
+             The artwork always spans the exact viewport width, anchored to
+             the bottom. On screens squarer than 16:9 it renders shorter
+             than the viewport and its mask-faded top edge melts into the
+             light page background (whole scene visible, scaled down); on
+             screens wider than 16:9 the excess height crops off the top
+             via the container's overflow-hidden. No side cropping at any
+             size, so edge props never get cut. */
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -900,13 +902,13 @@ export default function Index() {
                 loop
                 muted
                 playsInline
-                className="absolute inset-0 w-full h-full object-cover object-[center_bottom] [mask-image:linear-gradient(to_bottom,transparent_0,black_200px)]"
+                className="absolute inset-x-0 bottom-0 w-full h-auto aspect-video object-cover object-[center_bottom] [mask-image:linear-gradient(to_bottom,transparent_0,black_200px)]"
               />
             ) : (
               <img
                 src={sceneUrl}
                 alt=""
-                className="absolute inset-0 w-full h-full object-cover object-[center_bottom] [mask-image:linear-gradient(to_bottom,transparent_0,black_200px)]"
+                className="absolute inset-x-0 bottom-0 w-full h-auto aspect-video object-cover object-[center_bottom] [mask-image:linear-gradient(to_bottom,transparent_0,black_200px)]"
                 draggable={false}
               />
             )}
