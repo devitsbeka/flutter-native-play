@@ -1929,7 +1929,7 @@ export const ka = {
     playedLabel: "ნათამაშები",
     avatarChooseBtn: "არჩევა",
     homeGreetingHi: "გამარჯობა, {name}! 👋",
-    homeGreeting1: "გამარჯობა! კარგი დღე გისურვებ ✨",
+    homeGreeting1: "კარგ დღეს გისურვებ! ✨",
     homeGreeting2: "წარმატებები დღეს! 🍀",
     homeGreeting3: "მზად ხარ ახალი გამარჯვებისთვის? 🏆",
     homeGreeting4: "დღეს შენი დღეა! ⭐",
