@@ -245,10 +245,10 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
                   </p>
 
                   <span
-                    className="inline-flex items-center gap-1.5 self-start px-3 py-1.5 rounded-full text-xs font-bold text-white mb-auto"
+                    className="inline-flex items-center gap-2 self-start px-4 py-2.5 rounded-full text-sm font-bold text-white mb-auto"
                     style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}
                   >
-                    <img src={crownIcon} alt="" className="w-4 h-4" />
+                    <img src={crownIcon} alt="" className="w-6 h-6" />
                     {t("extra.tenDayPro")}
                   </span>
 
