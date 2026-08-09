@@ -339,8 +339,26 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
             </div>
 
             {loading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              /* Skeleton in the final layout's shape — a bare spinner made
+                 the content-hugging panel open as a tiny card and then jump
+                 to full size when the data arrived */
+              <div className="flex-1 overflow-y-auto">
+                <div className="max-w-[700px] md:max-w-[600px] mx-auto animate-pulse">
+                  <div className="p-4 flex flex-col items-center">
+                    <div className="w-[120px] h-[120px] rounded-full bg-slate-200/70" />
+                    <div className="mt-4 h-6 w-40 rounded-full bg-slate-200/70" />
+                    <div className="mt-3 h-4 w-24 rounded-full bg-slate-200/70" />
+                    <div className="mt-5 h-12 w-full max-w-[420px] rounded-full bg-slate-200/70" />
+                  </div>
+                  <div className="px-4 pb-8">
+                    <div className="h-24 rounded-2xl bg-slate-200/50" />
+                    <div className="mt-6 space-y-3">
+                      <div className="h-16 rounded-2xl bg-slate-200/50" />
+                      <div className="h-16 rounded-2xl bg-slate-200/50" />
+                      <div className="h-16 rounded-2xl bg-slate-200/50" />
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : !data?.profile ? (
               <div className="flex-1 flex items-center justify-center">
