@@ -470,17 +470,6 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
                       transition={{ delay: index * 0.05 }}
                       className="relative"
                     >
-                      {/* Popular badge */}
-                      {item.popular && (
-                        <motion.div 
-                          className="absolute -top-1.5 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white z-10 bg-gradient-to-r from-pink-500 to-orange-500"
-                          animate={{ scale: [1, 1.05, 1] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        >
-                          {t('shop.popular')}
-                        </motion.div>
-                      )}
-
                       <motion.button
                         onClick={() => !isPurchased && !isLoading && handlePurchase(item)}
                         disabled={isPurchased || isLoading}

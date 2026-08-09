@@ -14,14 +14,13 @@ interface GemPackage {
   priceUsd: number;
   name: string;
   bonus?: number;
-  badge?: "popular" | "best-value";
 }
 
 const GEM_PACKAGES: GemPackage[] = [
   { id: "gems_100", gems: 100, priceUsd: 0.79, name: "100" },
   { id: "gems_500", gems: 500, priceUsd: 3.19, name: "500" },
-  { id: "gems_1500", gems: 1500, priceUsd: 7.99, name: "1500", bonus: 20, badge: "popular" },
-  { id: "gems_5000", gems: 5000, priceUsd: 23.99, name: "5000", bonus: 40, badge: "best-value" },
+  { id: "gems_1500", gems: 1500, priceUsd: 7.99, name: "1500", bonus: 20 },
+  { id: "gems_5000", gems: 5000, priceUsd: 23.99, name: "5000", bonus: 40 },
 ];
 
 interface NotEnoughGemsModalProps {
@@ -127,19 +126,6 @@ export function NotEnoughGemsModal({
               whileTap={{ scale: 0.99 }}
             >
               {/* Badge */}
-              {pkg.badge && (
-                <div 
-                  className="absolute -top-2 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
-                  style={{
-                    background: pkg.badge === "popular" 
-                      ? "linear-gradient(90deg, #F59E0B 0%, #F97316 100%)"
-                      : "linear-gradient(90deg, #10B981 0%, #059669 100%)",
-                  }}
-                >
-                  {pkg.badge === "popular" ? t("shop.popular") : t("shop.bestValue")}
-                </div>
-              )}
-
               {/* Gem icon */}
               <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
                 <img src={gemIcon} alt="" className="w-7 h-7" />
