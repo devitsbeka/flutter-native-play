@@ -878,48 +878,38 @@ export default function Index() {
             Mounted only when the viewport is actually xl, so smaller
             screens never download the media. */}
         {!isSceneViewport ? null : sceneUrl ? (
-          /* Generated 16:9 scene, always full-bleed: the artwork covers the
-             full width of the band below the friends reel, anchored to the
-             bottom so the subject stays visible and any aspect-ratio excess
-             crops off the top. The blurred copy underneath backs the sliver
-             the 148px reel offset leaves above the band. */
+          /* Generated 16:9 scene: a single full-bleed layer covering the
+             whole page (cover, anchored to the bottom so the subject stays
+             visible and aspect-ratio excess crops off the top). The top edge
+             mask-fades to transparent so the artwork melts into the light
+             page background under the header/friends reel — no seam, no
+             blurred duplicate layer. */
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none"
+            className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none overflow-hidden"
           >
-            <img
-              src={sceneUrl}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110"
-              draggable={false}
-            />
-            {/* The sharp artwork lives in the band BELOW the friends reel
-                (top-[148px]) so the reel never covers the subject; it spans
-                the band edge-to-edge at every viewport size. */}
-            <div className="absolute left-0 right-0 top-[148px] bottom-0">
-              {sceneVideoUrl ? (
-                /* Seamless idle-loop video — poster keeps the still visible
-                   until the video is ready to play */
-                <video
-                  src={sceneVideoUrl}
-                  poster={sceneUrl}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover object-[center_bottom]"
-                />
-              ) : (
-                <img
-                  src={sceneUrl}
-                  alt=""
-                  className="w-full h-full object-cover object-[center_bottom]"
-                  draggable={false}
-                />
-              )}
-            </div>
+            {sceneVideoUrl ? (
+              /* Seamless idle-loop video — poster keeps the still visible
+                 until the video is ready to play */
+              <video
+                src={sceneVideoUrl}
+                poster={sceneUrl}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover object-[center_bottom] [mask-image:linear-gradient(to_bottom,transparent_0,black_200px)]"
+              />
+            ) : (
+              <img
+                src={sceneUrl}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover object-[center_bottom] [mask-image:linear-gradient(to_bottom,transparent_0,black_200px)]"
+                draggable={false}
+              />
+            )}
           </motion.div>
         ) : showDefaultScene && user ? (
           <motion.video
@@ -1122,64 +1112,6 @@ export default function Index() {
             {/* GUEST: Show avatar + play button (no auth wall) */}
             {!user && (
               <>
-                {/* Desktop below xl: Guest sees centered avatar with play
-                    button. On xl+ the guest gets the same scene layout as
-                    logged-in users (guest-adapted), so this hero hides. */}
-                <motion.div
-                  className="hidden"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.5, type: "spring" }}
-                >
-                  <div className="relative">
-                    <motion.div 
-                      animate={{ y: [0, -8, 0] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      <div className="pointer-events-auto cursor-pointer" onClick={() => navigate("/auth")}>
-                        <AvatarCircle 
-                          animatedAvatarUrl={guestMascotVideo}
-                          size={280} 
-                          coins={0} gems={0} level={1}
-                          xpProgress={0} xpCurrent={0} xpTotal={100}
-                          hideStats showAvatarPrompt={false} showMascotReminder={false}
-                          autoPlayInterval={5000}
-                        />
-                      </div>
-                    </motion.div>
-                  </div>
-                  <motion.div 
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3, type: "spring" }}
-                    className="flex flex-col items-center mt-6 pointer-events-auto"
-                  >
-                    <span className="font-sans text-gray-800 font-black flex items-center gap-2" style={{ fontSize: 28 }}>
-                       <motion.img src={handGestureIcon} alt="" className="w-8 h-8" animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }} style={{ transformOrigin: "70% 80%" }} /> {t("common.hello")}
-                     </span>
-                    {/* Auth buttons */}
-                    <div className="flex items-center gap-3 mt-4">
-                      <motion.button onClick={() => navigate("/auth")} className="px-5 py-2.5 rounded-full bg-white border border-border shadow-md text-sm font-semibold text-foreground" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        {t("common.signIn")}
-                      </motion.button>
-                      <motion.button onClick={() => navigate("/auth?mode=signup")} className="px-5 py-2.5 rounded-full bg-primary shadow-md text-sm font-semibold text-primary-foreground" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        {t("extra.joinFreeBtn")}
-                      </motion.button>
-                    </div>
-                    <div className="mt-14">
-                      <DesktopPlayButtonLarge
-                        onClick={handlePlayClick}
-                        playsRemaining={guestPlaysRemaining}
-                        maxPlays={MAX_GUEST_PLAYS_COUNT}
-                        canPlay={guestPlaysRemaining > 0}
-                        isVip={false}
-                        isGuest={true}
-                        onboardingId="play"
-                      />
-                    </div>
-                  </motion.div>
-                </motion.div>
-
                 {/* Mobile: Guest sees avatar with play button (play in bottom nav) */}
                 <motion.div
                   className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
