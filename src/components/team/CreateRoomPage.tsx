@@ -825,7 +825,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden"
+      className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden p-4"
     >
       {/* Bubble background video behind the whole page, washed light so the
           form stays readable (negative z paints it under the content) */}
@@ -850,15 +850,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         />
       </div>
 
-      {/* Frosted white panel behind the form — floats like a popup: inset
-          from top/bottom, 24px corners (still -z: above video, below content) */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-y-4 left-1/2 -z-10 w-full max-w-[740px] md:max-w-[560px] -translate-x-1/2 rounded-[24px] border border-white/70 bg-white/60 backdrop-blur-xl shadow-[0_12px_40px_rgba(104,71,204,0.18)]"
-      />
+      {/* Frosted popup panel — a real container now: header, form and the
+          create button all live inside it. Height hugs the content (m-auto
+          centers it), max-h keeps it inside the viewport with scrolling. */}
+      <div className="relative m-auto flex max-h-full w-full max-w-[740px] md:max-w-[560px] flex-col overflow-hidden rounded-[24px] border border-white/70 bg-white/60 backdrop-blur-xl shadow-[0_12px_40px_rgba(104,71,204,0.18)]">
 
       {/* Header - simplified */}
-      <div className="border-b border-border/30">
+      <div className="border-b border-border/30 shrink-0">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
             <button
@@ -881,7 +879,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4 space-y-5">
         {/* Room Name with Icon - AI generated */}
         <div>
@@ -1479,7 +1477,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       </div>
 
       {/* Footer - Normal Button */}
-      <div className="border-t border-border/30">
+      <div className="border-t border-border/30 shrink-0">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4">
         <ChunkyButton
           onClick={handleCreate}
@@ -1496,6 +1494,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           {t("extra.createBtn")}
         </ChunkyButton>
         </div>
+      </div>
+
+      {/* End of frosted popup panel */}
       </div>
 
       {/* TV Play Modal */}

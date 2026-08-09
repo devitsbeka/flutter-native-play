@@ -118,7 +118,7 @@ export default function CollectionLobby() {
   const heroGradientProps = getGradientProps(collection.cover_gradient);
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-screen bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] pb-32">
       {/* Hero */}
       <div className="h-56 relative overflow-hidden">
         {collection.cover_image ? (
@@ -254,6 +254,7 @@ export default function CollectionLobby() {
       {/* Fixed Play */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent pb-6">
         <motion.div
+          className="mx-auto w-full max-w-xl"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, type: "spring", stiffness: 300 }}

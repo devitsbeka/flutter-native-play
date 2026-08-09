@@ -82,7 +82,7 @@ export function ClaimRewardsModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-background flex flex-col"
+          className="fixed inset-0 z-50 bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] flex flex-col"
         >
           {/* Fixed Header */}
           <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">

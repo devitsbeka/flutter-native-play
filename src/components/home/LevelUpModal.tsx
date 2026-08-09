@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Gift, ChevronLeft } from "lucide-react";
+import { motion } from "framer-motion";
+import { Gift } from "lucide-react";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
@@ -8,7 +8,7 @@ import freezeIcon from "@/assets/powers/freeze.png";
 import replaceIcon from "@/assets/powers/replace.png";
 import timeDrainIcon from "@/assets/powers/time-drain.png";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ChunkyButton } from "@/components/ui/chunky-button";
+import { GameModal } from "@/components/ui/game-modal";
 import confetti from "canvas-confetti";
 
 const POWER_UP_ICONS: Record<string, string> = {
@@ -45,7 +45,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel, awarded
   useEffect(() => {
     if (isOpen && !confettiTriggered.current) {
       confettiTriggered.current = true;
-      
+
       // Initial burst
       confetti({
         particleCount: 100,
@@ -72,144 +72,87 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel, awarded
         });
       }, 250);
     }
-    
+
     if (!isOpen) {
       confettiTriggered.current = false;
     }
   }, [isOpen]);
 
   return (
-    <AnimatePresence>
-      {isOpen && (
+    <GameModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t("modals.levelUp")}
+      showSparkles
+      primaryLabel={t("common.continue")}
+      onPrimaryClick={onClose}
+    >
+      <div className="flex flex-col items-center justify-center py-6">
+        {/* Level Badge */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[100] flex flex-col"
+          initial={{ scale: 0, y: 20 }}
+          animate={{ scale: 1, y: 0 }}
+          transition={{ type: "spring", delay: 0.3, stiffness: 200 }}
+          className="relative mx-auto mb-4 flex h-32 w-32 flex-col items-center justify-center rounded-full"
           style={{
-            background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
+            background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)",
+            boxShadow: "0 5px 0 #C4B5FD",
+            border: "4px solid #A78BFA",
           }}
         >
-          {/* Fixed Header */}
-          <motion.div 
-            className="sticky top-0 z-10 flex items-center h-14 px-2 border-b border-gray-200/60"
-            style={{
-              background: "linear-gradient(180deg, #FFFFFF 0%, #FAFAFA 100%)",
-            }}
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
+          <motion.span
+            className="font-display text-6xl font-bold text-purple-600"
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", delay: 0.5, stiffness: 200 }}
           >
-            {/* Back button */}
-            <motion.button
-              onClick={onClose}
-              className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <ChevronLeft className="w-6 h-6 text-gray-700" />
-            </motion.button>
-            
-            {/* Centered title */}
-            <div className="flex-1 text-center px-2">
-              <h1 className="font-display text-lg font-bold text-gray-900 truncate">
-                {t("modals.levelUp")}
-              </h1>
-            </div>
-            
-            {/* Right spacer */}
-            <div className="w-10" />
-          </motion.div>
-
-          {/* Content */}
-          <div className="flex-1 flex flex-col items-center justify-center px-6">
-            {/* Level Badge */}
-            <motion.div
-              initial={{ scale: 0, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              transition={{ type: "spring", delay: 0.3, stiffness: 200 }}
-              className="relative w-32 h-32 mx-auto flex flex-col items-center justify-center rounded-full mb-4"
-              style={{
-                background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)",
-                boxShadow: "0 5px 0 #C4B5FD",
-                border: "4px solid #A78BFA",
-              }}
-            >
-              <motion.span
-                className="text-6xl font-display font-bold text-purple-600"
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", delay: 0.5, stiffness: 200 }}
-              >
-                {newLevel}
-              </motion.span>
-              <span className="text-sm font-bold text-purple-500">{t("modals.levelLabel")}</span>
-            </motion.div>
-
-            {/* Previous level info */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="text-center text-gray-500 text-lg font-medium mb-6"
-            >
-              🎯 {newLevel * REWARDS.LEVEL_UP_CORRECT_ANSWERS_THRESHOLD} {t("modals.correctAnswers")}
-            </motion.p>
-
-            {/* Rewards section - Simplified */}
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="rounded-2xl p-5 w-full max-w-xs"
-              style={{
-                background: "linear-gradient(180deg, #F9FAFB 0%, #F3F4F6 100%)",
-                boxShadow: "0 3px 0 #E5E7EB",
-              }}
-            >
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <Gift className="w-5 h-5 text-purple-600" />
-                <span className="font-bold text-lg text-gray-900">{t("modals.rewards")}</span>
-              </div>
-              <div className="flex justify-center gap-6">
-                <div className="text-center flex flex-col items-center min-w-[70px]">
-                  <img src={coinIcon} alt="" className="w-10 h-10 object-contain" />
-                  <p className="font-bold text-xl text-gray-800 mt-1">+{levelUpCoins}</p>
-                  <p className="text-sm font-medium text-gray-500">{t("modals.coin")}</p>
-                </div>
-                {awardedPowerUp && POWER_UP_ICONS[awardedPowerUp] && (
-                  <div className="text-center flex flex-col items-center min-w-[70px]">
-                    <img src={POWER_UP_ICONS[awardedPowerUp]} alt={awardedPowerUp} className="w-10 h-10 object-contain" />
-                    <p className="font-bold text-xl text-gray-800 mt-1">+1</p>
-                    <p className="text-sm font-medium text-gray-500">{t(POWER_UP_TRANSLATION_KEYS[awardedPowerUp])}</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Footer Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1 }}
-            className="sticky bottom-0 px-5 py-4 border-t border-gray-200/60"
-            style={{
-              background: "linear-gradient(180deg, #FAFAFA 0%, #FFFFFF 100%)",
-            }}
-          >
-            <ChunkyButton
-              onClick={onClose}
-              variant="success"
-              size="lg"
-              className="w-full"
-            >
-              {t("common.continue")}
-            </ChunkyButton>
-          </motion.div>
+            {newLevel}
+          </motion.span>
+          <span className="text-sm font-bold text-purple-500">{t("modals.levelLabel")}</span>
         </motion.div>
-      )}
-    </AnimatePresence>
+
+        {/* Correct-answers milestone */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mb-6 text-center text-lg font-medium text-gray-500"
+        >
+          🎯 {newLevel * REWARDS.LEVEL_UP_CORRECT_ANSWERS_THRESHOLD} {t("modals.correctAnswers")}
+        </motion.p>
+
+        {/* Rewards card — the shared lavender card recipe */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="w-full max-w-xs rounded-[24px] p-5"
+          style={{
+            background: "rgba(252,247,255,0.8)",
+            border: "1.5px solid #e8e0f5",
+            boxShadow: "0 3.6px 0 0 #d8d0e8, inset 0 1.8px 0 0 #fff",
+          }}
+        >
+          <div className="mb-4 flex items-center justify-center gap-2">
+            <Gift className="h-5 w-5 text-purple-600" />
+            <span className="text-lg font-bold text-[#402666]">{t("modals.rewards")}</span>
+          </div>
+          <div className="flex justify-center gap-6">
+            <div className="flex min-w-[70px] flex-col items-center text-center">
+              <img src={coinIcon} alt="" className="h-10 w-10 object-contain" />
+              <p className="mt-1 text-xl font-bold text-gray-800">+{levelUpCoins}</p>
+              <p className="text-sm font-medium text-gray-500">{t("modals.coin")}</p>
+            </div>
+            {awardedPowerUp && POWER_UP_ICONS[awardedPowerUp] && (
+              <div className="flex min-w-[70px] flex-col items-center text-center">
+                <img src={POWER_UP_ICONS[awardedPowerUp]} alt={awardedPowerUp} className="h-10 w-10 object-contain" />
+                <p className="mt-1 text-xl font-bold text-gray-800">+1</p>
+                <p className="text-sm font-medium text-gray-500">{t(POWER_UP_TRANSLATION_KEYS[awardedPowerUp])}</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </div>
+    </GameModal>
   );
 }
