@@ -132,8 +132,8 @@ function CreatorPortfolioCardComponent({ creator, onPlayTrivia, onLikeTrivia, on
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Creator Header */}
-      <div className="px-0 py-4 md:p-4 flex items-center justify-between">
+      {/* Creator Header — tight to the cards below it */}
+      <div className="px-0 pt-3 pb-1 md:px-4 md:pt-3 md:pb-1 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Avatar - Clickable to open profile */}
           <div 
@@ -179,7 +179,7 @@ function CreatorPortfolioCardComponent({ creator, onPlayTrivia, onLikeTrivia, on
       </div>
       
       {/* Trivia Display - List on mobile, Carousel on tablet+ */}
-      <div className="px-0 pb-4 md:px-4">
+      <div className="px-0 pb-2 md:px-4">
         {/* Mobile: Vertical List */}
         <div className="flex flex-col gap-3 md:hidden">
           {creator.trivias.map((trivia) => (
@@ -199,7 +199,7 @@ function CreatorPortfolioCardComponent({ creator, onPlayTrivia, onLikeTrivia, on
         
         {/* Tablet & Desktop: native horizontal scroll — wheel, trackpad and
             drag all work, unlike the embla carousel this replaces */}
-        <div className="hidden md:block w-full max-w-full py-3">
+        <div className="hidden md:block w-full max-w-full">
           <div className="flex gap-3 overflow-x-auto scrollbar-hide py-2 px-1 -mx-1">
             {creator.trivias.map((trivia) => (
               <div key={trivia.id} className="flex-shrink-0">

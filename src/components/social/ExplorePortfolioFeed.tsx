@@ -214,7 +214,7 @@ export function ExplorePortfolioFeed({
         </div>
       ) : (
         /* Desktop/Tablet: Grouped feed - player + horizontal carousel */
-        <div className="space-y-6 overflow-hidden w-full max-w-full">
+        <div className="space-y-3 overflow-hidden w-full max-w-full">
           {creators.slice(0, visibleCount).map((creator) => (
             <CreatorPortfolioCard
               key={creator.user_id}

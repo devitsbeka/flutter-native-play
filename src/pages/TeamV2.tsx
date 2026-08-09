@@ -719,7 +719,7 @@ function TeamContentV2() {
                   mobile keeps full-width equal tabs (create stays in the
                   filter bar there) */}
               <div className="px-4 w-full md:max-w-[1115px] mx-auto pt-3 pb-2 overflow-hidden">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
                   {/* Tab container */}
                   <div
                     className="relative flex-1 md:flex-initial md:w-fit flex rounded-2xl bg-muted p-1.5"
@@ -762,6 +762,44 @@ function TeamContentV2() {
                     ))}
                   </div>
 
+                  {/* md+: search + filter ride the tab row, just before the
+                      create button (mobile keeps its own filter bar below) */}
+                  <div className="hidden md:flex items-center gap-1.5 ml-auto shrink-0">
+                    {activeTab === "rooms" && hasRooms && (
+                      <UnifiedFiltersBar<RoomFilter, string>
+                        compact
+                        filter={roomsFilter}
+                        onFilterChange={(f) => setRoomsFilter(f)}
+                        filterOptions={roomFilterOptions}
+                        searchQuery={roomsSearchQuery}
+                        onSearchQueryChange={setRoomsSearchQuery}
+                      />
+                    )}
+                    {activeTab === "explore" && (
+                      <UnifiedFiltersBar<ExploreFilter, ExploreSort>
+                        compact
+                        filter={exploreFilter}
+                        onFilterChange={(f) => setExploreFilter(f)}
+                        filterOptions={exploreFilterOptions}
+                        sort={exploreSort}
+                        onSortChange={(s) => setExploreSort(s)}
+                        sortOptions={exploreSortOptions}
+                        searchQuery={exploreSearchQuery}
+                        onSearchQueryChange={setExploreSearchQuery}
+                      />
+                    )}
+                    {activeTab === "my-content" && hasTrivias && (
+                      <UnifiedFiltersBar<MyTriviaFilter, string>
+                        compact
+                        filter={sortFilter}
+                        onFilterChange={(f) => setSortFilter(f)}
+                        filterOptions={myTriviaFilterOptions}
+                        searchQuery={searchQuery}
+                        onSearchQueryChange={setSearchQuery}
+                      />
+                    )}
+                  </div>
+
                   {/* Create button - right edge, aligned with the tabs (md+) */}
                   <motion.button
                     whileHover={{ scale: 1.03 }}
@@ -786,7 +824,7 @@ function TeamContentV2() {
               {((activeTab === "rooms" && hasRooms) || 
                 (activeTab === "explore") || 
                 (activeTab === "my-content" && hasTrivias)) && (
-                <div key={activeTab} id="sticky-filter-bar" className="border-b border-border/50">
+                <div key={activeTab} id="sticky-filter-bar" className="md:hidden border-b border-border/50">
                   {activeTab === "rooms" && hasRooms && (
                     <UnifiedFiltersBar<RoomFilter, string>
                       filter={roomsFilter}
