@@ -895,26 +895,32 @@ export default function Index() {
               className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110"
               draggable={false}
             />
-            {sceneVideoUrl ? (
-              /* Seamless idle-loop video — poster keeps the still visible
-                 until the video is ready to play */
-              <video
-                src={sceneVideoUrl}
-                poster={sceneUrl}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="absolute inset-0 w-full h-full object-contain object-[center_bottom]"
-              />
-            ) : (
-              <img
-                src={sceneUrl}
-                alt=""
-                className="absolute inset-0 w-full h-full object-contain object-[center_bottom]"
-                draggable={false}
-              />
-            )}
+            {/* The sharp artwork lives in the band BELOW the friends reel
+                (top-[148px]) — it scales down to whatever height remains,
+                so the reel never covers it and smaller screens see the
+                whole scene zoomed out over the blurred fill. */}
+            <div className="absolute left-0 right-0 top-[148px] bottom-0">
+              {sceneVideoUrl ? (
+                /* Seamless idle-loop video — poster keeps the still visible
+                   until the video is ready to play */
+                <video
+                  src={sceneVideoUrl}
+                  poster={sceneUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-contain object-[center_bottom]"
+                />
+              ) : (
+                <img
+                  src={sceneUrl}
+                  alt=""
+                  className="w-full h-full object-contain object-[center_bottom]"
+                  draggable={false}
+                />
+              )}
+            </div>
           </motion.div>
         ) : showDefaultScene && user ? (
           <motion.video
