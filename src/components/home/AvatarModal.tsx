@@ -110,32 +110,35 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   const [scenePref, setScenePref] = useState<string | null>(null);
   useEffect(() => {
     if (isOpen && user) setScenePref(localStorage.getItem(`scene_pref_${user.id}`));
-  }, [isOpen, user]);
+  }, [isOpen, user?.id]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Load avatar generations + reset transient state: the component stays
-  // mounted while closed, so a close mid-generation used to leave
-  // isLoading/isProcessingFile stuck true and every button disabled on
-  // reopen.
+  // Reset transient state ONLY on a real closed -> open transition. This
+  // used to depend on the `user` OBJECT, so every session/token refresh
+  // re-ran it and fired setStep("gallery") mid-flow — kicking the user out
+  // of the upload/preview step and discarding the generated scene before
+  // it could be saved (any photo, always "nothing changed").
   const generationInFlight = useRef(false);
+  const wasOpen = useRef(false);
   useEffect(() => {
-    if (isOpen && user) {
-      // Reopening while a generation is still running must NOT clobber the
-      // generating/preview step it is driving
-      if (!generationInFlight.current) {
-        setIsLoading(false);
-        setIsProcessingFile(false);
-        setIsAnimating(false);
-        setSelectedForAction(null);
-        setStep("gallery");
-      }
-      loadGenerations();
+    if (isOpen && !wasOpen.current && !generationInFlight.current) {
+      setIsLoading(false);
+      setIsProcessingFile(false);
+      setIsAnimating(false);
+      setSelectedForAction(null);
+      setStep("gallery");
     }
-  }, [isOpen, user]);
+    wasOpen.current = isOpen;
+  }, [isOpen]);
+
+  // Keyed on the stable user id, never the user object
+  useEffect(() => {
+    if (isOpen && user?.id) loadGenerations();
+  }, [isOpen, user?.id]);
 
   const loadGenerations = async () => {
     if (!user) return;
