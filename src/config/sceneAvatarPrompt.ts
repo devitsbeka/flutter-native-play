@@ -33,8 +33,14 @@ A soft, light, airy pastel world:
 THE CHARACTER
 Adapt the person from the reference photo into a charming, high-end stylized 3D game character (expressive friendly eyes, clean rounded forms, detailed hair, soft skin shading — premium casual-game quality, never childish, plastic, uncanny or hyper-realistic).
 
-BODY PROPORTIONS — CRITICAL
-Natural adult head-to-body proportions: the head is about 1/6.5 of the character's full height, matching the body's scale exactly. The head must NEVER look enlarged, inflated or oversized relative to the torso and limbs — absolutely no bobblehead or chibi effect. Face, head and body all share one consistent realistic-stylized scale.
+BODY PROPORTIONS — MOST IMPORTANT RULE
+Render a realistically proportioned adult body. The head must read SMALL against the body, never large. Because the character is seated, judge the proportions with these concrete checks, all of which must hold:
+- Shoulder width is at least 2.5 times the width of the head.
+- Head height (chin to crown) is at most 1/3 of the torso length from shoulder to hip.
+- The upper arm from shoulder to elbow is longer than the head is tall.
+- The thigh from hip to knee is about 1.5 times the head height.
+Build the figure body-first: sculpt a full-size adult torso, arms and legs, then place a proportionally SMALL head on it. If in doubt, make the head smaller — an oversized head instantly ruins the image.
+Absolutely forbidden: bobblehead, chibi, caricature, doll or big-head-small-body looks; an inflated cranium; a head that dominates the silhouette. The head, face and body all share one consistent realistic-stylized scale.
 
 FACE STYLIZATION — CRITICAL
 Render the face as a polished 3D CG interpretation of the person — the same render language as the rest of the character, never a photograph pasted onto a stylized body, but also never a cartoon. Keep natural adult facial proportions: normal-sized eyes, real nose and lip shapes, true face geometry. Stylize only the surface treatment: smooth idealized CG skin with soft subsurface shading instead of photographic pores and blemishes, cleanly groomed sculpted hair and facial hair instead of photo texture, and soft even studio light on the face instead of camera-real lighting. Think of a high-end animated-feature or AAA game cinematic version of this exact person — the likeness unmistakable (same face shape, hairstyle, hair color, facial hair silhouette, eyebrows, skin tone, distinctive features), realistic proportions, just rendered as beautiful clean CG rather than photography. Avoid both extremes: no photoreal skin texture, and no toon exaggeration, oversized eyes or caricature.
