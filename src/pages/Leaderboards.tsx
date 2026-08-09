@@ -339,17 +339,22 @@ export default function Leaderboards() {
       >
         {/* Scope-matched backdrop: Georgian landmarks locally, world landmarks
             globally — both stay mounted so switching tabs crossfades instead
-            of flashing a re-download */}
+            of flashing a re-download. On md+ the artwork scales like the
+            homepage scene: width-driven, bottom-anchored 16:9 box whose
+            mask-faded top melts into the light page background (whole map
+            visible on squarer screens, top crops on ultrawide via the
+            container's overflow-hidden). Phones keep the full-screen cover
+            crop — a width-driven strip would be too short there. */}
         <img
           src={bgLeaderGeorgia}
           alt=""
-          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] pointer-events-none select-none transition-opacity duration-500 ${scope === "global" ? "opacity-0" : "opacity-100"}`}
+          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none transition-opacity duration-500 ${scope === "global" ? "opacity-0" : "opacity-100"}`}
           draggable={false}
         />
         <img
           src={bgLeaderGlobal}
           alt=""
-          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] pointer-events-none select-none transition-opacity duration-500 ${scope === "global" ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none transition-opacity duration-500 ${scope === "global" ? "opacity-100" : "opacity-0"}`}
           draggable={false}
         />
 
