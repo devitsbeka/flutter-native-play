@@ -632,12 +632,15 @@ export const en: KaTranslations = {
   // ==========================================
   missions: {
     title: "Missions",
-    subtitle: "Complete missions and claim rewards!",
+    subtitle: "Complete missions and earn rewards",
     daily: "Daily",
     weekly: "Weekly",
     achievements: "Achievements",
     streak: "Streak",
     days: "days",
+    progress: "Progress",
+    completedLabel: "Completed",
+    continueBtn: "Continue",
     claimReward: "Claim Reward",
     claimed: "Claimed",
     received: "Received!",
