@@ -18,6 +18,8 @@ interface DailyDealsRowProps {
   purchasedItems: Set<string>;
   isPurchasing: string | null;
   onItemClick: (item: ShopItem) => void;
+  /** The layout renders one shared შეთავაზებები title above PRO + deals. */
+  hideTitle?: boolean;
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -180,7 +182,7 @@ function DealCard({
   );
 }
 
-export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick }: DailyDealsRowProps) {
+export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick, hideTitle = false }: DailyDealsRowProps) {
   const { t } = useLanguage();
   const [now, setNow] = useState(() => Date.now());
 
@@ -204,10 +206,11 @@ export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick }: Dai
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {/* relative z-10 keeps the title above the background blobs */}
-      <div className="relative z-10 mb-3 mt-2 flex items-center gap-2.5 px-1">
-        <h2 className="text-lg md:text-xl font-display font-bold text-foreground">{t("shop.deals")}</h2>
-      </div>
+      {!hideTitle && (
+        <div className="relative z-10 mb-3 mt-2 flex items-center gap-2.5 px-1">
+          <h2 className="text-lg md:text-xl font-display font-bold text-foreground">{t("shop.deals")}</h2>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <DealCard
@@ -224,7 +227,7 @@ export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick }: Dai
           deal={hourlyDeal}
           label={t("shop.hourlyDeal")}
           remainingLabel={formatRemaining(nextHour - now, false)}
-          gradient="linear-gradient(135deg, #F43F5E 0%, #EC4899 50%, #D946EF 100%)"
+          gradient="linear-gradient(135deg, #14B8A6 0%, #0D9488 50%, #0F766E 100%)"
           chipClass="bg-white/25"
           urgent
           isPurchased={purchasedItems.has(hourlyDeal.id)}

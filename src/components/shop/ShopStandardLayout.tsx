@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { ShopSection, ShopItem } from "@/hooks/useShopData";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ShopProductGrid } from "./ShopProductGrid";
 import { MobileProCarousel } from "./MobileProCarousel";
 import { MyPowersSection } from "./MyPowersSection";
@@ -34,6 +35,7 @@ export function ShopStandardLayout({
   canAffordCoins,
   onPowerCardClick,
 }: ShopStandardLayoutProps) {
+  const { t } = useLanguage();
   const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const hasScrolled = useRef(false);
 
@@ -62,14 +64,21 @@ export function ShopStandardLayout({
 
   return (
     <div className="flex-1 pb-8">
+      {/* შეთავაზებები opens the page: one title over the whole deals group
+          (PRO banner + rotating daily/hourly bundles), then My Powers etc. */}
+      <div className="relative z-10 mx-3 sm:mx-4 mt-4 flex items-center px-1">
+        <h2 className="text-lg md:text-xl font-display font-bold text-foreground">{t("shop.deals")}</h2>
+      </div>
+
       {/* PRO Carousel - phones only. Tablet and desktop open straight with
           My Powers; on desktop the PRO banner lives in the right sidebar. */}
       <div className="md:hidden">
         <MobileProCarousel />
       </div>
 
-      {/* Rotating daily + hourly bundle deals — hero banners at the top */}
+      {/* Rotating daily + hourly bundle deals */}
       <DailyDealsRow
+        hideTitle
         purchasedItems={purchasedItems}
         isPurchasing={isPurchasing}
         onItemClick={handleItemClick}
