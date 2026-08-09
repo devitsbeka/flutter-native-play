@@ -49,6 +49,22 @@ export const de: KaTranslations = {
   playLimit: { ...en.playLimit, limitReached: "Spiellimit erreicht", becomeProDescription: "Werde PRO und spiele unbegrenzt, erstelle eigene Trivias und vieles mehr.", unlimitedGames: "Unbegrenzte Spiele", exclusiveFeatures: "Exklusive Funktionen", becomePro: "Werde PRO", freePlayReady: "Freies Spiel bereit!", playNow: "Jetzt spielen", nextFreePlay: "Nächstes freies Spiel: {time}", freePlayInterval: "1 freies Spiel alle 3 Stunden" },
   notificationsPanel: { ...en.notificationsPanel, activity: "Aktivität", gamesTab: "Spiele", socialTab: "Freunde", triviaTab: "Trivia", noNotifications: "Keine Benachrichtigungen", noGamesNotifications: "Keine Spielbenachrichtigungen", noSocialNotifications: "Keine Freundesbenachrichtigungen", noTriviaNotifications: "Keine Trivia-Benachrichtigungen", viewAll: "Alle ansehen", friendRequestAccepted: "Freundschaftsanfrage angenommen!", friendRequestDeclined: "Anfrage abgelehnt", inviteDeclined: "Einladung abgelehnt", errorOccurred: "Ein Fehler ist aufgetreten", urlCopied: "URL kopiert!", copyFailed: "Kopieren fehlgeschlagen", avatarAlreadySet: "Avatar bereits festgelegt!", roomNotFound: "Raum nicht gefunden", navigationFailed: "Konnte nicht zum Spiel navigieren" },
   extra: {
+    // Desktop logged-out landing (Figma 612:1888)
+    landingPlayersCount: "100.000+ Spieler",
+    landingJoinFreeHeading: "Kostenlos\nbeitreten",
+    landingJoinFree: "Kostenlos beitreten",
+    landingJoinSubtitle: "Schließe dich Tausenden Spielern aus 🇬🇪 Georgien an",
+    landingGoogleSignIn: "Mit Google anmelden",
+    landingOrEmail: "oder gib deine E-Mail ein",
+    landingOnlyOnMyTrivia: "Nur auf MyTrivia",
+    landingFeature1Title: "Dein Trivia",
+    landingFeature1Desc: "Erstelle deinen Charakter und deine eigene Welt.",
+    landingFeature2Title: "100+ Kategorien",
+    landingFeature2Desc: "Tausende Fragen zu allem, was dich interessiert.",
+    landingFeature3Title: "Rangliste und Preise",
+    landingFeature3Desc: "Tritt gegen andere an, steig auf und erhalte Belohnungen.",
+    landingFeature4Title: "Spiel mit Freunden",
+    landingFeature4Desc: "Erstelle einen Raum und veranstalte eine Trivia-Party.",
     ...en.extra,
     // Core
     player: "Spieler", players: "Spieler", gameName: "Spielname...", myTrivia: "Mein Trivia", create: "Erstellen",

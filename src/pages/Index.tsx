@@ -28,6 +28,7 @@ import { WelcomeOnboardingOverlay } from "@/components/onboarding/WelcomeOnboard
 import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { SceneHero } from "@/components/home/SceneHero";
 import { SceneSidebar } from "@/components/home/SceneSidebar";
+import { DesktopGuestLanding, DesktopGuestSceneBackground } from "@/components/home/DesktopGuestLanding";
 import { useUserScene } from "@/hooks/useUserScene";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
@@ -890,7 +891,7 @@ export default function Index() {
             className="hidden md:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
             draggable={false}
           />
-        ) : showDefaultScene ? (
+        ) : showDefaultScene && user ? (
           <motion.video
             src={DEFAULT_SCENE_VIDEO}
             autoPlay
@@ -902,6 +903,10 @@ export default function Index() {
             transition={{ duration: 0.6 }}
             className="hidden md:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
           />
+        ) : showDefaultScene ? (
+          /* Figma 612:1888 — guests get the exported Trivia King still with
+             the white edge vignette instead of the animated loop */
+          <DesktopGuestSceneBackground />
         ) : null}
         <header className="relative z-20 px-4 py-3 md:pt-4 safe-top border-b border-border/30 lg:border-b-0">
           <div className="flex items-center justify-between gap-3 md:min-h-12">
@@ -927,10 +932,14 @@ export default function Index() {
               <div className="lg:hidden">
                 <MyTriviaLiveLogo responsive />
               </div>
-              {/* lg+: an alternating greeting takes the logo's place */}
-              <div className="hidden lg:block min-w-0">
-                <HeaderGreeting nickname={user ? profile?.nickname : null} />
-              </div>
+              {/* lg+: an alternating greeting takes the logo's place.
+                  Hidden for guests — the Figma 612:1888 logged-out design
+                  keeps the header empty. */}
+              {user && (
+                <div className="hidden lg:block min-w-0">
+                  <HeaderGreeting nickname={profile?.nickname} />
+                </div>
+              )}
             </div>
             
             {/* Right side: Search/Notification for users, Sign In for guests */}
@@ -967,6 +976,20 @@ export default function Index() {
             ) : null}
           </div>
         </header>
+
+        {/* Figma 612:1888 — desktop logged-out state: signup + email-capture
+            cards on the left, feature list card on the right, floating over
+            the full-bleed guest scene */}
+        {!user && showDefaultScene && (
+          <DesktopGuestLanding
+            onGoogle={() => void signInWithGoogle()}
+            onFacebook={() => navigate("/auth?mode=signup")}
+            onSms={() => navigate("/auth?mode=signup")}
+            onEmailContinue={(email) =>
+              navigate(email ? `/auth?mode=signup&email=${encodeURIComponent(email)}` : "/auth?mode=signup")
+            }
+          />
+        )}
 
         {/* Friends strip - logged-in users, horizontally scrollable (mobile + desktop).
             Right padding on lg+ keeps it clear of the fixed action cards panel.
@@ -1400,10 +1423,10 @@ export default function Index() {
 
             </div>}
 
-            {/* xl+ layout: floating stats over the full-bleed scene. Guests
-                get the same layout in a guest-adapted state — every locked
-                interaction routes to auth. */}
-            {(sceneUrl || showDefaultScene) && (
+            {/* xl+ layout: floating stats over the full-bleed scene.
+                Logged-in only — guests get the Figma 612:1888 landing
+                overlay instead. */}
+            {user && (sceneUrl || showDefaultScene) && (
               <motion.div
                 className="hidden md:block w-full h-full pr-[280px] xl:pr-[300px] pointer-events-none"
                 initial={{ opacity: 0 }}
@@ -1441,45 +1464,6 @@ export default function Index() {
               >
                 <SceneSidebar onQuickPlay={handlePlayClick} />
               </motion.div>
-            )}
-
-            {/* xl+ scene: guest auth CTAs floating above the play button */}
-            {!user && showDefaultScene && (
-              <div className="hidden md:flex absolute bottom-[17%] left-1/2 -translate-x-1/2 z-20 items-center gap-3 pointer-events-auto">
-                <motion.button
-                  onClick={() => navigate("/auth")}
-                  className="px-5 py-2.5 rounded-full bg-white border border-border shadow-md text-sm font-semibold text-foreground"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {t("common.signIn")}
-                </motion.button>
-                <motion.button
-                  onClick={() => navigate("/auth?mode=signup")}
-                  className="px-5 py-2.5 rounded-full bg-primary shadow-md text-sm font-semibold text-primary-foreground"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {t("extra.joinFreeBtn")}
-                </motion.button>
-              </div>
-            )}
-
-            {/* xl+ scene: guests keep the big centered play CTA; logged-in
-                users play via the sidebar's quick-play button (Figma
-                601:1104 has no centered button) */}
-            {!user && (sceneUrl || showDefaultScene) && (
-              <div className="hidden md:block absolute bottom-[6%] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
-                <DesktopPlayButtonLarge
-                  onClick={handlePlayClick}
-                  playsRemaining={user ? playsRemaining : guestPlaysRemaining}
-                  maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
-                  canPlay={user ? canPlay : guestPlaysRemaining > 0}
-                  isVip={isVip}
-                  isGuest={!user}
-                  onboardingId="play"
-                />
-              </div>
             )}
 
             {/* xl+ layout: Avatar centered - only while the scene query is

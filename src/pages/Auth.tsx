@@ -38,7 +38,8 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
-  const [signupEmail, setSignupEmail] = useState("");
+  // Prefilled by the desktop landing's email-capture card (?email=)
+  const [signupEmail, setSignupEmail] = useState(searchParams.get('email') || "");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);

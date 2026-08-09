@@ -49,6 +49,22 @@ export const it: KaTranslations = {
   playLimit: { ...en.playLimit, limitReached: "Limite partite raggiunto", becomeProDescription: "Diventa PRO e gioca illimitato, crea i tuoi trivia e molto altro.", unlimitedGames: "Giochi illimitati", exclusiveFeatures: "Funzionalità esclusive", becomePro: "Diventa PRO", freePlayReady: "Gioco gratis pronto!", playNow: "Gioca ora", nextFreePlay: "Prossimo gioco gratis: {time}", freePlayInterval: "1 gioco gratis ogni 3 ore" },
   notificationsPanel: { ...en.notificationsPanel, activity: "Attività", gamesTab: "Giochi", socialTab: "Amici", triviaTab: "Trivia", noNotifications: "Nessuna notifica", noGamesNotifications: "Nessuna notifica giochi", noSocialNotifications: "Nessuna notifica amici", noTriviaNotifications: "Nessuna notifica trivia", viewAll: "Vedi tutto", friendRequestAccepted: "Richiesta accettata!", friendRequestDeclined: "Richiesta rifiutata", inviteDeclined: "Invito rifiutato", errorOccurred: "Si è verificato un errore", urlCopied: "URL copiato!", copyFailed: "Copia fallita", avatarAlreadySet: "Avatar già impostato!", roomNotFound: "Stanza non trovata", navigationFailed: "Impossibile navigare al gioco" },
   extra: {
+    // Desktop logged-out landing (Figma 612:1888)
+    landingPlayersCount: "100.000+ giocatori",
+    landingJoinFreeHeading: "Unisciti\ngratis",
+    landingJoinFree: "Unisciti gratis",
+    landingJoinSubtitle: "Unisciti a migliaia di giocatori dalla 🇬🇪 Georgia",
+    landingGoogleSignIn: "Accedi con Google",
+    landingOrEmail: "o inserisci la tua email",
+    landingOnlyOnMyTrivia: "Solo su MyTrivia",
+    landingFeature1Title: "Il tuo trivia",
+    landingFeature1Desc: "Crea il tuo personaggio e il tuo mondo.",
+    landingFeature2Title: "100+ categorie",
+    landingFeature2Desc: "Migliaia di domande su tutto ciò che ti interessa.",
+    landingFeature3Title: "Classifica e premi",
+    landingFeature3Desc: "Sfida gli altri, sali di livello e ottieni ricompense.",
+    landingFeature4Title: "Gioca con gli amici",
+    landingFeature4Desc: "Crea una stanza e organizza una festa trivia.",
     ...en.extra,
     // Core
     player: "Giocatore", players: "giocatori", gameName: "Nome gioco...", myTrivia: "Mio Trivia", create: "Crea",
