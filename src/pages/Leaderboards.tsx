@@ -337,8 +337,8 @@ export default function Leaderboards() {
         />
 
         {/* Header */}
-        <div className="relative shrink-0 z-50 px-4 py-3 bg-background/95 backdrop-blur-md border-b border-border/30">
-          <div className="flex items-center justify-between">
+        <div className="relative shrink-0 z-50 px-4 pt-4 pb-3 bg-background/95 backdrop-blur-md border-b border-border/30">
+          <div className="flex items-center justify-between min-h-12">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => (location.key !== "default" ? navigate(-1) : navigate("/"))}

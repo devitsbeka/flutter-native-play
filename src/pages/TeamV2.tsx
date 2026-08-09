@@ -684,7 +684,10 @@ function TeamContentV2() {
             />
           </div>
 
-          <div className="flex items-center gap-1 ml-auto shrink-0">
+          {/* Icons pin to the row TOP on md+ (the reel makes this row tall,
+              centering would sink them) — mt-3 lands their centers at the
+              same 40px-from-page-top spot the home header puts them */}
+          <div className="flex items-center gap-1 ml-auto shrink-0 md:self-start md:mt-3">
             {/* QR Scanner */}
             <motion.button
               whileHover={{ scale: 1.1 }}
