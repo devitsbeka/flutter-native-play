@@ -1779,7 +1779,7 @@ export const en: KaTranslations = {
     noOnePlayedTrivia: "No one has played yet",
     pingHostBtn: "Call the host",
     pingHostSent: "The host has been notified! 🔔",
-    pingHostNotifTitle: "{name} is calling you to start the game",
+    pingHostNotifTitle: "{name}: Let's play!",
     pingHostOpenRoom: "Open room",
     photoFaceRequiredTitle: "Please upload a photo with a face",
     photoFaceRequiredDesc: "Animation needs a photo where a face is visible",

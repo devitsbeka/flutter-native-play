@@ -1778,7 +1778,7 @@ export const ka = {
     noOnePlayedTrivia: "ჯერ არავის უთამაშია",
     pingHostBtn: "დაუძახე ჰოსტს",
     pingHostSent: "ჰოსტს შეტყობინება გაეგზავნა! 🔔",
-    pingHostNotifTitle: "{name} გეძახის თამაშის დასაწყებად",
+    pingHostNotifTitle: "{name}: მოდი ვითამაშოთ!",
     pingHostOpenRoom: "ოთახში შესვლა",
     photoFaceRequiredTitle: "გთხოვთ ატვირთოთ ფოტო სახით",
     photoFaceRequiredDesc: "ანიმაციისთვის საჭიროა ფოტო, რომელზეც სახე ჩანს",

@@ -297,6 +297,7 @@ export function RoomLobbyV2() {
       {
         room_id: currentRoom.id,
         room_code: currentRoom.room_code,
+        room_icon: currentRoom.room_icon || undefined,
         sender_nickname: senderName,
       }
     );
