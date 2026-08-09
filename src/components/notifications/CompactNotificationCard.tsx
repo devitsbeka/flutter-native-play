@@ -96,12 +96,12 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
       }
     }
     
-    if (isRoomInvite || isGameStarted || isGameInvite) {
+    if (isRoomInvite || isGameStarted || isGameInvite || notification.type === 'room_ping') {
       if (roomIcon) {
         return { type: 'image' as const, src: roomIcon };
       }
     }
-    
+
     return { type: 'avatar' as const, src: avatarUrl };
   }, [notification.type, triviaCover, triviaIconSlug, roomIcon, avatarUrl, isTriviaLikedOrSaved, isTriviaPlayed, isRoomInvite, isGameStarted, isGameInvite]);
   
