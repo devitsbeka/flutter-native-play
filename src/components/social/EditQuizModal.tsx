@@ -486,7 +486,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                             )}
                             
                             {/* Large Tappable Icon - opens portal picker */}
-                            <div className="flex flex-col items-center gap-1.5">
+                            <div className="relative flex flex-col items-center gap-1.5">
                               <button
                                 type="button"
                                 onClick={() => setIconPickerIndex(index)}
