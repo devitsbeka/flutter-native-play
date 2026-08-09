@@ -61,6 +61,9 @@ interface AvatarModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete?: () => void;
+  /** Reports a running generation to the shell so it can show a floating
+      progress chip while the modal is closed and reopen it when done. */
+  onGeneratingChange?: (active: boolean, thumb?: string | null) => void;
 }
 
 const MAX_AVATAR_GENERATIONS = 5;
@@ -73,7 +76,7 @@ interface AvatarGeneration {
   created_at: string;
 }
 
-export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
+export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }: AvatarModalProps) {
   const finishAndClose = onComplete || onClose;
   const { user, profile, updateProfile } = useAuth();
   const { isVip } = useVipStatus();
@@ -117,13 +120,18 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
   // mounted while closed, so a close mid-generation used to leave
   // isLoading/isProcessingFile stuck true and every button disabled on
   // reopen.
+  const generationInFlight = useRef(false);
   useEffect(() => {
     if (isOpen && user) {
-      setIsLoading(false);
-      setIsProcessingFile(false);
-      setIsAnimating(false);
-      setSelectedForAction(null);
-      setStep("gallery");
+      // Reopening while a generation is still running must NOT clobber the
+      // generating/preview step it is driving
+      if (!generationInFlight.current) {
+        setIsLoading(false);
+        setIsProcessingFile(false);
+        setIsAnimating(false);
+        setSelectedForAction(null);
+        setStep("gallery");
+      }
       loadGenerations();
     }
   }, [isOpen, user]);
@@ -339,6 +347,8 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
 
     setIsLoading(true);
     setStep("generating");
+    generationInFlight.current = true;
+    onGeneratingChange?.(true, uploadedImage);
 
     try {
       // Upload the image to storage
@@ -391,6 +401,8 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
       setStep("upload");
     } finally {
       setIsLoading(false);
+      generationInFlight.current = false;
+      onGeneratingChange?.(false);
     }
   };
 
