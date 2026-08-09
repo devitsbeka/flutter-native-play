@@ -1,5 +1,7 @@
 import { memo, useState, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
 import { Trash2, Home, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -79,7 +81,28 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const senderName = notification.data?.sender_nickname as string || notification.data?.sender_name as string || '';
   const roomName = notification.data?.room_name as string | undefined;
   const categoryName = notification.data?.category_name as string | undefined;
-  const roomIcon = notification.data?.room_icon as string | undefined;
+  const storedRoomIcon = notification.data?.room_icon as string | undefined;
+  const roomId = notification.data?.room_id as string | undefined;
+  const isRoomPing = notification.type === 'room_ping';
+
+  // Older room notifications didn't store the icon in their payload — look
+  // it up from the room itself (cached forever; one query per room, shared
+  // across rows by the query key)
+  const { data: fetchedRoomIcon } = useQuery({
+    queryKey: ['room-icon', roomId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('game_rooms')
+        .select('room_icon')
+        .eq('id', roomId!)
+        .maybeSingle();
+      return data?.room_icon || null;
+    },
+    enabled: !storedRoomIcon && !!roomId,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
+  });
+  const roomIcon = storedRoomIcon || fetchedRoomIcon || undefined;
   const triviaCover = notification.data?.trivia_cover as string | undefined;
   const triviaIconSlug = notification.data?.trivia_icon_slug as string | undefined;
   
@@ -96,7 +119,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
       }
     }
     
-    if (isRoomInvite || isGameStarted || isGameInvite || notification.type === 'room_ping') {
+    if (isRoomInvite || isGameStarted || isGameInvite || isRoomPing) {
       if (roomIcon) {
         return { type: 'image' as const, src: roomIcon };
       }
