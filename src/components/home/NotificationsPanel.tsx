@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CompactNotificationCard } from '@/components/notifications/CompactNotificationCard';
+import { NotificationDetailModal } from '@/components/notifications/NotificationDetailModal';
 import { CompactGenerationCard } from '@/components/notifications/CompactGenerationCard';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -74,6 +75,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
   };
   
   const [activeTab, setActiveTab] = useState<'games' | 'social' | 'trivia'>('games');
+  const [detailNotification, setDetailNotification] = useState<Notification | null>(null);
   
   // Reset to best tab when panel opens
   useEffect(() => {
@@ -331,14 +333,23 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
         }
         break;
       case 'reward':
-        onClose();
-        navigate('/');
-        break;
+      case 'daily_reward':
+      case 'streak':
+      case 'level_up':
       case 'achievement':
+      case 'system':
+      case 'welcome':
+        // "What you earned" popup — these have no page to go to, and
+        // dumping the player on the home screen showed them nothing
+        setDetailNotification(notification);
+        break;
+      case 'billing':
+      case 'subscription':
         onClose();
-        navigate('/profile');
+        navigate('/vip');
         break;
       default:
+        setDetailNotification(notification);
         break;
     }
   };
@@ -495,6 +506,11 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
               <div className="h-8" />
             </div>
           </motion.div>
+
+          <NotificationDetailModal
+            notification={detailNotification}
+            onClose={() => setDetailNotification(null)}
+          />
         </>
       )}
     </AnimatePresence>,

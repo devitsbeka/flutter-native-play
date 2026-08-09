@@ -714,6 +714,8 @@ export function useMissions() {
               coins: mission.reward_coins,
               gems: mission.reward_gems,
               xp: mission.reward_xp,
+              power_up: mission.reward_power_up,
+              power_up_count: mission.reward_power_up_count,
             }
           );
 
