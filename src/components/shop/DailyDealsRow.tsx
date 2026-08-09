@@ -119,18 +119,19 @@ export function DealCard({
       </div>
 
       {/* Bundle contents: PRO time + powers + coins — centered */}
-      <div className="flex flex-wrap items-center justify-center gap-1.5">
+      {/* Always a single line — chips never wrap to a second row */}
+      <div className="flex flex-nowrap items-center justify-center gap-1.5">
         {deal.contents.vip && (
-          <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 text-xs font-bold backdrop-blur-[2px]">
+          <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-white/20 px-2.5 py-2 text-xs font-bold backdrop-blur-[2px]">
             <img src={proLogoIcon} alt="" className="h-7 w-7 object-contain" />
             {deal.contents.vip === "week" ? t("shop.vipWeek") : t("shop.vipDay")}
           </span>
         )}
-        <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 text-xs font-bold backdrop-blur-[2px]">
+        <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-white/20 px-2.5 py-2 text-xs font-bold backdrop-blur-[2px]">
           <img src={powersIcon} alt="" className="h-7 w-7 object-contain" />
           {deal.contents.powers}× {t("shop.allPowers")}
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 text-xs font-bold backdrop-blur-[2px]">
+        <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-white/20 px-2.5 py-2 text-xs font-bold backdrop-blur-[2px]">
           <img src={coinIcon} alt="" className="h-7 w-7 object-contain" />
           {deal.contents.coins.toLocaleString()}
         </span>
