@@ -69,25 +69,29 @@ export interface PlayerProfileData {
 
 export function usePlayerProfile(userId: string | null) {
   const { user } = useAuth();
-  const [data, setData] = useState<PlayerProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  // Results are stored together with the user they belong to. Plain state
+  // kept the previous player's profile after the modal closed, and effects
+  // run only AFTER paint — so reopening the modal for someone else painted
+  // the old profile for a frame (the "ghost profile"). Deriving both data
+  // and loading from this key makes a stale render impossible.
+  const [entry, setEntry] = useState<{ userId: string; data: PlayerProfileData } | null>(null);
+  const [errorEntry, setErrorEntry] = useState<{ userId: string; error: Error } | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const data = entry && entry.userId === userId ? entry.data : null;
+  const error = errorEntry && errorEntry.userId === userId ? errorEntry.error : null;
+  const loading = !!userId && !data && !error;
 
   const refetch = () => setRefreshKey(k => k + 1);
 
   useEffect(() => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
+    if (!userId) return;
 
     // Ignore results that land after the modal switched to another user
     let cancelled = false;
 
     async function fetchProfile() {
-      setLoading(true);
-      setError(null);
+      setErrorEntry(null);
 
       try {
         // Phase 1 — the profile row alone. The header (avatar, name, score)
@@ -128,8 +132,7 @@ export function usePlayerProfile(userId: string | null) {
         };
 
         if (cancelled) return;
-        setData(base);
-        setLoading(false);
+        setEntry({ userId: userId!, data: base });
 
         // Phase 2 — everything else in parallel, merged in when it arrives
         const achievementsQ = supabase
@@ -249,7 +252,7 @@ export function usePlayerProfile(userId: string | null) {
         }
 
         if (cancelled) return;
-        setData({
+        setEntry({ userId: userId!, data: {
           ...base,
           achievements: achievements || [],
           trivias: trivias || [],
@@ -258,12 +261,13 @@ export function usePlayerProfile(userId: string | null) {
           isFriend,
           friendshipStatus,
           friendshipId,
-        });
+        } });
       } catch (err) {
         if (cancelled) return;
-        setError(err instanceof Error ? err : new Error("Failed to fetch profile"));
-      } finally {
-        if (!cancelled) setLoading(false);
+        setErrorEntry({
+          userId: userId!,
+          error: err instanceof Error ? err : new Error("Failed to fetch profile"),
+        });
       }
     }
 
