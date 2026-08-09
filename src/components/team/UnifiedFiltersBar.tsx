@@ -33,6 +33,9 @@ interface UnifiedFiltersBarProps<F extends string, S extends string> {
   onSearchQueryChange: (query: string) => void;
   onAddClick?: () => void;
   addButtonText?: string;
+  /** Inline variant for embedding in the tab row (no outer padding/width,
+      fixed-width search input, no add button). */
+  compact?: boolean;
 }
 
 export function UnifiedFiltersBar<F extends string, S extends string>({
@@ -46,6 +49,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
   onSearchQueryChange,
   onAddClick,
   addButtonText,
+  compact = false,
 }: UnifiedFiltersBarProps<F, S>) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { t } = useLanguage();
@@ -70,7 +74,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
     : undefined;
 
   return (
-    <div className="px-4 py-2 w-full max-w-full overflow-visible box-border">
+    <div className={compact ? "" : "px-4 py-2 w-full max-w-full overflow-visible box-border"}>
       <div className="flex items-center gap-1.5 w-full max-w-full">
         {/* Search button - left side */}
         <div className={isSearchOpen ? "flex-1" : "flex-shrink-0"}>
@@ -78,7 +82,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
             {isSearchOpen ? (
               <motion.div
                 initial={{ width: 0, opacity: 0 }}
-                animate={{ width: "100%", opacity: 1 }}
+                animate={{ width: compact ? 240 : "100%", opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 className="flex items-center gap-2 w-full"
               >
@@ -166,7 +170,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
 
             {/* Add button - right side (mobile only; on md+ the create button
                 lives in the tab row, aligned to the tabs) */}
-            {onAddClick && (
+            {onAddClick && !compact && (
               <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
