@@ -607,8 +607,8 @@ export const en: KaTranslations = {
   // Daily Rewards
   // ==========================================
   dailyRewards: {
-    title: "Daily Rewards",
-    subtitle: "Log in every day to get rewards!",
+    title: "Rewards",
+    subtitle: "Claim a reward every day",
     day: "Day {day}",
     today: "Today",
     claimed: "Claimed",

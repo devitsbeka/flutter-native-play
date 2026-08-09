@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Check, Lock, Flame, Clock, Crown } from "lucide-react";
-import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
+import { X, Check, Lock, Clock, Crown } from "lucide-react";
+import coinPurseIcon from "@/assets/icons/icon-coin-purse.png";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { useRewardTimers, useDailyRewardsClaim } from "@/hooks/useRewardTimers";
-import { GameModal } from "@/components/ui/game-modal";
 import confetti from "canvas-confetti";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
@@ -30,6 +29,21 @@ const dailyRewards = [
   { day: 7, coins: 300, gems: 5 },
 ];
 
+// Per-day card gradients: teal anchor into a different vivid end color each
+// day, like the Figma set (day 1 blue, day 2 purple, day 3 orange, ...)
+const DAY_GRADIENT_ENDS = [
+  "#0166F3", // 1 blue
+  "#CB01F3", // 2 purple
+  "#F39A01", // 3 orange
+  "#F3016B", // 4 rose
+  "#01B5F3", // 5 cyan
+  "#5B01F3", // 6 indigo
+  "#F3C401", // 7 gold
+];
+
+const cardGradient = (index: number) =>
+  `linear-gradient(215deg, #2AA671 15%, ${DAY_GRADIENT_ENDS[index % DAY_GRADIENT_ENDS.length]} 88%)`;
+
 const celebrateClaim = () => {
   confetti({
     particleCount: 100,
@@ -40,35 +54,23 @@ const celebrateClaim = () => {
   });
 };
 
-// Timer badge component
-const TimerBadge = ({ timeLeft }: { timeLeft: string }) => (
-  <div 
-    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-    style={{
-      background: "linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)",
-      boxShadow: "0 2px 0 #FCD34D",
-    }}
-  >
-    <Clock className="w-4 h-4 text-amber-600" />
-    <span className="text-sm font-bold text-amber-700 font-mono">{timeLeft}</span>
-  </div>
-);
-
-// Streak badge component
-const StreakBadge = ({ streak, t }: { streak: number; t: (key: string, params?: Record<string, string | number>) => string }) => (
-  <div className="flex items-center justify-center gap-2 mb-4">
-    <div 
-      className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-full px-4 py-2 flex items-center gap-2"
-      style={{ boxShadow: "0 3px 0 #D97706" }}
+// Salmon-pink reward pill from the Figma card (coin/gem icon + amount)
+function RewardPill({ icon, value }: { icon: string; value: number }) {
+  return (
+    <div
+      className="flex h-[46px] items-center gap-1.5 rounded-[16px] px-3"
+      style={{
+        background: "linear-gradient(180deg, #DC875F 0%, #D8518A 100%)",
+        border: "0.5px solid rgba(255,255,255,0.4)",
+      }}
     >
-      <Flame className="w-5 h-5 text-white" />
-      <span className="text-white font-bold text-lg">{streak} {t("missions.days")}</span>
+      <img src={icon} alt="" className="shrink-0" width={30} height={30} />
+      <span className="font-display text-lg font-black text-white">{value}</span>
     </div>
-  </div>
-);
+  );
+}
 
-// Day reward card component
-const DayRewardCard = ({
+function DayRewardCard({
   reward,
   index,
   currentDay,
@@ -84,7 +86,7 @@ const DayRewardCard = ({
   canClaim: boolean;
   onClaim: () => void;
   t: (key: string, params?: Record<string, string | number>) => string;
-}) => {
+}) {
   const isToday = index === currentDay;
   const isClaimed = index < currentDay || (index === currentDay && claimedToday);
   const isLocked = index > currentDay;
@@ -92,97 +94,62 @@ const DayRewardCard = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      onClick={isAvailable ? onClaim : undefined}
-      whileHover={isAvailable ? { scale: 1.05 } : {}}
-      whileTap={isAvailable ? { scale: 0.95 } : {}}
-      className={`
-        flex-shrink-0 w-[156px] rounded-2xl p-5 flex flex-col items-center justify-between snap-center
-        transition-all duration-300 relative overflow-hidden min-h-[182px]
-        ${isAvailable ? "cursor-pointer" : ""}
-      `}
+      transition={{ delay: index * 0.04 }}
+      className="relative flex h-[260px] w-[272px] flex-shrink-0 snap-center flex-col items-center justify-between rounded-[24px] px-3 py-6"
       style={{
-        background: isAvailable 
-          ? "linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)"
-          : isClaimed 
-          ? "linear-gradient(180deg, #D1FAE5 0%, #A7F3D0 100%)"
-          : "linear-gradient(180deg, #F3F4F6 0%, #E5E7EB 100%)",
-        boxShadow: isAvailable 
-          ? "0 4px 0 #D97706, 0 6px 16px rgba(245, 158, 11, 0.3)"
-          : isClaimed
-          ? "0 3px 0 #6EE7B7"
-          : "0 3px 0 #D1D5DB",
-        border: isAvailable ? "2px solid #FDE68A" : "2px solid transparent",
+        background: cardGradient(index),
+        border: "1.5px solid #D6399C",
+        filter: isLocked ? "saturate(0.55) brightness(1.02)" : undefined,
       }}
     >
       {/* Day label */}
-      <span
-        className={`text-base font-bold mb-2 ${
-          isAvailable ? "text-white" : isClaimed ? "text-emerald-700" : "text-gray-500"
-        }`}
-      >
+      <span className="font-display text-2xl font-bold text-white drop-shadow-sm">
         {t("dailyRewards.day", { day: reward.day })}
       </span>
 
-      {/* Reward content */}
-      <div className="flex flex-col items-center gap-2">
-        {isClaimed ? (
-          <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center" style={{ boxShadow: "0 2px 0 #059669" }}>
-            <Check className="w-8 h-8 text-white" />
-          </div>
-        ) : isLocked ? (
-          <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center" style={{ boxShadow: "0 2px 0 #9CA3AF" }}>
-            <Lock className="w-6 h-6 text-gray-400" />
-          </div>
-        ) : (
-          <>
-            <div className="flex items-center gap-2">
-              <img src={coinIcon} alt="coins" className="w-6 h-6" />
-              <span className={`text-lg font-bold ${isAvailable ? "text-white" : "text-gray-700"}`}>
-                {reward.coins}
-              </span>
-            </div>
-            {reward.gems > 0 && (
-              <div className="flex items-center gap-2">
-                <img src={gemIcon} alt="gems" className="w-6 h-6" />
-                <span className={`text-lg font-bold ${isAvailable ? "text-white" : "text-purple-600"}`}>
-                  +{reward.gems}
-                </span>
-              </div>
-            )}
-          </>
-        )}
+      {/* Reward pills */}
+      <div className="flex items-center gap-2">
+        <RewardPill icon={coinIcon} value={reward.coins} />
+        {reward.gems > 0 && <RewardPill icon={gemIcon} value={reward.gems} />}
       </div>
 
-      {/* Status indicator */}
-      <div className="mt-2 h-6">
-        {isAvailable && (
-          <motion.div
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-            className="text-sm font-bold text-amber-900 bg-white/30 rounded-full px-3 py-1"
-          >
-            {t("dailyRewards.claim")}
-          </motion.div>
-        )}
-      </div>
-
-      {/* Sparkle effect for available */}
-      {isAvailable && (
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          animate={{ opacity: [0.3, 0.6, 0.3] }}
-          transition={{ repeat: Infinity, duration: 2 }}
+      {/* Claim button / state */}
+      {isClaimed ? (
+        <div
+          className="flex h-[50px] w-[144px] items-center justify-center gap-1.5 rounded-[18px]"
+          style={{ background: "rgba(255,255,255,0.3)", border: "0.5px solid rgba(255,255,255,0.5)" }}
         >
-          <Sparkles className="absolute top-1 right-1 w-3 h-3 text-white/60" />
-          <Sparkles className="absolute bottom-2 left-1 w-2 h-2 text-white/40" />
-        </motion.div>
+          <Check className="h-5 w-5 text-white" />
+          <span className="text-base font-bold text-white">{t("dailyRewards.claimed")}</span>
+        </div>
+      ) : isLocked ? (
+        <div
+          className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
+          style={{ background: "rgba(255,255,255,0.25)", border: "0.5px solid rgba(255,255,255,0.4)" }}
+        >
+          <Lock className="h-5 w-5 text-white/80" />
+        </div>
+      ) : (
+        <motion.button
+          onClick={isAvailable ? onClaim : undefined}
+          disabled={!isAvailable}
+          whileTap={isAvailable ? { scale: 0.95 } : undefined}
+          animate={isAvailable ? { scale: [1, 1.04, 1] } : undefined}
+          transition={isAvailable ? { repeat: Infinity, duration: 1.6 } : undefined}
+          className="h-[50px] w-[144px] rounded-[18px] text-lg font-bold text-black disabled:opacity-60"
+          style={{
+            background: "linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(254,254,254,0.6) 100%)",
+            border: "0.5px solid #BFCDDE",
+          }}
+        >
+          {t("dailyRewards.claim")}
+        </motion.button>
       )}
     </motion.div>
   );
-};
+}
 
 export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: DailyRewardsModalProps) {
   const { t } = useLanguage();
@@ -190,13 +157,13 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
   const { playSound, vibrate } = useSound();
   const { canClaimDaily, dailyTimeLeft, refreshTimers } = useRewardTimers();
   const { claimDailyReward } = useDailyRewardsClaim();
-  const { isVip, getDailyRewardMultiplier, isProPlus } = useVipStatus();
+  const { getDailyRewardMultiplier, isProPlus } = useVipStatus();
   const [claimedToday, setClaimedToday] = useState(false);
   const [showFlyingCoins, setShowFlyingCoins] = useState(false);
   const [showFlyingGems, setShowFlyingGems] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const currentDay = Math.min(((currentStreak - 1) % 7), 6);
+  const currentDay = Math.min((currentStreak - 1) % 7, 6);
   const vipMultiplier = getDailyRewardMultiplier();
 
   // Sync claimed state with timer hook
@@ -204,11 +171,21 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
     setClaimedToday(!canClaimDaily);
   }, [canClaimDaily]);
 
+  // Escape dismisses the modal, same as backdrop and the X button
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
+
   // Scroll to center the current day when modal opens
   useEffect(() => {
     if (isOpen && scrollContainerRef.current) {
       const container = scrollContainerRef.current;
-      const cardWidth = 156 + 16; // w-[156px] + gap-4 (16px)
+      const cardWidth = 272 + 16; // w-[272px] + gap-4 (16px)
       const scrollPosition = currentDay * cardWidth - container.offsetWidth / 2 + cardWidth / 2;
       setTimeout(() => {
         container.scrollTo({ left: Math.max(0, scrollPosition), behavior: "smooth" });
@@ -220,11 +197,11 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
     if (claimedToday || !canClaimDaily) return;
 
     const reward = dailyRewards[currentDay];
-    
+
     // Apply VIP multiplier for PRO Plus users (+50% rewards)
     const finalCoins = Math.floor(reward.coins * vipMultiplier);
     const finalGems = Math.floor((reward.gems || 0) * vipMultiplier);
-    
+
     playSound("reward");
     vibrate([50, 30, 50]);
     celebrateClaim();
@@ -251,63 +228,93 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
     }, 1500);
   };
 
-  // Custom header icon
-  const headerIcon = (
-    <img src={giftBottleIcon} alt="" className="w-20 h-20 object-contain" />
-  );
-
   return (
     <>
-      <GameModal
-        isOpen={isOpen}
-        onClose={onClose}
-        fullScreen={false}
-        icon={headerIcon}
-        title={t("dailyRewards.title")}
-        subtitle={t("dailyRewards.subtitle")}
-        showSparkles
-        hideFooter
-      >
-        {/* Timer or Streak Badge */}
-        <div className="flex flex-col items-center gap-2 mb-4">
-          <StreakBadge streak={currentStreak} t={t} />
-          {!canClaimDaily && (
-            <TimerBadge timeLeft={dailyTimeLeft} />
-          )}
-          {/* VIP Bonus indicator for PRO Plus */}
-          {isProPlus() && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg">
-              <Crown className="w-4 h-4 text-white" />
-              <span className="text-sm font-bold text-white">{t("extra.vipBonusPercent")}</span>
-            </div>
-          )}
-        </div>
+      <AnimatePresence mode="wait">
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
+            onClick={onClose}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 24, scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 380, damping: 32 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-md overflow-hidden rounded-[24px] bg-white"
+              style={{ boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0,0,0,0.18)" }}
+            >
+              {/* Close */}
+              <button
+                onClick={onClose}
+                className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200"
+                style={{ boxShadow: "0 2px 0 #E5E7EB" }}
+                aria-label="close"
+              >
+                <X className="h-4 w-4 text-gray-600" />
+              </button>
 
-        {/* Rewards - Horizontal scroll */}
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5"
-          style={{ scrollSnapType: "x mandatory" }}
-        >
-          {dailyRewards.map((reward, index) => (
-            <DayRewardCard
-              key={reward.day}
-              reward={reward}
-              index={index}
-              currentDay={currentDay}
-              claimedToday={claimedToday}
-              canClaim={canClaimDaily}
-              onClaim={handleClaim}
-              t={t}
-            />
-          ))}
-        </div>
+              {/* Header: coin purse + title/subtitle */}
+              <div className="flex items-center gap-3 px-6 pt-6">
+                <img src={coinPurseIcon} alt="" className="h-[64px] w-[64px] object-contain" />
+                <div>
+                  <h2 className="font-display text-xl font-bold text-[#402666]">
+                    {t("dailyRewards.title")}
+                  </h2>
+                  <p className="mt-0.5 text-sm text-[#402666]/70">{t("dailyRewards.subtitle")}</p>
+                </div>
+              </div>
 
-        {/* Hint */}
-        <p className="text-center text-muted-foreground text-xs mt-3">
-          {t("missions.swipeHint")}
-        </p>
-      </GameModal>
+              {/* Day cards — next card peeks in from the right */}
+              <div
+                ref={scrollContainerRef}
+                className="scrollbar-hide mt-6 flex gap-4 overflow-x-auto px-6 pb-2"
+                style={{ scrollSnapType: "x mandatory" }}
+              >
+                {dailyRewards.map((reward, index) => (
+                  <DayRewardCard
+                    key={reward.day}
+                    reward={reward}
+                    index={index}
+                    currentDay={currentDay}
+                    claimedToday={claimedToday}
+                    canClaim={canClaimDaily}
+                    onClaim={handleClaim}
+                    t={t}
+                  />
+                ))}
+              </div>
+
+              {/* Next-claim timer + VIP bonus */}
+              <div className="flex min-h-[46px] items-center justify-center gap-2 px-6 pb-5 pt-2">
+                {!canClaimDaily && (
+                  <div
+                    className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
+                    style={{
+                      background: "linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)",
+                      boxShadow: "0 2px 0 #FCD34D",
+                    }}
+                  >
+                    <Clock className="h-4 w-4 text-amber-600" />
+                    <span className="font-mono text-sm font-bold text-amber-700">{dailyTimeLeft}</span>
+                  </div>
+                )}
+                {isProPlus() && (
+                  <div className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-1.5">
+                    <Crown className="h-4 w-4 text-white" />
+                    <span className="text-sm font-bold text-white">{t("extra.vipBonusPercent")}</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Flying Currency Animations - outside modal for proper z-index */}
       <AnimatePresence>
