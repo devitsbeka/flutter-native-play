@@ -286,10 +286,8 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
       setUploadedImage(dataUrl);
       setStep("upload");
       
-      // Reset input for iOS Safari (allows selecting same file again)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      // Reset the input that fired (allows selecting the same file again)
+      e.target.value = "";
     } catch (error) {
       console.error("Error processing image:", error);
       toast.error(t("errors.failedToReadImage") || "Failed to process image");
@@ -947,12 +945,17 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                   <span className="text-xs text-muted-foreground">{t("avatar.takeSelfie")}</span>
                 </motion.button>
 
-                <motion.label
-                  htmlFor="avatar-file-input"
-                  className={`flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isProcessingFile ? 'opacity-50 pointer-events-none' : ''}`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <div
+                  className={`relative flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isProcessingFile ? 'opacity-50' : ''}`}
                 >
+                  <input
+                    type="file"
+                    accept="image/*,.heic,.heif"
+                    onChange={handleFileSelect}
+                    disabled={isProcessingFile}
+                    aria-label={t("avatar.uploadPhoto")}
+                    className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 file:cursor-pointer"
+                  />
                   {isProcessingFile ? (
                     <>
                       <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -968,7 +971,7 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                       <span className="text-xs text-muted-foreground">{t("avatar.uploadPhoto")}</span>
                     </>
                   )}
-                </motion.label>
+                </div>
               </div>
             </>
           )}
@@ -993,23 +996,29 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                 scene, then the generated ones. */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {isLimitReached ? (
-                <motion.button
+                <button
+                  type="button"
                   onClick={() => toast.error(t("extra.avatarMaxGenReachedShort"))}
                   className="aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 opacity-50"
                 >
                   <Plus className="w-6 h-6 text-primary" />
                   <span className="text-xs text-muted-foreground">{t("avatar.newScene")}</span>
-                </motion.button>
+                </button>
               ) : (
-                <motion.label
-                  htmlFor="avatar-file-input"
-                  className={`aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isLoading || isProcessingFile ? "opacity-50 pointer-events-none" : ""}`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <div
+                  className={`relative aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isLoading || isProcessingFile ? "opacity-50" : ""}`}
                 >
+                  <input
+                    type="file"
+                    accept="image/*,.heic,.heif"
+                    onChange={handleFileSelect}
+                    disabled={isLoading || isProcessingFile}
+                    aria-label={t("avatar.newScene")}
+                    className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 file:cursor-pointer"
+                  />
                   <Plus className="w-6 h-6 text-primary" />
                   <span className="text-xs text-muted-foreground">{t("avatar.newScene")}</span>
-                </motion.label>
+                </div>
               )}
               <motion.button
                 onClick={selectDefaultScene}

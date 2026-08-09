@@ -17,6 +17,7 @@ import { LevelUpModal } from "@/components/home/LevelUpModal";
 import { MissionsModal } from "@/components/home/MissionsModal";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
+import { AvatarModal } from "@/components/home/AvatarModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 
 // Assets for preview screens
@@ -45,6 +46,7 @@ const MODALS = [
   { id: "missions", name: "Missions Modal" },
   { id: "daily-rewards", name: "Daily Rewards Modal" },
   { id: "chest-reward", name: "Chest Reward Modal" },
+  { id: "avatar-studio", name: "Avatar Studio Modal" },
   // Notifications
   { id: "notification-success", name: "Notification: Success" },
   { id: "notification-error", name: "Notification: Error" },
@@ -250,7 +252,12 @@ const PreviewLoseScreen = ({ onClose }: { onClose: () => void }) => (
 
 export default function ModalsShowcase() {
   const navigate = useNavigate();
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Deep-link a specific modal for quick dev/testing: /modals?modal=<id>
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    const id = new URLSearchParams(window.location.search).get("modal");
+    const i = MODALS.findIndex((m) => m.id === id);
+    return i >= 0 ? i : 0;
+  });
   const [isModalOpen, setIsModalOpen] = useState(true);
   
   const currentModal = MODALS[currentIndex];
@@ -418,6 +425,13 @@ export default function ModalsShowcase() {
           />
         );
       
+      case "avatar-studio":
+        return (
+          <AvatarModal
+            isOpen={isModalOpen}
+            onClose={handleClose}
+          />
+        );
       case "chest-reward":
         return (
           <ChestRewardModal 
