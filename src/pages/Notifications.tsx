@@ -45,35 +45,50 @@ export default function Notifications() {
 
   const dateLocale = language === 'ka' ? ka : enUS;
 
-  // Tab category mapping
-  const TAB_TYPES: Record<'games' | 'social' | 'trivia', string[]> = {
-    games: ['room_invite', 'game_started', 'challenge', 'game_result', 'room_ping'],
-    social: ['friend_request', 'friend_accepted'],
-    trivia: ['trivia_liked', 'trivia_saved', 'trivia_played'],
-  };
+  // Tab category mapping. Games is the CATCH-ALL: any type not explicitly
+  // social or trivia lands there (rewards, level-ups, system, messages...).
+  // With fixed per-tab lists, unlisted types were invisible AND never got
+  // marked read — the bell badge could never clear.
+  const SOCIAL_TYPES = ['friend_request', 'friend_accepted'];
+  const TRIVIA_TYPES = ['trivia_liked', 'trivia_saved', 'trivia_played'];
+  const typeInTab = useCallback(
+    (type: string, tab: 'games' | 'social' | 'trivia') =>
+      tab === 'social'
+        ? SOCIAL_TYPES.includes(type)
+        : tab === 'trivia'
+          ? TRIVIA_TYPES.includes(type)
+          : !SOCIAL_TYPES.includes(type) && !TRIVIA_TYPES.includes(type),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   // Filter notifications by active tab
   const filteredNotifications = useMemo(() => {
-    return notifications.filter(n => TAB_TYPES[activeTab].includes(n.type));
-  }, [notifications, activeTab]);
+    return notifications.filter(n => typeInTab(n.type, activeTab));
+  }, [notifications, activeTab, typeInTab]);
 
   // Get unread count per tab
   const getUnreadCount = (tab: 'games' | 'social' | 'trivia') => {
-    return notifications.filter(n => 
-      TAB_TYPES[tab].includes(n.type) && !n.read_at
-    ).length;
+    return notifications.filter(n => typeInTab(n.type, tab) && !n.read_at).length;
   };
 
   // Mark only current tab's notifications as read
   const markTabAsRead = useCallback(async (tab: 'games' | 'social' | 'trivia') => {
-    const unreadInTab = notifications.filter(n => 
-      TAB_TYPES[tab].includes(n.type) && !n.read_at
-    );
-    
+    const unreadInTab = notifications.filter(n => typeInTab(n.type, tab) && !n.read_at);
+    if (unreadInTab.length === 0) return;
+
+    // Fast path: when the tab holds every unread notification, one query
+    // clears them all instead of a round-trip per row
+    const totalUnread = notifications.filter(n => !n.read_at).length;
+    if (unreadInTab.length === totalUnread) {
+      await markAllAsRead();
+      return;
+    }
+
     for (const notification of unreadInTab) {
       await markAsRead(notification.id);
     }
-  }, [notifications, markAsRead]);
+  }, [notifications, markAsRead, markAllAsRead, typeInTab]);
 
   // Mark notifications as read when switching to a tab (with delay so user sees badge first)
   useEffect(() => {
