@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -38,6 +38,9 @@ interface BoardEntry {
 function useFunLeaderboard(scope: Scope, countryCode?: string | null) {
   return useQuery({
     queryKey: ["fun-leaderboard", scope, scope === "local" ? countryCode : null],
+    // Keep the outgoing scope's rows rendered while the new scope loads, so
+    // the tab switch animates as a re-arrangement instead of a blank flash
+    placeholderData: keepPreviousData,
     queryFn: async (): Promise<BoardEntry[]> => {
       let query = supabase
         .from("profiles")
@@ -157,9 +160,13 @@ function BoardRow({
   const flag = entry.country_code ? getCountryFlag(entry.country_code) : "";
   return (
     <motion.button
-      initial={{ opacity: 0, y: 8 }}
+      // layout keys the FLIP re-arrangement on tab switches: rows that stay
+      // glide to their new rank, newcomers rise in from below, leavers drop
+      layout
+      initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(entry.rank * 0.02, 0.4) }}
+      exit={{ opacity: 0, y: 60, scale: 0.96 }}
+      transition={{ type: "spring", stiffness: 320, damping: 30 }}
       onClick={() => !isMe && onOpenProfile(entry.user_id)}
       className={`w-full flex items-center gap-2.5 rounded-[18px] pl-2 pr-4 py-2 text-left ${
         isMe ? "" : "hover:brightness-105 active:scale-[0.99]"
@@ -403,7 +410,7 @@ export default function Leaderboards() {
           <div className="flex-1 min-h-0 rounded-[28px] px-3.5 flex flex-col">
             <div
               ref={listRef}
-              className="flex-1 min-h-0 overflow-y-auto scrollbar-hide space-y-3 py-4"
+              className="flex-1 min-h-0 overflow-y-auto scrollbar-hide flex flex-col gap-3 py-4"
               style={{
                 maskImage:
                   "linear-gradient(to bottom, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)",
@@ -421,15 +428,17 @@ export default function Leaderboards() {
                   <p className="text-slate-500 text-sm mt-1">{t("leaderboard.beTheFirst")}</p>
                 </div>
               ) : (
-                entries.map((entry) => (
-                  <BoardRow
-                    key={entry.user_id}
-                    entry={entry}
-                    isMe={entry.user_id === user?.id}
-                    onOpenProfile={openProfile}
-                    youLabel={`${profile?.nickname || t("leaderboard.you")}`}
-                  />
-                ))
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {entries.map((entry) => (
+                    <BoardRow
+                      key={entry.user_id}
+                      entry={entry}
+                      isMe={entry.user_id === user?.id}
+                      onOpenProfile={openProfile}
+                      youLabel={`${profile?.nickname || t("leaderboard.you")}`}
+                    />
+                  ))}
+                </AnimatePresence>
               )}
             </div>
 
