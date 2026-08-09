@@ -70,7 +70,7 @@ function DealCard({
 
   return (
     <div
-      className="relative flex min-h-[290px] flex-col overflow-hidden rounded-[24px] p-4 sm:p-5 text-white"
+      className="relative flex min-h-[246px] flex-col overflow-hidden rounded-[24px] p-4 sm:p-5 text-white"
       style={{ background: gradient }}
     >
       {/* soft highlight blob so the card doesn't read flat */}
@@ -100,7 +100,7 @@ function DealCard({
 
       {/* Middle block (name + discount + contents) floats centered — both
           axes — in the space between the header and the price row */}
-      <div className="relative flex flex-1 flex-col items-center justify-center gap-3">
+      <div className="relative flex flex-1 flex-col items-center justify-center gap-5">
       <div className="flex items-center justify-center gap-2 text-center">
         <h3 className="font-display text-lg font-bold leading-none">{t(deal.nameKey)}</h3>
         <span
