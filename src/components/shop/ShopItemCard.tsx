@@ -223,7 +223,7 @@ export function ShopItemCard({
         )}
 
         {/* Price / Status - Bottom (buy button is the only clickable part) */}
-        <div className="mt-auto w-full flex flex-col items-center gap-0.5">{actionBlock}</div>
+        <div className="mt-auto mb-2.5 w-full flex flex-col items-center gap-0.5">{actionBlock}</div>
       </div>
     </div>
   );
