@@ -1004,8 +1004,6 @@ export default function Index() {
                 });
               }
             }}
-            onFacebook={() => navigate("/auth?mode=signup")}
-            onSms={() => navigate("/auth?mode=signup")}
             onEmailContinue={(email) =>
               navigate(email ? `/auth?mode=signup&email=${encodeURIComponent(email)}` : "/auth?mode=signup")
             }
