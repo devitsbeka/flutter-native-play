@@ -42,6 +42,7 @@ import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { Input } from "@/components/ui/input";
 import { SearchHorizontalLists } from "./SearchHorizontalLists";
 import { usePlayGuard } from "@/contexts/PlayGuardContext";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 
 interface SpotlightSearchProps {
   className?: string;
@@ -73,6 +74,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
   const inputRef = React.useRef<HTMLInputElement>(null);
   const mobileInputRef = React.useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { openProfile } = usePlayerProfile();
   const { signOut } = useAuth();
   const { guardPlay } = usePlayGuard();
   const { t } = useLanguage();
@@ -240,10 +242,12 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
     navigate(`/category/${categoryId}`);
   };
 
-  // Handle friend select
+  // Handle friend select — open the profile modal directly over the
+  // current page; routing to /profile/:id swaps the page for a Suspense
+  // skeleton while the lazy route chunk loads
   const handleFriendSelect = (friendId: string) => {
     handleOpenChange(false);
-    navigate(`/profile/${friendId}`);
+    openProfile(friendId);
   };
 
   // Handle room select

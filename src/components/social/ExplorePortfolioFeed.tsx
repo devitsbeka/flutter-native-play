@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Loader2, Users } from "lucide-react";
 import { usePlayerFeedItems } from "@/hooks/usePlayerFeedItems";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useExploreCreators } from "@/hooks/useExploreCreators";
 import { PlayerFeedItem } from "./PlayerFeedItem";
 import { CreatorPortfolioCard } from "./CreatorPortfolioCard";
@@ -51,6 +52,7 @@ export function ExplorePortfolioFeed({
 }: ExplorePortfolioFeedProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { openProfile } = usePlayerProfile();
   const isMobile = useIsMobileViewport();
 
   // Searching in Explore also finds PLAYERS by nickname, not just posts
@@ -136,7 +138,7 @@ export function ExplorePortfolioFeed({
         {matchedPlayers.map((player) => (
           <button
             key={player.user_id}
-            onClick={() => navigate(`/profile/${player.user_id}`)}
+            onClick={() => openProfile(player.user_id)}
             className="flex flex-col items-center gap-1.5 flex-shrink-0 w-20 focus:outline-none"
           >
             <SafeAvatar
