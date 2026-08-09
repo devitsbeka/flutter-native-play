@@ -122,16 +122,16 @@ export function DealCard({
       <div className="flex flex-wrap items-center justify-center gap-1.5">
         {deal.contents.vip && (
           <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 text-xs font-bold backdrop-blur-[2px]">
-            <img src={proLogoIcon} alt="" className="h-6 w-6 object-contain" />
+            <img src={proLogoIcon} alt="" className="h-7 w-7 object-contain" />
             {deal.contents.vip === "week" ? t("shop.vipWeek") : t("shop.vipDay")}
           </span>
         )}
         <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 text-xs font-bold backdrop-blur-[2px]">
-          <img src={powersIcon} alt="" className="h-6 w-6 object-contain" />
+          <img src={powersIcon} alt="" className="h-7 w-7 object-contain" />
           {deal.contents.powers}× {t("shop.allPowers")}
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 text-xs font-bold backdrop-blur-[2px]">
-          <img src={coinIcon} alt="" className="h-6 w-6 object-contain" />
+          <img src={coinIcon} alt="" className="h-7 w-7 object-contain" />
           {deal.contents.coins.toLocaleString()}
         </span>
       </div>
@@ -144,7 +144,7 @@ export function DealCard({
             <img
               src={gemIcon}
               alt=""
-              className="h-4 w-4 object-contain opacity-80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]"
+              className="h-[18px] w-[18px] object-contain opacity-80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]"
             />
             {deal.wasPrice}
           </span>
@@ -152,7 +152,7 @@ export function DealCard({
             <img
               src={gemIcon}
               alt=""
-              className="h-6 w-6 object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]"
+              className="h-7 w-7 object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]"
             />
             {deal.price}
           </span>
