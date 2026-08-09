@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import { ShopSection, ShopItem } from "@/hooks/useShopData";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ShopProductGrid } from "./ShopProductGrid";
-import { MobileProCarousel } from "./MobileProCarousel";
+import { MobileProCarousel, DesktopProBanners } from "./MobileProCarousel";
 import { MyPowersSection } from "./MyPowersSection";
 import { DailyDealsRow } from "./DailyDealsRow";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
@@ -59,21 +59,21 @@ export function ShopStandardLayout({
     await onItemClick(item);
   };
 
-  // Filter out frames section
-  const displaySections = sections.filter(section => section.id !== "frames");
+  // Frames stay hidden; the ×3 powers packs section is gone — individual
+  // powers are already purchasable in My Powers right above it
+  const displaySections = sections.filter(
+    (section) => section.id !== "frames" && section.id !== "powers"
+  );
 
   return (
     <div className="flex-1 pb-8">
-      {/* შეთავაზებები opens the page: one title over the whole deals group
-          (PRO banner + rotating daily/hourly bundles), then My Powers etc. */}
-      <div className="relative z-10 mx-3 sm:mx-4 mt-4 flex items-center px-1">
+      {/* შეთავაზებები opens the page. Phones: one swipeable reel holds every
+          banner (deals, invite, PRO tiers). md+: the two PRO tiers open the
+          page and the deals grid re-appears after the coins section. */}
+      <div className="relative z-10 mx-3 sm:mx-4 mt-4 mb-3 flex items-center px-1">
         <h2 className="text-lg md:text-xl font-display font-bold text-foreground">{t("shop.deals")}</h2>
       </div>
 
-      {/* Phones: one swipeable reel holds every banner (daily deal, hourly
-          deal, invite, Solo PRO, Family PRO) with dot indicators. md+ keeps
-          the side-by-side deals grid; the PRO banner lives in the desktop
-          sidebar. */}
       <div className="md:hidden">
         <MobileProCarousel
           purchasedItems={purchasedItems}
@@ -83,12 +83,7 @@ export function ShopStandardLayout({
       </div>
 
       <div className="hidden md:block">
-        <DailyDealsRow
-          hideTitle
-          purchasedItems={purchasedItems}
-          isPurchasing={isPurchasing}
-          onItemClick={handleItemClick}
-        />
+        <DesktopProBanners />
       </div>
 
       {/* My Powers Section - individual purchase */}
@@ -100,7 +95,8 @@ export function ShopStandardLayout({
         onCardClick={onPowerCardClick}
       />
 
-      {/* Product Sections */}
+      {/* Product Sections — on md+ the rotating deals grid slots in right
+          after the coins section */}
       {displaySections.map((section) => (
         <div
           key={section.id}
@@ -118,6 +114,15 @@ export function ShopStandardLayout({
             isFrameUnlocked={isFrameUnlocked}
             onItemClick={handleItemClick}
           />
+          {section.id === "coins" && (
+            <div className="hidden md:block">
+              <DailyDealsRow
+                purchasedItems={purchasedItems}
+                isPurchasing={isPurchasing}
+                onItemClick={handleItemClick}
+              />
+            </div>
+          )}
         </div>
       ))}
 
