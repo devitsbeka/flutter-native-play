@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Check, Sparkles, Star } from "lucide-react";
 import coinIcon from "@/assets/icons/icon-coin.png";
@@ -16,6 +17,25 @@ import { TimeIcon } from "@/components/shared/TimeIcon";
 interface MissionsModalProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+// Where the CTA takes the player to actually work on a mission: category
+// missions go to discover, friend missions open the create-room flow, the TV
+// mission opens a room with TV mode pre-toggled, everything else (play, win,
+// answers, perfect) starts from the "how do you want to play" chooser.
+function missionDestination(missionId: string): { to: string; state?: Record<string, unknown> } {
+  switch (missionId) {
+    case "play_categories":
+    case "weekly_categories":
+      return { to: "/discover" };
+    case "play_friend":
+    case "weekly_friend_games":
+      return { to: "/team", state: { openCreateRoom: true } };
+    case "play_tv":
+      return { to: "/team", state: { openTV: true } };
+    default:
+      return { to: "/", state: { openPlayOptions: true } };
+  }
 }
 
 const POWER_UP_ICONS: Record<string, string | null> = {
@@ -145,6 +165,7 @@ function MissionCard({ mission, t }: { mission: Mission; t: (key: string) => str
 
 export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const { dailyMissions, weeklyMissions, loading } = useMissions();
   const { currentStreak } = useMissionStreak();
   const [activeTab, setActiveTab] = useState<"daily" | "weekly">("daily");
@@ -304,9 +325,15 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                 </div>
               )}
 
-              {/* Continue */}
+              {/* Start / continue — routes to where this mission is played */}
               <motion.button
-                onClick={onClose}
+                onClick={() => {
+                  onClose();
+                  if (mission && !mission.completed) {
+                    const dest = missionDestination(mission.mission_id);
+                    navigate(dest.to, dest.state ? { state: dest.state } : undefined);
+                  }
+                }}
                 whileTap={{ scale: 0.97, y: 2 }}
                 className="mt-4 h-12 w-full rounded-full font-display text-base font-bold text-white"
                 style={{
@@ -315,7 +342,9 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                   boxShadow: "0 4px 0 0 #D6427F, inset 0 1.5px 0 0 rgba(255,255,255,0.4)",
                 }}
               >
-                {t("missions.continueBtn")}
+                {mission && !mission.completed && mission.current_progress === 0
+                  ? t("missions.startBtn")
+                  : t("missions.continueBtn")}
               </motion.button>
             </div>
           </motion.div>

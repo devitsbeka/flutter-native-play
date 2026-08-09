@@ -104,6 +104,15 @@ function TeamContentV2() {
       setShowCreateModal(true);
       navigate(location.pathname, { replace: true, state: {} });
     }
+    if (location.state?.openTV) {
+      // Mission CTA for "play on TV": create the room and land in the lobby
+      // with TV mode already toggled on (same flow as the sidebar TV button)
+      navigate(location.pathname, { replace: true, state: {} });
+      void gateWithRewardedAd(async () => {
+        const room = await createRoom();
+        if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
+      });
+    }
     if (location.state?.openTrivia) {
       setShowCreateQuizModal(true);
       navigate(location.pathname, { replace: true, state: {} });

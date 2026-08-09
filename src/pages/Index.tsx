@@ -277,6 +277,17 @@ export default function Index() {
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showPlayOptions, setShowPlayOptions] = useState(false);
 
+  // Mission CTA landing: the missions modal routes play-type missions here
+  // with openPlayOptions so the "how do you want to play" chooser opens
+  useEffect(() => {
+    if (!location.state?.openPlayOptions) return;
+    navigate(location.pathname, { replace: true, state: {} });
+    if (user) {
+      setShowMissionsModal(false);
+      setShowPlayOptions(true);
+    }
+  }, [location.state, location.pathname, navigate, user]);
+
   // Show welcome onboarding for newly signed-up users (works for all signup paths)
   useEffect(() => {
     if (

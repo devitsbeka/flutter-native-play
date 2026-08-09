@@ -639,6 +639,7 @@ export const ka = {
     progress: "პროგრესი",
     completedLabel: "შესრულებული",
     continueBtn: "გაგრძელება",
+    startBtn: "დაწყება",
     claimReward: "მიიღე ჯილდო",
     claimed: "აღებულია",
     received: "მიღებულია!",

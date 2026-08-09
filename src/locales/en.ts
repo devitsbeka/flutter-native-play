@@ -641,6 +641,7 @@ export const en: KaTranslations = {
     progress: "Progress",
     completedLabel: "Completed",
     continueBtn: "Continue",
+    startBtn: "Start",
     claimReward: "Claim Reward",
     claimed: "Claimed",
     received: "Received!",
