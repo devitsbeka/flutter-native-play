@@ -9,8 +9,7 @@ import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
-import bubbleBgVideo from "@/assets/shopbg.mp4";
-import bubbleBgVideoWebm from "@/assets/shopbg.webm";
+import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 import { createNotification } from "@/hooks/useNotifications";
 // Room names are AI-generated via edge function during room creation
 import { TVPlayModal } from "@/components/team/TVPlayModal";
@@ -111,6 +110,7 @@ interface CreateRoomPageProps {
 export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, autoOpenPersonalTrivia, preSelectedCategory }: CreateRoomPageProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
+  const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -837,10 +837,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           playsInline
           className="h-full w-full object-cover"
         >
-          <source src={bubbleBgVideoWebm} type="video/webm" />
-          <source src={bubbleBgVideo} type="video/mp4" />
+          <source src={bubbleVideo.webm} type="video/webm" />
+          <source src={bubbleVideo.mp4} type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-[rgba(252,247,255,0.7)]" />
+        {/* Same soft wash the global background uses, so the blobs stay subtle */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(249,219,255,0.5) 0%, rgba(249,219,255,0.3) 45%, rgba(249,219,255,0.5) 100%)",
+          }}
+        />
       </div>
 
       {/* Header - simplified */}
