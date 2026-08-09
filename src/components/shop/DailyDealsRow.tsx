@@ -120,19 +120,19 @@ export function DealCard({
 
       {/* Bundle contents: PRO time + powers + coins — centered */}
       {/* Always a single line — chips never wrap to a second row */}
-      <div className="flex flex-nowrap items-center justify-center gap-1.5">
+      <div className="flex flex-nowrap items-center justify-center gap-2">
         {deal.contents.vip && (
-          <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-white/20 px-2.5 py-2 text-xs font-bold backdrop-blur-[2px]">
-            <img src={proLogoIcon} alt="" className="h-7 w-7 object-contain" />
+          <span className="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-white/20 px-3.5 text-xs font-bold leading-none backdrop-blur-[2px]">
+            <img src={proLogoIcon} alt="" className="h-7 w-7 shrink-0 object-contain" />
             {deal.contents.vip === "week" ? t("shop.vipWeek") : t("shop.vipDay")}
           </span>
         )}
-        <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-white/20 px-2.5 py-2 text-xs font-bold backdrop-blur-[2px]">
-          <img src={powersIcon} alt="" className="h-7 w-7 object-contain" />
+        <span className="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-white/20 px-3.5 text-xs font-bold leading-none backdrop-blur-[2px]">
+          <img src={powersIcon} alt="" className="h-7 w-7 shrink-0 object-contain" />
           {deal.contents.powers}× {t("shop.allPowers")}
         </span>
-        <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-white/20 px-2.5 py-2 text-xs font-bold backdrop-blur-[2px]">
-          <img src={coinIcon} alt="" className="h-7 w-7 object-contain" />
+        <span className="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-white/20 px-3.5 text-xs font-bold leading-none backdrop-blur-[2px]">
+          <img src={coinIcon} alt="" className="h-7 w-7 shrink-0 object-contain" />
           {deal.contents.coins.toLocaleString()}
         </span>
       </div>
