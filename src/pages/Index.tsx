@@ -57,14 +57,15 @@ import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
 import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
 import { oauth } from "@/integrations/oauth";
 
-// The scene background only shows on xl+ — mounting the <video>/<img> at all
-// sizes made phones/tablets download megabytes of media that CSS then hid.
-function useIsXlViewport(): boolean {
+// The scene background only shows on lg+ (desktop + tablet landscape) —
+// mounting the <video>/<img> at all sizes made phones download megabytes of
+// media that CSS then hid.
+function useIsSceneViewport(): boolean {
   const [isXl, setIsXl] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1280px)").matches
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches
   );
   useEffect(() => {
-    const mql = window.matchMedia("(min-width: 1280px)");
+    const mql = window.matchMedia("(min-width: 1024px)");
     const onChange = (e: MediaQueryListEvent) => setIsXl(e.matches);
     mql.addEventListener("change", onChange);
     return () => mql.removeEventListener("change", onChange);
@@ -643,7 +644,7 @@ export default function Index() {
   // Anyone without their own generated scene — guests and logged-in users
   // alike, even with custom avatars — gets the default Trivia King loop.
   const { data: userScene, isLoading: sceneLoading } = useUserScene(user?.id);
-  const isXlViewport = useIsXlViewport();
+  const isSceneViewport = useIsSceneViewport();
   const sceneUrl = userScene?.imageUrl || null;
   const sceneVideoUrl = userScene?.videoUrl || null;
   const showDefaultScene = !sceneUrl && !(user && sceneLoading);
@@ -824,7 +825,7 @@ export default function Index() {
             layer, not here — background layers never receive them.
             Mounted only when the viewport is actually xl, so smaller
             screens never download the media. */}
-        {!isXlViewport ? null : sceneUrl && sceneVideoUrl ? (
+        {!isSceneViewport ? null : sceneUrl && sceneVideoUrl ? (
           /* Seamless idle-loop video generated from the scene — poster keeps
              the still visible until the video is ready to play */
           <motion.video
@@ -837,7 +838,7 @@ export default function Index() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="hidden xl:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
+            className="hidden lg:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
           />
         ) : sceneUrl ? (
           <motion.img
@@ -846,7 +847,7 @@ export default function Index() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="hidden xl:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
+            className="hidden lg:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
             draggable={false}
           />
         ) : showDefaultScene ? (
@@ -859,7 +860,7 @@ export default function Index() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="hidden xl:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
+            className="hidden lg:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
           />
         ) : null}
         <header className="relative z-20 px-4 py-3 md:pt-4 safe-top border-b border-border/30 lg:border-b-0">
@@ -992,7 +993,7 @@ export default function Index() {
           {/* Action Cards - Fixed Right Side Panel (Desktop only) */}
           {user && (
             <motion.div 
-              className="hidden lg:flex xl:hidden fixed right-4 lg:right-6 top-20 z-20 pointer-events-auto"
+              className="hidden fixed right-4 top-20 z-20 pointer-events-auto"
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2, type: "spring" }}
@@ -1020,7 +1021,7 @@ export default function Index() {
                     button. On xl+ the guest gets the same scene layout as
                     logged-in users (guest-adapted), so this hero hides. */}
                 <motion.div
-                  className="hidden md:flex xl:hidden flex-col items-center justify-center w-full h-full pointer-events-auto"
+                  className="hidden md:flex lg:hidden flex-col items-center justify-center w-full h-full pointer-events-auto"
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.5, type: "spring" }}
@@ -1128,7 +1129,7 @@ export default function Index() {
             {/* xl+ layout: Cards moved to fixed right side */}
 
             {/* md to xl layout: Avatar centered (cards now fixed on right side) - LOGGED IN USERS ONLY */}
-            {user && <div className="hidden md:flex xl:hidden items-center justify-center w-full h-full px-4 lg:-ml-[170px]">
+            {user && <div className="hidden md:flex lg:hidden items-center justify-center w-full h-full px-4">
               {/* Avatar + Info. Below lg the action bubbles hang 75px above the
                   avatar (top: -75); pad the centered block so they stay inside
                   this overflow-hidden area instead of clipping under the
@@ -1360,7 +1361,7 @@ export default function Index() {
                 interaction routes to auth. */}
             {(sceneUrl || showDefaultScene) && (
               <motion.div
-                className="hidden xl:block w-full h-full pr-[300px] pointer-events-none"
+                className="hidden lg:block w-full h-full pr-[280px] xl:pr-[300px] pointer-events-none"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
@@ -1388,7 +1389,7 @@ export default function Index() {
                 invitation, continue-playing categories, quick play */}
             {user && (sceneUrl || showDefaultScene) && (
               <motion.div
-                className="hidden xl:block absolute right-[28px] top-[53px] z-20 pointer-events-auto"
+                className="hidden lg:block absolute right-3 xl:right-[28px] top-[53px] z-20 pointer-events-auto"
                 initial={{ opacity: 0, x: 16 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3, type: "spring" }}
@@ -1399,7 +1400,7 @@ export default function Index() {
 
             {/* xl+ scene: guest auth CTAs floating above the play button */}
             {!user && showDefaultScene && (
-              <div className="hidden xl:flex absolute bottom-[17%] left-1/2 -translate-x-1/2 z-20 items-center gap-3 pointer-events-auto">
+              <div className="hidden lg:flex absolute bottom-[17%] left-1/2 -translate-x-1/2 z-20 items-center gap-3 pointer-events-auto">
                 <motion.button
                   onClick={() => navigate("/auth")}
                   className="px-5 py-2.5 rounded-full bg-white border border-border shadow-md text-sm font-semibold text-foreground"
@@ -1423,7 +1424,7 @@ export default function Index() {
                 users play via the sidebar's quick-play button (Figma
                 601:1104 has no centered button) */}
             {!user && (sceneUrl || showDefaultScene) && (
-              <div className="hidden xl:block absolute bottom-[6%] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+              <div className="hidden lg:block absolute bottom-[6%] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
                 <DesktopPlayButtonLarge
                   onClick={handlePlayClick}
                   playsRemaining={user ? playsRemaining : guestPlaysRemaining}
@@ -1439,7 +1440,7 @@ export default function Index() {
             {/* xl+ layout: Avatar centered - only while the scene query is
                 still loading (any resolved state shows a scene now) */}
             {user && !sceneUrl && !showDefaultScene && <motion.div
-              className="hidden xl:flex flex-col items-center justify-center w-full h-full px-4 -ml-[170px]"
+              className="hidden lg:flex flex-col items-center justify-center w-full h-full px-4 -ml-[170px]"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
