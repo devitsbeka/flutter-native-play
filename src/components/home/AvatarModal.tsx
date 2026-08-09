@@ -20,7 +20,7 @@ import { t } from "@/lib/i18n";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { generatePublicPortrait } from "@/utils/portraitAvatar";
+import { generateAndRecordPortrait } from "@/utils/portraitAvatar";
 import { SCENE_ANIMATION_PROMPT } from "@/config/sceneAnimationPrompt";
 
 // Import mascot avatars
@@ -441,11 +441,11 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
       const finalUrl = urlData.publicUrl;
 
-      // The public circle avatar starts as the uploaded photo so the apply
-      // is instant; the mini stylized portrait is a SECOND AI generation
-      // (~1-2 minutes), so it runs in the background after the modal closes
-      // and swaps in quietly when ready.
-      let profileAvatarUrl: string | null = null;
+      // The raw photo is kept only as the generation's source record — it is
+      // never published as the public avatar. The circle keeps the previous
+      // avatar until the stylized portrait (generated FROM THE SCENE, so it
+      // matches the character and art style) lands a minute later.
+      let sourcePhotoUrl: string | null = null;
       if (uploadedImage) {
         try {
           const photoBlob = await (await fetch(uploadedImage)).blob();
@@ -454,10 +454,10 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
             .from("avatars")
             .upload(photoFileName, photoBlob, { upsert: true, contentType: 'image/png' });
           if (!photoError) {
-            profileAvatarUrl = supabase.storage.from("avatars").getPublicUrl(photoFileName).data.publicUrl;
+            sourcePhotoUrl = supabase.storage.from("avatars").getPublicUrl(photoFileName).data.publicUrl;
           }
         } catch (photoErr) {
-          console.warn("Saving original photo failed, keeping current avatar:", photoErr);
+          console.warn("Saving source photo failed:", photoErr);
         }
       }
 
@@ -468,7 +468,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       await supabase.from('avatar_generations').insert({
         user_id: user.id,
         avatar_url: finalUrl,
-        source_image_url: profileAvatarUrl,
+        source_image_url: sourcePhotoUrl,
         is_current: true,
       });
 
@@ -476,26 +476,20 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       // animated avatar belongs to the previous face, so it retires too —
       // surfaces that prefer the animation would otherwise keep showing
       // the old avatar.
-      await updateProfile({
-        ...(profileAvatarUrl ? { avatar_url: profileAvatarUrl, animated_avatar_url: null } : {}),
-        has_face_photo: true,
-      } as any);
+      await updateProfile({ has_face_photo: true } as any);
       queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
 
       toast.success(t("avatar.avatarSaved"));
       finishAndClose();
 
-      // Background portrait generation — never blocks the apply. When it
-      // lands, the circle avatar upgrades from the raw photo to the
-      // stylized portrait of the same character.
-      if (profileAvatarUrl) {
-        const photoUrl = profileAvatarUrl;
-        void generatePublicPortrait(user.id, photoUrl).then((portraitUrl) => {
-          if (portraitUrl) {
-            void updateProfile({ avatar_url: portraitUrl, animated_avatar_url: null } as any);
-          }
-        });
-      }
+      // Background portrait generation from the SCENE — never blocks the
+      // apply. When it lands it becomes the public circle avatar and joins
+      // "my avatars" so it can be re-picked later.
+      void generateAndRecordPortrait(user.id, finalUrl).then((portraitUrl) => {
+        if (portraitUrl) {
+          void updateProfile({ avatar_url: portraitUrl, animated_avatar_url: null } as any);
+        }
+      });
 
     } catch (error) {
       console.error("Error saving avatar:", error);
