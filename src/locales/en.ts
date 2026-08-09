@@ -706,11 +706,11 @@ export const en: KaTranslations = {
   // Treasure Chest
   // ==========================================
   chest: {
-    title: "Treasure",
+    title: "Treasure opened",
     titleOpened: "Treasure Opened!",
     subtitle: "Congratulations! Claim your rewards",
     subtitleWait: "Coming soon!",
-    nextChest: "Next chest",
+    nextChest: "Time left until the next chest",
     claim: "Claim",
     loading: "Loading...",
     rewardsReceived: "Rewards received!",
