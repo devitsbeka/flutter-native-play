@@ -234,26 +234,21 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
               {isInviteSlide ? (
                 /* Invite slide content */
                 <>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.2)", boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)" }}>
-                      <Share2 className="w-5 h-5 text-white" />
-                    </div>
-                  </div>
-
                   <p className="text-sm md:text-base font-bold text-white leading-tight mb-3">
                     {t("extra.inviteMiniTitle")}
                   </p>
 
                   <span
-                    className="inline-flex items-center gap-2.5 self-start px-5 py-3 rounded-full text-base font-bold mb-auto"
-                    // White chip so the gold crown reads against the orange card
+                    className="inline-flex items-center gap-2 self-start px-4 py-2.5 rounded-full text-sm font-bold mb-auto"
+                    // Purple chip: the gold crown still reads on it, and it
+                    // stays distinct from the white share button below
                     style={{
-                      background: "rgba(255,255,255,0.95)",
-                      color: "#7C3AED",
-                      boxShadow: "0 3px 0 rgba(0,0,0,0.15)",
+                      background: "linear-gradient(180deg, #8B5CF6 0%, #7C3AED 100%)",
+                      color: "#FFFFFF",
+                      boxShadow: "0 3px 0 #5B21B6",
                     }}
                   >
-                    <img src={crownIcon} alt="" className="w-7 h-7" />
+                    <img src={crownIcon} alt="" className="w-6 h-6" />
                     {t("extra.tenDayPro")}
                   </span>
 
