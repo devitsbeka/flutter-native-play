@@ -70,19 +70,26 @@ export function ShopStandardLayout({
         <h2 className="text-lg md:text-xl font-display font-bold text-foreground">{t("shop.deals")}</h2>
       </div>
 
-      {/* PRO Carousel - phones only. Tablet and desktop open straight with
-          My Powers; on desktop the PRO banner lives in the right sidebar. */}
+      {/* Phones: one swipeable reel holds every banner (daily deal, hourly
+          deal, invite, Solo PRO, Family PRO) with dot indicators. md+ keeps
+          the side-by-side deals grid; the PRO banner lives in the desktop
+          sidebar. */}
       <div className="md:hidden">
-        <MobileProCarousel />
+        <MobileProCarousel
+          purchasedItems={purchasedItems}
+          isPurchasing={isPurchasing}
+          onItemClick={handleItemClick}
+        />
       </div>
 
-      {/* Rotating daily + hourly bundle deals */}
-      <DailyDealsRow
-        hideTitle
-        purchasedItems={purchasedItems}
-        isPurchasing={isPurchasing}
-        onItemClick={handleItemClick}
-      />
+      <div className="hidden md:block">
+        <DailyDealsRow
+          hideTitle
+          purchasedItems={purchasedItems}
+          isPurchasing={isPurchasing}
+          onItemClick={handleItemClick}
+        />
+      </div>
 
       {/* My Powers Section - individual purchase */}
       <MyPowersSection

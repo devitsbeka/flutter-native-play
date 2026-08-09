@@ -24,7 +24,7 @@ interface DailyDealsRowProps {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-function formatRemaining(ms: number, withHours: boolean): string {
+export function formatRemaining(ms: number, withHours: boolean): string {
   const total = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
@@ -34,7 +34,7 @@ function formatRemaining(ms: number, withHours: boolean): string {
 
 // Converts a deal into a ShopItem so the page's existing purchase pipeline
 // (spendGems → bundle grant via BUNDLE_CONTENTS) handles it unchanged.
-function dealToShopItem(deal: ShopDeal, name: string): ShopItem {
+export function dealToShopItem(deal: ShopDeal, name: string): ShopItem {
   return {
     id: deal.id,
     name,
@@ -58,7 +58,7 @@ interface DealCardProps {
   onBuy: () => void;
 }
 
-function DealCard({
+export function DealCard({
   deal,
   label,
   remainingLabel,
@@ -74,7 +74,7 @@ function DealCard({
 
   return (
     <div
-      className="relative flex min-h-[251px] flex-col overflow-hidden rounded-[24px] p-4 sm:p-5 text-white"
+      className="relative flex w-full min-h-[251px] flex-col overflow-hidden rounded-[24px] p-4 sm:p-5 text-white"
       style={{ background: gradient }}
     >
       {/* soft highlight blob so the card doesn't read flat */}
@@ -182,8 +182,9 @@ function DealCard({
   );
 }
 
-export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick, hideTitle = false }: DailyDealsRowProps) {
-  const { t } = useLanguage();
+// Same offer for everyone at the same moment: index derives from wall time.
+// Shared by the deals grid (md+) and the phone banner reel.
+export function useLiveDeals() {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -191,13 +192,28 @@ export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick, hideT
     return () => clearInterval(id);
   }, []);
 
-  // Same offer for everyone at the same moment: index derives from wall time
   const dailyDeal = DAILY_DEALS[Math.floor(now / 86_400_000) % DAILY_DEALS.length];
   const hourlyDeal = HOURLY_DEALS[Math.floor(now / 3_600_000) % HOURLY_DEALS.length];
 
   const nextMidnight = new Date(now);
   nextMidnight.setHours(24, 0, 0, 0);
   const nextHour = (Math.floor(now / 3_600_000) + 1) * 3_600_000;
+
+  return {
+    dailyDeal,
+    hourlyDeal,
+    dailyRemaining: formatRemaining(nextMidnight.getTime() - now, true),
+    hourlyRemaining: formatRemaining(nextHour - now, false),
+  };
+}
+
+// The two deal gradients — also used by the phone reel so colors stay in sync
+export const DAILY_DEAL_GRADIENT = "linear-gradient(135deg, #4F46E5 0%, #2563EB 50%, #0EA5E9 100%)";
+export const HOURLY_DEAL_GRADIENT = "linear-gradient(135deg, #14B8A6 0%, #0D9488 50%, #0F766E 100%)";
+
+export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick, hideTitle = false }: DailyDealsRowProps) {
+  const { t } = useLanguage();
+  const { dailyDeal, hourlyDeal, dailyRemaining, hourlyRemaining } = useLiveDeals();
 
   return (
     <motion.section
@@ -216,8 +232,8 @@ export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick, hideT
         <DealCard
           deal={dailyDeal}
           label={t("shop.dailyDeal")}
-          remainingLabel={formatRemaining(nextMidnight.getTime() - now, true)}
-          gradient="linear-gradient(135deg, #4F46E5 0%, #2563EB 50%, #0EA5E9 100%)"
+          remainingLabel={dailyRemaining}
+          gradient={DAILY_DEAL_GRADIENT}
           chipClass="bg-white/25"
           isPurchased={purchasedItems.has(dailyDeal.id)}
           isLoading={isPurchasing === dailyDeal.id}
@@ -226,8 +242,8 @@ export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick, hideT
         <DealCard
           deal={hourlyDeal}
           label={t("shop.hourlyDeal")}
-          remainingLabel={formatRemaining(nextHour - now, false)}
-          gradient="linear-gradient(135deg, #14B8A6 0%, #0D9488 50%, #0F766E 100%)"
+          remainingLabel={hourlyRemaining}
+          gradient={HOURLY_DEAL_GRADIENT}
           chipClass="bg-white/25"
           urgent
           isPurchased={purchasedItems.has(hourlyDeal.id)}
