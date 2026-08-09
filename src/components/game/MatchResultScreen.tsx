@@ -95,6 +95,8 @@ const PlayerCard = ({
   winnerLabel,
   coinChange,
   formatNumber,
+  score,
+  correctSummary,
 }: { 
   avatarUrl?: string | null; 
   name: string;
@@ -104,6 +106,8 @@ const PlayerCard = ({
   winnerLabel: string;
   formatNumber: (n: number) => string;
   coinChange?: number;
+  score: number;
+  correctSummary: string;
 }) => (
   <motion.div 
     className="flex flex-col items-center"
@@ -185,6 +189,17 @@ const PlayerCard = ({
     <p className="mt-4 font-semibold text-white truncate max-w-[120px] text-center text-xl">
       {name}
     </p>
+
+    {/* This match: score + correct answers — the game's actual outcome */}
+    <motion.div
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ delay: 0.45, type: "spring" }}
+      className="flex flex-col items-center mt-1"
+    >
+      <span className="text-3xl font-black text-white drop-shadow-sm">{score}</span>
+      <span className="text-white/70 text-xs font-semibold">{correctSummary}</span>
+    </motion.div>
     
     {/* Coin Balance */}
     <motion.div
@@ -194,8 +209,8 @@ const PlayerCard = ({
       className="flex flex-col items-center mt-1"
     >
       <div className="flex items-center gap-1.5">
-        <img src={coinIcon} alt="" className="w-5 h-5" />
-        <span className="text-2xl font-black" style={{ color: "#F5A623" }}>
+        <img src={coinIcon} alt="" className="w-4 h-4" />
+        <span className="text-lg font-black" style={{ color: "#F5A623" }}>
           {formatNumber(coinBalance)}
         </span>
       </div>
@@ -233,7 +248,7 @@ const PlayerCard = ({
 );
 
 export function MatchResultScreen() {
-  const { userScore, opponentScore, opponent, resetGame, startMatchmaking } = useGame();
+  const { userScore, opponentScore, opponent, resetGame, startMatchmaking, userAnswerHistory, opponentAnswerHistory } = useGame();
   const { user, profile, updateProfile } = useAuth();
   const { addCoins } = useCurrency();
   const { playSound } = useSound();
@@ -252,8 +267,16 @@ export function MatchResultScreen() {
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guestModalBlocking, setGuestModalBlocking] = useState(false);
 
-  const isWin = userScore > opponentScore;
-  const isDraw = userScore === opponentScore;
+  // What actually happened in this match, per player
+  const userCorrect = userAnswerHistory.filter((a) => a.correct).length;
+  const opponentCorrect = opponentAnswerHistory.filter((a) => a.correct).length;
+  const totalQuestions = userAnswerHistory.length;
+
+  // A win must be earned: leading the score AND at least one correct
+  // answer — zero correct answers never celebrate as a victory.
+  const scoreLead = userScore > opponentScore;
+  const isWin = scoreLead && userCorrect > 0;
+  const isDraw = userScore === opponentScore || (scoreLead && userCorrect === 0);
   const isLose = !isWin && !isDraw;
 
   // Level up detection
@@ -614,6 +637,8 @@ export function MatchResultScreen() {
               winnerLabel={t("game.winner")}
               coinChange={isLose ? -Math.abs(netLoss) : isWin ? netWinProfit : undefined}
               formatNumber={formatCompactNumber}
+              score={userScore}
+              correctSummary={`${userCorrect}/${totalQuestions} ${t("modals.correctAnswers")}`}
             />
 
             {/* Opponent */}
@@ -626,6 +651,8 @@ export function MatchResultScreen() {
               winnerLabel={t("game.winner")}
               coinChange={isLose ? Math.abs(netLoss) : isWin ? -netWinProfit : undefined}
               formatNumber={formatCompactNumber}
+              score={opponentScore}
+              correctSummary={`${opponentCorrect}/${totalQuestions} ${t("modals.correctAnswers")}`}
             />
           </motion.div>
 
