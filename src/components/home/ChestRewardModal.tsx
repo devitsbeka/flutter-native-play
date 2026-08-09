@@ -159,7 +159,7 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
       variant="gold"
       icon={chestIcon}
       title={canClaimChest ? t("chest.titleOpened") : t("chest.title")}
-      subtitle={canClaimChest ? t("chest.subtitle") : t("chest.subtitleWait")}
+      subtitle={canClaimChest ? t("chest.subtitle") : undefined}
       showSparkles={canClaimChest}
       showStars={canClaimChest}
     >

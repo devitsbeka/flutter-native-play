@@ -700,11 +700,11 @@ export const ka = {
   // Treasure Chest / განძის ყუთი
   // ==========================================
   chest: {
-    title: "განძი",
+    title: "განძი გახსნილია",
     titleOpened: "განძი გახსნილია!",
     subtitle: "გილოცავ! მიიღე შენი ჯილდოები",
     subtitleWait: "მალე მზად იქნება!",
-    nextChest: "მომდევნო განძი",
+    nextChest: "შემდეგ გახსნამდე დარჩენილია",
     claim: "მიღება",
     loading: "იტვირთება...",
     rewardsReceived: "ჯილდოები მიღებულია!",
