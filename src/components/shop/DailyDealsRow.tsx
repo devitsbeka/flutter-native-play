@@ -137,7 +137,7 @@ function DealCard({
 
       {/* Price row: struck full price → deal price → buy */}
       <div className="relative flex items-center justify-between gap-2 pt-3">
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-center gap-2">
           <span className="flex items-center gap-1 text-sm text-white/70 line-through decoration-2">
             <img
               src={gemIcon}
@@ -224,8 +224,8 @@ export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick }: Dai
           deal={hourlyDeal}
           label={t("shop.hourlyDeal")}
           remainingLabel={formatRemaining(nextHour - now, false)}
-          gradient="linear-gradient(135deg, #FBBF24 0%, #F59E0B 55%, #EA7C0C 100%)"
-          chipClass="bg-black/25"
+          gradient="linear-gradient(135deg, #F43F5E 0%, #EC4899 50%, #D946EF 100%)"
+          chipClass="bg-white/25"
           urgent
           isPurchased={purchasedItems.has(hourlyDeal.id)}
           isLoading={isPurchasing === hourlyDeal.id}
