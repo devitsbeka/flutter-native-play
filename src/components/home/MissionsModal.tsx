@@ -40,55 +40,52 @@ interface Mission {
   completed: boolean;
 }
 
-function RewardChip({ mission }: { mission: Mission }) {
+const chipStyle = { border: "1.5px solid #E8E0F5", boxShadow: "0 2px 0 #EDE6F7" };
+
+// One fixed row of four chips so every mission card has the same height
+function RewardChips({ mission }: { mission: Mission }) {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2">
-      {mission.reward_coins > 0 && (
-        <div
-          className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5"
-          style={{ border: "1.5px solid #E8E0F5", boxShadow: "0 2px 0 #EDE6F7" }}
-        >
-          <img src={coinIcon} alt="" className="h-5 w-5" />
-          <span className="text-sm font-bold text-[#402666]">{mission.reward_coins}</span>
-        </div>
-      )}
-      {mission.reward_xp > 0 && (
-        <div
-          className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5"
-          style={{ border: "1.5px solid #E8E0F5", boxShadow: "0 2px 0 #EDE6F7" }}
-        >
-          <Sparkles className="h-4 w-4 text-violet-500" />
-          <span className="text-sm font-bold text-[#402666]">{mission.reward_xp}XP</span>
-        </div>
-      )}
-      {mission.reward_gems > 0 && (
-        <div
-          className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5"
-          style={{ border: "1.5px solid #E8E0F5", boxShadow: "0 2px 0 #EDE6F7" }}
-        >
-          <img src={gemIcon} alt="" className="h-5 w-5" />
-          <span className="text-sm font-bold text-[#402666]">{mission.reward_gems}</span>
-        </div>
-      )}
-      {mission.reward_power_up && mission.reward_power_up_count > 0 && (
-        <div
-          className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5"
-          style={{ border: "1.5px solid #E8E0F5", boxShadow: "0 2px 0 #EDE6F7" }}
-        >
-          {mission.reward_power_up === "time-drain" ? (
-            <TimeIcon size={20} />
-          ) : (
-            <img
-              src={POWER_UP_ICONS[mission.reward_power_up] || power5050}
-              alt=""
-              className="h-5 w-5"
-            />
-          )}
-          <span className="text-sm font-bold text-[#402666]">
-            {mission.reward_power_up_count}x
-          </span>
-        </div>
-      )}
+    <div className="grid grid-cols-4 gap-1.5">
+      <div
+        className="flex items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5"
+        style={chipStyle}
+      >
+        <img src={coinIcon} alt="" className="shrink-0" width={18} height={18} />
+        <span className="text-xs font-bold text-[#402666]">{mission.reward_coins}</span>
+      </div>
+      <div
+        className="flex items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5"
+        style={chipStyle}
+      >
+        <Sparkles className="h-4 w-4 shrink-0 text-violet-500" />
+        <span className="text-xs font-bold text-[#402666]">{mission.reward_xp}XP</span>
+      </div>
+      <div
+        className="flex items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5"
+        style={chipStyle}
+      >
+        <img src={gemIcon} alt="" className="shrink-0" width={18} height={18} />
+        <span className="text-xs font-bold text-[#402666]">{mission.reward_gems}</span>
+      </div>
+      <div
+        className="flex items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5"
+        style={chipStyle}
+      >
+        {mission.reward_power_up === "time-drain" ? (
+          <TimeIcon size={18} />
+        ) : (
+          <img
+            src={POWER_UP_ICONS[mission.reward_power_up || ""] || power5050}
+            alt=""
+            className="shrink-0"
+            width={18}
+            height={18}
+          />
+        )}
+        <span className="text-xs font-bold text-[#402666]">
+          {mission.reward_power_up_count || 1}x
+        </span>
+      </div>
     </div>
   );
 }
@@ -140,7 +137,7 @@ function MissionCard({ mission, t }: { mission: Mission; t: (key: string) => str
 
       {/* Rewards */}
       <div className="mt-3.5">
-        <RewardChip mission={mission} />
+        <RewardChips mission={mission} />
       </div>
     </div>
   );
@@ -314,8 +311,8 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                 className="mt-4 h-12 w-full rounded-full font-display text-base font-bold text-white"
                 style={{
                   background: "linear-gradient(90deg, #F25CA2 0%, #FF9A3D 100%)",
-                  border: "2px solid #10B981",
-                  boxShadow: "0 4px 0 0 #0EA97C, inset 0 1.5px 0 0 rgba(255,255,255,0.4)",
+                  border: "2px solid #FBB1D0",
+                  boxShadow: "0 4px 0 0 #D6427F, inset 0 1.5px 0 0 rgba(255,255,255,0.4)",
                 }}
               >
                 {t("missions.continueBtn")}
