@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 import gemIcon from "@/assets/icons/icon-gem.webp";
 import coinIcon from "@/assets/icons/icon-coin.webp";
 import powersIcon from "@/assets/icons/icon-powers-bottle.webp";
-import vipCrownIcon from "@/assets/icons/icon-vip-crown.webp";
+// The PRO brand logo (same crown used by the sidebar and PRO badges)
+import proLogoIcon from "@/assets/crown-icon.png";
 
 // Affordability isn't checked here on purpose — the page-level purchase
 // handler already routes an underfunded tap to the NotEnoughGems modal.
@@ -71,7 +72,7 @@ function DealCard({
 
   return (
     <div
-      className="relative flex min-h-[209px] flex-col overflow-hidden rounded-[24px] p-4 sm:p-5 text-white"
+      className="relative flex min-h-[251px] flex-col overflow-hidden rounded-[24px] p-4 sm:p-5 text-white"
       style={{ background: gradient }}
     >
       {/* soft highlight blob so the card doesn't read flat */}
@@ -101,9 +102,9 @@ function DealCard({
 
       {/* Middle block (name + discount + contents) floats centered — both
           axes — in the space between the header and the price row */}
-      <div className="relative flex flex-1 flex-col items-center justify-center gap-5">
-      <div className="flex items-center justify-center gap-2 text-center">
-        <h3 className="font-display text-lg font-bold leading-none">{t(deal.nameKey)}</h3>
+      <div className="relative flex flex-1 flex-col items-center justify-center gap-7">
+      <div className="flex items-center justify-center gap-2.5 text-center">
+        <h3 className="font-display text-xl font-bold leading-none">{t(deal.nameKey)}</h3>
         <span
           className="rounded-full px-2 py-0.5 text-[11px] font-extrabold text-amber-900"
           style={{
@@ -118,17 +119,17 @@ function DealCard({
       {/* Bundle contents: PRO time + powers + coins — centered */}
       <div className="flex flex-wrap items-center justify-center gap-1.5">
         {deal.contents.vip && (
-          <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-2.5 py-1.5 text-xs font-bold backdrop-blur-[2px]">
-            <img src={vipCrownIcon} alt="" className="h-5 w-5 object-contain" />
+          <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 text-xs font-bold backdrop-blur-[2px]">
+            <img src={proLogoIcon} alt="" className="h-6 w-6 object-contain" />
             {deal.contents.vip === "week" ? t("shop.vipWeek") : t("shop.vipDay")}
           </span>
         )}
-        <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-2.5 py-1.5 text-xs font-bold backdrop-blur-[2px]">
-          <img src={powersIcon} alt="" className="h-5 w-5 object-contain" />
+        <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 text-xs font-bold backdrop-blur-[2px]">
+          <img src={powersIcon} alt="" className="h-6 w-6 object-contain" />
           {deal.contents.powers}× {t("shop.allPowers")}
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-2.5 py-1.5 text-xs font-bold backdrop-blur-[2px]">
-          <img src={coinIcon} alt="" className="h-5 w-5 object-contain" />
+        <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 text-xs font-bold backdrop-blur-[2px]">
+          <img src={coinIcon} alt="" className="h-6 w-6 object-contain" />
           {deal.contents.coins.toLocaleString()}
         </span>
       </div>
@@ -137,12 +138,20 @@ function DealCard({
       {/* Price row: struck full price → deal price → buy */}
       <div className="relative flex items-center justify-between gap-2 pt-3">
         <div className="flex items-baseline gap-2">
-          <span className="flex items-center gap-1 text-sm text-white/60 line-through decoration-2">
-            <img src={gemIcon} alt="" className="h-3.5 w-3.5 object-contain opacity-60" />
+          <span className="flex items-center gap-1 text-sm text-white/70 line-through decoration-2">
+            <img
+              src={gemIcon}
+              alt=""
+              className="h-4 w-4 object-contain opacity-80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]"
+            />
             {deal.wasPrice}
           </span>
           <span className="flex items-center gap-1 text-xl font-extrabold">
-            <img src={gemIcon} alt="" className="h-5 w-5 object-contain" />
+            <img
+              src={gemIcon}
+              alt=""
+              className="h-6 w-6 object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]"
+            />
             {deal.price}
           </span>
         </div>
@@ -205,7 +214,7 @@ export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick }: Dai
           deal={dailyDeal}
           label={t("shop.dailyDeal")}
           remainingLabel={formatRemaining(nextMidnight.getTime() - now, true)}
-          gradient="linear-gradient(135deg, #8B5CF6 0%, #7C3AED 45%, #C026D3 100%)"
+          gradient="linear-gradient(135deg, #4F46E5 0%, #2563EB 50%, #0EA5E9 100%)"
           chipClass="bg-white/25"
           isPurchased={purchasedItems.has(dailyDeal.id)}
           isLoading={isPurchasing === dailyDeal.id}
