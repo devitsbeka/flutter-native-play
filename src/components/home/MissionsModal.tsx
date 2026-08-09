@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Check, Sparkles, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Star } from "lucide-react";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import { useMissions, getMissionIcon, type MissionIconKey } from "@/hooks/useMissions";
@@ -16,6 +16,7 @@ import iconShoe from "@/assets/missions/shoe.png";
 import iconTrophy from "@/assets/missions/trophy.png";
 import iconTv from "@/assets/missions/tv.png";
 import iconHearts from "@/assets/missions/hearts.png";
+import xpSparkIcon from "@/assets/level/xp-spark.png";
 
 const MISSION_ICONS: Record<MissionIconKey, string> = {
   check: iconCheck,
@@ -96,7 +97,7 @@ function RewardChips({ mission }: { mission: Mission }) {
         className="flex items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5"
         style={chipStyle}
       >
-        <Sparkles className="h-4 w-4 shrink-0 text-violet-500" />
+        <img src={xpSparkIcon} alt="" className="shrink-0" width={18} height={18} />
         <span className="text-xs font-bold text-[#402666]">{mission.reward_xp}XP</span>
       </div>
       <div

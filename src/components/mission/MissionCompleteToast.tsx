@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Sparkles, Coins, Gem, Star } from "lucide-react";
 import confetti from "canvas-confetti";
+import xpSparkIcon from "@/assets/level/xp-spark.png";
 import { useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -86,7 +87,7 @@ export function MissionCompleteToast({
             transition={{ delay: 0.1, type: "spring" }}
             className="flex items-center gap-1 bg-violet-100 text-violet-700 px-2 py-1 rounded-full text-xs font-bold"
           >
-            <Star className="w-3.5 h-3.5" />
+            <img src={xpSparkIcon} alt="" className="w-4 h-4" />
             +{xp} XP
           </motion.div>
         )}
