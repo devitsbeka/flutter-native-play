@@ -878,11 +878,11 @@ export default function Index() {
             Mounted only when the viewport is actually xl, so smaller
             screens never download the media. */}
         {!isSceneViewport ? null : sceneUrl ? (
-          /* Generated 16:9 scene, resolution-aware: the artwork fits inside
-             the viewport (contain, anchored to the bottom so the friends
-             reel never covers the subject) while a blurred copy of itself
-             fills whatever the aspect difference leaves uncovered. On true
-             16:9 screens the two layers coincide and it looks full-bleed. */
+          /* Generated 16:9 scene, always full-bleed: the artwork covers the
+             full width of the band below the friends reel, anchored to the
+             bottom so the subject stays visible and any aspect-ratio excess
+             crops off the top. The blurred copy underneath backs the sliver
+             the 148px reel offset leaves above the band. */
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -896,9 +896,8 @@ export default function Index() {
               draggable={false}
             />
             {/* The sharp artwork lives in the band BELOW the friends reel
-                (top-[148px]) — it scales down to whatever height remains,
-                so the reel never covers it and smaller screens see the
-                whole scene zoomed out over the blurred fill. */}
+                (top-[148px]) so the reel never covers the subject; it spans
+                the band edge-to-edge at every viewport size. */}
             <div className="absolute left-0 right-0 top-[148px] bottom-0">
               {sceneVideoUrl ? (
                 /* Seamless idle-loop video — poster keeps the still visible
@@ -910,13 +909,13 @@ export default function Index() {
                   loop
                   muted
                   playsInline
-                  className="w-full h-full object-contain object-[center_bottom]"
+                  className="w-full h-full object-cover object-[center_bottom]"
                 />
               ) : (
                 <img
                   src={sceneUrl}
                   alt=""
-                  className="w-full h-full object-contain object-[center_bottom]"
+                  className="w-full h-full object-cover object-[center_bottom]"
                   draggable={false}
                 />
               )}
