@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { formatCompactNumber } from "@/lib/utils";
 import { useMissionStreak } from "@/hooks/useMissionStreak";
+import { useRewardTimers } from "@/hooks/useRewardTimers";
 import coinChunky from "@/assets/figma-home/coin-chunky.png";
 import gemChunky from "@/assets/figma-home/gem-chunky.png";
 import giftWeekly from "@/assets/figma-home/gift-weekly.png";
@@ -111,6 +112,8 @@ export function SceneHero({
   playButton,
 }: SceneHeroProps) {
   const { streak, currentStreak } = useMissionStreak();
+  // Chest availability: once opened, the button grays out and counts down
+  const { canClaimChest, chestTimeLeft } = useRewardTimers();
 
   // Per-day streak state for the current week: a day is "done" when the
   // running streak covers it, "failed" when it's already past and wasn't,
@@ -309,24 +312,47 @@ export function SceneHero({
           <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_2.28px_0px_0px_rgba(255,255,255,0.35)]" />
         </button>
 
-        {/* გახსენი სკივრი (node 601:1595) */}
+        {/* გახსენი სკივრი (node 601:1595) — claimable: warm tan; already
+            opened: grayed out with the countdown to the next chest */}
         <button
           type="button"
           onClick={onChestClick}
-          className="absolute left-[-1px] top-[364px] h-[60px] w-[298px] rounded-[24px] border-[2.28px] border-solid border-[#fcd4a3] text-left shadow-[0px_4.56px_0px_0px_#cea87e,0px_7.6px_18.24px_0px_rgba(0,0,0,0.28)]"
+          className={`absolute left-[-1px] top-[364px] h-[60px] w-[298px] rounded-[24px] border-[2.28px] border-solid text-left ${
+            canClaimChest
+              ? "border-[#fcd4a3] shadow-[0px_4.56px_0px_0px_#cea87e,0px_7.6px_18.24px_0px_rgba(0,0,0,0.28)]"
+              : "border-[#ded9e4] shadow-[0px_4.56px_0px_0px_#bcb5c6,0px_7.6px_18.24px_0px_rgba(0,0,0,0.12)]"
+          }`}
         >
           <div
             aria-hidden
             className="absolute inset-0 pointer-events-none rounded-[inherit]"
-            style={{ backgroundImage: "linear-gradient(to bottom, #fbe7d4, #eedcca 50%, #ecc89d)" }}
+            style={{
+              backgroundImage: canClaimChest
+                ? "linear-gradient(to bottom, #fbe7d4, #eedcca 50%, #ecc89d)"
+                : "linear-gradient(to bottom, #f4f2f6, #e9e6ec 50%, #dedae2)",
+            }}
           />
-          <p className="absolute left-[64.72px] top-[18.72px] font-['Inter'] font-semibold text-[14px] text-[#282a2a] whitespace-nowrap">
-            გახსენი სკივრი
-          </p>
+          {canClaimChest ? (
+            <p className="absolute left-[64.72px] top-[18.72px] font-['Inter'] font-semibold text-[14px] text-[#282a2a] whitespace-nowrap">
+              გახსენი სკივრი
+            </p>
+          ) : (
+            <>
+              <p className="absolute left-[64.72px] top-[10px] font-['Inter'] font-semibold text-[10px] text-[#8a8394] whitespace-nowrap">
+                გახსენი სკივრი
+              </p>
+              <p
+                className="absolute left-[64.72px] top-[23px] font-bold text-[15px] tracking-[0.5px] text-[#544d61] whitespace-nowrap"
+                style={{ fontFamily: "'Intel One Mono', 'Nunito', monospace" }}
+              >
+                {chestTimeLeft}
+              </p>
+            </>
+          )}
           <div className="absolute left-[11.82px] top-[5.74px] size-[5.24px] rounded-full bg-white" />
           <div className="absolute left-[24.16px] top-[30.24px] size-[4.88px] rounded-full bg-[rgba(255,255,255,0.8)] opacity-90" />
           <div className="absolute left-[9px] top-[3px] flex size-[49.15px] items-center justify-center">
-            <div className="size-[48.76px] rotate-[-0.46deg]">
+            <div className={`size-[48.76px] rotate-[-0.46deg] ${canClaimChest ? "" : "grayscale opacity-60"}`}>
               <img alt="" className="max-w-none object-cover pointer-events-none size-full" src={chestDaily} />
             </div>
           </div>
