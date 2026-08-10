@@ -14,6 +14,7 @@ import timerLine from "@/assets/figma-home/timer-line.svg";
 import shieldOuter from "@/assets/figma-home/shield-outer.svg";
 import shieldInner from "@/assets/figma-home/shield-inner.svg";
 import swordLine from "@/assets/figma-home/sword-line.svg";
+import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 
 // Figma: Hom / node 601:1104 — left widget stack (profile card + level
 // shield, glass weekly-streak strip, daily missions and chest buttons).
@@ -371,23 +372,13 @@ export function SceneHero({
             hidden for space — the play button joins the stack here instead,
             right under the chest */}
         {onQuickPlay && (
-          <motion.button
-            type="button"
+          <GreenPlayButton
             onClick={onQuickPlay}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97, y: 2 }}
-            className="absolute left-[-1px] top-[440px] flex h-[60px] w-[298px] items-center justify-center gap-3 rounded-[24px] border-[3px] border-solid border-[#34d399] shadow-[0px_6px_0px_0px_#047857,0px_10px_24px_0px_rgba(16,185,129,0.5)] lg:hidden"
+            icon={<img alt="" className="size-[24px]" src={swordLine} />}
+            className="absolute left-[-1px] top-[440px] h-[60px] w-[298px] gap-3 font-['Inter'] text-[14px] lg:hidden"
           >
-            <div
-              aria-hidden
-              className="absolute inset-0 pointer-events-none rounded-[20px]"
-              style={{ backgroundImage: "linear-gradient(to bottom, #6ee7b7, #10b981 50%, #059669)" }}
-            />
-            <img alt="" className="relative size-[24px]" src={swordLine} />
-            <p className="relative font-['Inter'] font-bold text-[14px] text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)] whitespace-nowrap">
-              სწრაფი თამაში
-            </p>
-          </motion.button>
+            სწრაფი თამაში
+          </GreenPlayButton>
         )}
       </motion.div>
 
