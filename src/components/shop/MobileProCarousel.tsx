@@ -281,7 +281,7 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
                       <h3 className="text-base md:text-lg font-bold text-white">{slide.name}</h3>
                       {'price' in slide && (
                         <div className="hidden md:flex items-baseline gap-1 ml-auto">
-                          <span className="text-2xl font-black text-white">{getPriceDisplay(slide.price!).symbol}{getPriceDisplay(slide.price!).value}{getPriceDisplay(slide.price!).suffix}</span>
+                          <span className="text-2xl font-black text-white whitespace-nowrap">{getPriceDisplay(slide.price!).symbol}{getPriceDisplay(slide.price!).value}{getPriceDisplay(slide.price!).suffix}</span>
                           <span className="text-sm text-white/70">{getPriceDisplay(slide.price!).monthLabel}</span>
                         </div>
                       )}
@@ -418,15 +418,18 @@ export function DesktopProBanners() {
               </div>
             )}
             <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
-            <div className="relative flex items-center gap-3">
+            {/* flex-wrap + a nowrap price block: when the sidebar expands and
+                the card narrows, the price drops to its own line intact
+                instead of splitting the currency symbol onto a second row */}
+            <div className="relative flex flex-wrap items-center gap-x-3 gap-y-1">
               <div
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
                 style={{ background: "rgba(255,255,255,0.2)", boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)" }}
               >
                 <TierIcon className="h-5 w-5 text-white" />
               </div>
-              <h3 className="text-lg font-bold">{tier.name}</h3>
-              <div className="ml-auto flex items-baseline gap-1">
+              <h3 className="min-w-0 flex-1 text-lg font-bold leading-tight">{tier.name}</h3>
+              <div className="ml-auto flex shrink-0 items-baseline gap-1 whitespace-nowrap">
                 <span className="text-2xl font-black">{price.symbol}{price.value}{price.suffix}</span>
                 <span className="text-sm text-white/70">{price.monthLabel}</span>
               </div>

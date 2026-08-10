@@ -71,7 +71,8 @@ describe("locale registry", () => {
   });
 
   it("makes every shipped locale selectable", () => {
-    const declared = new Set(LANGUAGES.map((l) => l.code));
+    // Set<string>: LOCALE_CODES comes from Object.keys(), so it is string[]
+    const declared = new Set<string>(LANGUAGES.map((l) => l.code));
     for (const code of LOCALE_CODES) {
       expect(declared.has(code), `${code} has translations but is not selectable`).toBe(true);
     }
