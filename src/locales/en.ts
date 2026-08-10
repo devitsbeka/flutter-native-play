@@ -717,6 +717,7 @@ export const en: KaTranslations = {
     subtitleWait: "Coming soon!",
     nextChest: "Time left until the next chest",
     claim: "Claim",
+    open: "Open",
     loading: "Loading...",
     rewardsReceived: "Rewards received!",
     coins: "Coin",

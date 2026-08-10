@@ -711,6 +711,7 @@ export const ka = {
     subtitleWait: "მალე მზად იქნება!",
     nextChest: "შემდეგ გახსნამდე დარჩენილია",
     claim: "მიღება",
+    open: "გახსენი",
     loading: "იტვირთება...",
     rewardsReceived: "ჯილდოები მიღებულია!",
     coins: "მონეტა",
