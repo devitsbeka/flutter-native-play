@@ -1,4 +1,4 @@
-import { Clock } from "lucide-react";
+import timeDrainIcon from "@/assets/powers/time-drain.png";
 
 interface TimeIconProps {
   size?: number;
@@ -6,24 +6,18 @@ interface TimeIconProps {
   className?: string;
 }
 
+// The time-drain power-up's own 3D badge — the same artwork the other
+// power-ups use, instead of a flat gradient circle with a lucide clock.
 export function TimeIcon({ size = 32, disabled = false, className }: TimeIconProps) {
   return (
-    <div 
-      className={`rounded-full flex items-center justify-center ${className || ""}`}
-      style={{
-        width: size,
-        height: size,
-        background: disabled 
-          ? "hsl(var(--muted-foreground))" 
-          : "linear-gradient(180deg, #E8B4F8 0%, #C084FC 100%)",
-        boxShadow: disabled ? "none" : "0 4px 12px rgba(192, 132, 252, 0.4)"
-      }}
-    >
-      <Clock 
-        className="text-white" 
-        style={{ width: size * 0.5, height: size * 0.5 }}
-        strokeWidth={2.5} 
-      />
-    </div>
+    <img
+      src={timeDrainIcon}
+      alt=""
+      width={size}
+      height={size}
+      draggable={false}
+      className={`shrink-0 object-contain select-none ${disabled ? "opacity-50 grayscale" : ""} ${className || ""}`}
+      style={{ width: size, height: size }}
+    />
   );
 }
