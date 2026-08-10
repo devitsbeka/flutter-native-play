@@ -223,7 +223,7 @@ export default function Discover() {
                   >
                     {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
                   </button>
-                  <HeaderActions />
+                  <HeaderActions showSearch={false} />
                 </div>
               }
             />
