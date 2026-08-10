@@ -381,3 +381,18 @@
     }
   }
 }
+
+/* PRO banner pair (shop offers). The cards live in a two-column grid whose
+   width depends on the sidebar, not the viewport, so a viewport breakpoint
+   can't tell when they've become too narrow. A container query can: below
+   560px of actual row width the pair stacks, which is what keeps the tier
+   name, the price and the badge from ever being squeezed into each other. */
+.pro-banner-row {
+  container-type: inline-size;
+}
+
+@container (max-width: 560px) {
+  .pro-banner-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
