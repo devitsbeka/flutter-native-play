@@ -53,8 +53,22 @@ jobs:
       # a route that renders a blank screen — a bad chunk-init order or a
       # context throwing on mount produces a white page and no failing unit
       # test anywhere. These run against the same dist/ that gets deployed.
+      # Cached so a deploy does not re-download Chromium (~130 MB) every run.
+      # The key follows the lockfile, so a Playwright version bump refreshes it.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+            npx playwright install-deps chromium
+          else
+            npx playwright install --with-deps chromium
+          fi
 
       - name: Smoke tests
         run: npm run test:e2e
