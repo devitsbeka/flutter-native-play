@@ -3,6 +3,13 @@ name: Deploy to Cloudflare
 on:
   push:
     branches: [main]
+    # CI minutes are metered on this private repo, so don't spend a full
+    # build-and-deploy on changes that cannot alter what ships.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'LICENSE'
   workflow_dispatch:
 
 # One production deploy at a time; a newer push supersedes an in-flight one.
