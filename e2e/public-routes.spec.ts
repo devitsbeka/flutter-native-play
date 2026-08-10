@@ -17,7 +17,8 @@ const PUBLIC_ROUTES = [
 	{ path: "/discover", name: "discover" },
 	{ path: "/vip", name: "PRO" },
 	{ path: "/team", name: "rooms" },
-	{ path: "/join", name: "TV join" },
+	// /join is covered in tv-smoke.spec.ts, which asserts its actual UI
+	// rather than just that it painted — no need to load it twice.
 	{ path: "/privacy-policy", name: "privacy policy" },
 	{ path: "/terms", name: "terms" },
 	{ path: "/support", name: "support" },

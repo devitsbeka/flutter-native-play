@@ -1,11 +1,25 @@
 name: Qodana
+
+# MANUAL ONLY, on purpose.
+#
+# This scan used to run on every push to main AND every pull request — two
+# heavy runs per change, each doing a full-history checkout and a Docker-based
+# analysis of a ~190k-line codebase. It was also the most expensive thing in
+# the account by a wide margin.
+#
+# It produced nothing for that cost: the Qodana Cloud license token is
+# declined, so every run fails before a single file is scanned, which is why
+# the step below carries `continue-on-error: true`. Paying CI minutes for a
+# scan that cannot run is what pushed this account into "spending limit needs
+# to be increased", taking the production deploy down with it.
+#
+# TO RESTORE once QODANA_TOKEN is renewed: put back
+#   pull_request:
+# below, and verify one manual run goes green before re-adding the `push`
+# trigger — a scan on both push and pull_request doubles the cost for a
+# duplicate result.
 on:
   workflow_dispatch:
-  pull_request:
-  push:
-    branches: # Specify your branches here
-      - main # The 'main' branch
-      - 'releases/*' # The release branches
 
 jobs:
   qodana:
