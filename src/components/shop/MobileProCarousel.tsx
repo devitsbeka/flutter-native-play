@@ -9,6 +9,7 @@ import { getPriceDisplay } from "@/utils/currency";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import crownIcon from "@/assets/crown-icon.png";
+import friendsIcon from "@/assets/group-of-people.png";
 import { DealCard, dealToShopItem, useLiveDeals, DAILY_DEAL_GRADIENT, HOURLY_DEAL_GRADIENT } from "./DailyDealsRow";
 import type { ShopItem } from "@/hooks/useShopData";
 
@@ -76,8 +77,8 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
       id: "invite" as const,
       name: t("extra.inviteMiniTitle"),
       icon: Share2,
-      gradient: "linear-gradient(135deg, #FB923C 0%, #F97316 50%, #EA580C 100%)",
-      shadow: "#C2410C",
+      gradient: "linear-gradient(135deg, #34D399 0%, #10B981 50%, #047857 100%)",
+      shadow: "#065F46",
     },
     {
       type: "pro" as SlideType,
@@ -232,31 +233,36 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
 
             <div className="w-full p-5 z-10 flex flex-col">
               {isInviteSlide ? (
-                /* Invite slide content */
+                /* Invite slide content — a single centred column: friends
+                   icon, headline, then the PRO reward chip */
                 <>
-                  <p className="text-sm md:text-base font-bold text-white leading-tight mb-3">
-                    {t("extra.inviteMiniTitle")}
-                  </p>
+                  <div className="flex flex-col items-center text-center my-auto">
+                    <img src={friendsIcon} alt="" className="w-16 h-16 md:w-20 md:h-20 mb-2" />
 
-                  <span
-                    className="inline-flex items-center gap-2 self-start px-4 py-2.5 rounded-full text-sm font-bold mb-auto"
-                    // Purple chip: the gold crown still reads on it, and it
-                    // stays distinct from the white share button below
-                    style={{
-                      background: "linear-gradient(180deg, #8B5CF6 0%, #7C3AED 100%)",
-                      color: "#FFFFFF",
-                      boxShadow: "0 3px 0 #5B21B6",
-                    }}
-                  >
-                    <img src={crownIcon} alt="" className="w-6 h-6" />
-                    {t("extra.tenDayPro")}
-                  </span>
+                    <p className="text-base md:text-lg font-bold text-white leading-tight mb-3">
+                      {t("extra.inviteMiniTitle")}
+                    </p>
+
+                    <span
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-base font-bold"
+                      // Purple chip: the gold crown still reads on it, and it
+                      // stays distinct from the white share button below
+                      style={{
+                        background: "linear-gradient(180deg, #8B5CF6 0%, #7C3AED 100%)",
+                        color: "#FFFFFF",
+                        boxShadow: "0 3px 0 #5B21B6",
+                      }}
+                    >
+                      <img src={crownIcon} alt="" className="w-6 h-6" />
+                      {t("extra.tenDayPro")}
+                    </span>
+                  </div>
 
                   <button
                     type="button"
                     onClick={handleShare}
                     disabled={sharing}
-                    className="w-full py-3 md:py-4 px-4 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed mt-4"
+                    className="w-full py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed mt-4"
                     style={{
                       background: "rgba(255,255,255,0.95)",
                       color: "#7C3AED",
