@@ -18,6 +18,11 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { t } from "@/lib/i18n";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import {
+  calculateAvatarQuota,
+  needsSceneUpload,
+  shouldResetSession,
+} from "@/utils/avatarStudio";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { generateAndRecordPortrait } from "@/utils/portraitAvatar";
@@ -67,8 +72,6 @@ interface AvatarModalProps {
   onGeneratingChange?: (active: boolean, thumb?: string | null) => void;
 }
 
-const MAX_AVATAR_GENERATIONS = 5;
-
 interface AvatarGeneration {
   id: string;
   avatar_url: string;
@@ -117,18 +120,22 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Reset transient state ONLY on a real closed -> open transition. This
-  // used to depend on the `user` OBJECT, so every session/token refresh
-  // re-ran it and fired setStep("gallery") mid-flow — kicking the user out
-  // of the upload/preview step and discarding the generated scene before
-  // it could be saved (any photo, always "nothing changed").
+  // Reset transient state ONLY on a real closed -> open transition, and
+  // never mid-generation — see shouldResetSession in avatarStudio.ts for
+  // the regression this guards against.
   const generationInFlight = useRef(false);
   const wasOpen = useRef(false);
   // The scene generated in this session, already uploaded and recorded.
   // Applying it later only has to flip which scene is current.
   const storedScene = useRef<{ sceneUrl: string; sourceUrl: string | null } | null>(null);
   useEffect(() => {
-    if (isOpen && !wasOpen.current && !generationInFlight.current) {
+    if (
+      shouldResetSession({
+        isOpen,
+        wasOpen: wasOpen.current,
+        generationInFlight: generationInFlight.current,
+      })
+    ) {
       setIsLoading(false);
       setIsProcessingFile(false);
       setIsAnimating(false);
@@ -331,17 +338,10 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     }
   };
 
-  // Scenes and portraits count against SEPARATE caps (PRO: 5 + 5) — they
-  // used to share one, so a few scenes silently blocked new avatars. One
-  // full generation produces both a scene and a portrait, so creating a new
-  // one needs room on both sides.
-  const maxPerType = isVip ? MAX_AVATAR_GENERATIONS : 2;
-  const sceneCount = generations.filter((g) => g.avatar_url.includes("/scene_")).length;
-  const portraitCount = generations.length - sceneCount;
-  const isLimitReached = sceneCount >= maxPerType || portraitCount >= maxPerType;
-  const remainingGenerations = Math.max(
-    0,
-    Math.min(maxPerType - sceneCount, maxPerType - portraitCount)
+  // Scenes and portraits count against SEPARATE caps — see avatarStudio.ts.
+  const { maxPerType, isLimitReached, remainingGenerations } = calculateAvatarQuota(
+    generations,
+    isVip
   );
 
   const generateAvatar = async () => {
@@ -448,9 +448,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       // Generation already stored this scene, so applying it just flips the
       // current flag — no re-upload, and nothing to lose if this step never
       // happens.
-      const alreadyStored = storedScene.current?.sceneUrl === urlToSave;
-
-      if (!alreadyStored) {
+      if (needsSceneUpload(storedScene.current?.sceneUrl, urlToSave)) {
         const response = await fetch(urlToSave);
         const blob = await response.blob();
         const fileName = `${user.id}/scene_${Date.now()}.png`;
