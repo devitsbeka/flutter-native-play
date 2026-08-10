@@ -11,6 +11,7 @@ import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { GameLoseModal } from "@/components/game/GameLoseModal";
 import { LuckySpinModal } from "@/components/game/LuckySpinModal";
 import { VSMatchHelpModal } from "@/components/game/VSMatchHelpModal";
+import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { GameModal } from "@/components/ui/game-modal";
 import { NotificationModal } from "@/components/ui/notification-modal";
 import { LevelUpModal } from "@/components/home/LevelUpModal";
@@ -44,6 +45,7 @@ const MODALS = [
   { id: "game-modal-base", name: "Game Modal (Base)" },
   // Home modals
   { id: "missions", name: "Missions Modal" },
+  { id: "play-limit", name: "Play Limit / PRO Modal" },
   { id: "daily-rewards", name: "Daily Rewards Modal" },
   { id: "chest-reward", name: "Chest Reward Modal" },
   { id: "avatar-studio", name: "Avatar Studio Modal" },
@@ -408,6 +410,14 @@ export default function ModalsShowcase() {
         );
       
       // Home modals
+      case "play-limit":
+        return (
+          <PlayLimitModal
+            isOpen={isModalOpen}
+            onClose={handleClose}
+          />
+        );
+
       case "missions":
         return (
           <MissionsModal 

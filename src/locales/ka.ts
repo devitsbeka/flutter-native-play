@@ -1448,8 +1448,8 @@ export const ka = {
   // ==========================================
   playLimit: {
     limitReached: "თამაშის ლიმიტი ამოწურულია",
-    becomeProDescription: "გახდი PRO და ითამაშე შეუზღუდავად, შექმენი შენი ტრივიები და ბევრი სხვა.",
-    unlimitedGames: "შეუზღუდავი თამაშები",
+    becomeProDescription: "გახდი PRO და ითამაშე შეუზღუდავად, შექმენი შენი ტრივიები და ბევრი სხვა",
+    unlimitedGames: "ულიმიტო თამაშები",
     exclusiveFeatures: "ექსკლუზიური ფუნქციები",
     becomePro: "გახდი PRO",
     freePlayReady: "უფასო თამაში მზადაა!",
