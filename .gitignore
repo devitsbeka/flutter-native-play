@@ -25,3 +25,9 @@ dist-ssr
 
 # Cloudflare Wrangler local dev state
 .wrangler/
+
+# Playwright output
+test-results/
+playwright-report/
+blob-report/
+.playwright/
