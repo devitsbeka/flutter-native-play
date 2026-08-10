@@ -402,7 +402,12 @@ export function DesktopProBanners() {
   };
 
   return (
-    <div className="mx-3 sm:mx-4 mb-6 grid grid-cols-2 gap-2">
+    /* pro-banner-row is a container query context: the pair stacks when the
+       row itself gets narrow (an expanded sidebar shrinks it without the
+       viewport changing), so a card is never squeezed to the point where its
+       contents collide. See .pro-banner-grid in index.css. */
+    <div className="pro-banner-row mx-3 sm:mx-4 mb-6">
+      <div className="pro-banner-grid grid grid-cols-2 gap-2">
       {tiers.map((tier) => {
         const TierIcon = tier.icon;
         const state = buttonState(tier.id);
@@ -410,7 +415,7 @@ export function DesktopProBanners() {
         return (
           <div
             key={tier.id}
-            className="relative flex min-h-[251px] flex-col overflow-hidden rounded-[24px] p-5 text-white"
+            className="relative flex min-h-[251px] min-w-0 flex-col overflow-hidden rounded-[24px] p-5 text-white"
             style={{ background: tier.gradient, opacity: isProcessing ? 0.7 : 1 }}
           >
             {tier.popular && !state.isActive && (
@@ -424,30 +429,27 @@ export function DesktopProBanners() {
               </div>
             )}
             <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
-            {/* Title on its own line with the price beneath it, like the phone
-                reel. Sharing one row meant the title had to shrink against a
-                nowrap price, and once the sidebar expanded it collapsed to
-                nothing and the words spilled across the price. */}
-            <div className="relative flex items-start gap-3">
+            {/* One vertical stack: icon, then title, then price. Nothing
+                competes for room on a shared row, and pr-16 keeps the first
+                line clear of the TOP / აქტიური badge in the corner. */}
+            <div className="relative pr-16">
               <div
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
                 style={{ background: "rgba(255,255,255,0.2)", boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)" }}
               >
                 <TierIcon className="h-5 w-5 text-white" />
               </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="text-lg font-bold leading-tight">{tier.name}</h3>
-                <div className="mt-1 flex items-baseline gap-1 whitespace-nowrap">
-                  <span className="text-2xl font-black">{price.symbol}{price.value}{price.suffix}</span>
-                  <span className="text-sm text-white/70">{price.monthLabel}</span>
-                </div>
+              <h3 className="mt-2 break-words text-lg font-bold leading-tight">{tier.name}</h3>
+              <div className="mt-1 flex flex-wrap items-baseline gap-x-1">
+                <span className="text-2xl font-black">{price.symbol}{price.value}{price.suffix}</span>
+                <span className="text-sm text-white/70">{price.monthLabel}</span>
               </div>
             </div>
-            <ul className="relative mt-5 mb-auto flex flex-col gap-1.5">
+            <ul className="relative mt-4 mb-auto flex flex-col gap-1.5">
               {tier.benefits.map((benefit, i) => (
                 <li key={i} className="flex items-start gap-2 text-white/90">
                   <Check className="mt-0.5 h-4 w-4 shrink-0 text-white/80" />
-                  <span className="text-sm leading-tight">{benefit}</span>
+                  <span className="min-w-0 break-words text-sm leading-tight">{benefit}</span>
                 </li>
               ))}
             </ul>
@@ -462,6 +464,7 @@ export function DesktopProBanners() {
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
