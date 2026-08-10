@@ -33,6 +33,7 @@ import power5050 from "@/assets/powers/5050.png";
 import powerFreeze from "@/assets/powers/freeze.png";
 import powerReplace from "@/assets/powers/replace.png";
 import { TimeIcon } from "@/components/shared/TimeIcon";
+import { SunsetButton } from "@/components/shared/SunsetButton";
 
 interface MissionsModalProps {
   isOpen: boolean;
@@ -350,7 +351,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
               )}
 
               {/* Start / continue — routes to where this mission is played */}
-              <motion.button
+              <SunsetButton
                 onClick={() => {
                   onClose();
                   if (mission && !mission.completed) {
@@ -358,18 +359,12 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                     navigate(dest.to, dest.state ? { state: dest.state } : undefined);
                   }
                 }}
-                whileTap={{ scale: 0.97, y: 2 }}
-                className="mt-4 h-12 w-full rounded-full font-display text-base font-bold text-white"
-                style={{
-                  background: "linear-gradient(90deg, #F25CA2 0%, #FF9A3D 100%)",
-                  border: "2px solid #FBB1D0",
-                  boxShadow: "0 4px 0 0 #D6427F, inset 0 1.5px 0 0 rgba(255,255,255,0.4)",
-                }}
+                className="mt-4"
               >
                 {mission && !mission.completed && mission.current_progress === 0
                   ? t("missions.startBtn")
                   : t("missions.continueBtn")}
-              </motion.button>
+              </SunsetButton>
             </div>
           </motion.div>
         </motion.div>

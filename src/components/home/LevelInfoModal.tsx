@@ -9,6 +9,7 @@ import iconGift from "@/assets/level/gift.png";
 import iconXpSpark from "@/assets/level/xp-spark.png";
 import iconPowerBottle from "@/assets/level/power-bottle.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import { SunsetButton } from "@/components/shared/SunsetButton";
 
 interface LevelInfoModalProps {
   isOpen: boolean;
@@ -126,7 +127,7 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: Level
             )}
 
             {/* Continue playing */}
-            <motion.button
+            <SunsetButton
               onClick={() => {
                 if (onContinue && !levelInfo.isMaxLevel) {
                   onContinue();
@@ -134,16 +135,10 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: Level
                   onClose();
                 }
               }}
-              whileTap={{ scale: 0.97, y: 2 }}
-              className="mt-5 h-12 w-full rounded-full font-display text-base font-bold text-white"
-              style={{
-                background: "linear-gradient(90deg, #F25CA2 0%, #FF9A3D 100%)",
-                border: "2px solid #FBB1D0",
-                boxShadow: "0 4px 0 0 #D6427F, inset 0 1.5px 0 0 rgba(255,255,255,0.4)",
-              }}
+              className="mt-5"
             >
               {t("modals.continueGame")}
-            </motion.button>
+            </SunsetButton>
           </motion.div>
         </motion.div>
       )}

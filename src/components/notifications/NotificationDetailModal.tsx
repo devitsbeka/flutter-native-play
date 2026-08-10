@@ -25,6 +25,7 @@ import power5050 from "@/assets/powers/5050.png";
 import powerFreeze from "@/assets/powers/freeze.png";
 import powerReplace from "@/assets/powers/replace.png";
 import { TimeIcon } from "@/components/shared/TimeIcon";
+import { SunsetButton } from "@/components/shared/SunsetButton";
 
 const MISSION_ICONS: Record<MissionIconKey, string> = {
   check: iconCheck,
@@ -174,18 +175,12 @@ export function NotificationDetailModal({ notification, onClose }: NotificationD
               </div>
             )}
 
-            <motion.button
+            <SunsetButton
               onClick={onClose}
-              whileTap={{ scale: 0.97, y: 2 }}
-              className="mt-6 h-12 w-full rounded-full font-display text-base font-bold text-white"
-              style={{
-                background: "linear-gradient(90deg, #F25CA2 0%, #FF9A3D 100%)",
-                border: "2px solid #FBB1D0",
-                boxShadow: "0 4px 0 0 #D6427F, inset 0 1.5px 0 0 rgba(255,255,255,0.4)",
-              }}
+              className="mt-6"
             >
               {t("common.continue")}
-            </motion.button>
+            </SunsetButton>
           </motion.div>
         </motion.div>
       )}
