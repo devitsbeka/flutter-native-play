@@ -418,20 +418,23 @@ export function DesktopProBanners() {
               </div>
             )}
             <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
-            {/* flex-wrap + a nowrap price block: when the sidebar expands and
-                the card narrows, the price drops to its own line intact
-                instead of splitting the currency symbol onto a second row */}
-            <div className="relative flex flex-wrap items-center gap-x-3 gap-y-1">
+            {/* Title on its own line with the price beneath it, like the phone
+                reel. Sharing one row meant the title had to shrink against a
+                nowrap price, and once the sidebar expanded it collapsed to
+                nothing and the words spilled across the price. */}
+            <div className="relative flex items-start gap-3">
               <div
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
                 style={{ background: "rgba(255,255,255,0.2)", boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)" }}
               >
                 <TierIcon className="h-5 w-5 text-white" />
               </div>
-              <h3 className="min-w-0 flex-1 text-lg font-bold leading-tight">{tier.name}</h3>
-              <div className="ml-auto flex shrink-0 items-baseline gap-1 whitespace-nowrap">
-                <span className="text-2xl font-black">{price.symbol}{price.value}{price.suffix}</span>
-                <span className="text-sm text-white/70">{price.monthLabel}</span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg font-bold leading-tight">{tier.name}</h3>
+                <div className="mt-1 flex items-baseline gap-1 whitespace-nowrap">
+                  <span className="text-2xl font-black">{price.symbol}{price.value}{price.suffix}</span>
+                  <span className="text-sm text-white/70">{price.monthLabel}</span>
+                </div>
               </div>
             </div>
             <ul className="relative mt-5 mb-auto flex flex-col gap-1.5">
