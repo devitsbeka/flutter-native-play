@@ -59,13 +59,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  * every profile load, and the front end deploys separately from the
  * migration, so it must tolerate the function not existing yet.
  */
-async function fetchPrivateProfileFields(): Promise<Partial<Profile>> {
+async function fetchPrivateProfileFields(userId: string): Promise<Partial<Profile>> {
   try {
     const { data, error } = await callRpc<{ gems?: number; referral_code?: string | null }>(
       "get_my_private_profile",
     );
-    if (error || !data) return {};
-    return { gems: data.gems ?? 0, referral_code: data.referral_code ?? null } as Partial<Profile>;
+    if (!error && data) {
+      return { gems: data.gems ?? 0, referral_code: data.referral_code ?? null } as Partial<Profile>;
+    }
+  } catch {
+    // fall through to the direct read below
+  }
+
+  // The lock_wallet_columns migration (which creates the function above AND
+  // revokes the columns) deploys separately from this bundle. Until it lands
+  // the columns are still selectable, so read them directly instead of
+  // reporting a zero balance: a wrong 0 hides the player's gems and makes
+  // every gem purchase look unaffordable (`gems < price` gates the shop).
+  // Once the migration is applied the RPC answers and this never runs.
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("gems, referral_code")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const row = data as { gems?: number; referral_code?: string | null } | null;
+    if (!row) return {};
+    return { gems: row.gems ?? 0, referral_code: row.referral_code ?? null } as Partial<Profile>;
   } catch {
     return {};
   }
@@ -117,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data) {
         // Explicit-column select degrades the client's inferred type to a
         // generic; cast through unknown to the real Profile shape.
-        const profileData = { ...(data as unknown as Profile), ...(await fetchPrivateProfileFields()) };
+        const profileData = { ...(data as unknown as Profile), ...(await fetchPrivateProfileFields(userId)) };
         setProfile(profileData);
 
         // Auto-detect and set country code if not already set
