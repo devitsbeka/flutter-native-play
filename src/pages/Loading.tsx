@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tv, Grid3X3, Users, Trophy, Zap, Globe } from 'lucide-react';
-import splashBackground from '@/assets/loading-bg.webp';
+// Same world-landmarks artwork the rating board uses
+import splashBackground from '@/assets/bgleader-global.webp';
 import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -28,12 +29,23 @@ export default function Loading() {
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden">
-      {/* Background Image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-top bg-no-repeat"
-        style={{ backgroundImage: `url(${splashBackground})` }}
+      {/* Background Image — centered so phones crop to the trophies in the
+          middle of the 16:9 artwork and wide screens show it whole */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${splashBackground})`, backgroundColor: '#bcabee' }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+      {/* Centred scrim so the white logo and progress text stay readable over
+          the bright gold trophy in the middle of the artwork */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(closest-side at 50% 46%, rgba(35,18,66,0.62) 0%, rgba(35,18,66,0.42) 60%, rgba(35,18,66,0) 100%)',
+        }}
+      />
       
       {/* Content Container */}
       <div className="relative z-10 flex flex-col items-center justify-center px-8 w-full max-w-lg">
