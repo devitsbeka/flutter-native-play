@@ -163,15 +163,37 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // Track friends to invite with a ref so it's available when room is created
   const friendsToInviteRef = useRef<Set<string>>(new Set());
   
+  // Friends invited from the "see all" modal (or via a challenge) float to the
+  // front of the reel so they're visible as selected without scrolling. Kept
+  // separate from selectedFriends so tapping inside the reel doesn't reshuffle
+  // the avatars under the user's finger.
+  const [pinnedFriendIds, setPinnedFriendIds] = useState<string[]>([]);
+
   // If challenge user provided, auto-add to selected friends
   useEffect(() => {
     if (challengeUserId) {
       setSelectedFriends(new Set([challengeUserId]));
+      setPinnedFriendIds([challengeUserId]);
     }
   }, [challengeUserId]);
 
   // Only accepted friends
-  const acceptedFriends = friends.filter(f => f.status === "accepted");
+  const acceptedFriends = useMemo(
+    () => friends.filter(f => f.status === "accepted"),
+    [friends]
+  );
+
+  // Reel order: invited friends first (in the order they were picked), the rest
+  // keep their original order — Array.prototype.sort is stable.
+  const reelFriends = useMemo(() => {
+    if (pinnedFriendIds.length === 0) return acceptedFriends;
+    const rank = new Map(pinnedFriendIds.map((id, index) => [id, index]));
+    return [...acceptedFriends].sort(
+      (a, b) =>
+        (rank.get(a.friendId) ?? Number.MAX_SAFE_INTEGER) -
+        (rank.get(b.friendId) ?? Number.MAX_SAFE_INTEGER)
+    );
+  }, [acceptedFriends, pinnedFriendIds]);
 
   // Get current language for room name generation
   const currentLanguage = localStorage.getItem('preferredLanguage') || 'ka';
@@ -965,7 +987,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     <span className="text-xs text-primary font-medium">{t("extra.inviteBtn")}</span>
                   </motion.button>
                   
-                  {acceptedFriends.slice(0, 10).map((friend) => {
+                  {reelFriends.slice(0, 10).map((friend) => {
                     const isSelected = selectedFriends.has(friend.friendId);
                     return (
                       <motion.button
@@ -1510,7 +1532,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       {/* Invite Friends Modal - Pre-room selection mode */}
       <InviteFriendsModal
         isOpen={showInviteModal}
-        onClose={() => setShowInviteModal(false)}
+        onClose={() => {
+          setShowInviteModal(false);
+          // Whoever is invited now leads the reel, newest picks last
+          setPinnedFriendIds(prev => [
+            ...prev.filter(id => selectedFriends.has(id)),
+            ...Array.from(selectedFriends).filter(id => !prev.includes(id)),
+          ]);
+        }}
         onFriendSelect={(friendId: string) => {
           const newSelected = new Set(selectedFriends);
           if (newSelected.has(friendId)) {
