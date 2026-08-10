@@ -23,6 +23,7 @@ import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { UserPresenceTracker } from "@/components/UserPresenceTracker";
 import { AdminAIPromptSync } from "@/components/system/AdminAIPromptSync";
 import { StaleAnimationCleanup } from "@/components/system/StaleAnimationCleanup";
+import { FakeFriendRequestAutoAccept } from "@/components/system/FakeFriendRequestAutoAccept";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { Navigate } from "react-router-dom";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
@@ -159,6 +160,7 @@ const App = () => (
             <UserPresenceTracker />
             <AdminAIPromptSync />
             <StaleAnimationCleanup />
+            <FakeFriendRequestAutoAccept />
             <FreshBuildGuard />
             <Suspense fallback={<PageSkeleton />}>
               <Routes>

@@ -120,6 +120,10 @@ interface GameState {
   playerTimerBonus: number;
   hiddenAnswers: string[];
   replacedAnswer: { old: string; new: string } | null;
+  /** True while the player is on a question they skipped to with "replace".
+      The opponent is still answering the question the player walked away
+      from, so their pick must not be revealed on this one. */
+  questionReplaced: boolean;
 }
 
 interface GameContextType extends GameState {
@@ -177,6 +181,7 @@ const initialState: GameState = {
   playerTimerBonus: 0,
   hiddenAnswers: [],
   replacedAnswer: null,
+  questionReplaced: false,
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -328,6 +333,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         playerTimerBonus: 0,
         hiddenAnswers: [],
         replacedAnswer: null,
+  questionReplaced: false,
       }));
 
       posthog.capture("pvp_game_started", {
@@ -416,6 +422,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
             updates.currentQuestionIndex = skipTo;
             updates.hiddenAnswers = [];
             updates.replacedAnswer = null;
+            updates.questionReplaced = true;
             // A new question means a new turn for the opponent too - the old
             // plan names an answer that does not exist on this one.
             updates.opponentTurn = planOpponentTurn(prev.questions[skipTo], prev.timePerQuestion, prev.opponentSkill);
@@ -566,6 +573,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         playerTimerBonus: 0,
         hiddenAnswers: [],
         replacedAnswer: null,
+  questionReplaced: false,
       };
     });
   }, []);
