@@ -1,8 +1,11 @@
 import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
-import crownIcon from "@/assets/icons/crown-3d.png";
+import crownIcon from "@/assets/crown-icon.png";
+import hourglassIcon from "@/assets/playlimit/hourglass.png";
+import gamepadIcon from "@/assets/playlimit/gamepad.png";
+import wheelIcon from "@/assets/playlimit/wheel.png";
 import React from "react";
-import { motion } from "framer-motion";
-import { Sparkles, Trophy, Lock, Crown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, Trophy, Lock, X } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -113,71 +116,97 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
       );
     }
 
-    // Registered non-PRO user - show PRO upgrade modal with regen info
-    return (
-      <div ref={ref}>
-        <GameModal
-          isOpen={isOpen}
-          onClose={onClose}
-          variant="primary"
-          iconSrc={crownIcon}
-          title={t("playLimit.limitReached")}
-          showSparkles
-          showStars
-          inline={inline}
-          fullScreen={false}
+    // Registered non-PRO user — PRO upsell (Figma node 621-7033)
+    const card = (
+      <div
+        className="relative w-full max-w-sm rounded-[24px] bg-white p-6 text-center"
+        style={{ boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0,0,0,0.18)" }}
+      >
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200"
+          style={{ boxShadow: "0 2px 0 #E5E7EB" }}
+          aria-label="close"
         >
-          {/* PRO upgrade section */}
-          <div className="space-y-3 mb-4">
-            <motion.p
-              className="text-center text-foreground/80 text-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-            >
-              {t("playLimit.becomeProDescription")}
-            </motion.p>
+          <X className="h-4 w-4 text-gray-600" />
+        </button>
 
-            {/* PRO Benefits */}
-            <motion.div 
-              className="flex items-center gap-3 rounded-xl p-3"
-              style={{
-                background: "linear-gradient(180deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.05) 100%)",
-                border: "2px solid rgba(245,158,11,0.4)",
-                boxShadow: "0 3px 0 rgba(245,158,11,0.2)",
-              }}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.15 }}
-            >
-              <Crown className="h-5 w-5 text-amber-500 shrink-0" />
-              <p className="text-sm font-medium text-foreground">{t("playLimit.unlimitedGames")}</p>
-            </motion.div>
+        <img src={hourglassIcon} alt="" className="mx-auto h-16 w-16 object-contain" />
 
-            <motion.div 
-              className="flex items-center gap-3 rounded-xl p-3"
-              style={{
-                background: "linear-gradient(180deg, rgba(168,85,247,0.1) 0%, rgba(168,85,247,0.05) 100%)",
-                border: "2px solid rgba(168,85,247,0.3)",
-                boxShadow: "0 3px 0 rgba(168,85,247,0.15)",
-              }}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Sparkles className="h-5 w-5 text-primary shrink-0" />
-              <p className="text-sm font-medium text-foreground">{t("playLimit.exclusiveFeatures")}</p>
-            </motion.div>
+        <h2 className="mt-4 font-display text-xl font-bold text-[#1E1B2E]">
+          {t("playLimit.limitReached")}
+        </h2>
+        <p className="mx-auto mt-2 max-w-[300px] text-sm text-slate-500">
+          {t("playLimit.becomeProDescription")}
+        </p>
+
+        <div className="mt-5 space-y-3 text-left">
+          <div
+            className="flex items-center gap-3 rounded-2xl px-4 py-3"
+            style={{ background: "#F5F8FF", border: "1.5px solid #C9D9F5" }}
+          >
+            <img src={gamepadIcon} alt="" className="h-9 w-9 shrink-0 object-contain" />
+            <p className="font-display text-base font-bold text-[#1E1B2E]">
+              {t("playLimit.unlimitedGames")}
+            </p>
           </div>
 
-          {/* PRO button always first */}
-          <GameModalFooter
-            primaryLabel={t("playLimit.becomePro")}
-            onPrimary={handleUpgradeToPro}
-            primaryIcon={<Crown className="w-5 h-5" />}
-          />
+          <div
+            className="flex items-center gap-3 rounded-2xl px-4 py-3"
+            style={{ background: "#FBF5FF", border: "1.5px solid #E9B5EE" }}
+          >
+            <img src={wheelIcon} alt="" className="h-9 w-9 shrink-0 object-contain" />
+            <p className="font-display text-base font-bold text-[#1E1B2E]">
+              {t("playLimit.exclusiveFeatures")}
+            </p>
+          </div>
+        </div>
 
-        </GameModal>
+        <motion.button
+          onClick={handleUpgradeToPro}
+          whileTap={{ scale: 0.97, y: 2 }}
+          className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl font-display text-base font-bold text-white"
+          style={{
+            background: "linear-gradient(90deg, #29B36B 0%, #7CC94A 60%, #B7E356 100%)",
+            border: "2px solid #34D399",
+            boxShadow: "0 4px 0 0 #1F8F55, inset 0 1.5px 0 0 rgba(255,255,255,0.35)",
+          }}
+        >
+          <img src={crownIcon} alt="" className="h-6 w-6 object-contain" />
+          {t("playLimit.becomePro")}
+        </motion.button>
+      </div>
+    );
+
+    if (inline) {
+      return <div ref={ref}>{card}</div>;
+    }
+
+    return (
+      <div ref={ref}>
+        <AnimatePresence mode="wait">
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
+              onClick={onClose}
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 24, scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-sm"
+              >
+                {card}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
