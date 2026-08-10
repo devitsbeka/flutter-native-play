@@ -12,7 +12,12 @@ import { useShopData, ShopItem } from "@/hooks/useShopData";
 import { useShopPageData } from "@/hooks/useShopPageData";
 import { useGemPurchase } from "@/hooks/useGemPurchase";
 import { REWARDS } from "@/config/rewardConfig";
-import { ALL_SHOP_DEALS } from "@/config/shopDeals";
+import {
+  ALL_POWER_TYPES,
+  bundleValueReceived,
+  getBundleContents,
+  isBundleId,
+} from "@/config/bundleContents";
 
 import { trackPowerUpPurchased, trackShopItemPurchased } from "@/lib/analytics";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -31,29 +36,6 @@ import { CurrencyExchangeModal } from "@/components/shop/CurrencyExchangeModal";
 import { CurrencyActionModal, CurrencyType } from "@/components/shop/CurrencyActionModal";
 import { BuyCurrencyModal } from "@/components/shop/BuyCurrencyModal";
 import { NotEnoughGemsModal } from "@/components/home/NotEnoughGemsModal";
-
-const ALL_POWER_TYPES: PowerUpType[] = ["5050", "freeze", "replace", "time-drain"];
-
-// Single source of truth for bundle contents — the transaction log and the grant
-// step both read this so they can't drift. Coin amounts match the advertised
-// descriptions/pricing in useShopData (1 gem = 500 coins). Rotating daily/hourly
-// deal bundles come from shopDeals.ts so the deal cards can't drift either.
-const BUNDLE_CONTENTS: Record<string, { powers: number; coins: number; gems?: number; vip?: "day" | "week" }> = {
-  starter_bundle: { powers: 2, coins: 500 },
-  starter_bundle_medium: { powers: 5, coins: 1000 },
-  starter_bundle_large: { powers: 10, coins: 2500 },
-  power_bundle_small: { powers: 2, coins: 0 },
-  mega_power_bundle: { powers: 5, coins: 0 },
-  power_bundle_large: { powers: 10, coins: 0 },
-  power_combo_bundle: { powers: 3, coins: 0 },
-  ...Object.fromEntries(ALL_SHOP_DEALS.map((deal) => [deal.id, deal.contents])),
-};
-
-const isBundleId = (id: string) => id.includes("bundle") || id.startsWith("deal_");
-
-const getBundleContents = (id: string): { powers: number; coins: number; gems?: number; vip?: "day" | "week" } =>
-  BUNDLE_CONTENTS[id] ??
-  { powers: id.includes("small") ? 2 : id.includes("large") ? 10 : 5, coins: 0 };
 
 export default function PowerUps() {
   const navigate = useNavigate();
@@ -207,16 +189,7 @@ export default function PowerUps() {
       } else if (item.powerType && item.amount) {
         valueReceived = { [item.powerType]: item.amount };
       } else if (isBundleId(item.id)) {
-        const { powers, coins: coinAmount, gems: gemAmount = 0, vip } = getBundleContents(item.id);
-        valueReceived = {
-          "5050": powers,
-          freeze: powers,
-          replace: powers,
-          "time-drain": powers,
-          ...(coinAmount > 0 ? { coins: coinAmount } : {}),
-          ...(gemAmount > 0 ? { gems: gemAmount } : {}),
-          ...(vip ? { vip_days: vip } : {})
-        };
+        valueReceived = bundleValueReceived(item.id);
         productType = "bundle";
       }
 

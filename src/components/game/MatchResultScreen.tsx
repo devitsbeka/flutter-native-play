@@ -28,6 +28,7 @@ import { InviteFriendsModal } from "@/components/home/InviteFriendsModal";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { resolveMatchOutcome } from "@/utils/matchOutcome";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 
@@ -257,10 +258,11 @@ export function MatchResultScreen() {
 
   // A win must be earned: leading the score AND at least one correct
   // answer — zero correct answers never celebrate as a victory.
-  const scoreLead = userScore > opponentScore;
-  const isWin = scoreLead && userCorrect > 0;
-  const isDraw = userScore === opponentScore || (scoreLead && userCorrect === 0);
-  const isLose = !isWin && !isDraw;
+  const { isWin, isDraw, isLose } = resolveMatchOutcome({
+    userScore,
+    opponentScore,
+    userCorrect,
+  });
 
   // Level up detection
   const [showLevelUp, setShowLevelUp] = useState(false);
