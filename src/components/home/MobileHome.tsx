@@ -53,8 +53,11 @@ export function MobileSceneBackground({
   defaultVideoSrc,
 }: MobileSceneBackgroundProps) {
   if (sceneUrl) {
-    // 774.7 / 500 wide, left edge at -110.3 / 500, bottom 116px off the frame
-    const box = "absolute left-[-22.06vw] w-[154.94vw] max-w-none";
+    // 774.7 / 500 wide, left edge at -110.3 / 500, bottom 116px off the frame.
+    // The top edge is mask-faded: the page wash behind it is an animated blob
+    // loop, so a flat cut would read as a hard line straight across the page.
+    const box =
+      "absolute left-[-22.06vw] w-[154.94vw] max-w-none [mask-image:linear-gradient(to_bottom,transparent_0,black_140px)]";
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -99,7 +102,7 @@ export function MobileSceneBackground({
       className="md:hidden absolute inset-0 z-0 select-none pointer-events-none overflow-hidden"
     >
       <div
-        className="absolute left-[-47.8vw] w-[227.2vw] aspect-video"
+        className="absolute left-[-47.8vw] w-[227.2vw] aspect-video [mask-image:linear-gradient(to_bottom,transparent_0,black_140px)]"
         style={{ bottom: "calc(13px + env(safe-area-inset-bottom))" }}
       >
         <video
@@ -462,10 +465,10 @@ export function MobileGuestHero({
   searchButton,
 }: MobileGuestHeroProps) {
   return (
-    <div className="md:hidden absolute inset-0 z-20 flex flex-col overflow-hidden">
+    <div className="md:hidden pointer-events-none absolute inset-0 z-20 flex flex-col overflow-hidden">
       {/* Header (node 632:308 / 632:385): burger and search only — the
           wordmark lives in the body on this state */}
-      <div className="flex h-[70px] shrink-0 items-center justify-between px-4 py-3">
+      <div className="pointer-events-auto flex h-[70px] shrink-0 items-center justify-between px-4 py-3">
         <button
           type="button"
           onClick={onMenu}
@@ -495,13 +498,15 @@ export function MobileGuestHero({
         </p>
       </motion.div>
 
-      {/* The map is anchored to the bottom of this band so its lower edge
-          always meets the provider buttons; a short screen simply crops
-          more off the top, exactly as the frame does. */}
-      <div className="relative mt-[16px] min-h-0 flex-1 overflow-hidden">
-        {/* 893 / 500 wide with its left edge at -219 / 500. Positioned with
-            `left` rather than a translate utility: this is a motion element,
-            and framer's inline transform would overwrite the class. */}
+      {/* The island sits on the bottom of this band so its lower edge meets
+          the provider buttons. It is 893 / 500 wide with its left edge at
+          -219 / 500, but max-height caps it to the band and object-contain
+          scales it down to fit: the artwork is never sliced through, which
+          would leave a hard horizontal edge across the page on phones whose
+          band is shorter than the frame's. Positioned with `left` rather
+          than a translate utility because framer's inline transform on a
+          motion element would overwrite the class. */}
+      <div className="relative mt-[16px] min-h-0 flex-1">
         <motion.img
           src={guestGeoMap}
           alt=""
@@ -509,8 +514,8 @@ export function MobileGuestHero({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
-          className="pointer-events-none absolute bottom-0 max-w-none select-none"
-          style={{ left: "calc(50% - 93.8vw)", width: "178.6vw" }}
+          className="pointer-events-none absolute bottom-0 max-w-none select-none object-contain object-bottom"
+          style={{ left: "calc(50% - 93.8vw)", width: "178.6vw", maxHeight: "100%" }}
         />
       </div>
 
@@ -518,7 +523,7 @@ export function MobileGuestHero({
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.5, type: "spring" }}
-        className="shrink-0 px-4 min-[420px]:px-6"
+        className="pointer-events-auto shrink-0 px-4 min-[420px]:px-6"
       >
         {/* Provider row (node 633:604) — 392px wide in the frame. The Apple
             button takes the slack, putting its glyph at 18px and its label at
