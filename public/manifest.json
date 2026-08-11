@@ -6,7 +6,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#7c3aed",
-  "theme_color": "#7c3aed",
+  "theme_color": "#f8e6ff",
   "icons": [
     {
       "src": "/app-icon.png",
