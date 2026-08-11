@@ -1043,6 +1043,45 @@ export default function Index() {
           </div>
         </header>
 
+        {/* GUEST on phones (Figma 632:296): wordmark and tagline up top, the
+            Georgian trophy map behind, provider buttons and the terms note
+            above the nav. A direct child of the page root so it spans the
+            whole screen and keeps its own pointer events — the centered hero
+            box below is pointer-events-none. */}
+        {!user && (
+          <MobileGuestHero
+            onApple={async () => {
+              const { error } = await signInWithApple();
+              if (error) {
+                toast({
+                  title: t("extra.appleSignInError"),
+                  description: error.message,
+                  variant: "destructive",
+                });
+              }
+            }}
+            onGoogle={async () => {
+              const { error } = await signInWithGoogle();
+              // On success the browser redirects to Google; only failures land here.
+              if (error) {
+                toast({
+                  title: t("extra.googleSignInError"),
+                  description: error.message,
+                  variant: "destructive",
+                });
+              }
+            }}
+            /* No Facebook provider is configured for this app, so the
+               button opens the full auth screen instead. */
+            onFacebook={() => navigate("/auth?mode=signup")}
+            onEmail={() => navigate("/auth?mode=signup")}
+            onMenu={() => setIsSideMenuOpen(true)}
+            onTerms={() => navigate("/terms")}
+            onPrivacy={() => navigate("/privacy-policy")}
+            searchButton={<SpotlightSearch variant="button" />}
+          />
+        )}
+
         {/* Figma 612:1888 — desktop logged-out state: signup + email-capture
             cards on the left, feature list card on the right, floating over
             the full-bleed guest scene */}
@@ -1172,43 +1211,6 @@ export default function Index() {
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
             
-            {/* GUEST on phones (Figma 632:296): wordmark and tagline up top,
-                the Georgian trophy map behind, provider buttons and the terms
-                note above the nav. Rendered as its own full-page layer, so it
-                sits outside this centered hero box. */}
-            {!user && (
-              <MobileGuestHero
-                onApple={async () => {
-                  const { error } = await signInWithApple();
-                  if (error) {
-                    toast({
-                      title: t("extra.appleSignInError"),
-                      description: error.message,
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                onGoogle={async () => {
-                  const { error } = await signInWithGoogle();
-                  // On success the browser redirects to Google; only failures land here.
-                  if (error) {
-                    toast({
-                      title: t("extra.googleSignInError"),
-                      description: error.message,
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                /* No Facebook provider is configured for this app, so the
-                   button opens the full auth screen instead. */
-                onFacebook={() => navigate("/auth?mode=signup")}
-                onEmail={() => navigate("/auth?mode=signup")}
-                onMenu={() => setIsSideMenuOpen(true)}
-                onTerms={() => navigate("/terms")}
-                onPrivacy={() => navigate("/privacy-policy")}
-                searchButton={<SpotlightSearch variant="button" />}
-              />
-            )}
             
             {/* xl+ layout: Cards moved to fixed right side */}
 
