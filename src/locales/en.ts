@@ -2333,10 +2333,10 @@ export const en: KaTranslations = {
     familyProBenefit1: "All Solo PRO features + invite 5 friends",
     familyProBenefit2: "All PRO features",
     familyProBenefit3: "No ads",
-    mobileSoloBenefit1: "Unlimited free play",
+    mobileSoloBenefit1: "Unlimited play",
     mobileSoloBenefit2: "All PRO features",
     mobileSoloBenefit3: "No ads",
-    mobileFamilyBenefit1: "All Solo PRO features + invite 5 friends",
+    mobileFamilyBenefit1: "PRO features + 5 friends",
     mobileFamilyBenefit2: "Free play",
     mobileFamilyBenefit3: "No ads",
     // Shop tabs

@@ -1,6 +1,6 @@
 import { siteUrl } from "@/config/site";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Crown, Users, Sparkles, Check, ChevronRight, Loader2, Share2 } from "lucide-react";
+import { Crown, Users, Sparkles, Check, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
@@ -10,8 +10,27 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import crownIcon from "@/assets/crown-icon.png";
 import friendsIcon from "@/assets/group-of-people.png";
-import { DealCard, dealToShopItem, useLiveDeals, DAILY_DEAL_GRADIENT, HOURLY_DEAL_GRADIENT } from "./DailyDealsRow";
+import coinIcon from "@/assets/icons/icon-coin.png";
+import powersIcon from "@/assets/icons/icon-powers-bottle.png";
+import gamepadIcon from "@/assets/pro-banner/banner-gamepad.webp";
+import wheelIcon from "@/assets/pro-banner/banner-wheel.webp";
+import noAdsIcon from "@/assets/pro-banner/banner-no-ads.webp";
+import discountIcon from "@/assets/pro-banner/banner-discount.webp";
+import timerIcon from "@/assets/pro-banner/banner-timer.webp";
+import { dealToShopItem, useLiveDeals } from "./DailyDealsRow";
+import {
+  ProTierBanner,
+  InviteBanner,
+  DealBanner,
+  HEADER_SOLO,
+  HEADER_FAMILY,
+  SKIN_SOLO,
+  SKIN_FAMILY,
+  SKIN_INVITE,
+} from "./ProBannerCard";
 import type { ShopItem } from "@/hooks/useShopData";
+import type { ShopDeal } from "@/config/shopDeals";
+import { dealSavings } from "@/config/shopDeals";
 
 type SimplifiedTier = "solo" | "family";
 
@@ -65,51 +84,89 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
     {
       type: "deal" as SlideType,
       id: "deal-daily" as const,
-      icon: Crown,
     },
     {
       type: "deal" as SlideType,
       id: "deal-hourly" as const,
-      icon: Crown,
     },
     {
       type: "invite" as SlideType,
       id: "invite" as const,
       name: t("extra.inviteMiniTitle"),
-      icon: Share2,
-      gradient: "linear-gradient(135deg, #34D399 0%, #10B981 50%, #047857 100%)",
-      shadow: "#065F46",
+      skin: SKIN_INVITE,
     },
     {
       type: "pro" as SlideType,
       id: "solo" as const,
       name: t("extra.soloPro"),
       price: 3.99,
-      icon: Crown,
+      header: HEADER_SOLO(crownIcon),
+      skin: SKIN_SOLO,
       benefits: [
         t("extra.mobileSoloBenefit1"),
         t("extra.mobileSoloBenefit2"),
         t("extra.mobileSoloBenefit3"),
       ],
-      gradient: "linear-gradient(135deg, #EC4899 0%, #DB2777 50%, #BE185D 100%)",
-      shadow: "#9D174D",
     },
     {
       type: "family" as SlideType,
       id: "family" as const,
       name: t("extra.familyPro"),
       price: 7.99,
-      icon: Users,
+      header: HEADER_FAMILY(friendsIcon),
+      skin: SKIN_FAMILY,
       benefits: [
         t("extra.mobileFamilyBenefit1"),
         t("extra.mobileFamilyBenefit2"),
         t("extra.mobileFamilyBenefit3"),
       ],
-      gradient: "linear-gradient(135deg, #8B5CF6 0%, #6D28D9 50%, #5B21B6 100%)",
-      shadow: "#4C1D95",
-      popular: true,
     },
   ], [t]);
+
+  // Frame 636:169 — the three benefit tiles on a PRO card. Each icon has its
+  // own size and offset in the design; they are not a uniform set.
+  const PRO_TILES = [
+    { left: 43, icon: gamepadIcon, iconSize: 66, iconLeft: 85, iconTop: 138, labelWidth: 141, labelCenter: 113.5 },
+    { left: 213, icon: wheelIcon, iconSize: 67, iconLeft: 254, iconTop: 139, labelWidth: 150, labelCenter: 288 },
+    { left: 382, icon: noAdsIcon, iconSize: 69, iconLeft: 423, iconTop: 137, labelWidth: 150, labelCenter: 458 },
+  ];
+
+  // Frame 637:352 — a deal card's tiles: PRO time, powers, coins.
+  const dealTiles = (deal: ShopDeal) => [
+    {
+      left: 43,
+      icon: crownIcon,
+      iconSize: 64.785,
+      iconLeft: 85.24,
+      iconTop: 152.24,
+      label: deal.contents.vip === "week" ? t("shop.vipWeek") : t("shop.vipDay"),
+      labelTop: 231,
+      labelWidth: 134,
+      labelCenter: 118,
+    },
+    {
+      left: 213,
+      icon: powersIcon,
+      iconSize: 58,
+      iconLeft: 257,
+      iconTop: 159,
+      label: t("shop.allPowersTimes").replace("{count}", String(deal.contents.powers)),
+      labelTop: 230,
+      labelWidth: 126,
+      labelCenter: 285,
+    },
+    {
+      left: 382,
+      icon: coinIcon,
+      iconSize: 67,
+      iconLeft: 423,
+      iconTop: 154,
+      label: `${deal.contents.coins.toLocaleString()} ${t("shop.coin")}`,
+      labelTop: 233,
+      labelWidth: 107,
+      labelCenter: 456.5,
+    },
+  ];
 
   const getButtonText = (tierId: SimplifiedTier, currentTierVal: string | undefined) => {
     const normalizedTier = currentTierVal === "standard" ? "solo" : currentTierVal;
@@ -158,8 +215,10 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
     await initiateProCheckout(SIDEBAR_TO_STRIPE_TIER[tierId]);
   };
 
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  // The banner's own button already stops propagation, so the event is
+  // optional here — other call sites still pass one.
+  const handleShare = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (sharing) return;
     setSharing(true);
     try {
@@ -192,153 +251,63 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
         className="flex snap-x snap-mandatory overflow-x-auto scrollbar-hide gap-3 rounded-3xl"
       >
         {SLIDES.map((slide) => {
-          const SlideIcon = slide.icon;
-          const isInviteSlide = slide.type === "invite";
           const isDealSlide = slide.type === "deal";
           const activeDeal = slide.id === "deal-daily" ? dailyDeal : hourlyDeal;
           return (
-          <div
-            key={slide.id}
-            onClick={isDealSlide ? undefined : handleCardClick}
-            className={`relative w-full shrink-0 snap-center rounded-2xl overflow-hidden flex min-h-[280px] md:min-h-[300px] ${isDealSlide ? "" : "cursor-pointer"}`}
-            style={{ background: "gradient" in slide ? slide.gradient : "transparent", opacity: isProcessing ? 0.7 : 1 }}
-          >
+          <div key={slide.id} className="w-full shrink-0 snap-center">
             {isDealSlide ? (
-              <DealCard
-                deal={activeDeal}
-                label={slide.id === "deal-daily" ? t("shop.dailyDeal") : t("shop.hourlyDeal")}
-                remainingLabel={slide.id === "deal-daily" ? dailyRemaining : hourlyRemaining}
-                gradient={slide.id === "deal-daily" ? DAILY_DEAL_GRADIENT : HOURLY_DEAL_GRADIENT}
-                chipClass="bg-white/25"
-                urgent={slide.id === "deal-hourly"}
-                isPurchased={purchasedItems.has(activeDeal.id)}
-                isLoading={isPurchasing === activeDeal.id}
-                onBuy={() => onItemClick(dealToShopItem(activeDeal, t(activeDeal.nameKey)))}
+              <DealBanner
+                title={t(activeDeal.nameKey)}
+                savings={dealSavings(activeDeal)}
+                stripIcon={discountIcon}
+                stripLabel={slide.id === "deal-daily" ? t("shop.dailyDeal") : t("shop.hourlyDeal")}
+                remainingIcon={timerIcon}
+                remaining={slide.id === "deal-daily" ? dailyRemaining : hourlyRemaining}
+                tiles={dealTiles(activeDeal)}
+                actionLabel={
+                  isPurchasing === activeDeal.id
+                    ? <Loader2 className="size-5 animate-spin" />
+                    : t("extra.purchaseBtn")
+                }
+                actionDisabled={purchasedItems.has(activeDeal.id) || isPurchasing === activeDeal.id}
+                onAction={() => onItemClick(dealToShopItem(activeDeal, t(activeDeal.nameKey)))}
+              />
+            ) : slide.type === "invite" ? (
+              <InviteBanner
+                skin={SKIN_INVITE}
+                art={friendsIcon}
+                crown={crownIcon}
+                headline={t("extra.inviteMiniTitle")}
+                reward={t("extra.tenDayPro")}
+                onClick={handleCardClick}
+                actionLabel={sharing ? <Loader2 className="size-5 animate-spin" /> : t("team.inviteBtn")}
+                actionDisabled={sharing}
+                onAction={() => handleShare()}
               />
             ) : (
-            <>
-            {/* Popular badge for family tier */}
-            {'popular' in slide && slide.popular && currentTier !== "family" && (
-              <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl shadow-lg flex items-center gap-1 z-10">
-                <Sparkles className="w-3 h-3" /> TOP
-              </div>
-            )}
-
-            {/* Active badge for pro tiers */}
-            {!isInviteSlide && getButtonText(slide.id as SimplifiedTier, currentTier).isActive && (
-              <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl shadow-lg flex items-center gap-1 z-10">
-                <Check className="w-3 h-3" /> {t("extra.activeStatus")}
-              </div>
-            )}
-
-            <div className="w-full p-5 z-10 flex flex-col">
-              {isInviteSlide ? (
-                /* Invite slide content — a single centred column: friends
-                   icon, headline, then the PRO reward chip */
-                <>
-                  <div className="flex flex-col items-center text-center my-auto">
-                    <img src={friendsIcon} alt="" className="w-16 h-16 md:w-20 md:h-20 mb-2" />
-
-                    <p className="text-base md:text-lg font-bold text-white leading-tight mb-3">
-                      {t("extra.inviteMiniTitle")}
-                    </p>
-
-                    <span
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-base font-bold"
-                      // Purple chip: the gold crown still reads on it, and it
-                      // stays distinct from the white share button below
-                      style={{
-                        background: "linear-gradient(180deg, #8B5CF6 0%, #7C3AED 100%)",
-                        color: "#FFFFFF",
-                        boxShadow: "0 3px 0 #5B21B6",
-                      }}
-                    >
-                      <img src={crownIcon} alt="" className="w-6 h-6" />
-                      {t("extra.tenDayPro")}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleShare}
-                    disabled={sharing}
-                    className="w-full py-3 md:py-4 px-4 rounded-xl font-bold text-base md:text-lg flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed mt-4"
-                    style={{
-                      background: "rgba(255,255,255,0.95)",
-                      color: "#7C3AED",
-                      boxShadow: "0 3px 0 rgba(0,0,0,0.15)",
-                    }}
-                  >
-                    {sharing ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" />{t("extra.processingState")}</>
-                    ) : (
-                      <><Share2 className="w-4 h-4" />{t("extra.shareBtn")}</>
-                    )}
-                  </button>
-                </>
-              ) : (
-                /* PRO tier slide content */
-                <>
-                  <div>
-                    <div className="flex flex-wrap items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.2)", boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)" }}>
-                        <SlideIcon className="w-5 h-5 text-white" />
-                      </div>
-                      <h3 className="text-base md:text-lg font-bold text-white">{slide.name}</h3>
-                      {'price' in slide && (
-                        <div className="hidden md:flex items-baseline gap-1 ml-auto">
-                          <span className="text-2xl font-black text-white whitespace-nowrap">{getPriceDisplay(slide.price!).symbol}{getPriceDisplay(slide.price!).value}{getPriceDisplay(slide.price!).suffix}</span>
-                          <span className="text-sm text-white/70">{getPriceDisplay(slide.price!).monthLabel}</span>
-                        </div>
-                      )}
-                    </div>
-                    {'price' in slide && (
-                      <div className="flex md:hidden items-baseline gap-1 mb-2">
-                        <span className="text-xl font-black text-white">{getPriceDisplay(slide.price!).symbol}{getPriceDisplay(slide.price!).value}{getPriceDisplay(slide.price!).suffix}</span>
-                        <span className="text-xs text-white/70">{getPriceDisplay(slide.price!).monthLabel}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {'benefits' in slide && (
-                    <ul className="flex flex-col gap-1.5 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-2 mt-5 mb-auto">
-                      {slide.benefits!.map((benefit, i) => (
-                        <li key={i} className="flex items-start gap-2 text-white/90">
-                          <Check className="w-3.5 h-3.5 md:w-4 md:h-4 text-white/80 flex-shrink-0 mt-0.5" />
-                          <span className="text-xs md:text-sm leading-tight">{benefit}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
-                  {(() => {
-                    const buttonState = getButtonText(slide.id as SimplifiedTier, currentTier);
-                    return (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); if (!buttonState.isActive && !isProcessing) handleUpgrade(slide.id as SimplifiedTier); }}
-                        disabled={buttonState.isActive || isProcessing}
-                        className="w-full py-3 md:py-4 px-4 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed mt-4"
-                        style={{
-                          background: buttonState.isActive ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.95)",
-                          color: buttonState.isActive ? "rgba(255,255,255,0.6)" : slide.shadow,
-                          boxShadow: buttonState.isActive ? "none" : "0 3px 0 rgba(0,0,0,0.15)",
-                        }}
-                      >
-                        {buttonState.isActive ? (
-                          <><Check className="w-4 h-4" />{buttonState.text}</>
-                        ) : isProcessing ? (
-                          <><Loader2 className="w-4 h-4 animate-spin" />{t("extra.processingState")}</>
-                        ) : (
-                          <>{buttonState.text}<ChevronRight className="w-4 h-4" /></>
-                        )}
-                      </button>
-                    );
-                  })()}
-                </>
-              )}
-            </div>
-            </>
+              (() => {
+                const state = getButtonText(slide.id as SimplifiedTier, currentTier);
+                const price = getPriceDisplay(slide.price!);
+                return (
+                  <ProTierBanner
+                    skin={slide.skin!}
+                    header={slide.header!}
+                    name={slide.name}
+                    price={`${price.symbol}${price.value}${price.suffix}`}
+                    month={price.monthLabel}
+                    tiles={PRO_TILES.map((tile, i) => ({
+                      ...tile,
+                      label: slide.benefits![i],
+                      labelTop: 218,
+                    }))}
+                    onClick={handleCardClick}
+                    dimmed={isProcessing}
+                    actionLabel={isProcessing ? <Loader2 className="size-5 animate-spin" /> : state.text}
+                    actionDisabled={state.isActive || isProcessing}
+                    onAction={() => handleUpgrade(slide.id as SimplifiedTier)}
+                  />
+                );
+              })()
             )}
           </div>
           );

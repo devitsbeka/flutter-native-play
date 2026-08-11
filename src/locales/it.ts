@@ -503,10 +503,10 @@ export const it: KaTranslations = {
     familyProBenefit1: "Tutte le funzioni Solo PRO + invita 5 amici",
     familyProBenefit2: "Tutte le funzioni PRO",
     familyProBenefit3: "Senza pubblicità",
-    mobileSoloBenefit1: "Gioco gratuito illimitato",
+    mobileSoloBenefit1: "Gioco illimitato",
     mobileSoloBenefit2: "Tutte le funzioni PRO",
     mobileSoloBenefit3: "Senza pubblicità",
-    mobileFamilyBenefit1: "Tutte le funzioni Solo PRO + invita 5 amici",
+    mobileFamilyBenefit1: "Funzioni PRO + 5 amici",
     mobileFamilyBenefit2: "Gioco gratuito",
     mobileFamilyBenefit3: "Senza pubblicità",
     // Shop tabs

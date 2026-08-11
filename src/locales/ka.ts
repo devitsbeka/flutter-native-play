@@ -2332,10 +2332,10 @@ export const ka = {
     familyProBenefit1: "ყველა Solo PRO ფუნქცია + 5 მეგობრის მოწვევა",
     familyProBenefit2: "ყველა PRO ფუნქცია",
     familyProBenefit3: "რეკლამების გარეშე",
-    mobileSoloBenefit1: "ულიმიტო უფასო თამაში",
+    mobileSoloBenefit1: "ულიმიტო თამაში",
     mobileSoloBenefit2: "ყველა PRO ფუნქცია",
     mobileSoloBenefit3: "რეკლამის გარეშე",
-    mobileFamilyBenefit1: "ყველა Solo PRO ფუნქცია + 5 მეგობრის მოწვევა",
+    mobileFamilyBenefit1: "PRO ფუნქციები + 5 მეგობარი",
     mobileFamilyBenefit2: "უფასო თამაში",
     mobileFamilyBenefit3: "რეკლამის გარეშე",
     // Shop tabs
