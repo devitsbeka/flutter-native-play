@@ -9,7 +9,9 @@ import coinChunky from "@/assets/figma-home/coin-chunky.png";
 import gemChunky from "@/assets/figma-home/gem-chunky.png";
 import coinPurse from "@/assets/icons/icon-coin-purse.png";
 import xDay from "@/assets/figma-home/x-day.svg";
-import timerLine from "@/assets/figma-home/timer-line.svg";
+import missionsCrystal from "@/assets/figma-home/missions-crystal.png";
+import shieldOuter from "@/assets/figma-home/shield-outer.svg";
+import shieldInner from "@/assets/figma-home/shield-inner.svg";
 
 // Figma: Hom — the three mobile home states, all drawn on a 500x946 frame:
 //   632:296  Logged out / guest
@@ -201,14 +203,17 @@ interface MobileProfileCardProps {
   onCoinsClick: () => void;
   onGemsClick: () => void;
   onGiftClick: () => void;
+  /** The weekly streak row is the phone's only way into missions. */
+  onMissionsClick: () => void;
 }
 
 // node 626:1179, re-stacked. The frame put the nickname and the coin/gem
 // pills on one row and the level under the name; the pills overran long
 // nicknames, so the name keeps the row to itself, the pills drop beneath it
-// and the level moves up to the top right. That costs 29px of height (181 →
-// 210). The card also sits above the bottom nav rather than under the
-// friends reel, so the scene it floats on is not covered by it.
+// and the level becomes the same shield SceneHero uses on desktop, sitting
+// over the top-right corner. That costs 29px of height (181 → 210). The card
+// also sits above the bottom nav rather than under the friends reel, so the
+// scene it floats on is not covered by it.
 export function MobileProfileCard({
   nickname,
   level,
@@ -219,6 +224,7 @@ export function MobileProfileCard({
   onCoinsClick,
   onGemsClick,
   onGiftClick,
+  onMissionsClick,
 }: MobileProfileCardProps) {
   const { streak, currentStreak } = useMissionStreak();
 
@@ -251,22 +257,15 @@ export function MobileProfileCard({
         style={{ boxShadow: CARD_SHADOW }}
       >
         {/* The nickname owns its own row now, so nothing can sit over it.
-            It is bounded on the right by the level chip and truncates — the
-            frame let it run under the coin pill, which is why a name as
+            It is bounded on the right by the level shield and truncates —
+            the frame let it run under the coin pill, which is why a name as
             ordinary as "TriviaMaster" lost its last letter. */}
         <button
           type="button"
           onClick={onNameClick}
-          className="absolute left-[26px] right-[96px] top-[11px] truncate text-left font-slackey text-[32px] capitalize leading-[48px] tracking-[-0.16px] text-[#402666]"
+          className="absolute left-[26px] right-[86px] top-[11px] truncate text-left font-slackey text-[32px] capitalize leading-[48px] tracking-[-0.16px] text-[#402666]"
         >
           {nickname}
-        </button>
-        <button
-          type="button"
-          onClick={onLevelClick}
-          className="absolute right-[26px] top-[22px] text-[14px] font-semibold leading-[21px] tracking-[-0.16px] text-[#402666] whitespace-nowrap"
-        >
-          {t("modals.levelLabel")} {level}
         </button>
 
         <div className="absolute left-[26px] top-[64px] flex gap-[6.6px]">
@@ -291,8 +290,18 @@ export function MobileProfileCard({
         <div aria-hidden className="absolute left-[26px] right-[23px] top-[119px] h-px bg-black/[0.08]" />
 
         {/* Weekly streak: six day slots then the daily-rewards gift, spread
-            across the card (node 626:1399) */}
+            across the card (node 626:1399).
+
+            The days are one button, not decoration — the phone has no
+            separate missions section, so the week itself is the way in.
+            The gift keeps its own button inside it for daily rewards. */}
         <div className="absolute left-[26px] right-[22px] top-[128px] flex items-end justify-between">
+          <button
+            type="button"
+            onClick={onMissionsClick}
+            aria-label={t("missions.title")}
+            className="flex flex-1 items-end justify-between pr-[10px] text-left"
+          >
           {DAY_LABELS.map((label, i) => {
             const weekday = SLOT_WEEKDAYS[i];
             const state = dayState(weekday);
@@ -301,7 +310,8 @@ export function MobileProfileCard({
             return (
               <div key={label} className="flex flex-col items-center">
                 {isToday && state === "pending" ? (
-                  /* Today: gold timer chip on a purple well (node 626:1374) */
+                  /* Today: the missions crystal on the gold chip — the day
+                     the player can still act on, showing what acting means */
                   <div
                     className="flex h-[27.328px] w-[27.42px] items-start rounded-[125px]"
                     style={{
@@ -316,9 +326,9 @@ export function MobileProfileCard({
                         style={{ backgroundImage: "linear-gradient(to bottom, #fcd34d, #f59e0b 50%, #d97706)" }}
                       />
                       <img
-                        src={timerLine}
+                        src={missionsCrystal}
                         alt=""
-                        className="relative size-[16.984px] drop-shadow-[0px_1.688px_1.266px_rgba(0,0,0,0.07)]"
+                        className="relative size-[24px] object-contain drop-shadow-[0px_1.688px_1.266px_rgba(0,0,0,0.07)]"
                       />
                       <div className="absolute left-[6.79px] top-[3.37px] size-[2.552px] rounded-full bg-white opacity-[0.73]" />
                       <div className="absolute left-[13.88px] top-[17.21px] size-[1.881px] rounded-full bg-[rgba(255,255,255,0.8)] opacity-[0.53]" />
@@ -363,6 +373,7 @@ export function MobileProfileCard({
               </div>
             );
           })}
+          </button>
 
           {/* Daily rewards (node 626:1404) */}
           <button
@@ -372,7 +383,7 @@ export function MobileProfileCard({
             className="relative h-[62px] w-[76px] shrink-0 rounded-full border-[3px] border-solid border-[rgba(255,255,255,0.9)] shadow-[0px_4px_12px_0px_rgba(0,0,0,0.1),0px_3px_0px_0px_#fdba74]"
             style={{ backgroundImage: "linear-gradient(to bottom, #fff7ed, #fed7aa)" }}
           >
-            <span className="absolute left-[13.44px] top-[2px] block h-[48px] w-[41px] overflow-hidden">
+            <span className="absolute left-[17.5px] top-[2px] block h-[48px] w-[41px] overflow-hidden">
               <img
                 src={coinPurse}
                 alt=""
@@ -383,6 +394,35 @@ export function MobileProfileCard({
           </button>
         </div>
       </div>
+
+      {/* Level shield — the same badge SceneHero carries on desktop. It
+          overhangs the card's top-right corner, so it is a sibling of the
+          card rather than a child: the card clips its own contents. */}
+      <button
+        type="button"
+        aria-label={`${t("modals.levelLabel")} ${level}`}
+        onClick={onLevelClick}
+        className="absolute right-[-2px] top-[-14px] z-10 h-[93px] w-[82.06px]"
+      >
+        <img alt="" src={shieldOuter} className="absolute left-[7.66px] top-[-10.03px] h-[101.63px] w-[74.4px] max-w-none" />
+        <span className="absolute left-[11.09px] top-[-5.63px] block h-[94.4px] w-[67.56px]">
+          <span className="absolute inset-[-8%_-17.61%_-17.42%_-17.61%] block">
+            <img alt="" src={shieldInner} className="block size-full max-w-none" />
+          </span>
+        </span>
+        <span
+          className="absolute left-[46.02px] top-[2.77px] block -translate-x-1/2 whitespace-nowrap text-[35px] font-bold leading-[52.5px] tracking-[-1.75px] text-white"
+          style={{
+            fontFamily: "'Intel One Mono', 'Nunito', monospace",
+            textShadow: "0px 2.19px 2.19px rgba(0,0,0,0.3), 0px 4.38px 6.57px rgba(0,0,0,0.15)",
+          }}
+        >
+          {level}
+        </span>
+        <span className="absolute left-[45.8px] top-[46.66px] block -translate-x-1/2 whitespace-nowrap text-[9.85px] font-bold leading-[14.78px] text-[rgba(255,255,255,0.7)]">
+          {t("modals.levelLabel")}
+        </span>
+      </button>
     </motion.div>
   );
 }

@@ -1136,6 +1136,7 @@ export default function Index() {
             onCoinsClick={() => navigate("/power-ups?section=coins")}
             onGemsClick={() => navigate("/power-ups?section=gems-lari")}
             onGiftClick={() => setIsDailyRewardsOpen(true)}
+            onMissionsClick={() => setShowMissionsModal(true)}
           />
         )}
 
