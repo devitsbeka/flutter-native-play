@@ -287,7 +287,7 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
                 headline={t("extra.inviteMiniTitle")}
                 reward={t("extra.tenDayPro")}
                 onClick={handleCardClick}
-                actionLabel={sharing ? <Loader2 className="size-5 animate-spin" /> : t("team.inviteBtn")}
+                actionLabel={sharing ? <Loader2 className="size-5 animate-spin" /> : t("extra.inviteBtn")}
                 actionDisabled={sharing}
                 onAction={() => handleShare()}
               />

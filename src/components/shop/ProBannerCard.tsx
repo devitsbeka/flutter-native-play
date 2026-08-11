@@ -5,14 +5,15 @@
 // rather than having each coordinate re-derived as a percentage. Same trick
 // LoggedInHomeV2 uses for the world-map home.
 //
-// 435, not 396: the card rectangle is 396 tall and the buy button hangs 39px
-// below it. Both live inside the stage so nothing is ever clipped.
+// The frame draws a 396-tall card with the buy button hanging 39px below
+// it. That overhang puts the card's bottom edge straight through the
+// button on a real screen, so the card here is the full 435 and the button
+// sits inside it.
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export const BANNER_DESIGN_W = 575;
 export const BANNER_DESIGN_H = 435;
-const CARD_H = 396;
 
 /* ------------------------------------------------------------------ *
  * Skins
@@ -101,7 +102,7 @@ function WaveStack({ fill }: { fill: string }) {
     <>
       <svg
         aria-hidden
-        className="absolute left-0 top-[167.9px] block"
+        className="absolute left-0 top-[207px] block"
         width={575}
         height={228}
         viewBox="0 0 575 228"
@@ -111,7 +112,7 @@ function WaveStack({ fill }: { fill: string }) {
       </svg>
       <svg
         aria-hidden
-        className="absolute left-0 top-[156px] block"
+        className="absolute left-0 top-[195px] block"
         width={575}
         height={240}
         viewBox="0 0 575 240"
@@ -121,7 +122,7 @@ function WaveStack({ fill }: { fill: string }) {
       </svg>
       <svg
         aria-hidden
-        className="absolute left-0 top-[140px] block"
+        className="absolute left-0 top-[179px] block"
         width={575}
         height={240}
         viewBox="0 0 575 240"
@@ -208,7 +209,7 @@ export function ProBannerCard({
         {/* Card body */}
         <div
           onClick={onClick}
-          className={`absolute left-0 top-0 h-[396px] w-[575px] overflow-hidden rounded-[24px] ${
+          className={`absolute left-0 top-0 h-[435px] w-[575px] overflow-hidden rounded-[24px] ${
             onClick ? "cursor-pointer" : ""
           }`}
           style={{ backgroundImage: skin.bg }}
@@ -222,7 +223,14 @@ export function ProBannerCard({
           {children}
         </div>
 
-        {/* Buy / invite button — straddles the card's bottom edge */}
+        {/* Buy / invite button.
+
+            The frame hangs it off the card's bottom edge. On a device that
+            edge then runs straight across the button — a hard line with the
+            card's colour above it and the page wash below — and the button
+            reads as cropped by whatever it is sitting on. The card now fills
+            the whole stage and the button sits inside it, above everything
+            in the card, so nothing crosses it. */}
         <button
           type="button"
           onClick={(e) => {
@@ -230,12 +238,10 @@ export function ProBannerCard({
             onAction?.();
           }}
           disabled={actionDisabled}
-          className="absolute left-[68px] top-[358px] flex h-[77px] w-[424px] items-center justify-center gap-[3px] rounded-[24px] border-[2px] border-solid border-[rgba(255,255,255,0.55)] p-[3px] disabled:cursor-not-allowed"
-          // The button overhangs the card, so its shadow lands on the page
-          // wash rather than on the card. The frame's grey border and hard
-          // magenta offset read there as a dark slab floating behind it, so
-          // the lip is the button's own darker amber and the glow is tinted
-          // to the card — both read as the button's edge, not as a shape.
+          className="absolute left-[68px] top-[340px] z-20 flex h-[77px] w-[424px] items-center justify-center gap-[3px] rounded-[24px] border-[2px] border-solid border-[rgba(255,255,255,0.55)] p-[3px] disabled:cursor-not-allowed"
+          // The lip is the button's own darker amber and the glow is tinted
+          // to the card, so both read as the button's edge rather than as a
+          // shape behind it.
           style={{
             boxShadow: `0px 5px 0px 0px #B45309, 0px 10px 20px 0px ${skin.buttonShadow}59`,
           }}
