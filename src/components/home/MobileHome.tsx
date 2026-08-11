@@ -354,15 +354,17 @@ export function MobileProfileCard({
               <div key={label} className="flex flex-col items-center">
                 {isToday && state === "pending" ? (
                   /* Today: the missions crystal on the gold chip — the day
-                     the player can still act on, showing what acting means */
+                     the player can still act on, showing what acting means.
+                     Drawn 15% over the plain day slots so the one actionable
+                     day in the row is the one that catches the eye. */
                   <div
-                    className="flex h-[27.328px] w-[27.42px] items-start rounded-[125px]"
+                    className="flex h-[31.43px] w-[31.53px] items-start rounded-[125px]"
                     style={{
                       backgroundImage:
                         "linear-gradient(180deg, rgb(107,46,224) 8%, rgb(133,71,235) 44.8%, rgb(122,56,217) 72.4%, rgb(89,31,184) 100%)",
                     }}
                   >
-                    <div className="relative flex size-[27.016px] items-center justify-center rounded-full border-[1.266px] border-solid border-[#fbbf24] shadow-[0px_2.533px_0px_0px_#b45309,0px_4.221px_10.131px_0px_rgba(245,158,11,0.5)]">
+                    <div className="relative flex size-[31.07px] items-center justify-center rounded-full border-[1.456px] border-solid border-[#fbbf24] shadow-[0px_2.913px_0px_0px_#b45309,0px_4.854px_11.651px_0px_rgba(245,158,11,0.5)]">
                       <div
                         aria-hidden
                         className="absolute inset-0 rounded-full"
@@ -371,13 +373,13 @@ export function MobileProfileCard({
                       <img
                         src={missionsCrystal}
                         alt=""
-                        className="relative size-[24px] object-contain drop-shadow-[0px_1.688px_1.266px_rgba(0,0,0,0.07)]"
+                        className="relative size-[27.6px] object-contain drop-shadow-[0px_1.941px_1.456px_rgba(0,0,0,0.07)]"
                       />
-                      <div className="absolute left-[6.79px] top-[3.37px] size-[2.552px] rounded-full bg-white opacity-[0.73]" />
-                      <div className="absolute left-[13.88px] top-[17.21px] size-[1.881px] rounded-full bg-[rgba(255,255,255,0.8)] opacity-[0.53]" />
+                      <div className="absolute left-[7.81px] top-[3.88px] size-[2.935px] rounded-full bg-white opacity-[0.73]" />
+                      <div className="absolute left-[15.96px] top-[19.79px] size-[2.163px] rounded-full bg-[rgba(255,255,255,0.8)] opacity-[0.53]" />
                       <div
                         aria-hidden
-                        className="absolute inset-0 rounded-full shadow-[inset_0px_1.266px_0px_0px_rgba(255,255,255,0.35)]"
+                        className="absolute inset-0 rounded-full shadow-[inset_0px_1.456px_0px_0px_rgba(255,255,255,0.35)]"
                       />
                     </div>
                   </div>

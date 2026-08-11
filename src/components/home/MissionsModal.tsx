@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Check, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Star, X } from "lucide-react";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import { useMissions, getMissionIcon, type MissionIconKey } from "@/hooks/useMissions";
@@ -246,12 +246,25 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
               boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0,0,0,0.18)",
             }}
           >
+            {/* Close — same treatment as the other home modals. Tapping the
+                backdrop already dismisses, but that is not discoverable and
+                is unreachable on a phone where the sheet fills the screen. */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200"
+              style={{ boxShadow: "0 2px 0 #E5E7EB" }}
+              aria-label={t("common.close")}
+            >
+              <X className="h-4 w-4 text-gray-600" />
+            </button>
+
             <div className="px-5 pb-5 pt-5">
-              {/* Header */}
-              <h2 className="font-display text-xl font-bold text-[#402666]">
+              {/* Header — right padding keeps the title clear of the close button */}
+              <h2 className="pr-12 font-display text-xl font-bold text-[#402666]">
                 {t("missions.title")}
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">{t("missions.subtitle")}</p>
+              <p className="mt-0.5 pr-12 text-xs text-slate-500">{t("missions.subtitle")}</p>
 
               {/* Streak banner */}
               <div
