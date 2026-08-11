@@ -29,6 +29,7 @@ import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { SceneHero } from "@/components/home/SceneHero";
 import { SceneSidebar } from "@/components/home/SceneSidebar";
 import { DesktopGuestLanding, DesktopGuestSceneBackground } from "@/components/home/DesktopGuestLanding";
+import { MobileSceneBackground, MobileProfileCard, MobileGuestHero } from "@/components/home/MobileHome";
 import { useUserScene } from "@/hooks/useUserScene";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
@@ -101,17 +102,28 @@ function HeaderGreeting({ nickname }: { nickname?: string | null }) {
 // The scene background only shows on lg+ (desktop + tablet landscape) —
 // mounting the <video>/<img> at all sizes made phones download megabytes of
 // media that CSS then hid.
-function useIsSceneViewport(): boolean {
-  const [isXl, setIsXl] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches
+function useMatchMedia(query: string): boolean {
+  const [matches, setMatches] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(query).matches
   );
   useEffect(() => {
-    const mql = window.matchMedia("(min-width: 768px)");
-    const onChange = (e: MediaQueryListEvent) => setIsXl(e.matches);
+    const mql = window.matchMedia(query);
+    setMatches(mql.matches);
+    const onChange = (e: MediaQueryListEvent) => setMatches(e.matches);
     mql.addEventListener("change", onChange);
     return () => mql.removeEventListener("change", onChange);
-  }, []);
-  return isXl;
+  }, [query]);
+  return matches;
+}
+
+function useIsSceneViewport(): boolean {
+  return useMatchMedia("(min-width: 768px)");
+}
+
+// Below md the home page follows the phone design (Figma 626:201 / 628:437 /
+// 632:296), which has its own scene framing and widget layout.
+function useIsMobileViewport(): boolean {
+  return useMatchMedia("(max-width: 767px)");
 }
 
 import { toast } from "@/hooks/use-toast";
@@ -697,6 +709,7 @@ export default function Index() {
   // alike, even with custom avatars — gets the default Trivia King loop.
   const { data: userScene, isLoading: sceneLoading } = useUserScene(user?.id);
   const isSceneViewport = useIsSceneViewport();
+  const isMobileViewport = useIsMobileViewport();
   const sceneUrl = userScene?.imageUrl || null;
   const sceneVideoUrl = userScene?.videoUrl || null;
   const showDefaultScene = !sceneUrl && !(user && sceneLoading);
@@ -871,6 +884,18 @@ export default function Index() {
         disableScroll
       >
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
+        {/* Phone scene layer (Figma 626:201 / 628:437) — the same artwork the
+            desktop uses, but framed the way the mobile design does: far wider
+            than the screen and anchored just above the bottom nav. Guests get
+            their own artwork inside MobileGuestHero instead. */}
+        {user && isMobileViewport && (
+          <MobileSceneBackground
+            sceneUrl={sceneUrl}
+            sceneVideoUrl={sceneVideoUrl}
+            showDefaultScene={showDefaultScene}
+            defaultVideoSrc={DEFAULT_SCENE_VIDEO}
+          />
+        )}
         {/* Personalized scene (or the default Trivia King loop) as the
             full-bleed page background (xl+); the header, friends strip and
             cards float over it. Clicks are caught by SceneHero's catcher
@@ -930,7 +955,13 @@ export default function Index() {
              the white edge vignette (exported still as the poster) */
           <DesktopGuestSceneBackground videoSrc={DEFAULT_SCENE_VIDEO} />
         ) : null}
-        <header className="relative z-20 px-4 py-3 md:pt-4 safe-top border-b border-border/30 lg:border-b-0">
+        {/* Guests on phones get their header from MobileGuestHero (burger +
+            search only, no wordmark — the wordmark is in the body there). */}
+        <header
+          className={`relative z-20 px-4 py-3 md:pt-4 safe-top border-b border-border/30 lg:border-b-0 ${
+            !user ? "hidden md:block" : ""
+          }`}
+        >
           <div className="flex items-center justify-between gap-3 md:min-h-12">
             {/* Left side: Burger menu (mobile only) - Hidden for guests */}
             <div className="flex items-center gap-2">
@@ -1038,6 +1069,23 @@ export default function Index() {
           </div>
         )}
 
+        {/* Phone profile card (Figma 626:1179) — nickname, level, the chunky
+            coin/gem pills and the weekly streak, floating over the scene
+            22px under the friends reel. Desktop keeps SceneHero's stack. */}
+        {user && (
+          <MobileProfileCard
+            nickname={profile?.nickname || t("game.guest")}
+            level={levelInfo.level}
+            coins={coins}
+            gems={gems}
+            onNameClick={() => setShowChangeNameModal(true)}
+            onLevelClick={() => setShowLevelModal(true)}
+            onCoinsClick={() => navigate("/power-ups?section=coins")}
+            onGemsClick={() => navigate("/power-ups?section=gems-lari")}
+            onGiftClick={() => setIsDailyRewardsOpen(true)}
+          />
+        )}
+
         {/* Add Friend Modal for the friends strip */}
         <AddFriendsModal
           isOpen={showAddFriendModal}
@@ -1111,58 +1159,42 @@ export default function Index() {
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
             
-            {/* GUEST: Show avatar + play button (no auth wall) */}
+            {/* GUEST on phones (Figma 632:296): wordmark and tagline up top,
+                the Georgian trophy map behind, provider buttons and the terms
+                note above the nav. Rendered as its own full-page layer, so it
+                sits outside this centered hero box. */}
             {!user && (
-              <>
-                {/* Mobile: Guest sees avatar with play button (play in bottom nav) */}
-                <motion.div
-                  className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
-                  style={{ marginTop: -90 }}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.5, type: "spring" }}
-                >
-                  {/* PRO Gift Banner for guests */}
-
-
-                  <div className="relative">
-                    <motion.div 
-                      animate={{ y: [0, -8, 0] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      <div className="pointer-events-auto cursor-pointer" onClick={() => navigate("/auth")}>
-                        <AvatarCircle 
-                          animatedAvatarUrl={guestMascotVideo}
-                          size={220} 
-                          coins={0} gems={0} level={1}
-                          xpProgress={0} xpCurrent={0} xpTotal={100}
-                          hideStats showAvatarPrompt={false} showMascotReminder={false}
-                          autoPlayInterval={5000}
-                        />
-                      </div>
-                    </motion.div>
-                  </div>
-                  <motion.div 
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3, type: "spring" }}
-                    className="flex flex-col items-center mt-3 pointer-events-auto"
-                  >
-                    <span className="font-slackey text-gray-800 font-black flex items-center gap-2" style={{ fontSize: 26 }}>
-                      <motion.img src={handGestureIcon} alt="" className="w-7 h-7" animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }} style={{ transformOrigin: "70% 80%" }} /> {t("common.hello")}
-                    </span>
-                    {/* Auth buttons */}
-                    <div className="flex items-center gap-3 mt-3">
-                      <motion.button onClick={() => navigate("/auth")} className="px-5 py-2.5 rounded-full bg-white border border-border shadow-md text-sm font-semibold text-foreground" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        {t("common.signIn")}
-                      </motion.button>
-                      <motion.button onClick={() => navigate("/auth?mode=signup")} className="px-5 py-2.5 rounded-full bg-primary shadow-md text-sm font-semibold text-primary-foreground" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        {t("extra.joinFreeBtn")}
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              </>
+              <MobileGuestHero
+                onApple={async () => {
+                  const { error } = await signInWithApple();
+                  if (error) {
+                    toast({
+                      title: t("extra.appleSignInError"),
+                      description: error.message,
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                onGoogle={async () => {
+                  const { error } = await signInWithGoogle();
+                  // On success the browser redirects to Google; only failures land here.
+                  if (error) {
+                    toast({
+                      title: t("extra.googleSignInError"),
+                      description: error.message,
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                /* No Facebook provider is configured for this app, so the
+                   button opens the full auth screen instead. */
+                onFacebook={() => navigate("/auth?mode=signup")}
+                onEmail={() => navigate("/auth?mode=signup")}
+                onMenu={() => setIsSideMenuOpen(true)}
+                onTerms={() => navigate("/terms")}
+                onPrivacy={() => navigate("/privacy-policy")}
+                searchButton={<SpotlightSearch variant="button" />}
+              />
             )}
             
             {/* xl+ layout: Cards moved to fixed right side */}
@@ -1538,307 +1570,10 @@ export default function Index() {
               </motion.div>
             </motion.div>}
 
-            {/* Mobile only: circular action buttons + avatar + info - LOGGED IN USERS ONLY */}
-            {user && <div className="md:hidden w-full flex justify-center [@media(max-height:780px)]:[zoom:0.88] [@media(max-height:780px)]:-mt-8 [@media(max-height:700px)]:[zoom:0.8] [@media(max-height:700px)]:-mt-14 [@media(max-height:620px)]:[zoom:0.72] [@media(max-height:620px)]:-mt-20">
-            <motion.div
-              className="flex flex-col items-center w-full max-w-[360px] px-4"
-              style={{ marginTop: -5 }}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, type: "spring" }}
-            >
-              {/* Guest: Title and desc ABOVE avatar for mobile */}
-              {!user && (
-                <motion.div
-                  initial={{ y: -10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.2, type: "spring" }}
-                  className="flex flex-col items-center mb-10 pointer-events-auto"
-                >
-                  <span className="font-slackey text-gray-800 font-black" style={{ fontSize: 32, fontWeight: 900 }}>
-                    {t("common.hello")}
-                  </span>
-                  <motion.button
-                    onClick={() => navigate("/auth")}
-                    className="mt-1 text-center cursor-pointer"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <p className="text-base text-gray-600 font-medium text-center leading-relaxed">
-                      {t("extra.createProfilePlayFree")}
-                    </p>
-                  </motion.button>
-                </motion.div>
-              )}
-
-
-
-
-              <div className="relative">
-                {/* Mobile: Show curved action buttons above avatar */}
-                {user && (
-                  <div 
-                    className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center pointer-events-auto z-20"
-                    style={{ top: -75, width: 340, gap: isVip ? 8 : 4 }}
-                    data-walkthrough="powerups"
-                  >
-                    {/* Gift - edge position */}
-                    <motion.div 
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.3, type: "spring" }}
-                      style={{ marginBottom: 0 }}
-                    >
-                      <ActionButtonWithParticles
-                        iconSrc={giftBottleIcon}
-                        alt="Gift"
-                        onClick={() => setIsDailyRewardsOpen(true)}
-                        background="linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)"
-                        shadowColor="#FDBA74"
-                        delay={0.4}
-                        particleColor="rgba(253, 186, 116, 0.9)"
-                        glowColor="rgba(253, 186, 116, 0.5)"
-                        idleOffset={0}
-                        size={62}
-                        badge={
-                          canClaimDaily ? (
-                            <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
-                              <Check className="w-3.5 h-3.5" />
-                            </span>
-                          ) : (
-                            <motion.div
-                              className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center shadow-lg z-20"
-                              style={{
-                                background: "linear-gradient(180deg, #FEF3C7 0%, #FCD34D 100%)",
-                                boxShadow: "0 2px 8px rgba(252, 211, 77, 0.5)",
-                                border: "2px solid white",
-                              }}
-                              animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                            >
-                              <Clock className="w-3.5 h-3.5 text-amber-700" />
-                            </motion.div>
-                          )
-                        }
-                      />
-                    </motion.div>
-
-                    {/* Mission - arc position: 28px (5 buttons) or 20px (6 buttons) */}
-                    <motion.div 
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.35, type: "spring" }}
-                      style={{ marginBottom: isVip ? 32 : 24 }}
-                    >
-                      <ActionButtonWithParticles
-                        iconSrc={missionCrystalIcon}
-                        alt="Mission"
-                        onClick={() => setShowMissionsModal(true)}
-                        background="linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)"
-                        shadowColor="#7DD3FC"
-                        delay={0.48}
-                        particleColor="rgba(125, 211, 252, 0.9)"
-                        glowColor="rgba(125, 211, 252, 0.5)"
-                        idleOffset={0.7}
-                        size={62}
-                        badge={
-                          incompleteMissions > 0 ? (
-                            <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
-                              {incompleteMissions}
-                            </span>
-                          ) : (
-                            <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
-                              <Check className="w-3.5 h-3.5" />
-                            </span>
-                          )
-                        }
-                      />
-                    </motion.div>
-
-                    {/* Chest - peak position: 48px (5 buttons) or 36px (6 buttons) */}
-                    <motion.div 
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.4, type: "spring" }}
-                      style={{ marginBottom: isVip ? 32 : 40 }}
-                    >
-                      <ActionButtonWithParticles
-                        iconSrc={chestBoxIcon}
-                        alt="Chest"
-                        onClick={() => setIsChestModalOpen(true)}
-                        background="linear-gradient(180deg, #FCE7F3 0%, #F9A8D4 100%)"
-                        shadowColor="#F472B6"
-                        delay={0.56}
-                        particleColor="rgba(244, 114, 182, 0.9)"
-                        glowColor="rgba(244, 114, 182, 0.5)"
-                        idleOffset={1.4}
-                        size={62}
-                        badge={
-                          canClaimChest ? (
-                            <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
-                              <Check className="w-3.5 h-3.5" />
-                            </span>
-                          ) : undefined
-                        }
-                      />
-                    </motion.div>
-
-                    {/* No-ads - only for non-VIP, arc position: 36px */}
-                    {!isVip && (
-                      <motion.div 
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.45, type: "spring" }}
-                        style={{ marginBottom: 24 }}
-                      >
-                        <ActionButtonWithParticles
-                          iconSrc={adFreeIcon}
-                          alt="Shop"
-                          onClick={() => navigate("/power-ups")}
-                          background="linear-gradient(180deg, #FEF9C3 0%, #FDE047 100%)"
-                          shadowColor="#FACC15"
-                          delay={0.64}
-                          particleColor="rgba(250, 204, 21, 0.9)"
-                          glowColor="rgba(250, 204, 21, 0.5)"
-                          idleOffset={2.1}
-                          size={62}
-                        />
-                      </motion.div>
-                    )}
-
-                    {/* Powers - edge position */}
-                    <motion.div 
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.5, type: "spring" }}
-                      style={{ marginBottom: 0 }}
-                    >
-                      <ActionButtonWithParticles
-                        iconSrc={powersIcon}
-                        alt="Shop"
-                        onClick={() => navigate("/power-ups")}
-                        background="linear-gradient(180deg, #E9D5FF 0%, #C084FC 100%)"
-                        shadowColor="#A855F7"
-                        delay={0.72}
-                        particleColor="rgba(168, 85, 247, 0.9)"
-                        glowColor="rgba(168, 85, 247, 0.5)"
-                        idleOffset={2.8}
-                        size={62}
-                        badge={
-                          totalPowerUps > 0 ? (
-                            <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
-                              {totalPowerUps}
-                            </span>
-                          ) : undefined
-                        }
-                      />
-                    </motion.div>
-                  </div>
-                )}
-
-                <motion.div 
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  style={{ marginTop: user ? 15 : 0 }}
-                >
-                  <div 
-                    data-walkthrough="avatar" 
-                    className="pointer-events-auto cursor-pointer"
-                    onClick={() => user ? openAvatarModal() : navigate("/auth")}
-                  >
-                    <AvatarCircle
-                      avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar}
-                      animatedAvatarUrl={user ? profile?.animated_avatar_url : defaultGuestAvatarAnimated}
-                      size={238}
-                      coins={user ? coins : 0}
-                      gems={user ? gems : 0}
-                      level={user ? levelInfo.level : 1}
-                      xpProgress={user ? levelInfo.progress : 0}
-                      xpCurrent={user ? levelInfo.xpInCurrentLevel : 0}
-                      xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
-                      hideStats={!user}
-                      showAvatarPrompt={false}
-                      showAnimatePrompt={showAnimatePrompt}
-                      onAnimateClick={() => handleAnimateFromHome()}
-                      showMascotReminder={!!user && !profile?.avatar_url}
-                      userId={user?.id}
-                    />
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* User info section */}
-              <motion.div 
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3, type: "spring" }}
-                className="flex flex-col items-center mt-8 pointer-events-auto"
-              >
-                {user && (
-                  <>
-                    <div className="flex items-center justify-center gap-2.5">
-                      {profile?.country_code && (
-                        <span className="text-3xl">{getCountryFlag(profile.country_code)}</span>
-                      )}
-                      <motion.button
-                        onClick={() => setShowChangeNameModal(true)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="font-slackey text-gray-800 capitalize font-black cursor-pointer"
-                        style={{ fontSize: 32 }}
-                      >
-                        {profile?.nickname || t("game.guest")}
-                      </motion.button>
-                    </div>
-                    <div className="flex items-center gap-6 mt-1">
-                      <motion.button
-                        className="flex items-center gap-2 cursor-pointer"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate("/power-ups?section=coins")}
-                      >
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                          <img src={coinIcon} alt="Coins" className="w-10 h-10" />
-                        </div>
-                        <span className="font-bold text-gray-700 text-lg">
-                          {coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins}
-                        </span>
-                      </motion.button>
-                      <motion.button
-                        className="flex items-center gap-2 cursor-pointer"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate("/power-ups?section=gems-lari")}
-                      >
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                          <img src={gemIcon} alt="Gems" className="w-10 h-10" />
-                        </div>
-                        <span className="font-bold text-gray-700 text-lg">
-                          {gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems}
-                        </span>
-                      </motion.button>
-                    </div>
-                  </>
-                )}
-                {!user && (
-                  <div className="flex flex-col items-center">
-                    <p
-                      className="text-base text-gray-600 font-semibold text-center cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => navigate("/auth?mode=signup")}
-                    >
-                      {t("extra.registration")}
-                    </p>
-                    <div className="flex flex-col items-center" style={{ marginTop: 25 }}>
-                      <p className="text-base text-gray-600 font-medium text-center">
-                        {t("extra.playAsGuest")}
-                      </p>
-                      <HandDrawnArrow size={44} color="#9CA3AF" />
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            </motion.div>
-            </div>}
+            {/* The phone hero that used to live here (avatar + orbiting
+                action buttons + name/coins/gems) is replaced by the Figma
+                mobile design: the scene fills the page and MobileProfileCard
+                carries the nickname, level, balances and weekly streak. */}
         </div>
           </div>
 

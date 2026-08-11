@@ -1487,6 +1487,12 @@ export const ka = {
     challenge: "გამოწვევა",
   },
   extra: {
+    guestTagline: "გამოიწვიე მეგობრები და შექმენი შენი ტრივია ნებისმიერ თემაზე.",
+    appleSignInBtn: "Apple-ით შესვლა",
+    guestTermsIntro: "ანგარიშის შექმნით თქვენ ადასტურებთ რომ გაეცანით და ეთანხმებით",
+    guestTermsService: "მომსახურების წესებსა",
+    guestTermsAnd: "და",
+    guestTermsConditions: "პირობებს.",
     // Desktop logged-out landing (Figma 612:1888)
     landingPlayersCount: "100,000+ მოთამაშე",
     landingJoinFreeHeading: "გაწევრიანდი\nუფასოდ",

@@ -1488,6 +1488,12 @@ export const en: KaTranslations = {
     challenge: "Challenge",
   },
   extra: {
+    guestTagline: "Challenge your friends and create your own trivia on any topic.",
+    appleSignInBtn: "Sign in with Apple",
+    guestTermsIntro: "By creating an account you confirm that you have read and agree to the",
+    guestTermsService: "Terms of Service",
+    guestTermsAnd: "and",
+    guestTermsConditions: "Conditions.",
     // Desktop logged-out landing (Figma 612:1888)
     landingPlayersCount: "100,000+ players",
     landingJoinFreeHeading: "Join\nfor free",
