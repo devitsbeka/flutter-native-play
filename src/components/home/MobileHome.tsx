@@ -29,6 +29,14 @@ const AUTH_GRADIENT = STAT_GRADIENT;
 // device inset; scene art is anchored off it exactly as in the frame.
 const NAV_H = "calc(88px + env(safe-area-inset-bottom))";
 
+// Dissolves the scene artwork's top edge into the page wash. Both spellings
+// ship: iOS below 15.4 only understands the -webkit- one, and there the
+// unprefixed property alone would leave the edge as a hard line.
+const SCENE_TOP_FADE: React.CSSProperties = {
+  maskImage: "linear-gradient(to bottom, transparent 0, black 60%)",
+  WebkitMaskImage: "linear-gradient(to bottom, transparent 0, black 60%)",
+};
+
 /* ------------------------------------------------------------------ *
  * Scene background (logged-in states)
  * ------------------------------------------------------------------ */
@@ -53,11 +61,25 @@ export function MobileSceneBackground({
   defaultVideoSrc,
 }: MobileSceneBackgroundProps) {
   if (sceneUrl) {
-    // 774.7 / 500 wide, left edge at -110.3 / 500, bottom 116px off the frame.
-    // The top edge is mask-faded: the page wash behind it is an animated blob
-    // loop, so a flat cut would read as a hard line straight across the page.
-    const box =
-      "absolute left-[-22.06vw] w-[154.94vw] max-w-none [mask-image:linear-gradient(to_bottom,transparent_0,black_140px)]";
+    // 774.7 / 500 wide, left edge at -110.3 / 500.
+    //
+    // The frame floats the artwork 28px clear of the nav, which on a real
+    // phone reads as a strip of bare page wash under the scene, closed off
+    // by the hard cut of the artwork's own bottom edge. It sits ON the nav
+    // instead: the wave divider overlaps the last 14px, so the cut is never
+    // visible and there is nothing left to read as empty.
+    //
+    // The top edge is mask-faded — the wash behind it is an animated blob
+    // loop, so a flat cut would read as a hard line straight across the
+    // page. 140px was not enough: the artwork's own sky is a deeper
+    // lavender than the wash, so the fade finished while the two tones
+    // still differed and the seam showed anyway. Fading over most of the
+    // artwork's height spreads that difference out until it disappears.
+    const box = "absolute left-[-22.06vw] w-[154.94vw] max-w-none";
+    // Inline rather than a Tailwind arbitrary property: that ships
+    // `mask-image` alone, which iOS below 15.4 ignores outright — and an
+    // ignored mask is precisely the hard top edge this is here to prevent.
+    const style: React.CSSProperties = { bottom: NAV_H, ...SCENE_TOP_FADE };
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -74,16 +96,10 @@ export function MobileSceneBackground({
             muted
             playsInline
             className={box}
-            style={{ bottom: `calc(28px + ${NAV_H})` }}
+            style={style}
           />
         ) : (
-          <img
-            src={sceneUrl}
-            alt=""
-            draggable={false}
-            className={box}
-            style={{ bottom: `calc(28px + ${NAV_H})` }}
-          />
+          <img src={sceneUrl} alt="" draggable={false} className={box} style={style} />
         )}
       </motion.div>
     );
