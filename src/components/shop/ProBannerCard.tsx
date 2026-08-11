@@ -238,7 +238,7 @@ export function ProBannerCard({
             onAction?.();
           }}
           disabled={actionDisabled}
-          className="absolute left-[68px] top-[340px] z-20 flex h-[77px] w-[424px] items-center justify-center gap-[3px] rounded-[24px] border-[2px] border-solid border-[rgba(255,255,255,0.55)] p-[3px] disabled:cursor-not-allowed"
+          className="absolute left-[68px] top-[330px] z-20 flex h-[77px] w-[424px] items-center justify-center gap-[3px] rounded-[24px] border-[2px] border-solid border-[rgba(255,255,255,0.55)] p-[3px] disabled:cursor-not-allowed"
           // The lip is the button's own darker amber and the glow is tinted
           // to the card, so both read as the button's edge rather than as a
           // shape behind it.
@@ -457,7 +457,7 @@ export function ProTierBanner({
         }}
       >
         <p className="text-center text-[24px] font-extrabold leading-none">{name}</p>
-        <p className="font-semibold leading-none">
+        <p className="text-center font-semibold leading-none">
           <span className="text-[24px]">{price} / </span>
           <span className="text-[16px]">{month}</span>
         </p>
@@ -541,6 +541,9 @@ export function DealBanner({
   remaining,
   remainingIcon,
   tiles,
+  price,
+  wasPrice,
+  gemIcon,
   actionLabel,
   onAction,
   actionDisabled,
@@ -553,6 +556,11 @@ export function DealBanner({
   remaining: ReactNode;
   remainingIcon: string;
   tiles: BannerTileContent[];
+  /** What the bundle costs, in gems. */
+  price: number;
+  /** What the same contents cost bought separately. */
+  wasPrice: number;
+  gemIcon: string;
   actionLabel: ReactNode;
   onAction: () => void;
   actionDisabled?: boolean;
@@ -570,14 +578,44 @@ export function DealBanner({
         </div>
       }
     >
-      <p
-        className="absolute left-[262px] top-[74px] -translate-x-1/2 whitespace-nowrap text-center text-[24px] font-extrabold leading-none text-white"
+      {/* Title and its discount, as one centred row. The frame parks the
+          badge at a fixed x half the card away from the title, which reads
+          as two unrelated things; it belongs to the title, so it travels
+          with it. */}
+      <div
+        className="absolute left-[287.5px] top-[66px] flex -translate-x-1/2 items-center gap-[10px]"
         style={{ textShadow: CARD_TEXT_SHADOW }}
       >
-        {title}
-      </p>
-      <div className="absolute left-[413px] top-[75px] flex h-[28px] w-[52px] items-center justify-center rounded-[24px] bg-[#FCD34D]">
-        <p className="whitespace-nowrap text-[14px] font-extrabold leading-none text-[#78350F]">-{savings}%</p>
+        <p className="whitespace-nowrap text-center text-[24px] font-extrabold leading-none text-white">
+          {title}
+        </p>
+        <span
+          className="flex h-[28px] shrink-0 items-center justify-center rounded-[24px] bg-[#FCD34D] px-[10px]"
+          style={{ textShadow: "none" }}
+        >
+          <span className="whitespace-nowrap text-[14px] font-extrabold leading-none text-[#78350F]">
+            -{savings}%
+          </span>
+        </span>
+      </div>
+
+      {/* What it costs. A banner with a buy button and no price asks the
+          player to tap to find out. */}
+      <div className="absolute left-[287.5px] top-[108px] flex -translate-x-1/2 items-center gap-[10px] text-white">
+        <span
+          className="flex items-center gap-[4px] text-[16px] font-semibold text-white/70 line-through decoration-2"
+          style={{ textShadow: CARD_TEXT_SHADOW }}
+        >
+          <img src={gemIcon} alt="" draggable={false} className="size-[18px] object-contain opacity-80" />
+          {wasPrice}
+        </span>
+        <span
+          className="flex items-center gap-[5px] text-[24px] font-extrabold"
+          style={{ textShadow: CARD_TEXT_SHADOW }}
+        >
+          <img src={gemIcon} alt="" draggable={false} className="size-[28px] object-contain" />
+          {price}
+        </span>
       </div>
       {tiles.map((tile) => (
         <BannerTile key={tile.labelCenter} skin={skin} left={tileLeft(tile)} top={177} height={115} {...tile} />

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import crownIcon from "@/assets/crown-icon.png";
 import friendsIcon from "@/assets/group-of-people.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import gemIcon from "@/assets/icons/icon-gem.png";
 import powersIcon from "@/assets/icons/icon-powers-bottle.png";
 import gamepadIcon from "@/assets/pro-banner/banner-gamepad.webp";
 import wheelIcon from "@/assets/pro-banner/banner-wheel.webp";
@@ -271,6 +272,9 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
                 remainingIcon={timerIcon}
                 remaining={slide.id === "deal-daily" ? dailyRemaining : hourlyRemaining}
                 tiles={dealTiles(activeDeal)}
+                price={activeDeal.price}
+                wasPrice={activeDeal.wasPrice}
+                gemIcon={gemIcon}
                 actionLabel={
                   isPurchasing === activeDeal.id
                     ? <Loader2 className="size-5 animate-spin" />
