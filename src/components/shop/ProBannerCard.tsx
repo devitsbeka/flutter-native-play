@@ -79,6 +79,11 @@ const GLASS_SHEEN = "inset 0px 1px 0px 0px rgba(255,255,255,0.45)";
 // without darkening the card itself.
 const CARD_TEXT_SHADOW = "0px 1px 2px rgba(23,10,45,0.35), 0px 2px 8px rgba(23,10,45,0.18)";
 
+// Tile captions reserve two lines of 16px/1.15 whether or not they need
+// both, and centre inside that box. Without it a wrapping caption hangs
+// below its neighbours and the row of tiles reads as misaligned.
+const CAPTION_BOX_H = 37;
+
 /* ------------------------------------------------------------------ *
  * Wave stack
  * ------------------------------------------------------------------ */
@@ -308,12 +313,17 @@ export function BannerTile({
         className="absolute max-w-none object-contain"
         style={{ left: iconLeft, top: iconTop, width: iconSize, height: iconSize }}
       />
-      <p
-        className="absolute -translate-x-1/2 text-center text-[16px] font-semibold leading-none text-white"
-        style={{ left: labelCenter, top: labelTop, width: labelWidth, textShadow: CARD_TEXT_SHADOW }}
+      <div
+        className="absolute flex -translate-x-1/2 items-center justify-center"
+        style={{ left: labelCenter, top: labelTop, width: labelWidth, height: CAPTION_BOX_H }}
       >
-        {label}
-      </p>
+        <p
+          className="text-center text-[16px] font-semibold leading-[1.15] text-white"
+          style={{ textShadow: CARD_TEXT_SHADOW }}
+        >
+          {label}
+        </p>
+      </div>
     </>
   );
 }
@@ -371,10 +381,10 @@ export const HEADER_SOLO = (crown: string): ProTierHeader => ({
 });
 
 export const HEADER_FAMILY = (people: string): ProTierHeader => ({
-  art: [
-    { src: people, left: 126, top: 45, size: 69 },
-    { src: people, left: 150, top: 37, size: 68 },
-  ],
+  // The frame layers two copies of the group offset from each other. One
+  // reads as a crowd already; two just look like a rendering mistake, so a
+  // single icon sits centred on the pair's combined bounds at their size.
+  art: [{ src: people, left: 132, top: 35.5, size: 80 }],
   titleLeft: 214.76,
   titleTop: 46.42,
   titleWidth: 215.37,

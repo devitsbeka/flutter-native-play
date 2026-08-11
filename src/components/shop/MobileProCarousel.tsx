@@ -127,10 +127,14 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
 
   // Frame 636:169 — the three benefit tiles on a PRO card. Each icon has its
   // own size and offset in the design; they are not a uniform set.
+  // Captions sit on their tile's true centre (left + 75), not the frame's
+  // own values, which drift a few px off and read as misaligned once the
+  // captions all occupy the same box. 124 wide keeps them inside the tile
+  // and lets the longer ones wrap rather than run to the edges.
   const PRO_TILES = [
-    { left: 43, icon: gamepadIcon, iconSize: 66, iconLeft: 85, iconTop: 138, labelWidth: 141, labelCenter: 113.5 },
-    { left: 213, icon: wheelIcon, iconSize: 67, iconLeft: 254, iconTop: 139, labelWidth: 150, labelCenter: 288 },
-    { left: 382, icon: noAdsIcon, iconSize: 69, iconLeft: 423, iconTop: 137, labelWidth: 150, labelCenter: 458 },
+    { left: 43, icon: gamepadIcon, iconSize: 66, iconLeft: 85, iconTop: 138, labelWidth: 124, labelCenter: 118 },
+    { left: 213, icon: wheelIcon, iconSize: 67, iconLeft: 254, iconTop: 139, labelWidth: 124, labelCenter: 288 },
+    { left: 382, icon: noAdsIcon, iconSize: 69, iconLeft: 423, iconTop: 137, labelWidth: 124, labelCenter: 457 },
   ];
 
   // Frame 637:352 — a deal card's tiles: PRO time, powers, coins.
@@ -143,7 +147,7 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
       iconTop: 152.24,
       label: deal.contents.vip === "week" ? t("shop.vipWeek") : t("shop.vipDay"),
       labelTop: 231,
-      labelWidth: 134,
+      labelWidth: 124,
       labelCenter: 118,
     },
     {
@@ -154,8 +158,8 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
       iconTop: 159,
       label: t("shop.allPowersTimes").replace("{count}", String(deal.contents.powers)),
       labelTop: 230,
-      labelWidth: 126,
-      labelCenter: 285,
+      labelWidth: 124,
+      labelCenter: 288,
     },
     {
       left: 382,
@@ -165,8 +169,8 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
       iconTop: 154,
       label: `${deal.contents.coins.toLocaleString()} ${t("shop.coin")}`,
       labelTop: 233,
-      labelWidth: 107,
-      labelCenter: 456.5,
+      labelWidth: 124,
+      labelCenter: 457,
     },
   ];
 
