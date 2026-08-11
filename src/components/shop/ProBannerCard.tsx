@@ -18,44 +18,66 @@ const CARD_H = 396;
  * Skins
  * ------------------------------------------------------------------ */
 
+// One jewel tone per banner, each a light-to-deep gradient of a single hue
+// rather than a flat fill, with a darker relative of that hue for the waves.
+// Every banner stays cool so the gold button is the only warm thing on the
+// card and always reads as the thing to press.
+//
+// Nothing inside a card carries its own hue: tiles, panels and pills are
+// white at low alpha, so they pick up whichever gradient sits behind them
+// and can never clash with it.
+
 export interface BannerSkin {
-  /** Card fill. */
+  /** Card fill — a gradient, top to bottom. */
   bg: string;
-  /** Fill of the three stacked wave layers at the foot of the card. */
+  /** Deep relative of the card hue; fills the three stacked wave layers. */
   wave: string;
-  /** Top colour of the benefit tiles. */
-  tile: string;
-  /** Colour the tile gradient fades to. */
-  tileFade: string;
+  /** Hard lip and glow under the buy button, in the card's own hue. */
+  buttonShadow: string;
 }
 
 export const SKIN_SOLO: BannerSkin = {
-  bg: "#9333EA",
-  wave: "#7E2358",
-  tile: "#7E2358",
-  tileFade: "rgba(147,51,234,0.42)",
+  bg: "linear-gradient(163deg, #C4B5FD 0%, #A78BFA 46%, #7C3AED 100%)",
+  wave: "#5B21B6",
+  buttonShadow: "#5B21B6",
 };
 
 export const SKIN_FAMILY: BannerSkin = {
-  bg: "#E40070",
-  wave: "#7E2478",
-  tile: "#7E2478",
-  tileFade: "rgba(228,0,112,0.42)",
+  bg: "linear-gradient(163deg, #FDA4AF 0%, #FB7185 46%, #E11D48 100%)",
+  wave: "#9F1239",
+  buttonShadow: "#9F1239",
 };
 
 export const SKIN_INVITE: BannerSkin = {
-  bg: "#008FF1",
-  wave: "#2F2A4D",
-  tile: "#008FF1",
-  tileFade: "rgba(0,143,241,0.30)",
+  bg: "linear-gradient(163deg, #7DD3FC 0%, #38BDF8 46%, #0284C7 100%)",
+  wave: "#075985",
+  buttonShadow: "#075985",
 };
 
-export const SKIN_DEAL: BannerSkin = {
-  bg: "#00AE9B",
-  wave: "#374C85",
-  tile: "#E40070",
-  tileFade: "rgba(228,0,112,0.34)",
+/** Flash deal — the shorter fuse gets the brighter, more urgent green. */
+export const SKIN_DEAL_HOURLY: BannerSkin = {
+  bg: "linear-gradient(163deg, #6EE7B7 0%, #34D399 46%, #059669 100%)",
+  wave: "#047857",
+  buttonShadow: "#047857",
 };
+
+/** Daily deal — the calmer, richer indigo of the two. */
+export const SKIN_DEAL_DAILY: BannerSkin = {
+  bg: "linear-gradient(163deg, #A5B4FC 0%, #818CF8 46%, #4F46E5 100%)",
+  wave: "#3730A3",
+  buttonShadow: "#3730A3",
+};
+
+/** Glass used by every element that sits on a card: tiles, panels, pills. */
+const GLASS_FILL = "linear-gradient(180deg, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.08) 100%)";
+const GLASS_EDGE = "rgba(255,255,255,0.38)";
+/** Lifts the top edge of a glass surface so it reads as a pane, not a hole. */
+const GLASS_SHEEN = "inset 0px 1px 0px 0px rgba(255,255,255,0.45)";
+
+// White type sits on the pale end of these gradients as often as the deep
+// end, where it washes out. A soft dark shadow holds it legible on both
+// without darkening the card itself.
+const CARD_TEXT_SHADOW = "0px 1px 2px rgba(23,10,45,0.35), 0px 2px 8px rgba(23,10,45,0.18)";
 
 /* ------------------------------------------------------------------ *
  * Wave stack
@@ -80,7 +102,7 @@ function WaveStack({ fill }: { fill: string }) {
         viewBox="0 0 575 228"
         preserveAspectRatio="none"
       >
-        <path d={WAVE_TALL} fill={fill} />
+        <path d={WAVE_TALL} fill={fill} opacity={0.55} />
       </svg>
       <svg
         aria-hidden
@@ -90,7 +112,7 @@ function WaveStack({ fill }: { fill: string }) {
         viewBox="0 0 575 240"
         preserveAspectRatio="none"
       >
-        <path d={WAVE_SHORT} fill={fill} opacity={0.3} />
+        <path d={WAVE_SHORT} fill={fill} opacity={0.2} />
       </svg>
       <svg
         aria-hidden
@@ -100,7 +122,7 @@ function WaveStack({ fill }: { fill: string }) {
         viewBox="0 0 575 240"
         preserveAspectRatio="none"
       >
-        <path d={WAVE_SHORT} fill={fill} opacity={0.2} />
+        <path d={WAVE_SHORT} fill={fill} opacity={0.12} />
       </svg>
     </>
   );
@@ -184,12 +206,12 @@ export function ProBannerCard({
           className={`absolute left-0 top-0 h-[396px] w-[575px] overflow-hidden rounded-[24px] ${
             onClick ? "cursor-pointer" : ""
           }`}
-          style={{ background: skin.bg }}
+          style={{ backgroundImage: skin.bg }}
         >
           <WaveStack fill={skin.wave} />
           <div
             aria-hidden
-            className="absolute inset-0 rounded-[24px] shadow-[inset_0px_20px_42px_0px_rgba(0,0,0,0.25)]"
+            className="absolute inset-0 rounded-[24px] shadow-[inset_0px_12px_28px_0px_rgba(0,0,0,0.14)]"
           />
           {topStrip}
           {children}
@@ -203,24 +225,25 @@ export function ProBannerCard({
             onAction?.();
           }}
           disabled={actionDisabled}
-          className="absolute left-[68px] top-[358px] flex h-[77px] w-[424px] items-center justify-center gap-[3px] rounded-[24px] border-[3px] border-solid border-[#9fa8a3] p-[3px] shadow-[0px_6px_0px_0px_#7e2378,0px_10px_24px_0px_rgba(16,185,129,0.5)] disabled:cursor-not-allowed"
+          className="absolute left-[68px] top-[358px] flex h-[77px] w-[424px] items-center justify-center gap-[3px] rounded-[24px] border-[2px] border-solid border-[rgba(255,255,255,0.55)] p-[3px] disabled:cursor-not-allowed"
+          // The button overhangs the card, so its shadow lands on the page
+          // wash rather than on the card. The frame's grey border and hard
+          // magenta offset read there as a dark slab floating behind it, so
+          // the lip is the button's own darker amber and the glow is tinted
+          // to the card — both read as the button's edge, not as a shape.
+          style={{
+            boxShadow: `0px 5px 0px 0px #B45309, 0px 10px 20px 0px ${skin.buttonShadow}59`,
+          }}
         >
           <span
             aria-hidden
             className="absolute inset-0 rounded-[24px]"
-            style={{
-              backgroundImage:
-                "linear-gradient(180.65deg, rgb(226,213,32) 13.506%, rgb(187,32,143) 90.414%, rgb(129,225,201) 194.33%)",
-            }}
+            style={{ backgroundImage: "linear-gradient(180deg, #FDE68A 0%, #FBBF24 48%, #F59E0B 100%)" }}
           />
-          <span className="relative whitespace-nowrap text-[18px] font-bold leading-[30.95px] tracking-[-0.18px] text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)]">
+          <span className="relative whitespace-nowrap text-[18px] font-extrabold leading-[30.95px] tracking-[-0.18px] text-[#78350F]">
             {actionLabel}
           </span>
-          {/* Three specks of light on the button face (nodes 636:161–163) */}
-          <span aria-hidden className="absolute left-[16.42px] top-[8.42px] size-[5.152px] rounded-full bg-white opacity-[0.49]" />
-          <span aria-hidden className="absolute left-[195.16px] top-[17.36px] size-[5.283px] rounded-full bg-white opacity-[0.35]" />
-          <span aria-hidden className="absolute left-[32.71px] top-[40.71px] size-[4.589px] rounded-full bg-[rgba(255,255,255,0.8)] opacity-[0.58]" />
-          <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_3px_0px_0px_rgba(255,255,255,0.35)]" />
+          <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_3px_0px_0px_rgba(255,255,255,0.5)]" />
         </button>
       </div>
     </div>
@@ -268,12 +291,14 @@ export function BannerTile({
   return (
     <>
       <div
-        className="absolute w-[150px] rounded-[24px] border border-solid border-[#b5cf3d]"
+        className="absolute w-[150px] rounded-[24px] border border-solid"
         style={{
           left,
           top,
           height,
-          backgroundImage: `linear-gradient(180deg, ${skin.tile} 31.154%, ${skin.tileFade} 100%)`,
+          backgroundImage: GLASS_FILL,
+          borderColor: GLASS_EDGE,
+          boxShadow: GLASS_SHEEN,
         }}
       />
       <img
@@ -285,7 +310,7 @@ export function BannerTile({
       />
       <p
         className="absolute -translate-x-1/2 text-center text-[16px] font-semibold leading-none text-white"
-        style={{ left: labelCenter, top: labelTop, width: labelWidth }}
+        style={{ left: labelCenter, top: labelTop, width: labelWidth, textShadow: CARD_TEXT_SHADOW }}
       >
         {label}
       </p>
@@ -298,7 +323,9 @@ function BannerStripPill({ icon, children }: { icon: string; children: ReactNode
   return (
     <div className="flex shrink-0 items-center justify-center gap-[2px] rounded-[24px] bg-[rgba(255,255,255,0.22)] px-[8px] py-[4px]">
       <img src={icon} alt="" draggable={false} className="size-[16px] object-contain" />
-      <p className="whitespace-nowrap text-center text-[12px] font-semibold text-white">{children}</p>
+      <p className="whitespace-nowrap text-center text-[12px] font-semibold text-white" style={{ textShadow: CARD_TEXT_SHADOW }}>
+        {children}
+      </p>
     </div>
   );
 }
@@ -406,7 +433,12 @@ export function ProTierBanner({
       ))}
       <div
         className="absolute flex flex-col gap-[10px] text-white"
-        style={{ left: header.titleLeft, top: header.titleTop, width: header.titleWidth }}
+        style={{
+          left: header.titleLeft,
+          top: header.titleTop,
+          width: header.titleWidth,
+          textShadow: CARD_TEXT_SHADOW,
+        }}
       >
         <p className="text-center text-[24px] font-extrabold leading-none">{name}</p>
         <p className="font-semibold leading-none">
@@ -457,12 +489,15 @@ export function InviteBanner({
         draggable={false}
         className="absolute left-[263px] top-[22px] size-[66px] max-w-none object-contain"
       />
-      <p className="absolute left-[296.5px] top-[100px] w-[331px] -translate-x-1/2 text-center text-[18px] font-extrabold leading-[1.39] text-white">
+      <p
+        className="absolute left-[296.5px] top-[100px] w-[331px] -translate-x-1/2 text-center text-[18px] font-extrabold leading-[1.39] text-white"
+        style={{ textShadow: CARD_TEXT_SHADOW }}
+      >
         {headline}
       </p>
       <div
-        className="absolute left-[142px] top-[188px] h-[106px] w-[308px] rounded-[24px] border border-solid border-[#b5cf3d]"
-        style={{ backgroundImage: `linear-gradient(180deg, ${skin.tile} 31.154%, ${skin.tileFade} 100%)` }}
+        className="absolute left-[142px] top-[188px] h-[106px] w-[308px] rounded-[24px] border border-solid"
+        style={{ backgroundImage: GLASS_FILL, borderColor: GLASS_EDGE, boxShadow: GLASS_SHEEN }}
       />
       <img
         src={crown}
@@ -470,7 +505,10 @@ export function InviteBanner({
         draggable={false}
         className="absolute left-[172px] top-[210px] size-[64.8px] max-w-none object-contain"
       />
-      <p className="absolute left-[329.5px] top-[232px] -translate-x-1/2 whitespace-nowrap text-center text-[22px] font-semibold leading-none text-white">
+      <p
+        className="absolute left-[329.5px] top-[232px] -translate-x-1/2 whitespace-nowrap text-center text-[22px] font-semibold leading-none text-white"
+        style={{ textShadow: CARD_TEXT_SHADOW }}
+      >
         {reward}
       </p>
     </ProBannerCard>
@@ -479,6 +517,7 @@ export function InviteBanner({
 
 /** Frames 637:352 and 637:353 — countdown strip, title, discount badge. */
 export function DealBanner({
+  skin,
   title,
   savings,
   stripLabel,
@@ -490,6 +529,7 @@ export function DealBanner({
   onAction,
   actionDisabled,
 }: {
+  skin: BannerSkin;
   title: ReactNode;
   savings: number;
   stripLabel: ReactNode;
@@ -503,7 +543,7 @@ export function DealBanner({
 }) {
   return (
     <ProBannerCard
-      skin={SKIN_DEAL}
+      skin={skin}
       actionLabel={actionLabel}
       actionDisabled={actionDisabled}
       onAction={onAction}
@@ -514,14 +554,17 @@ export function DealBanner({
         </div>
       }
     >
-      <p className="absolute left-[262px] top-[74px] -translate-x-1/2 whitespace-nowrap text-center text-[24px] font-extrabold leading-none text-white">
+      <p
+        className="absolute left-[262px] top-[74px] -translate-x-1/2 whitespace-nowrap text-center text-[24px] font-extrabold leading-none text-white"
+        style={{ textShadow: CARD_TEXT_SHADOW }}
+      >
         {title}
       </p>
-      <div className="absolute left-[413px] top-[75px] flex h-[28px] w-[52px] items-center justify-center rounded-[24px] bg-[#ffd300]">
-        <p className="whitespace-nowrap text-[14px] font-extrabold leading-none text-[#541f00]">-{savings}%</p>
+      <div className="absolute left-[413px] top-[75px] flex h-[28px] w-[52px] items-center justify-center rounded-[24px] bg-[#FCD34D]">
+        <p className="whitespace-nowrap text-[14px] font-extrabold leading-none text-[#78350F]">-{savings}%</p>
       </div>
       {tiles.map((tile) => (
-        <BannerTile key={tile.labelCenter} skin={SKIN_DEAL} left={tileLeft(tile)} top={177} height={115} {...tile} />
+        <BannerTile key={tile.labelCenter} skin={skin} left={tileLeft(tile)} top={177} height={115} {...tile} />
       ))}
     </ProBannerCard>
   );

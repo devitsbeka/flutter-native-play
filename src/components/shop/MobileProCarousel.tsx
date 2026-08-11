@@ -27,6 +27,8 @@ import {
   SKIN_SOLO,
   SKIN_FAMILY,
   SKIN_INVITE,
+  SKIN_DEAL_DAILY,
+  SKIN_DEAL_HOURLY,
 } from "./ProBannerCard";
 import type { ShopItem } from "@/hooks/useShopData";
 import type { ShopDeal } from "@/config/shopDeals";
@@ -257,6 +259,7 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
           <div key={slide.id} className="w-full shrink-0 snap-center">
             {isDealSlide ? (
               <DealBanner
+                skin={slide.id === "deal-daily" ? SKIN_DEAL_DAILY : SKIN_DEAL_HOURLY}
                 title={t(activeDeal.nameKey)}
                 savings={dealSavings(activeDeal)}
                 stripIcon={discountIcon}
