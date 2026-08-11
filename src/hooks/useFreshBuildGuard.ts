@@ -45,7 +45,43 @@ async function servedBundle(): Promise<string | null> {
   }
 }
 
+// Preferred check: a build id compiled into this bundle against the one in
+// version.json, which every deploy rewrites. It needs neither a parseable
+// script tag nor an uncached index.html, so it still works where the bundle
+// comparison quietly gives up — exactly the case that leaves a device stale
+// for weeks. Returns null when it cannot tell (dev server, offline, an older
+// deploy that predates version.json).
+async function servedBuildId(): Promise<string | null> {
+  const running = typeof __BUILD_ID__ === "string" ? __BUILD_ID__ : null;
+  if (!running) return null;
+  try {
+    const res = await fetch(`/version.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { build?: string };
+    return typeof data.build === "string" ? data.build : null;
+  } catch {
+    return null;
+  }
+}
+
 async function checkAndMaybeReload() {
+  const servedId = await servedBuildId();
+  if (servedId) {
+    if (servedId === __BUILD_ID__) {
+      staleDetected = false;
+      return;
+    }
+    if (!staleDetected) {
+      console.warn("[FreshBuild] New build deployed:", servedId, "(running:", __BUILD_ID__, ")");
+    }
+    staleDetected = true;
+    if (isSafeMoment()) {
+      console.warn("[FreshBuild] Reloading to pick up the new build");
+      window.location.reload();
+    }
+    return;
+  }
+
   const current = runningBundle();
   if (!current) return;
   const served = await servedBundle();

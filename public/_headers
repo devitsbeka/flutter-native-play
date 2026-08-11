@@ -28,6 +28,11 @@
 /index.html
   Cache-Control: no-cache
 
+# Rewritten by every deploy and polled by the stale-build guard, so it must
+# never be answered from a cache.
+/version.json
+  Cache-Control: no-store
+
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
