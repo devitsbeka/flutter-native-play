@@ -22,10 +22,30 @@ const isSafeMoment = (): boolean =>
 let staleDetected = false;
 
 // Short human-readable fingerprint of the code THIS device is running -
-// rendered in lobby corners so build mismatches are visible at a glance
+// rendered in lobby corners and in Settings so "I'm not seeing the update"
+// takes one glance to settle: compare it with what /version.json reports.
 export function currentBuildLabel(): string {
+  if (typeof __BUILD_ID__ === "string" && __BUILD_ID__) return __BUILD_ID__;
   const b = runningBundle();
   return b ? b.replace(/^index-/, "").replace(/\.js$/, "") : "dev";
+}
+
+// Manual "check for updates" for the build line in Settings. Reloads straight
+// away when the server has something newer, so a stuck device has a way back
+// that doesn't involve explaining browser caches.
+export async function checkForUpdateNow(): Promise<"updating" | "current"> {
+  const served = await servedBuildId();
+  if (served && served !== __BUILD_ID__) {
+    window.location.reload();
+    return "updating";
+  }
+  const current = runningBundle();
+  const servedName = current ? await servedBundle() : null;
+  if (current && servedName && servedName !== current) {
+    window.location.reload();
+    return "updating";
+  }
+  return "current";
 }
 
 function runningBundle(): string | null {
