@@ -1122,8 +1122,9 @@ export default function Index() {
         )}
 
         {/* Phone profile card (Figma 626:1179) — nickname, level, the chunky
-            coin/gem pills and the weekly streak, floating over the scene
-            22px under the friends reel. Desktop keeps SceneHero's stack. */}
+            coin/gem pills and the weekly streak. It positions itself just
+            above the bottom nav, so it is placed here for reading order
+            rather than for where it lands. Desktop keeps SceneHero's stack. */}
         {user && (
           <MobileProfileCard
             nickname={profile?.nickname || t("game.guest")}

@@ -203,7 +203,12 @@ interface MobileProfileCardProps {
   onGiftClick: () => void;
 }
 
-// node 626:1179 — 452x181 card, 24px radius, floating over the scene.
+// node 626:1179, re-stacked. The frame put the nickname and the coin/gem
+// pills on one row and the level under the name; the pills overran long
+// nicknames, so the name keeps the row to itself, the pills drop beneath it
+// and the level moves up to the top right. That costs 29px of height (181 →
+// 210). The card also sits above the bottom nav rather than under the
+// friends reel, so the scene it floats on is not covered by it.
 export function MobileProfileCard({
   nickname,
   level,
@@ -238,28 +243,33 @@ export function MobileProfileCard({
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.15, type: "spring", stiffness: 260, damping: 26 }}
-      className="md:hidden relative z-20 mx-6 mt-[22px]"
+      className="md:hidden absolute inset-x-0 z-20 mx-6"
+      style={{ bottom: `calc(${NAV_H} + 16px)` }}
     >
       <div
-        className="relative h-[181px] w-full overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.8)]"
+        className="relative h-[210px] w-full overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.8)]"
         style={{ boxShadow: CARD_SHADOW }}
       >
+        {/* The nickname owns its own row now, so nothing can sit over it.
+            It is bounded on the right by the level chip and truncates — the
+            frame let it run under the coin pill, which is why a name as
+            ordinary as "TriviaMaster" lost its last letter. */}
         <button
           type="button"
           onClick={onNameClick}
-          className="absolute left-[26px] top-[11px] font-slackey text-[32px] capitalize leading-[48px] tracking-[-0.16px] text-[#402666] whitespace-nowrap"
+          className="absolute left-[26px] right-[96px] top-[11px] truncate text-left font-slackey text-[32px] capitalize leading-[48px] tracking-[-0.16px] text-[#402666]"
         >
           {nickname}
         </button>
         <button
           type="button"
           onClick={onLevelClick}
-          className="absolute left-[26px] top-[56px] text-[14px] font-semibold leading-[21px] tracking-[-0.16px] text-[#402666] whitespace-nowrap"
+          className="absolute right-[26px] top-[22px] text-[14px] font-semibold leading-[21px] tracking-[-0.16px] text-[#402666] whitespace-nowrap"
         >
           {t("modals.levelLabel")} {level}
         </button>
 
-        <div className="absolute right-[19px] top-[22.99px] flex gap-[6.6px]">
+        <div className="absolute left-[26px] top-[64px] flex gap-[6.6px]">
           <StatPill
             icon={coinChunky}
             iconLeft={7.8}
@@ -278,11 +288,11 @@ export function MobileProfileCard({
           />
         </div>
 
-        <div aria-hidden className="absolute left-[26px] right-[23px] top-[90px] h-px bg-black/[0.08]" />
+        <div aria-hidden className="absolute left-[26px] right-[23px] top-[119px] h-px bg-black/[0.08]" />
 
         {/* Weekly streak: six day slots then the daily-rewards gift, spread
             across the card (node 626:1399) */}
-        <div className="absolute left-[26px] right-[22px] top-[99px] flex items-end justify-between">
+        <div className="absolute left-[26px] right-[22px] top-[128px] flex items-end justify-between">
           {DAY_LABELS.map((label, i) => {
             const weekday = SLOT_WEEKDAYS[i];
             const state = dayState(weekday);
