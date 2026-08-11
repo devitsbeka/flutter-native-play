@@ -904,7 +904,7 @@ export const ka = {
   team: {
     roomUpdated: "ოთახი განახლდა",
     updateFailed: "განახლება ვერ მოხერხდა",
-    newRoom: "ახალი ოთახი",
+    newRoom: "მეგობრებთან თამაში",
     roomName: "ოთახის სახელი",
     enterRoomName: "შეიყვანეთ ოთახის სახელი",
     randomName: "შემთხვევითი სახელი",

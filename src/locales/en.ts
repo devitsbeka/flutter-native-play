@@ -905,7 +905,7 @@ export const en: KaTranslations = {
   team: {
     roomUpdated: "Room updated",
     updateFailed: "Update failed",
-    newRoom: "New Room",
+    newRoom: "Play with Friends",
     roomName: "Room Name",
     enterRoomName: "Enter room name",
     randomName: "Random Name",
