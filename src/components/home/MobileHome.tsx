@@ -245,15 +245,16 @@ export function MobileProfileCard({
   };
 
   return (
+    <>
+    {/* Who you are — directly under the friends reel, in normal flow. */}
     <motion.div
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.15, type: "spring", stiffness: 260, damping: 26 }}
-      className="md:hidden absolute inset-x-0 z-20 mx-6"
-      style={{ bottom: `calc(${NAV_H} + 16px)` }}
+      className="md:hidden relative z-20 mx-6 mt-[22px]"
     >
       <div
-        className="relative h-[210px] w-full overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.8)]"
+        className="relative h-[123px] w-full overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.8)]"
         style={{ boxShadow: CARD_SHADOW }}
       >
         {/* The nickname owns its own row now, so nothing can sit over it.
@@ -287,15 +288,57 @@ export function MobileProfileCard({
           />
         </div>
 
-        <div aria-hidden className="absolute left-[26px] right-[23px] top-[119px] h-px bg-black/[0.08]" />
+      </div>
 
-        {/* Weekly streak: six day slots then the daily-rewards gift, spread
-            across the card (node 626:1399).
+      {/* Level shield — the same badge SceneHero carries on desktop. It
+          overhangs the card's top-right corner, so it is a sibling of the
+          card rather than a child: the card clips its own contents. */}
+      <button
+        type="button"
+        aria-label={`${t("modals.levelLabel")} ${level}`}
+        onClick={onLevelClick}
+        className="absolute right-[-2px] top-[-14px] z-10 h-[93px] w-[82.06px]"
+      >
+        <img alt="" src={shieldOuter} className="absolute left-[7.66px] top-[-10.03px] h-[101.63px] w-[74.4px] max-w-none" />
+        <span className="absolute left-[11.09px] top-[-5.63px] block h-[94.4px] w-[67.56px]">
+          <span className="absolute inset-[-8%_-17.61%_-17.42%_-17.61%] block">
+            <img alt="" src={shieldInner} className="block size-full max-w-none" />
+          </span>
+        </span>
+        <span
+          className="absolute left-[46.02px] top-[2.77px] block -translate-x-1/2 whitespace-nowrap text-[35px] font-bold leading-[52.5px] tracking-[-1.75px] text-white"
+          style={{
+            fontFamily: "'Intel One Mono', 'Nunito', monospace",
+            textShadow: "0px 2.19px 2.19px rgba(0,0,0,0.3), 0px 4.38px 6.57px rgba(0,0,0,0.15)",
+          }}
+        >
+          {level}
+        </span>
+        <span className="absolute left-[45.8px] top-[46.66px] block -translate-x-1/2 whitespace-nowrap text-[9.85px] font-bold leading-[14.78px] text-[rgba(255,255,255,0.7)]">
+          {t("modals.levelLabel")}
+        </span>
+      </button>
+    </motion.div>
+
+    {/* The week — its own card, held down by the bottom nav so the scene
+        between the two has room to show through. */}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 26 }}
+      className="md:hidden absolute inset-x-0 z-20 mx-6"
+      style={{ bottom: `calc(${NAV_H} + 31px)` }}
+    >
+      <div
+        className="relative h-[94px] w-full overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.8)]"
+        style={{ boxShadow: CARD_SHADOW }}
+      >
+        {/* Six day slots then the daily-rewards gift (node 626:1399).
 
             The days are one button, not decoration — the phone has no
             separate missions section, so the week itself is the way in.
-            The gift keeps its own button inside it for daily rewards. */}
-        <div className="absolute left-[26px] right-[22px] top-[128px] flex items-end justify-between">
+            The gift keeps its own button beside it for daily rewards. */}
+        <div className="absolute left-[26px] right-[22px] top-[16px] flex items-end justify-between">
           <button
             type="button"
             onClick={onMissionsClick}
@@ -394,36 +437,8 @@ export function MobileProfileCard({
           </button>
         </div>
       </div>
-
-      {/* Level shield — the same badge SceneHero carries on desktop. It
-          overhangs the card's top-right corner, so it is a sibling of the
-          card rather than a child: the card clips its own contents. */}
-      <button
-        type="button"
-        aria-label={`${t("modals.levelLabel")} ${level}`}
-        onClick={onLevelClick}
-        className="absolute right-[-2px] top-[-14px] z-10 h-[93px] w-[82.06px]"
-      >
-        <img alt="" src={shieldOuter} className="absolute left-[7.66px] top-[-10.03px] h-[101.63px] w-[74.4px] max-w-none" />
-        <span className="absolute left-[11.09px] top-[-5.63px] block h-[94.4px] w-[67.56px]">
-          <span className="absolute inset-[-8%_-17.61%_-17.42%_-17.61%] block">
-            <img alt="" src={shieldInner} className="block size-full max-w-none" />
-          </span>
-        </span>
-        <span
-          className="absolute left-[46.02px] top-[2.77px] block -translate-x-1/2 whitespace-nowrap text-[35px] font-bold leading-[52.5px] tracking-[-1.75px] text-white"
-          style={{
-            fontFamily: "'Intel One Mono', 'Nunito', monospace",
-            textShadow: "0px 2.19px 2.19px rgba(0,0,0,0.3), 0px 4.38px 6.57px rgba(0,0,0,0.15)",
-          }}
-        >
-          {level}
-        </span>
-        <span className="absolute left-[45.8px] top-[46.66px] block -translate-x-1/2 whitespace-nowrap text-[9.85px] font-bold leading-[14.78px] text-[rgba(255,255,255,0.7)]">
-          {t("modals.levelLabel")}
-        </span>
-      </button>
     </motion.div>
+    </>
   );
 }
 
