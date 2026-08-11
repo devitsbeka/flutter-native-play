@@ -203,6 +203,12 @@ export const es: KaTranslations = {
   playLimit: { ...en.playLimit, limitReached: "Límite de juegos alcanzado", becomeProDescription: "Hazte PRO y juega ilimitado, crea tus propias trivias y mucho más.", unlimitedGames: "Juegos ilimitados", exclusiveFeatures: "Funciones exclusivas", becomePro: "Hazte PRO", freePlayReady: "¡Juego gratis listo!", playNow: "Jugar ahora", nextFreePlay: "Siguiente juego gratis: {time}", freePlayInterval: "1 juego gratis cada 3 horas" },
   notificationsPanel: { ...en.notificationsPanel, activity: "Actividad", gamesTab: "Juegos", socialTab: "Amigos", triviaTab: "Trivia", noNotifications: "Sin notificaciones", noGamesNotifications: "Sin notificaciones de juegos", noSocialNotifications: "Sin notificaciones de amigos", noTriviaNotifications: "Sin notificaciones de trivia", viewAll: "Ver todo", friendRequestAccepted: "¡Solicitud de amistad aceptada!", friendRequestDeclined: "Solicitud rechazada", inviteDeclined: "Invitación rechazada", errorOccurred: "Ocurrió un error", urlCopied: "¡URL copiada!", copyFailed: "Error al copiar", avatarAlreadySet: "¡Avatar ya configurado!", roomNotFound: "Sala no encontrada", navigationFailed: "No se pudo navegar al juego" },
   extra: {
+    guestTagline: "Desafía a tus amigos y crea tu propio trivia sobre cualquier tema.",
+    appleSignInBtn: "Iniciar sesión con Apple",
+    guestTermsIntro: "Al crear una cuenta confirmas que has leído y aceptas los",
+    guestTermsService: "Términos del servicio",
+    guestTermsAnd: "y",
+    guestTermsConditions: "Condiciones.",
     // Desktop logged-out landing (Figma 612:1888)
     landingPlayersCount: "100,000+ jugadores",
     landingJoinFreeHeading: "Únete\ngratis",

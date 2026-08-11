@@ -49,6 +49,12 @@ export const it: KaTranslations = {
   playLimit: { ...en.playLimit, limitReached: "Limite partite raggiunto", becomeProDescription: "Diventa PRO e gioca illimitato, crea i tuoi trivia e molto altro.", unlimitedGames: "Giochi illimitati", exclusiveFeatures: "Funzionalità esclusive", becomePro: "Diventa PRO", freePlayReady: "Gioco gratis pronto!", playNow: "Gioca ora", nextFreePlay: "Prossimo gioco gratis: {time}", freePlayInterval: "1 gioco gratis ogni 3 ore" },
   notificationsPanel: { ...en.notificationsPanel, activity: "Attività", gamesTab: "Giochi", socialTab: "Amici", triviaTab: "Trivia", noNotifications: "Nessuna notifica", noGamesNotifications: "Nessuna notifica giochi", noSocialNotifications: "Nessuna notifica amici", noTriviaNotifications: "Nessuna notifica trivia", viewAll: "Vedi tutto", friendRequestAccepted: "Richiesta accettata!", friendRequestDeclined: "Richiesta rifiutata", inviteDeclined: "Invito rifiutato", errorOccurred: "Si è verificato un errore", urlCopied: "URL copiato!", copyFailed: "Copia fallita", avatarAlreadySet: "Avatar già impostato!", roomNotFound: "Stanza non trovata", navigationFailed: "Impossibile navigare al gioco" },
   extra: {
+    guestTagline: "Sfida i tuoi amici e crea il tuo quiz su qualsiasi argomento.",
+    appleSignInBtn: "Accedi con Apple",
+    guestTermsIntro: "Creando un account confermi di aver letto e accettato i",
+    guestTermsService: "Termini di servizio",
+    guestTermsAnd: "e",
+    guestTermsConditions: "Condizioni.",
     // Desktop logged-out landing (Figma 612:1888)
     landingPlayersCount: "100.000+ giocatori",
     landingJoinFreeHeading: "Unisciti\ngratis",
