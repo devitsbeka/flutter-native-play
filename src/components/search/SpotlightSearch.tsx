@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { portal } from "@/lib/overlayPortal";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -325,7 +326,12 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
           </motion.button>
         )}
         
-        {/* Full-screen mobile panel */}
+        {/* Full-screen mobile panel. Portalled to <body>: the header that
+            hosts the search button is a backdrop-blur bar, which makes it the
+            containing block for position:fixed children — inside it, inset-0
+            resolves to the header's own box, so the panel covered only the
+            header strip and the page showed straight through the rest. */}
+        {portal(
         <AnimatePresence>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -404,6 +410,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             </div>
           </motion.div>
         </AnimatePresence>
+        )}
       </>
     );
   }
