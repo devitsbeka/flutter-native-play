@@ -6,6 +6,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Bell, Check, Clock, Mail, Menu } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
+import { useGoHomeOrRefresh } from "@/hooks/useGoHomeOrRefresh";
 import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
 import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
@@ -270,6 +271,7 @@ export default function Index() {
   const { t } = useLanguage();
   const { step, startOnboarding, setStep, hasCompletedOnboarding } = useOnboarding();
   const { openAvatarModal } = useAvatarModal();
+  const goHomeOrRefresh = useGoHomeOrRefresh();
   const { coins, gems, addCoins, exchangeGemsForCoins } = useCurrency();
   const { powerUps } = useUserPowerUps();
   const { totalStars } = useTotalStars();
@@ -1007,10 +1009,16 @@ export default function Index() {
             {/* Center: Logo + Spotlight */}
             <div className="flex-1 flex justify-center md:justify-start items-center gap-4 min-w-0">
               {/* Logo - responsive sizing: sm on mobile/tablet, md on desktop */}
-              {/* lg+ shows the logo in the left sidebar instead */}
-              <div className="lg:hidden">
+              {/* lg+ shows the logo in the left sidebar instead, where it is
+                  already its own button; this is the phone/tablet twin. */}
+              <button
+                type="button"
+                onClick={goHomeOrRefresh}
+                aria-label="MyTrivia"
+                className="lg:hidden cursor-pointer"
+              >
                 <MyTriviaLiveLogo responsive />
-              </div>
+              </button>
               {/* lg+: an alternating greeting takes the logo's place.
                   Hidden for guests — the Figma 612:1888 logged-out design
                   keeps the header empty. */}
