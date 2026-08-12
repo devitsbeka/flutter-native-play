@@ -116,8 +116,7 @@ export function useShopData() {
         price: 7,  // 8 powers worth 8 gems, sell for 7 = 12% discount
         currency: "gems",
         icon: <img src={iconMagicOrb} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
-        gradient: "linear-gradient(135deg, #34D399 0%, #10B981 50%, #0F9488 100%)",
-        vibrant: true,
+        gradient: "transparent",
         savings: 12,
       },
       {
@@ -127,8 +126,7 @@ export function useShopData() {
         price: 28,  // 40 powers worth 40 gems, sell for 28 = 30% discount
         currency: "gems",
         icon: <img src={iconMagicForge} alt="" width={50} height={50} loading="lazy" decoding="async" className="w-[50px] h-[50px] object-contain" />,
-        gradient: "linear-gradient(135deg, #FBBF24 0%, #F59E0B 55%, #EA580C 100%)",
-        vibrant: true,
+        gradient: "transparent",
         savings: 30,
       },
     ];
