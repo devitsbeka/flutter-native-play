@@ -1779,6 +1779,7 @@ export const en: KaTranslations = {
     myTriviaDesc: "Choose from your created trivias",
     createBtn: "Create",
     inviteBtn: "Invite",
+    guestSaveScorePrompt: "Sign up to keep your score",
     appFriends: "In-app friends",
     shareBtn: "Share",
     friendsInvited: "{count} friend(s) invited",
