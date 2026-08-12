@@ -46,7 +46,10 @@ export function TeamRightSidebar({
       className="hidden xl:flex flex-col w-[320px] min-w-[320px] sticky border-l border-border/50 bg-background/50 backdrop-blur-sm"
       style={{ top: topOffset, height: `calc(100vh - ${topOffset}px)` }}
     >
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* 31px, not 16: the widgets each carry their own heading, and at the
+          old spacing a heading sat about as close to the card above it as to
+          its own. */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-[31px]">
         {/* Game Invitations Widget */}
         <GameInvitationsSection
           onAcceptInvitation={onAcceptInvitation}
