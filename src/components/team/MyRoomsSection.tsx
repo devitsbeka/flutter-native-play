@@ -18,6 +18,7 @@ import { LiveBadge } from "@/components/social/LiveBadge";
 import danceFloorIcon from "@/assets/dance-floor.png";
 import retroTv3d from "@/assets/retro-tv-3d.png";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
+import { useRoomAge } from "@/hooks/useRoomAge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/components/team/FeatureOnboardingCarousel";
@@ -329,6 +330,9 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
   
   // Display name: only room_name, no fallback to code
   const displayName = room.room_name || "თამაშის ოთახი";
+  // How long ago the room was made — the thing that tells two similar rooms
+  // apart in a list of them.
+  const createdAgo = useRoomAge(room.created_at);
   const isCompleted = room.status === "completed";
   
   // NEW LOGIC: has_players_in_room = someone is actually INSIDE this room
@@ -567,6 +571,9 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
                       {room.category_name}
                     </p>
                   )}
+                  {createdAgo && (
+                    <p className="text-xs text-white/60 truncate drop-shadow-sm">{createdAgo}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -645,6 +652,9 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
   const isSwiping = useRef(false);
   
   const displayName = room.room_name || "თამაშის ოთახი";
+  // How long ago the room was made — the thing that tells two similar rooms
+  // apart in a list of them.
+  const createdAgo = useRoomAge(room.created_at);
   const isCompleted = room.status === "completed";
   
   // NEW LOGIC: has_players_in_room = someone is actually INSIDE this room
@@ -834,6 +844,9 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                   </h3>
                   {room.category_name && (
                     <p className="text-white/70 text-sm truncate mt-0.5">{room.category_name}</p>
+                  )}
+                  {createdAgo && (
+                    <p className="text-white/60 text-xs truncate mt-0.5">{createdAgo}</p>
                   )}
                 </div>
               </div>
