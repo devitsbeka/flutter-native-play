@@ -310,6 +310,21 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     });
   }, []);
 
+  // Opens the picker from a real button press. A silent no-op here is what
+  // "the tile does nothing" looks like from the outside, so if the input is
+  // somehow not mounted, say so rather than swallow the tap.
+  const openFilePicker = () => {
+    const input = fileInputRef.current;
+    if (!input) {
+      toast.error(t("errors.generic"));
+      return;
+    }
+    // Clear first: an input holds its last value, and re-picking the same
+    // photo fires no change event.
+    input.value = "";
+    input.click();
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     // Captured up front and cleared on EVERY exit below. An input keeps the
     // value it was given, and re-picking the same file fires no change event
@@ -1071,17 +1086,12 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                   <span className="text-xs text-muted-foreground">{t("avatar.takeSelfie")}</span>
                 </motion.button>
 
-                <div
+                <button
+                  type="button"
+                  onClick={openFilePicker}
+                  disabled={isProcessingFile}
                   className={`relative flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isProcessingFile ? 'opacity-50' : ''}`}
                 >
-                  <input
-                    type="file"
-                    accept="image/*,.heic,.heif"
-                    onChange={handleFileSelect}
-                    disabled={isProcessingFile}
-                    aria-label={t("avatar.uploadPhoto")}
-                    className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 file:cursor-pointer"
-                  />
                   {isProcessingFile ? (
                     <>
                       <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -1097,12 +1107,20 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                       <span className="text-xs text-muted-foreground">{t("avatar.uploadPhoto")}</span>
                     </>
                   )}
-                </div>
+                </button>
               </div>
             </>
           )}
           </div>
 
+          {/* The one file input in the modal, opened by ref from the tiles
+              above and from "+ new scene" below. Every tile used to carry its
+              own transparent full-size input instead — a pattern that depends
+              on hit-testing an invisible control inside a transform-animated
+              dialog, which WebKit and the Capacitor WebView do not reliably
+              honour. When it failed it failed silently: the tile looked
+              enabled, the click landed on the input, and no picker opened.
+              This ref-triggered input was already here, wired to nothing. */}
           <input
             id="avatar-file-input"
             ref={fileInputRef}
@@ -1110,6 +1128,8 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
             accept="image/*,.heic,.heif"
             onChange={handleFileSelect}
             className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
           />
 
           {/* My Scenes - homepage scene generations. Picking one makes it the
@@ -1139,20 +1159,21 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                   </span>
                 </button>
               ) : (
-                <div
+                <button
+                  type="button"
+                  onClick={openFilePicker}
+                  disabled={isLoading || isProcessingFile}
                   className={`relative aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isLoading || isProcessingFile ? "opacity-50" : ""}`}
                 >
-                  <input
-                    type="file"
-                    accept="image/*,.heic,.heif"
-                    onChange={handleFileSelect}
-                    disabled={isLoading || isProcessingFile}
-                    aria-label={t("avatar.newScene")}
-                    className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 file:cursor-pointer"
-                  />
-                  <Plus className="w-6 h-6 text-primary" />
-                  <span className="text-xs text-muted-foreground">{t("avatar.newScene")}</span>
-                </div>
+                  {isProcessingFile ? (
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  ) : (
+                    <Plus className="w-6 h-6 text-primary" />
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {isProcessingFile ? t("common.processing") || "Processing..." : t("avatar.newScene")}
+                  </span>
+                </button>
               )}
               <motion.button
                 onClick={selectDefaultScene}
