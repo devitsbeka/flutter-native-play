@@ -959,6 +959,7 @@ export const en: KaTranslations = {
     // Additional team translations
     multiplayer: "Multiplayer",
     signInToPlay: "Sign in to play with friends",
+    signInToJoinInvite: "You have been invited to a room — sign in or create an account to join",
     onlineGame: "Online Game",
     friends: "Friends",
     yourRooms: "Your Rooms",

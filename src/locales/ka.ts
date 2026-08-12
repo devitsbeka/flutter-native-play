@@ -958,6 +958,7 @@ export const ka = {
     // Additional team translations
     multiplayer: "მულტიპლეიერი",
     signInToPlay: "მეგობრებთან სათამაშოდ გაიარე ავტორიზაცია",
+    signInToJoinInvite: "მოგიწვიეს ოთახში — შედი ან შექმენი ანგარიში, რომ შეუერთდე",
     onlineGame: "ონლაინ თამაში",
     friends: "მეგობრები",
     yourRooms: "შენი ოთახები",
