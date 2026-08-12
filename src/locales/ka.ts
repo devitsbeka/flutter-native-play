@@ -1778,6 +1778,7 @@ export const ka = {
     myTriviaDesc: "აირჩიე შენი შექმნილი ტრივიებიდან",
     createBtn: "შექმნა",
     inviteBtn: "მოწვევა",
+    guestSaveScorePrompt: "დარეგისტრირდი და შეინახე შენი ქულა",
     appFriends: "აპში მეგობრები",
     shareBtn: "გაზიარება",
     friendsInvited: "{count} მეგობარი მოწვეული",

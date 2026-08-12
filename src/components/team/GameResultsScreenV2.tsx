@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { CategoryPickerModal } from "./CategoryPickerModal";
 import { calculateMultiplayerPayout, nextStreak } from "@/utils/multiplayerPayout";
+import { isGuestAccount } from "@/utils/guestAccount";
+import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
 // Games whose results were already counted on this device. Module-level (not a
 // ref) because the results screen can remount for the SAME game (results ->
@@ -52,6 +54,15 @@ export function GameResultsScreenV2() {
   const { trackMissionEvent } = useMissions();
   const { openProfile } = usePlayerProfile();
   const [coinsEarned, setCoinsEarned] = useState(0);
+  const [showGuestSignUp, setShowGuestSignUp] = useState(false);
+
+  // Let the result land before asking for anything — the score is the reason
+  // they played, and the ask reads as a reward rather than a toll gate.
+  useEffect(() => {
+    if (!isGuestAccount(user)) return;
+    const timer = setTimeout(() => setShowGuestSignUp(true), 3000);
+    return () => clearTimeout(timer);
+  }, [user]);
   const { 
     myScore: localMyScore, 
     participants, 
@@ -430,6 +441,16 @@ export function GameResultsScreenV2() {
   };
 
   return (
+    <>
+    {/* A visitor who opened a shared room link is signed in anonymously so
+        they can play immediately. That free game ends here: the score lands
+        first, then the offer to keep it. Guests only — a real account never
+        sees this. */}
+    <AuthRequiredModal
+      isOpen={showGuestSignUp}
+      onClose={() => setShowGuestSignUp(false)}
+      message={t("extra.guestSaveScorePrompt")}
+    />
     <div className="h-[100dvh] w-full overflow-hidden bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
       <div className="w-full h-full flex flex-col max-w-[700px] mx-auto">
       {/* Back Button Header */}
@@ -702,5 +723,6 @@ export function GameResultsScreenV2() {
       />
       </div>
     </div>
+    </>
   );
 }
