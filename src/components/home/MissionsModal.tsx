@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Check, Star, X } from "lucide-react";
@@ -248,6 +248,25 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
   const safeIndex = missions.length > 0 ? Math.min(index, missions.length - 1) : 0;
   const mission = missions[safeIndex];
 
+  const trackRef = useRef<HTMLDivElement | null>(null);
+
+  // The track is the source of truth for which card is showing: a drag
+  // moves it without going through React, so the index follows the scroll
+  // rather than the other way round.
+  const onTrackScroll = () => {
+    const el = trackRef.current;
+    if (!el || el.clientWidth === 0) return;
+    const next = Math.round(el.scrollLeft / el.clientWidth);
+    setIndex((prev) => (prev === next ? prev : next));
+  };
+
+  const scrollToIndex = (i: number, smooth = true) => {
+    const el = trackRef.current;
+    if (!el) return;
+    el.scrollTo({ left: i * el.clientWidth, behavior: smooth ? "smooth" : "auto" });
+    setIndex(i);
+  };
+
   // Escape dismisses the modal, same as backdrop and the continue button
   useEffect(() => {
     if (!isOpen) return;
@@ -266,6 +285,16 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
     setWeeklyIndex(Math.max(0, weeklyMissions.findIndex((m) => !m.completed)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  // Put the track where that index says, without animating into place —
+  // the track starts at 0 whenever it mounts or the tab swaps it out, and
+  // sliding from there would look like a page the player did not ask for.
+  useLayoutEffect(() => {
+    const el = trackRef.current;
+    if (!el || el.clientWidth === 0) return;
+    el.scrollTo({ left: safeIndex * el.clientWidth, behavior: "auto" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, activeTab, missions.length]);
 
   return (
     <AnimatePresence mode="wait">
@@ -412,32 +441,36 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
                 ))}
               </div>
 
-              {/* One-card carousel */}
+              {/* Carousel. A scroll-snap track rather than one swapped card:
+                  the cards are really side by side, so a thumb drag, a
+                  trackpad and the arrows all move it, and the browser owns
+                  the momentum and rubber-banding. */}
               <div className="relative mt-3.5">
                 {loading ? (
                   <div className="h-[290px] animate-pulse rounded-[20px] bg-white/70" />
-                ) : !mission ? (
+                ) : missions.length === 0 ? (
                   <div className="flex h-[290px] items-center justify-center rounded-[20px] bg-white/70 text-sm text-slate-400">
                     {t("missions.noMissions")}
                   </div>
                 ) : (
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.div
-                      key={`${activeTab}-${mission.id}`}
-                      initial={{ opacity: 0, x: 32 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -32 }}
-                      transition={{ duration: 0.18 }}
-                    >
-                      <MissionCard mission={mission} t={t} />
-                    </motion.div>
-                  </AnimatePresence>
+                  <div
+                    ref={trackRef}
+                    onScroll={onTrackScroll}
+                    className="scrollbar-hide flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain"
+                    style={{ touchAction: "pan-x pan-y" }}
+                  >
+                    {missions.map((m) => (
+                      <div key={m.id} className="w-full shrink-0 snap-center">
+                        <MissionCard mission={m} t={t} />
+                      </div>
+                    ))}
+                  </div>
                 )}
 
                 {/* Prev / next arrows */}
                 {safeIndex > 0 && (
                   <button
-                    onClick={() => setIndex(safeIndex - 1)}
+                    onClick={() => scrollToIndex(safeIndex - 1)}
                     className="absolute -left-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-500 shadow-md transition-colors hover:text-[#402666]"
                     aria-label="previous mission"
                   >
@@ -446,7 +479,7 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
                 )}
                 {safeIndex < missions.length - 1 && (
                   <button
-                    onClick={() => setIndex(safeIndex + 1)}
+                    onClick={() => scrollToIndex(safeIndex + 1)}
                     className="absolute -right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-500 shadow-md transition-colors hover:text-[#402666]"
                     aria-label="next mission"
                   >
@@ -455,18 +488,25 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
                 )}
               </div>
 
-              {/* Dots */}
+              {/* Dots double as the scoreboard: green for a mission already
+                  done, grey for one still open. The current page keeps the
+                  elongated pill, so position and progress read separately —
+                  colour alone could not say both. */}
               {missions.length > 1 && (
                 <div className="mt-3 flex items-center justify-center gap-1.5">
                   {missions.map((m, i) => (
                     <button
                       key={m.id}
-                      onClick={() => setIndex(i)}
-                      aria-label={`mission ${i + 1}`}
-                      className={`rounded-full transition-all duration-200 ${
-                        i === safeIndex
-                          ? "h-1.5 w-5 bg-[#7C3AED]"
-                          : "h-1.5 w-1.5 bg-slate-300 hover:bg-slate-400"
+                      onClick={() => scrollToIndex(i)}
+                      aria-label={`${t("missions.progress")} ${i + 1}`}
+                      className={`h-1.5 rounded-full transition-all duration-200 ${
+                        i === safeIndex ? "w-5" : "w-1.5"
+                      } ${
+                        m.completed
+                          ? "bg-emerald-500"
+                          : i === safeIndex
+                            ? "bg-[#7C3AED]"
+                            : "bg-slate-300 hover:bg-slate-400"
                       }`}
                     />
                   ))}

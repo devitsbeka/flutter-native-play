@@ -1495,11 +1495,10 @@ export default function Index() {
                   gems={user ? gems : 0}
                   onNameClick={user ? () => setShowChangeNameModal(true) : () => navigate("/auth")}
                   onLevelClick={user ? () => setShowLevelModal(true) : () => navigate("/auth")}
-                  onMissionsClick={user ? () => { setMissionsDate(null); setShowMissionsModal(true); } : () => navigate("/auth")}
+                  onMissionsClick={user ? (dateISO) => { setMissionsDate(dateISO); setShowMissionsModal(true); } : () => navigate("/auth")}
                   onCoinsClick={user ? () => navigate("/power-ups?section=coins") : () => navigate("/auth")}
                   onGemsClick={user ? () => navigate("/power-ups?section=gems-lari") : () => navigate("/auth")}
                   onGiftClick={user ? () => setIsDailyRewardsOpen(true) : () => navigate("/auth")}
-                  onChestClick={user ? () => setIsChestModalOpen(true) : () => navigate("/auth")}
                   onSceneClick={user ? () => openAvatarModal() : () => navigate("/auth?mode=signup")}
                   onQuickPlay={user ? handlePlayClick : undefined}
                 />
