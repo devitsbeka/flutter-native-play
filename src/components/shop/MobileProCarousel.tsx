@@ -208,7 +208,11 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
         onScroll={onReelScroll}
         onPointerDown={() => { lastInteraction.current = Date.now(); }}
         onTouchStart={() => { lastInteraction.current = Date.now(); }}
-        className="flex snap-x snap-mandatory overflow-x-auto scrollbar-hide gap-3 rounded-3xl"
+        className="flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain scrollbar-hide gap-3 rounded-3xl"
+        // touch-action pins the gesture to one axis: without it a swipe that
+        // drifts vertically scrolls the page mid-drag and the banner slides
+        // out from under the finger.
+        style={{ touchAction: "pan-x" }}
       >
         {SLIDES.map((slide) => {
           const isDealSlide = slide.type === "deal";

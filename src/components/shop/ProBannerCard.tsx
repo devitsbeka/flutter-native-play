@@ -472,7 +472,7 @@ export function ProTierBanner({
           textShadow: CARD_TEXT_SHADOW,
         }}
       >
-        <p className="text-center text-[24px] font-extrabold leading-none">{name}</p>
+        <p className="text-center font-display text-[24px] font-extrabold leading-none">{name}</p>
         <p className="text-center font-semibold leading-none">
           <span className="text-[24px]">{price} / </span>
           <span className="text-[16px]">{month}</span>
@@ -522,27 +522,31 @@ export function InviteBanner({
         className="absolute left-[263px] top-[22px] size-[66px] max-w-none object-contain"
       />
       <p
-        className="absolute left-[296.5px] top-[100px] w-[331px] -translate-x-1/2 text-center text-[18px] font-extrabold leading-[1.39] text-white"
+        className="absolute left-[296.5px] top-[100px] w-[331px] -translate-x-1/2 text-center font-display text-[18px] font-extrabold leading-[1.39] text-white"
         style={{ textShadow: CARD_TEXT_SHADOW }}
       >
         {headline}
       </p>
+      {/* Reward panel: one centred row on the card's own axis, 15% down from
+          the frame's size. The pieces used to be placed individually, which
+          left the pane and its contents each centred on a different x. */}
       <div
-        className="absolute left-[142px] top-[188px] h-[106px] w-[308px] rounded-[24px] border border-solid"
+        className="absolute left-[287.5px] top-[196px] flex h-[90px] w-[262px] -translate-x-1/2 items-center justify-center gap-[8px] rounded-[24px] border border-solid"
         style={{ backgroundImage: GLASS_FILL, borderColor: GLASS_EDGE, boxShadow: GLASS_SHEEN }}
-      />
-      <img
-        src={crown}
-        alt=""
-        draggable={false}
-        className="absolute left-[172px] top-[210px] size-[64.8px] max-w-none object-contain"
-      />
-      <p
-        className="absolute left-[329.5px] top-[232px] -translate-x-1/2 whitespace-nowrap text-center text-[22px] font-semibold leading-none text-white"
-        style={{ textShadow: CARD_TEXT_SHADOW }}
       >
-        {reward}
-      </p>
+        <img
+          src={crown}
+          alt=""
+          draggable={false}
+          className="size-[55px] shrink-0 max-w-none object-contain"
+        />
+        <p
+          className="whitespace-nowrap text-center text-[19px] font-semibold leading-none text-white"
+          style={{ textShadow: CARD_TEXT_SHADOW }}
+        >
+          {reward}
+        </p>
+      </div>
     </ProBannerCard>
   );
 }
@@ -605,7 +609,7 @@ export function DealBanner({
         className="absolute left-[287.5px] top-[66px] flex -translate-x-1/2 items-center gap-[10px]"
         style={{ textShadow: CARD_TEXT_SHADOW }}
       >
-        <p className="whitespace-nowrap text-center text-[24px] font-extrabold leading-none text-white">
+        <p className="whitespace-nowrap text-center font-display text-[24px] font-extrabold leading-none text-white">
           {title}
         </p>
         <span
