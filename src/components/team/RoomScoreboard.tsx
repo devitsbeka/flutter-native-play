@@ -71,7 +71,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-white/60" />
-          <span className="font-semibold text-white text-sm">
+          <span className="font-semibold text-white text-[15.4px]">
             {t("extra.playersHeader")} {maxPlayers && <span className="text-white/60">({participants.length}/{maxPlayers})</span>}
           </span>
         </div>
@@ -358,7 +358,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
         {/* Recent Rounds */}
         {matches.length > 0 && (
           <div className="mt-3 pt-3 border-t border-white/10">
-            <p className="text-xs text-white/50 mb-2">{t("extra.recentRoundsTitle")}</p>
+            <p className="text-[13.2px] text-white/50 mb-2">{t("extra.recentRoundsTitle")}</p>
             <div className="space-y-1.5 max-h-28 overflow-y-auto">
               {matches.slice(0, 5).map((match, index) => {
                 const winner = match.player_scores?.find(p => p.user_id === match.winner_user_id);

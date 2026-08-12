@@ -905,7 +905,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4 space-y-5">
         {/* Room Name with Icon - AI generated */}
         <div>
-          <h2 className="text-xs font-medium text-muted-foreground mb-2">{t("extra.chooseRoomName")}</h2>
+          <h2 className="text-[13.2px] font-medium text-muted-foreground mb-2">{t("extra.chooseRoomName")}</h2>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
                   {/* Clickable area for Icon + Name - opens picker modal */}
                   <div
@@ -958,7 +958,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         {/* Invite Friends - Horizontal Scroll */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xs font-medium text-muted-foreground">{t("extra.inviteFriendsToPlay")}</h2>
+            <h2 className="text-[13.2px] font-medium text-muted-foreground">{t("extra.inviteFriendsToPlay")}</h2>
             {acceptedFriends.length > 5 && (
               <button 
                 onClick={() => setShowInviteModal(true)}
@@ -1077,7 +1077,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
         {/* 3 Option Cards - Vertical List with Descriptions */}
         <div>
-          <h2 className="text-xs font-medium text-muted-foreground mb-2">{t("extra.whatToPlay")}</h2>
+          <h2 className="text-[13.2px] font-medium text-muted-foreground mb-2">{t("extra.whatToPlay")}</h2>
           
           <div className="space-y-3">
             {/* Random Option - Container that expands to show preview */}

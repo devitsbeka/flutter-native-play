@@ -135,7 +135,7 @@ export function CategoryPickerSection({
             <div className="flex items-center gap-2 flex-wrap">
               <p className={cn(
                 "text-white font-semibold leading-tight truncate",
-                hasCategory ? "text-[18px]" : "text-[14px]"
+                hasCategory ? "text-[19.8px]" : "text-[15.4px]"
               )}>
                 {hasCategory ? categoryName : (isHost ? t("extra.cpsWhatToPlay") : t("extra.cpsCurrentCategory"))}
               </p>
@@ -152,7 +152,7 @@ export function CategoryPickerSection({
             </div>
             <p className={cn(
               "leading-snug",
-              hasCategory ? "text-white/60 text-[14px]" : "text-white/60 text-[12px]"
+              hasCategory ? "text-white/60 text-[16.1px]" : "text-white/60 text-[13.8px]"
             )}>
               {isAlreadyPlayed && hasCategory
                 ? t("extra.cpsChooseNew")
