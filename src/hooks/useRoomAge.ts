@@ -1,31 +1,26 @@
 import { useEffect, useState } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { ka, enUS } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { roomAgeLabel } from "@/utils/roomAge";
 
 /**
- * "3 წუთის წინ" for a room's creation time, refreshed as it ages.
+ * A room's age for its card badge, re-rendered as it ages.
  *
- * A minute-old room reads as a minute old for a whole minute, so the label
- * re-renders on a timer rather than only when the list happens to re-fetch —
- * otherwise a card can sit at "1 წუთის წინ" for an hour.
+ * The minute ticks on a timer rather than only when the list re-fetches —
+ * otherwise a card would still read "1წთ" an hour later.
  */
 export function useRoomAge(createdAt: string | null | undefined): string {
-  const { language } = useLanguage();
-  const [, setTick] = useState(0);
+  const { t } = useLanguage();
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (!createdAt) return;
-    const id = setInterval(() => setTick((n) => n + 1), 60_000);
+    const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
   }, [createdAt]);
 
-  if (!createdAt) return "";
-  const date = new Date(createdAt);
-  if (Number.isNaN(date.getTime())) return "";
-
-  return formatDistanceToNow(date, {
-    addSuffix: true,
-    locale: language === "ka" ? ka : enUS,
-  });
+  const label = roomAgeLabel(createdAt, now);
+  if (!label) return "";
+  return label.count === undefined
+    ? t(label.key)
+    : t(label.key).replace("{count}", String(label.count));
 }
