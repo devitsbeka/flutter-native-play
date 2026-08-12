@@ -230,7 +230,7 @@ export const en: KaTranslations = {
     play: "Play",
     discover: "Discover",
     leaderboard: "Leaderboard",
-    triviaLive: "Trivia Live",
+    triviaLive: "Online Game",
   },
 
   // ==========================================

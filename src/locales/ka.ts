@@ -228,7 +228,7 @@ export const ka = {
     play: "ითამაშე",
     discover: "აღმოაჩინე",
     leaderboard: "ლიდერბორდი",
-    triviaLive: "Trivia Live",
+    triviaLive: "ონლაინ თამაში",
   },
 
   // ==========================================
