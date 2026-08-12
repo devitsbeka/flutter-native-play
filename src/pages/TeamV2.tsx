@@ -314,6 +314,10 @@ function TeamContentV2() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showGuestJoinModal, setShowGuestJoinModal] = useState(false);
   const [pendingGuestJoinCode, setPendingGuestJoinCode] = useState<string | null>(null);
+  // Set when a guest could not be created for an invite (anonymous sign-ins
+  // disabled), so the invite screen can explain itself instead of the
+  // generic multiplayer wall.
+  const [guestSignInBlocked, setGuestSignInBlocked] = useState(false);
   const isGuest = !user;
   
   // Show auth modal for guests on mount (but NOT if they have a join code - show guest modal instead)
@@ -407,13 +411,21 @@ function TeamContentV2() {
         next.delete("tv");
         setSearchParams(next, { replace: true });
       })();
-    } else if (!pendingGuestJoinCode) {
-      // Guest: auto-join with anonymous sign-in (no modal)
+    } else if (!pendingGuestJoinCode && !guestSignInBlocked) {
+      // Guest: auto-join with anonymous sign-in (no modal). Once it has been
+      // refused, stop asking — clearing the pending code re-runs this effect,
+      // which otherwise retries the same rejected sign-in forever.
       setPendingGuestJoinCode(joinCode);
       (async () => {
         const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
         if (anonError || !anonData.user) {
-          toast.error(t("extra.signInFailedToast"));
+          // Anonymous sign-ins can be turned off for the project, in which
+          // case guests cannot be created at all. Remember the room so the
+          // prompt below can be about THIS invite, and send them back into it
+          // once they have an account, rather than dropping them on a generic
+          // "sign in to play" page with the invite lost.
+          console.warn("[TeamV2] Guest sign-in unavailable:", anonError?.message);
+          setGuestSignInBlocked(true);
           setPendingGuestJoinCode(null);
           return;
         }
@@ -425,7 +437,7 @@ function TeamContentV2() {
         // The useEffect will re-trigger with the new user and auto-join
       })();
     }
-  }, [searchParams, user, phase, enterRoom, setSearchParams, showGuestJoinModal, pendingGuestJoinCode]);
+  }, [searchParams, user, phase, enterRoom, setSearchParams, showGuestJoinModal, pendingGuestJoinCode, guestSignInBlocked]);
 
   // Handle guest joining a room via invite link
   const handleGuestJoinRoom = async (nickname: string) => {
@@ -640,6 +652,18 @@ function TeamContentV2() {
     );
   }
 
+  // An invite is being opened by a signed-out visitor: the anonymous guest is
+  // still being created, so hold the screen rather than flashing the "sign in
+  // to play" wall over an invite that is about to open itself.
+  const inviteCode = searchParams.get("join") || searchParams.get("room");
+  if (!user && inviteCode && !guestSignInBlocked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   // Show login prompt if not authenticated
   if (!user) {
     return (
@@ -653,9 +677,19 @@ function TeamContentV2() {
             <Users className="w-12 h-12 text-slate-700" />
           </motion.div>
           <h1 className="font-display text-2xl text-slate-800 mb-3">{t('team.multiplayer')}</h1>
-          <p className="text-slate-600 text-center mb-6">{t('team.signInToPlay')}</p>
-          <ChunkyButton variant="secondary" onClick={() => navigate("/auth")}>
-            {t('auth.signIn')}
+          <p className="text-slate-600 text-center mb-6">
+            {inviteCode ? t('team.signInToJoinInvite') : t('team.signInToPlay')}
+          </p>
+          <ChunkyButton
+            variant="secondary"
+            onClick={() => {
+              // Carry the invite through the sign-up so they land in the room
+              // they were invited to, not on an empty multiplayer page.
+              const returnTo = inviteCode ? `/team?join=${inviteCode}` : "/team";
+              navigate(`/auth?mode=signup&returnTo=${encodeURIComponent(returnTo)}`);
+            }}
+          >
+            {inviteCode ? t('extra.notifJoin') : t('auth.signIn')}
           </ChunkyButton>
         </div>
       </div>
