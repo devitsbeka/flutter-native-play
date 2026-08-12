@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { Avatar } from "@/components/shared/Avatar";
+import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import { MissionsModal } from "./MissionsModal";
 import { DailyRewardsModal } from "./DailyRewardsModal";
 import { ChestRewardModal } from "./ChestRewardModal";
@@ -232,43 +233,16 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 )}
               </div>
 
-              {/* Big Play Button - Simplified 3D Mint Style */}
+              {/* Big Play Button — the shared chunky green one, so the menu's
+                  call to action reads the same as the home and category pages */}
               <div className="px-3 pb-3" style={{ marginTop: "-5px" }}>
-                <motion.button
+                <GreenPlayButton
                   onClick={handlePlayClick}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98, y: 2 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  className="relative w-full overflow-hidden rounded-2xl"
-                  style={{ height: 52 }}
+                  className="h-[56px] w-full text-lg"
+                  icon={<Play className="h-6 w-6 fill-white text-white" />}
                 >
-                  {/* Bottom shadow/depth layer */}
-                  <div
-                    className="absolute inset-0 rounded-2xl"
-                    style={{
-                      top: 4,
-                      background: "linear-gradient(180deg, #4BC9A0 0%, #3DB890 100%)",
-                    }}
-                  />
-                  
-                  {/* Main face - simpler gradient */}
-                  <div
-                    className="absolute rounded-2xl overflow-hidden"
-                    style={{
-                      inset: 0,
-                      bottom: 4,
-                      background: "linear-gradient(180deg, #6ADDB5 0%, #5DD8B0 50%, #4BC9A0 100%)",
-                    }}
-                  >
-                    {/* Button content */}
-                    <div className="relative h-full flex items-center justify-center gap-3">
-                      <Play className="w-6 h-6 fill-white text-white" />
-                      <span className="text-white font-bold text-lg" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}>
-                        {t("menu.play")}
-                      </span>
-                    </div>
-                  </div>
-                </motion.button>
+                  {t("menu.play")}
+                </GreenPlayButton>
               </div>
 
               {/* Navigation Items (replacing bottom nav) */}

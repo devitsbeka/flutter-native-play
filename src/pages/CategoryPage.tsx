@@ -283,7 +283,7 @@ export default function CategoryPage() {
         <div className="relative px-5 -mt-10 z-20 hidden md:block md:px-20 lg:px-28">
           <div className="max-w-3xl mx-auto">
             <div
-              className="flex items-center justify-between px-6 py-4 rounded-[24px]"
+              className="flex items-center justify-between px-6 py-6 rounded-[24px]"
               // Main page card recipe — lavender-white, #e8e0f5 border, chunky lip
               style={{
                 background: 'rgba(252,247,255,0.92)',
@@ -307,7 +307,7 @@ export default function CategoryPage() {
         <div className="relative px-5 -mt-7 z-20 md:hidden">
           <div className="max-w-3xl mx-auto">
             <div
-              className="flex gap-1 rounded-[24px] p-1.5"
+              className="flex gap-1 rounded-[24px] p-3"
               style={{
                 background: 'rgba(252,247,255,0.92)',
                 boxShadow: '0 3.6px 0 0 #d8d0e8, 0 5.4px 14.5px 0 rgba(0,0,0,0.1), inset 0 1.8px 0 0 #ffffff',
