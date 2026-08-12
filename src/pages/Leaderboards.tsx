@@ -320,7 +320,11 @@ export default function Leaderboards() {
   ];
 
   return (
-    <MainLayout showPlayButton={false}>
+    // disableScroll drops the layout's mobile pb-24. The page below is already
+    // exactly 100dvh with its own bottom-nav clearance, so that padding gave
+    // the outer scroller 96px of slack — just enough to drag the header (title,
+    // search, notifications) off the top. Only the board's row list scrolls now.
+    <MainLayout showPlayButton={false} disableScroll>
       <AuthRequiredModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
