@@ -8,7 +8,6 @@ import guestGeoMap from "@/assets/figma-home/guest-geo-map.webp";
 import coinChunky from "@/assets/figma-home/coin-chunky.png";
 import gemChunky from "@/assets/figma-home/gem-chunky.png";
 import coinPurse from "@/assets/icons/icon-coin-purse.png";
-import xDay from "@/assets/figma-home/x-day.svg";
 import missionsCrystal from "@/assets/figma-home/missions-crystal.png";
 import shieldOuter from "@/assets/figma-home/shield-outer.svg";
 import shieldInner from "@/assets/figma-home/shield-inner.svg";
@@ -227,10 +226,13 @@ function StatPill({
   );
 }
 
-// Mon, Tue, Wed, Thu, Sat, Sun — the frame skips Friday, matching the
-// desktop streak strip (SceneHero) this card is the phone counterpart of.
-const DAY_LABELS = ["ორშ", "სამ", "ოთხ", "ხუთ", "შაბ", "კვ"];
-const SLOT_WEEKDAYS = [0, 1, 2, 3, 5, 6]; // 0 = Monday
+// The full week. The frame — and the desktop strip this is the phone
+// counterpart of — skipped Friday, which was survivable while the row was
+// decoration. It is not now: every day opens its own missions, and the
+// week bonus asks you to finish all of them, so a day with no slot is a
+// day you cannot see or be credited for.
+const DAY_LABELS = ["ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ", "კვ"];
+const SLOT_WEEKDAYS = [0, 1, 2, 3, 4, 5, 6]; // 0 = Monday
 
 type DayState = "done" | "failed" | "pending";
 
@@ -250,8 +252,11 @@ interface MobileProfileCardProps {
   onCoinsClick: () => void;
   onGemsClick: () => void;
   onGiftClick: () => void;
-  /** The weekly streak row is the phone's only way into missions. */
-  onMissionsClick: () => void;
+  /** The weekly streak row is the phone's only way into missions. Carries
+      the ISO date of the day tapped, so each day opens its own. */
+  onMissionsClick: (dateISO: string) => void;
+  /** Today's daily reward is already taken — the purse shows as spent. */
+  dailyRewardClaimed?: boolean;
 }
 
 // node 626:1179, re-stacked. The frame put the nickname and the coin/gem
@@ -275,6 +280,7 @@ export function MobileProfileCard({
   onGemsClick,
   onGiftClick,
   onMissionsClick,
+  dailyRewardClaimed = false,
 }: MobileProfileCardProps) {
   const { streak, currentStreak } = useMissionStreak();
 
@@ -288,6 +294,17 @@ export function MobileProfileCard({
   const today = new Date();
   const todayIdx = (today.getDay() + 6) % 7; // 0 = Monday
   const lastDone = streak?.last_completion_date || null;
+  // The date a slot stands for. Anchored on the same day key mission rows
+  // are stored under (mission_date is a UTC date) and stepped in whole days
+  // from there, rather than rebuilt from local calendar parts: east of UTC
+  // the two disagree for the first hours of the day, and the today slot
+  // would open a date with no rows against it.
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const dateOfWeekday = (weekday: number): string =>
+    new Date(Date.parse(`${todayKey}T00:00:00Z`) + (weekday - todayIdx) * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+
   const dayState = (weekday: number): DayState => {
     if (weekday > todayIdx) return "pending";
     if (lastDone && currentStreak > 0) {
@@ -401,7 +418,7 @@ export function MobileProfileCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 26 }}
       className="md:hidden absolute inset-x-0 z-20 mx-6"
-      style={{ bottom: `calc(${NAV_H} + 31px)` }}
+      style={{ bottom: `calc(${NAV_H} + 36px)` }}
     >
       <div
         className="relative h-[94px] w-full overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.8)]"
@@ -412,20 +429,24 @@ export function MobileProfileCard({
             The days are one button, not decoration — the phone has no
             separate missions section, so the week itself is the way in.
             The gift keeps its own button beside it for daily rewards. */}
-        <div className="absolute left-[26px] right-[22px] top-[16px] flex items-end justify-between">
-          <button
-            type="button"
-            onClick={onMissionsClick}
-            aria-label={t("missions.title")}
-            className="flex flex-1 items-end justify-between pr-[10px] text-left"
-          >
+        {/* Seven days plus the purse need more of the card than six did, so
+            the row reclaims some side padding rather than shrinking the day
+            labels — on a 360px phone the labels are what runs out first. */}
+        <div className="absolute left-[16px] right-[14px] top-[16px] flex items-end justify-between">
+          <div className="flex flex-1 items-end justify-between pr-[8px]">
           {DAY_LABELS.map((label, i) => {
             const weekday = SLOT_WEEKDAYS[i];
             const state = dayState(weekday);
             const isToday = weekday === todayIdx;
             const isFuture = weekday > todayIdx;
             return (
-              <div key={label} className="flex flex-col items-center">
+              <button
+                key={label}
+                type="button"
+                onClick={() => onMissionsClick(dateOfWeekday(weekday))}
+                aria-label={`${label} — ${t("missions.title")}`}
+                className="flex flex-col items-center"
+              >
                 {isToday && state === "pending" ? (
                   /* Today: the missions crystal on the gold chip — the day
                      the player can still act on, showing what acting means.
@@ -460,7 +481,11 @@ export function MobileProfileCard({
                 ) : (
                   <div
                     className={`flex h-[27.328px] w-[27.42px] items-center justify-center rounded-full ${
-                      state === "done" ? "bg-[#10b981]" : "bg-[rgba(149,129,171,0.14)]"
+                      state === "done"
+                        ? "bg-[#10b981]"
+                        : state === "failed"
+                          ? "bg-[rgba(217,119,6,0.16)]"
+                          : "bg-[rgba(149,129,171,0.14)]"
                     }`}
                   >
                     {state === "done" && (
@@ -474,7 +499,17 @@ export function MobileProfileCard({
                         />
                       </svg>
                     )}
-                    {state === "failed" && <img src={xDay} alt="" className="size-[14px]" />}
+                    {state === "failed" && (
+                      <svg viewBox="0 0 14 14" className="size-[14px]" fill="none" aria-hidden>
+                        <path
+                          d="M10.5 3.5L3.5 10.5M3.5 3.5l7 7"
+                          stroke="#b45309"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
                     {isFuture && (
                       <p className="-mt-[9px] font-['Nunito'] text-[16px] font-bold leading-[16px] tracking-[0.5px] text-[#887695]">
                         ...
@@ -489,25 +524,42 @@ export function MobileProfileCard({
                 >
                   {label}
                 </p>
-              </div>
+              </button>
             );
           })}
-          </button>
+          </div>
 
           {/* Daily rewards (node 626:1404) */}
+          {/* Spent for the day, the purse drains to grey and flattens: the
+              warm gradient, the amber lip and the glow all belong to the
+              state where there is something to collect. Colour alone would
+              not carry it, so the artwork desaturates too. */}
           <button
             type="button"
             onClick={onGiftClick}
             aria-label={t("extra.dailyRewards")}
-            className="relative h-[62px] w-[76px] shrink-0 rounded-full border-[3px] border-solid border-[rgba(255,255,255,0.9)] shadow-[0px_4px_12px_0px_rgba(0,0,0,0.1),0px_3px_0px_0px_#fdba74]"
-            style={{ backgroundImage: "linear-gradient(to bottom, #fff7ed, #fed7aa)" }}
+            className={`relative h-[62px] w-[76px] shrink-0 rounded-full border-[3px] border-solid transition-colors ${
+              dailyRewardClaimed
+                ? "border-[rgba(255,255,255,0.65)] shadow-[0px_2px_6px_0px_rgba(0,0,0,0.06),0px_2px_0px_0px_#cbc3d4]"
+                : "border-[rgba(255,255,255,0.9)] shadow-[0px_4px_12px_0px_rgba(0,0,0,0.1),0px_3px_0px_0px_#fdba74]"
+            }`}
+            style={{
+              backgroundImage: dailyRewardClaimed
+                ? "linear-gradient(to bottom, #f4f2f7, #ded9e6)"
+                : "linear-gradient(to bottom, #fff7ed, #fed7aa)",
+            }}
           >
             <span className="absolute left-[17.5px] top-[2px] block h-[48px] w-[41px] overflow-hidden">
               <img
                 src={coinPurse}
                 alt=""
                 draggable={false}
-                className="absolute left-[-16.46%] h-full w-[116.46%] max-w-none"
+                className="absolute left-[-16.46%] h-full w-[116.46%] max-w-none transition-[filter,opacity]"
+                style={
+                  dailyRewardClaimed
+                    ? { filter: "grayscale(1) contrast(0.9)", opacity: 0.55 }
+                    : undefined
+                }
               />
             </span>
           </button>

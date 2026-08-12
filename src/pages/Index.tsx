@@ -294,6 +294,9 @@ export default function Index() {
   const [isAdFreeModalOpen, setIsAdFreeModalOpen] = useState(false);
   const [isGemShopOpen, setIsGemShopOpen] = useState(false);
   const [showMissionsModal, setShowMissionsModal] = useState(false);
+  // Which day the missions modal opens on. null = today, which is what
+  // every entry point other than the week strip means.
+  const [missionsDate, setMissionsDate] = useState<string | null>(null);
   const [showLevelModal, setShowLevelModal] = useState(false);
   const [showMyPowersModal, setShowMyPowersModal] = useState(false);
   const [showWatchAdModal, setShowWatchAdModal] = useState(false);
@@ -757,7 +760,7 @@ export default function Index() {
           playsRemaining={playsRemaining}
           unreadCount={unreadCount}
           onPlay={handlePlayClick}
-          onMissions={() => setShowMissionsModal(true)}
+          onMissions={() => { setMissionsDate(null); setShowMissionsModal(true); }}
           onPowers={() => setShowMyPowersModal(true)}
           onLevel={() => setShowLevelModal(true)}
           onShop={() => setIsGemShopOpen(true)}
@@ -768,7 +771,7 @@ export default function Index() {
         {/* Modals reachable from the homepage */}
         <SignupOnboardingModal />
         <SideMenuDrawer isOpen={isSideMenuOpen} onClose={() => setIsSideMenuOpen(false)} />
-        <MissionsModal isOpen={showMissionsModal} onClose={() => setShowMissionsModal(false)} />
+        <MissionsModal isOpen={showMissionsModal} onClose={() => setShowMissionsModal(false)} date={missionsDate} />
         <MyPowersModal isOpen={showMyPowersModal} onClose={() => setShowMyPowersModal(false)} />
         <GemShopModal isOpen={isGemShopOpen} onClose={() => setIsGemShopOpen(false)} />
         <LevelInfoModal
@@ -847,6 +850,7 @@ export default function Index() {
       <MissionsModal
         isOpen={showMissionsModal}
         onClose={() => setShowMissionsModal(false)}
+        date={missionsDate}
       />
       <LevelInfoModal
         isOpen={showLevelModal}
@@ -1160,7 +1164,11 @@ export default function Index() {
             onCoinsClick={() => navigate("/power-ups?section=coins")}
             onGemsClick={() => navigate("/power-ups?section=gems-lari")}
             onGiftClick={() => setIsDailyRewardsOpen(true)}
-            onMissionsClick={() => setShowMissionsModal(true)}
+            dailyRewardClaimed={!canClaimDaily}
+            onMissionsClick={(dateISO) => {
+              setMissionsDate(dateISO);
+              setShowMissionsModal(true);
+            }}
           />
         )}
 
@@ -1223,7 +1231,7 @@ export default function Index() {
             >
               <DesktopActionCards
                 onDailyRewardsClick={() => setIsDailyRewardsOpen(true)}
-                onMissionsClick={() => setShowMissionsModal(true)}
+                onMissionsClick={() => { setMissionsDate(null); setShowMissionsModal(true); }}
                 onChestClick={() => setIsChestModalOpen(true)}
                 onPowersClick={() => setShowMyPowersModal(true)}
                 onAdFreeClick={() => navigate("/power-ups")}
@@ -1487,7 +1495,7 @@ export default function Index() {
                   gems={user ? gems : 0}
                   onNameClick={user ? () => setShowChangeNameModal(true) : () => navigate("/auth")}
                   onLevelClick={user ? () => setShowLevelModal(true) : () => navigate("/auth")}
-                  onMissionsClick={user ? () => setShowMissionsModal(true) : () => navigate("/auth")}
+                  onMissionsClick={user ? () => { setMissionsDate(null); setShowMissionsModal(true); } : () => navigate("/auth")}
                   onCoinsClick={user ? () => navigate("/power-ups?section=coins") : () => navigate("/auth")}
                   onGemsClick={user ? () => navigate("/power-ups?section=gems-lari") : () => navigate("/auth")}
                   onGiftClick={user ? () => setIsDailyRewardsOpen(true) : () => navigate("/auth")}

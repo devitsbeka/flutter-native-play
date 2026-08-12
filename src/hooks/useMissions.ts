@@ -291,9 +291,24 @@ function pickRotation<T>(pool: T[], slot: number, count: number): T[] {
   return Array.from({ length: Math.min(count, pool.length) }, (_, i) => pool[(start + i) % pool.length]);
 }
 
+// Whole UTC days since the epoch — the slot the rotation turns on. Rows are
+// keyed by a UTC date (mission_date), so a date string maps onto the same
+// slot the live pool used when it created them.
+function daySlotOf(dateISO: string): number {
+  return Math.floor(Date.parse(`${dateISO}T00:00:00Z`) / 86_400_000);
+}
+
+export function todayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** The five missions that day's rotation runs, past or future. */
+export function dailyPoolForDate(dateISO: string): PoolMission[] {
+  return pickRotation(DAILY_POOL, daySlotOf(dateISO), DAILY_ACTIVE_COUNT);
+}
+
 function activeDailyPool(): PoolMission[] {
-  const dayNumber = Math.floor(Date.now() / 86_400_000);
-  return pickRotation(DAILY_POOL, dayNumber, DAILY_ACTIVE_COUNT);
+  return dailyPoolForDate(todayKey());
 }
 
 function activeWeeklyPool(): PoolMission[] {
@@ -876,4 +891,90 @@ export function useMissions() {
     totalCount: computed.allMissions.length,
     unclaimedCount: computed.unclaimedDaily + computed.unclaimedWeekly,
   };
+}
+
+// ---------- One day at a time ----------
+
+export type DayKind = "past" | "today" | "future";
+
+export interface DayMissions {
+  kind: DayKind;
+  missions: Mission[];
+  loading: boolean;
+}
+
+export function dayKindOf(dateISO: string, today = todayKey()): DayKind {
+  if (dateISO === today) return "today";
+  return dateISO < today ? "past" : "future";
+}
+
+// A pool entry dressed as a mission row for a day that has none: future days
+// are a preview, so nothing is written and progress reads zero. The id is
+// synthetic and never reaches the database.
+function previewRow(m: PoolMission, tier: "beginner" | "advanced", dateISO: string): Mission {
+  const t = m[tier];
+  return {
+    id: `preview-${dateISO}-${m.mission_id}`,
+    mission_id: m.mission_id,
+    mission_title: m.title,
+    mission_description: m.description.replace("{n}", String(t.target)),
+    target_value: t.target,
+    current_progress: 0,
+    reward_xp: t.xp,
+    reward_coins: t.coins,
+    reward_gems: t.gems,
+    reward_power_up: m.power_up || null,
+    reward_power_up_count: m.power_up_count || 0,
+    completed: false,
+    completed_at: null,
+    reward_claimed: false,
+    mission_type: "daily",
+  };
+}
+
+/**
+ * One day's daily missions, whichever day it is.
+ *
+ * A past day reads back exactly what was stored — that is the history, and
+ * it must never be created or back-filled, or opening last Tuesday would
+ * mint missions the player never had a chance at. A future day has no rows
+ * by design and is previewed from the same rotation that will create them.
+ * Today defers to the live query so progress and realtime keep working.
+ */
+export function useDailyMissionsFor(dateISO: string | null): DayMissions {
+  const { user, profile } = useAuth();
+  const live = useMissions();
+  const today = todayKey();
+  const date = dateISO ?? today;
+  const kind = dayKindOf(date, today);
+  const tier = tierOf(profile?.games_played || 0);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["missions-day", user?.id, date],
+    queryFn: async (): Promise<Mission[]> => {
+      const ids = new Set(dailyPoolForDate(date).map((d) => d.mission_id));
+      const { data: rows, error } = await supabase
+        .from("user_missions")
+        .select("*")
+        .eq("user_id", user!.id)
+        .eq("mission_date", date)
+        .eq("mission_type", "daily");
+      if (error) throw error;
+      return (rows || []).filter((r) => ids.has(r.mission_id)) as Mission[];
+    },
+    enabled: !!user && kind === "past",
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (kind === "today") {
+    return { kind, missions: live.dailyMissions, loading: live.loading };
+  }
+  if (kind === "future") {
+    return {
+      kind,
+      missions: dailyPoolForDate(date).map((m) => previewRow(m, tier, date)),
+      loading: false,
+    };
+  }
+  return { kind, missions: data || [], loading: isLoading };
 }

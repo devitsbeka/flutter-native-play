@@ -4,7 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Check, Star, X } from "lucide-react";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
-import { useMissions, getMissionIcon, type MissionIconKey } from "@/hooks/useMissions";
+import {
+  useMissions,
+  useDailyMissionsFor,
+  getMissionIcon,
+  todayKey,
+  type MissionIconKey,
+} from "@/hooks/useMissions";
 import { useMissionStreak } from "@/hooks/useMissionStreak";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -38,6 +44,8 @@ import { SunsetButton } from "@/components/shared/SunsetButton";
 interface MissionsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Which day to open on. null (the default) means today. */
+  date?: string | null;
 }
 
 // Where the CTA takes the player to actually work on a mission: category
@@ -188,10 +196,28 @@ function MissionCard({ mission, t }: { mission: Mission; t: (key: string) => str
   );
 }
 
-export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
-  const { t } = useLanguage();
+export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalProps) {
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
-  const { dailyMissions, weeklyMissions, loading } = useMissions();
+  const { weeklyMissions } = useMissions();
+  // Whichever day was tapped. Today routes back to the live query, so
+  // progress and realtime behave exactly as before.
+  const day = useDailyMissionsFor(date);
+  const dailyMissions = day.missions;
+  const loading = day.loading;
+
+  // "Mon, 10 Aug" in the player's own language, plus whether that day is
+  // behind or ahead — the date alone does not say which.
+  const dayLabel = (() => {
+    if (!date || day.kind === "today") return "";
+    const when = new Date(`${date}T00:00:00Z`).toLocaleDateString(language, {
+      weekday: "long",
+      day: "numeric",
+      month: "short",
+      timeZone: "UTC",
+    });
+    return `${when} · ${t(day.kind === "past" ? "missions.pastDay" : "missions.futureDay")}`;
+  })();
   const { currentStreak } = useMissionStreak();
   const [activeTab, setActiveTab] = useState<"daily" | "weekly">("daily");
   const [dailyIndex, setDailyIndex] = useState(0);
@@ -264,7 +290,9 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
               <h2 className="pr-12 font-display text-xl font-bold text-[#402666]">
                 {t("missions.title")}
               </h2>
-              <p className="mt-0.5 pr-12 text-xs text-slate-500">{t("missions.subtitle")}</p>
+              <p className="mt-0.5 pr-12 text-xs text-slate-500">
+                {day.kind === "today" ? t("missions.subtitle") : dayLabel}
+              </p>
 
               {/* Streak banner */}
               <div
@@ -363,20 +391,25 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                 </div>
               )}
 
-              {/* Start / continue — routes to where this mission is played */}
+              {/* Start / continue — routes to where this mission is played.
+                  Only today can be acted on: a past day is settled and a
+                  future one has not opened, so both close instead of
+                  sending the player somewhere that cannot help them. */}
               <SunsetButton
                 onClick={() => {
                   onClose();
-                  if (mission && !mission.completed) {
+                  if (day.kind === "today" && mission && !mission.completed) {
                     const dest = missionDestination(mission.mission_id);
                     navigate(dest.to, dest.state ? { state: dest.state } : undefined);
                   }
                 }}
                 className="mt-4"
               >
-                {mission && !mission.completed && mission.current_progress === 0
-                  ? t("missions.startBtn")
-                  : t("missions.continueBtn")}
+                {day.kind !== "today"
+                  ? t("common.close")
+                  : mission && !mission.completed && mission.current_progress === 0
+                    ? t("missions.startBtn")
+                    : t("missions.continueBtn")}
               </SunsetButton>
             </div>
           </motion.div>
