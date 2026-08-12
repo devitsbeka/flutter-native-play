@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
-import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { AnimatePresence, motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal, MonitorPlay } from "lucide-react";
 import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession, isLiveTVSession, isNewlyCreated } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
@@ -70,7 +70,12 @@ export function MyRoomsSection({
   const TVIcon = platform === 'ios' ? Airplay : platform === 'android' ? Cast : Tv;
 
   // Delete room handler
+  // The card on its way out. It shrinks away first and the row closes behind
+  // it, instead of the list blinking a card shorter when the refetch lands.
+  const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null);
+
   const handleDeleteRoom = async (roomId: string) => {
+    setDeletingRoomId(roomId);
     try {
       // Related tables cascade via ON DELETE CASCADE - no manual pre-deletes needed.
       // RLS only lets the host delete a room; a non-host delete silently matches
@@ -84,14 +89,20 @@ export function MyRoomsSection({
       if (error) throw error;
       if (!deleted || deleted.length === 0) {
         toast.error(t("extra.roomDeleteFailed"));
+        setDeletingRoomId(null);
         return;
       }
 
       toast.success(t("extra.roomDeleted"));
-      refreshRooms();
+      // Let the card finish leaving before the list reloads under it
+      setTimeout(() => {
+        refreshRooms();
+        setDeletingRoomId(null);
+      }, 420);
     } catch (error) {
       console.error("Error deleting room:", error);
       toast.error(t("extra.roomDeleteFailed"));
+      setDeletingRoomId(null);
     }
   };
 
@@ -253,30 +264,40 @@ export function MyRoomsSection({
         )
       ) : vertical ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pb-4 w-full max-w-full">
-          {rooms.map((room, index) => (
-            <RoomCardGrid
-              key={room.id}
-              room={room}
-              index={index}
-              onJoin={() => handleJoin(room)}
-              onDelete={handleDeleteRoom}
-              isJoining={joiningRoomId === room.id}
-            />
-          ))}
+          {/* popLayout so the cards after the one leaving glide up into the
+              gap rather than jumping once it unmounts */}
+          <AnimatePresence mode="popLayout" initial={false}>
+            {rooms
+              .filter((room) => room.id !== deletingRoomId)
+              .map((room, index) => (
+                <RoomCardGrid
+                  key={room.id}
+                  room={room}
+                  index={index}
+                  onJoin={() => handleJoin(room)}
+                  onDelete={handleDeleteRoom}
+                  isJoining={joiningRoomId === room.id}
+                />
+              ))}
+          </AnimatePresence>
         </div>
       ) : (
         <div className="overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory scroll-smooth">
           <div className="flex gap-3 px-4">
-            {rooms.map((room, index) => (
-              <RoomCard
-                key={room.id}
-                room={room}
-                index={index}
-                onJoin={() => handleJoin(room)}
-                onDelete={handleDeleteRoom}
-                isJoining={joiningRoomId === room.id}
-              />
-            ))}
+            <AnimatePresence mode="popLayout" initial={false}>
+              {rooms
+                .filter((room) => room.id !== deletingRoomId)
+                .map((room, index) => (
+                  <RoomCard
+                    key={room.id}
+                    room={room}
+                    index={index}
+                    onJoin={() => handleJoin(room)}
+                    onDelete={handleDeleteRoom}
+                    isJoining={joiningRoomId === room.id}
+                  />
+                ))}
+            </AnimatePresence>
             {/* View All Card */}
             {onShowAllRooms && (
               <motion.button
@@ -431,7 +452,12 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: index * 0.05, type: "spring", stiffness: 400, damping: 30 }}
+          // Deleting: the card shrinks away and tips forward as it goes, and
+          // popLayout closes the gap behind it. layout keeps the neighbours
+          // gliding rather than snapping into the space.
+          layout
+          exit={{ opacity: 0, scale: 0.72, y: 12, filter: "blur(4px)" }}
+          transition={{ delay: index * 0.05, type: "spring", stiffness: 400, damping: 30, opacity: { duration: 0.28 }, scale: { duration: 0.34, ease: [0.4, 0, 0.2, 1] } }}
           drag={isMobile ? "x" : false}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.2}
@@ -742,7 +768,12 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: index * 0.03, type: "spring", stiffness: 400, damping: 30 }}
+          // Deleting: the card shrinks away and tips forward as it goes, and
+          // popLayout closes the gap behind it. layout keeps the neighbours
+          // gliding rather than snapping into the space.
+          layout
+          exit={{ opacity: 0, scale: 0.72, y: 12, filter: "blur(4px)" }}
+          transition={{ delay: index * 0.03, type: "spring", stiffness: 400, damping: 30, opacity: { duration: 0.28 }, scale: { duration: 0.34, ease: [0.4, 0, 0.2, 1] } }}
           drag={isMobile ? "x" : false}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.2}
