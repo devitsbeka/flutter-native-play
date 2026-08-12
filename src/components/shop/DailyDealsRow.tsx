@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ShopItem } from "@/hooks/useShopData";
 import { DAILY_DEALS, HOURLY_DEALS, ShopDeal, dealSavings } from "@/config/shopDeals";
@@ -10,19 +9,11 @@ import bannerCrownIcon from "@/assets/crown-icon.png";
 import bannerPowersIcon from "@/assets/icons/icon-powers-bottle.png";
 import bannerDiscountIcon from "@/assets/pro-banner/banner-discount.webp";
 import bannerTimerIcon from "@/assets/pro-banner/banner-timer.webp";
-import { DealBanner, SKIN_DEAL_DAILY, SKIN_DEAL_HOURLY } from "./ProBannerCard";
+import { DealBanner, SKIN_WHITE } from "./ProBannerCard";
 import powersIcon from "@/assets/icons/icon-powers-bottle.webp";
 
 // Affordability isn't checked here on purpose — the page-level purchase
 // handler already routes an underfunded tap to the NotEnoughGems modal.
-interface DailyDealsRowProps {
-  purchasedItems: Set<string>;
-  isPurchasing: string | null;
-  onItemClick: (item: ShopItem) => void;
-  /** The layout renders one shared შეთავაზებები title above PRO + deals. */
-  hideTitle?: boolean;
-}
-
 const pad = (n: number) => String(n).padStart(2, "0");
 
 export function formatRemaining(ms: number, withHours: boolean): string {
@@ -148,7 +139,7 @@ export function DealBannerCard({
 
   return (
     <DealBanner
-      skin={daily ? SKIN_DEAL_DAILY : SKIN_DEAL_HOURLY}
+      skin={SKIN_WHITE}
       title={t(deal.nameKey)}
       savings={dealSavings(deal)}
       stripIcon={bannerDiscountIcon}
@@ -164,53 +155,5 @@ export function DealBannerCard({
       actionDisabled={isPurchased || isLoading}
       onAction={onBuy}
     />
-  );
-}
-
-export function DailyDealsRow({ purchasedItems, isPurchasing, onItemClick, hideTitle = false }: DailyDealsRowProps) {
-  const { t } = useLanguage();
-  const { dailyDeal, hourlyDeal, dailyRemaining, hourlyRemaining } = useLiveDeals();
-
-  return (
-    <motion.section
-      className="mx-3 sm:mx-4 mb-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      {!hideTitle && (
-        <div className="relative z-10 mb-3 mt-2 flex items-center gap-2.5 px-1">
-          <h2 className="text-lg md:text-xl font-display font-bold text-foreground">{t("shop.deals")}</h2>
-        </div>
-      )}
-
-      {/* auto-fit on a 420px floor rather than a breakpoint: the column
-          count follows the space this row actually has, so a collapsing
-          sidebar or a narrow window drops it to one banner on its own
-          without a media query needing to know about either. */}
-      <div
-        className="grid gap-3"
-        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(420px, 100%), 1fr))" }}
-      >
-        <DealBannerCard
-          deal={dailyDeal}
-          label={t("shop.dailyDeal")}
-          remainingLabel={dailyRemaining}
-          daily
-          isPurchased={purchasedItems.has(dailyDeal.id)}
-          isLoading={isPurchasing === dailyDeal.id}
-          onBuy={() => onItemClick(dealToShopItem(dailyDeal, t(dailyDeal.nameKey)))}
-        />
-        <DealBannerCard
-          deal={hourlyDeal}
-          label={t("shop.hourlyDeal")}
-          remainingLabel={hourlyRemaining}
-          daily={false}
-          isPurchased={purchasedItems.has(hourlyDeal.id)}
-          isLoading={isPurchasing === hourlyDeal.id}
-          onBuy={() => onItemClick(dealToShopItem(hourlyDeal, t(hourlyDeal.nameKey)))}
-        />
-      </div>
-    </motion.section>
   );
 }

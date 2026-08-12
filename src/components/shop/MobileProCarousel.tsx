@@ -1,6 +1,6 @@
 import { siteUrl } from "@/config/site";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Crown, Users, Sparkles, Check, Loader2 } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
@@ -19,9 +19,7 @@ import {
   InviteBanner,
   HEADER_SOLO,
   HEADER_FAMILY,
-  SKIN_SOLO,
-  SKIN_FAMILY,
-  SKIN_INVITE,
+  SKIN_WHITE,
 } from "./ProBannerCard";
 import type { ShopItem } from "@/hooks/useShopData";
 
@@ -31,6 +29,9 @@ const SIDEBAR_TO_STRIPE_TIER: Record<SimplifiedTier, ProTierId> = {
   solo: "pro",
   family: "pro_plus",
 };
+
+/** gap-3 between banners, in px — the reel needs the number to page by. */
+const REEL_GAP = 12;
 
 type SlideType = "invite" | "solo" | "family" | "deal";
 
@@ -45,13 +46,13 @@ const BENEFIT_PLAY: ProBenefitArt = { icon: gamepadIcon, size: 66, top: 138 };
 const BENEFIT_FEATURES: ProBenefitArt = { icon: wheelIcon, size: 67, top: 139 };
 const BENEFIT_NO_ADS: ProBenefitArt = { icon: noAdsIcon, size: 69, top: 137 };
 
-interface MobileProCarouselProps {
+interface ProBannerReelProps {
   purchasedItems: Set<string>;
   isPurchasing: string | null;
   onItemClick: (item: ShopItem) => void;
 }
 
-export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }: MobileProCarouselProps) {
+export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick }: ProBannerReelProps) {
   const { t } = useLanguage();
   const { dailyDeal, hourlyDeal, dailyRemaining, hourlyRemaining } = useLiveDeals();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -97,7 +98,7 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
       type: "invite" as SlideType,
       id: "invite" as const,
       name: t("extra.inviteMiniTitle"),
-      skin: SKIN_INVITE,
+      skin: SKIN_WHITE,
     },
     {
       type: "pro" as SlideType,
@@ -105,7 +106,7 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
       name: t("extra.soloPro"),
       price: 3.99,
       header: HEADER_SOLO(crownIcon),
-      skin: SKIN_SOLO,
+      skin: SKIN_WHITE,
       benefits: [
         { art: BENEFIT_PLAY, label: t("extra.mobileSoloBenefit1") },
         { art: BENEFIT_FEATURES, label: t("extra.mobileSoloBenefit2") },
@@ -118,7 +119,7 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
       name: t("extra.familyPro"),
       price: 7.99,
       header: HEADER_FAMILY(friendsIcon),
-      skin: SKIN_FAMILY,
+      skin: SKIN_WHITE,
       benefits: [
         // Family leads with the PRO bundle, then play — the opposite of solo.
         { art: BENEFIT_FEATURES, label: t("extra.mobileFamilyBenefit1") },
@@ -172,18 +173,70 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
   const reelRef = useRef<HTMLDivElement | null>(null);
   const lastInteraction = useRef(0);
 
+  // How many banners fit at once. Measured from the reel, not the viewport,
+  // so an expanding sidebar drops it from three to two without a breakpoint
+  // knowing the sidebar exists. 360 is the width below which a banner's
+  // captions stop being readable.
+  const [perView, setPerView] = useState(1);
+  useEffect(() => {
+    const el = reelRef.current;
+    if (!el) return;
+    const measure = () => setPerView(Math.max(1, Math.min(3, Math.floor(el.clientWidth / 360))));
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // A page is one banner's width, so the arrows step by one rather than
+  // jumping a whole screenful past what the player was looking at.
+  const pageWidth = useCallback(() => {
+    const el = reelRef.current;
+    if (!el) return 1;
+    return Math.max(1, (el.clientWidth - REEL_GAP * (perView - 1)) / perView + REEL_GAP);
+  }, [perView]);
+
+  const lastIndex = Math.max(0, SLIDES.length - perView);
+
   const scrollToIndex = useCallback((index: number) => {
     const el = reelRef.current;
     if (!el) return;
-    el.scrollTo({ left: index * el.clientWidth, behavior: "smooth" });
-  }, []);
+    el.scrollTo({ left: index * pageWidth(), behavior: "smooth" });
+  }, [pageWidth]);
 
   const onReelScroll = useCallback(() => {
     const el = reelRef.current;
     if (!el) return;
-    const idx = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
+    const idx = Math.round(el.scrollLeft / pageWidth());
     setCurrentIndex(Math.min(SLIDES.length - 1, Math.max(0, idx)));
-  }, [SLIDES.length]);
+  }, [SLIDES.length, pageWidth]);
+
+  // Mouse drag. Touch already drags the reel natively; a pointer without
+  // touch does not, and on desktop the reel is the main way to browse.
+  const drag = useRef<{ startX: number; startScroll: number; moved: boolean } | null>(null);
+  const onPointerDown = (e: React.PointerEvent) => {
+    lastInteraction.current = Date.now();
+    if (e.pointerType === "touch") return;
+    const el = reelRef.current;
+    if (!el) return;
+    drag.current = { startX: e.clientX, startScroll: el.scrollLeft, moved: false };
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    const el = reelRef.current;
+    if (!drag.current || !el) return;
+    const dx = e.clientX - drag.current.startX;
+    if (Math.abs(dx) > 3) drag.current.moved = true;
+    el.scrollLeft = drag.current.startScroll - dx;
+  };
+  const endDrag = () => { drag.current = null; };
+  // A drag that moved must not also fire the banner underneath it.
+  const swallowClickAfterDrag = (e: React.MouseEvent) => {
+    if (drag.current?.moved) { e.preventDefault(); e.stopPropagation(); }
+  };
 
   useEffect(() => {
     if (!isActive) return;
@@ -191,11 +244,11 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
       if (Date.now() - lastInteraction.current < 8000) return;
       const el = reelRef.current;
       if (!el) return;
-      const idx = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
-      scrollToIndex((idx + 1) % SLIDES.length);
+      const idx = Math.round(el.scrollLeft / pageWidth());
+      scrollToIndex(idx >= lastIndex ? 0 : idx + 1);
     }, 6000);
     return () => clearInterval(interval);
-  }, [SLIDES.length, isActive, scrollToIndex]);
+  }, [lastIndex, isActive, scrollToIndex]);
 
   const handleCardClick = () => { navigate('/profile?tab=PRO'); };
   const handleUpgrade = async (tierId: SimplifiedTier) => {
@@ -229,11 +282,15 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
 
 
   return (
-    <div ref={containerRef} className="px-4 pt-4 pb-2 md:pb-4">
+    <div ref={containerRef} className="relative px-4 pt-4 pb-2 md:pb-4">
       <div
         ref={reelRef}
         onScroll={onReelScroll}
-        onPointerDown={() => { lastInteraction.current = Date.now(); }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerLeave={endDrag}
+        onClickCapture={swallowClickAfterDrag}
         onTouchStart={() => { lastInteraction.current = Date.now(); }}
         className="flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain scrollbar-hide gap-3 rounded-3xl"
         // touch-action pins the gesture to one axis: without it a swipe that
@@ -245,7 +302,11 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
           const isDealSlide = slide.type === "deal";
           const activeDeal = slide.id === "deal-daily" ? dailyDeal : hourlyDeal;
           return (
-          <div key={slide.id} className="w-full shrink-0 snap-center">
+          <div
+            key={slide.id}
+            className="shrink-0 snap-center"
+            style={{ width: `calc((100% - ${REEL_GAP * (perView - 1)}px) / ${perView})` }}
+          >
             {isDealSlide ? (
               <DealBannerCard
                 deal={activeDeal}
@@ -258,7 +319,7 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
               />
             ) : slide.type === "invite" ? (
               <InviteBanner
-                skin={SKIN_INVITE}
+                skin={SKIN_WHITE}
                 art={friendsIcon}
                 crown={crownIcon}
                 headline={t("extra.inviteMiniTitle")}
@@ -294,11 +355,34 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
         })}
       </div>
 
+      {/* Arrows, shown once there is a pointer to use them with. They step
+          one banner at a time and hide at each end rather than sitting there
+          dead. */}
+      {[-1, 1].map((dir) => {
+        const atEnd = dir < 0 ? currentIndex <= 0 : currentIndex >= lastIndex;
+        return (
+          <button
+            key={dir}
+            type="button"
+            aria-label={dir < 0 ? t("common.back") : t("common.next")}
+            onClick={() => {
+              lastInteraction.current = Date.now();
+              scrollToIndex(Math.min(lastIndex, Math.max(0, currentIndex + dir)));
+            }}
+            className={`absolute top-1/2 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-[rgba(64,38,102,0.1)] bg-white/90 text-[#402666] shadow-[0_4px_14px_rgba(64,38,102,0.18)] backdrop-blur transition-opacity ${
+              atEnd || lastIndex === 0 ? "pointer-events-none opacity-0" : "opacity-100 hover:bg-white"
+            } ${dir < 0 ? "left-1" : "right-1"}`}
+          >
+            {dir < 0 ? <ChevronLeft className="size-5" /> : <ChevronRight className="size-5" />}
+          </button>
+        );
+      })}
+
       {/* relative z-10: the background blob layer paints over plain
           (non-stacking-context) elements and was swallowing the dots */}
       <div className="relative z-10 flex flex-col items-center gap-1 mt-2">
         <div className="flex justify-center gap-2">
-          {SLIDES.map((_, index) => (
+          {Array.from({ length: lastIndex + 1 }, (_, index) => (
             <button
               key={index}
               onClick={() => { lastInteraction.current = Date.now(); scrollToIndex(index); }}
@@ -306,144 +390,7 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
             />
           ))}
         </div>
-        <span className="text-xs text-muted-foreground">{currentIndex + 1} / {SLIDES.length}</span>
       </div>
     </div>
-  );
-}
-
-// Desktop (md+): the two PRO tiers as side-by-side hero cards under the
-// შეთავაზებები title — same gradients and checkout flow as the phone reel.
-export function DesktopProBanners() {
-  const { t } = useLanguage();
-  const { subscription, isVip } = useVipStatus();
-  const { initiateProCheckout, isProcessing } = useProPurchase();
-  const currentTier = isVip ? subscription?.vip_tier : undefined;
-
-  const tiers = [
-    {
-      id: "solo" as SimplifiedTier,
-      name: t("extra.soloPro"),
-      price: 3.99,
-      icon: Crown,
-      benefits: [t("extra.mobileSoloBenefit1"), t("extra.mobileSoloBenefit2"), t("extra.mobileSoloBenefit3")],
-      gradient: "linear-gradient(135deg, #EC4899 0%, #DB2777 50%, #BE185D 100%)",
-      shadow: "#9D174D",
-      popular: false,
-    },
-    {
-      id: "family" as SimplifiedTier,
-      name: t("extra.familyPro"),
-      price: 7.99,
-      icon: Users,
-      benefits: [t("extra.mobileFamilyBenefit1"), t("extra.mobileFamilyBenefit2"), t("extra.mobileFamilyBenefit3")],
-      gradient: "linear-gradient(135deg, #8B5CF6 0%, #6D28D9 50%, #5B21B6 100%)",
-      shadow: "#4C1D95",
-      popular: true,
-    },
-  ];
-
-  const buttonState = (tierId: SimplifiedTier) => {
-    const normalized = currentTier === "standard" ? "solo" : currentTier;
-    if (normalized === "family" || normalized === "pro_plus") return { text: t("extra.activeStatus"), isActive: true };
-    if ((normalized === "solo" || normalized === "pro") && tierId === "solo") return { text: t("extra.activeStatus"), isActive: true };
-    return { text: t("extra.purchaseBtn"), isActive: false };
-  };
-
-  return (
-    /* pro-banner-row is a container query context: the pair stacks when the
-       row itself gets narrow (an expanded sidebar shrinks it without the
-       viewport changing), so a card is never squeezed to the point where its
-       contents collide. See .pro-banner-grid in index.css. */
-    <div className="pro-banner-row mx-3 sm:mx-4 mb-6">
-      <div className="pro-banner-grid grid grid-cols-2 gap-2">
-      {tiers.map((tier) => {
-        const TierIcon = tier.icon;
-        const state = buttonState(tier.id);
-        const price = getPriceDisplay(tier.price);
-        return (
-          <div
-            key={tier.id}
-            className="relative flex min-h-[251px] min-w-0 flex-col overflow-hidden rounded-[24px] p-5 text-white"
-            style={{ background: tier.gradient, opacity: isProcessing ? 0.7 : 1 }}
-          >
-            {tier.popular && !state.isActive && (
-              <div className="absolute top-0 right-0 z-10 flex items-center gap-1 rounded-bl-xl bg-yellow-400 px-2.5 py-0.5 text-[10px] font-bold text-yellow-900 shadow-lg">
-                <Sparkles className="h-3 w-3" /> TOP
-              </div>
-            )}
-            {state.isActive && (
-              <div className="absolute top-0 right-0 z-10 flex items-center gap-1 rounded-bl-xl bg-emerald-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-lg">
-                <Check className="h-3 w-3" /> {t("extra.activeStatus")}
-              </div>
-            )}
-            <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
-            {/* One vertical stack: icon, then title, then price. Nothing
-                competes for room on a shared row, and pr-16 keeps the first
-                line clear of the TOP / აქტიური badge in the corner. */}
-            <div className="relative pr-16">
-              <div
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                style={{ background: "rgba(255,255,255,0.2)", boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)" }}
-              >
-                <TierIcon className="h-5 w-5 text-white" />
-              </div>
-              <h3 className="mt-2 break-words text-lg font-bold leading-tight">{tier.name}</h3>
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-1">
-                <span className="text-2xl font-black">{price.symbol}{price.value}{price.suffix}</span>
-                <span className="text-sm text-white/70">{price.monthLabel}</span>
-              </div>
-            </div>
-            <ul className="relative mt-4 mb-auto flex flex-col gap-1.5">
-              {tier.benefits.map((benefit, i) => (
-                <li key={i} className="flex items-start gap-2 text-white/90">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-white/80" />
-                  <span className="min-w-0 break-words text-sm leading-tight">{benefit}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="relative flex justify-end pt-3">
-              <ProBuyButton
-                state={state}
-                isProcessing={isProcessing}
-                onClick={() => { if (!state.isActive && !isProcessing) initiateProCheckout(SIDEBAR_TO_STRIPE_TIER[tier.id]); }}
-                t={t}
-              />
-            </div>
-          </div>
-        );
-      })}
-      </div>
-    </div>
-  );
-}
-
-// White chunky buy pill shared by the desktop PRO cards
-function ProBuyButton({
-  state,
-  isProcessing,
-  onClick,
-  t,
-}: {
-  state: { text: string; isActive: boolean };
-  isProcessing: boolean;
-  onClick: () => void;
-  t: (key: string) => string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={state.isActive || isProcessing}
-      className="rounded-full px-6 py-2.5 text-sm font-bold disabled:opacity-70"
-      style={{
-        background: state.isActive ? "rgba(255,255,255,0.15)" : "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
-        color: state.isActive ? "rgba(255,255,255,0.7)" : "#402666",
-        boxShadow: state.isActive ? "none" : "0 3px 0 #D8D0E8, 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 #FFFFFF",
-        border: state.isActive ? "none" : "2px solid #E8E0F5",
-      }}
-    >
-      {isProcessing ? t("extra.processingState") : state.text}
-    </button>
   );
 }

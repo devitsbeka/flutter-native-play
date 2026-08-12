@@ -23,59 +23,41 @@ const BUTTON_TOP = 358;
  * Skins
  * ------------------------------------------------------------------ */
 
-// One jewel tone per banner, each a light-to-deep gradient of a single hue
-// rather than a flat fill, with a darker relative of that hue for the waves.
-// Every banner stays cool so the gold button is the only warm thing on the
-// card and always reads as the thing to press.
+// Every banner is white. Colour on the card competed with the button for
+// attention and made five offers look like five different products; on a
+// white card the gold CTA is the only saturated thing on screen.
 //
-// Nothing inside a card carries its own hue: tiles, panels and pills are
-// white at low alpha, so they pick up whichever gradient sits behind them
-// and can never clash with it.
+// The skin is still a type rather than a set of constants so a banner can
+// be re-tinted without touching the markup, but there is one of them.
 
 export interface BannerSkin {
-  /** Card fill — a gradient, top to bottom. */
+  /** Card fill. */
   bg: string;
-  /** Deep relative of the card hue; fills the three stacked wave layers. */
+  /** Fill of the three stacked wave layers at the foot of the card. */
   wave: string;
+  /** Titles, captions, prices. */
+  ink: string;
+  /** Struck-through prices and other secondary type. */
+  inkSoft: string;
+  /** Benefit tiles and the invite reward panel. */
+  tileFill: string;
+  tileEdge: string;
+  /** The deal card's countdown pills. */
+  pillFill: string;
 }
 
-export const SKIN_SOLO: BannerSkin = {
-  bg: "linear-gradient(163deg, #C4B5FD 0%, #A78BFA 46%, #7C3AED 100%)",
-  wave: "#5B21B6",
+export const SKIN_WHITE: BannerSkin = {
+  bg: "linear-gradient(163deg, #FFFFFF 0%, #FDFBFF 55%, #F5EFFB 100%)",
+  wave: "#C9B8E4",
+  ink: "#402666",
+  inkSoft: "rgba(64,38,102,0.45)",
+  tileFill: "linear-gradient(180deg, rgba(124,58,237,0.09) 0%, rgba(124,58,237,0.03) 100%)",
+  tileEdge: "rgba(124,58,237,0.16)",
+  pillFill: "rgba(64,38,102,0.07)",
 };
 
-export const SKIN_FAMILY: BannerSkin = {
-  bg: "linear-gradient(163deg, #FDA4AF 0%, #FB7185 46%, #E11D48 100%)",
-  wave: "#9F1239",
-};
-
-export const SKIN_INVITE: BannerSkin = {
-  bg: "linear-gradient(163deg, #7DD3FC 0%, #38BDF8 46%, #0284C7 100%)",
-  wave: "#075985",
-};
-
-/** Flash deal — the shorter fuse gets the brighter, more urgent green. */
-export const SKIN_DEAL_HOURLY: BannerSkin = {
-  bg: "linear-gradient(163deg, #6EE7B7 0%, #34D399 46%, #059669 100%)",
-  wave: "#047857",
-};
-
-/** Daily deal — the calmer, richer indigo of the two. */
-export const SKIN_DEAL_DAILY: BannerSkin = {
-  bg: "linear-gradient(163deg, #A5B4FC 0%, #818CF8 46%, #4F46E5 100%)",
-  wave: "#3730A3",
-};
-
-/** Glass used by every element that sits on a card: tiles, panels, pills. */
-const GLASS_FILL = "linear-gradient(180deg, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.08) 100%)";
-const GLASS_EDGE = "rgba(255,255,255,0.38)";
-/** Lifts the top edge of a glass surface so it reads as a pane, not a hole. */
-const GLASS_SHEEN = "inset 0px 1px 0px 0px rgba(255,255,255,0.45)";
-
-// White type sits on the pale end of these gradients as often as the deep
-// end, where it washes out. A soft dark shadow holds it legible on both
-// without darkening the card itself.
-const CARD_TEXT_SHADOW = "0px 1px 2px rgba(23,10,45,0.35), 0px 2px 8px rgba(23,10,45,0.18)";
+/** Lifts the top edge of a tile so it reads as a pane, not a hole. */
+const GLASS_SHEEN = "inset 0px 1px 0px 0px rgba(255,255,255,0.7)";
 
 // Tile captions reserve two lines of 16px/1.15 whether or not they need
 // both, and centre inside that box. Without it a wrapping caption hangs
@@ -105,7 +87,7 @@ function WaveStack({ fill }: { fill: string }) {
         viewBox="0 0 575 228"
         preserveAspectRatio="none"
       >
-        <path d={WAVE_TALL} fill={fill} opacity={0.55} />
+        <path d={WAVE_TALL} fill={fill} opacity={0.35} />
       </svg>
       <svg
         aria-hidden
@@ -115,7 +97,7 @@ function WaveStack({ fill }: { fill: string }) {
         viewBox="0 0 575 240"
         preserveAspectRatio="none"
       >
-        <path d={WAVE_SHORT} fill={fill} opacity={0.2} />
+        <path d={WAVE_SHORT} fill={fill} opacity={0.16} />
       </svg>
       <svg
         aria-hidden
@@ -125,7 +107,7 @@ function WaveStack({ fill }: { fill: string }) {
         viewBox="0 0 575 240"
         preserveAspectRatio="none"
       >
-        <path d={WAVE_SHORT} fill={fill} opacity={0.12} />
+        <path d={WAVE_SHORT} fill={fill} opacity={0.1} />
       </svg>
     </>
   );
@@ -226,12 +208,16 @@ export function ProBannerCard({
           className={`absolute left-0 top-0 w-[575px] overflow-hidden rounded-[24px] ${
             onClick ? "cursor-pointer" : ""
           }`}
-          style={{ height: CARD_H, backgroundImage: skin.bg }}
+          style={{
+            height: CARD_H,
+            backgroundImage: skin.bg,
+            boxShadow: "0 2px 6px rgba(64,38,102,0.06), 0 10px 28px rgba(64,38,102,0.10)",
+          }}
         >
           <WaveStack fill={skin.wave} />
           <div
             aria-hidden
-            className="absolute inset-0 rounded-[24px] shadow-[inset_0px_12px_28px_0px_rgba(0,0,0,0.14)]"
+            className="absolute inset-0 rounded-[24px] shadow-[inset_0px_0px_0px_1px_rgba(64,38,102,0.06)]"
           />
           {topStrip}
           {children}
@@ -321,8 +307,8 @@ export function BannerTile({
           left,
           top,
           height,
-          backgroundImage: GLASS_FILL,
-          borderColor: GLASS_EDGE,
+          backgroundImage: skin.tileFill,
+          borderColor: skin.tileEdge,
           boxShadow: GLASS_SHEEN,
         }}
       />
@@ -337,10 +323,7 @@ export function BannerTile({
         className="absolute flex -translate-x-1/2 items-center justify-center"
         style={{ left: labelCenter, top: labelTop, width: labelWidth, height: CAPTION_BOX_H }}
       >
-        <p
-          className="text-center text-[16px] font-semibold leading-[1.15] text-white"
-          style={{ textShadow: CARD_TEXT_SHADOW }}
-        >
+        <p className="text-center text-[16px] font-semibold leading-[1.15]" style={{ color: skin.ink }}>
           {label}
         </p>
       </div>
@@ -351,11 +334,11 @@ export function BannerTile({
 /** One rounded pill in the deal card's top strip. */
 // 15% above the frame's sizes: at the width a phone actually gives the card,
 // the deal label and its countdown read as fine print beside the title.
-function BannerStripPill({ icon, children }: { icon: string; children: ReactNode }) {
+function BannerStripPill({ icon, fill, ink, children }: { icon: string; fill: string; ink: string; children: ReactNode }) {
   return (
-    <div className="flex shrink-0 items-center justify-center gap-[3px] rounded-[24px] bg-[rgba(255,255,255,0.22)] px-[9px] py-[5px]">
+    <div className="flex shrink-0 items-center justify-center gap-[3px] rounded-[24px] px-[9px] py-[5px]" style={{ background: fill }}>
       <img src={icon} alt="" draggable={false} className="size-[18px] object-contain" />
-      <p className="whitespace-nowrap text-center text-[14px] font-semibold text-white" style={{ textShadow: CARD_TEXT_SHADOW }}>
+      <p className="whitespace-nowrap text-center text-[14px] font-semibold" style={{ color: ink }}>
         {children}
       </p>
     </div>
@@ -464,12 +447,12 @@ export function ProTierBanner({
         />
       ))}
       <div
-        className="absolute flex flex-col gap-[10px] text-white"
+        className="absolute flex flex-col gap-[10px]"
         style={{
           left: header.titleLeft,
           top: header.titleTop,
           width: header.titleWidth,
-          textShadow: CARD_TEXT_SHADOW,
+          color: skin.ink,
         }}
       >
         <p className="text-center font-display text-[24px] font-extrabold leading-none">{name}</p>
@@ -524,8 +507,8 @@ export function InviteBanner({
         className="absolute left-[263px] top-[22px] size-[66px] max-w-none object-contain"
       />
       <p
-        className="absolute left-[296.5px] top-[100px] w-[331px] -translate-x-1/2 text-center font-display text-[18px] font-extrabold leading-[1.39] text-white"
-        style={{ textShadow: CARD_TEXT_SHADOW }}
+        className="absolute left-[296.5px] top-[100px] w-[331px] -translate-x-1/2 text-center font-display text-[18px] font-extrabold leading-[1.39]"
+        style={{ color: skin.ink }}
       >
         {headline}
       </p>
@@ -534,7 +517,7 @@ export function InviteBanner({
           left the pane and its contents each centred on a different x. */}
       <div
         className="absolute left-[287.5px] top-[196px] flex h-[90px] w-[262px] -translate-x-1/2 items-center justify-center gap-[8px] rounded-[24px] border border-solid"
-        style={{ backgroundImage: GLASS_FILL, borderColor: GLASS_EDGE, boxShadow: GLASS_SHEEN }}
+        style={{ backgroundImage: skin.tileFill, borderColor: skin.tileEdge, boxShadow: GLASS_SHEEN }}
       >
         <img
           src={crown}
@@ -543,8 +526,8 @@ export function InviteBanner({
           className="size-[55px] shrink-0 max-w-none object-contain"
         />
         <p
-          className="whitespace-nowrap text-center text-[19px] font-semibold leading-none text-white"
-          style={{ textShadow: CARD_TEXT_SHADOW }}
+          className="whitespace-nowrap text-center text-[19px] font-semibold leading-none"
+          style={{ color: skin.ink }}
         >
           {reward}
         </p>
@@ -598,8 +581,8 @@ export function DealBanner({
       onAction={onAction}
       topStrip={
         <div className="absolute left-[20px] top-[21px] flex w-[538px] items-center justify-between">
-          <BannerStripPill icon={stripIcon}>{stripLabel}</BannerStripPill>
-          <BannerStripPill icon={remainingIcon}>{remaining}</BannerStripPill>
+          <BannerStripPill icon={stripIcon} fill={skin.pillFill} ink={skin.ink}>{stripLabel}</BannerStripPill>
+          <BannerStripPill icon={remainingIcon} fill={skin.pillFill} ink={skin.ink}>{remaining}</BannerStripPill>
         </div>
       }
     >
@@ -609,14 +592,13 @@ export function DealBanner({
           with it. */}
       <div
         className="absolute left-[287.5px] top-[66px] flex -translate-x-1/2 items-center gap-[10px]"
-        style={{ textShadow: CARD_TEXT_SHADOW }}
+        style={{ color: skin.ink }}
       >
-        <p className="whitespace-nowrap text-center font-display text-[24px] font-extrabold leading-none text-white">
+        <p className="whitespace-nowrap text-center font-display text-[24px] font-extrabold leading-none">
           {title}
         </p>
         <span
           className="flex h-[28px] shrink-0 items-center justify-center rounded-[24px] bg-[#FCD34D] px-[10px]"
-          style={{ textShadow: "none" }}
         >
           <span className="whitespace-nowrap text-[14px] font-extrabold leading-none text-[#78350F]">
             -{savings}%
@@ -626,18 +608,15 @@ export function DealBanner({
 
       {/* What it costs. A banner with a buy button and no price asks the
           player to tap to find out. */}
-      <div className="absolute left-[287.5px] top-[108px] flex -translate-x-1/2 items-center gap-[10px] text-white">
+      <div className="absolute left-[287.5px] top-[108px] flex -translate-x-1/2 items-center gap-[10px]" style={{ color: skin.ink }}>
         <span
-          className="flex items-center gap-[4px] text-[16px] font-semibold text-white/70 line-through decoration-2"
-          style={{ textShadow: CARD_TEXT_SHADOW }}
+          className="flex items-center gap-[4px] text-[16px] font-semibold line-through decoration-2"
+          style={{ color: skin.inkSoft }}
         >
           <img src={gemIcon} alt="" draggable={false} className="size-[18px] object-contain opacity-80" />
           {wasPrice}
         </span>
-        <span
-          className="flex items-center gap-[5px] text-[24px] font-extrabold"
-          style={{ textShadow: CARD_TEXT_SHADOW }}
-        >
+        <span className="flex items-center gap-[5px] text-[24px] font-extrabold">
           <img src={gemIcon} alt="" draggable={false} className="size-[28px] object-contain" />
           {price}
         </span>

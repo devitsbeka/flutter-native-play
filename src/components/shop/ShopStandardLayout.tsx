@@ -2,9 +2,8 @@ import { useRef, useEffect } from "react";
 import { ShopSection, ShopItem } from "@/hooks/useShopData";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ShopProductGrid } from "./ShopProductGrid";
-import { MobileProCarousel, DesktopProBanners } from "./MobileProCarousel";
+import { ProBannerReel } from "./MobileProCarousel";
 import { MyPowersSection } from "./MyPowersSection";
-import { DailyDealsRow } from "./DailyDealsRow";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
 
 
@@ -74,17 +73,14 @@ export function ShopStandardLayout({
         <h2 className="text-lg md:text-xl font-display font-bold text-foreground">{t("shop.deals")}</h2>
       </div>
 
-      <div className="md:hidden">
-        <MobileProCarousel
-          purchasedItems={purchasedItems}
-          isPurchasing={isPurchasing}
-          onItemClick={handleItemClick}
-        />
-      </div>
-
-      <div className="hidden md:block">
-        <DesktopProBanners />
-      </div>
+      {/* One reel at every width: it shows one banner on a phone and two or
+          three once there is room, so there is a single set of offers rather
+          than a phone version and a desktop version that drift apart. */}
+      <ProBannerReel
+        purchasedItems={purchasedItems}
+        isPurchasing={isPurchasing}
+        onItemClick={handleItemClick}
+      />
 
       {/* My Powers Section - individual purchase */}
       <MyPowersSection
@@ -114,15 +110,6 @@ export function ShopStandardLayout({
             isFrameUnlocked={isFrameUnlocked}
             onItemClick={handleItemClick}
           />
-          {section.id === "coins" && (
-            <div className="hidden md:block">
-              <DailyDealsRow
-                purchasedItems={purchasedItems}
-                isPurchasing={isPurchasing}
-                onItemClick={handleItemClick}
-              />
-            </div>
-          )}
         </div>
       ))}
 
