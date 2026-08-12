@@ -155,7 +155,7 @@ export const es: KaTranslations = {
     addPower: { name: "Agregar más", description: "Obtén más poderes en la tienda", hint: "¡Nuevos bonos cada día!" },
   },
   nav: { ...en.nav, explore: "Explorar", map: "Mapa", play: "Jugar", rank: "Ranking", sound: "Sonido", profile: "Perfil", settings: "Ajustes", home: "Inicio", menu: "Menú" },
-  menu: { ...en.menu, rewards: "Recompensas", missions: "Misiones", treasure: "Cofre del tesoro", shop: "Tienda", party: "Fiesta", otherGames: "Otros juegos", settings: "Ajustes", accountSettings: "Gestión de cuenta", help: "Ayuda", privacy: "Privacidad", signOut: "Cerrar sesión", signIn: "Iniciar sesión", comingSoon: "¡Próximamente!", player: "Jugador", points: "puntos", menuTitle: "Menú", play: "Jugar", discover: "Descubrir", leaderboard: "Clasificación", triviaLive: "Trivia Live" },
+  menu: { ...en.menu, rewards: "Recompensas", missions: "Misiones", treasure: "Cofre del tesoro", shop: "Tienda", party: "Fiesta", otherGames: "Otros juegos", settings: "Ajustes", accountSettings: "Gestión de cuenta", help: "Ayuda", privacy: "Privacidad", signOut: "Cerrar sesión", signIn: "Iniciar sesión", comingSoon: "¡Próximamente!", player: "Jugador", points: "puntos", menuTitle: "Menú", play: "Jugar", discover: "Descubrir", leaderboard: "Clasificación", triviaLive: "Juego en línea" },
   sound: { ...en.sound, title: "Ajustes de sonido", music: "Música", soundEffects: "Efectos de sonido", vibration: "Vibración", on: "Activado", off: "Desactivado" },
   game: {
     ...en.game,
