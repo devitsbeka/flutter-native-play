@@ -1080,10 +1080,20 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
 
   // Enter room (join or re-enter)
   const enterRoom = useCallback(async (roomCode: string): Promise<boolean> => {
-    if (!user || !profile) {
+    if (!user) {
       toast.error(tStandalone("extra.mpAuthRequired"));
       return false;
     }
+    // The profile arrives after the session does. Refusing the whole join for
+    // it meant a tap in that window died with an "auth required" toast on an
+    // account that was signed in — the room only opened after a reload, once
+    // the profile had landed. The row it fills in is cosmetic, so fall back
+    // and let the realtime profile update correct it.
+    const joiningProfile = profile ?? {
+      nickname: user.email?.split("@")[0] || "Player",
+      avatar_url: null,
+      country_code: null,
+    };
     
     setLoading(true);
     try {
@@ -1268,9 +1278,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         await supabase.from("room_participants").insert({
           room_id: room.id,
           user_id: user.id,
-          nickname: profile.nickname || "Player",
-          avatar_url: profile.avatar_url,
-          country_code: profile.country_code,
+          nickname: joiningProfile.nickname || "Player",
+          avatar_url: joiningProfile.avatar_url,
+          country_code: joiningProfile.country_code,
           is_host: false,
         });
 

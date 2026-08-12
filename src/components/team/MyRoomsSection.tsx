@@ -94,11 +94,33 @@ export function MyRoomsSection({
     }
   };
 
-  // Clear unread activity when joining a room
+  // Which room the player is currently opening. Tapping a card fires a chain
+  // of writes before the screen changes, so without this the card looks dead
+  // and every extra tap starts the chain again.
+  const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
+
   const handleJoin = async (room: MyRoom) => {
-    // Clear the unread flag
+    if (joiningRoomId) return;
+    setJoiningRoomId(room.id);
+    try {
+      await openRoom(room);
+    } catch (error) {
+      // A failed housekeeping write used to escape this handler unhandled, so
+      // enterRoom was never reached and the tap did nothing at all — no error,
+      // no room. Try the room anyway: none of that cleanup is what makes the
+      // lobby openable.
+      console.error("[MyRoomsSection] Join preparation failed, entering anyway:", error);
+      await enterRoom(room.room_code);
+    } finally {
+      setJoiningRoomId(null);
+    }
+  };
+
+  const openRoom = async (room: MyRoom) => {
+    // Cosmetic, and nothing below depends on it — don't make the player wait
+    // on a write that only clears a dot.
     if (room.has_unread_activity) {
-      await supabase
+      void supabase
         .from("game_rooms")
         .update({ has_unread_activity: false })
         .eq("id", room.id);
@@ -121,23 +143,19 @@ export function MyRoomsSection({
       // Clear expired/inactive TV session from room
       if (isExpired || isInactive) {
         console.log('[MyRoomsSection] Clearing expired/inactive TV session from room');
+        // One write, not two — same row, same purpose
         await supabase
           .from("game_rooms")
-          .update({ tv_session_id: null })
-          .eq("id", room.id);
-        
-        // Reset room to waiting state
-        await supabase
-          .from("game_rooms")
-          .update({ 
+          .update({
+            tv_session_id: null,
             status: "waiting",
             started_at: null,
-            completed_at: null 
+            completed_at: null,
           })
           .eq("id", room.id);
-        
+
         // Continue to lobby instead of erroring out
-        enterRoom(room.room_code);
+        await enterRoom(room.room_code);
         return;
       }
       
@@ -152,42 +170,27 @@ export function MyRoomsSection({
       }
     }
     
-    // If room is completed (non-TV), reset it to waiting for rematch
+    // A finished room is reset for a rematch. The four writes are independent
+    // of each other, so they go out together rather than one after another —
+    // four sequential round-trips on a phone is most of the wait before the
+    // lobby appears.
     if (room.status === "completed") {
-      await supabase
-        .from("game_rooms")
-        .update({ 
-          status: "waiting",
-          started_at: null,
-          completed_at: null 
-        })
-        .eq("id", room.id);
-      
-      // Clear room questions for new game
-      await supabase
-        .from("room_questions")
-        .delete()
-        .eq("room_id", room.id);
-      
-      // Clear player answers
-      await supabase
-        .from("player_answers")
-        .delete()
-        .eq("room_id", room.id);
-      
-      // Reset all participants to joined status
-      await supabase
-        .from("room_participants")
-        .update({ 
-          status: "joined",
-          score: 0,
-          current_question: 0
-        })
-        .eq("room_id", room.id);
+      await Promise.all([
+        supabase
+          .from("game_rooms")
+          .update({ status: "waiting", started_at: null, completed_at: null })
+          .eq("id", room.id),
+        supabase.from("room_questions").delete().eq("room_id", room.id),
+        supabase.from("player_answers").delete().eq("room_id", room.id),
+        supabase
+          .from("room_participants")
+          .update({ status: "joined", score: 0, current_question: 0 })
+          .eq("room_id", room.id),
+      ]);
     }
     
     // Standard room join - goes to lobby
-    enterRoom(room.room_code);
+    await enterRoom(room.room_code);
   };
 
   // Check if user has seen feature onboarding
@@ -256,6 +259,7 @@ export function MyRoomsSection({
               index={index}
               onJoin={() => handleJoin(room)}
               onDelete={handleDeleteRoom}
+              isJoining={joiningRoomId === room.id}
             />
           ))}
         </div>
@@ -269,6 +273,7 @@ export function MyRoomsSection({
                 index={index}
                 onJoin={() => handleJoin(room)}
                 onDelete={handleDeleteRoom}
+                isJoining={joiningRoomId === room.id}
               />
             ))}
             {/* View All Card */}
@@ -302,9 +307,11 @@ interface RoomCardProps {
   onJoin: () => void;
   onDelete: (roomId: string) => void;
   fullWidth?: boolean;
+  /** Opening this room: the card says so and stops taking taps. */
+  isJoining?: boolean;
 }
 
-function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCardProps) {
+function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining = false }: RoomCardProps) {
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -391,8 +398,8 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
   };
 
   const handleClick = () => {
-    // Only trigger join if not swiping
-    if (!isSwiping.current) {
+    // Only trigger join if not swiping, and not while it is already opening
+    if (!isSwiping.current && !isJoining) {
       onJoin();
     }
   };
@@ -444,6 +451,13 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
             enableNoise={false}
             className="relative px-2.5 pb-2.5 pt-6 rounded-2xl"
           >
+            {/* Opening a room means several writes before the screen changes.
+                Say so on the card that was tapped, or it reads as ignored. */}
+            {isJoining && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-black/35 backdrop-blur-[1px]">
+                <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/40 border-t-white" />
+              </div>
+            )}
             {/* Top row - Avatars left, Status badge + menu right */}
             <div className="relative z-10 px-2 pb-4">
               <div className="flex items-start justify-between mb-8">
@@ -609,9 +623,11 @@ interface RoomCardGridProps {
   index: number;
   onJoin: () => void;
   onDelete: (roomId: string) => void;
+  /** Opening this room: the card says so and stops taking taps. */
+  isJoining?: boolean;
 }
 
-function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
+function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: RoomCardGridProps) {
   const { openProfile } = usePlayerProfile();
   const { t } = useLanguage();
   const isMobile = useIsMobile();
@@ -689,7 +705,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
   };
 
   const handleClick = () => {
-    if (!isSwiping.current) {
+    if (!isSwiping.current && !isJoining) {
       onJoin();
     }
   };
@@ -740,6 +756,13 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
             enableNoise={false}
             className="relative w-full h-full p-3 flex flex-col"
           >
+            {/* Opening a room means several writes before the screen changes.
+                Say so on the card that was tapped, or it reads as ignored. */}
+            {isJoining && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-black/35 backdrop-blur-[1px]">
+                <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/40 border-t-white" />
+              </div>
+            )}
             {/* Cover image with radial fade */}
             {/* Top Row: Status Badge + Menu */}
             <div className="relative z-10 flex items-start justify-between">
