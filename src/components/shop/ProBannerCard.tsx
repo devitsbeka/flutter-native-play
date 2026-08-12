@@ -1,19 +1,23 @@
 // Figma: Hom / 637:390 — the PRO offer banners.
 //
-// The frame draws every card on a 575x435 canvas with absolute coordinates,
-// so the card is built at that size and scaled to whatever width it is given
-// rather than having each coordinate re-derived as a percentage. Same trick
-// LoggedInHomeV2 uses for the world-map home.
+// The frame lays every card out in absolute coordinates on a 575-wide
+// canvas, so the card is built at that width and scaled to whatever it is
+// given rather than having each coordinate re-derived as a percentage. Same
+// trick LoggedInHomeV2 uses for the world-map home.
 //
-// The frame draws a 396-tall card with the buy button hanging 39px below
-// it. That overhang puts the card's bottom edge straight through the
-// button on a real screen, so the card here is the full 435 and the button
-// sits inside it.
+// The button straddles the card's bottom edge by design — 77 tall at y358
+// against a 396 card, so exactly half of it hangs below. It paints above
+// the card, and the stage reserves room for its shadow.
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export const BANNER_DESIGN_W = 575;
-export const BANNER_DESIGN_H = 435;
+// 470, not 435: the card is 396 and the button hangs to 435, but its lip
+// and glow reach ~34px further. The reel clips to this height, so the stage
+// has to reserve that or the button's own shadow is shaved off.
+export const BANNER_DESIGN_H = 470;
+const CARD_H = 396;
+const BUTTON_TOP = 358;
 
 /* ------------------------------------------------------------------ *
  * Skins
@@ -33,40 +37,33 @@ export interface BannerSkin {
   bg: string;
   /** Deep relative of the card hue; fills the three stacked wave layers. */
   wave: string;
-  /** Hard lip and glow under the buy button, in the card's own hue. */
-  buttonShadow: string;
 }
 
 export const SKIN_SOLO: BannerSkin = {
   bg: "linear-gradient(163deg, #C4B5FD 0%, #A78BFA 46%, #7C3AED 100%)",
   wave: "#5B21B6",
-  buttonShadow: "#5B21B6",
 };
 
 export const SKIN_FAMILY: BannerSkin = {
   bg: "linear-gradient(163deg, #FDA4AF 0%, #FB7185 46%, #E11D48 100%)",
   wave: "#9F1239",
-  buttonShadow: "#9F1239",
 };
 
 export const SKIN_INVITE: BannerSkin = {
   bg: "linear-gradient(163deg, #7DD3FC 0%, #38BDF8 46%, #0284C7 100%)",
   wave: "#075985",
-  buttonShadow: "#075985",
 };
 
 /** Flash deal — the shorter fuse gets the brighter, more urgent green. */
 export const SKIN_DEAL_HOURLY: BannerSkin = {
   bg: "linear-gradient(163deg, #6EE7B7 0%, #34D399 46%, #059669 100%)",
   wave: "#047857",
-  buttonShadow: "#047857",
 };
 
 /** Daily deal — the calmer, richer indigo of the two. */
 export const SKIN_DEAL_DAILY: BannerSkin = {
   bg: "linear-gradient(163deg, #A5B4FC 0%, #818CF8 46%, #4F46E5 100%)",
   wave: "#3730A3",
-  buttonShadow: "#3730A3",
 };
 
 /** Glass used by every element that sits on a card: tiles, panels, pills. */
@@ -102,7 +99,7 @@ function WaveStack({ fill }: { fill: string }) {
     <>
       <svg
         aria-hidden
-        className="absolute left-0 top-[207px] block"
+        className="absolute left-0 top-[167.9px] block"
         width={575}
         height={228}
         viewBox="0 0 575 228"
@@ -112,7 +109,7 @@ function WaveStack({ fill }: { fill: string }) {
       </svg>
       <svg
         aria-hidden
-        className="absolute left-0 top-[195px] block"
+        className="absolute left-0 top-[156px] block"
         width={575}
         height={240}
         viewBox="0 0 575 240"
@@ -122,7 +119,7 @@ function WaveStack({ fill }: { fill: string }) {
       </svg>
       <svg
         aria-hidden
-        className="absolute left-0 top-[179px] block"
+        className="absolute left-0 top-[140px] block"
         width={575}
         height={240}
         viewBox="0 0 575 240"
@@ -209,10 +206,10 @@ export function ProBannerCard({
         {/* Card body */}
         <div
           onClick={onClick}
-          className={`absolute left-0 top-0 h-[435px] w-[575px] overflow-hidden rounded-[24px] ${
+          className={`absolute left-0 top-0 w-[575px] overflow-hidden rounded-[24px] ${
             onClick ? "cursor-pointer" : ""
           }`}
-          style={{ backgroundImage: skin.bg }}
+          style={{ height: CARD_H, backgroundImage: skin.bg }}
         >
           <WaveStack fill={skin.wave} />
           <div
@@ -223,14 +220,12 @@ export function ProBannerCard({
           {children}
         </div>
 
-        {/* Buy / invite button.
+        {/* Buy / invite button — node 636:156, verbatim.
 
-            The frame hangs it off the card's bottom edge. On a device that
-            edge then runs straight across the button — a hard line with the
-            card's colour above it and the page wash below — and the button
-            reads as cropped by whatever it is sitting on. The card now fills
-            the whole stage and the button sits inside it, above everything
-            in the card, so nothing crosses it. */}
+            77 tall at y358 against a 396 card, so exactly half of it hangs
+            below the card's edge. It is a sibling of the card, not a child,
+            and paints after it, so the card's edge passes behind it and the
+            card's own clipping never touches it. */}
         <button
           type="button"
           onClick={(e) => {
@@ -238,23 +233,25 @@ export function ProBannerCard({
             onAction?.();
           }}
           disabled={actionDisabled}
-          className="absolute left-[68px] top-[330px] z-20 flex h-[77px] w-[424px] items-center justify-center gap-[3px] rounded-[24px] border-[2px] border-solid border-[rgba(255,255,255,0.55)] p-[3px] disabled:cursor-not-allowed"
-          // The lip is the button's own darker amber and the glow is tinted
-          // to the card, so both read as the button's edge rather than as a
-          // shape behind it.
-          style={{
-            boxShadow: `0px 5px 0px 0px #B45309, 0px 10px 20px 0px ${skin.buttonShadow}59`,
-          }}
+          className="absolute left-[68px] z-20 flex h-[77px] w-[424px] items-center justify-center gap-[3px] rounded-[24px] border-[3px] border-solid border-[#9fa8a3] p-[3px] shadow-[0px_6px_0px_0px_#7e2378,0px_10px_24px_0px_rgba(16,185,129,0.5)] disabled:cursor-not-allowed"
+          style={{ top: BUTTON_TOP }}
         >
           <span
             aria-hidden
             className="absolute inset-0 rounded-[24px]"
-            style={{ backgroundImage: "linear-gradient(180deg, #FDE68A 0%, #FBBF24 48%, #F59E0B 100%)" }}
+            style={{
+              backgroundImage:
+                "linear-gradient(180.6543874615296deg, rgb(226,213,32) 13.506%, rgb(187,32,143) 90.414%, rgb(129,225,201) 194.33%)",
+            }}
           />
-          <span className="relative whitespace-nowrap text-[18px] font-extrabold leading-[30.95px] tracking-[-0.18px] text-[#78350F]">
+          <span className="relative whitespace-nowrap text-[18px] font-bold leading-[30.95px] tracking-[-0.18px] text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)]">
             {actionLabel}
           </span>
-          <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_3px_0px_0px_rgba(255,255,255,0.5)]" />
+          {/* Three specks of light on the button face (nodes 636:161–163) */}
+          <span aria-hidden className="absolute left-[16.42px] top-[8.42px] size-[5.152px] rounded-full bg-white opacity-[0.49]" />
+          <span aria-hidden className="absolute left-[195.16px] top-[17.36px] size-[5.283px] rounded-full bg-white opacity-[0.35]" />
+          <span aria-hidden className="absolute left-[32.71px] top-[40.71px] size-[4.589px] rounded-full bg-[rgba(255,255,255,0.8)] opacity-[0.58]" />
+          <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_3px_0px_0px_rgba(255,255,255,0.35)]" />
         </button>
       </div>
     </div>
