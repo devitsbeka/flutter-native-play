@@ -473,8 +473,10 @@ export function ProTierBanner({
         }}
       >
         <p className="text-center font-display text-[24px] font-extrabold leading-none">{name}</p>
+        {/* The month label carries its own separator ("/თვე", "/mo"), so
+            adding one here printed "10.97 ₾ / /თვე". */}
         <p className="text-center font-semibold leading-none">
-          <span className="text-[24px]">{price} / </span>
+          <span className="text-[24px]">{price} </span>
           <span className="text-[16px]">{month}</span>
         </p>
       </div>

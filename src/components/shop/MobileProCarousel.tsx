@@ -34,6 +34,17 @@ const SIDEBAR_TO_STRIPE_TIER: Record<SimplifiedTier, ProTierId> = {
 
 type SlideType = "invite" | "solo" | "family" | "deal";
 
+// Frame 636:169 — the artwork for each promise a PRO tier makes, at the
+// size the frame draws it. Not a uniform set, so each carries its own.
+interface ProBenefitArt {
+  icon: string;
+  size: number;
+  top: number;
+}
+const BENEFIT_PLAY: ProBenefitArt = { icon: gamepadIcon, size: 66, top: 138 };
+const BENEFIT_FEATURES: ProBenefitArt = { icon: wheelIcon, size: 67, top: 139 };
+const BENEFIT_NO_ADS: ProBenefitArt = { icon: noAdsIcon, size: 69, top: 137 };
+
 interface MobileProCarouselProps {
   purchasedItems: Set<string>;
   isPurchasing: string | null;
@@ -96,9 +107,9 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
       header: HEADER_SOLO(crownIcon),
       skin: SKIN_SOLO,
       benefits: [
-        t("extra.mobileSoloBenefit1"),
-        t("extra.mobileSoloBenefit2"),
-        t("extra.mobileSoloBenefit3"),
+        { art: BENEFIT_PLAY, label: t("extra.mobileSoloBenefit1") },
+        { art: BENEFIT_FEATURES, label: t("extra.mobileSoloBenefit2") },
+        { art: BENEFIT_NO_ADS, label: t("extra.mobileSoloBenefit3") },
       ],
     },
     {
@@ -109,24 +120,40 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
       header: HEADER_FAMILY(friendsIcon),
       skin: SKIN_FAMILY,
       benefits: [
-        t("extra.mobileFamilyBenefit1"),
-        t("extra.mobileFamilyBenefit2"),
-        t("extra.mobileFamilyBenefit3"),
+        // Family leads with the PRO bundle, then play — the opposite of solo.
+        { art: BENEFIT_FEATURES, label: t("extra.mobileFamilyBenefit1") },
+        { art: BENEFIT_PLAY, label: t("extra.mobileFamilyBenefit2") },
+        { art: BENEFIT_NO_ADS, label: t("extra.mobileFamilyBenefit3") },
       ],
     },
   ], [t]);
 
-  // Frame 636:169 — the three benefit tiles on a PRO card. Each icon has its
-  // own size and offset in the design; they are not a uniform set.
-  // Captions sit on their tile's true centre (left + 75), not the frame's
-  // own values, which drift a few px off and read as misaligned once the
-  // captions all occupy the same box. 124 wide keeps them inside the tile
-  // and lets the longer ones wrap rather than run to the edges.
-  const PRO_TILES = [
-    { left: 43, icon: gamepadIcon, iconSize: 66, iconLeft: 85, iconTop: 138, labelWidth: 124, labelCenter: 118 },
-    { left: 213, icon: wheelIcon, iconSize: 67, iconLeft: 254, iconTop: 139, labelWidth: 124, labelCenter: 288 },
-    { left: 382, icon: noAdsIcon, iconSize: 69, iconLeft: 423, iconTop: 137, labelWidth: 124, labelCenter: 457 },
+  // Captions sit on their tile's true centre, not the frame's own values,
+  // which drift a few px off and read as misaligned once the captions all
+  // occupy the same box. 124 wide keeps them inside the tile and lets the
+  // longer ones wrap rather than run to the edges.
+  const PRO_COLUMNS = [
+    { left: 43, labelCenter: 118 },
+    { left: 213, labelCenter: 288 },
+    { left: 382, labelCenter: 457 },
   ];
+
+  // Build the three tiles for a tier. The icon is chosen by what the benefit
+  // promises, never by which column it lands in: the two tiers list their
+  // benefits in different orders, and keying off position put the prize
+  // wheel on "free play" and a joystick on "PRO features". Each icon keeps
+  // its own size from the frame and is centred on its column.
+  const proTiles = (benefits: { art: ProBenefitArt; label: string }[]) =>
+    benefits.map(({ art, label }, i) => ({
+      icon: art.icon,
+      iconSize: art.size,
+      iconLeft: PRO_COLUMNS[i].labelCenter - art.size / 2,
+      iconTop: art.top,
+      label,
+      labelTop: 218,
+      labelWidth: 124,
+      labelCenter: PRO_COLUMNS[i].labelCenter,
+    }));
 
   const getButtonText = (tierId: SimplifiedTier, currentTierVal: string | undefined) => {
     const normalizedTier = currentTierVal === "standard" ? "solo" : currentTierVal;
@@ -252,11 +279,7 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
                     name={slide.name}
                     price={`${price.symbol}${price.value}${price.suffix}`}
                     month={price.monthLabel}
-                    tiles={PRO_TILES.map((tile, i) => ({
-                      ...tile,
-                      label: slide.benefits![i],
-                      labelTop: 218,
-                    }))}
+                    tiles={proTiles(slide.benefits!)}
                     onClick={handleCardClick}
                     dimmed={isProcessing}
                     actionLabel={isProcessing ? <Loader2 className="size-5 animate-spin" /> : state.text}
