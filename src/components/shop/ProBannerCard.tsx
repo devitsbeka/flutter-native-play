@@ -500,18 +500,23 @@ export function InviteBanner({
       actionDisabled={actionDisabled}
       onAction={onAction}
     >
-      <img
-        src={art}
-        alt=""
-        draggable={false}
-        className="absolute left-[263px] top-[22px] size-[66px] max-w-none object-contain"
-      />
-      <p
-        className="absolute left-[296.5px] top-[100px] w-[331px] -translate-x-1/2 text-center font-display text-[18px] font-extrabold leading-[1.39]"
-        style={{ color: skin.ink }}
-      >
-        {headline}
-      </p>
+      {/* Icon beside the headline rather than stacked over it, as one
+          centred row. The text sets left so it reads off the icon instead
+          of drifting away from it on the short line. */}
+      <div className="absolute left-[287.5px] top-[64px] flex w-[420px] -translate-x-1/2 items-center gap-[16px]">
+        <img
+          src={art}
+          alt=""
+          draggable={false}
+          className="size-[66px] shrink-0 max-w-none object-contain"
+        />
+        <p
+          className="min-w-0 flex-1 font-display text-[20.7px] font-extrabold leading-[1.39]"
+          style={{ color: skin.ink }}
+        >
+          {headline}
+        </p>
+      </div>
       {/* Reward panel: one centred row on the card's own axis, 15% down from
           the frame's size. The pieces used to be placed individually, which
           left the pane and its contents each centred on a different x. */}
