@@ -82,30 +82,37 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
 
   const avatarUrl = (notification.data?.sender_avatar || notification.data?.sender_avatar_url) as string | undefined;
   const senderName = notification.data?.sender_nickname as string || notification.data?.sender_name as string || '';
-  const roomName = notification.data?.room_name as string | undefined;
-  const categoryName = notification.data?.category_name as string | undefined;
+  const storedRoomName = notification.data?.room_name as string | undefined;
+  const storedCategoryName = notification.data?.category_name as string | undefined;
   const storedRoomIcon = notification.data?.room_icon as string | undefined;
   const roomId = notification.data?.room_id as string | undefined;
   const isRoomPing = notification.type === 'room_ping';
 
-  // Older room notifications didn't store the icon in their payload — look
-  // it up from the room itself (cached forever; one query per room, shared
-  // across rows by the query key)
-  const { data: fetchedRoomIcon } = useQuery({
-    queryKey: ['room-icon', roomId],
+  // The invite's payload is a snapshot taken by the notify_room_invite
+  // trigger when the invite was sent. The host can pick a different category
+  // afterwards — from the lobby, or by queueing rounds, which clears the
+  // room's selection outright — and the invited player would still be
+  // reading the category from the moment they were invited, then land in a
+  // different one. Read the room itself so the card shows what is actually
+  // going to be played; the payload stays as the fallback for rooms that
+  // have since been deleted.
+  const { data: liveRoom } = useQuery({
+    queryKey: ['notification-room', roomId],
     queryFn: async () => {
       const { data } = await supabase
         .from('game_rooms')
-        .select('room_icon')
+        .select('room_icon, room_name, category_name')
         .eq('id', roomId!)
         .maybeSingle();
-      return data?.room_icon || null;
+      return data ?? null;
     },
-    enabled: !storedRoomIcon && !!roomId,
-    staleTime: Infinity,
+    enabled: !!roomId,
+    staleTime: 30_000,
     gcTime: 60 * 60 * 1000,
   });
-  const roomIcon = storedRoomIcon || fetchedRoomIcon || undefined;
+  const roomIcon = liveRoom?.room_icon || storedRoomIcon || undefined;
+  const roomName = liveRoom?.room_name || storedRoomName || undefined;
+  const categoryName = liveRoom ? liveRoom.category_name ?? undefined : storedCategoryName;
   const triviaCover = notification.data?.trivia_cover as string | undefined;
   const triviaIconSlug = notification.data?.trivia_icon_slug as string | undefined;
   
