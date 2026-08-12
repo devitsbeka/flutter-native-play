@@ -94,10 +94,13 @@ export function MyRoomsSection({
       }
 
       toast.success(t("extra.roomDeleted"));
-      // Let the card finish leaving before the list reloads under it
+      // Let the card finish leaving, then reload — and keep hiding it until
+      // the reload has actually landed. Clearing the id as soon as the
+      // refetch was *requested* un-hid a room the list still held, so the
+      // card animated back in and sat there for the length of the round
+      // trip: a delete that had already succeeded looked like it had failed.
       setTimeout(() => {
-        refreshRooms();
-        setDeletingRoomId(null);
+        void Promise.resolve(refreshRooms()).finally(() => setDeletingRoomId(null));
       }, 420);
     } catch (error) {
       console.error("Error deleting room:", error);
@@ -264,9 +267,13 @@ export function MyRoomsSection({
         )
       ) : vertical ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pb-4 w-full max-w-full">
-          {/* popLayout so the cards after the one leaving glide up into the
-              gap rather than jumping once it unmounts */}
-          <AnimatePresence mode="popLayout" initial={false}>
+          {/* Plain AnimatePresence, not popLayout. popLayout takes the
+              leaving child out of flow, which needs a ref on it, and these
+              cards are function components returning a fragment — React
+              warned "Function components cannot be given refs" on every
+              render and the positioning it buys never worked. `layout` on
+              the cards still glides the neighbours into the gap. */}
+          <AnimatePresence initial={false}>
             {rooms
               .filter((room) => room.id !== deletingRoomId)
               .map((room, index) => (
@@ -284,7 +291,7 @@ export function MyRoomsSection({
       ) : (
         <div className="overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory scroll-smooth">
           <div className="flex gap-3 px-4">
-            <AnimatePresence mode="popLayout" initial={false}>
+            <AnimatePresence initial={false}>
               {rooms
                 .filter((room) => room.id !== deletingRoomId)
                 .map((room, index) => (
