@@ -282,8 +282,11 @@ export default function PowerUps() {
         </div>
 
         <div className="flex flex-1 min-h-0">
-          {/* Main Content Area - 60% on lg+, full width below */}
-          <div className="flex-1 lg:max-w-[60%] relative pb-24 md:pb-0 bg-transparent scroll-smooth scrollbar-hide overflow-y-auto">
+          {/* Main content. No percentage cap: the scene beside it is capped
+              instead, so every pixel past that width goes to the shop rather
+              than stretching a video — which is what squeezed the product
+              grid whenever the left menu was expanded. */}
+          <div className="flex-1 min-w-0 relative pb-24 md:pb-0 bg-transparent scroll-smooth scrollbar-hide overflow-y-auto">
             <GlobalSplineBackground />
 
             {/* Standard Shop Layout - Hero carousel + product grids */}
@@ -306,7 +309,7 @@ export default function PowerUps() {
 
           {/* Right 40% (lg+): the looping trivia king scene, pinned to the
               viewport — it never scrolls, only the shop content does */}
-          <div className="hidden lg:block lg:w-[40%] sticky top-0 self-start h-[100dvh] md:h-screen overflow-hidden">
+          <div className="hidden lg:block lg:w-[34%] lg:max-w-[460px] lg:min-w-[280px] sticky top-0 self-start h-[100dvh] md:h-screen overflow-hidden">
             <video
               src={TRIVIA_KING_SCENE_VIDEO}
               autoPlay

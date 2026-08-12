@@ -396,3 +396,18 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Shop product grid. Whether four cards fit depends on the column the shop
+   actually gets — the left menu expands and the video panel takes a share of
+   the width — so the switch is on the row's own width, not the viewport's. A
+   viewport breakpoint put four narrow cards in a squeezed column. Below the
+   threshold the base two columns apply; there is no three-across state. */
+.shop-grid-row {
+  container-type: inline-size;
+}
+
+@container (min-width: 900px) {
+  .shop-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

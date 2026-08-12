@@ -148,7 +148,7 @@ export function ShopItemCard({
           <div className="flex-1 min-w-0">
             <h3 className={cn("font-bold leading-tight mb-0.5", gradientActive ? "text-white drop-shadow-sm text-base sm:text-lg" : "text-gray-900 text-sm sm:text-base")}>{name}</h3>
             {showDescription && description && (
-              <p className={cn("text-[11px] sm:text-xs leading-snug line-clamp-2", gradientActive ? "text-white/85" : "text-gray-500")}>{description}</p>
+              <p className={cn("text-[13px] sm:text-[14px] leading-snug line-clamp-2", gradientActive ? "text-white/85" : "text-gray-500")}>{description}</p>
             )}
           </div>
           <div className="shrink-0 flex flex-col items-center gap-1.5">{actionBlock}</div>
@@ -161,7 +161,7 @@ export function ShopItemCard({
     <div
       className="relative pt-3"
       // Skip offscreen rendering work while scrolling long shop lists
-      style={{ contentVisibility: "auto", containIntrinsicSize: "226px" } as React.CSSProperties}
+      style={{ contentVisibility: "auto", containIntrinsicSize: "250px" } as React.CSSProperties}
     >
       {/* Savings Badge - positioned on left */}
       {savings && !isPurchased && (
@@ -180,7 +180,7 @@ export function ShopItemCard({
         className={cn(
           "w-full rounded-[24px] transition-all relative overflow-hidden flex flex-col items-center text-center",
           "px-2.5 sm:px-3 p-3",
-          "h-[188px] sm:h-[198px]",
+          "h-[210px] sm:h-[222px]",
           !isPurchased && canAfford && !hasGradient && "liquid-glass"
         )}
         style={{
@@ -213,12 +213,12 @@ export function ShopItemCard({
         </div>
 
         {/* Name */}
-        <h3 className={cn("font-bold text-[13px] sm:text-sm leading-tight mb-0.5", gradientActive ? "text-white drop-shadow-sm" : "text-gray-900")}>{name}</h3>
+        <h3 className={cn("font-bold text-base sm:text-lg leading-tight mb-0.5", gradientActive ? "text-white drop-shadow-sm" : "text-gray-900")}>{name}</h3>
 
         {/* Description - flex-1 to push price section to bottom */}
         {showDescription && description && (
           <div className="flex-1 flex items-start">
-            <p className={cn("text-[11px] sm:text-xs leading-snug line-clamp-2 w-full", gradientActive ? "text-white/85" : "text-gray-500")}>{description}</p>
+            <p className={cn("text-[13px] sm:text-[14px] leading-snug line-clamp-2 w-full", gradientActive ? "text-white/85" : "text-gray-500")}>{description}</p>
           </div>
         )}
 
