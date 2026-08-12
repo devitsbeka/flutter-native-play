@@ -270,6 +270,8 @@ export function MatchResultScreen() {
   
   const [newLevel, setNewLevel] = useState(0);
   const [previousLevel, setPreviousLevel] = useState(0);
+  /** Correct answers behind the reward, which is what actually triggers it. */
+  const [milestoneCorrectAnswers, setMilestoneCorrectAnswers] = useState<number | undefined>(undefined);
   const [coinChange, setCoinChange] = useState(0);
   const hasCheckedLevelUp = useRef(false);
   const hasSoundPlayed = useRef(false);
@@ -433,8 +435,13 @@ export function MatchResultScreen() {
         });
 
         if (newMilestone > oldMilestone) {
-          setPreviousLevel(newMilestone);
-          setNewLevel(newMilestone);
+          // The badge shows the player's level, the way every other screen
+          // counts it. It used to show the milestone index instead — a player
+          // on level 79 crossing their third 20-correct-answer mark was told
+          // they were level 3.
+          setPreviousLevel(oldLevelInfo.level);
+          setNewLevel(newLevelInfo.level);
+          setMilestoneCorrectAnswers(newMilestone * threshold);
           requestAnimationFrame(() => {
             setTimeout(() => {
               setShowLevelUp(true);
@@ -515,6 +522,7 @@ export function MatchResultScreen() {
         newLevel={newLevel}
         previousLevel={previousLevel}
         awardedPowerUp={awardedPowerUp}
+        correctAnswers={milestoneCorrectAnswers}
       />
       
       <InviteFriendsModal

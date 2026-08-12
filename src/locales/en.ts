@@ -995,6 +995,7 @@ export const en: KaTranslations = {
     myPowers: "My Powers",
     goToShop: "Go to Shop",
     levelUp: "Level Up! 🎉",
+    rewardEarned: "Reward earned! 🎉",
     levelLabel: "Level",
     rewards: "Rewards",
     coin: "Coin",

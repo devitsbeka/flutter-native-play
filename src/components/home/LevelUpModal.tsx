@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Gift } from "lucide-react";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import giftIcon from "@/assets/level/gift.png";
+import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
 import freezeIcon from "@/assets/powers/freeze.png";
 import replaceIcon from "@/assets/powers/replace.png";
@@ -28,13 +29,21 @@ const POWER_UP_TRANSLATION_KEYS: Record<string, string> = {
 interface LevelUpModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** The player's level, as the rest of the app counts it. */
   newLevel: number;
   previousLevel: number;
   awardedPowerUp?: string;
+  /**
+   * Total correct answers behind this celebration. VS games hand out these
+   * rewards every 20 correct answers, which is not the same thing as gaining
+   * a level — passing the real figure keeps the line under the badge honest
+   * instead of deriving it from the level number.
+   */
+  correctAnswers?: number;
 }
 
 // PURELY PRESENTATIONAL - rewards are credited in MatchResultScreen
-export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel, awardedPowerUp }: LevelUpModalProps) {
+export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel, awardedPowerUp, correctAnswers }: LevelUpModalProps) {
   const { t } = useLanguage();
   const confettiTriggered = useRef(false);
 
@@ -82,10 +91,13 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel, awarded
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      title={t("modals.levelUp")}
+      title={newLevel > previousLevel ? t("modals.levelUp") : t("modals.rewardEarned")}
       showSparkles
-      primaryLabel={t("common.continue")}
-      onPrimaryClick={onClose}
+      footer={
+        <GreenPlayButton onClick={onClose} className="h-14 w-full text-base">
+          {t("common.continue")}
+        </GreenPlayButton>
+      }
     >
       <div className="flex flex-col items-center justify-center py-6">
         {/* Level Badge */}
@@ -112,14 +124,16 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel, awarded
         </motion.div>
 
         {/* Correct-answers milestone */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mb-6 text-center text-lg font-medium text-gray-500"
-        >
-          🎯 {newLevel * REWARDS.LEVEL_UP_CORRECT_ANSWERS_THRESHOLD} {t("modals.correctAnswers")}
-        </motion.p>
+        {correctAnswers !== undefined && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mb-6 text-center text-lg font-medium text-gray-500"
+          >
+            🎯 {correctAnswers} {t("modals.correctAnswers")}
+          </motion.p>
+        )}
 
         {/* Rewards card — the shared lavender card recipe */}
         <motion.div
@@ -134,18 +148,18 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel, awarded
           }}
         >
           <div className="mb-4 flex items-center justify-center gap-2">
-            <Gift className="h-5 w-5 text-purple-600" />
+            <img src={giftIcon} alt="" className="h-7 w-7 object-contain" />
             <span className="text-lg font-bold text-[#402666]">{t("modals.rewards")}</span>
           </div>
           <div className="flex justify-center gap-6">
             <div className="flex min-w-[70px] flex-col items-center text-center">
-              <img src={coinIcon} alt="" className="h-10 w-10 object-contain" />
+              <img src={coinIcon} alt="" className="h-12 w-12 object-contain" />
               <p className="mt-1 text-xl font-bold text-gray-800">+{levelUpCoins}</p>
               <p className="text-sm font-medium text-gray-500">{t("modals.coin")}</p>
             </div>
             {awardedPowerUp && POWER_UP_ICONS[awardedPowerUp] && (
               <div className="flex min-w-[70px] flex-col items-center text-center">
-                <img src={POWER_UP_ICONS[awardedPowerUp]} alt={awardedPowerUp} className="h-10 w-10 object-contain" />
+                <img src={POWER_UP_ICONS[awardedPowerUp]} alt={awardedPowerUp} className="h-12 w-12 object-contain" />
                 <p className="mt-1 text-xl font-bold text-gray-800">+1</p>
                 <p className="text-sm font-medium text-gray-500">{t(POWER_UP_TRANSLATION_KEYS[awardedPowerUp])}</p>
               </div>

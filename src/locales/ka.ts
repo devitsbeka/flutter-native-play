@@ -994,6 +994,7 @@ export const ka = {
     myPowers: "ჩემი ძალები",
     goToShop: "მაღაზიაში გადასვლა",
     levelUp: "დონემ აიწია!",
+    rewardEarned: "ჯილდო მიღებულია!",
     levelLabel: "დონე",
     rewards: "ჯილდოები",
     coin: "მონეტა",
