@@ -335,11 +335,13 @@ export function BannerTile({
 }
 
 /** One rounded pill in the deal card's top strip. */
+// 15% above the frame's sizes: at the width a phone actually gives the card,
+// the deal label and its countdown read as fine print beside the title.
 function BannerStripPill({ icon, children }: { icon: string; children: ReactNode }) {
   return (
-    <div className="flex shrink-0 items-center justify-center gap-[2px] rounded-[24px] bg-[rgba(255,255,255,0.22)] px-[8px] py-[4px]">
-      <img src={icon} alt="" draggable={false} className="size-[16px] object-contain" />
-      <p className="whitespace-nowrap text-center text-[12px] font-semibold text-white" style={{ textShadow: CARD_TEXT_SHADOW }}>
+    <div className="flex shrink-0 items-center justify-center gap-[3px] rounded-[24px] bg-[rgba(255,255,255,0.22)] px-[9px] py-[5px]">
+      <img src={icon} alt="" draggable={false} className="size-[18px] object-contain" />
+      <p className="whitespace-nowrap text-center text-[14px] font-semibold text-white" style={{ textShadow: CARD_TEXT_SHADOW }}>
         {children}
       </p>
     </div>
