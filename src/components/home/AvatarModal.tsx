@@ -39,23 +39,6 @@ import mascotAvatar7 from '@/assets/avatars/mascot-avatar-7.png';
 import mascotAvatar8 from '@/assets/avatars/mascot-avatar-8.png';
 import { SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";
 
-// Homepage scenes only render on tablet/desktop (the hero is mounted at
-// min-width 768px), so the scene picker is pointless on a phone — and the
-// tiles would otherwise pull down scene videos nobody can see. Read
-// synchronously so phones never paint the section for a frame.
-function useIsSceneViewport(): boolean {
-  const [isWide, setIsWide] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches
-  );
-  useEffect(() => {
-    const mql = window.matchMedia("(min-width: 768px)");
-    const onChange = (e: MediaQueryListEvent) => setIsWide(e.matches);
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, []);
-  return isWide;
-}
-
 const DEFAULT_AVATARS = [
   mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4,
   mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8,
@@ -103,7 +86,6 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   const { isVip } = useVipStatus();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const isSceneViewport = useIsSceneViewport();
 
   // Detect if current avatar is a preset mascot/bot avatar
   const isCurrentAvatarMascot = (() => {
@@ -988,10 +970,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   // Content based on step
   const renderContent = () => {
     // The scene the animate button would bring to life (selected, else newest).
-    // Phones never show the homepage scene, so there's nothing to animate there.
-    const sceneRows = isSceneViewport
-      ? generations.filter((g) => g.avatar_url.includes("/scene_"))
-      : [];
+    const sceneRows = generations.filter((g) => g.avatar_url.includes("/scene_"));
     const currentScene = sceneRows.find((g) => g.is_current) || sceneRows[0] || null;
 
     if (step === "gallery") {
@@ -1134,9 +1113,10 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
           {/* My Scenes - homepage scene generations. Picking one makes it the
               active homepage scene; the plus tile starts a new generation
-              from a different selfie/photo. Tablet/desktop only — the scene
-              hero itself doesn't exist below 768px. */}
-          {isSceneViewport && (
+              from a different selfie/photo. This used to be hidden below
+              768px because the scene hero was desktop-only — the mobile home
+              redesign gave phones the same hero, so hiding the picker there
+              left tapping the scene with nowhere to go. */}
           <div>
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myScenes")}</p>
             {/* Wrapping grid — every tile always fully visible, no cropped
@@ -1236,7 +1216,6 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
             {/* Apply/delete for the tapped scene - right under the ticker */}
             {selectedGen && isSceneUrl(selectedGen.avatar_url) && renderGenActions()}
           </div>
-          )}
 
           {/* My Generated Avatars (portrait/photo generations only) */}
           {generations.some((g) => !isSceneUrl(g.avatar_url)) && (

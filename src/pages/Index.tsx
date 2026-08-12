@@ -906,6 +906,7 @@ export default function Index() {
             sceneVideoUrl={sceneVideoUrl}
             showDefaultScene={showDefaultScene}
             defaultVideoSrc={DEFAULT_SCENE_VIDEO}
+            onSceneClick={() => openAvatarModal()}
           />
         )}
         {/* Personalized scene (or the default Trivia King loop) as the

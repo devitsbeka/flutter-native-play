@@ -51,6 +51,33 @@ interface MobileSceneBackgroundProps {
   /** Fall back to the shared Trivia King loop. */
   showDefaultScene: boolean;
   defaultVideoSrc: string;
+  /** Tapping the artwork opens the avatar studio, as on desktop. */
+  onSceneClick?: () => void;
+}
+
+// Catches taps on the artwork itself — the same affordance SceneHero gives
+// the desktop scene. It covers the artwork's footprint rather than the whole
+// layer, so bare page wash above the scene stays inert, and it renders before
+// the widgets in Index so every one of those keeps its own clicks.
+function SceneTapTarget({
+  onSceneClick,
+  className,
+  style,
+}: {
+  onSceneClick?: () => void;
+  className: string;
+  style: React.CSSProperties;
+}) {
+  if (!onSceneClick) return null;
+  return (
+    <button
+      type="button"
+      aria-label="შეცვალე სცენა"
+      onClick={onSceneClick}
+      className={`${className} pointer-events-auto cursor-pointer`}
+      style={style}
+    />
+  );
 }
 
 // node 626:952 (personalized) / 628:446 (default). Both render the 16:9
@@ -61,6 +88,7 @@ export function MobileSceneBackground({
   sceneVideoUrl,
   showDefaultScene,
   defaultVideoSrc,
+  onSceneClick,
 }: MobileSceneBackgroundProps) {
   if (sceneUrl) {
     // 774.7 / 500 wide, left edge at -110.3 / 500.
@@ -103,6 +131,13 @@ export function MobileSceneBackground({
         ) : (
           <img src={sceneUrl} alt="" draggable={false} className={box} style={style} />
         )}
+        {/* Scenes are 16:9, so aspect-video on the same box reproduces the
+            artwork's footprint exactly. */}
+        <SceneTapTarget
+          onSceneClick={onSceneClick}
+          className={`${box} aspect-video`}
+          style={{ bottom: NAV_H }}
+        />
       </motion.div>
     );
   }
@@ -137,6 +172,11 @@ export function MobileSceneBackground({
           style={{ background: "linear-gradient(to bottom, rgba(246,222,255,0) 55.7%, #f6deff 88.4%)" }}
         />
       </div>
+      <SceneTapTarget
+        onSceneClick={onSceneClick}
+        className="absolute left-[-47.8vw] w-[227.2vw] aspect-video"
+        style={{ bottom: "calc(13px + env(safe-area-inset-bottom))" }}
+      />
     </motion.div>
   );
 }
