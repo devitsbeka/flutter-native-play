@@ -12,6 +12,7 @@ import xDay from "@/assets/figma-home/x-day.svg";
 import missionsCrystal from "@/assets/figma-home/missions-crystal.png";
 import shieldOuter from "@/assets/figma-home/shield-outer.svg";
 import shieldInner from "@/assets/figma-home/shield-inner.svg";
+import { getCountryFlag } from "@/data/opponents";
 
 // Figma: Hom — the three mobile home states, all drawn on a 500x946 frame:
 //   632:296  Logged out / guest
@@ -235,10 +236,16 @@ type DayState = "done" | "failed" | "pending";
 
 interface MobileProfileCardProps {
   nickname: string;
+  /** ISO-2 of the country the player is ranked in; flag sits before the name. */
+  countryCode?: string | null;
+  /** Place on that country's board (global when we have no country). */
+  rank?: number | null;
   level: number;
   coins: number;
   gems: number;
   onNameClick: () => void;
+  /** The rank badge is a shortcut into the board it came from. */
+  onRankClick: () => void;
   onLevelClick: () => void;
   onCoinsClick: () => void;
   onGemsClick: () => void;
@@ -256,10 +263,13 @@ interface MobileProfileCardProps {
 // scene it floats on is not covered by it.
 export function MobileProfileCard({
   nickname,
+  countryCode,
+  rank,
   level,
   coins,
   gems,
   onNameClick,
+  onRankClick,
   onLevelClick,
   onCoinsClick,
   onGemsClick,
@@ -267,6 +277,11 @@ export function MobileProfileCard({
   onMissionsClick,
 }: MobileProfileCardProps) {
   const { streak, currentStreak } = useMissionStreak();
+
+  // getCountryFlag falls back to a blank white flag for a code it doesn't
+  // know, which says less than showing nothing at all.
+  const rawFlag = countryCode ? getCountryFlag(countryCode) : "";
+  const flag = rawFlag === "🏳️" ? "" : rawFlag;
 
   // Same rule as the desktop strip: a day is done when the running streak
   // still covers it, failed once it's past, pending today or ahead.
@@ -300,14 +315,33 @@ export function MobileProfileCard({
         {/* The nickname owns its own row now, so nothing can sit over it.
             It is bounded on the right by the level shield and truncates —
             the frame let it run under the coin pill, which is why a name as
-            ordinary as "TriviaMaster" lost its last letter. */}
-        <button
-          type="button"
-          onClick={onNameClick}
-          className="absolute left-[26px] right-[86px] top-[11px] truncate text-left font-slackey text-[32px] capitalize leading-[48px] tracking-[-0.16px] text-[#402666]"
-        >
-          {nickname}
-        </button>
+            ordinary as "TriviaMaster" lost its last letter.
+            The flag and rank badge flank it and never shrink, so a long name
+            gives up its own characters rather than pushing them out. */}
+        <div className="absolute left-[26px] right-[86px] top-[11px] flex items-center gap-[7px]">
+          {flag && (
+            <span aria-hidden className="shrink-0 text-[21px] leading-none">
+              {flag}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onNameClick}
+            className="min-w-0 truncate text-left font-slackey text-[32px] capitalize leading-[48px] tracking-[-0.16px] text-[#402666]"
+          >
+            {nickname}
+          </button>
+          {!!rank && (
+            <button
+              type="button"
+              onClick={onRankClick}
+              aria-label={`${t("leaderboard.yourRank")} #${rank}`}
+              className="shrink-0 rounded-full bg-[rgba(124,58,237,0.12)] px-[7px] py-[2px] text-[11px] font-bold leading-[14px] text-[#5B21B6]"
+            >
+              #{rank}
+            </button>
+          )}
+        </div>
 
         <div className="absolute left-[26px] top-[64px] flex gap-[6.6px]">
           <StatPill

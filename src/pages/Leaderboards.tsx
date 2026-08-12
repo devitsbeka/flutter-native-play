@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getCountryFlag } from "@/data/opponents";
 import { countryCoordinates } from "@/lib/countryCoordinates";
 import { formatCompactNumber } from "@/lib/utils";
+import { useMyLeaderboardRank } from "@/hooks/useMyLeaderboardRank";
 
 type Scope = "local" | "global";
 
@@ -71,40 +72,6 @@ function useFunLeaderboard(scope: Scope, countryCode?: string | null) {
     },
     staleTime: 60_000,
     gcTime: 5 * 60_000,
-  });
-}
-
-// The signed-in player's rank when they fall outside the visible top 50.
-// Admin accounts stay hidden from the public list, but still get their own
-// pinned row: the rank they would hold among the ranked (non-admin) players.
-function useMyRank(
-  scope: Scope,
-  countryCode: string | null | undefined,
-  myCoins: number | undefined,
-  myUserId: string | undefined,
-  enabled: boolean
-) {
-  return useQuery({
-    queryKey: ["fun-leaderboard-my-rank", scope, countryCode, myCoins, myUserId],
-    queryFn: async (): Promise<number | null> => {
-      const { data: adminData } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
-      const adminIds = (adminData || []).map((r) => r.user_id);
-
-      let query = supabase
-        .from("profiles")
-        .select("user_id", { count: "exact", head: true })
-        .gt("coins", myCoins ?? 0);
-      if (scope === "local" && countryCode) {
-        query = query.eq("country_code", countryCode);
-      }
-      if (adminIds.length > 0) {
-        query = query.not("user_id", "in", `(${adminIds.join(",")})`);
-      }
-      const { count } = await query;
-      return (count ?? 0) + 1;
-    },
-    enabled,
-    staleTime: 60_000,
   });
 }
 
@@ -286,7 +253,7 @@ export default function Leaderboards() {
 
   const myEntry = user ? entries.find((e) => e.user_id === user.id) : undefined;
   const needsOwnRank = !!user && !!profile && entries.length > 0 && !myEntry;
-  const { data: myRank } = useMyRank(scope, countryCode, profile?.coins ?? 0, user?.id, needsOwnRank);
+  const { data: myRank } = useMyLeaderboardRank(scope, countryCode, profile?.coins ?? 0, user?.id, needsOwnRank);
 
   // Pin the player's own row below the list whenever it isn't visible without
   // scrolling: ranked past the first ~10 rows, or outside the top 50 entirely.

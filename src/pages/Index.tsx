@@ -31,6 +31,7 @@ import { SceneSidebar } from "@/components/home/SceneSidebar";
 import { DesktopGuestLanding, DesktopGuestSceneBackground } from "@/components/home/DesktopGuestLanding";
 import { MobileSceneBackground, MobileProfileCard, MobileGuestHero } from "@/components/home/MobileHome";
 import { useUserScene } from "@/hooks/useUserScene";
+import { useMyLeaderboardRank, defaultScopeFor } from "@/hooks/useMyLeaderboardRank";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
 import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
@@ -727,6 +728,17 @@ export default function Index() {
   const showDefaultScene = !sceneUrl && !(user && sceneLoading);
   const showAnimatePrompt = !isAnimatingFromHome && !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
 
+  // The phone profile card carries the player's flag and their place on the
+  // board. Only the phone shows it, so the count is only fetched there.
+  const myCountry = profile?.country_code || null;
+  const { data: myRank } = useMyLeaderboardRank(
+    defaultScopeFor(myCountry),
+    myCountry,
+    profile?.coins ?? 0,
+    user?.id,
+    isMobileViewport
+  );
+
   // /dev/v2 previews the 3D world-map homepage for logged-in users; the
   // regular responsive homepage below serves the main route.
   if (user && isDevV2) {
@@ -1129,10 +1141,13 @@ export default function Index() {
         {user && (
           <MobileProfileCard
             nickname={profile?.nickname || t("game.guest")}
+            countryCode={myCountry}
+            rank={myRank}
             level={levelInfo.level}
             coins={coins}
             gems={gems}
             onNameClick={() => setShowChangeNameModal(true)}
+            onRankClick={() => navigate("/leaderboards")}
             onLevelClick={() => setShowLevelModal(true)}
             onCoinsClick={() => navigate("/power-ups?section=coins")}
             onGemsClick={() => navigate("/power-ups?section=gems-lari")}
