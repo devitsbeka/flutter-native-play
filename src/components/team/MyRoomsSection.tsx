@@ -510,7 +510,7 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
                   ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                      {t("extra.roomStatusNew")}
+                      {createdAgo || t("extra.roomStatusNew")}
                     </span>
                   ) : isCompleted ? (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
@@ -522,9 +522,11 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
                       {t("extra.roomStatusOnline")}
                     </span>
                   ) : (
+                    // "Waiting" reads the same on every card and says nothing
+                    // about which room is which; its age does.
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                      {t("extra.roomStatusWaiting")}
+                      {createdAgo || t("extra.roomStatusWaiting")}
                     </span>
                   )}
                   
@@ -570,9 +572,6 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
                     <p className="text-sm text-white/70 truncate font-medium drop-shadow-sm">
                       {room.category_name}
                     </p>
-                  )}
-                  {createdAgo && (
-                    <p className="text-xs text-white/60 truncate drop-shadow-sm">{createdAgo}</p>
                   )}
                 </div>
               </div>
@@ -786,7 +785,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
               ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                  {t("extra.roomStatusNew")}
+                  {createdAgo || t("extra.roomStatusNew")}
                 </span>
               ) : isCompleted ? (
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
@@ -798,9 +797,11 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                   {t("extra.roomStatusOnline")}
                 </span>
               ) : (
+                // "Waiting" reads the same on every card and says nothing
+                // about which room is which; its age does.
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                  {t("extra.roomStatusWaiting")}
+                  {createdAgo || t("extra.roomStatusWaiting")}
                 </span>
               )}
               
@@ -844,9 +845,6 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                   </h3>
                   {room.category_name && (
                     <p className="text-white/70 text-sm truncate mt-0.5">{room.category_name}</p>
-                  )}
-                  {createdAgo && (
-                    <p className="text-white/60 text-xs truncate mt-0.5">{createdAgo}</p>
                   )}
                 </div>
               </div>
