@@ -10,30 +10,20 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import crownIcon from "@/assets/crown-icon.png";
 import friendsIcon from "@/assets/group-of-people.png";
-import coinIcon from "@/assets/icons/icon-coin.png";
-import gemIcon from "@/assets/icons/icon-gem.png";
-import powersIcon from "@/assets/icons/icon-powers-bottle.png";
 import gamepadIcon from "@/assets/pro-banner/banner-gamepad.webp";
 import wheelIcon from "@/assets/pro-banner/banner-wheel.webp";
 import noAdsIcon from "@/assets/pro-banner/banner-no-ads.webp";
-import discountIcon from "@/assets/pro-banner/banner-discount.webp";
-import timerIcon from "@/assets/pro-banner/banner-timer.webp";
-import { dealToShopItem, useLiveDeals } from "./DailyDealsRow";
+import { dealToShopItem, useLiveDeals, DealBannerCard } from "./DailyDealsRow";
 import {
   ProTierBanner,
   InviteBanner,
-  DealBanner,
   HEADER_SOLO,
   HEADER_FAMILY,
   SKIN_SOLO,
   SKIN_FAMILY,
   SKIN_INVITE,
-  SKIN_DEAL_DAILY,
-  SKIN_DEAL_HOURLY,
 } from "./ProBannerCard";
 import type { ShopItem } from "@/hooks/useShopData";
-import type { ShopDeal } from "@/config/shopDeals";
-import { dealSavings } from "@/config/shopDeals";
 
 type SimplifiedTier = "solo" | "family";
 
@@ -138,43 +128,6 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
     { left: 382, icon: noAdsIcon, iconSize: 69, iconLeft: 423, iconTop: 137, labelWidth: 124, labelCenter: 457 },
   ];
 
-  // Frame 637:352 — a deal card's tiles: PRO time, powers, coins.
-  const dealTiles = (deal: ShopDeal) => [
-    {
-      left: 43,
-      icon: crownIcon,
-      iconSize: 64.785,
-      iconLeft: 85.24,
-      iconTop: 152.24,
-      label: deal.contents.vip === "week" ? t("shop.vipWeek") : t("shop.vipDay"),
-      labelTop: 231,
-      labelWidth: 124,
-      labelCenter: 118,
-    },
-    {
-      left: 213,
-      icon: powersIcon,
-      iconSize: 58,
-      iconLeft: 257,
-      iconTop: 159,
-      label: t("shop.allPowersTimes").replace("{count}", String(deal.contents.powers)),
-      labelTop: 230,
-      labelWidth: 124,
-      labelCenter: 288,
-    },
-    {
-      left: 382,
-      icon: coinIcon,
-      iconSize: 67,
-      iconLeft: 423,
-      iconTop: 154,
-      label: `${deal.contents.coins.toLocaleString()} ${t("shop.coin")}`,
-      labelTop: 233,
-      labelWidth: 124,
-      labelCenter: 457,
-    },
-  ];
-
   const getButtonText = (tierId: SimplifiedTier, currentTierVal: string | undefined) => {
     const normalizedTier = currentTierVal === "standard" ? "solo" : currentTierVal;
     if (normalizedTier === "family" || normalizedTier === "pro_plus") {
@@ -263,25 +216,14 @@ export function MobileProCarousel({ purchasedItems, isPurchasing, onItemClick }:
           return (
           <div key={slide.id} className="w-full shrink-0 snap-center">
             {isDealSlide ? (
-              <DealBanner
-                skin={slide.id === "deal-daily" ? SKIN_DEAL_DAILY : SKIN_DEAL_HOURLY}
-                title={t(activeDeal.nameKey)}
-                savings={dealSavings(activeDeal)}
-                stripIcon={discountIcon}
-                stripLabel={slide.id === "deal-daily" ? t("shop.dailyDeal") : t("shop.hourlyDeal")}
-                remainingIcon={timerIcon}
-                remaining={slide.id === "deal-daily" ? dailyRemaining : hourlyRemaining}
-                tiles={dealTiles(activeDeal)}
-                price={activeDeal.price}
-                wasPrice={activeDeal.wasPrice}
-                gemIcon={gemIcon}
-                actionLabel={
-                  isPurchasing === activeDeal.id
-                    ? <Loader2 className="size-5 animate-spin" />
-                    : t("extra.purchaseBtn")
-                }
-                actionDisabled={purchasedItems.has(activeDeal.id) || isPurchasing === activeDeal.id}
-                onAction={() => onItemClick(dealToShopItem(activeDeal, t(activeDeal.nameKey)))}
+              <DealBannerCard
+                deal={activeDeal}
+                label={slide.id === "deal-daily" ? t("shop.dailyDeal") : t("shop.hourlyDeal")}
+                remainingLabel={slide.id === "deal-daily" ? dailyRemaining : hourlyRemaining}
+                daily={slide.id === "deal-daily"}
+                isPurchased={purchasedItems.has(activeDeal.id)}
+                isLoading={isPurchasing === activeDeal.id}
+                onBuy={() => onItemClick(dealToShopItem(activeDeal, t(activeDeal.nameKey)))}
               />
             ) : slide.type === "invite" ? (
               <InviteBanner

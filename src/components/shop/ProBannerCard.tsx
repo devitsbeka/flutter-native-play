@@ -135,18 +135,25 @@ function WaveStack({ fill }: { fill: string }) {
  * Shell
  * ------------------------------------------------------------------ */
 
-/** Scale factor that fits the 575px design into the measured width. */
-function useBannerScale() {
+/**
+ * Fits the 575px design to whatever width the banner is actually given.
+ *
+ * Measured from the element, not from the viewport, so the sidebar
+ * collapsing or a column changing width is handled the same way a phone
+ * rotating is — there is no breakpoint to get wrong.
+ *
+ * Capped at `maxScale` so a wide column does not blow the artwork up past
+ * the resolution behind it; when the cap bites, the stage centres in the
+ * space rather than hugging the left edge.
+ */
+function useBannerScale(maxScale: number) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const [scale, setScale] = useState(1);
+  const [width, setWidth] = useState(0);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const measure = () => {
-      const width = el.clientWidth;
-      if (width > 0) setScale(width / BANNER_DESIGN_W);
-    };
+    const measure = () => setWidth(el.clientWidth);
     measure();
     if (typeof ResizeObserver === "undefined") {
       window.addEventListener("resize", measure);
@@ -157,7 +164,13 @@ function useBannerScale() {
     return () => observer.disconnect();
   }, []);
 
-  return { ref, scale };
+  // Before the first measurement, render at nothing rather than at full
+  // size — a 575px stage inside an unmeasured box overflows every parent
+  // it has for one frame.
+  const scale = width > 0 ? Math.min(width / BANNER_DESIGN_W, maxScale) : 0;
+  const offsetX = Math.max(0, (width - BANNER_DESIGN_W * scale) / 2);
+
+  return { ref, scale, offsetX };
 }
 
 interface ProBannerCardProps {
@@ -172,6 +185,8 @@ interface ProBannerCardProps {
   topStrip?: ReactNode;
   onClick?: () => void;
   dimmed?: boolean;
+  /** Largest the design is allowed to be drawn. */
+  maxScale?: number;
 }
 
 export function ProBannerCard({
@@ -183,8 +198,9 @@ export function ProBannerCard({
   topStrip,
   onClick,
   dimmed,
+  maxScale = 1.25,
 }: ProBannerCardProps) {
-  const { ref, scale } = useBannerScale();
+  const { ref, scale, offsetX } = useBannerScale(maxScale);
 
   return (
     <div
@@ -195,8 +211,9 @@ export function ProBannerCard({
       style={{ height: BANNER_DESIGN_H * scale, opacity: dimmed ? 0.7 : 1 }}
     >
       <div
-        className="absolute left-0 top-0"
+        className="absolute top-0"
         style={{
+          left: offsetX,
           width: BANNER_DESIGN_W,
           height: BANNER_DESIGN_H,
           transform: `scale(${scale})`,
@@ -546,6 +563,7 @@ export function DealBanner({
   actionLabel,
   onAction,
   actionDisabled,
+  maxScale,
 }: {
   skin: BannerSkin;
   title: ReactNode;
@@ -563,10 +581,12 @@ export function DealBanner({
   actionLabel: ReactNode;
   onAction: () => void;
   actionDisabled?: boolean;
+  maxScale?: number;
 }) {
   return (
     <ProBannerCard
       skin={skin}
+      maxScale={maxScale}
       actionLabel={actionLabel}
       actionDisabled={actionDisabled}
       onAction={onAction}
