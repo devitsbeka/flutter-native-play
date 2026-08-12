@@ -170,17 +170,27 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
   const loadGenerations = async () => {
     if (!user) return;
-    
-    const { data, error } = await supabase
-      .from('avatar_generations')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(12);
 
-    if (!error && data) {
-      setGenerations(data);
-    }
+    // Each type gets its own budget. One combined LIMIT meant a run of
+    // background portraits could push every scene out of the window: "my
+    // scenes" came back empty and the scene count the new-scene tile is
+    // gated on read zero, on an account that plainly had scenes.
+    const byType = (scenesOnly: boolean) => {
+      const base = supabase.from('avatar_generations').select('*').eq('user_id', user.id);
+      const scoped = scenesOnly
+        ? base.like('avatar_url', '%/scene_%')
+        : base.not('avatar_url', 'like', '%/scene_%');
+      return scoped.order('created_at', { ascending: false }).limit(12);
+    };
+
+    const [scenes, portraits] = await Promise.all([byType(true), byType(false)]);
+    if (scenes.error || portraits.error) return;
+
+    setGenerations(
+      [...(scenes.data || []), ...(portraits.data || [])].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+    );
   };
 
   // Camera controls
@@ -301,7 +311,12 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   }, []);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    // Captured up front and cleared on EVERY exit below. An input keeps the
+    // value it was given, and re-picking the same file fires no change event
+    // — so one rejected or failed photo used to leave the tile permanently
+    // unresponsive to that photo, with no way to tell from the outside.
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
 
     // Allow empty type for HEIC (some browsers don't report MIME type for HEIC)
@@ -309,12 +324,14 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     const isImageByExtension = /\.(jpg|jpeg|png|gif|webp|heic|heif|bmp)$/i.test(file.name);
     if (!file.type.startsWith("image/") && !isImageByExtension) {
       toast.error(t("errors.selectImageFile"));
+      input.value = "";
       return;
     }
 
     // Increased limit for mobile (compression will reduce final size)
     if (file.size > 15 * 1024 * 1024) {
       toast.error(t("errors.imageTooLarge"));
+      input.value = "";
       return;
     }
 
@@ -345,13 +362,12 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       }
       setUploadedImage(dataUrl);
       setStep("upload");
-      
-      // Reset the input that fired (allows selecting the same file again)
-      e.target.value = "";
     } catch (error) {
       console.error("Error processing image:", error);
       toast.error(t("errors.failedToReadImage") || "Failed to process image");
     } finally {
+      // Reset the input that fired (allows selecting the same file again)
+      input.value = "";
       setIsProcessingFile(false);
     }
   };
@@ -527,11 +543,43 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       // Background portrait generation from the SCENE — never blocks the
       // apply. When it lands it becomes the public circle avatar and joins
       // "my avatars" so it can be re-picked later.
-      void generateAndRecordPortrait(user.id, finalUrl).then((portraitUrl) => {
-        if (portraitUrl) {
-          void updateProfile({ avatar_url: portraitUrl, animated_avatar_url: null } as any);
+      //
+      // A scene that already has its portrait reuses it. This used to
+      // regenerate unconditionally, so every switch between two existing
+      // scenes paid for another generation AND inserted another row — the
+      // portrait shelf filled up from ordinary browsing, which is what
+      // killed the "+ new scene" tile.
+      void (async () => {
+        const { data: existing } = await supabase
+          .from("avatar_generations")
+          .select("id, avatar_url")
+          .eq("user_id", user.id)
+          .eq("source_image_url", finalUrl)
+          .not("avatar_url", "like", "%/scene_%")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        let portraitUrl: string | null;
+        if (existing) {
+          await supabase
+            .from("avatar_generations")
+            .update({ is_current: false })
+            .eq("user_id", user.id)
+            .not("avatar_url", "like", "%/scene_%");
+          await supabase
+            .from("avatar_generations")
+            .update({ is_current: true })
+            .eq("id", existing.id);
+          portraitUrl = existing.avatar_url;
+        } else {
+          portraitUrl = await generateAndRecordPortrait(user.id, finalUrl);
         }
-      });
+
+        if (portraitUrl) {
+          await updateProfile({ avatar_url: portraitUrl, animated_avatar_url: null } as any);
+        }
+      })();
 
     } catch (error) {
       console.error("Error saving avatar:", error);
@@ -1076,13 +1124,19 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                 scene, then the generated ones. */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {isLimitReached ? (
+                // A blocked tile has to say so on sight. It used to be the
+                // same plus sign at half opacity, so a full shelf was
+                // indistinguishable from a tile that simply refused to open
+                // a file picker — the reason the block reads as "broken".
                 <button
                   type="button"
                   onClick={() => toast.error(t("extra.avatarMaxGenReachedShort"))}
-                  className="aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 opacity-50"
+                  className="aspect-video rounded-xl border-2 border-dashed border-border bg-muted/40 flex flex-col items-center justify-center gap-1 px-2"
                 >
-                  <Plus className="w-6 h-6 text-primary" />
-                  <span className="text-xs text-muted-foreground">{t("avatar.newScene")}</span>
+                  <Lock className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-[11px] leading-tight text-center text-muted-foreground">
+                    {t("avatar.maxGenReached", { max: maxPerType })}
+                  </span>
                 </button>
               ) : (
                 <div

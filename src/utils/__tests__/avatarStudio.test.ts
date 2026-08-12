@@ -58,20 +58,29 @@ describe("calculateAvatarQuota", () => {
     expect(quota.portraitCount).toBe(0);
   });
 
-  it("blocks generation once either side is full", () => {
-    // A generation produces both a scene and a portrait, so it needs room
-    // on both sides — a full shelf on either one stops it.
+  it("blocks generation once the scene shelf is full", () => {
     const scenesFull = calculateAvatarQuota([scene(1), scene(2)], false);
     expect(scenesFull.isLimitReached).toBe(true);
     expect(scenesFull.remainingGenerations).toBe(0);
-
-    const portraitsFull = calculateAvatarQuota([portrait(1), portrait(2)], false);
-    expect(portraitsFull.isLimitReached).toBe(true);
   });
 
-  it("reports the tighter of the two sides as the remaining count", () => {
+  it("does not let piled-up portraits block a new scene", () => {
+    // THE regression. Portraits are minted in the background every time a
+    // scene is applied — nobody asks for them. Counting them into the gate
+    // meant ordinary scene-switching filled the portrait shelf and killed
+    // the "+ new scene" tile, on an account with scene slots to spare. The
+    // tile just stopped opening a file picker, and said nothing.
+    const quota = calculateAvatarQuota(
+      [scene(1), portrait(1), portrait(2), portrait(3), portrait(4)],
+      false
+    );
+    expect(quota.portraitCount).toBe(4);
+    expect(quota.isLimitReached).toBe(false);
+    expect(quota.remainingGenerations).toBe(1);
+  });
+
+  it("reports the remaining count from the scene shelf", () => {
     const quota = calculateAvatarQuota([scene(1), scene(2), scene(3), portrait(1)], true);
-    // 2 scene slots left, 4 portrait slots left
     expect(quota.remainingGenerations).toBe(2);
   });
 

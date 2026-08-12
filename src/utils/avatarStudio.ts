@@ -34,9 +34,16 @@ export interface AvatarQuota {
  *
  * Scenes and portraits count against SEPARATE caps. They used to share one,
  * so a few scenes silently blocked new avatars — the "+ new selfie" tile
- * simply stopped responding with no explanation. One full generation
- * produces both a scene and a portrait, so creating a new one needs room on
- * both sides.
+ * simply stopped responding with no explanation.
+ *
+ * The only thing a person can ASK for here is a scene. The portrait is a
+ * derived artifact: applying a scene mints the matching circle avatar in the
+ * background, without anyone requesting it. So the shelf that gates the
+ * "+ new scene" tile is the SCENE shelf alone. Counting portraits into that
+ * gate resurrected the original bug from the other side — enough background
+ * portraits and the tile went dead while the scene shelf sat half empty,
+ * with nothing on screen to explain why. `portraitCount` stays exposed for
+ * display, but it must never decide whether a scene can be made.
  */
 export function calculateAvatarQuota(
   generations: readonly AvatarGenerationLike[],
@@ -50,11 +57,8 @@ export function calculateAvatarQuota(
     maxPerType,
     sceneCount,
     portraitCount,
-    isLimitReached: sceneCount >= maxPerType || portraitCount >= maxPerType,
-    remainingGenerations: Math.max(
-      0,
-      Math.min(maxPerType - sceneCount, maxPerType - portraitCount)
-    ),
+    isLimitReached: sceneCount >= maxPerType,
+    remainingGenerations: Math.max(0, maxPerType - sceneCount),
   };
 }
 
