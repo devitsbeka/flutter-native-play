@@ -4,6 +4,22 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createNotification } from "./useNotifications";
 import { useAuth } from "./useAuth";
+import {
+  dayKindOf,
+  rotationForDate,
+  todayKey,
+  weekBonusPowerUp,
+  weekStartOf,
+  type DayKind,
+} from "@/utils/missionDays";
+
+export {
+  dayKindOf,
+  todayKey,
+  weekBonusPowerUp,
+  weekStartOf,
+  type DayKind,
+} from "@/utils/missionDays";
 
 interface Mission {
   id: string;
@@ -53,6 +69,13 @@ interface PoolMission {
   power_up_count?: number;
   color_theme: ColorTheme;
   icon: MissionIconKey;
+  /**
+   * Only advance when the event names this thing — a category slug today.
+   * Events fired without a tag (a session that spanned several categories,
+   * say) cannot satisfy a mission that asks for one specific category, so
+   * they leave it alone rather than crediting it by accident.
+   */
+  requires_tag?: string;
 }
 
 // Mission color themes for UI
@@ -199,6 +222,77 @@ const DAILY_POOL: PoolMission[] = [
     color_theme: "amber",
     icon: "tv",
   },
+  {
+    mission_id: "category_movies",
+    title: "კინომოყვარული",
+    description: "ითამაშე კინოს კატეგორიაში",
+    beginner: { target: 1, xp: 25, coins: 60, gems: 1 },
+    advanced: { target: 1, xp: 30, coins: 70, gems: 1 },
+    power_up: "5050",
+    power_up_count: 1,
+    color_theme: "rose",
+    icon: "tv",
+    requires_tag: "movies",
+  },
+  {
+    mission_id: "category_music",
+    title: "მელომანი",
+    description: "ითამაშე მუსიკის კატეგორიაში",
+    beginner: { target: 1, xp: 25, coins: 60, gems: 1 },
+    advanced: { target: 1, xp: 30, coins: 70, gems: 1 },
+    power_up: "freeze",
+    power_up_count: 1,
+    color_theme: "purple",
+    icon: "hearts",
+    requires_tag: "music",
+  },
+  {
+    mission_id: "category_animals",
+    title: "ველური სამყარო",
+    description: "ითამაშე ცხოველების კატეგორიაში",
+    beginner: { target: 1, xp: 25, coins: 60, gems: 1 },
+    advanced: { target: 1, xp: 30, coins: 70, gems: 1 },
+    power_up: "replace",
+    power_up_count: 1,
+    color_theme: "emerald",
+    icon: "map",
+    requires_tag: "animals",
+  },
+  {
+    mission_id: "category_sports",
+    title: "სპორტული სული",
+    description: "ითამაშე სპორტის კატეგორიაში",
+    beginner: { target: 1, xp: 25, coins: 60, gems: 1 },
+    advanced: { target: 1, xp: 30, coins: 70, gems: 1 },
+    power_up: "5050",
+    power_up_count: 1,
+    color_theme: "orange",
+    icon: "trophy",
+    requires_tag: "sports",
+  },
+  {
+    mission_id: "category_cuisine",
+    title: "გემოვნების ექსპერტი",
+    description: "ითამაშე ქართული სამზარეულოს კატეგორიაში",
+    beginner: { target: 1, xp: 25, coins: 60, gems: 1 },
+    advanced: { target: 1, xp: 30, coins: 70, gems: 1 },
+    power_up: "freeze",
+    power_up_count: 1,
+    color_theme: "amber",
+    icon: "hearts",
+    requires_tag: "georgian_cuisine",
+  },
+  {
+    mission_id: "invite_to_play",
+    title: "მოიწვიე მეგობარი",
+    description: "მოიწვიე მეგობარი თამაშში",
+    beginner: { target: 1, xp: 35, coins: 70, gems: 1 },
+    advanced: { target: 1, xp: 40, coins: 90, gems: 1 },
+    power_up: "replace",
+    power_up_count: 1,
+    color_theme: "cyan",
+    icon: "hearts",
+  },
 ];
 
 const WEEKLY_POOL: PoolMission[] = [
@@ -286,25 +380,9 @@ const WEEKLY_ACTIVE_COUNT = 4;
 // Players with this many finished games get the advanced targets/rewards
 const ADVANCED_GAMES_THRESHOLD = 30;
 
-function pickRotation<T>(pool: T[], slot: number, count: number): T[] {
-  const start = ((slot % pool.length) + pool.length) % pool.length;
-  return Array.from({ length: Math.min(count, pool.length) }, (_, i) => pool[(start + i) % pool.length]);
-}
-
-// Whole UTC days since the epoch — the slot the rotation turns on. Rows are
-// keyed by a UTC date (mission_date), so a date string maps onto the same
-// slot the live pool used when it created them.
-function daySlotOf(dateISO: string): number {
-  return Math.floor(Date.parse(`${dateISO}T00:00:00Z`) / 86_400_000);
-}
-
-export function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 /** The five missions that day's rotation runs, past or future. */
 export function dailyPoolForDate(dateISO: string): PoolMission[] {
-  return pickRotation(DAILY_POOL, daySlotOf(dateISO), DAILY_ACTIVE_COUNT);
+  return rotationForDate(DAILY_POOL, dateISO, DAILY_ACTIVE_COUNT);
 }
 
 function activeDailyPool(): PoolMission[] {
@@ -313,7 +391,10 @@ function activeDailyPool(): PoolMission[] {
 
 function activeWeeklyPool(): PoolMission[] {
   const weekNumber = Math.floor(Date.now() / (7 * 86_400_000));
-  return pickRotation(WEEKLY_POOL, weekNumber, WEEKLY_ACTIVE_COUNT);
+  const start = ((weekNumber % WEEKLY_POOL.length) + WEEKLY_POOL.length) % WEEKLY_POOL.length;
+  return Array.from({ length: Math.min(WEEKLY_ACTIVE_COUNT, WEEKLY_POOL.length) }, (_, i) =>
+    WEEKLY_POOL[(start + i) % WEEKLY_POOL.length]
+  );
 }
 
 function tierOf(gamesPlayed: number): "beginner" | "advanced" {
@@ -355,22 +436,33 @@ const EVENT_MISSIONS: Record<MissionEvent, string[]> = {
   game_played: ["play_games", "weekly_play_games"],
   correct_answers: ["answer_correct", "weekly_answers"],
   game_won: ["win_games", "weekly_wins"],
-  categories_played: ["play_categories", "weekly_categories"],
+  categories_played: [
+    "play_categories",
+    "weekly_categories",
+    // Tag-gated: only the category named advances these.
+    "category_movies",
+    "category_music",
+    "category_animals",
+    "category_sports",
+    "category_cuisine",
+  ],
   perfect_win: ["perfect_round", "weekly_perfect"],
   friend_game: ["play_friend", "weekly_friend_games"],
   tv_played: ["play_tv"],
-  friend_invited: ["weekly_invite_friend"],
+  friend_invited: ["invite_to_play", "weekly_invite_friend"],
 };
 
 // Export mission helpers for UI
+const ALL_POOL: PoolMission[] = [...DAILY_POOL, ...WEEKLY_POOL];
+
 export function getMissionTheme(missionId: string) {
-  const all = [...DAILY_POOL, ...WEEKLY_POOL];
+  const all = ALL_POOL;
   const mission = all.find((m) => m.mission_id === missionId);
   return mission ? MISSION_THEMES[mission.color_theme] : MISSION_THEMES.blue;
 }
 
 export function getMissionIcon(missionId: string): MissionIconKey {
-  const all = [...DAILY_POOL, ...WEEKLY_POOL];
+  const all = ALL_POOL;
   return all.find((m) => m.mission_id === missionId)?.icon || "check";
 }
 
@@ -760,10 +852,13 @@ export function useMissions() {
   // Report a gameplay EVENT — advances every active daily + weekly mission
   // listening to it. This is what game code should call.
   const trackMissionEvent = useCallback(
-    async (event: MissionEvent, amount: number = 1) => {
+    async (event: MissionEvent, amount: number = 1, tag?: string) => {
       const ids = EVENT_MISSIONS[event] || [];
       const results = [];
       for (const id of ids) {
+        const def = ALL_POOL.find((m) => m.mission_id === id);
+        // A mission that names a category only moves for that category.
+        if (def?.requires_tag && def.requires_tag !== tag) continue;
         results.push(await updateMissionProgress(id, amount));
       }
       return results;
@@ -895,17 +990,10 @@ export function useMissions() {
 
 // ---------- One day at a time ----------
 
-export type DayKind = "past" | "today" | "future";
-
 export interface DayMissions {
   kind: DayKind;
   missions: Mission[];
   loading: boolean;
-}
-
-export function dayKindOf(dateISO: string, today = todayKey()): DayKind {
-  if (dateISO === today) return "today";
-  return dateISO < today ? "past" : "future";
 }
 
 // A pool entry dressed as a mission row for a day that has none: future days
@@ -977,4 +1065,171 @@ export function useDailyMissionsFor(dateISO: string | null): DayMissions {
     };
   }
   return { kind, missions: data || [], loading: isLoading };
+}
+
+// ---------- End-of-week bonus ----------
+
+/**
+ * The prize for finishing every day of the week.
+ *
+ * Deliberately a mixed package rather than a pile of one currency: coins to
+ * spend, gems to save, and a couple of power-ups to actually change a game.
+ */
+export const WEEK_BONUS = {
+  mission_id: "week_bonus",
+  coins: 2000,
+  gems: 3,
+  xp: 250,
+  power_up_count: 2,
+} as const;
+
+export interface WeekBonusState {
+  /** Days of this week whose whole rotation is finished. */
+  daysComplete: number;
+  /** Days that have actually happened — you cannot finish tomorrow. */
+  daysElapsed: number;
+  claimable: boolean;
+  claimed: boolean;
+  loading: boolean;
+  claim: () => Promise<boolean>;
+}
+
+/**
+ * Progress toward the week bonus, and the one-shot claim.
+ *
+ * The claim is guarded by a conditional UPDATE against the row's
+ * reward_claimed flag rather than a read-then-write: two taps in the same
+ * moment both pass a read, and this reward is large enough that granting it
+ * twice matters. Only the update that actually flips the flag comes back
+ * with a row, and only that caller pays out.
+ */
+export function useWeekBonus(): WeekBonusState {
+  const { user, profile, updateProfile, setProfileLocal } = useAuth();
+  const queryClient = useQueryClient();
+  const today = todayKey();
+  const weekStart = weekStartOf(today);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["week-bonus", user?.id, weekStart],
+    queryFn: async () => {
+      const { data: rows, error } = await supabase
+        .from("user_missions")
+        .select("mission_id, mission_date, completed, reward_claimed, mission_type")
+        .eq("user_id", user!.id)
+        .gte("mission_date", weekStart)
+        .lte("mission_date", today);
+      if (error) throw error;
+
+      const byDate = new Map<string, { done: number; ids: Set<string> }>();
+      for (const r of rows || []) {
+        if (r.mission_type !== "daily") continue;
+        const slot = byDate.get(r.mission_date) || { done: 0, ids: new Set<string>() };
+        slot.ids.add(r.mission_id);
+        if (r.completed) slot.done++;
+        byDate.set(r.mission_date, slot);
+      }
+
+      // A day counts only when every mission its own rotation ran is done.
+      let daysComplete = 0;
+      let daysElapsed = 0;
+      for (let i = 0; i < 7; i++) {
+        const day = new Date(Date.parse(`${weekStart}T00:00:00Z`) + i * 86_400_000)
+          .toISOString()
+          .slice(0, 10);
+        if (day > today) break;
+        daysElapsed++;
+        const need = dailyPoolForDate(day).map((m) => m.mission_id);
+        const slot = byDate.get(day);
+        if (slot && need.every((id) => slot.ids.has(id)) && slot.done >= need.length) {
+          daysComplete++;
+        }
+      }
+
+      const claimed = (rows || []).some(
+        (r) => r.mission_id === WEEK_BONUS.mission_id && r.reward_claimed
+      );
+      return { daysComplete, daysElapsed, claimed };
+    },
+    enabled: !!user,
+    staleTime: 60 * 1000,
+  });
+
+  const daysComplete = data?.daysComplete ?? 0;
+  const daysElapsed = data?.daysElapsed ?? 0;
+  const claimed = data?.claimed ?? false;
+  // Every day so far, and the week actually run to its end.
+  const claimable = !claimed && daysElapsed >= 7 && daysComplete >= 7;
+
+  const claim = useCallback(async (): Promise<boolean> => {
+    if (!user || !profile || !claimable) return false;
+
+    // The ledger row. mission_id + mission_date + user is unique, so this
+    // creates exactly one per week no matter how often it runs.
+    await supabase.from("user_missions").upsert(
+      [
+        {
+          user_id: user.id,
+          mission_id: WEEK_BONUS.mission_id,
+          mission_title: "week_bonus",
+          mission_description: null,
+          target_value: 7,
+          current_progress: 7,
+          completed: true,
+          reward_xp: WEEK_BONUS.xp,
+          reward_coins: WEEK_BONUS.coins,
+          reward_gems: WEEK_BONUS.gems,
+          reward_power_up: weekBonusPowerUp(weekStart),
+          reward_power_up_count: WEEK_BONUS.power_up_count,
+          mission_date: weekStart,
+          mission_type: "weekly",
+        },
+      ],
+      { onConflict: "user_id,mission_id,mission_date", ignoreDuplicates: true }
+    );
+
+    // Whoever flips the flag pays out; a second caller gets no row back.
+    const { data: won, error } = await supabase
+      .from("user_missions")
+      .update({ reward_claimed: true })
+      .eq("user_id", user.id)
+      .eq("mission_id", WEEK_BONUS.mission_id)
+      .eq("mission_date", weekStart)
+      .eq("reward_claimed", false)
+      .select("id");
+    if (error || !won || won.length === 0) return false;
+
+    const { data: currency } = await supabase.rpc("update_user_currency", {
+      p_user_id: user.id,
+      p_coins_delta: WEEK_BONUS.coins,
+      p_gems_delta: WEEK_BONUS.gems,
+    });
+    if (currency && currency.length > 0) {
+      setProfileLocal({ coins: currency[0].new_coins, gems: currency[0].new_gems });
+    }
+    await updateProfile({ total_points: (profile.total_points || 0) + WEEK_BONUS.xp });
+
+    const powerUp = weekBonusPowerUp(weekStart);
+    const { data: owned } = await supabase
+      .from("user_power_ups")
+      .select("id, quantity")
+      .eq("user_id", user.id)
+      .eq("power_up_type", powerUp)
+      .maybeSingle();
+    if (owned) {
+      await supabase
+        .from("user_power_ups")
+        .update({ quantity: (owned.quantity || 0) + WEEK_BONUS.power_up_count })
+        .eq("id", owned.id);
+    } else {
+      await supabase
+        .from("user_power_ups")
+        .insert({ user_id: user.id, power_up_type: powerUp, quantity: WEEK_BONUS.power_up_count });
+    }
+
+    queryClient.invalidateQueries({ queryKey: ["user-power-ups", user.id] });
+    queryClient.invalidateQueries({ queryKey: ["week-bonus", user.id, weekStart] });
+    return true;
+  }, [user, profile, claimable, weekStart, setProfileLocal, updateProfile, queryClient]);
+
+  return { daysComplete, daysElapsed, claimable, claimed, loading: isLoading, claim };
 }

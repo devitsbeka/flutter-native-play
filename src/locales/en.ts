@@ -635,6 +635,7 @@ export const en: KaTranslations = {
   // Missions
   // ==========================================
   missions: {
+    weekPackage: "Week package",
     pastDay: "Past day",
     futureDay: "Upcoming day",
     title: "Missions",

@@ -7,8 +7,12 @@ import gemIcon from "@/assets/icons/icon-gem.png";
 import {
   useMissions,
   useDailyMissionsFor,
+  useWeekBonus,
   getMissionIcon,
   todayKey,
+  WEEK_BONUS,
+  weekBonusPowerUp,
+  weekStartOf,
   type MissionIconKey,
 } from "@/hooks/useMissions";
 import { useMissionStreak } from "@/hooks/useMissionStreak";
@@ -57,6 +61,19 @@ function missionDestination(missionId: string): { to: string; state?: Record<str
     case "play_categories":
     case "weekly_categories":
       return { to: "/discover" };
+    // A mission naming one category opens that category, not the browser.
+    case "category_movies":
+      return { to: "/category/movies" };
+    case "category_music":
+      return { to: "/category/music" };
+    case "category_animals":
+      return { to: "/category/animals" };
+    case "category_sports":
+      return { to: "/category/sports" };
+    case "category_cuisine":
+      return { to: "/category/georgian_cuisine" };
+    case "invite_to_play":
+      return { to: "/team", state: { openCreateRoom: true } };
     case "play_friend":
     case "weekly_friend_games":
       return { to: "/team", state: { openCreateRoom: true } };
@@ -202,6 +219,8 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
   const { weeklyMissions } = useMissions();
   // Whichever day was tapped. Today routes back to the live query, so
   // progress and realtime behave exactly as before.
+  const weekBonus = useWeekBonus();
+  const [claimingBonus, setClaimingBonus] = useState(false);
   const day = useDailyMissionsFor(date);
   const dailyMissions = day.missions;
   const loading = day.loading;
@@ -293,6 +312,69 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
               <p className="mt-0.5 pr-12 text-xs text-slate-500">
                 {day.kind === "today" ? t("missions.subtitle") : dayLabel}
               </p>
+
+              {/* Week package — the prize for a clean sweep of all seven
+                  days. Shown as progress while the week is still running so
+                  it is something to aim at, not a surprise at the end. */}
+              {!weekBonus.claimed && (
+                <div
+                  className="mt-3.5 rounded-2xl px-3 py-2.5"
+                  style={{
+                    background: weekBonus.claimable
+                      ? "linear-gradient(90deg, #F59E0B 0%, #D97706 100%)"
+                      : "linear-gradient(90deg, #A78BFA 0%, #7C3AED 100%)",
+                    boxShadow: weekBonus.claimable
+                      ? "0 3px 0 0 #B45309, inset 0 1.5px 0 0 rgba(255,255,255,0.35)"
+                      : "0 3px 0 0 #6D28D9, inset 0 1.5px 0 0 rgba(255,255,255,0.35)",
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-bold text-white">
+                      {t("missions.weekPackage")}
+                    </span>
+                    <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#5B21B6]">
+                      {weekBonus.daysComplete}/7
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <span className="flex items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-bold text-white">
+                      <img src={coinIcon} alt="" width={13} height={13} />
+                      {WEEK_BONUS.coins}
+                    </span>
+                    <span className="flex items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-bold text-white">
+                      <img src={gemIcon} alt="" width={13} height={13} />
+                      {WEEK_BONUS.gems}
+                    </span>
+                    <span className="flex items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-bold text-white">
+                      {weekBonusPowerUp(weekStartOf(todayKey())) === "time-drain" ? (
+                        <TimeIcon size={13} />
+                      ) : (
+                        <img
+                          src={POWER_UP_ICONS[weekBonusPowerUp(weekStartOf(todayKey()))] || power5050}
+                          alt=""
+                          width={13}
+                          height={13}
+                        />
+                      )}
+                      {WEEK_BONUS.power_up_count}x
+                    </span>
+                  </div>
+                  {weekBonus.claimable && (
+                    <button
+                      type="button"
+                      disabled={claimingBonus}
+                      onClick={async () => {
+                        setClaimingBonus(true);
+                        await weekBonus.claim();
+                        setClaimingBonus(false);
+                      }}
+                      className="mt-2 w-full rounded-full bg-white py-1.5 text-xs font-bold text-[#B45309] disabled:opacity-60"
+                    >
+                      {claimingBonus ? t("missions.claimed") : t("missions.claimReward")}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Streak banner */}
               <div

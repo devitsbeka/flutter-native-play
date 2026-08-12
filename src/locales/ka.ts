@@ -633,6 +633,7 @@ export const ka = {
   // Missions / მისიები
   // ==========================================
   missions: {
+    weekPackage: "კვირის პაკეტი",
     pastDay: "დასრულებული დღე",
     futureDay: "მომავალი დღე",
     title: "მისიები",
