@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
-import { useCurrency } from "./useCurrency";
 import { 
   WEEKLY_LEADERBOARD_REWARDS, 
   getRewardForRank,
@@ -46,7 +45,6 @@ export interface EarnedBadge {
 
 export function useLeaderboardRewards(categoryId?: string) {
   const { user } = useAuth();
-  const { addCurrency } = useCurrency();
   const [unclaimedRewards, setUnclaimedRewards] = useState<WeeklyReward[]>([]);
   const [earnedFrames, setEarnedFrames] = useState<EarnedFrame[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([]);
@@ -109,69 +107,28 @@ export function useLeaderboardRewards(categoryId?: string) {
     if (!reward) return false;
 
     try {
-      // Atomically mark as claimed; the .is() guard makes double-claims a no-op
-      const { data: claimedRows, error: updateError } = await supabase
-        .from("category_weekly_rewards")
-        .update({ claimed_at: new Date().toISOString() })
-        .eq("id", rewardId)
-        .is("claimed_at", null)
-        .select();
+      // Claim, credit, frame and badge in one transaction. This used to be
+      // four round trips with a hand-written rollback for the case where the
+      // claim stuck but the credit failed — and it relayed the payout amount
+      // back to the server, which already had it on the row.
+      const { data, error } = await supabase.rpc("claim_leaderboard_reward", {
+        p_reward_id: rewardId,
+      });
 
-      if (updateError) throw updateError;
-
-      if (!claimedRows || claimedRows.length === 0) {
-        // Already claimed elsewhere — don't grant again
+      if (error) {
+        // The function refuses a reward that is already claimed, or not the
+        // caller's. Either way it is gone from this list.
         setUnclaimedRewards((prev) => prev.filter((r) => r.id !== rewardId));
-        return false;
+        throw error;
       }
 
-      // Grant coins/gems via the delta-based currency RPC (stale-profile safe)
-      const granted = await addCurrency(reward.coins_rewarded, reward.gems_rewarded);
-      if (!granted) {
-        // Roll back the claim so the user can retry instead of losing the reward
-        await supabase
-          .from("category_weekly_rewards")
-          .update({ claimed_at: null })
-          .eq("id", rewardId);
-        return false;
-      }
-
-      // If frame was rewarded, add to user_leaderboard_frames
-      if (reward.frame_rewarded) {
-        await supabase.from("user_leaderboard_frames").upsert({
-          user_id: user.id,
-          frame_id: reward.frame_rewarded,
-          category_id: reward.category_id,
-          week_earned: reward.week_start_date,
-        }, { onConflict: "user_id,frame_id,category_id" });
-      }
-
-      // If badge was rewarded, add/update user_leaderboard_badges
-      if (reward.badge_rewarded) {
-        // Check if badge already exists
-        const existingBadge = earnedBadges.find(
-          (b) => b.badge_id === reward.badge_rewarded && b.category_id === reward.category_id
-        );
-
-        if (existingBadge) {
-          await supabase
-            .from("user_leaderboard_badges")
-            .update({ times_earned: existingBadge.times_earned + 1 })
-            .eq("id", existingBadge.id);
-        } else {
-          await supabase.from("user_leaderboard_badges").insert({
-            user_id: user.id,
-            badge_id: reward.badge_rewarded,
-            category_id: reward.category_id,
-            week_earned: reward.week_start_date,
-          });
-        }
-      }
+      const claim = Array.isArray(data) ? data[0] : data;
+      if (!claim) return false;
 
       // Update local state
       setUnclaimedRewards((prev) => prev.filter((r) => r.id !== rewardId));
 
-      toast.success(`მიღებულია ${reward.coins_rewarded} მონეტა და ${reward.gems_rewarded} ალმასი!`);
+      toast.success(`მიღებულია ${claim.coins_awarded} მონეტა და ${claim.gems_awarded} ალმასი!`);
       return true;
     } catch (error) {
       console.error("Error claiming reward:", error);

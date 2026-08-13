@@ -3,6 +3,8 @@
  * Handles iOS 14.5+ tracking authorization requests
  */
 
+import { Capacitor } from '@capacitor/core';
+
 export type TrackingStatus = 
   | 'authorized'
   | 'denied'
@@ -17,8 +19,9 @@ class TrackingService {
   private currentStatus: TrackingStatus = 'notDetermined';
 
   async initialize(): Promise<void> {
-    // Check if running on native platform (Capacitor)
-    this.isNative = typeof (window as any).Capacitor !== 'undefined';
+    // Not `typeof window.Capacitor !== 'undefined'`: that global exists on the
+    // web as well, so the service believed it was native in a browser.
+    this.isNative = Capacitor.isNativePlatform();
 
     if (this.isNative) {
       try {

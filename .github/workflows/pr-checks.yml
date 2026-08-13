@@ -1,0 +1,109 @@
+name: PR checks
+
+# Pull requests had no CI at all. deploy.yml runs only on push to main, and
+# Qodana is manual-only — so the first thing that ran against a branch was the
+# production deploy, after merge.
+#
+# That is how untracking .env nearly shipped: the deploy took the Supabase URL
+# from that committed file, Vite inlines `undefined` for an unset VITE_* var,
+# and the build succeeds and deploys an app that cannot reach its backend.
+# `npm run build` here catches exactly that, because vite.config.ts now
+# refuses to build without those values.
+#
+# COST. This repo is metered, and the Qodana note is explicit that running the
+# same analysis on both push and pull_request doubles the spend for a
+# duplicate result. So this deliberately does NOT run the Playwright smokes —
+# deploy.yml already pays for those on main, and they are the expensive part
+# (a Chromium download plus ~6 minutes). What is here is the cheap half that
+# fails fast on a broken branch.
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'LICENSE'
+
+# A new push supersedes an in-flight run on the same PR.
+concurrency:
+  group: pr-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # Was a no-op until recently: the root tsconfig carries `files: []` with
+      # project references, so `tsc --noEmit` resolved to an empty program and
+      # passed unconditionally. It points at the real projects now.
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Build
+        # Same values as the deploy. The fallbacks are the public project ref
+        # and anon key; repository secrets override them.
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://sqwpzezkhpqkdyltvsim.supabase.co' }}
+          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID || 'sqwpzezkhpqkdyltvsim' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxd3B6ZXpraHBxa2R5bHR2c2ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMzY5MTQsImV4cCI6MjA4MTkxMjkxNH0.tNtgf8sbZakCP6HAUtoxVSrcshZ1Lvn_1OqS7K7VhTc' }}
+        run: npm run build
+
+  # The money paths, executed rather than reviewed. Entitlements and currency
+  # are enforced in plpgsql, where a CREATE FUNCTION succeeding proves nothing
+  # about the body — table references resolve at call time. Cheap: a Postgres
+  # service container and a few seconds of SQL.
+  entitlements:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Apply migrations
+        env:
+          PGPASSWORD: postgres
+        run: |
+          PSQL="psql -h localhost -p 5432 -U postgres -q"
+          $PSQL -f supabase/tests/00-supabase-shim.sql
+          # Roughly 36 historical migrations depend on Supabase's own
+          # storage/realtime schemas and cannot apply here. That is expected;
+          # every table the entitlement functions touch does get created, and
+          # the assertions below fail loudly if one is missing.
+          for f in supabase/migrations/*.sql; do
+            $PSQL -f "$f" >/dev/null 2>&1 || true
+          done
+
+      - name: Assert entitlement and currency rules
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/02-assertions.sql

@@ -1,13 +1,25 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0";
-import { getCorsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders, isNativeAppOrigin } from "../_shared/cors.ts";
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
-  
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Gems are digital goods consumed in the app, so on iOS they must be bought
+  // through In-App Purchase (App Store guideline 3.1.1). The native client
+  // now routes to RevenueCat; refusing here as well means a regression in
+  // that branch fails visibly instead of shipping a rejectable build.
+  if (isNativeAppOrigin(req)) {
+    console.warn("Refused web gem checkout from a native app origin");
+    return new Response(
+      JSON.stringify({ error: "NATIVE_MUST_USE_IAP" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   try {

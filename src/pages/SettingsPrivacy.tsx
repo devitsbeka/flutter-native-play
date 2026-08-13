@@ -2,6 +2,7 @@ import { toastIcon, ICON_URLS } from "@/lib/toast-icons";
 import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { BlockedPlayersSection } from "@/components/social/BlockedPlayersSection";
 import { useNavigate } from "react-router-dom";
 import { Shield, FileText, Download, Trash2, ChevronRight, Loader2, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -63,7 +64,20 @@ export default function SettingsPrivacy() {
 
     setIsDeleting(true);
     try {
-      await supabase.from("profiles").delete().eq("user_id", user.id);
+      // The edge function, not a profiles delete.
+      //
+      // This used to run `profiles.delete()` and sign out, which left the auth
+      // user intact — you could sign straight back in — along with every
+      // related row: game plays, friendships, chat messages, push tokens,
+      // subscriptions. The account was not deleted in any sense a reviewer or
+      // a data-protection request would accept, and this is the flow they
+      // reach, since /delete-account was not linked from anywhere.
+      //
+      // delete-user-account removes the related tables and the auth user
+      // itself, under the service role.
+      const { error } = await supabase.functions.invoke("delete-user-account");
+      if (error) throw error;
+
       await signOut();
       navigate("/");
       notify.success(t("settings.accountDeleted"), { icon: toastIcon(triviaBuzzer) });
@@ -122,6 +136,9 @@ export default function SettingsPrivacy() {
             );
           })}
         </motion.div>
+
+        {/* People you've blocked, and the way back. */}
+        {user && <BlockedPlayersSection />}
 
         {/* Data Actions */}
         {user && (

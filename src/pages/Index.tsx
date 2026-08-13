@@ -527,8 +527,8 @@ export default function Index() {
 
     isExchangingGemsRef.current = true;
     try {
-      const coinsToAdd = gemsNeeded * REWARDS.GEM_TO_COINS_RATE;
-      const success = await exchangeGemsForCoins(gemsNeeded, coinsToAdd);
+      // Only the amount given up is passed; the server applies the rate.
+      const success = await exchangeGemsForCoins(gemsNeeded);
       if (success) {
         setShowNotEnoughCoinsModal(false);
       } else {

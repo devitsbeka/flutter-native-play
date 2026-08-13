@@ -29,7 +29,7 @@ const GEM_TO_COIN_PRESETS = [1, 2, 5, 10];
 type ExchangeDirection = "coins-to-gems" | "gems-to-coins";
 
 export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModalProps) {
-  const { coins, gems, spendCoins, addGems, spendGems, addCoins } = useCurrency();
+  const { coins, gems, exchangeCurrency } = useCurrency();
   const { playSound } = useSound();
   const { t } = useLanguage();
   
@@ -83,19 +83,14 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
     playSound("button-click");
 
     try {
-      let success = false;
-      
-      if (isCoinsToGems) {
-        const spent = await spendCoins(amount);
-        if (spent) {
-          success = await addGems(exchangeResult);
-        }
-      } else {
-        const spent = await spendGems(amount);
-        if (spent) {
-          success = await addCoins(exchangeResult);
-        }
-      }
+      // One call, one transaction, and the rate is the server's. The old
+      // spend-then-credit pair could take the coins and fail to deliver the
+      // gems, and passed both sides of the trade from here — so a gem could
+      // have been exchanged for any number of coins.
+      const success = await exchangeCurrency(
+        isCoinsToGems ? "coins_to_gems" : "gems_to_coins",
+        amount,
+      );
 
       if (success) {
         playSound("reward");

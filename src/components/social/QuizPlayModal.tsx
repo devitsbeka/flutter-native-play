@@ -180,7 +180,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
     
     try {
       if (coins > 0) {
-        await addCoins(coins);
+        await addCoins(coins, "feed_trivia");
       }
       if (xp > 0 && profile) {
         const newPoints = (profile.total_points || 0) + xp;

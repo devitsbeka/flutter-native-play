@@ -227,7 +227,7 @@ export default function PowerUps() {
       let grantFailed = false;
 
       if (item.value) {
-        if (!(await addCoins(item.value))) grantFailed = true;
+        if (!(await addCoins(item.value, "shop_grant", item.id))) grantFailed = true;
       } else if (item.vipDuration) {
         await activateVip(item.vipDuration);
       } else if (item.frameId) {
@@ -241,10 +241,10 @@ export default function PowerUps() {
           if (!(await grantPowerUp(type, powers))) grantFailed = true;
         }
         if (coinAmount > 0) {
-          if (!(await addCoins(coinAmount))) grantFailed = true;
+          if (!(await addCoins(coinAmount, "shop_grant", item.id))) grantFailed = true;
         }
         if (gemAmount > 0) {
-          if (!(await addGems(gemAmount))) grantFailed = true;
+          if (!(await addGems(gemAmount, "shop_grant", item.id))) grantFailed = true;
         }
         if (vip) {
           await activateVip(vip);

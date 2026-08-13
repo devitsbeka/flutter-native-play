@@ -687,12 +687,15 @@ export function useMissions() {
       if (!user || !profile) return;
 
       if (mission.reward_coins > 0 || mission.reward_gems > 0) {
+        // A credit, so it goes through the grant path — update_user_currency
+        // refuses positive deltas from a signed-in caller now.
         const { data: currencyData, error: currencyError } = await supabase.rpc(
-          "update_user_currency",
+          "credit_gameplay_reward",
           {
-            p_user_id: user.id,
-            p_coins_delta: mission.reward_coins || 0,
-            p_gems_delta: mission.reward_gems || 0,
+            p_kind: "mission",
+            p_coins: mission.reward_coins || 0,
+            p_gems: mission.reward_gems || 0,
+            p_reference: mission.mission_id,
           }
         );
         if (currencyError) throw currencyError;
@@ -1198,10 +1201,11 @@ export function useWeekBonus(): WeekBonusState {
       .select("id");
     if (error || !won || won.length === 0) return false;
 
-    const { data: currency } = await supabase.rpc("update_user_currency", {
-      p_user_id: user.id,
-      p_coins_delta: WEEK_BONUS.coins,
-      p_gems_delta: WEEK_BONUS.gems,
+    const { data: currency } = await supabase.rpc("credit_gameplay_reward", {
+      p_kind: "mission",
+      p_coins: WEEK_BONUS.coins,
+      p_gems: WEEK_BONUS.gems,
+      p_reference: WEEK_BONUS.mission_id,
     });
     if (currency && currency.length > 0) {
       setProfileLocal({ coins: currency[0].new_coins, gems: currency[0].new_gems });

@@ -33,6 +33,14 @@
 /version.json
   Cache-Control: no-store
 
+# Universal links. Apple's CDN requires application/json, and the file has no
+# extension for the server to infer it from — the extension is omitted because
+# Apple fetches this exact path. A wrong content type fails silently: links
+# just keep opening in Safari.
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+  Cache-Control: public, max-age=3600
+
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

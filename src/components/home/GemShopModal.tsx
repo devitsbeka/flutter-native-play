@@ -329,7 +329,7 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
 
       // Handle different item types
       if (item.category === "coins" && item.value) {
-        await addCoins(item.value);
+        await addCoins(item.value, "shop_grant", item.id);
       } else if (item.category === "vip" && item.vipDuration) {
         await activateVip(item.vipDuration);
       } else if (item.category === "powerup") {

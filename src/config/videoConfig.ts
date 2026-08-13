@@ -1,6 +1,51 @@
 // Centralized video configuration for preloading and display
 // IMPORTANT: No cache-busting query params - Service Worker handles versioning
 
+import { Capacitor } from "@capacitor/core";
+
+/**
+ * Where video files are fetched from.
+ *
+ * On the web this stays empty and every path is root-relative, exactly as
+ * before. On native it has to be an absolute URL, because the app is served
+ * from `capacitor://localhost` and `/videos/foo.mp4` resolves inside the app
+ * bundle rather than to the site.
+ *
+ * That indirection is what lets the iOS build ship without 276 MB of video
+ * in it. `public/videos` is the single largest thing in the repo, Capacitor
+ * copies `webDir` wholesale into the app, and the result was a ~400 MB
+ * download — over the cellular threshold, where iOS warns the user and many
+ * of them stop.
+ *
+ * A small first-run set is still bundled (see scripts/prune-ios-videos.mjs);
+ * everything else streams and is cached by the HTTP layer.
+ */
+const VIDEO_BASE_URL: string = (() => {
+  const configured = import.meta.env.VITE_VIDEO_BASE_URL;
+  if (configured) return String(configured).replace(/\/$/, "");
+  // Native with nothing configured would resolve into the bundle and 404 for
+  // anything pruned, so fall back to production rather than failing silently.
+  if (Capacitor.isNativePlatform()) return "https://mytrivia.io";
+  return "";
+})();
+
+/**
+ * Resolve a `/videos/...` path to something fetchable on this platform.
+ *
+ * Safe to call on any path: non-video and already-absolute URLs pass through
+ * untouched, so call sites do not have to know which is which.
+ */
+export function videoUrl(path: string): string {
+  if (!path.startsWith("/videos/")) return path;
+  if (!VIDEO_BASE_URL) return path;
+  return `${VIDEO_BASE_URL}${path}`;
+}
+
+/** True when videos are being streamed rather than read from the bundle. */
+export function videosAreRemote(): boolean {
+  return VIDEO_BASE_URL !== "";
+}
+
 // Map/Adventure videos
 export const MAP_VIDEOS = {
   default: "/videos/floating-blob.mp4",
@@ -151,19 +196,47 @@ export function toMobileWebmUrl(mp4Url: string): string {
   return `${dir}/mobile/${filename}`;
 }
 
+// Convert an MP4 path to its mobile MP4 equivalent (480px, H.264)
+export function toMobileMp4Url(mp4Url: string): string {
+  const lastSlash = mp4Url.lastIndexOf("/");
+  const dir = mp4Url.substring(0, lastSlash);
+  const filename = mp4Url.substring(lastSlash + 1);
+  return `${dir}/mobile/${filename}`;
+}
+
 // Check if user is on a mobile-sized viewport (< 768px)
 export function isMobileViewport(): boolean {
   return typeof window !== "undefined" && window.innerWidth < 768;
 }
 
-// Get the best video URL for current device: mobile WebM, desktop WebM, or MP4 fallback
+/**
+ * The best pair of sources for this device.
+ *
+ * The MP4 is not decoration — it is what actually plays on most iPhones in
+ * service. WebM (VP8/VP9) only became playable in WKWebView on **iOS 17.4**,
+ * and this app's floor is iOS 15, so every device below that skips the WebM
+ * source entirely and uses the MP4.
+ *
+ * Which is why the MP4 has to have a mobile variant too. Sending a phone the
+ * 720p desktop MP4 — several megabytes each, sixty of them — is the same
+ * mistake as bundling them, just paid over the network instead of at install.
+ *
+ * `mobile/*.mp4` files do not exist in the repo yet; only the WebM variants
+ * were generated. Until they do, `mobileMp4Available` is false and the
+ * desktop MP4 is used, exactly as before. See ACTION_ITEMS.md.
+ */
+const MOBILE_MP4_AVAILABLE = import.meta.env.VITE_MOBILE_MP4_AVAILABLE === "true";
+
 export function getResponsiveVideoSrc(mp4Url: string): {
   webm: string;
   mp4: string;
 } {
+  const wantsMobile = isMobileViewport() || Capacitor.isNativePlatform();
   return {
-    webm: isMobileViewport() ? toMobileWebmUrl(mp4Url) : toWebmUrl(mp4Url),
-    mp4: mp4Url,
+    webm: videoUrl(wantsMobile ? toMobileWebmUrl(mp4Url) : toWebmUrl(mp4Url)),
+    mp4: videoUrl(
+      wantsMobile && MOBILE_MP4_AVAILABLE ? toMobileMp4Url(mp4Url) : mp4Url,
+    ),
   };
 }
 
@@ -177,9 +250,10 @@ export function getAllVideoUrls(categoryLimit?: number): string[] {
   const uniqueMp4 = [
     ...new Set([...Object.values(MAP_VIDEOS), ...limitedCategoryUrls]),
   ];
-  const toUrl = isMobileViewport() ? toMobileWebmUrl : toWebmUrl;
+  const toUrl =
+    isMobileViewport() || Capacitor.isNativePlatform() ? toMobileWebmUrl : toWebmUrl;
 
-  return uniqueMp4.map((url) => toUrl(url));
+  return uniqueMp4.map((url) => videoUrl(toUrl(url)));
 }
 
 // Get all MP4 URLs (for legacy/fallback preloading)

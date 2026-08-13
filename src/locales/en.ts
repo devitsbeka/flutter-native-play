@@ -623,6 +623,44 @@ export const en: KaTranslations = {
   // ==========================================
   // Daily Rewards
   // ==========================================
+  // App Tracking Transparency
+  // ==========================================
+  att: {
+    title: "Help keep MyTrivia free",
+    body: "You'll see ads either way. Allowing tracking means they're relevant to you instead of random.",
+    reassurance: "Your quiz answers and scores are never shared.",
+    continue: "Continue",
+    notNow: "Not now",
+  },
+
+  // ==========================================
+  // Content moderation
+  // ==========================================
+  moderation: {
+    thisPlayer: "This player",
+    sheetSubtitle: "Choose what you'd like to do",
+    report: "Report",
+    block: "Block",
+    blocked: "Player blocked",
+    unblocked: "Player unblocked",
+    blockFailed: "That didn't work. Try again",
+    reportReceived: "Report received. We'll take a look",
+    reportFailed: "Report didn't send. Try again",
+    blockedPlayers: "Blocked players",
+    unblock: "Unblock",
+    reportReasonTitle: "What's wrong?",
+    blockConfirmTitle: "Block this player?",
+    blockConfirmBody: "Their quizzes and comments will stop appearing. You can unblock from Settings.",
+    reason: {
+      inappropriate: "Inappropriate content",
+      harassment: "Harassment or abuse",
+      spam: "Spam",
+      cheating: "Cheating",
+      other: "Something else",
+    },
+  },
+
+  // ==========================================
   dailyRewards: {
     title: "Rewards",
     subtitle: "Claim a reward every day",

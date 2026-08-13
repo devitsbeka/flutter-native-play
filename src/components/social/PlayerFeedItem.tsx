@@ -1,6 +1,8 @@
 import { useState, useMemo, lazy, memo, Suspense } from "react";
 
-import { UserPlus, UserCheck, Clock, Play, Layers, Hourglass, Pencil } from "lucide-react";
+import { UserPlus, UserCheck, Clock, Play, Layers, Hourglass, Pencil, MoreVertical } from "lucide-react";
+import { ReportBlockSheet } from "@/components/social/ReportBlockSheet";
+import { useAuth } from "@/hooks/useAuth";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Button } from "@/components/ui/button";
@@ -87,6 +89,9 @@ function PlayerFeedItemComponent({
   const [isLoading, setIsLoading] = useState(false);
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [moderationOpen, setModerationOpen] = useState(false);
+  const { user: currentUser } = useAuth();
+  const currentUserId = currentUser?.id;
 
   const handleAddFriend = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -273,9 +278,32 @@ function PlayerFeedItemComponent({
           </div>
         </div>
         
-        {/* Friend Button */}
-        {renderFriendButton()}
+        <div className="flex items-center gap-1">
+          {/* Friend Button */}
+          {renderFriendButton()}
+
+          {/* Report / block. Guideline 1.2 wants this reachable from the
+              content itself, so it sits on the card rather than in settings.
+              Hidden on your own posts, where it would be nonsense. */}
+          {currentUserId && currentUserId !== player.user_id && (
+            <button
+              type="button"
+              aria-label={t("moderation.report")}
+              onClick={(e) => { e.stopPropagation(); setModerationOpen(true); }}
+              className="p-1.5 rounded-full text-muted-foreground hover:bg-muted active:scale-95 transition"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
+
+      <ReportBlockSheet
+        open={moderationOpen}
+        onClose={() => setModerationOpen(false)}
+        userId={player.user_id}
+        displayName={player.nickname}
+      />
       
       {/* Content Card */}
       <div

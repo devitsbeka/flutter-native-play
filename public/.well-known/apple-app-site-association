@@ -1,0 +1,29 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "T38XQSM4L3.io.mytrivia.app",
+        "paths": [
+          "/challenge/*",
+          "/join",
+          "/join/*",
+          "/room/*",
+          "/tv/*",
+          "/controller/*",
+          "/collection/*",
+          "/trivia/*",
+          "/profile/*",
+          "/category/*",
+          "/play/*",
+          "NOT /admin*",
+          "NOT /docs*",
+          "NOT /privacy-policy*",
+          "NOT /terms*",
+          "NOT /support",
+          "NOT /delete-account"
+        ]
+      }
+    ]
+  }
+}

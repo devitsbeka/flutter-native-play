@@ -52,9 +52,23 @@ jobs:
 
       - name: Build
         run: npm run build
-        # Supabase URL and the (public) anon key come from the committed .env.
-        # If .env is ever removed from the repo, add them as secrets and pass
-        # them here as VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY.
+        # .env is no longer committed, so these are passed explicitly — the
+        # exact situation the previous comment here warned about.
+        #
+        # Vite inlines `undefined` for an unset VITE_* var, so a build with
+        # these missing succeeds and ships a bundle that cannot reach the
+        # backend at all. vite.config.ts now refuses to build in that state
+        # rather than letting it deploy, but the values still have to arrive
+        # from somewhere, and that is here.
+        #
+        # The fallbacks are the project ref and the *publishable* (anon) key,
+        # which are designed to be public and were committed in this repo for
+        # its whole history — they are not secrets. Setting the repository
+        # secrets overrides them, which is the better long-term home.
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://sqwpzezkhpqkdyltvsim.supabase.co' }}
+          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID || 'sqwpzezkhpqkdyltvsim' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxd3B6ZXpraHBxa2R5bHR2c2ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMzY5MTQsImV4cCI6MjA4MTkxMjkxNH0.tNtgf8sbZakCP6HAUtoxVSrcshZ1Lvn_1OqS7K7VhTc' }}
 
       # Smoke the built bundle before it reaches users. Unit tests cannot see
       # a route that renders a blank screen — a bad chunk-init order or a

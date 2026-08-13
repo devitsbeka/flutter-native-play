@@ -115,9 +115,9 @@ export function useRewards() {
         const xpToAdd = calculateXP(result.value, isVip);
         await updateProfile({ total_points: currentPoints + xpToAdd });
       } else if (result.type === "coins") {
-        await addCoins(result.value);
+        await addCoins(result.value, "spin", result.label);
       } else if (result.type === "gems") {
-        await addGems(result.value);
+        await addGems(result.value, "spin", result.label);
       } else if (result.type === "powerup") {
         // Grant a random power-up (SPIN_REWARDS "powerup" segments were never granted)
         const type = SPIN_POWER_UP_TYPES[Math.floor(Math.random() * SPIN_POWER_UP_TYPES.length)];
@@ -160,7 +160,7 @@ export function useRewards() {
       }
 
       if (totalCoins > 0 || totalGems > 0) {
-        await addCurrency(totalCoins, totalGems);
+        await addCurrency(totalCoins, totalGems, "chest");
       }
 
       return {

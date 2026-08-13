@@ -423,9 +423,9 @@ export default function CategoryQuizPage() {
           // Add coins — await and retry once so a transient network blip at
           // the level-up moment doesn't silently swallow the reward the
           // celebration screen is about to show
-          const coinsCredited = await addCurrency(levelUpCoins, 0);
+          const coinsCredited = await addCurrency(levelUpCoins, 0, "level_up", `level ${newLevel}`);
           if (!coinsCredited) {
-            await addCurrency(levelUpCoins, 0);
+            await addCurrency(levelUpCoins, 0, "level_up", `level ${newLevel}`);
           }
           
           // Credit the random power-up to database

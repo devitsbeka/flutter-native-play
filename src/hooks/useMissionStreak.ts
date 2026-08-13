@@ -171,11 +171,12 @@ export function useMissionStreak() {
       // (the client can't read the locked gems column back).
       if (bonus.coins > 0 || bonus.gems > 0) {
         const { data: currencyData, error: currencyError } = await supabase.rpc(
-          "update_user_currency",
+          "credit_gameplay_reward",
           {
-            p_user_id: user.id,
-            p_coins_delta: bonus.coins || 0,
-            p_gems_delta: bonus.gems || 0,
+            p_kind: "mission",
+            p_coins: bonus.coins || 0,
+            p_gems: bonus.gems || 0,
+            p_reference: "streak",
           }
         );
         if (currencyError) throw currencyError;

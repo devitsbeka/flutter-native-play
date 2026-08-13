@@ -169,6 +169,12 @@ verify_jwt = true
 [functions.stripe-gem-webhook]
 verify_jwt = false
 
+# Authenticated by REVENUECAT_WEBHOOK_SECRET in the Authorization header
+# instead — RevenueCat has no Supabase session. The function refuses to run
+# when that secret is unset.
+[functions.revenuecat-webhook]
+verify_jwt = false
+
 # --- PUBLIC/READ-ONLY (can remain public if needed) ---
 [functions.search-question-image]
 verify_jwt = true

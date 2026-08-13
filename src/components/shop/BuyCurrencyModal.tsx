@@ -90,7 +90,7 @@ export function BuyCurrencyModal({
         return;
       }
 
-      await addCoins(pkg.coins);
+      await addCoins(pkg.coins, "shop_grant", `coin_pack_${pkg.coins}`);
 
       // Grant the advertised power-ups (retry once on failure)
       let allPowersGranted = true;

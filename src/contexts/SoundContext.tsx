@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
 
 // Sound effect types for the game
 export type SoundEffect = 
@@ -593,11 +594,61 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     [settings.sfxEnabled, settings.volume]
   );
 
-  // Vibrate device
+  /**
+   * Haptic feedback.
+   *
+   * `navigator.vibrate` does not exist in WKWebView — the Vibration API has
+   * never been implemented on iOS — so every call site here was a silent
+   * no-op on iPhone. The app had no haptics at all on the platform where
+   * players most expect them, while shipping the plugin that provides them.
+   *
+   * The existing call sites pass millisecond patterns, written for the web
+   * API. Rather than rewrite eleven of them, the duration is mapped onto the
+   * iOS impact styles it was approximating: a short tap is light, the default
+   * is medium, a long buzz is heavy. A pattern (an array) means "something
+   * notable happened" and becomes a notification haptic, which is what the
+   * multi-pulse patterns were imitating.
+   */
   const vibrate = useCallback(
     (pattern: number | number[] = 50) => {
       if (!settings.vibrationEnabled) return;
-      
+
+      if (Capacitor.isNativePlatform()) {
+        void (async () => {
+          try {
+            const { Haptics, ImpactStyle, NotificationType } = await import(
+              "@capacitor/haptics"
+            );
+
+            if (Array.isArray(pattern)) {
+              // Longest pulse in the pattern stands in for its intensity.
+              const peak = Math.max(...pattern);
+              await Haptics.notification({
+                type:
+                  peak >= 150
+                    ? NotificationType.Error
+                    : peak >= 80
+                      ? NotificationType.Success
+                      : NotificationType.Warning,
+              });
+              return;
+            }
+
+            await Haptics.impact({
+              style:
+                pattern <= 30
+                  ? ImpactStyle.Light
+                  : pattern >= 100
+                    ? ImpactStyle.Heavy
+                    : ImpactStyle.Medium,
+            });
+          } catch (error) {
+            console.warn("[haptics] Unavailable:", error);
+          }
+        })();
+        return;
+      }
+
       if ("vibrate" in navigator) {
         navigator.vibrate(pattern);
       }

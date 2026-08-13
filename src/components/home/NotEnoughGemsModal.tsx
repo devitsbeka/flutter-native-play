@@ -7,21 +7,11 @@ import { useGemPurchase } from "@/hooks/useGemPurchase";
 import { useAuth } from "@/contexts/AuthContext";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import { formatPrice } from "@/utils/currency";
+import { GEM_PACKS, type GemPack } from "@/config/gemPacks";
 
-interface GemPackage {
-  id: string;
-  gems: number;
-  priceUsd: number;
-  name: string;
-  bonus?: number;
-}
-
-const GEM_PACKAGES: GemPackage[] = [
-  { id: "gems_100", gems: 100, priceUsd: 0.79, name: "100" },
-  { id: "gems_500", gems: 500, priceUsd: 3.19, name: "500" },
-  { id: "gems_1500", gems: 1500, priceUsd: 7.99, name: "1500", bonus: 20 },
-  { id: "gems_5000", gems: 5000, priceUsd: 23.99, name: "5000", bonus: 40 },
-];
+// Packs live in config so the native store SKUs stay attached to them.
+type GemPackage = GemPack;
+const GEM_PACKAGES = GEM_PACKS;
 
 interface NotEnoughGemsModalProps {
   isOpen: boolean;

@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check, Lock, Clock, Crown } from "lucide-react";
 import coinPurseIcon from "@/assets/icons/icon-coin-purse.png";
-import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { useRewardTimers, useDailyRewardsClaim } from "@/hooks/useRewardTimers";
 import confetti from "canvas-confetti";
@@ -163,14 +162,17 @@ function DayRewardCard({
 
 export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: DailyRewardsModalProps) {
   const { t } = useLanguage();
-  const { addCurrency } = useCurrency();
   const { playSound, vibrate } = useSound();
   const { canClaimDaily, dailyTimeLeft, refreshTimers } = useRewardTimers();
   const { claimDailyReward } = useDailyRewardsClaim();
-  const { getDailyRewardMultiplier, isProPlus } = useVipStatus();
+  const { isProPlus } = useVipStatus();
   const [claimedToday, setClaimedToday] = useState(false);
   const [showFlyingCoins, setShowFlyingCoins] = useState(false);
   const [showFlyingGems, setShowFlyingGems] = useState(false);
+  // What the server actually granted. The cards advertise the base amounts;
+  // a PRO Plus claim is worth 1.5x those, so the numbers that fly to the
+  // wallet come from the claim rather than from the card.
+  const [awarded, setAwarded] = useState<{ coins: number; gems: number } | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Mouse-drag scrolling with momentum for the day-cards row. Touch keeps
@@ -229,7 +231,6 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
   };
 
   const currentDay = Math.min((currentStreak - 1) % 7, 6);
-  const vipMultiplier = getDailyRewardMultiplier();
 
   // Sync claimed state with timer hook
   useEffect(() => {
@@ -264,24 +265,20 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
   const handleClaim = async () => {
     if (claimedToday || !canClaimDaily) return;
 
-    const reward = dailyRewards[currentDay];
-
-    // Apply VIP multiplier for PRO Plus users (+50% rewards)
-    const finalCoins = Math.floor(reward.coins * vipMultiplier);
-    const finalGems = Math.floor((reward.gems || 0) * vipMultiplier);
-
     playSound("reward");
     vibrate([50, 30, 50]);
     celebrateClaim();
 
-    // Mark as claimed in database
-    const success = await claimDailyReward();
-    if (!success) return;
+    // One call claims the day and credits it. The amount, the VIP bonus and
+    // the once-per-day guard are all decided server-side, so what comes back
+    // is what was actually granted rather than what this screen expected.
+    const claim = await claimDailyReward();
+    if (!claim) return;
 
-    await addCurrency(finalCoins, finalGems);
+    setAwarded({ coins: claim.coins, gems: claim.gems });
 
     setShowFlyingCoins(true);
-    if (reward.gems > 0) {
+    if (claim.gems > 0) {
       setTimeout(() => setShowFlyingGems(true), 300);
     }
 
@@ -390,11 +387,11 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
 
       {/* Flying Currency Animations - outside modal for proper z-index */}
       <AnimatePresence>
-        {showFlyingCoins && (
-          <FlyingCurrency type="coins" amount={dailyRewards[currentDay].coins} isActive={showFlyingCoins} />
+        {showFlyingCoins && awarded && (
+          <FlyingCurrency type="coins" amount={awarded.coins} isActive={showFlyingCoins} />
         )}
-        {dailyRewards[currentDay].gems > 0 && showFlyingGems && (
-          <FlyingCurrency type="gems" amount={dailyRewards[currentDay].gems} isActive={showFlyingGems} />
+        {showFlyingGems && awarded && awarded.gems > 0 && (
+          <FlyingCurrency type="gems" amount={awarded.gems} isActive={showFlyingGems} />
         )}
       </AnimatePresence>
     </>

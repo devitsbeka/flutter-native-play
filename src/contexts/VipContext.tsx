@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, useEffect, useMemo, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useMemo, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { addDays, addMonths, isAfter } from "date-fns";
+import { isAfter } from "date-fns";
 import { t } from "@/utils/standaloneTranslation";
 
 export interface VipSubscription {
@@ -18,20 +18,15 @@ export interface VipSubscription {
 export type VipDuration = "day" | "2days" | "week" | "month" | "10days";
 
 /**
- * How many days each duration grants. 0 means a calendar month.
+ * How long each duration grants now lives in the `grant_vip_days` SQL
+ * function, because an expiry date the client computes is an expiry date the
+ * client can choose. The mapping that used to be here is reproduced there
+ * verbatim, including the calendar-month special case for 'month'.
  *
- * A Record over the union rather than a chain of ternaries: the chain ended
- * in `: 0`, and 0 meant "add a month", so any duration nobody had thought
- * about granted a MONTH of PRO for the price of a flash deal. Adding a
- * duration to the union without a day count is now a compile error.
+ * Keep the two in step: adding a duration to VipDuration means adding a
+ * branch to that function, or the grant fails loudly with "Unknown VIP
+ * duration" rather than silently handing out the wrong amount of time.
  */
-const VIP_DURATION_DAYS: Record<VipDuration, number> = {
-  day: 1,
-  "2days": 2,
-  week: 7,
-  "10days": 10,
-  month: 0,
-};
 
 export const VIP_PRICES: Record<VipDuration, number> = {
   day: 3,
@@ -78,11 +73,9 @@ const LIFETIME_EXPIRES_AT = "2126-01-01T00:00:00.000Z";
 const isLifetime = (expiresAt: string) =>
   new Date(expiresAt).getTime() >= new Date("2100-01-01T00:00:00Z").getTime();
 
-// Individually granted lifetime PRO accounts (self-granted on their own
-// login, like admins — RLS only lets a user write their own subscription row)
-const LIFETIME_PRO_USER_IDS = new Set<string>([
-  "a22491af-e2a1-4072-bee0-a2f804393a77", // beka
-]);
+// The lifetime-PRO allowlist moved into ensure_admin_lifetime_pro(), next to
+// the admin-role check it sits beside. Both now run somewhere the client
+// cannot reach around them.
 
 interface VipContextType {
   subscription: VipSubscription | null;
@@ -119,11 +112,16 @@ export function VipProvider({ children }: { children: ReactNode }) {
     }
   });
 
+  // activateVip lives outside the effect but needs to re-read the row after a
+  // first-time grant, when there is no local subscription to patch.
+  const fetchVipStatusRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     if (!user) {
       setSubscription(null);
       setIsVip(false);
       setLoading(false);
+      fetchVipStatusRef.current = null;
       return;
     }
 
@@ -161,21 +159,12 @@ export function VipProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    // Admins and individually granted accounts keep lifetime PRO. RLS lets a
-    // user write only their own subscription row, so this self-grant runs
-    // client-side on login and heals itself if the row is ever removed or
-    // shortened.
+    // Admins keep lifetime PRO, healed on login if the row is ever removed or
+    // shortened. The admin check now happens inside the function rather than
+    // out here: the subscription table is no longer client-writable, because
+    // "a user may write their own row" also meant a user could write
+    // themselves any tier and any expiry date they liked.
     const ensureAdminLifetimePro = async () => {
-      if (!LIFETIME_PRO_USER_IDS.has(user.id)) {
-        const { data: adminRole } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-        if (!adminRole) return;
-      }
-
       const { data: existing } = await supabase
         .from("vip_subscriptions")
         .select("expires_at")
@@ -183,20 +172,16 @@ export function VipProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
       if (existing && isLifetime(existing.expires_at)) return;
 
-      const { error } = existing
-        ? await supabase
-            .from("vip_subscriptions")
-            .update({ vip_tier: "pro", expires_at: LIFETIME_EXPIRES_AT })
-            .eq("user_id", user.id)
-        : await supabase
-            .from("vip_subscriptions")
-            .insert({ user_id: user.id, vip_tier: "pro", expires_at: LIFETIME_EXPIRES_AT });
+      const { data: granted, error } = await supabase.rpc("ensure_admin_lifetime_pro");
       if (error) {
         console.error("[VipContext] Admin lifetime PRO self-grant failed:", error);
         return;
       }
-      fetchVipStatus();
+      // Returns false for everyone who isn't an admin, which is the common case.
+      if (granted) fetchVipStatus();
     };
+
+    fetchVipStatusRef.current = () => { fetchVipStatus(); };
 
     fetchVipStatus();
     ensureAdminLifetimePro();
@@ -215,51 +200,38 @@ export function VipProvider({ children }: { children: ReactNode }) {
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      fetchVipStatusRef.current = null;
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const activateVip = async (duration: VipDuration): Promise<boolean> => {
     if (!user) return false;
 
     try {
-      const now = new Date();
-      const durationDays = VIP_DURATION_DAYS[duration];
-      const expiresAt = durationDays > 0
-        ? addDays(now, durationDays)
-        : addMonths(now, 1);
+      // The server owns the duration → days mapping and the stacking rule now.
+      // Passing a duration name rather than a computed expiry is the whole
+      // point: the old code sent an expires_at of its own choosing straight
+      // into the table, so the date was only ever as trustworthy as the
+      // client that picked it.
+      const { data, error } = await supabase.rpc("grant_vip_days", {
+        p_duration: duration,
+      });
 
-      if (subscription) {
-        const currentExpiry = new Date(subscription.expires_at);
-        const newExpiry = isAfter(currentExpiry, now)
-          ? (durationDays > 0 ? addDays(currentExpiry, durationDays) : addMonths(currentExpiry, 1))
-          : expiresAt;
+      if (error) throw error;
 
-        const { error } = await supabase
-          .from("vip_subscriptions")
-          .update({
-            expires_at: newExpiry.toISOString(),
-            vip_tier: "standard",
-          })
-          .eq("user_id", user.id);
+      const granted = Array.isArray(data) ? data[0] : data;
+      if (!granted?.expires_at) throw new Error("No expiry returned from grant_vip_days");
 
-        if (error) throw error;
-
-        setSubscription((prev) => prev ? { ...prev, expires_at: newExpiry.toISOString() } : null);
-      } else {
-        const { data, error } = await supabase
-          .from("vip_subscriptions")
-          .insert({
-            user_id: user.id,
-            vip_tier: "standard",
-            expires_at: expiresAt.toISOString(),
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        setSubscription(data as VipSubscription);
-      }
+      setSubscription((prev) =>
+        prev
+          ? { ...prev, expires_at: granted.expires_at, vip_tier: granted.vip_tier }
+          : prev,
+      );
+      // A first-time grant has no row in state yet; re-read so the new row,
+      // and the id the rest of the app expects, arrive intact.
+      if (!subscription) fetchVipStatusRef.current?.();
 
       setIsVip(true);
       toast.success(t("extra.vipActivatedToast"));

@@ -38,7 +38,7 @@ export function useGameStake(): GameStakeResult {
 
   const awardWin = useCallback(async (): Promise<boolean> => {
     // Winner gets +500 coins
-    const success = await addCoins(winAmount);
+    const success = await addCoins(winAmount, "stake_win");
     return success;
   }, [addCoins, winAmount]);
 
