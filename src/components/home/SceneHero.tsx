@@ -138,7 +138,7 @@ export function SceneHero({
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.25, type: "spring" }}
-        className="absolute left-4 xl:left-[56px] top-[53px] h-[370px] w-[356px] pointer-events-auto"
+        className="absolute left-4 lg:left-[26px] top-[53px] h-[370px] w-[356px] pointer-events-auto"
       >
         {/* Profile card (node 601:1129) */}
         <div

@@ -964,9 +964,15 @@ export default function Index() {
             search only, no wordmark — the wordmark is in the body there). */}
         <header
           // The greeting, the friends strip below it and the scene's widget
-          // stack are one column on lg+, so they share one left inset: 16
-          // here and at lg, 56 from xl, where SceneHero's stack sits.
-          className={`relative z-20 px-4 py-3 md:pt-4 xl:pl-[56px] safe-top border-b border-border/30 lg:border-b-0 ${
+          // stack are one column on lg+, so they share one left inset. That
+          // inset is 26px from lg, which is where the search and bell glyphs
+          // sit on the other side: they are 20px icons centred in 40px
+          // buttons against 16px of padding, so their visible edge lands at
+          // 16 + 10. Text and avatars carry no such inset, so matching the
+          // buttons' 16px of padding left this column looking tighter than
+          // the icons opposite it. Matching the glyphs instead makes the two
+          // sides read as equal.
+          className={`relative z-20 px-4 py-3 md:pt-4 lg:pl-[26px] safe-top border-b border-border/30 lg:border-b-0 ${
             !user ? "hidden md:block" : ""
           }`}
         >
@@ -1116,7 +1122,7 @@ export default function Index() {
             so the avatars land 16px below the page top — the same offset the reel
             has inside the rooms page header, keeping the two pages in sync. */}
         {user && (
-          <div className="relative z-20 px-4 xl:pl-[56px]">
+          <div className="relative z-20 px-4 lg:pl-[26px]">
             <div className="lg:pointer-events-auto">
               <FriendsStoriesBar
                 onAddFriendClick={() => setShowAddFriendModal(true)}
