@@ -28,7 +28,7 @@ import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 // Served from public/ - not bundled, streams straight from the CDN
-const TRIVIA_KING_SCENE_VIDEO = "/videos/trivia-king-scene.mp4";
+const SHOP_SCENE_VIDEO = "/videos/shop-scene.mp4";
 
 import { ShopStandardLayout } from "@/components/shop/ShopStandardLayout";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
@@ -307,16 +307,20 @@ export default function PowerUps() {
             </div>
           </div>
 
-          {/* Right 40% (lg+): the looping trivia king scene, pinned to the
-              viewport — it never scrolls, only the shop content does */}
+          {/* Right column (lg+): the looping shop scene, pinned to the
+              viewport — it never scrolls, only the shop content does.
+              The clip is 1470x630, far wider than this tall column, so
+              object-cover keeps under a fifth of its width: anchor that
+              slice at 76% across, where the shopkeeper stands, instead of
+              the centre, which would show the empty shelves beside him. */}
           <div className="hidden lg:block lg:w-[34%] lg:max-w-[460px] lg:min-w-[280px] sticky top-0 self-start h-[100dvh] md:h-screen overflow-hidden">
             <video
-              src={TRIVIA_KING_SCENE_VIDEO}
+              src={SHOP_SCENE_VIDEO}
               autoPlay
               loop
               muted
               playsInline
-              className="absolute inset-0 w-full h-full object-cover object-center"
+              className="absolute inset-0 w-full h-full object-cover object-[76%_center]"
             />
             {/* Soft fades so the pinned video melts into the page instead of a hard cut */}
             <div className="pointer-events-none absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-[#f7ebfb] via-[#f7ebfb]/45 to-transparent" />
