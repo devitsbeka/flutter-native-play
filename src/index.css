@@ -428,8 +428,14 @@
   container-type: inline-size;
 }
 
+/* Above the threshold the cards keep a fixed maximum width and PACK FROM THE
+   LEFT, with the leftover width falling at the end of the row. Equal
+   fractional columns were splitting the row between however many cards a
+   section happened to have, so a section with two of them put one card at
+   each side of the shop with a hole down the middle. */
 @container (min-width: 900px) {
-  .shop-grid-4 {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .shop-grid-row > .grid {
+    grid-template-columns: repeat(auto-fill, minmax(0, 420px));
+    justify-content: start;
   }
 }

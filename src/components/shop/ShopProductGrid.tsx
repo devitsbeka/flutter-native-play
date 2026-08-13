@@ -3,7 +3,6 @@ import { ShopItem } from "@/hooks/useShopData";
 import { ShopItemCard } from "./ShopItemCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PowerUpsSummary } from "./PowerUpsSummary";
-import { cn } from "@/lib/utils";
 
 interface ShopProductGridProps {
   sectionId?: string;
@@ -28,11 +27,6 @@ export function ShopProductGrid({
 }: ShopProductGridProps) {
   const { t } = useLanguage();
 
-  const count = items.length;
-  // Rows hold 2 or 4 cards — no full-width featured rows. Sections that
-  // divide into fours get 4 columns on desktop; pairs stay 2-wide.
-  const fourCols = count % 4 === 0;
-
   return (
     <motion.section
       className="mx-3 sm:mx-4 mb-6"
@@ -49,11 +43,13 @@ export function ShopProductGrid({
         </h2>
       </div>
 
-      {/* Products Grid — see .shop-grid-row in index.css: four across only
-          when the row is genuinely wide enough for it, measured on the row
-          rather than the window. */}
+      {/* Products Grid — see .shop-grid-row in index.css. How many fit is
+          measured on the row rather than the window, because the left menu
+          expands and the video panel takes a share of the width. Sections no
+          longer opt into a column count by how many items they happen to
+          have: cards are a capped width and as many fit as fit. */}
       <div className="shop-grid-row">
-      <div className={cn("grid grid-cols-2 gap-2", fourCols && "shop-grid-4")}>
+      <div className="grid grid-cols-2 gap-2">
         {items.map((item, index) => {
           // Real-money (lari) packs are always purchasable — gems balance is irrelevant
           const canAfford = item.currency === "lari" || gems >= item.price;
@@ -64,9 +60,10 @@ export function ShopProductGrid({
           const isOwned = isPurchased || isFrameOwned;
 
           return (
-            // A wide row with only two cards in it would stretch each one to
-            // half the shop; cap the card and centre it in its cell instead.
-            <div key={item.id} className="mx-auto w-full max-w-[420px]">
+            // Capped, and left-aligned in its track. Centring inside a
+            // half-width cell is what pushed a two-card section apart with a
+            // hole down the middle of the shop.
+            <div key={item.id} className="w-full max-w-[420px]">
               <ShopItemCard
                 id={item.id}
                 name={item.name}
