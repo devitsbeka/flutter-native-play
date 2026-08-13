@@ -1,15 +1,21 @@
 import { describe, it, expect } from "vitest";
 import {
+  EXTRA_GENERATION_GEM_COST,
   FREE_AVATAR_GENERATIONS,
   MAX_AVATAR_GENERATIONS,
   calculateAvatarQuota,
+  decideGeneration,
+  isRequestedPortraitUrl,
   isSceneUrl,
   needsSceneUpload,
   shouldResetSession,
 } from "@/utils/avatarStudio";
 
 const scene = (n: number) => ({ avatar_url: `https://cdn/u1/scene_${n}.png` });
+/** A portrait the person asked for. */
 const portrait = (n: number) => ({ avatar_url: `https://cdn/u1/portrait_${n}.png` });
+/** A portrait the app minted itself when a scene was applied. */
+const derived = (n: number) => ({ avatar_url: `https://cdn/u1/avatar_${n}.png` });
 
 describe("isSceneUrl", () => {
   it("recognises stored scenes by their filename", () => {
@@ -28,73 +34,117 @@ describe("isSceneUrl", () => {
   });
 });
 
+describe("isRequestedPortraitUrl", () => {
+  it("recognises a portrait the person asked for", () => {
+    expect(isRequestedPortraitUrl("https://cdn/u1/portrait_1717.png")).toBe(true);
+  });
+
+  it("does not charge for a portrait the app derived from a scene", () => {
+    // Every account made before this split has a pile of these. Reading one
+    // as a requested generation would bill people for work they never asked
+    // for, and close the tile on accounts that had never used it.
+    expect(isRequestedPortraitUrl("https://cdn/u1/avatar_1717.png")).toBe(false);
+    expect(isRequestedPortraitUrl("https://cdn/u1/scene_1717.png")).toBe(false);
+    expect(isRequestedPortraitUrl(null)).toBe(false);
+  });
+});
+
 describe("calculateAvatarQuota", () => {
   it("gives a new PRO member room for five of each", () => {
     const quota = calculateAvatarQuota([], true);
     expect(quota.maxPerType).toBe(MAX_AVATAR_GENERATIONS);
-    expect(quota.isLimitReached).toBe(false);
-    expect(quota.remainingGenerations).toBe(5);
+    expect(quota.scene.remaining).toBe(5);
+    expect(quota.avatar.remaining).toBe(5);
+    expect(quota.scene.isLimitReached).toBe(false);
   });
 
-  it("gives a free member room for two of each", () => {
+  it("gives a free member one of each", () => {
     const quota = calculateAvatarQuota([], false);
     expect(quota.maxPerType).toBe(FREE_AVATAR_GENERATIONS);
-    expect(quota.remainingGenerations).toBe(2);
+    expect(quota.scene.remaining).toBe(1);
+    expect(quota.avatar.remaining).toBe(1);
   });
 
-  it("counts scenes and portraits separately", () => {
+  it("counts scenes and avatars against their own budgets", () => {
     const quota = calculateAvatarQuota([scene(1), scene(2), portrait(1)], true);
-    expect(quota.sceneCount).toBe(2);
-    expect(quota.portraitCount).toBe(1);
+    expect(quota.scene.used).toBe(2);
+    expect(quota.avatar.used).toBe(1);
   });
 
-  it("does not let a full scene shelf block new portraits from counting", () => {
-    // The bug: scenes and portraits shared one cap, so five scenes silently
-    // blocked every new avatar. The "+ new selfie" tile just stopped
-    // responding, with nothing logged and no message shown.
-    const fiveScenes = [scene(1), scene(2), scene(3), scene(4), scene(5)];
-    const quota = calculateAvatarQuota(fiveScenes, true);
-    expect(quota.sceneCount).toBe(5);
-    expect(quota.portraitCount).toBe(0);
+  it("does not let a full scene shelf close the avatar tiles", () => {
+    // The bug: both tiles were gated on the scene count, so one scene used
+    // up the avatar tile too. It simply stopped responding, with nothing
+    // logged and no message shown.
+    const quota = calculateAvatarQuota([scene(1)], false);
+    expect(quota.scene.isLimitReached).toBe(true);
+    expect(quota.avatar.isLimitReached).toBe(false);
+    expect(quota.avatar.remaining).toBe(1);
   });
 
-  it("blocks generation once the scene shelf is full", () => {
-    const scenesFull = calculateAvatarQuota([scene(1), scene(2)], false);
-    expect(scenesFull.isLimitReached).toBe(true);
-    expect(scenesFull.remainingGenerations).toBe(0);
-  });
-
-  it("does not let piled-up portraits block a new scene", () => {
-    // THE regression. Portraits are minted in the background every time a
-    // scene is applied — nobody asks for them. Counting them into the gate
-    // meant ordinary scene-switching filled the portrait shelf and killed
-    // the "+ new scene" tile, on an account with scene slots to spare. The
-    // tile just stopped opening a file picker, and said nothing.
+  it("does not let piled-up derived portraits block anything", () => {
+    // THE regression. Applying a scene mints its portrait in the background
+    // — nobody asks for it. Counting those into a gate meant ordinary
+    // scene-switching filled a shelf and killed the tile, on an account with
+    // slots to spare. Derived portraits are stored under `avatar_`; only
+    // `portrait_` rows were actually requested.
     const quota = calculateAvatarQuota(
-      [scene(1), portrait(1), portrait(2), portrait(3), portrait(4)],
+      [derived(1), derived(2), derived(3), derived(4), derived(5)],
       false
     );
-    expect(quota.portraitCount).toBe(4);
-    expect(quota.isLimitReached).toBe(false);
-    expect(quota.remainingGenerations).toBe(1);
-  });
-
-  it("reports the remaining count from the scene shelf", () => {
-    const quota = calculateAvatarQuota([scene(1), scene(2), scene(3), portrait(1)], true);
-    expect(quota.remainingGenerations).toBe(2);
+    expect(quota.derivedPortraitCount).toBe(5);
+    expect(quota.avatar.isLimitReached).toBe(false);
+    expect(quota.scene.isLimitReached).toBe(false);
   });
 
   it("never reports a negative remaining count", () => {
     const overfull = [scene(1), scene(2), scene(3), scene(4), scene(5), scene(6), scene(7)];
     const quota = calculateAvatarQuota(overfull, false);
-    expect(quota.remainingGenerations).toBe(0);
-    expect(quota.isLimitReached).toBe(true);
+    expect(quota.scene.remaining).toBe(0);
+    expect(quota.scene.isLimitReached).toBe(true);
   });
 
   it("gives a PRO member strictly more room than a free member", () => {
     const shelf = [scene(1), scene(2), portrait(1), portrait(2)];
-    expect(calculateAvatarQuota(shelf, false).isLimitReached).toBe(true);
-    expect(calculateAvatarQuota(shelf, true).isLimitReached).toBe(false);
+    expect(calculateAvatarQuota(shelf, false).scene.isLimitReached).toBe(true);
+    expect(calculateAvatarQuota(shelf, true).scene.isLimitReached).toBe(false);
+  });
+});
+
+describe("decideGeneration", () => {
+  const quotaOf = (used: number, isVip = false) =>
+    calculateAvatarQuota(Array.from({ length: used }, (_, i) => scene(i)), isVip).scene;
+
+  it("generates for free while the allowance lasts", () => {
+    expect(decideGeneration(quotaOf(0), 0)).toEqual({ action: "generate" });
+  });
+
+  it("charges a gem for the one past the allowance", () => {
+    expect(decideGeneration(quotaOf(1), 3)).toEqual({
+      action: "charge",
+      gems: EXTRA_GENERATION_GEM_COST,
+    });
+  });
+
+  it("charges the same single gem the sixth time for a PRO member", () => {
+    expect(decideGeneration(quotaOf(5, true), 1)).toEqual({
+      action: "charge",
+      gems: EXTRA_GENERATION_GEM_COST,
+    });
+  });
+
+  it("blocks with a reason when the gems are not there", () => {
+    // The point of the reason: the caller has something to SAY. A refusal
+    // with nothing to show for it is what reads as a broken button.
+    expect(decideGeneration(quotaOf(1), 0)).toEqual({
+      action: "blocked",
+      reason: "insufficient-gems",
+      gems: EXTRA_GENERATION_GEM_COST,
+    });
+  });
+
+  it("spends exactly one gem, never the balance", () => {
+    const decision = decideGeneration(quotaOf(1), 500);
+    expect(decision).toEqual({ action: "charge", gems: 1 });
   });
 });
 

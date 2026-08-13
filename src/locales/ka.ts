@@ -575,6 +575,14 @@ export const ka = {
     animationPro: "ანიმაცია (PRO)",
     remainingGen: "დარჩა {remaining}/{max} გენერაცია",
     maxGenReached: "მაქსიმუმ {max} ავატარის გენერაცია შეგიძლიათ",
+    // Running out is a price, not a wall — the wording has to leave a way
+    // forward, because a dead end here reads as a broken button.
+    limitUsedUp: "შენი {max} უფასო გენერაცია გამოყენებულია.",
+    extraCostsGems: "შემდეგი — {cost} ბრილიანტი",
+    needGemsForExtra: "საკმარისი ბრილიანტი არ გაქვს — შემდეგი გენერაცია {cost} ბრილიანტი ღირს",
+    generateForGems: "გენერაცია • {cost} 💎",
+    paidWithGems: "გადახდილია {cost} ბრილიანტი",
+    proGetsFive: "PRO-თი {max} გენერაცია თითოეულზე",
     avatarsList: "ავატარები",
   },
 

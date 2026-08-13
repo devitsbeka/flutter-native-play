@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2, Crown, Lock, Plus } from "lucide-react";
+import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2, Crown, Lock, Plus, Gem, AlertCircle } from "lucide-react";
 
 // Import 3D icons for avatar flow
 import iconScissors from '@/assets/icons/icon-scissors.png';
@@ -20,12 +20,19 @@ import { t } from "@/lib/i18n";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import {
   calculateAvatarQuota,
+  decideGeneration,
+  isRequestedPortraitUrl,
   needsSceneUpload,
   shouldResetSession,
+  EXTRA_GENERATION_GEM_COST,
+  MAX_AVATAR_GENERATIONS,
+  type GenerationKind,
+  type KindQuota,
 } from "@/utils/avatarStudio";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { generateAndRecordPortrait } from "@/utils/portraitAvatar";
+import { generateAndRecordPortrait, generatePublicPortrait } from "@/utils/portraitAvatar";
 import { SCENE_ANIMATION_PROMPT } from "@/config/sceneAnimationPrompt";
 
 // Import mascot avatars
@@ -80,10 +87,78 @@ interface AvatarGeneration {
   created_at: string;
 }
 
+/**
+ * What this kind of generation costs right now, said before it is spent.
+ *
+ * The old version of this line only ever appeared while there was allowance
+ * left; running out swapped the whole section for a locked box. So the two
+ * states a person needs to tell apart — "you have used your generations" and
+ * "this button is broken" — looked exactly alike.
+ */
+function QuotaNote({
+  quota,
+  isVip,
+  gems,
+  onGetPro,
+}: {
+  quota: KindQuota;
+  isVip: boolean;
+  gems: number;
+  onGetPro: () => void;
+}) {
+  if (!quota.isLimitReached) {
+    return (
+      <p className="text-xs text-muted-foreground mb-1">
+        {t("avatar.remainingGen", { remaining: quota.remaining, max: quota.max })}
+      </p>
+    );
+  }
+
+  const canAfford = gems >= EXTRA_GENERATION_GEM_COST;
+
+  return (
+    <div className="mb-2 rounded-xl border border-border bg-muted/40 px-3 py-2">
+      <p className="text-xs text-foreground">
+        {t("avatar.limitUsedUp", { max: quota.max })}{" "}
+        <span className="inline-flex items-center gap-1 font-bold text-primary">
+          <Gem className="w-3 h-3" />
+          {t("avatar.extraCostsGems", { cost: EXTRA_GENERATION_GEM_COST })}
+        </span>
+      </p>
+      {!canAfford && (
+        <p className="mt-1 text-[11px] text-destructive">
+          {t("avatar.needGemsForExtra", { cost: EXTRA_GENERATION_GEM_COST })}
+        </p>
+      )}
+      {!isVip && (
+        <button
+          type="button"
+          onClick={onGetPro}
+          className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-primary underline underline-offset-2"
+        >
+          <Crown className="w-3 h-3 text-amber-500" />
+          {t("avatar.proGetsFive", { max: MAX_AVATAR_GENERATIONS })}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** The last failure, kept on screen instead of only in a toast. */
+function FailureNote({ message }: { message: string }) {
+  return (
+    <div className="mt-3 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2">
+      <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
+      <p className="text-[11px] leading-snug text-destructive">{message}</p>
+    </div>
+  );
+}
+
 export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }: AvatarModalProps) {
   const finishAndClose = onComplete || onClose;
   const { user, profile, updateProfile } = useAuth();
   const { isVip } = useVipStatus();
+  const { gems, spendGems } = useCurrency();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
 
@@ -106,6 +181,14 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
+  // Which of the two things the person set out to make. Both flows start
+  // from the same photo picker, so without this the modal cannot tell an
+  // avatar request from a scene request — and they have separate budgets.
+  const [flowKind, setFlowKind] = useState<GenerationKind>("avatar");
+  // The last thing that went wrong, shown IN the modal. A toast can be
+  // missed, scrolled past, or — as it turned out — never rendered at all;
+  // the step that failed should carry its own explanation.
+  const [failure, setFailure] = useState<string | null>(null);
   const [selectedForAction, setSelectedForAction] = useState<string | null>(null);
   // "default" = the Trivia King mascot loop backs the homepage instead of a
   // generated scene; anything else = the picked generated scene. Local
@@ -186,6 +269,9 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
   const startCamera = useCallback(async () => {
     try {
+      // The selfie tile lives under "create new avatar"
+      setFlowKind("avatar");
+      setFailure(null);
       setStep("camera");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
@@ -295,7 +381,14 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   // Opens the picker from a real button press. A silent no-op here is what
   // "the tile does nothing" looks like from the outside, so if the input is
   // somehow not mounted, say so rather than swallow the tap.
-  const openFilePicker = () => {
+  const goToPro = () => {
+    onClose();
+    navigate("/profile?tab=PRO");
+  };
+
+  const openFilePicker = (kind: GenerationKind) => {
+    setFlowKind(kind);
+    setFailure(null);
     const input = fileInputRef.current;
     if (!input) {
       toast.error(t("errors.generic"));
@@ -320,6 +413,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     // Check extension as fallback
     const isImageByExtension = /\.(jpg|jpeg|png|gif|webp|heic|heif|bmp)$/i.test(file.name);
     if (!file.type.startsWith("image/") && !isImageByExtension) {
+      setFailure(t("errors.selectImageFile"));
       toast.error(t("errors.selectImageFile"));
       input.value = "";
       return;
@@ -327,11 +421,13 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
     // Increased limit for mobile (compression will reduce final size)
     if (file.size > 15 * 1024 * 1024) {
+      setFailure(t("errors.imageTooLarge"));
       toast.error(t("errors.imageTooLarge"));
       input.value = "";
       return;
     }
 
+    setFailure(null);
     setIsProcessingFile(true);
 
     try {
@@ -361,7 +457,13 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       setStep("upload");
     } catch (error) {
       console.error("Error processing image:", error);
-      toast.error(t("errors.failedToReadImage") || "Failed to process image");
+      // The photo never made it past the browser — an unreadable HEIC, a
+      // codec the WebView won't decode. This is the failure that looked like
+      // "it loads for a second and does nothing", so it now stays on screen
+      // instead of vanishing with the spinner.
+      const message = t("errors.failedToReadImage") || "Failed to process image";
+      setFailure(message);
+      toast.error(message);
     } finally {
       // Reset the input that fired (allows selecting the same file again)
       input.value = "";
@@ -369,20 +471,39 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     }
   };
 
-  // Scenes and portraits count against SEPARATE caps — see avatarStudio.ts.
-  const { maxPerType, isLimitReached, remainingGenerations } = calculateAvatarQuota(
-    generations,
-    isVip
-  );
+  // Scenes and avatars have SEPARATE budgets — see avatarStudio.ts.
+  const quota = calculateAvatarQuota(generations, isVip);
+  const activeQuota = flowKind === "scene" ? quota.scene : quota.avatar;
 
   const generateAvatar = async () => {
     if (!uploadedImage || !user) return;
 
-    if (isLimitReached) {
-      toast.error(t("extra.avatarMaxGenReachedShort"));
+    // Over the included allowance, one more costs a gem. Refusing outright
+    // was the old behaviour and it read as a broken button; charging for it
+    // at least gives the tap somewhere to go.
+    const decision = decideGeneration(activeQuota, gems);
+    if (decision.action === "blocked") {
+      const message = t("avatar.needGemsForExtra", { cost: decision.gems });
+      setFailure(message);
+      toast.error(message);
       return;
     }
+    if (decision.action === "charge") {
+      const paid = await spendGems(decision.gems, {
+        productType: "avatar_generation",
+        productId: flowKind,
+        valueReceived: { kind: flowKind, generations: 1 },
+      });
+      if (!paid) {
+        const message = t("avatar.needGemsForExtra", { cost: decision.gems });
+        setFailure(message);
+        toast.error(message);
+        return;
+      }
+      toast.success(t("avatar.paidWithGems", { cost: decision.gems }));
+    }
 
+    setFailure(null);
     setIsLoading(true);
     setStep("generating");
     generationInFlight.current = true;
@@ -415,7 +536,34 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
       const imageUrl = urlData.publicUrl;
 
-      // Generate avatar via edge function
+      // An avatar request makes an AVATAR. Both tiles used to run the scene
+      // pipeline, so "create new avatar" produced a full-body scene and spent
+      // the scene budget — which is why one shelf filling up closed both.
+      if (flowKind === "avatar") {
+        const portraitUrl = await generatePublicPortrait(user.id, imageUrl, "portrait");
+        if (!portraitUrl) throw new Error(t("errors.generationFailed"));
+
+        // Recorded but NOT current yet — applying it is still the user's call
+        await supabase.from("avatar_generations").insert({
+          user_id: user.id,
+          avatar_url: portraitUrl,
+          source_image_url: imageUrl,
+          is_current: false,
+        });
+
+        await loadGenerations();
+        setGeneratedAvatar(portraitUrl);
+        setStep("preview");
+        confetti({
+          particleCount: 80,
+          spread: 60,
+          origin: { y: 0.6 },
+          colors: ["#A855F7", "#EC4899", "#FFD700"],
+        });
+        return;
+      }
+
+      // Generate the scene via edge function
       const { data, error } = await supabase.functions.invoke("generate-avatar", {
         body: { imageUrl, prompt: SCENE_AVATAR_PROMPT },
       });
@@ -460,7 +608,11 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
     } catch (error) {
       console.error("Error generating avatar:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to generate avatar");
+      const message = error instanceof Error ? error.message : t("errors.generationFailed");
+      // Shown on the step it dropped back to, not only as a toast — landing
+      // back on the photo with nothing said is the whole complaint.
+      setFailure(message);
+      toast.error(message);
       setStep("upload");
     } finally {
       setIsLoading(false);
@@ -476,6 +628,34 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     setIsLoading(true);
 
     try {
+      // A generated AVATAR is already the finished circle — it becomes the
+      // profile picture directly. Everything below this point is scene
+      // machinery (which scene backs the homepage, deriving its portrait),
+      // and running an avatar through it would file it as a scene.
+      if (isRequestedPortraitUrl(urlToSave)) {
+        await supabase
+          .from("avatar_generations")
+          .update({ is_current: false })
+          .eq("user_id", user.id)
+          .not("avatar_url", "like", "%/scene_%");
+        await supabase
+          .from("avatar_generations")
+          .update({ is_current: true })
+          .eq("user_id", user.id)
+          .eq("avatar_url", urlToSave);
+
+        // The old animation belongs to the previous face, so it retires with it
+        await updateProfile({
+          avatar_url: urlToSave,
+          animated_avatar_url: null,
+          has_face_photo: true,
+        });
+
+        toast.success(t("avatar.avatarSaved"));
+        finishAndClose();
+        return;
+      }
+
       // Generation already stored this scene, so applying it just flips the
       // current flag — no re-upload, and nothing to lose if this step never
       // happens.
@@ -1042,13 +1222,10 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
           {/* Generate New Section - MOVED UP */}
           <div className="pt-2">
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.createNew")}</p>
-          {isLimitReached ? (
-            <div className="flex items-center justify-center py-3 px-4 rounded-xl bg-muted/50 border border-border">
-              <p className="text-xs text-muted-foreground text-center">{t("avatar.maxGenReached", { max: maxPerType })}</p>
-            </div>
-          ) : (
+            {/* The tiles stay live once the allowance is gone — the next one
+                is simply priced. A dead tile was the whole complaint. */}
+            <QuotaNote quota={quota.avatar} isVip={isVip} gems={gems} onGetPro={goToPro} />
             <>
-              <p className="text-xs text-muted-foreground mb-1">{t("avatar.remainingGen", { remaining: remainingGenerations, max: maxPerType })}</p>
               <p className="text-xs text-muted-foreground mb-2">{t("avatar.facePhotoHint")}</p>
               <div className="flex gap-3">
                 <motion.button
@@ -1067,7 +1244,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
                 <button
                   type="button"
-                  onClick={openFilePicker}
+                  onClick={() => openFilePicker("avatar")}
                   disabled={isProcessingFile}
                   className={`relative flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isProcessingFile ? 'opacity-50' : ''}`}
                 >
@@ -1078,9 +1255,9 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                     </>
                   ) : (
                     <>
-                      <img 
-                        src={iconPhotoUpload} 
-                        alt="Upload" 
+                      <img
+                        src={iconPhotoUpload}
+                        alt="Upload"
                         className="w-10 h-10 object-contain"
                       />
                       <span className="text-xs text-muted-foreground">{t("avatar.uploadPhoto")}</span>
@@ -1089,7 +1266,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                 </button>
               </div>
             </>
-          )}
+            {failure && <FailureNote message={failure} />}
           </div>
 
           {/* The one file input in the modal, opened by ref from the tiles
@@ -1119,42 +1296,36 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
               left tapping the scene with nowhere to go. */}
           <div>
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myScenes")}</p>
+            {/* Scenes have their own budget, separate from avatars — a full
+                scene shelf used to close the avatar tiles too. */}
+            <QuotaNote quota={quota.scene} isVip={isVip} gems={gems} onGetPro={goToPro} />
             {/* Wrapping grid — every tile always fully visible, no cropped
                 scroll row. First the new-scene tile, then the default mascot
                 scene, then the generated ones. */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {isLimitReached ? (
-                // A blocked tile has to say so on sight. It used to be the
-                // same plus sign at half opacity, so a full shelf was
-                // indistinguishable from a tile that simply refused to open
-                // a file picker — the reason the block reads as "broken".
-                <button
-                  type="button"
-                  onClick={() => toast.error(t("extra.avatarMaxGenReachedShort"))}
-                  className="aspect-video rounded-xl border-2 border-dashed border-border bg-muted/40 flex flex-col items-center justify-center gap-1 px-2"
-                >
-                  <Lock className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-[11px] leading-tight text-center text-muted-foreground">
-                    {t("avatar.maxGenReached", { max: maxPerType })}
+              <button
+                type="button"
+                onClick={() => openFilePicker("scene")}
+                disabled={isLoading || isProcessingFile}
+                className={`relative aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isLoading || isProcessingFile ? "opacity-50" : ""}`}
+              >
+                {isProcessingFile ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                ) : (
+                  <Plus className="w-6 h-6 text-primary" />
+                )}
+                <span className="text-xs text-muted-foreground">
+                  {isProcessingFile ? t("common.processing") || "Processing..." : t("avatar.newScene")}
+                </span>
+                {/* Priced, not locked — the tile still opens the picker and
+                    the charge is spelled out before anything is spent. */}
+                {quota.scene.isLimitReached && (
+                  <span className="absolute top-1 right-1 inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                    <Gem className="w-2.5 h-2.5" />
+                    {EXTRA_GENERATION_GEM_COST}
                   </span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={openFilePicker}
-                  disabled={isLoading || isProcessingFile}
-                  className={`relative aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isLoading || isProcessingFile ? "opacity-50" : ""}`}
-                >
-                  {isProcessingFile ? (
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  ) : (
-                    <Plus className="w-6 h-6 text-primary" />
-                  )}
-                  <span className="text-xs text-muted-foreground">
-                    {isProcessingFile ? t("common.processing") || "Processing..." : t("avatar.newScene")}
-                  </span>
-                </button>
-              )}
+                )}
+              </button>
               <motion.button
                 onClick={selectDefaultScene}
                 disabled={isLoading}
@@ -1308,84 +1479,45 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
             <img src={uploadedImage} alt="Uploaded" className="w-full h-full object-cover" />
           </div>
           
-          {isVip ? (
-            // PRO USER: Show both options
-            <>
-              <p className="text-sm text-muted-foreground text-center">
-                {t("avatar.description")}
-              </p>
-              <div className="flex gap-2 w-full">
-                <ChunkyButton
-                  variant="secondary"
-                  size="md"
-                  onClick={saveOriginalPhoto}
-                  disabled={isLoading}
-                  className="flex-1"
-                >
-                  {t("extra.avatarOriginal")}
-                </ChunkyButton>
-                <ChunkyButton
-                  variant="primary"
-                  size="md"
-                  onClick={generateAvatar}
-                  disabled={isLoading}
-                  className="flex-1"
-                  icon={<img src={iconAiSparkle} alt="" className="w-5 h-5 object-contain" />}
-                >
-                  {t("avatar.generate")}
-                </ChunkyButton>
-              </div>
-            </>
-          ) : (
-            // NON-PRO USER: Show save option + PRO upsell
-            <>
-              <ChunkyButton
-                variant="secondary"
-                size="md"
-                onClick={saveOriginalPhoto}
-                disabled={isLoading}
-                className="w-full"
-              >
-                {t("extra.avatarSaveAsPhoto")}
-              </ChunkyButton>
-              
-              <div className="w-full h-px bg-border my-2" />
-              
-              {/* PRO Upsell Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full p-4 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
-                    <img src={iconAiSparkle} alt="" className="w-6 h-6 object-contain" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm">{t("extra.avatarAiGenTitle")}</p>
-                    <p className="text-xs text-muted-foreground">{t("extra.avatarProFeature")}</p>
-                  </div>
-                </div>
-                
-                <p className="text-xs text-muted-foreground mb-3">
-                  {t("extra.avatarAiDesc")}
-                </p>
-                
-                <ChunkyButton
-                  variant="primary"
-                  size="sm"
-                  onClick={() => {
-                    onClose();
-                    navigate("/profile?tab=PRO");
-                  }}
-                  className="w-full"
-                  icon={<Crown className="w-4 h-4" />}
-                >
-                  {t("extra.avatarBecomePro")}
-                </ChunkyButton>
-              </motion.div>
-            </>
-          )}
+          {/* Generating is no longer PRO-only. Everyone gets one of each
+              kind, PRO gets five, and past that it is priced in gems — so
+              this step offers the same two choices to everybody and the
+              button says what the next one costs. */}
+          <p className="text-sm text-muted-foreground text-center">
+            {t("avatar.description")}
+          </p>
+          <div className="flex gap-2 w-full">
+            <ChunkyButton
+              variant="secondary"
+              size="md"
+              onClick={saveOriginalPhoto}
+              disabled={isLoading}
+              className="flex-1"
+            >
+              {t("extra.avatarOriginal")}
+            </ChunkyButton>
+            <ChunkyButton
+              variant="primary"
+              size="md"
+              onClick={generateAvatar}
+              disabled={isLoading}
+              className="flex-1"
+              icon={
+                activeQuota.isLimitReached ? (
+                  <Gem className="w-5 h-5 shrink-0" />
+                ) : (
+                  <img src={iconAiSparkle} alt="" className="w-5 h-5 object-contain" />
+                )
+              }
+            >
+              {activeQuota.isLimitReached
+                ? t("avatar.generateForGems", { cost: EXTRA_GENERATION_GEM_COST })
+                : t("avatar.generate")}
+            </ChunkyButton>
+          </div>
+
+          <QuotaNote quota={activeQuota} isVip={isVip} gems={gems} onGetPro={goToPro} />
+          {failure && <FailureNote message={failure} />}
         </div>
       );
     }
