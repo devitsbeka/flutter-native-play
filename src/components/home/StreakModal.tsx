@@ -3,6 +3,7 @@ import { Flame, Calendar, Award } from "lucide-react";
 import { GameModal, GameModalStat } from "@/components/ui/game-modal";
 import { getStreakMilestones, getStreakBonus } from "@/utils/levelCalculation";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatWeekdayShort } from "@/utils/localDate";
 
 interface StreakModalProps {
   isOpen: boolean;
@@ -17,12 +18,14 @@ export function StreakModal({ isOpen, onClose, currentStreak, bestStreak }: Stre
   const currentBonus = getStreakBonus(currentStreak);
 
   const today = new Date();
-  const locale = language === 'ka' ? 'ka-GE' : language === 'en' ? 'en-US' : language;
+  // Georgian weekday names come from localDate, not Intl — the browser has
+  // no Georgian locale data and answers with English rather than an error,
+  // so this strip read Mon/Tue/Wed to Georgian players.
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(today);
     date.setDate(date.getDate() - (6 - i));
     return {
-      day: date.toLocaleDateString(locale, { weekday: "short" }),
+      day: formatWeekdayShort(date, language),
       isActive: i >= 7 - currentStreak,
     };
   });

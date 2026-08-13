@@ -44,6 +44,7 @@ import powerFreeze from "@/assets/powers/freeze.png";
 import powerReplace from "@/assets/powers/replace.png";
 import { TimeIcon } from "@/components/shared/TimeIcon";
 import { SunsetButton } from "@/components/shared/SunsetButton";
+import { formatDayWithWeekday } from "@/utils/localDate";
 
 interface MissionsModalProps {
   isOpen: boolean;
@@ -225,16 +226,15 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
   const dailyMissions = day.missions;
   const loading = day.loading;
 
-  // "Mon, 10 Aug" in the player's own language, plus whether that day is
-  // behind or ahead — the date alone does not say which.
+  // "ორშაბათი, 10 აგვისტო" in the player's own language, plus whether that
+  // day is behind or ahead — the date alone does not say which.
+  //
+  // Not toLocaleDateString: browsers ship no Georgian locale data and Intl
+  // answers a missing locale with an English date rather than an error, so
+  // this line read "Sunday, Aug 16" to every Georgian player. See localDate.
   const dayLabel = (() => {
     if (!date || day.kind === "today") return "";
-    const when = new Date(`${date}T00:00:00Z`).toLocaleDateString(language, {
-      weekday: "long",
-      day: "numeric",
-      month: "short",
-      timeZone: "UTC",
-    });
+    const when = formatDayWithWeekday(new Date(`${date}T00:00:00Z`), language, { utc: true });
     return `${when} · ${t(day.kind === "past" ? "missions.pastDay" : "missions.futureDay")}`;
   })();
   const { currentStreak } = useMissionStreak();
