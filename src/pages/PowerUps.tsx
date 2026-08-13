@@ -29,6 +29,22 @@ import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 // Served from public/ - not bundled, streams straight from the CDN
 const SHOP_SCENE_VIDEO = "/videos/shop-scene.mp4";
+const SHOP_SCENE_VIDEO_WEBM = "/videos/shop-scene.webm";
+
+// Dissolves the pinned scene into the page on every side it can meet it:
+// to the left, where the shop content sits, and along the top and bottom.
+// Both spellings ship — Safari below 15.4 only knows the -webkit- one, and
+// there an ignored mask would put back the hard edge this exists to remove.
+const SHOP_SCENE_FADE_LAYERS = [
+  "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.35) 22%, rgba(0,0,0,0.8) 42%, #000 62%)",
+  "linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%)",
+].join(", ");
+const SHOP_SCENE_FADE: React.CSSProperties = {
+  maskImage: SHOP_SCENE_FADE_LAYERS,
+  WebkitMaskImage: SHOP_SCENE_FADE_LAYERS,
+  maskComposite: "intersect",
+  WebkitMaskComposite: "source-in",
+};
 
 import { ShopStandardLayout } from "@/components/shop/ShopStandardLayout";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
@@ -313,19 +329,25 @@ export default function PowerUps() {
               object-cover keeps under a fifth of its width: anchor that
               slice at 76% across, where the shopkeeper stands, instead of
               the centre, which would show the empty shelves beside him. */}
-          <div className="hidden lg:block lg:w-[34%] lg:max-w-[460px] lg:min-w-[280px] sticky top-0 self-start h-[100dvh] md:h-screen overflow-hidden">
-            <video
-              src={SHOP_SCENE_VIDEO}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover object-[76%_center]"
-            />
-            {/* Soft fades so the pinned video melts into the page instead of a hard cut */}
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-[#f7ebfb] via-[#f7ebfb]/45 to-transparent" />
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#fdf8fe]/95 via-[#fbf2fd]/45 to-transparent" />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#f7ebfb]/70 to-transparent" />
+          <div className="hidden lg:block lg:w-[34%] lg:max-w-[460px] lg:min-w-[280px] sticky top-0 self-start h-[100dvh] md:h-screen">
+            {/* The column dissolves into the page rather than being painted
+                over it. It used to be covered by gradients of a fixed colour,
+                which could only ever guess at the wash behind it — they
+                started on #f7ebfb where the page was #f6dcfe, so the "fade"
+                opened with a hard step. Fading the column's own alpha instead
+                lets the real background show through, whatever it is doing. */}
+            <div className="absolute inset-0 overflow-hidden" style={SHOP_SCENE_FADE}>
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover object-[76%_center]"
+              >
+                <source src={SHOP_SCENE_VIDEO_WEBM} type="video/webm" />
+                <source src={SHOP_SCENE_VIDEO} type="video/mp4" />
+              </video>
+            </div>
           </div>
         </div>
       </div>
