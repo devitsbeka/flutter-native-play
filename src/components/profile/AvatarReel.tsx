@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Sparkles, X } from "lucide-react";
+import { Camera, Check, Plus, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -10,10 +10,18 @@ import { resolveAvatarUrl } from "@/utils/avatarUtils";
 interface ReelItem {
   id: string;
   path: string;
-  kind: "preset" | "generated" | "custom";
+  // "create" is not an avatar — it is the slot that opens the studio to make
+  // one. It rides in the same list so the carousel's snapping, centering and
+  // index maths treat it like any other slot.
+  kind: "preset" | "generated" | "custom" | "create";
   genId?: string; // avatar_generations row id, kind "generated" only
   animatedUrl?: string | null;
 }
+
+// Making a new avatar was reachable only from the chip under a focused
+// NON-preset avatar — so a player wearing a mascot, which is everyone who has
+// not made one yet, had no way in from this screen at all. It leads the reel.
+const CREATE_ITEM: ReelItem = { id: "create-new", path: "", kind: "create" };
 
 // Canonical /src/assets paths — stable across builds, resolveAvatarUrl()
 // maps them to the bundled URLs at runtime (same scheme as AvatarModal).
@@ -104,7 +112,7 @@ export function AvatarReel() {
       seen.add(key);
       own.push(item);
     }
-    return [...own, ...REEL_AVATARS];
+    return [CREATE_ITEM, ...own, ...REEL_AVATARS];
   }, [customUrl, generated]);
 
   const currentResolved = resolveAvatarUrl(profile?.avatar_url);
@@ -211,6 +219,12 @@ export function AvatarReel() {
   // choose/studio actions — applying happens only through the chip
   const handleItemClick = (idx: number) => {
     if (dragState.current.moved || busyId) return;
+    // The create slot is an action, not a choice — one tap opens the studio
+    // rather than focusing a thing that then needs a second tap.
+    if (items[idx]?.kind === "create") {
+      openAvatarModal();
+      return;
+    }
     setFocusedIdx(idx);
     if (idx !== centerIdx) centerItem(idx);
   };
@@ -273,8 +287,38 @@ export function AvatarReel() {
         {items.map((item, idx) => {
           const isCenter = idx === centerIdx;
           const isSelected = idx === selectedIdx;
-          const src = resolveItem(item);
           const isBusy = busyId === item.id;
+
+          if (item.kind === "create") {
+            return (
+              <button
+                key={item.id}
+                ref={(el) => (itemRefs.current[idx] = el)}
+                onClick={() => handleItemClick(idx)}
+                aria-label={t("avatar.createNew")}
+                className="relative shrink-0 h-full snap-center flex items-center justify-center"
+                style={{ width: SLOT_WIDTH, zIndex: isCenter ? 10 : 1 }}
+              >
+                <div
+                  className="relative rounded-full transition-transform duration-200 ease-out"
+                  style={{ transform: `scale(${isCenter ? CENTER_SCALE : 1})` }}
+                >
+                  <div
+                    className={`w-16 h-16 rounded-full flex items-center justify-center bg-white/80 border-2 border-dashed ${
+                      isCenter ? "border-primary" : "border-primary/40"
+                    }`}
+                  >
+                    <Camera className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary border-2 border-white flex items-center justify-center">
+                    <Plus className="w-3 h-3 text-primary-foreground" strokeWidth={3.5} />
+                  </div>
+                </div>
+              </button>
+            );
+          }
+
+          const src = resolveItem(item);
           return (
             <button
               key={item.id}
@@ -322,7 +366,7 @@ export function AvatarReel() {
         <>
           {/* Remove — top-right of the enlarged avatar; own avatars only,
               and never the one currently in use */}
-          {items[centerIdx].kind !== "preset" && centerIdx !== selectedIdx && (
+          {items[centerIdx].kind !== "preset" && items[centerIdx].kind !== "create" && centerIdx !== selectedIdx && (
             <button
               onClick={() => void removeItem(items[centerIdx])}
               aria-label="Remove avatar"
@@ -343,9 +387,10 @@ export function AvatarReel() {
               {t("extra.avatarChooseBtn")}
             </button>
           )}
-          {/* Studio (generate/animate) only makes sense for the player's own
-              avatars — the preset mascots can't be animated */}
-          {items[centerIdx].kind !== "preset" && (
+          {/* The studio makes a new avatar from a photo, which is worth
+              offering whatever is centred — it used to be hidden on the
+              presets, so a player wearing a mascot had no way to reach it. */}
+          {items[centerIdx].kind !== "create" && (
             <button
               onClick={() => openAvatarModal()}
               className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg"
