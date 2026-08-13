@@ -2,10 +2,15 @@
  * Service Worker for World Quizzes
  * Caches video files for instant return visits
  *
- * Version: 3 - WebM + responsive video support
+ * Version: 4 - new pop culture / social media / Georgian culture clips
+ *
+ * Videos are served cache-first under a versioned cache name, so replacing a
+ * clip at a path that is already cached is invisible to anyone who has
+ * visited before. Bump this whenever a video's contents change, not just
+ * when the caching logic does — the bump is what evicts the old copy.
  */
 
-const CACHE_NAME = 'worldquizzes-videos-v3';
+const CACHE_NAME = 'worldquizzes-videos-v4';
 
 // Match video requests - MP4 and WebM (including mobile/ subdirectory)
 const VIDEO_URL_PATTERN = /\/videos\/.*\.(mp4|webm)$/;
