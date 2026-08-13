@@ -74,33 +74,22 @@ export default function Notifications() {
     return notifications.filter(n => typeInTab(n.type, tab) && !n.read_at).length;
   };
 
-  // Mark only current tab's notifications as read
-  const markTabAsRead = useCallback(async (tab: 'games' | 'social' | 'trivia') => {
-    const unreadInTab = notifications.filter(n => typeInTab(n.type, tab) && !n.read_at);
-    if (unreadInTab.length === 0) return;
-
-    // Fast path: when the tab holds every unread notification, one query
-    // clears them all instead of a round-trip per row
-    const totalUnread = notifications.filter(n => !n.read_at).length;
-    if (unreadInTab.length === totalUnread) {
-      await markAllAsRead();
-      return;
-    }
-
-    for (const notification of unreadInTab) {
-      await markAsRead(notification.id);
-    }
-  }, [notifications, markAsRead, markAllAsRead, typeInTab]);
-
-  // Mark notifications as read when switching to a tab (with delay so user sees badge first)
+  // Opening this screen reads everything, not just the tab you land on.
+  //
+  // The bell's badge counts every unread notification, so clearing one tab
+  // at a time left it lit after the player had opened notifications and
+  // closed them again — they had, as far as they were concerned, looked.
+  // Half the notification types could not be cleared at all from here.
+  //
+  // The short delay is deliberate: the per-tab counts are worth seeing for a
+  // moment before they go.
   useEffect(() => {
-    if (!loading) {
-      const timer = setTimeout(() => {
-        markTabAsRead(activeTab);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab, loading, markTabAsRead]);
+    if (loading || unreadCount === 0) return;
+    const timer = setTimeout(() => {
+      void markAllAsRead();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [loading, unreadCount, markAllAsRead]);
 
   const displayedNotifications = filteredNotifications.slice(0, displayLimit);
   const hasMore = filteredNotifications.length > displayLimit;
