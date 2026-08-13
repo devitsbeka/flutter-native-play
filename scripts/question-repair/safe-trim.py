@@ -16,7 +16,7 @@ remove. If a rule cannot fire on the whole set, it does not fire at all.
 Output goes to trimmed.jsonl in the same shape as rewrites.jsonl. Whatever is
 left over is printed as the queue that still needs a person.
 """
-import json, re, sys, collections
+import json, re, sys, collections, unicodedata
 
 Q_MAX, A_MAX, SPREAD = 70, 20, 8
 
@@ -135,7 +135,25 @@ def trim_question(q):
     return out
 
 # ── run ───────────────────────────────────────────────────────────────────
-def norm(s): return re.sub(r'\s+', ' ', re.sub(r'[^\w\s]', '', s.lower())).strip()
+def same_option(s):
+    """Compare option text for real duplication.
+
+    Stripping all punctuation collapses whole families of legitimate answers
+    into the same string: $/€/£/¥, ∃/∀/∧/∨, ☉/☾/♂/⊕, and every formula
+    ("a² + b² = c²" and "a + b = c" both become "a b c"). Only leading and
+    trailing punctuation is noise — "Grumpy Cat." and "Grumpy Cat" are the same
+    answer. Everything inside the string carries meaning.
+    """
+    s = unicodedata.normalize('NFKC', str(s)).lower()
+    s = re.sub(r'\s+', ' ', s).strip()
+    return s.strip('.,;:!?\'"“”‘’ ')
+
+
+def norm(s):
+    """Flatten text for word overlap and substring tests, where punctuation is
+    genuinely noise. Not for comparing options — see same_option."""
+    s = unicodedata.normalize('NFKC', str(s)).lower()
+    return re.sub(r'\s+', ' ', re.sub(r'[^\w\s]', ' ', s)).strip()
 
 resolved, residue = [], []
 for qid in sorted(wl['rewrite']):
@@ -162,7 +180,7 @@ for qid in sorted(wl['rewrite']):
     leaks = lens[0] == max(lens) and lens[0] - sorted(lens)[-2] > 6
     ok = (len(q) <= Q_MAX and q.strip().endswith('?')
           and max(lens) <= A_MAX and not leaks
-          and len({norm(x) for x in a}) == 4
+          and len({same_option(x) for x in a}) == 4
           and all(x.strip() for x in a)
           and not (norm(a[0]) in norm(q) and len(norm(a[0])) > 4
                    and norm(a[0]) not in {'before','after','yes','no','same'}))

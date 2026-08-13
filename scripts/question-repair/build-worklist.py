@@ -21,9 +21,25 @@ def opts(r):
     if isinstance(ia, str): ia = json.loads(ia)
     return [str(r['correct_answer'])] + [str(x) for x in ia]
 
-def norm(s):
+def same_option(s):
+    """Compare option text for real duplication.
+
+    Stripping all punctuation collapses whole families of legitimate answers
+    into the same string: $/€/£/¥, ∃/∀/∧/∨, ☉/☾/♂/⊕, and every formula
+    ("a² + b² = c²" and "a + b = c" both become "a b c"). Only leading and
+    trailing punctuation is noise — "Grumpy Cat." and "Grumpy Cat" are the same
+    answer. Everything inside the string carries meaning.
+    """
     s = unicodedata.normalize('NFKC', str(s)).lower()
-    return re.sub(r'\s+', ' ', re.sub(r'[^\w\s]', '', s)).strip()
+    s = re.sub(r'\s+', ' ', s).strip()
+    return s.strip('.,;:!?\'"“”‘’ ')
+
+
+def norm(s):
+    """Flatten text for word overlap and substring tests, where punctuation is
+    genuinely noise. Not for comparing options — see same_option."""
+    s = unicodedata.normalize('NFKC', str(s)).lower()
+    return re.sub(r'\s+', ' ', re.sub(r'[^\w\s]', ' ', s)).strip()
 
 STOP = set('what which who whom whose when where why how the a an of in on for to is are was were did does do by with from that this these those it its as at or and actually really typically normally one at year'.split())
 def words(s): return frozenset(w for w in norm(s).split() if len(w) > 2 and w not in STOP)
@@ -63,6 +79,22 @@ def protected(a, b): return frozenset((a[:8], b[:8])) in PROTECT
 RARE_DF = 6
 DF = collections.Counter()
 
+# ...except when the rare word only narrows or restates the same question rather
+# than naming a different subject. "How many PERMANENT teeth does an adult human
+# have?" and "How many teeth does an adult human have?" are one question; so are
+# the pairs separated by "observable", "normal", "rounded", or a year. What must
+# still block is a rare word that names a different thing — giraffe, Michelin,
+# Gosling, C++ — so this list is curated by reading the pairs, not inferred.
+QUALIFIER_WORDS = {
+    'permanent', 'observable', 'weight', 'physicist', 'rounded', 'normal',
+    'naked', 'intact', 'starting', 'lineup', 'astronaut', 'wisdom', 'incl',
+    'approximately', 'exactly', 'roughly', 'officially', 'currently', 'known',
+    'confirmed', 'total', 'average', 'adult', 'modern', 'famous', 'iconic',
+    'entire', 'whole', 'single', 'overall', 'precise', 'scientific',
+}
+def is_qualifier(w):
+    return w in QUALIFIER_WORDS or re.fullmatch(r'(1[5-9]|20)\d\d', w) is not None
+
 # ── keeper overrides, decided by reading the pair ─────────────────────────
 # Left = the id to keep, regardless of what the structural score prefers.
 FORCE_KEEP = {
@@ -86,7 +118,7 @@ for _, t in sig: DF.update(t)
 
 def distinct_subject(t1, t2):
     """True when the words that differ are rare enough to be the subject."""
-    return any(DF[w] <= RARE_DF for w in (t1 ^ t2))
+    return any(DF[w] <= RARE_DF and not is_qualifier(w) for w in (t1 ^ t2))
 
 parent = {}
 def find(x):
@@ -177,7 +209,7 @@ for r in prod:
     if r['id'] in retire: continue
     o = opts(r); why = []
     if len(o) != 4: why.append(f'only_{len(o)}_options')
-    if len({norm(x) for x in o}) != len(o): why.append('duplicate_options')
+    if len({same_option(x) for x in o}) != len(o): why.append('duplicate_options')
     if NON_LATIN.search(' '.join(o) + r['question_text']): why.append('foreign_script')
     if len(r['question_text']) > Q_BROKEN: why.append(f"question_{len(r['question_text'])}ch")
     if max(len(a) for a in o) > A_BROKEN: why.append(f'answer_{max(len(a) for a in o)}ch')
