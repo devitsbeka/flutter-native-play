@@ -10,9 +10,13 @@
 // PowerUps.tsx merges these into its BUNDLE_CONTENTS map, so the card and
 // the grant can't drift. `powers` means N of EACH of the 4 power-ups.
 // Value math (rewardConfig): 1 power ≈ 1 gem, 500 coins = 1 gem,
-// VIP day = 30 gems, VIP week = 100 gems.
+// VIP day = 30 gems, VIP 2 days = 55 gems, VIP week = 100 gems.
+//
+// Every deal carries PRO time. The banner draws three fixed tiles — PRO,
+// powers, coins — so a deal without it would leave the first tile claiming
+// something the purchase does not grant.
 
-export type DealVip = "day" | "week";
+export type DealVip = "day" | "2days" | "week";
 
 export interface ShopDeal {
   id: string;
@@ -74,6 +78,31 @@ export const HOURLY_DEALS: ShopDeal[] = [
     contents: { powers: 1, coins: 2000, vip: "day" },
     wasPrice: 38, // 30 + 4 + 4
     price: 18,
+  },
+  // Two-day PRO: the reason the rotation is worth watching. A day is gone
+  // by tomorrow; two carries a weekend.
+  {
+    id: "deal_hourly_duo",
+    nameKey: "shop.dealDuo",
+    contents: { powers: 1, coins: 500, vip: "2days" },
+    wasPrice: 60, // 55 (VIP 2 days) + 4 + 1
+    price: 24,
+  },
+  // Powers-heavy, for someone who is losing rounds rather than short of time.
+  {
+    id: "deal_hourly_arsenal",
+    nameKey: "shop.dealArsenal",
+    contents: { powers: 5, coins: 500, vip: "day" },
+    wasPrice: 51, // 30 + 20 + 1
+    price: 23,
+  },
+  // Coins-heavy, the other way round.
+  {
+    id: "deal_hourly_vault",
+    nameKey: "shop.dealVault",
+    contents: { powers: 1, coins: 3000, vip: "day" },
+    wasPrice: 40, // 30 + 4 + 6
+    price: 19,
   },
 ];
 

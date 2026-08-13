@@ -764,6 +764,10 @@ export const en: KaTranslations = {
   // Shop
   // ==========================================
   shop: {
+    vipTwoDays: "2 days PRO",
+    dealDuo: "Two-day pack",
+    dealArsenal: "Arsenal pack",
+    dealVault: "Vault pack",
     title: "Shop",
     starterPack: "Boost Powers",
     forBeginners: "For Beginners",

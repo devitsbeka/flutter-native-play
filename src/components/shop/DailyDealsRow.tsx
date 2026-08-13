@@ -110,7 +110,14 @@ export function DealBannerCard({
       iconSize: 64.785,
       iconLeft: 85.24,
       iconTop: 152.24,
-      label: deal.contents.vip === "week" ? t("shop.vipWeek") : t("shop.vipDay"),
+      // Three durations now, so the old two-way check would have called two
+      // days "one day" — the label has to name what is actually granted.
+      label:
+        deal.contents.vip === "week"
+          ? t("shop.vipWeek")
+          : deal.contents.vip === "2days"
+            ? t("shop.vipTwoDays")
+            : t("shop.vipDay"),
       labelTop: 231,
       labelWidth: 124,
       labelCenter: 118,

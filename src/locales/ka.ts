@@ -758,6 +758,10 @@ export const ka = {
   // Shop / მაღაზია
   // ==========================================
   shop: {
+    vipTwoDays: "2 დღე PRO",
+    dealDuo: "ორდღიანი პაკეტი",
+    dealArsenal: "არსენალის პაკეტი",
+    dealVault: "საგანძურის პაკეტი",
     title: "მაღაზია",
     starterPack: "მოიმატე ძალები",
     forBeginners: "დამწყებთათვის",

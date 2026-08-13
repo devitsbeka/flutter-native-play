@@ -15,10 +15,27 @@ export interface VipSubscription {
   friend_invites_remaining?: number;
 }
 
-export type VipDuration = "day" | "week" | "month" | "10days";
+export type VipDuration = "day" | "2days" | "week" | "month" | "10days";
+
+/**
+ * How many days each duration grants. 0 means a calendar month.
+ *
+ * A Record over the union rather than a chain of ternaries: the chain ended
+ * in `: 0`, and 0 meant "add a month", so any duration nobody had thought
+ * about granted a MONTH of PRO for the price of a flash deal. Adding a
+ * duration to the union without a day count is now a compile error.
+ */
+const VIP_DURATION_DAYS: Record<VipDuration, number> = {
+  day: 1,
+  "2days": 2,
+  week: 7,
+  "10days": 10,
+  month: 0,
+};
 
 export const VIP_PRICES: Record<VipDuration, number> = {
   day: 3,
+  "2days": 0, // only ever granted by a deal, never sold on its own
   week: 12,
   month: 35,
   "10days": 0,
@@ -206,7 +223,7 @@ export function VipProvider({ children }: { children: ReactNode }) {
 
     try {
       const now = new Date();
-      const durationDays = duration === "day" ? 1 : duration === "week" ? 7 : duration === "10days" ? 10 : 0;
+      const durationDays = VIP_DURATION_DAYS[duration];
       const expiresAt = durationDays > 0
         ? addDays(now, durationDays)
         : addMonths(now, 1);

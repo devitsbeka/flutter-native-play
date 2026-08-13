@@ -94,6 +94,34 @@ describe("shop deals", () => {
     expect(dearestHourly).toBeLessThan(cheapestDaily);
   });
 
+  it("shows every hourly deal at some point in a day", () => {
+    // The rotation is hour-of-epoch % length, so a day covers the whole set
+    // only while there are at most 24 of them. A deal nobody ever sees is
+    // just dead config.
+    const seen = new Set<string>();
+    const startHour = Math.floor(Date.UTC(2026, 7, 13) / 3_600_000);
+    for (let h = 0; h < 24; h++) {
+      seen.add(HOURLY_DEALS[(startHour + h) % HOURLY_DEALS.length].id);
+    }
+    expect(seen.size).toBe(HOURLY_DEALS.length);
+  });
+
+  it("gives the hourly rotation enough variety to be worth watching", () => {
+    // One deal repeating every hour is a static banner with a countdown on
+    // it. Several, changing through the day, is the point.
+    expect(HOURLY_DEALS.length).toBeGreaterThanOrEqual(4);
+    const shapes = new Set(
+      HOURLY_DEALS.map((d) => `${d.contents.vip}:${d.contents.powers}:${d.contents.coins}`)
+    );
+    expect(shapes.size, "two hourly deals grant exactly the same thing").toBe(
+      HOURLY_DEALS.length
+    );
+  });
+
+  it("offers PRO for longer than a day somewhere in the rotation", () => {
+    expect(ALL_SHOP_DEALS.some((d) => d.contents.vip === "2days")).toBe(true);
+  });
+
   it("only offers PRO durations the shop can actually activate", () => {
     for (const deal of ALL_SHOP_DEALS) {
       if (!deal.contents.vip) continue;
