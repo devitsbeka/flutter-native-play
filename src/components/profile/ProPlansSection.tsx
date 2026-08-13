@@ -167,6 +167,7 @@ export function ProPlansSection({
           land on than a page that pretends the offer no longer exists. The
           status and upgrade cards below it stay as they were. */}
       <ProBannerReel
+        slides="pro"
         purchasedItems={EMPTY_PURCHASES}
         isPurchasing={null}
         onItemClick={() => navigate("/power-ups")}

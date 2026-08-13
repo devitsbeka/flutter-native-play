@@ -169,6 +169,13 @@ interface ProBannerCardProps {
   dimmed?: boolean;
   /** Largest the design is allowed to be drawn. */
   maxScale?: number;
+  /**
+   * Card height in design pixels, when the body needs more room than the
+   * frame's 396 — a phone stacks the benefit tiles into a list, and the list
+   * is taller than the row it replaces. The button and the stage follow it,
+   * so the button keeps straddling the edge and its shadow keeps its room.
+   */
+  cardHeight?: number;
 }
 
 export function ProBannerCard({
@@ -181,8 +188,13 @@ export function ProBannerCard({
   onClick,
   dimmed,
   maxScale = 1.25,
+  cardHeight = CARD_H,
 }: ProBannerCardProps) {
   const { ref, scale, offsetX } = useBannerScale(maxScale);
+  // The button hangs half below the card wherever the card ends, and the
+  // stage keeps the same room beneath it for the lip and glow.
+  const buttonTop = cardHeight - (CARD_H - BUTTON_TOP);
+  const stageHeight = cardHeight + (BANNER_DESIGN_H - CARD_H);
 
   return (
     <div
@@ -190,14 +202,14 @@ export function ProBannerCard({
       className="relative w-full"
       // The stage is scaled, so the wrapper has to reserve the scaled height
       // itself — a transform does not affect layout.
-      style={{ height: BANNER_DESIGN_H * scale, opacity: dimmed ? 0.7 : 1 }}
+      style={{ height: stageHeight * scale, opacity: dimmed ? 0.7 : 1 }}
     >
       <div
         className="absolute top-0"
         style={{
           left: offsetX,
           width: BANNER_DESIGN_W,
-          height: BANNER_DESIGN_H,
+          height: stageHeight,
           transform: `scale(${scale})`,
           transformOrigin: "top left",
         }}
@@ -209,7 +221,7 @@ export function ProBannerCard({
             onClick ? "cursor-pointer" : ""
           }`}
           style={{
-            height: CARD_H,
+            height: cardHeight,
             backgroundImage: skin.bg,
             boxShadow: "0 2px 6px rgba(64,38,102,0.06), 0 10px 28px rgba(64,38,102,0.10)",
           }}
@@ -237,7 +249,7 @@ export function ProBannerCard({
           }}
           disabled={actionDisabled}
           className="absolute left-[68px] z-20 flex h-[77px] w-[424px] items-center justify-center gap-[3px] rounded-[24px] border-[3px] border-solid border-[#9fa8a3] p-[3px] shadow-[0px_6px_0px_0px_#7e2378,0px_10px_24px_0px_rgba(16,185,129,0.5)] disabled:cursor-not-allowed"
-          style={{ top: BUTTON_TOP }}
+          style={{ top: buttonTop }}
         >
           <span
             aria-hidden
@@ -331,6 +343,78 @@ export function BannerTile({
   );
 }
 
+/* ------------------------------------------------------------------ *
+ * Stacked benefits (narrow stages)
+ * ------------------------------------------------------------------ */
+
+// Three tiles side by side across 575 design pixels leaves each one 150 wide
+// with a 16px caption — which, on a phone, is a 575px canvas drawn at about
+// two thirds size, so the caption lands near 11px and the benefits become
+// fine print. Stacked, a row is the full width of the card and its label can
+// be half as big again, reading at a normal size once scaled.
+const ROW_LEFT = 52;
+const ROW_W = 471;
+const ROW_H = 92;
+const ROW_GAP = 12;
+const ROWS_TOP = 150;
+
+// What the frame leaves between the last thing in the card and the card's
+// own bottom edge: 396 tall with tiles ending at 294. Keeping it means the
+// button clears the list by the same margin it clears the tiles by — at 34
+// the button landed on top of the third row.
+const CARD_FOOT = CARD_H - 294;
+
+/** Design height a stacked tier card needs for `count` benefits. */
+function stackedCardHeight(count: number): number {
+  return ROWS_TOP + count * ROW_H + (count - 1) * ROW_GAP + CARD_FOOT;
+}
+
+function BannerRow({
+  skin,
+  index,
+  icon,
+  iconSize,
+  label,
+}: {
+  skin: BannerSkin;
+  index: number;
+  icon: string;
+  iconSize: number;
+  label: ReactNode;
+}) {
+  const top = ROWS_TOP + index * (ROW_H + ROW_GAP);
+  // The artwork keeps the size the frame gave it, centred in the row's own
+  // gutter rather than scaled to fit — these icons are drawn at different
+  // sizes on purpose and matching them flattens the set.
+  const art = Math.min(iconSize, ROW_H - 14);
+
+  return (
+    <div
+      className="absolute flex items-center gap-[18px] rounded-[24px] border border-solid px-[22px]"
+      style={{
+        left: ROW_LEFT,
+        top,
+        width: ROW_W,
+        height: ROW_H,
+        backgroundImage: skin.tileFill,
+        borderColor: skin.tileEdge,
+        boxShadow: GLASS_SHEEN,
+      }}
+    >
+      <img
+        src={icon}
+        alt=""
+        draggable={false}
+        className="shrink-0 object-contain"
+        style={{ width: art, height: art }}
+      />
+      <p className="text-[26px] font-semibold leading-[1.2]" style={{ color: skin.ink }}>
+        {label}
+      </p>
+    </div>
+  );
+}
+
 /** One rounded pill in the deal card's top strip. */
 // 15% above the frame's sizes: at the width a phone actually gives the card,
 // the deal label and its countdown read as fine print beside the title.
@@ -408,6 +492,7 @@ export function ProTierBanner({
   actionDisabled,
   onClick,
   dimmed,
+  stacked,
 }: {
   skin: BannerSkin;
   header: ProTierHeader;
@@ -420,6 +505,8 @@ export function ProTierBanner({
   actionDisabled?: boolean;
   onClick?: () => void;
   dimmed?: boolean;
+  /** Benefits as a list rather than a row — see the note on BannerRow. */
+  stacked?: boolean;
 }) {
   return (
     <ProBannerCard
@@ -429,6 +516,7 @@ export function ProTierBanner({
       actionLabel={actionLabel}
       actionDisabled={actionDisabled}
       onAction={onAction}
+      cardHeight={stacked ? stackedCardHeight(tiles.length) : undefined}
     >
       {header.art.map((art, i) => (
         <img
@@ -463,9 +551,20 @@ export function ProTierBanner({
           <span className="text-[16px]">{month}</span>
         </p>
       </div>
-      {tiles.map((tile) => (
-        <BannerTile key={tile.labelCenter} skin={skin} left={tileLeft(tile)} top={164} height={130} {...tile} />
-      ))}
+      {stacked
+        ? tiles.map((tile, i) => (
+            <BannerRow
+              key={tile.labelCenter}
+              skin={skin}
+              index={i}
+              icon={tile.icon}
+              iconSize={tile.iconSize}
+              label={tile.label}
+            />
+          ))
+        : tiles.map((tile) => (
+            <BannerTile key={tile.labelCenter} skin={skin} left={tileLeft(tile)} top={164} height={130} {...tile} />
+          ))}
     </ProBannerCard>
   );
 }

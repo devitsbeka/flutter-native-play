@@ -123,23 +123,26 @@ export default function Profile() {
 
           {/* Scrollable Content */}
           <div className="flex-1 relative">
-            {/* Header spacer */}
-            <div className="pt-12 pb-20 px-6" />
-
             {/* Avatar card — the carousel spans the full page width (outside
                 the constrained column below) so wide screens show more slots;
                 it starts centered on the selected avatar and dragging only
-                browses, selection stays tap-only */}
+                browses, selection stays tap-only.
+
+                A 128px spacer pulled back 64px by a negative margin used to
+                sit above this, which is 64px of nothing between a sticky
+                header and the avatars — and the reel already carries its own
+                160px band, so the enlarged centre avatar was never short of
+                room. The gap is now the gap. */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="-mt-16 relative w-full mb-6"
+              className="pt-4 relative w-full mb-4"
             >
               <div className="flex flex-col items-center">
                 <AvatarReel />
                 {/* Nickname in the main page's hero font, with inline
                     edit/save quick access on the right */}
-                <div className="flex items-center gap-2 mt-4">
+                <div className="flex items-center gap-2 mt-2">
                   {editingName ? (
                     <input
                       value={nameDraft}
@@ -187,7 +190,7 @@ export default function Profile() {
 
             <div className="px-6 relative max-w-[700px] md:max-w-[600px] mx-auto w-full pb-8">
             {/* Tabs - segmented switcher */}
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-4">
               <div className="inline-flex items-center p-1 rounded-full bg-white/70 backdrop-blur-sm border border-border/40 shadow-sm">
                 {[
                   { id: "PRO", label: getProLabel() },
