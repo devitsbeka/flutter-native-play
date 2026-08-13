@@ -32,6 +32,8 @@ interface LongQuestion {
   category_id: string;
   length: number;
   shorten_status: string | null;
+  /** The shortened rewrite waiting to go live, if the shortener produced one. */
+  pending_question_text: string | null;
 }
 
 interface IconAssignmentProgress {
@@ -248,6 +250,72 @@ export default function QuestionTools() {
   };
 
   // Long Questions Functions
+  // Publishing a pending rewrite. The original is kept in
+  // original_question_text — the shortener already stores it — so a bad
+  // rewrite can be put back rather than being a one-way edit to live content.
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [publishingAll, setPublishingAll] = useState(false);
+
+  const publishPending = async (q: LongQuestion) => {
+    if (!q.pending_question_text) return;
+    setPublishingId(q.id);
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({
+          question_text: q.pending_question_text,
+          original_question_text: q.question_text,
+          pending_question_text: null,
+          shorten_status: 'shortened',
+        })
+        .eq('id', q.id);
+      if (error) throw error;
+
+      setLongQuestions((prev) => prev.filter((row) => row.id !== q.id));
+      toast({ title: 'გამოქვეყნდა', description: q.pending_question_text });
+    } catch (error) {
+      console.error('Publish failed:', error);
+      toast({ title: 'ვერ გამოქვეყნდა', variant: 'destructive' });
+    } finally {
+      setPublishingId(null);
+    }
+  };
+
+  const publishAllPending = async () => {
+    const ready = longQuestions.filter((q) => q.pending_question_text);
+    if (ready.length === 0) return;
+    setPublishingAll(true);
+    let done = 0;
+    try {
+      // Sequential rather than parallel: these are writes to live content and
+      // a partial failure should stop where it stopped, not scatter.
+      for (const q of ready) {
+        const { error } = await supabase
+          .from('questions')
+          .update({
+            question_text: q.pending_question_text,
+            original_question_text: q.question_text,
+            pending_question_text: null,
+            shorten_status: 'shortened',
+          })
+          .eq('id', q.id);
+        if (error) throw error;
+        done += 1;
+      }
+      setLongQuestions((prev) => prev.filter((q) => !q.pending_question_text));
+      toast({ title: 'გამოქვეყნდა', description: `${done} კითხვა` });
+    } catch (error) {
+      console.error('Bulk publish failed:', error);
+      toast({
+        title: 'შეჩერდა',
+        description: `გამოქვეყნდა ${done}/${ready.length}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setPublishingAll(false);
+    }
+  };
+
   const scanLongQuestions = async () => {
     setScanningLong(true);
     setLongQuestions([]);
@@ -255,7 +323,11 @@ export default function QuestionTools() {
     try {
       let query = supabase
         .from('questions')
-        .select('id, question_text, category_id, shorten_status')
+        // pending_question_text is the whole point of the review queue: the
+        // shortener writes its rewrite there and marks the row
+        // pending_review. Nothing ever read it back, so every one of those
+        // rewrites sat unused while the long original stayed in production.
+        .select('id, question_text, category_id, shorten_status, pending_question_text')
         .eq('is_active', true);
       
       if (longQCategoryId !== 'all') {
@@ -567,12 +639,30 @@ export default function QuestionTools() {
                 {/* Results */}
                 {longQuestions.length > 0 && (
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <Label>შედეგები ({longQuestions.length})</Label>
-                      <Badge variant="destructive">
-                        <AlertTriangle className="h-3 w-3 mr-1" />
-                        {longQuestions.length} გრძელი კითხვა
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        {/* How many of these already have a rewrite waiting.
+                            Publishing them costs nothing and needs no AI — the
+                            work was done and then stranded. */}
+                        {longQuestions.some((q) => q.pending_question_text) && (
+                          <Button
+                            size="sm"
+                            className="h-7"
+                            disabled={publishingAll || !!publishingId}
+                            onClick={publishAllPending}
+                          >
+                            {publishingAll ? (
+                              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                            ) : null}
+                            {`გამოქვეყნდეს ყველა (${longQuestions.filter((q) => q.pending_question_text).length})`}
+                          </Button>
+                        )}
+                        <Badge variant="destructive">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          {longQuestions.length} გრძელი კითხვა
+                        </Badge>
+                      </div>
                     </div>
                     <div className="space-y-2 max-h-96 overflow-y-auto">
                       {longQuestions.map((q) => (
@@ -603,6 +693,32 @@ export default function QuestionTools() {
                             </Badge>
                           </div>
                           <p className="text-sm">{q.question_text}</p>
+
+                          {/* The rewrite the shortener already produced. It
+                              was written to the database and never shown
+                              anywhere, so the long original stayed live. */}
+                          {q.pending_question_text && (
+                            <div className="mt-2 rounded-md border border-emerald-300 bg-emerald-50 p-2 dark:bg-emerald-950/20">
+                              <div className="mb-1 flex items-center justify-between gap-2">
+                                <Badge className="bg-emerald-600 text-xs">
+                                  {q.pending_question_text.length} სიმბოლო
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  className="h-7"
+                                  disabled={publishingId === q.id || publishingAll}
+                                  onClick={() => publishPending(q)}
+                                >
+                                  {publishingId === q.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    'გამოქვეყნება'
+                                  )}
+                                </Button>
+                              </div>
+                              <p className="text-sm">{q.pending_question_text}</p>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
