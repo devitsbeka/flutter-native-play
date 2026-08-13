@@ -1147,8 +1147,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                 is simply priced. A dead tile was the whole complaint. */}
             <QuotaNote quota={quota.avatar} isVip={isVip} gems={gems} onGetPro={goToPro} />
             <>
-              <p className="text-xs text-muted-foreground mb-2">{t("avatar.facePhotoHint")}</p>
-              <div className="flex gap-3">
+              <div className="flex gap-3 mt-2">
                 <motion.button
                   onClick={startCamera}
                   className="flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all"
