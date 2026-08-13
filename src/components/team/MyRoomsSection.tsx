@@ -541,8 +541,8 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
                   ) : showLiveBadge ? (
                     <LiveBadge />
                   ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
+                      <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-white animate-pulse" />
                       {createdAgo || t("extra.roomStatusNew")}
                     </span>
                   ) : isCompleted ? (
@@ -557,8 +557,8 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
                   ) : (
                     // "Waiting" reads the same on every card and says nothing
                     // about which room is which; its age does.
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                      <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-amber-400 animate-pulse" />
                       {createdAgo || t("extra.roomStatusWaiting")}
                     </span>
                   )}
@@ -821,8 +821,8 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
               ) : showLiveBadge ? (
                 <LiveBadge />
               ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
+                  <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-white animate-pulse" />
                   {createdAgo || t("extra.roomStatusNew")}
                 </span>
               ) : isCompleted ? (
@@ -837,8 +837,8 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
               ) : (
                 // "Waiting" reads the same on every card and says nothing
                 // about which room is which; its age does.
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                  <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-amber-400 animate-pulse" />
                   {createdAgo || t("extra.roomStatusWaiting")}
                 </span>
               )}

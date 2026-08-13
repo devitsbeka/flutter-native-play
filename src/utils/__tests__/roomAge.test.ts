@@ -15,14 +15,20 @@ describe("roomAgeLabel", () => {
   });
 
   it("counts minutes, then hours", () => {
-    expect(roomAgeLabel(ago(20 * MIN), NOW)).toEqual({ key: "extra.timeMinShort", count: 20 });
-    expect(roomAgeLabel(ago(3 * HOUR), NOW)).toEqual({ key: "extra.timeHourShort", count: 3 });
+    expect(roomAgeLabel(ago(20 * MIN), NOW)).toEqual({ key: "extra.timeMinutesAgo", count: 20 });
+    expect(roomAgeLabel(ago(3 * HOUR), NOW)).toEqual({ key: "extra.timeHoursAgo", count: 3 });
   });
 
   it("says yesterday for one day, then counts days and weeks", () => {
     expect(roomAgeLabel(ago(DAY + HOUR), NOW)).toEqual({ key: "extra.timeYesterday" });
-    expect(roomAgeLabel(ago(4 * DAY), NOW)).toEqual({ key: "extra.timeDayShort", count: 4 });
-    expect(roomAgeLabel(ago(20 * DAY), NOW)).toEqual({ key: "extra.timeWeekShort", count: 2 });
+    expect(roomAgeLabel(ago(4 * DAY), NOW)).toEqual({ key: "extra.timeDaysAgo", count: 4 });
+    expect(roomAgeLabel(ago(20 * DAY), NOW)).toEqual({ key: "extra.timeWeeksAgo", count: 2 });
+  });
+
+  it("turns over to months rather than counting weeks forever", () => {
+    // "9 კვირის წინ" is a number to divide, not a fact.
+    expect(roomAgeLabel(ago(29 * DAY), NOW)).toEqual({ key: "extra.timeWeeksAgo", count: 4 });
+    expect(roomAgeLabel(ago(70 * DAY), NOW)).toEqual({ key: "extra.timeMonthsAgo", count: 2 });
   });
 
   it("never reports a negative age from a skewed clock", () => {
@@ -36,7 +42,8 @@ describe("roomAgeLabel", () => {
   });
 
   // The badge renders t(key) with {count} substituted, so the keys have to
-  // exist and carry the placeholder — otherwise the corner reads "{count}წთ".
+  // exist and carry the placeholder — otherwise the corner reads
+  // "{count} წუთის წინ".
   it("resolves to real text in both languages", () => {
     const render = (lang: "ka" | "en", createdAt: string) => {
       const label = roomAgeLabel(createdAt, NOW)!;
@@ -45,8 +52,9 @@ describe("roomAgeLabel", () => {
       return label.count === undefined ? text : text.replace("{count}", String(label.count));
     };
 
-    expect(render("ka", ago(20 * MIN))).toBe("20წთ");
-    expect(render("en", ago(20 * MIN))).toBe("20m");
+    expect(render("ka", ago(20 * MIN))).toBe("20 წუთის წინ");
+    expect(render("ka", ago(3 * HOUR))).toBe("3 საათის წინ");
+    expect(render("ka", ago(20 * DAY))).toBe("2 კვირის წინ");
     expect(render("ka", ago(DAY + HOUR))).toBe("გუშინ");
     expect(render("en", ago(30_000))).toBe("just now");
   });
