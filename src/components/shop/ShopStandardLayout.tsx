@@ -48,9 +48,76 @@ export function ShopStandardLayout({
 
     let frame = 0;
     let tries = 0;
-    let nudge: ReturnType<typeof setTimeout>;
-    let corrections: ReturnType<typeof setTimeout>[] = [];
-    let cleanupListeners = () => {};
+    // The player taking over wins over anything left to do here: moving the
+    // page after that would drag them back from where they chose to be.
+    let cancelled = false;
+    const release = () => { cancelled = true; };
+    window.addEventListener("wheel", release, { once: true, passive: true });
+    window.addEventListener("touchstart", release, { once: true, passive: true });
+
+    // Calls `then` once `measure` has held the same value for a few frames —
+    // never before `minMs`, and never later than `capMs`. Watching what the
+    // page is actually doing is what replaces guessing at it with timeouts.
+    const whenStill = (
+      measure: () => number,
+      { minMs = 0, capMs }: { minMs?: number; capMs: number },
+      then: () => void,
+    ) => {
+      let last = NaN;
+      let steady = 0;
+      const startedAt = performance.now();
+      const tick = () => {
+        if (cancelled) return;
+        const value = Math.round(measure());
+        steady = value === last ? steady + 1 : 0;
+        last = value;
+        const elapsed = performance.now() - startedAt;
+        if ((steady >= 5 && elapsed >= minMs) || elapsed > capMs) {
+          then();
+          return;
+        }
+        frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
+    };
+
+    // Which element actually scrolls depends on the layout — on the narrow
+    // one it is a container inside the page, not the document — and the two
+    // report their position through different properties. Everything below
+    // reads and moves whichever one it turns out to be.
+    const scrollerOf = (el: HTMLElement): HTMLElement => {
+      for (let n = el.parentElement; n; n = n.parentElement) {
+        const overflowY = getComputedStyle(n).overflowY;
+        if ((overflowY === "auto" || overflowY === "scroll") && n.scrollHeight > n.clientHeight + 4) {
+          return n;
+        }
+      }
+      return (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
+    };
+
+    // Anything that loads above the section after it has been scrolled to
+    // pushes it down again. Rather than scrolling a second time — the jump
+    // that made arriving feel like two separate landings — the page is moved
+    // by the same amount underneath it, which holds the section exactly where
+    // it is and is invisible. Held for a short while, and dropped the moment
+    // the scroll position changes for any reason other than this: whatever
+    // else moved the page is the player, and they win.
+    const pinInPlace = (el: HTMLElement, scroller: HTMLElement) => {
+      const restingTop = Math.round(el.getBoundingClientRect().top);
+      let ownTop = Math.round(scroller.scrollTop);
+      const until = performance.now() + 1200;
+      const hold = () => {
+        if (cancelled || performance.now() > until) return;
+        if (Math.round(scroller.scrollTop) !== ownTop) return;
+        const drift = Math.round(el.getBoundingClientRect().top) - restingTop;
+        if (drift !== 0) {
+          scroller.scrollBy({ top: drift, behavior: "auto" });
+          ownTop = Math.round(scroller.scrollTop);
+        }
+        frame = requestAnimationFrame(hold);
+      };
+      frame = requestAnimationFrame(hold);
+    };
 
     const run = () => {
       const el = sectionRefs.current.get(initialScrollSection);
@@ -62,45 +129,35 @@ export function ShopStandardLayout({
         return;
       }
       hasScrolled.current = true;
-
-      // Where it stops is set by scroll-margin on the section itself, so the
-      // browser owns the movement — no hand-computed scrollTop, which is
-      // what turned a scroll into a fight with itself.
-      const goThere = () => el.scrollIntoView({ behavior: "smooth", block: "start" });
-      goThere();
+      const scroller = scrollerOf(el);
 
       // Everything above the section is still arriving — the offers reel,
-      // the powers row, their artwork — and each thing that lands pushes it
-      // further down, so one scroll leaves the heading wherever the page
-      // happened to be a moment later. Asking again twice puts it back.
-      // Landing correctly makes these no-ops: the browser has nowhere to
-      // move it to.
-      //
-      // Unless the player has taken over. Correcting after that would drag
-      // them back from wherever they chose to be.
-      let cancelled = false;
-      const release = () => { cancelled = true; };
-      window.addEventListener("wheel", release, { once: true, passive: true });
-      window.addEventListener("touchstart", release, { once: true, passive: true });
-      corrections = [700, 1400].map((ms) =>
-        setTimeout(() => { if (!cancelled) goThere(); }, ms)
-      );
+      // the powers row, their artwork — and each thing that lands pushes the
+      // section further down. Scrolling into that meant landing wrong and
+      // being yanked back twice; waiting for the section to stop moving
+      // first buys one scroll that goes straight there.
+      whenStill(() => el.getBoundingClientRect().top + scroller.scrollTop, { capMs: 1500 }, () => {
+        // Where it stops is set by scroll-margin on the section itself, so
+        // the browser owns the movement — no hand-computed scrollTop, which
+        // is what turned a scroll into a fight with itself.
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
 
-      // After the travel, not during it — a shake competing with a scroll
-      // reads as a glitch rather than as an answer to "which one is mine".
-      nudge = setTimeout(() => setArrivedAt(initialScrollSection), 1700);
-      cleanupListeners = () => {
-        window.removeEventListener("wheel", release);
-        window.removeEventListener("touchstart", release);
-      };
+        // After the travel, not during it — a shake competing with a scroll
+        // reads as a glitch rather than as an answer to "which one is mine".
+        // It fires when the page actually stops, however long that took.
+        whenStill(() => el.getBoundingClientRect().top, { minMs: 150, capMs: 2000 }, () => {
+          setArrivedAt(initialScrollSection);
+          pinInPlace(el, scroller);
+        });
+      });
     };
 
     frame = requestAnimationFrame(run);
     return () => {
+      cancelled = true;
       cancelAnimationFrame(frame);
-      clearTimeout(nudge);
-      corrections.forEach(clearTimeout);
-      cleanupListeners();
+      window.removeEventListener("wheel", release);
+      window.removeEventListener("touchstart", release);
     };
   }, [initialScrollSection]);
 
