@@ -27,6 +27,7 @@ import { FakeFriendRequestAutoAccept } from "@/components/system/FakeFriendReque
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { Navigate } from "react-router-dom";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
+import { Toaster } from "sonner";
 import { useFreshBuildGuard } from "@/hooks/useFreshBuildGuard";
 
 // Build-time flag for admin inclusion (default: included unless explicitly disabled)
@@ -151,6 +152,21 @@ const App = () => (
                 <AvatarModalProvider>
                   <SplashScreen>
                     <TooltipProvider>
+            {/* The app calls toast() in ~580 places — every failure, every
+                limit, every confirmation — and none of it had ever reached a
+                screen, because no Toaster was mounted to render it. That is
+                what "it loads for a second and does nothing" was: the app
+                explaining itself to nobody. Above z-[100] so it clears the
+                full-screen game modals, which is exactly where the messages
+                that went missing were being raised. */}
+            <Toaster
+              position="top-center"
+              richColors
+              closeButton
+              duration={4000}
+              style={{ zIndex: 2147483647 }}
+            />
+
             {/* Offline detection banner */}
             <OfflineBanner />
             

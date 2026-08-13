@@ -8,7 +8,14 @@ import { PORTRAIT_AVATAR_PROMPT } from "@/config/portraitAvatarPrompt";
 // when generation fails or returns a non-square image (an old deployed
 // function that ignores the mode returns the 16:9 scene — never put that in
 // the circle).
-export async function generatePublicPortrait(userId: string, photoUrl: string): Promise<string | null> {
+export async function generatePublicPortrait(
+  userId: string,
+  photoUrl: string,
+  // `avatar_` marks a portrait the app derived on its own; `portrait_` marks
+  // one the person asked for and spent a generation on. The budget is read
+  // straight off these names — see avatarStudio.ts.
+  prefix: "avatar" | "portrait" = "avatar"
+): Promise<string | null> {
   try {
     const { data, error } = await supabase.functions.invoke("generate-avatar", {
       body: { imageUrl: photoUrl, mode: "portrait", prompt: PORTRAIT_AVATAR_PROMPT },
@@ -21,7 +28,7 @@ export async function generatePublicPortrait(userId: string, photoUrl: string): 
     bitmap.close();
     if (ratio > 1.3 || ratio < 0.77) return null;
 
-    const fileName = `${userId}/avatar_${Date.now()}.png`;
+    const fileName = `${userId}/${prefix}_${Date.now()}.png`;
     const { error: uploadError } = await supabase.storage
       .from("avatars")
       .upload(fileName, blob, { upsert: true, contentType: "image/png" });

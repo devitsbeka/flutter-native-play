@@ -577,6 +577,14 @@ export const en: KaTranslations = {
     animationPro: "Animation (PRO)",
     remainingGen: "{remaining}/{max} generations left",
     maxGenReached: "Maximum {max} avatar generations allowed",
+    // Running out is a price, not a wall — the wording has to leave a way
+    // forward, because a dead end here reads as a broken button.
+    limitUsedUp: "You've used your {max} free generations.",
+    extraCostsGems: "Next one — {cost} gem",
+    needGemsForExtra: "Not enough gems — the next generation costs {cost}",
+    generateForGems: "Generate • {cost} 💎",
+    paidWithGems: "Paid {cost} gem",
+    proGetsFive: "PRO gets {max} of each",
     avatarsList: "Avatars",
   },
 
