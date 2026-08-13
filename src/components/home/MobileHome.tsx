@@ -2,14 +2,14 @@ import { motion } from "framer-motion";
 import { Menu, Search } from "lucide-react";
 import { formatCompactNumber } from "@/lib/utils";
 import { t } from "@/lib/i18n";
-import { useMissionStreak } from "@/hooks/useMissionStreak";
 import myTriviaLogo from "@/assets/mytrivia-logo.svg";
 import guestGeoMap from "@/assets/figma-home/guest-geo-map.webp";
 import coinChunky from "@/assets/figma-home/coin-chunky.png";
 import gemChunky from "@/assets/figma-home/gem-chunky.png";
-import coinPurse from "@/assets/icons/icon-coin-purse.png";
-import xDay from "@/assets/figma-home/x-day.svg";
-import timerLine from "@/assets/figma-home/timer-line.svg";
+import shieldOuter from "@/assets/figma-home/shield-outer.svg";
+import shieldInner from "@/assets/figma-home/shield-inner.svg";
+import { getCountryFlag } from "@/data/opponents";
+import { WeekMissionsStrip } from "@/components/home/WeekMissionsStrip";
 
 // Figma: Hom — the three mobile home states, all drawn on a 500x946 frame:
 //   632:296  Logged out / guest
@@ -28,6 +28,14 @@ const AUTH_GRADIENT = STAT_GRADIENT;
 // The bottom nav is 88px of chrome (20px padding + 48px items) plus the
 // device inset; scene art is anchored off it exactly as in the frame.
 const NAV_H = "calc(88px + env(safe-area-inset-bottom))";
+
+// Dissolves the scene artwork's top edge into the page wash. Both spellings
+// ship: iOS below 15.4 only understands the -webkit- one, and there the
+// unprefixed property alone would leave the edge as a hard line.
+const SCENE_TOP_FADE: React.CSSProperties = {
+  maskImage: "linear-gradient(to bottom, transparent 0, black 60%)",
+  WebkitMaskImage: "linear-gradient(to bottom, transparent 0, black 60%)",
+};
 
 /* ------------------------------------------------------------------ *
  * Scene background (logged-in states)
@@ -53,11 +61,25 @@ export function MobileSceneBackground({
   defaultVideoSrc,
 }: MobileSceneBackgroundProps) {
   if (sceneUrl) {
-    // 774.7 / 500 wide, left edge at -110.3 / 500, bottom 116px off the frame.
-    // The top edge is mask-faded: the page wash behind it is an animated blob
-    // loop, so a flat cut would read as a hard line straight across the page.
-    const box =
-      "absolute left-[-22.06vw] w-[154.94vw] max-w-none [mask-image:linear-gradient(to_bottom,transparent_0,black_140px)]";
+    // 774.7 / 500 wide, left edge at -110.3 / 500.
+    //
+    // The frame floats the artwork 28px clear of the nav, which on a real
+    // phone reads as a strip of bare page wash under the scene, closed off
+    // by the hard cut of the artwork's own bottom edge. It sits ON the nav
+    // instead: the wave divider overlaps the last 14px, so the cut is never
+    // visible and there is nothing left to read as empty.
+    //
+    // The top edge is mask-faded — the wash behind it is an animated blob
+    // loop, so a flat cut would read as a hard line straight across the
+    // page. 140px was not enough: the artwork's own sky is a deeper
+    // lavender than the wash, so the fade finished while the two tones
+    // still differed and the seam showed anyway. Fading over most of the
+    // artwork's height spreads that difference out until it disappears.
+    const box = "absolute left-[-22.06vw] w-[154.94vw] max-w-none";
+    // Inline rather than a Tailwind arbitrary property: that ships
+    // `mask-image` alone, which iOS below 15.4 ignores outright — and an
+    // ignored mask is precisely the hard top edge this is here to prevent.
+    const style: React.CSSProperties = { bottom: NAV_H, ...SCENE_TOP_FADE };
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -74,16 +96,10 @@ export function MobileSceneBackground({
             muted
             playsInline
             className={box}
-            style={{ bottom: `calc(28px + ${NAV_H})` }}
+            style={style}
           />
         ) : (
-          <img
-            src={sceneUrl}
-            alt=""
-            draggable={false}
-            className={box}
-            style={{ bottom: `calc(28px + ${NAV_H})` }}
-          />
+          <img src={sceneUrl} alt="" draggable={false} className={box} style={style} />
         )}
       </motion.div>
     );
@@ -168,56 +184,60 @@ function StatPill({
   );
 }
 
-// Mon, Tue, Wed, Thu, Sat, Sun — the frame skips Friday, matching the
-// desktop streak strip (SceneHero) this card is the phone counterpart of.
-const DAY_LABELS = ["ორშ", "სამ", "ოთხ", "ხუთ", "შაბ", "კვ"];
-const SLOT_WEEKDAYS = [0, 1, 2, 3, 5, 6]; // 0 = Monday
-
-type DayState = "done" | "failed" | "pending";
-
 interface MobileProfileCardProps {
   nickname: string;
+  /** ISO-2 of the country the player is ranked in; flag sits before the name. */
+  countryCode?: string | null;
+  /** Place on that country's board (global when we have no country). */
+  rank?: number | null;
   level: number;
   coins: number;
   gems: number;
   onNameClick: () => void;
+  /** The rank badge is a shortcut into the board it came from. */
+  onRankClick: () => void;
   onLevelClick: () => void;
   onCoinsClick: () => void;
   onGemsClick: () => void;
   onGiftClick: () => void;
+  /** The weekly streak row is the phone's only way into missions. Carries
+      the ISO date of the day tapped, so each day opens its own. */
+  onMissionsClick: (dateISO: string) => void;
+  /** Today's daily reward is already taken — the purse shows as spent. */
+  dailyRewardClaimed?: boolean;
 }
 
-// node 626:1179 — 452x181 card, 24px radius, floating over the scene.
+// node 626:1179, re-stacked. The frame put the nickname and the coin/gem
+// pills on one row and the level under the name; the pills overran long
+// nicknames, so the name keeps the row to itself, the pills drop beneath it
+// and the level becomes the same shield SceneHero uses on desktop, sitting
+// over the top-right corner. That costs 29px of height (181 → 210). The card
+// also sits above the bottom nav rather than under the friends reel, so the
+// scene it floats on is not covered by it.
 export function MobileProfileCard({
   nickname,
+  countryCode,
+  rank,
   level,
   coins,
   gems,
   onNameClick,
+  onRankClick,
   onLevelClick,
   onCoinsClick,
   onGemsClick,
   onGiftClick,
+  onMissionsClick,
+  dailyRewardClaimed = false,
 }: MobileProfileCardProps) {
-  const { streak, currentStreak } = useMissionStreak();
-
-  // Same rule as the desktop strip: a day is done when the running streak
-  // still covers it, failed once it's past, pending today or ahead.
-  const today = new Date();
-  const todayIdx = (today.getDay() + 6) % 7; // 0 = Monday
-  const lastDone = streak?.last_completion_date || null;
-  const dayState = (weekday: number): DayState => {
-    if (weekday > todayIdx) return "pending";
-    if (lastDone && currentStreak > 0) {
-      const dayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (todayIdx - weekday));
-      const last = new Date(`${lastDone}T00:00:00`);
-      const diff = Math.round((last.getTime() - dayDate.getTime()) / 86_400_000);
-      if (diff >= 0 && diff < currentStreak) return "done";
-    }
-    return weekday === todayIdx ? "pending" : "failed";
-  };
+  // getCountryFlag falls back to a blank white flag for a code it doesn't
+  // know, which says less than showing nothing at all.
+  const rawFlag = countryCode ? getCountryFlag(countryCode) : "";
+  const flag = rawFlag === "🏳️" ? "" : rawFlag;
 
   return (
+    <>
+    {/* Who you are — directly under the friends reel, in normal flow. */}
     <motion.div
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
@@ -225,25 +245,41 @@ export function MobileProfileCard({
       className="md:hidden relative z-20 mx-6 mt-[22px]"
     >
       <div
-        className="relative h-[181px] w-full overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.8)]"
+        className="relative h-[123px] w-full overflow-hidden rounded-[24px] bg-[rgba(252,247,255,0.8)]"
         style={{ boxShadow: CARD_SHADOW }}
       >
-        <button
-          type="button"
-          onClick={onNameClick}
-          className="absolute left-[26px] top-[11px] font-slackey text-[32px] capitalize leading-[48px] tracking-[-0.16px] text-[#402666] whitespace-nowrap"
-        >
-          {nickname}
-        </button>
-        <button
-          type="button"
-          onClick={onLevelClick}
-          className="absolute left-[26px] top-[56px] text-[14px] font-semibold leading-[21px] tracking-[-0.16px] text-[#402666] whitespace-nowrap"
-        >
-          {t("modals.levelLabel")} {level}
-        </button>
+        {/* The nickname owns its own row now, so nothing can sit over it.
+            It is bounded on the right by the level shield and truncates —
+            the frame let it run under the coin pill, which is why a name as
+            ordinary as "TriviaMaster" lost its last letter.
+            The flag and rank badge flank it and never shrink, so a long name
+            gives up its own characters rather than pushing them out. */}
+        <div className="absolute left-[26px] right-[86px] top-[11px] flex items-center gap-[7px]">
+          {flag && (
+            <span aria-hidden className="shrink-0 text-[21px] leading-none">
+              {flag}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onNameClick}
+            className="min-w-0 truncate text-left font-slackey text-[32px] capitalize leading-[48px] tracking-[-0.16px] text-[#402666]"
+          >
+            {nickname}
+          </button>
+          {!!rank && (
+            <button
+              type="button"
+              onClick={onRankClick}
+              aria-label={`${t("leaderboard.yourRank")} #${rank}`}
+              className="shrink-0 rounded-full bg-[rgba(124,58,237,0.12)] px-[7px] py-[2px] text-[11px] font-bold leading-[14px] text-[#5B21B6]"
+            >
+              #{rank}
+            </button>
+          )}
+        </div>
 
-        <div className="absolute right-[19px] top-[22.99px] flex gap-[6.6px]">
+        <div className="absolute left-[26px] top-[64px] flex gap-[6.6px]">
           <StatPill
             icon={coinChunky}
             iconLeft={7.8}
@@ -262,102 +298,55 @@ export function MobileProfileCard({
           />
         </div>
 
-        <div aria-hidden className="absolute left-[26px] right-[23px] top-[90px] h-px bg-black/[0.08]" />
-
-        {/* Weekly streak: six day slots then the daily-rewards gift, spread
-            across the card (node 626:1399) */}
-        <div className="absolute left-[26px] right-[22px] top-[99px] flex items-end justify-between">
-          {DAY_LABELS.map((label, i) => {
-            const weekday = SLOT_WEEKDAYS[i];
-            const state = dayState(weekday);
-            const isToday = weekday === todayIdx;
-            const isFuture = weekday > todayIdx;
-            return (
-              <div key={label} className="flex flex-col items-center">
-                {isToday && state === "pending" ? (
-                  /* Today: gold timer chip on a purple well (node 626:1374) */
-                  <div
-                    className="flex h-[27.328px] w-[27.42px] items-start rounded-[125px]"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(180deg, rgb(107,46,224) 8%, rgb(133,71,235) 44.8%, rgb(122,56,217) 72.4%, rgb(89,31,184) 100%)",
-                    }}
-                  >
-                    <div className="relative flex size-[27.016px] items-center justify-center rounded-full border-[1.266px] border-solid border-[#fbbf24] shadow-[0px_2.533px_0px_0px_#b45309,0px_4.221px_10.131px_0px_rgba(245,158,11,0.5)]">
-                      <div
-                        aria-hidden
-                        className="absolute inset-0 rounded-full"
-                        style={{ backgroundImage: "linear-gradient(to bottom, #fcd34d, #f59e0b 50%, #d97706)" }}
-                      />
-                      <img
-                        src={timerLine}
-                        alt=""
-                        className="relative size-[16.984px] drop-shadow-[0px_1.688px_1.266px_rgba(0,0,0,0.07)]"
-                      />
-                      <div className="absolute left-[6.79px] top-[3.37px] size-[2.552px] rounded-full bg-white opacity-[0.73]" />
-                      <div className="absolute left-[13.88px] top-[17.21px] size-[1.881px] rounded-full bg-[rgba(255,255,255,0.8)] opacity-[0.53]" />
-                      <div
-                        aria-hidden
-                        className="absolute inset-0 rounded-full shadow-[inset_0px_1.266px_0px_0px_rgba(255,255,255,0.35)]"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    className={`flex h-[27.328px] w-[27.42px] items-center justify-center rounded-full ${
-                      state === "done" ? "bg-[#10b981]" : "bg-[rgba(149,129,171,0.14)]"
-                    }`}
-                  >
-                    {state === "done" && (
-                      <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" aria-hidden>
-                        <path
-                          d="M5 12.5l4.5 4.5L19 7.5"
-                          stroke="#fff"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
-                    {state === "failed" && <img src={xDay} alt="" className="size-[14px]" />}
-                    {isFuture && (
-                      <p className="-mt-[9px] font-['Nunito'] text-[16px] font-bold leading-[16px] tracking-[0.5px] text-[#887695]">
-                        ...
-                      </p>
-                    )}
-                  </div>
-                )}
-                <p
-                  className={`mt-[8.73px] text-center text-[13.15px] font-semibold leading-[19.725px] tracking-[-0.16px] text-[#402666] whitespace-nowrap ${
-                    isToday || isFuture ? "" : "opacity-50"
-                  }`}
-                >
-                  {label}
-                </p>
-              </div>
-            );
-          })}
-
-          {/* Daily rewards (node 626:1404) */}
-          <button
-            type="button"
-            onClick={onGiftClick}
-            aria-label={t("extra.dailyRewards")}
-            className="relative h-[62px] w-[76px] shrink-0 rounded-full border-[3px] border-solid border-[rgba(255,255,255,0.9)] shadow-[0px_4px_12px_0px_rgba(0,0,0,0.1),0px_3px_0px_0px_#fdba74]"
-            style={{ backgroundImage: "linear-gradient(to bottom, #fff7ed, #fed7aa)" }}
-          >
-            <span className="absolute left-[13.44px] top-[2px] block h-[48px] w-[41px] overflow-hidden">
-              <img
-                src={coinPurse}
-                alt=""
-                draggable={false}
-                className="absolute left-[-16.46%] h-full w-[116.46%] max-w-none"
-              />
-            </span>
-          </button>
-        </div>
       </div>
+
+      {/* Level shield — the same badge SceneHero carries on desktop. It
+          overhangs the card's top-right corner, so it is a sibling of the
+          card rather than a child: the card clips its own contents. */}
+      <button
+        type="button"
+        aria-label={`${t("modals.levelLabel")} ${level}`}
+        onClick={onLevelClick}
+        className="absolute right-[-2px] top-[-14px] z-10 h-[93px] w-[82.06px]"
+      >
+        <img alt="" src={shieldOuter} className="absolute left-[7.66px] top-[-10.03px] h-[101.63px] w-[74.4px] max-w-none" />
+        <span className="absolute left-[11.09px] top-[-5.63px] block h-[94.4px] w-[67.56px]">
+          <span className="absolute inset-[-8%_-17.61%_-17.42%_-17.61%] block">
+            <img alt="" src={shieldInner} className="block size-full max-w-none" />
+          </span>
+        </span>
+        <span
+          className="absolute left-[46.02px] top-[2.77px] block -translate-x-1/2 whitespace-nowrap text-[35px] font-bold leading-[52.5px] tracking-[-1.75px] text-white"
+          style={{
+            fontFamily: "'Intel One Mono', 'Nunito', monospace",
+            textShadow: "0px 2.19px 2.19px rgba(0,0,0,0.3), 0px 4.38px 6.57px rgba(0,0,0,0.15)",
+          }}
+        >
+          {level}
+        </span>
+        <span className="absolute left-[45.8px] top-[46.66px] block -translate-x-1/2 whitespace-nowrap text-[9.85px] font-bold leading-[14.78px] text-[rgba(255,255,255,0.7)]">
+          {t("modals.levelLabel")}
+        </span>
+      </button>
     </motion.div>
+
+    {/* The week — its own card, held down by the bottom nav so the scene
+        between the two has room to show through. */}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 26 }}
+      className="md:hidden absolute inset-x-0 z-20 mx-6"
+      style={{ bottom: `calc(${NAV_H} + 36px)` }}
+    >
+      <WeekMissionsStrip
+        className="h-[94px]"
+        onMissionsClick={onMissionsClick}
+        onGiftClick={onGiftClick}
+        dailyRewardClaimed={dailyRewardClaimed}
+      />
+    </motion.div>
+    </>
   );
 }
 

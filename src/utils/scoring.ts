@@ -27,8 +27,11 @@ export const calculatePoints = (isCorrect: boolean, timeRemaining: number): numb
 
   const clampedTime = Math.max(0, Math.min(timeRemaining, QUESTION_TIME_SECONDS));
 
-  // Math.round to prevent floating point precision issues from timer decrements
-  return Math.round(BASE_POINTS + clampedTime * TIME_BONUS_MULTIPLIER);
+  // Whole seconds only: the in-game clock ticks in 0.1s steps, and paying
+  // for fractional remainders produced totals like 464 that read as random.
+  // Rounding to the second the player actually saw keeps every answer a
+  // clean multiple of 10 over the base.
+  return BASE_POINTS + Math.round(clampedTime) * TIME_BONUS_MULTIPLIER;
 };
 
 /**

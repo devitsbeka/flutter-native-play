@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import logoDark from "@/assets/mytrivia-logo.svg";
+import { useGoHomeOrRefresh } from "@/hooks/useGoHomeOrRefresh";
 import {
   Home,
   Compass,
@@ -58,6 +59,7 @@ export function UnifiedDesktopNav({
   showPlayButton = true,
 }: UnifiedDesktopNavProps) {
   const navigate = useNavigate();
+  const goHomeOrRefresh = useGoHomeOrRefresh();
   const location = useLocation();
   const { profile, user } = useAuth();
   // PRO badge/stroke on the profile button — read from the VIP context rather
@@ -220,7 +222,7 @@ export function UnifiedDesktopNav({
           <div className="group hidden lg:flex justify-center mb-4">
             <div className="relative h-8 w-8">
               <button
-                onClick={() => navigate("/")}
+                onClick={goHomeOrRefresh}
                 aria-label="MyTrivia"
                 className="absolute inset-0 cursor-pointer transition-opacity group-hover:opacity-0 group-hover:pointer-events-none"
               >
@@ -237,7 +239,7 @@ export function UnifiedDesktopNav({
           </div>
         ) : (
           <div className="hidden lg:flex items-center justify-between pl-4 pr-2 mb-4">
-            <button onClick={() => navigate("/")} aria-label="MyTrivia" className="flex items-center cursor-pointer">
+            <button onClick={goHomeOrRefresh} aria-label="MyTrivia" className="flex items-center cursor-pointer">
               <img src={logoDark} alt="MyTrivia" className="h-10 w-auto select-none" draggable={false} />
             </button>
             <button

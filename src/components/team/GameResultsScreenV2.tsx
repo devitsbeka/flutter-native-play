@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useMissions } from "@/hooks/useMissions";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -19,10 +20,13 @@ import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
-import xpIcon from "@/assets/icons/icon-xp.png";
+import xpIcon from "@/assets/level/xp-spark.png";
 import { toast } from "sonner";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { CategoryPickerModal } from "./CategoryPickerModal";
+import { calculateMultiplayerPayout, nextStreak } from "@/utils/multiplayerPayout";
+import { isGuestAccount } from "@/utils/guestAccount";
+import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
 // Games whose results were already counted on this device. Module-level (not a
 // ref) because the results screen can remount for the SAME game (results ->
@@ -48,7 +52,17 @@ export function GameResultsScreenV2() {
   const { addCoins } = useCurrency();
   const { maybeShowInterstitial } = useAds();
   const { trackMissionEvent } = useMissions();
+  const { openProfile } = usePlayerProfile();
   const [coinsEarned, setCoinsEarned] = useState(0);
+  const [showGuestSignUp, setShowGuestSignUp] = useState(false);
+
+  // Let the result land before asking for anything — the score is the reason
+  // they played, and the ask reads as a reward rather than a toll gate.
+  useEffect(() => {
+    if (!isGuestAccount(user)) return;
+    const timer = setTimeout(() => setShowGuestSignUp(true), 3000);
+    return () => clearTimeout(timer);
+  }, [user]);
   const { 
     myScore: localMyScore, 
     participants, 
@@ -149,31 +163,13 @@ export function GameResultsScreenV2() {
       if (statsKey) processedResultsGames.add(statsKey);
 
       const updateStats = async () => {
-        // Unified reward policy. A room with a single player is practice:
-        // XP still counts, but there is no opponent to beat, so no coin
-        // bonus, no recorded win and no streak — otherwise a solo "room"
-        // is a free coin/win farm.
-        const playerCount = participants.length;
-        const isPractice = playerCount <= 1;
-        const countsAsWin = isWin && !isPractice;
-
-        // Placement coins scale with how many opponents were actually
-        // beaten, so winning an 8-player room pays more than a duel.
-        let earnedCoins = 0;
-        if (!isPractice) {
-          const playersBeaten = Math.max(0, playerCount - myRank);
-          if (myRank === 1) {
-            earnedCoins =
-              Math.min(
-                REWARDS.MULTIPLAYER_WIN_COINS_PER_BEATEN * playersBeaten,
-                REWARDS.MULTIPLAYER_1ST_COINS
-              ) + myScore;
-          } else if (myRank === 2 || myRank === 3) {
-            earnedCoins = Math.floor(myScore / 2);
-          } else {
-            earnedCoins = REWARDS.MULTIPLAYER_PARTICIPATION_COINS;
-          }
-        }
+        // Unified reward policy — see multiplayerPayout.ts for the rules.
+        const { earnedCoins, isPractice, countsAsWin } = calculateMultiplayerPayout({
+          playerCount: participants.length,
+          myRank,
+          myScore,
+          isWin,
+        });
         setCoinsEarned(earnedCoins);
 
         // Missions: every room game counts as played; a real (non-practice)
@@ -192,11 +188,7 @@ export function GameResultsScreenV2() {
           total_points: (profile.total_points || 0) + myScore,
           games_played: (profile.games_played || 0) + 1,
           games_won: countsAsWin ? (profile.games_won || 0) + 1 : profile.games_won,
-          current_streak: countsAsWin
-            ? (profile.current_streak || 0) + 1
-            : isPractice
-              ? profile.current_streak
-              : 0,
+          current_streak: nextStreak(profile.current_streak || 0, countsAsWin, isPractice),
           best_streak: countsAsWin
             ? Math.max(profile.best_streak || 0, (profile.current_streak || 0) + 1)
             : profile.best_streak,
@@ -449,6 +441,16 @@ export function GameResultsScreenV2() {
   };
 
   return (
+    <>
+    {/* A visitor who opened a shared room link is signed in anonymously so
+        they can play immediately. That free game ends here: the score lands
+        first, then the offer to keep it. Guests only — a real account never
+        sees this. */}
+    <AuthRequiredModal
+      isOpen={showGuestSignUp}
+      onClose={() => setShowGuestSignUp(false)}
+      message={t("extra.guestSaveScorePrompt")}
+    />
     <div className="h-[100dvh] w-full overflow-hidden bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
       <div className="w-full h-full flex flex-col max-w-[700px] mx-auto">
       {/* Back Button Header */}
@@ -564,8 +566,12 @@ export function GameResultsScreenV2() {
                   p.isMe ? "bg-white/20" : ""
                 )}
               >
-                {/* Avatar with crown for winner */}
-                <div className="relative">
+                {/* Avatar with crown for winner — tap opens the player's profile */}
+                <div
+                  className={cn("relative", !p.isMe && "cursor-pointer active:scale-95 transition-transform")}
+                  onClick={!p.isMe ? () => openProfile(p.user_id) : undefined}
+                  role={!p.isMe ? "button" : undefined}
+                >
                   <SafeAvatar 
                     avatarUrl={p.avatar_url}
                     fallback={p.nickname || "?"}
@@ -717,5 +723,6 @@ export function GameResultsScreenV2() {
       />
       </div>
     </div>
+    </>
   );
 }

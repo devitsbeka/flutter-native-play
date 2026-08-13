@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Gift, Clock } from "lucide-react";
-import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
+import { GameModal } from "@/components/ui/game-modal";
+import { SunsetButton } from "@/components/shared/SunsetButton";
 import chestTabletIcon from "@/assets/icons/icon-chest-box.png";
 import treasurePileIcon from "@/assets/icons/pile-of-treasure.png";
 import confetti from "canvas-confetti";
@@ -197,12 +198,13 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
             ))}
           </div>
 
-          <GameModalFooter
-            primaryLabel={isClaiming ? t("chest.loading") : t("chest.claim")}
-            onPrimary={handleClaim}
-            primaryIcon={<Gift className="w-5 h-5" />}
-            isLoading={isClaiming}
-          />
+          <SunsetButton
+            onClick={handleClaim}
+            disabled={isClaiming}
+            icon={<Gift className="w-5 h-5" />}
+          >
+            {isClaiming ? t("chest.loading") : t("chest.open")}
+          </SunsetButton>
         </>
       ) : (
         <ChestTimer timeLeft={chestTimeLeft} t={t} />

@@ -229,8 +229,9 @@ function PlayerFeedItemComponent({
   }, [coverImage, triviaItem]);
 
   return (
+    <>
     <div
-      className="overflow-hidden rounded-2xl border-2 border-primary/30 shadow-sm"
+      className="overflow-hidden rounded-2xl border border-primary/15 shadow-sm"
       style={{
         touchAction: 'manipulation',
         contentVisibility: 'auto',
@@ -399,7 +400,10 @@ function PlayerFeedItemComponent({
           </div>
         </div>
       </div>
+    </div>
 
+      {/* Modals sit OUTSIDE the card: its content-visibility makes the card a
+          containing block for fixed positioning, which would clip them */}
       <PlayLimitModal
         isOpen={showPlayLimitModal}
         onClose={() => setShowPlayLimitModal(false)}
@@ -444,7 +448,7 @@ function PlayerFeedItemComponent({
           />
         </Suspense>
       )}
-    </div>
+    </>
   );
 }
 

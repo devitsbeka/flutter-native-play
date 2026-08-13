@@ -228,7 +228,7 @@ export const ka = {
     play: "ითამაშე",
     discover: "აღმოაჩინე",
     leaderboard: "ლიდერბორდი",
-    triviaLive: "Trivia Live",
+    triviaLive: "ონლაინ თამაში",
   },
 
   // ==========================================
@@ -515,6 +515,9 @@ export const ka = {
     nameChanged: "სახელი შეიცვალა!",
     deleteAccount: "ანგარიშის წაშლა",
     deleteAccountDescription: "სამუდამოდ წაშალე შენი ანგარიში",
+    buildLabel: "ვერსია",
+    checkingForUpdate: "მოწმდება...",
+    upToDate: "უახლესი ვერსიაა",
     privacyPolicy: "კონფიდენციალურობის პოლიტიკა",
     termsOfService: "მომსახურების პირობები",
     dataManagement: "მონაცემების მართვა",
@@ -571,6 +574,14 @@ export const ka = {
     animationPro: "ანიმაცია (PRO)",
     remainingGen: "დარჩა {remaining}/{max} გენერაცია",
     maxGenReached: "მაქსიმუმ {max} ავატარის გენერაცია შეგიძლიათ",
+    // Running out is a price, not a wall — the wording has to leave a way
+    // forward, because a dead end here reads as a broken button.
+    limitUsedUp: "შენი {max} უფასო გენერაცია გამოყენებულია.",
+    extraCostsGems: "შემდეგი — {cost} ბრილიანტი",
+    needGemsForExtra: "საკმარისი ბრილიანტი არ გაქვს — შემდეგი გენერაცია {cost} ბრილიანტი ღირს",
+    generateForGems: "გენერაცია • {cost}",
+    paidWithGems: "გადახდილია {cost} ბრილიანტი",
+    proGetsFive: "PRO-თი {max} გენერაცია თითოეულზე",
     avatarsList: "ავატარები",
   },
 
@@ -587,8 +598,14 @@ export const ka = {
     cameraPermission: "კამერის წვდომა შეუძლებელია. გთხოვთ შეამოწმოთ ნებართვები.",
     uploadFailed: "ატვირთვა ვერ მოხერხდა",
     generationFailed: "ავატარის გენერაცია ვერ მოხერხდა",
-    imageTooLarge: "სურათი 5MB-ზე ნაკლები უნდა იყოს",
+    imageTooLarge: "სურათი 30MB-ზე ნაკლები უნდა იყოს",
     selectImageFile: "გთხოვთ აირჩიოთ სურათის ფაილი",
+    // "დამუშავება ვერ მოხერხდა" was the only thing any photo failure said,
+    // so nobody could tell whether to try another photo, a smaller one, or a
+    // different format.
+    photoNotDownloaded: "ფოტო მოწყობილობაზე ვერ წაიკითხა — თუ iCloud/Google Photos-შია, ჯერ ჩამოტვირთე და სცადე თავიდან",
+    photoFormatUnsupported: "ამ ფოტოს ფორმატი ვერ წაიკითხა — სცადე სხვა ფოტო ან შეინახე JPG-ად",
+    photoTooBigToProcess: "ფოტო ძალიან დიდია დასამუშავებლად — სცადე უფრო პატარა",
     noAvatarToAnimate: "ანიმაციისთვის ავატარი არ არის",
   },
 
@@ -629,6 +646,9 @@ export const ka = {
   // Missions / მისიები
   // ==========================================
   missions: {
+    weekPackage: "კვირის პაკეტი",
+    pastDay: "დასრულებული დღე",
+    futureDay: "მომავალი დღე",
     title: "მისიები",
     subtitle: "შეასრულე მისიები და მიიღე ჯილდოები",
     daily: "დღის",
@@ -710,6 +730,7 @@ export const ka = {
     subtitleWait: "მალე მზად იქნება!",
     nextChest: "შემდეგ გახსნამდე დარჩენილია",
     claim: "მიღება",
+    open: "გახსენი",
     loading: "იტვირთება...",
     rewardsReceived: "ჯილდოები მიღებულია!",
     coins: "მონეტა",
@@ -737,6 +758,10 @@ export const ka = {
   // Shop / მაღაზია
   // ==========================================
   shop: {
+    vipTwoDays: "2 დღე PRO",
+    dealDuo: "ორდღიანი პაკეტი",
+    dealArsenal: "არსენალის პაკეტი",
+    dealVault: "საგანძურის პაკეტი",
     title: "მაღაზია",
     starterPack: "მოიმატე ძალები",
     forBeginners: "დამწყებთათვის",
@@ -902,7 +927,7 @@ export const ka = {
   team: {
     roomUpdated: "ოთახი განახლდა",
     updateFailed: "განახლება ვერ მოხერხდა",
-    newRoom: "ახალი ოთახი",
+    newRoom: "მეგობრებთან თამაში",
     roomName: "ოთახის სახელი",
     enterRoomName: "შეიყვანეთ ოთახის სახელი",
     randomName: "შემთხვევითი სახელი",
@@ -953,6 +978,7 @@ export const ka = {
     // Additional team translations
     multiplayer: "მულტიპლეიერი",
     signInToPlay: "მეგობრებთან სათამაშოდ გაიარე ავტორიზაცია",
+    signInToJoinInvite: "მოგიწვიეს ოთახში — შედი ან შექმენი ანგარიში, რომ შეუერთდე",
     onlineGame: "ონლაინ თამაში",
     friends: "მეგობრები",
     yourRooms: "შენი ოთახები",
@@ -989,6 +1015,7 @@ export const ka = {
     myPowers: "ჩემი ძალები",
     goToShop: "მაღაზიაში გადასვლა",
     levelUp: "დონემ აიწია!",
+    rewardEarned: "ჯილდო მიღებულია!",
     levelLabel: "დონე",
     rewards: "ჯილდოები",
     coin: "მონეტა",
@@ -1028,6 +1055,8 @@ export const ka = {
     orBecomeVip: "ან გახდი VIP უსაზღვრო თამაშებისთვის",
     continueGame: "თამაშის გაგრძელება",
     xpProgress: "XP პროგრესი",
+    nextLevelRewardsHint: "შემდეგ დონეზე შეგიძლია მიიღო",
+    randomPower: "შემთხვევითი ძალა",
     maxLevelReached: "შენ მიაღწიე მაქსიმალურ დონეს! 🎉",
     xpToNextLevel: "დარჩა {amount} XP შემდეგ დონემდე",
     totalXp: "სულ XP",
@@ -1445,8 +1474,8 @@ export const ka = {
   // ==========================================
   playLimit: {
     limitReached: "თამაშის ლიმიტი ამოწურულია",
-    becomeProDescription: "გახდი PRO და ითამაშე შეუზღუდავად, შექმენი შენი ტრივიები და ბევრი სხვა.",
-    unlimitedGames: "შეუზღუდავი თამაშები",
+    becomeProDescription: "გახდი PRO და ითამაშე შეუზღუდავად, შექმენი შენი ტრივიები და ბევრი სხვა",
+    unlimitedGames: "ულიმიტო თამაშები",
     exclusiveFeatures: "ექსკლუზიური ფუნქციები",
     becomePro: "გახდი PRO",
     freePlayReady: "უფასო თამაში მზადაა!",
@@ -1770,6 +1799,7 @@ export const ka = {
     myTriviaDesc: "აირჩიე შენი შექმნილი ტრივიებიდან",
     createBtn: "შექმნა",
     inviteBtn: "მოწვევა",
+    guestSaveScorePrompt: "დარეგისტრირდი და შეინახე შენი ქულა",
     appFriends: "აპში მეგობრები",
     shareBtn: "გაზიარება",
     friendsInvited: "{count} მეგობარი მოწვეული",
@@ -1779,9 +1809,9 @@ export const ka = {
     saveErrorToast: "შეცდომა შენახვისას",
     myTriviaPartySaved: "MyTrivia Party შენახულია!",
     noOnePlayedTrivia: "ჯერ არავის უთამაშია",
-    pingHostBtn: "დაუძახე ჰოსტს",
+    pingHostBtn: "მოიწვიე სათამაშოდ",
     pingHostSent: "ჰოსტს შეტყობინება გაეგზავნა! 🔔",
-    pingHostNotifTitle: "{name} გეძახის თამაშის დასაწყებად",
+    pingHostNotifTitle: "{name}: მოდი ვითამაშოთ!",
     pingHostOpenRoom: "ოთახში შესვლა",
     photoFaceRequiredTitle: "გთხოვთ ატვირთოთ ფოტო სახით",
     photoFaceRequiredDesc: "ანიმაციისთვის საჭიროა ფოტო, რომელზეც სახე ჩანს",
@@ -2328,11 +2358,11 @@ export const ka = {
     familyProBenefit1: "ყველა Solo PRO ფუნქცია + 5 მეგობრის მოწვევა",
     familyProBenefit2: "ყველა PRO ფუნქცია",
     familyProBenefit3: "რეკლამების გარეშე",
-    mobileSoloBenefit1: "ულიმიტო უფასო თამაში",
+    mobileSoloBenefit1: "ულიმიტო თამაში",
     mobileSoloBenefit2: "ყველა PRO ფუნქცია",
     mobileSoloBenefit3: "რეკლამის გარეშე",
-    mobileFamilyBenefit1: "ყველა Solo PRO ფუნქცია + 5 მეგობრის მოწვევა",
-    mobileFamilyBenefit2: "უფასო თამაში",
+    mobileFamilyBenefit1: "ულიმიტო თამაში",
+    mobileFamilyBenefit2: "PRO ფუნქციები + 5 მეგობარი",
     mobileFamilyBenefit3: "რეკლამის გარეშე",
     // Shop tabs
     shopHotDeals: "🔥 ფასდაკლება",

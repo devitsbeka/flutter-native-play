@@ -1,5 +1,7 @@
 import { memo, useState, useMemo, useRef } from 'react';
-import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { motion, useMotionValue, useTransform, useAnimationControls, PanInfo } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
 import { Trash2, Home, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -18,6 +20,7 @@ const TRIVIA_TYPE_ICONS: Record<string, string> = {
   trivia_played: pushButton3d,
 };
 import { Notification } from '@/hooks/useNotifications';
+import { shouldDismissSwipe, SWIPE_THRESHOLD, SWIPE_LIMIT } from '@/utils/swipeToDismiss';
 import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
 
 interface CompactNotificationCardProps {
@@ -33,7 +36,7 @@ interface CompactNotificationCardProps {
   timeAgo: string;
 }
 
-const SWIPE_THRESHOLD = 100;
+
 
 export const CompactNotificationCard = memo(function CompactNotificationCard({
   notification,
@@ -51,9 +54,11 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const [isDismissing, setIsDismissing] = useState(false);
   const touchedRef = useRef(false);
   const x = useMotionValue(0);
-  const opacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [0, 1]);
-  const deleteOpacity = useTransform(x, [-SWIPE_THRESHOLD, -50, 0], [1, 0.5, 0]);
-  const deleteScale = useTransform(x, [-SWIPE_THRESHOLD, -50, 0], [1, 0.8, 0.5]);
+  const controls = useAnimationControls();
+  // Both track the card's own position, so the bin appears exactly as far as
+  // the card has actually moved.
+  const deleteOpacity = useTransform(x, [-SWIPE_THRESHOLD, -30, 0], [1, 0.5, 0]);
+  const deleteScale = useTransform(x, [-SWIPE_THRESHOLD, -30, 0], [1, 0.8, 0.5]);
 
   const isUnread = !notification.read_at;
   const config = getNotificationConfig(notification.type);
@@ -77,9 +82,37 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
 
   const avatarUrl = (notification.data?.sender_avatar || notification.data?.sender_avatar_url) as string | undefined;
   const senderName = notification.data?.sender_nickname as string || notification.data?.sender_name as string || '';
-  const roomName = notification.data?.room_name as string | undefined;
-  const categoryName = notification.data?.category_name as string | undefined;
-  const roomIcon = notification.data?.room_icon as string | undefined;
+  const storedRoomName = notification.data?.room_name as string | undefined;
+  const storedCategoryName = notification.data?.category_name as string | undefined;
+  const storedRoomIcon = notification.data?.room_icon as string | undefined;
+  const roomId = notification.data?.room_id as string | undefined;
+  const isRoomPing = notification.type === 'room_ping';
+
+  // The invite's payload is a snapshot taken by the notify_room_invite
+  // trigger when the invite was sent. The host can pick a different category
+  // afterwards — from the lobby, or by queueing rounds, which clears the
+  // room's selection outright — and the invited player would still be
+  // reading the category from the moment they were invited, then land in a
+  // different one. Read the room itself so the card shows what is actually
+  // going to be played; the payload stays as the fallback for rooms that
+  // have since been deleted.
+  const { data: liveRoom } = useQuery({
+    queryKey: ['notification-room', roomId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('game_rooms')
+        .select('room_icon, room_name, category_name')
+        .eq('id', roomId!)
+        .maybeSingle();
+      return data ?? null;
+    },
+    enabled: !!roomId,
+    staleTime: 30_000,
+    gcTime: 60 * 60 * 1000,
+  });
+  const roomIcon = liveRoom?.room_icon || storedRoomIcon || undefined;
+  const roomName = liveRoom?.room_name || storedRoomName || undefined;
+  const categoryName = liveRoom ? liveRoom.category_name ?? undefined : storedCategoryName;
   const triviaCover = notification.data?.trivia_cover as string | undefined;
   const triviaIconSlug = notification.data?.trivia_icon_slug as string | undefined;
   
@@ -96,12 +129,12 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
       }
     }
     
-    if (isRoomInvite || isGameStarted || isGameInvite) {
+    if (isRoomInvite || isGameStarted || isGameInvite || isRoomPing) {
       if (roomIcon) {
         return { type: 'image' as const, src: roomIcon };
       }
     }
-    
+
     return { type: 'avatar' as const, src: avatarUrl };
   }, [notification.type, triviaCover, triviaIconSlug, roomIcon, avatarUrl, isTriviaLikedOrSaved, isTriviaPlayed, isRoomInvite, isGameStarted, isGameInvite]);
   
@@ -230,11 +263,23 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
     }
   };
 
-  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.x < -SWIPE_THRESHOLD && onDismiss) {
-      setIsDismissing(true);
-      onDismiss(notification.id);
+  const handleDragEnd = async (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const committed = shouldDismissSwipe(info.offset.x, info.velocity.x);
+
+    if (!committed || !onDismiss) {
+      // Not far enough: ride back to rest instead of snapping
+      void controls.start({ x: 0, transition: { type: "spring", stiffness: 500, damping: 40 } });
+      return;
     }
+
+    // Carry the swipe through — the card leaves the way the finger was
+    // taking it, then the row collapses behind it
+    await controls.start({
+      x: -window.innerWidth,
+      transition: { duration: 0.18, ease: "easeOut" },
+    });
+    setIsDismissing(true);
+    onDismiss(notification.id);
   };
 
   if (isDismissing) {
@@ -249,7 +294,11 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   }
 
   return (
-    <div className="relative overflow-hidden mx-2 my-2 rounded-2xl">
+    <motion.div
+      className="relative overflow-hidden mx-2 my-2 rounded-2xl"
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
       {/* Delete background indicator */}
       <motion.div 
         className="absolute inset-0 bg-destructive flex items-center justify-end pr-6"
@@ -260,15 +309,20 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
         </motion.div>
       </motion.div>
 
-      {/* Swipeable card */}
+      {/* Swipeable card. The constraints used to pin both edges to 0 with
+          dragElastic 0.1, so the card crawled a tenth of the way while the
+          delete fired off the finger's travel — it barely moved, then the row
+          vanished. Left is free to SWIPE_LIMIT so the card tracks the finger
+          1:1; right stays pinned. */}
       <motion.div
         drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.1}
+        dragDirectionLock
+        dragConstraints={{ left: -SWIPE_LIMIT, right: 0 }}
+        dragElastic={{ left: 0.35, right: 0 }}
+        dragMomentum={false}
         onDragEnd={handleDragEnd}
-        style={{ x, opacity }}
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
+        style={{ x }}
+        animate={controls}
         className={cn(
           "relative flex items-start gap-3 px-4 py-3 transition-colors backdrop-blur-sm border border-border/40 rounded-2xl",
           isUnread ? "bg-purple-500/10" : "bg-card/80",
@@ -455,6 +509,6 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
           )}
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 });

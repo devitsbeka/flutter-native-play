@@ -149,8 +149,11 @@ serve(async (req) => {
       promptSource = "override";
     }
 
-    // Portraits use their fixed prompt; scenes use the DB/override one
-    if (mode === "portrait") {
+    // Portraits: a supplied prompt wins, otherwise the built-in one. This
+    // used to force PORTRAIT_PROMPT unconditionally, so the avatar's art
+    // style could not be changed without redeploying this function — and it
+    // drifted away from the scene's style.
+    if (mode === "portrait" && !promptOverride) {
       prompt = PORTRAIT_PROMPT;
       promptSource = "portrait";
     }

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
 import { hasReachedGuestPlayLimit, recordGuestPlay } from "@/hooks/useGuestPlays";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -27,6 +28,7 @@ import { InviteFriendsModal } from "@/components/home/InviteFriendsModal";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { resolveMatchOutcome } from "@/utils/matchOutcome";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 
@@ -89,21 +91,21 @@ const FloatingConfetti = () => {
 const PlayerCard = ({ 
   avatarUrl, 
   name,
-  coinBalance,
-  level,
   isWinner,
   winnerLabel,
   coinChange,
-  formatNumber,
+  score,
+  correctSummary,
+  onAvatarClick,
 }: { 
   avatarUrl?: string | null; 
   name: string;
-  coinBalance: number;
-  level: number;
   isWinner: boolean;
   winnerLabel: string;
-  formatNumber: (n: number) => string;
   coinChange?: number;
+  score: number;
+  correctSummary: string;
+  onAvatarClick?: () => void;
 }) => (
   <motion.div 
     className="flex flex-col items-center"
@@ -136,8 +138,10 @@ const PlayerCard = ({
       )}
       
       {/* Avatar with border */}
-      <div 
-        className="rounded-2xl p-1 w-[88px] h-[88px] flex items-center justify-center"
+      <div
+        onClick={onAvatarClick}
+        role={onAvatarClick ? "button" : undefined}
+        className={`rounded-2xl p-1 w-[88px] h-[88px] flex items-center justify-center ${onAvatarClick ? "cursor-pointer active:scale-95 transition-transform" : ""}`}
         style={{
           background: isWinner 
             ? "linear-gradient(135deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)"
@@ -185,24 +189,18 @@ const PlayerCard = ({
     <p className="mt-4 font-semibold text-white truncate max-w-[120px] text-center text-xl">
       {name}
     </p>
-    
-    {/* Coin Balance */}
+
+    {/* This match: score + correct answers — the game's actual outcome */}
     <motion.div
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
-      transition={{ delay: 0.5, type: "spring" }}
+      transition={{ delay: 0.45, type: "spring" }}
       className="flex flex-col items-center mt-1"
     >
-      <div className="flex items-center gap-1.5">
-        <img src={coinIcon} alt="" className="w-5 h-5" />
-        <span className="text-2xl font-black" style={{ color: "#F5A623" }}>
-          {formatNumber(coinBalance)}
-        </span>
-      </div>
-      <span className="text-white/70 text-xs font-medium">
-        (Lvl.{level})
-      </span>
+      <span className="text-3xl font-black text-white drop-shadow-sm">{score}</span>
+      <span className="text-white/70 text-xs font-semibold">{correctSummary}</span>
     </motion.div>
+    
 
     {/* Coin change badge - moved below */}
     <div className="h-8 flex items-center justify-center mt-2">
@@ -233,8 +231,9 @@ const PlayerCard = ({
 );
 
 export function MatchResultScreen() {
-  const { userScore, opponentScore, opponent, resetGame, startMatchmaking } = useGame();
+  const { userScore, opponentScore, opponent, resetGame, startMatchmaking, userAnswerHistory, opponentAnswerHistory } = useGame();
   const { user, profile, updateProfile } = useAuth();
+  const { openProfile } = usePlayerProfile();
   const { addCoins } = useCurrency();
   const { playSound } = useSound();
   const { trackMissionEvent } = useMissions();
@@ -252,9 +251,18 @@ export function MatchResultScreen() {
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guestModalBlocking, setGuestModalBlocking] = useState(false);
 
-  const isWin = userScore > opponentScore;
-  const isDraw = userScore === opponentScore;
-  const isLose = !isWin && !isDraw;
+  // What actually happened in this match, per player
+  const userCorrect = userAnswerHistory.filter((a) => a.correct).length;
+  const opponentCorrect = opponentAnswerHistory.filter((a) => a.correct).length;
+  const totalQuestions = userAnswerHistory.length;
+
+  // A win must be earned: leading the score AND at least one correct
+  // answer — zero correct answers never celebrate as a victory.
+  const { isWin, isDraw, isLose } = resolveMatchOutcome({
+    userScore,
+    opponentScore,
+    userCorrect,
+  });
 
   // Level up detection
   const [showLevelUp, setShowLevelUp] = useState(false);
@@ -262,6 +270,8 @@ export function MatchResultScreen() {
   
   const [newLevel, setNewLevel] = useState(0);
   const [previousLevel, setPreviousLevel] = useState(0);
+  /** Correct answers behind the reward, which is what actually triggers it. */
+  const [milestoneCorrectAnswers, setMilestoneCorrectAnswers] = useState<number | undefined>(undefined);
   const [coinChange, setCoinChange] = useState(0);
   const hasCheckedLevelUp = useRef(false);
   const hasSoundPlayed = useRef(false);
@@ -425,8 +435,13 @@ export function MatchResultScreen() {
         });
 
         if (newMilestone > oldMilestone) {
-          setPreviousLevel(newMilestone);
-          setNewLevel(newMilestone);
+          // The badge shows the player's level, the way every other screen
+          // counts it. It used to show the milestone index instead — a player
+          // on level 79 crossing their third 20-correct-answer mark was told
+          // they were level 3.
+          setPreviousLevel(oldLevelInfo.level);
+          setNewLevel(newLevelInfo.level);
+          setMilestoneCorrectAnswers(newMilestone * threshold);
           requestAnimationFrame(() => {
             setTimeout(() => {
               setShowLevelUp(true);
@@ -489,8 +504,6 @@ export function MatchResultScreen() {
   }, [user?.id]);
 
   // Calculate user level
-  const userLevel = calculateLevel(profile?.total_points || 0).level;
-  const opponentLevel = Math.floor(Math.random() * 5) + 1; // Mock opponent level
 
   // Get result text based on outcome
   const getResultText = () => {
@@ -509,6 +522,7 @@ export function MatchResultScreen() {
         newLevel={newLevel}
         previousLevel={previousLevel}
         awardedPowerUp={awardedPowerUp}
+        correctAnswers={milestoneCorrectAnswers}
       />
       
       <InviteFriendsModal
@@ -608,24 +622,23 @@ export function MatchResultScreen() {
             <PlayerCard 
               avatarUrl={profile?.avatar_url} 
               name={profile?.nickname || t("game.you")}
-              coinBalance={profile?.coins || 0}
-              level={userLevel}
               isWinner={isWin}
               winnerLabel={t("game.winner")}
               coinChange={isLose ? -Math.abs(netLoss) : isWin ? netWinProfit : undefined}
-              formatNumber={formatCompactNumber}
+              score={userScore}
+              correctSummary={`${userCorrect}/${totalQuestions} ${t("modals.correctAnswers")}`}
+              onAvatarClick={user ? () => openProfile(user.id) : undefined}
             />
 
             {/* Opponent */}
             <PlayerCard 
               avatarUrl={opponent?.avatarUrl} 
               name={opponent?.name || t("game.opponent")}
-              coinBalance={opponent?.points || 0}
-              level={opponentLevel}
               isWinner={!isWin && !isDraw}
               winnerLabel={t("game.winner")}
               coinChange={isLose ? Math.abs(netLoss) : isWin ? -netWinProfit : undefined}
-              formatNumber={formatCompactNumber}
+              score={opponentScore}
+              correctSummary={`${opponentCorrect}/${totalQuestions} ${t("modals.correctAnswers")}`}
             />
           </motion.div>
 

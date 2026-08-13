@@ -16,9 +16,11 @@ import { toast } from "sonner";
 import { useState, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 import { MASCOT_USER_IDS } from "@/lib/excludedUsers";
 import { CreateQuizModal } from "@/components/social/CreateQuizModal";
 import { AdminProfileEditor } from "@/components/profile/AdminProfileEditor";
+import { SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";
 
 import {
   DropdownMenu,
@@ -75,6 +77,7 @@ const ACHIEVEMENT_ICONS: Record<string, string> = {
 
 export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileModalProps) {
   const { user } = useAuth();
+  const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
   const { isAdmin } = useAdminRole();
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -194,7 +197,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
       toast.info(t("extra.aiAvatarGenerating"), { duration: 10000 });
 
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-avatar", {
-        body: { imageUrl: rawPublicUrl },
+        body: { imageUrl: rawPublicUrl, prompt: SCENE_AVATAR_PROMPT },
       });
 
       if (aiError || !aiData?.success) {
@@ -261,10 +264,28 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-background flex flex-col"
+            className="fixed inset-0 z-[100] bg-background flex flex-col overflow-hidden p-4"
           >
+            {/* Bubble background video + soft wash, same as the room page */}
+            <div className="absolute inset-0 -z-10 pointer-events-none" aria-hidden>
+              <video autoPlay muted loop playsInline className="h-full w-full object-cover">
+                <source src={bubbleVideo.webm} type="video/webm" />
+                <source src={bubbleVideo.mp4} type="video/mp4" />
+              </video>
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(249,219,255,0.5) 0%, rgba(249,219,255,0.3) 45%, rgba(249,219,255,0.5) 100%)",
+                }}
+              />
+            </div>
+
+            {/* Frosted popup panel wrapping header + profile content */}
+            <div className="relative m-auto flex max-h-full w-full max-w-[740px] md:max-w-[640px] flex-col overflow-hidden rounded-[24px] border border-white/70 bg-white/60 backdrop-blur-xl shadow-[0_12px_40px_rgba(104,71,204,0.18)]">
+
             {/* Fixed Header */}
-            <div className="flex-shrink-0 sticky top-0 z-10 bg-background border-b border-border">
+            <div className="flex-shrink-0 sticky top-0 z-10 border-b border-border/40">
               <div className="flex items-center h-14 px-4 max-w-[700px] md:max-w-[600px] mx-auto w-full">
                 <motion.button
                   onClick={onClose}
@@ -319,8 +340,26 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
             </div>
 
             {loading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              /* Skeleton in the final layout's shape — a bare spinner made
+                 the content-hugging panel open as a tiny card and then jump
+                 to full size when the data arrived */
+              <div className="flex-1 overflow-y-auto">
+                <div className="max-w-[700px] md:max-w-[600px] mx-auto animate-pulse">
+                  <div className="p-4 flex flex-col items-center">
+                    <div className="w-[120px] h-[120px] rounded-full bg-slate-200/70" />
+                    <div className="mt-4 h-6 w-40 rounded-full bg-slate-200/70" />
+                    <div className="mt-3 h-4 w-24 rounded-full bg-slate-200/70" />
+                    <div className="mt-5 h-12 w-full max-w-[420px] rounded-full bg-slate-200/70" />
+                  </div>
+                  <div className="px-4 pb-8">
+                    <div className="h-24 rounded-2xl bg-slate-200/50" />
+                    <div className="mt-6 space-y-3">
+                      <div className="h-16 rounded-2xl bg-slate-200/50" />
+                      <div className="h-16 rounded-2xl bg-slate-200/50" />
+                      <div className="h-16 rounded-2xl bg-slate-200/50" />
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : !data?.profile ? (
               <div className="flex-1 flex items-center justify-center">
@@ -617,6 +656,9 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 </div>
               </div>
             )}
+
+            {/* End of frosted popup panel */}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

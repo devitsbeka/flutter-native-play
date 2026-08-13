@@ -547,7 +547,9 @@ export default function CategoryQuizPage() {
           (await trackMissionEvent("correct_answers", score)).forEach(handleMissionResult);
         }
 
-        (await trackMissionEvent("categories_played", 1)).forEach(handleMissionResult);
+        // The slug rides along so a mission that names one category (cinema,
+        // music, ...) can tell this game apart from any other.
+        (await trackMissionEvent("categories_played", 1, categoryId)).forEach(handleMissionResult);
 
         if (result.stars >= 1) {
           (await trackMissionEvent("game_won", 1)).forEach(handleMissionResult);

@@ -15,6 +15,7 @@ import { ka } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { CompactNotificationCard } from '@/components/notifications/CompactNotificationCard';
+import { NotificationDetailModal } from '@/components/notifications/NotificationDetailModal';
 import { CompactGenerationCard } from '@/components/notifications/CompactGenerationCard';
 import { PingPongVideo } from '@/components/shared/PingPongVideo';
 import { MAP_VIDEOS } from '@/config/videoConfig';
@@ -42,48 +43,53 @@ export default function Notifications() {
   const [displayLimit, setDisplayLimit] = useState(20);
   const [clearingAll, setClearingAll] = useState(false);
   const [activeTab, setActiveTab] = useState<'games' | 'social' | 'trivia'>('games');
+  const [detailNotification, setDetailNotification] = useState<Notification | null>(null);
 
   const dateLocale = language === 'ka' ? ka : enUS;
 
-  // Tab category mapping
-  const TAB_TYPES: Record<'games' | 'social' | 'trivia', string[]> = {
-    games: ['room_invite', 'game_started', 'challenge', 'game_result', 'room_ping'],
-    social: ['friend_request', 'friend_accepted'],
-    trivia: ['trivia_liked', 'trivia_saved', 'trivia_played'],
-  };
+  // Tab category mapping. Games is the CATCH-ALL: any type not explicitly
+  // social or trivia lands there (rewards, level-ups, system, messages...).
+  // With fixed per-tab lists, unlisted types were invisible AND never got
+  // marked read — the bell badge could never clear.
+  const SOCIAL_TYPES = ['friend_request', 'friend_accepted'];
+  const TRIVIA_TYPES = ['trivia_liked', 'trivia_saved', 'trivia_played'];
+  const typeInTab = useCallback(
+    (type: string, tab: 'games' | 'social' | 'trivia') =>
+      tab === 'social'
+        ? SOCIAL_TYPES.includes(type)
+        : tab === 'trivia'
+          ? TRIVIA_TYPES.includes(type)
+          : !SOCIAL_TYPES.includes(type) && !TRIVIA_TYPES.includes(type),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   // Filter notifications by active tab
   const filteredNotifications = useMemo(() => {
-    return notifications.filter(n => TAB_TYPES[activeTab].includes(n.type));
-  }, [notifications, activeTab]);
+    return notifications.filter(n => typeInTab(n.type, activeTab));
+  }, [notifications, activeTab, typeInTab]);
 
   // Get unread count per tab
   const getUnreadCount = (tab: 'games' | 'social' | 'trivia') => {
-    return notifications.filter(n => 
-      TAB_TYPES[tab].includes(n.type) && !n.read_at
-    ).length;
+    return notifications.filter(n => typeInTab(n.type, tab) && !n.read_at).length;
   };
 
-  // Mark only current tab's notifications as read
-  const markTabAsRead = useCallback(async (tab: 'games' | 'social' | 'trivia') => {
-    const unreadInTab = notifications.filter(n => 
-      TAB_TYPES[tab].includes(n.type) && !n.read_at
-    );
-    
-    for (const notification of unreadInTab) {
-      await markAsRead(notification.id);
-    }
-  }, [notifications, markAsRead]);
-
-  // Mark notifications as read when switching to a tab (with delay so user sees badge first)
+  // Opening this screen reads everything, not just the tab you land on.
+  //
+  // The bell's badge counts every unread notification, so clearing one tab
+  // at a time left it lit after the player had opened notifications and
+  // closed them again — they had, as far as they were concerned, looked.
+  // Half the notification types could not be cleared at all from here.
+  //
+  // The short delay is deliberate: the per-tab counts are worth seeing for a
+  // moment before they go.
   useEffect(() => {
-    if (!loading) {
-      const timer = setTimeout(() => {
-        markTabAsRead(activeTab);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab, loading, markTabAsRead]);
+    if (loading || unreadCount === 0) return;
+    const timer = setTimeout(() => {
+      void markAllAsRead();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [loading, unreadCount, markAllAsRead]);
 
   const displayedNotifications = filteredNotifications.slice(0, displayLimit);
   const hasMore = filteredNotifications.length > displayLimit;
@@ -262,12 +268,22 @@ export default function Notifications() {
         }
         break;
       case 'reward':
-        navigate('/');
-        break;
+      case 'daily_reward':
+      case 'streak':
+      case 'level_up':
       case 'achievement':
-        navigate('/profile');
+      case 'system':
+      case 'welcome':
+        // "What you earned" popup — these have no page to go to, and
+        // dumping the player on the home screen showed them nothing
+        setDetailNotification(notification);
+        break;
+      case 'billing':
+      case 'subscription':
+        navigate('/vip');
         break;
       default:
+        setDetailNotification(notification);
         break;
     }
   };
@@ -468,6 +484,11 @@ export default function Notifications() {
 
         <div className="h-8" />
       </div>
+
+      <NotificationDetailModal
+        notification={detailNotification}
+        onClose={() => setDetailNotification(null)}
+      />
     </div>
     </MainLayout>
   );

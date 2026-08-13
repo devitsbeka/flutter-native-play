@@ -24,6 +24,7 @@ import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { MAP_VIDEOS } from "@/config/videoConfig";
 import { useMissions } from "@/hooks/useMissions";
+import { PlayerProfileModal } from "@/components/profile/PlayerProfileModal";
 
 interface InviteFriendsModalProps {
   isOpen: boolean;
@@ -135,6 +136,12 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   // Determine mode: pre-room selection vs room invite vs friend request
   const isPreRoomMode = Boolean(onFriendSelect);
   const isRoomInviteMode = Boolean(roomId);
+  // Opened from the home strip's "+": no room to invite into and nothing to
+  // pick for. It used to show only a search box and share links, so the one
+  // thing the screen could have told you — who you already have — was the
+  // thing it left out.
+  const isBrowseMode = !isPreRoomMode && !isRoomInviteMode;
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
   
   // Fetch pending outgoing friend requests on modal open
   useEffect(() => {
@@ -534,19 +541,33 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                   </AnimatePresence>
                 </div>
 
-                {/* Friends Grid - Show in pre-room selection mode when not searching */}
-                {isPreRoomMode && acceptedFriends.length > 0 && !searchQuery && (
+                {/* Friends grid — shown both when picking friends before a
+                    room and when inviting into an existing one. Inviting from
+                    a room used to hide it, leaving only search and share
+                    links even though the friends were right there. */}
+                {acceptedFriends.length > 0 && !searchQuery && (
                   <div className={`space-y-3 ${narrow}`}>
                     <p className="text-sm font-medium text-white/80 px-1">{t("extra.yourFriends")}</p>
                     <div className="grid grid-cols-4 gap-2 max-h-[240px] overflow-y-auto">
                       {acceptedFriends.map((friend) => {
                         const isSelected = selectedFriends?.has(friend.friendId) || false;
+                        const isInvited = !isBrowseMode && sentRequests.has(friend.friendId);
+                        const isInviting = invitingUser === friend.friendId;
+                        const marked = isSelected || isInvited;
                         return (
                           <motion.button
                             key={friend.friendId}
-                            onClick={() => onFriendSelect?.(friend.friendId)}
-                            className={`flex flex-col items-center p-2.5 rounded-xl transition-all ${
-                              isSelected 
+                            onClick={() => {
+                              if (isPreRoomMode) return onFriendSelect?.(friend.friendId);
+                              if (isRoomInviteMode) return handleInviteToRoom(friend.friendId);
+                              // Nothing to invite them to from here, so the
+                              // tile opens who they are rather than being a
+                              // button that does nothing.
+                              setProfileUserId(friend.friendId);
+                            }}
+                            disabled={!isBrowseMode && (isInviting || isInvited)}
+                            className={`flex flex-col items-center p-2.5 rounded-xl transition-all disabled:opacity-70 ${
+                              marked
                                 ? "bg-white/25 ring-2 ring-white" 
                                 : "bg-white/10 hover:bg-white/15"
                             }`}
@@ -560,7 +581,12 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                 className="w-12 h-12 border border-white/20"
                                 fallbackClassName="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold"
                               />
-                              {isSelected && (
+                              {isInviting && (
+                                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
+                                  <Loader2 className="w-4 h-4 text-white animate-spin" />
+                                </div>
+                              )}
+                              {marked && !isInviting && (
                                 <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-white rounded-full flex items-center justify-center">
                                   <Check className="w-3 h-3 text-primary" />
                                 </div>
@@ -576,8 +602,8 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                   </div>
                 )}
 
-                {/* No friends message in pre-room mode */}
-                {isPreRoomMode && acceptedFriends.length === 0 && !searchQuery && (
+                {/* No friends yet */}
+                {acceptedFriends.length === 0 && !searchQuery && (
                   <div className={`text-center py-6 ${narrow}`}>
                     <p className="text-white/70 text-sm mb-2">{t("extra.noFriendsYetShort")}</p>
                     <p className="text-white/50 text-xs">{t("extra.searchAndAddAbove")}</p>
@@ -653,6 +679,14 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
           </div>
         </motion.div>
       )}
+
+      {/* Tapping a friend from the plain "add friends" entry opens who they
+          are — there is no room to invite them to from here. */}
+      <PlayerProfileModal
+        isOpen={profileUserId !== null}
+        onClose={() => setProfileUserId(null)}
+        userId={profileUserId}
+      />
     </AnimatePresence>
   , document.body);
 }

@@ -154,7 +154,7 @@ export default function TriviaLobby() {
   const samplePost = convertToSamplePost(trivia, creator);
 
   return (
-    <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
+    <div className="h-[100dvh] bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] flex flex-col overflow-hidden">
       {/* Hero Section with Cover - fixed height */}
       <div className="h-56 relative overflow-hidden flex-shrink-0">
         {trivia.cover_image ? (

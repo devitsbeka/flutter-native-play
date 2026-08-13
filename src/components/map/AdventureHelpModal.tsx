@@ -4,7 +4,7 @@ import { GameModal } from "@/components/ui/game-modal";
 import giftBottleIcon from "@/assets/icons/icon-gem.png";
 import missionCrystalIcon from "@/assets/icons/icon-compass.png";
 import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
-import xpIcon from "@/assets/icons/icon-xp.png";
+import xpIcon from "@/assets/level/xp-spark.png";
 import powersIcon from "@/assets/icons/icon-powers-3d.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 

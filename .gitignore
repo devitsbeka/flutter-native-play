@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# TypeScript incremental build state (written by `tsc -b`)
+*.tsbuildinfo
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -25,3 +28,9 @@ dist-ssr
 
 # Cloudflare Wrangler local dev state
 .wrangler/
+
+# Playwright output
+test-results/
+playwright-report/
+blob-report/
+.playwright/

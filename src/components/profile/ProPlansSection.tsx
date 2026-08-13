@@ -1,4 +1,3 @@
-import { siteUrl } from "@/config/site";
 import { motion } from "framer-motion";
 import groupIcon from "@/assets/group-of-people.png";
 import crownIcon from "@/assets/crown-icon.png";
@@ -6,14 +5,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp, Share2, Check, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
-import { useFriendInvites } from "@/hooks/useFriendInvites";
-import { toast } from "sonner";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { format } from "date-fns";
 import { FriendInvitesTracker } from "./FriendInvitesTracker";
 import { useSearchParams } from "react-router-dom";
 import { getPriceDisplay } from "@/utils/currency";
+import { ProBannerReel } from "@/components/shop/MobileProCarousel";
+import { useNavigate } from "react-router-dom";
+
+// The reel marks bought deals; nothing here is bought from this screen.
+const EMPTY_PURCHASES: Set<string> = new Set();
 export type ProTier = 'pro' | 'pro_plus' | 'pro_master' | 'standard';
 
 interface TierConfig {
@@ -93,13 +95,12 @@ export function ProPlansSection({
   subscriptionExpiryDate
 }: ProPlansSectionProps) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [purchasedTierName, setPurchasedTierName] = useState("");
-  const [sharing, setSharing] = useState(false);
   const { initiateProCheckout, isProcessing: purchasing } = useProPurchase();
-  const { createLinkInvite } = useFriendInvites();
 
   // Handle success callback from Stripe
   useEffect(() => {
@@ -145,8 +146,6 @@ export function ProPlansSection({
     ? t("extra.proExpiry", { date: format(new Date(subscriptionExpiryDate), 'dd.MM.yyyy') })
     : t("extra.proUnlimited");
 
-  const tierBenefits = (tier: TierConfig) =>
-    tier.benefits.map(b => (b.count ? t(b.text, { count: b.count }) : t(b.text)));
 
   // Same list, but the friend-invites line calls out how many more than solo
   const upgradeBenefits = familyTier.benefits.map(b => {
@@ -159,39 +158,16 @@ export function ProPlansSection({
       {/* SCENARIO 1: Not PRO - Show both tier cards */}
       {isNotPro && (
         <>
-          {/* Invite Friends Card */}
-          <InviteCard sharing={sharing} onShare={async () => {
-            if (sharing) return;
-            setSharing(true);
-            try {
-              const referralCode = await createLinkInvite("friend_pro");
-              if (referralCode) {
-                const link = siteUrl(`/auth?mode=signup&ref=${referralCode}`);
-                const shareText = t("extra.getProFree");
-                if (navigator.share) {
-                  try { await navigator.share({ title: "My Trivia", text: shareText, url: link }); } catch { /* cancelled */ }
-                } else {
-                  await navigator.clipboard.writeText(link);
-                  toast.success(t("extra.linkCopiedInvite"));
-                }
-              }
-            } finally { setSharing(false); }
-          }} />
-          {PRO_TIERS.map((tier, index) => (
-            <ProBannerCard
-              key={tier.id}
-              tier={tier}
-              index={index}
-              badge={tier.popular ? "top" : undefined}
-              price={tier.price}
-              benefits={tierBenefits(tier)}
-              button={{
-                label: t("extra.buyBtn"),
-                onClick: () => handleUpgrade(tier.id),
-                loading: purchasing,
-              }}
-            />
-          ))}
+          {/* The shop's banner reel, rather than a second set of PRO cards
+              built here. Both surfaces sell the same two tiers and the same
+              invite offer, and keeping two designs of them meant every copy
+              or price change had to be made twice — and was not. Buying goes
+              through the same useProPurchase hook either way. */}
+          <ProBannerReel
+            purchasedItems={EMPTY_PURCHASES}
+            isPurchasing={null}
+            onItemClick={() => navigate("/power-ups")}
+          />
         </>
       )}
 
@@ -399,74 +375,6 @@ function ProBannerCard({
           </button>
         )}
       </div>
-    </motion.div>
-  );
-}
-
-// Invite Card matching TierCard style
-function InviteCard({ sharing, onShare }: { sharing: boolean; onShare: () => void }) {
-  const { t } = useLanguage();
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="relative rounded-2xl p-4 overflow-hidden bg-card"
-      style={{
-        border: "2px solid rgba(236, 72, 153, 0.4)",
-        boxShadow: "0 4px 24px -4px rgba(147, 51, 234, 0.25)",
-      }}
-    >
-      {/* Shimmer Effect */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            background: "linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%)",
-            animation: "shimmer 3s infinite",
-            backgroundSize: "200% 200%",
-          }}
-        />
-      </div>
-
-      <div className="relative z-10 flex items-start gap-3">
-        {/* Left: Group Icon */}
-        <img src={groupIcon} alt="" className="w-12 h-12 shrink-0" />
-
-        {/* Right: Text + Badge + Button */}
-        <div className="flex flex-col gap-2 flex-1 min-w-0">
-          <h3 className="text-sm font-bold text-foreground leading-tight">{t("extra.inviteMiniTitle")}</h3>
-
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-foreground bg-muted self-start">
-            <img src={crownIcon} alt="" className="w-4 h-4" />
-            {t("extra.tenDayPro")}
-          </span>
-
-          <motion.button
-            onClick={onShare}
-            disabled={sharing}
-            className="w-full py-2.5 rounded-xl font-semibold text-white text-sm flex items-center justify-center gap-2 disabled:opacity-70"
-            style={{
-              background: "linear-gradient(135deg, #EC4899 0%, #9333EA 100%)",
-              boxShadow: "0 4px 16px rgba(147, 51, 234, 0.25)",
-            }}
-            whileHover={{ scale: sharing ? 1 : 1.02 }}
-            whileTap={{ scale: sharing ? 1 : 0.98 }}
-          >
-            {sharing ? (
-              <><Loader2 className="w-4 h-4 animate-spin" />{t("extra.processingBtn")}</>
-            ) : (
-              <><Share2 className="w-4 h-4" />{t("extra.shareBtn")}</>
-            )}
-          </motion.button>
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes shimmer {
-          0% { background-position: 200% 200%; }
-          100% { background-position: -200% -200%; }
-        }
-      `}</style>
     </motion.div>
   );
 }

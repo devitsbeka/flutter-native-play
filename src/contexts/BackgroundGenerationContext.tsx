@@ -5,7 +5,8 @@ import { useNotificationModalContext } from "@/contexts/NotificationModalContext
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { t } from "@/lib/i18n";
-import { generatePublicPortrait } from "@/utils/portraitAvatar";
+import { generateAndRecordPortrait } from "@/utils/portraitAvatar";
+import { SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";
 
 export type GenerationType = "avatar" | "cover";
 
@@ -141,7 +142,7 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
 
         // Generate avatar via edge function
         const { data, error } = await supabase.functions.invoke("generate-avatar", {
-          body: { imageUrl },
+          body: { imageUrl, prompt: SCENE_AVATAR_PROMPT },
         });
 
         if (error) throw new Error(error.message);
@@ -191,10 +192,15 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
                   is_current: true,
                 });
 
-                // The public circle avatar: a mini stylized portrait of the
-                // same character; falls back to the uploaded photo
-                const portraitUrl = await generatePublicPortrait(user.id, imageUrl);
-                await updateProfile({ avatar_url: portraitUrl || imageUrl, has_face_photo: true } as any);
+                // The public circle avatar: a mini stylized portrait derived
+                // from the SCENE, so it matches the character exactly. The
+                // raw photo is never published — on failure the previous
+                // avatar simply stays.
+                const portraitUrl = await generateAndRecordPortrait(user.id, finalUrlData.publicUrl);
+                await updateProfile({
+                  ...(portraitUrl ? { avatar_url: portraitUrl, animated_avatar_url: null } : {}),
+                  has_face_photo: true,
+                } as any);
                 queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
                 toast.success(t("avatar.avatarSaved"));
 

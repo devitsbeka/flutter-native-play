@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CompactNotificationCard } from '@/components/notifications/CompactNotificationCard';
+import { NotificationDetailModal } from '@/components/notifications/NotificationDetailModal';
 import { CompactGenerationCard } from '@/components/notifications/CompactGenerationCard';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -31,11 +32,26 @@ const formatTimeAgo = (date: Date, t: (key: string, params?: Record<string, stri
 };
 
 // Tab category mapping
-const TAB_TYPES: Record<'games' | 'social' | 'trivia', string[]> = {
-  games: ['room_invite', 'game_started', 'challenge', 'game_result'],
-  social: ['friend_request', 'friend_accepted'],
-  trivia: ['trivia_liked', 'trivia_saved', 'trivia_played'],
-};
+type NotifTab = 'games' | 'social' | 'trivia';
+
+const SOCIAL_TYPES = ['friend_request', 'friend_accepted'];
+const TRIVIA_TYPES = ['trivia_liked', 'trivia_saved', 'trivia_played'];
+
+/**
+ * Which tab a notification belongs in.
+ *
+ * Games is everything else rather than a list of its own, the way the
+ * notifications page already sorts them. Naming all three explicitly covered
+ * nine of the twenty-one types that exist, so a welcome, a level-up, an
+ * achievement or a reward appeared in no tab at all — invisible here, while
+ * still counted in the bell's badge.
+ */
+const typeInTab = (type: string, tab: NotifTab): boolean =>
+  tab === 'social'
+    ? SOCIAL_TYPES.includes(type)
+    : tab === 'trivia'
+      ? TRIVIA_TYPES.includes(type)
+      : !SOCIAL_TYPES.includes(type) && !TRIVIA_TYPES.includes(type);
 
 interface NotificationsPanelProps {
   isOpen: boolean;
@@ -57,13 +73,13 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
     if (defaultTab) return defaultTab;
     
     const socialUnread = notifications.filter(n => 
-      TAB_TYPES.social.includes(n.type) && !n.read_at
+      typeInTab(n.type, 'social') && !n.read_at
     ).length;
     const triviaUnread = notifications.filter(n => 
-      TAB_TYPES.trivia.includes(n.type) && !n.read_at
+      typeInTab(n.type, 'trivia') && !n.read_at
     ).length;
     const gamesUnread = notifications.filter(n => 
-      TAB_TYPES.games.includes(n.type) && !n.read_at
+      typeInTab(n.type, 'games') && !n.read_at
     ).length;
     
     // Prioritize tabs with unread items
@@ -73,7 +89,8 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
     return 'games';
   };
   
-  const [activeTab, setActiveTab] = useState<'games' | 'social' | 'trivia'>('games');
+  const [activeTab, setActiveTab] = useState<NotifTab>('games');
+  const [detailNotification, setDetailNotification] = useState<Notification | null>(null);
   
   // Reset to best tab when panel opens
   useEffect(() => {
@@ -84,51 +101,31 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
 
   // Filter notifications by active tab
   const filteredNotifications = useMemo(() => {
-    return notifications.filter(n => TAB_TYPES[activeTab].includes(n.type));
+    return notifications.filter(n => typeInTab(n.type, activeTab));
   }, [notifications, activeTab]);
 
   // Get unread count per tab
   const getUnreadCount = (tab: 'games' | 'social' | 'trivia') => {
     return notifications.filter(n => 
-      TAB_TYPES[tab].includes(n.type) && !n.read_at
+      typeInTab(n.type, tab) && !n.read_at
     ).length;
   };
 
-  // Mark only current tab's notifications as read
-  const markTabAsRead = useCallback(async (tab: 'games' | 'social' | 'trivia') => {
-    const unreadInTab = notifications.filter(n => 
-      TAB_TYPES[tab].includes(n.type) && !n.read_at
-    );
-    
-    // Mark each unread notification in this tab as read
-    for (const notification of unreadInTab) {
-      await markAsRead(notification.id);
-    }
-  }, [notifications, markAsRead]);
-
-  // Track previous isOpen state to mark as read only when panel closes
+  // Closing the panel reads everything.
+  //
+  // It used to mark only the tabs that had been looked at, while the bell's
+  // badge counts every unread notification — so opening notifications and
+  // closing them again left it lit. Worse, the tab lists here name their
+  // types explicitly and between them cover nine of the twenty-one that
+  // exist: a welcome, a level-up or an achievement could not be marked read
+  // from this panel at all, and sat in the badge forever.
   const prevIsOpenRef = useRef(isOpen);
-  const viewedTabsRef = useRef<Set<'games' | 'social' | 'trivia'>>(new Set());
-
-  // Track which tabs have been viewed while panel is open
   useEffect(() => {
-    if (isOpen) {
-      viewedTabsRef.current.add(activeTab);
-    }
-  }, [isOpen, activeTab]);
-
-  // Mark viewed tabs as read when panel closes (transitions from open to closed)
-  useEffect(() => {
-    if (prevIsOpenRef.current && !isOpen) {
-      // Panel just closed - mark all viewed tabs as read
-      viewedTabsRef.current.forEach(tab => {
-        markTabAsRead(tab);
-      });
-      // Reset viewed tabs for next open
-      viewedTabsRef.current.clear();
+    if (prevIsOpenRef.current && !isOpen && unreadCount > 0) {
+      void markAllAsRead();
     }
     prevIsOpenRef.current = isOpen;
-  }, [isOpen, markTabAsRead]);
+  }, [isOpen, unreadCount, markAllAsRead]);
 
   const hasAnyContent = generationNotifications.length > 0 || notifications.length > 0;
   const hasTabContent = filteredNotifications.length > 0;
@@ -331,14 +328,23 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
         }
         break;
       case 'reward':
-        onClose();
-        navigate('/');
-        break;
+      case 'daily_reward':
+      case 'streak':
+      case 'level_up':
       case 'achievement':
+      case 'system':
+      case 'welcome':
+        // "What you earned" popup — these have no page to go to, and
+        // dumping the player on the home screen showed them nothing
+        setDetailNotification(notification);
+        break;
+      case 'billing':
+      case 'subscription':
         onClose();
-        navigate('/profile');
+        navigate('/vip');
         break;
       default:
+        setDetailNotification(notification);
         break;
     }
   };
@@ -495,6 +501,11 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
               <div className="h-8" />
             </div>
           </motion.div>
+
+          <NotificationDetailModal
+            notification={detailNotification}
+            onClose={() => setDetailNotification(null)}
+          />
         </>
       )}
     </AnimatePresence>,

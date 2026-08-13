@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { portal } from "@/lib/overlayPortal";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -42,6 +43,7 @@ import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { Input } from "@/components/ui/input";
 import { SearchHorizontalLists } from "./SearchHorizontalLists";
 import { usePlayGuard } from "@/contexts/PlayGuardContext";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 
 interface SpotlightSearchProps {
   className?: string;
@@ -73,6 +75,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
   const inputRef = React.useRef<HTMLInputElement>(null);
   const mobileInputRef = React.useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { openProfile } = usePlayerProfile();
   const { signOut } = useAuth();
   const { guardPlay } = usePlayGuard();
   const { t } = useLanguage();
@@ -240,10 +243,12 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
     navigate(`/category/${categoryId}`);
   };
 
-  // Handle friend select
+  // Handle friend select — open the profile modal directly over the
+  // current page; routing to /profile/:id swaps the page for a Suspense
+  // skeleton while the lazy route chunk loads
   const handleFriendSelect = (friendId: string) => {
     handleOpenChange(false);
-    navigate(`/profile/${friendId}`);
+    openProfile(friendId);
   };
 
   // Handle room select
@@ -321,7 +326,12 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
           </motion.button>
         )}
         
-        {/* Full-screen mobile panel */}
+        {/* Full-screen mobile panel. Portalled to <body>: the header that
+            hosts the search button is a backdrop-blur bar, which makes it the
+            containing block for position:fixed children — inside it, inset-0
+            resolves to the header's own box, so the panel covered only the
+            header strip and the page showed straight through the rest. */}
+        {portal(
         <AnimatePresence>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -400,6 +410,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             </div>
           </motion.div>
         </AnimatePresence>
+        )}
       </>
     );
   }

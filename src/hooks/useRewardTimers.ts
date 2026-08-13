@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { chestCooldownStatus, dailyResetCountdown } from "@/utils/rewardTimers";
 
 interface DailyRewardStatus {
   canClaimDaily: boolean;
@@ -25,9 +26,6 @@ interface RewardData {
   chestClaimedAt: string | null;
 }
 
-// Chest cooldown in hours
-const CHEST_COOLDOWN_HOURS = 24;
-
 const QUERY_KEY = "reward-timers";
 
 async function fetchRewardData(userId: string): Promise<RewardData> {
@@ -45,17 +43,6 @@ async function fetchRewardData(userId: string): Promise<RewardData> {
   return {
     dailyClaimedAt: data?.daily_claimed_at ?? null,
     chestClaimedAt: data?.chest_claimed_at ?? null,
-  };
-}
-
-function formatTimeDiff(diffMs: number): { timeLeft: string; secondsLeft: number } {
-  if (diffMs <= 0) return { timeLeft: "00:00:00", secondsLeft: 0 };
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-  return {
-    timeLeft: `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`,
-    secondsLeft: Math.floor(diffMs / 1000),
   };
 }
 
@@ -116,21 +103,12 @@ export function useRewardTimers(): RewardTimers {
     };
   }, [tickMs]);
 
-  const dailyReset = useMemo(() => {
-    const midnight = new Date(now);
-    midnight.setHours(24, 0, 0, 0);
-    return formatTimeDiff(midnight.getTime() - now.getTime());
-  }, [now]);
+  const dailyReset = useMemo(() => dailyResetCountdown(now), [now]);
 
-  const chestCooldown = useMemo(() => {
-    if (!data?.chestClaimedAt) {
-      return { timeLeft: "00:00:00", secondsLeft: 0, canClaim: true };
-    }
-    const cooldownEnd = new Date(data.chestClaimedAt).getTime() + CHEST_COOLDOWN_HOURS * 60 * 60 * 1000;
-    const diff = cooldownEnd - now.getTime();
-    if (diff <= 0) return { timeLeft: "00:00:00", secondsLeft: 0, canClaim: true };
-    return { ...formatTimeDiff(diff), canClaim: false };
-  }, [now, data?.chestClaimedAt]);
+  const chestCooldown = useMemo(
+    () => chestCooldownStatus(data?.chestClaimedAt, now),
+    [now, data?.chestClaimedAt]
+  );
 
   const canClaimDaily = !data?.dailyClaimedAt;
 

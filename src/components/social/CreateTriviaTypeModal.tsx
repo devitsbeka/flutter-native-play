@@ -111,8 +111,8 @@ export function CreateTriviaTypeModal({
               
               {/* Text */}
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white text-base">{t("extra.triviaLabel")}</h3>
-                  <p className="text-white/60 text-xs">{t("extra.triviaDesc2")}</p>
+                <h3 className="font-bold text-white text-[17.6px]">{t("extra.triviaLabel")}</h3>
+                  <p className="text-white/60 text-[13.8px]">{t("extra.triviaDesc2")}</p>
               </div>
             </motion.button>
 
@@ -149,8 +149,8 @@ export function CreateTriviaTypeModal({
               
               {/* Text */}
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white text-base">{t("extra.collectionLabel")}</h3>
-                  <p className="text-white/60 text-xs">{t("extra.collectionDesc2")}</p>
+                <h3 className="font-bold text-white text-[17.6px]">{t("extra.collectionLabel")}</h3>
+                  <p className="text-white/60 text-[13.8px]">{t("extra.collectionDesc2")}</p>
               </div>
             </motion.button>
 
@@ -189,8 +189,8 @@ export function CreateTriviaTypeModal({
                   
                   {/* Text */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-white text-base">My Trivia Party</h3>
-                    <p className="text-white/60 text-xs">{t("extra.myTriviaPartyDesc2")}</p>
+                    <h3 className="font-bold text-white text-[17.6px]">My Trivia Party</h3>
+                    <p className="text-white/60 text-[13.8px]">{t("extra.myTriviaPartyDesc2")}</p>
                   </div>
                 </motion.button>
               </>
@@ -230,8 +230,8 @@ export function CreateTriviaTypeModal({
                 
                 {/* Text */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-white text-base">სათამაშო ოთახი</h3>
-                  <p className="text-white/60 text-xs">ითამაშე მეგობრებთან ერთად</p>
+                  <h3 className="font-bold text-white text-[17.6px]">სათამაშო ოთახი</h3>
+                  <p className="text-white/60 text-[13.8px]">ითამაშე მეგობრებთან ერთად</p>
                 </div>
               </motion.button>
             )}

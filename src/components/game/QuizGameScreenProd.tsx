@@ -45,6 +45,7 @@ export function QuizGameScreenProd() {
     lastUserAnswer,
     lastOpponentAnswer,
     lastOpponentCorrect,
+    questionReplaced,
     opponentTurn,
     opponentAnswered,
     opponentCommits,
@@ -303,6 +304,10 @@ export function QuizGameScreenProd() {
   // work as a hint.
   const opponentChoosersFor = useCallback(
     (answer: string): AnswerChooser[] => {
+      // A question reached via "replace" is one the player swapped into —
+      // the opponent is still on the question that was skipped, so showing
+      // their pick here would be answering a different question.
+      if (questionReplaced) return [];
       if (!opponent || !answerRevealed || lastOpponentAnswer !== answer) return [];
       return [{
         id: "opponent",
@@ -311,7 +316,7 @@ export function QuizGameScreenProd() {
         isCorrect: lastOpponentCorrect,
       }];
     },
-    [opponent, answerRevealed, lastOpponentAnswer, lastOpponentCorrect]
+    [opponent, answerRevealed, lastOpponentAnswer, lastOpponentCorrect, questionReplaced]
   );
 
   if (!currentQuestion) {

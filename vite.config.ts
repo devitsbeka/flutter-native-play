@@ -3,13 +3,36 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
+// One id per build. It is compiled into the bundle AND written to
+// dist/version.json, which lets a long-lived tab ask "is the build I am
+// running still the one being served?" without depending on how the HTML
+// happens to reference its script.
+const BUILD_ID = `${Date.now().toString(36)}`;
+
+function buildVersionFile() {
+  return {
+    name: "build-version-file",
+    apply: "build" as const,
+    generateBundle(_options: unknown, _bundle: unknown) {
+      (this as unknown as { emitFile: (f: Record<string, string>) => void }).emitFile({
+        type: "asset",
+        fileName: "version.json",
+        source: JSON.stringify({ build: BUILD_ID }),
+      });
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
   },
-  plugins: [react()],
+  define: {
+    __BUILD_ID__: JSON.stringify(BUILD_ID),
+  },
+  plugins: [react(), buildVersionFile()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

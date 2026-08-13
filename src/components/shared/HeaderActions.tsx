@@ -7,16 +7,19 @@ import SpotlightSearch from "@/components/search/SpotlightSearch";
 
 interface HeaderActionsProps {
   className?: string;
+  /** Pages with their own in-page search (Discover) hide this one so the
+      header doesn't show two magnifying glasses side by side. */
+  showSearch?: boolean;
 }
 
-export function HeaderActions({ className = "" }: HeaderActionsProps) {
+export function HeaderActions({ className = "", showSearch = true }: HeaderActionsProps) {
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   const { unreadCount } = useNotifications();
 
   return (
     <>
       <div className={`flex items-center gap-1 ${className}`}>
-        <SpotlightSearch variant="button" />
+        {showSearch && <SpotlightSearch variant="button" />}
         <motion.button
           className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
           whileHover={{ scale: 1.1 }}

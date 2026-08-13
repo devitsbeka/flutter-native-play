@@ -163,15 +163,37 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // Track friends to invite with a ref so it's available when room is created
   const friendsToInviteRef = useRef<Set<string>>(new Set());
   
+  // Friends invited from the "see all" modal (or via a challenge) float to the
+  // front of the reel so they're visible as selected without scrolling. Kept
+  // separate from selectedFriends so tapping inside the reel doesn't reshuffle
+  // the avatars under the user's finger.
+  const [pinnedFriendIds, setPinnedFriendIds] = useState<string[]>([]);
+
   // If challenge user provided, auto-add to selected friends
   useEffect(() => {
     if (challengeUserId) {
       setSelectedFriends(new Set([challengeUserId]));
+      setPinnedFriendIds([challengeUserId]);
     }
   }, [challengeUserId]);
 
   // Only accepted friends
-  const acceptedFriends = friends.filter(f => f.status === "accepted");
+  const acceptedFriends = useMemo(
+    () => friends.filter(f => f.status === "accepted"),
+    [friends]
+  );
+
+  // Reel order: invited friends first (in the order they were picked), the rest
+  // keep their original order — Array.prototype.sort is stable.
+  const reelFriends = useMemo(() => {
+    if (pinnedFriendIds.length === 0) return acceptedFriends;
+    const rank = new Map(pinnedFriendIds.map((id, index) => [id, index]));
+    return [...acceptedFriends].sort(
+      (a, b) =>
+        (rank.get(a.friendId) ?? Number.MAX_SAFE_INTEGER) -
+        (rank.get(b.friendId) ?? Number.MAX_SAFE_INTEGER)
+    );
+  }, [acceptedFriends, pinnedFriendIds]);
 
   // Get current language for room name generation
   const currentLanguage = localStorage.getItem('preferredLanguage') || 'ka';
@@ -825,7 +847,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden"
+      className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden p-4"
     >
       {/* Bubble background video behind the whole page, washed light so the
           form stays readable (negative z paints it under the content) */}
@@ -850,15 +872,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         />
       </div>
 
-      {/* Frosted white panel behind the form — floats like a popup: inset
-          from top/bottom, 24px corners (still -z: above video, below content) */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-y-4 left-1/2 -z-10 w-full max-w-[740px] md:max-w-[560px] -translate-x-1/2 rounded-[24px] border border-white/70 bg-white/60 backdrop-blur-xl shadow-[0_12px_40px_rgba(104,71,204,0.18)]"
-      />
+      {/* Frosted popup panel — a real container now: header, form and the
+          create button all live inside it. Height hugs the content (m-auto
+          centers it), max-h keeps it inside the viewport with scrolling. */}
+      <div className="relative m-auto flex max-h-full w-full max-w-[740px] md:max-w-[560px] flex-col overflow-hidden rounded-[24px] border border-white/70 bg-white/60 backdrop-blur-xl shadow-[0_12px_40px_rgba(104,71,204,0.18)]">
 
       {/* Header - simplified */}
-      <div className="border-b border-border/30">
+      <div className="border-b border-border/30 shrink-0">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
             <button
@@ -881,11 +901,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4 space-y-5">
         {/* Room Name with Icon - AI generated */}
         <div>
-          <h2 className="text-xs font-medium text-muted-foreground mb-2">{t("extra.chooseRoomName")}</h2>
+          <h2 className="text-[13.2px] font-medium text-muted-foreground mb-2">{t("extra.chooseRoomName")}</h2>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
                   {/* Clickable area for Icon + Name - opens picker modal */}
                   <div
@@ -938,7 +958,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         {/* Invite Friends - Horizontal Scroll */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xs font-medium text-muted-foreground">{t("extra.inviteFriendsToPlay")}</h2>
+            <h2 className="text-[13.2px] font-medium text-muted-foreground">{t("extra.inviteFriendsToPlay")}</h2>
             {acceptedFriends.length > 5 && (
               <button 
                 onClick={() => setShowInviteModal(true)}
@@ -967,7 +987,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     <span className="text-xs text-primary font-medium">{t("extra.inviteBtn")}</span>
                   </motion.button>
                   
-                  {acceptedFriends.slice(0, 10).map((friend) => {
+                  {reelFriends.slice(0, 10).map((friend) => {
                     const isSelected = selectedFriends.has(friend.friendId);
                     return (
                       <motion.button
@@ -1057,7 +1077,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
         {/* 3 Option Cards - Vertical List with Descriptions */}
         <div>
-          <h2 className="text-xs font-medium text-muted-foreground mb-2">{t("extra.whatToPlay")}</h2>
+          <h2 className="text-[13.2px] font-medium text-muted-foreground mb-2">{t("extra.whatToPlay")}</h2>
           
           <div className="space-y-3">
             {/* Random Option - Container that expands to show preview */}
@@ -1479,7 +1499,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       </div>
 
       {/* Footer - Normal Button */}
-      <div className="border-t border-border/30">
+      <div className="border-t border-border/30 shrink-0">
         <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4">
         <ChunkyButton
           onClick={handleCreate}
@@ -1498,6 +1518,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         </div>
       </div>
 
+      {/* End of frosted popup panel */}
+      </div>
+
       {/* TV Play Modal */}
       <TVPlayModal
         isOpen={showTVModal}
@@ -1509,7 +1532,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       {/* Invite Friends Modal - Pre-room selection mode */}
       <InviteFriendsModal
         isOpen={showInviteModal}
-        onClose={() => setShowInviteModal(false)}
+        onClose={() => {
+          setShowInviteModal(false);
+          // Whoever is invited now leads the reel, newest picks last
+          setPinnedFriendIds(prev => [
+            ...prev.filter(id => selectedFriends.has(id)),
+            ...Array.from(selectedFriends).filter(id => !prev.includes(id)),
+          ]);
+        }}
         onFriendSelect={(friendId: string) => {
           const newSelected = new Set(selectedFriends);
           if (newSelected.has(friendId)) {

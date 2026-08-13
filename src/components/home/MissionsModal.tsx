@@ -1,10 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Check, Sparkles, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Star, X } from "lucide-react";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
-import { useMissions, getMissionIcon, type MissionIconKey } from "@/hooks/useMissions";
+import {
+  useMissions,
+  useDailyMissionsFor,
+  useWeekBonus,
+  getMissionIcon,
+  todayKey,
+  WEEK_BONUS,
+  weekBonusPowerUp,
+  weekStartOf,
+  type MissionIconKey,
+} from "@/hooks/useMissions";
 import { useMissionStreak } from "@/hooks/useMissionStreak";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -16,6 +26,7 @@ import iconShoe from "@/assets/missions/shoe.png";
 import iconTrophy from "@/assets/missions/trophy.png";
 import iconTv from "@/assets/missions/tv.png";
 import iconHearts from "@/assets/missions/hearts.png";
+import xpSparkIcon from "@/assets/level/xp-spark.png";
 
 const MISSION_ICONS: Record<MissionIconKey, string> = {
   check: iconCheck,
@@ -32,10 +43,14 @@ import power5050 from "@/assets/powers/5050.png";
 import powerFreeze from "@/assets/powers/freeze.png";
 import powerReplace from "@/assets/powers/replace.png";
 import { TimeIcon } from "@/components/shared/TimeIcon";
+import { SunsetButton } from "@/components/shared/SunsetButton";
+import { formatDayWithWeekday } from "@/utils/localDate";
 
 interface MissionsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Which day to open on. null (the default) means today. */
+  date?: string | null;
 }
 
 // Where the CTA takes the player to actually work on a mission: category
@@ -47,6 +62,19 @@ function missionDestination(missionId: string): { to: string; state?: Record<str
     case "play_categories":
     case "weekly_categories":
       return { to: "/discover" };
+    // A mission naming one category opens that category, not the browser.
+    case "category_movies":
+      return { to: "/category/movies" };
+    case "category_music":
+      return { to: "/category/music" };
+    case "category_animals":
+      return { to: "/category/animals" };
+    case "category_sports":
+      return { to: "/category/sports" };
+    case "category_cuisine":
+      return { to: "/category/georgian_cuisine" };
+    case "invite_to_play":
+      return { to: "/team", state: { openCreateRoom: true } };
     case "play_friend":
     case "weekly_friend_games":
       return { to: "/team", state: { openCreateRoom: true } };
@@ -96,7 +124,7 @@ function RewardChips({ mission }: { mission: Mission }) {
         className="flex items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5"
         style={chipStyle}
       >
-        <Sparkles className="h-4 w-4 shrink-0 text-violet-500" />
+        <img src={xpSparkIcon} alt="" className="shrink-0" width={18} height={18} />
         <span className="text-xs font-bold text-[#402666]">{mission.reward_xp}XP</span>
       </div>
       <div
@@ -186,10 +214,29 @@ function MissionCard({ mission, t }: { mission: Mission; t: (key: string) => str
   );
 }
 
-export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
-  const { t } = useLanguage();
+export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalProps) {
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
-  const { dailyMissions, weeklyMissions, loading } = useMissions();
+  const { weeklyMissions } = useMissions();
+  // Whichever day was tapped. Today routes back to the live query, so
+  // progress and realtime behave exactly as before.
+  const weekBonus = useWeekBonus();
+  const [claimingBonus, setClaimingBonus] = useState(false);
+  const day = useDailyMissionsFor(date);
+  const dailyMissions = day.missions;
+  const loading = day.loading;
+
+  // "ორშაბათი, 10 აგვისტო" in the player's own language, plus whether that
+  // day is behind or ahead — the date alone does not say which.
+  //
+  // Not toLocaleDateString: browsers ship no Georgian locale data and Intl
+  // answers a missing locale with an English date rather than an error, so
+  // this line read "Sunday, Aug 16" to every Georgian player. See localDate.
+  const dayLabel = (() => {
+    if (!date || day.kind === "today") return "";
+    const when = formatDayWithWeekday(new Date(`${date}T00:00:00Z`), language, { utc: true });
+    return `${when} · ${t(day.kind === "past" ? "missions.pastDay" : "missions.futureDay")}`;
+  })();
   const { currentStreak } = useMissionStreak();
   const [activeTab, setActiveTab] = useState<"daily" | "weekly">("daily");
   const [dailyIndex, setDailyIndex] = useState(0);
@@ -200,6 +247,25 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
   const setIndex = activeTab === "daily" ? setDailyIndex : setWeeklyIndex;
   const safeIndex = missions.length > 0 ? Math.min(index, missions.length - 1) : 0;
   const mission = missions[safeIndex];
+
+  const trackRef = useRef<HTMLDivElement | null>(null);
+
+  // The track is the source of truth for which card is showing: a drag
+  // moves it without going through React, so the index follows the scroll
+  // rather than the other way round.
+  const onTrackScroll = () => {
+    const el = trackRef.current;
+    if (!el || el.clientWidth === 0) return;
+    const next = Math.round(el.scrollLeft / el.clientWidth);
+    setIndex((prev) => (prev === next ? prev : next));
+  };
+
+  const scrollToIndex = (i: number, smooth = true) => {
+    const el = trackRef.current;
+    if (!el) return;
+    el.scrollTo({ left: i * el.clientWidth, behavior: smooth ? "smooth" : "auto" });
+    setIndex(i);
+  };
 
   // Escape dismisses the modal, same as backdrop and the continue button
   useEffect(() => {
@@ -219,6 +285,16 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
     setWeeklyIndex(Math.max(0, weeklyMissions.findIndex((m) => !m.completed)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  // Put the track where that index says, without animating into place —
+  // the track starts at 0 whenever it mounts or the tab swaps it out, and
+  // sliding from there would look like a page the player did not ask for.
+  useLayoutEffect(() => {
+    const el = trackRef.current;
+    if (!el || el.clientWidth === 0) return;
+    el.scrollTo({ left: safeIndex * el.clientWidth, behavior: "auto" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, activeTab, missions.length]);
 
   return (
     <AnimatePresence mode="wait">
@@ -244,12 +320,90 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
               boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0,0,0,0.18)",
             }}
           >
+            {/* Close — same treatment as the other home modals. Tapping the
+                backdrop already dismisses, but that is not discoverable and
+                is unreachable on a phone where the sheet fills the screen. */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200"
+              style={{ boxShadow: "0 2px 0 #E5E7EB" }}
+              aria-label={t("common.close")}
+            >
+              <X className="h-4 w-4 text-gray-600" />
+            </button>
+
             <div className="px-5 pb-5 pt-5">
-              {/* Header */}
-              <h2 className="font-display text-xl font-bold text-[#402666]">
+              {/* Header — right padding keeps the title clear of the close button */}
+              <h2 className="pr-12 font-display text-xl font-bold text-[#402666]">
                 {t("missions.title")}
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">{t("missions.subtitle")}</p>
+              <p className="mt-0.5 pr-12 text-xs text-slate-500">
+                {day.kind === "today" ? t("missions.subtitle") : dayLabel}
+              </p>
+
+              {/* Week package — the prize for a clean sweep of all seven
+                  days. Shown as progress while the week is still running so
+                  it is something to aim at, not a surprise at the end. */}
+              {!weekBonus.claimed && (
+                <div
+                  className="mt-3.5 rounded-2xl px-3 py-2.5"
+                  style={{
+                    background: weekBonus.claimable
+                      ? "linear-gradient(90deg, #F59E0B 0%, #D97706 100%)"
+                      : "linear-gradient(90deg, #A78BFA 0%, #7C3AED 100%)",
+                    boxShadow: weekBonus.claimable
+                      ? "0 3px 0 0 #B45309, inset 0 1.5px 0 0 rgba(255,255,255,0.35)"
+                      : "0 3px 0 0 #6D28D9, inset 0 1.5px 0 0 rgba(255,255,255,0.35)",
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-bold text-white">
+                      {t("missions.weekPackage")}
+                    </span>
+                    <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#5B21B6]">
+                      {weekBonus.daysComplete}/7
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <span className="flex items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-bold text-white">
+                      <img src={coinIcon} alt="" width={13} height={13} />
+                      {WEEK_BONUS.coins}
+                    </span>
+                    <span className="flex items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-bold text-white">
+                      <img src={gemIcon} alt="" width={13} height={13} />
+                      {WEEK_BONUS.gems}
+                    </span>
+                    <span className="flex items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-bold text-white">
+                      {weekBonusPowerUp(weekStartOf(todayKey())) === "time-drain" ? (
+                        <TimeIcon size={13} />
+                      ) : (
+                        <img
+                          src={POWER_UP_ICONS[weekBonusPowerUp(weekStartOf(todayKey()))] || power5050}
+                          alt=""
+                          width={13}
+                          height={13}
+                        />
+                      )}
+                      {WEEK_BONUS.power_up_count}x
+                    </span>
+                  </div>
+                  {weekBonus.claimable && (
+                    <button
+                      type="button"
+                      disabled={claimingBonus}
+                      onClick={async () => {
+                        setClaimingBonus(true);
+                        await weekBonus.claim();
+                        setClaimingBonus(false);
+                      }}
+                      className="mt-2 w-full rounded-full bg-white py-1.5 text-xs font-bold text-[#B45309] disabled:opacity-60"
+                    >
+                      {claimingBonus ? t("missions.claimed") : t("missions.claimReward")}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Streak banner */}
               <div
@@ -287,32 +441,36 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                 ))}
               </div>
 
-              {/* One-card carousel */}
+              {/* Carousel. A scroll-snap track rather than one swapped card:
+                  the cards are really side by side, so a thumb drag, a
+                  trackpad and the arrows all move it, and the browser owns
+                  the momentum and rubber-banding. */}
               <div className="relative mt-3.5">
                 {loading ? (
                   <div className="h-[290px] animate-pulse rounded-[20px] bg-white/70" />
-                ) : !mission ? (
+                ) : missions.length === 0 ? (
                   <div className="flex h-[290px] items-center justify-center rounded-[20px] bg-white/70 text-sm text-slate-400">
                     {t("missions.noMissions")}
                   </div>
                 ) : (
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.div
-                      key={`${activeTab}-${mission.id}`}
-                      initial={{ opacity: 0, x: 32 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -32 }}
-                      transition={{ duration: 0.18 }}
-                    >
-                      <MissionCard mission={mission} t={t} />
-                    </motion.div>
-                  </AnimatePresence>
+                  <div
+                    ref={trackRef}
+                    onScroll={onTrackScroll}
+                    className="scrollbar-hide flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain"
+                    style={{ touchAction: "pan-x pan-y" }}
+                  >
+                    {missions.map((m) => (
+                      <div key={m.id} className="w-full shrink-0 snap-center">
+                        <MissionCard mission={m} t={t} />
+                      </div>
+                    ))}
+                  </div>
                 )}
 
                 {/* Prev / next arrows */}
                 {safeIndex > 0 && (
                   <button
-                    onClick={() => setIndex(safeIndex - 1)}
+                    onClick={() => scrollToIndex(safeIndex - 1)}
                     className="absolute -left-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-500 shadow-md transition-colors hover:text-[#402666]"
                     aria-label="previous mission"
                   >
@@ -321,7 +479,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                 )}
                 {safeIndex < missions.length - 1 && (
                   <button
-                    onClick={() => setIndex(safeIndex + 1)}
+                    onClick={() => scrollToIndex(safeIndex + 1)}
                     className="absolute -right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-500 shadow-md transition-colors hover:text-[#402666]"
                     aria-label="next mission"
                   >
@@ -330,45 +488,51 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                 )}
               </div>
 
-              {/* Dots */}
+              {/* Dots double as the scoreboard: green for a mission already
+                  done, grey for one still open. The current page keeps the
+                  elongated pill, so position and progress read separately —
+                  colour alone could not say both. */}
               {missions.length > 1 && (
                 <div className="mt-3 flex items-center justify-center gap-1.5">
                   {missions.map((m, i) => (
                     <button
                       key={m.id}
-                      onClick={() => setIndex(i)}
-                      aria-label={`mission ${i + 1}`}
-                      className={`rounded-full transition-all duration-200 ${
-                        i === safeIndex
-                          ? "h-1.5 w-5 bg-[#7C3AED]"
-                          : "h-1.5 w-1.5 bg-slate-300 hover:bg-slate-400"
+                      onClick={() => scrollToIndex(i)}
+                      aria-label={`${t("missions.progress")} ${i + 1}`}
+                      className={`h-1.5 rounded-full transition-all duration-200 ${
+                        i === safeIndex ? "w-5" : "w-1.5"
+                      } ${
+                        m.completed
+                          ? "bg-emerald-500"
+                          : i === safeIndex
+                            ? "bg-[#7C3AED]"
+                            : "bg-slate-300 hover:bg-slate-400"
                       }`}
                     />
                   ))}
                 </div>
               )}
 
-              {/* Start / continue — routes to where this mission is played */}
-              <motion.button
+              {/* Start / continue — routes to where this mission is played.
+                  Only today can be acted on: a past day is settled and a
+                  future one has not opened, so both close instead of
+                  sending the player somewhere that cannot help them. */}
+              <SunsetButton
                 onClick={() => {
                   onClose();
-                  if (mission && !mission.completed) {
+                  if (day.kind === "today" && mission && !mission.completed) {
                     const dest = missionDestination(mission.mission_id);
                     navigate(dest.to, dest.state ? { state: dest.state } : undefined);
                   }
                 }}
-                whileTap={{ scale: 0.97, y: 2 }}
-                className="mt-4 h-12 w-full rounded-full font-display text-base font-bold text-white"
-                style={{
-                  background: "linear-gradient(90deg, #F25CA2 0%, #FF9A3D 100%)",
-                  border: "2px solid #FBB1D0",
-                  boxShadow: "0 4px 0 0 #D6427F, inset 0 1.5px 0 0 rgba(255,255,255,0.4)",
-                }}
+                className="mt-4"
               >
-                {mission && !mission.completed && mission.current_progress === 0
-                  ? t("missions.startBtn")
-                  : t("missions.continueBtn")}
-              </motion.button>
+                {day.kind !== "today"
+                  ? t("common.close")
+                  : mission && !mission.completed && mission.current_progress === 0
+                    ? t("missions.startBtn")
+                    : t("missions.continueBtn")}
+              </SunsetButton>
             </div>
           </motion.div>
         </motion.div>

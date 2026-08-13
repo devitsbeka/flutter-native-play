@@ -49,8 +49,11 @@ export function ShopProductGrid({
         </h2>
       </div>
 
-      {/* Products Grid */}
-      <div className={cn("grid grid-cols-2 gap-2", fourCols && "lg:grid-cols-4")}>
+      {/* Products Grid — see .shop-grid-row in index.css: four across only
+          when the row is genuinely wide enough for it, measured on the row
+          rather than the window. */}
+      <div className="shop-grid-row">
+      <div className={cn("grid grid-cols-2 gap-2", fourCols && "shop-grid-4")}>
         {items.map((item, index) => {
           // Real-money (lari) packs are always purchasable — gems balance is irrelevant
           const canAfford = item.currency === "lari" || gems >= item.price;
@@ -61,7 +64,9 @@ export function ShopProductGrid({
           const isOwned = isPurchased || isFrameOwned;
 
           return (
-            <div key={item.id}>
+            // A wide row with only two cards in it would stretch each one to
+            // half the shop; cap the card and centre it in its cell instead.
+            <div key={item.id} className="mx-auto w-full max-w-[420px]">
               <ShopItemCard
                 id={item.id}
                 name={item.name}
@@ -82,6 +87,7 @@ export function ShopProductGrid({
             </div>
           );
         })}
+      </div>
       </div>
     </motion.section>
   );

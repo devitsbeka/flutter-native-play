@@ -2,13 +2,12 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { supabase } from "@/integrations/supabase/client";
-import { REWARDS } from "@/config/rewardConfig";
-
-const MAX_FREE_PLAYS = 5;
-const REGEN_MS = REWARDS.PLAY_REGEN_HOURS * 60 * 60 * 1000; // 3 hours in ms
-
-/** Must match v_window inside the consume_free_play() function. */
-const WINDOW_MS = 3 * 60 * 60 * 1000;
+import {
+  MAX_FREE_PLAYS,
+  resolvePlayLimit,
+  spendPlayFromWindow,
+  type PlayWindow,
+} from "@/utils/playLimit";
 
 /**
  * Five free games per three hours for non-PRO users.
@@ -45,7 +44,7 @@ export function usePlayLimit() {
   // null while unknown - see the "BOTH RULES" note above. `used` and `start`
   // are the server's last word; consumePlay advances them optimistically so
   // two quick taps cannot spend the same play twice.
-  const [playWindow, setPlayWindow] = useState<{ used: number; start: number | null } | null>(null);
+  const [playWindow, setPlayWindow] = useState<PlayWindow | null>(null);
   const [windowSupported, setWindowSupported] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -79,17 +78,27 @@ export function usePlayLimit() {
 
   const windowMode = windowSupported === true;
 
-  // A window that never opened, or that has aged out, is a fresh five. This
-  // mirrors the same branch inside consume_free_play() so the number on
-  // screen matches what the next call will decide.
-  const windowExpired =
-    !playWindow?.start || now - playWindow.start >= WINDOW_MS;
-  const windowUsed = windowExpired ? 0 : (playWindow?.used ?? 0);
+  // Regeneration inputs (legacy rule only)
+  const profileRegenAt = (profile as any)?.last_play_regen_at ?? null;
+  const lastRegenAt = profileRegenAt ? new Date(profileRegenAt).getTime() : null;
 
-  const gamesPlayed = profile?.games_played || 0;
-  const playsUsed = windowMode ? windowUsed : gamesPlayed;
-  const playsRemaining = Math.max(0, MAX_FREE_PLAYS - playsUsed);
-  const freeGamesExhausted = playsRemaining <= 0;
+  // All the arithmetic lives in playLimit.ts — see there for both rules.
+  const {
+    playsUsed,
+    playsRemaining,
+    freeGamesExhausted,
+    regenPlayAvailable,
+    canPlay,
+    timeUntilNextPlay,
+  } = resolvePlayLimit({
+    now,
+    isVip,
+    windowMode,
+    playWindow,
+    gamesPlayed: profile?.games_played || 0,
+    lastRegenAt,
+    regenConsumedLocally,
+  });
 
   // Tick every minute so countdown updates - only when a countdown is actually shown
   useEffect(() => {
@@ -99,12 +108,6 @@ export function usePlayLimit() {
     return () => clearInterval(interval);
   }, [isVip, freeGamesExhausted]);
 
-  // Regeneration logic (legacy rule only)
-  const profileRegenAt = (profile as any)?.last_play_regen_at ?? null;
-  const lastRegenAt = profileRegenAt
-    ? new Date(profileRegenAt).getTime()
-    : null;
-
   // Reset local consumed flag when profile updates with new last_play_regen_at
   // (realtime subscription delivered the DB change)
   useEffect(() => {
@@ -113,31 +116,6 @@ export function usePlayLimit() {
       setRegenConsumedLocally(false);
     }
   }, [profileRegenAt]);
-
-  // Under the window rule there is no separate regen play: the window itself
-  // is the regeneration, and granting one on top of it would hand out a
-  // sixth game. The old single-play trickle only applies to the old rule.
-  const regenPlayAvailable = !windowMode && freeGamesExhausted && !isVip && !regenConsumedLocally && (
-    lastRegenAt === null || (now - lastRegenAt) >= REGEN_MS
-  );
-
-  // Time until next play (only relevant when nothing is playable right now)
-  let timeUntilNextPlay: string | null = null;
-  const resetsAt = windowMode
-    ? (playWindow?.start ? playWindow.start + WINDOW_MS : null)
-    : (lastRegenAt !== null ? lastRegenAt + REGEN_MS : null);
-  if (freeGamesExhausted && !isVip && !regenPlayAvailable && resetsAt !== null) {
-    const msRemaining = Math.max(0, resetsAt - now);
-    const hoursLeft = Math.floor(msRemaining / (60 * 60 * 1000));
-    const minutesLeft = Math.floor((msRemaining % (60 * 60 * 1000)) / (60 * 1000));
-    if (hoursLeft > 0) {
-      timeUntilNextPlay = `${hoursLeft}h ${minutesLeft}m`;
-    } else {
-      timeUntilNextPlay = `${minutesLeft}m`;
-    }
-  }
-
-  const canPlay = isVip || playsRemaining > 0 || regenPlayAvailable;
 
   // Use a regenerated play: sets last_play_regen_at to now
   // Immediately updates local state to prevent race condition
@@ -171,12 +149,7 @@ export function usePlayLimit() {
 
     if (windowMode) {
       // Optimistic, before the await: two fast taps must not spend one play
-      setPlayWindow(prev => {
-        const expired = !prev?.start || Date.now() - prev.start >= WINDOW_MS;
-        return expired
-          ? { used: 1, start: Date.now() }
-          : { used: (prev?.used ?? 0) + 1, start: prev!.start };
-      });
+      setPlayWindow(prev => spendPlayFromWindow(prev, Date.now()));
 
       // Cast rather than regenerate the whole database type file for one
       // function the client only ever calls with no arguments.

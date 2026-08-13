@@ -227,7 +227,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className={`fixed inset-0 z-[100] flex flex-col ${
-            viewMode === "questions" ? "bg-[#7E7ADB]" : "bg-background"
+            viewMode === "questions" ? "bg-[#7E7ADB]" : "bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF]"
           }`}
         >
           {/* Fixed Header */}
@@ -486,7 +486,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                             )}
                             
                             {/* Large Tappable Icon - opens portal picker */}
-                            <div className="flex flex-col items-center gap-1.5">
+                            <div className="relative flex flex-col items-center gap-1.5">
                               <button
                                 type="button"
                                 onClick={() => setIconPickerIndex(index)}
@@ -662,6 +662,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
               ? "bg-[#7E7ADB]/90 backdrop-blur-sm border-t border-white/10" 
               : "bg-background border-t border-border"
           }`}>
+            <div className="mx-auto w-full max-w-xl">
             <ChunkyButton
               onClick={handleSave}
               disabled={isSaving}
@@ -677,6 +678,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                 t("extra.editorSaveBtn")
               )}
             </ChunkyButton>
+            </div>
           </div>
         </motion.div>
       )}

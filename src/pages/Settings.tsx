@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { currentBuildLabel, checkForUpdateNow } from "@/hooks/useFreshBuildGuard";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -24,6 +25,9 @@ export default function Settings() {
   // Modal states
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showCountryModal, setShowCountryModal] = useState(false);
+
+  // Which build this device is running, and a way to pull a newer one
+  const [updateState, setUpdateState] = useState<"idle" | "checking" | "current">("idle");
 
 
   // Name change states
@@ -308,6 +312,26 @@ export default function Settings() {
               <ChevronRight className="w-5 h-5 text-destructive/50" />
             </motion.button>
           )}
+
+          {/* Which build this device is running. Compare it with
+              mytrivia.io/version.json to settle "I'm not seeing the update"
+              in one glance; tapping pulls a newer build if there is one. */}
+          <button
+            type="button"
+            onClick={async () => {
+              setUpdateState("checking");
+              const result = await checkForUpdateNow();
+              // "updating" reloads the page, so only the other case lands here
+              setUpdateState(result === "current" ? "current" : "checking");
+            }}
+            className="mx-auto mt-2 block px-3 py-2 text-center text-xs text-muted-foreground"
+          >
+            {updateState === "checking"
+              ? t("settings.checkingForUpdate")
+              : updateState === "current"
+                ? `${t("settings.upToDate")} · ${currentBuildLabel()}`
+                : `${t("settings.buildLabel")} ${currentBuildLabel()}`}
+          </button>
         </div>
 
         {/* Modals */}

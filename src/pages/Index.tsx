@@ -6,6 +6,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Bell, Check, Clock, Mail, Menu } from "lucide-react";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
+import { useGoHomeOrRefresh } from "@/hooks/useGoHomeOrRefresh";
 import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
 import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
@@ -31,6 +32,7 @@ import { SceneSidebar } from "@/components/home/SceneSidebar";
 import { DesktopGuestLanding, DesktopGuestSceneBackground } from "@/components/home/DesktopGuestLanding";
 import { MobileSceneBackground, MobileProfileCard, MobileGuestHero } from "@/components/home/MobileHome";
 import { useUserScene } from "@/hooks/useUserScene";
+import { useMyLeaderboardRank, defaultScopeFor } from "@/hooks/useMyLeaderboardRank";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
 import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
@@ -53,6 +55,18 @@ import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
 // Default Trivia King scene loop — everyone who hasn't explicitly generated
 // their own scene sees this (guests included), regardless of custom avatars.
 const DEFAULT_SCENE_VIDEO = "/videos/trivia-king-scene.mp4";
+
+// Feathers the generated scene's top and side edges into the page
+// background (bottom stays solid — the artwork grounds there). Both masks
+// intersect so every edge fades independently.
+const SCENE_EDGE_FADE: React.CSSProperties = {
+  maskImage:
+    "linear-gradient(to right, transparent 0, black 7%, black 93%, transparent 100%), linear-gradient(to bottom, transparent 0, black 12%)",
+  WebkitMaskImage:
+    "linear-gradient(to right, transparent 0, black 7%, black 93%, transparent 100%), linear-gradient(to bottom, transparent 0, black 12%)",
+  maskComposite: "intersect",
+  WebkitMaskComposite: "source-in",
+};
 import guestMascotVideo from "@/assets/guest-welcome-avatar.mp4";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
@@ -257,6 +271,7 @@ export default function Index() {
   const { t } = useLanguage();
   const { step, startOnboarding, setStep, hasCompletedOnboarding } = useOnboarding();
   const { openAvatarModal } = useAvatarModal();
+  const goHomeOrRefresh = useGoHomeOrRefresh();
   const { coins, gems, addCoins, exchangeGemsForCoins } = useCurrency();
   const { powerUps } = useUserPowerUps();
   const { totalStars } = useTotalStars();
@@ -279,6 +294,9 @@ export default function Index() {
   const [isAdFreeModalOpen, setIsAdFreeModalOpen] = useState(false);
   const [isGemShopOpen, setIsGemShopOpen] = useState(false);
   const [showMissionsModal, setShowMissionsModal] = useState(false);
+  // Which day the missions modal opens on. null = today, which is what
+  // every entry point other than the week strip means.
+  const [missionsDate, setMissionsDate] = useState<string | null>(null);
   const [showLevelModal, setShowLevelModal] = useState(false);
   const [showMyPowersModal, setShowMyPowersModal] = useState(false);
   const [showWatchAdModal, setShowWatchAdModal] = useState(false);
@@ -715,6 +733,17 @@ export default function Index() {
   const showDefaultScene = !sceneUrl && !(user && sceneLoading);
   const showAnimatePrompt = !isAnimatingFromHome && !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
 
+  // The phone profile card carries the player's flag and their place on the
+  // board. Only the phone shows it, so the count is only fetched there.
+  const myCountry = profile?.country_code || null;
+  const { data: myRank } = useMyLeaderboardRank(
+    defaultScopeFor(myCountry),
+    myCountry,
+    profile?.coins ?? 0,
+    user?.id,
+    isMobileViewport
+  );
+
   // /dev/v2 previews the 3D world-map homepage for logged-in users; the
   // regular responsive homepage below serves the main route.
   if (user && isDevV2) {
@@ -731,7 +760,7 @@ export default function Index() {
           playsRemaining={playsRemaining}
           unreadCount={unreadCount}
           onPlay={handlePlayClick}
-          onMissions={() => setShowMissionsModal(true)}
+          onMissions={() => { setMissionsDate(null); setShowMissionsModal(true); }}
           onPowers={() => setShowMyPowersModal(true)}
           onLevel={() => setShowLevelModal(true)}
           onShop={() => setIsGemShopOpen(true)}
@@ -742,7 +771,7 @@ export default function Index() {
         {/* Modals reachable from the homepage */}
         <SignupOnboardingModal />
         <SideMenuDrawer isOpen={isSideMenuOpen} onClose={() => setIsSideMenuOpen(false)} />
-        <MissionsModal isOpen={showMissionsModal} onClose={() => setShowMissionsModal(false)} />
+        <MissionsModal isOpen={showMissionsModal} onClose={() => setShowMissionsModal(false)} date={missionsDate} />
         <MyPowersModal isOpen={showMyPowersModal} onClose={() => setShowMyPowersModal(false)} />
         <GemShopModal isOpen={isGemShopOpen} onClose={() => setIsGemShopOpen(false)} />
         <LevelInfoModal
@@ -821,6 +850,7 @@ export default function Index() {
       <MissionsModal
         isOpen={showMissionsModal}
         onClose={() => setShowMissionsModal(false)}
+        date={missionsDate}
       />
       <LevelInfoModal
         isOpen={showLevelModal}
@@ -903,40 +933,41 @@ export default function Index() {
             Mounted only when the viewport is actually xl, so smaller
             screens never download the media. */}
         {!isSceneViewport ? null : sceneUrl ? (
-          /* Generated 16:9 scene: a single width-driven full-bleed layer.
-             The artwork always spans the exact viewport width, anchored to
-             the bottom. On screens squarer than 16:9 it renders shorter
-             than the viewport and its mask-faded top edge melts into the
-             light page background (whole scene visible, scaled down); on
-             screens wider than 16:9 the excess height crops off the top
-             via the container's overflow-hidden. No side cropping at any
-             size, so edge props never get cut. */
+          /* Generated 16:9 scene: the whole artwork fits in the band BELOW
+             the friends reel (top 230px), bottom-anchored and centered, so
+             the subject can never sit under the reel and nothing is
+             cropped at any resolution. Its top and side edges feather into
+             the page's own pastel background - no fill layers, no seams. */
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
             className="hidden md:block absolute inset-0 z-0 select-none pointer-events-none overflow-hidden"
           >
-            {sceneVideoUrl ? (
-              /* Seamless idle-loop video — poster keeps the still visible
-                 until the video is ready to play */
-              <video
-                src={sceneVideoUrl}
-                poster={sceneUrl}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="absolute inset-x-0 bottom-0 w-full h-auto aspect-video object-cover object-[center_bottom] [mask-image:linear-gradient(to_bottom,transparent_0,black_200px)]"
-              />
-            ) : (
-              <img
-                src={sceneUrl}
-                alt=""
-                className="absolute inset-x-0 bottom-0 w-full h-auto aspect-video object-cover object-[center_bottom] [mask-image:linear-gradient(to_bottom,transparent_0,black_200px)]"
-                draggable={false}
-              />
-            )}
+            <div className="absolute left-0 right-0 top-[230px] bottom-0 flex items-end justify-center">
+              {sceneVideoUrl ? (
+                /* Seamless idle-loop video — poster keeps the still visible
+                   until the video is ready to play */
+                <video
+                  src={sceneVideoUrl}
+                  poster={sceneUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="max-h-full max-w-full aspect-video object-contain"
+                  style={SCENE_EDGE_FADE}
+                />
+              ) : (
+                <img
+                  src={sceneUrl}
+                  alt=""
+                  className="max-h-full max-w-full aspect-video object-contain"
+                  draggable={false}
+                  style={SCENE_EDGE_FADE}
+                />
+              )}
+            </div>
           </motion.div>
         ) : showDefaultScene && user ? (
           <motion.video
@@ -981,10 +1012,16 @@ export default function Index() {
             {/* Center: Logo + Spotlight */}
             <div className="flex-1 flex justify-center md:justify-start items-center gap-4 min-w-0">
               {/* Logo - responsive sizing: sm on mobile/tablet, md on desktop */}
-              {/* lg+ shows the logo in the left sidebar instead */}
-              <div className="lg:hidden">
+              {/* lg+ shows the logo in the left sidebar instead, where it is
+                  already its own button; this is the phone/tablet twin. */}
+              <button
+                type="button"
+                onClick={goHomeOrRefresh}
+                aria-label="MyTrivia"
+                className="lg:hidden cursor-pointer"
+              >
                 <MyTriviaLiveLogo responsive />
-              </div>
+              </button>
               {/* lg+: an alternating greeting takes the logo's place.
                   Hidden for guests — the Figma 612:1888 logged-out design
                   keeps the header empty. */}
@@ -1109,19 +1146,28 @@ export default function Index() {
         )}
 
         {/* Phone profile card (Figma 626:1179) — nickname, level, the chunky
-            coin/gem pills and the weekly streak, floating over the scene
-            22px under the friends reel. Desktop keeps SceneHero's stack. */}
+            coin/gem pills and the weekly streak. It positions itself just
+            above the bottom nav, so it is placed here for reading order
+            rather than for where it lands. Desktop keeps SceneHero's stack. */}
         {user && (
           <MobileProfileCard
             nickname={profile?.nickname || t("game.guest")}
+            countryCode={myCountry}
+            rank={myRank}
             level={levelInfo.level}
             coins={coins}
             gems={gems}
             onNameClick={() => setShowChangeNameModal(true)}
+            onRankClick={() => navigate("/leaderboards")}
             onLevelClick={() => setShowLevelModal(true)}
             onCoinsClick={() => navigate("/power-ups?section=coins")}
             onGemsClick={() => navigate("/power-ups?section=gems-lari")}
             onGiftClick={() => setIsDailyRewardsOpen(true)}
+            dailyRewardClaimed={!canClaimDaily}
+            onMissionsClick={(dateISO) => {
+              setMissionsDate(dateISO);
+              setShowMissionsModal(true);
+            }}
           />
         )}
 
@@ -1184,7 +1230,7 @@ export default function Index() {
             >
               <DesktopActionCards
                 onDailyRewardsClick={() => setIsDailyRewardsOpen(true)}
-                onMissionsClick={() => setShowMissionsModal(true)}
+                onMissionsClick={() => { setMissionsDate(null); setShowMissionsModal(true); }}
                 onChestClick={() => setIsChestModalOpen(true)}
                 onPowersClick={() => setShowMyPowersModal(true)}
                 onAdFreeClick={() => navigate("/power-ups")}
@@ -1195,6 +1241,22 @@ export default function Index() {
 
           {/* Main content area */}
           <div className="flex-1 relative overflow-hidden">
+            {/* Phone scene click-catcher.
+                The scene layer itself sits at z-0 outside this column, and
+                this column is a later sibling — so it paints over the scene
+                and swallowed every tap meant for it. The catcher has to live
+                in here, first, exactly as SceneHero does it on md+: later
+                children keep their own clicks, and what is left over is the
+                scene. */}
+            {user && isMobileViewport && (
+              <button
+                type="button"
+                aria-label="შეცვალე სცენა"
+                onClick={() => openAvatarModal()}
+                className="md:hidden absolute inset-0 cursor-pointer"
+              />
+            )}
+
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
             
@@ -1448,11 +1510,10 @@ export default function Index() {
                   gems={user ? gems : 0}
                   onNameClick={user ? () => setShowChangeNameModal(true) : () => navigate("/auth")}
                   onLevelClick={user ? () => setShowLevelModal(true) : () => navigate("/auth")}
-                  onMissionsClick={user ? () => setShowMissionsModal(true) : () => navigate("/auth")}
+                  onMissionsClick={user ? (dateISO) => { setMissionsDate(dateISO); setShowMissionsModal(true); } : () => navigate("/auth")}
                   onCoinsClick={user ? () => navigate("/power-ups?section=coins") : () => navigate("/auth")}
                   onGemsClick={user ? () => navigate("/power-ups?section=gems-lari") : () => navigate("/auth")}
                   onGiftClick={user ? () => setIsDailyRewardsOpen(true) : () => navigate("/auth")}
-                  onChestClick={user ? () => setIsChestModalOpen(true) : () => navigate("/auth")}
                   onSceneClick={user ? () => openAvatarModal() : () => navigate("/auth?mode=signup")}
                   onQuickPlay={user ? handlePlayClick : undefined}
                 />

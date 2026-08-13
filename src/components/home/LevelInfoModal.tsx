@@ -1,9 +1,16 @@
-import { motion } from "framer-motion";
-import { TrendingUp, Gift, Play } from "lucide-react";
-import { GameModal, GameModalStat } from "@/components/ui/game-modal";
-import { ChunkyButton } from "@/components/ui/chunky-button";
-import { LevelInfo, getLevelRewards } from "@/utils/levelCalculation";
+import { useEffect } from "react";
+import { X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { LevelInfo } from "@/utils/levelCalculation";
+import { REWARDS } from "@/config/rewardConfig";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+// 3D icons from the Figma level modal
+import iconGift from "@/assets/level/gift.png";
+import iconXpSpark from "@/assets/level/xp-spark.png";
+import iconPowerBottle from "@/assets/level/power-bottle.png";
+import coinIcon from "@/assets/icons/icon-coin.png";
+import { SunsetButton } from "@/components/shared/SunsetButton";
 
 interface LevelInfoModalProps {
   isOpen: boolean;
@@ -12,121 +19,151 @@ interface LevelInfoModalProps {
   onContinue?: () => void;
 }
 
+const innerCardStyle = {
+  background: "#F5FAFF",
+  border: "1.5px solid #D63A9C",
+};
+
 export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: LevelInfoModalProps) {
   const { t } = useLanguage();
-  const nextLevelRewards = getLevelRewards(levelInfo.level + 1);
+
+  // Escape dismisses the modal, same as backdrop click
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
+
+  // Only what a level-up actually credits (see MatchResultScreen /
+  // CategoryQuizPage): fixed coins and one random power-up
+  const rewardItems: { icon: string; label: string }[] = [
+    { icon: coinIcon, label: `${REWARDS.LEVEL_UP_COINS} ${t("modals.coin")}` },
+    { icon: iconPowerBottle, label: `1 ${t("modals.randomPower")}` },
+  ];
 
   return (
-    <GameModal
-      isOpen={isOpen}
-      onClose={onClose}
-      variant="info"
-      title={`${t("modals.levelLabel")} ${levelInfo.level}`}
-      subtitle={levelInfo.isMaxLevel ? `✨ ${t("modals.maximum")}!` : undefined}
-      showSparkles
-    >
-      {/* Continue Playing Button */}
-      {onContinue && !levelInfo.isMaxLevel && (
-        <div className="mb-4">
-          <ChunkyButton
-            variant="primary"
-            size="md"
-            onClick={onContinue}
-            icon={<Play className="w-5 h-5" />}
-            className="w-full"
-          >
-            {t("modals.continueGame")}
-          </ChunkyButton>
-        </div>
-      )}
-      {/* XP Progress */}
-      <div 
-        className="rounded-2xl p-4 mb-4"
-        style={{
-          background: "#F9FAFB",
-          border: "2px solid #E5E7EB",
-          boxShadow: "0 3px 0 #E5E7EB",
-        }}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-500">{t("modals.xpProgress")}</span>
-          <span className="text-sm font-bold text-gray-800">
-            {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel}
-          </span>
-        </div>
-        <div 
-          className="h-3 rounded-full overflow-hidden"
-          style={{ background: "#E5E7EB" }}
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
+          onClick={onClose}
         >
           <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-blue-400 to-cyan-400"
-            initial={{ width: 0 }}
-            animate={{ width: `${levelInfo.progress}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          />
-        </div>
-        <p className="text-xs text-gray-500 mt-2 text-center">
-          {levelInfo.isMaxLevel
-            ? t("modals.maxLevelReached")
-            : t("modals.xpToNextLevel", { amount: levelInfo.xpNeededForNextLevel - levelInfo.xpInCurrentLevel })}
-        </p>
-      </div>
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 380, damping: 32 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[24px] bg-white p-5"
+            style={{ boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0,0,0,0.18)" }}
+          >
+            {/* Close — same treatment as the other home modals. Tapping the
+                backdrop already dismisses, but that is not discoverable and
+                is unreachable on a phone where the sheet fills the screen.
 
-      {/* Current Stats */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <GameModalStat
-          icon={<TrendingUp className="h-5 w-5 text-primary" />}
-          value={levelInfo.currentXP}
-          label={t("modals.totalXp")}
-        />
-        <GameModalStat
-          icon={<Gift className="h-5 w-5 text-amber-500" />}
-          value={levelInfo.isMaxLevel ? "✓" : levelInfo.level + 1}
-          label={levelInfo.isMaxLevel ? t("modals.maximum") : t("modals.nextLevel")}
-          highlight={!levelInfo.isMaxLevel}
-        />
-      </div>
+                The card is its own scroller, so the button rides a
+                zero-height sticky strip: absolute alone would scroll off the
+                top on a short screen, which is exactly where the sheet is
+                tall enough to need it. */}
+            <div className="sticky top-0 z-10 h-0">
+              <button
+                type="button"
+                onClick={onClose}
+                className="absolute right-0 top-0 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200"
+                style={{ boxShadow: "0 2px 0 #E5E7EB" }}
+                aria-label={t("common.close")}
+              >
+                <X className="h-4 w-4 text-gray-600" />
+              </button>
+            </div>
 
-      {/* Next Level Rewards */}
-      {!levelInfo.isMaxLevel && (
-        <div 
-          className="rounded-xl p-4"
-          style={{
-            background: "linear-gradient(180deg, rgba(251,191,36,0.1) 0%, rgba(234,179,8,0.05) 100%)",
-            border: "2px solid rgba(251,191,36,0.3)",
-            boxShadow: "0 3px 0 rgba(251,191,36,0.15)",
-          }}
-        >
-          <h3 className="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
-            <span>🎁</span>
-            {t("modals.levelRewards", { level: levelInfo.level + 1 })}
-          </h3>
-          <div className="space-y-1.5">
-            <p className="text-sm text-gray-600 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400" />
-              +{nextLevelRewards.xpBonus} {t("modals.xpBonus")}
-            </p>
-            {nextLevelRewards.powerUps > 0 && (
-              <p className="text-sm text-gray-600 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400" />
-                +{nextLevelRewards.powerUps} {t("modals.powers")}
+            {/* Title + total XP — padded clear of the close button, which the
+                centred title would otherwise run under. */}
+            <h2 className="px-11 text-center font-display text-2xl font-bold text-[#6D28D9]">
+              {t("modals.levelLabel")} {levelInfo.level}
+            </h2>
+            <div className="mt-1.5 flex items-center justify-center gap-1.5">
+              <img src={iconXpSpark} alt="" width={22} height={22} className="shrink-0" />
+              <span className="text-base font-bold text-[#1E1B2E]">
+                {levelInfo.currentXP.toLocaleString()} <span className="font-semibold">XP</span>
+              </span>
+            </div>
+
+            {/* XP progress card */}
+            <div className="mt-4 rounded-[24px] p-5" style={innerCardStyle}>
+              <h3 className="font-display text-lg font-bold text-[#1E1B2E]">
+                {t("modals.xpProgress")}
+              </h3>
+              <p className="mt-0.5 text-sm font-semibold text-[#402666]">
+                {levelInfo.xpInCurrentLevel}/{levelInfo.xpNeededForNextLevel}
               </p>
+              <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-200">
+                <motion.div
+                  className="h-full rounded-full bg-[#4A7DDF]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${levelInfo.progress}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                />
+              </div>
+              <p className="mt-3 text-sm text-slate-500">
+                {levelInfo.isMaxLevel ? (
+                  t("modals.maxLevelReached")
+                ) : (
+                  <>
+                    {t("modals.xpToNextLevel", {
+                      amount: levelInfo.xpNeededForNextLevel - levelInfo.xpInCurrentLevel,
+                    })}
+                  </>
+                )}
+              </p>
+            </div>
+
+            {/* Next level rewards card */}
+            {!levelInfo.isMaxLevel && (
+              <div className="mt-4 rounded-[24px] p-5" style={innerCardStyle}>
+                <div className="flex items-center gap-3">
+                  <img src={iconGift} alt="" width={44} height={44} className="shrink-0" />
+                  <div>
+                    <p className="font-display text-2xl font-bold leading-none text-[#1E1B2E]">
+                      {t("modals.levelLabel")} {levelInfo.level + 1}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-600">{t("modals.nextLevelRewardsHint")}</p>
+                  </div>
+                </div>
+                <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-3">
+                  {rewardItems.map((item) => (
+                    <div key={item.label} className="flex items-center gap-1.5">
+                      <img src={item.icon} alt="" width={20} height={20} className="shrink-0" />
+                      <span className="text-sm font-medium text-[#1E1B2E]">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
-            {nextLevelRewards.spinTickets > 0 && (
-              <p className="text-sm text-gray-600 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400" />
-                +{nextLevelRewards.spinTickets} {t("modals.spinTickets")}
-              </p>
-            )}
-            {nextLevelRewards.specialRewards.map((reward, i) => (
-              <p key={i} className="text-sm text-gray-600 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-purple-400" />
-                {reward}
-              </p>
-            ))}
-          </div>
-        </div>
+
+            {/* Continue playing */}
+            <SunsetButton
+              onClick={() => {
+                if (onContinue && !levelInfo.isMaxLevel) {
+                  onContinue();
+                } else {
+                  onClose();
+                }
+              }}
+              className="mt-5"
+            >
+              {t("modals.continueGame")}
+            </SunsetButton>
+          </motion.div>
+        </motion.div>
       )}
-    </GameModal>
+    </AnimatePresence>
   );
 }

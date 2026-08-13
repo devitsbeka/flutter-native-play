@@ -1,4 +1,5 @@
 import { useMemo, useEffect, useRef } from "react";
+import { compareRooms } from "@/utils/roomOrder";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -454,47 +455,25 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
       );
     }
 
-    // Sort: TV sessions first, then my new rooms, then LIVE, then playing, then waiting, then unread, then by activity
-    result = [...result].sort((a, b) => {
-      const now = Date.now();
-      const fiveMinutesAgo = now - 5 * 60 * 1000;
-
-      // Priority 0: Active TV sessions
-      const aHasTV = isActiveTVSession(a.tv_status);
-      const bHasTV = isActiveTVSession(b.tv_status);
-      if (aHasTV && !bHasTV) return -1;
-      if (bHasTV && !aHasTV) return 1;
-
-      // Priority 1: MY recently created or recently active rooms (within 10 min)
-      const tenMinutesAgo = now - 10 * 60 * 1000;
-      const aIsMyNew = a.is_host && a.status === "waiting" &&
-        (new Date(a.created_at).getTime() > fiveMinutesAgo ||
-         new Date(a.last_activity_at || a.created_at).getTime() > tenMinutesAgo);
-      const bIsMyNew = b.is_host && b.status === "waiting" &&
-        (new Date(b.created_at).getTime() > fiveMinutesAgo ||
-         new Date(b.last_activity_at || b.created_at).getTime() > tenMinutesAgo);
-      if (aIsMyNew && !bIsMyNew) return -1;
-      if (bIsMyNew && !aIsMyNew) return 1;
-
-      // Priority 2: LIVE rooms
-      const aIsLive = a.has_players_in_room || (a.status === "playing" && a.has_others_online);
-      const bIsLive = b.has_players_in_room || (b.status === "playing" && b.has_others_online);
-      if (aIsLive && !bIsLive) return -1;
-      if (bIsLive && !aIsLive) return 1;
-
-      // Priority 3: Rooms with unread activity
-      if (a.has_unread_activity && !b.has_unread_activity) return -1;
-      if (b.has_unread_activity && !a.has_unread_activity) return 1;
-
-      // Priority 4: Waiting rooms over completed
-      if (a.status === "waiting" && b.status === "completed") return -1;
-      if (b.status === "waiting" && a.status === "completed") return 1;
-
-      // Priority 5: By last activity (most recent first)
-      const aTime = new Date(a.last_activity_at || a.created_at).getTime();
-      const bTime = new Date(b.last_activity_at || b.created_at).getTime();
-      return bTime - aTime;
-    });
+    // Newest first, full stop.
+    //
+    // This used to be five priority classes deep — my-new-room, LIVE, unread,
+    // waiting-over-completed, then activity — and a room only counted as "my
+    // new room" for five minutes. After that a freshly made room fell back
+    // into the pile and any LIVE or unread room outranked it, so the room you
+    // had just created moved somewhere down the list and looked lost. One rule
+    // keeps it findable: whatever happened most recently sits at the top, and
+    // creating a room is the most recent thing that can happen to one.
+    //
+    // A live TV session is the exception, and only because its row's activity
+    // timestamp does not tick while the TV plays — without the pin it would
+    // sink during the session it is running.
+    result = [...result].sort((a, b) =>
+      compareRooms(
+        { ...a, hasLiveTV: isActiveTVSession(a.tv_status) },
+        { ...b, hasLiveTV: isActiveTVSession(b.tv_status) }
+      )
+    );
 
     return result;
   }, [activeRooms, filter, friendIds, searchQuery]);

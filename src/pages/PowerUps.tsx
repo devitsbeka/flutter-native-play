@@ -12,7 +12,12 @@ import { useShopData, ShopItem } from "@/hooks/useShopData";
 import { useShopPageData } from "@/hooks/useShopPageData";
 import { useGemPurchase } from "@/hooks/useGemPurchase";
 import { REWARDS } from "@/config/rewardConfig";
-import { ALL_SHOP_DEALS } from "@/config/shopDeals";
+import {
+  ALL_POWER_TYPES,
+  bundleValueReceived,
+  getBundleContents,
+  isBundleId,
+} from "@/config/bundleContents";
 
 import { trackPowerUpPurchased, trackShopItemPurchased } from "@/lib/analytics";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -31,29 +36,6 @@ import { CurrencyExchangeModal } from "@/components/shop/CurrencyExchangeModal";
 import { CurrencyActionModal, CurrencyType } from "@/components/shop/CurrencyActionModal";
 import { BuyCurrencyModal } from "@/components/shop/BuyCurrencyModal";
 import { NotEnoughGemsModal } from "@/components/home/NotEnoughGemsModal";
-
-const ALL_POWER_TYPES: PowerUpType[] = ["5050", "freeze", "replace", "time-drain"];
-
-// Single source of truth for bundle contents — the transaction log and the grant
-// step both read this so they can't drift. Coin amounts match the advertised
-// descriptions/pricing in useShopData (1 gem = 500 coins). Rotating daily/hourly
-// deal bundles come from shopDeals.ts so the deal cards can't drift either.
-const BUNDLE_CONTENTS: Record<string, { powers: number; coins: number; gems?: number; vip?: "day" | "week" }> = {
-  starter_bundle: { powers: 2, coins: 500 },
-  starter_bundle_medium: { powers: 5, coins: 1000 },
-  starter_bundle_large: { powers: 10, coins: 2500 },
-  power_bundle_small: { powers: 2, coins: 0 },
-  mega_power_bundle: { powers: 5, coins: 0 },
-  power_bundle_large: { powers: 10, coins: 0 },
-  power_combo_bundle: { powers: 3, coins: 0 },
-  ...Object.fromEntries(ALL_SHOP_DEALS.map((deal) => [deal.id, deal.contents])),
-};
-
-const isBundleId = (id: string) => id.includes("bundle") || id.startsWith("deal_");
-
-const getBundleContents = (id: string): { powers: number; coins: number; gems?: number; vip?: "day" | "week" } =>
-  BUNDLE_CONTENTS[id] ??
-  { powers: id.includes("small") ? 2 : id.includes("large") ? 10 : 5, coins: 0 };
 
 export default function PowerUps() {
   const navigate = useNavigate();
@@ -207,16 +189,7 @@ export default function PowerUps() {
       } else if (item.powerType && item.amount) {
         valueReceived = { [item.powerType]: item.amount };
       } else if (isBundleId(item.id)) {
-        const { powers, coins: coinAmount, gems: gemAmount = 0, vip } = getBundleContents(item.id);
-        valueReceived = {
-          "5050": powers,
-          freeze: powers,
-          replace: powers,
-          "time-drain": powers,
-          ...(coinAmount > 0 ? { coins: coinAmount } : {}),
-          ...(gemAmount > 0 ? { gems: gemAmount } : {}),
-          ...(vip ? { vip_days: vip } : {})
-        };
+        valueReceived = bundleValueReceived(item.id);
         productType = "bundle";
       }
 
@@ -309,8 +282,11 @@ export default function PowerUps() {
         </div>
 
         <div className="flex flex-1 min-h-0">
-          {/* Main Content Area - 60% on lg+, full width below */}
-          <div className="flex-1 lg:max-w-[60%] relative pb-24 md:pb-0 bg-transparent scroll-smooth scrollbar-hide overflow-y-auto">
+          {/* Main content. No percentage cap: the scene beside it is capped
+              instead, so every pixel past that width goes to the shop rather
+              than stretching a video — which is what squeezed the product
+              grid whenever the left menu was expanded. */}
+          <div className="flex-1 min-w-0 relative pb-24 md:pb-0 bg-transparent scroll-smooth scrollbar-hide overflow-y-auto">
             <GlobalSplineBackground />
 
             {/* Standard Shop Layout - Hero carousel + product grids */}
@@ -331,20 +307,20 @@ export default function PowerUps() {
             </div>
           </div>
 
-          {/* Right 40% (lg+): the looping shop scene, pinned to the
+          {/* Right column (lg+): the looping shop scene, pinned to the
               viewport — it never scrolls, only the shop content does.
               The clip is 1470x630, far wider than this tall column, so
-              object-cover keeps only a ~30% slice of it: anchor that slice
-              at 70% across, where the shopkeeper stands, instead of the
-              centre, which would show the empty shelves beside him. */}
-          <div className="hidden lg:block lg:w-[40%] sticky top-0 self-start h-[100dvh] md:h-screen overflow-hidden">
+              object-cover keeps under a fifth of its width: anchor that
+              slice at 76% across, where the shopkeeper stands, instead of
+              the centre, which would show the empty shelves beside him. */}
+          <div className="hidden lg:block lg:w-[34%] lg:max-w-[460px] lg:min-w-[280px] sticky top-0 self-start h-[100dvh] md:h-screen overflow-hidden">
             <video
               src={SHOP_SCENE_VIDEO}
               autoPlay
               loop
               muted
               playsInline
-              className="absolute inset-0 w-full h-full object-cover object-[70%_center]"
+              className="absolute inset-0 w-full h-full object-cover object-[76%_center]"
             />
             {/* Soft fades so the pinned video melts into the page instead of a hard cut */}
             <div className="pointer-events-none absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-[#f7ebfb] via-[#f7ebfb]/45 to-transparent" />

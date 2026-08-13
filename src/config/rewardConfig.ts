@@ -88,6 +88,7 @@ export const REWARDS = {
   // Longer periods get better value
   VIP_PRICES: {
     day: 30,      // 30 gems = 3 GEL (base rate)
+    "2days": 55,  // 55 gems — a shade under 2x day, deal-only
     week: 100,    // 100 gems = 10 GEL (52% discount vs daily)
     month: 250,   // 250 gems = 25 GEL (72% discount vs daily)
   },

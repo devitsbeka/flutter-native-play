@@ -1,9 +1,9 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
-import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { AnimatePresence, motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal, MonitorPlay } from "lucide-react";
-import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession, isLiveTVSession, isNewlyCreated } from "@/hooks/useMyRooms";
+import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -14,10 +14,11 @@ import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { Capacitor } from "@capacitor/core";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
-import { LiveBadge } from "@/components/social/LiveBadge";
 import danceFloorIcon from "@/assets/dance-floor.png";
+import crownIcon from "@/assets/crown-icon.png";
 import retroTv3d from "@/assets/retro-tv-3d.png";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
+import { useRoomAge } from "@/hooks/useRoomAge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/components/team/FeatureOnboardingCarousel";
@@ -48,6 +49,10 @@ interface MyRoomsSectionProps {
   onNavigateToTab?: (tab: string) => void;
 }
 
+// How long a card takes to fade out. The reload is held until after it, so
+// the list never reflows underneath a card that is still on screen.
+const EXIT_MS = 320;
+
 export function MyRoomsSection({ 
   hideTV = false, 
   onCreateRoom, 
@@ -68,8 +73,18 @@ export function MyRoomsSection({
   const platform = Capacitor.getPlatform();
   const TVIcon = platform === 'ios' ? Airplay : platform === 'android' ? Cast : Tv;
 
-  // Delete room handler
+  // The card on its way out — hidden from the tap, so the fade starts
+  // immediately rather than after the round trip.
+  const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null);
+  // Rooms this view has deleted for good. The list is refetched from a
+  // server that has already dropped them, but a response that was in flight
+  // when the delete landed still carries the old row — and that response
+  // arriving late is what made a deleted card blink back for a moment
+  // before disappearing again. Nothing gets to put these back.
+  const [removedRoomIds, setRemovedRoomIds] = useState<Set<string>>(() => new Set());
+
   const handleDeleteRoom = async (roomId: string) => {
+    setDeletingRoomId(roomId);
     try {
       // Related tables cascade via ON DELETE CASCADE - no manual pre-deletes needed.
       // RLS only lets the host delete a room; a non-host delete silently matches
@@ -83,22 +98,51 @@ export function MyRoomsSection({
       if (error) throw error;
       if (!deleted || deleted.length === 0) {
         toast.error(t("extra.roomDeleteFailed"));
+        setDeletingRoomId(null);
         return;
       }
 
       toast.success(t("extra.roomDeleted"));
-      refreshRooms();
+      setRemovedRoomIds((prev) => new Set(prev).add(roomId));
+      // Reload once the card has finished fading. deletingRoomId can be let
+      // go afterwards — removedRoomIds is what keeps it gone from here on.
+      setTimeout(() => {
+        void Promise.resolve(refreshRooms()).finally(() => setDeletingRoomId(null));
+      }, EXIT_MS + 60);
     } catch (error) {
       console.error("Error deleting room:", error);
       toast.error(t("extra.roomDeleteFailed"));
+      setDeletingRoomId(null);
     }
   };
 
-  // Clear unread activity when joining a room
+  // Which room the player is currently opening. Tapping a card fires a chain
+  // of writes before the screen changes, so without this the card looks dead
+  // and every extra tap starts the chain again.
+  const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
+
   const handleJoin = async (room: MyRoom) => {
-    // Clear the unread flag
+    if (joiningRoomId) return;
+    setJoiningRoomId(room.id);
+    try {
+      await openRoom(room);
+    } catch (error) {
+      // A failed housekeeping write used to escape this handler unhandled, so
+      // enterRoom was never reached and the tap did nothing at all — no error,
+      // no room. Try the room anyway: none of that cleanup is what makes the
+      // lobby openable.
+      console.error("[MyRoomsSection] Join preparation failed, entering anyway:", error);
+      await enterRoom(room.room_code);
+    } finally {
+      setJoiningRoomId(null);
+    }
+  };
+
+  const openRoom = async (room: MyRoom) => {
+    // Cosmetic, and nothing below depends on it — don't make the player wait
+    // on a write that only clears a dot.
     if (room.has_unread_activity) {
-      await supabase
+      void supabase
         .from("game_rooms")
         .update({ has_unread_activity: false })
         .eq("id", room.id);
@@ -121,23 +165,19 @@ export function MyRoomsSection({
       // Clear expired/inactive TV session from room
       if (isExpired || isInactive) {
         console.log('[MyRoomsSection] Clearing expired/inactive TV session from room');
+        // One write, not two — same row, same purpose
         await supabase
           .from("game_rooms")
-          .update({ tv_session_id: null })
-          .eq("id", room.id);
-        
-        // Reset room to waiting state
-        await supabase
-          .from("game_rooms")
-          .update({ 
+          .update({
+            tv_session_id: null,
             status: "waiting",
             started_at: null,
-            completed_at: null 
+            completed_at: null,
           })
           .eq("id", room.id);
-        
+
         // Continue to lobby instead of erroring out
-        enterRoom(room.room_code);
+        await enterRoom(room.room_code);
         return;
       }
       
@@ -152,42 +192,27 @@ export function MyRoomsSection({
       }
     }
     
-    // If room is completed (non-TV), reset it to waiting for rematch
+    // A finished room is reset for a rematch. The four writes are independent
+    // of each other, so they go out together rather than one after another —
+    // four sequential round-trips on a phone is most of the wait before the
+    // lobby appears.
     if (room.status === "completed") {
-      await supabase
-        .from("game_rooms")
-        .update({ 
-          status: "waiting",
-          started_at: null,
-          completed_at: null 
-        })
-        .eq("id", room.id);
-      
-      // Clear room questions for new game
-      await supabase
-        .from("room_questions")
-        .delete()
-        .eq("room_id", room.id);
-      
-      // Clear player answers
-      await supabase
-        .from("player_answers")
-        .delete()
-        .eq("room_id", room.id);
-      
-      // Reset all participants to joined status
-      await supabase
-        .from("room_participants")
-        .update({ 
-          status: "joined",
-          score: 0,
-          current_question: 0
-        })
-        .eq("room_id", room.id);
+      await Promise.all([
+        supabase
+          .from("game_rooms")
+          .update({ status: "waiting", started_at: null, completed_at: null })
+          .eq("id", room.id),
+        supabase.from("room_questions").delete().eq("room_id", room.id),
+        supabase.from("player_answers").delete().eq("room_id", room.id),
+        supabase
+          .from("room_participants")
+          .update({ status: "joined", score: 0, current_question: 0 })
+          .eq("room_id", room.id),
+      ]);
     }
     
     // Standard room join - goes to lobby
-    enterRoom(room.room_code);
+    await enterRoom(room.room_code);
   };
 
   // Check if user has seen feature onboarding
@@ -249,28 +274,72 @@ export function MyRoomsSection({
         )
       ) : vertical ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pb-4 w-full max-w-full">
-          {rooms.map((room, index) => (
-            <RoomCardGrid
-              key={room.id}
-              room={room}
-              index={index}
-              onJoin={() => handleJoin(room)}
-              onDelete={handleDeleteRoom}
-            />
-          ))}
+          {/* The motion.div is what AnimatePresence sees, and it carries
+              leaving and reflowing.
+
+              Not popLayout: that lifts the card out of flow the instant it
+              starts leaving, so the row closes while the card is still
+              visible — which reads as the card vanishing and the grid
+              snapping shut. Left in flow, it fades on the spot and the
+              neighbours only move once it is gone. One thing at a time.
+
+              The layout transition is its own, with no per-index delay. The
+              cards' entry transition carries one, and a shared transition
+              applies to layout animations too — which is what turned one
+              delete into a staggered reshuffle of the whole grid. */}
+          <AnimatePresence initial={false}>
+            {rooms
+              .filter((room) => room.id !== deletingRoomId && !removedRoomIds.has(room.id))
+              .map((room, index) => (
+                <motion.div
+                  key={room.id}
+                  layout
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  transition={{
+                    layout: { type: "spring", stiffness: 300, damping: 34, mass: 0.9 },
+                    opacity: { duration: EXIT_MS / 1000, ease: "easeInOut" },
+                    scale: { duration: EXIT_MS / 1000, ease: "easeInOut" },
+                  }}
+                >
+                  <RoomCardGrid
+                    room={room}
+                    index={index}
+                    onJoin={() => handleJoin(room)}
+                    onDelete={handleDeleteRoom}
+                    isJoining={joiningRoomId === room.id}
+                  />
+                </motion.div>
+              ))}
+          </AnimatePresence>
         </div>
       ) : (
         <div className="overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory scroll-smooth">
           <div className="flex gap-3 px-4">
-            {rooms.map((room, index) => (
-              <RoomCard
-                key={room.id}
-                room={room}
-                index={index}
-                onJoin={() => handleJoin(room)}
-                onDelete={handleDeleteRoom}
-              />
-            ))}
+            <AnimatePresence initial={false}>
+              {rooms
+                .filter((room) => room.id !== deletingRoomId && !removedRoomIds.has(room.id))
+                .map((room, index) => (
+                  <motion.div
+                    key={room.id}
+                    layout
+                    className="shrink-0"
+                    exit={{ opacity: 0, scale: 0.97 }}
+                    transition={{
+                      layout: { type: "spring", stiffness: 300, damping: 34, mass: 0.9 },
+                      opacity: { duration: EXIT_MS / 1000, ease: "easeInOut" },
+                      scale: { duration: EXIT_MS / 1000, ease: "easeInOut" },
+                    }}
+                  >
+                    <RoomCard
+                      room={room}
+                      index={index}
+                      onJoin={() => handleJoin(room)}
+                      onDelete={handleDeleteRoom}
+                      isJoining={joiningRoomId === room.id}
+                    />
+                  </motion.div>
+                ))}
+            </AnimatePresence>
             {/* View All Card */}
             {onShowAllRooms && (
               <motion.button
@@ -302,9 +371,11 @@ interface RoomCardProps {
   onJoin: () => void;
   onDelete: (roomId: string) => void;
   fullWidth?: boolean;
+  /** Opening this room: the card says so and stops taking taps. */
+  isJoining?: boolean;
 }
 
-function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCardProps) {
+function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining = false }: RoomCardProps) {
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -322,19 +393,20 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
   
   // Display name: only room_name, no fallback to code
   const displayName = room.room_name || "თამაშის ოთახი";
-  const isCompleted = room.status === "completed";
-  
+  // How long ago the room was made — the thing that tells two similar rooms
+  // apart in a list of them.
+  const createdAgo = useRoomAge(room.created_at);
+
   // NEW LOGIC: has_players_in_room = someone is actually INSIDE this room
   const hasPlayersInRoom = room.has_players_in_room;
-  
+
   // TV session is active (TV connected)
   const hasTVSession = isActiveTVSession(room.tv_status);
-  
-  // Badge logic:
-  // TV badge: Players in room + TV connected
-  // LIVE badge: Players in room, no TV
+
+  // The TV artwork still marks a room being played on a screen; the words
+  // that used to sit beside it are gone, so the badge is only ever the age.
   const showTVBadge = hasPlayersInRoom && hasTVSession;
-  const showLiveBadge = hasPlayersInRoom && !hasTVSession;
+  const someoneInRoom = hasPlayersInRoom;
 
   // Rooms that were ever played on TV keep their session id; live ones have
   // an active status — either way the footer gets a TV marker.
@@ -351,15 +423,17 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
     ? room.tv_active_players 
     : room.participants.length;
   
-  // Use TV players for avatars when session is active, otherwise use room participants
+  // Use TV players for avatars when session is active, otherwise use room
+  // participants — host first, so the person who made the room is the face
+  // you see rather than whoever happened to join last.
   const displayPlayers = hasTVSession && room.tv_players.length > 0
-    ? room.tv_players.map(p => ({ 
-        user_id: p.user_id || '', 
-        nickname: p.nickname, 
+    ? room.tv_players.map(p => ({
+        user_id: p.user_id || '',
+        nickname: p.nickname,
         avatar_url: p.avatar_url,
-        is_host: false 
+        is_host: false
       }))
-    : room.participants;
+    : [...room.participants].sort((a, b) => Number(b.is_host) - Number(a.is_host));
   
   // Always use the placeholder image
   
@@ -391,8 +465,8 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
   };
 
   const handleClick = () => {
-    // Only trigger join if not swiping
-    if (!isSwiping.current) {
+    // Only trigger join if not swiping, and not while it is already opening
+    if (!isSwiping.current && !isJoining) {
       onJoin();
     }
   };
@@ -420,6 +494,10 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
+          // Entry only. Leaving and reflowing belong to the wrapper this sits
+          // in — a `transition` with a per-index delay applies to LAYOUT
+          // animations too, so having them here made the whole grid reshuffle
+          // in a staggered ripple every time one card left.
           transition={{ delay: index * 0.05, type: "spring", stiffness: 400, damping: 30 }}
           drag={isMobile ? "x" : false}
           dragConstraints={{ left: 0, right: 0 }}
@@ -444,6 +522,13 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
             enableNoise={false}
             className="relative px-2.5 pb-2.5 pt-6 rounded-2xl"
           >
+            {/* Opening a room means several writes before the screen changes.
+                Say so on the card that was tapped, or it reads as ignored. */}
+            {isJoining && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-black/35 backdrop-blur-[1px]">
+                <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/40 border-t-white" />
+              </div>
+            )}
             {/* Top row - Avatars left, Status badge + menu right */}
             <div className="relative z-10 px-2 pb-4">
               <div className="flex items-start justify-between mb-8">
@@ -454,20 +539,35 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
                     const isOnline = room.online_participants.some(op => op.user_id === p.user_id);
                     
                     return (
-                      <div 
-                        key={p.user_id || idx} 
-                        className={`w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-white/20 shadow-md ${
-                          isOnline 
-                            ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent" 
-                            : "border-2 border-white/40"
-                        }`}
+                      // Descending z-index so the first avatar sits on top of
+                      // the ones behind it — the negative margin alone would
+                      // put the last one in front.
+                      <div
+                        key={p.user_id || idx}
+                        className="relative flex-shrink-0"
+                        style={{ zIndex: displayPlayers.length - idx }}
                       >
-                        <SafeAvatarImage
-                          avatarUrl={p.avatar_url}
-                          fallback={p.nickname || "?"}
-                          className="w-full h-full object-cover"
-                          containerClassName="w-full h-full"
-                        />
+                        <div
+                          className={`w-9 h-9 rounded-full overflow-hidden bg-white/20 shadow-md ${
+                            isOnline
+                              ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent"
+                              : "border-2 border-white/40"
+                          }`}
+                        >
+                          <SafeAvatarImage
+                            avatarUrl={p.avatar_url}
+                            fallback={p.nickname || "?"}
+                            className="w-full h-full object-cover"
+                            containerClassName="w-full h-full"
+                          />
+                        </div>
+                        {p.is_host && (
+                          <img
+                            src={crownIcon}
+                            alt=""
+                            className="pointer-events-none absolute -top-2 -left-1 w-4 h-4 object-contain drop-shadow"
+                          />
+                        )}
                       </div>
                     );
                   })}
@@ -482,33 +582,23 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
 
                 {/* Top right - Status badge + menu (desktop/tablet) */}
                 <div className="flex items-center gap-2">
-                  {/* Badge priority: TV > LIVE > New > Completed > Waiting */}
-                  {showTVBadge ? (
+                  {showTVBadge && (
                     <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
                       <QuizCategoryIcon iconSlug="retro-tv" size={24} className="w-6 h-6" />
                     </div>
-                  ) : showLiveBadge ? (
-                    <LiveBadge />
-                  ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                      {t("extra.roomStatusNew")}
-                    </span>
-                  ) : isCompleted ? (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                      {t("extra.roomStatusCompleted")}
-                    </span>
-                  ) : allPlayersOnline ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                      {t("extra.roomStatusOnline")}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                      {t("extra.roomStatusWaiting")}
-                    </span>
                   )}
+                  {/* The badge is always the age. "Waiting", "online" and
+                      "new" read the same on every card; the dot carries that
+                      state instead — green when someone is there, amber when
+                      the room is empty. */}
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                    <span
+                      className={`w-1.5 h-1.5 shrink-0 rounded-full animate-pulse ${
+                        someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
+                      }`}
+                    />
+                    {createdAgo || t("extra.roomStatusWaiting")}
+                  </span>
                   
                   {/* 3-dot menu (tablet/desktop only) */}
                   {!isMobile && (
@@ -609,9 +699,11 @@ interface RoomCardGridProps {
   index: number;
   onJoin: () => void;
   onDelete: (roomId: string) => void;
+  /** Opening this room: the card says so and stops taking taps. */
+  isJoining?: boolean;
 }
 
-function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
+function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: RoomCardGridProps) {
   const { openProfile } = usePlayerProfile();
   const { t } = useLanguage();
   const isMobile = useIsMobile();
@@ -629,15 +721,18 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
   const isSwiping = useRef(false);
   
   const displayName = room.room_name || "თამაშის ოთახი";
-  const isCompleted = room.status === "completed";
-  
+  // How long ago the room was made — the thing that tells two similar rooms
+  // apart in a list of them.
+  const createdAgo = useRoomAge(room.created_at);
+
   // NEW LOGIC: has_players_in_room = someone is actually INSIDE this room
   const hasPlayersInRoom = room.has_players_in_room;
   const hasTVSession = isActiveTVSession(room.tv_status);
-  
-  // Badge logic: TV badge if players in room + TV connected, LIVE if players in room without TV
+
+  // The TV artwork still marks a room being played on a screen; the words
+  // that used to sit beside it are gone, so the badge is only ever the age.
   const showTVBadge = hasPlayersInRoom && hasTVSession;
-  const showLiveBadge = hasPlayersInRoom && !hasTVSession;
+  const someoneInRoom = hasPlayersInRoom;
 
   // Rooms that were ever played on TV keep their session id; live ones have
   // an active status — either way the footer gets a TV marker.
@@ -654,15 +749,16 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
     ? room.tv_active_players 
     : room.participants.length;
   
-  // Use TV players for avatars when session is active
+  // Use TV players for avatars when session is active — otherwise room
+  // participants with the host first, so the room's owner is the face you see.
   const displayPlayers = hasTVSession && room.tv_players.length > 0
-    ? room.tv_players.map(p => ({ 
-        user_id: p.user_id || '', 
-        nickname: p.nickname, 
+    ? room.tv_players.map(p => ({
+        user_id: p.user_id || '',
+        nickname: p.nickname,
         avatar_url: p.avatar_url,
-        is_host: false 
+        is_host: false
       }))
-    : room.participants;
+    : [...room.participants].sort((a, b) => Number(b.is_host) - Number(a.is_host));
   
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
@@ -689,7 +785,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
   };
 
   const handleClick = () => {
-    if (!isSwiping.current) {
+    if (!isSwiping.current && !isJoining) {
       onJoin();
     }
   };
@@ -717,6 +813,10 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
+          // Entry only. Leaving and reflowing belong to the wrapper this sits
+          // in — a `transition` with a per-index delay applies to LAYOUT
+          // animations too, so having them here made the whole grid reshuffle
+          // in a staggered ripple every time one card left.
           transition={{ delay: index * 0.03, type: "spring", stiffness: 400, damping: 30 }}
           drag={isMobile ? "x" : false}
           dragConstraints={{ left: 0, right: 0 }}
@@ -740,36 +840,34 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
             enableNoise={false}
             className="relative w-full h-full p-3 flex flex-col"
           >
+            {/* Opening a room means several writes before the screen changes.
+                Say so on the card that was tapped, or it reads as ignored. */}
+            {isJoining && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-black/35 backdrop-blur-[1px]">
+                <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/40 border-t-white" />
+              </div>
+            )}
             {/* Cover image with radial fade */}
             {/* Top Row: Status Badge + Menu */}
             <div className="relative z-10 flex items-start justify-between">
-              {/* Badge priority: TV > LIVE > New > Completed > Waiting */}
-              {showTVBadge ? (
-                <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <QuizCategoryIcon iconSlug="retro-tv" size={24} className="w-6 h-6" />
-                </div>
-              ) : showLiveBadge ? (
-                <LiveBadge />
-              ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                  {t("extra.roomStatusNew")}
+              <div className="flex items-center gap-2">
+                {showTVBadge && (
+                  <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <QuizCategoryIcon iconSlug="retro-tv" size={24} className="w-6 h-6" />
+                  </div>
+                )}
+                {/* The badge is always the age. "Waiting", "online" and "new"
+                    read the same on every card; the dot carries that state
+                    instead — green when someone is there, amber when empty. */}
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                  <span
+                    className={`w-1.5 h-1.5 shrink-0 rounded-full animate-pulse ${
+                      someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
+                    }`}
+                  />
+                  {createdAgo || t("extra.roomStatusWaiting")}
                 </span>
-              ) : isCompleted ? (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                  {t("extra.roomStatusCompleted")}
-                </span>
-              ) : allPlayersOnline ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                  {t("extra.roomStatusOnline")}
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                  {t("extra.roomStatusWaiting")}
-                </span>
-              )}
+              </div>
               
               {/* 3-dot menu (tablet/desktop only) */}
               {!isMobile && (
@@ -839,24 +937,39 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
                     const isOnline = room.online_participants.some(op => op.user_id === p.user_id);
                     
                     return (
-                      <div 
-                        key={p.user_id || idx} 
-                        className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md ${
-                          isOnline 
-                            ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent" 
-                            : "border-2 border-white/40"
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (p.user_id) openProfile(p.user_id);
-                        }}
+                      // Descending z-index so the first avatar sits on top of
+                      // the ones behind it — the negative margin alone would
+                      // put the last one in front.
+                      <div
+                        key={p.user_id || idx}
+                        className="relative flex-shrink-0"
+                        style={{ zIndex: displayPlayers.length - idx }}
                       >
-                        <SafeAvatarImage
-                          avatarUrl={p.avatar_url}
-                          fallback={p.nickname || "?"}
-                          className="w-full h-full object-cover"
-                          containerClassName="w-full h-full"
-                        />
+                        <div
+                          className={`w-8 h-8 rounded-full overflow-hidden bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md ${
+                            isOnline
+                              ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent"
+                              : "border-2 border-white/40"
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (p.user_id) openProfile(p.user_id);
+                          }}
+                        >
+                          <SafeAvatarImage
+                            avatarUrl={p.avatar_url}
+                            fallback={p.nickname || "?"}
+                            className="w-full h-full object-cover"
+                            containerClassName="w-full h-full"
+                          />
+                        </div>
+                        {p.is_host && (
+                          <img
+                            src={crownIcon}
+                            alt=""
+                            className="pointer-events-none absolute -top-2 -left-1 w-3.5 h-3.5 object-contain drop-shadow"
+                          />
+                        )}
                       </div>
                     );
                   })}

@@ -230,7 +230,7 @@ export const en: KaTranslations = {
     play: "Play",
     discover: "Discover",
     leaderboard: "Leaderboard",
-    triviaLive: "Trivia Live",
+    triviaLive: "Online Game",
   },
 
   // ==========================================
@@ -517,6 +517,9 @@ export const en: KaTranslations = {
     nameChanged: "Name changed!",
     deleteAccount: "Delete Account",
     deleteAccountDescription: "Permanently delete your account",
+    buildLabel: "Build",
+    checkingForUpdate: "Checking...",
+    upToDate: "Up to date",
     privacyPolicy: "Privacy Policy",
     termsOfService: "Terms of Service",
     dataManagement: "Data Management",
@@ -573,6 +576,14 @@ export const en: KaTranslations = {
     animationPro: "Animation (PRO)",
     remainingGen: "{remaining}/{max} generations left",
     maxGenReached: "Maximum {max} avatar generations allowed",
+    // Running out is a price, not a wall — the wording has to leave a way
+    // forward, because a dead end here reads as a broken button.
+    limitUsedUp: "You've used your {max} free generations.",
+    extraCostsGems: "Next one — {cost} gem",
+    needGemsForExtra: "Not enough gems — the next generation costs {cost}",
+    generateForGems: "Generate • {cost}",
+    paidWithGems: "Paid {cost} gem",
+    proGetsFive: "PRO gets {max} of each",
     avatarsList: "Avatars",
   },
 
@@ -589,8 +600,14 @@ export const en: KaTranslations = {
     cameraPermission: "Cannot access camera. Please check permissions.",
     uploadFailed: "Upload failed",
     generationFailed: "Avatar generation failed",
-    imageTooLarge: "Image must be less than 5MB",
+    imageTooLarge: "Image must be less than 30MB",
     selectImageFile: "Please select an image file",
+    // "Failed to process image" was the only thing any photo failure said, so
+    // nobody could tell whether to try another photo, a smaller one, or a
+    // different format.
+    photoNotDownloaded: "Couldn't read the photo from your device — if it's still in iCloud or Google Photos, download it first and try again",
+    photoFormatUnsupported: "Couldn't read this photo's format — try another photo, or save it as JPG",
+    photoTooBigToProcess: "This photo is too big to process — try a smaller one",
     noAvatarToAnimate: "No avatar to animate",
   },
 
@@ -631,6 +648,9 @@ export const en: KaTranslations = {
   // Missions
   // ==========================================
   missions: {
+    weekPackage: "Week package",
+    pastDay: "Past day",
+    futureDay: "Upcoming day",
     title: "Missions",
     subtitle: "Complete missions and earn rewards",
     daily: "Daily",
@@ -716,6 +736,7 @@ export const en: KaTranslations = {
     subtitleWait: "Coming soon!",
     nextChest: "Time left until the next chest",
     claim: "Claim",
+    open: "Open",
     loading: "Loading...",
     rewardsReceived: "Rewards received!",
     coins: "Coin",
@@ -743,6 +764,10 @@ export const en: KaTranslations = {
   // Shop
   // ==========================================
   shop: {
+    vipTwoDays: "2 days PRO",
+    dealDuo: "Two-day pack",
+    dealArsenal: "Arsenal pack",
+    dealVault: "Vault pack",
     title: "Shop",
     starterPack: "Boost Powers",
     forBeginners: "For Beginners",
@@ -903,7 +928,7 @@ export const en: KaTranslations = {
   team: {
     roomUpdated: "Room updated",
     updateFailed: "Update failed",
-    newRoom: "New Room",
+    newRoom: "Play with Friends",
     roomName: "Room Name",
     enterRoomName: "Enter room name",
     randomName: "Random Name",
@@ -954,6 +979,7 @@ export const en: KaTranslations = {
     // Additional team translations
     multiplayer: "Multiplayer",
     signInToPlay: "Sign in to play with friends",
+    signInToJoinInvite: "You have been invited to a room — sign in or create an account to join",
     onlineGame: "Online Game",
     friends: "Friends",
     yourRooms: "Your Rooms",
@@ -990,6 +1016,7 @@ export const en: KaTranslations = {
     myPowers: "My Powers",
     goToShop: "Go to Shop",
     levelUp: "Level Up! 🎉",
+    rewardEarned: "Reward earned! 🎉",
     levelLabel: "Level",
     rewards: "Rewards",
     coin: "Coin",
@@ -1029,6 +1056,8 @@ export const en: KaTranslations = {
     orBecomeVip: "or become VIP for unlimited plays",
     continueGame: "Continue Game",
     xpProgress: "XP Progress",
+    nextLevelRewardsHint: "At the next level you can get",
+    randomPower: "random power-up",
     maxLevelReached: "You've reached the maximum level! 🎉",
     xpToNextLevel: "{amount} XP left to next level",
     totalXp: "Total XP",
@@ -1771,6 +1800,7 @@ export const en: KaTranslations = {
     myTriviaDesc: "Choose from your created trivias",
     createBtn: "Create",
     inviteBtn: "Invite",
+    guestSaveScorePrompt: "Sign up to keep your score",
     appFriends: "In-app friends",
     shareBtn: "Share",
     friendsInvited: "{count} friend(s) invited",
@@ -1780,9 +1810,9 @@ export const en: KaTranslations = {
     saveErrorToast: "Error while saving",
     myTriviaPartySaved: "MyTrivia Party saved!",
     noOnePlayedTrivia: "No one has played yet",
-    pingHostBtn: "Call the host",
+    pingHostBtn: "Invite to play",
     pingHostSent: "The host has been notified! 🔔",
-    pingHostNotifTitle: "{name} is calling you to start the game",
+    pingHostNotifTitle: "{name}: Let's play!",
     pingHostOpenRoom: "Open room",
     photoFaceRequiredTitle: "Please upload a photo with a face",
     photoFaceRequiredDesc: "Animation needs a photo where a face is visible",
@@ -2329,11 +2359,11 @@ export const en: KaTranslations = {
     familyProBenefit1: "All Solo PRO features + invite 5 friends",
     familyProBenefit2: "All PRO features",
     familyProBenefit3: "No ads",
-    mobileSoloBenefit1: "Unlimited free play",
+    mobileSoloBenefit1: "Unlimited play",
     mobileSoloBenefit2: "All PRO features",
     mobileSoloBenefit3: "No ads",
-    mobileFamilyBenefit1: "All Solo PRO features + invite 5 friends",
-    mobileFamilyBenefit2: "Free play",
+    mobileFamilyBenefit1: "Unlimited play",
+    mobileFamilyBenefit2: "PRO features + 5 friends",
     mobileFamilyBenefit3: "No ads",
     // Shop tabs
     shopHotDeals: "🔥 Deals",

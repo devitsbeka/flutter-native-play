@@ -298,7 +298,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className={`fixed inset-0 z-[100] flex flex-col ${
-            viewMode === "questions" ? "bg-[#7E7ADB]" : "bg-background"
+            viewMode === "questions" ? "bg-[#7E7ADB]" : "bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF]"
           }`}
         >
           {/* Fixed Header */}

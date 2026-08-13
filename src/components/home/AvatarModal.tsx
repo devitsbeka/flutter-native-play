@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2, Crown, Lock, Plus } from "lucide-react";
+import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2, Lock, Plus, AlertCircle } from "lucide-react";
 
 // Import 3D icons for avatar flow
 import iconScissors from '@/assets/icons/icon-scissors.png';
@@ -9,6 +9,8 @@ import iconAiSparkle from '@/assets/icons/icon-ai-sparkle.png';
 import iconPhotoUpload from '@/assets/icons/icon-photo-upload.png';
 import iconHourglass from '@/assets/icons/icon-hourglass.png';
 import iconSelfie from '@/assets/icons/icon-selfie.png';
+import gemIcon from '@/assets/icons/icon-gem.png';
+import crownIcon from '@/assets/crown-icon.png';
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,9 +20,24 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { t } from "@/lib/i18n";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import {
+  calculateAvatarQuota,
+  decideGeneration,
+  isRequestedPortraitUrl,
+  needsSceneUpload,
+  shouldResetSession,
+  EXTRA_GENERATION_GEM_COST,
+  MAX_AVATAR_GENERATIONS,
+  type GenerationKind,
+  type KindQuota,
+} from "@/utils/avatarStudio";
+import { useCurrency } from "@/hooks/useCurrency";
+import { preparePhoto } from "@/utils/imageInput";
+import { isNativePhotoPickerAvailable, pickPhotoFromLibrary } from "@/utils/nativePhotoPicker";
+import { photoError, type PhotoError } from "@/utils/photoErrorMessage";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { generatePublicPortrait } from "@/utils/portraitAvatar";
+import { generateAndRecordPortrait, generatePublicPortrait } from "@/utils/portraitAvatar";
 import { SCENE_ANIMATION_PROMPT } from "@/config/sceneAnimationPrompt";
 
 // Import mascot avatars
@@ -32,6 +49,7 @@ import mascotAvatar5 from '@/assets/avatars/mascot-avatar-5.png';
 import mascotAvatar6 from '@/assets/avatars/mascot-avatar-6.png';
 import mascotAvatar7 from '@/assets/avatars/mascot-avatar-7.png';
 import mascotAvatar8 from '@/assets/avatars/mascot-avatar-8.png';
+import { SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";
 
 const DEFAULT_AVATARS = [
   mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4,
@@ -61,9 +79,10 @@ interface AvatarModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete?: () => void;
+  /** Reports a running generation to the shell so it can show a floating
+      progress chip while the modal is closed and reopen it when done. */
+  onGeneratingChange?: (active: boolean, thumb?: string | null) => void;
 }
-
-const MAX_AVATAR_GENERATIONS = 5;
 
 interface AvatarGeneration {
   id: string;
@@ -73,10 +92,107 @@ interface AvatarGeneration {
   created_at: string;
 }
 
-export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
+/**
+ * The diamond on a white disc.
+ *
+ * The artwork is a purple gem, so on the purple primary button it vanished
+ * entirely and on the lavender note it read as a smudge. The disc gives it
+ * a constant background to sit on, the way a coin reads on any surface.
+ */
+function GemCoin({ size = "md" }: { size?: "sm" | "md" }) {
+  const disc = size === "sm" ? "w-5 h-5" : "w-6 h-6";
+  const gem = size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5";
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-white shadow-sm ${disc}`}
+    >
+      <img src={gemIcon} alt="" className={`${gem} object-contain`} />
+    </span>
+  );
+}
+
+/**
+ * What this kind of generation costs right now, said before it is spent.
+ *
+ * The old version of this line only ever appeared while there was allowance
+ * left; running out swapped the whole section for a locked box. So the two
+ * states a person needs to tell apart — "you have used your generations" and
+ * "this button is broken" — looked exactly alike.
+ */
+function QuotaNote({
+  quota,
+  isVip,
+  gems,
+  onGetPro,
+}: {
+  quota: KindQuota;
+  isVip: boolean;
+  gems: number;
+  onGetPro: () => void;
+}) {
+  if (!quota.isLimitReached) {
+    return (
+      <p className="text-xs text-muted-foreground mb-1">
+        {t("avatar.remainingGen", { remaining: quota.remaining, max: quota.max })}
+      </p>
+    );
+  }
+
+  const canAfford = gems >= EXTRA_GENERATION_GEM_COST;
+
+  return (
+    <div className="mb-2 rounded-xl border border-border bg-muted/40 px-3 py-2">
+      <p className="text-xs text-foreground">
+        {t("avatar.limitUsedUp", { max: quota.max })}{" "}
+        <span className="inline-flex items-center gap-1 font-bold text-primary">
+          <GemCoin size="sm" />
+          {t("avatar.extraCostsGems", { cost: EXTRA_GENERATION_GEM_COST })}
+        </span>
+      </p>
+      {!canAfford && (
+        <p className="mt-1 text-[11px] text-destructive">
+          {t("avatar.needGemsForExtra", { cost: EXTRA_GENERATION_GEM_COST })}
+        </p>
+      )}
+      {!isVip && (
+        <button
+          type="button"
+          onClick={onGetPro}
+          className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-primary underline underline-offset-2"
+        >
+          <img src={crownIcon} alt="" className="w-3.5 h-3.5 object-contain" />
+          {t("avatar.proGetsFive", { max: MAX_AVATAR_GENERATIONS })}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** The last failure, kept on screen instead of only in a toast. */
+function FailureNote({ failure }: { failure: PhotoError }) {
+  return (
+    <div className="mt-3 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2">
+      <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
+      <div className="min-w-0">
+        <p className="text-[11px] leading-snug text-destructive">{failure.message}</p>
+        {/* What the file actually was. It is here so a screenshot of this
+            box is enough to tell which photo the app choked on — otherwise
+            "unsupported format" is a guess the person has to confirm for us. */}
+        {failure.diagnosis && (
+          <p className="mt-0.5 break-words font-mono text-[10px] leading-snug text-muted-foreground">
+            {failure.diagnosis}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }: AvatarModalProps) {
   const finishAndClose = onComplete || onClose;
   const { user, profile, updateProfile } = useAuth();
   const { isVip } = useVipStatus();
+  const { gems, spendGems } = useCurrency();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
 
@@ -99,6 +215,14 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
+  // Which of the two things the person set out to make. Both flows start
+  // from the same photo picker, so without this the modal cannot tell an
+  // avatar request from a scene request — and they have separate budgets.
+  const [flowKind, setFlowKind] = useState<GenerationKind>("avatar");
+  // The last thing that went wrong, shown IN the modal. A toast can be
+  // missed, scrolled past, or — as it turned out — never rendered at all;
+  // the step that failed should carry its own explanation.
+  const [failure, setFailure] = useState<PhotoError | null>(null);
   const [selectedForAction, setSelectedForAction] = useState<string | null>(null);
   // "default" = the Trivia King mascot loop backs the homepage instead of a
   // generated scene; anything else = the picked generated scene. Local
@@ -106,33 +230,69 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
   const [scenePref, setScenePref] = useState<string | null>(null);
   useEffect(() => {
     if (isOpen && user) setScenePref(localStorage.getItem(`scene_pref_${user.id}`));
-  }, [isOpen, user]);
+  }, [isOpen, user?.id]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Load avatar generations
+  // Reset transient state ONLY on a real closed -> open transition, and
+  // never mid-generation — see shouldResetSession in avatarStudio.ts for
+  // the regression this guards against.
+  const generationInFlight = useRef(false);
+  const wasOpen = useRef(false);
+  // The scene generated in this session, already uploaded and recorded.
+  // Applying it later only has to flip which scene is current.
+  const storedScene = useRef<{ sceneUrl: string; sourceUrl: string | null } | null>(null);
   useEffect(() => {
-    if (isOpen && user) {
-      loadGenerations();
+    if (
+      shouldResetSession({
+        isOpen,
+        wasOpen: wasOpen.current,
+        generationInFlight: generationInFlight.current,
+      })
+    ) {
+      setIsLoading(false);
+      setIsProcessingFile(false);
+      setIsAnimating(false);
+      setSelectedForAction(null);
+      // Otherwise last session's error is on screen the moment the modal
+      // opens, describing a photo nobody has picked yet.
+      setFailure(null);
+      setStep("gallery");
     }
-  }, [isOpen, user]);
+    wasOpen.current = isOpen;
+  }, [isOpen]);
+
+  // Keyed on the stable user id, never the user object
+  useEffect(() => {
+    if (isOpen && user?.id) loadGenerations();
+  }, [isOpen, user?.id]);
 
   const loadGenerations = async () => {
     if (!user) return;
-    
-    const { data, error } = await supabase
-      .from('avatar_generations')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(12);
 
-    if (!error && data) {
-      setGenerations(data);
-    }
+    // Each type gets its own budget. One combined LIMIT meant a run of
+    // background portraits could push every scene out of the window: "my
+    // scenes" came back empty and the scene count the new-scene tile is
+    // gated on read zero, on an account that plainly had scenes.
+    const byType = (scenesOnly: boolean) => {
+      const base = supabase.from('avatar_generations').select('*').eq('user_id', user.id);
+      const scoped = scenesOnly
+        ? base.like('avatar_url', '%/scene_%')
+        : base.not('avatar_url', 'like', '%/scene_%');
+      return scoped.order('created_at', { ascending: false }).limit(12);
+    };
+
+    const [scenes, portraits] = await Promise.all([byType(true), byType(false)]);
+    if (scenes.error || portraits.error) return;
+
+    setGenerations(
+      [...(scenes.data || []), ...(portraits.data || [])].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+    );
   };
 
   // Camera controls
@@ -146,6 +306,9 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
 
   const startCamera = useCallback(async () => {
     try {
+      // The selfie tile lives under "create new avatar"
+      setFlowKind("avatar");
+      setFailure(null);
       setStep("camera");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
@@ -205,104 +368,126 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
     }
   }, [isOpen, stopCamera]);
 
-  // Compress image using canvas - handles HEIC, resizes, and converts to JPEG
-  const compressImage = useCallback((file: File, maxWidth = 1024, quality = 0.85): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        
-        let { width, height } = img;
-        
-        // Scale down if larger than maxWidth
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-        if (height > maxWidth) {
-          width = (width * maxWidth) / height;
-          height = maxWidth;
-        }
-        
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        
-        if (!ctx) {
-          reject(new Error("Canvas context unavailable"));
-          return;
-        }
-        
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        // Convert to JPEG data URL
-        const dataUrl = canvas.toDataURL("image/jpeg", quality);
-        resolve(dataUrl);
-      };
-      
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error("Failed to load image"));
-      };
-      
-      img.src = url;
-    });
-  }, []);
+
+  // Opens the picker from a real button press. A silent no-op here is what
+  // "the tile does nothing" looks like from the outside, so if the input is
+  // somehow not mounted, say so rather than swallow the tap.
+  const goToPro = () => {
+    onClose();
+    navigate("/profile?tab=PRO");
+  };
+
+  const openFilePicker = async (kind: GenerationKind) => {
+    setFlowKind(kind);
+    setFailure(null);
+
+    // In the native app, ask the phone for the photo. iOS and Android hand
+    // back a JPEG from their own pipeline, already upright — no format for
+    // a JavaScript decoder to get wrong, because the platform that wrote
+    // the file is the one reading it.
+    if (isNativePhotoPickerAvailable()) {
+      setIsProcessingFile(true);
+      try {
+        const { dataUrl, cancelled } = await pickPhotoFromLibrary(1024);
+        if (cancelled) return;
+        if (!dataUrl) throw new Error("No photo returned");
+        setUploadedImage(dataUrl);
+        setStep("upload");
+      } catch (error) {
+        console.error("Native photo picker failed:", error);
+        const failed = photoError(error);
+        setFailure(failed);
+        toast.error(failed.message);
+      } finally {
+        setIsProcessingFile(false);
+      }
+      return;
+    }
+
+    const input = fileInputRef.current;
+    if (!input) {
+      toast.error(t("errors.generic"));
+      return;
+    }
+    // Clear first: an input holds its last value, and re-picking the same
+    // photo fires no change event.
+    input.value = "";
+    input.click();
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    // Captured up front and cleared on EVERY exit below. An input keeps the
+    // value it was given, and re-picking the same file fires no change event
+    // — so one rejected or failed photo used to leave the tile permanently
+    // unresponsive to that photo, with no way to tell from the outside.
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
 
     // Allow empty type for HEIC (some browsers don't report MIME type for HEIC)
     // Check extension as fallback
-    const isImageByExtension = /\.(jpg|jpeg|png|gif|webp|heic|heif|bmp)$/i.test(file.name);
-    if (!file.type.startsWith("image/") && !isImageByExtension) {
-      toast.error(t("errors.selectImageFile"));
-      return;
-    }
-
-    // Increased limit for mobile (compression will reduce final size)
-    if (file.size > 15 * 1024 * 1024) {
-      toast.error(t("errors.imageTooLarge"));
-      return;
-    }
-
+    setFailure(null);
     setIsProcessingFile(true);
 
     try {
-      // Use canvas compression - handles HEIC, resizes, and converts to JPEG
-      const dataUrl = await compressImage(file, 1024, 0.85);
+      // Every decoder the browser has, then the JS HEIC transcoder — see
+      // imageInput.ts. A phone photo must not be turned away for what its
+      // filename or MIME type claims to be.
+      const dataUrl = await preparePhoto(file, 1024, 0.85);
       setUploadedImage(dataUrl);
       setStep("upload");
-      
-      // Reset input for iOS Safari (allows selecting same file again)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     } catch (error) {
       console.error("Error processing image:", error);
-      toast.error(t("errors.failedToReadImage") || "Failed to process image");
+      // This is the failure that looked like "it loads for a second and does
+      // nothing", so it names what actually happened and stays on screen
+      // instead of vanishing with the spinner.
+      const failed = photoError(error);
+      setFailure(failed);
+      toast.error(failed.message);
     } finally {
+      // Reset the input that fired (allows selecting the same file again)
+      input.value = "";
       setIsProcessingFile(false);
     }
   };
 
-  const isLimitReached = generations.length >= MAX_AVATAR_GENERATIONS;
-  const remainingGenerations = MAX_AVATAR_GENERATIONS - generations.length;
+  // Scenes and avatars have SEPARATE budgets — see avatarStudio.ts.
+  const quota = calculateAvatarQuota(generations, isVip);
+  const activeQuota = flowKind === "scene" ? quota.scene : quota.avatar;
 
   const generateAvatar = async () => {
     if (!uploadedImage || !user) return;
 
-    if (isLimitReached) {
-      toast.error(t("extra.avatarMaxGenReachedShort"));
+    // Over the included allowance, one more costs a gem. Refusing outright
+    // was the old behaviour and it read as a broken button; charging for it
+    // at least gives the tap somewhere to go.
+    const decision = decideGeneration(activeQuota, gems);
+    if (decision.action === "blocked") {
+      const message = t("avatar.needGemsForExtra", { cost: decision.gems });
+      setFailure({ message });
+      toast.error(message);
       return;
     }
+    if (decision.action === "charge") {
+      const paid = await spendGems(decision.gems, {
+        productType: "avatar_generation",
+        productId: flowKind,
+        valueReceived: { kind: flowKind, generations: 1 },
+      });
+      if (!paid) {
+        const message = t("avatar.needGemsForExtra", { cost: decision.gems });
+        setFailure({ message });
+        toast.error(message);
+        return;
+      }
+      toast.success(t("avatar.paidWithGems", { cost: decision.gems }));
+    }
 
+    setFailure(null);
     setIsLoading(true);
     setStep("generating");
+    generationInFlight.current = true;
+    onGeneratingChange?.(true, uploadedImage);
 
     try {
       // Upload the image to storage
@@ -331,15 +516,67 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
 
       const imageUrl = urlData.publicUrl;
 
-      // Generate avatar via edge function
+      // An avatar request makes an AVATAR. Both tiles used to run the scene
+      // pipeline, so "create new avatar" produced a full-body scene and spent
+      // the scene budget — which is why one shelf filling up closed both.
+      if (flowKind === "avatar") {
+        const portraitUrl = await generatePublicPortrait(user.id, imageUrl, "portrait");
+        if (!portraitUrl) throw new Error(t("errors.generationFailed"));
+
+        // Recorded but NOT current yet — applying it is still the user's call
+        await supabase.from("avatar_generations").insert({
+          user_id: user.id,
+          avatar_url: portraitUrl,
+          source_image_url: imageUrl,
+          is_current: false,
+        });
+
+        await loadGenerations();
+        setGeneratedAvatar(portraitUrl);
+        setStep("preview");
+        confetti({
+          particleCount: 80,
+          spread: 60,
+          origin: { y: 0.6 },
+          colors: ["#A855F7", "#EC4899", "#FFD700"],
+        });
+        return;
+      }
+
+      // Generate the scene via edge function
       const { data, error } = await supabase.functions.invoke("generate-avatar", {
-        body: { imageUrl },
+        body: { imageUrl, prompt: SCENE_AVATAR_PROMPT },
       });
 
       if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || "Failed to generate avatar");
 
-      setGeneratedAvatar(data.avatarUrl);
+      // Persist the scene IMMEDIATELY. It used to live only in component
+      // state until the user pressed save, so any interruption — closing the
+      // modal, the auto-reopen, a re-render — silently threw the finished
+      // generation away and the scenes list looked untouched.
+      const sceneResponse = await fetch(data.avatarUrl);
+      const sceneBlob = await sceneResponse.blob();
+      const sceneFileName = `${user.id}/scene_${Date.now()}.png`;
+      const { error: sceneUploadError } = await supabase.storage
+        .from("avatars")
+        .upload(sceneFileName, sceneBlob, { upsert: true, contentType: "image/png" });
+      if (sceneUploadError) throw new Error(`Failed to store scene: ${sceneUploadError.message}`);
+
+      const storedSceneUrl = supabase.storage.from("avatars").getPublicUrl(sceneFileName).data.publicUrl;
+
+      // Recorded but NOT current yet — applying it is still the user's call
+      await supabase.from("avatar_generations").insert({
+        user_id: user.id,
+        avatar_url: storedSceneUrl,
+        source_image_url: imageUrl,
+        is_current: false,
+      });
+
+      storedScene.current = { sceneUrl: storedSceneUrl, sourceUrl: imageUrl };
+      await loadGenerations();
+
+      setGeneratedAvatar(storedSceneUrl);
       setStep("preview");
       
       confetti({
@@ -351,10 +588,16 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
 
     } catch (error) {
       console.error("Error generating avatar:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to generate avatar");
+      const message = error instanceof Error ? error.message : t("errors.generationFailed");
+      // Shown on the step it dropped back to, not only as a toast — landing
+      // back on the photo with nothing said is the whole complaint.
+      setFailure({ message });
+      toast.error(message);
       setStep("upload");
     } finally {
       setIsLoading(false);
+      generationInFlight.current = false;
+      onGeneratingChange?.(false);
     }
   };
 
@@ -365,82 +608,135 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
     setIsLoading(true);
 
     try {
-      // The generated artifact is a 16:9 homepage scene — save it under the
-      // scene_ marker the homepage hero looks for
-      const response = await fetch(urlToSave);
-      const blob = await response.blob();
+      // A generated AVATAR is already the finished circle — it becomes the
+      // profile picture directly. Everything below this point is scene
+      // machinery (which scene backs the homepage, deriving its portrait),
+      // and running an avatar through it would file it as a scene.
+      if (isRequestedPortraitUrl(urlToSave)) {
+        await supabase
+          .from("avatar_generations")
+          .update({ is_current: false })
+          .eq("user_id", user.id)
+          .not("avatar_url", "like", "%/scene_%");
+        await supabase
+          .from("avatar_generations")
+          .update({ is_current: true })
+          .eq("user_id", user.id)
+          .eq("avatar_url", urlToSave);
 
-      const fileName = `${user.id}/scene_${Date.now()}.png`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(fileName, blob, {
-          upsert: true,
-          contentType: 'image/png'
+        // The old animation belongs to the previous face, so it retires with it
+        await updateProfile({
+          avatar_url: urlToSave,
+          animated_avatar_url: null,
+          has_face_photo: true,
         });
 
-      if (uploadError) {
-        throw new Error(`Failed to save avatar: ${uploadError.message}`);
+        toast.success(t("avatar.avatarSaved"));
+        finishAndClose();
+        return;
       }
 
-      const { data: urlData } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(fileName);
-
-      const finalUrl = urlData.publicUrl;
-
-      // The public circle avatar starts as the uploaded photo so the apply
-      // is instant; the mini stylized portrait is a SECOND AI generation
-      // (~1-2 minutes), so it runs in the background after the modal closes
-      // and swaps in quietly when ready.
-      let profileAvatarUrl: string | null = null;
-      if (uploadedImage) {
-        try {
-          const photoBlob = await (await fetch(uploadedImage)).blob();
-          const photoFileName = `${user.id}/photo_${Date.now()}.png`;
-          const { error: photoError } = await supabase.storage
-            .from("avatars")
-            .upload(photoFileName, photoBlob, { upsert: true, contentType: 'image/png' });
-          if (!photoError) {
-            profileAvatarUrl = supabase.storage.from("avatars").getPublicUrl(photoFileName).data.publicUrl;
-          }
-        } catch (photoErr) {
-          console.warn("Saving original photo failed, keeping current avatar:", photoErr);
+      // Generation already stored this scene, so applying it just flips the
+      // current flag — no re-upload, and nothing to lose if this step never
+      // happens.
+      if (needsSceneUpload(storedScene.current?.sceneUrl, urlToSave)) {
+        const response = await fetch(urlToSave);
+        const blob = await response.blob();
+        const fileName = `${user.id}/scene_${Date.now()}.png`;
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(fileName, blob, { upsert: true, contentType: 'image/png' });
+        if (uploadError) {
+          throw new Error(`Failed to save avatar: ${uploadError.message}`);
         }
+        storedScene.current = {
+          sceneUrl: supabase.storage.from("avatars").getPublicUrl(fileName).data.publicUrl,
+          sourceUrl: null,
+        };
       }
 
-      // Save to avatar_generations table (the current SCENE row is what the
-      // homepage hero reads — only scene rows lose their flag here)
-      await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id).like('avatar_url', '%/scene_%');
+      const finalUrl = storedScene.current!.sceneUrl;
 
-      await supabase.from('avatar_generations').insert({
-        user_id: user.id,
-        avatar_url: finalUrl,
-        source_image_url: profileAvatarUrl,
-        is_current: true,
-      });
+      // Make this the current scene. The row already exists (generation
+      // recorded it), so this only moves the flag; a row is inserted only for
+      // the legacy path where the scene was not stored during generation.
+      await supabase
+        .from('avatar_generations')
+        .update({ is_current: false })
+        .eq('user_id', user.id)
+        .like('avatar_url', '%/scene_%');
 
-      // Update profile - AI generation implies a face was present
-      await updateProfile({
-        ...(profileAvatarUrl ? { avatar_url: profileAvatarUrl } : {}),
-        has_face_photo: true,
-      } as any);
+      const { data: existingRow } = await supabase
+        .from('avatar_generations')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('avatar_url', finalUrl)
+        .maybeSingle();
+
+      if (existingRow) {
+        await supabase
+          .from('avatar_generations')
+          .update({ is_current: true })
+          .eq('id', existingRow.id);
+      } else {
+        await supabase.from('avatar_generations').insert({
+          user_id: user.id,
+          avatar_url: finalUrl,
+          source_image_url: storedScene.current!.sourceUrl,
+          is_current: true,
+        });
+      }
+
+      // Update profile - AI generation implies a face was present. The old
+      // animated avatar belongs to the previous face, so it retires too —
+      // surfaces that prefer the animation would otherwise keep showing
+      // the old avatar.
+      await updateProfile({ has_face_photo: true } as any);
       queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
 
       toast.success(t("avatar.avatarSaved"));
       finishAndClose();
 
-      // Background portrait generation — never blocks the apply. When it
-      // lands, the circle avatar upgrades from the raw photo to the
-      // stylized portrait of the same character.
-      if (profileAvatarUrl) {
-        const photoUrl = profileAvatarUrl;
-        void generatePublicPortrait(user.id, photoUrl).then((portraitUrl) => {
-          if (portraitUrl) {
-            void updateProfile({ avatar_url: portraitUrl } as any);
-          }
-        });
-      }
+      // Background portrait generation from the SCENE — never blocks the
+      // apply. When it lands it becomes the public circle avatar and joins
+      // "my avatars" so it can be re-picked later.
+      //
+      // A scene that already has its portrait reuses it. This used to
+      // regenerate unconditionally, so every switch between two existing
+      // scenes paid for another generation AND inserted another row — the
+      // portrait shelf filled up from ordinary browsing, which is what
+      // killed the "+ new scene" tile.
+      void (async () => {
+        const { data: existing } = await supabase
+          .from("avatar_generations")
+          .select("id, avatar_url")
+          .eq("user_id", user.id)
+          .eq("source_image_url", finalUrl)
+          .not("avatar_url", "like", "%/scene_%")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        let portraitUrl: string | null;
+        if (existing) {
+          await supabase
+            .from("avatar_generations")
+            .update({ is_current: false })
+            .eq("user_id", user.id)
+            .not("avatar_url", "like", "%/scene_%");
+          await supabase
+            .from("avatar_generations")
+            .update({ is_current: true })
+            .eq("id", existing.id);
+          portraitUrl = existing.avatar_url;
+        } else {
+          portraitUrl = await generateAndRecordPortrait(user.id, finalUrl);
+        }
+
+        if (portraitUrl) {
+          await updateProfile({ avatar_url: portraitUrl, animated_avatar_url: null } as any);
+        }
+      })();
 
     } catch (error) {
       console.error("Error saving avatar:", error);
@@ -833,7 +1129,7 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
 
   // Content based on step
   const renderContent = () => {
-    // The scene the animate button would bring to life (selected, else newest)
+    // The scene the animate button would bring to life (selected, else newest).
     const sceneRows = generations.filter((g) => g.avatar_url.includes("/scene_"));
     const currentScene = sceneRows.find((g) => g.is_current) || sceneRows[0] || null;
 
@@ -897,7 +1193,7 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                 >
                   <Lock className="w-3 h-3" />
                   <span>{t("avatar.animationPro")}</span>
-                  <Crown className="w-3 h-3 text-amber-500" />
+                  <img src={crownIcon} alt="" className="w-3.5 h-3.5 object-contain" />
                 </motion.button>
               )
             )}
@@ -906,14 +1202,11 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
           {/* Generate New Section - MOVED UP */}
           <div className="pt-2">
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.createNew")}</p>
-          {isLimitReached ? (
-            <div className="flex items-center justify-center py-3 px-4 rounded-xl bg-muted/50 border border-border">
-              <p className="text-xs text-muted-foreground text-center">{t("avatar.maxGenReached", { max: MAX_AVATAR_GENERATIONS })}</p>
-            </div>
-          ) : (
+            {/* The tiles stay live once the allowance is gone — the next one
+                is simply priced. A dead tile was the whole complaint. */}
+            <QuotaNote quota={quota.avatar} isVip={isVip} gems={gems} onGetPro={goToPro} />
             <>
-              <p className="text-xs text-muted-foreground mb-1">{t("avatar.remainingGen", { remaining: remainingGenerations, max: MAX_AVATAR_GENERATIONS })}</p>
-              <div className="flex gap-3">
+              <div className="flex gap-3 mt-2">
                 <motion.button
                   onClick={startCamera}
                   className="flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all"
@@ -928,12 +1221,11 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                   <span className="text-xs text-muted-foreground">{t("avatar.takeSelfie")}</span>
                 </motion.button>
 
-                <motion.button
-                  onClick={() => fileInputRef.current?.click()}
+                <button
+                  type="button"
+                  onClick={() => openFilePicker("avatar")}
                   disabled={isProcessingFile}
-                  className={`flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all ${isProcessingFile ? 'opacity-50' : ''}`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  className={`relative flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isProcessingFile ? 'opacity-50' : ''}`}
                 >
                   {isProcessingFile ? (
                     <>
@@ -942,53 +1234,88 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
                     </>
                   ) : (
                     <>
-                      <img 
-                        src={iconPhotoUpload} 
-                        alt="Upload" 
+                      <img
+                        src={iconPhotoUpload}
+                        alt="Upload"
                         className="w-10 h-10 object-contain"
                       />
                       <span className="text-xs text-muted-foreground">{t("avatar.uploadPhoto")}</span>
                     </>
                   )}
-                </motion.button>
+                </button>
               </div>
             </>
-          )}
+            {failure && <FailureNote failure={failure} />}
           </div>
 
+          {/* The one file input in the modal, opened by ref from the tiles
+              above and from "+ new scene" below. Every tile used to carry its
+              own transparent full-size input instead — a pattern that depends
+              on hit-testing an invisible control inside a transform-animated
+              dialog, which WebKit and the Capacitor WebView do not reliably
+              honour. When it failed it failed silently: the tile looked
+              enabled, the click landed on the input, and no picker opened.
+              This ref-triggered input was already here, wired to nothing. */}
           <input
+            id="avatar-file-input"
             ref={fileInputRef}
             type="file"
-            accept="image/*,.heic,.heif"
+            /* `image/*` ALONE, on purpose. Naming .heic/.heif here tells iOS
+               the app wants HEIC and it hands over the raw camera file;
+               with a plain image/* it transcodes the photo to JPEG itself,
+               on the device, losing nothing and needing no JS decoder. The
+               two screens that listed the extensions are the two that could
+               not open an iPhone selfie. Desktop pickers still show HEIC
+               under image/*, and anything they do let through goes to the
+               transcoder in imageInput.ts. */
+            accept="image/*"
             onChange={handleFileSelect}
-            className="hidden"
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
           />
 
           {/* My Scenes - homepage scene generations. Picking one makes it the
               active homepage scene; the plus tile starts a new generation
-              from a different selfie/photo. */}
+              from a different selfie/photo. This used to be hidden below
+              768px because the scene hero was desktop-only — the mobile home
+              redesign gave phones the same hero, so hiding the picker there
+              left tapping the scene with nowhere to go. */}
           <div>
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myScenes")}</p>
+            {/* Scenes have their own budget, separate from avatars — a full
+                scene shelf used to close the avatar tiles too. */}
+            <QuotaNote quota={quota.scene} isVip={isVip} gems={gems} onGetPro={goToPro} />
             {/* Wrapping grid — every tile always fully visible, no cropped
                 scroll row. First the new-scene tile, then the default mascot
                 scene, then the generated ones. */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              <motion.button
-                onClick={() => {
-                  if (isLimitReached) {
-                    toast.error(t("extra.avatarMaxGenReachedShort"));
-                    return;
-                  }
-                  fileInputRef.current?.click();
-                }}
+              <button
+                type="button"
+                onClick={() => openFilePicker("scene")}
                 disabled={isLoading || isProcessingFile}
-                className="aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-50"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                className={`relative aspect-video rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer ${isLoading || isProcessingFile ? "opacity-50" : ""}`}
               >
-                <Plus className="w-6 h-6 text-primary" />
-                <span className="text-xs text-muted-foreground">{t("avatar.newScene")}</span>
-              </motion.button>
+                {isProcessingFile ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                ) : (
+                  <Plus className="w-6 h-6 text-primary" />
+                )}
+                <span className="text-xs text-muted-foreground">
+                  {isProcessingFile ? t("common.processing") || "Processing..." : t("avatar.newScene")}
+                </span>
+                {/* Priced, not locked — the tile still opens the picker and
+                    the charge is spelled out before anything is spent. */}
+                {quota.scene.isLimitReached && (
+                  // White pill rather than a tinted one: the diamond is
+                  // purple artwork, and on the lavender tile it sat on a
+                  // near-matching wash and disappeared.
+                  <span className="absolute top-1 right-1 inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-primary shadow-sm">
+                    <img src={gemIcon} alt="" className="w-3 h-3 object-contain" />
+                    {EXTRA_GENERATION_GEM_COST}
+                  </span>
+                )}
+              </button>
               <motion.button
                 onClick={selectDefaultScene}
                 disabled={isLoading}
@@ -1142,84 +1469,45 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
             <img src={uploadedImage} alt="Uploaded" className="w-full h-full object-cover" />
           </div>
           
-          {isVip ? (
-            // PRO USER: Show both options
-            <>
-              <p className="text-sm text-muted-foreground text-center">
-                {t("avatar.description")}
-              </p>
-              <div className="flex gap-2 w-full">
-                <ChunkyButton
-                  variant="secondary"
-                  size="md"
-                  onClick={saveOriginalPhoto}
-                  disabled={isLoading}
-                  className="flex-1"
-                >
-                  {t("extra.avatarOriginal")}
-                </ChunkyButton>
-                <ChunkyButton
-                  variant="primary"
-                  size="md"
-                  onClick={generateAvatar}
-                  disabled={isLoading}
-                  className="flex-1"
-                  icon={<img src={iconAiSparkle} alt="" className="w-5 h-5 object-contain" />}
-                >
-                  {t("avatar.generate")}
-                </ChunkyButton>
-              </div>
-            </>
-          ) : (
-            // NON-PRO USER: Show save option + PRO upsell
-            <>
-              <ChunkyButton
-                variant="secondary"
-                size="md"
-                onClick={saveOriginalPhoto}
-                disabled={isLoading}
-                className="w-full"
-              >
-                {t("extra.avatarSaveAsPhoto")}
-              </ChunkyButton>
-              
-              <div className="w-full h-px bg-border my-2" />
-              
-              {/* PRO Upsell Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full p-4 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
-                    <img src={iconAiSparkle} alt="" className="w-6 h-6 object-contain" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm">{t("extra.avatarAiGenTitle")}</p>
-                    <p className="text-xs text-muted-foreground">{t("extra.avatarProFeature")}</p>
-                  </div>
-                </div>
-                
-                <p className="text-xs text-muted-foreground mb-3">
-                  {t("extra.avatarAiDesc")}
-                </p>
-                
-                <ChunkyButton
-                  variant="primary"
-                  size="sm"
-                  onClick={() => {
-                    onClose();
-                    navigate("/profile?tab=PRO");
-                  }}
-                  className="w-full"
-                  icon={<Crown className="w-4 h-4" />}
-                >
-                  {t("extra.avatarBecomePro")}
-                </ChunkyButton>
-              </motion.div>
-            </>
-          )}
+          {/* Generating is no longer PRO-only. Everyone gets one of each
+              kind, PRO gets five, and past that it is priced in gems — so
+              this step offers the same two choices to everybody and the
+              button says what the next one costs. */}
+          <p className="text-sm text-muted-foreground text-center">
+            {t("avatar.description")}
+          </p>
+          <div className="flex gap-2 w-full">
+            <ChunkyButton
+              variant="secondary"
+              size="md"
+              onClick={saveOriginalPhoto}
+              disabled={isLoading}
+              className="flex-1"
+            >
+              {t("extra.avatarOriginal")}
+            </ChunkyButton>
+            <ChunkyButton
+              variant="primary"
+              size="md"
+              onClick={generateAvatar}
+              disabled={isLoading}
+              className="flex-1"
+              icon={
+                activeQuota.isLimitReached ? (
+                  <GemCoin />
+                ) : (
+                  <img src={iconAiSparkle} alt="" className="w-5 h-5 object-contain" />
+                )
+              }
+            >
+              {activeQuota.isLimitReached
+                ? t("avatar.generateForGems", { cost: EXTRA_GENERATION_GEM_COST })
+                : t("avatar.generate")}
+            </ChunkyButton>
+          </div>
+
+          <QuotaNote quota={activeQuota} isVip={isVip} gems={gems} onGetPro={goToPro} />
+          {failure && <FailureNote failure={failure} />}
         </div>
       );
     }
@@ -1390,7 +1678,7 @@ export function AvatarModal({ isOpen, onClose, onComplete }: AvatarModalProps) {
               >
                 <span className="flex items-center gap-1.5">
                   {t("extra.avatarAnimatePro")}
-                  <Crown className="w-3.5 h-3.5 text-amber-500" />
+                  <img src={crownIcon} alt="" className="w-4 h-4 object-contain" />
                 </span>
               </ChunkyButton>
             )}

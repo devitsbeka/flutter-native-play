@@ -151,7 +151,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-[100] flex flex-col"
           style={{
-            background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
+            background: "linear-gradient(180deg, #FDFAFF 0%, #F6E8FF 100%)",
           }}
         >
           {/* Fixed Header */}
@@ -409,6 +409,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                 background: "linear-gradient(180deg, #FAFAFA 0%, #FFFFFF 100%)",
               }}
             >
+              <div className="mx-auto w-full max-w-xl">
               <ChunkyButton
                 variant="success"
                 size="lg"
@@ -417,6 +418,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
               >
                 {t('spin.claimReward')}
               </ChunkyButton>
+              </div>
             </motion.div>
           )}
 
