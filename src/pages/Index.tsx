@@ -924,7 +924,6 @@ export default function Index() {
             sceneVideoUrl={sceneVideoUrl}
             showDefaultScene={showDefaultScene}
             defaultVideoSrc={DEFAULT_SCENE_VIDEO}
-            onSceneClick={() => openAvatarModal()}
           />
         )}
         {/* Personalized scene (or the default Trivia King loop) as the
@@ -1242,6 +1241,22 @@ export default function Index() {
 
           {/* Main content area */}
           <div className="flex-1 relative overflow-hidden">
+            {/* Phone scene click-catcher.
+                The scene layer itself sits at z-0 outside this column, and
+                this column is a later sibling — so it paints over the scene
+                and swallowed every tap meant for it. The catcher has to live
+                in here, first, exactly as SceneHero does it on md+: later
+                children keep their own clicks, and what is left over is the
+                scene. */}
+            {user && isMobileViewport && (
+              <button
+                type="button"
+                aria-label="შეცვალე სცენა"
+                onClick={() => openAvatarModal()}
+                className="md:hidden absolute inset-0 cursor-pointer"
+              />
+            )}
+
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
             
