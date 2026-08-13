@@ -35,8 +35,8 @@ playwright-report/
 blob-report/
 .playwright/
 
-# Local environment. Values are documented in .env.example; the real ones
-# live in the deploy environment, not the repo.
-.env
+# .env IS tracked, deliberately — see the note at the top of .env.example.
+# It holds only the Supabase project ref and the publishable (anon) key, both
+# public by design, and three separate build systems read it.
 .env.local
 .env.*.local
