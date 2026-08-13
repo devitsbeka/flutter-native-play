@@ -8,27 +8,24 @@
 {"id": "0f506dbf", "c": "Electromagnetic", "w": ["Gravitational", "Strong nuclear", "Weak nuclear"]}
 {"id": "11197666", "c": "Tay", "w": ["GPT-2", "ELIZA", "Clippy"]}
 {"id": "13452f9e", "c": "Hubble Space", "w": ["James Webb Space", "Spitzer Space", "Kepler Space"]}
-{"id": "153359db", "c": "PV", "w": ["Onshore wind power", "Geothermal energy", "CSP"]}
 {"id": "1bc78d0c", "c": "47,000", "w": ["5,000", "10,000", "85,000"]}
 {"id": "1fb44bcc", "c": "Tay", "w": ["ELIZA", "ALICE", "Siri"]}
 {"id": "273a10f3", "c": "FTX", "w": ["Terraform Labs", "Celsius Network", "Three Arrows Capital"]}
 {"id": "28276648", "c": "Pruitt-Igoe", "w": ["Battery Park City", "Canary Wharf", "Harborplace"]}
 {"id": "28dc50b8", "c": "Three-age system", "w": ["Dynasty numbering", "Century division", "Event-based timeline"]}
 {"id": "2aacac90", "c": "Conversational AI", "w": ["NLP", "Speech Recognition", "Computer Vision"]}
-{"id": "2ae8897a", "c": "∫ₐᵇ f(x)dx", "w": ["Σₐᵇ f", "∮ f(x)dx", "∂ₐᵇ f"]}
 {"id": "2af7b71f", "c": "Aroldis Chapman", "w": ["Nolan Ryan", "Roger Clemens", "Bob Feller"]}
 {"id": "2de338b4", "c": "Bramble Cay melomys", "w": ["Baiji dolphin", "Sumatran rhinoceros", "Vaquita porpoise"]}
 {"id": "2e0eef9c", "c": "Evil Demon", "w": ["Dream Argument", "Cogito, ergo sum", "Wax Argument"]}
 {"id": "2e8f77ae", "q": "What material was Thor's hammer, Mjolnir, primarily made of?"}
 {"id": "2f5bc247", "c": "CCR5-delta32", "w": ["Factor V Leiden", "Huntington's disease", "BRCA1"]}
 {"id": "334a9d8c", "c": "Saul of Tarsus", "w": ["Peter", "Judas Iscariot", "John the Baptist"]}
-{"id": "35ba8e50", "c": "ESIC", "w": ["IESF", "GEF", "WESA"]}
 {"id": "35f2b15e", "c": "Noble Eightfold Path", "w": ["Five Pillars", "Ten Commandments", "Vedic Hymns"]}
 {"id": "36e6d378", "c": "Ogival or Gothic", "w": ["Romanesque", "Byzantine", "Saracenic"]}
 {"id": "37b5d3ef", "c": "Chlorofluorocarbons", "w": ["Carbon dioxide", "Methane", "Sulfur dioxide"]}
 {"id": "398438a9", "c": "Superior", "w": ["Sapiens", "Neanderthalensis", "Erectus"]}
 {"id": "40010231", "c": "Phi Phenomenon", "w": ["Weber's Law", "Snell's Law", "Hooke's Law"]}
-{"id": "427aabfe", "c": "XRD", "w": ["Thermometer", "pH meter", "Density scale"]}
+{"id": "427aabfe", "c": "X-ray Diffraction", "w": ["Thermometer", "pH meter", "Density scale"]}
 {"id": "47f746c3", "c": "Tacoma Narrows", "w": ["Golden Gate", "Brooklyn", "Tower"]}
 {"id": "4ad4c17e", "q": "Which manga series was first serialized in Weekly Shonen Jump?"}
 {"id": "4cd354c6", "c": "Borosilicate", "w": ["Soda-lime", "Laminated safety", "Quartz"]}
@@ -43,7 +40,6 @@
 {"id": "5b12feb1", "c": "Academy Awards", "w": ["Grammy Awards", "Golden Globe Awards", "Emmy Awards"]}
 {"id": "5b3ac9b3", "c": "Arabidopsis thaliana", "w": ["Zinnia elegans", "Triticum aestivum", "Lactuca sativa"]}
 {"id": "5bbf00c0", "c": "Sheep", "w": ["Mouse", "Cow", "Goat"]}
-{"id": "5eb6f291", "c": "TEA", "w": ["AES", "RSA", "DES"]}
 {"id": "5ffb4022", "c": "Kursk, Russia", "w": ["North Magnetic Pole", "Mariana Trench", "Mount Everest"]}
 {"id": "61176d3d", "c": "DMCA", "w": ["GDPR", "CDA", "SOPA"]}
 {"id": "6686f3a5", "c": "Liar", "w": ["Barber", "Grandfather", "Ship of Theseus"]}
@@ -58,7 +54,6 @@
 {"id": "75ebe21a", "q": "About what percent of Earth’s oxygen comes from marine photosynthesis?"}
 {"id": "767e351e", "q": "In Greek mythology, which god is the king of the Olympian gods?"}
 {"id": "7891501a", "c": "Mosaic disease", "w": ["Brown streak virus", "Bacterial blight", "Root rot"]}
-{"id": "79f10430", "c": "WWI", "w": ["Caspian Sea Battle", "Siege of Acre", "Battle of the Nile"]}
 {"id": "7ad0eca0", "c": "Wolf of Wall Street", "w": ["Big Short", "Too Big to Fail", "Inside Job"]}
 {"id": "7f587431", "c": "Toothed", "w": ["Point", "Flat", "Cape"]}
 {"id": "80506fc5", "c": "Stratigraphic codes", "w": ["Depth meters only", "Age ranges", "Color descriptions"]}
@@ -73,12 +68,10 @@
 {"id": "89cf12dd", "c": "Fugu", "w": ["Tuna", "Mackerel", "Salmon"]}
 {"id": "8e223786", "c": "Intel Itanium 2", "w": ["Intel Pentium 4", "AMD Athlon 64", "Intel Core 2 Duo"]}
 {"id": "8ec3f269", "c": "Pogson's", "w": ["Hubble's", "Wien's Displacement", "Kepler's Third"]}
-{"id": "96b6db20", "c": "IGA", "w": ["OPA", "SST", "CCC"]}
 {"id": "975c678f", "c": "Meryl Streep", "w": ["Katherine Hepburn", "Jack Lemmon", "Denzel Washington"]}
 {"id": "9ac0208c", "q": "Which AI chatbot had the most visits from Middle Eastern users?"}
 {"id": "9df1a9c3", "c": "Hawaii", "w": ["Indonesia", "Iceland", "Philippines"]}
 {"id": "a067cb67", "c": "Smell", "w": ["Taste", "Sight", "Touch"]}
-{"id": "a1bf8452", "c": "ℕ", "w": ["Z", "Q", "R"]}
 {"id": "a2560010", "c": "Steve Carell", "w": ["Shelley Long", "Charlie Sheen", "Suzanne Somers"]}
 {"id": "a48fca10", "c": "COMPAS", "w": ["PageRank", "Bubble Sort", "Euclidean distance"]}
 {"id": "a9138a70", "c": "Atomic Force", "w": ["Scanning Electron", "Confocal", "Brightfield"]}
@@ -91,11 +84,9 @@
 {"id": "b961bc9a", "q": "What has been the average U.S. unemployment rate since 1948?"}
 {"id": "b9f5aa78", "c": "Confused Nick Young", "w": ["Blinking White Guy", "Math Lady", "Distracted Boyfriend"]}
 {"id": "bcf2667c", "c": "Nile", "w": ["Amazon", "Yangtze", "Mississippi-Missouri"]}
-{"id": "be559388", "c": "I, II, III", "w": ["Arabic numerals", "Greek letters", "Latin abbreviations"]}
-{"id": "bef47d11", "q": "Which is a classic example of a monoalphabetic substitution cipher?"}
+{"id": "be559388", "c": "Roman numerals", "w": ["Arabic numerals", "Greek letters", "Latin abbreviations"]}
 {"id": "c2629adc", "c": "Emmy", "w": ["Golden Globe", "Screen Actors Guild", "People's Choice"]}
 {"id": "c46848c8", "c": "Drake Hotline Bling", "w": ["Expanding Brain", "This Is Fine dog", "Surprised Pikachu"]}
-{"id": "c48ca0db", "c": "Nazaré Confusa", "w": ["Expanding Brain", "Drake meme", "Stonks"]}
 {"id": "c4c37a04", "c": "Human Genome", "w": ["Human Proteome", "ENCODE", "1000 Genomes"]}
 {"id": "c5c38ffd", "c": "Pepsi", "w": ["Starbucks", "McDonald's", "Subway"]}
 {"id": "cbe1d092", "c": "200%", "w": ["50%", "100%", "300%"]}
@@ -103,7 +94,6 @@
 {"id": "cec55ac4", "c": "sale of indulgences", "w": ["Veneration of saints", "Papal infallibility", "Transubstantiation"]}
 {"id": "cef2c18d", "c": "IUCN", "w": ["WWF", "UNEP", "Nature Conservancy"]}
 {"id": "d5c6c39f", "c": "Nothing", "w": ["dash", "colon", "comma"]}
-{"id": "dd8ebc6b", "c": "Cristiano Ronaldo", "w": ["Pelé", "Lionel Messi", "Josef Bican"]}
 {"id": "ddee2da8", "q": "Which words is famously cited as having no perfect rhyme in English?"}
 {"id": "df31037c", "c": "Australia", "w": ["Canada", "Greenland", "South Africa"]}
 {"id": "dfcdaf1e", "c": "COPE", "w": ["IRB", "WMA", "ORI"]}
@@ -113,16 +103,13 @@
 {"id": "e31e8b22", "c": "Paris", "w": ["Berlin", "Vienna", "Copenhagen"]}
 {"id": "e383503e", "c": "Johann Bessler", "w": ["Isaac Newton", "Gottfried Leibniz", "Christiaan Huygens"]}
 {"id": "e72e094b", "c": "Kidney", "w": ["Bone marrow", "Liver", "Heart"]}
-{"id": "ecd99cc5", "c": "ACO", "w": ["NATO HQ", "NAC", "ACT"]}
 {"id": "ee87be73", "c": "JPL", "w": ["JSC", "KSC", "GSFC"]}
-{"id": "ef6623d9", "c": "MBCT", "w": ["Psychoanalysis", "Gestalt therapy", "Humanistic approach"]}
 {"id": "ef6693bd", "c": "Rickroll", "w": ["Loss", "Doge", "Ugandan Knuckles"]}
 {"id": "f0c54a86", "c": "Great Resignation", "w": ["Hot desking", "Open-plan offices", "Job sharing"]}
 {"id": "f10799d3", "c": "Teleological", "w": ["Cosmological", "Ontological", "Moral"]}
 {"id": "f376d970", "c": "Cannibal Holocaust", "w": ["Blair Witch Project", "REC", "Host"]}
 {"id": "f4f2cef3", "c": "CAA", "w": ["WME", "UTA", "ICM Partners"]}
-{"id": "f5f4f264", "c": "ENIAC", "w": ["Colossus", "ABC", "Harvard Mark I"]}
-{"id": "f76707a6", "c": "USGS", "w": ["BLM", "EPA", "DOE"]}
+{"id": "f76707a6", "c": "USGS", "w": ["BLM", "EPA", "Department of Energy"]}
 {"id": "f901a3b1", "c": "Refraction", "w": ["Reflection", "Polarization", "Diffraction"]}
 {"id": "f961ba0b", "c": "X", "w": ["LinkedIn", "Pinterest", "Instagram"]}
 {"id": "f9b7992e", "c": "Andy Warhol", "w": ["Jean-Michel Basquiat", "David Hockney", "Yue Minjun"]}

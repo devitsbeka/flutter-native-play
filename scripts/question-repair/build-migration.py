@@ -13,7 +13,15 @@ rows = [json.loads(l) for l in open('en_raw.jsonl')]
 by_id = {r['id']: r for r in rows}
 short = {r['id'][:8]: r['id'] for r in rows}
 wl = json.load(open('worklist.json'))
+# rewrites.jsonl is hand-authored; trimmed.jsonl is what safe-trim.py resolved
+# by rule. A hand-authored entry wins if both touch the same question.
 rewrites = [json.loads(l) for l in open('rewrites.jsonl') if l.strip()]
+_hand = {d['id'] for d in rewrites}
+try:
+    rewrites += [d for l in open('trimmed.jsonl') if l.strip()
+                 for d in [json.loads(l)] if d['id'] not in _hand]
+except FileNotFoundError:
+    pass
 
 def opts(r):
     ia = r.get('incorrect_answers') or []
@@ -23,9 +31,11 @@ def opts(r):
 def norm(s):
     return re.sub(r'\s+', ' ', re.sub(r'[^\w\s]', '', str(s).lower())).strip()
 
+# Latin text, punctuation, currency, arrows, maths and sub/superscripts. A
+# chemistry or calculus answer is not a language leak.
 NON_LATIN = re.compile(r'[^\x00-\x7FÀ-ɏ -⁯₠-₿'
                        r'℀-⅏←-⇿∀-⋿■-◿'
-                       r'☀-➿]')
+                       r'☀-➿⁰-₟Α-Ͽ]')
 
 errors, warnings, applied = [], [], []
 

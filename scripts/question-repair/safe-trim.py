@@ -73,15 +73,24 @@ def strip_shared_hedge(o):
 
 PAREN = re.compile(r'^(.*?)\s*\(([^)]+)\)\s*$')
 def resolve_parenthetical(o):
-    """"The Museum of Modern Art (MoMA)" -> "MoMA"; "Kartikeya (Murugan)" -> "Kartikeya"."""
+    """"The Museum of Modern Art (MoMA)" -> "MoMA"; "Kartikeya (Murugan)" -> "Kartikeya".
+
+    An all-caps parenthetical is only the head's abbreviation if its letters are
+    actually the head's initials. Not every bracketed capital is: "The Battle
+    for Lake Tanganyika (WWI)" is a battle disambiguated by its war, and reading
+    that as an abbreviation leaves the answer as the bare string "WWI".
+    """
     out = []
     for x in o:
         m = PAREN.match(x)
         if not m: out.append(x); continue
         head, inner = m.group(1).strip(), m.group(2).strip()
-        # an all-caps inner is the abbreviation of the head — keep the short one
-        if inner.isupper() and len(inner) < len(head): out.append(inner)
-        else: out.append(head)
+        initials = ''.join(w[0] for w in re.findall(r"[A-Za-z][\w'’-]*", head)
+                           if w[0].isupper()).upper()
+        if inner.isupper() and len(inner) < len(head) and inner.replace('.', '') == initials:
+            out.append(inner)
+        else:
+            out.append(head)
     return out
 
 ARTICLE = re.compile(r'^(the|a|an)\s+', re.I)
@@ -134,6 +143,10 @@ for qid in sorted(wl['rewrite']):
     r = by_id[qid]
     o = opts(r)
     if len(o) != 4: residue.append(qid); continue
+
+    # Notation is not prose. Word-level rules mangle "∫ₐᵇ f(x)dx" into "∫ₐᵇ f"
+    # and change what the answer means, so hand these to a person untouched.
+    if any(re.search(r'[^\x00-\x7F]', x) for x in o): residue.append(qid); continue
 
     q = r['question_text']
     if len(q) > Q_MAX: q = trim_question(q)
