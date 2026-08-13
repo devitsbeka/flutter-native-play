@@ -179,7 +179,7 @@ export function GameResultsScreenV2() {
         if (countsAsWin) void trackMissionEvent("game_won", 1);
 
         if (earnedCoins > 0) {
-          await addCoins(earnedCoins);
+          await addCoins(earnedCoins, "quiz_reward");
         }
 
         // Update profile stats — XP is placement-independent: every player

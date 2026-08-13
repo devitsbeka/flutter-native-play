@@ -142,44 +142,43 @@ export function useRewardTimers(): RewardTimers {
   };
 }
 
+/** What the server actually awarded for today's claim. */
+export interface DailyRewardClaim {
+  coins: number;
+  gems: number;
+  streak: number;
+  newCoins: number;
+  newGems: number;
+}
+
 // Hook to claim daily reward — invalidates the shared cache after claiming
 export function useDailyRewardsClaim() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const claimDailyReward = async (): Promise<boolean> => {
-    if (!user) return false;
+  /**
+   * Claim today's daily reward.
+   *
+   * The whole decision — which day of the streak, what it pays, whether PRO
+   * Plus applies, whether today was already claimed — belongs to
+   * `claim_daily_reward` now. This used to mark the row claimed here and then
+   * separately credit an amount the client had worked out for itself, which
+   * meant the payout was whatever the caller said it was.
+   *
+   * Returns what was actually awarded, so the celebration shows the granted
+   * figures rather than a local guess at them.
+   */
+  const claimDailyReward = async (): Promise<DailyRewardClaim | null> => {
+    if (!user) return null;
 
     try {
-      const today = new Date().toISOString().split("T")[0];
       const nowIso = new Date().toISOString();
+      const { data, error } = await supabase.rpc("claim_daily_reward");
 
-      const { data: existing } = await supabase
-        .from("user_daily_rewards")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("reward_date", today)
-        .maybeSingle();
+      if (error) throw error;
 
-      if (existing) {
-        if (existing.daily_claimed) return false;
-        await supabase
-          .from("user_daily_rewards")
-          .update({
-            daily_claimed: true,
-            daily_claimed_at: nowIso,
-            streak_count: (existing.streak_count || 0) + 1,
-          })
-          .eq("id", existing.id);
-      } else {
-        await supabase.from("user_daily_rewards").insert({
-          user_id: user.id,
-          reward_date: today,
-          daily_claimed: true,
-          daily_claimed_at: nowIso,
-          streak_count: 1,
-        });
-      }
+      const claim = Array.isArray(data) ? data[0] : data;
+      if (!claim) return null;
 
       // Optimistic update + background revalidation
       queryClient.setQueryData<RewardData>([QUERY_KEY, user.id], (old) => ({
@@ -187,10 +186,16 @@ export function useDailyRewardsClaim() {
         chestClaimedAt: old?.chestClaimedAt ?? null,
       }));
 
-      return true;
+      return {
+        coins: claim.coins_awarded,
+        gems: claim.gems_awarded,
+        streak: claim.streak,
+        newCoins: claim.new_coins,
+        newGems: claim.new_gems,
+      };
     } catch (error) {
       console.error("Error claiming daily reward:", error);
-      return false;
+      return null;
     }
   };
 

@@ -3912,8 +3912,46 @@ export type Database = {
         Args: { p_question_index: number; p_session_id: string }
         Returns: Json
       }
+      claim_daily_reward: {
+        Args: never
+        Returns: {
+          coins_awarded: number
+          gems_awarded: number
+          new_coins: number
+          new_gems: number
+          streak: number
+        }[]
+      }
+      claim_leaderboard_reward: {
+        Args: { p_reward_id: string }
+        Returns: {
+          coins_awarded: number
+          gems_awarded: number
+          new_coins: number
+          new_gems: number
+        }[]
+      }
       consume_free_play: { Args: never; Returns: Json }
+      credit_gameplay_reward: {
+        Args: {
+          p_coins?: number
+          p_gems?: number
+          p_kind: string
+          p_reference?: string
+        }
+        Returns: {
+          new_coins: number
+          new_gems: number
+        }[]
+      }
       ensure_admin_lifetime_pro: { Args: never; Returns: boolean }
+      exchange_currency: {
+        Args: { p_amount: number; p_direction: string }
+        Returns: {
+          new_coins: number
+          new_gems: number
+        }[]
+      }
       format_display_name: { Args: { full_name: string }; Returns: string }
       generate_challenge_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }

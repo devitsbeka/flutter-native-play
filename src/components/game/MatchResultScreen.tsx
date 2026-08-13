@@ -420,7 +420,7 @@ export function MatchResultScreen() {
 
         // Level-up coins added atomically via RPC (separate from game rewards)
         if (levelUpCoins > 0) {
-          await addCoins(levelUpCoins);
+          await addCoins(levelUpCoins, "level_up");
         }
 
         await supabase.from("game_sessions").insert({
