@@ -93,6 +93,25 @@ interface AvatarGeneration {
 }
 
 /**
+ * The diamond on a white disc.
+ *
+ * The artwork is a purple gem, so on the purple primary button it vanished
+ * entirely and on the lavender note it read as a smudge. The disc gives it
+ * a constant background to sit on, the way a coin reads on any surface.
+ */
+function GemCoin({ size = "md" }: { size?: "sm" | "md" }) {
+  const disc = size === "sm" ? "w-5 h-5" : "w-6 h-6";
+  const gem = size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5";
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-white shadow-sm ${disc}`}
+    >
+      <img src={gemIcon} alt="" className={`${gem} object-contain`} />
+    </span>
+  );
+}
+
+/**
  * What this kind of generation costs right now, said before it is spent.
  *
  * The old version of this line only ever appeared while there was allowance
@@ -126,7 +145,7 @@ function QuotaNote({
       <p className="text-xs text-foreground">
         {t("avatar.limitUsedUp", { max: quota.max })}{" "}
         <span className="inline-flex items-center gap-1 font-bold text-primary">
-          <img src={gemIcon} alt="" className="w-3.5 h-3.5 object-contain" />
+          <GemCoin size="sm" />
           {t("avatar.extraCostsGems", { cost: EXTRA_GENERATION_GEM_COST })}
         </span>
       </p>
@@ -1475,7 +1494,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
               className="flex-1"
               icon={
                 activeQuota.isLimitReached ? (
-                  <img src={gemIcon} alt="" className="w-5 h-5 shrink-0 object-contain" />
+                  <GemCoin />
                 ) : (
                   <img src={iconAiSparkle} alt="" className="w-5 h-5 object-contain" />
                 )
