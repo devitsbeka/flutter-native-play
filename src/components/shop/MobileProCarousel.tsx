@@ -1,6 +1,6 @@
 import { siteUrl } from "@/config/site";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight, Copy, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
@@ -20,6 +20,7 @@ import {
   HEADER_SOLO,
   HEADER_FAMILY,
   SKIN_WHITE,
+  SKIN_INVITE,
 } from "./ProBannerCard";
 import type { ShopItem } from "@/hooks/useShopData";
 
@@ -53,10 +54,10 @@ interface ProBannerReelProps {
   isPurchasing: string | null;
   onItemClick: (item: ShopItem) => void;
   /**
-   * "pro" keeps the two subscription tiers and drops the timed package deals
-   * and the invite offer. The profile shows what PRO is; the shop is where
-   * packages are sold, and carrying them here made a two-offer reel look
-   * like a five-offer one.
+   * "pro" keeps the ways to get PRO — the two subscription tiers and the
+   * invite offer, which hands out ten days of it — and drops the timed
+   * package deals. Packages are the shop's business; carrying them on the
+   * profile made a three-offer reel look like a five-offer one.
    */
   slides?: "all" | "pro";
 }
@@ -146,7 +147,7 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
   ], [t]);
 
   const SLIDES = useMemo(
-    () => (slides === "pro" ? ALL_SLIDES.filter((s) => s.type === "pro" || s.type === "family") : ALL_SLIDES),
+    () => (slides === "pro" ? ALL_SLIDES.filter((s) => s.type !== "deal") : ALL_SLIDES),
     [ALL_SLIDES, slides],
   );
 
@@ -285,6 +286,23 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
     await initiateProCheckout(SIDEBAR_TO_STRIPE_TIER[tierId]);
   };
 
+  // Copying the link is the other half of the invite banner's pair: the
+  // share sheet is not offered by every browser, and a link on the clipboard
+  // goes wherever the player wants to put it.
+  const handleCopy = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const referralCode = await createLinkInvite("friend_pro");
+      if (referralCode) {
+        await navigator.clipboard.writeText(siteUrl(`/auth?mode=signup&ref=${referralCode}`));
+        toast.success(t("extra.linkCopiedInvite"));
+      }
+    } finally {
+      setSharing(false);
+    }
+  };
+
   // The banner's own button already stops propagation, so the event is
   // optional here — other call sites still pass one.
   const handleShare = async (e?: React.MouseEvent) => {
@@ -336,7 +354,11 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
           return (
           <div
             key={slide.id}
-            className="shrink-0 snap-center"
+            // Centred, because the slides are not all the same height: a
+            // tier card with its benefits stacked into a list is taller than
+            // the invite card beside it. Top-aligned, the shorter one hung
+            // from the ceiling with the difference below it.
+            className="flex shrink-0 snap-center items-center"
             style={{ width: `calc((100% - ${REEL_GAP * (perView - 1)}px) / ${perView})` }}
           >
             {isDealSlide ? (
@@ -351,13 +373,19 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
               />
             ) : slide.type === "invite" ? (
               <InviteBanner
-                skin={SKIN_WHITE}
+                skin={SKIN_INVITE}
                 art={friendsIcon}
                 crown={crownIcon}
-                headline={t("extra.inviteMiniTitle")}
+                headline={t("extra.inviteFriends")}
+                body={`${t("extra.shareLink")} ${t("extra.tenDayPro")}`}
                 reward={t("extra.tenDayPro")}
+                copyLabel={<><Copy className="size-[18px]" />{t("extra.copyBtn")}</>}
+                onCopy={() => void handleCopy()}
+                copyDisabled={sharing}
                 onClick={handleCardClick}
-                actionLabel={sharing ? <Loader2 className="size-5 animate-spin" /> : t("extra.inviteBtn")}
+                actionLabel={
+                  sharing ? <Loader2 className="size-5 animate-spin" /> : <><Share2 className="size-[18px]" />{t("extra.shareBtn")}</>
+                }
                 actionDisabled={sharing}
                 onAction={() => handleShare()}
               />

@@ -18,6 +18,8 @@ export const BANNER_DESIGN_W = 575;
 export const BANNER_DESIGN_H = 470;
 const CARD_H = 396;
 const BUTTON_TOP = 358;
+// The invite frame's button pair (nodes 676:124 and 676:160).
+const PAIR_H = 62;
 
 /* ------------------------------------------------------------------ *
  * Skins
@@ -44,6 +46,8 @@ export interface BannerSkin {
   tileEdge: string;
   /** The deal card's countdown pills. */
   pillFill: string;
+  /** Optional inset glow on the card itself (the invite frame's gold wash). */
+  innerGlow?: string;
 }
 
 export const SKIN_WHITE: BannerSkin = {
@@ -54,6 +58,22 @@ export const SKIN_WHITE: BannerSkin = {
   tileFill: "linear-gradient(180deg, rgba(124,58,237,0.09) 0%, rgba(124,58,237,0.03) 100%)",
   tileEdge: "rgba(124,58,237,0.16)",
   pillFill: "rgba(64,38,102,0.07)",
+};
+
+// Frame 676:188 — the invite offer is the one banner that is not white. It
+// is selling PRO by giving it away, so it gets the colour the PRO tiers do
+// not, and a gold wash inside the top edge.
+export const SKIN_INVITE: BannerSkin = {
+  ...SKIN_WHITE,
+  // Flat, but written as a gradient: the card paints this through
+  // background-image, which ignores a bare colour.
+  bg: "linear-gradient(#FBDAFF, #FBDAFF)",
+  wave: "rgba(255,255,255,0.55)",
+  ink: "#543990",
+  inkSoft: "rgba(84,57,144,0.5)",
+  tileFill: "linear-gradient(180deg, #FBDAFF 31%, #FFFFFF 100%)",
+  tileEdge: "#B5CF3D",
+  innerGlow: "inset 0px 20px 42px 0px rgba(244,187,26,0.13)",
 };
 
 /** Lifts the top edge of a tile so it reads as a pane, not a hole. */
@@ -170,6 +190,13 @@ interface ProBannerCardProps {
   /** Largest the design is allowed to be drawn. */
   maxScale?: number;
   /**
+   * A second button beside the first, as the invite frame (676:188) has:
+   * the pair is 244 wide and 62 tall against the single button's 424 by 77,
+   * and straddles the card's bottom edge the same way. The primary keeps the
+   * gold face; this one takes the card's own pale fill.
+   */
+  secondaryAction?: { label: ReactNode; onAction?: () => void; disabled?: boolean };
+  /**
    * Card height in design pixels, when the body needs more room than the
    * frame's 396 — a phone stacks the benefit tiles into a list, and the list
    * is taller than the row it replaces. The button and the stage follow it,
@@ -177,6 +204,23 @@ interface ProBannerCardProps {
    */
   cardHeight?: number;
 }
+
+// The three specks of light and the top lip that every button on these cards
+// carries (nodes 636:161-163).
+function ButtonFace({ fill }: { fill: string }) {
+  return (
+    <>
+      <span aria-hidden className="absolute inset-0 rounded-[24px]" style={{ backgroundImage: fill }} />
+      <span aria-hidden className="absolute left-[16.42px] top-[8.42px] size-[5.152px] rounded-full bg-white opacity-[0.49]" />
+      <span aria-hidden className="absolute left-[195.16px] top-[17.36px] size-[5.283px] rounded-full bg-white opacity-[0.35]" />
+      <span aria-hidden className="absolute left-[32.71px] top-[40.71px] size-[4.589px] rounded-full bg-[rgba(255,255,255,0.8)] opacity-[0.58]" />
+      <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_3px_0px_0px_rgba(255,255,255,0.35)]" />
+    </>
+  );
+}
+
+const GOLD_BUTTON =
+  "linear-gradient(180.6543874615296deg, rgb(226,213,32) 13.506%, rgb(187,32,143) 90.414%, rgb(129,225,201) 194.33%)";
 
 export function ProBannerCard({
   skin,
@@ -189,6 +233,7 @@ export function ProBannerCard({
   dimmed,
   maxScale = 1.25,
   cardHeight = CARD_H,
+  secondaryAction,
 }: ProBannerCardProps) {
   const { ref, scale, offsetX } = useBannerScale(maxScale);
   // The button hangs half below the card wherever the card ends, and the
@@ -223,7 +268,13 @@ export function ProBannerCard({
           style={{
             height: cardHeight,
             backgroundImage: skin.bg,
-            boxShadow: "0 2px 6px rgba(64,38,102,0.06), 0 10px 28px rgba(64,38,102,0.10)",
+            boxShadow: [
+              skin.innerGlow,
+              "0 2px 6px rgba(64,38,102,0.06)",
+              "0 10px 28px rgba(64,38,102,0.10)",
+            ]
+              .filter(Boolean)
+              .join(", "),
           }}
         >
           <WaveStack fill={skin.wave} />
@@ -240,34 +291,65 @@ export function ProBannerCard({
             77 tall at y358 against a 396 card, so exactly half of it hangs
             below the card's edge. It is a sibling of the card, not a child,
             and paints after it, so the card's edge passes behind it and the
-            card's own clipping never touches it. */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onAction?.();
-          }}
-          disabled={actionDisabled}
-          className="absolute left-[68px] z-20 flex h-[77px] w-[424px] items-center justify-center gap-[3px] rounded-[24px] border-[3px] border-solid border-[#9fa8a3] p-[3px] shadow-[0px_6px_0px_0px_#7e2378,0px_10px_24px_0px_rgba(16,185,129,0.5)] disabled:cursor-not-allowed"
-          style={{ top: buttonTop }}
-        >
-          <span
-            aria-hidden
-            className="absolute inset-0 rounded-[24px]"
-            style={{
-              backgroundImage:
-                "linear-gradient(180.6543874615296deg, rgb(226,213,32) 13.506%, rgb(187,32,143) 90.414%, rgb(129,225,201) 194.33%)",
+            card's own clipping never touches it.
+
+            The invite frame pairs it with a second, shorter button; the two
+            sit on the same edge, so the pair carries its own height and its
+            own half-below offset. */}
+        {secondaryAction ? (
+          <div
+            className="absolute left-0 z-20 flex w-[575px] justify-center gap-[23px]"
+            style={{ top: cardHeight - PAIR_H / 2 }}
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                secondaryAction.onAction?.();
+              }}
+              disabled={secondaryAction.disabled}
+              className="relative flex h-[62px] w-[244px] items-center justify-center gap-[10px] rounded-[24px] border-[3px] border-solid border-[#9fa8a3] p-[3px] shadow-[0px_6px_0px_0px_rgba(68,36,107,0.08),0px_10px_24px_0px_rgba(16,185,129,0.5)] disabled:cursor-not-allowed"
+            >
+              <ButtonFace fill="linear-gradient(#FDF0FF, #FDF0FF)" />
+              <span
+                className="relative flex items-center gap-[10px] whitespace-nowrap text-[18px] font-bold leading-[30.95px] tracking-[-0.18px]"
+                style={{ color: skin.ink }}
+              >
+                {secondaryAction.label}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAction?.();
+              }}
+              disabled={actionDisabled}
+              className="relative flex h-[62px] w-[244px] items-center justify-center gap-[10px] rounded-[24px] border-[3px] border-solid border-[#9fa8a3] p-[3px] shadow-[0px_6px_0px_0px_#7e2378,0px_10px_24px_0px_rgba(16,185,129,0.5)] disabled:cursor-not-allowed"
+            >
+              <ButtonFace fill={GOLD_BUTTON} />
+              <span className="relative flex items-center gap-[10px] whitespace-nowrap text-[18px] font-bold leading-[30.95px] tracking-[-0.18px] text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)]">
+                {actionLabel}
+              </span>
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAction?.();
             }}
-          />
-          <span className="relative whitespace-nowrap text-[18px] font-bold leading-[30.95px] tracking-[-0.18px] text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)]">
-            {actionLabel}
-          </span>
-          {/* Three specks of light on the button face (nodes 636:161–163) */}
-          <span aria-hidden className="absolute left-[16.42px] top-[8.42px] size-[5.152px] rounded-full bg-white opacity-[0.49]" />
-          <span aria-hidden className="absolute left-[195.16px] top-[17.36px] size-[5.283px] rounded-full bg-white opacity-[0.35]" />
-          <span aria-hidden className="absolute left-[32.71px] top-[40.71px] size-[4.589px] rounded-full bg-[rgba(255,255,255,0.8)] opacity-[0.58]" />
-          <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_3px_0px_0px_rgba(255,255,255,0.35)]" />
-        </button>
+            disabled={actionDisabled}
+            className="absolute left-[68px] z-20 flex h-[77px] w-[424px] items-center justify-center gap-[3px] rounded-[24px] border-[3px] border-solid border-[#9fa8a3] p-[3px] shadow-[0px_6px_0px_0px_#7e2378,0px_10px_24px_0px_rgba(16,185,129,0.5)] disabled:cursor-not-allowed"
+            style={{ top: buttonTop }}
+          >
+            <ButtonFace fill={GOLD_BUTTON} />
+            <span className="relative whitespace-nowrap text-[18px] font-bold leading-[30.95px] tracking-[-0.18px] text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)]">
+              {actionLabel}
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -569,26 +651,43 @@ export function ProTierBanner({
   );
 }
 
-/** Frame 636:222 — one wide reward panel instead of three tiles. */
+/**
+ * Frame 676:188 — invite friends, get PRO.
+ *
+ * The one banner that is not white, and the one with two buttons: copying
+ * the link and sharing it are the same weight of action, so neither is the
+ * other's afterthought. It replaced 636:222, which said the same thing on a
+ * white card with a single button.
+ */
 export function InviteBanner({
   skin,
   art,
   crown,
   headline,
+  body,
   reward,
   actionLabel,
   onAction,
   actionDisabled,
+  copyLabel,
+  onCopy,
+  copyDisabled,
   onClick,
 }: {
   skin: BannerSkin;
   art: string;
   crown: string;
   headline: ReactNode;
+  /** The sentence under the headline. */
+  body: ReactNode;
+  /** What the invite is worth, on the pill. */
   reward: ReactNode;
   actionLabel: ReactNode;
   onAction: () => void;
   actionDisabled?: boolean;
+  copyLabel: ReactNode;
+  onCopy: () => void;
+  copyDisabled?: boolean;
   onClick?: () => void;
 }) {
   return (
@@ -598,41 +697,39 @@ export function InviteBanner({
       actionLabel={actionLabel}
       actionDisabled={actionDisabled}
       onAction={onAction}
+      secondaryAction={{ label: copyLabel, onAction: onCopy, disabled: copyDisabled }}
     >
-      {/* Icon beside the headline rather than stacked over it, as one
-          centred row. The text sets left so it reads off the icon instead
-          of drifting away from it on the short line. */}
-      <div className="absolute left-[287.5px] top-[64px] flex w-[420px] -translate-x-1/2 items-center gap-[16px]">
+      {/* Art beside the copy, both reading off the same left edge — the
+          headline sets the column and the sentence runs under it. */}
+      <div className="absolute left-[48px] top-[44px] flex w-[479px] items-start gap-[20px]">
         <img
           src={art}
           alt=""
           draggable={false}
-          className="size-[66px] shrink-0 max-w-none object-contain"
+          className="size-[88px] shrink-0 max-w-none object-contain"
         />
-        <p
-          className="min-w-0 flex-1 font-display text-[20.7px] font-extrabold leading-[1.39]"
-          style={{ color: skin.ink }}
-        >
-          {headline}
-        </p>
+        <div className="min-w-0 flex-1 pt-[6px]">
+          <p className="font-display text-[24px] font-extrabold leading-none" style={{ color: skin.ink }}>
+            {headline}
+          </p>
+          <p className="mt-[10px] text-[18px] font-medium leading-[1.53]" style={{ color: "#44246B" }}>
+            {body}
+          </p>
+        </div>
       </div>
-      {/* Reward panel: one centred row on the card's own axis, 15% down from
-          the frame's size. The pieces used to be placed individually, which
-          left the pane and its contents each centred on a different x. */}
+
+      {/* The reward, on its own pane: 376 wide against a 575 card, centred. */}
       <div
-        className="absolute left-[287.5px] top-[196px] flex h-[90px] w-[262px] -translate-x-1/2 items-center justify-center gap-[8px] rounded-[24px] border border-solid"
+        className="absolute left-[287.5px] top-[218px] flex h-[78px] w-[376px] -translate-x-1/2 items-center justify-center gap-[12px] rounded-[24px] border border-solid"
         style={{ backgroundImage: skin.tileFill, borderColor: skin.tileEdge, boxShadow: GLASS_SHEEN }}
       >
         <img
           src={crown}
           alt=""
           draggable={false}
-          className="size-[55px] shrink-0 max-w-none object-contain"
+          className="size-[48.7px] shrink-0 max-w-none object-contain"
         />
-        <p
-          className="whitespace-nowrap text-center text-[19px] font-semibold leading-none"
-          style={{ color: skin.ink }}
-        >
+        <p className="whitespace-nowrap text-center text-[20px] font-semibold leading-none" style={{ color: skin.ink }}>
           {reward}
         </p>
       </div>
