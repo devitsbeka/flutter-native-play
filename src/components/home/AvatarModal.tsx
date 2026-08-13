@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2, Crown, Lock, Plus, Gem, AlertCircle } from "lucide-react";
+import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2, Lock, Plus, AlertCircle } from "lucide-react";
 
 // Import 3D icons for avatar flow
 import iconScissors from '@/assets/icons/icon-scissors.png';
@@ -9,6 +9,8 @@ import iconAiSparkle from '@/assets/icons/icon-ai-sparkle.png';
 import iconPhotoUpload from '@/assets/icons/icon-photo-upload.png';
 import iconHourglass from '@/assets/icons/icon-hourglass.png';
 import iconSelfie from '@/assets/icons/icon-selfie.png';
+import gemIcon from '@/assets/icons/icon-gem.png';
+import crownIcon from '@/assets/crown-icon.png';
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
@@ -124,7 +126,7 @@ function QuotaNote({
       <p className="text-xs text-foreground">
         {t("avatar.limitUsedUp", { max: quota.max })}{" "}
         <span className="inline-flex items-center gap-1 font-bold text-primary">
-          <Gem className="w-3 h-3" />
+          <img src={gemIcon} alt="" className="w-3.5 h-3.5 object-contain" />
           {t("avatar.extraCostsGems", { cost: EXTRA_GENERATION_GEM_COST })}
         </span>
       </p>
@@ -139,7 +141,7 @@ function QuotaNote({
           onClick={onGetPro}
           className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-primary underline underline-offset-2"
         >
-          <Crown className="w-3 h-3 text-amber-500" />
+          <img src={crownIcon} alt="" className="w-3.5 h-3.5 object-contain" />
           {t("avatar.proGetsFive", { max: MAX_AVATAR_GENERATIONS })}
         </button>
       )}
@@ -1172,7 +1174,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                 >
                   <Lock className="w-3 h-3" />
                   <span>{t("avatar.animationPro")}</span>
-                  <Crown className="w-3 h-3 text-amber-500" />
+                  <img src={crownIcon} alt="" className="w-3.5 h-3.5 object-contain" />
                 </motion.button>
               )
             )}
@@ -1286,8 +1288,11 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                 {/* Priced, not locked — the tile still opens the picker and
                     the charge is spelled out before anything is spent. */}
                 {quota.scene.isLimitReached && (
-                  <span className="absolute top-1 right-1 inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
-                    <Gem className="w-2.5 h-2.5" />
+                  // White pill rather than a tinted one: the diamond is
+                  // purple artwork, and on the lavender tile it sat on a
+                  // near-matching wash and disappeared.
+                  <span className="absolute top-1 right-1 inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-primary shadow-sm">
+                    <img src={gemIcon} alt="" className="w-3 h-3 object-contain" />
                     {EXTRA_GENERATION_GEM_COST}
                   </span>
                 )}
@@ -1470,7 +1475,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
               className="flex-1"
               icon={
                 activeQuota.isLimitReached ? (
-                  <Gem className="w-5 h-5 shrink-0" />
+                  <img src={gemIcon} alt="" className="w-5 h-5 shrink-0 object-contain" />
                 ) : (
                   <img src={iconAiSparkle} alt="" className="w-5 h-5 object-contain" />
                 )
@@ -1654,7 +1659,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
               >
                 <span className="flex items-center gap-1.5">
                   {t("extra.avatarAnimatePro")}
-                  <Crown className="w-3.5 h-3.5 text-amber-500" />
+                  <img src={crownIcon} alt="" className="w-4 h-4 object-contain" />
                 </span>
               </ChunkyButton>
             )}

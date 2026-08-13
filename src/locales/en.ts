@@ -581,7 +581,7 @@ export const en: KaTranslations = {
     limitUsedUp: "You've used your {max} free generations.",
     extraCostsGems: "Next one — {cost} gem",
     needGemsForExtra: "Not enough gems — the next generation costs {cost}",
-    generateForGems: "Generate • {cost} 💎",
+    generateForGems: "Generate • {cost}",
     paidWithGems: "Paid {cost} gem",
     proGetsFive: "PRO gets {max} of each",
     avatarsList: "Avatars",
