@@ -5,11 +5,16 @@ Target: a native iOS app on TestFlight, then submitted for App Store review.
 Audited at commit `54ffa71` on 2026-08-13. Everything in the Audit section
 below was verified against the code in this repo, not assumed.
 
-> **Status — P0, P1 and P2 done, bar the account paperwork.** Everything in
-> P0.1–P0.4, P1.1–P1.7 and P2.1–P2.6 is implemented. P0.5 is account paperwork
-> only the account holder can file, and it now blocks P3 onward. Executing the
-> work surfaced seven findings the read-only audit missed — S1-6, S1-7, S1-8,
-> S2-6, S2-7, S2-8 and S3-7 below — all fixed. See "Status" at the end.
+> **Status — P0, P1, P2 and most of P3 done.** The remaining work is either
+> account paperwork or needs a device or an ffmpeg machine. See
+> [`ACTION_ITEMS.md`](../ACTION_ITEMS.md) for what is on you, and "Status" at
+> the end for what has landed.
+>
+> Executing the plan surfaced **eleven findings the read-only audit missed** —
+> S1-6 through S1-9, S2-6 through S2-10, S3-7 and S3-8. All are fixed. The
+> pattern worth noticing: four of them were complete backends with no client
+> (push tokens, reporting, blocking), and three were web APIs that silently do
+> nothing on iOS.
 
 ---
 
@@ -829,6 +834,12 @@ from RevenueCat.
 | **P2.5** | Real 1024×1024 brand icon, RGB, no alpha, in both the asset catalog and `public/`. |
 | **P2.6** | Settings deletion now calls `delete-user-account` instead of dropping a profile row. |
 
+| **P3.1** | Video library pruned out of the iOS bundle and streamed instead: **394 MB → 130 MB**. The verifier enforces a 150 MB ceiling. |
+| **P3.3** | Haptics routed through the plugin — `navigator.vibrate` does not exist in WKWebView, so all eleven call sites were silent no-ops on iPhone. |
+| **P3.4** | Offline detection reads `@capacitor/network`; `navigator.onLine` stays `true` in a WKWebView with no signal, so the banner never appeared. |
+| **P3.6** | RevenueCat no longer configures with a placeholder key, DEBUG logging is dev-only, `.env` untracked with `.env.example` added. |
+| **Guideline 1.2** | Reporting and blocking built — `user_reports` and `user_blocks` had existed with correct RLS and no client at all. Blocked authors filtered from the feed; managed from Settings → Privacy. |
+
 ### Not done
 
 **P2.7 / P2.8 — nutrition labels and age rating.** Both are forms in App Store
@@ -860,3 +871,35 @@ money, and it is a project rather than a patch.
 **The safe-area sweep.** The primitive exists; converting the ~20 screens
 that hand-roll `env(safe-area-inset-*)` needs a device, so it belongs with
 the P3 device matrix rather than here.
+
+
+---
+
+## What the audit missed, and why
+
+Eleven findings only appeared once the work was done rather than read. They
+fall into three groups, and the groups are more useful than the list.
+
+**Complete backends with no client.** Push notifications had a full FCM
+sender reading a table nothing ever wrote to. `user_reports` and
+`user_blocks` had correct RLS, an admin review path, and no caller. In each
+case the schema and the server function looked finished, and the audit
+checked that they existed. Existence was not the question.
+
+**Web APIs that do nothing on iOS.** `navigator.vibrate` has never been
+implemented in WKWebView, so every haptic call was a no-op on iPhone.
+`navigator.onLine` stays `true` on a phone with no signal, so the offline
+banner never showed. WebM only became playable in WKWebView in iOS 17.4,
+below which the video source chain silently falls through to the desktop MP4.
+All three read as implemented in the source and are absent on the device.
+
+**Configuration that looked applied and wasn't.** The `infoPlist` block in
+`capacitor.config.ts` never reached the generated plist. `npm run typecheck`
+resolved to an empty program and passed unconditionally. RevenueCat
+configured happily with a placeholder key. Each failed silently in the
+direction of appearing to work.
+
+The general lesson for the rest of this plan: for anything on the remaining
+list, "the code exists" is not evidence it runs. The P4 device matrix and the
+P5 beta are where the equivalents of these get caught, which is why neither
+should be compressed.
