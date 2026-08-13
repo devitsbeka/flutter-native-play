@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>MyTrivia</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+
+	<!-- arm64 rather than the template's armv7: no armv7 device can run iOS 15,
+	     so the old value described a device that cannot install this app. -->
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+
+	<!-- Portrait only, on both idioms. The same lock is declared in
+	     capacitor.config.ts, but that block is not applied to this file by
+	     `cap add`/`cap sync` — the generated plist still carried the template's
+	     landscape entries. This file is the one iOS reads. -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+
+	<!-- ═══ Permission usage strings ═══
+	     Each of these is shown verbatim in the system prompt. Missing strings
+	     are not a warning: iOS terminates the app the moment the API is
+	     touched, and App Review rejects for vague wording. -->
+
+	<key>NSCameraUsageDescription</key>
+	<string>MyTrivia uses the camera so you can take a profile photo and scan QR codes to join a game.</string>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MyTrivia needs access to your photos so you can choose a profile picture.</string>
+
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>MyTrivia saves the avatars and quiz cards you create to your photo library.</string>
+
+	<!-- App Tracking Transparency. Written from the player's side rather than
+	     the ad network's: "this identifier will be used to deliver personalized
+	     ads to you" describes what we get, not what they get. -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Allow tracking to keep MyTrivia free — you will see ads that are relevant to you instead of random ones. Your quiz answers are never shared.</string>
+
+	<!-- ═══ AdMob ═══
+	     The Google Mobile Ads SDK raises on launch when this key is absent, so
+	     it belongs here rather than only in capacitor.config.ts. -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-1329033152352928~1190114462</string>
+
+	<!-- ═══ Export compliance ═══
+	     HTTPS only, which is the standard exemption. Declaring it here stops
+	     App Store Connect asking on every single upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+</dict>
+</plist>

@@ -4,12 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-// Product IDs configured in App Store Connect
+// Product IDs configured in App Store Connect and mirrored in RevenueCat.
+// Must stay in sync with PRODUCTS in supabase/functions/_shared/iap.ts, which
+// is where each one is turned into an entitlement.
 export const IAP_PRODUCTS = {
   VIP_MONTHLY: "io.mytrivia.vip.monthly",
   VIP_ANNUAL: "io.mytrivia.vip.annual",
   AD_FREE: "io.mytrivia.adfree",
 } as const;
+
+// Gem consumables are defined alongside the packs they sell, in
+// src/config/gemPacks.ts, so the shop and the store SKUs cannot drift apart.
+export { GEM_PACK_PRODUCTS } from "@/config/gemPacks";
 
 export interface IAPProduct {
   productId: string;
@@ -202,25 +208,22 @@ export function useInAppPurchases() {
       }
 
       if (customerInfo) {
-        // Get transaction info for verification
-        const transactionId = customerInfo.originalAppUserId || customerInfo.originalApplicationVersion || Date.now().toString();
-        
-        // Verify receipt on server
-        const verifyResult = await verifyReceiptOnServer(
-          transactionId,
-          productId,
-          user.id
-        );
+        // The purchase itself is done. What the account is now entitled to is
+        // decided server-side: we ask the backend to re-read this user from
+        // RevenueCat and write the result. Nothing about the transaction is
+        // sent from here, because nothing sent from here could be trusted.
+        const synced = await syncEntitlements();
 
-        if (verifyResult.success) {
-          toast.success("Purchase completed! 🎉");
-          return { 
-            success: true, 
-            transactionId 
-          };
-        } else {
-          throw new Error("Receipt verification failed");
+        if (!synced.success) {
+          // The money moved even though the sync didn't. Say so honestly
+          // rather than reporting a failed purchase the user was charged for —
+          // the webhook will settle it, and restore covers the rest.
+          toast.error("Purchase went through, but activating it failed. It will appear shortly.");
+          return { success: false, error: "sync_failed" };
         }
+
+        toast.success("Purchase completed! 🎉");
+        return { success: true };
       }
 
       return { success: false, error: "Purchase failed" };
@@ -265,43 +268,25 @@ export function useInAppPurchases() {
         throw new Error("Purchase plugin not available");
       }
 
-      const { customerInfo } = await plugin.restorePurchases();
+      // Hand the restore to StoreKit, then let the server decide what it
+      // means. One sync replaces the old per-entitlement loop, which walked
+      // the client's own view of the purchases and posted each one back as if
+      // it were proof.
+      await plugin.restorePurchases();
 
-      // Check for active entitlements
-      const activeEntitlements = customerInfo?.entitlements?.active;
-      const hasActiveEntitlements = activeEntitlements && Object.keys(activeEntitlements).length > 0;
-
-      // Check for non-subscription purchases
-      const nonSubscriptions = customerInfo?.nonSubscriptionTransactions || [];
-
-      if (hasActiveEntitlements || nonSubscriptions.length > 0) {
-        // Sync with server - verify each active entitlement
-        if (activeEntitlements) {
-          for (const entitlementId of Object.keys(activeEntitlements)) {
-            const entitlement = activeEntitlements[entitlementId];
-            await verifyReceiptOnServer(
-              customerInfo.originalAppUserId || entitlementId,
-              entitlement.productIdentifier || entitlementId,
-              user.id
-            );
-          }
-        }
-
-        // Also verify non-subscription purchases (like ad-free)
-        for (const transaction of nonSubscriptions) {
-          await verifyReceiptOnServer(
-            transaction.transactionIdentifier || transaction.productIdentifier,
-            transaction.productIdentifier,
-            user.id
-          );
-        }
-
-        toast.success("Purchases restored! 🎉");
-        return true;
-      } else {
-        toast.info("No previous purchases found");
+      const synced = await syncEntitlements();
+      if (!synced.success) {
+        toast.error("Restore failed");
         return false;
       }
+
+      if (synced.tier || synced.gemsCredited > 0) {
+        toast.success("Purchases restored! 🎉");
+        return true;
+      }
+
+      toast.info("No previous purchases found");
+      return false;
     } catch (error: any) {
       console.error("Restore error:", error);
       toast.error("Restore failed");
@@ -328,25 +313,33 @@ export function useInAppPurchases() {
   };
 }
 
-// Helper function to verify receipt on server
-async function verifyReceiptOnServer(
-  receiptData: string,
-  productId: string,
-  userId: string
-): Promise<{ success: boolean }> {
+interface EntitlementSync {
+  success: boolean;
+  tier: string | null;
+  gemsCredited: number;
+}
+
+/**
+ * Ask the server to re-read this user's purchases from RevenueCat and write
+ * whatever it finds.
+ *
+ * Deliberately argument-free. The endpoint identifies the user from their JWT
+ * and the purchases from RevenueCat's API, so there is nothing useful the
+ * client could contribute and nothing it could forge. It used to take a
+ * transaction id, a product id and a user id, all of which it was believed.
+ */
+async function syncEntitlements(): Promise<EntitlementSync> {
   try {
-    const { data, error } = await supabase.functions.invoke("verify-receipt", {
-      body: {
-        receiptData,
-        productId,
-        userId,
-      },
-    });
+    const { data, error } = await supabase.functions.invoke("verify-receipt");
 
     if (error) throw error;
-    return { success: data?.success || false };
+    return {
+      success: data?.success === true,
+      tier: data?.tier ?? null,
+      gemsCredited: data?.gemsCredited ?? 0,
+    };
   } catch (error) {
-    console.error("Receipt verification error:", error);
-    return { success: false };
+    console.error("Entitlement sync error:", error);
+    return { success: false, tier: null, gemsCredited: 0 };
   }
 }

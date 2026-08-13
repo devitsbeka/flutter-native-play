@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0";
-import { getCorsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders, isNativeAppOrigin } from "../_shared/cors.ts";
 
 // PRO tier product configurations
 const PRO_PRODUCTS = {
@@ -30,6 +30,17 @@ serve(async (req) => {
 
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // PRO is a digital subscription, so on iOS it must be sold through In-App
+  // Purchase (App Store guideline 3.1.1). useProPurchase already branches to
+  // RevenueCat on native; this refusal is the backstop.
+  if (isNativeAppOrigin(req)) {
+    console.warn("Refused web PRO checkout from a native app origin");
+    return new Response(
+      JSON.stringify({ error: "NATIVE_MUST_USE_IAP" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   try {

@@ -3913,6 +3913,7 @@ export type Database = {
         Returns: Json
       }
       consume_free_play: { Args: never; Returns: Json }
+      ensure_admin_lifetime_pro: { Args: never; Returns: boolean }
       format_display_name: { Args: { full_name: string }; Returns: string }
       generate_challenge_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
@@ -3974,6 +3975,13 @@ export type Database = {
         Returns: {
           room_id: string
           unread_count: number
+        }[]
+      }
+      grant_vip_days: {
+        Args: { p_duration: string }
+        Returns: {
+          expires_at: string
+          vip_tier: string
         }[]
       }
       has_role: {
