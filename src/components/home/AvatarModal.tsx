@@ -132,7 +132,7 @@ function QuotaNote({
 }) {
   if (!quota.isLimitReached) {
     return (
-      <p className="text-xs text-muted-foreground mb-1">
+      <p className="mt-2 text-xs text-muted-foreground">
         {t("avatar.remainingGen", { remaining: quota.remaining, max: quota.max })}
       </p>
     );
@@ -141,18 +141,20 @@ function QuotaNote({
   const canAfford = gems >= EXTRA_GENERATION_GEM_COST;
 
   return (
-    <div className="mb-2 rounded-xl border border-border bg-muted/40 px-3 py-2">
+    <div className="mt-3 rounded-xl border border-border bg-muted/40 px-3 py-2">
       <p className="text-xs text-foreground">
         {t("avatar.limitUsedUp", { max: quota.max })}{" "}
 {t("avatar.extraCostsGems")}{" "}
         {/* The price wears the same white pill the gem balance does on the
             home card, so what it costs and what you hold are read the same
-            way rather than one being a sentence and the other a chip. */}
+            way rather than one being a sentence and the other a chip. The
+            gem goes in bare — the pill is already the white background it
+            needs, and the disc made a second white shape inside the first. */}
         <span
           className="ml-0.5 inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 align-middle text-[13px] font-bold leading-none text-[#402666]"
           style={{ boxShadow: "0 2.5px 0 0 #d8d0e8, 0 4px 10px 0 rgba(0,0,0,0.08)" }}
         >
-          <GemCoin size="sm" />
+          <img src={gemIcon} alt="" className="h-4 w-4 shrink-0 object-contain" />
           {EXTRA_GENERATION_GEM_COST}
         </span>
       </p>
@@ -1224,9 +1226,6 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
           {/* Generate New Section - MOVED UP */}
           <div className="pt-2">
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.createNew")}</p>
-            {/* The tiles stay live once the allowance is gone — the next one
-                is simply priced. A dead tile was the whole complaint. */}
-            <QuotaNote quota={quota.avatar} isVip={isVip} gems={gems} onGetPro={goToPro} />
             <>
               <div className="flex gap-3 mt-2">
                 <motion.button
@@ -1267,6 +1266,11 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                 </button>
               </div>
             </>
+            {/* Under the tiles, not over them: the allowance describes what
+                the tiles will do, so it reads after them rather than as a
+                heading over the section. The tiles stay live once it is
+                spent — the next one is simply priced. */}
+            <QuotaNote quota={quota.avatar} isVip={isVip} gems={gems} onGetPro={goToPro} />
             {failure && <FailureNote failure={failure} />}
           </div>
 
@@ -1364,9 +1368,6 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
               left tapping the scene with nowhere to go. */}
           <div>
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myScenes")}</p>
-            {/* Scenes have their own budget, separate from avatars — a full
-                scene shelf used to close the avatar tiles too. */}
-            <QuotaNote quota={quota.scene} isVip={isVip} gems={gems} onGetPro={goToPro} />
             {/* Wrapping grid — every tile always fully visible, no cropped
                 scroll row. First the new-scene tile, then the default mascot
                 scene, then the generated ones. */}
@@ -1464,6 +1465,11 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
             {/* Apply/delete for the tapped scene - right under the ticker */}
             {selectedGen && isSceneUrl(selectedGen.avatar_url) && renderGenActions()}
+
+            {/* Under the shelf it describes. Scenes have their own budget,
+                separate from avatars — a full scene shelf used to close the
+                avatar tiles too. */}
+            <QuotaNote quota={quota.scene} isVip={isVip} gems={gems} onGetPro={goToPro} />
           </div>
 
           {/* Default Avatars */}
