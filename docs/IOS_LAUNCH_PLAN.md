@@ -5,6 +5,12 @@ Target: a native iOS app on TestFlight, then submitted for App Store review.
 Audited at commit `54ffa71` on 2026-08-13. Everything in the Audit section
 below was verified against the code in this repo, not assumed.
 
+> **Status — P0 in progress.** P0.1 through P0.4 are implemented; P0.5 is
+> account paperwork that only the account holder can file. Executing P0
+> surfaced four findings the read-only audit missed — S1-6, S1-7, S2-6 and
+> S2-7 below. Three are fixed. **S1-7 is open and still allows free PRO**,
+> so the P0 gate is not yet met. See "P0 status" at the end of this document.
+
 ---
 
 ## Part 1 — Audit
@@ -132,6 +138,58 @@ catalog and App Store Connect both require a true PNG, 1024×1024, **no
 alpha channel, no transparency, no rounded corners**. `apple-touch-icon.png`
 is a genuine 1024×1024 RGB PNG and is the better starting point.
 
+#### S1-6 — RLS let any user write their own subscription row. **(Fixed in P0.1)**
+
+`supabase/migrations/20260101115003_*.sql`
+
+`vip_subscriptions` carried these two policies:
+
+```sql
+CREATE POLICY "Users can insert their own VIP subscription"
+  ON public.vip_subscriptions FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own VIP subscription"
+  ON public.vip_subscriptions FOR UPDATE USING (auth.uid() = user_id);
+```
+
+So PRO did not require going near `verify-receipt` at all. From the browser
+console of any signed-in session:
+
+```js
+supabase.from('vip_subscriptions')
+  .insert({ user_id: <me>, vip_tier: 'pro_plus', expires_at: '2099-01-01' })
+```
+
+Found while wiring the real verification path — the audit read the edge
+function but not the table's policies. Both policies are dropped; the two
+client writes that depended on them (`activateVip`, the admin lifetime
+self-grant) now go through `SECURITY DEFINER` functions.
+
+#### S1-7 — `update_user_currency` grants unlimited currency. **(Open — partially mitigated)**
+
+`supabase/migrations/20260110002224_*.sql`
+
+The RPC is `SECURITY DEFINER`, granted to `authenticated`, takes `p_user_id`
+as a parameter, and never checked who was calling:
+
+```js
+supabase.rpc('update_user_currency', { p_user_id: <anyone>, p_gems_delta: 999999 })
+```
+
+Two consequences. Cross-user tampering — draining a rival's balance or
+topping up a friend's — **is now blocked**: the function rejects a target
+that isn't the caller, which is a no-op for every real call site since they
+all pass their own id.
+
+Self-crediting is **not** blocked, and this is the reason the P0 gate isn't
+met yet: gems buy PRO days through the shop, so minting gems still reaches a
+free subscription — just one step further round than before.
+
+Closing it properly means moving reward grants (missions, daily rewards,
+streaks, ad rewards) server-side, because today every one of them credits
+currency from the client. That is a real project, not a patch, and it is
+the highest-value item on the post-P0 list. Until it lands, treat in-app
+currency as advisory rather than earned.
+
 #### S2-1 — Third-party tracking fires before ATT authorization.
 
 `index.html` loads the **Meta Pixel** (`fbevents.js`) unconditionally in
@@ -214,6 +272,42 @@ Store binary contains a full content-management console.
 
 Two costs: needless size, and reviewer risk — App Review reacts badly to
 hidden or non-functional surfaces inside a consumer app.
+
+#### S2-6 — The `infoPlist` block in `capacitor.config.ts` was never applied. **(Fixed in P0.4)**
+
+`capacitor.config.ts`
+
+The config declared a portrait lock and four permission usage strings —
+camera, photo library, photo library add, and ATT. Generating the project
+and running `cap sync` showed none of them reaching `ios/App/App/Info.plist`:
+the plist still carried the template's landscape orientations and had zero
+usage descriptions.
+
+This mattered more than it looks. iOS **terminates the app** the instant it
+touches the camera without `NSCameraUsageDescription` — so the avatar
+capture flow would have crashed on first use, and the orientation lock the
+team believed was in place wasn't. The block had been sitting in the repo
+providing false assurance.
+
+Usage strings and orientation now live in `Info.plist`, which is the file
+iOS actually reads, and the inert config block is gone.
+
+#### S2-7 — Capacitor 8 defaults to SPM, which silently drops RevenueCat. **(Fixed in P0.4)**
+
+`npx cap add ios` emitted a warning that is easy to scroll past:
+
+```
+[warn] @revenuecat/purchases-capacitor does not have a Package.swift
+[warn] Some installed packages are not compatable with SPM
+```
+
+…and then generated a `Package.swift` listing five plugins. RevenueCat was
+not among them. The JS import would still resolve, so the failure would only
+appear at runtime, on device, as every purchase call failing against a
+native plugin that was never linked into the binary.
+
+The project is generated with `--packagemanager Cocoapods` instead, where
+the plugin's `.podspec` is picked up and all six plugins resolve.
 
 #### S3-1 — Missing native lifecycle plugins.
 
@@ -618,3 +712,45 @@ account enrollment must start immediately or it becomes the critical path.
    install and one they abandon at the download prompt.** It's classified
    P3 because it doesn't block review — but it will quietly cost more
    users than any other item on this list.
+
+---
+
+## P0 status
+
+### Done
+
+| Item | What landed |
+|---|---|
+| **P0.1** | `verify-receipt` rewritten — user from JWT, purchases from RevenueCat's API, no client input at all. New `revenuecat-webhook` for renewals, cancellations and refunds, made idempotent by an `iap_events` ledger. `vip_subscriptions` write policies dropped; `grant_vip_days` and `ensure_admin_lifetime_pro` replace the two client writes. Unique index stops one transaction activating two accounts. |
+| **P0.2** | Four gem consumables defined in `src/config/gemPacks.ts` alongside the packs they sell. `useGemPurchase` branches on native. Both checkout functions refuse a `capacitor://` origin as a regression backstop. Seven tests lock the pack/SKU mapping. |
+| **P0.3** | `minVersion` 14.0 → 15.0, matching the Capacitor 8 podspec. Generated project confirms `IPHONEOS_DEPLOYMENT_TARGET = 15.0`. |
+| **P0.4** | `ios/` generated and committed, CocoaPods, all six plugins in the Podfile. `Info.plist` authored with real usage strings, portrait lock, AdMob identifier and the encryption exemption. |
+
+Two correctness bugs were fixed in passing, both in the tier mapping:
+`verify-receipt` wrote `vip_tier: 'vip'`, which matches no branch in
+`VIP_BENEFITS_BY_TIER`, so **annual subscribers were silently reading as
+monthly** — `isProPlus()` returned false for someone who had just paid for
+the year. And subscription expiry was derived from the word "monthly" in a
+product id rather than read from the store, which is what let a cancelled
+subscription stay active until a date we had invented. Expiry now comes
+from RevenueCat.
+
+### Not done
+
+**P0.5 — accounts.** Nothing here can be done from the repo; it is all
+paperwork on the account holder's side, and it gates everything downstream.
+Apple Developer enrolment, the App ID with its four capabilities, the App
+Store Connect record, RevenueCat, AdMob, Firebase with an APNs key, and —
+the one that blocks all purchase testing — the paid-apps agreement and
+banking forms.
+
+Two secrets need setting once RevenueCat exists, or the new code stays
+inert: `REVENUECAT_SECRET_API_KEY` (server-side, for the subscriber lookup)
+and `REVENUECAT_WEBHOOK_SECRET` (shared with the RevenueCat dashboard). The
+webhook refuses to run without the latter rather than processing
+unauthenticated calls.
+
+**S1-7 — self-crediting currency.** See the finding above. The P0 gate says
+"forged entitlement calls are rejected", and while every *direct* route to a
+subscription is now closed, minting gems still buys PRO days through the
+shop. The gate is not met until reward grants move server-side.

@@ -180,3 +180,76 @@ $$;
 
 REVOKE ALL ON FUNCTION public.ensure_admin_lifetime_pro() FROM public;
 GRANT EXECUTE ON FUNCTION public.ensure_admin_lifetime_pro() TO authenticated;
+
+-- ── 6. Currency changes may only target the caller ─────────────────────────
+--
+-- update_user_currency is SECURITY DEFINER, granted to `authenticated`, and
+-- took the user id as a parameter without ever checking it. Any signed-in
+-- user could move coins and gems on any *other* account — drain a rival's
+-- balance, or top up a friend's.
+--
+-- Every client call site already passes its own id (see useCurrency,
+-- useMissions, useMissionStreak), so this is a no-op for legitimate callers.
+-- Edge functions call it under the service role, where auth.uid() is null,
+-- and are allowed through explicitly.
+--
+-- NOT closed by this: a user may still credit *themselves*, because reward
+-- grants (missions, daily rewards, ad rewards) are all client-initiated
+-- today. That is the wider client-trusted-economy problem, tracked separately
+-- in docs/IOS_LAUNCH_PLAN.md — it needs reward logic moved server-side, which
+-- is a bigger change than this migration should be making.
+
+CREATE OR REPLACE FUNCTION public.update_user_currency(
+  p_user_id uuid,
+  p_coins_delta integer DEFAULT 0,
+  p_gems_delta integer DEFAULT 0
+)
+RETURNS TABLE (new_coins integer, new_gems integer)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_current_coins integer;
+  v_current_gems integer;
+  v_caller uuid := auth.uid();
+BEGIN
+  -- auth.uid() is null for the service role, which edge functions use.
+  IF v_caller IS NOT NULL AND v_caller <> p_user_id THEN
+    RAISE EXCEPTION 'Cannot modify another user''s balance';
+  END IF;
+
+  -- Lock the row for update (prevents race conditions)
+  SELECT coins, gems INTO v_current_coins, v_current_gems
+  FROM profiles
+  WHERE user_id = p_user_id
+  FOR UPDATE;
+
+  -- Check if profile exists
+  IF v_current_coins IS NULL THEN
+    RAISE EXCEPTION 'Profile not found for user %', p_user_id;
+  END IF;
+
+  -- Prevent negative balances
+  IF v_current_coins + p_coins_delta < 0 THEN
+    RAISE EXCEPTION 'Insufficient coins';
+  END IF;
+
+  IF v_current_gems + p_gems_delta < 0 THEN
+    RAISE EXCEPTION 'Insufficient gems';
+  END IF;
+
+  -- Update and return new values
+  UPDATE profiles
+  SET
+    coins = v_current_coins + p_coins_delta,
+    gems = v_current_gems + p_gems_delta,
+    updated_at = now()
+  WHERE user_id = p_user_id
+  RETURNING coins, gems INTO new_coins, new_gems;
+
+  RETURN NEXT;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.update_user_currency(uuid, integer, integer) TO authenticated;
