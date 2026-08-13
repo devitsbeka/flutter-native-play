@@ -290,6 +290,17 @@ export default function Index() {
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
   const [isSoundModalOpen, setIsSoundModalOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
+
+  // `/?daily=1` opens the daily rewards on arrival. The rewards modal lives
+  // here, so screens elsewhere that want to point a player at it — the
+  // out-of-coins modal after a match, for one — send them to this URL rather
+  // than growing a second copy of the modal. The parameter is cleared once
+  // it has been acted on so a refresh does not reopen it.
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("daily") !== "1") return;
+    setIsDailyRewardsOpen(true);
+    navigate(location.pathname, { replace: true });
+  }, [location.search, location.pathname, navigate]);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
   const [isAdFreeModalOpen, setIsAdFreeModalOpen] = useState(false);
   const [isGemShopOpen, setIsGemShopOpen] = useState(false);

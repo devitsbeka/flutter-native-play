@@ -6,6 +6,7 @@ import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
+import { NotEnoughCoinsModal } from "@/components/home/NotEnoughCoinsModal";
 import { hasReachedGuestPlayLimit, recordGuestPlay } from "@/hooks/useGuestPlays";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
@@ -233,11 +234,11 @@ export function MatchResultScreen() {
   const { userScore, opponentScore, opponent, resetGame, startMatchmaking, userAnswerHistory, opponentAnswerHistory } = useGame();
   const { user, profile, updateProfile } = useAuth();
   const { openProfile } = usePlayerProfile();
-  const { addCoins } = useCurrency();
+  const { addCoins, coins, gems, exchangeGemsForCoins } = useCurrency();
   const { playSound } = useSound();
   const { trackMissionEvent } = useMissions();
   const { t } = useLanguage();
-  const { awardWin, awardDraw, awardLose, netWinProfit, netLoss } = useGameStake();
+  const { awardWin, awardDraw, awardLose, hasEnoughCoins, stakeAmount } = useGameStake();
   const { exhaustionInfo } = useTrivia();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -246,6 +247,7 @@ export function MatchResultScreen() {
   
   // State for showing PRO upgrade modal when limit reached
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
+  const [showNotEnoughCoinsModal, setShowNotEnoughCoinsModal] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guestModalBlocking, setGuestModalBlocking] = useState(false);
 
@@ -279,6 +281,28 @@ export function MatchResultScreen() {
     navigate("/");
   };
 
+  // Turning gems into the coins the next game needs, the same single atomic
+  // RPC home uses — a spend-then-add pair could take the gems and never
+  // deliver the coins. Guarded against double-taps while it is in flight.
+  const isExchangingGemsRef = useRef(false);
+  const handleExchangeGems = useCallback(async () => {
+    if (isExchangingGemsRef.current) return;
+    const gemsNeeded = Math.ceil((stakeAmount - coins) / REWARDS.GEM_TO_COINS_RATE);
+    if (gemsNeeded <= 0 || gems < gemsNeeded) return;
+
+    isExchangingGemsRef.current = true;
+    try {
+      const success = await exchangeGemsForCoins(gemsNeeded);
+      if (success) {
+        setShowNotEnoughCoinsModal(false);
+      } else {
+        toast({ title: t("shop.purchaseFailed"), variant: "destructive" });
+      }
+    } finally {
+      isExchangingGemsRef.current = false;
+    }
+  }, [stakeAmount, coins, gems, exchangeGemsForCoins, toast, t]);
+
   const handlePlayAgain = () => {
     // === GUEST CHECK - always show modal for guests ===
     if (!user) {
@@ -305,6 +329,15 @@ export function MatchResultScreen() {
       // tapped, so the modal that sells one opens directly — the invite offer
       // that used to come first answered a different question.
       setShowPlayLimitModal(true);
+      return;
+    }
+
+    // And can they cover the stake? Home asks this before starting a quick
+    // game; this button did not, so a player under 500 coins could keep
+    // playing games whose loss they could not be charged for — which is one
+    // of the ways a lost game ended up costing nothing.
+    if (!hasEnoughCoins) {
+      setShowNotEnoughCoinsModal(true);
       return;
     }
 
@@ -341,26 +374,32 @@ export function MatchResultScreen() {
   useEffect(() => {
     const currentUser = initialUserRef.current || user;
     const currentProfile = initialProfileRef.current || profile;
-    
+
+    // Everything a finished game is worth — coins, points, the streak, the
+    // session row — happens in here, once. The profile is what it is all
+    // measured against, so arriving before it has loaded is a wait, not a
+    // skip: this used to run on user id alone and, finding no profile, do
+    // nothing at all and never come back to it. The game paid out nothing.
     if (currentUser && currentProfile && !hasCheckedLevelUp.current) {
       hasCheckedLevelUp.current = true;
-      
+
       const updateStats = async () => {
         const oldPoints = currentProfile.total_points || 0;
         const newPoints = oldPoints + userScore;
         const oldLevelInfo = calculateLevel(oldPoints);
         const newLevelInfo = calculateLevel(newPoints);
 
-        // Post-game rewards: Win +500, Lose -500, Draw 0
+        // Post-game rewards: Win +500, Lose -500, Draw 0.
+        //
+        // The badge shows what the award actually moved, not what it set out
+        // to move: a credit the server capped or a debit it refused both used
+        // to be announced as a full ±500 that never reached the balance.
         if (isWin) {
-          await awardWin();
-          setCoinChange(netWinProfit); // +500
+          setCoinChange(await awardWin());
         } else if (isDraw) {
-          await awardDraw();
-          setCoinChange(0); // no change
+          setCoinChange(await awardDraw());
         } else {
-          await awardLose();
-          setCoinChange(-netLoss); // -500
+          setCoinChange(await awardLose());
         }
 
         // === Correct-answer milestone level-up (every 20 correct answers) ===
@@ -500,9 +539,11 @@ export function MatchResultScreen() {
 
       updateStats();
     }
-  // Only depend on user.id to prevent re-runs when profile changes
+  // The ref guard is what keeps this to one run; the deps only decide when it
+  // is first allowed to happen, which is as soon as there is a profile to
+  // count against.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, profile?.user_id]);
 
   // Calculate user level
 
@@ -543,6 +584,23 @@ export function MatchResultScreen() {
           setShowPlayLimitModal(false);
           void consumePlay();
           startMatchmaking();
+        }}
+      />
+
+      <NotEnoughCoinsModal
+        isOpen={showNotEnoughCoinsModal}
+        onClose={() => setShowNotEnoughCoinsModal(false)}
+        currentCoins={coins}
+        requiredCoins={stakeAmount}
+        userGems={gems}
+        onExchangeGems={handleExchangeGems}
+        onOpenDailyRewards={() => {
+          // Daily rewards live on the home screen; this screen has no modal
+          // of its own to open, so it hands the player over to the one that
+          // does rather than pretending the button does nothing.
+          setShowNotEnoughCoinsModal(false);
+          resetGame();
+          navigate("/?daily=1");
         }}
       />
 
@@ -624,7 +682,7 @@ export function MatchResultScreen() {
               name={profile?.nickname || t("game.you")}
               isWinner={isWin}
               winnerLabel={t("game.winner")}
-              coinChange={isLose ? -Math.abs(netLoss) : isWin ? netWinProfit : undefined}
+              coinChange={coinChange !== 0 ? coinChange : undefined}
               score={userScore}
               correctSummary={`${userCorrect}/${totalQuestions} ${t("modals.correctAnswers")}`}
               onAvatarClick={user ? () => openProfile(user.id) : undefined}
@@ -636,7 +694,7 @@ export function MatchResultScreen() {
               name={opponent?.name || t("game.opponent")}
               isWinner={!isWin && !isDraw}
               winnerLabel={t("game.winner")}
-              coinChange={isLose ? Math.abs(netLoss) : isWin ? -netWinProfit : undefined}
+              coinChange={coinChange !== 0 ? -coinChange : undefined}
               score={opponentScore}
               correctSummary={`${opponentCorrect}/${totalQuestions} ${t("modals.correctAnswers")}`}
             />
