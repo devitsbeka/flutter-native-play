@@ -601,8 +601,13 @@ export const en: KaTranslations = {
     cameraPermission: "Cannot access camera. Please check permissions.",
     uploadFailed: "Upload failed",
     generationFailed: "Avatar generation failed",
-    imageTooLarge: "Image must be less than 5MB",
+    imageTooLarge: "Image must be less than 30MB",
     selectImageFile: "Please select an image file",
+    // "Failed to process image" was the only thing any photo failure said, so
+    // nobody could tell whether to try another photo, a smaller one, or a
+    // different format.
+    photoFormatUnsupported: "Couldn't read this photo's format — try another photo, or save it as JPG",
+    photoTooBigToProcess: "This photo is too big to process — try a smaller one",
     noAvatarToAnimate: "No avatar to animate",
   },
 
