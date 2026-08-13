@@ -534,6 +534,60 @@ export type Database = {
           },
         ]
       }
+      currency_grant_limits: {
+        Row: {
+          kind: string
+          max_coins_call: number
+          max_coins_day: number
+          max_gems_call: number
+          max_gems_day: number
+        }
+        Insert: {
+          kind: string
+          max_coins_call: number
+          max_coins_day: number
+          max_gems_call: number
+          max_gems_day: number
+        }
+        Update: {
+          kind?: string
+          max_coins_call?: number
+          max_coins_day?: number
+          max_gems_call?: number
+          max_gems_day?: number
+        }
+        Relationships: []
+      }
+      currency_grants: {
+        Row: {
+          coins: number
+          created_at: string
+          gems: number
+          id: string
+          kind: string
+          reference: string | null
+          user_id: string
+        }
+        Insert: {
+          coins?: number
+          created_at?: string
+          gems?: number
+          id?: string
+          kind: string
+          reference?: string | null
+          user_id: string
+        }
+        Update: {
+          coins?: number
+          created_at?: string
+          gems?: number
+          id?: string
+          kind?: string
+          reference?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       economy_config: {
         Row: {
           category: string
@@ -1061,6 +1115,45 @@ export type Database = {
           status?: string | null
           target_count?: number
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      iap_events: {
+        Row: {
+          event_at: string | null
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string
+          product_id: string | null
+          store: string | null
+          transaction_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          event_at?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string
+          product_id?: string | null
+          store?: string | null
+          transaction_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          event_at?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string
+          product_id?: string | null
+          store?: string | null
+          transaction_id?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -3907,6 +4000,19 @@ export type Database = {
       adjust_power_up: {
         Args: { p_delta: number; p_type: string }
         Returns: number
+      }
+      apply_currency_grant: {
+        Args: {
+          p_coins: number
+          p_gems: number
+          p_kind: string
+          p_reference?: string
+          p_user_id: string
+        }
+        Returns: {
+          new_coins: number
+          new_gems: number
+        }[]
       }
       award_tv_observer_bonus: {
         Args: { p_question_index: number; p_session_id: string }
