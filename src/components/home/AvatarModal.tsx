@@ -36,7 +36,7 @@ import { preparePhoto } from "@/utils/imageInput";
 import { isNativePhotoPickerAvailable, pickPhotoFromLibrary } from "@/utils/nativePhotoPicker";
 import { photoError, type PhotoError } from "@/utils/photoErrorMessage";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { generateAndRecordPortrait, generatePublicPortrait } from "@/utils/portraitAvatar";
 import { SCENE_ANIMATION_PROMPT } from "@/config/sceneAnimationPrompt";
 
@@ -214,7 +214,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   })();
   const navigate = useNavigate();
   const [step, setStep] = useState<"gallery" | "upload" | "camera" | "generating" | "preview">("gallery");
-  const [generations, setGenerations] = useState<AvatarGeneration[]>([]);
+
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [generatedAvatar, setGeneratedAvatar] = useState<string | null>(null);
@@ -272,34 +272,49 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     wasOpen.current = isOpen;
   }, [isOpen]);
 
-  // Keyed on the stable user id, never the user object
-  useEffect(() => {
-    if (isOpen && user?.id) loadGenerations();
-  }, [isOpen, user?.id]);
+  // Cached across openings, keyed on the stable user id and never the user
+  // object. This used to be component state refetched from zero on every
+  // open, so the shelves were empty for a round trip EVERY time the modal
+  // came up and the scenes visibly appeared a moment later. Now only the
+  // first open in a session waits, and that wait shows skeletons.
+  const {
+    data: generations = [],
+    isLoading: generationsLoading,
+    refetch: refetchGenerations,
+  } = useQuery({
+    queryKey: ["avatar-generations", user?.id],
+    enabled: !!user?.id && isOpen,
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<AvatarGeneration[]> => {
+      // Each type gets its own budget. One combined LIMIT meant a run of
+      // background portraits could push every scene out of the window: "my
+      // scenes" came back empty and the scene count the new-scene tile is
+      // gated on read zero, on an account that plainly had scenes.
+      const byType = (scenesOnly: boolean) => {
+        const base = supabase
+          .from("avatar_generations")
+          // Named columns rather than *: the row carries fields this screen
+          // never reads, and this payload is what the player waits for.
+          .select("id, avatar_url, animated_avatar_url, is_current, created_at")
+          .eq("user_id", user!.id);
+        const scoped = scenesOnly
+          ? base.like("avatar_url", "%/scene_%")
+          : base.not("avatar_url", "like", "%/scene_%");
+        return scoped.order("created_at", { ascending: false }).limit(12);
+      };
+
+      const [scenes, portraits] = await Promise.all([byType(true), byType(false)]);
+      if (scenes.error) throw scenes.error;
+      if (portraits.error) throw portraits.error;
+
+      return [...(scenes.data || []), ...(portraits.data || [])].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    },
+  });
 
   const loadGenerations = async () => {
-    if (!user) return;
-
-    // Each type gets its own budget. One combined LIMIT meant a run of
-    // background portraits could push every scene out of the window: "my
-    // scenes" came back empty and the scene count the new-scene tile is
-    // gated on read zero, on an account that plainly had scenes.
-    const byType = (scenesOnly: boolean) => {
-      const base = supabase.from('avatar_generations').select('*').eq('user_id', user.id);
-      const scoped = scenesOnly
-        ? base.like('avatar_url', '%/scene_%')
-        : base.not('avatar_url', 'like', '%/scene_%');
-      return scoped.order('created_at', { ascending: false }).limit(12);
-    };
-
-    const [scenes, portraits] = await Promise.all([byType(true), byType(false)]);
-    if (scenes.error || portraits.error) return;
-
-    setGenerations(
-      [...(scenes.data || []), ...(portraits.data || [])].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      )
-    );
+    await refetchGenerations();
   };
 
   // Camera controls
@@ -1282,6 +1297,65 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
             aria-hidden="true"
           />
 
+          {/* My Generated Avatars (portrait/photo generations only). While
+              the first fetch is in flight the shelf shows its shape rather
+              than nothing, so the tiles fade in where they were always going
+              to be instead of appearing out of blank space. */}
+          {generationsLoading && (
+            <div>
+              <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myAvatars")}</p>
+              <div className="grid grid-cols-5 gap-2">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="aspect-square rounded-xl bg-muted/60 animate-pulse" />
+                ))}
+              </div>
+            </div>
+          )}
+          {generations.some((g) => !isSceneUrl(g.avatar_url)) && (
+            <div>
+              <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myAvatars")}</p>
+              <div className="grid grid-cols-5 gap-2">
+                {generations.filter((g) => !isSceneUrl(g.avatar_url)).slice(0, 10).map((gen) => (
+                  <motion.button
+                    key={gen.id}
+                    onClick={() => setSelectedForAction(
+                      selectedForAction === gen.id ? null : gen.id
+                    )}
+                    disabled={isLoading}
+                    className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                      selectedForAction === gen.id
+                        ? "border-primary ring-2 ring-primary/30"
+                        : gen.is_current
+                          ? "border-primary"
+                          : "border-border hover:border-primary/50"
+                    } disabled:opacity-50`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <img
+                      src={gen.avatar_url}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                    {gen.is_current && selectedForAction !== gen.id && (
+                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-primary" />
+                      </div>
+                    )}
+                    {selectedForAction === gen.id && (
+                      <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                        <Check className="w-5 h-5 text-primary" />
+                      </div>
+                    )}
+                  </motion.button>
+                ))}
+              </div>
+
+              {/* Apply/delete for the tapped avatar - right under the grid */}
+              {selectedGen && !isSceneUrl(selectedGen.avatar_url) && renderGenActions()}
+            </div>
+          )}
+
           {/* My Scenes - homepage scene generations. Picking one makes it the
               active homepage scene; the plus tile starts a new generation
               from a different selfie/photo. This used to be hidden below
@@ -1351,6 +1425,13 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                   </div>
                 )}
               </motion.button>
+              {/* Same reason as the avatars shelf: hold the slots while the
+                  rows are still in flight, so a scene fades into a space that
+                  was already there. */}
+              {generationsLoading &&
+                [0, 1].map((i) => (
+                  <div key={`s${i}`} className="aspect-video rounded-xl bg-muted/60 animate-pulse" />
+                ))}
               {generations.filter((g) => isSceneUrl(g.avatar_url)).map((gen) => (
                 <motion.button
                   key={gen.id}
@@ -1384,52 +1465,6 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
             {/* Apply/delete for the tapped scene - right under the ticker */}
             {selectedGen && isSceneUrl(selectedGen.avatar_url) && renderGenActions()}
           </div>
-
-          {/* My Generated Avatars (portrait/photo generations only) */}
-          {generations.some((g) => !isSceneUrl(g.avatar_url)) && (
-            <div>
-              <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myAvatars")}</p>
-              <div className="grid grid-cols-5 gap-2">
-                {generations.filter((g) => !isSceneUrl(g.avatar_url)).slice(0, 10).map((gen) => (
-                  <motion.button
-                    key={gen.id}
-                    onClick={() => setSelectedForAction(
-                      selectedForAction === gen.id ? null : gen.id
-                    )}
-                    disabled={isLoading}
-                    className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
-                      selectedForAction === gen.id
-                        ? "border-primary ring-2 ring-primary/30"
-                        : gen.is_current
-                          ? "border-primary"
-                          : "border-border hover:border-primary/50"
-                    } disabled:opacity-50`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <img
-                      src={gen.avatar_url}
-                      alt="Avatar"
-                      className="w-full h-full object-cover"
-                    />
-                    {gen.is_current && selectedForAction !== gen.id && (
-                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-primary" />
-                      </div>
-                    )}
-                    {selectedForAction === gen.id && (
-                      <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                        <Check className="w-5 h-5 text-primary" />
-                      </div>
-                    )}
-                  </motion.button>
-                ))}
-              </div>
-
-              {/* Apply/delete for the tapped avatar - right under the grid */}
-              {selectedGen && !isSceneUrl(selectedGen.avatar_url) && renderGenActions()}
-            </div>
-          )}
 
           {/* Default Avatars */}
           <div>
