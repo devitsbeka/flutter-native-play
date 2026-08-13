@@ -138,7 +138,6 @@ export function ProPlansSection({
   // 'standard' tier from DB = basic PRO (solo)
   // 'pro' tier = solo PRO
   // 'pro_plus' or 'pro_master' = family PRO
-  const isNotPro = !currentTier;
   const isSoloPro = currentTier === 'pro' || currentTier === 'standard';
   const isFamilyPro = currentTier === 'pro_plus' || currentTier === 'pro_master';
 
@@ -155,21 +154,23 @@ export function ProPlansSection({
 
   return (
     <div className="space-y-4">
-      {/* SCENARIO 1: Not PRO - Show both tier cards */}
-      {isNotPro && (
-        <>
-          {/* The shop's banner reel, rather than a second set of PRO cards
-              built here. Both surfaces sell the same two tiers and the same
-              invite offer, and keeping two designs of them meant every copy
-              or price change had to be made twice — and was not. Buying goes
-              through the same useProPurchase hook either way. */}
-          <ProBannerReel
-            purchasedItems={EMPTY_PURCHASES}
-            isPurchasing={null}
-            onItemClick={() => navigate("/power-ups")}
-          />
-        </>
-      )}
+      {/* The shop's banner reel, rather than a second set of PRO cards built
+          here. Both surfaces sell the same two tiers and the same invite
+          offer, and keeping two designs of them meant every copy or price
+          change had to be made twice — and was not. Buying goes through the
+          same useProPurchase hook either way.
+
+          Shown whatever the player's tier: it used to appear only for
+          someone with no subscription, so a PRO member opening this tab saw
+          none of it. The reel already marks the tier they are on as active
+          and the one above it as buyable, which is the more useful thing to
+          land on than a page that pretends the offer no longer exists. The
+          status and upgrade cards below it stay as they were. */}
+      <ProBannerReel
+        purchasedItems={EMPTY_PURCHASES}
+        isPurchasing={null}
+        onItemClick={() => navigate("/power-ups")}
+      />
 
       {/* SCENARIO 2: PRO Solo - Show current status + upgrade to Family */}
       {isSoloPro && (

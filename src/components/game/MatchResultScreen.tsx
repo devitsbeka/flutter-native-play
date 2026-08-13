@@ -6,7 +6,7 @@ import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
-import { NotEnoughCoinsModal } from "@/components/home/NotEnoughCoinsModal";
+import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { hasReachedGuestPlayLimit, recordGuestPlay } from "@/hooks/useGuestPlays";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
@@ -234,11 +234,11 @@ export function MatchResultScreen() {
   const { userScore, opponentScore, opponent, resetGame, startMatchmaking, userAnswerHistory, opponentAnswerHistory } = useGame();
   const { user, profile, updateProfile } = useAuth();
   const { openProfile } = usePlayerProfile();
-  const { addCoins, coins, gems, exchangeGemsForCoins } = useCurrency();
+  const { addCoins } = useCurrency();
   const { playSound } = useSound();
   const { trackMissionEvent } = useMissions();
   const { t } = useLanguage();
-  const { awardWin, awardDraw, awardLose, hasEnoughCoins, stakeAmount } = useGameStake();
+  const { awardWin, awardDraw, awardLose, hasEnoughCoins } = useGameStake();
   const { exhaustionInfo } = useTrivia();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -280,28 +280,6 @@ export function MatchResultScreen() {
     resetGame();
     navigate("/");
   };
-
-  // Turning gems into the coins the next game needs, the same single atomic
-  // RPC home uses — a spend-then-add pair could take the gems and never
-  // deliver the coins. Guarded against double-taps while it is in flight.
-  const isExchangingGemsRef = useRef(false);
-  const handleExchangeGems = useCallback(async () => {
-    if (isExchangingGemsRef.current) return;
-    const gemsNeeded = Math.ceil((stakeAmount - coins) / REWARDS.GEM_TO_COINS_RATE);
-    if (gemsNeeded <= 0 || gems < gemsNeeded) return;
-
-    isExchangingGemsRef.current = true;
-    try {
-      const success = await exchangeGemsForCoins(gemsNeeded);
-      if (success) {
-        setShowNotEnoughCoinsModal(false);
-      } else {
-        toast({ title: t("shop.purchaseFailed"), variant: "destructive" });
-      }
-    } finally {
-      isExchangingGemsRef.current = false;
-    }
-  }, [stakeAmount, coins, gems, exchangeGemsForCoins, toast, t]);
 
   const handlePlayAgain = () => {
     // === GUEST CHECK - always show modal for guests ===
@@ -587,18 +565,10 @@ export function MatchResultScreen() {
         }}
       />
 
-      <NotEnoughCoinsModal
+      <NotEnoughStakeModal
         isOpen={showNotEnoughCoinsModal}
         onClose={() => setShowNotEnoughCoinsModal(false)}
-        currentCoins={coins}
-        requiredCoins={stakeAmount}
-        userGems={gems}
-        onExchangeGems={handleExchangeGems}
-        onOpenDailyRewards={() => {
-          // Daily rewards live on the home screen; this screen has no modal
-          // of its own to open, so it hands the player over to the one that
-          // does rather than pretending the button does nothing.
-          setShowNotEnoughCoinsModal(false);
+        onDailyRewards={() => {
           resetGame();
           navigate("/?daily=1");
         }}

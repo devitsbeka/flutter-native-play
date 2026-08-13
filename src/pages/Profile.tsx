@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProPlansSection, ProTier } from "@/components/profile/ProPlansSection";
 import { AvatarReel } from "@/components/profile/AvatarReel";
+import { ProBadge } from "@/components/shared/ProBadge";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { HeaderActions } from "@/components/shared/HeaderActions";
@@ -153,8 +154,14 @@ export default function Profile() {
                       style={{ fontSize: 24 }}
                     />
                   ) : (
-                    <h2 className="font-slackey text-gray-800 capitalize font-black" style={{ fontSize: 28 }}>
+                    <h2 className="font-slackey text-gray-800 capitalize font-black flex items-center gap-2" style={{ fontSize: 28 }}>
                       {profile.nickname}
+                      {/* Reads next to the name rather than on the avatar:
+                          the avatar here is a carousel the player scrolls
+                          through, and a crown pinned to whichever slot is
+                          centred would look like a property of that avatar
+                          rather than of them. */}
+                      <ProBadge variant="pill" size="lg" />
                     </h2>
                   )}
                   <button

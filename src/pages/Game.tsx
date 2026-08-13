@@ -6,6 +6,8 @@ import { ArrowLeft } from "lucide-react";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
+import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
+import { useGameStake } from "@/hooks/useGameStake";
 import { useAuth } from "@/hooks/useAuth";
 import { hasReachedGuestPlayLimit, recordGuestPlay, getGuestPlays } from "@/hooks/useGuestPlays";
 
@@ -14,9 +16,11 @@ function GameContent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const categoryId = searchParams.get("category");
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const { canPlay, isVip, freeGamesExhausted, regenPlayAvailable, timeUntilNextPlay, useRegenPlay, consumePlay, loading: playLimitLoading } = usePlayLimit();
+  const { hasEnoughCoins } = useGameStake();
   const [showLimitModal, setShowLimitModal] = useState(false);
+  const [showStakeModal, setShowStakeModal] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guestModalBlocking, setGuestModalBlocking] = useState(false);
   const [blocked, setBlocked] = useState(false);
@@ -73,6 +77,19 @@ function GameContent() {
       return;
     }
 
+    // The stake has to be covered before the first question, not discovered
+    // at the final whistle. This page is where every route into a game ends
+    // up, so it is the one place the check cannot be walked around — a game
+    // begun without 500 coins is a game whose loss cannot be charged.
+    // Only once there is a profile to read a balance from. A profile that
+    // failed to load reads as zero coins, and refusing a game over a failed
+    // read would be this check inventing a reason to stop someone.
+    if (profile && !hasEnoughCoins) {
+      setBlocked(true);
+      setShowStakeModal(true);
+      return;
+    }
+
     // Spend the play. Fire-and-forget: consumePlay advances its own local
     // count first, so a double-start cannot spend one play twice, and it
     // never refuses on a network failure - the player was already told yes.
@@ -80,7 +97,7 @@ function GameContent() {
 
     setGameStarted(true);
     startMatchmaking(categoryId || undefined);
-  }, [phase, dataReady, gameStarted, blocked, user, canPlay, consumePlay, startMatchmaking, categoryId]);
+  }, [phase, dataReady, gameStarted, blocked, user, profile, canPlay, hasEnoughCoins, consumePlay, startMatchmaking, categoryId]);
 
   // Phases that have their own full-screen background
   const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result" || phase === "match-result";
@@ -139,6 +156,17 @@ function GameContent() {
           setBlocked(false);
           setGameStarted(true);
           startMatchmaking(categoryId || undefined);
+        }}
+      />
+
+      {/* Short of the stake — offers the gems-for-coins exchange, and drops
+          the player home if they close it, since this page has nothing to
+          show without a game. */}
+      <NotEnoughStakeModal
+        isOpen={showStakeModal}
+        onClose={() => {
+          setShowStakeModal(false);
+          navigate("/");
         }}
       />
 

@@ -7,6 +7,7 @@ import iconGem from "@/assets/icons/icon-gem.png";
 import aiSparkleIcon from "@/assets/icons/ai-sparkle.png";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { SinglePlayVideo } from "@/components/shared/SinglePlayVideo";
+import { ProBadge } from "@/components/shared/ProBadge";
 import guestWelcomeVideo from "@/assets/guest-welcome-avatar.mp4";
 
 // Silently ignore AbortError from play() — expected when video is removed from DOM (e.g. StrictMode remount)
@@ -396,6 +397,20 @@ export function AvatarCircle({
         )}
       </div>
 
+
+      {/* PRO crown, top-right of the ring. Placed off the circle's own radius
+          rather than a corner of the box, so it sits ON the ring at every
+          size this avatar is drawn at. Nothing renders for a player without a
+          subscription. */}
+      <div
+        className="absolute z-30 pointer-events-none"
+        style={{
+          top: size * 0.5 - Math.cos(Math.PI / 4) * (size * 0.5) - size * 0.04,
+          left: size * 0.5 + Math.sin(Math.PI / 4) * (size * 0.5) - size * 0.04,
+        }}
+      >
+        <ProBadge variant="crown" size={size >= 200 ? "xl" : "lg"} />
+      </div>
 
       {/* "გააცოცხლე ავატარი" animate prompt button - above level badge */}
       {showAnimatePrompt && !hideStats && (

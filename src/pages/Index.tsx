@@ -16,7 +16,7 @@ import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
 import { MissionsModal } from "@/components/home/MissionsModal";
 import { LevelInfoModal } from "@/components/home/LevelInfoModal";
-import { NotEnoughCoinsModal } from "@/components/home/NotEnoughCoinsModal";
+import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -272,7 +272,7 @@ export default function Index() {
   const { step, startOnboarding, setStep, hasCompletedOnboarding } = useOnboarding();
   const { openAvatarModal } = useAvatarModal();
   const goHomeOrRefresh = useGoHomeOrRefresh();
-  const { coins, gems, addCoins, exchangeGemsForCoins } = useCurrency();
+  const { coins, gems, addCoins } = useCurrency();
   const { powerUps } = useUserPowerUps();
   const { totalStars } = useTotalStars();
   const { canClaimDaily, canClaimChest } = useRewardTimers();
@@ -527,29 +527,6 @@ export default function Index() {
     navigate("/team", { state: { openCreateRoom: true } });
   }, [navigate]);
 
-  // Handle exchange gems for coins — single atomic RPC (a separate
-  // spend-then-add pair could take the gems and never deliver the coins),
-  // guarded against double-taps while the request is in flight.
-  const isExchangingGemsRef = useRef(false);
-  const handleExchangeGems = useCallback(async () => {
-    if (isExchangingGemsRef.current) return;
-    const gemsNeeded = Math.ceil((stakeAmount - coins) / REWARDS.GEM_TO_COINS_RATE);
-    if (gemsNeeded <= 0 || gems < gemsNeeded) return;
-
-    isExchangingGemsRef.current = true;
-    try {
-      // Only the amount given up is passed; the server applies the rate.
-      const success = await exchangeGemsForCoins(gemsNeeded);
-      if (success) {
-        setShowNotEnoughCoinsModal(false);
-      } else {
-        toast({ title: t("shop.purchaseFailed"), variant: "destructive" });
-      }
-    } finally {
-      isExchangingGemsRef.current = false;
-    }
-  }, [stakeAmount, coins, gems, exchangeGemsForCoins]);
-
   // Guest welcome panel handlers
   const handleGuestCreateAccount = useCallback(async (username: string, password: string) => {
     setIsAuthLoading(true);
@@ -803,17 +780,10 @@ export default function Index() {
           onOpenChange={setInviteModalVisible}
           onDismiss={() => dismissInvite()}
         />
-        <NotEnoughCoinsModal
+        <NotEnoughStakeModal
           isOpen={showNotEnoughCoinsModal}
           onClose={() => setShowNotEnoughCoinsModal(false)}
-          currentCoins={coins}
-          requiredCoins={stakeAmount}
-          userGems={gems}
-          onExchangeGems={handleExchangeGems}
-          onOpenDailyRewards={() => {
-            setShowNotEnoughCoinsModal(false);
-            setIsDailyRewardsOpen(true);
-          }}
+          onDailyRewards={() => setIsDailyRewardsOpen(true)}
         />
         <DailyRewardsModal
           isOpen={isDailyRewardsOpen}
@@ -899,17 +869,10 @@ export default function Index() {
         timeUntilNextPlay={timeUntilNextPlay}
         onPlayWithRegen={handlePlayWithRegen}
       />
-      <NotEnoughCoinsModal
+      <NotEnoughStakeModal
         isOpen={showNotEnoughCoinsModal}
         onClose={() => setShowNotEnoughCoinsModal(false)}
-        currentCoins={coins}
-        requiredCoins={stakeAmount}
-        userGems={gems}
-        onExchangeGems={handleExchangeGems}
-        onOpenDailyRewards={() => {
-          setShowNotEnoughCoinsModal(false);
-          setIsDailyRewardsOpen(true);
-        }}
+        onDailyRewards={() => setIsDailyRewardsOpen(true)}
       />
       {/* Main layout with desktop navigation */}
       <MainLayout

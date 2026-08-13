@@ -1,8 +1,7 @@
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useAvatarFrames, AvatarFrame } from "@/hooks/useAvatarFrames";
-import { useVipStatus } from "@/hooks/useVipStatus";
-import { Crown } from "lucide-react";
+import { ProBadge } from "@/components/shared/ProBadge";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 
 interface AvatarWithFrameProps {
@@ -14,11 +13,12 @@ interface AvatarWithFrameProps {
   frameOverride?: AvatarFrame | null;
 }
 
+// Badge size comes from ProBadge now; only where it sits is local.
 const sizeClasses = {
-  sm: { container: "w-12 h-12", text: "text-xl", badge: "w-4 h-4 -top-0.5 -right-0.5", badgeIcon: "w-2.5 h-2.5" },
-  md: { container: "w-16 h-16", text: "text-2xl", badge: "w-5 h-5 -top-1 -right-1", badgeIcon: "w-3 h-3" },
-  lg: { container: "w-24 h-24", text: "text-4xl", badge: "w-7 h-7 -top-1 -right-1", badgeIcon: "w-4 h-4" },
-  xl: { container: "w-32 h-32", text: "text-5xl", badge: "w-8 h-8 -top-1 -right-1", badgeIcon: "w-5 h-5" },
+  sm: { container: "w-12 h-12", text: "text-xl", badgePosition: "-top-0.5 -right-0.5" },
+  md: { container: "w-16 h-16", text: "text-2xl", badgePosition: "-top-1 -right-1" },
+  lg: { container: "w-24 h-24", text: "text-4xl", badgePosition: "-top-1 -right-1" },
+  xl: { container: "w-32 h-32", text: "text-5xl", badgePosition: "-top-1 -right-1" },
 };
 
 export function AvatarWithFrame({
@@ -30,7 +30,6 @@ export function AvatarWithFrame({
   frameOverride,
 }: AvatarWithFrameProps) {
   const { getEquippedFrameData } = useAvatarFrames();
-  const { isVip } = useVipStatus();
   
   const equippedFrame = frameOverride !== undefined ? frameOverride : getEquippedFrameData();
   const sizeConfig = sizeClasses[size];
@@ -95,23 +94,10 @@ export function AvatarWithFrame({
         )}
       </motion.div>
 
-      {/* VIP Crown Badge */}
-      {showVipBadge && isVip && (
-        <motion.div
-          className={cn(
-            "absolute rounded-full flex items-center justify-center",
-            sizeConfig.badge
-          )}
-          style={{
-            background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
-            boxShadow: "0 2px 8px rgba(255, 215, 0, 0.5)",
-          }}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 400, damping: 15 }}
-        >
-          <Crown className={cn(sizeConfig.badgeIcon, "text-white fill-white")} />
-        </motion.div>
+      {/* VIP Crown Badge — the same one the home avatar and the profile
+          carry, drawn from one place so the three cannot drift apart. */}
+      {showVipBadge && (
+        <ProBadge variant="crown" size={size} className={cn("absolute", sizeConfig.badgePosition)} />
       )}
     </div>
   );
