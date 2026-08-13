@@ -7,21 +7,33 @@ Full context for each is in [`docs/IOS_LAUNCH_PLAN.md`](docs/IOS_LAUNCH_PLAN.md)
 
 ---
 
-## 1. Apple Developer account — blocks everything
+## 1. Apple Developer portal — the account exists, the setup does not
 
-Nothing in P3 onward can be verified without this, and the enrolment itself
-has a lead time measured in weeks if you enrol as a company (D-U-N-S number
-required).
+Enrolment is done (`hello@itsbeka.com`, Team ID `T38XQSM4L3`), which removes
+the multi-week lead time that used to sit in front of everything else. What
+remains is configuration, and it is quick.
 
-- [ ] **Enrol in the Apple Developer Program** ($99/yr)
-- [ ] **Register App ID `io.mytrivia.app`** with these capabilities:
+- [x] ~~Enrol in the Apple Developer Program~~
+- [ ] **Sign the Paid Applications Agreement, and complete the banking and tax
+      forms.** Do this first. **StoreKit returns zero products until it
+      clears**, so no purchase can be tested at all — sandbox included — and
+      everything about IAP stays untestable behind it. It is also the step
+      with a review delay attached, unlike the rest of this list.
+- [ ] **Register App ID `io.mytrivia.app`** with four capabilities:
       In-App Purchase · Push Notifications · Sign in with Apple ·
       Associated Domains
 - [ ] **Create the App Store Connect record** and reserve the name "MyTrivia"
-- [ ] **Sign the Paid Applications Agreement and complete the banking and tax
-      forms.** This one is easy to leave for later and shouldn't be:
-      **StoreKit returns zero products until it clears**, so no purchase can
-      be tested at all — sandbox included.
+- [ ] **Create the products**, and confirm the identifiers match
+      `supabase/functions/_shared/iap.ts` exactly — a mismatch means the
+      purchase succeeds and grants nothing:
+      - `io.mytrivia.vip.monthly` · `io.mytrivia.vip.annual` (auto-renewable,
+        same subscription group)
+      - `io.mytrivia.adfree` (non-consumable)
+      - `io.mytrivia.gems.100` · `.500` · `.1500` · `.5000` (consumable)
+- [ ] **Mirror all seven in RevenueCat** and attach them to an offering. The
+      paywall now reads its prices from StoreKit, so a product missing from
+      the offering renders with the compiled fallback price instead of the
+      real one.
 
 ## 2. Third-party accounts
 
@@ -58,9 +70,13 @@ and the publishable anon key, both public by design, and three build systems
 read it — the GitHub deploy workflow, Lovable, and local builds. Untracking it
 broke two of them. `.env.example` documents the rest.
 
-## 4. Xcode, once you have the account
+## 4. Xcode — needs a Mac
 
-These need the Xcode UI and a signing identity:
+None of this can be done from a Linux container, and it is the last
+structural gap. There is currently **no `.entitlements` file** in the
+project: Capacitor does not generate one, and it is created by adding the
+capabilities below. Without it Push, Sign in with Apple and Associated
+Domains are all inert regardless of what the App ID says.
 
 - [ ] Set the **Team** on the App target
 - [ ] Add the **Associated Domains** capability:
