@@ -12,7 +12,11 @@ export const MAP_VIDEOS = {
 // Note: Removed ?v=X params - SW cache handles versioning via CACHE_NAME
 export const CATEGORY_VIDEOS: Record<string, string> = {
   art: "/videos/art.mp4",
-  georgian_history: "/videos/geo-history.mp4",
+  // Filenames are the originals; the artwork was assigned the wrong way
+  // round — the sword figure belongs to history and the town view to
+  // culture. Swapped here rather than renaming two videos and two
+  // stills, so nothing else has to be hunted down.
+  georgian_history: "/videos/georgian-culture.mp4",
   sports: "/videos/sport-final.mp4",
   space: "/videos/galaxy.mp4",
   georgian_literature: "/videos/literature.mp4",
@@ -65,7 +69,7 @@ export const CATEGORY_VIDEOS: Record<string, string> = {
   world_cuisine: "/videos/world-cuisine.mp4",
   food: "/videos/world-cuisine.mp4",
   georgian_cuisine: "/videos/georgian-cuisine.mp4",
-  georgian_culture: "/videos/georgian-culture.mp4",
+  georgian_culture: "/videos/geo-history.mp4",
   geology: "/videos/geology.mp4",
   languages: "/videos/languages.mp4",
   linguistics: "/videos/languages.mp4",
@@ -74,7 +78,8 @@ export const CATEGORY_VIDEOS: Record<string, string> = {
 // Category card first-frame images for instant loading during animations
 export const CATEGORY_IMAGES: Record<string, string> = {
   art: "/images/categories/art.jpg",
-  georgian_history: "/images/categories/geo-history.jpg",
+  // Paired with the video swap above.
+  georgian_history: "/images/categories/georgian-culture.jpg",
   sports: "/images/categories/sport.jpg",
   space: "/images/categories/galaxy.jpg",
   georgian_literature: "/images/categories/literature.jpg",
@@ -127,7 +132,7 @@ export const CATEGORY_IMAGES: Record<string, string> = {
   world_cuisine: "/images/categories/world-cuisine.jpg",
   food: "/images/categories/world-cuisine.jpg",
   georgian_cuisine: "/images/categories/georgian-cuisine.jpg",
-  georgian_culture: "/images/categories/georgian-culture.jpg",
+  georgian_culture: "/images/categories/geo-history.jpg",
   geology: "/images/categories/geology.jpg",
   languages: "/images/categories/languages.jpg",
   linguistics: "/images/categories/languages.jpg",
