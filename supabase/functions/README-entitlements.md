@@ -24,6 +24,11 @@ npx supabase link --project-ref sqwpzezkhpqkdyltvsim
 # The RevenueCat SECRET key — starts with sk_, from
 # RevenueCat → Project Settings → API keys → Secret keys.
 # NOT the appl_… SDK key, which is public and lives in .env.
+#
+# It must be a **V1** key. RevenueCat issues V2 keys by default now, and
+# _shared/iap.ts calls the V1 /subscribers endpoint — a V2 key there fails
+# with 403 code 7723, "trying to use a secret API key incompatible with
+# RevenueCat API V1". Check the API Version column when you copy it.
 npx supabase secrets set REVENUECAT_SECRET_API_KEY='sk_…'
 
 # A secret you invent, shared with RevenueCat in step 3.
