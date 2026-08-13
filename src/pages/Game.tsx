@@ -131,6 +131,15 @@ function GameContent() {
             startMatchmaking(categoryId || undefined);
           }
         }}
+        onPurchased={() => {
+          // Same landing as a regenerated play: the game this page was opened
+          // for starts, rather than dropping the player back on the home
+          // screen to tap through to it again.
+          setShowLimitModal(false);
+          setBlocked(false);
+          setGameStarted(true);
+          startMatchmaking(categoryId || undefined);
+        }}
       />
 
       {/* Guest play limit modal */}

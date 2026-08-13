@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Trophy, Lock, X } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
+import { ExtraPlaysOffer } from "@/components/home/ExtraPlaysOffer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 
@@ -21,10 +22,17 @@ interface PlayLimitModalProps {
   regenPlayAvailable?: boolean;
   timeUntilNextPlay?: string | null;
   onPlayWithRegen?: () => void;
+  /**
+   * A pack of extra games was bought and the player can start one now. Where
+   * the modal interrupted a game that was about to begin, this is where it
+   * carries on; callers that only ever opened it as a notice can leave it
+   * unset and the modal just closes.
+   */
+  onPurchased?: () => void;
 }
 
 export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalProps>(
-  function PlayLimitModal({ isOpen, onClose, onRegister, isGuest = false, inline, regenPlayAvailable, timeUntilNextPlay, onPlayWithRegen }, ref) {
+  function PlayLimitModal({ isOpen, onClose, onRegister, isGuest = false, inline, regenPlayAvailable, timeUntilNextPlay, onPlayWithRegen, onPurchased }, ref) {
     const { t } = useLanguage();
     const navigate = useNavigate();
     const guestProgress = getGuestProgress();
@@ -41,6 +49,13 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
     const handleUpgradeToPro = () => {
       onClose();
       navigate("/profile?tab=PRO");
+    };
+
+    // The buyer owns what happens next — starting the game they were stopped
+    // from, usually — so closing is left to them where they said so.
+    const handlePurchased = () => {
+      if (onPurchased) onPurchased();
+      else onClose();
     };
 
     // Guest modal content
@@ -137,8 +152,16 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
           {t("playLimit.limitReached")}
         </h2>
         <p className="mx-auto mt-2 max-w-[300px] text-sm text-slate-500">
-          {t("playLimit.becomeProDescription")}
+          {timeUntilNextPlay
+            ? t("playLimit.nextFreePlay", { time: timeUntilNextPlay })
+            : t("playLimit.freePlayInterval")}
         </p>
+
+        {/* Paying for the next game or three comes first: it is the only
+            answer here that ends with the player back in a game right now.
+            The offer takes itself off the card when there is nothing it can
+            sell, leaving the PRO route below it as it was. */}
+        <ExtraPlaysOffer onPurchased={handlePurchased} />
 
         <div className="mt-5 space-y-3 text-left">
           <div

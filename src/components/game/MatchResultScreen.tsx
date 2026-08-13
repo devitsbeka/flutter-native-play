@@ -24,7 +24,6 @@ import { showMissionCompleteToast } from "@/components/mission/MissionCompleteTo
 import { usePlayLimit, MAX_FREE_PLAYS } from "@/hooks/usePlayLimit";
 import { useAds } from "@/hooks/useAds";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
-import { InviteFriendsModal } from "@/components/home/InviteFriendsModal";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
@@ -247,7 +246,6 @@ export function MatchResultScreen() {
   
   // State for showing PRO upgrade modal when limit reached
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
-  const [showInviteModal, setShowInviteModal] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guestModalBlocking, setGuestModalBlocking] = useState(false);
 
@@ -303,7 +301,10 @@ export function MatchResultScreen() {
     // subtracted by hand.
     const remainingAfterThisGame = windowMode ? playsRemaining : playsRemaining - 1;
     if (!isVip && !vipLoading && remainingAfterThisGame <= 0) {
-      setShowInviteModal(true);
+      // Wanting another game right now is the whole reason this button was
+      // tapped, so the modal that sells one opens directly — the invite offer
+      // that used to come first answered a different question.
+      setShowPlayLimitModal(true);
       return;
     }
 
@@ -525,12 +526,6 @@ export function MatchResultScreen() {
         correctAnswers={milestoneCorrectAnswers}
       />
       
-      <InviteFriendsModal
-        open={showInviteModal}
-        onOpenChange={setShowInviteModal}
-        onDismiss={() => setShowPlayLimitModal(true)}
-      />
-
       <PlayLimitModal
         isOpen={showPlayLimitModal}
         onClose={() => setShowPlayLimitModal(false)}
@@ -543,6 +538,11 @@ export function MatchResultScreen() {
             setShowPlayLimitModal(false);
             startMatchmaking();
           }
+        }}
+        onPurchased={() => {
+          setShowPlayLimitModal(false);
+          void consumePlay();
+          startMatchmaking();
         }}
       />
 

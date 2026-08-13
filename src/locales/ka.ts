@@ -1520,6 +1520,11 @@ export const ka = {
     playNow: "ითამაშე ახლა",
     nextFreePlay: "შემდეგი უფასო თამაში: {time}",
     freePlayInterval: "3 საათში 1 თამაში უფასოდ",
+    extraGames: "+{count} თამაში",
+    watchAd: "რეკლამა",
+    notEnoughBalance: "არ გყოფნის.",
+    adLimitReached: "რეკლამით მეტი თამაში ამ პერიოდში ვერ მიიღებ.",
+    purchaseFailed: "ვერ შესრულდა. სცადე თავიდან.",
   },
 
   // ==========================================

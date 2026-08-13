@@ -1521,6 +1521,11 @@ export const en: KaTranslations = {
     playNow: "Play Now",
     nextFreePlay: "Next free play: {time}",
     freePlayInterval: "1 free play every 3 hours",
+    extraGames: "+{count} games",
+    watchAd: "Ad",
+    notEnoughBalance: "Not enough for that one.",
+    adLimitReached: "No more ad games in this window.",
+    purchaseFailed: "That did not go through. Try again.",
   },
 
   // ==========================================
