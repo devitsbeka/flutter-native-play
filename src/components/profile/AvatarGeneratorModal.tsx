@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { t } from "@/lib/i18n";
 import { useBackgroundGeneration } from "@/contexts/BackgroundGenerationContext";
+import { preparePhoto } from "@/utils/imageInput";
+import { photoErrorMessage } from "@/utils/photoErrorMessage";
 
 interface AvatarGeneratorModalProps {
   isOpen: boolean;
@@ -101,81 +103,27 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
     }
   }, [isOpen, stopCamera]);
 
-  // Compress image using canvas - handles HEIC, resizes, and converts to JPEG
-  const compressImage = useCallback((file: File, maxWidth = 1024, quality = 0.85): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        
-        let { width, height } = img;
-        
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-        if (height > maxWidth) {
-          width = (width * maxWidth) / height;
-          height = maxWidth;
-        }
-        
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        
-        if (!ctx) {
-          reject(new Error("Canvas context unavailable"));
-          return;
-        }
-        
-        ctx.drawImage(img, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL("image/jpeg", quality);
-        resolve(dataUrl);
-      };
-      
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error("Failed to load image"));
-      };
-      
-      img.src = url;
-    });
-  }, []);
-
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
-
-    // Allow empty type for HEIC, check extension as fallback
-    const isImageByExtension = /\.(jpg|jpeg|png|gif|webp|heic|heif|bmp)$/i.test(file.name);
-    if (!file.type.startsWith("image/") && !isImageByExtension) {
-      toast.error(t("errors.selectImageFile"));
-      return;
-    }
-
-    // Increased limit for mobile (compression will reduce final size)
-    if (file.size > 15 * 1024 * 1024) {
-      toast.error(t("errors.imageTooLarge"));
-      return;
-    }
 
     setIsProcessingFile(true);
 
     try {
-      const dataUrl = await compressImage(file, 1024, 0.85);
+      // This copy had no HEIC handling at all, so every iPhone photo failed
+      // here outside Safari. Both modals now share one decoder — see
+      // imageInput.ts — which tries the browser first and transcodes second.
+      const dataUrl = await preparePhoto(file, 1024, 0.85);
       setUploadedImage(dataUrl);
-      
-      // Reset input for iOS Safari
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     } catch (error) {
       console.error("Error processing image:", error);
-      toast.error(t("errors.failedToReadImage") || "Failed to process image");
+      toast.error(photoErrorMessage(error));
     } finally {
+      // Cleared on EVERY exit: an input keeps its last value, and re-picking
+      // the same file fires no change event — so one failed photo used to
+      // leave the tile unresponsive to that photo with no way to tell.
+      input.value = "";
       setIsProcessingFile(false);
     }
   };
@@ -350,7 +298,9 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*,.heic,.heif"
+                /* image/* alone — see AvatarModal: naming .heic here stops
+                   iOS transcoding the photo to JPEG for us. */
+                accept="image/*"
                 onChange={handleFileSelect}
                 className="hidden"
               />

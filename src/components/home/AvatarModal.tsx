@@ -30,6 +30,8 @@ import {
   type KindQuota,
 } from "@/utils/avatarStudio";
 import { useCurrency } from "@/hooks/useCurrency";
+import { preparePhoto } from "@/utils/imageInput";
+import { photoErrorMessage } from "@/utils/photoErrorMessage";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { generateAndRecordPortrait, generatePublicPortrait } from "@/utils/portraitAvatar";
@@ -331,52 +333,6 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     }
   }, [isOpen, stopCamera]);
 
-  // Compress image using canvas - handles HEIC, resizes, and converts to JPEG
-  const compressImage = useCallback((file: File, maxWidth = 1024, quality = 0.85): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        
-        let { width, height } = img;
-        
-        // Scale down if larger than maxWidth
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-        if (height > maxWidth) {
-          width = (width * maxWidth) / height;
-          height = maxWidth;
-        }
-        
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        
-        if (!ctx) {
-          reject(new Error("Canvas context unavailable"));
-          return;
-        }
-        
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        // Convert to JPEG data URL
-        const dataUrl = canvas.toDataURL("image/jpeg", quality);
-        resolve(dataUrl);
-      };
-      
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error("Failed to load image"));
-      };
-      
-      img.src = url;
-    });
-  }, []);
 
   // Opens the picker from a real button press. A silent no-op here is what
   // "the tile does nothing" looks like from the outside, so if the input is
@@ -411,57 +367,22 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
     // Allow empty type for HEIC (some browsers don't report MIME type for HEIC)
     // Check extension as fallback
-    const isImageByExtension = /\.(jpg|jpeg|png|gif|webp|heic|heif|bmp)$/i.test(file.name);
-    if (!file.type.startsWith("image/") && !isImageByExtension) {
-      setFailure(t("errors.selectImageFile"));
-      toast.error(t("errors.selectImageFile"));
-      input.value = "";
-      return;
-    }
-
-    // Increased limit for mobile (compression will reduce final size)
-    if (file.size > 15 * 1024 * 1024) {
-      setFailure(t("errors.imageTooLarge"));
-      toast.error(t("errors.imageTooLarge"));
-      input.value = "";
-      return;
-    }
-
     setFailure(null);
     setIsProcessingFile(true);
 
     try {
-      // Canvas compression resizes + converts to JPEG. HEIC/HEIF (iPhone/Mac
-      // photos) can't be decoded by <img> outside Safari, so on failure they
-      // are converted with heic2any (lazy-loaded) and retried.
-      let dataUrl: string;
-      try {
-        dataUrl = await compressImage(file, 1024, 0.85);
-      } catch (firstError) {
-        const looksHeic =
-          /\.(heic|heif)$/i.test(file.name) ||
-          file.type === "image/heic" ||
-          file.type === "image/heif" ||
-          file.type === "";
-        if (!looksHeic) throw firstError;
-        const { default: heic2any } = await import("heic2any");
-        const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
-        const jpegBlob = Array.isArray(converted) ? converted[0] : converted;
-        dataUrl = await compressImage(
-          new File([jpegBlob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }),
-          1024,
-          0.85
-        );
-      }
+      // Every decoder the browser has, then the JS HEIC transcoder — see
+      // imageInput.ts. A phone photo must not be turned away for what its
+      // filename or MIME type claims to be.
+      const dataUrl = await preparePhoto(file, 1024, 0.85);
       setUploadedImage(dataUrl);
       setStep("upload");
     } catch (error) {
       console.error("Error processing image:", error);
-      // The photo never made it past the browser — an unreadable HEIC, a
-      // codec the WebView won't decode. This is the failure that looked like
-      // "it loads for a second and does nothing", so it now stays on screen
+      // This is the failure that looked like "it loads for a second and does
+      // nothing", so it names what actually happened and stays on screen
       // instead of vanishing with the spinner.
-      const message = t("errors.failedToReadImage") || "Failed to process image";
+      const message = photoErrorMessage(error);
       setFailure(message);
       toast.error(message);
     } finally {
@@ -1281,7 +1202,15 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
             id="avatar-file-input"
             ref={fileInputRef}
             type="file"
-            accept="image/*,.heic,.heif"
+            /* `image/*` ALONE, on purpose. Naming .heic/.heif here tells iOS
+               the app wants HEIC and it hands over the raw camera file;
+               with a plain image/* it transcodes the photo to JPEG itself,
+               on the device, losing nothing and needing no JS decoder. The
+               two screens that listed the extensions are the two that could
+               not open an iPhone selfie. Desktop pickers still show HEIC
+               under image/*, and anything they do let through goes to the
+               transcoder in imageInput.ts. */
+            accept="image/*"
             onChange={handleFileSelect}
             className="sr-only"
             tabIndex={-1}

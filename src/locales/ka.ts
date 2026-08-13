@@ -599,8 +599,13 @@ export const ka = {
     cameraPermission: "კამერის წვდომა შეუძლებელია. გთხოვთ შეამოწმოთ ნებართვები.",
     uploadFailed: "ატვირთვა ვერ მოხერხდა",
     generationFailed: "ავატარის გენერაცია ვერ მოხერხდა",
-    imageTooLarge: "სურათი 5MB-ზე ნაკლები უნდა იყოს",
+    imageTooLarge: "სურათი 30MB-ზე ნაკლები უნდა იყოს",
     selectImageFile: "გთხოვთ აირჩიოთ სურათის ფაილი",
+    // "დამუშავება ვერ მოხერხდა" was the only thing any photo failure said,
+    // so nobody could tell whether to try another photo, a smaller one, or a
+    // different format.
+    photoFormatUnsupported: "ამ ფოტოს ფორმატი ვერ წაიკითხა — სცადე სხვა ფოტო ან შეინახე JPG-ად",
+    photoTooBigToProcess: "ფოტო ძალიან დიდია დასამუშავებლად — სცადე უფრო პატარა",
     noAvatarToAnimate: "ანიმაციისთვის ავატარი არ არის",
   },
 
