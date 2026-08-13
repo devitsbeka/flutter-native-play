@@ -1,12 +1,13 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Lock, Play, LogIn, Clock } from "lucide-react";
+import { ArrowLeft, Star, Lock, Play, LogIn, Clock, Heart } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNewLevels } from "@/hooks/useNewLevels";
 import { useCategoryPlayLimit } from "@/hooks/useCategoryPlayLimit";
+import { useFavorites } from "@/hooks/useFavorites";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -58,6 +59,7 @@ export default function CategoryPage() {
   const { getCategoryProgress, getLevelStars, isLevelCompleted, loading, refetch } = useCategoryProgress();
   const { clearNewLevelBadge } = useNewLevels();
   const { canPlayLevel, isCategoryBlocked, getLevelsPlayedInCategory, maxFreeLevelsPerCategory, isVip } = useCategoryPlayLimit();
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
   const [unlockedLevel, setUnlockedLevel] = useState<number | null>(null);
@@ -73,6 +75,11 @@ export default function CategoryPage() {
     [categories, categoryId]
   );
   
+  // The discover cards favourite by UUID and so must this, or the same
+  // category would be favourited twice under two different ids.
+  const favoriteId = category?.uuid || category?.id || "";
+  const favorited = isFavorite(favoriteId);
+
   const currentLevel = getCategoryProgress(categoryId || "") || 1;
   const pastelColors = useMemo(() => getPastelColors(categoryId || ""), [categoryId]);
 
@@ -260,15 +267,34 @@ export default function CategoryPage() {
             >
               <ArrowLeft className="h-5 w-5 text-white" />
             </button>
-            {!user && (
+            <div className="flex items-center gap-2">
+              {!user && (
+                <button
+                  onClick={() => navigate("/auth")}
+                  className="flex items-center gap-1.5 text-sm text-white font-medium bg-black/25 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full"
+                >
+                  <LogIn className="h-4 w-4" />
+                  {t('auth.signIn')}
+                </button>
+              )}
+              {/* Favourite. Keyed on the category's UUID, the same id the
+                  discover cards use — user_favorites.category_id is a foreign
+                  key to categories, so the route slug would not match. Guests
+                  get it too: useFavorites keeps theirs in localStorage. */}
               <button
-                onClick={() => navigate("/auth")}
-                className="flex items-center gap-1.5 text-sm text-white font-medium bg-black/25 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full"
+                onClick={() => favoriteId && toggleFavorite(favoriteId)}
+                disabled={!favoriteId}
+                aria-label={t('discover.favorites')}
+                aria-pressed={favorited}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-black/25 backdrop-blur-md border border-white/20 active:scale-95 transition-transform"
               >
-                <LogIn className="h-4 w-4" />
-                {t('auth.signIn')}
+                <Heart
+                  className={`h-5 w-5 transition-colors ${
+                    favorited ? "fill-red-500 text-red-500" : "text-white"
+                  }`}
+                />
               </button>
-            )}
+            </div>
           </div>
 
           {/* Title - positioned near bottom of video - Mobile only */}
