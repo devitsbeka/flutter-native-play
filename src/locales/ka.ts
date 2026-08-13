@@ -1559,6 +1559,7 @@ export const ka = {
     challenge: "გამოწვევა",
   },
   extra: {
+    perMonthShort: "/თვე",
     guestTagline: "გამოიწვიე მეგობრები და შექმენი შენი ტრივია ნებისმიერ თემაზე.",
     appleSignInBtn: "Apple-ით შესვლა",
     guestTermsIntro: "ანგარიშის შექმნით თქვენ ადასტურებთ რომ გაეცანით და ეთანხმებით",
