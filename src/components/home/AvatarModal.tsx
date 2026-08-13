@@ -31,6 +31,7 @@ import {
 } from "@/utils/avatarStudio";
 import { useCurrency } from "@/hooks/useCurrency";
 import { preparePhoto } from "@/utils/imageInput";
+import { isNativePhotoPickerAvailable, pickPhotoFromLibrary } from "@/utils/nativePhotoPicker";
 import { photoError, type PhotoError } from "@/utils/photoErrorMessage";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -355,9 +356,33 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     navigate("/profile?tab=PRO");
   };
 
-  const openFilePicker = (kind: GenerationKind) => {
+  const openFilePicker = async (kind: GenerationKind) => {
     setFlowKind(kind);
     setFailure(null);
+
+    // In the native app, ask the phone for the photo. iOS and Android hand
+    // back a JPEG from their own pipeline, already upright — no format for
+    // a JavaScript decoder to get wrong, because the platform that wrote
+    // the file is the one reading it.
+    if (isNativePhotoPickerAvailable()) {
+      setIsProcessingFile(true);
+      try {
+        const { dataUrl, cancelled } = await pickPhotoFromLibrary(1024);
+        if (cancelled) return;
+        if (!dataUrl) throw new Error("No photo returned");
+        setUploadedImage(dataUrl);
+        setStep("upload");
+      } catch (error) {
+        console.error("Native photo picker failed:", error);
+        const failed = photoError(error);
+        setFailure(failed);
+        toast.error(failed.message);
+      } finally {
+        setIsProcessingFile(false);
+      }
+      return;
+    }
+
     const input = fileInputRef.current;
     if (!input) {
       toast.error(t("errors.generic"));
