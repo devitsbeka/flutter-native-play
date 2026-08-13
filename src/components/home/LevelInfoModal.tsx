@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LevelInfo } from "@/utils/levelCalculation";
 import { REWARDS } from "@/config/rewardConfig";
@@ -60,11 +61,32 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: Level
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
             onClick={(e) => e.stopPropagation()}
-            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[24px] bg-white p-5"
+            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[24px] bg-white p-5"
             style={{ boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0,0,0,0.18)" }}
           >
-            {/* Title + total XP */}
-            <h2 className="text-center font-display text-2xl font-bold text-[#6D28D9]">
+            {/* Close — same treatment as the other home modals. Tapping the
+                backdrop already dismisses, but that is not discoverable and
+                is unreachable on a phone where the sheet fills the screen.
+
+                The card is its own scroller, so the button rides a
+                zero-height sticky strip: absolute alone would scroll off the
+                top on a short screen, which is exactly where the sheet is
+                tall enough to need it. */}
+            <div className="sticky top-0 z-10 h-0">
+              <button
+                type="button"
+                onClick={onClose}
+                className="absolute right-0 top-0 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200"
+                style={{ boxShadow: "0 2px 0 #E5E7EB" }}
+                aria-label={t("common.close")}
+              >
+                <X className="h-4 w-4 text-gray-600" />
+              </button>
+            </div>
+
+            {/* Title + total XP — padded clear of the close button, which the
+                centred title would otherwise run under. */}
+            <h2 className="px-11 text-center font-display text-2xl font-bold text-[#6D28D9]">
               {t("modals.levelLabel")} {levelInfo.level}
             </h2>
             <div className="mt-1.5 flex items-center justify-center gap-1.5">
