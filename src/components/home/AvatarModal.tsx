@@ -31,7 +31,7 @@ import {
 } from "@/utils/avatarStudio";
 import { useCurrency } from "@/hooks/useCurrency";
 import { preparePhoto } from "@/utils/imageInput";
-import { photoErrorMessage } from "@/utils/photoErrorMessage";
+import { photoError, type PhotoError } from "@/utils/photoErrorMessage";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { generateAndRecordPortrait, generatePublicPortrait } from "@/utils/portraitAvatar";
@@ -147,11 +147,21 @@ function QuotaNote({
 }
 
 /** The last failure, kept on screen instead of only in a toast. */
-function FailureNote({ message }: { message: string }) {
+function FailureNote({ failure }: { failure: PhotoError }) {
   return (
     <div className="mt-3 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2">
       <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
-      <p className="text-[11px] leading-snug text-destructive">{message}</p>
+      <div className="min-w-0">
+        <p className="text-[11px] leading-snug text-destructive">{failure.message}</p>
+        {/* What the file actually was. It is here so a screenshot of this
+            box is enough to tell which photo the app choked on — otherwise
+            "unsupported format" is a guess the person has to confirm for us. */}
+        {failure.diagnosis && (
+          <p className="mt-0.5 break-words font-mono text-[10px] leading-snug text-muted-foreground">
+            {failure.diagnosis}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -190,7 +200,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   // The last thing that went wrong, shown IN the modal. A toast can be
   // missed, scrolled past, or — as it turned out — never rendered at all;
   // the step that failed should carry its own explanation.
-  const [failure, setFailure] = useState<string | null>(null);
+  const [failure, setFailure] = useState<PhotoError | null>(null);
   const [selectedForAction, setSelectedForAction] = useState<string | null>(null);
   // "default" = the Trivia King mascot loop backs the homepage instead of a
   // generated scene; anything else = the picked generated scene. Local
@@ -225,6 +235,9 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       setIsProcessingFile(false);
       setIsAnimating(false);
       setSelectedForAction(null);
+      // Otherwise last session's error is on screen the moment the modal
+      // opens, describing a photo nobody has picked yet.
+      setFailure(null);
       setStep("gallery");
     }
     wasOpen.current = isOpen;
@@ -382,9 +395,9 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       // This is the failure that looked like "it loads for a second and does
       // nothing", so it names what actually happened and stays on screen
       // instead of vanishing with the spinner.
-      const message = photoErrorMessage(error);
-      setFailure(message);
-      toast.error(message);
+      const failed = photoError(error);
+      setFailure(failed);
+      toast.error(failed.message);
     } finally {
       // Reset the input that fired (allows selecting the same file again)
       input.value = "";
@@ -405,7 +418,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     const decision = decideGeneration(activeQuota, gems);
     if (decision.action === "blocked") {
       const message = t("avatar.needGemsForExtra", { cost: decision.gems });
-      setFailure(message);
+      setFailure({ message });
       toast.error(message);
       return;
     }
@@ -417,7 +430,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       });
       if (!paid) {
         const message = t("avatar.needGemsForExtra", { cost: decision.gems });
-        setFailure(message);
+        setFailure({ message });
         toast.error(message);
         return;
       }
@@ -532,7 +545,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       const message = error instanceof Error ? error.message : t("errors.generationFailed");
       // Shown on the step it dropped back to, not only as a toast — landing
       // back on the photo with nothing said is the whole complaint.
-      setFailure(message);
+      setFailure({ message });
       toast.error(message);
       setStep("upload");
     } finally {
@@ -1186,7 +1199,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                 </button>
               </div>
             </>
-            {failure && <FailureNote message={failure} />}
+            {failure && <FailureNote failure={failure} />}
           </div>
 
           {/* The one file input in the modal, opened by ref from the tiles
@@ -1445,7 +1458,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
           </div>
 
           <QuotaNote quota={activeQuota} isVip={isVip} gems={gems} onGetPro={goToPro} />
-          {failure && <FailureNote message={failure} />}
+          {failure && <FailureNote failure={failure} />}
         </div>
       );
     }

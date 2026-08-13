@@ -603,6 +603,7 @@ export const ka = {
     // "დამუშავება ვერ მოხერხდა" was the only thing any photo failure said,
     // so nobody could tell whether to try another photo, a smaller one, or a
     // different format.
+    photoNotDownloaded: "ფოტო მოწყობილობაზე ვერ წაიკითხა — თუ iCloud/Google Photos-შია, ჯერ ჩამოტვირთე და სცადე თავიდან",
     photoFormatUnsupported: "ამ ფოტოს ფორმატი ვერ წაიკითხა — სცადე სხვა ფოტო ან შეინახე JPG-ად",
     photoTooBigToProcess: "ფოტო ძალიან დიდია დასამუშავებლად — სცადე უფრო პატარა",
     noAvatarToAnimate: "ანიმაციისთვის ავატარი არ არის",
