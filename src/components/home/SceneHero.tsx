@@ -54,18 +54,25 @@ interface SceneHeroProps {
   playButton?: ReactNode;
 }
 
-// One design-exact chunky stat pill (coins / gems) inside the profile card.
+// Floor width for a stat pill, stepped by how long the value reads: one
+// character ("6") stays narrow, two ("42") sit in the middle, three or more
+// ("999", "1.2K") get the full pill. Anything longer just grows past the
+// floor, so the number is never clipped.
+function statPillMinWidth(value: string): number {
+  if (value.length <= 1) return 79;
+  if (value.length === 2) return 91;
+  return 103;
+}
+
+// One chunky stat pill (coins / gems) inside the profile card. The design
+// froze the pill at one width for a 3-digit value, which leaves short
+// balances with a hole between the icon and the number; icon and value sit
+// in a flex row instead, and the width steps with the value's length.
 function StatButton({
-  left,
-  imgLeft,
-  imgTop,
   icon,
   value,
   onClick,
 }: {
-  left: number;
-  imgLeft: number;
-  imgTop: number;
   icon: string;
   value: string;
   onClick: () => void;
@@ -74,14 +81,14 @@ function StatButton({
     <button
       type="button"
       onClick={onClick}
-      className="absolute top-[97px] h-[53.05px] w-[128.94px] rounded-[18px] border-[1.5px] border-solid border-[#e8e0f5]"
-      style={{ left, boxShadow: STAT_SHADOW }}
+      className="relative flex h-[53.05px] shrink-0 items-center gap-[5px] rounded-[18px] border-[1.5px] border-solid border-[#e8e0f5] pl-[9px] pr-[13px]"
+      style={{ boxShadow: STAT_SHADOW, minWidth: statPillMinWidth(value) }}
     >
       <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[18px]" style={{ background: STAT_GRADIENT }} />
-      <div className="absolute size-[39.79px]" style={{ left: imgLeft, top: imgTop }}>
+      <div className="relative size-[39.79px] shrink-0">
         <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={icon} />
       </div>
-      <p className="absolute left-[82.41px] top-[9.21px] -translate-x-1/2 font-['Nunito'] font-black text-[19.9px] leading-[30.95px] tracking-[-0.18px] text-[#334155] whitespace-nowrap">
+      <p className="relative flex-1 text-center font-['Nunito'] font-black text-[19.9px] leading-[30.95px] tracking-[-0.18px] text-[#334155] whitespace-nowrap">
         {value}
       </p>
       <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1.81px_0px_0px_white]" />
@@ -148,9 +155,12 @@ export function SceneHero({
           <p className="absolute left-[23px] top-[59px] text-[14px] leading-[21px] font-semibold tracking-[-0.16px] text-[#402666] whitespace-nowrap">
             {xpCurrent.toLocaleString("en-US")} / {xpTotal.toLocaleString("en-US")} XP
           </p>
-          {/* Coins (node 601:1136) / Gems (node 601:1144) */}
-          <StatButton left={14} imgLeft={9.61} imgTop={3.43} icon={coinChunky} value={formatCompactNumber(coins)} onClick={onCoinsClick} />
-          <StatButton left={151.05} imgLeft={8.13} imgTop={4.81} icon={gemChunky} value={formatCompactNumber(gems)} onClick={onGemsClick} />
+          {/* Coins (node 601:1136) / Gems (node 601:1144) — one row, so the
+              gem pill follows the coin pill however wide that one gets. */}
+          <div className="absolute left-[14px] top-[97px] flex gap-[8.11px]">
+            <StatButton icon={coinChunky} value={formatCompactNumber(coins)} onClick={onCoinsClick} />
+            <StatButton icon={gemChunky} value={formatCompactNumber(gems)} onClick={onGemsClick} />
+          </div>
         </div>
 
         {/* Level shield (node 601:1152) - overlaps the card's top-right corner */}

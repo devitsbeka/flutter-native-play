@@ -153,19 +153,27 @@ export function MobileSceneBackground({
  * Profile card (logged-in states)
  * ------------------------------------------------------------------ */
 
-// Chunky coin / gem pill — node 626:1183 and 626:1188. The gradient, value
-// and icon sit on the padding box so the frame's own coordinates apply.
+// Floor width for a stat pill, stepped by how long the value reads: one
+// character ("6") stays narrow, two ("42") sit in the middle, three or more
+// ("999", "1.2K") get the full pill. Anything longer just grows past the
+// floor, so the number is never clipped.
+function statPillMinWidth(value: string): number {
+  if (value.length <= 1) return 64;
+  if (value.length === 2) return 74;
+  return 84;
+}
+
+// Chunky coin / gem pill — node 626:1183 and 626:1188. The design froze the
+// pill at one width for a 3-digit value, which leaves short balances with a
+// hole between the icon and the number; icon and value sit in a flex row
+// instead, and the width steps with how long the value reads.
 function StatPill({
   icon,
-  iconLeft,
-  iconTop,
   value,
   label,
   onClick,
 }: {
   icon: string;
-  iconLeft: number;
-  iconTop: number;
   value: string;
   label: string;
   onClick: () => void;
@@ -175,18 +183,17 @@ function StatPill({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="relative h-[43.075px] w-[104.7px] shrink-0 rounded-[14.616px] border-[1.218px] border-solid border-[#e8e0f5]"
-      style={{ boxShadow: STAT_SHADOW }}
+      className="relative flex h-[43.075px] shrink-0 items-center gap-[4px] rounded-[14.616px] border-[1.218px] border-solid border-[#e8e0f5] pl-[7px] pr-[11px]"
+      style={{ boxShadow: STAT_SHADOW, minWidth: statPillMinWidth(value) }}
     >
       <span aria-hidden className="absolute inset-0 rounded-[inherit]" style={{ background: STAT_GRADIENT }} />
       <img
         src={icon}
         alt=""
         draggable={false}
-        className="absolute size-[32.31px] object-cover"
-        style={{ left: iconLeft, top: iconTop }}
+        className="relative size-[32.31px] shrink-0 object-cover"
       />
-      <span className="absolute left-[67.05px] top-[7.48px] -translate-x-1/2 font-['Nunito'] text-[16.159px] font-black leading-[25.132px] tracking-[-0.1462px] text-[#334155] whitespace-nowrap">
+      <span className="relative flex-1 text-center font-['Nunito'] text-[16.159px] font-black leading-[25.132px] tracking-[-0.1462px] text-[#334155] whitespace-nowrap">
         {value}
       </span>
       <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_1.47px_0px_0px_white]" />
@@ -292,16 +299,12 @@ export function MobileProfileCard({
         <div className="absolute left-[26px] top-[64px] flex gap-[6.6px]">
           <StatPill
             icon={coinChunky}
-            iconLeft={7.8}
-            iconTop={2.78}
             value={formatCompactNumber(coins)}
             label={t("common.coins")}
             onClick={onCoinsClick}
           />
           <StatPill
             icon={gemChunky}
-            iconLeft={6.6}
-            iconTop={3.91}
             value={formatCompactNumber(gems)}
             label={t("common.gems")}
             onClick={onGemsClick}
