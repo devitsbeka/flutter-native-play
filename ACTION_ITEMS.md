@@ -40,8 +40,14 @@ rather than silently — that was deliberate — but it still doesn't work.
 
 | Value | Where it goes | What breaks without it |
 |---|---|---|
-| `REVENUECAT_SECRET_API_KEY` | Supabase secret | **Still needed.** Entitlement sync can't ask RevenueCat what a user owns. This is *not* the `appl_…` SDK key you sent — it's the secret one, starts with `sk_`, under RevenueCat → Project Settings → API keys → Secret keys |
-| `REVENUECAT_WEBHOOK_SECRET` | Supabase secret **and** the RevenueCat dashboard | The webhook refuses to run rather than accept unauthenticated calls |
+| `REVENUECAT_SECRET_API_KEY` | Supabase secret — **you have the value, it needs setting** | Entitlement sync can't ask RevenueCat what a user owns |
+| `REVENUECAT_WEBHOOK_SECRET` | Supabase secret **and** the RevenueCat dashboard — you generate it | The webhook refuses to run rather than accept unauthenticated calls |
+
+Both are set and the functions deployed by following
+[`supabase/functions/README-entitlements.md`](supabase/functions/README-entitlements.md).
+Neither value goes in the repo, in `.env`, or in a workflow — they are
+platform secrets, and the secret RevenueCat key can read and modify every
+subscriber on the account.
 | ~~`VITE_REVENUECAT_IOS_API_KEY`~~ | ~~Build env~~ | **Done** — in `.env.example`; copy to your local `.env` |
 | `VITE_ADMOB_IOS_REWARDED` | Build env | Falls back to a demo unit — ads show, revenue is zero |
 | `VITE_ADMOB_IOS_INTERSTITIAL` | Build env | Same |
