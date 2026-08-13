@@ -579,7 +579,7 @@ export const ka = {
     limitUsedUp: "შენი {max} უფასო გენერაცია გამოყენებულია.",
     extraCostsGems: "შემდეგი — {cost} ბრილიანტი",
     needGemsForExtra: "საკმარისი ბრილიანტი არ გაქვს — შემდეგი გენერაცია {cost} ბრილიანტი ღირს",
-    generateForGems: "გენერაცია • {cost} 💎",
+    generateForGems: "გენერაცია • {cost}",
     paidWithGems: "გადახდილია {cost} ბრილიანტი",
     proGetsFive: "PRO-თი {max} გენერაცია თითოეულზე",
     avatarsList: "ავატარები",
