@@ -41,6 +41,16 @@ const SCENE_TOP_FADE: React.CSSProperties = {
  * Scene background (logged-in states)
  * ------------------------------------------------------------------ */
 
+// Above the app-wide backdrop, below the cards.
+//
+// GlobalSplineBackground paints a blob video at z-0, a white radial mask at
+// z-1 and two particle layers at z-2 and z-3, all fixed over the whole app.
+// The scene sat at z-0 with them, so the mask washed it out and the orbs and
+// sparkles drifted across the face of a picture someone had generated of
+// themselves. It goes above that stack and stays well below the widgets,
+// which start at z-20.
+const SCENE_Z = "z-[4]";
+
 interface MobileSceneBackgroundProps {
   /** Generated 16:9 still for this user, when they have one. */
   sceneUrl: string | null;
@@ -85,7 +95,7 @@ export function MobileSceneBackground({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
-        className="md:hidden absolute inset-0 z-0 select-none pointer-events-none overflow-hidden"
+        className={`md:hidden absolute inset-0 ${SCENE_Z} select-none pointer-events-none overflow-hidden`}
       >
         {sceneVideoUrl ? (
           <video
@@ -115,7 +125,7 @@ export function MobileSceneBackground({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="md:hidden absolute inset-0 z-0 select-none pointer-events-none overflow-hidden"
+      className={`md:hidden absolute inset-0 ${SCENE_Z} select-none pointer-events-none overflow-hidden`}
     >
       <div
         className="absolute left-[-47.8vw] w-[227.2vw] aspect-video [mask-image:linear-gradient(to_bottom,transparent_0,black_140px)]"
