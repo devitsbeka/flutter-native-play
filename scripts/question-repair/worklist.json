@@ -1,0 +1,2801 @@
+{
+ "retire": {
+  "0acb1e18-8b43-4be2-b19d-06383de24be0": {
+   "reason": "unfixable",
+   "keeper": null,
+   "note": "ambiguous: marked Iron Man, but both films are 2008 and \"Same year\" is offered"
+  },
+  "1343aae1-313d-4f6f-bb7b-cf4af12a27df": {
+   "reason": "unfixable",
+   "keeper": null,
+   "note": "arbitrary: no defensible \"most common\" ordering of difficulty levels"
+  },
+  "3b2ba59b-663f-4488-be11-68ef8741e1c8": {
+   "reason": "unfixable",
+   "keeper": null,
+   "note": "invented premise: TikTok's algorithm does not model starling murmuration"
+  },
+  "3d1c7e1a-3b30-4dca-ba32-8a831640058a": {
+   "reason": "unfixable",
+   "keeper": null,
+   "note": "multiple options true: the Met, Guggenheim and Tate all banned selfie sticks"
+  },
+  "8982ce69-df21-4845-90b3-741bd3429666": {
+   "reason": "unfixable",
+   "keeper": null,
+   "note": "unverifiable quote attribution"
+  },
+  "8b5298c7-8100-4931-a297-5cf8693339ac": {
+   "reason": "unfixable",
+   "keeper": null,
+   "note": "false premise: the conflict in Tiger King is between people, not cats"
+  },
+  "a5cc5ad0-8ece-4fb1-b9c3-ca20f2253e36": {
+   "reason": "unfixable",
+   "keeper": null,
+   "note": "unanswerable trivia: a single index's country count for one year"
+  },
+  "cb44da4f-f959-4b97-b878-7533782b314d": {
+   "reason": "unfixable",
+   "keeper": null,
+   "note": "stale and self-defeating: answer is 35 since Feb 2025, and 35 is a distractor"
+  },
+  "f3a221d6-ff40-48b0-a709-ff5dae781eef": {
+   "reason": "unfixable",
+   "keeper": null,
+   "note": "wrong and nonsensical: aphakic people do see UV; \"eye exercises\" is not a real premise"
+  },
+  "03d5122a-46b8-4cd6-88cd-d69da0464cda": {
+   "reason": "duplicate",
+   "keeper": "13909d1a-17ff-4ab7-8615-f4415c670715",
+   "note": "near-identical to 13909d1a"
+  },
+  "04349aac-8408-4874-aa47-28d3db2d8b87": {
+   "reason": "duplicate_conflicting",
+   "keeper": "df304a6c-a224-4fbe-9532-b7694be989d1",
+   "note": "near-identical to df304a6c"
+  },
+  "72076414-3558-48a8-bae0-6c28c06bac58": {
+   "reason": "duplicate_conflicting",
+   "keeper": "df304a6c-a224-4fbe-9532-b7694be989d1",
+   "note": "near-identical to df304a6c"
+  },
+  "8dbe5332-2cf0-4fc6-bad1-e2d069eabf44": {
+   "reason": "duplicate_conflicting",
+   "keeper": "df304a6c-a224-4fbe-9532-b7694be989d1",
+   "note": "near-identical to df304a6c"
+  },
+  "af23d7ac-bea1-4083-8244-bf5893163e9e": {
+   "reason": "duplicate_conflicting",
+   "keeper": "df304a6c-a224-4fbe-9532-b7694be989d1",
+   "note": "near-identical to df304a6c"
+  },
+  "1776e1e2-6b35-42b1-ad07-92242f027a72": {
+   "reason": "duplicate_conflicting",
+   "keeper": "df304a6c-a224-4fbe-9532-b7694be989d1",
+   "note": "near-identical to df304a6c"
+  },
+  "5348f743-8f02-40b4-a9e7-c6e7b562247a": {
+   "reason": "duplicate_conflicting",
+   "keeper": "df304a6c-a224-4fbe-9532-b7694be989d1",
+   "note": "near-identical to df304a6c"
+  },
+  "b625e909-ed99-4988-842b-5dfa4e5abc5d": {
+   "reason": "duplicate_conflicting",
+   "keeper": "df304a6c-a224-4fbe-9532-b7694be989d1",
+   "note": "near-identical to df304a6c"
+  },
+  "07a8d836-0f8f-4890-8912-165e45566822": {
+   "reason": "duplicate_conflicting",
+   "keeper": "bfd47cb4-f42d-4767-acfb-3c8edd5693a4",
+   "note": "near-identical to bfd47cb4"
+  },
+  "b18cd125-cb9a-4ae5-b3e2-4119936ab3b5": {
+   "reason": "duplicate_conflicting",
+   "keeper": "bfd47cb4-f42d-4767-acfb-3c8edd5693a4",
+   "note": "near-identical to bfd47cb4"
+  },
+  "31951ca9-7c2a-4f94-8b92-6a537a025488": {
+   "reason": "duplicate_conflicting",
+   "keeper": "bfd47cb4-f42d-4767-acfb-3c8edd5693a4",
+   "note": "near-identical to bfd47cb4"
+  },
+  "60964972-9dd0-4c5a-8880-509c45388ac9": {
+   "reason": "duplicate",
+   "keeper": "0cf8c4dd-a1f2-40ca-abd0-6139145b0d9e",
+   "note": "near-identical to 0cf8c4dd"
+  },
+  "1144b3b3-56bc-452f-8f02-edd9a64a207f": {
+   "reason": "duplicate",
+   "keeper": "12f805f7-2f38-40ab-b536-40edd252169e",
+   "note": "near-identical to 12f805f7"
+  },
+  "ec8ab9ee-dfc6-464b-9d4d-6a724a29db0f": {
+   "reason": "duplicate",
+   "keeper": "12f805f7-2f38-40ab-b536-40edd252169e",
+   "note": "near-identical to 12f805f7"
+  },
+  "140a0243-f478-487c-8bf2-bb5348e521af": {
+   "reason": "duplicate",
+   "keeper": "40ed46ce-f5f3-4b60-abab-99d19edaa231",
+   "note": "near-identical to 40ed46ce"
+  },
+  "167577fa-2387-4dfa-8e11-eeadf2db96f3": {
+   "reason": "duplicate",
+   "keeper": "4813bef8-a2a1-4be1-a619-725d18acf9fa",
+   "note": "near-identical to 4813bef8"
+  },
+  "b6f5ea83-f2eb-4818-94e1-5971e1c0b597": {
+   "reason": "duplicate",
+   "keeper": "19c80039-acda-41bd-92ba-59a2e45c5707",
+   "note": "near-identical to 19c80039"
+  },
+  "a78dc2ef-3077-4ddc-8d79-cfd677f71824": {
+   "reason": "duplicate",
+   "keeper": "1ae3558c-fae6-4733-9b0c-0c57b0e5ce30",
+   "note": "near-identical to 1ae3558c"
+  },
+  "7d307f82-76d7-4f6c-a459-15dad934fcc0": {
+   "reason": "duplicate_conflicting",
+   "keeper": "1df79c32-38d0-404e-83e4-626d761c8d6a",
+   "note": "near-identical to 1df79c32"
+  },
+  "3d7311e8-65f4-4ffd-b1b7-38e5146c6f40": {
+   "reason": "duplicate",
+   "keeper": "23cf6655-5e66-4e4a-ba45-a0749a53a9a2",
+   "note": "near-identical to 23cf6655"
+  },
+  "a47952f0-2d31-4a5e-b45b-66c407cfd954": {
+   "reason": "duplicate",
+   "keeper": "24a60403-efc2-4ce9-96d3-c18646c1924b",
+   "note": "near-identical to 24a60403"
+  },
+  "2d335545-4913-4228-ab22-175ab180b19a": {
+   "reason": "duplicate_conflicting",
+   "keeper": "24cf93e1-2eac-4a93-9af1-9c4d00b6eba7",
+   "note": "near-identical to 24cf93e1"
+  },
+  "5708a1e5-ef01-4bea-ac35-083007752e66": {
+   "reason": "duplicate_conflicting",
+   "keeper": "24cf93e1-2eac-4a93-9af1-9c4d00b6eba7",
+   "note": "near-identical to 24cf93e1"
+  },
+  "720fb607-07b6-4873-989e-940cb1295098": {
+   "reason": "duplicate_conflicting",
+   "keeper": "24cf93e1-2eac-4a93-9af1-9c4d00b6eba7",
+   "note": "near-identical to 24cf93e1"
+  },
+  "263fe0bb-5d33-43e0-a687-cfc3abc0c94a": {
+   "reason": "duplicate",
+   "keeper": "791d7558-3154-49b6-afc6-19a0385dfa59",
+   "note": "near-identical to 791d7558"
+  },
+  "b90ffd12-5391-48ad-b416-5b0d638ad879": {
+   "reason": "duplicate",
+   "keeper": "791d7558-3154-49b6-afc6-19a0385dfa59",
+   "note": "near-identical to 791d7558"
+  },
+  "eba73542-4852-4ddb-b385-dc5a6c6a447a": {
+   "reason": "duplicate",
+   "keeper": "791d7558-3154-49b6-afc6-19a0385dfa59",
+   "note": "near-identical to 791d7558"
+  },
+  "619efa73-f216-4c45-b167-f70f5dcfeda5": {
+   "reason": "duplicate",
+   "keeper": "26867a17-d687-41a4-8040-c93df1e6ff82",
+   "note": "near-identical to 26867a17"
+  },
+  "ccc82740-cf75-4ffd-9839-89774d92e57a": {
+   "reason": "duplicate",
+   "keeper": "26fcc586-406c-4ee4-ac2f-7ac2292c3c08",
+   "note": "near-identical to 26fcc586"
+  },
+  "632e0fb3-c3cb-4792-911d-703b76027dae": {
+   "reason": "duplicate",
+   "keeper": "27e09330-e4b9-4f8a-b2ee-4913311fe99b",
+   "note": "near-identical to 27e09330"
+  },
+  "292e5319-de98-4c7b-9504-ef946a8b6f45": {
+   "reason": "duplicate",
+   "keeper": "d502edc7-ea38-44b9-b2ea-71c8f67e1836",
+   "note": "near-identical to d502edc7"
+  },
+  "dfd9e776-083a-4656-bc7b-04b8a3d4e803": {
+   "reason": "duplicate_conflicting",
+   "keeper": "2c230f50-fed0-4eac-8be0-53f514b123d7",
+   "note": "near-identical to 2c230f50"
+  },
+  "2cf16aee-a563-4191-8736-d53cf2bebe1f": {
+   "reason": "duplicate",
+   "keeper": "680ab972-7974-4ed7-9d22-93b0dfcf3739",
+   "note": "near-identical to 680ab972"
+  },
+  "44688c8c-7475-4828-8210-00b68a089d17": {
+   "reason": "duplicate",
+   "keeper": "2d734f1b-d2a0-414e-b1db-94a3dd7d3670",
+   "note": "near-identical to 2d734f1b"
+  },
+  "fc2d742a-dbc5-4037-8d3e-5e2d125a425a": {
+   "reason": "duplicate",
+   "keeper": "2d734f1b-d2a0-414e-b1db-94a3dd7d3670",
+   "note": "near-identical to 2d734f1b"
+  },
+  "dd0285b3-c163-4937-962b-15960b2be7ac": {
+   "reason": "duplicate",
+   "keeper": "30335f6e-419e-44be-a6fe-05b25b097006",
+   "note": "near-identical to 30335f6e"
+  },
+  "8520b539-9646-4b3d-bb83-2dca387bbaa0": {
+   "reason": "duplicate_conflicting",
+   "keeper": "334a46a5-80d1-41c0-b0d8-4281446e43c3",
+   "note": "near-identical to 334a46a5"
+  },
+  "576f4eb6-de91-4528-84bf-3712a279a183": {
+   "reason": "duplicate_conflicting",
+   "keeper": "334a46a5-80d1-41c0-b0d8-4281446e43c3",
+   "note": "near-identical to 334a46a5"
+  },
+  "0d1d8038-c66f-4a06-a0b5-64dae77e8de4": {
+   "reason": "duplicate_conflicting",
+   "keeper": "334a46a5-80d1-41c0-b0d8-4281446e43c3",
+   "note": "near-identical to 334a46a5"
+  },
+  "35e2de87-4b51-45cf-add4-af801250a866": {
+   "reason": "duplicate",
+   "keeper": "b48445db-6fde-4762-91f4-ef749acf18a3",
+   "note": "near-identical to b48445db"
+  },
+  "7332a810-2511-4ff2-9c6c-cbbb0fe84d00": {
+   "reason": "duplicate",
+   "keeper": "b48445db-6fde-4762-91f4-ef749acf18a3",
+   "note": "near-identical to b48445db"
+  },
+  "90702ae7-f51f-4228-a05f-423f2ea005ff": {
+   "reason": "duplicate",
+   "keeper": "b48445db-6fde-4762-91f4-ef749acf18a3",
+   "note": "near-identical to b48445db"
+  },
+  "ec3e1760-b793-4e17-9758-9ba8230c0c0d": {
+   "reason": "duplicate",
+   "keeper": "38afbcdc-b987-46a5-90fa-1052b75a048e",
+   "note": "near-identical to 38afbcdc"
+  },
+  "ea8606f9-cdb0-4e10-8123-c3a3fab83c08": {
+   "reason": "duplicate",
+   "keeper": "3e4c1936-a30b-4ecb-afb6-8d4b845a0269",
+   "note": "near-identical to 3e4c1936"
+  },
+  "c4281343-4d33-4882-b98f-3707fbe38b01": {
+   "reason": "duplicate",
+   "keeper": "406a1173-7236-4ac3-b5d8-2845b58de074",
+   "note": "near-identical to 406a1173"
+  },
+  "9258a006-f29a-448b-8510-bbd308dd7667": {
+   "reason": "duplicate",
+   "keeper": "46bcca3b-8aa5-4b03-8438-1babd10309b1",
+   "note": "near-identical to 46bcca3b"
+  },
+  "4874f084-9178-40c2-9c28-fa1c14247418": {
+   "reason": "duplicate",
+   "keeper": "f0bccdc8-aedd-42b7-a472-532fe327513e",
+   "note": "near-identical to f0bccdc8"
+  },
+  "ed152479-e56a-4ecf-8034-7065c8ae5182": {
+   "reason": "duplicate_conflicting",
+   "keeper": "494a541f-87a5-4e54-96c4-60d6da349bb5",
+   "note": "near-identical to 494a541f"
+  },
+  "fd92b702-a94a-4cc0-a09f-1a548015f0fb": {
+   "reason": "duplicate_conflicting",
+   "keeper": "494a541f-87a5-4e54-96c4-60d6da349bb5",
+   "note": "near-identical to 494a541f"
+  },
+  "d5b9ddd0-ca68-4cd6-946a-4bfdd54a7f93": {
+   "reason": "duplicate_conflicting",
+   "keeper": "494a541f-87a5-4e54-96c4-60d6da349bb5",
+   "note": "near-identical to 494a541f"
+  },
+  "feb80ee0-1fad-4ed0-a145-5ee48ba52b16": {
+   "reason": "duplicate",
+   "keeper": "4ade8e91-c2c6-49d5-aabd-a63f513ea749",
+   "note": "near-identical to 4ade8e91"
+  },
+  "a864844a-7540-448c-9bcf-8488dab70482": {
+   "reason": "duplicate_conflicting",
+   "keeper": "4c5e2e33-2725-4ff3-a9a8-6de428937350",
+   "note": "near-identical to 4c5e2e33"
+  },
+  "4c90a451-6b12-4fdb-b00b-a7b70c704699": {
+   "reason": "duplicate_conflicting",
+   "keeper": "ec0a63c5-b0d7-4d91-af2e-4666054b3311",
+   "note": "near-identical to ec0a63c5"
+  },
+  "89b428b4-29f2-4d1d-8c8d-ca1de5fc27bc": {
+   "reason": "duplicate_conflicting",
+   "keeper": "50c406c6-9c84-44e0-bdbd-820892078c7f",
+   "note": "near-identical to 50c406c6"
+  },
+  "513456b2-1562-4489-98b8-c1c5ae607fdd": {
+   "reason": "duplicate",
+   "keeper": "860c0aa1-c1cb-4208-8f0f-e40b848f7457",
+   "note": "near-identical to 860c0aa1"
+  },
+  "a8b0a511-04f6-493b-85cb-167666f97ca8": {
+   "reason": "duplicate",
+   "keeper": "860c0aa1-c1cb-4208-8f0f-e40b848f7457",
+   "note": "near-identical to 860c0aa1"
+  },
+  "a9894a3a-b357-4d1b-977c-03cb352c3b99": {
+   "reason": "duplicate_conflicting",
+   "keeper": "52e06211-c531-434b-b2e4-48d6ba43b2a2",
+   "note": "near-identical to 52e06211"
+  },
+  "54561e72-d2ba-4279-b700-a89b3570ba4b": {
+   "reason": "duplicate",
+   "keeper": "98a7f817-edc0-4e25-8cad-f43ba353e406",
+   "note": "near-identical to 98a7f817"
+  },
+  "9d455c7c-17c2-496e-b5c3-b0352bce5a0e": {
+   "reason": "duplicate",
+   "keeper": "98a7f817-edc0-4e25-8cad-f43ba353e406",
+   "note": "near-identical to 98a7f817"
+  },
+  "7f58afc6-1351-49d3-85d8-78a8f6838860": {
+   "reason": "duplicate",
+   "keeper": "5af6d746-d5a5-4d84-a403-482ea8780964",
+   "note": "near-identical to 5af6d746"
+  },
+  "8d7aac09-ee0b-4d0b-8bd8-98238193c0d8": {
+   "reason": "duplicate",
+   "keeper": "5eb1c9f2-8aab-4e6d-be72-a35d4fbecb01",
+   "note": "near-identical to 5eb1c9f2"
+  },
+  "5fe8bd49-b70f-4f38-9106-092517c12993": {
+   "reason": "duplicate",
+   "keeper": "be6465bd-f275-4c0c-abd2-6220c301f5b7",
+   "note": "near-identical to be6465bd"
+  },
+  "b1f6aa83-1303-4846-bc1a-42ef41472dee": {
+   "reason": "duplicate",
+   "keeper": "be6465bd-f275-4c0c-abd2-6220c301f5b7",
+   "note": "near-identical to be6465bd"
+  },
+  "708f9db2-1804-4c89-87b6-1e677b8b346f": {
+   "reason": "duplicate",
+   "keeper": "be6465bd-f275-4c0c-abd2-6220c301f5b7",
+   "note": "near-identical to be6465bd"
+  },
+  "eb3778a4-82ad-47f0-a524-f3025085189b": {
+   "reason": "duplicate",
+   "keeper": "be6465bd-f275-4c0c-abd2-6220c301f5b7",
+   "note": "near-identical to be6465bd"
+  },
+  "85e2a21f-4439-4556-81a2-c944259ea6c5": {
+   "reason": "duplicate",
+   "keeper": "be6465bd-f275-4c0c-abd2-6220c301f5b7",
+   "note": "near-identical to be6465bd"
+  },
+  "b6035691-e399-404e-88ee-bc3df29dbe22": {
+   "reason": "duplicate",
+   "keeper": "be6465bd-f275-4c0c-abd2-6220c301f5b7",
+   "note": "near-identical to be6465bd"
+  },
+  "d64d1949-a7eb-4e89-8396-e5324fe66498": {
+   "reason": "duplicate",
+   "keeper": "be6465bd-f275-4c0c-abd2-6220c301f5b7",
+   "note": "near-identical to be6465bd"
+  },
+  "676e1e4c-bacc-4c98-a059-3178c5b390d5": {
+   "reason": "duplicate_conflicting",
+   "keeper": "601ef0a7-50ab-4f21-ab9b-925e863466a1",
+   "note": "near-identical to 601ef0a7"
+  },
+  "a6e75b74-1fdf-4ad3-b9bd-7c1b245b80dc": {
+   "reason": "duplicate",
+   "keeper": "647ac2d0-fb7c-415f-908b-af8e6e6b0bd4",
+   "note": "near-identical to 647ac2d0"
+  },
+  "7d20542b-f578-4694-ae58-f898379cb2b4": {
+   "reason": "duplicate",
+   "keeper": "6b59c9a5-f081-4a10-a949-d7d919eecccc",
+   "note": "near-identical to 6b59c9a5"
+  },
+  "d1c88718-05a7-40e4-a187-e4b9981b2e69": {
+   "reason": "duplicate",
+   "keeper": "6b59c9a5-f081-4a10-a949-d7d919eecccc",
+   "note": "near-identical to 6b59c9a5"
+  },
+  "ab22c872-f766-41c2-9ee5-188c5e7ed81c": {
+   "reason": "duplicate",
+   "keeper": "6b59c9a5-f081-4a10-a949-d7d919eecccc",
+   "note": "near-identical to 6b59c9a5"
+  },
+  "e2b1d573-af9d-470e-a756-7f989682106a": {
+   "reason": "duplicate",
+   "keeper": "6b59c9a5-f081-4a10-a949-d7d919eecccc",
+   "note": "near-identical to 6b59c9a5"
+  },
+  "e2b7e7fd-a6a1-4b30-a8ff-8a434e373ba9": {
+   "reason": "duplicate",
+   "keeper": "6b59c9a5-f081-4a10-a949-d7d919eecccc",
+   "note": "near-identical to 6b59c9a5"
+  },
+  "7ad75354-2cd2-4ef9-9fdf-e7abab93f708": {
+   "reason": "duplicate",
+   "keeper": "716449e7-9c07-4ced-93b7-f0fa8c31fb90",
+   "note": "near-identical to 716449e7"
+  },
+  "74e06058-2ec9-423c-806e-fa1f1c3db5f2": {
+   "reason": "duplicate",
+   "keeper": "efedbc00-5a32-4cde-ba22-c1449fccba6a",
+   "note": "near-identical to efedbc00"
+  },
+  "e205275c-c8fa-4513-a13e-258a00cdd4f7": {
+   "reason": "duplicate",
+   "keeper": "7ecce6da-44d5-4020-b107-0ff827481209",
+   "note": "near-identical to 7ecce6da"
+  },
+  "9f28c621-b3cb-4612-942c-139631f9f389": {
+   "reason": "duplicate",
+   "keeper": "7f547df2-97ec-44ec-bf77-978a0681b21d",
+   "note": "near-identical to 7f547df2"
+  },
+  "cf2e6482-085f-4cae-a0cf-1caf93db43ec": {
+   "reason": "duplicate",
+   "keeper": "8188adc3-d427-4195-bc9a-7fd679f27862",
+   "note": "near-identical to 8188adc3"
+  },
+  "87e07f47-e3c3-4aa7-b44c-42c37fbc96cb": {
+   "reason": "duplicate_conflicting",
+   "keeper": "c5962ff4-8357-4fd9-bd1e-f0c548e0e886",
+   "note": "near-identical to c5962ff4"
+  },
+  "8a4a98e9-8c55-45c5-a3a0-854e85f21943": {
+   "reason": "duplicate",
+   "keeper": "ec5a6e4c-fcd4-4283-aad3-6a4f52fa864c",
+   "note": "near-identical to ec5a6e4c"
+  },
+  "956154e5-5a00-40c9-a1f8-fb8583416382": {
+   "reason": "duplicate",
+   "keeper": "a8ab09a8-dfc8-46b2-b882-8211d0cbf743",
+   "note": "near-identical to a8ab09a8"
+  },
+  "a59e2fe0-b846-4667-a8d8-4a35d4fa63e9": {
+   "reason": "duplicate",
+   "keeper": "97fe31b8-3aa4-4331-8898-fa2f6cc16de8",
+   "note": "near-identical to 97fe31b8"
+  },
+  "994a01d1-503d-468f-a885-cdbffb8d1b8d": {
+   "reason": "duplicate",
+   "keeper": "f622b5bf-12fe-4664-90a2-bd6024f4df2f",
+   "note": "near-identical to f622b5bf"
+  },
+  "9e2138ef-2d13-41b4-b2fd-971cf1f2ead5": {
+   "reason": "duplicate",
+   "keeper": "9b9ac07c-0b63-443a-91ac-c04ac0eca1b5",
+   "note": "near-identical to 9b9ac07c"
+  },
+  "fd03d46b-5f3f-47b5-ae2d-0e9dfb7e35c5": {
+   "reason": "duplicate",
+   "keeper": "9b9ac07c-0b63-443a-91ac-c04ac0eca1b5",
+   "note": "near-identical to 9b9ac07c"
+  },
+  "16106329-397a-4723-8cd7-ee434dad52b3": {
+   "reason": "duplicate",
+   "keeper": "9b9ac07c-0b63-443a-91ac-c04ac0eca1b5",
+   "note": "near-identical to 9b9ac07c"
+  },
+  "be8303dd-d493-4cd6-890d-8c1dfb8134ca": {
+   "reason": "duplicate",
+   "keeper": "9ba05355-2b7c-4d0a-9b68-181e85e1065c",
+   "note": "near-identical to 9ba05355"
+  },
+  "a5a313e4-f833-4449-8228-c34cd42bce9e": {
+   "reason": "duplicate_conflicting",
+   "keeper": "c272015c-87d6-4280-9c41-d1440df319cf",
+   "note": "near-identical to c272015c"
+  },
+  "a682544d-1774-42d2-86de-7757707609bc": {
+   "reason": "duplicate_conflicting",
+   "keeper": "bf1c3378-65b8-40b4-adc2-04e2ef932213",
+   "note": "near-identical to bf1c3378"
+  },
+  "a8c43fb4-3142-4647-9007-0c57358b662c": {
+   "reason": "duplicate",
+   "keeper": "dcbf9804-ceac-4ed6-87cb-183239003fc3",
+   "note": "near-identical to dcbf9804"
+  },
+  "b762c283-b6f4-4980-9b08-596af3e0c6c7": {
+   "reason": "duplicate",
+   "keeper": "aa0b74c1-b6e2-4b1a-a0b5-4540edee63ec",
+   "note": "near-identical to aa0b74c1"
+  },
+  "f3e2c338-ba66-4c80-9299-1a6157dbac4c": {
+   "reason": "duplicate",
+   "keeper": "aa8801ef-af23-455d-af2b-e5d88dc1aaf1",
+   "note": "near-identical to aa8801ef"
+  },
+  "c9414b30-3270-4811-8b89-c2b4a62af087": {
+   "reason": "duplicate_conflicting",
+   "keeper": "aa9a8350-d1a6-4308-9749-0f0ae6d5d6b7",
+   "note": "near-identical to aa9a8350"
+  },
+  "dbeb87ed-00c7-4e1b-a0bc-24498ae60046": {
+   "reason": "duplicate_conflicting",
+   "keeper": "b05fc333-3d6e-489b-a52c-492caf5157df",
+   "note": "near-identical to b05fc333"
+  },
+  "b35fba9a-4b23-43e6-80f0-81fdd5f4612f": {
+   "reason": "duplicate",
+   "keeper": "b4cfc8dc-1bf8-4881-88d9-e2f877584fca",
+   "note": "near-identical to b4cfc8dc"
+  },
+  "b4bb0a33-6fbc-4c27-a5a0-bcfa91f7daf3": {
+   "reason": "duplicate",
+   "keeper": "bce99fcc-01f8-4c4e-9172-4ca8ac9f295f",
+   "note": "near-identical to bce99fcc"
+  },
+  "d6f7ef53-3da3-4d9b-9f90-73cf0490a120": {
+   "reason": "duplicate",
+   "keeper": "c3a3c3d3-7293-40fd-8ac6-4b23a48babe0",
+   "note": "near-identical to c3a3c3d3"
+  },
+  "f6476e48-02a8-4983-8fa9-bc4909316dab": {
+   "reason": "duplicate",
+   "keeper": "ffcdedc7-d2f3-4de8-bb84-572c6a7afeda",
+   "note": "near-identical to ffcdedc7"
+  },
+  "02a67672-7ad5-423c-83fd-acab2bd063a1": {
+   "reason": "duplicate",
+   "keeper": "4a8e4bbe-190e-4df9-a2e5-865c08817a6b",
+   "note": "near-identical to 4a8e4bbe"
+  },
+  "05146180-6b4e-47a3-ac77-ce63899deded": {
+   "reason": "duplicate",
+   "keeper": "f1f01ce3-9fc5-4fdd-ba29-dc57c8e1f0f6",
+   "note": "near-identical to f1f01ce3"
+  },
+  "06a35975-fb5b-44ae-99a9-a300cc6c546d": {
+   "reason": "duplicate",
+   "keeper": "cee6d7a4-7a2a-4abe-8182-e451c3166478",
+   "note": "near-identical to cee6d7a4"
+  },
+  "08163744-7e1b-4009-8755-d946bd4eccb8": {
+   "reason": "duplicate",
+   "keeper": "746d2e83-7601-4d41-a0c3-d12732acd84e",
+   "note": "near-identical to 746d2e83"
+  },
+  "87776321-cc78-4cd1-9272-fbc97eff2f65": {
+   "reason": "duplicate",
+   "keeper": "099da789-b691-44c9-add1-1596a0eb1222",
+   "note": "near-identical to 099da789"
+  },
+  "d2949f03-1879-4ae3-8f8b-75da2202b95f": {
+   "reason": "duplicate",
+   "keeper": "099da789-b691-44c9-add1-1596a0eb1222",
+   "note": "near-identical to 099da789"
+  },
+  "0cb12cee-c9e5-4e67-94c9-325dd9b5dbaf": {
+   "reason": "duplicate",
+   "keeper": "9a9fd2bb-cc8e-404e-9b6e-ffb3b85b3d45",
+   "note": "near-identical to 9a9fd2bb"
+  },
+  "11d99a47-322c-4189-87e5-c0ba6682733f": {
+   "reason": "duplicate",
+   "keeper": "2c559e7c-56f8-42a4-9be1-e8f4c8ef2022",
+   "note": "near-identical to 2c559e7c"
+  },
+  "e9b0b632-cc66-4218-ab47-3c8a783738ea": {
+   "reason": "duplicate",
+   "keeper": "13d2f3ae-9c36-4683-9acc-c87e563d3aff",
+   "note": "near-identical to 13d2f3ae"
+  },
+  "65e4499e-d4fd-4054-bde1-9c23460a9d7e": {
+   "reason": "duplicate",
+   "keeper": "1726e1cb-793e-46db-8f4b-6447c2343b17",
+   "note": "near-identical to 1726e1cb"
+  },
+  "8b49d45d-5c51-4e2b-a589-90dff6d359f7": {
+   "reason": "duplicate",
+   "keeper": "185ca20b-cfd6-45e4-b70b-0e3121489c26",
+   "note": "near-identical to 185ca20b"
+  },
+  "e1577d4e-be1c-4322-8304-5d41592ba698": {
+   "reason": "duplicate",
+   "keeper": "1c976731-8ed6-4f89-bb68-6d1288ed0b66",
+   "note": "near-identical to 1c976731"
+  },
+  "b0492068-81df-4b02-8afd-929c8a963070": {
+   "reason": "duplicate",
+   "keeper": "1feadacd-39bd-41b3-a663-dc7ed5ab6e9e",
+   "note": "near-identical to 1feadacd"
+  },
+  "23f64906-31de-4cb7-a1f1-dc2cfb25451a": {
+   "reason": "duplicate",
+   "keeper": "f2cf4911-3710-4f77-b401-46ea9a0f2685",
+   "note": "near-identical to f2cf4911"
+  },
+  "286c8132-ed39-4145-9ed2-3a07df00be7b": {
+   "reason": "duplicate",
+   "keeper": "44298b20-55a4-4332-ba47-d3fd245d66f9",
+   "note": "near-identical to 44298b20"
+  },
+  "2f210775-3114-438c-b8e0-889f83cc64cb": {
+   "reason": "duplicate",
+   "keeper": "ba1d2b32-e80e-419e-96ba-02f4fb4c0af3",
+   "note": "near-identical to ba1d2b32"
+  },
+  "312274ba-5b52-421a-9043-8b4efe9a57b3": {
+   "reason": "duplicate",
+   "keeper": "377a6ce7-5506-489f-9103-4e7ce643a19f",
+   "note": "near-identical to 377a6ce7"
+  },
+  "3219aac3-d060-4950-9c19-601cab045341": {
+   "reason": "duplicate",
+   "keeper": "4c1ee6a6-70fa-47cf-9338-accfba04a422",
+   "note": "near-identical to 4c1ee6a6"
+  },
+  "ac6142b9-29c1-4a9b-a4fd-e81923d689d2": {
+   "reason": "duplicate",
+   "keeper": "4c1ee6a6-70fa-47cf-9338-accfba04a422",
+   "note": "near-identical to 4c1ee6a6"
+  },
+  "33bc8bf8-ae0a-494d-b499-feee2ba69dde": {
+   "reason": "duplicate",
+   "keeper": "e3098a12-60e0-4fe6-afcb-f7f8e59c6705",
+   "note": "near-identical to e3098a12"
+  },
+  "3cd5aff4-0680-4dba-9d16-1c1967986df1": {
+   "reason": "duplicate",
+   "keeper": "8578245f-f600-47f6-9230-53a727d5b199",
+   "note": "near-identical to 8578245f"
+  },
+  "40c308b2-1782-4d83-bc41-56aeeca72486": {
+   "reason": "duplicate",
+   "keeper": "c1a533ca-e18d-49cd-a0bd-800fac218e5c",
+   "note": "near-identical to c1a533ca"
+  },
+  "42ac35c0-c68e-4535-9dc2-dde82474ae3f": {
+   "reason": "duplicate",
+   "keeper": "ef8d977b-009c-46c3-9c8b-1ed0b074f7b8",
+   "note": "near-identical to ef8d977b"
+  },
+  "518a1f49-6568-46f7-ab64-f8af76b660e2": {
+   "reason": "duplicate",
+   "keeper": "f71aab4a-175d-4525-9b3f-0b74a617dec0",
+   "note": "near-identical to f71aab4a"
+  },
+  "60a63284-f677-40bc-8b77-0e1e84bf3dcb": {
+   "reason": "duplicate",
+   "keeper": "e2fb664c-7022-4942-af08-741823947964",
+   "note": "near-identical to e2fb664c"
+  },
+  "6233845e-802a-4a6d-939e-b6f9afaa86bb": {
+   "reason": "duplicate",
+   "keeper": "bbfe4cad-6d57-404f-96dc-dd449e8c10e4",
+   "note": "near-identical to bbfe4cad"
+  },
+  "62d135c7-f2b2-4d10-9ccd-3a790d45d0d0": {
+   "reason": "duplicate",
+   "keeper": "9f07ba20-a5a1-4e62-8aa2-8a3839cb304d",
+   "note": "near-identical to 9f07ba20"
+  },
+  "772f8c4c-3036-465e-8427-36c2eaa305df": {
+   "reason": "duplicate",
+   "keeper": "936ffc9f-a9eb-4ea7-bead-1e69796b2220",
+   "note": "near-identical to 936ffc9f"
+  },
+  "989098c1-2279-4384-bfd3-caf395d23a19": {
+   "reason": "duplicate",
+   "keeper": "7da223c4-ba1e-48cf-a677-f4ab39d8b13f",
+   "note": "near-identical to 7da223c4"
+  },
+  "9e79142f-a9dc-45ad-9722-fdc91df17edc": {
+   "reason": "duplicate",
+   "keeper": "fa76eb37-66f1-419e-aacf-4b5895581bab",
+   "note": "near-identical to fa76eb37"
+  },
+  "e5577931-6936-43be-93ee-10c11857ddf8": {
+   "reason": "duplicate",
+   "keeper": "fa9e852f-626e-4ac6-8b30-b3bffe5e9337",
+   "note": "near-identical to fa9e852f"
+  }
+ },
+ "rewrite": {
+  "018ab763-830c-44d7-83a9-4ef2c538e611": [
+   "question_93ch"
+  ],
+  "01f1b333-e6a3-4920-b96f-9d8866ed9830": [
+   "question_101ch"
+  ],
+  "029011b1-afa2-46de-b1be-99dd4b534c6d": [
+   "answer_70ch"
+  ],
+  "03ba6b1d-1629-4099-b69f-c6dde4b995ed": [
+   "question_109ch",
+   "answer_51ch"
+  ],
+  "03f00e2d-2993-404b-b839-690c49f90bf7": [
+   "question_103ch",
+   "answer_140ch"
+  ],
+  "043adbf2-ef7d-4eea-939f-bf26af4cbfb9": [
+   "question_104ch"
+  ],
+  "04b1fa2d-e388-4798-91ae-ab9e286dd46a": [
+   "question_92ch"
+  ],
+  "04db3c5d-3dc9-412f-b00f-bc20395a6d57": [
+   "question_111ch",
+   "answer_59ch"
+  ],
+  "04e1f243-8ef3-4f9f-a00c-bcf001975332": [
+   "answer_51ch"
+  ],
+  "05814d57-39b3-4387-b253-c67524a02a18": [
+   "question_106ch"
+  ],
+  "065dbed6-25aa-4fed-9d99-4c8377016f78": [
+   "question_91ch"
+  ],
+  "068d838e-8de5-48dc-a500-a43d34437842": [
+   "answer_50ch"
+  ],
+  "06d305dd-7007-486d-a58c-cfd66b1e1632": [
+   "question_116ch"
+  ],
+  "06d9d6ac-930e-4719-bc26-e879bcf9be58": [
+   "question_104ch"
+  ],
+  "06e878d3-0478-4742-92b9-a8bc4d36a146": [
+   "question_91ch"
+  ],
+  "07a7b0fd-f638-4c68-924f-f305ee18cc82": [
+   "duplicate_options"
+  ],
+  "07de6df2-df86-43df-bbad-70a900005481": [
+   "question_91ch"
+  ],
+  "08054492-64f9-4a95-b25c-57637002703b": [
+   "question_92ch"
+  ],
+  "0871e16c-ebd0-4edd-b45f-57392108001b": [
+   "question_94ch"
+  ],
+  "08951dff-4695-4ec5-8490-0f25ecabffe0": [
+   "only_2_options"
+  ],
+  "08bb2295-4404-43f8-acb7-c7ac187c8f65": [
+   "question_113ch"
+  ],
+  "08bd11eb-b98f-4970-b4d5-f12d51bb9048": [
+   "question_117ch"
+  ],
+  "08fd0cc7-16e9-406d-9104-b58f61e24661": [
+   "question_105ch",
+   "answer_117ch"
+  ],
+  "09158ae2-ccfd-4818-b59a-dd45cc0c09be": [
+   "question_105ch",
+   "answer_82ch"
+  ],
+  "093e1099-413f-4efb-bbda-ffcbd77f5b2e": [
+   "question_91ch"
+  ],
+  "095e85ba-8647-4cba-a727-ebf8b868305b": [
+   "question_91ch"
+  ],
+  "0a7bbb7f-ed26-4991-8030-c390f15320be": [
+   "question_101ch"
+  ],
+  "0a8b8ec0-c383-4663-95a6-bdfd353f6d88": [
+   "question_100ch"
+  ],
+  "0b30b029-712f-41f9-881f-50b49799ef1c": [
+   "question_110ch"
+  ],
+  "0b8926a3-88e4-4b3d-9616-7d22b8a407a6": [
+   "question_92ch"
+  ],
+  "0c1827ac-762f-4e2e-9261-6c323d1d906a": [
+   "question_102ch"
+  ],
+  "0d85aac8-69a8-406b-bd0a-6ff03b526b5f": [
+   "question_110ch"
+  ],
+  "0da3b652-8985-45ea-9951-e061385b6750": [
+   "answer_63ch"
+  ],
+  "0e75c576-356a-42de-83a1-0a2648a72bc2": [
+   "question_92ch"
+  ],
+  "0ef0929d-0ef6-456b-867a-f2cee9143c7c": [
+   "question_98ch"
+  ],
+  "1058ec8c-86b9-4eef-8500-7d1bbf93a5fd": [
+   "question_108ch"
+  ],
+  "11c25707-d4a1-44a4-ad20-0765da4e8615": [
+   "question_118ch",
+   "answer_49ch"
+  ],
+  "1305c335-0ea9-4296-87ac-0f00da6bd89c": [
+   "question_99ch"
+  ],
+  "13200731-a5cd-4b82-adb2-1dc1077b5919": [
+   "question_110ch"
+  ],
+  "13649b50-d84d-4203-b80b-d69f978fd631": [
+   "answer_52ch"
+  ],
+  "13a31e76-1c2f-4bcc-9386-00947fd64d7e": [
+   "question_109ch"
+  ],
+  "14052bca-59cb-42f6-9adb-a7f6ba5af1c1": [
+   "duplicate_options"
+  ],
+  "149de294-ba09-494f-ac42-764c8b138e7a": [
+   "question_114ch"
+  ],
+  "149ebfd0-3cc2-431f-a104-f0c9c648f184": [
+   "question_91ch"
+  ],
+  "14a29cd5-3a60-43db-bc67-6c16dcf5fd89": [
+   "question_93ch"
+  ],
+  "151c994d-5c34-4f55-89d1-ba122492642d": [
+   "question_117ch",
+   "answer_99ch"
+  ],
+  "15537fd3-b62a-484f-8375-d9e2c86f2bbb": [
+   "question_94ch"
+  ],
+  "1598fdb2-ed13-4fd5-b06e-ee63a0259ef6": [
+   "question_92ch"
+  ],
+  "15b25d7a-636f-4e42-8936-ebc43d31c693": [
+   "question_94ch"
+  ],
+  "161a3a55-e58c-40de-9337-979d89086c5d": [
+   "question_105ch"
+  ],
+  "161e7640-b0f9-4658-bbbb-e4e7088141ee": [
+   "question_96ch",
+   "answer_52ch"
+  ],
+  "1669c8c7-1b24-493f-8e77-f9591b588eed": [
+   "question_96ch",
+   "answer_58ch"
+  ],
+  "17a2b786-fcdb-4504-b893-61da77634b27": [
+   "answer_57ch"
+  ],
+  "17af4323-ed07-49ea-bac2-ddc9ab1e3e95": [
+   "question_114ch"
+  ],
+  "17b7066f-3847-4159-9210-182eb3563e02": [
+   "question_92ch"
+  ],
+  "17c35e85-951f-481f-8017-688bc7de2780": [
+   "question_114ch",
+   "answer_62ch"
+  ],
+  "17c71e5c-1974-497e-b914-40c939ee3519": [
+   "question_100ch"
+  ],
+  "18078dc8-f14d-4c29-a769-a8ac96d6c50c": [
+   "question_115ch"
+  ],
+  "18f6b3cf-0426-488f-b011-3f7313c64acd": [
+   "question_93ch"
+  ],
+  "191ff473-5cf1-4e15-ab45-0e69bf33d8d4": [
+   "question_110ch"
+  ],
+  "194eef81-5298-4765-8773-94fb60aef960": [
+   "question_98ch"
+  ],
+  "19c717f8-6977-49b0-9e16-bc32d92d7358": [
+   "question_100ch",
+   "answer_68ch"
+  ],
+  "19ff932d-21d9-4e9b-ba22-74ac16740254": [
+   "question_104ch"
+  ],
+  "1a3c3d61-7d00-41ec-8a56-ab53d9e427be": [
+   "answer_81ch"
+  ],
+  "1a7500d5-f013-4eb2-a460-387784dc5c74": [
+   "question_111ch"
+  ],
+  "1a968177-ed35-4606-b2b0-b065fc492a18": [
+   "question_117ch",
+   "answer_80ch"
+  ],
+  "1af8e593-86fb-4054-9747-ac9253aa44c5": [
+   "answer_58ch"
+  ],
+  "1b66aa64-062c-406c-ab74-ced0895729ae": [
+   "question_91ch"
+  ],
+  "1c116569-5f2e-4b4a-9c48-8c1d235337cd": [
+   "question_103ch"
+  ],
+  "1c4ab279-eb31-4fb2-b343-031bd4c22416": [
+   "question_114ch",
+   "answer_56ch"
+  ],
+  "1c758f39-1470-4f42-aa9f-5033c9434259": [
+   "question_95ch"
+  ],
+  "1e270c9d-662d-4132-8468-13e80e0cdad3": [
+   "question_114ch"
+  ],
+  "1e2a41de-6843-4147-b43e-25f0478a1448": [
+   "question_93ch"
+  ],
+  "1e3df881-a8b5-414d-8e26-3f7eeca9389b": [
+   "duplicate_options",
+   "foreign_script"
+  ],
+  "1f005aa5-8d6c-4d7c-8bf0-115393dae7e7": [
+   "only_2_options"
+  ],
+  "201c1a37-21dd-43b3-a1fb-6f425d445ace": [
+   "duplicate_options"
+  ],
+  "20ae5fca-c3bb-45e2-8d68-8f8f28f28fae": [
+   "question_94ch"
+  ],
+  "20c6fc37-1116-4ab4-8676-11da55ef1b15": [
+   "foreign_script"
+  ],
+  "21149522-d0ff-4ec9-b8d2-d9bce9229100": [
+   "question_113ch",
+   "answer_83ch"
+  ],
+  "215cef23-7c5a-4c7d-90a6-d4e37a75a39a": [
+   "question_99ch"
+  ],
+  "21cc0e27-19e0-4465-8611-28e60fc9454b": [
+   "question_116ch",
+   "answer_53ch"
+  ],
+  "220c7375-4d48-4b91-9e4a-943a1aef5d77": [
+   "duplicate_options"
+  ],
+  "22a72dd9-54bb-41f5-b8fc-85cde1e3d79a": [
+   "question_100ch"
+  ],
+  "2321a14f-b084-49af-91ca-2f8b68563896": [
+   "question_104ch"
+  ],
+  "235b2772-4200-46c8-b00d-df9191a863ed": [
+   "answer_52ch"
+  ],
+  "23992556-9ec1-4916-95b6-69c62fb3a2c1": [
+   "foreign_script"
+  ],
+  "23fabb20-f71e-4b3e-8742-98e6df053379": [
+   "question_98ch"
+  ],
+  "2424ca43-ad42-43d5-9779-71022557c009": [
+   "question_105ch"
+  ],
+  "24bb3cc9-b552-48dd-82f7-e28b88a80849": [
+   "answer_52ch"
+  ],
+  "24e57c02-54a5-4cad-9f05-8ce27cddeb26": [
+   "only_3_options"
+  ],
+  "25fe2d7b-7e0a-4d18-ae31-02f3062765a0": [
+   "question_91ch"
+  ],
+  "26afacfc-16ff-433c-a0b9-6cf07f213c35": [
+   "foreign_script"
+  ],
+  "26b0543e-c5b7-4bb7-ac21-6a81b1410882": [
+   "question_95ch"
+  ],
+  "271c4db4-7b32-4b8b-9db6-ab661e7d0aaa": [
+   "question_100ch"
+  ],
+  "2755f111-e665-4822-8088-3fec350354c9": [
+   "question_102ch"
+  ],
+  "2769dbd6-fd80-400e-a20f-9b3633e37f29": [
+   "question_96ch",
+   "answer_66ch"
+  ],
+  "27a962b0-fe9f-490f-9d3f-e70e77f64877": [
+   "question_111ch",
+   "answer_95ch"
+  ],
+  "27c09c4f-0588-4ace-9c97-466d024ea1a2": [
+   "answer_50ch"
+  ],
+  "2862b09a-b105-4921-9da1-181a18e16992": [
+   "question_98ch"
+  ],
+  "288be221-a400-4a8f-8b08-62da99c286f9": [
+   "question_102ch"
+  ],
+  "2913caa7-e3bb-45db-9c67-7f910ff4b4cc": [
+   "answer_64ch"
+  ],
+  "29ef7916-0151-4787-bfec-a2ed7fdb44fc": [
+   "answer_96ch"
+  ],
+  "2a1a220d-6406-4e9d-80da-19874b99fdb8": [
+   "question_102ch"
+  ],
+  "2a7db648-b71f-44f5-a5b7-80fc4aeed458": [
+   "question_98ch"
+  ],
+  "2ae8897a-6507-46bc-b4c9-8e3f3181034c": [
+   "foreign_script"
+  ],
+  "2bcaa407-b9ed-4640-b00a-6a1213aa3efa": [
+   "question_114ch"
+  ],
+  "2c694b14-4f64-4ecf-823e-2a553a585cbf": [
+   "question_96ch"
+  ],
+  "2cce5865-07c4-4126-9e7c-47cf7cc139db": [
+   "question_96ch"
+  ],
+  "2ce8852a-e9bb-48ec-8020-a354123c3cb7": [
+   "question_92ch",
+   "answer_65ch"
+  ],
+  "2ce8ccb1-1d9a-4b3e-99ae-603ca56c31e1": [
+   "question_110ch"
+  ],
+  "2d0f89d7-7c69-4c6f-87c3-b572d9982dc2": [
+   "question_99ch"
+  ],
+  "2d52cfff-950a-4670-b063-9147a807e4df": [
+   "question_97ch",
+   "answer_55ch"
+  ],
+  "2d54828d-379c-4150-9cc8-9c88d5ecfaae": [
+   "question_91ch"
+  ],
+  "2d581a45-6a46-437d-a9df-940af34cc349": [
+   "question_101ch"
+  ],
+  "2e3b6521-27f1-4279-89a7-3acad6943adc": [
+   "question_97ch"
+  ],
+  "306032ab-4009-40c4-beae-aff7ae83e379": [
+   "question_96ch"
+  ],
+  "30b50fdf-cdaa-4c6e-89ed-866f1ea22144": [
+   "question_98ch"
+  ],
+  "30c1c371-d437-4049-ac2c-424cb7ec00a1": [
+   "question_95ch"
+  ],
+  "30df185f-a8ac-48c5-8d7a-628367d747bc": [
+   "duplicate_options"
+  ],
+  "31b03b51-5d53-4a97-8012-5f140b14b91d": [
+   "answer_82ch"
+  ],
+  "3255211b-234b-42fd-9654-9d4984ece7bf": [
+   "question_107ch"
+  ],
+  "32dafaff-66f3-4bee-83ee-e882ea879455": [
+   "duplicate_options"
+  ],
+  "32dfa2e8-4a94-475e-8856-83064a231c94": [
+   "question_97ch"
+  ],
+  "33802640-26c2-4a7e-9b9c-68c5497edee2": [
+   "question_91ch"
+  ],
+  "339ac987-76f4-4510-8f4f-90c8f69a3bf8": [
+   "question_92ch"
+  ],
+  "340471a8-1cc1-4d47-8d3f-5a41c79f6c02": [
+   "question_114ch"
+  ],
+  "34342c72-3bda-4b28-bf35-256415e3b4ee": [
+   "question_114ch",
+   "answer_83ch"
+  ],
+  "3538db5c-6d2f-442c-9b35-c4dc46175d29": [
+   "duplicate_options"
+  ],
+  "3555f93f-8750-47f3-a6f0-400ef0aefe8a": [
+   "question_102ch"
+  ],
+  "35f4ae2c-ca39-4034-970f-95da48a1f553": [
+   "question_92ch"
+  ],
+  "36fc8731-88d0-4f05-85e2-3d633536c1e7": [
+   "question_118ch"
+  ],
+  "37218edb-b55d-430a-bdf3-7534b1ec0139": [
+   "question_92ch"
+  ],
+  "3798e93b-3f51-40e0-ba66-479d3c5da0fc": [
+   "question_104ch"
+  ],
+  "37e56f99-e670-4582-a65d-f08a97191d53": [
+   "duplicate_options"
+  ],
+  "38057c3d-c2e6-432b-a955-ffb4e8798693": [
+   "question_100ch"
+  ],
+  "38a1d181-7bab-4aa8-935b-a3ee03cead31": [
+   "question_113ch",
+   "answer_53ch"
+  ],
+  "38aae7c7-9969-4788-b776-93a0462bc2f3": [
+   "question_94ch"
+  ],
+  "38e17793-972e-4457-a955-3437dcabf9a0": [
+   "question_105ch"
+  ],
+  "3907054b-80a7-4385-9263-8f73c85eea62": [
+   "question_117ch",
+   "answer_89ch"
+  ],
+  "393dad3b-92e3-407b-8b69-28b2dfed21c7": [
+   "question_94ch"
+  ],
+  "39434c88-0f77-4bd6-b711-49de44b560c2": [
+   "question_98ch"
+  ],
+  "394c2301-f000-4664-b100-7058f332ffe6": [
+   "answer_50ch"
+  ],
+  "395f7659-0fe9-4ccd-80c4-9176ca829217": [
+   "question_104ch"
+  ],
+  "39752023-1ff0-4420-8f5d-31724871c574": [
+   "question_117ch"
+  ],
+  "3a2a59a8-1cce-425e-bb46-803e8d0b23ef": [
+   "question_98ch",
+   "answer_90ch"
+  ],
+  "3a3d165a-c6ec-4d63-a0e1-1d8e357bfde5": [
+   "question_101ch"
+  ],
+  "3a4f24c3-bf41-425a-af64-2bfecdf7624c": [
+   "duplicate_options"
+  ],
+  "3a7ad2ef-722b-467b-948a-28afc23f5457": [
+   "question_112ch"
+  ],
+  "3b4cfb04-4ebf-4f01-a152-49deb700293e": [
+   "question_101ch"
+  ],
+  "3b867df9-295e-44f0-9f8b-35baf6eb9ec2": [
+   "question_106ch"
+  ],
+  "3b88c9f9-cc1a-458b-bf49-e99c49f59ba7": [
+   "foreign_script"
+  ],
+  "3bb3e1a8-d07c-4f3d-b140-a3a2bfbdc0be": [
+   "duplicate_options"
+  ],
+  "3c3031ab-c70d-438a-aa86-72bbb5a953cb": [
+   "answer_90ch"
+  ],
+  "3c3cf5e4-9c7f-4837-9ffc-aabc9512a065": [
+   "answer_93ch"
+  ],
+  "3c49084e-b89b-4d17-a20e-7f688d956d50": [
+   "question_113ch"
+  ],
+  "3c78f980-b91a-44c6-a7dc-052fa19b1b6f": [
+   "answer_53ch"
+  ],
+  "3d0042c4-6d2b-4777-a03e-a30fe0d18800": [
+   "answer_51ch"
+  ],
+  "3d0a5ad3-170a-4a4a-9bef-9ecf697e3d57": [
+   "question_106ch"
+  ],
+  "3d9d93fe-2a25-41e1-871f-d4140c1e2dc6": [
+   "question_100ch"
+  ],
+  "3e2e0aef-1ae9-41bd-9c24-937271b85d36": [
+   "duplicate_options"
+  ],
+  "3e3f0cad-ca45-47d3-b1c4-c4383f194f5f": [
+   "question_107ch"
+  ],
+  "3ee72f1d-46be-4b72-a920-2bc68cd93b61": [
+   "question_100ch",
+   "answer_98ch"
+  ],
+  "3fbabbbf-471a-40ab-b067-6e101525cef9": [
+   "question_95ch"
+  ],
+  "3fbb445a-83a0-4c8d-b2da-7cbbf3489696": [
+   "question_100ch"
+  ],
+  "3fda59ce-1072-4bda-8d71-785b10716051": [
+   "question_103ch"
+  ],
+  "3fda97cb-d13a-458d-b481-4ba868145d75": [
+   "question_117ch",
+   "answer_51ch"
+  ],
+  "4087f935-6648-425f-931b-44dc01d6e917": [
+   "question_108ch"
+  ],
+  "40dbbfc7-be08-4d79-ba8c-a031dfaf07d8": [
+   "answer_113ch"
+  ],
+  "41747e0d-9f76-45c2-806c-6d6308920c83": [
+   "question_91ch"
+  ],
+  "41e9b1d3-bcb4-4819-916f-ee1ea294c488": [
+   "question_105ch"
+  ],
+  "422110ae-83c8-4d27-8894-227f3eba81ae": [
+   "question_93ch",
+   "answer_57ch"
+  ],
+  "428efb97-f0cf-4d68-92de-b7fd2ad805bc": [
+   "question_113ch",
+   "answer_60ch"
+  ],
+  "42f7f2bb-6781-4cfd-b282-97f7c0f0e51e": [
+   "question_94ch"
+  ],
+  "443bb647-a2e2-4bc5-a8f7-8a61054d8bda": [
+   "answer_58ch"
+  ],
+  "44ecfd91-3c8e-46a8-a801-2c1d1d868891": [
+   "question_102ch",
+   "answer_61ch"
+  ],
+  "44f7e53b-7869-4d7a-93a5-7ee8915c0ae7": [
+   "duplicate_options"
+  ],
+  "4529b637-2f2f-4bf4-89bf-674d2cca6bc4": [
+   "question_96ch",
+   "answer_116ch"
+  ],
+  "4541e9b7-bd8c-48af-9a6f-9cd6d4e8352e": [
+   "question_95ch",
+   "answer_104ch"
+  ],
+  "4564bab9-3b6f-44b7-b7b8-8ef65d802026": [
+   "question_99ch"
+  ],
+  "45a63b1f-b21f-44e2-a348-7946bb61d1a5": [
+   "question_112ch"
+  ],
+  "45f68351-a27d-4d94-8728-eec21ac0d1b1": [
+   "question_104ch"
+  ],
+  "46313174-4061-49a4-805d-4f45649adb71": [
+   "question_103ch"
+  ],
+  "465fbbd9-1508-4cc7-8a17-a80cb838ad0c": [
+   "question_100ch"
+  ],
+  "46e3d657-6c04-4739-bd40-9ce62350e0f3": [
+   "question_102ch"
+  ],
+  "46f0388b-e8ce-4c44-bf8d-c621680807a9": [
+   "question_103ch"
+  ],
+  "47236dc3-fae7-4f76-b04f-d20db35888ab": [
+   "question_107ch"
+  ],
+  "47294b3b-56a9-4378-b22b-5bdb16c241dc": [
+   "answer_84ch"
+  ],
+  "48394427-f130-4cac-b6a3-43bafacaf6e1": [
+   "question_99ch"
+  ],
+  "48ac8132-e077-48bc-841f-f94e2122e198": [
+   "question_110ch"
+  ],
+  "496e1e08-9789-4ee4-acab-fa9cf9eb272c": [
+   "question_94ch"
+  ],
+  "49c4ddc7-5b99-4f54-bbf3-aac87d19069d": [
+   "question_115ch"
+  ],
+  "4a370750-373c-4845-b7f0-d29443b483cc": [
+   "question_118ch"
+  ],
+  "4a42d5ba-f38b-46b0-a7a8-9692df4d64d9": [
+   "question_96ch"
+  ],
+  "4a8f11f6-baae-4b11-a81c-7cfb743ec124": [
+   "question_92ch"
+  ],
+  "4a9bd20e-8ee7-4c0d-a301-fb69f1dc4b59": [
+   "question_109ch",
+   "answer_56ch"
+  ],
+  "4ab70545-9a85-4d7d-b55c-11bf06a40d9b": [
+   "question_104ch"
+  ],
+  "4b0060f4-b457-4385-ab6f-601f4895becf": [
+   "question_92ch"
+  ],
+  "4c836800-dfd9-40f1-8ee0-5841017c6261": [
+   "question_99ch"
+  ],
+  "4c83d67e-720b-48a5-9599-441947f8af47": [
+   "question_100ch"
+  ],
+  "4c866aa7-1cce-410a-a589-82474b14fab9": [
+   "question_101ch",
+   "answer_73ch"
+  ],
+  "4cca32bd-63fb-4d04-9322-40b38b343141": [
+   "question_94ch"
+  ],
+  "4cdc823b-3b11-4d62-a397-8fa9d3a20713": [
+   "question_95ch"
+  ],
+  "4d145eb5-32c5-485a-989d-7a907c93f2ef": [
+   "answer_61ch"
+  ],
+  "4d61d5b1-b605-4c91-adc6-58ebbb606312": [
+   "foreign_script"
+  ],
+  "4de9f877-10e2-4700-8dae-8145256a2771": [
+   "question_104ch"
+  ],
+  "4e4cdbac-c308-47cf-9800-6711c9641b7e": [
+   "duplicate_options"
+  ],
+  "4e7f8e69-47d6-4b5c-9a72-9d1405c1b068": [
+   "duplicate_options"
+  ],
+  "4eae66ca-7f64-486b-a9dd-d2bed11f27a5": [
+   "question_112ch"
+  ],
+  "4f8b91d0-ef28-4345-b84e-b3282a1371b7": [
+   "question_97ch"
+  ],
+  "5006abf6-fa71-4860-b8b6-9412e1f711fd": [
+   "question_91ch"
+  ],
+  "50459cb5-a529-4f6e-81eb-8f2aa7dfda29": [
+   "question_100ch"
+  ],
+  "5056e8ba-82fb-4cf7-bee0-459eff5b89b9": [
+   "question_99ch"
+  ],
+  "50a5fb08-a55f-4167-9275-6cdfbc0a1fcb": [
+   "question_103ch"
+  ],
+  "514f1c2b-58cc-4efd-87f8-27e2cd4e3182": [
+   "question_106ch"
+  ],
+  "515187c3-8238-4791-b7b6-f7ba0ebfed27": [
+   "question_106ch",
+   "answer_134ch"
+  ],
+  "515f4df3-f684-4cde-a34f-d5f31c9f64f9": [
+   "question_111ch"
+  ],
+  "51634eac-d09b-44aa-a203-b7a8a24091f5": [
+   "foreign_script"
+  ],
+  "51b4d688-8aba-4944-b674-96578fefb87f": [
+   "question_104ch"
+  ],
+  "51d522c1-a5f7-4425-b735-0601935f6cb1": [
+   "answer_98ch"
+  ],
+  "5271a7db-bb58-488a-8ef6-05e8281088e6": [
+   "question_99ch"
+  ],
+  "52c94132-70fc-4755-96cb-95a0e021d8b8": [
+   "question_99ch"
+  ],
+  "52c95184-7100-425a-acef-cd117948aed8": [
+   "foreign_script"
+  ],
+  "53146cc4-1401-40c4-b31a-6856fb12c640": [
+   "question_111ch"
+  ],
+  "53b8c811-4acc-4a49-8017-42e3f1ef42b5": [
+   "question_99ch"
+  ],
+  "53e33891-73c9-4744-9826-6428e4d352f6": [
+   "question_91ch"
+  ],
+  "5428c403-4c7d-4c23-90da-221252a51560": [
+   "question_91ch"
+  ],
+  "5435b539-bfbd-4965-ae0a-911326460d43": [
+   "answer_58ch"
+  ],
+  "548caad5-1b06-4ec7-98bd-e4259282c317": [
+   "question_105ch"
+  ],
+  "54f278ec-ff07-466f-86aa-4b23bafb1dcd": [
+   "question_91ch"
+  ],
+  "5528b2fa-7ba5-42f6-812b-502accdffddd": [
+   "question_116ch",
+   "answer_54ch"
+  ],
+  "559e4398-e020-4c7b-a169-83e945014922": [
+   "question_94ch"
+  ],
+  "55dc341c-091d-4671-a100-565c3324421d": [
+   "question_93ch"
+  ],
+  "55e3657c-7fd6-4c0e-88f4-ff14ed12503c": [
+   "question_96ch"
+  ],
+  "56134f15-af24-4138-8284-6738b27fabd8": [
+   "question_94ch"
+  ],
+  "5617889d-c862-4fca-8e32-37372d41b9de": [
+   "question_92ch"
+  ],
+  "56276030-0625-4d82-9880-49af63d619dc": [
+   "question_106ch"
+  ],
+  "56282f77-914f-411a-98f6-0e32888a19f5": [
+   "question_115ch",
+   "answer_58ch"
+  ],
+  "56989699-9319-4fba-9de1-99669a64e670": [
+   "question_97ch"
+  ],
+  "56bfc293-a012-43e8-9950-e665b3b30e42": [
+   "question_93ch"
+  ],
+  "577b1c9e-a0ae-42be-88eb-849578695f85": [
+   "question_106ch"
+  ],
+  "579f05ae-1703-4130-a51b-ac09c1375079": [
+   "question_104ch"
+  ],
+  "57ad1daa-e791-4e67-ba67-d83cd8418b06": [
+   "question_93ch"
+  ],
+  "588bce58-5865-4448-8325-daac8198da70": [
+   "question_102ch"
+  ],
+  "589c37e8-3dc5-494f-a855-976e7b2b7048": [
+   "question_102ch"
+  ],
+  "58c26e2f-d43c-40b1-8793-d764597d0d62": [
+   "question_103ch"
+  ],
+  "58d307d5-3f57-40c6-81f0-e35529300952": [
+   "question_104ch",
+   "answer_119ch"
+  ],
+  "5973f316-84af-46d3-8f21-fba05993b3d1": [
+   "question_94ch"
+  ],
+  "59c0998b-8a83-459f-8864-d4ff4820fc27": [
+   "duplicate_options"
+  ],
+  "59cb5e50-67ec-4311-9f0a-87e20a0faf3c": [
+   "question_93ch"
+  ],
+  "5a64fd23-cc19-43b5-9b34-97f777bf565d": [
+   "question_91ch"
+  ],
+  "5ab2ceed-5d10-4551-8294-db730f83b3c7": [
+   "question_112ch",
+   "answer_99ch"
+  ],
+  "5b1c5863-2260-401c-a402-edd99810c0c5": [
+   "question_114ch",
+   "answer_93ch"
+  ],
+  "5b48bdec-b538-4e0f-9173-eea2a95fab18": [
+   "answer_92ch"
+  ],
+  "5c1ea944-2fe9-47ff-9427-0954d8f5be4f": [
+   "answer_64ch"
+  ],
+  "5d141e94-039a-4856-b950-a2f9a2975893": [
+   "question_100ch",
+   "answer_93ch"
+  ],
+  "5d20d58e-1c2c-46d7-8dca-4e1ed051d7db": [
+   "question_115ch"
+  ],
+  "5d262c67-fb27-48dc-8775-1e88438e33b8": [
+   "question_103ch"
+  ],
+  "5e7b0805-a450-4383-b614-b0e123ee46ef": [
+   "question_95ch"
+  ],
+  "5ee87b5c-e300-4204-89e5-de2b907c5dfe": [
+   "question_118ch"
+  ],
+  "5f115453-1179-4343-8ecb-bd1cad8b4e1c": [
+   "question_104ch"
+  ],
+  "5f68ab16-3369-44cf-9ba0-42909552ef93": [
+   "question_95ch"
+  ],
+  "5fa45696-2de2-42ba-acbb-e7e4b74c7de8": [
+   "question_91ch",
+   "answer_71ch"
+  ],
+  "5ffbb7b7-5344-4e9d-b577-45d0da5b4bef": [
+   "question_100ch"
+  ],
+  "6040af3e-89f9-4a54-8d08-408ae8613e00": [
+   "question_107ch"
+  ],
+  "605806ce-2a30-47c3-9d9c-1f0713a60c56": [
+   "question_116ch"
+  ],
+  "605c2c98-0b76-49d6-a659-17f6f92eb64c": [
+   "foreign_script"
+  ],
+  "613c35e9-9d8d-4626-8b17-7faa5bc99f10": [
+   "question_103ch"
+  ],
+  "61dca268-5dc3-43ac-8330-1f6360adec62": [
+   "question_96ch",
+   "answer_81ch"
+  ],
+  "628ac3df-1131-40bf-9519-0c6eda841b26": [
+   "answer_51ch"
+  ],
+  "62a33946-e49d-4f7d-9aa7-8207ecc16c51": [
+   "question_97ch"
+  ],
+  "62f91b16-1357-41e1-9bff-920581987eff": [
+   "question_105ch"
+  ],
+  "6362cbfd-ef79-42db-813f-a4c7b0a987aa": [
+   "answer_84ch"
+  ],
+  "6381e9ec-c714-4057-ad5a-e7b138fa1e58": [
+   "question_92ch",
+   "answer_89ch"
+  ],
+  "6435892b-fb77-46fd-a411-8ae2277350e7": [
+   "answer_55ch"
+  ],
+  "6467e9b3-6cd8-4101-9b69-559e964c79a6": [
+   "question_97ch"
+  ],
+  "64bdf00e-1035-4f96-b70c-631002cfebc7": [
+   "duplicate_options"
+  ],
+  "64c9a1f4-a3da-4937-babf-f7ca79c281ca": [
+   "answer_52ch"
+  ],
+  "65680b6e-1700-437c-92d5-c67ac09d191b": [
+   "question_94ch"
+  ],
+  "66f974b5-9a45-485f-8aaf-d7a18921901d": [
+   "question_97ch",
+   "answer_49ch"
+  ],
+  "678a0ae3-aa05-4801-9b3a-3deff71ecfc0": [
+   "question_108ch",
+   "answer_75ch"
+  ],
+  "67a7ca33-51c8-4fda-9ae1-c526f87fb7fd": [
+   "question_91ch"
+  ],
+  "67b72c3d-cd52-4a9d-a62d-e0f3e3e87145": [
+   "foreign_script"
+  ],
+  "683921e3-b2e5-4324-8e30-3cb92cdd0745": [
+   "question_118ch"
+  ],
+  "68488a8c-4e0c-4aa4-8965-2e1fbb53c09e": [
+   "only_3_options"
+  ],
+  "68acac26-b8b6-48d8-ab76-8969b937dfec": [
+   "question_110ch"
+  ],
+  "68c5ce82-70a1-4ffc-8e81-18105257a5b0": [
+   "question_110ch"
+  ],
+  "691a6352-b67c-4b1e-b2ea-470798c2abaf": [
+   "question_106ch"
+  ],
+  "694d58fd-b2d1-40a4-bc96-603d51165e34": [
+   "only_2_options"
+  ],
+  "69b562c5-48c9-46e2-a6c8-25b92e0f1c17": [
+   "question_113ch"
+  ],
+  "6a47f7c8-cf13-4f06-85b0-a2bcd0004a15": [
+   "question_93ch"
+  ],
+  "6a8e9248-c97a-481d-ae65-1ec70897de19": [
+   "question_102ch"
+  ],
+  "6ac5d1cb-89b4-4bff-ab4b-a412ab00040a": [
+   "question_102ch"
+  ],
+  "6b8439da-0b3e-4420-af2e-d9c4543c9939": [
+   "question_104ch"
+  ],
+  "6bbb442b-663c-49dc-840b-05fe7b465f28": [
+   "duplicate_options"
+  ],
+  "6c632360-9cbe-4ccc-a68e-5cb99ea2a0b0": [
+   "question_106ch",
+   "answer_74ch"
+  ],
+  "6c7eb792-ec18-4037-83fa-73ab1eafd842": [
+   "foreign_script"
+  ],
+  "6ce5a733-f4af-442a-bf41-bf06eb70bfec": [
+   "question_100ch"
+  ],
+  "6d803757-488d-4d92-93a8-56cc4f249bc2": [
+   "question_109ch"
+  ],
+  "6dd92db9-4564-4260-9d57-4baf43caa6b4": [
+   "question_116ch"
+  ],
+  "6eef557c-5fbb-4fba-86a0-d8dea7ae5c47": [
+   "question_96ch"
+  ],
+  "6f38b748-fc30-41ff-9093-3dfa4e0b970f": [
+   "answer_72ch"
+  ],
+  "6fd24f9b-3d95-4c93-9436-4487d718498b": [
+   "question_101ch"
+  ],
+  "70395c4f-7b05-4b44-b2bb-cdafcda8f682": [
+   "question_92ch"
+  ],
+  "717671b0-09ae-4f99-ab59-d65b8e8b2e24": [
+   "question_114ch"
+  ],
+  "71806295-f80c-4a28-80b0-1f4dad44bf00": [
+   "question_102ch"
+  ],
+  "71bfb733-954f-424d-9419-36923efb4e5d": [
+   "answer_93ch"
+  ],
+  "71fec91c-309b-468f-99f5-efb22c2dd8f5": [
+   "question_118ch",
+   "answer_49ch"
+  ],
+  "737e151f-d963-4828-9a7b-000666a3ed2c": [
+   "duplicate_options"
+  ],
+  "7448dc64-6550-40bc-80da-ebf0b95dcd54": [
+   "question_113ch",
+   "answer_58ch"
+  ],
+  "7468913b-4e13-44db-afad-7f5d02ae8192": [
+   "question_93ch"
+  ],
+  "749c4a56-70a7-4793-81e6-0f6f2033966e": [
+   "question_109ch"
+  ],
+  "74b60455-629e-4dab-be5f-3a106fdff058": [
+   "question_98ch"
+  ],
+  "74caa522-c11f-45c0-b899-d1dcc7a5b3cb": [
+   "question_94ch"
+  ],
+  "74ef26d3-07a7-418c-9a49-de8516cfa4f3": [
+   "question_115ch"
+  ],
+  "7554f433-9b43-450c-a8b0-481188f7995e": [
+   "question_115ch"
+  ],
+  "757698c3-02a4-490c-9986-22c6df7c118a": [
+   "question_99ch"
+  ],
+  "75d45d4a-584d-419a-b319-6a2b2f823ef2": [
+   "question_97ch",
+   "answer_54ch"
+  ],
+  "75efd69e-5a96-4ed6-b32e-3f184dad6e77": [
+   "question_93ch",
+   "answer_87ch"
+  ],
+  "765e1576-507d-4dcf-881d-d949f9e231d9": [
+   "question_96ch",
+   "answer_49ch"
+  ],
+  "7693acc8-55b5-4504-b420-9cd04eb2bf36": [
+   "answer_70ch"
+  ],
+  "77246d22-8602-4dea-992b-4e93f0cd6c82": [
+   "question_95ch"
+  ],
+  "77a1ef14-7ee0-4ca8-aa70-49093fe06c00": [
+   "question_102ch"
+  ],
+  "791c6359-818f-49fd-b8c5-51b23cbaa70c": [
+   "foreign_script"
+  ],
+  "797828a1-3283-4387-ac11-36f256407346": [
+   "question_105ch",
+   "answer_51ch"
+  ],
+  "79820caf-4339-4220-a5fa-44b13f57c062": [
+   "question_100ch"
+  ],
+  "79db3c70-6e69-43eb-a445-1c7bc2cb33ed": [
+   "question_108ch"
+  ],
+  "79ff3952-0aa1-45d3-b3cd-3f47b5517052": [
+   "foreign_script"
+  ],
+  "7a4c23be-1f77-4bc6-9a8c-729ff67c6be2": [
+   "question_107ch"
+  ],
+  "7b3aa038-4e86-47cd-a908-73baea8c08b9": [
+   "answer_61ch"
+  ],
+  "7b4293c8-fc45-4940-a6ec-858cfa772bec": [
+   "question_113ch",
+   "answer_71ch"
+  ],
+  "7b570a04-1919-4363-97ec-8abb27e2bf37": [
+   "duplicate_options"
+  ],
+  "7bce9932-edb8-42ad-a307-9b77fc080f3b": [
+   "answer_61ch"
+  ],
+  "7bfa7663-9d32-44ae-a161-01cfab234de3": [
+   "question_103ch"
+  ],
+  "7ca6f25b-6a9c-4541-855d-9ddf418f9021": [
+   "question_93ch"
+  ],
+  "7cb4b90d-47c3-488d-8671-36fe90d48039": [
+   "question_91ch"
+  ],
+  "7dae3534-8e31-4a0c-a02f-2d1f765fd13c": [
+   "duplicate_options"
+  ],
+  "7de58f93-c909-43a9-b277-473823afcac1": [
+   "question_107ch"
+  ],
+  "7e589d59-b455-4538-833d-471c42962e8a": [
+   "question_104ch"
+  ],
+  "7e6e1274-2bda-4193-af6b-53c1c5e79ae7": [
+   "question_92ch"
+  ],
+  "7eb01b49-9840-4a9d-8933-3292dc113e17": [
+   "answer_80ch"
+  ],
+  "7f23d6f2-644e-4070-a2d0-23884dc8b71d": [
+   "question_98ch"
+  ],
+  "7f940e58-e230-4700-9856-ad817eb4c5e6": [
+   "question_112ch"
+  ],
+  "800197ae-cd8d-4155-b9b5-955237585d9b": [
+   "answer_50ch"
+  ],
+  "81036a13-3910-47f3-b1e2-086a9a7e7f65": [
+   "foreign_script"
+  ],
+  "8175483b-ba2a-4275-9e7f-759645731506": [
+   "question_116ch"
+  ],
+  "82073b51-09aa-4066-8d8e-ffb7e166b0bf": [
+   "question_118ch"
+  ],
+  "821338c5-89bb-478d-ab90-93c4fdfca5dc": [
+   "question_92ch"
+  ],
+  "82225d1e-f80e-468e-a742-ad9dfeb9b71a": [
+   "question_102ch"
+  ],
+  "82626c3c-0eab-49c3-ab0d-6e69e6879a2f": [
+   "question_92ch"
+  ],
+  "826b1521-952a-40cb-801f-c27922759256": [
+   "duplicate_options"
+  ],
+  "828e9c57-ee54-49fa-a58a-90c7151f474a": [
+   "question_94ch"
+  ],
+  "833dc6b0-fbf2-4296-9a52-e289a2db0c01": [
+   "question_98ch"
+  ],
+  "837c1f1c-14ec-4fa5-ba3a-887c2e7aa39c": [
+   "question_113ch",
+   "answer_103ch"
+  ],
+  "83a992f5-1985-4185-a8cd-43af147a80a9": [
+   "question_91ch"
+  ],
+  "84514945-5525-421f-b54d-a74cde33465e": [
+   "question_100ch"
+  ],
+  "8479bb89-38f9-4fb9-b24f-5fc882d7a056": [
+   "question_93ch"
+  ],
+  "84c40ecb-c1e0-4e4d-904c-3ee14d22a8d7": [
+   "question_91ch"
+  ],
+  "8580c258-3ab4-479d-8ded-4cf1600bba1c": [
+   "question_91ch"
+  ],
+  "85c62e13-d636-4024-b807-1f6156210965": [
+   "answer_88ch"
+  ],
+  "85efc4fa-1388-4b73-9d51-0fb636286081": [
+   "question_103ch",
+   "answer_63ch"
+  ],
+  "8647e170-a9e8-40ee-af74-cc9cc7a74401": [
+   "question_117ch"
+  ],
+  "867b4766-168c-4484-94a1-8e612b5b3190": [
+   "question_102ch"
+  ],
+  "86a936b1-9de3-46f7-ab75-a040a6c56d5b": [
+   "question_114ch",
+   "answer_126ch"
+  ],
+  "87843c28-4cdb-4f9c-83e6-670b525ae62e": [
+   "question_116ch",
+   "answer_72ch"
+  ],
+  "88a2c44f-3af5-40ce-9944-1cb93e33558a": [
+   "question_114ch",
+   "answer_97ch"
+  ],
+  "89788378-0d1f-4bd6-ac28-2c537b1f1d10": [
+   "question_117ch"
+  ],
+  "89e53f4b-9fe1-4bd0-bc51-275ea8fb26f9": [
+   "question_113ch"
+  ],
+  "89feb3a2-35b9-45e9-8b11-f1333c80c9c3": [
+   "question_98ch"
+  ],
+  "8a9c0bf6-6457-4c61-b3f4-d3c6406f1823": [
+   "question_110ch"
+  ],
+  "8b405416-9d1f-4c9d-be8a-3abce3529bdf": [
+   "answer_62ch"
+  ],
+  "8ba23b3c-a482-473d-bcb0-6a9479221d26": [
+   "answer_64ch"
+  ],
+  "8c018548-5085-45bc-aea6-7de85e8f496d": [
+   "question_97ch",
+   "answer_68ch"
+  ],
+  "8c34a5e1-782e-4bdd-89ab-98a592079660": [
+   "question_105ch"
+  ],
+  "8c64241f-252c-4c89-b72a-33fc5d4a82d2": [
+   "question_106ch"
+  ],
+  "8c6b9cee-3f8a-413d-94bd-4b77683045ef": [
+   "question_99ch"
+  ],
+  "8d125a6a-931f-4e21-8d43-b73fb15e73cd": [
+   "question_93ch",
+   "answer_85ch"
+  ],
+  "8d19df8b-fe16-4a58-88f7-b42014213bf5": [
+   "question_95ch"
+  ],
+  "8dee9522-ed30-425f-a8bf-476cbae73333": [
+   "question_98ch"
+  ],
+  "8e569cdb-0bd7-4c2c-ace1-7b2cb96f914d": [
+   "question_95ch",
+   "answer_52ch"
+  ],
+  "8e99cd1a-a99f-47aa-b80c-e76be6cb1d95": [
+   "question_92ch",
+   "answer_71ch"
+  ],
+  "8ed5dd5f-a903-4813-bfed-b177dec93cea": [
+   "question_93ch"
+  ],
+  "8ee4bef6-6ed3-47be-a5e0-bbc66424668e": [
+   "question_94ch"
+  ],
+  "8f2a0631-64df-41c3-a20d-71ed07498c7a": [
+   "question_94ch"
+  ],
+  "8f4bf504-81de-4ed7-8d5a-938601203d8a": [
+   "question_104ch"
+  ],
+  "8f628861-f526-48b8-8d63-8d2d6bc1423b": [
+   "question_94ch"
+  ],
+  "8f95df78-88ca-41b6-8fb2-8b0754ef0a8a": [
+   "question_96ch"
+  ],
+  "8fa54522-3356-4115-ac97-360de98c90ee": [
+   "question_107ch"
+  ],
+  "903346c6-a9f6-41f2-90f6-f66ca146fe0f": [
+   "question_105ch"
+  ],
+  "905fda73-ab59-44ac-9c3a-ff2aa3b4ee2c": [
+   "question_105ch"
+  ],
+  "90f14ed0-1b34-424c-8249-ef1570bcf53d": [
+   "question_94ch"
+  ],
+  "910aee2e-4fb7-4487-8ea9-3b425011b23f": [
+   "question_105ch"
+  ],
+  "917627d9-ddb8-4337-b734-474739dd3080": [
+   "question_97ch"
+  ],
+  "91bff746-e3e9-4070-be80-e1f634bca949": [
+   "duplicate_options"
+  ],
+  "9209adca-2ede-4864-8e38-b20fad42b78d": [
+   "question_96ch",
+   "answer_70ch"
+  ],
+  "935d431d-ab54-4039-874b-e8e4176e146c": [
+   "question_92ch"
+  ],
+  "9375c658-4fd5-4e4a-8f33-b9b3a2a91abd": [
+   "foreign_script"
+  ],
+  "9420400e-c6ca-41b0-a06e-b5e8733877bb": [
+   "question_92ch"
+  ],
+  "942c8ceb-f8a9-4aef-943f-8c2fbb8437d0": [
+   "question_103ch",
+   "answer_82ch"
+  ],
+  "9489d8fd-263e-48b0-9a16-733187f81883": [
+   "question_100ch",
+   "answer_106ch"
+  ],
+  "95a257e4-1901-4c49-afe6-a837e091812e": [
+   "question_98ch"
+  ],
+  "95ce0f2e-7ac8-4928-9941-c00cd6c3cc15": [
+   "question_100ch"
+  ],
+  "96683bf2-469e-49ee-9ba7-438e19c254f5": [
+   "question_104ch"
+  ],
+  "97002c03-cd57-49e2-9ebe-dabfb5ceeb36": [
+   "question_91ch"
+  ],
+  "97018625-5e38-4841-823e-5c3f83eb5198": [
+   "answer_91ch"
+  ],
+  "97f122ad-1e21-4d14-8591-57b1c11faa9a": [
+   "question_113ch"
+  ],
+  "98d3d5d2-e1f4-496d-a77b-ce53176d2915": [
+   "question_117ch"
+  ],
+  "98ff923e-0402-4243-92d7-f1703c6f9bbc": [
+   "question_92ch",
+   "answer_62ch"
+  ],
+  "99400371-caeb-46f3-8d57-a4e261822868": [
+   "question_111ch"
+  ],
+  "99796769-2d3d-4a22-bc01-4fba8c9b8d10": [
+   "answer_54ch"
+  ],
+  "99a0f84b-dd3f-41d6-adab-e8e4c3d45a62": [
+   "question_98ch"
+  ],
+  "99b2d39f-7eae-4f1a-9441-9c9d64e91673": [
+   "question_91ch"
+  ],
+  "9ac0208c-1831-4b65-88e8-f4bba23c0cf1": [
+   "question_95ch"
+  ],
+  "9b347655-119a-43ee-b8b0-9eaff47ccf93": [
+   "question_91ch"
+  ],
+  "9c894f8f-f637-485d-9f2a-b3a0aa86ee8a": [
+   "question_91ch"
+  ],
+  "9d1e469b-74d9-4028-a9be-62571160c2ef": [
+   "question_108ch",
+   "answer_101ch"
+  ],
+  "9d57eb25-0e95-402b-ac8d-cd5c3dee7baf": [
+   "question_108ch"
+  ],
+  "9e3290d1-e89a-4e03-811b-4dc7ba79d7d3": [
+   "question_98ch"
+  ],
+  "9e85714e-8f97-488e-be6e-56607c87289e": [
+   "question_109ch"
+  ],
+  "9ee42b23-fe5f-49e5-b964-33d86a31282a": [
+   "question_100ch"
+  ],
+  "9f4fd5c2-88f4-46ab-af20-f2f4f99b123a": [
+   "question_94ch"
+  ],
+  "9f6029b7-97de-4286-be68-f30fe85602b9": [
+   "question_114ch"
+  ],
+  "9fc08e0d-1ea3-44a0-982e-c7ac6a66156d": [
+   "question_104ch"
+  ],
+  "a0531c23-2775-4073-9cd3-1252df9579b9": [
+   "only_2_options"
+  ],
+  "a0580c6e-77d8-4a53-a14c-aa00668664d4": [
+   "question_108ch"
+  ],
+  "a0657f44-1645-49b1-a131-5828f0d5f8f8": [
+   "answer_60ch"
+  ],
+  "a17d50a9-52df-4372-bb55-f84bd77d8755": [
+   "question_96ch"
+  ],
+  "a1ffb6bf-bdeb-464d-b0a7-2e23cab15724": [
+   "question_93ch"
+  ],
+  "a2147d36-05bd-49e2-bb26-a07bbc21468b": [
+   "question_97ch"
+  ],
+  "a2a76a96-d7c7-42ac-9096-a9e7eefd286f": [
+   "foreign_script"
+  ],
+  "a2faa0a6-5f18-42a4-86b2-32a7205668a2": [
+   "question_118ch"
+  ],
+  "a3233f48-cf1a-44dd-ae55-20cd9ababf42": [
+   "question_92ch"
+  ],
+  "a34f1a69-6d6f-426d-bcb3-c86e96e665e9": [
+   "duplicate_options"
+  ],
+  "a3a217e7-431f-4428-b3f2-72634d84a0d5": [
+   "duplicate_options"
+  ],
+  "a3e44155-8ade-479c-a5bc-4c2ffd1ab12d": [
+   "question_107ch"
+  ],
+  "a405f67b-7f2c-4070-85ef-e78a1dfd6dd4": [
+   "question_111ch"
+  ],
+  "a41b433b-39f4-4b53-bb99-9da5cbe11ca0": [
+   "question_110ch"
+  ],
+  "a4384c03-4115-484b-8dde-70263aeb8f73": [
+   "question_114ch"
+  ],
+  "a5606c36-e773-4685-9a9d-b5bf65779680": [
+   "question_113ch"
+  ],
+  "a5cec96a-bc01-47e5-838d-7f32a977473a": [
+   "question_101ch"
+  ],
+  "a7092f1a-2da1-4a9d-82e7-0aba58327a36": [
+   "question_97ch",
+   "answer_56ch"
+  ],
+  "a70b9b82-c400-46c4-bcde-5d14fbf85d18": [
+   "question_99ch"
+  ],
+  "a733f50c-71ba-409b-9841-531fc21251ae": [
+   "question_107ch"
+  ],
+  "a772f876-063c-449d-a326-69512371df32": [
+   "question_114ch",
+   "answer_102ch"
+  ],
+  "a89e54b3-a382-4ff5-8a97-9dbf6be222ee": [
+   "question_114ch"
+  ],
+  "a8ce3976-5581-4ab6-a52e-664baa56cde3": [
+   "question_99ch"
+  ],
+  "aa347bd9-0794-481b-8714-bd51dfb43fc4": [
+   "question_100ch"
+  ],
+  "aa4e81d8-20ba-457e-adec-637dbb38ec16": [
+   "only_2_options"
+  ],
+  "aacd3bd2-1adb-4f75-9b78-87837c2e9382": [
+   "question_95ch"
+  ],
+  "ab2a3631-6c78-42d5-ae9b-e9b40b5a9ea3": [
+   "question_102ch"
+  ],
+  "ab9eb116-fd96-40b5-bb47-d2a3c67bd62c": [
+   "foreign_script"
+  ],
+  "acea0152-72ff-41f5-acd2-b6652b44db50": [
+   "question_108ch"
+  ],
+  "ad73155b-22c1-43e6-99b1-4a4c249d5894": [
+   "foreign_script",
+   "question_95ch"
+  ],
+  "adf29d7d-549c-4ade-b094-f2984367fb0b": [
+   "question_101ch"
+  ],
+  "ae0a1f17-0caa-4b7a-99f8-3ef553101210": [
+   "question_108ch",
+   "answer_65ch"
+  ],
+  "ae0d786d-6e61-4185-b2a2-d0cde76cf126": [
+   "question_96ch"
+  ],
+  "ae4c45e2-8598-4ed6-a3e3-2a52416fd8f9": [
+   "foreign_script"
+  ],
+  "ae96946f-b7a3-499c-b07b-60566558cc9b": [
+   "question_93ch"
+  ],
+  "af1f456c-d5ae-4866-a371-99e65c27e261": [
+   "duplicate_options",
+   "foreign_script"
+  ],
+  "af3dffef-d595-4da9-b099-0ee6a379aa46": [
+   "question_105ch"
+  ],
+  "af495d9c-dc14-4b75-a1ee-2f1994386193": [
+   "question_96ch"
+  ],
+  "aff6bc3b-8d03-4d36-831a-0b0cec09aabf": [
+   "question_93ch"
+  ],
+  "b06d6d2a-150f-4101-8b13-14428814fb8f": [
+   "question_92ch"
+  ],
+  "b094fab5-7d68-4fed-95ea-7be586807b60": [
+   "question_98ch",
+   "answer_90ch"
+  ],
+  "b0ba858c-95f9-4fae-a463-3c2e98711062": [
+   "question_100ch",
+   "answer_65ch"
+  ],
+  "b0dbb61d-d290-4c95-9fcf-b2d31e1d7fff": [
+   "answer_50ch"
+  ],
+  "b1e854df-d5f8-4228-84af-6321283bc216": [
+   "question_107ch"
+  ],
+  "b272e272-913c-4c6e-bf42-79ae5e27a20d": [
+   "question_105ch"
+  ],
+  "b2a297b3-0f5b-4a98-9530-72f960082963": [
+   "answer_82ch"
+  ],
+  "b2df8362-fe53-4cc5-af9b-30352e99a494": [
+   "question_92ch"
+  ],
+  "b38513d2-5f17-4977-b523-55affc81f86b": [
+   "only_3_options"
+  ],
+  "b399fe75-5ca4-4412-ae8d-c4401a013486": [
+   "answer_104ch"
+  ],
+  "b433945d-a06f-4c25-bee9-0b7f1137c8aa": [
+   "answer_128ch"
+  ],
+  "b4476560-0cf1-4511-a561-059089027cce": [
+   "question_91ch"
+  ],
+  "b5238ba9-8d3b-4602-b990-3ec27e08ce84": [
+   "answer_99ch"
+  ],
+  "b5804112-e15d-472a-9323-afceec42b444": [
+   "question_95ch",
+   "answer_98ch"
+  ],
+  "b5afe9de-dd72-4d1f-b543-d2e6f1f6e5df": [
+   "question_105ch",
+   "answer_63ch"
+  ],
+  "b657622e-bdee-43c8-9e12-eed97e363fec": [
+   "question_104ch"
+  ],
+  "b6759b45-8a0e-448c-ae21-102a6ae1246b": [
+   "question_94ch"
+  ],
+  "b6a09373-cba3-48ad-89e5-6b0b0975eed3": [
+   "question_101ch"
+  ],
+  "b70b3a80-11bb-4a7c-9aca-41a542cf089a": [
+   "question_118ch"
+  ],
+  "b7844462-ce58-4cc1-a12f-895586f417b2": [
+   "answer_84ch"
+  ],
+  "b79e625b-331c-43a9-aff1-69abebe04441": [
+   "question_116ch",
+   "answer_76ch"
+  ],
+  "b7d56cbf-2e98-41ac-9f60-c1f603dc3e8e": [
+   "duplicate_options"
+  ],
+  "b80bdf0b-4d27-4fa8-aa5a-a10964f5222d": [
+   "question_118ch",
+   "answer_85ch"
+  ],
+  "b8d25a02-fdb5-4b44-8a56-0fa57db2a2b9": [
+   "question_91ch"
+  ],
+  "b961bc9a-232a-45db-8cbc-92d168fd056c": [
+   "question_105ch"
+  ],
+  "b99b4e39-5c9d-4b63-a140-975577b11492": [
+   "question_109ch"
+  ],
+  "ba0424bb-c79d-435b-a032-3ee3326676e1": [
+   "question_110ch"
+  ],
+  "ba4b020e-b8da-4033-b5a7-f341c42fdbbb": [
+   "question_111ch",
+   "answer_86ch"
+  ],
+  "ba617707-4fe3-462e-8a1d-71b7c5ca5cb5": [
+   "question_112ch"
+  ],
+  "ba61bf84-447d-4825-ae61-2944ad4a686a": [
+   "only_2_options"
+  ],
+  "bae3cc3d-b1d0-49c7-b06e-f28b1eae91f0": [
+   "question_102ch"
+  ],
+  "bc2fe8ed-fa09-409a-b77a-a4569f85ab46": [
+   "question_108ch"
+  ],
+  "bc32ec72-988d-48d1-8405-3fc9a229f666": [
+   "duplicate_options"
+  ],
+  "bd1530e8-44ad-4696-9900-a134a44f5a7b": [
+   "question_94ch"
+  ],
+  "bda9e5f0-d1c8-491a-8436-0199739a5565": [
+   "duplicate_options"
+  ],
+  "bdcdef02-d2fc-488b-9f75-9f90e83b5d29": [
+   "question_109ch"
+  ],
+  "be81126b-1aaa-4655-8c3d-e67b969595c3": [
+   "duplicate_options"
+  ],
+  "bf39d603-11cb-421a-b467-5e7df251b366": [
+   "question_98ch",
+   "answer_77ch"
+  ],
+  "bf7efc71-4d53-46e4-b50f-fe92b4458438": [
+   "question_110ch"
+  ],
+  "bf937fba-a1f9-4947-b656-d03d0daf0bd1": [
+   "answer_55ch"
+  ],
+  "bfbb4fec-6303-4bc9-a1ed-978de33d0c1a": [
+   "question_112ch"
+  ],
+  "c004fe5b-4892-41af-a847-2ef0d66a6336": [
+   "answer_70ch"
+  ],
+  "c0537e58-a41e-4b3e-99d0-6d2c3ddb3673": [
+   "question_93ch"
+  ],
+  "c0ac3e2a-3a70-40eb-a11c-3b747a3d1902": [
+   "question_101ch"
+  ],
+  "c12aa1db-b3ad-47cb-b665-a5e0c4aa08b3": [
+   "question_92ch"
+  ],
+  "c1358ed1-2fde-4504-aad5-0b0ad43831ad": [
+   "question_110ch"
+  ],
+  "c14c80a0-a5f8-4567-a6b0-574e5fb06ec6": [
+   "question_98ch"
+  ],
+  "c15f9c15-efce-4067-b695-1ee9e397270d": [
+   "question_94ch",
+   "answer_65ch"
+  ],
+  "c1b0ee47-b709-4cb8-b8ae-598425b588fc": [
+   "question_93ch"
+  ],
+  "c1f71455-8a2c-4e19-bc30-ed723f8e39e0": [
+   "question_106ch"
+  ],
+  "c2a59796-faa0-4afb-809c-f3e88e20c3da": [
+   "foreign_script"
+  ],
+  "c2b7a1a1-a5f8-4074-9218-b283e060e866": [
+   "question_94ch"
+  ],
+  "c2b9830a-de21-455e-a9ec-caab46ddf97b": [
+   "question_91ch"
+  ],
+  "c2d30d85-6850-47ef-a9df-28bd273427c0": [
+   "foreign_script"
+  ],
+  "c33e46ea-d81c-4384-a86d-3f59a4dc6a06": [
+   "question_106ch"
+  ],
+  "c36c01fb-c1db-4e89-ae43-16c48eb80878": [
+   "question_107ch"
+  ],
+  "c3a3c3d3-7293-40fd-8ac6-4b23a48babe0": [
+   "question_110ch"
+  ],
+  "c4310c1b-7fd3-4a48-ae53-b0dcb7ade3f1": [
+   "question_100ch",
+   "answer_98ch"
+  ],
+  "c4859815-85e6-4cf3-903a-2a8bcc4a43e9": [
+   "answer_62ch"
+  ],
+  "c4aaf3ee-3083-4be3-9d17-11c8176235ec": [
+   "question_96ch"
+  ],
+  "c4b2610e-7e77-416b-8906-63dab270e0c5": [
+   "foreign_script"
+  ],
+  "c4bc5efd-dd11-4a49-b286-9d61a7ae727d": [
+   "question_102ch"
+  ],
+  "c4fd4e78-a12e-456d-82e3-7c60fd6fbe29": [
+   "question_115ch",
+   "answer_66ch"
+  ],
+  "c527a4f3-617f-4d69-8373-1cd48ff3b6dc": [
+   "question_96ch"
+  ],
+  "c53bcb8e-bd90-4e02-956f-60c9fd23c9b8": [
+   "question_103ch"
+  ],
+  "c54fd9b0-3639-4517-bc5a-4f8d2afc7695": [
+   "question_92ch",
+   "answer_80ch"
+  ],
+  "c588f3f2-7f78-40a7-a544-b67db0502a15": [
+   "question_95ch"
+  ],
+  "c5f99320-943a-4281-af0f-1387aebae994": [
+   "question_93ch"
+  ],
+  "c712bbb6-1fc2-4e03-a443-e946410ea01f": [
+   "answer_63ch"
+  ],
+  "c82ba537-8d72-40a3-9cc7-d5720ce0ab92": [
+   "question_111ch"
+  ],
+  "c8bd55ef-b083-46f7-81a4-9fff3bf8d122": [
+   "question_97ch"
+  ],
+  "c9655f80-876e-4122-97ae-30c51f0c52e7": [
+   "answer_56ch"
+  ],
+  "c9a03ace-7264-458f-88a0-e8fd9ec11b5f": [
+   "question_110ch",
+   "answer_49ch"
+  ],
+  "c9ed1ceb-e561-4cef-822b-9fe34ec76a19": [
+   "question_117ch"
+  ],
+  "ca9e4f9e-3016-41ae-b2af-7778180ccee9": [
+   "question_95ch"
+  ],
+  "cac307fa-43c0-4d15-a57f-9644a41a993a": [
+   "question_112ch"
+  ],
+  "cb0ac120-16d4-4ba1-a9ec-c8c2de25386d": [
+   "question_107ch"
+  ],
+  "cb97935d-1b5e-4585-abbb-294e3c2d4767": [
+   "duplicate_options",
+   "foreign_script"
+  ],
+  "cbd7d0f7-4e24-4f91-a0db-76bc0d176995": [
+   "foreign_script"
+  ],
+  "ccc36c38-3f6c-4cfd-9c7b-54a79f5644cc": [
+   "question_96ch",
+   "answer_54ch"
+  ],
+  "cd007471-074d-49b7-a6b6-19a08c67d069": [
+   "question_95ch"
+  ],
+  "cd112053-22d6-4694-a177-d6584584a93f": [
+   "question_103ch"
+  ],
+  "cd4c2a83-43de-4eda-9cad-52c1e25d773e": [
+   "question_94ch",
+   "answer_62ch"
+  ],
+  "cd6710e5-8acc-4501-a455-3ec99eaa9dda": [
+   "question_95ch"
+  ],
+  "cdf2220c-64e8-4364-9749-525f4b5a0065": [
+   "question_100ch"
+  ],
+  "cf94ea62-e87a-46da-8807-1392e34c2c93": [
+   "question_94ch"
+  ],
+  "d0326c23-abc9-44b0-85b7-c9f89bf001c2": [
+   "question_112ch"
+  ],
+  "d07f70f8-604c-45e0-844f-33dd30a2d88b": [
+   "foreign_script"
+  ],
+  "d0ce8b64-b285-47d7-9012-f86b74a0628f": [
+   "question_107ch",
+   "answer_73ch"
+  ],
+  "d13468e1-4a49-4113-a0aa-4ea418599cca": [
+   "question_98ch"
+  ],
+  "d1d2941e-62dd-448b-ad79-21b42db2387f": [
+   "question_91ch"
+  ],
+  "d2259532-f40b-44bf-ac9a-337fe35be9f7": [
+   "question_104ch"
+  ],
+  "d287f345-bf23-48ef-a069-c7f63d35c251": [
+   "question_104ch"
+  ],
+  "d301e98c-6a4c-483d-ab73-8229966db0b1": [
+   "question_92ch"
+  ],
+  "d3170578-6091-48be-a490-cd9f9a171ea7": [
+   "question_106ch"
+  ],
+  "d33d13f8-83fa-4259-adef-a81807b975ee": [
+   "question_110ch",
+   "answer_84ch"
+  ],
+  "d4a73718-9fd0-471b-bb0c-28f3e8e17705": [
+   "question_100ch"
+  ],
+  "d545fe58-d705-4e03-b41f-9c095801639e": [
+   "question_116ch",
+   "answer_75ch"
+  ],
+  "d5b432c5-ceed-47cc-8a45-13754350e8e7": [
+   "question_98ch"
+  ],
+  "d6330218-9646-40ae-afea-62734b32d5d4": [
+   "question_118ch",
+   "answer_60ch"
+  ],
+  "d66192d3-5e3e-404a-9a36-6605412e9384": [
+   "question_91ch",
+   "answer_93ch"
+  ],
+  "d6633420-8292-483c-b5a6-77d3d84228ed": [
+   "question_105ch"
+  ],
+  "d71f9c6b-80c3-4979-8692-90fb1efd1a58": [
+   "foreign_script"
+  ],
+  "d7bb16ca-9a68-48a6-88b2-6ff2f4956f37": [
+   "foreign_script"
+  ],
+  "d845d21f-4541-41fa-8c7d-653afee1f559": [
+   "question_97ch"
+  ],
+  "d8734379-bafc-40c3-a1dc-381bba7d8bab": [
+   "question_101ch"
+  ],
+  "d92d6fe2-4b56-4048-a9b7-ab753387fd81": [
+   "question_104ch"
+  ],
+  "d9424770-1d12-490e-b0bf-89deb43f9056": [
+   "question_114ch"
+  ],
+  "d99d20d6-4c95-4898-9102-c41fb0b226c9": [
+   "foreign_script"
+  ],
+  "d9c94f16-b5ba-4665-9100-7a88498a9838": [
+   "answer_87ch"
+  ],
+  "da07b536-f6d9-4cca-a455-aafede6a770a": [
+   "answer_73ch"
+  ],
+  "da5dbb62-3058-45c2-9988-f9538672786e": [
+   "question_92ch"
+  ],
+  "da8d1070-a6c9-4cdc-b78c-03f8a8cca90c": [
+   "foreign_script"
+  ],
+  "db16faf9-e656-4fb1-ac05-5d3375517255": [
+   "question_96ch"
+  ],
+  "db6cdf57-5371-4e73-8f53-cf47e7669eb0": [
+   "question_95ch"
+  ],
+  "dbcd95b0-2b92-4bcc-98ce-9a62730a77f7": [
+   "question_92ch"
+  ],
+  "dd165c0c-84ac-40b7-a054-6b2d256c88af": [
+   "question_91ch"
+  ],
+  "de1d4ec7-99aa-4050-9acb-fe3e0c799fea": [
+   "question_110ch",
+   "answer_80ch"
+  ],
+  "de6a7906-bb1a-433d-a921-4606c76ff198": [
+   "answer_110ch"
+  ],
+  "deec54a5-1f0a-4ccf-816f-dbf673fef67d": [
+   "question_93ch"
+  ],
+  "defabc15-bb47-4b05-92ee-23a0876df69b": [
+   "question_94ch"
+  ],
+  "df3f738b-8bac-4cb7-8bdd-e1695b7810cd": [
+   "question_94ch",
+   "answer_56ch"
+  ],
+  "e00d09ea-a6a6-42e4-b83c-872dde901250": [
+   "foreign_script"
+  ],
+  "e07815c5-ebea-4bb9-93f3-2b06cebc29db": [
+   "question_97ch"
+  ],
+  "e0d58560-c73c-40f8-a7a8-05486143cb46": [
+   "question_99ch"
+  ],
+  "e1b53c02-7634-4da4-b01f-bd3de50233df": [
+   "question_106ch"
+  ],
+  "e20f370b-3fb3-4c2a-8ca4-b27ff0eb2cee": [
+   "question_99ch"
+  ],
+  "e22068ad-e485-4bb4-a88c-85ec3269295a": [
+   "answer_57ch"
+  ],
+  "e26516ff-c10b-4492-8eef-90b9e6f0c908": [
+   "question_92ch"
+  ],
+  "e4601b30-aa21-4fab-a408-b24ad5c5e9f7": [
+   "question_91ch"
+  ],
+  "e4926efd-ba53-4bdc-a04f-28aa2bd73f12": [
+   "answer_51ch"
+  ],
+  "e4eff996-ecb6-4fb4-b09a-1f53df72bace": [
+   "question_94ch"
+  ],
+  "e5833839-7105-4a8e-b954-9c9214a9c34e": [
+   "question_94ch"
+  ],
+  "e5e24300-4e9d-4b61-bc5e-38c2a040d8b2": [
+   "question_113ch"
+  ],
+  "e626ebbd-91ae-4381-9f8f-4f0ea6ae06af": [
+   "question_112ch"
+  ],
+  "e660b602-7eb8-4998-9347-92e78730e175": [
+   "question_106ch",
+   "answer_49ch"
+  ],
+  "e6a76382-61ab-49a5-b8fb-f605f00be9fb": [
+   "question_92ch"
+  ],
+  "e6cb1fc2-bb03-43a2-abc1-5e3be06084f5": [
+   "foreign_script"
+  ],
+  "e6d66da2-5cf1-4dab-a303-1fecc22c1865": [
+   "question_110ch"
+  ],
+  "e7252f99-3794-4879-b6f7-52659d8a7ad3": [
+   "question_96ch"
+  ],
+  "e72b4bcb-1355-40ea-b3d6-4febbb9b05c6": [
+   "question_104ch"
+  ],
+  "e79964b8-77af-4593-91e0-c288764e04ed": [
+   "question_93ch"
+  ],
+  "e7dc52eb-a326-49ed-bb8b-fe18128b93f0": [
+   "question_97ch"
+  ],
+  "e8ee2e87-fb98-40a4-aa1a-680ea10cce45": [
+   "question_116ch"
+  ],
+  "e8f31302-6db9-44ae-827a-dc8b2c82e157": [
+   "question_101ch"
+  ],
+  "e9254871-6cd9-48d9-ae62-5c932e51f7df": [
+   "question_95ch"
+  ],
+  "e946c8ac-04c7-4eff-842b-2681b6448cca": [
+   "question_104ch"
+  ],
+  "e96872ba-650f-406e-a1df-2b5d48b91604": [
+   "question_95ch"
+  ],
+  "e9aa3353-c104-4ab2-a2ae-433b9caf1cb8": [
+   "question_97ch"
+  ],
+  "e9bb8bf6-f5e6-4d1a-8fb3-5722b980c8e8": [
+   "duplicate_options"
+  ],
+  "e9d116fe-3626-46cb-9627-03809dfc897d": [
+   "foreign_script"
+  ],
+  "e9d1d16f-aee3-4ba9-8067-c69570307fd1": [
+   "foreign_script"
+  ],
+  "ea662cb3-2290-44ee-961d-718ed9685952": [
+   "question_111ch"
+  ],
+  "eb099d8e-ce82-41f1-b4fa-b299799600df": [
+   "question_113ch"
+  ],
+  "ec009dc4-c1e8-45f9-b86c-0adca4153f8f": [
+   "question_109ch"
+  ],
+  "ec3f1d25-d0b6-499e-b7ad-6a60182716a5": [
+   "question_112ch"
+  ],
+  "ec937776-6e8e-4d5c-8fbf-24aef4bc7817": [
+   "question_104ch"
+  ],
+  "ecc18b16-5c48-407d-b987-1b968d57d477": [
+   "foreign_script"
+  ],
+  "ed10472d-c20c-4478-b4ba-aefbb4106c8c": [
+   "question_107ch"
+  ],
+  "ed46a545-ba72-41f5-98df-20acb03e3134": [
+   "question_91ch"
+  ],
+  "edaa73d4-0fef-4367-9a06-228bfb79db9a": [
+   "question_117ch"
+  ],
+  "ee9c9a8c-4d05-4848-8a6b-11176fe55525": [
+   "answer_74ch"
+  ],
+  "ef4da4d1-f81d-40da-b665-2a73a62429d7": [
+   "question_97ch"
+  ],
+  "ef5d7928-692d-41af-b32d-9c1f7ee41422": [
+   "question_102ch"
+  ],
+  "ef6956b2-1299-414e-a169-21372fc0618a": [
+   "question_99ch"
+  ],
+  "ef6c533d-3496-4c85-995e-fcd31033b858": [
+   "question_108ch"
+  ],
+  "ef7e90f5-ab10-4753-a6b1-5ca54351e86f": [
+   "question_95ch",
+   "answer_49ch"
+  ],
+  "efa78763-e8bc-4581-842b-8aec811bf4c7": [
+   "answer_56ch"
+  ],
+  "efb26ba3-6f8a-444b-85af-e73a81fb9a60": [
+   "answer_99ch"
+  ],
+  "efe4db59-368c-4198-b4b2-58e068c44f4b": [
+   "question_100ch"
+  ],
+  "efedbc00-5a32-4cde-ba22-c1449fccba6a": [
+   "question_108ch"
+  ],
+  "f002abdb-bb24-42ae-9215-10b4b250426e": [
+   "question_116ch"
+  ],
+  "f03592a8-ba41-4e02-995c-080a6a73cfbf": [
+   "question_103ch"
+  ],
+  "f0c14f66-9073-4edb-b3f5-def410af59db": [
+   "question_91ch"
+  ],
+  "f0d00105-69b0-4956-92a2-4a5978d6bd42": [
+   "question_103ch"
+  ],
+  "f0d6a7b5-ab2a-4ba1-9ce9-7ace5af66a19": [
+   "only_3_options"
+  ],
+  "f1a12c15-29a3-4c20-9775-6bbe9aa52ce8": [
+   "question_99ch"
+  ],
+  "f1d61d49-64be-4080-94f1-0f2501e24f47": [
+   "question_101ch"
+  ],
+  "f1de0348-129d-46ff-a73e-8fba28cda5a1": [
+   "question_111ch",
+   "answer_62ch"
+  ],
+  "f1e8658a-db02-49f2-8eda-b10217b45ea6": [
+   "question_118ch",
+   "answer_73ch"
+  ],
+  "f2930b9d-9148-4879-b431-b80cb0d34273": [
+   "question_92ch"
+  ],
+  "f305d9be-8fac-40cb-b954-54a4bd44b59b": [
+   "question_105ch",
+   "answer_94ch"
+  ],
+  "f45425bf-9eef-46b4-afce-caffb8f3020b": [
+   "question_107ch"
+  ],
+  "f492143a-327f-4297-be67-99bde5656291": [
+   "question_105ch"
+  ],
+  "f58d40d4-355d-4477-a8e0-8f81ef413445": [
+   "question_98ch"
+  ],
+  "f5b42bcb-0aad-4514-a456-9f0ddb4c0c6f": [
+   "question_100ch"
+  ],
+  "f6255d66-043e-40c4-9478-a2ca8abf3187": [
+   "question_115ch"
+  ],
+  "f634d48d-b3dc-4064-9bb2-f288b3e229ba": [
+   "answer_59ch"
+  ],
+  "f6465998-4a4b-4cff-a25b-7543539cb60a": [
+   "question_97ch"
+  ],
+  "f6963cbf-c76c-45f4-8082-58df280863d3": [
+   "question_91ch"
+  ],
+  "f7485b67-87d4-4e6f-9f7d-b575f5011b2b": [
+   "question_93ch"
+  ],
+  "f7ab8101-62d9-415c-9a13-b0453b4753dc": [
+   "duplicate_options"
+  ],
+  "f7bd0729-afb9-40aa-ab52-2a9318e04d68": [
+   "question_109ch"
+  ],
+  "f806879a-2cb1-4433-8e46-7ae63de7728d": [
+   "duplicate_options"
+  ],
+  "f95c03aa-8e31-4c67-bb0e-1d0965085841": [
+   "question_93ch"
+  ],
+  "f99ba0e9-7309-437f-962e-aefd14a01e74": [
+   "question_93ch"
+  ],
+  "fafa8541-92fa-41e7-b5bb-2c2213635dc9": [
+   "answer_56ch"
+  ],
+  "fcb15bc1-0d90-42c2-b896-63b7fdab8798": [
+   "question_104ch"
+  ],
+  "fd6757d2-f32b-4433-b6c8-dfdce38342ce": [
+   "question_107ch",
+   "answer_99ch"
+  ],
+  "fd6dd6bd-c881-4535-8781-810f6fe17b1e": [
+   "question_97ch",
+   "answer_102ch"
+  ],
+  "fda89d56-fea5-413a-be25-254ea6c6cba9": [
+   "question_96ch"
+  ],
+  "fe4432aa-711c-41a2-bae4-87445451e0cf": [
+   "question_101ch",
+   "answer_65ch"
+  ],
+  "fea0694a-2ce2-4fe5-953d-b24faf6511a6": [
+   "question_117ch"
+  ]
+ }
+}
