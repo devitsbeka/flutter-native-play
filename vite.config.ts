@@ -45,6 +45,37 @@ function stripNativeExcludedHtml(isNative: boolean) {
   };
 }
 
+/**
+ * Fail the build when the app would ship unable to reach its backend.
+ *
+ * Vite substitutes `import.meta.env.VITE_*` at build time and simply inlines
+ * `undefined` for anything unset. The build succeeds, the bundle deploys, and
+ * the app is dead on arrival — no auth, no data, and no error anywhere in CI
+ * to say why.
+ *
+ * This nearly happened: the deploy workflow relied on a committed `.env` for
+ * the Supabase URL and publishable key, and removing that file from the repo
+ * silently produced exactly this bundle. The PR carries no CI, so it would
+ * have surfaced in production.
+ */
+function requireBackendEnv() {
+  const REQUIRED = ["VITE_SUPABASE_URL", "VITE_SUPABASE_PUBLISHABLE_KEY"];
+  return {
+    name: "require-backend-env",
+    apply: "build" as const,
+    configResolved(config: { env: Record<string, unknown> }) {
+      const missing = REQUIRED.filter((key) => !config.env[key]);
+      if (missing.length > 0) {
+        throw new Error(
+          `Refusing to build without ${missing.join(", ")}.\n` +
+            "The bundle would compile and deploy with an unreachable backend.\n" +
+            "Set them in .env (see .env.example) or in the build environment.",
+        );
+      }
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -56,6 +87,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    requireBackendEnv(),
     buildVersionFile(),
     stripNativeExcludedHtml(process.env.VITE_NATIVE_BUILD === "true"),
   ],

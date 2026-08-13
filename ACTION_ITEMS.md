@@ -65,6 +65,21 @@ These need the Xcode UI and a signing identity:
 
 ## 5. Deploy-side
 
+- [ ] **Optional but tidier: add the Supabase build values as repository
+      secrets** — `VITE_SUPABASE_URL`, `VITE_SUPABASE_PROJECT_ID`,
+      `VITE_SUPABASE_PUBLISHABLE_KEY`.
+
+      Nothing is broken without this. `.env` used to be committed and the
+      deploy workflow relied on it; untracking the file would have made
+      production builds compile with an undefined backend and deploy an app
+      that could not reach Supabase at all. The workflow now passes the values
+      explicitly, falling back to the public project ref and anon key that
+      were in this repo's history anyway. Setting the secrets overrides the
+      fallbacks and is the better long-term home for them.
+
+      `vite build` now refuses outright when those two values are missing,
+      rather than shipping a bundle that compiles and is dead on arrival.
+
 - [ ] Confirm `https://mytrivia.io/.well-known/apple-app-site-association`
       returns **200**, `content-type: application/json`, and **no redirect**.
       Apple's CDN is strict about all three and fails silently if any is
