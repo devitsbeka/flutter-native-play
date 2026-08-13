@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Loader2, Users } from "lucide-react";
 import { usePlayerFeedItems } from "@/hooks/usePlayerFeedItems";
+import { useContentModeration } from "@/hooks/useContentModeration";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useExploreCreators } from "@/hooks/useExploreCreators";
 import { PlayerFeedItem } from "./PlayerFeedItem";
@@ -80,12 +81,22 @@ export function ExplorePortfolioFeed({
     sort,
     isMobile
   );
+  // Blocking has to actually hide things, or it is a button that lies. The
+  // filter runs here rather than in the query so a block takes effect on the
+  // feed already on screen, without a refetch.
+  const { isBlocked } = useContentModeration();
+
   const { data: creators = [], isLoading: isGroupedLoading } = useExploreCreators(
     searchQuery,
     filter,
     sort,
     !isMobile
   );
+  const visibleFeedItems = useMemo(
+    () => feedItems.filter((f) => !isBlocked(f.player?.user_id)),
+    [feedItems, isBlocked],
+  );
+
   const { userLikes, userSaves, userPlays, toggleLike, toggleSave } = useSocialFeed();
 
   // Hoisted from per-card hooks - one subscription/interval for the whole feed
@@ -190,7 +201,7 @@ export function ExplorePortfolioFeed({
       {isMobile ? (
         /* Mobile: Flattened feed - one player + one item per card */
         <div className="space-y-4">
-          {feedItems.slice(0, visibleCount).map((feedItem) => (
+          {visibleFeedItems.slice(0, visibleCount).map((feedItem) => (
             <div key={feedItem.id}>
               <PlayerFeedItem
                 player={feedItem.player}

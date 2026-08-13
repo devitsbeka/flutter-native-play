@@ -99,15 +99,45 @@ which this environment doesn't have.
       Moving them to `public/videos/` and referencing them by path would let
       them stream like everything else.
 
-- [ ] **Compress the 129 PNGs in `src/assets/`** — 42 MB.
-
-      Second largest. Most are UI icons and illustrations; WebP or an
-      optimised PNG pass should take a large bite out of this without any code
-      change.
-
 Between them those two items are 88 MB of the remaining 130 MB.
 
-## 7. Decisions I need from you
+---
+
+## 7. A decision on images — 48 MB, but it's your artwork
+
+The 125 PNGs across `src/assets/` and `public/images/` are **57.2 MB**. I
+measured the options rather than guessing, and the result is not what I
+assumed when I first wrote this list:
+
+| Approach | Result | Quality |
+|---|---|---|
+| Lossless PNG recompression | **No gain at all** (files get *larger*) | Pixel-identical |
+| PNG palette quantisation | 57.2 → 12.0 MB (79% off) | **Visibly degraded** — worst case a 239/255 delta |
+| **WebP lossless** | **57.2 → 30.2 MB (47% off)** | **Pixel-identical — no decision needed** |
+| WebP q95 | 57.2 → 9.3 MB (84% off) | Lossy, near-transparent |
+| WebP q90 | 57.2 → 7.1 MB (88% off) | Lossy, usually still fine on UI art |
+
+Two things worth knowing. The PNGs are **already optimally compressed** —
+there is no free lossless win hiding in them, which is what I'd assumed.
+And a per-file quality gate on quantisation converts almost nothing, so
+that route is all-or-nothing degradation.
+
+WebP is the real option, and it's supported in WKWebView from iOS 14, so the
+iOS 15 floor is no constraint.
+
+**Lossless WebP is free money**: 27 MB off, pixel-identical output, nothing to
+review. That alone takes the bundle from 130 MB to about **103 MB**.
+
+Going lossy at q90 would take it to roughly **82 MB** instead — but that's a
+judgement call on your own artwork, which is why it's here rather than done.
+
+- [ ] **Confirm you want the image set converted to WebP, and at what
+      quality.** Say "lossless" and I'll just do it — there's no downside to
+      weigh. Say q90/q95 and I'll produce a before/after sheet for you to
+      eyeball first. Either way I'll implement it as a build-time conversion so
+      no import paths change.
+
+## 8. Decisions I need from you
 
 - [ ] **Gem pack pricing.** Four consumables are defined
       (`io.mytrivia.gems.{100,500,1500,5000}`) matching the packs the web shop
@@ -116,10 +146,15 @@ Between them those two items are 88 MB of the remaining 130 MB.
       Connect — changing a live IAP price is far more painful than getting it
       right first.
 
-- [ ] **Age rating and user-generated content.** Expect 12+ given ads and
-      social features. If players can see each other's quizzes, **Guideline
-      1.2 requires a way to report and block** — I haven't verified one
-      exists. If it doesn't, that's a build item before submission.
+- [ ] **Age rating.** Expect 12+ given ads and social features. The
+      questionnaire is in App Store Connect, so it needs the account.
+
+      The Guideline 1.2 half of this is **now handled**: reporting and
+      blocking are built. `user_reports` and `user_blocks` had existed in the
+      schema with correct RLS and an admin review path since early on, and
+      nothing in the app had ever written to either — the same shape as the
+      push tokens table. Blocked players are filtered from the feed, and
+      Settings → Privacy lists who you've blocked with a way back.
 
 - [ ] **iPad.** Not currently a target, but the app runs in compatibility mode
       and reviewers do open it. Worth ten minutes on a simulator to decide

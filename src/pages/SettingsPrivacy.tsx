@@ -2,6 +2,7 @@ import { toastIcon, ICON_URLS } from "@/lib/toast-icons";
 import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { BlockedPlayersSection } from "@/components/social/BlockedPlayersSection";
 import { useNavigate } from "react-router-dom";
 import { Shield, FileText, Download, Trash2, ChevronRight, Loader2, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -135,6 +136,9 @@ export default function SettingsPrivacy() {
             );
           })}
         </motion.div>
+
+        {/* People you've blocked, and the way back. */}
+        {user && <BlockedPlayersSection />}
 
         {/* Data Actions */}
         {user && (
