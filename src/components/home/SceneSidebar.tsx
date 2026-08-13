@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useCategories } from "@/hooks/useCategories";
+import { useLanguage } from "@/contexts/LanguageContext";
 import swordLine from "@/assets/figma-home/sword-line.svg";
 import arrowRight from "@/assets/figma-home/arrow-right-s.svg";
 import inviteAccept from "@/assets/figma-home/invite-accept.png";
@@ -25,6 +26,7 @@ interface SceneSidebarProps {
 }
 
 export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { pendingInvitations, acceptInvitation, declineInvitation } = useGameInvitations();
   const { progress } = useCategoryProgress();
@@ -97,7 +99,7 @@ export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
               className="absolute left-[18px] top-[14px] text-[16px] uppercase leading-[16px] tracking-[-0.16px] text-[#402666] whitespace-nowrap"
               style={TITLE_STYLE}
             >
-              მოწვევა
+              {t("extra.sidebarInvitation")}
             </p>
 
             {/* Sender avatar (node 601:1738) */}
@@ -125,8 +127,8 @@ export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
             </div>
 
             <p className="absolute left-[76px] top-[43px] w-[129px] text-[12px] leading-[18px] tracking-[-0.16px] text-[#402666]">
-              <span className="font-['Nunito'] font-bold">{invitation.sender?.nickname || "მეგობარი"}</span>
-              <span className="font-['Nunito'] font-semibold">{" გიწვევთ თამაშში"}</span>
+              <span className="font-['Nunito'] font-bold">{invitation.sender?.nickname || t("extra.friend")}</span>
+              <span className="font-['Nunito'] font-semibold">{t("extra.sidebarInvitesYou")}</span>
             </p>
             {invitation.room?.category_name && (
               <p className="absolute left-[76px] top-[81px] w-[124px] truncate font-['Nunito'] text-[12px] leading-[19.73px] tracking-[-0.16px] text-[#402666] opacity-70">
@@ -137,7 +139,7 @@ export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
             {/* Decline (node 601:1777) + accept (node 601:1787) */}
             <motion.button
               type="button"
-              aria-label="უარყოფა"
+              aria-label={t("extra.sidebarDecline")}
               onClick={handleDecline}
               disabled={inviteBusy}
               whileHover={{ scale: 1.1 }}
@@ -148,7 +150,7 @@ export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
             </motion.button>
             <motion.button
               type="button"
-              aria-label="მიღება"
+              aria-label={t("extra.sidebarAccept")}
               onClick={handleAccept}
               disabled={inviteBusy}
               whileHover={{ scale: 1.08 }}
@@ -173,7 +175,7 @@ export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
             className="absolute left-[18px] top-[16px] text-[14px] uppercase leading-[14px] tracking-[-0.16px] text-[#402666] whitespace-nowrap"
             style={TITLE_STYLE}
           >
-            გააგრძელე თამაში
+            {t("extra.sidebarContinue")}
           </p>
           {continueRows.map((row, i) => {
             const img = categoryImage(row.category);
@@ -198,7 +200,7 @@ export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
                   {row.category.name}
                 </p>
                 <p className="absolute left-[72px] top-[32px] w-[124px] font-['Nunito'] text-[12px] leading-[19.73px] tracking-[-0.16px] text-[#402666] opacity-70">
-                  {row.level} დონე
+                  {t("extra.sidebarLevelSuffix", { level: row.level })}
                 </p>
                 <div className="absolute right-[14px] top-[18px] size-[24px] rotate-180 opacity-[0.23] transition-opacity group-hover:opacity-60">
                   <img alt="" className="size-full max-w-none" src={arrowRight} />
@@ -224,7 +226,7 @@ export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
         />
         <img alt="" className="relative size-[24px]" src={swordLine} />
         <p className="relative font-['Inter'] font-bold text-[14px] text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)] whitespace-nowrap">
-          სწრაფი თამაში
+          {t("extra.sidebarQuickPlay")}
         </p>
         <div className="absolute left-[16.42px] top-[8.42px] size-[5.15px] rounded-full bg-white opacity-50" />
         <div className="absolute right-[97px] top-[17.36px] size-[5.28px] rounded-full bg-white opacity-35" />

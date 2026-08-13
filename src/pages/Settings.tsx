@@ -8,7 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
 import { EmailEditModal } from "@/components/profile/EmailEditModal";
 import { CountrySelectModal } from "@/components/profile/CountrySelectModal";
-import { countryCoordinates } from "@/lib/countryCoordinates";
+import { countryName, countryFlag } from "@/utils/countryName";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import { currentBuildLabel, checkForUpdateNow } from "@/hooks/useFreshBuildGuard
 export default function Settings() {
   const navigate = useNavigate();
   const { user, profile, updateProfile, fetchProfile } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { toast } = useToast();
 
   // Modal states
@@ -44,14 +44,9 @@ export default function Settings() {
   // Get country info
   const getCountryInfo = (code: string | null) => {
     if (!code) return { name: t("profile.notSet"), flag: "🌍" };
-    const countryData = countryCoordinates[code.toLowerCase()];
-    const flag = code.toUpperCase() === 'UK' ? '🇬🇧' : 
-      code.toUpperCase().split('').map(char => 
-        String.fromCodePoint(127397 + char.charCodeAt(0))
-      ).join('');
-    return { 
-      name: countryData?.name || code.toUpperCase(), 
-      flag 
+    return {
+      name: countryName(code, language, code.toUpperCase()),
+      flag: countryFlag(code),
     };
   };
 

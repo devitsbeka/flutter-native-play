@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { translateErrorMessage } from "@/utils/errorTranslations";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { languageForCountry } from "@/utils/countryLanguage";
+import { countryName, countryFlag } from "@/utils/countryName";
 
 interface CountrySelectModalProps {
   isOpen: boolean;
@@ -28,24 +29,16 @@ export function CountrySelectModal({ isOpen, onClose, currentCountryCode }: Coun
   const { toast } = useToast();
   const { t, language, setLanguage } = useLanguage();
 
-  // Get flag emoji from country code
-  const getFlagEmoji = (countryCode: string) => {
-    const code = countryCode.toUpperCase();
-    if (code === 'UK') return '🇬🇧';
-    return code
-      .split('')
-      .map(char => String.fromCodePoint(127397 + char.charCodeAt(0)))
-      .join('');
-  };
-
   // Filter and sort countries
   const countries = useMemo(() => {
     const allCountries = Object.entries(countryCoordinates)
       .filter(([code]) => code !== 'unknown')
-      .map(([code, data]) => ({
+      // Named in the language being read, not in the language the country
+      // table happens to be written in.
+      .map(([code]) => ({
         code: code.toUpperCase(),
-        name: data.name,
-        flag: getFlagEmoji(code),
+        name: countryName(code, language),
+        flag: countryFlag(code),
       }));
 
     // Filter by search
@@ -69,9 +62,9 @@ export function CountrySelectModal({ isOpen, onClose, currentCountryCode }: Coun
                priorityCountries.indexOf(b.code.toLowerCase());
       }
       
-      return a.name.localeCompare(b.name, 'ka');
+      return a.name.localeCompare(b.name, language);
     });
-  }, [searchQuery]);
+  }, [searchQuery, language]);
 
   const handleSelect = async (countryCode: string) => {
     setSelectedCode(countryCode);
