@@ -1,0 +1,10 @@
+# app-ads.txt — authorised digital sellers for the MyTrivia mobile apps.
+#
+# AdMob checks this file at https://mytrivia.io/app-ads.txt and matches it
+# against the developer website listed on the App Store and Play Store
+# listings. Those URLs must point at this domain or the file is never found,
+# and unauthorised-inventory filtering costs real revenue.
+#
+# The publisher id is the account id from AdMob (Settings → Account
+# information), NOT an ad unit id.
+google.com, pub-1329033152352928, DIRECT, f08c47fec0942fa0

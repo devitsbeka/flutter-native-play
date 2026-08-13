@@ -623,6 +623,17 @@ export const en: KaTranslations = {
   // ==========================================
   // Daily Rewards
   // ==========================================
+  // App Tracking Transparency
+  // ==========================================
+  att: {
+    title: "Help keep MyTrivia free",
+    body: "You'll see ads either way. Allowing tracking means they're relevant to you instead of random.",
+    reassurance: "Your quiz answers and scores are never shared.",
+    continue: "Continue",
+    notNow: "Not now",
+  },
+
+  // ==========================================
   dailyRewards: {
     title: "Rewards",
     subtitle: "Claim a reward every day",

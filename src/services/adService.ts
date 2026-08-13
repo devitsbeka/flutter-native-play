@@ -6,23 +6,35 @@
 
 import { Capacitor } from '@capacitor/core';
 import { trackingService } from './trackingService';
+import { personalizedAdsAllowed, ensureTrackingConsent } from '@/native/trackingConsent';
 
-// AdMob Configuration — every ad unit ID lives in this one object.
+/**
+ * Ad unit IDs.
+ *
+ * Google's public demo units are the fallback, not the default: the
+ * interstitial IDs used to be hardcoded to them, which meant interstitials
+ * rendered and earned nothing. Real IDs come from the environment, so a
+ * missing one is visible in the build log rather than silently costing
+ * revenue for however long it takes someone to notice.
+ *
+ * iOS and Android need their own units. The rewarded ID was shared between
+ * both platforms, which corrupts per-platform reporting and stops AdMob
+ * optimising either one properly.
+ */
+const GOOGLE_TEST_UNITS = {
+  rewarded: 'ca-app-pub-3940256099942544/5224354917',
+  interstitial: 'ca-app-pub-3940256099942544/1033173712',
+} as const;
+
 const ADMOB_CONFIG = {
   rewarded: {
-    // Existing production rewarded ID used as default for both platforms.
-    // TODO(owner): supply a dedicated iOS rewarded ad unit ID if different from Android.
-    android: 'ca-app-pub-1329033152352928/8877032796',
-    ios: 'ca-app-pub-1329033152352928/8877032796',
+    ios: import.meta.env.VITE_ADMOB_IOS_REWARDED || '',
+    android: import.meta.env.VITE_ADMOB_ANDROID_REWARDED || 'ca-app-pub-1329033152352928/8877032796',
   },
   interstitial: {
-    // TODO(owner): replace these Google TEST interstitial IDs with real per-platform unit IDs.
-    android: 'ca-app-pub-3940256099942544/1033173712',
-    ios: 'ca-app-pub-3940256099942544/4411468910',
+    ios: import.meta.env.VITE_ADMOB_IOS_INTERSTITIAL || '',
+    android: import.meta.env.VITE_ADMOB_ANDROID_INTERSTITIAL || '',
   },
-  // Test ad unit IDs for development
-  testRewardedAdUnitId: 'ca-app-pub-3940256099942544/5224354917',
-  testInterstitialAdUnitId: 'ca-app-pub-3940256099942544/1033173712',
 };
 
 interface AdReward {
@@ -52,6 +64,7 @@ class AdService {
   private listeners: any[] = [];
   private isVipUser = false;
   private ageGroup: string | null = null;
+  private warnedMissingUnits = new Set<string>();
 
   /**
    * Set VIP status - VIP users skip ads and get rewards automatically.
@@ -64,7 +77,21 @@ class AdService {
   private getAdUnitId(kind: 'rewarded' | 'interstitial'): string {
     const platform = Capacitor.getPlatform();
     const ids = ADMOB_CONFIG[kind];
-    return platform === 'ios' ? ids.ios : ids.android;
+    const configured = platform === 'ios' ? ids.ios : ids.android;
+
+    if (configured) return configured;
+
+    // Falling back to a demo unit means this placement earns nothing. Say so
+    // once, loudly enough to be caught in a TestFlight console, rather than
+    // letting it look like it is working.
+    if (!this.warnedMissingUnits.has(`${kind}:${platform}`)) {
+      this.warnedMissingUnits.add(`${kind}:${platform}`);
+      console.warn(
+        `[ads] No ${platform} ${kind} unit configured — using Google's demo unit, ` +
+        `which serves ads but earns nothing. Set VITE_ADMOB_${platform.toUpperCase()}_${kind.toUpperCase()}.`,
+      );
+    }
+    return GOOGLE_TEST_UNITS[kind];
   }
 
   /**
@@ -73,6 +100,20 @@ class AdService {
    */
   setAgeGroup(ageGroup: string | null | undefined) {
     this.ageGroup = ageGroup ?? null;
+  }
+
+  /**
+   * '1' means non-personalised.
+   *
+   * On iOS the ATT answer decides it: anything short of an explicit yes, and
+   * the request must go out without the advertising identifier. The
+   * age-group rules below set it independently for children and teens, and
+   * either reason is sufficient.
+   */
+  private nonPersonalizedFlag(): '1' | undefined {
+    if (!personalizedAdsAllowed()) return '1';
+    const childSafety = this.getChildSafetyOptions();
+    return childSafety.npa;
   }
 
   private getChildSafetyOptions() {
@@ -119,10 +160,14 @@ class AdService {
           this.RewardAdPluginEvents = admobModule.RewardAdPluginEvents;
           this.InterstitialAdPluginEvents = admobModule.InterstitialAdPluginEvents;
           
-          // Initialize tracking service and request ATT authorization
+          // Read the tracking status; do NOT prompt here. Initialising the
+          // ad service happens in a bare effect in useAds, so requesting ATT
+          // at this point put the system dialog in front of the player the
+          // instant any screen mounting that hook loaded — before they had
+          // seen the game. The prompt now belongs to ensureTrackingConsent(),
+          // which runs a context screen first, immediately before an ad.
           await trackingService.initialize();
-          await trackingService.requestAuthorization();
-          
+
           const childSafety = this.getChildSafetyOptions();
           await this.AdMob.initialize({
             testingDevices: [],
@@ -206,11 +251,11 @@ class AdService {
         );
         this.listeners.push(failedListener);
 
-        const childSafety = this.getChildSafetyOptions();
+        const npa = this.nonPersonalizedFlag();
         await this.AdMob.prepareRewardVideoAd({
           adId: this.getAdUnitId('rewarded'),
           isTesting: false,
-          ...(childSafety.npa && { npa: childSafety.npa }),
+          ...(npa && { npa }),
         });
 
         return true;
@@ -334,6 +379,11 @@ class AdService {
       return true;
     }
 
+    // The one moment where tracking is actually relevant to the player: they
+    // have chosen to watch an ad. Resolves instantly once ATT has an answer,
+    // and on every non-iOS platform.
+    await ensureTrackingConsent();
+
     // Load and show in one call
     if (!this.isAdLoaded) {
       const loaded = await this.loadRewardedAd(callbacks);
@@ -371,11 +421,11 @@ class AdService {
             }
           );
 
-          const childSafety = this.getChildSafetyOptions();
+          const npa = this.nonPersonalizedFlag();
           await this.AdMob.prepareInterstitial({
             adId: this.getAdUnitId('interstitial'),
             isTesting: false,
-            ...(childSafety.npa && { npa: childSafety.npa }),
+            ...(npa && { npa }),
           });
         } catch (error) {
           console.warn('prepareInterstitial threw:', error);
@@ -423,6 +473,8 @@ class AdService {
 
     if (this.isVipUser) return false;
     if (!this.isNative || !this.AdMob || !this.InterstitialAdPluginEvents) return false;
+
+    await ensureTrackingConsent();
 
     if (!this.isInterstitialLoaded) {
       const loaded = await this.prepareInterstitial();

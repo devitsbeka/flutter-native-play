@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { configureDeepLinks, hideSplashScreen } from "@/native/nativeShell";
+import { TrackingConsentGate } from "@/native/TrackingConsentGate";
 
 /**
  * The native shell's foothold inside the router.
@@ -39,5 +40,8 @@ export function NativeBridge() {
     };
   }, [navigate]);
 
-  return null;
+  // The ATT context screen. Invisible until something asks for consent, so it
+  // costs nothing to keep mounted at the root — and it has to be mounted
+  // before the first ad can trigger it.
+  return <TrackingConsentGate />;
 }
