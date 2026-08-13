@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import { useFriendInvites } from "@/hooks/useFriendInvites";
-import { getPriceDisplay } from "@/utils/currency";
+import { useStorePrice } from "@/hooks/useStorePrice";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import crownIcon from "@/assets/crown-icon.png";
@@ -54,6 +54,10 @@ interface ProBannerReelProps {
 
 export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick }: ProBannerReelProps) {
   const { t } = useLanguage();
+  const resolvePrice = useStorePrice();
+  // The web helper supplied this alongside the price; StoreKit's string
+  // carries only the amount, so the period label comes from i18n.
+  const monthLabel = t("extra.perMonthShort");
   const { dailyDeal, hourlyDeal, dailyRemaining, hourlyRemaining } = useLiveDeals();
   const [currentIndex, setCurrentIndex] = useState(0);
   const { subscription, isVip } = useVipStatus();
@@ -335,14 +339,16 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick }: Pro
             ) : (
               (() => {
                 const state = getButtonText(slide.id as SimplifiedTier, currentTier);
-                const price = getPriceDisplay(slide.price!);
+                // StoreKit's own localized string on native — a price compiled
+                // into the bundle is wrong in every storefront but one.
+                const price = resolvePrice(slide.id as string, slide.price!);
                 return (
                   <ProTierBanner
                     skin={slide.skin!}
                     header={slide.header!}
                     name={slide.name}
-                    price={`${price.symbol}${price.value}${price.suffix}`}
-                    month={price.monthLabel}
+                    price={price.display}
+                    month={monthLabel}
                     tiles={proTiles(slide.benefits!)}
                     onClick={handleCardClick}
                     dimmed={isProcessing}

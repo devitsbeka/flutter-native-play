@@ -1560,6 +1560,7 @@ export const en: KaTranslations = {
     challenge: "Challenge",
   },
   extra: {
+    perMonthShort: "/mo",
     guestTagline: "Challenge your friends and create your own trivia on any topic.",
     appleSignInBtn: "Sign in with Apple",
     guestTermsIntro: "By creating an account you confirm that you have read and agree to the",
