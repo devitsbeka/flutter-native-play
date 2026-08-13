@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { AnimatePresence, motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal, MonitorPlay } from "lucide-react";
-import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession, isLiveTVSession, isNewlyCreated } from "@/hooks/useMyRooms";
+import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -14,8 +14,8 @@ import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { Capacitor } from "@capacitor/core";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
-import { LiveBadge } from "@/components/social/LiveBadge";
 import danceFloorIcon from "@/assets/dance-floor.png";
+import crownIcon from "@/assets/crown-icon.png";
 import retroTv3d from "@/assets/retro-tv-3d.png";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { useRoomAge } from "@/hooks/useRoomAge";
@@ -388,19 +388,17 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);
-  const isCompleted = room.status === "completed";
-  
+
   // NEW LOGIC: has_players_in_room = someone is actually INSIDE this room
   const hasPlayersInRoom = room.has_players_in_room;
-  
+
   // TV session is active (TV connected)
   const hasTVSession = isActiveTVSession(room.tv_status);
-  
-  // Badge logic:
-  // TV badge: Players in room + TV connected
-  // LIVE badge: Players in room, no TV
+
+  // The TV artwork still marks a room being played on a screen; the words
+  // that used to sit beside it are gone, so the badge is only ever the age.
   const showTVBadge = hasPlayersInRoom && hasTVSession;
-  const showLiveBadge = hasPlayersInRoom && !hasTVSession;
+  const someoneInRoom = hasPlayersInRoom;
 
   // Rooms that were ever played on TV keep their session id; live ones have
   // an active status — either way the footer gets a TV marker.
@@ -417,15 +415,17 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
     ? room.tv_active_players 
     : room.participants.length;
   
-  // Use TV players for avatars when session is active, otherwise use room participants
+  // Use TV players for avatars when session is active, otherwise use room
+  // participants — host first, so the person who made the room is the face
+  // you see rather than whoever happened to join last.
   const displayPlayers = hasTVSession && room.tv_players.length > 0
-    ? room.tv_players.map(p => ({ 
-        user_id: p.user_id || '', 
-        nickname: p.nickname, 
+    ? room.tv_players.map(p => ({
+        user_id: p.user_id || '',
+        nickname: p.nickname,
         avatar_url: p.avatar_url,
-        is_host: false 
+        is_host: false
       }))
-    : room.participants;
+    : [...room.participants].sort((a, b) => Number(b.is_host) - Number(a.is_host));
   
   // Always use the placeholder image
   
@@ -531,20 +531,35 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
                     const isOnline = room.online_participants.some(op => op.user_id === p.user_id);
                     
                     return (
-                      <div 
-                        key={p.user_id || idx} 
-                        className={`w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-white/20 shadow-md ${
-                          isOnline 
-                            ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent" 
-                            : "border-2 border-white/40"
-                        }`}
+                      // Descending z-index so the first avatar sits on top of
+                      // the ones behind it — the negative margin alone would
+                      // put the last one in front.
+                      <div
+                        key={p.user_id || idx}
+                        className="relative flex-shrink-0"
+                        style={{ zIndex: displayPlayers.length - idx }}
                       >
-                        <SafeAvatarImage
-                          avatarUrl={p.avatar_url}
-                          fallback={p.nickname || "?"}
-                          className="w-full h-full object-cover"
-                          containerClassName="w-full h-full"
-                        />
+                        <div
+                          className={`w-9 h-9 rounded-full overflow-hidden bg-white/20 shadow-md ${
+                            isOnline
+                              ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent"
+                              : "border-2 border-white/40"
+                          }`}
+                        >
+                          <SafeAvatarImage
+                            avatarUrl={p.avatar_url}
+                            fallback={p.nickname || "?"}
+                            className="w-full h-full object-cover"
+                            containerClassName="w-full h-full"
+                          />
+                        </div>
+                        {p.is_host && (
+                          <img
+                            src={crownIcon}
+                            alt=""
+                            className="pointer-events-none absolute -top-2 -left-1 w-4 h-4 object-contain drop-shadow"
+                          />
+                        )}
                       </div>
                     );
                   })}
@@ -559,35 +574,23 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
 
                 {/* Top right - Status badge + menu (desktop/tablet) */}
                 <div className="flex items-center gap-2">
-                  {/* Badge priority: TV > LIVE > New > Completed > Waiting */}
-                  {showTVBadge ? (
+                  {showTVBadge && (
                     <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
                       <QuizCategoryIcon iconSlug="retro-tv" size={24} className="w-6 h-6" />
                     </div>
-                  ) : showLiveBadge ? (
-                    <LiveBadge />
-                  ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
-                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
-                      <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-white animate-pulse" />
-                      {createdAgo || t("extra.roomStatusNew")}
-                    </span>
-                  ) : isCompleted ? (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                      {t("extra.roomStatusCompleted")}
-                    </span>
-                  ) : allPlayersOnline ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                      {t("extra.roomStatusOnline")}
-                    </span>
-                  ) : (
-                    // "Waiting" reads the same on every card and says nothing
-                    // about which room is which; its age does.
-                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                      <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-amber-400 animate-pulse" />
-                      {createdAgo || t("extra.roomStatusWaiting")}
-                    </span>
                   )}
+                  {/* The badge is always the age. "Waiting", "online" and
+                      "new" read the same on every card; the dot carries that
+                      state instead — green when someone is there, amber when
+                      the room is empty. */}
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                    <span
+                      className={`w-1.5 h-1.5 shrink-0 rounded-full animate-pulse ${
+                        someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
+                      }`}
+                    />
+                    {createdAgo || t("extra.roomStatusWaiting")}
+                  </span>
                   
                   {/* 3-dot menu (tablet/desktop only) */}
                   {!isMobile && (
@@ -713,15 +716,15 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);
-  const isCompleted = room.status === "completed";
-  
+
   // NEW LOGIC: has_players_in_room = someone is actually INSIDE this room
   const hasPlayersInRoom = room.has_players_in_room;
   const hasTVSession = isActiveTVSession(room.tv_status);
-  
-  // Badge logic: TV badge if players in room + TV connected, LIVE if players in room without TV
+
+  // The TV artwork still marks a room being played on a screen; the words
+  // that used to sit beside it are gone, so the badge is only ever the age.
   const showTVBadge = hasPlayersInRoom && hasTVSession;
-  const showLiveBadge = hasPlayersInRoom && !hasTVSession;
+  const someoneInRoom = hasPlayersInRoom;
 
   // Rooms that were ever played on TV keep their session id; live ones have
   // an active status — either way the footer gets a TV marker.
@@ -738,15 +741,16 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
     ? room.tv_active_players 
     : room.participants.length;
   
-  // Use TV players for avatars when session is active
+  // Use TV players for avatars when session is active — otherwise room
+  // participants with the host first, so the room's owner is the face you see.
   const displayPlayers = hasTVSession && room.tv_players.length > 0
-    ? room.tv_players.map(p => ({ 
-        user_id: p.user_id || '', 
-        nickname: p.nickname, 
+    ? room.tv_players.map(p => ({
+        user_id: p.user_id || '',
+        nickname: p.nickname,
         avatar_url: p.avatar_url,
-        is_host: false 
+        is_host: false
       }))
-    : room.participants;
+    : [...room.participants].sort((a, b) => Number(b.is_host) - Number(a.is_host));
   
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
@@ -838,35 +842,24 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
             {/* Cover image with radial fade */}
             {/* Top Row: Status Badge + Menu */}
             <div className="relative z-10 flex items-start justify-between">
-              {/* Badge priority: TV > LIVE > New > Completed > Waiting */}
-              {showTVBadge ? (
-                <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <QuizCategoryIcon iconSlug="retro-tv" size={24} className="w-6 h-6" />
-                </div>
-              ) : showLiveBadge ? (
-                <LiveBadge />
-              ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
-                  <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-white animate-pulse" />
-                  {createdAgo || t("extra.roomStatusNew")}
-                </span>
-              ) : isCompleted ? (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                  {t("extra.roomStatusCompleted")}
-                </span>
-              ) : allPlayersOnline ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                  {t("extra.roomStatusOnline")}
-                </span>
-              ) : (
-                // "Waiting" reads the same on every card and says nothing
-                // about which room is which; its age does.
+              <div className="flex items-center gap-2">
+                {showTVBadge && (
+                  <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <QuizCategoryIcon iconSlug="retro-tv" size={24} className="w-6 h-6" />
+                  </div>
+                )}
+                {/* The badge is always the age. "Waiting", "online" and "new"
+                    read the same on every card; the dot carries that state
+                    instead — green when someone is there, amber when empty. */}
                 <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                  <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-amber-400 animate-pulse" />
+                  <span
+                    className={`w-1.5 h-1.5 shrink-0 rounded-full animate-pulse ${
+                      someoneInRoom || allPlayersOnline ? "bg-green-400" : "bg-amber-400"
+                    }`}
+                  />
                   {createdAgo || t("extra.roomStatusWaiting")}
                 </span>
-              )}
+              </div>
               
               {/* 3-dot menu (tablet/desktop only) */}
               {!isMobile && (
@@ -936,24 +929,39 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                     const isOnline = room.online_participants.some(op => op.user_id === p.user_id);
                     
                     return (
-                      <div 
-                        key={p.user_id || idx} 
-                        className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md ${
-                          isOnline 
-                            ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent" 
-                            : "border-2 border-white/40"
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (p.user_id) openProfile(p.user_id);
-                        }}
+                      // Descending z-index so the first avatar sits on top of
+                      // the ones behind it — the negative margin alone would
+                      // put the last one in front.
+                      <div
+                        key={p.user_id || idx}
+                        className="relative flex-shrink-0"
+                        style={{ zIndex: displayPlayers.length - idx }}
                       >
-                        <SafeAvatarImage
-                          avatarUrl={p.avatar_url}
-                          fallback={p.nickname || "?"}
-                          className="w-full h-full object-cover"
-                          containerClassName="w-full h-full"
-                        />
+                        <div
+                          className={`w-8 h-8 rounded-full overflow-hidden bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md ${
+                            isOnline
+                              ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent"
+                              : "border-2 border-white/40"
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (p.user_id) openProfile(p.user_id);
+                          }}
+                        >
+                          <SafeAvatarImage
+                            avatarUrl={p.avatar_url}
+                            fallback={p.nickname || "?"}
+                            className="w-full h-full object-cover"
+                            containerClassName="w-full h-full"
+                          />
+                        </div>
+                        {p.is_host && (
+                          <img
+                            src={crownIcon}
+                            alt=""
+                            className="pointer-events-none absolute -top-2 -left-1 w-3.5 h-3.5 object-contain drop-shadow"
+                          />
+                        )}
                       </div>
                     );
                   })}
