@@ -963,13 +963,19 @@ export default function Index() {
         {/* Guests on phones get their header from MobileGuestHero (burger +
             search only, no wordmark — the wordmark is in the body there). */}
         <header
-          className={`relative z-20 px-4 py-3 md:pt-4 safe-top border-b border-border/30 lg:border-b-0 ${
+          // The greeting, the friends strip below it and the scene's widget
+          // stack are one column on lg+, so they share one left inset: 16
+          // here and at lg, 56 from xl, where SceneHero's stack sits.
+          className={`relative z-20 px-4 py-3 md:pt-4 xl:pl-[56px] safe-top border-b border-border/30 lg:border-b-0 ${
             !user ? "hidden md:block" : ""
           }`}
         >
           <div className="flex items-center justify-between gap-3 md:min-h-12">
-            {/* Left side: Burger menu (mobile only) - Hidden for guests */}
-            <div className="flex items-center gap-2">
+            {/* Left side: Burger menu (mobile only) - Hidden for guests.
+                Gone entirely from md up rather than left empty: an empty flex
+                child still takes the row's gap, and that gap was what moved
+                the greeting 12px off the column everything else lines up on. */}
+            <div className="flex items-center gap-2 md:hidden">
               {/* Burger Menu - Mobile Only, Hidden for Guests */}
               {user && (
                 <motion.button
@@ -1110,7 +1116,7 @@ export default function Index() {
             so the avatars land 16px below the page top — the same offset the reel
             has inside the rooms page header, keeping the two pages in sync. */}
         {user && (
-          <div className="relative z-20 px-4">
+          <div className="relative z-20 px-4 xl:pl-[56px]">
             <div className="lg:pointer-events-auto">
               <FriendsStoriesBar
                 onAddFriendClick={() => setShowAddFriendModal(true)}
