@@ -122,8 +122,11 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick }: Pro
       skin: SKIN_WHITE,
       benefits: [
         // Family leads with the PRO bundle, then play — the opposite of solo.
-        { art: BENEFIT_FEATURES, label: t("extra.mobileFamilyBenefit1") },
-        { art: BENEFIT_PLAY, label: t("extra.mobileFamilyBenefit2") },
+        // Same order as solo above — play, features, no ads — so the two
+        // tiers read as the same offer at two sizes rather than two
+        // different lists. Art follows meaning, not position.
+        { art: BENEFIT_PLAY, label: t("extra.mobileFamilyBenefit1") },
+        { art: BENEFIT_FEATURES, label: t("extra.mobileFamilyBenefit2") },
         { art: BENEFIT_NO_ADS, label: t("extra.mobileFamilyBenefit3") },
       ],
     },

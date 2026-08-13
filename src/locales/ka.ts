@@ -2356,8 +2356,8 @@ export const ka = {
     mobileSoloBenefit1: "ულიმიტო თამაში",
     mobileSoloBenefit2: "ყველა PRO ფუნქცია",
     mobileSoloBenefit3: "რეკლამის გარეშე",
-    mobileFamilyBenefit1: "PRO ფუნქციები + 5 მეგობარი",
-    mobileFamilyBenefit2: "უფასო თამაში",
+    mobileFamilyBenefit1: "ულიმიტო თამაში",
+    mobileFamilyBenefit2: "PRO ფუნქციები + 5 მეგობარი",
     mobileFamilyBenefit3: "რეკლამის გარეშე",
     // Shop tabs
     shopHotDeals: "🔥 ფასდაკლება",

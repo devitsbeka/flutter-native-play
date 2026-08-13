@@ -506,9 +506,9 @@ export const it: KaTranslations = {
     mobileSoloBenefit1: "Gioco illimitato",
     mobileSoloBenefit2: "Tutte le funzioni PRO",
     mobileSoloBenefit3: "Senza pubblicità",
-    mobileFamilyBenefit1: "Funzioni PRO + 5 amici",
-    mobileFamilyBenefit2: "Gioco gratuito",
-    mobileFamilyBenefit3: "Senza pubblicità",
+    mobileFamilyBenefit1: "Gioco illimitato",
+    mobileFamilyBenefit2: "Funzioni PRO + 5 amici",
+    mobileFamilyBenefit3: "Nessuna pubblicità",
     // Shop tabs
     shopHotDeals: "🔥 Offerte",
     shopPowers: "Poteri",

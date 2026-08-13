@@ -49,6 +49,9 @@ export const pt: KaTranslations = {
   playLimit: { ...en.playLimit, limitReached: "Limite de jogos atingido", becomeProDescription: "Vire PRO e jogue ilimitado, crie suas trivias e muito mais.", unlimitedGames: "Jogos ilimitados", exclusiveFeatures: "Recursos exclusivos", becomePro: "Vire PRO", freePlayReady: "Jogo grátis pronto!", playNow: "Jogar agora", nextFreePlay: "Próximo jogo grátis: {time}", freePlayInterval: "1 jogo grátis a cada 3 horas" },
   notificationsPanel: { ...en.notificationsPanel, activity: "Atividade", gamesTab: "Jogos", socialTab: "Amigos", triviaTab: "Trivia", noNotifications: "Sem notificações", noGamesNotifications: "Sem notificações de jogos", noSocialNotifications: "Sem notificações de amigos", noTriviaNotifications: "Sem notificações de trivia", viewAll: "Ver tudo", friendRequestAccepted: "Pedido de amizade aceito!", friendRequestDeclined: "Pedido recusado", inviteDeclined: "Convite recusado", errorOccurred: "Ocorreu um erro", urlCopied: "URL copiada!", copyFailed: "Falha ao copiar", avatarAlreadySet: "Avatar já definido!", roomNotFound: "Sala não encontrada", navigationFailed: "Não foi possível navegar para o jogo" },
   extra: {
+    mobileFamilyBenefit1: "Jogo ilimitado",
+    mobileFamilyBenefit2: "Recursos PRO + 5 amigos",
+    mobileFamilyBenefit3: "Sem anúncios",
     guestTagline: "Desafia os teus amigos e cria o teu próprio quiz sobre qualquer tema.",
     appleSignInBtn: "Entrar com Apple",
     guestTermsIntro: "Ao criar uma conta confirmas que leste e aceitas os",
