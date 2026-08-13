@@ -15,7 +15,10 @@ Head and shoulders, centered, facing the viewer with a warm, natural, closed-lip
 ${CHARACTER_RENDER_STYLE}
 
 CONSISTENCY WITH THE SCENE — CRITICAL
-This portrait and the reference scene must read as the same character rendered by the same artist in the same production. Match the reference's face, skin tone, hairstyle and hair color, any headwear, and the level of realism exactly. Do not make the portrait more cartoonish, smoother, younger or more idealized than the reference, and do not make it more photographic. If the reference wears a hat or beret, keep it.
+This portrait and the reference scene must read as the same character rendered by the same artist in the same production. Match the reference's face, skin tone, hairstyle and hair color, any headwear, and the level of realism exactly. Do not make the portrait more cartoonish, smoother or more idealized than the reference, and do not make it more photographic. If the reference wears a hat or beret, keep it.
+
+AGE — MATCH THE REFERENCE EXACTLY
+The character is the age the reference shows. If the reference is a child, the portrait is a child: rounder cheeks, softer jaw, higher forehead, smaller features, a head that reads large for the shoulders as a real child's does. If the reference is an adult, keep the adult jaw and cheekbones. Never age the character up or down in either direction — a child rendered as a small adult, or an adult smoothed into a youth, is a failed portrait even if the likeness is otherwise good.
 
 WARDROBE
 The character wears their purple hoodie with the small gold crown accent, as in the reference.

@@ -14,9 +14,9 @@ export const CHARACTER_RENDER_STYLE = `CHARACTER RENDER STYLE — the MyTrivia h
 Render the person as a premium stylized 3D character: a high-end animated-feature or AAA game cinematic interpretation of this exact person. The style sits deliberately halfway between photography and cartoon — neither extreme is acceptable.
 
 Keep from reality (do NOT stylize away):
-- True adult facial geometry and proportions: normal-sized eyes, real nose and lip shapes, natural jaw and cheekbones, correct eye spacing.
+- True human facial geometry and proportions FOR THIS PERSON'S ACTUAL AGE: normal-sized eyes, real nose and lip shapes, natural jaw and cheekbones, correct eye spacing. A child keeps a child's softer jaw, rounder cheeks and higher forehead; an adult keeps an adult's defined jaw and cheekbones. Never age the person up or down.
 - The likeness itself: face shape, hairstyle, hair color, facial hair silhouette, eyebrows, skin tone, distinctive features. The person must be unmistakably recognizable.
-- Natural head-to-body scale.
+- Natural head-to-body scale for their age.
 
 Stylize (surface treatment only):
 - Smooth idealized CG skin with soft subsurface shading instead of photographic pores, blemishes and skin texture.
@@ -26,4 +26,4 @@ Stylize (surface treatment only):
 
 Explicitly forbidden in BOTH directions:
 - No photorealism: not a photograph, not a retouched photo, no photographic skin texture, no camera grain or lens artifacts.
-- No cartoon exaggeration: no oversized or glossy anime eyes, no enlarged head, no shrunken nose, no doll or caricature look, no chibi, no bobblehead, no plastic or toy appearance, no uncanny waxy skin.`;
+- No cartoon exaggeration: no oversized or glossy anime eyes, no shrunken nose, no doll or caricature look, no chibi, no bobblehead, no plastic or toy appearance, no uncanny waxy skin. The head must never be enlarged BEYOND the person's real proportions for their age — a child's head is genuinely larger relative to their body than an adult's, and rendering that correctly is accuracy, not exaggeration.`;
