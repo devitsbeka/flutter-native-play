@@ -267,42 +267,69 @@ export function MyRoomsSection({
         )
       ) : vertical ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pb-4 w-full max-w-full">
-          {/* Plain AnimatePresence, not popLayout. popLayout takes the
-              leaving child out of flow, which needs a ref on it, and these
-              cards are function components returning a fragment — React
-              warned "Function components cannot be given refs" on every
-              render and the positioning it buys never worked. `layout` on
-              the cards still glides the neighbours into the gap. */}
-          <AnimatePresence initial={false}>
+          {/* The motion.div is what AnimatePresence sees, and it is what
+              carries leaving and reflowing. popLayout needs a ref on its
+              child to lift the leaving card out of flow — the card
+              components are functions returning a fragment and cannot hold
+              one, so this wrapper holds it instead. Without that lift the
+              neighbours move twice: once as the card shrinks, again when it
+              finally unmounts.
+
+              The layout transition is its own, with no per-index delay. The
+              cards' entry transition carries one, and a shared transition
+              applies to layout animations too — which is what turned one
+              delete into a staggered reshuffle of the whole grid. */}
+          <AnimatePresence mode="popLayout" initial={false}>
             {rooms
               .filter((room) => room.id !== deletingRoomId)
               .map((room, index) => (
-                <RoomCardGrid
+                <motion.div
                   key={room.id}
-                  room={room}
-                  index={index}
-                  onJoin={() => handleJoin(room)}
-                  onDelete={handleDeleteRoom}
-                  isJoining={joiningRoomId === room.id}
-                />
-              ))}
-          </AnimatePresence>
-        </div>
-      ) : (
-        <div className="overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory scroll-smooth">
-          <div className="flex gap-3 px-4">
-            <AnimatePresence initial={false}>
-              {rooms
-                .filter((room) => room.id !== deletingRoomId)
-                .map((room, index) => (
-                  <RoomCard
-                    key={room.id}
+                  layout
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{
+                    layout: { type: "spring", stiffness: 420, damping: 38, mass: 0.9 },
+                    opacity: { duration: 0.18, ease: "easeOut" },
+                    scale: { duration: 0.22, ease: [0.4, 0, 0.2, 1] },
+                  }}
+                >
+                  <RoomCardGrid
                     room={room}
                     index={index}
                     onJoin={() => handleJoin(room)}
                     onDelete={handleDeleteRoom}
                     isJoining={joiningRoomId === room.id}
                   />
+                </motion.div>
+              ))}
+          </AnimatePresence>
+        </div>
+      ) : (
+        <div className="overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory scroll-smooth">
+          <div className="flex gap-3 px-4">
+            <AnimatePresence mode="popLayout" initial={false}>
+              {rooms
+                .filter((room) => room.id !== deletingRoomId)
+                .map((room, index) => (
+                  <motion.div
+                    key={room.id}
+                    layout
+                    className="shrink-0"
+                    exit={{ opacity: 0, scale: 0.92 }}
+                    transition={{
+                      layout: { type: "spring", stiffness: 420, damping: 38, mass: 0.9 },
+                      opacity: { duration: 0.18, ease: "easeOut" },
+                      scale: { duration: 0.22, ease: [0.4, 0, 0.2, 1] },
+                    }}
+                  >
+                    <RoomCard
+                      room={room}
+                      index={index}
+                      onJoin={() => handleJoin(room)}
+                      onDelete={handleDeleteRoom}
+                      isJoining={joiningRoomId === room.id}
+                    />
+                  </motion.div>
                 ))}
             </AnimatePresence>
             {/* View All Card */}
@@ -459,12 +486,11 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          // Deleting: the card shrinks away and tips forward as it goes, and
-          // popLayout closes the gap behind it. layout keeps the neighbours
-          // gliding rather than snapping into the space.
-          layout
-          exit={{ opacity: 0, scale: 0.72, y: 12, filter: "blur(4px)" }}
-          transition={{ delay: index * 0.05, type: "spring", stiffness: 400, damping: 30, opacity: { duration: 0.28 }, scale: { duration: 0.34, ease: [0.4, 0, 0.2, 1] } }}
+          // Entry only. Leaving and reflowing belong to the wrapper this sits
+          // in — a `transition` with a per-index delay applies to LAYOUT
+          // animations too, so having them here made the whole grid reshuffle
+          // in a staggered ripple every time one card left.
+          transition={{ delay: index * 0.05, type: "spring", stiffness: 400, damping: 30 }}
           drag={isMobile ? "x" : false}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.2}
@@ -775,12 +801,11 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          // Deleting: the card shrinks away and tips forward as it goes, and
-          // popLayout closes the gap behind it. layout keeps the neighbours
-          // gliding rather than snapping into the space.
-          layout
-          exit={{ opacity: 0, scale: 0.72, y: 12, filter: "blur(4px)" }}
-          transition={{ delay: index * 0.03, type: "spring", stiffness: 400, damping: 30, opacity: { duration: 0.28 }, scale: { duration: 0.34, ease: [0.4, 0, 0.2, 1] } }}
+          // Entry only. Leaving and reflowing belong to the wrapper this sits
+          // in — a `transition` with a per-index delay applies to LAYOUT
+          // animations too, so having them here made the whole grid reshuffle
+          // in a staggered ripple every time one card left.
+          transition={{ delay: index * 0.03, type: "spring", stiffness: 400, damping: 30 }}
           drag={isMobile ? "x" : false}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.2}
