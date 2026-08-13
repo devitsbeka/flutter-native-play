@@ -49,6 +49,10 @@ interface MyRoomsSectionProps {
   onNavigateToTab?: (tab: string) => void;
 }
 
+// How long a card takes to fade out. The reload is held until after it, so
+// the list never reflows underneath a card that is still on screen.
+const EXIT_MS = 320;
+
 export function MyRoomsSection({ 
   hideTV = false, 
   onCreateRoom, 
@@ -69,10 +73,15 @@ export function MyRoomsSection({
   const platform = Capacitor.getPlatform();
   const TVIcon = platform === 'ios' ? Airplay : platform === 'android' ? Cast : Tv;
 
-  // Delete room handler
-  // The card on its way out. It shrinks away first and the row closes behind
-  // it, instead of the list blinking a card shorter when the refetch lands.
+  // The card on its way out — hidden from the tap, so the fade starts
+  // immediately rather than after the round trip.
   const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null);
+  // Rooms this view has deleted for good. The list is refetched from a
+  // server that has already dropped them, but a response that was in flight
+  // when the delete landed still carries the old row — and that response
+  // arriving late is what made a deleted card blink back for a moment
+  // before disappearing again. Nothing gets to put these back.
+  const [removedRoomIds, setRemovedRoomIds] = useState<Set<string>>(() => new Set());
 
   const handleDeleteRoom = async (roomId: string) => {
     setDeletingRoomId(roomId);
@@ -94,14 +103,12 @@ export function MyRoomsSection({
       }
 
       toast.success(t("extra.roomDeleted"));
-      // Let the card finish leaving, then reload — and keep hiding it until
-      // the reload has actually landed. Clearing the id as soon as the
-      // refetch was *requested* un-hid a room the list still held, so the
-      // card animated back in and sat there for the length of the round
-      // trip: a delete that had already succeeded looked like it had failed.
+      setRemovedRoomIds((prev) => new Set(prev).add(roomId));
+      // Reload once the card has finished fading. deletingRoomId can be let
+      // go afterwards — removedRoomIds is what keeps it gone from here on.
       setTimeout(() => {
         void Promise.resolve(refreshRooms()).finally(() => setDeletingRoomId(null));
-      }, 420);
+      }, EXIT_MS + 60);
     } catch (error) {
       console.error("Error deleting room:", error);
       toast.error(t("extra.roomDeleteFailed"));
@@ -267,30 +274,31 @@ export function MyRoomsSection({
         )
       ) : vertical ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pb-4 w-full max-w-full">
-          {/* The motion.div is what AnimatePresence sees, and it is what
-              carries leaving and reflowing. popLayout needs a ref on its
-              child to lift the leaving card out of flow — the card
-              components are functions returning a fragment and cannot hold
-              one, so this wrapper holds it instead. Without that lift the
-              neighbours move twice: once as the card shrinks, again when it
-              finally unmounts.
+          {/* The motion.div is what AnimatePresence sees, and it carries
+              leaving and reflowing.
+
+              Not popLayout: that lifts the card out of flow the instant it
+              starts leaving, so the row closes while the card is still
+              visible — which reads as the card vanishing and the grid
+              snapping shut. Left in flow, it fades on the spot and the
+              neighbours only move once it is gone. One thing at a time.
 
               The layout transition is its own, with no per-index delay. The
               cards' entry transition carries one, and a shared transition
               applies to layout animations too — which is what turned one
               delete into a staggered reshuffle of the whole grid. */}
-          <AnimatePresence mode="popLayout" initial={false}>
+          <AnimatePresence initial={false}>
             {rooms
-              .filter((room) => room.id !== deletingRoomId)
+              .filter((room) => room.id !== deletingRoomId && !removedRoomIds.has(room.id))
               .map((room, index) => (
                 <motion.div
                   key={room.id}
                   layout
-                  exit={{ opacity: 0, scale: 0.92 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
                   transition={{
-                    layout: { type: "spring", stiffness: 420, damping: 38, mass: 0.9 },
-                    opacity: { duration: 0.18, ease: "easeOut" },
-                    scale: { duration: 0.22, ease: [0.4, 0, 0.2, 1] },
+                    layout: { type: "spring", stiffness: 300, damping: 34, mass: 0.9 },
+                    opacity: { duration: EXIT_MS / 1000, ease: "easeInOut" },
+                    scale: { duration: EXIT_MS / 1000, ease: "easeInOut" },
                   }}
                 >
                   <RoomCardGrid
@@ -307,19 +315,19 @@ export function MyRoomsSection({
       ) : (
         <div className="overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory scroll-smooth">
           <div className="flex gap-3 px-4">
-            <AnimatePresence mode="popLayout" initial={false}>
+            <AnimatePresence initial={false}>
               {rooms
-                .filter((room) => room.id !== deletingRoomId)
+                .filter((room) => room.id !== deletingRoomId && !removedRoomIds.has(room.id))
                 .map((room, index) => (
                   <motion.div
                     key={room.id}
                     layout
                     className="shrink-0"
-                    exit={{ opacity: 0, scale: 0.92 }}
+                    exit={{ opacity: 0, scale: 0.97 }}
                     transition={{
-                      layout: { type: "spring", stiffness: 420, damping: 38, mass: 0.9 },
-                      opacity: { duration: 0.18, ease: "easeOut" },
-                      scale: { duration: 0.22, ease: [0.4, 0, 0.2, 1] },
+                      layout: { type: "spring", stiffness: 300, damping: 34, mass: 0.9 },
+                      opacity: { duration: EXIT_MS / 1000, ease: "easeInOut" },
+                      scale: { duration: EXIT_MS / 1000, ease: "easeInOut" },
                     }}
                   >
                     <RoomCard
