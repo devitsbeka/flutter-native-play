@@ -29,9 +29,12 @@ const SWEPT = [
   "src/components/profile/CountrySelectModal.tsx",
   "src/components/team/TeamRightSidebar.tsx",
   "src/components/team/widgets/MyTriviasWidget.tsx",
+  "src/components/home/MissionsModal.tsx",
   "src/pages/Leaderboards.tsx",
   "src/pages/Settings.tsx",
   "src/utils/countryName.ts",
+  "src/utils/missionText.ts",
+  "src/utils/notificationTranslations.ts",
 ];
 
 /**

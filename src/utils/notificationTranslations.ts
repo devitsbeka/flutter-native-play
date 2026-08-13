@@ -1,5 +1,6 @@
 // Helper to translate notification content based on type and language
 import { translations, DEFAULT_LANGUAGE } from '@/locales';
+import { missionTitle } from '@/utils/missionText';
 
 interface NotificationData {
   sender_nickname?: string;
@@ -50,6 +51,15 @@ export function translateNotificationTitle(
     'room_ping': 'extra.pingHostNotifTitle',
   };
 
+  // A completed mission's row carries the title in the language the app was
+  // in when it was written. mission_id does not change, so the name is looked
+  // up from that and only falls back to the stored words for a mission this
+  // build does not know.
+  if (type === 'reward' && data?.mission_id) {
+    const name = missionTitle(data.mission_id as string, '');
+    if (name) return getTranslation('missions.completedTitle').replace('{mission}', name);
+  }
+
   const translationKey = titleMap[type];
   if (translationKey) {
     let translation = getTranslation(translationKey);
@@ -82,6 +92,17 @@ export function translateNotificationMessage(
     'friend_request': 'notifications.friendRequestFrom',
     'friend_accepted': 'notifications.friendAcceptedBy',
   };
+
+  // "Reward: 350 coins · 6 gems · 180 XP" — rebuilt from the numbers stored
+  // alongside the notification rather than read back as a Georgian sentence.
+  if (type === 'reward') {
+    const bits = [
+      Number(data?.coins) > 0 ? `${data!.coins} ${getTranslation('common.coins')}` : null,
+      Number(data?.gems) > 0 ? `${data!.gems} ${getTranslation('common.gems')}` : null,
+      Number(data?.xp) > 0 ? `${data!.xp} XP` : null,
+    ].filter(Boolean).join(' · ');
+    if (bits) return `${getTranslation('missions.rewardLabel')}: ${bits}`;
+  }
 
   const translationKey = messageMap[type];
   if (translationKey) {

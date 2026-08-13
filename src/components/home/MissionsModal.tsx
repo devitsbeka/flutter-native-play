@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { missionTitle, missionDescription } from "@/utils/missionText";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Check, Star, X } from "lucide-react";
@@ -175,11 +176,16 @@ function MissionCard({ mission, t }: { mission: Mission; t: (key: string) => str
         alt=""
         className="h-11 w-11 object-contain"
       />
+      {/* Named from mission_id rather than from the row's stored title: the
+          row was written in whatever language the app was in when the
+          mission was handed out. */}
       <h3 className="mt-2.5 font-display text-lg font-bold text-[#402666]">
-        {mission.mission_title}
+        {missionTitle(mission.mission_id, mission.mission_title)}
       </h3>
       {mission.mission_description && (
-        <p className="mt-1 text-sm text-slate-500">{mission.mission_description}</p>
+        <p className="mt-1 text-sm text-slate-500">
+          {missionDescription(mission.mission_id, mission.mission_description, mission.target_value)}
+        </p>
       )}
 
       {/* Progress */}
