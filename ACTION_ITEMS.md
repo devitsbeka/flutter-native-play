@@ -40,22 +40,23 @@ rather than silently — that was deliberate — but it still doesn't work.
 
 | Value | Where it goes | What breaks without it |
 |---|---|---|
-| `REVENUECAT_SECRET_API_KEY` | Supabase secret — **you have the value, it needs setting** | Entitlement sync can't ask RevenueCat what a user owns |
-| `REVENUECAT_WEBHOOK_SECRET` | Supabase secret **and** the RevenueCat dashboard — you generate it | The webhook refuses to run rather than accept unauthenticated calls |
-
-Both are set and the functions deployed by following
-[`supabase/functions/README-entitlements.md`](supabase/functions/README-entitlements.md).
-Neither value goes in the repo, in `.env`, or in a workflow — they are
-platform secrets, and the secret RevenueCat key can read and modify every
-subscriber on the account.
+| ~~`REVENUECAT_SECRET_API_KEY`~~ | ~~Supabase secret~~ | **Done and verified.** Must be a **V1** key — a V2 key returns 403 code 7723 against the `/subscribers` endpoint the code uses |
+| ~~`REVENUECAT_WEBHOOK_SECRET`~~ | ~~Supabase secret + RevenueCat~~ | **Done and verified** — wrong and missing secrets both rejected with 401, correct one accepted |
 | ~~`VITE_REVENUECAT_IOS_API_KEY`~~ | ~~Build env~~ | **Done** — in `.env.example`; copy to your local `.env` |
 | `VITE_ADMOB_IOS_REWARDED` | Build env | Falls back to a demo unit — ads show, revenue is zero |
 | `VITE_ADMOB_IOS_INTERSTITIAL` | Build env | Same |
 | `VITE_VIDEO_BASE_URL` | Build env | Native falls back to `https://mytrivia.io`; set it explicitly if videos move |
 | ~~Apple **Team ID**~~ | ~~AASA file~~ | **Done** — `T38XQSM4L3` |
 
-`.env.example` documents all the build-env values. `.env` is no longer
-tracked in git.
+Both RevenueCat secrets are set and verified. Neither goes in the repo, in
+`.env`, or in a workflow — they are platform secrets, and the secret key can
+read and modify every subscriber on the account. See
+[`supabase/functions/README-entitlements.md`](supabase/functions/README-entitlements.md).
+
+`.env` **is** tracked, deliberately: it holds only the Supabase project ref
+and the publishable anon key, both public by design, and three build systems
+read it — the GitHub deploy workflow, Lovable, and local builds. Untracking it
+broke two of them. `.env.example` documents the rest.
 
 ## 4. Xcode, once you have the account
 
