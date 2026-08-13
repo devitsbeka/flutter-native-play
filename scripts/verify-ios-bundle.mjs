@@ -17,7 +17,7 @@
  */
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, resolve, relative } from "node:path";
 
 const DIST = resolve(process.cwd(), "dist");
 
@@ -77,10 +77,46 @@ try {
   failures.push("dist/index.html is missing.");
 }
 
+// ── Size ceiling ───────────────────────────────────────────────────────────
+//
+// Capacitor copies dist/ into the app, so this is a close proxy for the
+// installed size. The number that matters is not the App Store's 4 GB limit
+// but the cellular download threshold: above it iOS warns before downloading,
+// and a meaningful share of installs stop there.
+//
+// dist/ was 394 MB — 276 MB of it video — before the pruning step existed.
+// The ceiling is set well above the pruned size so ordinary asset growth does
+// not trip it, and well below the point where the warning appears.
+const MAX_DIST_MB = 150;
+
+const totalBytes = files.reduce((sum, f) => sum + statSync(f).size, 0);
+const totalMb = totalBytes / 1024 / 1024;
+
+if (totalMb > MAX_DIST_MB) {
+  failures.push(
+    `The bundle is ${totalMb.toFixed(1)} MB, over the ${MAX_DIST_MB} MB ceiling.\n` +
+      "      Largest directories:\n" +
+      Object.entries(
+        files.reduce((acc, f) => {
+          const dir = relative(DIST, f).split("/")[0];
+          acc[dir] = (acc[dir] ?? 0) + statSync(f).size;
+          return acc;
+        }, {}),
+      )
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([dir, size]) => `        ${dir}: ${(size / 1024 / 1024).toFixed(1)} MB`)
+        .join("\n"),
+  );
+}
+
 if (failures.length > 0) {
   console.error("\nverify-ios-bundle failed:\n");
   for (const f of failures) console.error(`  ✗ ${f}\n`);
   process.exit(1);
 }
 
-console.log("verify-ios-bundle: ok — no admin console, no pre-ATT tracking.");
+console.log(
+  `verify-ios-bundle: ok — ${totalMb.toFixed(1)} MB, no admin console, ` +
+    "no pre-ATT tracking.",
+);

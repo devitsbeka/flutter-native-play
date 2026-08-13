@@ -34,3 +34,9 @@ test-results/
 playwright-report/
 blob-report/
 .playwright/
+
+# Local environment. Values are documented in .env.example; the real ones
+# live in the deploy environment, not the repo.
+.env
+.env.local
+.env.*.local

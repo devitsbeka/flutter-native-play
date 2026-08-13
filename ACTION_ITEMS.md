@@ -1,0 +1,134 @@
+# Action items — things only you can do
+
+Everything here blocks progress and cannot be done from inside the repo.
+Ordered by what unblocks the most downstream work.
+
+Full context for each is in [`docs/IOS_LAUNCH_PLAN.md`](docs/IOS_LAUNCH_PLAN.md).
+
+---
+
+## 1. Apple Developer account — blocks everything
+
+Nothing in P3 onward can be verified without this, and the enrolment itself
+has a lead time measured in weeks if you enrol as a company (D-U-N-S number
+required).
+
+- [ ] **Enrol in the Apple Developer Program** ($99/yr)
+- [ ] **Register App ID `io.mytrivia.app`** with these capabilities:
+      In-App Purchase · Push Notifications · Sign in with Apple ·
+      Associated Domains
+- [ ] **Create the App Store Connect record** and reserve the name "MyTrivia"
+- [ ] **Sign the Paid Applications Agreement and complete the banking and tax
+      forms.** This one is easy to leave for later and shouldn't be:
+      **StoreKit returns zero products until it clears**, so no purchase can
+      be tested at all — sandbox included.
+
+## 2. Third-party accounts
+
+- [ ] **RevenueCat** — create the project and the iOS app config
+- [ ] **AdMob** — register the iOS app, create a **dedicated iOS** rewarded
+      unit and a **real** interstitial unit (the interstitials currently point
+      at Google's demo units, which serve ads and earn nothing)
+- [ ] **Firebase** — project, plus an **APNs authentication key (.p8)**
+      uploaded. Push cannot deliver to iOS without it.
+- [ ] **Sentry** or equivalent — iOS crash reporting
+
+## 3. Values to fill in
+
+Until these are set, the code that depends on them is inert. It fails loudly
+rather than silently — that was deliberate — but it still doesn't work.
+
+| Value | Where it goes | What breaks without it |
+|---|---|---|
+| `REVENUECAT_SECRET_API_KEY` | Supabase secret | Entitlement sync can't ask RevenueCat what a user owns |
+| `REVENUECAT_WEBHOOK_SECRET` | Supabase secret **and** the RevenueCat dashboard | The webhook refuses to run rather than accept unauthenticated calls |
+| `VITE_REVENUECAT_IOS_API_KEY` | Build env | Paywall renders with no products |
+| `VITE_ADMOB_IOS_REWARDED` | Build env | Falls back to a demo unit — ads show, revenue is zero |
+| `VITE_ADMOB_IOS_INTERSTITIAL` | Build env | Same |
+| `VITE_VIDEO_BASE_URL` | Build env | Native falls back to `https://mytrivia.io`; set it explicitly if videos move |
+| Apple **Team ID** | `public/.well-known/apple-app-site-association` | Universal links silently keep opening in Safari |
+
+`.env.example` documents all the build-env values. `.env` is no longer
+tracked in git.
+
+## 4. Xcode, once you have the account
+
+These need the Xcode UI and a signing identity:
+
+- [ ] Set the **Team** on the App target
+- [ ] Add the **Associated Domains** capability:
+      `applinks:mytrivia.io` and `applinks:www.mytrivia.io`
+- [ ] Add the **Push Notifications** capability
+- [ ] Add the **Sign in with Apple** capability
+- [ ] Run **Product → Archive → Generate Privacy Report** and check it against
+      `ios/App/App/PrivacyInfo.xcprivacy` before the first upload
+
+## 5. Deploy-side
+
+- [ ] Confirm `https://mytrivia.io/.well-known/apple-app-site-association`
+      returns **200**, `content-type: application/json`, and **no redirect**.
+      Apple's CDN is strict about all three and fails silently if any is
+      wrong. `curl -sI` it after deploying.
+- [ ] Confirm `https://mytrivia.io/app-ads.txt` is reachable, and that the
+      developer website on both store listings points at that domain — AdMob
+      matches the two, and a mismatch means the file is never found.
+- [ ] Confirm the host serving `VITE_VIDEO_BASE_URL` serves `/videos/*`,
+      including the `mobile/` subdirectory. **The iOS build no longer ships
+      the video library** — it streams it.
+
+## 6. Video encoding — needs ffmpeg
+
+The iOS bundle went from 394 MB to **130 MB** by pruning the video library
+out of it and streaming instead. Two follow-ups need a machine with ffmpeg,
+which this environment doesn't have.
+
+- [ ] **Generate `public/videos/mobile/*.mp4`** (480px, H.264).
+
+      Only the WebM variants were ever generated. **WebM does not play in
+      WKWebView below iOS 17.4**, and this app supports iOS 15 — so on most
+      iPhones in service the `<source>` chain skips the WebM and falls through
+      to the *desktop* MP4, several megabytes each. Extend
+      `scripts/convert-videos-webm.sh` to emit H.264 at the mobile size, then
+      set `VITE_MOBILE_MP4_AVAILABLE=true`. The code already prefers them when
+      that flag is on.
+
+- [ ] **Re-encode or move the 8 MP4s imported from `src/assets/`** — 46 MB.
+
+      These are bundled as ES module imports, so the video pruning doesn't
+      reach them. They are the single largest remaining item in the bundle.
+      Moving them to `public/videos/` and referencing them by path would let
+      them stream like everything else.
+
+- [ ] **Compress the 129 PNGs in `src/assets/`** — 42 MB.
+
+      Second largest. Most are UI icons and illustrations; WebP or an
+      optimised PNG pass should take a large bite out of this without any code
+      change.
+
+Between them those two items are 88 MB of the remaining 130 MB.
+
+## 7. Decisions I need from you
+
+- [ ] **Gem pack pricing.** Four consumables are defined
+      (`io.mytrivia.gems.{100,500,1500,5000}`) matching the packs the web shop
+      already sells at $0.79 / $3.19 / $7.99 / $23.99. Confirm those prices,
+      or give me the tiers you want, before they're created in App Store
+      Connect — changing a live IAP price is far more painful than getting it
+      right first.
+
+- [ ] **Age rating and user-generated content.** Expect 12+ given ads and
+      social features. If players can see each other's quizzes, **Guideline
+      1.2 requires a way to report and block** — I haven't verified one
+      exists. If it doesn't, that's a build item before submission.
+
+- [ ] **iPad.** Not currently a target, but the app runs in compatibility mode
+      and reviewers do open it. Worth ten minutes on a simulator to decide
+      whether it's acceptable or needs hiding.
+
+---
+
+## Not blocked — what I can keep doing
+
+P3 performance and accessibility work, and the remaining bundle reduction
+that doesn't need ffmpeg. P4 (signing, CI, purchase testing) and P5
+(TestFlight, listing, submission) are gated on section 1.

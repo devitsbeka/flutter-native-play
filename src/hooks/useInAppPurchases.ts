@@ -75,14 +75,34 @@ export function useInAppPurchases() {
           return;
         }
 
-        // Get platform-specific API key
+        // Get platform-specific API key.
+        //
+        // No placeholder fallback. It used to default to
+        // "appl_CONFIGURE_IN_ENV", which configure() accepts happily — then
+        // getOfferings() returns nothing and the paywall renders with no
+        // products at all. The only symptom was a console warning, so the
+        // failure looked like "the store is empty today" rather than "nobody
+        // set the key".
         const platform = Capacitor.getPlatform();
-        const apiKey = platform === "ios" 
-          ? (import.meta.env.VITE_REVENUECAT_IOS_API_KEY || "appl_CONFIGURE_IN_ENV")
-          : (import.meta.env.VITE_REVENUECAT_ANDROID_API_KEY || "goog_CONFIGURE_IN_ENV");
+        const apiKey =
+          platform === "ios"
+            ? import.meta.env.VITE_REVENUECAT_IOS_API_KEY
+            : import.meta.env.VITE_REVENUECAT_ANDROID_API_KEY;
 
-        // Configure RevenueCat
-        await plugin.setLogLevel({ level: LOG_LEVEL?.DEBUG || "DEBUG" });
+        if (!apiKey) {
+          console.error(
+            `[iap] No RevenueCat key for ${platform}. Purchases are disabled. ` +
+            `Set VITE_REVENUECAT_${platform.toUpperCase()}_API_KEY.`,
+          );
+          setLoading(false);
+          return;
+        }
+
+        // Verbose purchase logging is for development. In a release build it
+        // writes transaction internals to the device console.
+        await plugin.setLogLevel({
+          level: import.meta.env.DEV ? (LOG_LEVEL?.DEBUG ?? "DEBUG") : (LOG_LEVEL?.ERROR ?? "ERROR"),
+        });
         await plugin.configure({ apiKey });
 
         // If user is logged in, identify them in RevenueCat
