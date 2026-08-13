@@ -170,7 +170,8 @@ for members in clusters.values():
         }
 
 # ── rewrite queue ─────────────────────────────────────────────────────────
-Q_BROKEN, A_BROKEN = 90, 48
+# Scope: everything off the project's own 70/20 standard, not just what clips.
+Q_BROKEN, A_BROKEN = 70, 20
 rewrite = {}
 for r in prod:
     if r['id'] in retire: continue
@@ -180,6 +181,13 @@ for r in prod:
     if NON_LATIN.search(' '.join(o) + r['question_text']): why.append('foreign_script')
     if len(r['question_text']) > Q_BROKEN: why.append(f"question_{len(r['question_text'])}ch")
     if max(len(a) for a in o) > A_BROKEN: why.append(f'answer_{max(len(a) for a in o)}ch')
+    # An unbalanced answer set only gives the game away when the CORRECT answer
+    # is the long one. "William Butler Yeats" against "T.S. Eliot" is unbalanced
+    # and unfixable — the man's name is his name — but if the long option is a
+    # distractor, nothing leaks. Only flag the leaking direction.
+    lens = [len(a) for a in o]
+    if len(o[0]) == max(lens) and len(o[0]) - sorted(lens)[-2] > 6:
+        why.append(f'correct_longest_{len(o[0])}')
     if why: rewrite[r['id']] = why
 
 json.dump({'retire': retire, 'rewrite': rewrite}, open('worklist.json', 'w'),

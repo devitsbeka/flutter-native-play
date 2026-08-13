@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
+import { rejectAnswerSet } from "../_shared/answerQuality.ts";
 
 const MAX_ANSWER_LENGTH = 20;
 const AGGRESSIVE_THRESHOLD = 12;
@@ -17,6 +18,8 @@ interface AnswerShortenResult {
   status: 'shortened' | 'partially_shortened' | 'unshortenable' | 'failed';
   correctShortened: boolean;
   incorrectShortenedCount: number;
+  /** Why a proposed set was rejected, so the studio can show it. */
+  qualityIssue?: string;
 }
 
 serve(async (req) => {
@@ -120,15 +123,21 @@ serve(async (req) => {
 - თუ პასუხი უკვე კარგი და მოკლეა — დატოვე უცვლელად`
           : `You are a trivia quiz answer editor. Given a question and its 4 answer options, rewrite ALL answers as short, high-quality quiz button labels (max ${MAX_ANSWER_LENGTH} chars each).
 
-Rules:
-- ALL 4 answers must be ≤${MAX_ANSWER_LENGTH} characters
-- Answers should be similar in length and style (balanced)
-- Keep factual accuracy — don't change which answer is correct
-- Extract key concepts from sentences
-- Use well-known abbreviations only (USA, DNA, CO₂, etc.)
-- Do NOT truncate words (e.g. "Alexander" → "Alexand" is WRONG)
-- If an answer is already good and short, keep it as-is
-- Output must be in the SAME LANGUAGE as the input answers`;
+HOW TO SHORTEN. In order, prefer:
+1. Drop words the question already said. "How many chambers does a heart have?" → "Four chambers" becomes "Four".
+2. Drop hedges and filler: "About", "Approximately", "It is", "This is", "generally".
+3. Drop a leading article: "The Trojan Horse" → "Trojan Horse".
+4. Keep the distinguishing noun and cut the rest of the sentence. "Humans have a low fat-to-muscle ratio, making them inefficient prey" → "Too little body fat".
+
+NEVER:
+- Never invent an abbreviation. "Foundation" → "Fdn", "Stock Exchange" → "Stk Exch", "Council" → "Cncl" and "Noise-induced hearing loss" → "Noise-induced H.L." are all WRONG. Only abbreviations a reader already knows without being told are allowed: USA, DNA, NASA, CO₂, WHO. If it will not fit without inventing one, drop a qualifier instead and let the answer be longer.
+- Never truncate a word. "Alexander" → "Alexand" is WRONG.
+- Never rename a proper noun to make it fit. A book, person, place or brand keeps its real name even if that means exceeding ${MAX_ANSWER_LENGTH}: "Philosophical Investigations" stays, it does not become "Philosophical Studies".
+- Never change which answer is correct, and never make a distractor true.
+
+BALANCE. The correct answer must NOT be the longest. Players pick the long one without reading. If the correct answer is a name you cannot shorten, lengthen the distractors to match instead — "William Butler Yeats" against "T.S. Eliot" should become "William Butler Yeats" against "Thomas Stearns Eliot".
+
+Answers should be similar in length and style. If an answer is already short and good, keep it exactly as-is. Output must be in the SAME LANGUAGE as the input.`;
 
         const userPrompt = `Question: "${question.question_text}"
 Correct answer: "${question.correct_answer}"
@@ -231,16 +240,27 @@ Incorrect 3: "${incorrectAnswers[2] || ''}"`;
           }
         }
 
-        // Validate and apply results
-        const newCorrect = (parsed.correct.length <= MAX_ANSWER_LENGTH || parsed.correct.length < question.correct_answer.length) 
-          ? parsed.correct : question.correct_answer;
+        // The set is accepted or rejected as a whole. Taking the model's new
+        // text for some options and keeping the original for others is how a
+        // half-shortened set appears — and a set where the correct answer is
+        // the only long one left is a worse question than the one we started
+        // with, because the answer can now be picked without reading it.
+        const setRejection = rejectAnswerSet(
+          question.correct_answer,
+          incorrectAnswers,
+          parsed.correct,
+          parsed.incorrect,
+        );
+        if (setRejection) {
+          console.log(`Question ${question.id}: rejected — ${setRejection}`);
+          failed++;
+          results.push(makeFailResult(question, incorrectAnswers, setRejection));
+          continue;
+        }
+
+        const newCorrect = parsed.correct;
         const correctWasShortened = newCorrect !== question.correct_answer;
-        
-        const newIncorrect = parsed.incorrect.map((ans, idx) => {
-          const original = incorrectAnswers[idx] || '';
-          if (ans && (ans.length <= MAX_ANSWER_LENGTH || ans.length < original.length)) return ans;
-          return original || ans;
-        });
+        const newIncorrect = parsed.incorrect;
         const incorrectShortenedCount = newIncorrect.filter((ans, idx) => ans !== incorrectAnswers[idx]).length;
 
         // Check if ALL long answers were actually shortened
@@ -318,7 +338,11 @@ Incorrect 3: "${incorrectAnswers[2] || ''}"`;
   }
 });
 
-function makeFailResult(question: any, incorrectAnswers: string[]): AnswerShortenResult {
+function makeFailResult(
+  question: any,
+  incorrectAnswers: string[],
+  qualityIssue?: string,
+): AnswerShortenResult {
   return {
     id: question.id,
     questionText: question.question_text,
@@ -329,5 +353,7 @@ function makeFailResult(question: any, incorrectAnswers: string[]): AnswerShorte
     status: 'failed',
     correctShortened: false,
     incorrectShortenedCount: 0,
+    qualityIssue,
   };
 }
+
