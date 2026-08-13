@@ -29,11 +29,14 @@ export interface StorePrice {
   fromStore: boolean;
 }
 
+// `solo`/`family` are the shop carousel's names for the same two tiers the
+// profile calls `pro`/`pro_plus` (see MobileProCarousel and ShopRightSidebar),
+// so both spellings map here.
 const TIER_TO_PRODUCT: Record<string, string> = {
-  solo: IAP_PRODUCTS.VIP_MONTHLY,
-  pro: IAP_PRODUCTS.VIP_MONTHLY,
-  family: IAP_PRODUCTS.VIP_ANNUAL,
-  pro_plus: IAP_PRODUCTS.VIP_ANNUAL,
+  solo: IAP_PRODUCTS.PRO_MONTHLY,
+  pro: IAP_PRODUCTS.PRO_MONTHLY,
+  family: IAP_PRODUCTS.PRO_PLUS_MONTHLY,
+  pro_plus: IAP_PRODUCTS.PRO_PLUS_MONTHLY,
 };
 
 /**

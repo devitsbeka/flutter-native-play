@@ -9,31 +9,99 @@ Full context for each is in [`docs/IOS_LAUNCH_PLAN.md`](docs/IOS_LAUNCH_PLAN.md)
 
 ## 1. Apple Developer portal — the account exists, the setup does not
 
-Enrolment is done (`hello@itsbeka.com`, Team ID `T38XQSM4L3`), which removes
-the multi-week lead time that used to sit in front of everything else. What
-remains is configuration, and it is quick.
+Enrolment is done (`hello@itsbeka.com`, Team ID `T38XQSM4L3`), the Paid
+Applications Agreement is signed, and the banking and tax forms are in. That
+removes every step on this list that had a waiting period attached. What
+remains is configuration, and **the order below matters** — three of these
+steps create things Apple will never let you rename.
 
 - [x] ~~Enrol in the Apple Developer Program~~
-- [ ] **Sign the Paid Applications Agreement, and complete the banking and tax
-      forms.** Do this first. **StoreKit returns zero products until it
-      clears**, so no purchase can be tested at all — sandbox included — and
-      everything about IAP stays untestable behind it. It is also the step
-      with a review delay attached, unlike the rest of this list.
-- [ ] **Register App ID `io.mytrivia.app`** with four capabilities:
+- [x] ~~Paid Applications Agreement, banking, tax~~ — done. This was the one
+      gate in front of StoreKit returning any products at all.
+
+### 1a. Deal with the existing app record first
+
+There is already a record on App Store Connect (Apple ID `6757699196`, name
+"MyTrivia", status *1.0 Prepare for Submission*) left over from Lovable. Its
+bundle id is:
+
+```
+app.lovable.f54c9281c7aa40a48ea74b75d0ffa3d4
+```
+
+**A bundle id cannot be changed after the record is created.** This repo is
+built around `io.mytrivia.app` — `capacitor.config.ts`, the Xcode project,
+`src/config/site.ts`, and the `apple-app-site-association` file that carries
+`T38XQSM4L3.io.mytrivia.app`. Reusing the record means adopting the Lovable
+id permanently, in crash reports, the App ID list, and the AASA.
+
+The record has **never been released**, so throwing it away costs nothing —
+no users, no reviews, no ratings, no App Store URL in circulation. Replacing
+it now is free; changing your mind later is not.
+
+- [ ] **Rename the old record** (App Information → Name → e.g. "MyTrivia
+      Legacy") and save. This releases the name "MyTrivia" so the new record
+      can claim it — an app name is held exclusively by whichever record
+      reserved it, including an unreleased one.
+- [ ] **Delete the old record** once the new one is up (My Apps → the app →
+      App Information → Delete App). Available because it never shipped.
+
+If you'd rather keep the record, the alternative is to change this repo's
+bundle id to `app.lovable.f54c…` in the four places above. It works, and it's
+a worse identifier forever. The recommendation is to replace the record.
+
+### 1b. Register the App ID, then create the record
+
+Order matters: App Store Connect populates its bundle-id dropdown from
+registered App IDs, so an unregistered `io.mytrivia.app` simply won't appear.
+
+- [ ] **Register App ID `io.mytrivia.app`** (Certificates, Identifiers &
+      Profiles → Identifiers) with four capabilities:
       In-App Purchase · Push Notifications · Sign in with Apple ·
       Associated Domains
-- [ ] **Create the App Store Connect record** and reserve the name "MyTrivia"
-- [ ] **Create the products**, and confirm the identifiers match
-      `supabase/functions/_shared/iap.ts` exactly — a mismatch means the
-      purchase succeeds and grants nothing:
-      - `io.mytrivia.vip.monthly` · `io.mytrivia.vip.annual` (auto-renewable,
-        same subscription group)
-      - `io.mytrivia.adfree` (non-consumable)
-      - `io.mytrivia.gems.100` · `.500` · `.1500` · `.5000` (consumable)
-- [ ] **Mirror all seven in RevenueCat** and attach them to an offering. The
-      paywall now reads its prices from StoreKit, so a product missing from
-      the offering renders with the compiled fallback price instead of the
-      real one.
+- [ ] **Create the new App Store Connect record** against that bundle id and
+      reserve the name "MyTrivia"
+
+### 1c. Create the seven products
+
+Both subscriptions are **monthly**. PRO and Friends PRO are feature tiers
+(1 vs 5 friend invites), not billing periods, and the app renders both with a
+"/month" label — see `PRO_TIERS` in `components/profile/ProPlansSection.tsx`.
+Creating the $7.99 one as a yearly product would undercharge by 12x and put a
+price on screen that doesn't match the one Apple charges, which is a
+guideline 2.3.1 rejection on the same screen that shows it.
+
+Subscriptions need a **Subscription Group** before any can be created. Put
+both in the **same group** — that's what lets a subscriber move between tiers
+as an upgrade rather than a second, parallel subscription.
+
+| Product ID | Type | Duration | Price | Grants |
+|---|---|---|---|---|
+| `io.mytrivia.pro.monthly` | Auto-renewable | 1 month | $3.99 | `pro` |
+| `io.mytrivia.proplus.monthly` | Auto-renewable | 1 month | $7.99 | `pro_plus` |
+| `io.mytrivia.adfree` | Non-consumable | — | (your call) | `ad_free` |
+| `io.mytrivia.gems.100` | Consumable | — | $0.79 | 100 gems |
+| `io.mytrivia.gems.500` | Consumable | — | $3.19 | 500 gems |
+| `io.mytrivia.gems.1500` | Consumable | — | $7.99 | 1500 gems |
+| `io.mytrivia.gems.5000` | Consumable | — | $23.99 | 5000 gems |
+
+- [ ] **Create all seven**, and check each identifier against
+      `PRODUCTS` in `supabase/functions/_shared/iap.ts` character by
+      character. That table is the only thing that turns a purchase into an
+      entitlement; an id that doesn't match it means the purchase succeeds,
+      Apple takes the money, and the user gets nothing. There is no error
+      anywhere in that path.
+- [ ] **Mirror all seven in RevenueCat and attach them to an offering.**
+      Products that exist in RevenueCat but sit outside an offering are not
+      returned to the app. The paywall reads its prices from StoreKit now, so
+      a product missing from the offering renders the compiled fallback
+      price instead of the real localized one.
+
+The self-check once this is done: on a device, a paywall showing `$3.99`
+means the chain is broken somewhere and it fell back to the number compiled
+into the bundle. A paywall showing a real store price — including the right
+currency for the storefront — means App Store Connect, RevenueCat and the
+offering are all wired correctly. See `src/hooks/useStorePrice.ts`.
 
 ## 2. Third-party accounts
 

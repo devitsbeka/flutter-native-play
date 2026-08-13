@@ -7,9 +7,19 @@ import { toast } from "sonner";
 // Product IDs configured in App Store Connect and mirrored in RevenueCat.
 // Must stay in sync with PRODUCTS in supabase/functions/_shared/iap.ts, which
 // is where each one is turned into an entitlement.
+//
+// Both subscriptions are **monthly**. PRO and Friends PRO differ by features
+// (1 vs 5 friend invites) and not by billing period — see PRO_TIERS in
+// components/profile/ProPlansSection.tsx, where both render a "/month" label.
+// They used to be named `vip.monthly`/`vip.annual`, copied from an old
+// shop_items migration that really did sell a monthly and an annual VIP. That
+// naming would have had whoever created the App Store product pick a 1-year
+// duration for the $7.99 tier while the app said "/month" — 12x under-charging
+// and a guideline 2.3.1 mismatch on the same screen. Renamed before either was
+// created, because an App Store product id can never be reused once it exists.
 export const IAP_PRODUCTS = {
-  VIP_MONTHLY: "io.mytrivia.vip.monthly",
-  VIP_ANNUAL: "io.mytrivia.vip.annual",
+  PRO_MONTHLY: "io.mytrivia.pro.monthly",
+  PRO_PLUS_MONTHLY: "io.mytrivia.proplus.monthly",
   AD_FREE: "io.mytrivia.adfree",
 } as const;
 

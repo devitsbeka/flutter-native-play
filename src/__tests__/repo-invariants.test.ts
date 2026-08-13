@@ -117,6 +117,70 @@ describe("repo invariants", () => {
     }
   });
 
+  it("keeps the client and server product catalogs in agreement", () => {
+    // Three files name App Store product ids: the client's IAP_PRODUCTS, the
+    // gem packs, and PRODUCTS in the edge function that decides what each id
+    // grants. Only the last one is consulted when a purchase lands, so an id
+    // that exists in the client and not there means Apple takes the money and
+    // the user receives nothing — silently, with no error on any path.
+    //
+    // These ids are also permanent: App Store Connect never lets one be
+    // renamed or reused, so a typo caught here is free and the same typo
+    // caught after launch is not fixable at all.
+    const ids = (source: string) =>
+      new Set(
+        [...read(source).matchAll(/"(io\.mytrivia\.[a-z0-9.]+)"/g)].map((m) => m[1]),
+      );
+
+    const server = ids("supabase/functions/_shared/iap.ts");
+    const client = new Set([
+      ...ids("src/hooks/useInAppPurchases.ts"),
+      ...ids("src/config/gemPacks.ts"),
+    ]);
+
+    expect(server.size, "no product ids found in _shared/iap.ts").toBeGreaterThan(0);
+
+    const unredeemable = [...client].filter((id) => !server.has(id));
+    expect(
+      unredeemable,
+      `These product ids are sold by the app but absent from PRODUCTS in ` +
+        `supabase/functions/_shared/iap.ts: ${unredeemable.join(", ")}. ` +
+        "A purchase of one succeeds, is charged, and grants nothing.",
+    ).toEqual([]);
+
+    const unsold = [...server].filter((id) => !client.has(id));
+    expect(
+      unsold,
+      `These product ids are in the server catalog but nothing in the app ` +
+        `sells them: ${unsold.join(", ")}. Either wire them up or remove ` +
+        "them — a half-present product is the shape the drift takes.",
+    ).toEqual([]);
+  });
+
+  it("keeps both PRO subscriptions on a monthly identifier", () => {
+    // PRO and Friends PRO differ by friend invites, not billing period, and
+    // both render a "/month" label (PRO_TIERS in ProPlansSection.tsx). They
+    // were once named vip.monthly/vip.annual after an unrelated shop_items
+    // migration; whoever created the App Store products from those names
+    // would have made the $7.99 tier yearly — undercharging 12x while the
+    // screen said "/month", which is a guideline 2.3.1 rejection.
+    //
+    // Matched against the id strings only, not the file text — the comment
+    // above IAP_PRODUCTS explains this history and names the old ids.
+    const source = read("src/hooks/useInAppPurchases.ts");
+    const periodic = [...source.matchAll(/"(io\.mytrivia\.[a-z0-9.]+)"/g)]
+      .map((m) => m[1])
+      .filter((id) => /annual|yearly/i.test(id));
+
+    expect(
+      periodic,
+      `These subscription product ids say annual/yearly: ${periodic.join(", ")}. ` +
+        "Both PRO tiers bill monthly — if an annual plan is genuinely being " +
+        "added, give it its own tier and its own /year label rather than " +
+        "renaming an existing monthly product.",
+    ).toEqual([]);
+  });
+
   it("keeps the entitlement migrations", () => {
     // Deleting one of these would rebuild a fresh database with the
     // free-subscription and currency-minting holes back in place.

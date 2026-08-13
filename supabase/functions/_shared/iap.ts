@@ -17,10 +17,18 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const REVENUECAT_API = "https://api.revenuecat.com/v1";
 
-/** Product ids as configured in App Store Connect and RevenueCat. */
+/**
+ * Product ids as configured in App Store Connect and RevenueCat.
+ *
+ * Both subscriptions are monthly: PRO and Friends PRO are feature tiers, not
+ * billing periods, and the app renders both with a "/month" label. They were
+ * previously named `vip.monthly`/`vip.annual` after an unrelated shop_items
+ * migration, which would have led to the $7.99 tier being created as a yearly
+ * product. Kept in sync with IAP_PRODUCTS in src/hooks/useInAppPurchases.ts.
+ */
 export const PRODUCTS = {
-  VIP_MONTHLY: "io.mytrivia.vip.monthly",
-  VIP_ANNUAL: "io.mytrivia.vip.annual",
+  PRO_MONTHLY: "io.mytrivia.pro.monthly",
+  PRO_PLUS_MONTHLY: "io.mytrivia.proplus.monthly",
   AD_FREE: "io.mytrivia.adfree",
   GEMS_100: "io.mytrivia.gems.100",
   GEMS_500: "io.mytrivia.gems.500",
@@ -43,12 +51,12 @@ type CatalogEntry =
  *
  * Note the tiers: `pro` and `pro_plus` are what VipContext actually reads.
  * The old code wrote `vip`, which matched no branch in VIP_BENEFITS_BY_TIER
- * and left annual subscribers silently on monthly benefits — isProPlus()
- * returned false for someone who had just paid for the year.
+ * and left Friends PRO subscribers silently on plain PRO benefits —
+ * isProPlus() returned false for someone who had just paid for the upgrade.
  */
 const CATALOG: Record<string, CatalogEntry> = {
-  [PRODUCTS.VIP_MONTHLY]: { kind: "subscription", tier: "pro" },
-  [PRODUCTS.VIP_ANNUAL]: { kind: "subscription", tier: "pro_plus" },
+  [PRODUCTS.PRO_MONTHLY]: { kind: "subscription", tier: "pro" },
+  [PRODUCTS.PRO_PLUS_MONTHLY]: { kind: "subscription", tier: "pro_plus" },
   [PRODUCTS.AD_FREE]: { kind: "non_consumable", tier: "ad_free" },
   [PRODUCTS.GEMS_100]: { kind: "consumable", gems: 100 },
   [PRODUCTS.GEMS_500]: { kind: "consumable", gems: 500 },
