@@ -6,13 +6,12 @@ in Messages opens the website — on a phone that has the app installed.
 
 ## Before this works
 
-**`appID` still says `TEAMID`.** Replace it with the real Apple Developer Team
-ID, so the value reads `ABCDE12345.io.mytrivia.app`. The Team ID is in the
-Apple Developer portal under Membership. iOS silently ignores a file whose
-appID doesn't match the installed app, so a wrong value fails the same way a
-missing file does — no error, links just keep opening in Safari.
+The `appID` carries the real Team ID (`T38XQSM4L3`). iOS silently ignores a
+file whose appID doesn't match the installed app, so if this is ever edited,
+a wrong value fails the same way a missing file does — no error, links just
+keep opening in Safari.
 
-Then, in Xcode, add the Associated Domains capability to the App target with:
+In Xcode, add the Associated Domains capability to the App target with:
 
 ```
 applinks:mytrivia.io

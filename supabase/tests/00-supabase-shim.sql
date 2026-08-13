@@ -16,9 +16,12 @@ GRANT anon          TO postgres;
 
 CREATE SCHEMA IF NOT EXISTS auth;
 
+-- raw_user_meta_data is not optional: handle_new_user() reads it to build the
+-- profile row, so a shim without it fails every insert into auth.users.
 CREATE TABLE IF NOT EXISTS auth.users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  email text
+  email text,
+  raw_user_meta_data jsonb DEFAULT '{}'::jsonb
 );
 
 -- The test harness sets these to impersonate a caller.

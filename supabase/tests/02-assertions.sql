@@ -1,0 +1,213 @@
+-- Entitlement and currency rules, as assertions.
+--
+-- 01-entitlements.sql prints a report a human reads. This is the same ground
+-- expressed so a machine can grade it: anything that does not hold raises,
+-- and with ON_ERROR_STOP the script exits non-zero. That is what makes it
+-- usable as a CI gate.
+--
+-- Every assertion corresponds to a claim made in the P0 and currency commits.
+-- If one starts failing, the claim stopped being true.
+
+\set ON_ERROR_STOP on
+
+-- ── helpers ────────────────────────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION pg_temp.must_fail(stmt text, label text)
+RETURNS void LANGUAGE plpgsql AS $$
+DECLARE raised boolean := false;
+BEGIN
+  BEGIN
+    EXECUTE stmt;
+  EXCEPTION WHEN OTHERS THEN raised := true;
+  END;
+  IF NOT raised THEN
+    RAISE EXCEPTION 'ASSERTION FAILED (should have been refused): %', label;
+  END IF;
+END $$;
+
+CREATE OR REPLACE FUNCTION pg_temp.must_equal(got anyelement, want anyelement, label text)
+RETURNS void LANGUAGE plpgsql AS $$
+BEGIN
+  IF got IS DISTINCT FROM want THEN
+    RAISE EXCEPTION 'ASSERTION FAILED: % — got %, wanted %', label, got, want;
+  END IF;
+END $$;
+
+-- ── fixtures ───────────────────────────────────────────────────────────────
+
+DELETE FROM public.currency_grants WHERE user_id IN
+  ('11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222');
+DELETE FROM public.vip_subscriptions WHERE user_id IN
+  ('11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222');
+DELETE FROM public.user_daily_rewards WHERE user_id IN
+  ('11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222');
+
+INSERT INTO auth.users (id, email) VALUES
+  ('11111111-1111-1111-1111-111111111111','a@test'),
+  ('22222222-2222-2222-2222-222222222222','b@test')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.profiles (user_id, nickname, coins, gems) VALUES
+  ('11111111-1111-1111-1111-111111111111','A', 1000, 10),
+  ('22222222-2222-2222-2222-222222222222','B', 1000, 10)
+ON CONFLICT (user_id) DO UPDATE SET coins = 1000, gems = 10;
+
+SELECT set_config('test.uid','11111111-1111-1111-1111-111111111111', false);
+
+-- ── currency: what a client may and may not do ─────────────────────────────
+
+SELECT pg_temp.must_fail(
+  $$SELECT public.update_user_currency('11111111-1111-1111-1111-111111111111'::uuid, 0, 999999)$$,
+  'a signed-in user minting themselves gems');
+
+SELECT pg_temp.must_fail(
+  $$SELECT public.update_user_currency('22222222-2222-2222-2222-222222222222'::uuid, -500, 0)$$,
+  'a signed-in user draining another account');
+
+-- Spending is still allowed; only credits are gated.
+SELECT pg_temp.must_equal(
+  (SELECT new_coins FROM public.update_user_currency('11111111-1111-1111-1111-111111111111'::uuid, -100, 0)),
+  900, 'spending your own coins');
+
+-- ── gameplay rewards: bounded, not trusted ─────────────────────────────────
+
+SELECT pg_temp.must_equal(
+  (SELECT new_coins FROM public.credit_gameplay_reward('level_up', 150, 0, 'level 5')),
+  1050, 'a level-up reward within its cap');
+
+SELECT pg_temp.must_fail(
+  $$SELECT public.credit_gameplay_reward('level_up', 99999, 0, NULL)$$,
+  'a reward above the per-award ceiling');
+
+SELECT pg_temp.must_fail(
+  $$SELECT public.credit_gameplay_reward('free_money', 10, 0, NULL)$$,
+  'a reward kind with no limits row');
+
+-- level_up allows 5000/day and 150 is spent, so nine more 500s fit exactly.
+DO $$
+BEGIN
+  FOR i IN 1..9 LOOP
+    PERFORM public.credit_gameplay_reward('level_up', 500, 0, 'fill ' || i);
+  END LOOP;
+END $$;
+
+SELECT pg_temp.must_fail(
+  $$SELECT public.credit_gameplay_reward('level_up', 500, 0, 'overflow')$$,
+  'a reward crossing the daily total for its kind');
+
+-- ── subscriptions: not client-writable ─────────────────────────────────────
+
+SET ROLE authenticated;
+SELECT pg_temp.must_fail(
+  $$INSERT INTO public.vip_subscriptions (user_id, vip_tier, expires_at)
+    VALUES ('11111111-1111-1111-1111-111111111111','pro_plus','2099-01-01')$$,
+  'a direct client insert into vip_subscriptions');
+RESET ROLE;
+
+SELECT pg_temp.must_fail(
+  $$SELECT public.grant_vip_days('decade')$$,
+  'an unknown VIP duration');
+
+-- Granted twice, a week should stack to fourteen days rather than reset.
+DO $$
+DECLARE first_expiry timestamptz; second_expiry timestamptz;
+BEGIN
+  SELECT expires_at INTO first_expiry  FROM public.grant_vip_days('week');
+  SELECT expires_at INTO second_expiry FROM public.grant_vip_days('week');
+  IF second_expiry <= first_expiry THEN
+    RAISE EXCEPTION 'ASSERTION FAILED: a second grant did not extend the expiry';
+  END IF;
+  IF second_expiry::date <> (first_expiry + interval '7 days')::date THEN
+    RAISE EXCEPTION 'ASSERTION FAILED: stacking added % not 7 days',
+      second_expiry - first_expiry;
+  END IF;
+END $$;
+
+SELECT pg_temp.must_equal(
+  (SELECT public.ensure_admin_lifetime_pro()),
+  false, 'lifetime PRO for an account that is neither admin nor allowlisted');
+
+-- ── exchange: the rate is the server's ─────────────────────────────────────
+
+DO $$
+DECLARE before_coins integer; after_coins integer; after_gems integer;
+BEGIN
+  SELECT coins INTO before_coins FROM public.profiles
+   WHERE user_id = '11111111-1111-1111-1111-111111111111';
+
+  SELECT new_coins, new_gems INTO after_coins, after_gems
+    FROM public.exchange_currency('gems_to_coins', 2);
+
+  IF after_coins - before_coins <> 1000 THEN
+    RAISE EXCEPTION 'ASSERTION FAILED: 2 gems bought % coins, expected 1000',
+      after_coins - before_coins;
+  END IF;
+END $$;
+
+SELECT pg_temp.must_fail(
+  $$SELECT public.exchange_currency('coins_to_gems', 100)$$,
+  'exchanging fewer coins than one gem costs');
+
+SELECT pg_temp.must_fail(
+  $$SELECT public.exchange_currency('gems_to_ferraris', 1)$$,
+  'an unknown exchange direction');
+
+-- ── daily reward: amount and frequency both decided here ───────────────────
+
+SELECT pg_temp.must_equal(
+  (SELECT coins_awarded FROM public.claim_daily_reward()),
+  50, 'day one of the daily reward');
+
+SELECT pg_temp.must_fail(
+  $$SELECT public.claim_daily_reward()$$,
+  'a second daily claim on the same day');
+
+-- ── leaderboard reward: owner only, once ───────────────────────────────────
+
+INSERT INTO public.category_weekly_rewards
+  (id, category_id, user_id, week_start_date, week_end_date, final_rank,
+   coins_rewarded, gems_rewarded)
+SELECT '33333333-3333-3333-3333-333333333333', c.id,
+       '22222222-2222-2222-2222-222222222222','2026-08-03','2026-08-09', 1, 5000, 20
+FROM public.categories c LIMIT 1
+ON CONFLICT (id) DO NOTHING;
+
+-- Skip if the categories table came from a migration that could not apply.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.category_weekly_rewards
+                  WHERE id = '33333333-3333-3333-3333-333333333333') THEN
+    RAISE EXCEPTION
+      'ASSERTION SETUP FAILED: no category available to attach a weekly reward to';
+  END IF;
+END $$;
+
+-- Player A is not the owner.
+SELECT pg_temp.must_fail(
+  $$SELECT public.claim_leaderboard_reward('33333333-3333-3333-3333-333333333333')$$,
+  'claiming a leaderboard reward belonging to someone else');
+
+SELECT set_config('test.uid','22222222-2222-2222-2222-222222222222', false);
+
+SELECT pg_temp.must_equal(
+  (SELECT coins_awarded FROM public.claim_leaderboard_reward('33333333-3333-3333-3333-333333333333')),
+  5000, 'the owner claiming their leaderboard reward');
+
+SELECT pg_temp.must_fail(
+  $$SELECT public.claim_leaderboard_reward('33333333-3333-3333-3333-333333333333')$$,
+  'claiming the same leaderboard reward twice');
+
+-- ── the ledger recorded all of it ──────────────────────────────────────────
+
+DO $$
+DECLARE n integer;
+BEGIN
+  SELECT count(*) INTO n FROM public.currency_grants
+   WHERE user_id = '11111111-1111-1111-1111-111111111111';
+  -- 1 level-up + 9 fills + 1 exchange + 1 daily
+  IF n <> 12 THEN
+    RAISE EXCEPTION 'ASSERTION FAILED: ledger holds % rows for player A, expected 12', n;
+  END IF;
+END $$;
+
+\echo 'All entitlement and currency assertions hold.'
