@@ -605,6 +605,7 @@ export const en: KaTranslations = {
     // "Failed to process image" was the only thing any photo failure said, so
     // nobody could tell whether to try another photo, a smaller one, or a
     // different format.
+    photoNotDownloaded: "Couldn't read the photo from your device — if it's still in iCloud or Google Photos, download it first and try again",
     photoFormatUnsupported: "Couldn't read this photo's format — try another photo, or save it as JPG",
     photoTooBigToProcess: "This photo is too big to process — try a smaller one",
     noAvatarToAnimate: "No avatar to animate",

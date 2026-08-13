@@ -7,6 +7,8 @@ import {
   isUsableDataUrl,
   looksLikeHeic,
   photoRejection,
+  shouldTryTranscode,
+  sniffFormat,
 } from "@/utils/imageInput";
 
 const file = (name: string, type: string, size = 2_000_000) => ({ name, type, size });
@@ -42,6 +44,13 @@ describe("photoRejection", () => {
   it("rejects a file past the size ceiling", () => {
     expect(photoRejection(file("huge.jpg", "image/jpeg", MAX_PHOTO_BYTES + 1))).toBe("too-large");
     expect(photoRejection(file("big.jpg", "image/jpeg", MAX_PHOTO_BYTES))).toBeNull();
+  });
+
+  it("calls a zero-byte file unreadable, not an unsupported format", () => {
+    // What a cloud-only photo looks like before it has been downloaded:
+    // the File is real, the bytes are not. Every decoder fails, and calling
+    // that a format problem sends the person off to convert a good photo.
+    expect(photoRejection(file("IMG_2201.HEIC", "image/heic", 0))).toBe("unreadable");
   });
 
   it("leaves room for a modern camera roll photo", () => {
@@ -98,6 +107,74 @@ describe("fitWithin", () => {
     // produce an empty JPEG the app would then upload as an avatar.
     expect(() => fitWithin(0, 0, 1024)).toThrow(PhotoInputError);
     expect(() => fitWithin(100, 0, 1024)).toThrow(PhotoInputError);
+  });
+});
+
+describe("sniffFormat", () => {
+  const bytes = (...values: number[]) => new Uint8Array(values);
+  const ascii = (text: string, pad = 0) =>
+    new Uint8Array([...Array(pad).fill(0), ...text.split("").map((c) => c.charCodeAt(0))]);
+
+  it("names the common formats from their first bytes", () => {
+    expect(sniffFormat(bytes(0xff, 0xd8, 0xff, 0xe0))).toBe("jpeg");
+    expect(sniffFormat(bytes(0x89, 0x50, 0x4e, 0x47))).toBe("png");
+    expect(sniffFormat(ascii("GIF89a"))).toBe("gif");
+    expect(sniffFormat(bytes(0x42, 0x4d, 0x00, 0x00))).toBe("bmp");
+  });
+
+  it("names a webp only when the RIFF payload says so", () => {
+    const webp = new Uint8Array(16);
+    webp.set(ascii("RIFF"), 0);
+    webp.set(ascii("WEBP"), 8);
+    expect(sniffFormat(webp)).toBe("webp");
+  });
+
+  it("recognises every brand an iPhone writes", () => {
+    // The reason this exists: the type and the extension are the two things
+    // phones and cloud drives get wrong, and they were the only evidence the
+    // old code had. A file called .jpg holding these bytes IS a HEIC.
+    for (const brand of ["heic", "heix", "mif1", "msf1", "hevc"]) {
+      const heif = new Uint8Array(16);
+      heif.set(ascii("ftyp"), 4);
+      heif.set(ascii(brand), 8);
+      expect(sniffFormat(heif), brand).toBe("heif");
+    }
+  });
+
+  it("tells AVIF apart from HEIF — same container, different codec", () => {
+    const avif = new Uint8Array(16);
+    avif.set(ascii("ftyp"), 4);
+    avif.set(ascii("avif"), 8);
+    expect(sniffFormat(avif)).toBe("avif");
+  });
+
+  it("says unknown rather than guessing", () => {
+    expect(sniffFormat(bytes(0x00, 0x01, 0x02, 0x03))).toBe("unknown");
+    expect(sniffFormat(bytes(0xff))).toBe("unknown");
+    expect(sniffFormat(new Uint8Array(0))).toBe("unknown");
+  });
+
+  it("does not call an mp4 a photo", () => {
+    // Live Photos sit next to stills in the picker and share the container.
+    const mp4 = new Uint8Array(16);
+    mp4.set(ascii("ftyp"), 4);
+    mp4.set(ascii("isom"), 8);
+    expect(sniffFormat(mp4)).toBe("unknown");
+  });
+});
+
+describe("shouldTryTranscode", () => {
+  it("runs the transcoder for HEIF and for bytes it cannot name", () => {
+    expect(shouldTryTranscode("heif")).toBe(true);
+    // The case that used to be rethrown untried.
+    expect(shouldTryTranscode("unknown")).toBe(true);
+  });
+
+  it("does not fetch a wasm decoder for a corrupt jpeg", () => {
+    // A JPEG the browser refuses is damaged, not secretly another format —
+    // there is nothing to gain from a second decoder failing more slowly.
+    expect(shouldTryTranscode("jpeg")).toBe(false);
+    expect(shouldTryTranscode("png")).toBe(false);
   });
 });
 
