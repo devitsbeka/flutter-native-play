@@ -217,7 +217,7 @@ export function AirbnbCategoryCard({
                 e.preventDefault();
                 onFavoriteClick?.(e);
               }}
-              className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white flex items-center justify-center z-10 border-2 border-white/80 active:translate-y-0.5"
+              className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white flex items-center justify-center z-20 border-2 border-white/80 active:translate-y-0.5"
               style={{
                 boxShadow: '0 4px 0 0 rgba(0,0,0,0.1), inset 0 2px 0 rgba(255,255,255,0.8)',
               }}
@@ -229,54 +229,71 @@ export function AirbnbCategoryCard({
               />
             </button>
 
-            {/* NEW! Badge for new levels - takes priority */}
-            {hasNewLevels && !leaderboardRank && (
-              <div
-                className="absolute top-3 left-3 px-3 py-2 rounded-full flex items-center justify-center border-2 border-purple-300"
-                style={{
-                  background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-                  boxShadow: '0 4px 0 0 rgba(139,92,246,0.3), inset 0 2px 0 rgba(255,255,255,0.3), 0 0 12px rgba(139,92,246,0.4)',
-                }}
-              >
-                <span className="text-xs font-bold text-white leading-none">
-                  {t("extra.newBadge")}
-                </span>
-              </div>
-            )}
+            {/* Top-left markers.
 
-            {/* Badge - only show if no leaderboard rank and no new levels badge */}
-            {badge && !leaderboardRank && !hasNewLevels && (
-              <div
-                className="absolute top-3 left-3 px-3 py-2 rounded-full bg-white flex items-center justify-center border-2 border-white/80"
-                style={{
-                  boxShadow: '0 4px 0 0 rgba(0,0,0,0.1), inset 0 2px 0 rgba(255,255,255,0.8)',
-                }}
-              >
-                <span className="text-xs font-bold text-slate-700 leading-none">
-                  {badge}
-                </span>
-              </div>
-            )}
+                These used to hide each other — NEW was suppressed by a rank,
+                and the plain badge by either. Every one of them arrives from a
+                DIFFERENT async query (ranks, new levels, progress), so as each
+                landed the corner swapped what it showed: a badge appeared,
+                then vanished when the next query resolved. That is the
+                flicker. They sit side by side now and nothing displaces
+                anything else. */}
+            <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5">
+              {leaderboardRank && leaderboardRank > 0 && leaderboardRank <= 3 && (
+                <div
+                  className="h-10 px-3 rounded-full flex items-center gap-1.5 bg-white border-2 border-white/80"
+                  style={{
+                    boxShadow: '0 4px 0 0 rgba(0,0,0,0.1), inset 0 2px 0 rgba(255,255,255,0.8)',
+                  }}
+                >
+                  <span className="text-lg">
+                    {leaderboardRank === 1 ? '🥇' : leaderboardRank === 2 ? '🥈' : '🥉'}
+                  </span>
+                  <span className="text-sm font-bold text-slate-700 leading-none">
+                    #{leaderboardRank}
+                  </span>
+                </div>
+              )}
 
-            {/* Leaderboard Rank Badge - Only show for top 3 with medals */}
-            {leaderboardRank && leaderboardRank > 0 && leaderboardRank <= 3 && (
-              <div
-                className="absolute top-3 left-3 h-10 px-3 rounded-full flex items-center gap-1.5 z-10 bg-white border-2 border-white/80"
-                style={{
-                  boxShadow: '0 4px 0 0 rgba(0,0,0,0.1), inset 0 2px 0 rgba(255,255,255,0.8)',
-                }}
-              >
-                <span className="text-lg">
-                  {leaderboardRank === 1 ? '🥇' : leaderboardRank === 2 ? '🥈' : '🥉'}
-                </span>
-                <span className="text-sm font-bold text-slate-700 leading-none">
-                  #{leaderboardRank}
-                </span>
-              </div>
-            )}
+              {hasNewLevels && (
+                <div
+                  className="px-3 py-2 rounded-full flex items-center justify-center border-2 border-purple-300"
+                  style={{
+                    background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
+                    boxShadow: '0 4px 0 0 rgba(139,92,246,0.3), inset 0 2px 0 rgba(255,255,255,0.3), 0 0 12px rgba(139,92,246,0.4)',
+                  }}
+                >
+                  <span className="text-xs font-bold text-white leading-none">
+                    {t("extra.newBadge")}
+                  </span>
+                </div>
+              )}
 
-            {/* Progress Bar Area with gradient mask */}
-             <div className={`absolute left-0 right-0 bottom-0`}>
+              {badge && !leaderboardRank && !hasNewLevels && (
+                <div
+                  className="px-3 py-2 rounded-full bg-white flex items-center justify-center border-2 border-white/80"
+                  style={{
+                    boxShadow: '0 4px 0 0 rgba(0,0,0,0.1), inset 0 2px 0 rgba(255,255,255,0.8)',
+                  }}
+                >
+                  <span className="text-xs font-bold text-slate-700 leading-none">
+                    {badge}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Progress Bar Area with gradient mask.
+
+                z-20 on purpose. Every overlay on this card has to clear the
+                two decorative gradients, which are z-[1]: the shine across
+                the top third and the video's bottom fade, which ends FULLY
+                opaque. Without it the progress bar and the badges painted
+                underneath them — and only on cards that have a video, since
+                that bottom gradient renders only in the video branch. That is
+                the "sometimes there, sometimes not" — it was per-card, not
+                per-moment. */}
+             <div className={`absolute left-0 right-0 bottom-0 z-20`}>
               {/* Strong gradient mask for video fade */}
               <div
                  className="absolute inset-x-0 pointer-events-none z-0"
