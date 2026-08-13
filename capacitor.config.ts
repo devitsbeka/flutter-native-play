@@ -26,6 +26,15 @@ const config: CapacitorConfig = {
     AdMob: {
       appId: 'ca-app-pub-1329033152352928~1190114462',
     },
+    SplashScreen: {
+      // The app takes its own splash down once React has painted its first
+      // route (see NativeBridge). A timer instead either uncovers a blank
+      // webview or holds a still image over a ready app; both read as the app
+      // being slow.
+      launchAutoHide: false,
+      backgroundColor: '#f8e6ff',
+      showSpinner: false,
+    },
   },
 };
 

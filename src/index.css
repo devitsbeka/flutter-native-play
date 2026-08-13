@@ -28,6 +28,28 @@
   }
 }
 
+/* Native inset tokens.
+ *
+ * Safe-area handling was previously written out per component — roughly
+ * twenty of them call env(safe-area-inset-*) directly, and any screen nobody
+ * remembered collides with the status bar or the home indicator. These give
+ * the layout primitives (and any screen that needs it directly) one name to
+ * use, with a sane fallback on platforms that have no notch.
+ *
+ * --keyboard-height is published by the native shell on keyboardWillShow, so
+ * a footer can make room for the keyboard instead of iOS scrolling the whole
+ * document and pushing the header off screen. It stays 0 on the web.
+ */
+@layer base {
+  :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --keyboard-height: 0px;
+  }
+}
+
 /* Design System Colors */
 @layer base {
   :root {

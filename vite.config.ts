@@ -23,6 +23,28 @@ function buildVersionFile() {
   };
 }
 
+/**
+ * Strip web-only markup from the native build.
+ *
+ * The Meta Pixel loads unconditionally from index.html. In a browser that is
+ * a product decision; inside the iOS binary it is third-party tracking that
+ * runs before the ATT prompt is ever shown, which is both an App Review
+ * problem and a privacy-manifest one. Blocks between the marker comments are
+ * removed when VITE_NATIVE_BUILD is set.
+ */
+function stripNativeExcludedHtml(isNative: boolean) {
+  return {
+    name: "strip-native-excluded-html",
+    transformIndexHtml(html: string) {
+      if (!isNative) return html;
+      return html.replace(
+        /<!--\s*native:strip:start\s*-->[\s\S]*?<!--\s*native:strip:end\s*-->/g,
+        "",
+      );
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -32,7 +54,11 @@ export default defineConfig(({ mode }) => ({
   define: {
     __BUILD_ID__: JSON.stringify(BUILD_ID),
   },
-  plugins: [react(), buildVersionFile()],
+  plugins: [
+    react(),
+    buildVersionFile(),
+    stripNativeExcludedHtml(process.env.VITE_NATIVE_BUILD === "true"),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

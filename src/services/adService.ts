@@ -4,6 +4,7 @@
  * Falls back to simulated ads on web
  */
 
+import { Capacitor } from '@capacitor/core';
 import { trackingService } from './trackingService';
 
 // AdMob Configuration — every ad unit ID lives in this one object.
@@ -61,7 +62,7 @@ class AdService {
   }
 
   private getAdUnitId(kind: 'rewarded' | 'interstitial'): string {
-    const platform = (window as any).Capacitor?.getPlatform?.() || 'web';
+    const platform = Capacitor.getPlatform();
     const ids = ADMOB_CONFIG[kind];
     return platform === 'ios' ? ids.ios : ids.android;
   }
@@ -105,9 +106,10 @@ class AdService {
     if (this.isInitialized) return true;
 
     try {
-      // Check if running on native platform (Capacitor)
-      const isPlatformNative = typeof (window as any).Capacitor !== 'undefined';
-      this.isNative = isPlatformNative;
+      // Capacitor injects a `window.Capacitor` global on the web too, so the
+      // old check reported "native" in a browser and only recovered because
+      // the plugin import then threw. isNativePlatform() is the real answer.
+      this.isNative = Capacitor.isNativePlatform();
 
       if (this.isNative) {
         // Dynamic import for Capacitor AdMob plugin
