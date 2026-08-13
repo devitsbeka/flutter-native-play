@@ -5,11 +5,11 @@ Target: a native iOS app on TestFlight, then submitted for App Store review.
 Audited at commit `54ffa71` on 2026-08-13. Everything in the Audit section
 below was verified against the code in this repo, not assumed.
 
-> **Status — P0 and P1 done, bar the account paperwork.** Everything in
-> P0.1–P0.4 and P1.1–P1.7 is implemented. P0.5 is account paperwork only the
-> account holder can file, and it now blocks progress. Executing the work
-> surfaced five findings the read-only audit missed — S1-6, S1-7, S2-6, S2-7
-> and S3-7 below — all of which are fixed. See "Status" at the end.
+> **Status — P0, P1 and P2 done, bar the account paperwork.** Everything in
+> P0.1–P0.4, P1.1–P1.7 and P2.1–P2.6 is implemented. P0.5 is account paperwork
+> only the account holder can file, and it now blocks P3 onward. Executing the
+> work surfaced seven findings the read-only audit missed — S1-6, S1-7, S1-8,
+> S2-6, S2-7, S2-8 and S3-7 below — all fixed. See "Status" at the end.
 
 ---
 
@@ -216,6 +216,32 @@ And the leaderboard claim relayed the server's own payout figure back to it
 across four round trips, with a hand-written rollback for the case where the
 claim stuck but the credit failed.
 
+#### S1-8 — "Delete account" deleted a profile row, not an account. **(Fixed in P2.6)**
+
+`src/pages/SettingsPrivacy.tsx`
+
+Settings → Privacy → Delete account ran:
+
+```ts
+await supabase.from("profiles").delete().eq("user_id", user.id);
+await signOut();
+```
+
+That is not a deletion. **The auth user survived — you could sign straight
+back in** — and roughly twenty-five related tables kept every row: game
+plays, friendships, chat messages, push tokens, subscriptions, purchase
+history.
+
+`delete-user-account`, the edge function that genuinely removes all of it,
+existed and was correct. It was only reachable from `/delete-account`, a
+route nothing in the app linked to. So the working implementation was
+unreachable and the reachable one didn't work.
+
+The audit checked that the route and the function existed and marked P2.6 as
+mostly done. It didn't read the handler the Settings button actually calls.
+Guideline 5.1.1(v) is specific about this, and it's the flow a reviewer
+clicks.
+
 #### S2-1 — Third-party tracking fires before ATT authorization.
 
 `index.html` loads the **Meta Pixel** (`fbevents.js`) unconditionally in
@@ -334,6 +360,19 @@ native plugin that was never linked into the binary.
 
 The project is generated with `--packagemanager Cocoapods` instead, where
 the plugin's `.podspec` is picked up and all six plugins resolve.
+
+#### S2-8 — The generated app icon was Capacitor's placeholder. **(Fixed in P2.5)**
+
+`ios/App/App/Assets.xcassets/AppIcon.appiconset/`
+
+`cap add ios` writes its own default icon into the asset catalog, and it
+stays there until someone replaces it. Nothing in the generation output says
+so. Combined with S1-5 — the marketing icon being a JPEG — the app had no
+correct icon anywhere: the one in the binary was Capacitor's, and the one
+intended for App Store Connect was the wrong format.
+
+Both are now the real 1024×1024 brand PNG, RGB, no alpha, sourced from
+`apple-touch-icon.png` which was the only correct copy in the repo.
 
 #### S3-7 — `npm run typecheck` was checking nothing. **(Fixed)**
 
@@ -783,8 +822,21 @@ from RevenueCat.
 | **P1.1–P1.3** | Six lifecycle plugins added. Splash hides on first paint across two frames. Sessions moved to Preferences/UserDefaults — `localStorage` in WKWebView is evictable, and losing it logs the user out silently. |
 | **P1.4** | `appUrlOpen` handled, both OAuth shapes plus content links. `apple-app-site-association` written with paths matched to the real routes, legal and support deliberately excluded. |
 | **P1.5–P1.7** | `SafeArea` primitive and CSS inset tokens, including a keyboard height the shell publishes. Platform detection corrected in the two services that gate ads and tracking. `build:ios` excludes the admin console and strips the Meta Pixel, with a verifier that fails the build if either returns. |
+| **P2.1** | `PrivacyInfo.xcprivacy` authored and registered in the Xcode Resources phase — dropping the file in the folder alone would not have reached the bundle. Tracking domains listed so iOS fails closed if an ad request ever precedes ATT. |
+| **P2.2** | ATT moved out of ad initialisation to the moment a player chooses to watch an ad, behind a context screen. Declining the pre-prompt leaves the system dialog unasked rather than spending the one chance iOS gives. Denial drives `npa=1` on every request. |
+| **P2.3** | `usePushNotifications` — registration, token refresh on relaunch, tap routing, and row removal on unregister. Never prompts on mount. |
+| **P2.4** | Ad unit IDs from the environment, with a loud console warning when falling back to a demo unit. `app-ads.txt` and the SKAdNetwork list added. |
+| **P2.5** | Real 1024×1024 brand icon, RGB, no alpha, in both the asset catalog and `public/`. |
+| **P2.6** | Settings deletion now calls `delete-user-account` instead of dropping a profile row. |
 
 ### Not done
+
+**P2.7 / P2.8 — nutrition labels and age rating.** Both are forms in App Store
+Connect, so they need the account. The answers must match
+`PrivacyInfo.xcprivacy` exactly — that file is the source to fill them from.
+Expect 12+ given ads, user-generated quizzes and social features; if
+user-generated content is visible to other players, Guideline 1.2 also wants
+a reporting and blocking mechanism, which has not been checked for.
 
 **P0.5 — accounts. This is now the only thing blocking progress.** Nothing
 here can be done from the repo; it is all paperwork on the account holder's
