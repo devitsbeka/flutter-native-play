@@ -577,7 +577,7 @@ export const ka = {
     // Running out is a price, not a wall — the wording has to leave a way
     // forward, because a dead end here reads as a broken button.
     limitUsedUp: "შენი {max} უფასო გენერაცია გამოყენებულია.",
-    extraCostsGems: "შემდეგი — {cost} ბრილიანტი",
+    extraCostsGems: "შემდეგი გენერაცია:",
     needGemsForExtra: "საკმარისი ბრილიანტი არ გაქვს — შემდეგი გენერაცია {cost} ბრილიანტი ღირს",
     generateForGems: "გენერაცია • {cost}",
     paidWithGems: "გადახდილია {cost} ბრილიანტი",

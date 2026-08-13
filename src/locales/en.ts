@@ -579,7 +579,7 @@ export const en: KaTranslations = {
     // Running out is a price, not a wall — the wording has to leave a way
     // forward, because a dead end here reads as a broken button.
     limitUsedUp: "You've used your {max} free generations.",
-    extraCostsGems: "Next one — {cost} gem",
+    extraCostsGems: "Next generation:",
     needGemsForExtra: "Not enough gems — the next generation costs {cost}",
     generateForGems: "Generate • {cost}",
     paidWithGems: "Paid {cost} gem",

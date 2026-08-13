@@ -144,9 +144,16 @@ function QuotaNote({
     <div className="mb-2 rounded-xl border border-border bg-muted/40 px-3 py-2">
       <p className="text-xs text-foreground">
         {t("avatar.limitUsedUp", { max: quota.max })}{" "}
-        <span className="inline-flex items-center gap-1 font-bold text-primary">
+{t("avatar.extraCostsGems")}{" "}
+        {/* The price wears the same white pill the gem balance does on the
+            home card, so what it costs and what you hold are read the same
+            way rather than one being a sentence and the other a chip. */}
+        <span
+          className="ml-0.5 inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 align-middle text-[13px] font-bold leading-none text-[#402666]"
+          style={{ boxShadow: "0 2.5px 0 0 #d8d0e8, 0 4px 10px 0 rgba(0,0,0,0.08)" }}
+        >
           <GemCoin size="sm" />
-          {t("avatar.extraCostsGems", { cost: EXTRA_GENERATION_GEM_COST })}
+          {EXTRA_GENERATION_GEM_COST}
         </span>
       </p>
       {!canAfford && (
