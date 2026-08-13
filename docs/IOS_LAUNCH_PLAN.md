@@ -5,11 +5,11 @@ Target: a native iOS app on TestFlight, then submitted for App Store review.
 Audited at commit `54ffa71` on 2026-08-13. Everything in the Audit section
 below was verified against the code in this repo, not assumed.
 
-> **Status — P0 in progress.** P0.1 through P0.4 are implemented; P0.5 is
-> account paperwork that only the account holder can file. Executing P0
-> surfaced four findings the read-only audit missed — S1-6, S1-7, S2-6 and
-> S2-7 below. Three are fixed. **S1-7 is open and still allows free PRO**,
-> so the P0 gate is not yet met. See "P0 status" at the end of this document.
+> **Status — P0 and P1 done, bar the account paperwork.** Everything in
+> P0.1–P0.4 and P1.1–P1.7 is implemented. P0.5 is account paperwork only the
+> account holder can file, and it now blocks progress. Executing the work
+> surfaced five findings the read-only audit missed — S1-6, S1-7, S2-6, S2-7
+> and S3-7 below — all of which are fixed. See "Status" at the end.
 
 ---
 
@@ -164,7 +164,7 @@ function but not the table's policies. Both policies are dropped; the two
 client writes that depended on them (`activateVip`, the admin lifetime
 self-grant) now go through `SECURITY DEFINER` functions.
 
-#### S1-7 — `update_user_currency` grants unlimited currency. **(Open — partially mitigated)**
+#### S1-7 — `update_user_currency` grants unlimited currency. **(Fixed — bounded, see below)**
 
 `supabase/migrations/20260110002224_*.sql`
 
@@ -175,20 +175,46 @@ as a parameter, and never checked who was calling:
 supabase.rpc('update_user_currency', { p_user_id: <anyone>, p_gems_delta: 999999 })
 ```
 
-Two consequences. Cross-user tampering — draining a rival's balance or
-topping up a friend's — **is now blocked**: the function rejects a target
-that isn't the caller, which is a no-op for every real call site since they
-all pass their own id.
+Cross-user tampering — draining a rival's balance or topping up a friend's
+— is blocked: the function rejects a target that isn't the caller.
 
-Self-crediting is **not** blocked, and this is the reason the P0 gate isn't
-met yet: gems buy PRO days through the shop, so minting gems still reaches a
-free subscription — just one step further round than before.
+Self-crediting mattered more, because gems buy PRO days through the shop, so
+minting gems reached a free subscription one step further round than the
+routes S1-1 and S1-6 closed.
 
-Closing it properly means moving reward grants (missions, daily rewards,
-streaks, ad rewards) server-side, because today every one of them credits
-currency from the client. That is a real project, not a patch, and it is
-the highest-value item on the post-P0 list. Until it lands, treat in-app
-currency as advisory rather than earned.
+**The shape of the fix.** Clients may still *spend* freely — a debit can only
+hurt the person making it — but a positive delta from a signed-in caller is
+now refused outright. Every credit goes through a function that either
+decides the amount itself or bounds it:
+
+| Function | Owns |
+|---|---|
+| `claim_daily_reward` | Which day of the streak, what it pays, the PRO Plus bonus, the once-per-day guard |
+| `claim_leaderboard_reward` | Reads the payout off the row being claimed; credit, frame and badge in one transaction |
+| `exchange_currency` | The 500:1 rate, and both sides of the trade atomically |
+| `credit_gameplay_reward` | Per-award and per-day ceilings per reward kind, plus the ledger row |
+
+The first three are fully authoritative. The fourth is the honest
+compromise: quiz payouts, level-ups, spins, chests, missions, stake wins and
+shop grants still arrive from the client, because the server does not replay
+the game that produced them. They are checked against `currency_grant_limits`
+and written to `currency_grants`.
+
+That turns "unlimited, instant, invisible" into "at most the daily cap for
+one category, and every unit of it on the record". **The remaining step is
+server-side scoring** — until the server can derive a quiz payout itself,
+those kinds are bounded rather than verified. The caps are set well above
+legitimate play, so anything hitting them is a bug or abuse, and the ledger
+is what makes the difference visible.
+
+Three things were fixed on the way past. The exchange rate was
+client-supplied on *both* sides, so one gem could have bought any number of
+coins. The daily-reward payout was read from a table in the client bundle —
+which had drifted to entirely different numbers from `REWARDS.DAILY_REWARDS`
+in `rewardConfig.ts`, the config a test asserts on and nothing grants from.
+And the leaderboard claim relayed the server's own payout figure back to it
+across four round trips, with a hand-written rollback for the case where the
+claim stuck but the credit failed.
 
 #### S2-1 — Third-party tracking fires before ATT authorization.
 
@@ -308,6 +334,24 @@ native plugin that was never linked into the binary.
 
 The project is generated with `--packagemanager Cocoapods` instead, where
 the plugin's `.podspec` is picked up and all six plugins resolve.
+
+#### S3-7 — `npm run typecheck` was checking nothing. **(Fixed)**
+
+`tsconfig.json` / `package.json`
+
+The root `tsconfig.json` carries `"files": []` and two project references.
+`tsc --noEmit` against it resolves to an empty program and exits 0 —
+unconditionally, regardless of the state of the code. The script had been
+reporting success without compiling a single file, including on every run
+earlier in this branch.
+
+Found by accident: a change that added a required argument to six exported
+functions still "passed". Pointed at the app and node projects, the first
+real run produced 23 errors, all of them that change's own call sites — which
+is how all nineteen were located.
+
+Worth assuming any pre-existing type error in the codebase has never been
+seen. The tree is clean now, but it was never actually checked before.
 
 #### S3-1 — Missing native lifecycle plugins.
 
@@ -715,7 +759,7 @@ account enrollment must start immediately or it becomes the critical path.
 
 ---
 
-## P0 status
+## Status
 
 ### Done
 
@@ -735,22 +779,32 @@ product id rather than read from the store, which is what let a cancelled
 subscription stay active until a date we had invented. Expiry now comes
 from RevenueCat.
 
+| **Currency** | Credits are no longer client-named. Three claim functions own their amounts outright; the rest are capped per-award and per-day and written to a `currency_grants` ledger. Reward kind is a required argument, so a new credit path is a compile error until someone prices it. |
+| **P1.1–P1.3** | Six lifecycle plugins added. Splash hides on first paint across two frames. Sessions moved to Preferences/UserDefaults — `localStorage` in WKWebView is evictable, and losing it logs the user out silently. |
+| **P1.4** | `appUrlOpen` handled, both OAuth shapes plus content links. `apple-app-site-association` written with paths matched to the real routes, legal and support deliberately excluded. |
+| **P1.5–P1.7** | `SafeArea` primitive and CSS inset tokens, including a keyboard height the shell publishes. Platform detection corrected in the two services that gate ads and tracking. `build:ios` excludes the admin console and strips the Meta Pixel, with a verifier that fails the build if either returns. |
+
 ### Not done
 
-**P0.5 — accounts.** Nothing here can be done from the repo; it is all
-paperwork on the account holder's side, and it gates everything downstream.
-Apple Developer enrolment, the App ID with its four capabilities, the App
-Store Connect record, RevenueCat, AdMob, Firebase with an APNs key, and —
+**P0.5 — accounts. This is now the only thing blocking progress.** Nothing
+here can be done from the repo; it is all paperwork on the account holder's
+side. Apple Developer enrolment, the App ID with its four capabilities, the
+App Store Connect record, RevenueCat, AdMob, Firebase with an APNs key, and —
 the one that blocks all purchase testing — the paid-apps agreement and
 banking forms.
 
-Two secrets need setting once RevenueCat exists, or the new code stays
-inert: `REVENUECAT_SECRET_API_KEY` (server-side, for the subscriber lookup)
-and `REVENUECAT_WEBHOOK_SECRET` (shared with the RevenueCat dashboard). The
-webhook refuses to run without the latter rather than processing
-unauthenticated calls.
+Three values need filling in before the new code does anything:
 
-**S1-7 — self-crediting currency.** See the finding above. The P0 gate says
-"forged entitlement calls are rejected", and while every *direct* route to a
-subscription is now closed, minting gems still buys PRO days through the
-shop. The gate is not met until reward grants move server-side.
+| Value | Where | Without it |
+|---|---|---|
+| `REVENUECAT_SECRET_API_KEY` | Supabase secret | Entitlement sync cannot ask RevenueCat what a user owns |
+| `REVENUECAT_WEBHOOK_SECRET` | Supabase secret + RevenueCat dashboard | The webhook refuses to run rather than accept unauthenticated calls |
+| Apple Team ID | `public/.well-known/apple-app-site-association` | Universal links silently keep opening in Safari |
+
+**Server-side scoring.** The remaining half of S1-7. Gameplay rewards are
+bounded and logged, not verified. Worth doing before the economy carries real
+money, and it is a project rather than a patch.
+
+**The safe-area sweep.** The primitive exists; converting the ~20 screens
+that hand-roll `env(safe-area-inset-*)` needs a device, so it belongs with
+the P3 device matrix rather than here.
