@@ -1601,6 +1601,7 @@ export type Database = {
           country_code: string | null
           created_at: string
           current_streak: number | null
+          free_plays_ad_grants: number
           free_plays_used: number
           free_plays_window_start: string | null
           games_played: number | null
@@ -1630,6 +1631,7 @@ export type Database = {
           country_code?: string | null
           created_at?: string
           current_streak?: number | null
+          free_plays_ad_grants?: number
           free_plays_used?: number
           free_plays_window_start?: string | null
           games_played?: number | null
@@ -1659,6 +1661,7 @@ export type Database = {
           country_code?: string | null
           created_at?: string
           current_streak?: number | null
+          free_plays_ad_grants?: number
           free_plays_used?: number
           free_plays_window_start?: string | null
           games_played?: number | null
@@ -4018,6 +4021,10 @@ export type Database = {
         Args: { p_question_index: number; p_session_id: string }
         Returns: Json
       }
+      buy_extra_plays: {
+        Args: { p_games: number; p_source: string }
+        Returns: Json
+      }
       claim_daily_reward: {
         Args: never
         Returns: {
@@ -4178,6 +4185,10 @@ export type Database = {
           updated_at: string
           video_url: string
         }[]
+      }
+      settle_quick_game: {
+        Args: { p_outcome: string; p_reference?: string }
+        Returns: Json
       }
       submit_tv_answer: {
         Args: {
