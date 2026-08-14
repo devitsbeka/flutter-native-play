@@ -22,9 +22,20 @@ const config: CapacitorConfig = {
     overrideUserAgent: 'MyTrivia Android App',
   },
   plugins: {
-    // AdMob configuration
+    // AdMob. App ids are per platform, and this key can only hold one — so
+    // it carries the iOS id, which is the only platform this repo builds.
+    //
+    // iOS does not read it. The Google Mobile Ads SDK takes
+    // GADApplicationIdentifier from Info.plist, and it used to hold the
+    // *Android* app id: same publisher, different platform. Recent SDK
+    // versions raise on an app id that does not resolve to an iOS app, which
+    // is a crash on launch before the app paints — the first thing a reviewer
+    // would have hit.
+    //
+    // Adding an Android target means putting its own id in AndroidManifest,
+    // not changing this one.
     AdMob: {
-      appId: 'ca-app-pub-1329033152352928~1190114462',
+      appId: 'ca-app-pub-3462589915085372~1525220642',
     },
     SplashScreen: {
       // The app takes its own splash down once React has painted its first

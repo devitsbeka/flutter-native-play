@@ -9,8 +9,8 @@ export type ProTierId = "pro" | "pro_plus";
 
 // Mapping from tier ID to RevenueCat product IDs for native
 const TIER_TO_NATIVE_PRODUCT: Record<ProTierId, string> = {
-  pro: IAP_PRODUCTS.VIP_MONTHLY,
-  pro_plus: IAP_PRODUCTS.VIP_ANNUAL,
+  pro: IAP_PRODUCTS.PRO_MONTHLY,
+  pro_plus: IAP_PRODUCTS.PRO_PLUS_MONTHLY,
 };
 
 export function useProPurchase() {

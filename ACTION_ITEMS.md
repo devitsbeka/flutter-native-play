@@ -3,41 +3,93 @@
 Everything here blocks progress and cannot be done from inside the repo.
 Ordered by what unblocks the most downstream work.
 
+> **Doing the work?** Follow
+> [`docs/LAUNCH_RUNBOOK.md`](docs/LAUNCH_RUNBOOK.md) instead — same items,
+> arranged in the order they have to happen, with the verification step for
+> each. This file is the inventory; the runbook is the sequence.
+
 Full context for each is in [`docs/IOS_LAUNCH_PLAN.md`](docs/IOS_LAUNCH_PLAN.md).
 
 ---
 
 ## 1. Apple Developer portal — the account exists, the setup does not
 
-Enrolment is done (`hello@itsbeka.com`, Team ID `T38XQSM4L3`), which removes
-the multi-week lead time that used to sit in front of everything else. What
-remains is configuration, and it is quick.
+Enrolment is done (`hello@itsbeka.com`, Team ID `T38XQSM4L3`), the Paid
+Applications Agreement is signed, and the banking and tax forms are in. That
+removes every step on this list that had a waiting period attached. What
+remains is configuration, and **the order below matters** — three of these
+steps create things Apple will never let you rename.
 
 - [x] ~~Enrol in the Apple Developer Program~~
-- [ ] **Sign the Paid Applications Agreement, and complete the banking and tax
-      forms.** Do this first. **StoreKit returns zero products until it
-      clears**, so no purchase can be tested at all — sandbox included — and
-      everything about IAP stays untestable behind it. It is also the step
-      with a review delay attached, unlike the rest of this list.
-- [ ] **Register App ID `io.mytrivia.app`** with four capabilities:
-      In-App Purchase · Push Notifications · Sign in with Apple ·
-      Associated Domains
-- [ ] **Create the App Store Connect record** and reserve the name "MyTrivia"
-- [ ] **Create the products**, and confirm the identifiers match
-      `supabase/functions/_shared/iap.ts` exactly — a mismatch means the
-      purchase succeeds and grants nothing:
-      - `io.mytrivia.vip.monthly` · `io.mytrivia.vip.annual` (auto-renewable,
-        same subscription group)
-      - `io.mytrivia.adfree` (non-consumable)
-      - `io.mytrivia.gems.100` · `.500` · `.1500` · `.5000` (consumable)
-- [ ] **Mirror all seven in RevenueCat** and attach them to an offering. The
-      paywall now reads its prices from StoreKit, so a product missing from
-      the offering renders with the compiled fallback price instead of the
-      real one.
+- [x] ~~Paid Applications Agreement, banking, tax~~ — done. This was the one
+      gate in front of StoreKit returning any products at all.
+
+### 1a–1c. Done
+
+The Lovable record (bundle id `app.lovable.f54c9281…`, permanent and wrong)
+was deleted and replaced. Everything below is confirmed against the code.
+
+- [x] ~~Old record deleted, name released~~
+- [x] ~~App ID `io.mytrivia.app` registered~~ — In-App Purchase, Push
+      Notifications, Sign In with Apple, Associated Domains
+- [x] ~~New App Store Connect record~~ — **MyTrivia: Party Quiz Game**.
+      The long name is the store listing only; `CFBundleDisplayName` is
+      `MyTrivia`, so the home screen icon reads MyTrivia either way
+- [x] ~~Subscription group **MyTrivia PRO**~~ — `io.mytrivia.proplus.monthly`
+      at level 1, `io.mytrivia.pro.monthly` at level 2, both **1 month**
+- [x] ~~Four gem consumables~~ — `.100` $0.99 · `.500` $3.99 · `.1500` $12.99
+      · `.5000` $34.99. All six ids verified character-for-character against
+      `PRODUCTS` in `supabase/functions/_shared/iap.ts`
+
+Still open on the products:
+
+- [x] ~~Localizations and review screenshots on all six~~ — every product
+      reads **Ready to Submit** in App Store Connect and in RevenueCat, which
+      is the same fact seen twice: RevenueCat mirrors Apple's status, so six
+      green rows there means StoreKit will return them in sandbox.
+
+      Subscriptions show "Prepare for Submission" rather than "Ready to
+      Submit". Same state, different wording, and it does not clear until the
+      first build ships — "your first subscription group must be submitted
+      with a new app version". Not to be confused with **Missing Metadata**,
+      which looks similar and means StoreKit returns nothing at all.
+
+      Screenshots were captured with `scripts/capture-store-screenshots.mjs`
+      against the dev server. App Store Connect validates them against real
+      device resolutions, not the 640x920 minimum its own documentation
+      quotes — a 780x986 crop was rejected, the same content as a full
+      1242x2208 screen was accepted.
+
+- [ ] **`io.mytrivia.adfree` — deliberately not created.** `AdFreeModal` is
+      mounted in `Index.tsx` but `setIsAdFreeModalOpen(true)` is never called,
+      so nothing in the app can open it. An in-app purchase with no reachable
+      path is a question at review. Wire up an entry point first; products can
+      be added any time.
+- [ ] **The 1500 pack is worse value than the 500 pack** — 116 gems per dollar
+      against 125. Nothing breaks, but it gives a buyer a reason to buy two
+      500s instead. Any price below **$11.97** puts the curve back in order.
+      Prices stay editable; ids do not.
 
 ## 2. Third-party accounts
 
-- [ ] **RevenueCat** — create the project and the iOS app config
+- [x] ~~**Supabase Apple provider**~~ — Services ID `io.mytrivia.signin`, the
+      bundle id in the Client IDs list, secret generated from the Sign in with
+      Apple key. **The secret is a JWT Apple caps at six months** — regenerate
+      before it lapses or new web sign-ins start failing, silently, while
+      existing sessions and the native path carry on working.
+- [x] ~~**RevenueCat**~~ — project rebuilt, iOS app on `io.mytrivia.app` with
+      the In-App Purchase key uploaded, all six products imported, webhook
+      returning 200, secret key confirmed **V1** (a V2 key returns 403 code
+      7723 against the `/subscribers` endpoint `_shared/iap.ts` calls, and
+      every symptom of that is server-side).
+- [x] ~~**RevenueCat offering**~~ — `default`, six packages, one product each.
+      Worth recording how this went wrong once: the `gems_5000` package was
+      wired to `io.mytrivia.gems.1500`, leaving the 5000 pack in no package at
+      all. Nothing announced it. `products` is built from offering packages, so
+      the pack would have shown the `$34.99` compiled into the bundle instead
+      of the store price — right by coincidence in the US, wrong everywhere
+      else, on the screen a reviewer taps to buy. `purchase()` now logs when it
+      falls through to the no-package path.
 - [ ] **AdMob** — register the iOS app, create a **dedicated iOS** rewarded
       unit and a **real** interstitial unit (the interstitials currently point
       at Google's demo units, which serve ads and earn nothing)
@@ -52,15 +104,15 @@ rather than silently — that was deliberate — but it still doesn't work.
 
 | Value | Where it goes | What breaks without it |
 |---|---|---|
-| ~~`REVENUECAT_SECRET_API_KEY`~~ | ~~Supabase secret~~ | **Done and verified.** Must be a **V1** key — a V2 key returns 403 code 7723 against the `/subscribers` endpoint the code uses |
-| ~~`REVENUECAT_WEBHOOK_SECRET`~~ | ~~Supabase secret + RevenueCat~~ | **Done and verified** — wrong and missing secrets both rejected with 401, correct one accepted |
-| ~~`VITE_REVENUECAT_IOS_API_KEY`~~ | ~~Build env~~ | **Done** — in `.env.example`; copy to your local `.env` |
+| `REVENUECAT_SECRET_API_KEY` | Supabase secret | Re-issued for the rebuilt project and set. Must still be a **V1** key — a V2 key returns 403 code 7723 against the `/subscribers` endpoint the code uses |
+| `REVENUECAT_WEBHOOK_SECRET` | Supabase secret + RevenueCat | Rotate alongside the rebuilt project. Supabase only ever shows a digest, so the old value cannot be read back to paste into the new webhook — generate a fresh one and set it in both places. The mechanism itself was verified: wrong and missing secrets both rejected with 401, correct one accepted |
+| ~~`VITE_REVENUECAT_IOS_API_KEY`~~ | ~~Build env~~ | **Done** — re-issued for the rebuilt RevenueCat project and committed to `.env`. Public by design: it ships inside the binary and identifies the app, it does not authorise anything |
 | `VITE_ADMOB_IOS_REWARDED` | Build env | Falls back to a demo unit — ads show, revenue is zero |
 | `VITE_ADMOB_IOS_INTERSTITIAL` | Build env | Same |
 | `VITE_VIDEO_BASE_URL` | Build env | Native falls back to `https://mytrivia.io`; set it explicitly if videos move |
 | ~~Apple **Team ID**~~ | ~~AASA file~~ | **Done** — `T38XQSM4L3` |
 
-Both RevenueCat secrets are set and verified. Neither goes in the repo, in
+Neither RevenueCat secret goes in the repo, in
 `.env`, or in a workflow — they are platform secrets, and the secret key can
 read and modify every subscriber on the account. See
 [`supabase/functions/README-entitlements.md`](supabase/functions/README-entitlements.md).
@@ -120,15 +172,27 @@ The iOS bundle went from 394 MB to **130 MB** by pruning the video library
 out of it and streaming instead. Two follow-ups need a machine with ffmpeg,
 which this environment doesn't have.
 
-- [ ] **Generate `public/videos/mobile/*.mp4`** (480px, H.264).
+- [ ] **Generate `public/videos/mobile/*.mp4`** — the script is written, it
+      just needs a machine with ffmpeg:
 
-      Only the WebM variants were ever generated. **WebM does not play in
-      WKWebView below iOS 17.4**, and this app supports iOS 15 — so on most
-      iPhones in service the `<source>` chain skips the WebM and falls through
-      to the *desktop* MP4, several megabytes each. Extend
-      `scripts/convert-videos-webm.sh` to emit H.264 at the mobile size, then
-      set `VITE_MOBILE_MP4_AVAILABLE=true`. The code already prefers them when
-      that flag is on.
+      ```bash
+      brew install ffmpeg          # if needed
+      bash scripts/convert-videos-mobile-mp4.sh
+      ```
+
+      Then set `VITE_MOBILE_MP4_AVAILABLE=true` in `.env` and rebuild. The
+      files existing is **not** what switches this on — `getResponsiveVideoSrc`
+      reads the flag, so without it phones keep getting the desktop MP4.
+
+      Only WebM variants were ever generated, and **WKWebView cannot play WebM
+      below iOS 17.4** while this app supports iOS 15. So on most iPhones in
+      service the `<source>` chain skips every WebM and falls through to the
+      *desktop* MP4 — 720p, several megabytes each, 63 of them. The mobile
+      tier exists and is empty for exactly the devices that need it most.
+
+      Encoding is H.264 main/4.0, yuv420p, `+faststart`, 480px, no audio —
+      chosen for the iOS 15 floor rather than for size. Takes a while at
+      `preset slow`; it is a one-time cost and re-running skips what exists.
 
 - [ ] **Re-encode or move the 8 MP4s imported from `src/assets/`** — 46 MB.
 

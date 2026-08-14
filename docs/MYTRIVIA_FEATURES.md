@@ -571,7 +571,8 @@ trivia, collections and avatar generations. `pro_plus` adds enhanced rewards (1.
 still loading rather than passing them through, and shows a `ProRequiredModal` otherwise.
 
 **Pricing** in gems: day 30 · week 100 (52% off daily) · month 250 (72% off). Real-money PRO
-runs through RevenueCat (`io.mytrivia.vip.monthly`, `io.mytrivia.vip.annual`) or Stripe
+runs through RevenueCat (`io.mytrivia.pro.monthly`, `io.mytrivia.proplus.monthly` — both
+monthly; the two tiers differ by friend invites, not billing period) or Stripe
 (`create-pro-checkout`). Admin accounts and specific granted accounts self-heal a
 **lifetime PRO** row on login.
 

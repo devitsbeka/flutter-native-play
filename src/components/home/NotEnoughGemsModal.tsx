@@ -6,7 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useGemPurchase } from "@/hooks/useGemPurchase";
 import { useAuth } from "@/contexts/AuthContext";
 import gemIcon from "@/assets/icons/icon-gem.png";
-import { formatPrice } from "@/utils/currency";
+import { useStorePrice } from "@/hooks/useStorePrice";
 import { GEM_PACKS, type GemPack } from "@/config/gemPacks";
 
 // Packs live in config so the native store SKUs stay attached to them.
@@ -29,6 +29,11 @@ export function NotEnoughGemsModal({
   const { t } = useLanguage();
   const { user } = useAuth();
   const { initiateCheckout, isProcessing } = useGemPurchase();
+  // On iOS the figure has to be StoreKit's own localized string, not the USD
+  // number compiled into gemPacks.ts. Apple charges in the storefront's
+  // currency, so a Georgian buyer shown "$0.79" is quoted a price the store
+  // never charges — guideline 2.3.1, on the screen a reviewer taps to buy.
+  const storePrice = useStorePrice();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   
   const gemsNeeded = Math.max(0, requiredGems - currentGems);
@@ -145,7 +150,7 @@ export function NotEnoughGemsModal({
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <>{formatPrice(pkg.priceUsd)}</>
+                  <>{storePrice(pkg.productId, pkg.priceUsd).display}</>
                 )}
               </div>
             </motion.button>

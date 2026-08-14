@@ -7,6 +7,7 @@ import shopBgVideoWebm from "@/assets/shopbg.webm";
 import crown3dIcon from "@/assets/crown-3d.png";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import { getPriceDisplay } from "@/utils/currency";
+import { useStorePrice } from "@/hooks/useStorePrice";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 // White particle component for sidebar
@@ -40,6 +41,8 @@ const SIDEBAR_TO_STRIPE_TIER: Record<SimplifiedTier, ProTierId> = {
 
 export function ShopRightSidebar() {
   const { t } = useLanguage();
+  // StoreKit's localized price on iOS, not the USD figure in PRO_TIERS.
+  const storePrice = useStorePrice();
   const { subscription, isVip } = useVipStatus();
   const { initiateProCheckout, isProcessing } = useProPurchase();
   const currentTier = isVip ? subscription?.vip_tier as SimplifiedTier | undefined : undefined;
@@ -163,7 +166,7 @@ export function ShopRightSidebar() {
                       <div className="flex-1">
                         <h3 className="text-base font-bold text-white">{tier.name}</h3>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-xl font-black text-white">{getPriceDisplay(tier.price).symbol}{getPriceDisplay(tier.price).value}{getPriceDisplay(tier.price).suffix}</span>
+                          <span className="text-xl font-black text-white">{storePrice(tier.id, tier.price).display}</span>
                           <span className="text-xs text-white/70">{getPriceDisplay(tier.price).monthLabel}</span>
                         </div>
                       </div>

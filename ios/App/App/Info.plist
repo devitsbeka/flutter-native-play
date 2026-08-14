@@ -74,7 +74,7 @@
 	     The Google Mobile Ads SDK raises on launch when this key is absent, so
 	     it belongs here rather than only in capacitor.config.ts. -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-1329033152352928~1190114462</string>
+	<string>ca-app-pub-3462589915085372~1525220642</string>
 
 	<!-- SKAdNetwork: how ad networks get install attribution without the
 	     advertising identifier, and therefore how anything sold against this
