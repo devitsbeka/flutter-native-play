@@ -907,11 +907,19 @@ export default function Index() {
             Mounted only when the viewport is actually xl, so smaller
             screens never download the media. */}
         {!isSceneViewport ? null : sceneUrl ? (
-          /* Generated 16:9 scene: the whole artwork fits in the band BELOW
-             the friends reel (top 230px), bottom-anchored and centered, so
-             the subject can never sit under the reel and nothing is
-             cropped at any resolution. Its top and side edges feather into
-             the page's own pastel background - no fill layers, no seams. */
+          /* Generated scene: the whole artwork fits in the band BELOW the
+             friends reel (top 230px), bottom-anchored and centered, so the
+             subject can never sit under the reel and nothing is cropped at
+             any resolution. Its top and side edges feather into the page's
+             own pastel background - no fill layers, no seams.
+
+             The box takes the artwork's own shape rather than being pinned
+             to 16:9. A portrait scene inside a forced 16:9 box was fitted to
+             that box's height and then letterboxed inside it — measured at
+             1600x1038, a 768x1152 scene drew at 288x432 where the band had
+             room for 539x808, so it read as a small card floating on the
+             page. A 16:9 scene is unaffected: measured identically at
+             1436x808 either way. */
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -929,14 +937,14 @@ export default function Index() {
                   loop
                   muted
                   playsInline
-                  className="max-h-full max-w-full aspect-video object-contain"
+                  className="max-h-full max-w-full object-contain"
                   style={SCENE_EDGE_FADE}
                 />
               ) : (
                 <img
                   src={sceneUrl}
                   alt=""
-                  className="max-h-full max-w-full aspect-video object-contain"
+                  className="max-h-full max-w-full object-contain"
                   draggable={false}
                   style={SCENE_EDGE_FADE}
                 />
