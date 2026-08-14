@@ -48,11 +48,26 @@ def norm(s):
     s = unicodedata.normalize('NFKC', str(s)).lower()
     return re.sub(r'\s+', ' ', re.sub(r'[^\w\s]', ' ', s)).strip()
 
-# Latin text, punctuation, currency, arrows, maths and sub/superscripts. A
-# chemistry or calculus answer is not a language leak.
-NON_LATIN = re.compile(r'[^\x00-\x7FÀ-ɏ -⁯₠-₿'
-                       r'℀-⅏←-⇿∀-⋿■-◿'
-                       r'☀-➿⁰-₟Α-Ͽ]')
+# What may appear in an English question, written as explicit code points
+# because the literal ranges were unreadable and twice wrong. A chemistry
+# formula, a degree sign or a calculus symbol is not a language leak; Georgian,
+# Cyrillic and Arabic are.
+NON_LATIN = re.compile(
+    '[^'
+    '\u0000-\u007f'   # ASCII
+    '\u00a0-\u024f'   # Latin-1 supplement and Latin Extended: ° × ÷ ± é ñ
+    '\u0370-\u03ff'   # Greek: π Σ Ω
+    '\u1d00-\u1d7f'   # phonetic modifier letters: superscript a b
+    '\u2000-\u206f'   # general punctuation: — “ ” ‘ ’ …
+    '\u2070-\u209f'   # superscripts and subscripts: ⁻³¹ ₂ ₆
+    '\u20a0-\u20bf'   # currency: € £ ¥ ₾
+    '\u2100-\u214f'   # letterlike: ℃ ℉ №
+    '\u2190-\u21ff'   # arrows
+    '\u2200-\u22ff'   # maths operators: ∫ ∑ ∀ ∃ √ ≈
+    '\u2300-\u23ff'   # misc technical
+    '\u25a0-\u25ff'   # geometric shapes
+    '\u2600-\u27bf'   # misc symbols: ☉ ☾ ♂ ⊕
+    ']')
 
 HAND = {json.loads(l)['id'] for l in open('rewrites.jsonl') if l.strip()}
 errors, warnings, applied = [], [], []

@@ -58,3 +58,104 @@
 {"id": "18078dc8", "q": "In basketball, what is illegal contact with an opponent?"}
 {"id": "18f6b3cf", "q": "Did NATO expand east before or after the USSR fell?"}
 {"id": "191ff473", "q": "What was the order of medieval European feudal ranks?", "c": "Monarch to serfs", "w": ["Priests to slaves", "Elders to servants", "Masters to laborers"]}
+{"id": "19c717f8", "q": "What is the myth about who invented the light bulb?", "c": "Edison did it alone", "w": ["Tesla invented it", "It began in the 1900s", "No one person did"]}
+{"id": "1a3c3d61", "q": "What does ocean acidification do to marine life?", "c": "Weakens shells", "w": ["Speeds coral growth", "Raises fish numbers", "Warms the water"]}
+{"id": "1a968177", "q": "How does a warm room change how people treat each other?", "c": "More generous", "w": ["No social effect", "Colder unites more", "Only comfort shifts"]}
+{"id": "1af8e593", "q": "How do kidneys control long-term blood pressure?", "c": "Salt and water balance", "w": ["Raising heart rate", "Narrowing vessels", "Filtering waste"]}
+{"id": "1c4ab279", "q": "What happens if you change baking ingredient ratios?", "c": "Texture and rise shift", "w": ["Cook time adjusts", "Only looks change", "Only cost changes"]}
+{"id": "1e3df881", "c": "More O₂ to blood", "w": ["Less O₂ to blood", "No effect on O₂", "Only affects N₂"]}
+{"id": "1f005aa5", "q": "Which blood groups make up the ABO system?", "c": "A, B, AB, O", "w": ["Lewis, Kell, Duffy", "M, N, S, P", "Rh, Kidd, Lutheran"]}
+{"id": "20c6fc37", "q": "How does lemon juice lift organic stains?", "c": "Citric acid, low pH", "w": ["High pH kills germs", "Adds oxygen to fibre", "Bleaches the fabric"]}
+{"id": "21149522", "q": "Which biohacking claim most oversimplifies biology?", "c": "Habits beat genetics", "w": ["Body as a machine", "Focus alters organs", "Pills replace pathways"]}
+{"id": "21cc0e27", "q": "Why do indoor robots lose their way without GPS?", "c": "Odometry drift", "w": ["No internet uplink", "Air pressure change", "AI refuses commands"]}
+{"id": "235b2772", "q": "What do people get wrong about Plato's cave?", "c": "That it is literal", "w": ["It is about reality", "Ignorance to wisdom", "Perception has limits"]}
+{"id": "24bb3cc9", "q": "Which three branches form normative ethics?", "c": "Duty, ends, virtue", "w": ["Relativism, nihilism", "Religious and secular", "Meta and descriptive"]}
+{"id": "24e57c02", "q": "Which anime world uses Nen?", "c": "Hunter x Hunter", "w": ["Dragon Ball", "Yu Yu Hakusho", "Naruto"]}
+{"id": "2769dbd6", "q": "How did Greek combat sport shape hoplite training?", "c": "Built strength", "w": ["Taught cavalry work", "Trained archery", "Favoured duelling"]}
+{"id": "27a962b0", "q": "How did Chinese and Roman pottery glazes differ?", "c": "High-fired vs lead", "w": ["Rome glazed first", "They were identical", "Neither had glazes"]}
+{"id": "27c09c4f", "q": "What did the Harambe incident change at zoos?", "c": "Enclosure safety", "w": ["More gorillas born", "Attendance collapsed", "Virtual exhibits"]}
+{"id": "2913caa7", "q": "What is the myth about the origin of \"hello\"?", "c": "Edison coined it", "w": ["From Old English", "From French hola", "From sailor slang"]}
+{"id": "29ef7916", "q": "Can lightning strike the same place more than once?", "c": "Yes, often", "w": ["No, never twice", "Only in one storm", "Only in rare air"]}
+{"id": "2ce8852a", "q": "How did colonial borders split ethnic groups?", "c": "Arbitrary lines", "w": ["Forced migration", "Unified identities", "New cultural norms"]}
+{"id": "2d52cfff", "q": "Which property of logarithms simplifies big sums?", "c": "Products become sums", "w": ["No decimals needed", "All become primes", "Integers only"]}
+{"id": "31b03b51", "q": "Why does lost sleep hurt thinking?", "c": "Memory fails to set", "w": ["It boosts creativity", "Waste clears faster", "Only the body tires"]}
+{"id": "32dafaff", "q": "Which animal fronted a famously grumpy meme?", "c": "Grumpy Cat", "w": ["Doge", "Keyboard Cat", "Nyan Cat"]}
+{"id": "34342c72", "q": "What best explains Mozart's early musical skill?", "c": "Intense early training", "w": ["Pure innate genius", "He taught himself", "Divine inspiration"]}
+{"id": "38a1d181", "q": "What are the three phobia-related anxiety disorders?", "c": "Specific, social, agora", "w": ["Object, place, animal", "Fear, anxiety, trauma", "Mild, moderate, severe"]}
+{"id": "3907054b", "q": "Which distortion do political biopics most often use?", "c": "The 'Great Man' view", "w": ["Accurate geopolitics", "Understated struggle", "Collective movements"]}
+{"id": "394c2301", "q": "What did Orphic and early Christian cults share?", "c": "Rebirth and shared meals", "w": ["Strict monotheism", "A material afterlife", "No sacrifice at all"]}
+{"id": "3a2a59a8", "q": "How did the printing press change sharing news?", "c": "Made print affordable", "w": ["Ended written language", "Only printed bibles", "Held literacy back"]}
+{"id": "3c3031ab", "q": "How does bad weather move global coffee prices?", "c": "Prices rise", "w": ["No effect at all", "Prices fall sharply", "Stockpiles absorb it"]}
+{"id": "3c3cf5e4", "q": "What sets the direction Muslims face in prayer?", "c": "Where Mecca lies", "w": ["Always due east", "The time of day", "The nearest mosque"]}
+{"id": "3c78f980", "q": "Does cracking your knuckles cause arthritis?", "c": "No proven link", "w": ["Yes, it causes it", "Yes, thins the fluid", "Yes, wears cartilage"]}
+{"id": "3d0042c4", "q": "How did Instagram's 2018 algorithm change feeds?", "c": "Pushed video first", "w": ["Hid all like counts", "Capped friend counts", "Banned hashtags"]}
+{"id": "3ee72f1d", "q": "What is a myth about recording 'Bohemian Rhapsody'?", "c": "It was improvised", "w": ["Mercury wrote it alone", "May sang the opera", "The demo was shorter"]}
+{"id": "3fda97cb", "q": "How does 'Who's Who in America' list awards?", "c": "Name, then the year", "w": ["A star rating", "Gold, silver, bronze", "Abbreviations only"]}
+{"id": "40dbbfc7", "q": "What notation marks a hybrid organism in taxonomy?", "c": "A multiplication sign", "w": ["A plus sign", "An ampersand", "A dollar sign"]}
+{"id": "422110ae", "q": "What did the media get wrong about the Tide Pod Challenge?", "c": "That it was an epidemic", "w": ["That it never happened", "That P&G promoted it", "That it hit one country"]}
+{"id": "428efb97", "q": "How do heist films usually beat advanced security?", "c": "Hacking the system", "w": ["Brute-force explosives", "Social engineering", "Realistic protocols"]}
+{"id": "443bb647", "q": "How did the Western Roman Empire actually end?", "c": "A slow decline", "w": ["One sudden collapse", "Gone in a decade", "All influence ceased"]}
+{"id": "44ecfd91", "q": "How many languages are used at Olympic ceremonies?", "c": "Three", "w": ["Two", "Five", "Six"]}
+{"id": "4529b637", "q": "Does the equator run through the centre of Africa?", "c": "No, the centre is north", "w": ["Yes, it bisects it", "Yes, per old maps", "No, it misses Africa"]}
+{"id": "4541e9b7", "q": "What is the logical problem of evil?", "c": "A good God allows evil", "w": ["Free will causes pain", "Angels rebelled", "Satan made all evil"]}
+{"id": "47294b3b", "q": "Can sharks get cancer?", "c": "Yes, but rarely", "w": ["No, fully immune", "They kill tumours", "They spread it"]}
+{"id": "4a9bd20e", "q": "Which sound feature separates Mandarin word meanings?", "c": "Tone", "w": ["No grammar at all", "Purely phonetic text", "One flat intonation"]}
+{"id": "4c866aa7", "q": "Were demons created evil in Christian theology?", "c": "No, they rebelled", "w": ["Yes, from creation", "They are not evil", "An evil god made them"]}
+{"id": "4d145eb5", "q": "Who is manga written for?", "c": "All ages and genders", "w": ["Young children only", "Teenagers only", "Adult readers only"]}
+{"id": "4d61d5b1", "c": "Alpha particle damage", "w": ["Acute radiation burns", "It blocks oxygen", "It raises blood CO₂"]}
+{"id": "515187c3", "q": "How are animal venoms used in medicine?", "c": "As painkiller sources", "w": ["No practical use", "Too complex to make", "Ethics rule them out"]}
+{"id": "51634eac", "c": "Antarctic ozone hole", "w": ["Strengthened ozone", "No effect at all", "Only ground-level air"]}
+{"id": "51d522c1", "q": "What does Serena Williams say defines a champion?", "c": "How they recover", "w": ["Champions are born", "Talent guarantees it", "Mostly plain luck"]}
+{"id": "52c95184", "c": "Defence from predators", "w": ["To regulate warmth", "To attract mates", "To absorb oxygen"]}
+{"id": "5435b539", "q": "Is spontaneous human combustion real?", "c": "No evidence for it", "w": ["Confirmed but rare", "Caused by methane", "Possible in extremes"]}
+{"id": "5528b2fa", "q": "What happens if an AI model has too little training data?", "c": "It fails on new data", "w": ["It rejects all input", "Data volume is moot", "It becomes broad AI"]}
+{"id": "56282f77", "q": "What did Donald Knuth say about optimising early?", "c": "Root of all evil", "w": ["Always optimise first", "Let the compiler do it", "It solves everything"]}
+{"id": "58d307d5", "q": "How does ocean acidification affect shellfish shells?", "c": "Fewer carbonate ions", "w": ["Shells grow stronger", "Ocean pH is moot", "Shells ignore water"]}
+{"id": "5ab2ceed", "q": "How did the Panama Canal change ocean trade?", "c": "Cut out Cape Horn", "w": ["Linked river systems", "Diverted the Amazon", "Crossed North America"]}
+{"id": "5b1c5863", "q": "How do biologists classify viruses?", "c": "Between living and not", "w": ["Clearly alive", "Clearly non-living", "Depends on the host"]}
+{"id": "5b48bdec", "q": "Online, what does it mean to 'troll'?", "c": "Post to provoke", "w": ["Search for information", "Make fake accounts", "Leak private data"]}
+{"id": "5c1ea944", "q": "Can giraffes make sounds?", "c": "Yes, but rarely", "w": ["No, they are silent", "Yes, they roar loudly", "Only calves can"]}
+{"id": "5d141e94", "q": "Who votes for the final Academy Award winners?", "c": "Academy members", "w": ["A critics' panel", "The box office", "A public poll"]}
+{"id": "5fa45696", "q": "What must an exoplanet's orbit do for the transit method?", "c": "Sit nearly edge-on", "w": ["Sit perpendicular", "Sit face-on", "Be perfectly circular"]}
+{"id": "61dca268", "q": "Could an Old English speaker understand Shakespeare?", "c": "No, far too different", "w": ["Yes, nearly the same", "Partly, with effort", "Nobody can tell"]}
+{"id": "628ac3df", "q": "What do people get wrong about Venus's rotation?", "c": "That it spins like Earth", "w": ["It spins slower", "Its day beats its year", "It barely tilts"]}
+{"id": "6362cbfd", "q": "How much life do deserts support?", "c": "A surprising variety", "w": ["Almost none at all", "Only microbes", "Only plants"]}
+{"id": "6381e9ec", "q": "What did the Nazis promote at the 1936 Berlin Olympics?", "c": "Aryan superiority", "w": ["Global cooperation", "Socialist prosperity", "Cultural diversity"]}
+{"id": "6435892b", "q": "Which three are personality classification systems?", "c": "Big 5, MBTI, DISC", "w": ["Freud, Jung, Adler", "Blood, bone, humour", "Alpha, beta, gamma"]}
+{"id": "64c9a1f4", "q": "Why is gravity weaker at the equator than the poles?", "c": "Spin and bulge", "w": ["Air pressure", "Solar radiation", "Ocean tides"]}
+{"id": "66f974b5", "q": "How is doping controlled at the modern Olympics?", "c": "Mandatory testing", "w": ["Doping has ended", "Athletes self-report", "Only medallists"]}
+{"id": "678a0ae3", "q": "Was leprosy found in victims of the 79 AD Vesuvius eruption?", "c": "No, not definitively", "w": ["Yes, in skeletons", "Yes, then dismissed", "Yes, very widely"]}
+{"id": "68488a8c", "q": "Which atomic bomb was first used in war?", "c": "Little Boy", "w": ["Trinity", "Fat Man", "Big Boy"]}
+{"id": "694d58fd", "q": "Which number has no multiplicative inverse?", "c": "Zero", "w": ["One", "Negative one", "Infinity"]}
+{"id": "6c632360", "q": "Where does tennis's 15, 30, 40 scoring come from?", "c": "A clock face", "w": ["Games in a set", "Tournament ranks", "Points to win"]}
+{"id": "6f38b748", "q": "Does pure water always freeze at exactly 0°C?", "c": "No, pressure matters", "w": ["Yes, always", "Yes, at sea level", "No, always lower"]}
+{"id": "71bfb733", "q": "Was the Leaning Tower of Pisa meant to lean?", "c": "No, the soil gave way", "w": ["Yes, by design", "Yes, for wind", "No, an earthquake"]}
+{"id": "71fec91c", "q": "Which order of markets goes from smallest to largest reach?", "c": "Local to global", "w": ["Primary to quaternary", "Monopoly to perfect", "Small-cap to mega-cap"]}
+{"id": "7448dc64", "q": "Which body regulates EU pharmaceutical manufacturing?", "c": "EMA", "w": ["FDA", "PMDA", "MHRA"]}
+{"id": "75d45d4a", "q": "What does science say about horoscope predictions?", "c": "No basis for them", "w": ["Often accurate", "Backed by physics", "Planets steer fate"]}
+{"id": "75efd69e", "q": "How do historians now view the European Middle Ages?", "c": "A time of progress", "w": ["Total stagnation", "Science went backwards", "No innovation at all"]}
+{"id": "765e1576", "q": "What did 'imperium' mean in the Roman Republic?", "c": "Power to command", "w": ["Roman territory", "A war declaration", "A priestly rite"]}
+{"id": "7693acc8", "q": "How does inflammation help the body heal?", "c": "Calls in immune cells", "w": ["Cuts blood flow", "Blocks immune cells", "Lowers white cells"]}
+{"id": "791c6359", "q": "Why do marathon runners carb-load before a race?", "c": "To store glycogen", "w": ["To grow muscle fast", "To absorb more oxygen", "To avoid dehydration"]}
+{"id": "797828a1", "q": "What chemical process tarnishes silver?", "c": "Reaction with sulfur", "w": ["Dust building up", "Magnetic fields", "Wear from handling"]}
+{"id": "79ff3952", "c": "To save water", "w": ["To draw pollinators", "To grow taller", "To catch more light"]}
+{"id": "7b3aa038", "q": "Which five events made up the Greek pentathlon?", "c": "Discus, javelin, jump, run, wrestle", "w": ["Archery, boxing, chariot, run, wrestle", "Boxing, swim, run, javelin, discus", "Discus, javelin, jump, boxing, swim"]}
+{"id": "7b4293c8", "q": "What did early ecologists get wrong about predators?", "c": "That they only harm", "w": ["They cull the sick", "They change nothing", "They enrich the soil"]}
+{"id": "7b570a04", "q": "Which meme shows one family member visibly unhappy?", "c": "Disaster Girl", "w": ["Hide the Pain Harold", "Grumpy Cat", "Distracted Boyfriend"]}
+{"id": "7bce9932", "q": "How are Khoisan click consonants produced?", "c": "Ingressive airstream", "w": ["Ejective stops", "Pulmonic egressive", "Extreme tone shifts"]}
+{"id": "7dae3534", "q": "Which abbreviation means one megabyte?", "c": "MB", "w": ["KB", "GB", "TB"]}
+{"id": "7eb01b49", "q": "How can medical trauma affect someone socially?", "c": "Social withdrawal", "w": ["Stronger friendships", "No effect at all", "Recovery is instant"]}
+{"id": "800197ae", "q": "Which is the largest global computing society?", "c": "ACM", "w": ["IEEE", "ISO", "IETF"]}
+{"id": "837c1f1c", "q": "What was Edison's real contribution to the light bulb?", "c": "A lasting filament", "w": ["He invented the bulb", "He only bought patents", "He restyled the bulb"]}
+{"id": "85c62e13", "q": "Why do hash collisions slow down a hash table?", "c": "Extra probing needed", "w": ["Memory fragments", "CPU cache misses", "Pointers fail"]}
+{"id": "85efc4fa", "q": "What do the lenses in a light microscope do?", "c": "Magnify the specimen", "w": ["Generate the light", "Stain the cells", "Absorb stray colour"]}
+{"id": "86a936b1", "q": "Why did Roman lead pipes poison the water less than expected?", "c": "Mineral scale coated them", "w": ["Rome used copper pipes", "Acid flushed lead away", "It was a known crisis"]}
+{"id": "87843c28", "q": "Who board-certifies psychology specialties in the US?", "c": "ABPP", "w": ["APA", "AMA", "CACREP"]}
+{"id": "88a2c44f", "q": "How does chronic inflammation cause disease?", "c": "Ongoing tissue damage", "w": ["It boosts immunity", "It strengthens organs", "It aids circulation"]}
+{"id": "8b405416", "q": "What is a black hole in astrophysics?", "c": "A gravity well", "w": ["A tear in space", "A tunnel between eras", "A door to a universe"]}
+{"id": "64bdf00e", "q": "Which letter denotes the gravitational constant?", "c": "Big G", "w": ["Little g", "Little c", "Little h"]}
+{"id": "6bbb442b", "q": "What number times any other always gives 0?", "c": "Zero", "w": ["One", "Negative one", "Ten"]}
+{"id": "6c7eb792", "c": "An oxygen tank blast", "w": ["A solar flare hit", "A meteor collision", "A fuel line leak"]}
+{"id": "737e151f", "q": "At what Celsius temperature does water freeze?", "c": "0", "w": ["4", "-4", "32"]}
+{"id": "81036a13", "q": "What geographic factor causes iodine deficiency?", "c": "Glaciation and rain", "w": ["High nitrogen soil", "Frequent earthquakes", "Wide river deltas"]}
+{"id": "826b1521", "q": "What is absolute zero in Celsius?", "c": "-273.15", "w": ["0", "100", "-100"]}
