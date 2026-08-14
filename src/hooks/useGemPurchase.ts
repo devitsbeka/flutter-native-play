@@ -30,12 +30,15 @@ export function useGemPurchase() {
     // breaks App Store guideline 3.1.1 — which is what this hook did on every
     // platform before, because it had no native branch at all.
     if (Capacitor.isNativePlatform()) {
-      const productId = GEM_PACK_PRODUCTS[product.gems];
+      // Keyed by pack id, not gem count. The count is base + bonus, so keying
+      // on it meant adding a bonus to a pack silently unmapped its SKU — which
+      // is how three of the shop's four packs came to be dead on iOS.
+      const productId = GEM_PACK_PRODUCTS[product.id];
 
       if (!productId) {
         // A pack with no store SKU cannot be sold here, and falling through to
         // the web path would be the exact violation. Fail loudly instead.
-        console.error(`No store product configured for a ${product.gems} gem pack`);
+        console.error(`No store product configured for pack ${product.id}`);
         toast.error("ეს პაკეტი ამჟამად მიუწვდომელია");
         return;
       }

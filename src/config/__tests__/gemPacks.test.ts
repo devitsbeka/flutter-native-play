@@ -25,17 +25,42 @@ describe("gem packs", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("does not sell two packs of the same size", () => {
-    // GEM_PACK_PRODUCTS is keyed by gem count, so duplicates would silently
+  it("does not reuse a pack id", () => {
+    // GEM_PACK_PRODUCTS is keyed by pack id, so duplicates would silently
     // collapse and one pack would buy the other's product.
-    const sizes = GEM_PACKS.map((p) => p.gems);
-    expect(new Set(sizes).size).toBe(sizes.length);
+    const ids = GEM_PACKS.map((p) => p.id);
+    expect(new Set(ids).size).toBe(ids.length);
     expect(Object.keys(GEM_PACK_PRODUCTS).length).toBe(GEM_PACKS.length);
   });
 
-  it("resolves every pack's size to its own product", () => {
+  it("resolves every pack's id to its own product", () => {
     for (const pack of GEM_PACKS) {
-      expect(GEM_PACK_PRODUCTS[pack.gems], `pack ${pack.id}`).toBe(pack.productId);
+      expect(GEM_PACK_PRODUCTS[pack.id], `pack ${pack.id}`).toBe(pack.productId);
+    }
+  });
+
+  it("credits the total the card advertises, bonus included", () => {
+    // The card reads "700 +200" and the buyer is owed 900. The shop passed the
+    // base figure to checkout, so the bonus was advertised on every pack and
+    // granted on none — which on the App Store is advertising 900 and
+    // delivering 700.
+    for (const pack of GEM_PACKS) {
+      expect(pack.gems, `pack ${pack.id}`).toBe(pack.baseGems + pack.bonusGems);
+      const advertised = pack.bonusGems
+        ? `${pack.baseGems} +${pack.bonusGems}`
+        : `${pack.baseGems}`;
+      expect(pack.name, `pack ${pack.id} label`).toBe(advertised);
+    }
+  });
+
+  it("gives more gems per dollar as the pack gets bigger", () => {
+    // A ladder where a larger pack is worse value is a pricing mistake, and
+    // the two ladders this app used to carry disagreed by 4-8x on exactly
+    // this ratio.
+    const rates = GEM_PACKS.map((p) => p.gems / p.priceUsd);
+    for (let i = 1; i < rates.length; i++) {
+      expect(rates[i], `pack ${GEM_PACKS[i].id} vs ${GEM_PACKS[i - 1].id}`)
+        .toBeGreaterThan(rates[i - 1]);
     }
   });
 

@@ -10,6 +10,7 @@ import replaceIcon from "@/assets/powers/replace.webp";
 import timeDrainIcon from "@/assets/powers/time-drain.webp";
 import coinIcon from "@/assets/icons/icon-coin.webp";
 import gemIcon from "@/assets/icons/icon-gem.webp";
+import { GEM_PACKS } from "@/config/gemPacks";
 import iconStarterPack from "@/assets/icons/icon-starter-pack.webp";
 import iconVipCrown from "@/assets/icons/icon-vip-crown.webp";
 import iconMagicOrb from "@/assets/icons/magic-orb.webp";
@@ -270,57 +271,47 @@ export function useShopData() {
       },
     ];
 
-    // Gems Section (Real Money - USD)
-    const GEMS_ITEMS: ShopItem[] = [
-      {
-        id: "gems_30",
-        name: "30",
-        description: t("shop.gemsDescSmall"),
-        price: 1.19,
-        currency: "lari",
-        icon: <img src={gemIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
-        gradient: "linear-gradient(135deg, hsl(270 80% 60%) 0%, hsl(290 75% 55%) 100%)",
-        value: 30,
-      },
-      {
-        id: "gems_100",
-        name: "100 +11",
-        description: t("shop.gemsDescMedium"),
-        price: 3.59,
-        currency: "lari",
-        icon: <img src={gemIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
-        gradient: "linear-gradient(135deg, hsl(275 80% 58%) 0%, hsl(295 75% 52%) 100%)",
-        value: 100,
-        badge: "popular",
-        savings: 11,
-        bonusPercentage: 11,
-      },
-      {
-        id: "gems_300",
-        name: "300 +60",
-        description: t("shop.gemsDescLarge"),
-        price: 9.99,
-        currency: "lari",
-        icon: <img src={gemIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
-        gradient: "linear-gradient(135deg, hsl(280 82% 55%) 0%, hsl(300 78% 50%) 100%)",
-        value: 300,
-        savings: 20,
-        bonusPercentage: 20,
-      },
-      {
-        id: "gems_700",
-        name: "700 +200",
-        description: t("shop.gemsDescMega"),
-        price: 19.99,
-        currency: "lari",
-        icon: <img src={gemIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
-        gradient: "linear-gradient(135deg, hsl(285 85% 52%) 0%, hsl(310 80% 48%) 100%)",
-        value: 700,
-        badge: "best-value",
-        savings: 40,
-        bonusPercentage: 40,
-      },
+    // Gems Section (real money). Built from GEM_PACKS so the shop grid, the
+    // "not enough gems" modal, the Stripe checkout and the App Store catalog
+    // all sell the same four packs. They did not: this list and the modal's
+    // carried different ladders, and only this one matched the economy the
+    // rest of the shop is priced against ("1 GEL = 10 gems", above).
+    //
+    // `value` is the total credited, bonus included. It used to be the base
+    // figure while the card advertised "+200", so the bonus was promised on
+    // every pack and granted on none.
+    const GEMS_GRADIENTS = [
+      "linear-gradient(135deg, hsl(270 80% 60%) 0%, hsl(290 75% 55%) 100%)",
+      "linear-gradient(135deg, hsl(275 80% 58%) 0%, hsl(295 75% 52%) 100%)",
+      "linear-gradient(135deg, hsl(280 82% 55%) 0%, hsl(300 78% 50%) 100%)",
+      "linear-gradient(135deg, hsl(285 85% 52%) 0%, hsl(310 80% 48%) 100%)",
     ];
+    const GEMS_DESCRIPTIONS = [
+      "shop.gemsDescSmall",
+      "shop.gemsDescMedium",
+      "shop.gemsDescLarge",
+      "shop.gemsDescMega",
+    ];
+    const GEMS_BADGES: (ShopItem["badge"] | undefined)[] = [
+      undefined,
+      "popular",
+      undefined,
+      "best-value",
+    ];
+
+    const GEMS_ITEMS: ShopItem[] = GEM_PACKS.map((pack, i) => ({
+      id: pack.id,
+      name: pack.name,
+      description: t(GEMS_DESCRIPTIONS[i] ?? "shop.gemsDescSmall"),
+      price: pack.priceUsd,
+      currency: "lari",
+      icon: <img src={gemIcon} alt="" width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8" />,
+      gradient: GEMS_GRADIENTS[i] ?? GEMS_GRADIENTS[0],
+      value: pack.gems,
+      badge: GEMS_BADGES[i],
+      savings: pack.bonus,
+      bonusPercentage: pack.bonus,
+    }));
 
     // Section definitions - ordered: ჩემი ძალები (hardcoded) → მონეტები → ალმასები → VIP → მოიმატე ძალები → სუპერ ძალები
     const SHOP_SECTIONS: ShopSection[] = [
