@@ -42,11 +42,15 @@ const TIER_TO_PRODUCT: Record<string, string> = {
 /**
  * Returns a resolver rather than a single price, because paywalls render a
  * list of tiers and a hook cannot be called inside the map.
+ *
+ * The key is either a tier id (`pro`, `family`, …) or a store product id
+ * directly — gem packs already carry their `productId`, and routing them
+ * through a tier alias would only be a second table to keep in sync.
  */
 export function useStorePrice() {
   const { getProduct } = useInAppPurchases();
 
-  return (tierId: string, fallbackUsd: number): StorePrice => {
+  return (tierOrProductId: string, fallbackUsd: number): StorePrice => {
     const fallback = () => {
       const p = getPriceDisplay(fallbackUsd);
       return { display: `${p.symbol}${p.value}${p.suffix}`, fromStore: false };
@@ -54,8 +58,8 @@ export function useStorePrice() {
 
     if (!Capacitor.isNativePlatform()) return fallback();
 
-    const productId = TIER_TO_PRODUCT[tierId];
-    const product = productId ? getProduct(productId) : undefined;
+    const productId = TIER_TO_PRODUCT[tierOrProductId] ?? tierOrProductId;
+    const product = getProduct(productId);
 
     return product?.price ? { display: product.price, fromStore: true } : fallback();
   };

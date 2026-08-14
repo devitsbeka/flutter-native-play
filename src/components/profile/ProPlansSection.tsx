@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { FriendInvitesTracker } from "./FriendInvitesTracker";
 import { useSearchParams } from "react-router-dom";
 import { getPriceDisplay } from "@/utils/currency";
+import { useStorePrice } from "@/hooks/useStorePrice";
 import { ProBannerReel } from "@/components/shop/MobileProCarousel";
 import { useNavigate } from "react-router-dom";
 
@@ -288,6 +289,10 @@ function ProBannerCard({
 }) {
   const { t } = useLanguage();
   const TierIcon = tier.icon;
+  // iOS must show StoreKit's localized price, not the USD figure in
+  // PRO_TIERS — see useStorePrice. The period label stays separate, because
+  // RevenueCat's priceString is the amount alone.
+  const storePrice = useStorePrice();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -333,7 +338,7 @@ function ProBannerCard({
           {price !== undefined && (
             <div className="flex items-baseline gap-1 mb-2">
               <span className="text-xl font-black text-white">
-                {getPriceDisplay(price).symbol}{getPriceDisplay(price).value}{getPriceDisplay(price).suffix}
+                {storePrice(tier.id, price).display}
               </span>
               <span className="text-xs text-white/70">{getPriceDisplay(price).monthLabel}</span>
             </div>
