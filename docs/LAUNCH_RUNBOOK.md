@@ -94,7 +94,7 @@ Only after 1.3 succeeds. Available because it never shipped.
 
 ---
 
-## Phase 2 — Create the seven products
+## Phase 2 — Create the products
 
 **Do not start this before Phase 1.3.** In-app purchases belong to an app
 record — anything created on the old record is destroyed along with it.
@@ -134,38 +134,40 @@ rather than a second, parallel subscription the user is now paying twice for.
       **review screenshot** of the paywall (Phase 9 produces these — you can
       come back)
 
-### 2.2 The five one-off purchases
+### 2.2 The consumables
 
 **Monetization** → **In-App Purchases** → **Create**:
 
-| Product ID | Type | Price | Grants |
-|---|---|---|---|
-| `io.mytrivia.adfree` | Non-consumable | your call | permanent ad removal |
-| `io.mytrivia.gems.30` | Consumable | $1.19 | 30 gems |
-| `io.mytrivia.gems.100` | Consumable | $3.59 | **111** gems |
-| `io.mytrivia.gems.300` | Consumable | $9.99 | **360** gems |
-| `io.mytrivia.gems.700` | Consumable | $19.99 | **900** gems |
+| Product ID | Type | Price | Grants | gems/$ |
+|---|---|---|---|---|
+| `io.mytrivia.gems.100` | Consumable | $0.99 | 100 gems | 101 |
+| `io.mytrivia.gems.500` | Consumable | $3.99 | 500 gems | 125 |
+| `io.mytrivia.gems.1500` | Consumable | $12.99 | 1500 gems | 116 |
+| `io.mytrivia.gems.5000` | Consumable | $34.99 | 5000 gems | 143 |
 
-The id carries the *headline* number and the grant is the *total*, because the
-cards advertise a bonus: "100 +11", "300 +60", "700 +200". That is not a typo
-in the table — `_shared/iap.ts` credits 111/360/900, and the ids were created
-before the bonus was ever honoured.
+These replaced two contradictory ladders — the `/power-ups` shop sold
+30/100/300/700 while the "not enough gems" modal sold 100/500/1500/5000 at
+four to eight times more gems per dollar. Both surfaces build from
+`src/config/gemPacks.ts` now, and `_shared/iap.ts` must agree with it or a
+purchase grants nothing; the repo invariant test enforces that.
 
-These replaced a second, contradictory ladder (100/500/1500/5000 at
-$0.79-$23.99) that the "not enough gems" modal sold at four to eight times
-more gems per dollar. Both surfaces sell these four now; see
-`src/config/gemPacks.ts`.
+**The 1500 pack is worse value than the 500 pack** — 116 gems per dollar
+against 125. Not strictly dominated (you do get 3x the gems), so nothing
+breaks, but it gives a buyer a reason to buy two 500s instead. Any price
+below **$11.97** puts the curve back in order. Prices stay editable in App
+Store Connect; product ids do not.
 
-Gem prices are what `/power-ups` already charges, and they hold to the economy
-the rest of the shop is priced against — 1 GEL = 10 gems, VIP month = 250
-gems. Changing a live IAP price is far more painful than setting it right the
-first time.
+### 2.3 Ad-free — hold off
 
-If an exact price point isn't offered, take the nearest and tell me which —
-`gemPacks.ts` has to match, or the web shop and the App Store quote different
-numbers for the same pack.
+`io.mytrivia.adfree` is in both catalogs and `AdFreeModal` is mounted in
+`Index.tsx`, but **`setIsAdFreeModalOpen(true)` is never called** — nothing in
+the app can open it, so the product cannot be bought.
 
-**Check:** seven products exist, each in state *Ready to Submit* or *Missing
+Do not create it yet. An in-app purchase with no reachable path is a question
+at review, and products can be added at any time. Wire up an entry point
+first, then create it.
+
+**Check:** six products exist, each in state *Ready to Submit* or *Missing
 Metadata*. They stay that way until submitted alongside the first build —
 "your first in-app purchase must be submitted with a new app version" is
 normal and not a problem.
@@ -181,10 +183,10 @@ RevenueCat but sit **outside an offering** are not returned to the app at all.
 - [ ] Project → **Apps** → iOS app → set **Bundle ID** to `io.mytrivia.app`
 - [ ] Upload the **App Store Connect API key** (In-App Purchase key) so
       RevenueCat can validate receipts server-side
-- [ ] **Products** → add all seven ids, exactly as created in Phase 2
+- [ ] **Products** → add all six ids, exactly as created in Phase 2
 - [ ] **Entitlements** → create `pro`, `pro_plus`, `ad_free`; attach the
       matching subscription/non-consumable products
-- [ ] **Offerings** → create the default offering → add **all seven**
+- [ ] **Offerings** → create the default offering → add **all six**
       products as packages
 - [ ] Confirm the webhook still points at
       `https://sqwpzezkhpqkdyltvsim.supabase.co/functions/v1/revenuecat-webhook`
@@ -194,7 +196,7 @@ Already done and verified, no action needed: `REVENUECAT_SECRET_API_KEY`
 `/subscribers` endpoint the code uses) and `REVENUECAT_WEBHOOK_SECRET`, both
 Supabase platform secrets. Neither goes in the repo.
 
-**Check:** RevenueCat's Offering screen lists seven products with prices
+**Check:** RevenueCat's Offering screen lists six products with prices
 pulled from App Store Connect. Blank prices there mean Phase 2 isn't finished
 propagating — it can take a few hours after products are created.
 
@@ -415,7 +417,7 @@ Worth re-reading the paywall against that before submitting.
 
 ## Phase 10 — Submit
 
-- [ ] Attach the seven in-app purchases to the version — first submission
+- [ ] Attach the in-app purchases to the version — first submission
       must include them
 - [ ] Select the TestFlight build
 - [ ] Submit for review

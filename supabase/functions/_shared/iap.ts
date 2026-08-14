@@ -30,10 +30,10 @@ export const PRODUCTS = {
   PRO_MONTHLY: "io.mytrivia.pro.monthly",
   PRO_PLUS_MONTHLY: "io.mytrivia.proplus.monthly",
   AD_FREE: "io.mytrivia.adfree",
-  GEMS_30: "io.mytrivia.gems.30",
   GEMS_100: "io.mytrivia.gems.100",
-  GEMS_300: "io.mytrivia.gems.300",
-  GEMS_700: "io.mytrivia.gems.700",
+  GEMS_500: "io.mytrivia.gems.500",
+  GEMS_1500: "io.mytrivia.gems.1500",
+  GEMS_5000: "io.mytrivia.gems.5000",
 } as const;
 
 type CatalogEntry =
@@ -58,14 +58,15 @@ const CATALOG: Record<string, CatalogEntry> = {
   [PRODUCTS.PRO_MONTHLY]: { kind: "subscription", tier: "pro" },
   [PRODUCTS.PRO_PLUS_MONTHLY]: { kind: "subscription", tier: "pro_plus" },
   [PRODUCTS.AD_FREE]: { kind: "non_consumable", tier: "ad_free" },
-  // Totals, not headline numbers: the cards advertise "100 +11", "300 +60",
-  // "700 +200", and the buyer is owed what the card says. The web shop passed
-  // the base figure to checkout, so the bonus was advertised on every pack and
-  // granted on none. Keep these in step with GEM_PACKS in src/config/gemPacks.ts.
-  [PRODUCTS.GEMS_30]: { kind: "consumable", gems: 30 },
-  [PRODUCTS.GEMS_100]: { kind: "consumable", gems: 111 },
-  [PRODUCTS.GEMS_300]: { kind: "consumable", gems: 360 },
-  [PRODUCTS.GEMS_700]: { kind: "consumable", gems: 900 },
+  // These are totals. No pack advertises a bonus any more, so total equals
+  // face value — but the field means "what the buyer is owed", not "the number
+  // in the id". An earlier ladder advertised "700 +200" and credited 700.
+  // Keep in step with GEM_PACKS in src/config/gemPacks.ts; the repo invariant
+  // test fails if the two disagree on which products exist.
+  [PRODUCTS.GEMS_100]: { kind: "consumable", gems: 100 },
+  [PRODUCTS.GEMS_500]: { kind: "consumable", gems: 500 },
+  [PRODUCTS.GEMS_1500]: { kind: "consumable", gems: 1500 },
+  [PRODUCTS.GEMS_5000]: { kind: "consumable", gems: 5000 },
 };
 
 export function lookupProduct(productId: string): CatalogEntry | null {
