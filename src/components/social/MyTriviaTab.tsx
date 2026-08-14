@@ -989,9 +989,9 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
       queryClient.invalidateQueries({ queryKey: ['quiz-posts-with-profiles'] });
       
       if (variables.newPublicState) {
-        toast.success('კონტენტი გამოქვეყნდა! 🎉');
+        toast.success('კონტენტი გამოქვეყნდა!');
       } else {
-        toast.success('კონტენტი პირადი გახდა 🔒');
+        toast.success('კონტენტი პირადი გახდა');
       }
       setPostingItemId(null);
     },

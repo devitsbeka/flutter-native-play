@@ -117,7 +117,7 @@ export function useDailyVipRewards() {
       if (error) throw error;
 
       setState(prev => ({ ...prev, powersClaimed: true }));
-      toast.success("VIP ძალები მიღებულია! ⚡");
+      toast.success("VIP ძალები მიღებულია!");
       return true;
     } catch (error) {
       console.error("Error claiming daily power-ups:", error);

@@ -836,7 +836,7 @@ export function useMissions() {
             }
           );
 
-          toast.success(`🎯 ${t("missions.completedTitle", { mission: name })}`, {
+          toast.success(t("missions.completedTitle", { mission: name }), {
             description: rewardBits ? `${t("missions.rewardLabel")}: ${rewardBits}` : undefined,
           });
         }

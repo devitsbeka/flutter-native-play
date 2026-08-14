@@ -19,6 +19,7 @@ import {
   Info,
   PartyPopper,
   Bell,
+  BellRing,
   Sparkles,
   type LucideIcon,
 } from 'lucide-react';
@@ -185,6 +186,16 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, NotificationTypeConfig> = 
     bgColor: 'bg-primary/20',
     label: 'მოგესალმებით',
     labelEn: 'Welcome',
+  },
+  // The 21st type. It is in the NotificationType union and the app sends it
+  // from the room lobby, but it had no entry here, so it was the one kind of
+  // notification that fell through to the generic bell.
+  room_ping: {
+    icon: BellRing,
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/20',
+    label: 'შეხსენება ოთახში',
+    labelEn: 'Room Ping',
   },
 };
 

@@ -242,7 +242,7 @@ export function useInAppPurchases() {
           return { success: false, error: "sync_failed" };
         }
 
-        toast.success("Purchase completed! 🎉");
+        toast.success("Purchase completed!");
         return { success: true };
       }
 
@@ -301,7 +301,7 @@ export function useInAppPurchases() {
       }
 
       if (synced.tier || synced.gemsCredited > 0) {
-        toast.success("Purchases restored! 🎉");
+        toast.success("Purchases restored!");
         return true;
       }
 

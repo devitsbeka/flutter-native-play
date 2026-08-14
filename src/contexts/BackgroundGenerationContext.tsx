@@ -287,7 +287,7 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
 
           // Always auto-apply cover without blocking popup
           onComplete?.(data.imageUrl);
-          toast.success("გარეკანი შეიქმნა! ✓");
+          toast.success("გარეკანი შეიქმნა!");
           
           // Invalidate cache so My Trivia shows latest cover image if user saved
           queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
