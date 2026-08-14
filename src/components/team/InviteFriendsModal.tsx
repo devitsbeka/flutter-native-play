@@ -25,6 +25,7 @@ import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { MAP_VIDEOS } from "@/config/videoConfig";
 import { useMissions } from "@/hooks/useMissions";
 import { PlayerProfileModal } from "@/components/profile/PlayerProfileModal";
+import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 
 interface InviteFriendsModalProps {
   isOpen: boolean;
@@ -132,7 +133,30 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     () => friends.filter(f => f.status === 'accepted'),
     [friends]
   );
-  
+
+  /**
+   * Who leads the grid: the friends already picked when this screen opened.
+   *
+   * Taken on open rather than recomputed on every tap. Sorting live would
+   * move a tile to the top the instant it is touched — out from under the
+   * finger, and taking the row you were reading with it. CreateRoomPage pins
+   * its reel the same way and for the same reason.
+   */
+  const [leadIds, setLeadIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (isOpen) setLeadIds(new Set(selectedFriends ?? []));
+    // selectedFriends is deliberately not a dependency — see above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  const orderedFriends = useMemo(() => {
+    if (leadIds.size === 0) return acceptedFriends;
+    // sort() is stable, so everyone else keeps the order they had
+    return [...acceptedFriends].sort(
+      (a, b) => (leadIds.has(b.friendId) ? 1 : 0) - (leadIds.has(a.friendId) ? 1 : 0),
+    );
+  }, [acceptedFriends, leadIds]);
+
   // Determine mode: pre-room selection vs room invite vs friend request
   const isPreRoomMode = Boolean(onFriendSelect);
   const isRoomInviteMode = Boolean(roomId);
@@ -141,6 +165,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   // thing the screen could have told you — who you already have — was the
   // thing it left out.
   const isBrowseMode = !isPreRoomMode && !isRoomInviteMode;
+  const selectedCount = selectedFriends?.size ?? 0;
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
   
   // Fetch pending outgoing friend requests on modal open
@@ -367,7 +392,9 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
 
           {/* Scrollable Content */}
           <div className="relative z-10 flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-[520px] p-4 pb-36">
+            {/* Clear the fixed footer, which is a button taller when there
+                is a "ready" to press. */}
+            <div className={`mx-auto w-full max-w-[520px] p-4 ${isPreRoomMode ? "pb-56" : "pb-36"}`}>
               <div className="space-y-[18px] sm:space-y-5">
                 {/* Search Section */}
                 <div>
@@ -548,8 +575,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                 {acceptedFriends.length > 0 && !searchQuery && (
                   <div className={`space-y-3 ${narrow}`}>
                     <p className="text-sm font-medium text-white/80 px-1">{t("extra.yourFriends")}</p>
-                    <div className="grid grid-cols-4 gap-2 max-h-[240px] overflow-y-auto">
-                      {acceptedFriends.map((friend) => {
+                    {/* Taller than it was: the screen had a third of itself
+                        empty below the share row while the grid clipped at
+                        two and a half rows. */}
+                    <div className="grid grid-cols-4 gap-2 max-h-[min(48vh,440px)] overflow-y-auto">
+                      {orderedFriends.map((friend) => {
                         const isSelected = selectedFriends?.has(friend.friendId) || false;
                         const isInvited = !isBrowseMode && sentRequests.has(friend.friendId);
                         const isInviting = invitingUser === friend.friendId;
@@ -675,6 +705,24 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                   </>
                 )}
               </motion.button>
+
+              {/* The way back, when picking friends for a room you have not
+                  created yet. The only way out used to be the back chevron in
+                  the corner, which reads as "cancel" — so the screen never
+                  said what to do once you had chosen someone. Green, because
+                  the button above it is the pale one and this is the one that
+                  finishes the job. */}
+              {isPreRoomMode && (
+                <GreenPlayButton
+                  onClick={handleClose}
+                  className="mx-auto mt-3 h-14 w-full max-w-[460px] text-base"
+                  icon={<Check className="w-5 h-5" />}
+                >
+                  {selectedCount > 0
+                    ? `${t("common.done")} · ${selectedCount}`
+                    : t("common.done")}
+                </GreenPlayButton>
+              )}
             </div>
           </div>
         </motion.div>
