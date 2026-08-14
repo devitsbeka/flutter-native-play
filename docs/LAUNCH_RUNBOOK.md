@@ -141,14 +141,29 @@ rather than a second, parallel subscription the user is now paying twice for.
 | Product ID | Type | Price | Grants |
 |---|---|---|---|
 | `io.mytrivia.adfree` | Non-consumable | your call | permanent ad removal |
-| `io.mytrivia.gems.100` | Consumable | $0.79 | 100 gems |
-| `io.mytrivia.gems.500` | Consumable | $3.19 | 500 gems |
-| `io.mytrivia.gems.1500` | Consumable | $7.99 | 1500 gems |
-| `io.mytrivia.gems.5000` | Consumable | $23.99 | 5000 gems |
+| `io.mytrivia.gems.30` | Consumable | $1.19 | 30 gems |
+| `io.mytrivia.gems.100` | Consumable | $3.59 | **111** gems |
+| `io.mytrivia.gems.300` | Consumable | $9.99 | **360** gems |
+| `io.mytrivia.gems.700` | Consumable | $19.99 | **900** gems |
 
-Gem prices mirror what the web shop already charges — see
-`src/config/gemPacks.ts`. Changing a live IAP price is far more painful than
-setting it right the first time.
+The id carries the *headline* number and the grant is the *total*, because the
+cards advertise a bonus: "100 +11", "300 +60", "700 +200". That is not a typo
+in the table — `_shared/iap.ts` credits 111/360/900, and the ids were created
+before the bonus was ever honoured.
+
+These replaced a second, contradictory ladder (100/500/1500/5000 at
+$0.79-$23.99) that the "not enough gems" modal sold at four to eight times
+more gems per dollar. Both surfaces sell these four now; see
+`src/config/gemPacks.ts`.
+
+Gem prices are what `/power-ups` already charges, and they hold to the economy
+the rest of the shop is priced against — 1 GEL = 10 gems, VIP month = 250
+gems. Changing a live IAP price is far more painful than setting it right the
+first time.
+
+If an exact price point isn't offered, take the nearest and tell me which —
+`gemPacks.ts` has to match, or the web shop and the App Store quote different
+numbers for the same pack.
 
 **Check:** seven products exist, each in state *Ready to Submit* or *Missing
 Metadata*. They stay that way until submitted alongside the first build —
@@ -378,6 +393,12 @@ duplicate build number, and it's the single most common upload failure.
 - [ ] **App Privacy nutrition labels** — must agree with
       `PrivacyInfo.xcprivacy` and with what AdMob, RevenueCat, Firebase and
       Supabase actually collect. Declare identifiers and usage data
+- [ ] **EU trader status** (**Business** → Trader Status). Since 2025 the
+      Digital Services Act requires a verified trader declaration — legal
+      name, address, phone, email — or Apple removes the app from **every EU
+      storefront**. Verification takes days, is not part of app review, and
+      fails independently of it, so start it early rather than discovering it
+      after launch
 - [ ] **Age rating** questionnaire — expect 12+ given ads and social features
 - [ ] **Sign-in required** → yes → provide a **demo account** with credentials
       in App Review notes. A reviewer who cannot get past the login screen
