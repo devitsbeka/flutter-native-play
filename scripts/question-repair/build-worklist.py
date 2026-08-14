@@ -218,6 +218,7 @@ FORCE_RETIRE = {
     'ba2e634c': 'third copy of the Arctic tern migration question',
     'c2177df2': 'same paradox question as 76c15b35, with a filler adverb in the stem',
     'b6ce32d3': 'same question as 93946f4b (eight glasses of water a day)',
+    'e84d5750': 'same question as e4fc3ad4 (first US telephone patent)',
 }
 
 retire = {}
