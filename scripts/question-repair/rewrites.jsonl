@@ -524,95 +524,251 @@
 {"id": "c4bc5efd", "q": "Which feedback loop keeps a system stable?"}
 {"id": "c527a4f3", "q": "Where is the Fibonacci sequence most famously seen in nature?", "c": "Sunflower seed heads", "w": ["Bird migration paths", "Fish scale patterns", "Tree bark texture"]}
 {"id": "7554f433", "q": "Which US tech firm had the most global offices in 2023?"}
-{"id":"905fda73","q":"Roughly how many digits has the largest computed Fibonacci number?","c":"Over 485 million","w":["Over 485 thousand","Over 485 billion","Over 4.85 million"]}
-{"id":"c53bcb8e","q":"Which material absorbs impact inside a football helmet?","c":"Polypropylene foam","w":["Solid rubber blocks","Compressed cotton","Moulded fibreglass"]}
-{"id":"c588f3f2","q":"Which robotic surgery system spread through hospitals after 2005?","c":"The da Vinci system","w":["The Mako system","The Rosa system","The Versius system"]}
-{"id":"c5f99320","q":"Which church, begun in 1882, is still unfinished today?"}
-{"id":"c82ba537","q":"What destroyed most of Krakatoa in the 1883 eruption?","c":"Caldera collapse","w":["A lava flood","A landslide","An earthquake"]}
-{"id":"c8bd55ef","q":"Who died in the 2016 Tesla Autopilot crash?"}
-{"id":"c9ed1ceb","q":"Which crumbly dessert flew only on Apollo 7?"}
-{"id":"ca9e4f9e","q":"Which 2007 video gave us a cat playing an instrument?"}
-{"id":"cac307fa","q":"Which US civilian honour went to Angela Merkel in 2022?","c":"Medal of Freedom","w":["Congressional Gold Medal","Legion of Merit","National Humanities Medal"]}
-{"id":"cb0ac120","q":"Which assembly, founded in 930 AD, is the oldest parliament?","c":"The Althing","w":["The Witenagemot","The Tynwald","The Storting"]}
-{"id":"cd007471","q":"Which North American bird rebounded from near extinction?"}
-{"id":"cd112053","q":"Which tactic to bury a story usually spreads it further?","c":"A cease and desist","w":["A press statement","A paid apology","A staged interview"]}
-{"id":"cd6710e5","q":"Which space business became routine in the 2010s?","c":"Private orbital launch","w":["Asteroid mining","Space tourism hotels","Lunar cargo runs"]}
-{"id":"cf94ea62","q":"Which Olympics did the US boycott over Afghanistan?","c":"Moscow 1980","w":["Munich 1972","Montreal 1976","Los Angeles 1984"]}
-{"id":"d0326c23","q":"What is the distinctive writing style of internet memes called?"}
-{"id":"d13468e1","q":"Which Mississippi Delta genre uses 12-bar form and blue notes?"}
-{"id":"d1d2941e","q":"Which feature most drove content discovery for influencers?"}
-{"id":"d2259532","q":"Who wrote 1755's 'A Dictionary of the English Language'?"}
-{"id":"d287f345","q":"Which mobile network generation has the highest peak speed?"}
-{"id":"d301e98c","q":"Which merchandise fills the most floor space at anime cons?","c":"Figures and statues","w":["Posters and prints","Manga volumes","Cosplay costumes"]}
-{"id":"d3170578","q":"Which scan shows brain activity via blood flow changes?"}
-{"id":"d4a73718","q":"Which fictional archetype is Nikola Tesla said to inspire?"}
-{"id":"d5b432c5","q":"Which battle royale launched free-to-play in 2020?","c":"Warzone","w":["Apex Legends","Fortnite","PUBG"]}
-{"id":"d6633420","q":"What controversy follows rewilding with apex predators?","c":"Livestock losses","w":["Soil depletion","Water shortages","Tourist crowding"]}
-{"id":"d845d21f","q":"Which ocean carries the most undersea internet cables?"}
-{"id":"d8734379","q":"Which probability distribution is a symmetric bell curve?"}
-{"id":"d92d6fe2","q":"Which Slavic god of thunder is compared to Thor?"}
-{"id":"d9424770","q":"Which deep-sea sediment is made of microscopic remains?"}
-{"id":"da5dbb62","q":"How did logical positivism treat metaphysical statements?","c":"As meaningless","w":["As certainly true","As merely unproven","As purely aesthetic"]}
-{"id":"db16faf9","q":"How are plants primarily classified by reproduction?","c":"Spore or seed bearing","w":["Tall or short growing","Wet or dry dwelling","Green or brown leaved"]}
-{"id":"db6cdf57","q":"Which region wins the most major esports world titles?"}
-{"id":"dbcd95b0","q":"Which US society works to preserve indigenous languages?","c":"Linguistic Society","w":["Modern Language Assn","National Endowment","American Folklore Society"]}
-{"id":"dd165c0c","q":"What does the Latin word 'patiens' literally mean?"}
-{"id":"deec54a5","q":"Which social platform began as a photo-sharing app?"}
-{"id":"defabc15","q":"Which honour did Paul Krugman receive in 2008?","c":"The Nobel in economics","w":["The Fields Medal","The Pulitzer Prize","The Turing Award"]}
-{"id":"e07815c5","q":"Which numbers did Descartes dismiss as 'fictitious'?"}
-{"id":"e0d58560","q":"Which body unites national geographical societies?","c":"The IGU","w":["The IUCN","UNESCO","The RGS"]}
-{"id":"e1b53c02","q":"What does regular balance training improve?","c":"Proprioception","w":["Lung capacity","Bone density","Blood pressure"]}
-{"id":"e20f370b","q":"What did Jung call symbols from the collective unconscious?"}
-{"id":"e26516ff","q":"What is it called when a model learns its training data too well?","c":"Overfitting","w":["Underfitting","Regularisation","Normalisation"]}
-{"id":"e4601b30","q":"What are the three main branches of Christianity?","c":"Catholic, Orthodox, Protestant","w":["Latin, Greek, Coptic","Roman, Anglican, Baptist","Eastern, Western, Southern"]}
-{"id":"e4eff996","q":"Why do sugar-free fizzy drinks still harm teeth?","c":"Acid erodes enamel","w":["Sugar feeds bacteria","Bubbles scratch teeth","Cold cracks the enamel"]}
-{"id":"e5833839","q":"Which 1982 legal drama earned Paul Newman an Oscar nod?"}
-{"id":"e5e24300","q":"Which biodiverse islands are a UNESCO World Heritage Site?","c":"The Galapagos","w":["The Canaries","The Azores","The Maldives"]}
-{"id":"e626ebbd","q":"How do 24-hour news cycles affect crisis diplomacy?","c":"They rush decisions","w":["They slow decisions","They have no effect","They hide the crisis"]}
-{"id":"e6a76382","q":"Which mechanism drives cross-sensitisation in addiction?","c":"Dopamine sensitising","w":["Serotonin depletion","Cortisol suppression","Insulin resistance"]}
-{"id":"e6d66da2","q":"Which continent produces Kente cloth and Kuba textiles?"}
-{"id":"e7252f99","q":"How does science assess the safety of genetic engineering?","c":"Case by case","w":["Always fully safe","Always too risky","It is never assessed"]}
-{"id":"e72b4bcb","q":"Who invented the Audion, the first triode vacuum tube?"}
-{"id":"e79964b8","q":"Which recorded eruption had the highest explosivity index?","c":"Tambora, 1815","w":["Krakatoa, 1883","Vesuvius, 79 AD","Pinatubo, 1991"]}
-{"id":"e7dc52eb","q":"Which US primetime drama has run the most seasons?","c":"Law & Order: SVU","w":["Grey's Anatomy","NCIS","ER"]}
-{"id":"e8ee2e87","q":"What most held back the California condor's recovery?","c":"Lead poisoning","w":["Habitat loss","Egg collectors","Wind turbines"]}
-{"id":"e8f31302","q":"How is a soccer team's formation usually written?","c":"As numbers, like 4-4-2","w":["As letters, like A-B-C","As a diagram only","As player names"]}
-{"id":"e9254871","q":"Which invasive toxic plant plagued the Sochi 2014 build?"}
-{"id":"e946c8ac","q":"In which empire did Romance languages grow from Latin?"}
-{"id":"e96872ba","q":"Which river dolphin was declared functionally extinct in 2006?","c":"The Baiji","w":["The Vaquita","The Boto","The Susu"]}
-{"id":"e9aa3353","q":"What harm is most linked to the rise of 'stan culture'?","c":"Online pile-ons","w":["Falling album sales","Fewer concert tours","Weaker fan clubs"]}
-{"id":"ea662cb3","q":"How do insect colonies coordinate tasks collectively?","c":"Stigmergy","w":["Direct orders","Majority voting","Random assignment"]}
-{"id":"eb099d8e","q":"Which is the world's oldest continuously running restaurant?"}
-{"id":"ec009dc4","q":"In Euler's formula, what does the constant 'e' stand for?","c":"About 2.718","w":["About 3.142","About 1.618","About 1.414"]}
-{"id":"ec3f1d25","q":"What is the core gameplay loop of Animal Crossing?","c":"Gathering and crafting","w":["Combat and levelling","Racing and drifting","Puzzles and riddles"]}
-{"id":"ec937776","q":"Who built the first flush toilet for Elizabeth I in 1596?"}
-{"id":"ed10472d","q":"What metric shows how rare a Steam achievement is?","c":"Its unlock rate","w":["Its point value","Its release date","Its icon colour"]}
-{"id":"ed46a545","q":"Which platform passed one billion users between 2010 and 2015?"}
-{"id":"edaa73d4","q":"Which sheep breed gives the finest wool for fine garments?"}
-{"id":"ef4da4d1","q":"Which park turned an elevated railway into public space?","c":"The High Line","w":["Central Park","Bryant Park","Battery Park"]}
-{"id":"ef5d7928","q":"What process forms stalactites in limestone caves?"}
-{"id":"ef6956b2","q":"What did the 2016 death of Harambe mainly spark online?","c":"A viral meme","w":["A funding drive","A zoo boycott","A policy petition"]}
-{"id":"ef6c533d","q":"What did Matt Furie originally intend Pepe the Frog to be?"}
-{"id":"efe4db59","q":"Which luxury textile surged in price in 2021 and 2022?"}
-{"id":"efedbc00","q":"Which Roman city did Vesuvius bury in ash in 79 AD?"}
-{"id":"f002abdb","q":"Who won a Fields Medal for work on modular forms?"}
-{"id":"f03592a8","q":"Which Pyongyang skyscraper has stood empty since 1992?"}
-{"id":"f0c14f66","q":"Which San Francisco tower began leaning as it settled?"}
-{"id":"f0d00105","q":"Which 2019 platformer fakes a remaster of a 1987 game?","c":"The Eternal Castle","w":["Shovel Knight","Celeste","Katana Zero"]}
-{"id":"f1a12c15","q":"Which 2018 Johnny Depp film drew boycott calls?","c":"Crimes of Grindelwald","w":["Murder on the Orient Express","Sherlock Gnomes","City of Lies"]}
-{"id":"f1d61d49","q":"What did Nietzsche urge doing to existing moral systems?","c":"Revalue all values","w":["Codify all values","Abolish all values","Restore old values"]}
-{"id":"f2930b9d","q":"Which Chanel and Fendi designer made dozens of collections yearly?"}
-{"id":"f45425bf","q":"Which tool renders three-dimensional geometric equations?","c":"3D graphing software","w":["A spreadsheet","A word processor","A photo editor"]}
-{"id":"f492143a","q":"Which large African animal kills the most people each year?"}
-{"id":"f58d40d4","q":"Which vaccine was the first widely distributed in the US?"}
-{"id":"f5b42bcb","q":"Which region's dialect underlies Standard Mandarin?"}
-{"id":"f6255d66","q":"Roughly how many casualties fell at the Battle of the Somme?","c":"1.1 million","w":["110 thousand","11 million","300 thousand"]}
-{"id":"f6465998","q":"Which author received the Cervantes Prize for literature?"}
-{"id":"f6963cbf","q":"Which theologian behind 'Reverence for Life' won a Nobel?"}
-{"id":"f7485b67","q":"What would make Star Trek photon torpedoes miss at range?","c":"Light's finite speed","w":["Solar wind drift","Magnetic interference","Gravity from stars"]}
-{"id":"f7bd0729","q":"Which was in the original 1999 emoji set by Shigetaka Kurita?"}
-{"id":"f95c03aa","q":"Which act sets the US presidential line of succession?","c":"The Succession Act","w":["The Electoral Count Act","The Hatch Act","The Judiciary Act"]}
-{"id":"f99ba0e9","q":"Which empire used quarantine lines in the Justinian Plague?"}
-{"id":"fcb15bc1","q":"What edge can quantum algorithms have in factoring?","c":"Exponential speedup","w":["Perfect accuracy","Lower memory use","Unlimited precision"]}
-{"id":"fda89d56","q":"Which artifact system did Christian Thomsen develop?"}
-{"id":"fea0694a","q":"Which constant is a circle's circumference over its diameter?"}
+{"id": "905fda73", "q": "Roughly how many digits has the largest computed Fibonacci number?", "c": "Over 485 million", "w": ["Over 485 thousand", "Over 485 billion", "Over 4.85 million"]}
+{"id": "c53bcb8e", "q": "Which material absorbs impact inside a football helmet?", "c": "Polypropylene foam", "w": ["Solid rubber blocks", "Compressed cotton", "Moulded fibreglass"]}
+{"id": "c588f3f2", "q": "Which robotic surgery system spread through hospitals after 2005?", "c": "The da Vinci system", "w": ["The Mako system", "The Rosa system", "The Versius system"]}
+{"id": "c5f99320", "q": "Which church, begun in 1882, is still unfinished today?"}
+{"id": "c82ba537", "q": "What destroyed most of Krakatoa in the 1883 eruption?", "c": "Caldera collapse", "w": ["A lava flood", "A landslide", "An earthquake"]}
+{"id": "c8bd55ef", "q": "Who died in the 2016 Tesla Autopilot crash?"}
+{"id": "c9ed1ceb", "q": "Which crumbly dessert flew only on Apollo 7?"}
+{"id": "ca9e4f9e", "q": "Which 2007 video gave us a cat playing an instrument?"}
+{"id": "cac307fa", "q": "Which US civilian honour went to Angela Merkel in 2022?", "c": "Medal of Freedom", "w": ["Congressional Gold Medal", "Legion of Merit", "National Humanities Medal"]}
+{"id": "cb0ac120", "q": "Which assembly, founded in 930 AD, is the oldest parliament?", "c": "The Althing", "w": ["The Witenagemot", "The Tynwald", "The Storting"]}
+{"id": "cd007471", "q": "Which North American bird rebounded from near extinction?"}
+{"id": "cd112053", "q": "Which tactic to bury a story usually spreads it further?", "c": "A cease and desist", "w": ["A press statement", "A paid apology", "A staged interview"]}
+{"id": "cd6710e5", "q": "Which space business became routine in the 2010s?", "c": "Private orbital launch", "w": ["Asteroid mining", "Space tourism hotels", "Lunar cargo runs"]}
+{"id": "cf94ea62", "q": "Which Olympics did the US boycott over Afghanistan?", "c": "Moscow 1980", "w": ["Munich 1972", "Montreal 1976", "Los Angeles 1984"]}
+{"id": "d0326c23", "q": "What is the distinctive writing style of internet memes called?"}
+{"id": "d13468e1", "q": "Which Mississippi Delta genre uses 12-bar form and blue notes?"}
+{"id": "d1d2941e", "q": "Which feature most drove content discovery for influencers?"}
+{"id": "d2259532", "q": "Who wrote 1755's 'A Dictionary of the English Language'?"}
+{"id": "d287f345", "q": "Which mobile network generation has the highest peak speed?"}
+{"id": "d301e98c", "q": "Which merchandise fills the most floor space at anime cons?", "c": "Figures and statues", "w": ["Posters and prints", "Manga volumes", "Cosplay costumes"]}
+{"id": "d3170578", "q": "Which scan shows brain activity via blood flow changes?"}
+{"id": "d4a73718", "q": "Which fictional archetype is Nikola Tesla said to inspire?"}
+{"id": "d5b432c5", "q": "Which battle royale launched free-to-play in 2020?", "c": "Warzone", "w": ["Apex Legends", "Fortnite", "PUBG"]}
+{"id": "d6633420", "q": "What controversy follows rewilding with apex predators?", "c": "Livestock losses", "w": ["Soil depletion", "Water shortages", "Tourist crowding"]}
+{"id": "d845d21f", "q": "Which ocean carries the most undersea internet cables?"}
+{"id": "d8734379", "q": "Which probability distribution is a symmetric bell curve?"}
+{"id": "d92d6fe2", "q": "Which Slavic god of thunder is compared to Thor?"}
+{"id": "d9424770", "q": "Which deep-sea sediment is made of microscopic remains?"}
+{"id": "da5dbb62", "q": "How did logical positivism treat metaphysical statements?", "c": "As meaningless", "w": ["As certainly true", "As merely unproven", "As purely aesthetic"]}
+{"id": "db16faf9", "q": "How are plants primarily classified by reproduction?", "c": "Spore or seed bearing", "w": ["Tall or short growing", "Wet or dry dwelling", "Green or brown leaved"]}
+{"id": "db6cdf57", "q": "Which region wins the most major esports world titles?"}
+{"id": "dbcd95b0", "q": "Which US society works to preserve indigenous languages?", "c": "Linguistic Society", "w": ["Modern Language Assn", "National Endowment", "American Folklore Society"]}
+{"id": "dd165c0c", "q": "What does the Latin word 'patiens' literally mean?"}
+{"id": "deec54a5", "q": "Which social platform began as a photo-sharing app?"}
+{"id": "defabc15", "q": "Which honour did Paul Krugman receive in 2008?", "c": "The Nobel in economics", "w": ["The Fields Medal", "The Pulitzer Prize", "The Turing Award"]}
+{"id": "e07815c5", "q": "Which numbers did Descartes dismiss as 'fictitious'?"}
+{"id": "e0d58560", "q": "Which body unites national geographical societies?", "c": "The IGU", "w": ["The IUCN", "UNESCO", "The RGS"]}
+{"id": "e1b53c02", "q": "What does regular balance training improve?", "c": "Proprioception", "w": ["Lung capacity", "Bone density", "Blood pressure"]}
+{"id": "e20f370b", "q": "What did Jung call symbols from the collective unconscious?"}
+{"id": "e26516ff", "q": "What is it called when a model learns its training data too well?", "c": "Overfitting", "w": ["Underfitting", "Regularisation", "Normalisation"]}
+{"id": "e4601b30", "q": "What are the three main branches of Christianity?", "c": "Catholic, Orthodox, Protestant", "w": ["Latin, Greek, Coptic", "Roman, Anglican, Baptist", "Eastern, Western, Southern"]}
+{"id": "e4eff996", "q": "Why do sugar-free fizzy drinks still harm teeth?", "c": "Acid erodes enamel", "w": ["Sugar feeds bacteria", "Bubbles scratch teeth", "Cold cracks the enamel"]}
+{"id": "e5833839", "q": "Which 1982 legal drama earned Paul Newman an Oscar nod?"}
+{"id": "e5e24300", "q": "Which biodiverse islands are a UNESCO World Heritage Site?", "c": "The Galapagos", "w": ["The Canaries", "The Azores", "The Maldives"]}
+{"id": "e626ebbd", "q": "How do 24-hour news cycles affect crisis diplomacy?", "c": "They rush decisions", "w": ["They slow decisions", "They have no effect", "They hide the crisis"]}
+{"id": "e6a76382", "q": "Which mechanism drives cross-sensitisation in addiction?", "c": "Dopamine sensitising", "w": ["Serotonin depletion", "Cortisol suppression", "Insulin resistance"]}
+{"id": "e6d66da2", "q": "Which continent produces Kente cloth and Kuba textiles?"}
+{"id": "e7252f99", "q": "How does science assess the safety of genetic engineering?", "c": "Case by case", "w": ["Always fully safe", "Always too risky", "It is never assessed"]}
+{"id": "e72b4bcb", "q": "Who invented the Audion, the first triode vacuum tube?"}
+{"id": "e79964b8", "q": "Which recorded eruption had the highest explosivity index?", "c": "Tambora, 1815", "w": ["Krakatoa, 1883", "Vesuvius, 79 AD", "Pinatubo, 1991"]}
+{"id": "e7dc52eb", "q": "Which US primetime drama has run the most seasons?", "c": "Law & Order: SVU", "w": ["Grey's Anatomy", "NCIS", "ER"]}
+{"id": "e8ee2e87", "q": "What most held back the California condor's recovery?", "c": "Lead poisoning", "w": ["Habitat loss", "Egg collectors", "Wind turbines"]}
+{"id": "e8f31302", "q": "How is a soccer team's formation usually written?", "c": "As numbers, like 4-4-2", "w": ["As letters, like A-B-C", "As a diagram only", "As player names"]}
+{"id": "e9254871", "q": "Which invasive toxic plant plagued the Sochi 2014 build?"}
+{"id": "e946c8ac", "q": "In which empire did Romance languages grow from Latin?"}
+{"id": "e96872ba", "q": "Which river dolphin was declared functionally extinct in 2006?", "c": "The Baiji", "w": ["The Vaquita", "The Boto", "The Susu"]}
+{"id": "e9aa3353", "q": "What harm is most linked to the rise of 'stan culture'?", "c": "Online pile-ons", "w": ["Falling album sales", "Fewer concert tours", "Weaker fan clubs"]}
+{"id": "ea662cb3", "q": "How do insect colonies coordinate tasks collectively?", "c": "Stigmergy", "w": ["Direct orders", "Majority voting", "Random assignment"]}
+{"id": "eb099d8e", "q": "Which is the world's oldest continuously running restaurant?"}
+{"id": "ec009dc4", "q": "In Euler's formula, what does the constant 'e' stand for?", "c": "About 2.718", "w": ["About 3.142", "About 1.618", "About 1.414"]}
+{"id": "ec3f1d25", "q": "What is the core gameplay loop of Animal Crossing?", "c": "Gathering and crafting", "w": ["Combat and levelling", "Racing and drifting", "Puzzles and riddles"]}
+{"id": "ec937776", "q": "Who built the first flush toilet for Elizabeth I in 1596?"}
+{"id": "ed10472d", "q": "What metric shows how rare a Steam achievement is?", "c": "Its unlock rate", "w": ["Its point value", "Its release date", "Its icon colour"]}
+{"id": "ed46a545", "q": "Which platform passed one billion users between 2010 and 2015?"}
+{"id": "edaa73d4", "q": "Which sheep breed gives the finest wool for fine garments?"}
+{"id": "ef4da4d1", "q": "Which park turned an elevated railway into public space?", "c": "The High Line", "w": ["Central Park", "Bryant Park", "Battery Park"]}
+{"id": "ef5d7928", "q": "What process forms stalactites in limestone caves?"}
+{"id": "ef6956b2", "q": "What did the 2016 death of Harambe mainly spark online?", "c": "A viral meme", "w": ["A funding drive", "A zoo boycott", "A policy petition"]}
+{"id": "ef6c533d", "q": "What did Matt Furie originally intend Pepe the Frog to be?"}
+{"id": "efe4db59", "q": "Which luxury textile surged in price in 2021 and 2022?"}
+{"id": "efedbc00", "q": "Which Roman city did Vesuvius bury in ash in 79 AD?"}
+{"id": "f002abdb", "q": "Who won a Fields Medal for work on modular forms?"}
+{"id": "f03592a8", "q": "Which Pyongyang skyscraper has stood empty since 1992?"}
+{"id": "f0c14f66", "q": "Which San Francisco tower began leaning as it settled?"}
+{"id": "f0d00105", "q": "Which 2019 platformer fakes a remaster of a 1987 game?", "c": "The Eternal Castle", "w": ["Shovel Knight", "Celeste", "Katana Zero"]}
+{"id": "f1a12c15", "q": "Which 2018 Johnny Depp film drew boycott calls?", "c": "Crimes of Grindelwald", "w": ["Murder on the Orient Express", "Sherlock Gnomes", "City of Lies"]}
+{"id": "f1d61d49", "q": "What did Nietzsche urge doing to existing moral systems?", "c": "Revalue all values", "w": ["Codify all values", "Abolish all values", "Restore old values"]}
+{"id": "f2930b9d", "q": "Which Chanel and Fendi designer made dozens of collections yearly?"}
+{"id": "f45425bf", "q": "Which tool renders three-dimensional geometric equations?", "c": "3D graphing software", "w": ["A spreadsheet", "A word processor", "A photo editor"]}
+{"id": "f492143a", "q": "Which large African animal kills the most people each year?"}
+{"id": "f58d40d4", "q": "Which vaccine was the first widely distributed in the US?"}
+{"id": "f5b42bcb", "q": "Which region's dialect underlies Standard Mandarin?"}
+{"id": "f6255d66", "q": "Roughly how many casualties fell at the Battle of the Somme?", "c": "1.1 million", "w": ["110 thousand", "11 million", "300 thousand"]}
+{"id": "f6465998", "q": "Which author received the Cervantes Prize for literature?"}
+{"id": "f6963cbf", "q": "Which theologian behind 'Reverence for Life' won a Nobel?"}
+{"id": "f7485b67", "q": "What would make Star Trek photon torpedoes miss at range?", "c": "Light's finite speed", "w": ["Solar wind drift", "Magnetic interference", "Gravity from stars"]}
+{"id": "f7bd0729", "q": "Which was in the original 1999 emoji set by Shigetaka Kurita?"}
+{"id": "f95c03aa", "q": "Which act sets the US presidential line of succession?", "c": "The Succession Act", "w": ["The Electoral Count Act", "The Hatch Act", "The Judiciary Act"]}
+{"id": "f99ba0e9", "q": "Which empire used quarantine lines in the Justinian Plague?"}
+{"id": "fcb15bc1", "q": "What edge can quantum algorithms have in factoring?", "c": "Exponential speedup", "w": ["Perfect accuracy", "Lower memory use", "Unlimited precision"]}
+{"id": "fda89d56", "q": "Which artifact system did Christian Thomsen develop?"}
+{"id": "fea0694a", "q": "Which constant is a circle's circumference over its diameter?"}
+{"id": "00794a2c", "c": "An opening arc", "w": ["A dashed line", "Coloured arrows", "Numbered labels"]}
+{"id": "008159e6", "c": "TV is far faster", "w": ["About the same", "Real police faster", "TV slightly faster"]}
+{"id": "009b5d3f", "c": "Plants and sediment", "w": ["Chemical oxidation", "Bacterial evaporation", "Light absorption"]}
+{"id": "0166883f", "c": "No, no link found", "w": ["Yes, glucose spikes", "Yes, it stimulates", "Yes, dopamine surges"], "q": "Does eating sugar make children hyperactive?"}
+{"id": "01e3e80c", "c": "Mountains and islands", "w": ["Plains and valleys", "Deserts and steppes", "Tropical rainforest"]}
+{"id": "01f6bf51", "c": "McKayla Not Impressed", "w": ["Expanding Brain", "Drake Approval", "Distracted Boyfriend"]}
+{"id": "022e8d28", "c": "Doric, Ionic, Corinthian", "w": ["Gold, silver, bronze", "Spring, summer, fall", "North, south, east"]}
+{"id": "0259645a", "c": "Through fungal threads", "w": ["Root-to-root contact", "Spore distribution", "Soil conductivity"]}
+{"id": "029cb24b", "c": "Warm air condenses", "w": ["Cold air freezes it", "Glass absorbs water", "The frame sweats"]}
+{"id": "02c25c27", "c": "Conductor to insulator", "w": ["Magnetic to diamagnetic", "Elastic to brittle", "Dense to hollow"]}
+{"id": "03187c49", "c": "Kalahari Reserve", "w": ["Serengeti Park", "Kruger Park", "Atlas Mountains"]}
+{"id": "03a2c722", "c": "Fundamental interactions", "w": ["Newton's hierarchy", "The Planck force scale", "The Einstein model"], "q": "What are gravity, electromagnetism and the nuclear forces called?"}
+{"id": "03c2c3a4", "c": "Formal, natural, social", "w": ["Dewey decimal classes", "Academic departments", "Industrial standards"]}
+{"id": "046217db", "c": "Quinine from cinchona", "w": ["Oak bark extract", "Birch bark tar", "Maple sap syrup"]}
+{"id": "0474f07c", "c": "They shift behaviour", "w": ["They make oxygen", "They never change", "They are random"], "q": "How does the gut microbiome affect its host?"}
+{"id": "049cfb4c", "c": "Arthritis was common", "w": ["Their bones were perfect", "No bone disease existed", "Only violence killed them"]}
+{"id": "049e33ff", "c": "Formal and informal", "w": ["Common and rare", "Ancient and modern", "Written and spoken"]}
+{"id": "056f3a56", "q": "Which APA award did B.F. Skinner receive in 1958?", "c": "Distinguished Scientist", "w": ["A Nobel nomination", "Lifetime Achievement", "Medal of Freedom"]}
+{"id": "061acd02", "c": "It grips the surface", "w": ["It lowers foot pressure", "It stops heat building", "It absorbs the impact"]}
+{"id": "0620db00", "c": "Mass choreography", "w": ["Abstract expressionism", "Cubist composition", "Surrealist imagery"], "q": "Which technique defined the 2008 Beijing opening ceremony?"}
+{"id": "06d9047c", "c": "Place, manner, voicing", "w": ["Pitch and tone level", "Syllable structure", "Lexical stress"]}
+{"id": "06ef3b04", "c": "Changes to files", "w": ["Server performance", "User login history", "Application logs"]}
+{"id": "077fa815", "c": "Earth's axial tilt", "w": ["Air density shifts", "The Moon's orbit", "Rising solar output"]}
+{"id": "092fbd28", "c": "No, none at all", "w": ["Yes, definitely", "Yes, if refined", "Yes, in large amounts"]}
+{"id": "0a3dadfa", "q": "Who first mapped the Nile's source for Europe?", "c": "John Hanning Speke", "w": ["David Livingstone", "Henry Morton Stanley", "Richard Francis Burton"]}
+{"id": "0b2afc99", "c": "NGC 1052-DF2", "w": ["Andromeda's rotation", "The Milky Way bulge", "Triangulum's glow"]}
+{"id": "0b77c430", "c": "It humbles people", "w": ["It raises anxiety", "It sharpens eyesight", "It builds maths skill"], "q": "What effect does looking at the night sky have on people?"}
+{"id": "0b937372", "c": "Experience", "w": ["Empire or rule", "Emotion or feeling", "Eternity or lasting"]}
+{"id": "0bbf46bf", "c": "Time flows uniformly", "w": ["Time is circular", "Time is an illusion", "Only gravity bends it"]}
+{"id": "0c3ba89d", "c": "Encryption and privacy", "w": ["Malware prevention", "Speed optimisation", "Extra bandwidth"]}
+{"id": "0c9431a1", "c": "Watch on demand", "w": ["Fixed schedules", "Cinema-only releases", "A small catalogue"]}
+{"id": "0caea685", "c": "Greek for clot", "w": ["Latin for heart", "Arabic for pulse", "Germanic for blood"]}
+{"id": "0cb5bb25", "c": "Trapped coal smoke", "w": ["A chemical release", "An industrial fire", "Vehicle exhaust"]}
+{"id": "0d15a76f", "c": "No bounds check", "w": ["SQL injection", "Cross-site scripting", "A man in the middle"]}
+{"id": "0d731c01", "c": "Yes, BRCA predicts it", "w": ["Genes predict nothing", "Sequencing cannot work", "All genes are alike"]}
+{"id": "0e2ccf50", "c": "Efficient packing", "w": ["Random patterns", "Divine design", "Mathematical accident"]}
+{"id": "0e93df90", "c": "Philadelphia", "w": ["Boston", "New York", "Washington DC"]}
+{"id": "0f44f0ad", "c": "Do not do this", "w": ["Extra durable", "Professional clean", "Experimental fabric"]}
+{"id": "0f9162e1", "c": "Mixed, not all dark", "w": ["Entirely dark", "Fully enlightened", "Wholly without progress"]}
+{"id": "10f56d08", "q": "What post did Henrietta Leavitt hold at Harvard Observatory?", "c": "Curator of Photographs", "w": ["Director of Research", "Chief Astronomer", "Head of Calculations"]}
+{"id": "122caa95", "c": "Volcanic ash concrete", "w": ["Plain lime mortar", "Natural bitumen", "Baked clay paste"]}
+{"id": "123f5771", "c": "No, scholars knew", "w": ["Yes, everyone did", "Yes, until Columbus", "Yes, all through it"]}
+{"id": "1276c403", "c": "Europe to America", "w": ["Asia to Africa", "South to Australia", "East Europe to Asia"]}
+{"id": "129c40f2", "c": "Varied by temperature", "w": ["Always plain white", "Only red or blue", "They change nightly"]}
+{"id": "12e97454", "c": "General relativity", "w": ["Newton's gravity law", "Kepler's observations", "Galileo's telescope"]}
+{"id": "13049fb8", "c": "Ice is less dense", "w": ["Bonds repel gravity", "Air pockets lift it", "Cold reverses weight"]}
+{"id": "134e3641", "c": "M*A*S*H", "w": ["Game of Thrones", "Breaking Bad", "Friends"]}
+{"id": "13c4128c", "c": "The GameStop squeeze", "w": ["The Dogecoin surge", "TikTok stock tipsters", "A 4chan forum raid"]}
+{"id": "13ff6c09", "c": "It equals its divisors", "w": ["Divisible by 1 and itself", "It has even divisors", "Its digits sum to a prime"]}
+{"id": "140f77ea", "c": "They build up in fish", "w": ["They stay in water", "They dissolve away", "They repel organisms"]}
+{"id": "1438bb00", "c": "It shortens the throw", "w": ["It lengthens the flight", "It lifts the javelin", "It pushes it forward"], "q": "How does air resistance affect how far a javelin flies?"}
+{"id": "147344df", "c": "All would be explained", "w": ["It would end at five", "No flashbacks at all", "A real island setting"]}
+{"id": "16177a94", "c": "Geim and Novoselov", "w": ["Heck and Negishi", "Curl and Kroto", "Alder and Diels"]}
+{"id": "167d329f", "c": "Patients seem dangerous", "w": ["They portray it well", "They reduce stigma", "They match the manual"]}
+{"id": "16cef178", "c": "Synchronous or not", "w": ["Ephemeral or lasting", "One-to-many or many", "Public or private"], "q": "Which terms split live from delayed digital communication?"}
+{"id": "19aab468", "c": "Natural dyes died out", "w": ["Wool demand rose", "Pigments were banned", "New mills opened"]}
+{"id": "19c6afcb", "c": "The point below you", "w": ["The highest sky point", "The celestial pole", "The Sun's direction"]}
+{"id": "1a2b7839", "c": "A government ministry", "w": ["The Cairo bureau", "A heritage council", "A preservation board"]}
+{"id": "1a620a3e", "c": "They can aid survival", "w": ["All mutations help", "It is pure chance", "The habitat prefers it"]}
+{"id": "1b3ad75a", "c": "A circle at the input", "w": ["A pointing triangle", "A square bracket", "An asterisk"], "q": "Which symbol marks a function block's 'Enable' input?"}
+{"id": "1bd8146d", "q": "What is the central subject of 'The Office'?", "c": "Office life", "w": ["Hospital emergencies", "Police investigations", "Restaurant kitchens"]}
+{"id": "1c5bdb9b", "c": "Largely exaggerated", "w": ["Yes, and dangerously", "Only in hot climates", "Never, a pure myth"]}
+{"id": "1c987efd", "c": "Distorted reality", "w": ["Objective events", "Linear structure", "Consistent characters"]}
+{"id": "1ce7ec7e", "c": "Proto-Indo-European", "w": ["Ancient Egyptian", "Mesopotamian", "Mesoamerican"]}
+{"id": "1d0bba52", "c": "They rise together", "w": ["They move opposite", "They are unrelated", "They vary randomly"]}
+{"id": "1d3d778f", "c": "Collective decisions", "w": ["Hierarchical command", "Territorial conflict", "Individual autonomy"]}
+{"id": "1de82c1c", "c": "No, they see some", "w": ["Yes, none at all", "True for all breeds", "Only when puppies"]}
+{"id": "1e192585", "c": "Light against shadow", "w": ["A type of paint", "An architectural style", "A Renaissance period"]}
+{"id": "1e795d77", "c": "The voting machine", "w": ["The paper ballot", "The lever machine", "The punch card"]}
+{"id": "1eedf30e", "c": "Arabian oryx revival", "w": ["Dodo resurrection", "Passenger pigeon return", "Thylacine revival"]}
+{"id": "0d9871fa", "c": "Structured Query", "w": ["Simple Query", "Standard Query", "System Query"]}
+{"id": "0e256a07", "c": "Private big cats", "w": ["Rare reptiles", "Exotic birds", "Pet primates"]}
+{"id": "115b22ab", "c": "Cuvier's beaked whale", "w": ["The sperm whale", "The Weddell seal", "The walrus"], "q": "Which marine mammal holds the longest recorded dive?"}
+{"id": "1358d9f4", "c": "Rousseau", "w": ["Thomas Hobbes", "John Locke", "Montesquieu"], "q": "Which philosopher wrote 'The Social Contract'?"}
+{"id": "1bf1c85d", "c": "Hindu-Arabic", "w": ["Roman numerals", "Babylonian", "Egyptian"], "q": "Which numeral system gave us positional decimal notation?"}
+{"id": "1cc3a9a3", "c": "Universal Transverse Mercator", "w": ["United Tactical Mapping", "Universal Targeting Mark", "Upper Terrain Measurement"]}
+{"id": "1cf2eec3", "c": "Antikythera mechanism", "w": ["The Jacquard loom", "The aeolipile", "The orrery"]}
+{"id":"06bb3787","c":"Jobs disappear","w":["Jobs grow overall","Nothing changes","Wages shift a little"]}
+{"id":"1f56816b","c":"Magnesium threonate","w":["Zinc sulfate","Iron gluconate","Calcium carbonate"]}
+{"id":"1f7d3e86","q":"How does water purity affect Olympic speed skating ice?","c":"Pure water is smoother","w":["Calcium aids the glide","Minerals slow melting","Iron hardens the ice"]}
+{"id":"206ad822","c":"The stack runs out","w":["An infinite loop","A memory leak","CPU throttling"]}
+{"id":"207deb08","c":"No, just eye strain","w":["Yes, causes myopia","It depends on genes","Only if predisposed"]}
+{"id":"208425c8","c":"Age-based letter codes","w":["A one-to-ten scale","Colour-coded bands","Star ratings"]}
+{"id":"20c3634d","c":"Reuniting broken parts","w":["Calculating numbers","Unknown quantities","Solving equations"]}
+{"id":"213969de","c":"Yes, more red cells","w":["No, it always hurts","Only for sprinters","It is counterproductive"]}
+{"id":"215f1409","c":"Weathering makes soil","w":["Soil causes weather","They are unrelated","Rock prevents soil"]}
+{"id":"21b18e33","c":"Yes, in milliseconds","w":["No, it takes minutes","Only a few species","No, it is impossible"]}
+{"id":"222d52ca","c":"Sanz de Sautuola","w":["Henri Breuil","Hugo Obermayer","Louis Simonin"]}
+{"id":"225e2082","c":"430,000 mph","w":["380,000 mph","490,000 mph","350,000 mph"]}
+{"id":"233b0898","c":"Degenerate neutrons","w":["Degenerate electrons","Quark-gluon plasma","Liquid plasma"]}
+{"id":"23d85d60","c":"Radiation damage","w":["Gravitational pull","Temperature swings","Field reversals"]}
+{"id":"24a241cd","c":"Broken pottery","w":["A ceramic kiln","A pottery wheel","A clay vessel"]}
+{"id":"25024d90","c":"High self-awareness","w":["Mostly a myth","Beyond human IQ","Basic learning only"]}
+{"id":"2504e1d8","c":"Optical illusions","w":["Ancient waterways","Dust storm tracks","Crater formations"]}
+{"id":"253cdd57","c":"Patient autonomy","w":["Pure utilitarianism","Strict deontology","Virtue ethics"]}
+{"id":"2680db9c","c":"Early, High and Late","w":["Dark, light and reform","Feudal and after","Roman and after"]}
+{"id":"268d602b","q":"When did Churchill give the 'blood, toil, tears and sweat' speech?","c":"His first as PM","w":["After Singapore fell","After the Blitz","Before D-Day"]}
+{"id":"269b1b1e","c":"Norway's oil fund","w":["China Investment Corp","Abu Dhabi's authority","Saudi Arabia's PIF"]}
+{"id":"26bf907f","c":"None whatsoever","w":["They shift the odds","Belief makes it real","A proven factor"]}
+{"id":"26f23eb3","c":"A comedy group","w":["A kind of snake","Its creator's name","A mythical beast"]}
+{"id":"272fd4f5","c":"Damage suppressor","w":["Extra melanin","A chitin shell","Protective sugars"]}
+{"id":"285cbd1d","c":"By mother sauce","w":["By their colour","By cooking time","By serving heat"]}
+{"id":"286d8157","c":"Bernard Arnault","w":["Elon Musk","Jeff Bezos","Larry Ellison"]}
+{"id":"28d00cb0","q":"Which Celeste mechanic stands in for a panic attack?","c":"The feather minigame","w":["The dash limit","The stamina bar","The strawberries"]}
+{"id":"29a6a5b8","c":"National Geographic","w":["Royal Geographical","The Smithsonian","UNESCO"]}
+{"id":"2a731ed8","c":"Ptolemy","w":["Galileo Galilei","Isaac Newton","Johannes Kepler"]}
+{"id":"2aa4bdd1","c":"The IPCC","w":["UNEP","The IMF","The WMO"]}
+{"id":"2b99ae08","c":"The Travels","w":["Silk Road Chronicles","Journey to the East","The Venetian Voyager"]}
+{"id":"2bcc78b2","c":"Comparative linguistics","w":["Phonetic transcription","Morpheme analysis","Syntactic parsing"]}
+{"id":"2bf39a20","c":"Their huge mass","w":["Magnetic fields","Rapid rotation","Quantum tunnelling"]}
+{"id":"2c6125dc","c":"No, average height","w":["Yes, extremely short","Yes, well below average","Yes, he had dwarfism"]}
+{"id":"2c74c8a6","c":"The Harvard study","w":["The Terman study","The Tuskegee study","The Milgram study"]}
+{"id":"2d39b0b2","c":"No, none exists","w":["Yes, pheromones do","Yes, neurochemicals","Yes, alchemists made one"]}
+{"id":"2d4aa699","c":"The particle beam","w":["High-frequency sound","Strong magnetic fields","Static electricity"]}
+{"id":"2dd752e4","c":"Historical imbalance","w":["Rounding errors","Processing speed","Cache memory limits"]}
+{"id":"3009adce","c":"The Arctic tern","w":["The grey whale","The monarch butterfly","The wildebeest"]}
+{"id":"301e4260","c":"Moving tectonic plates","w":["Underground water","Volcanic gas","The Sun's gravity"]}
+{"id":"305f807e","q":"Which instrument measures ionizing radiation?","c":"A Geiger counter","w":["A stopwatch","An atomic clock","A frequency counter"]}
+{"id":"30c258d6","q":"Which technique reveals crystal phases in devitrified glass?","c":"X-ray diffraction","w":["Optical microscopy","Electron microscopy","Mass spectrometry"]}
+{"id":"31075026","c":"Primary to tertiary","w":["Public and private","Micro to large-scale","Goods and services"]}
+{"id":"31220c60","c":"They cut off corridors","w":["Wildlife increases","There is no impact","Animals adapt at once"]}
+{"id":"31b0f9ec","c":"Ultimate Game of the Year","w":["Best Multiplayer Game","Best Family Game","PC Game of the Year"]}
+{"id":"31cfbca7","c":"They recycle nutrients","w":["They grow new plants","They remove herbivores","They hold in water"]}
+{"id":"320ac34c","c":"Its exposed flanks","w":["Its short spears","Its lack of shields","Its heavy armour"]}
+{"id":"328e0c02","c":"The Harvard system","w":["The Yale sequence","The Potsdam system","The Lockyer scheme"]}
+{"id":"32a6d26c","c":"Adventures of Superman","w":["Batman","The Incredible Hulk","Wonder Woman"]}
+{"id":"32b13151","c":"Cortisol weakens you","w":["Stress damages DNA","The mind makes illness","Genetics alone"]}
+{"id":"32bf5c62","c":"Procedural generation","w":["Pattern repetition","Texture rotation","Lighting shifts"]}
+{"id":"32c8525b","q":"Which TikTok trend paired NASA footage with a pop song?","c":"The NASA trend","w":["Space Oddity challenge","Mars rover dance-off","Cosmic dust filter"]}
+{"id":"330bbc43","c":"Solid-state parts","w":["Hydraulic systems","Pneumatic logic","Mechanical relays"]}
+{"id":"330f45aa","c":"True, special bones","w":["False, only 180","False, only 90","False, not at all"]}
+{"id":"33561458","c":"Royal mummies did","w":["None showed disease","Only labourers did","The evidence is unclear"]}
+{"id":"335e0b09","c":"Hot air is lighter","w":["Helium escapes gravity","Wind pushes them up","Sunlight propels them"]}
+{"id":"33fc4a88","c":"Rank, filter, recommend","w":["By their colour scheme","By the user's age","By posting frequency"]}
+{"id":"341eb83e","c":"No, he refined it","w":["Yes, he rejected it","He found germ theory","He studied anatomy"]}
+{"id":"343f7b86","c":"Stress on odd beats","w":["Synchronised timing","Music sync licensing","Harmonic alignment"]}
+{"id":"345cfc3a","c":"Contest, dating, survival","w":["Sitcom, drama, horror","News, sports, weather","Sci-fi, fantasy, western"]}
+{"id":"34886972","c":"Ceuta, by Morocco","w":["Masada, by Rome","Acre, by the Crusaders","Candia, by the Ottomans"]}
+{"id":"3492d3af","c":"It bends light hard","w":["Its surface polish","An inner light source","A clear coating"]}
+{"id":"34d84432","q":"Which theory explains trade gains from productivity gaps?","c":"Comparative advantage","w":["The Heckscher-Ohlin model","Stolper-Samuelson","The Rybczynski theorem"]}
+{"id":"34db7449","c":"Video Killed the Radio Star","w":["Billie Jean","Like a Virgin","Hungry Like the Wolf"]}
+{"id":"34eca6da","c":"Yes, months of it","w":["No, three seconds","Only where food is","They forget everything"]}
+{"id":"35549676","c":"It poisoned predators","w":["It controlled pests","It fed predators well","It balanced the system"]}
+{"id":"357dff83","c":"It united strangers","w":["It blocks cooperation","It has no effect","Community needs none"]}
+{"id":"372cc366","c":"Wear on the edges","w":["Weight and density","Symmetry of shape","Colour of the patina"]}
+{"id":"3761e1cd","c":"Service or attendance","w":["Physical exercise","Deep contemplation","Public speaking"]}
+{"id":"37a51091","c":"Yes, cartels do it","w":["No, it is free market","Only for diamonds","Prices only ever fall"]}
+{"id":"383ec1b0","q":"Which US body oversees stock market trading?","c":"The SEC","w":["The FOA","The GMSB","The TSC"]}
+{"id":"394dee2a","c":"No, terrain won out","w":["Yes, the army needed it","Only for the roads","They could not deviate"]}
+{"id":"39834d5c","q":"How does the Mariana Trench compare to Everest?","c":"The trench is deeper","w":["They are about equal","The trench is half","The trench is double"]}
+{"id":"3a148a43","c":"They shine UV light","w":["They diagnose illness","They give antibiotics","They clean instruments"]}
+{"id":"3a24cff8","q":"Which wearable tracks an athlete's aerobic capacity?","c":"A heart rate sensor","w":["A glucose monitor","An EMG device","A GPS accelerometer"]}
+{"id":"3a269e25","c":"The 1929 crash","w":["The 1987 crash","The 1998 crisis","The 2001 decline"]}
+{"id":"3ac73992","c":"The small world idea","w":["Weak tie theory","Dunbar's number","Social exchange theory"]}
+{"id":"3ae51e03","q":"How did knight and samurai armour differ?","c":"Plate versus lamellar","w":["Honour versus money","Horse versus foot","Crossbow versus none"]}
+{"id":"2d0f89d7","q":"What first used integrated circuits at large scale?","c":"Missile guidance","w":["Home computers","Pocket calculators","Television sets"]}

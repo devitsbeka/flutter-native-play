@@ -208,6 +208,10 @@ FORCE_RETIRE = {
     '62f91b16': 'answer looks wrong — Cyberpunk: Edgerunners took Anime of the Year in 2023',
     '89e53f4b': 'the TOP500 number one changes every list; El Capitan has since passed Frontier',
     'cdf2220c': 'same question as ab2a3631 (the psychologist who fabricated data)',
+    '046e4532': 'same question as 01f6bf51 (the 2012 Olympic gymnast meme)',
+    '0b0a0045': 'same question as e12a42bc (swallowed gum and the seven-year myth)',
+    '22c73bfd': 'third copy of the swallowed-gum myth; e12a42bc survives',
+    '39432591': 'same question as ba4b020e (scientific consensus on AI consciousness)',
 }
 
 retire = {}

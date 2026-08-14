@@ -513,7 +513,7 @@ UPDATE public.questions SET is_active = false, in_production = false, quality_st
 --   near-identical to aa8801ef
 UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_duplicate', updated_at = now() WHERE id = 'f3e2c338-ba66-4c80-9299-1a6157dbac4c';
 
--- unfixable: no correct question underneath — invented premise, unverifiable, or several true options (19)
+-- unfixable: no correct question underneath — invented premise, unverifiable, or several true options (23)
 -- According to IMDb user ratings as of early 2024, which of these TV seasons has the highest average episode rating?
 --   IMDb episode ratings move continuously; no answer stays right
 UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = '1e270c9d-662d-4132-8468-13e80e0cdad3';
@@ -535,21 +535,33 @@ UPDATE public.questions SET is_active = false, in_production = false, quality_st
 -- Can humans actually see ultraviolet light with eye exercises?
 --   wrong and nonsensical: aphakic people do see UV; "eye exercises" is not a real premise
 UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = 'f3a221d6-ff40-48b0-a709-ff5dae781eef';
+-- Does swallowing gum actually stay in stomach for seven years?
+--   third copy of the swallowed-gum myth; e12a42bc survives
+UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = '22c73bfd-6e43-4ec4-bbf2-af81ea600b8c';
 -- Gold leaf, commonly used in Renaissance art, is primarily composed of which metallic element?
 --   self-answering in any phrasing: gold leaf is made of gold
 UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = '59cb5e50-67ec-4311-9f0a-87e20a0faf3c';
 -- How many Grammy Awards has Beyoncé won in total?
 --   stale and self-defeating: answer is 35 since Feb 2025, and 35 is a distractor
 UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = 'cb44da4f-f959-4b97-b878-7533782b314d';
+-- Is it true swallowed gum stays in stomach for seven years?
+--   same question as e12a42bc (swallowed gum and the seven-year myth)
+UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = '0b0a0045-ff9a-4f52-85d7-01aed0825f86';
 -- Most common difficulty levels from easiest to hardest?
 --   arbitrary: no defensible "most common" ordering of difficulty levels
 UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = '1343aae1-313d-4f6f-bb7b-cf4af12a27df';
 -- TikTok's algorithm mimics which animal's herd behavior?
 --   invented premise: TikTok's algorithm does not model starling murmuration
 UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = '3b2ba59b-663f-4488-be11-68ef8741e1c8';
+-- What's current scientific consensus on AI consciousness?
+--   same question as ba4b020e (scientific consensus on AI consciousness)
+UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = '39432591-4d87-4068-9ee7-38681849cb34';
 -- Which Dutch social psychologist was found to have fabricated data in dozens of studies in the 2010s?
 --   same question as ab2a3631 (the psychologist who fabricated data)
 UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = 'cdf2220c-64e8-4364-9749-525f4b5a0065';
+-- Which Olympic gymnast meme became popular in 2012?
+--   same question as 01f6bf51 (the 2012 Olympic gymnast meme)
+UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = '046e4532-a03b-4bbb-929b-df8e3efc4432';
 -- Which feline trait best explains conflict in "Tiger King"?
 --   false premise: the conflict in Tiger King is between people, not cats
 UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = '8b5298c7-8100-4931-a297-5cf8693339ac';
@@ -573,7 +585,7 @@ UPDATE public.questions SET is_active = false, in_production = false, quality_st
 UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = '8982ce69-df21-4845-90b3-741bd3429666';
 
 
--- ── 2. repaired and cleared for production (431) ─────────────
+-- ── 2. repaired and cleared for production (502) ─────────────
 -- Every hard check passed and nothing needs a second opinion. These rows
 -- were already being served; they are the same questions, shorter.
 
@@ -1225,6 +1237,96 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '288be221-a400-4a8f-8b08-62da99c286f9';
 
+-- Can dogs truly see in black and white without color vision?
+--   hand-rewritten: answers 27->19 chars
+UPDATE public.questions SET
+    question_text = 'Can dogs truly see in black and white without color vision?',
+    correct_answer = 'No, they see some',
+    incorrect_answers = '["Yes, none at all", "True for all breeds", "Only when puppies"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1de82c1c-f1c1-415a-9780-7d0cad12a610';
+
+-- Can octopuses actually change colors instantly?
+--   hand-rewritten: answers 39->20 chars
+UPDATE public.questions SET
+    question_text = 'Can octopuses actually change colors instantly?',
+    correct_answer = 'Yes, in milliseconds',
+    incorrect_answers = '["No, it takes minutes", "Only a few species", "No, it is impossible"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '21b18e33-850f-4297-ae07-991a5f521fbb';
+
+-- Can reading in dim light permanently damage eyesight quality?
+--   hand-rewritten: answers 32->19 chars
+UPDATE public.questions SET
+    question_text = 'Can reading in dim light permanently damage eyesight quality?',
+    correct_answer = 'No, just eye strain',
+    incorrect_answers = '["Yes, causes myopia", "It depends on genes", "Only if predisposed"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '207deb08-f55b-40d2-868f-02c3d1d71492';
+
+-- Can sugar actually make children hyperactive directly from consumption?
+--   hand-rewritten: question 71->44 chars, answers 31->20 chars
+UPDATE public.questions SET
+    question_text = 'Does eating sugar make children hyperactive?',
+    correct_answer = 'No, no link found',
+    incorrect_answers = '["Yes, glucose spikes", "Yes, it stimulates", "Yes, dopamine surges"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0166883f-54d1-4425-b703-51c620e42086';
+
+-- Common ancestor of Greek, Roman, Norse, and Vedic mythologies?
+--   hand-rewritten: answers 29->19 chars
+UPDATE public.questions SET
+    question_text = 'Common ancestor of Greek, Roman, Norse, and Vedic mythologies?',
+    correct_answer = 'Proto-Indo-European',
+    incorrect_answers = '["Ancient Egyptian", "Mesopotamian", "Mesoamerican"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1ce7ec7e-dd99-48b5-b199-7422ecc5c7ad';
+
 -- Did Gothic architecture originate with the Goths?
 --   hand-rewritten: answers 63->20 chars
 UPDATE public.questions SET
@@ -1243,6 +1345,60 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '0da3b652-8985-45ea-9951-e061385b6750';
 
+-- Did Hippocrates challenge ancient humoral theory beliefs?
+--   hand-rewritten: answers 32->20 chars
+UPDATE public.questions SET
+    question_text = 'Did Hippocrates challenge ancient humoral theory beliefs?',
+    correct_answer = 'No, he refined it',
+    incorrect_answers = '["Yes, he rejected it", "He found germ theory", "He studied anatomy"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '341eb83e-bf1c-4470-ac1b-3b7799a9bffd';
+
+-- Did Victorian women really faint from tight lacing?
+--   hand-rewritten: answers 37->20 chars
+UPDATE public.questions SET
+    question_text = 'Did Victorian women really faint from tight lacing?',
+    correct_answer = 'Largely exaggerated',
+    incorrect_answers = '["Yes, and dangerously", "Only in hot climates", "Never, a pure myth"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1c5bdb9b-7ef3-44c6-bfdd-a6e930d94659';
+
+-- Did medieval people actually believe the Earth was flat?
+--   hand-rewritten: answers 30->19 chars
+UPDATE public.questions SET
+    question_text = 'Did medieval people actually believe the Earth was flat?',
+    correct_answer = 'No, scholars knew',
+    incorrect_answers = '["Yes, everyone did", "Yes, until Columbus", "Yes, all through it"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '123f5771-b76c-437e-83a0-51156d61382e';
+
 -- Did speakers of Classical Latin pronounce their language in the same way as modern Italian speakers pronounce theirs?
 --   hand-rewritten: question 117->46 chars, answers 99->20 chars
 UPDATE public.questions SET
@@ -1260,6 +1416,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '151c994d-5c34-4f55-89d1-ba122492642d';
+
+-- Do superstitions truly affect an event's mathematical probability?
+--   hand-rewritten: answers 21->20 chars
+UPDATE public.questions SET
+    question_text = 'Do superstitions truly affect an event''s mathematical probability?',
+    correct_answer = 'None whatsoever',
+    incorrect_answers = '["They shift the odds", "Belief makes it real", "A proven factor"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '26bf907f-6a71-474d-bb68-f55d5010db12';
 
 -- During the Islamic Golden Age, which language supplied many astronomical terms and star names?
 --   hand-rewritten: question 94->53 chars
@@ -1513,6 +1687,42 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'c36c01fb-c1db-4e89-ae43-16c48eb80878';
 
+-- How are logical fallacies classified by argumentative structure?
+--   hand-rewritten: answers 32->19 chars
+UPDATE public.questions SET
+    question_text = 'How are logical fallacies classified by argumentative structure?',
+    correct_answer = 'Formal and informal',
+    incorrect_answers = '["Common and rare", "Ancient and modern", "Written and spoken"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '049e33ff-02ac-4416-8ac4-0d665620fee2';
+
+-- How are sauces classified in French culinary tradition?
+--   hand-rewritten: answers 30->15 chars
+UPDATE public.questions SET
+    question_text = 'How are sauces classified in French culinary tradition?',
+    correct_answer = 'By mother sauce',
+    incorrect_answers = '["By their colour", "By cooking time", "By serving heat"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '285cbd1d-eca2-4400-8313-70b615173919';
+
 -- How can medical trauma impact an individual's psychological and social functioning?
 --   hand-rewritten: question 83->47 chars, answers 80->20 chars
 UPDATE public.questions SET
@@ -1585,6 +1795,42 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'c004fe5b-4892-41af-a847-2ef0d66a6336';
 
+-- How do TV ad costs relate to viewership ratings for a time slot?
+--   hand-rewritten: answers 21->18 chars
+UPDATE public.questions SET
+    question_text = 'How do TV ad costs relate to viewership ratings for a time slot?',
+    correct_answer = 'They rise together',
+    incorrect_answers = '["They move opposite", "They are unrelated", "They vary randomly"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1d0bba52-54ce-47a4-b4ce-6368350706a3';
+
+-- How do archaeologists identify ancient tool use patterns?
+--   hand-rewritten: answers 35->20 chars
+UPDATE public.questions SET
+    question_text = 'How do archaeologists identify ancient tool use patterns?',
+    correct_answer = 'Wear on the edges',
+    incorrect_answers = '["Weight and density", "Symmetry of shape", "Colour of the patina"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '372cc366-a5fd-4332-9da5-364f5d075e9a';
+
 -- How do changes in interest rates directly impact the monthly payment amount for a personal loan?
 --   hand-rewritten: question 96->51 chars, answers 58->18 chars
 UPDATE public.questions SET
@@ -1656,6 +1902,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '40010231-cdbd-44cc-94af-83940787806a';
+
+-- How does TV crime-solving time compare to real police cases?
+--   hand-rewritten: answers 30->18 chars
+UPDATE public.questions SET
+    question_text = 'How does TV crime-solving time compare to real police cases?',
+    correct_answer = 'TV is far faster',
+    incorrect_answers = '["About the same", "Real police faster", "TV slightly faster"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '008159e6-f319-4154-ba11-3d6f3bc4388d';
 
 -- How does higher alveolar oxygen pressure affect gas exchange?
 --   hand-rewritten: answers 15->16 chars
@@ -1908,6 +2172,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '1bc78d0c-cdf6-4f3d-8930-27dddbd04422';
+
+-- How was the Greek phalanx vulnerable to enemy cavalry?
+--   hand-rewritten: answers 27->19 chars
+UPDATE public.questions SET
+    question_text = 'How was the Greek phalanx vulnerable to enemy cavalry?',
+    correct_answer = 'Its exposed flanks',
+    incorrect_answers = '["Its short spears", "Its lack of shields", "Its heavy armour"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '320ac34c-925a-4f7a-a534-1cf3d9624392';
 
 -- Human gene mapping project completed in 2003 was what?
 --   trimmed by rule: answers 26->14 chars
@@ -2395,6 +2677,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '065dbed6-25aa-4fed-9d99-4c8377016f78';
 
+-- In the United States, which regulatory body oversees stock market trading practices?
+--   hand-rewritten: question 84->44 chars, answers 34->8 chars
+UPDATE public.questions SET
+    question_text = 'Which US body oversees stock market trading?',
+    correct_answer = 'The SEC',
+    incorrect_answers = '["The FOA", "The GMSB", "The TSC"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '383ec1b0-1000-47b0-b480-d6a00a7b8d39';
+
 -- In the context of classical studies and literature, how is the Trojan Horse primarily classified?
 --   hand-rewritten: question 97->52 chars, answers 31->19 chars
 UPDATE public.questions SET
@@ -2665,6 +2965,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '29ef7916-0151-4787-bfec-a2ed7fdb44fc';
 
+-- Is it true that owls can rotate their heads 270 degrees?
+--   hand-rewritten: answers 37->19 chars
+UPDATE public.questions SET
+    question_text = 'Is it true that owls can rotate their heads 270 degrees?',
+    correct_answer = 'True, special bones',
+    incorrect_answers = '["False, only 180", "False, only 90", "False, not at all"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '330f45aa-f544-4d02-bdbf-07ea13719dca';
+
 -- Is the Great Wall of China visible to the unaided human eye from Earth's orbit?
 --   hand-rewritten: question 79->54 chars, answers 50->18 chars
 UPDATE public.questions SET
@@ -2737,6 +3055,42 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '0b30b029-712f-41f9-881f-50b49799ef1c';
 
+-- Longest-running longitudinal study of human life?
+--   hand-rewritten: answers 38->18 chars
+UPDATE public.questions SET
+    question_text = 'Longest-running longitudinal study of human life?',
+    correct_answer = 'The Harvard study',
+    incorrect_answers = '["The Terman study", "The Tuskegee study", "The Milgram study"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '2c74c8a6-2bd7-4fc9-a476-5750a53e2033';
+
+-- Max speed of Parker Solar Probe near Sun (mph)?
+--   hand-rewritten: answers 22->11 chars
+UPDATE public.questions SET
+    question_text = 'Max speed of Parker Solar Probe near Sun (mph)?',
+    correct_answer = '430,000 mph',
+    incorrect_answers = '["380,000 mph", "490,000 mph", "350,000 mph"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '225e2082-d896-4c58-afdf-3f47bd5ccaed';
+
 -- On the Steam platform, what metric is primarily used to determine and display the rarity of an achievement?
 --   hand-rewritten: question 107->50 chars, answers 12->16 chars
 UPDATE public.questions SET
@@ -2772,6 +3126,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '539d16f4-cac3-45aa-afba-be634ef072c7';
+
+-- Swarm intelligence: Which mechanism parallels democratic voting?
+--   hand-rewritten: answers 26->20 chars
+UPDATE public.questions SET
+    question_text = 'Swarm intelligence: Which mechanism parallels democratic voting?',
+    correct_answer = 'Collective decisions',
+    incorrect_answers = '["Hierarchical command", "Territorial conflict", "Individual autonomy"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1d3d778f-ce34-4832-aeb9-4e57188edf07';
 
 -- The English word 'sediment' is derived from the Latin verb 'sedere'. What does 'sedere' mean?
 --   hand-rewritten: question 93->60 chars
@@ -2809,6 +3181,42 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '8f628861-f526-48b8-8d63-8d2d6bc1423b';
 
+-- Three sectors classify industries in a three-sector economy?
+--   hand-rewritten: answers 32->20 chars
+UPDATE public.questions SET
+    question_text = 'Three sectors classify industries in a three-sector economy?',
+    correct_answer = 'Primary to tertiary',
+    incorrect_answers = '["Public and private", "Micro to large-scale", "Goods and services"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '31075026-da55-4472-ad42-23902918968c';
+
+-- Wearable tech for Olympic athletes' aerobic capacity and strain?
+--   hand-rewritten: question 64->52 chars, answers 39->19 chars
+UPDATE public.questions SET
+    question_text = 'Which wearable tracks an athlete''s aerobic capacity?',
+    correct_answer = 'A heart rate sensor',
+    incorrect_answers = '["A glucose monitor", "An EMG device", "A GPS accelerometer"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '3a24cff8-6571-4396-9539-22497dd59a44';
+
 -- What Catholic practice fueled the Protestant Reformation?
 --   trimmed by rule: answers 23->20 chars
 UPDATE public.questions SET
@@ -2826,6 +3234,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'cec55ac4-23c2-4e53-83e8-393224a20e47';
+
+-- What UN body assesses climate change information?
+--   hand-rewritten: answers 41->8 chars
+UPDATE public.questions SET
+    question_text = 'What UN body assesses climate change information?',
+    correct_answer = 'The IPCC',
+    incorrect_answers = '["UNEP", "The IMF", "The WMO"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '2aa4bdd1-1e75-48a9-a94c-ee6a122853e3';
 
 -- What abbreviation denotes 'megabyte' in digital storage?
 --   hand-rewritten: question 56->38 chars, answers 2->2 chars
@@ -2953,6 +3379,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '3c3cf5e4-9c7f-4837-9ffc-aabc9512a065';
 
+-- What did Percival Lowell misidentify as Martian canals?
+--   hand-rewritten: answers 37->17 chars
+UPDATE public.questions SET
+    question_text = 'What did Percival Lowell misidentify as Martian canals?',
+    correct_answer = 'Optical illusions',
+    incorrect_answers = '["Ancient waterways", "Dust storm tracks", "Crater formations"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '2504e1d8-a54a-4278-8a6b-1ce348bcae33';
+
 -- What distinctive articulatory mechanism characterizes Khoisan click consonants?
 --   hand-rewritten: question 79->42 chars, answers 61->20 chars
 UPDATE public.questions SET
@@ -2970,6 +3414,78 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '7bce9932-edb8-42ad-a307-9b77fc080f3b';
+
+-- What does 'potsherd' mean in archaeological terminology?
+--   hand-rewritten: answers 28->15 chars
+UPDATE public.questions SET
+    question_text = 'What does ''potsherd'' mean in archaeological terminology?',
+    correct_answer = 'Broken pottery',
+    incorrect_answers = '["A ceramic kiln", "A pottery wheel", "A clay vessel"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '24a241cd-ee22-4986-8eeb-ed36a48eff08';
+
+-- What does 'syncopation' terminology mean rhythmically?
+--   hand-rewritten: answers 24->20 chars
+UPDATE public.questions SET
+    question_text = 'What does ''syncopation'' terminology mean rhythmically?',
+    correct_answer = 'Stress on odd beats',
+    incorrect_answers = '["Synchronised timing", "Music sync licensing", "Harmonic alignment"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '343f7b86-a03a-4d06-b001-08a6e85633da';
+
+-- What does 'thrombosis' derive from etymologically?
+--   hand-rewritten: answers 29->18 chars
+UPDATE public.questions SET
+    question_text = 'What does ''thrombosis'' derive from etymologically?',
+    correct_answer = 'Greek for clot',
+    incorrect_answers = '["Latin for heart", "Arabic for pulse", "Germanic for blood"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0caea685-4939-46b4-aee1-1faeb0446a18';
+
+-- What does a version control system (VCS) primarily track?
+--   hand-rewritten: answers 32->18 chars
+UPDATE public.questions SET
+    question_text = 'What does a version control system (VCS) primarily track?',
+    correct_answer = 'Changes to files',
+    incorrect_answers = '["Server performance", "User login history", "Application logs"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '06ef3b04-7ded-45f0-9b9d-abcf79e509b0';
 
 -- What does stellar parallax measure in astronomical observation?
 --   trimmed by rule: answers 25->20 chars
@@ -2989,6 +3505,60 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'ce0930db-3803-4f1d-82d2-f171d0c34f9e';
 
+-- What does the 'X' symbol indicate on garment care labels?
+--   hand-rewritten: answers 26->19 chars
+UPDATE public.questions SET
+    question_text = 'What does the ''X'' symbol indicate on garment care labels?',
+    correct_answer = 'Do not do this',
+    incorrect_answers = '["Extra durable", "Professional clean", "Experimental fabric"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0f44f0ad-f834-4e54-a247-283c04594cc9';
+
+-- What does the acronym SQL stand for?
+--   hand-rewritten: answers 25->16 chars
+UPDATE public.questions SET
+    question_text = 'What does the acronym SQL stand for?',
+    correct_answer = 'Structured Query',
+    incorrect_answers = '["Simple Query", "Standard Query", "System Query"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0d9871fa-1f33-41bb-a0c1-6cc10dae269d';
+
+-- What ecological disaster caused the Great Smog of London in 1952?
+--   hand-rewritten: answers 32->18 chars
+UPDATE public.questions SET
+    question_text = 'What ecological disaster caused the Great Smog of London in 1952?',
+    correct_answer = 'Trapped coal smoke',
+    incorrect_answers = '["A chemical release", "An industrial fire", "Vehicle exhaust"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0cb5bb25-0440-48a0-bce4-a2a0d289f165';
+
 -- What effect, linked to Jaws, caused public shark fear and overfishing?
 --   trimmed by rule: answers 22->18 chars
 UPDATE public.questions SET
@@ -3007,6 +3577,60 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'af9dddc0-45a5-4315-9954-d69cbd7c50ca';
 
+-- What ethical framework guides modern medical practice primarily?
+--   hand-rewritten: answers 31->19 chars
+UPDATE public.questions SET
+    question_text = 'What ethical framework guides modern medical practice primarily?',
+    correct_answer = 'Patient autonomy',
+    incorrect_answers = '["Pure utilitarianism", "Strict deontology", "Virtue ethics"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '253cdd57-7a7e-40fd-a3b7-dc5d206b7dec';
+
+-- What exotic pet trend surged after "Tiger King" popularity?
+--   hand-rewritten: answers 25->16 chars
+UPDATE public.questions SET
+    question_text = 'What exotic pet trend surged after "Tiger King" popularity?',
+    correct_answer = 'Private big cats',
+    incorrect_answers = '["Rare reptiles", "Exotic birds", "Pet primates"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0e256a07-d8e2-450b-8670-6baeab9df910';
+
+-- What famous quote did Churchill give about 'blood, toil, tears, and sweat'?
+--   hand-rewritten: question 75->66 chars, answers 34->20 chars
+UPDATE public.questions SET
+    question_text = 'When did Churchill give the ''blood, toil, tears and sweat'' speech?',
+    correct_answer = 'His first as PM',
+    incorrect_answers = '["After Singapore fell", "After the Blitz", "Before D-Day"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '268d602b-25c3-4f0e-9492-217069092c8b';
+
 -- What geographic factor causes iodine deficiency in a region?
 --   hand-rewritten: question 60->48 chars, answers 15->20 chars
 UPDATE public.questions SET
@@ -3024,6 +3648,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '81036a13-3910-47f3-b1e2-086a9a7e7f65';
+
+-- What hidden bias emerges in AI training datasets unintentionally?
+--   hand-rewritten: answers 32->20 chars
+UPDATE public.questions SET
+    question_text = 'What hidden bias emerges in AI training datasets unintentionally?',
+    correct_answer = 'Historical imbalance',
+    incorrect_answers = '["Rounding errors", "Processing speed", "Cache memory limits"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '2dd752e4-5425-4e5d-8267-74feb4de13aa';
 
 -- What is 0! (factorial of 0)?
 --   hand-rewritten: question 28->31 chars, answers 13->10 chars
@@ -3205,6 +3847,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '17b7066f-3847-4159-9210-182eb3563e02';
 
+-- What is the primary state of matter in a neutron star's core?
+--   hand-rewritten: answers 25->20 chars
+UPDATE public.questions SET
+    question_text = 'What is the primary state of matter in a neutron star''s core?',
+    correct_answer = 'Degenerate neutrons',
+    incorrect_answers = '["Degenerate electrons", "Quark-gluon plasma", "Liquid plasma"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '233b0898-4955-4713-83b7-1cc13c5238e5';
+
 -- What is the scientific community's established view regarding the predictive power of horoscopes?
 --   hand-rewritten: question 97->50 chars, answers 54->18 chars
 UPDATE public.questions SET
@@ -3277,6 +3937,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'b6759b45-8a0e-448c-ae21-102a6ae1246b';
 
+-- What market crash caused the Great Depression?
+--   hand-rewritten: answers 23->16 chars
+UPDATE public.questions SET
+    question_text = 'What market crash caused the Great Depression?',
+    correct_answer = 'The 1929 crash',
+    incorrect_answers = '["The 1987 crash", "The 1998 crisis", "The 2001 decline"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '3a269e25-07d9-453c-af2a-5ac3a09a7eb9';
+
 -- What meme format shows Drake's approval/disapproval?
 --   trimmed by rule: answers 28->19 chars
 UPDATE public.questions SET
@@ -3313,6 +3991,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '6c7eb792-ec18-4037-83fa-73ab1eafd842';
 
+-- What nearly caused the Heartbleed vulnerability impact?
+--   hand-rewritten: answers 29->20 chars
+UPDATE public.questions SET
+    question_text = 'What nearly caused the Heartbleed vulnerability impact?',
+    correct_answer = 'No bounds check',
+    incorrect_answers = '["SQL injection", "Cross-site scripting", "A man in the middle"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0d15a76f-07fe-4157-80d2-e1a1cea72a57';
+
 -- What notation denotes a biconditional logical relationship?
 --   hand-rewritten: question 59->46 chars, answers 6->14 chars
 UPDATE public.questions SET
@@ -3330,6 +4026,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'af1f456c-d5ae-4866-a371-99e65c27e261';
+
+-- What notation indicates door swing direction on floor plans?
+--   hand-rewritten: answers 29->15 chars
+UPDATE public.questions SET
+    question_text = 'What notation indicates door swing direction on floor plans?',
+    correct_answer = 'An opening arc',
+    incorrect_answers = '["A dashed line", "Coloured arrows", "Numbered labels"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '00794a2c-e136-425b-bb3a-1a15fe96e51f';
 
 -- What notation system ranks historical rulers by dynastic order?
 --   trimmed by rule: answers 27->19 chars
@@ -3367,6 +4081,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'd5c2bacd-2881-4b8a-b09b-913b7e399cf2';
 
+-- What primary hazard do solar flares pose to spacecraft electronics?
+--   hand-rewritten: answers 42->18 chars
+UPDATE public.questions SET
+    question_text = 'What primary hazard do solar flares pose to spacecraft electronics?',
+    correct_answer = 'Radiation damage',
+    incorrect_answers = '["Gravitational pull", "Temperature swings", "Field reversals"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '23d85d60-a4c2-4429-b862-c1b0431691fe';
+
 -- What principle describes the early placement of 'ἄν' in Greek?
 --   hand-rewritten: question 62->46 chars, answers 19->17 chars
 UPDATE public.questions SET
@@ -3385,6 +4117,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'ae77d6ee-95a7-4458-b931-f1b4587186b8';
 
+-- What protein helps tardigrades survive extreme radiation exposure?
+--   hand-rewritten: answers 32->17 chars
+UPDATE public.questions SET
+    question_text = 'What protein helps tardigrades survive extreme radiation exposure?',
+    correct_answer = 'Damage suppressor',
+    incorrect_answers = '["Extra melanin", "A chitin shell", "Protective sugars"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '272fd4f5-a71b-455b-838e-b43925bd9f6a';
+
 -- What record did the Antikythera mechanism set when discovered?
 --   trimmed by rule: answers 26->19 chars
 UPDATE public.questions SET
@@ -3402,6 +4152,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '7260c1e6-2cbc-4103-9cef-4d565d5336d9';
+
+-- What runtime danger exist in recursive function overflow?
+--   hand-rewritten: answers 29->18 chars
+UPDATE public.questions SET
+    question_text = 'What runtime danger exist in recursive function overflow?',
+    correct_answer = 'The stack runs out',
+    incorrect_answers = '["An infinite loop", "A memory leak", "CPU throttling"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '206ad822-cfc0-4de1-b2f7-4ae5580380b8';
 
 -- What scale measures mineral hardness by scratch resistance?
 --   trimmed by rule: answers 23->17 chars
@@ -3438,6 +4206,42 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '1a3c3d61-7d00-41ec-8a56-ab53d9e427be';
+
+-- What streaming service feature lets users watch anytime?
+--   hand-rewritten: answers 29->20 chars
+UPDATE public.questions SET
+    question_text = 'What streaming service feature lets users watch anytime?',
+    correct_answer = 'Watch on demand',
+    incorrect_answers = '["Fixed schedules", "Cinema-only releases", "A small catalogue"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0c9431a1-ae43-4aaf-ab9d-634be04d9bad';
+
+-- What surprising effect do microbiomes have on hosts via the gut-brain axis?
+--   hand-rewritten: question 75->44 chars, answers 34->20 chars
+UPDATE public.questions SET
+    question_text = 'How does the gut microbiome affect its host?',
+    correct_answer = 'They shift behaviour',
+    incorrect_answers = '["They make oxygen", "They never change", "They are random"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0474f07c-24c1-4556-8d22-0d416b64a707';
 
 -- What symbol denotes the male organism in biology?
 --   hand-rewritten: question 49->48 chars, answers 16->18 chars
@@ -3510,6 +4314,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '28dc50b8-ef95-4bac-a3a1-9152845c513b';
+
+-- What system ranks stellar objects from O to M by spectral type?
+--   hand-rewritten: answers 31->18 chars
+UPDATE public.questions SET
+    question_text = 'What system ranks stellar objects from O to M by spectral type?',
+    correct_answer = 'The Harvard system',
+    incorrect_answers = '["The Yale sequence", "The Potsdam system", "The Lockyer scheme"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '328e0c02-6d85-4976-81cd-00fc11d5797b';
 
 -- What temperature does water freeze at in Celsius scale?
 --   hand-rewritten: question 55->46 chars
@@ -3618,6 +4440,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '7a4c23be-1f77-4bc6-9a8c-729ff67c6be2';
+
+-- What was the Python programming language named after?
+--   hand-rewritten: answers 37->18 chars
+UPDATE public.questions SET
+    question_text = 'What was the Python programming language named after?',
+    correct_answer = 'A comedy group',
+    incorrect_answers = '["A kind of snake", "Its creator''s name", "A mythical beast"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '26f23eb3-881a-4f26-ac5b-3509fd7ed5e3';
 
 -- What was the deceptive wooden structure used by the Achaeans to infiltrate the city of Troy?
 --   hand-rewritten: question 92->50 chars, answers 24->18 chars
@@ -3781,6 +4621,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '70799373-abda-4911-8a69-6f4bae392812';
 
+-- What's the scientific consensus on dolphin intelligence?
+--   hand-rewritten: answers 31->19 chars
+UPDATE public.questions SET
+    question_text = 'What''s the scientific consensus on dolphin intelligence?',
+    correct_answer = 'High self-awareness',
+    incorrect_answers = '["Mostly a myth", "Beyond human IQ", "Basic learning only"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '25024d90-e517-4dd4-9981-906a719d7e39';
+
 -- When is absolute zero for gas?
 --   hand-rewritten: question 30->33 chars, answers 10->7 chars
 UPDATE public.questions SET
@@ -3817,6 +4675,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '0d85aac8-69a8-406b-bd0a-6ff03b526b5f';
 
+-- Where did the Industrial Revolution spread most rapidly?
+--   hand-rewritten: answers 31->19 chars
+UPDATE public.questions SET
+    question_text = 'Where did the Industrial Revolution spread most rapidly?',
+    correct_answer = 'Europe to America',
+    incorrect_answers = '["Asia to Africa", "South to Australia", "East Europe to Asia"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1276c403-6ff9-4666-a523-b4e248fef56d';
+
 -- Where is Earth's largest crustal magnetic anomaly located?
 --   trimmed by rule: answers 23->19 chars
 UPDATE public.questions SET
@@ -3852,6 +4728,42 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '9df1a9c3-e773-4cd4-9cbe-f58fccc78757';
+
+-- Where was the Declaration of Independence signed?
+--   hand-rewritten: answers 26->13 chars
+UPDATE public.questions SET
+    question_text = 'Where was the Declaration of Independence signed?',
+    correct_answer = 'Philadelphia',
+    incorrect_answers = '["Boston", "New York", "Washington DC"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0e93df90-6979-4fa0-9c34-5a155f0fc3be';
+
+-- Which 18th-century philosopher of The Social Contract influenced the French Revolution?
+--   hand-rewritten: question 87->46 chars, answers 21->13 chars
+UPDATE public.questions SET
+    question_text = 'Which philosopher wrote ''The Social Contract''?',
+    correct_answer = 'Rousseau',
+    incorrect_answers = '["Thomas Hobbes", "John Locke", "Montesquieu"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1358d9f4-148f-46b9-94e2-0b12ad077593';
 
 -- Which 1922 archaeological discovery sparked global interest in ancient Egypt and inspired adventure films?
 --   hand-rewritten: question 106->54 chars, answers 18->20 chars
@@ -4015,6 +4927,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '11197666-e726-46d2-aa18-a68d3945e8cc';
 
+-- Which African location is an International Dark Sky Reserve?
+--   hand-rewritten: answers 21->16 chars
+UPDATE public.questions SET
+    question_text = 'Which African location is an International Dark Sky Reserve?',
+    correct_answer = 'Kalahari Reserve',
+    incorrect_answers = '["Serengeti Park", "Kruger Park", "Atlas Mountains"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '03187c49-bbbd-4e45-bf3c-68cbff206cba';
+
 -- Which African-American genre with 12-bar blues and blue notes originated in the Mississippi Delta?
 --   hand-rewritten: question 98->62 chars
 UPDATE public.questions SET
@@ -4050,6 +4980,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '7bfa7663-9d32-44ae-a161-01cfab234de3';
+
+-- Which Celeste gameplay mechanic symbolizes handling panic or anxiety attacks?
+--   hand-rewritten: question 77->52 chars, answers 26->20 chars
+UPDATE public.questions SET
+    question_text = 'Which Celeste mechanic stands in for a panic attack?',
+    correct_answer = 'The feather minigame',
+    incorrect_answers = '["The dash limit", "The stamina bar", "The strawberries"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '28d00cb0-3dc6-4630-8f64-0b20673d675d';
 
 -- Which European explorer was the first to successfully navigate the entire Northwest Passage by ship?
 --   hand-rewritten: question 100->46 chars
@@ -5383,6 +6331,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '2d52cfff-950a-4670-b063-9147a807e4df';
 
+-- Which galaxy anomaly showed unexpected dark matter distribution?
+--   hand-rewritten: answers 30->20 chars
+UPDATE public.questions SET
+    question_text = 'Which galaxy anomaly showed unexpected dark matter distribution?',
+    correct_answer = 'NGC 1052-DF2',
+    incorrect_answers = '["Andromeda''s rotation", "The Milky Way bulge", "Triangulum''s glow"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0b2afc99-5e3e-4290-bb83-1255f7ba47b8';
+
 -- Which game developer has received the most BAFTA Games Awards in total?
 --   trimmed by rule: question 71->63 chars
 UPDATE public.questions SET
@@ -5599,6 +6565,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '6381e9ec-c714-4057-ad5a-e7b138fa1e58';
 
+-- Which impact of automation most harms traditional manufacturing jobs?
+--   hand-rewritten: answers 21->20 chars
+UPDATE public.questions SET
+    question_text = 'Which impact of automation most harms traditional manufacturing jobs?',
+    correct_answer = 'Jobs disappear',
+    incorrect_answers = '["Jobs grow overall", "Nothing changes", "Wages shift a little"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '06bb3787-d81a-4d92-bc81-4bb0c2b8fcef';
+
 -- Which infectious disease is estimated to have caused the most human deaths throughout history?
 --   hand-rewritten: question 94->57 chars
 UPDATE public.questions SET
@@ -5634,6 +6618,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '56bfc293-a012-43e8-9950-e665b3b30e42';
+
+-- Which instrument detects and measures ionizing radiation for half-life calculations?
+--   hand-rewritten: question 84->45 chars, answers 21->19 chars
+UPDATE public.questions SET
+    question_text = 'Which instrument measures ionizing radiation?',
+    correct_answer = 'A Geiger counter',
+    incorrect_answers = '["A stopwatch", "An atomic clock", "A frequency counter"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '305f807e-b892-4555-a897-b5c166b97e35';
 
 -- Which internet personality is known for frequently using the catchphrase 'Siuuu' (often pronounced 'Sewey')?
 --   hand-rewritten: question 108->52 chars
@@ -5706,6 +6708,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '68acac26-b8b6-48d8-ab76-8969b937dfec';
+
+-- Which late-20th-century tech let voters record choices digitally?
+--   hand-rewritten: answers 25->18 chars
+UPDATE public.questions SET
+    question_text = 'Which late-20th-century tech let voters record choices digitally?',
+    correct_answer = 'The voting machine',
+    incorrect_answers = '["The paper ballot", "The lever machine", "The punch card"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1e795d77-b5d2-4bf8-9855-d5a6ffe46fb6';
 
 -- Which legislative assembly, founded in 930 AD, is often cited as the world's oldest established parliament?
 --   hand-rewritten: question 107->60 chars, answers 22->15 chars
@@ -5796,6 +6816,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'efe4db59-368c-4198-b4b2-58e068c44f4b';
+
+-- Which magnesium crosses the blood-brain barrier for cognition?
+--   hand-rewritten: answers 21->19 chars
+UPDATE public.questions SET
+    question_text = 'Which magnesium crosses the blood-brain barrier for cognition?',
+    correct_answer = 'Magnesium threonate',
+    incorrect_answers = '["Zinc sulfate", "Iron gluconate", "Calcium carbonate"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1f56816b-493d-4ce1-98a5-a0f1e6c28b90';
 
 -- Which major Emperor penguin breeding colony is located in Queen Maud Land, East Antarctica?
 --   hand-rewritten: question 91->53 chars
@@ -6120,6 +7158,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '6c338e0a-31f1-4c8e-85d4-cb1efee50f72';
+
+-- Which numeral system developed the positional decimal notation used today?
+--   hand-rewritten: question 74->57 chars, answers 27->14 chars
+UPDATE public.questions SET
+    question_text = 'Which numeral system gave us positional decimal notation?',
+    correct_answer = 'Hindu-Arabic',
+    incorrect_answers = '["Roman numerals", "Babylonian", "Egyptian"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1bf1c85d-e2d5-4a26-a7c2-cad552258c83';
 
 -- Which ocean currently contains the highest number of active undersea fiber-optic internet cables?
 --   hand-rewritten: question 97->54 chars
@@ -7507,6 +8563,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '7cb4b90d-47c3-488d-8671-36fe90d48039';
 
+-- Which show had the highest series finale viewership ever?
+--   hand-rewritten: answers 29->15 chars
+UPDATE public.questions SET
+    question_text = 'Which show had the highest series finale viewership ever?',
+    correct_answer = 'M*A*S*H',
+    incorrect_answers = '["Game of Thrones", "Breaking Bad", "Friends"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '134e3641-064b-4bb3-b807-cca5deae5dc1';
+
 -- Which significant archaeological discovery in Egypt's Valley of the Kings was announced in 2012?
 --   hand-rewritten: question 96->57 chars, answers 19->18 chars
 UPDATE public.questions SET
@@ -7705,6 +8779,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'ba617707-4fe3-462e-8a1d-71b7c5ca5cb5';
 
+-- Which statement accurately compares the Mariana Trench depth to Mount Everest height?
+--   hand-rewritten: question 85->47 chars, answers 26->20 chars
+UPDATE public.questions SET
+    question_text = 'How does the Mariana Trench compare to Everest?',
+    correct_answer = 'The trench is deeper',
+    incorrect_answers = '["They are about equal", "The trench is half", "The trench is double"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '39834d5c-590b-4029-abde-16228a4a2f37';
+
 -- Which statement accurately describes the susceptibility of sharks to cancer?
 --   hand-rewritten: question 76->22 chars, answers 84->17 chars
 UPDATE public.questions SET
@@ -7813,6 +8905,42 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '79db3c70-6e69-43eb-a445-1c7bc2cb33ed';
 
+-- Which tech largely replaced vacuum tubes in electronic circuits?
+--   hand-rewritten: answers 23->17 chars
+UPDATE public.questions SET
+    question_text = 'Which tech largely replaced vacuum tubes in electronic circuits?',
+    correct_answer = 'Solid-state parts',
+    incorrect_answers = '["Hydraulic systems", "Pneumatic logic", "Mechanical relays"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '330bbc43-f031-4c84-aea7-afa6a7dbfe79';
+
+-- Which technique identifies atomic structure and crystalline phases in devitrified glass?
+--   hand-rewritten: question 88->60 chars, answers 23->19 chars
+UPDATE public.questions SET
+    question_text = 'Which technique reveals crystal phases in devitrified glass?',
+    correct_answer = 'X-ray diffraction',
+    incorrect_answers = '["Optical microscopy", "Electron microscopy", "Mass spectrometry"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '30c258d6-b35a-4cf4-9256-94e9504c478c';
+
 -- Which technological architecture, introduced in 2017, advanced NLP and machine translation?
 --   hand-rewritten: question 91->56 chars, answers 31->20 chars
 UPDATE public.questions SET
@@ -7866,6 +8994,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '5428c403-4c7d-4c23-90da-221252a51560';
+
+-- Which terms describe simultaneous vs. delayed digital communication platforms?
+--   hand-rewritten: question 78->58 chars, answers 28->20 chars
+UPDATE public.questions SET
+    question_text = 'Which terms split live from delayed digital communication?',
+    correct_answer = 'Synchronous or not',
+    incorrect_answers = '["Ephemeral or lasting", "One-to-many or many", "Public or private"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '16cef178-6037-436a-954f-b3bc6c7a8701';
 
 -- Which theological argument bears William Paley's name?
 --   trimmed by rule: answers 21->12 chars
@@ -8119,6 +9265,42 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '68488a8c-4e0c-4aa4-8965-2e1fbb53c09e';
 
+-- Who discovered the first known prehistoric cave paintings?
+--   hand-rewritten: answers 26->16 chars
+UPDATE public.questions SET
+    question_text = 'Who discovered the first known prehistoric cave paintings?',
+    correct_answer = 'Sanz de Sautuola',
+    incorrect_answers = '["Henri Breuil", "Hugo Obermayer", "Louis Simonin"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '222d52ca-95b1-46c7-9de1-ae97c9beb77f';
+
+-- Who got the 2010 Nobel Prize in Physics for graphene?
+--   hand-rewritten: answers 35->18 chars
+UPDATE public.questions SET
+    question_text = 'Who got the 2010 Nobel Prize in Physics for graphene?',
+    correct_answer = 'Geim and Novoselov',
+    incorrect_answers = '["Heck and Negishi", "Curl and Kroto", "Alder and Diels"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '16177a94-7aaa-4fb5-b43c-2bc4282793bb';
+
 -- Who invented the Audion, the first triode vacuum tube, which enabled the amplification of radio signals?
 --   hand-rewritten: question 104->54 chars
 UPDATE public.questions SET
@@ -8245,6 +9427,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'c8bd55ef-b083-46f7-81a4-9fff3bf8d122';
 
+-- Who was the world's wealthiest person in 2024, per Forbes?
+--   hand-rewritten: answers 24->15 chars
+UPDATE public.questions SET
+    question_text = 'Who was the world''s wealthiest person in 2024, per Forbes?',
+    correct_answer = 'Bernard Arnault',
+    incorrect_answers = '["Elon Musk", "Jeff Bezos", "Larry Ellison"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '286d8157-c141-4e81-93ce-7c3e13d8bb21';
+
 -- Who won most Grammys in a single night in 1984?
 --   trimmed by rule: answers 27->15 chars
 UPDATE public.questions SET
@@ -8262,6 +9462,60 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '872f9bac-b2e5-4345-87b0-e5ecb687c575';
+
+-- Who wrongly believed the Sun orbits Earth?
+--   hand-rewritten: answers 31->15 chars
+UPDATE public.questions SET
+    question_text = 'Who wrongly believed the Sun orbits Earth?',
+    correct_answer = 'Ptolemy',
+    incorrect_answers = '["Galileo Galilei", "Isaac Newton", "Johannes Kepler"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '2a731ed8-d936-478e-a164-e53980474139';
+
+-- Why do black holes bend spacetime around them?
+--   hand-rewritten: answers 41->18 chars
+UPDATE public.questions SET
+    question_text = 'Why do black holes bend spacetime around them?',
+    correct_answer = 'Their huge mass',
+    incorrect_answers = '["Magnetic fields", "Rapid rotation", "Quantum tunnelling"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '2bf39a20-bf9c-416d-a6e7-67f4016ff3fe';
+
+-- Why do car windows fog up inside on a cold morning?
+--   hand-rewritten: answers 27->19 chars
+UPDATE public.questions SET
+    question_text = 'Why do car windows fog up inside on a cold morning?',
+    correct_answer = 'Warm air condenses',
+    incorrect_answers = '["Cold air freezes it", "Glass absorbs water", "The frame sweats"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '029cb24b-0936-4f69-bc33-efef3b721ac6';
 
 -- Why do deciduous trees shed leaves before winter?
 --   hand-rewritten: answers 20->19 chars
@@ -8298,6 +9552,42 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '85c62e13-d636-4024-b807-1f6156210965';
+
+-- Why does ice float on water unlike most solids?
+--   hand-rewritten: answers 35->20 chars
+UPDATE public.questions SET
+    question_text = 'Why does ice float on water unlike most solids?',
+    correct_answer = 'Ice is less dense',
+    incorrect_answers = '["Bonds repel gravity", "Air pockets lift it", "Cold reverses weight"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '13049fb8-ae83-4e81-80ba-2529243c507e';
+
+-- Why does sunrise timing vary throughout the year for daily schedules?
+--   hand-rewritten: answers 36->19 chars
+UPDATE public.questions SET
+    question_text = 'Why does sunrise timing vary throughout the year for daily schedules?',
+    correct_answer = 'Earth''s axial tilt',
+    incorrect_answers = '["Air density shifts", "The Moon''s orbit", "Rising solar output"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = true,
+    shorten_status = 'shortened',
+    answer_shorten_status = 'shortened',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '077fa815-437a-4f65-8d76-858fb62b3c80';
 
 -- Why is graphene key to advanced electronics development?
 --   trimmed by rule: answers 23->17 chars
@@ -8336,7 +9626,7 @@ UPDATE public.questions SET
   WHERE id = '64c9a1f4-a3da-4937-babf-f7ca79c281ca';
 
 
--- ── 3. repaired but staged in the Library for review (303) ──────
+-- ── 3. repaired but staged in the Library for review (388) ──────
 -- An answer over 20 chars that could not be shortened without renaming a
 -- proper noun, or a set still unbalanced. Readable, but worth a look.
 
@@ -8610,6 +9900,42 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'ef6693bd-c4ff-464c-b3f4-279286196ecd';
 
+-- Any chemical can instantly induce romantic love in humans?
+--   hand-rewritten: answers 35->24 chars
+UPDATE public.questions SET
+    question_text = 'Any chemical can instantly induce romantic love in humans?',
+    correct_answer = 'No, none exists',
+    incorrect_answers = '["Yes, pheromones do", "Yes, neurochemicals", "Yes, alchemists made one"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '2d39b0b2-8546-48a9-ab31-5eccd76ee86d';
+
+-- Are stars always bright white or varied colors?
+--   hand-rewritten: answers 28->21 chars
+UPDATE public.questions SET
+    question_text = 'Are stars always bright white or varied colors?',
+    correct_answer = 'Varied by temperature',
+    incorrect_answers = '["Always plain white", "Only red or blue", "They change nightly"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '129c40f2-768d-494a-9b86-af5492085229';
+
 -- As of 2024, which single video game title has sold the most copies worldwide across all platforms?
 --   hand-rewritten: question 98->54 chars
 UPDATE public.questions SET
@@ -8645,6 +9971,60 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'b80bdf0b-4d27-4fa8-aa5a-a10964f5222d';
+
+-- Can athletes actually train in high altitudes successfully?
+--   hand-rewritten: answers 40->23 chars
+UPDATE public.questions SET
+    question_text = 'Can athletes actually train in high altitudes successfully?',
+    correct_answer = 'Yes, more red cells',
+    incorrect_answers = '["No, it always hurts", "Only for sprinters", "It is counterproductive"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '213969de-e028-41d5-bf67-3e9a5f3e85e0';
+
+-- Can genetic sequencing identify disease predisposition genes?
+--   hand-rewritten: answers 39->22 chars
+UPDATE public.questions SET
+    question_text = 'Can genetic sequencing identify disease predisposition genes?',
+    correct_answer = 'Yes, BRCA predicts it',
+    incorrect_answers = '["Genes predict nothing", "Sequencing cannot work", "All genes are alike"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0d731c01-91cb-4846-ba29-7352e44c327b';
+
+-- Can goldfish actually remember things longer than seconds?
+--   hand-rewritten: answers 40->22 chars
+UPDATE public.questions SET
+    question_text = 'Can goldfish actually remember things longer than seconds?',
+    correct_answer = 'Yes, months of it',
+    incorrect_answers = '["No, three seconds", "Only where food is", "They forget everything"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '34eca6da-95b3-4db1-8e52-b93a96ab3b4f';
 
 -- Considering their earliest widely recognized forms, which of these scientific instruments was invented first?
 --   hand-rewritten: question 109->46 chars
@@ -8717,6 +10097,42 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '18f6b3cf-0426-488f-b011-3f7313c64acd';
+
+-- Did Napoleon really have a notably short stature historically?
+--   hand-rewritten: answers 37->23 chars
+UPDATE public.questions SET
+    question_text = 'Did Napoleon really have a notably short stature historically?',
+    correct_answer = 'No, average height',
+    incorrect_answers = '["Yes, extremely short", "Yes, well below average", "Yes, he had dwarfism"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '2c6125dc-e5e3-4447-a8c4-3ddd9878572f';
+
+-- Did ancient Romans really build in straight lines always?
+--   hand-rewritten: answers 33->23 chars
+UPDATE public.questions SET
+    question_text = 'Did ancient Romans really build in straight lines always?',
+    correct_answer = 'No, terrain won out',
+    incorrect_answers = '["Yes, the army needed it", "Only for the roads", "They could not deviate"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '394dee2a-eedc-452e-83f0-879e2fd03b17';
 
 -- Did the Kardashian family gain major fame before or after Keeping Up with the Kardashians premiered?
 --   hand-rewritten: question 100->61 chars
@@ -8862,6 +10278,42 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '877bfcfa-960f-4ea6-aa51-76b77464b9ed';
 
+-- First live-action superhero TV show?
+--   hand-rewritten: no textual change
+UPDATE public.questions SET
+    question_text = 'First live-action superhero TV show?',
+    correct_answer = 'Adventures of Superman',
+    incorrect_answers = '["Batman", "The Incredible Hulk", "Wonder Woman"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '32a6d26c-2a81-442f-a7d8-12f694a3ee14';
+
+-- For Olympic speed skating, how does water mineral content affect ice quality?
+--   hand-rewritten: question 77->55 chars, answers 27->22 chars
+UPDATE public.questions SET
+    question_text = 'How does water purity affect Olympic speed skating ice?',
+    correct_answer = 'Pure water is smoother',
+    incorrect_answers = '["Calcium aids the glide", "Minerals slow melting", "Iron hardens the ice"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1f7d3e86-56b7-42e0-bb22-7a798a745dba';
+
 -- From a critical sociological perspective, cancel culture is often characterized as a form of what?
 --   hand-rewritten: question 98->51 chars
 UPDATE public.questions SET
@@ -8970,6 +10422,78 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '80506fc5-cc55-4035-a633-c1f5252fde1c';
 
+-- How are architectural orders classified in classical design?
+--   hand-rewritten: answers 28->24 chars
+UPDATE public.questions SET
+    question_text = 'How are architectural orders classified in classical design?',
+    correct_answer = 'Doric, Ionic, Corinthian',
+    incorrect_answers = '["Gold, silver, bronze", "Spring, summer, fall", "North, south, east"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '022e8d28-9263-477a-940c-c6fc1d0eec8e';
+
+-- How are materials classified by electrical conductivity?
+--   hand-rewritten: answers 38->23 chars
+UPDATE public.questions SET
+    question_text = 'How are materials classified by electrical conductivity?',
+    correct_answer = 'Conductor to insulator',
+    incorrect_answers = '["Magnetic to diamagnetic", "Elastic to brittle", "Dense to hollow"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '02c25c27-8589-40f7-a861-dd0db7753e82';
+
+-- How are social media algorithms typically classified?
+--   hand-rewritten: answers 41->23 chars
+UPDATE public.questions SET
+    question_text = 'How are social media algorithms typically classified?',
+    correct_answer = 'Rank, filter, recommend',
+    incorrect_answers = '["By their colour scheme", "By the user''s age", "By posting frequency"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '33fc4a88-4b9e-434c-8cab-684898f0575d';
+
+-- How are speech sounds classified by production in the vocal tract?
+--   hand-rewritten: answers 42->22 chars
+UPDATE public.questions SET
+    question_text = 'How are speech sounds classified by production in the vocal tract?',
+    correct_answer = 'Place, manner, voicing',
+    incorrect_answers = '["Pitch and tone level", "Syllable structure", "Lexical stress"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '06d9047c-6e24-4633-a533-8ca0bc233c46';
+
 -- How can communities build resilience after an earthquake (PTG)?
 --   hand-rewritten: question 63->53 chars, answers 28->22 chars
 UPDATE public.questions SET
@@ -9006,6 +10530,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '51634eac-d09b-44aa-a203-b7a8a24091f5';
 
+-- How did shared faith foster social cohesion historically?
+--   hand-rewritten: answers 40->21 chars
+UPDATE public.questions SET
+    question_text = 'How did shared faith foster social cohesion historically?',
+    correct_answer = 'It united strangers',
+    incorrect_answers = '["It blocks cooperation", "It has no effect", "Community needs none"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '357dff83-bee6-4c2e-a2b8-38cceca2ec62';
+
 -- How did social media significantly influence the 2011 Arab Spring uprisings?
 --   hand-rewritten: question 76->48 chars, answers 99->22 chars
 UPDATE public.questions SET
@@ -9024,6 +10566,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'efb26ba3-6f8a-444b-85af-e73a81fb9a60';
 
+-- How did synthetic dyes unexpectedly impact the global labor market?
+--   hand-rewritten: answers 21->21 chars
+UPDATE public.questions SET
+    question_text = 'How did synthetic dyes unexpectedly impact the global labor market?',
+    correct_answer = 'Natural dyes died out',
+    incorrect_answers = '["Wool demand rose", "Pigments were banned", "New mills opened"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '19aab468-b1cd-4a1e-b584-a3cfb80b6d4d';
+
 -- How did the advent of printing technology primarily influence regional language development?
 --   hand-rewritten: question 92->43 chars, answers 71->22 chars
 UPDATE public.questions SET
@@ -9041,6 +10601,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '8e99cd1a-a99f-47aa-b80c-e76be6cb1d95';
+
+-- How did the cane toad introduction affect Australian predators?
+--   hand-rewritten: answers 42->22 chars
+UPDATE public.questions SET
+    question_text = 'How did the cane toad introduction affect Australian predators?',
+    correct_answer = 'It poisoned predators',
+    incorrect_answers = '["It controlled pests", "It fed predators well", "It balanced the system"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '35549676-15e9-4c77-97a1-f5ca8b23b6fb';
 
 -- How did the construction of the Panama Canal significantly impact trade between the Atlantic and Pacific Oceans?
 --   hand-rewritten: question 112->44 chars, answers 99->21 chars
@@ -9096,6 +10674,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'f1de0348-129d-46ff-a73e-8fba28cda5a1';
 
+-- How do Olympic venues affect wildlife habitats and migration?
+--   hand-rewritten: answers 39->22 chars
+UPDATE public.questions SET
+    question_text = 'How do Olympic venues affect wildlife habitats and migration?',
+    correct_answer = 'They cut off corridors',
+    incorrect_answers = '["Wildlife increases", "There is no impact", "Animals adapt at once"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '31220c60-ea6d-4fee-9234-b1f9fd8081b4';
+
 -- How do bats navigate using echolocation?
 --   hand-rewritten: question 40->37 chars, answers 74->22 chars
 UPDATE public.questions SET
@@ -9114,6 +10710,78 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'ee9c9a8c-4d05-4848-8a6b-11176fe55525';
 
+-- How do decomposers benefit ecosystems?
+--   hand-rewritten: answers 30->22 chars
+UPDATE public.questions SET
+    question_text = 'How do decomposers benefit ecosystems?',
+    correct_answer = 'They recycle nutrients',
+    incorrect_answers = '["They grow new plants", "They remove herbivores", "They hold in water"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '31cfbca7-3606-46e5-b361-c7af3bd22abb';
+
+-- How do games generate unique levels with predefined rules?
+--   hand-rewritten: answers 21->21 chars
+UPDATE public.questions SET
+    question_text = 'How do games generate unique levels with predefined rules?',
+    correct_answer = 'Procedural generation',
+    incorrect_answers = '["Pattern repetition", "Texture rotation", "Lighting shifts"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '32bf5c62-561f-4307-b23c-ce883c23f5a5';
+
+-- How do hospital robots assist with infection control?
+--   hand-rewritten: answers 21->22 chars
+UPDATE public.questions SET
+    question_text = 'How do hospital robots assist with infection control?',
+    correct_answer = 'They shine UV light',
+    incorrect_answers = '["They diagnose illness", "They give antibiotics", "They clean instruments"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '3a148a43-7397-453f-baa1-5fbe59971d7d';
+
+-- How do microplastics in oceans affect human health?
+--   hand-rewritten: answers 40->21 chars
+UPDATE public.questions SET
+    question_text = 'How do microplastics in oceans affect human health?',
+    correct_answer = 'They build up in fish',
+    incorrect_answers = '["They stay in water", "They dissolve away", "They repel organisms"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '140f77ea-e936-4e56-afab-82f61e1792f6';
+
 -- How do mycorrhizal fungi primarily aid plant nutrient absorption?
 --   hand-rewritten: question 65->42 chars, answers 104->24 chars
 UPDATE public.questions SET
@@ -9131,6 +10799,42 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'b399fe75-5ca4-4412-ae8d-c4401a013486';
+
+-- How do mycorrhizal networks exchange nutrients between plants?
+--   hand-rewritten: answers 42->22 chars
+UPDATE public.questions SET
+    question_text = 'How do mycorrhizal networks exchange nutrients between plants?',
+    correct_answer = 'Through fungal threads',
+    incorrect_answers = '["Root-to-root contact", "Spore distribution", "Soil conductivity"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0259645a-2244-478b-b145-d50cc42516c7';
+
+-- How do psychological thrillers misrepresent mental illness?
+--   hand-rewritten: answers 21->23 chars
+UPDATE public.questions SET
+    question_text = 'How do psychological thrillers misrepresent mental illness?',
+    correct_answer = 'Patients seem dangerous',
+    incorrect_answers = '["They portray it well", "They reduce stigma", "They match the manual"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '167d329f-ab59-4ec9-83ea-a55c6abea48a';
 
 -- How do radon emissions increase lung cancer risk?
 --   hand-rewritten: answers 21->21 chars
@@ -9186,6 +10890,42 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '3c3031ab-c70d-438a-aa86-72bbb5a953cb';
 
+-- How do soil formation and rock weathering relate?
+--   hand-rewritten: answers 21->21 chars
+UPDATE public.questions SET
+    question_text = 'How do soil formation and rock weathering relate?',
+    correct_answer = 'Weathering makes soil',
+    incorrect_answers = '["Soil causes weather", "They are unrelated", "Rock prevents soil"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '215f1409-2147-47c8-992e-54236f1a52b5';
+
+-- How do wetlands filter pollutants from water systems?
+--   hand-rewritten: answers 34->21 chars
+UPDATE public.questions SET
+    question_text = 'How do wetlands filter pollutants from water systems?',
+    correct_answer = 'Plants and sediment',
+    incorrect_answers = '["Chemical oxidation", "Bacterial evaporation", "Light absorption"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '009b5d3f-86ee-4637-940d-d4ea47fa4969';
+
 -- How does Jupiter's Great Red Spot primarily interact with the planet's atmosphere?
 --   hand-rewritten: question 82->33 chars, answers 99->21 chars
 UPDATE public.questions SET
@@ -9204,6 +10944,60 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'b5238ba9-8d3b-4602-b990-3ec27e08ce84';
 
+-- How does air resistance primarily affect the horizontal distance a javelin travels?
+--   hand-rewritten: question 83->55 chars, answers 42->23 chars
+UPDATE public.questions SET
+    question_text = 'How does air resistance affect how far a javelin flies?',
+    correct_answer = 'It shortens the throw',
+    incorrect_answers = '["It lengthens the flight", "It lifts the javelin", "It pushes it forward"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1438bb00-6273-42b2-950c-329abc33395e';
+
+-- How does an unreliable narrator mislead film viewers?
+--   hand-rewritten: answers 32->21 chars
+UPDATE public.questions SET
+    question_text = 'How does an unreliable narrator mislead film viewers?',
+    correct_answer = 'Distorted reality',
+    incorrect_answers = '["Objective events", "Linear structure", "Consistent characters"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1c987efd-4da7-4717-bc6f-f8ce74cd0f75';
+
+-- How does friction help you walk on the ground safely?
+--   hand-rewritten: answers 40->23 chars
+UPDATE public.questions SET
+    question_text = 'How does friction help you walk on the ground safely?',
+    correct_answer = 'It grips the surface',
+    incorrect_answers = '["It lowers foot pressure", "It stops heat building", "It absorbs the impact"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '061acd02-3671-4f14-ae1a-06dd0e1ceb60';
+
 -- How does inflammation primarily contribute to the body's healing process?
 --   hand-rewritten: question 73->41 chars, answers 70->21 chars
 UPDATE public.questions SET
@@ -9221,6 +11015,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '7693acc8-55b5-4504-b420-9cd04eb2bf36';
+
+-- How does periodization divide Medieval European civilization?
+--   hand-rewritten: answers 26->22 chars
+UPDATE public.questions SET
+    question_text = 'How does periodization divide Medieval European civilization?',
+    correct_answer = 'Early, High and Late',
+    incorrect_answers = '["Dark, light and reform", "Feudal and after", "Roman and after"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '2680db9c-9ecb-4dde-866d-f3dad5404aa0';
 
 -- In 2008, Paul Krugman was awarded which of these prestigious honors for his work in economics?
 --   hand-rewritten: question 94->46 chars, answers 41->22 chars
@@ -9420,6 +11232,42 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '5b48bdec-b538-4e0f-9173-eea2a95fab18';
 
+-- In mathematics, what characteristic defines a perfect number?
+--   hand-rewritten: answers 46->25 chars
+UPDATE public.questions SET
+    question_text = 'In mathematics, what characteristic defines a perfect number?',
+    correct_answer = 'It equals its divisors',
+    incorrect_answers = '["Divisible by 1 and itself", "It has even divisors", "Its digits sum to a prime"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '13ff6c09-0d79-4d60-a13a-a6e3bb0e52fb';
+
+-- In military grid references, what does the acronym UTM stand for?
+--   hand-rewritten: answers 29->29 chars
+UPDATE public.questions SET
+    question_text = 'In military grid references, what does the acronym UTM stand for?',
+    correct_answer = 'Universal Transverse Mercator',
+    incorrect_answers = '["United Tactical Mapping", "Universal Targeting Mark", "Upper Terrain Measurement"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1cc3a9a3-bd3e-4ea3-ba1a-593e2f85880a';
+
 -- In soccer, what common numerical notation is used to represent a team's tactical formation or lineup?
 --   hand-rewritten: question 101->49 chars, answers 39->22 chars
 UPDATE public.questions SET
@@ -9600,6 +11448,42 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'c4310c1b-7fd3-4a48-ae53-b0dcb7ade3f1';
 
+-- Is it true that rare gemstones have artificial price supports?
+--   hand-rewritten: answers 27->21 chars
+UPDATE public.questions SET
+    question_text = 'Is it true that rare gemstones have artificial price supports?',
+    correct_answer = 'Yes, cartels do it',
+    incorrect_answers = '["No, it is free market", "Only for diamonds", "Prices only ever fall"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '37a51091-3f98-4d01-846e-70daa1520b4a';
+
+-- Is it true that sugar makes children hyperactive?
+--   hand-rewritten: answers 26->21 chars
+UPDATE public.questions SET
+    question_text = 'Is it true that sugar makes children hyperactive?',
+    correct_answer = 'No, none at all',
+    incorrect_answers = '["Yes, definitely", "Yes, if refined", "Yes, in large amounts"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '092fbd28-7ddf-44a9-aa83-71e62ec06eb5';
+
 -- Is the common saying 'lightning never strikes the same place twice' scientifically accurate?
 --   hand-rewritten: question 92->55 chars
 UPDATE public.questions SET
@@ -9636,6 +11520,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '77a1ef14-7ee0-4ca8-aa70-49093fe06c00';
 
+-- Key combat difference: European knight vs Japanese samurai?
+--   hand-rewritten: question 59->41 chars, answers 48->21 chars
+UPDATE public.questions SET
+    question_text = 'How did knight and samurai armour differ?',
+    correct_answer = 'Plate versus lamellar',
+    incorrect_answers = '["Honour versus money", "Horse versus foot", "Crossbow versus none"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '3ae51e03-0124-4396-a0c6-ffebc609edf4';
+
 -- Memory reconstruction studies primarily contradict which of the following common beliefs about human recall?
 --   hand-rewritten: question 108->60 chars, answers 65->23 chars
 UPDATE public.questions SET
@@ -9671,6 +11573,42 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'c12aa1db-b3ad-47cb-b665-a5e0c4aa08b3';
+
+-- Primary ionizing radiation hazard from particle accelerators?
+--   hand-rewritten: answers 22->22 chars
+UPDATE public.questions SET
+    question_text = 'Primary ionizing radiation hazard from particle accelerators?',
+    correct_answer = 'The particle beam',
+    incorrect_answers = '["High-frequency sound", "Strong magnetic fields", "Static electricity"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '2d4aa699-d475-4fb3-9566-f6a675bfadbf';
+
+-- Reality TV's sub-genres are accurately listed by which set?
+--   hand-rewritten: answers 42->25 chars
+UPDATE public.questions SET
+    question_text = 'Reality TV''s sub-genres are accurately listed by which set?',
+    correct_answer = 'Contest, dating, survival',
+    incorrect_answers = '["Sitcom, drama, horror", "News, sports, weather", "Sci-fi, fantasy, western"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '345cfc3a-1d75-48b0-801e-b14ded95791a';
 
 -- Regarding the duration and reversibility of ocean dead zones, what was a common scientific misconception?
 --   hand-rewritten: question 105->58 chars, answers 63->23 chars
@@ -9780,6 +11718,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'a0531c23-2775-4073-9cd3-1252df9579b9';
 
+-- What APA honor did B.F. Skinner receive in 1958?
+--   hand-rewritten: question 48->49 chars, answers 43->23 chars
+UPDATE public.questions SET
+    question_text = 'Which APA award did B.F. Skinner receive in 1958?',
+    correct_answer = 'Distinguished Scientist',
+    incorrect_answers = '["A Nobel nomination", "Lifetime Achievement", "Medal of Freedom"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '056f3a56-7764-4ccf-9677-938b9869a2f5';
+
 -- What Adobe software do pros use for photo editing & organizing?
 --   trimmed by rule: answers 23->17 chars
 UPDATE public.questions SET
@@ -9834,6 +11790,96 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'c4859815-85e6-4cf3-903a-2a8bcc4a43e9';
 
+-- What are the three main classifications of science?
+--   hand-rewritten: answers 21->23 chars
+UPDATE public.questions SET
+    question_text = 'What are the three main classifications of science?',
+    correct_answer = 'Formal, natural, social',
+    incorrect_answers = '["Dewey decimal classes", "Academic departments", "Industrial standards"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '03c2c3a4-4ce0-47e2-bbdc-5bac08e297ae';
+
+-- What best reflects modern view of the "Dark Ages"?
+--   hand-rewritten: answers 24->23 chars
+UPDATE public.questions SET
+    question_text = 'What best reflects modern view of the "Dark Ages"?',
+    correct_answer = 'Mixed, not all dark',
+    incorrect_answers = '["Entirely dark", "Fully enlightened", "Wholly without progress"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0f9162e1-8a2d-4d47-87d4-2a0eeed6efc0';
+
+-- What causes earthquakes primarily?
+--   hand-rewritten: answers 36->22 chars
+UPDATE public.questions SET
+    question_text = 'What causes earthquakes primarily?',
+    correct_answer = 'Moving tectonic plates',
+    incorrect_answers = '["Underground water", "Volcanic gas", "The Sun''s gravity"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '301e4260-a698-4e48-8177-3a80fe59fe36';
+
+-- What causes the Fibonacci sequence in nature?
+--   hand-rewritten: answers 42->21 chars
+UPDATE public.questions SET
+    question_text = 'What causes the Fibonacci sequence in nature?',
+    correct_answer = 'Efficient packing',
+    incorrect_answers = '["Random patterns", "Divine design", "Mathematical accident"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0e2ccf50-ddd4-4e0e-b5a6-7440cad4968f';
+
+-- What collective term refers to the four fundamental forces?
+--   hand-rewritten: question 59->65 chars, answers 24->24 chars
+UPDATE public.questions SET
+    question_text = 'What are gravity, electromagnetism and the nuclear forces called?',
+    correct_answer = 'Fundamental interactions',
+    incorrect_answers = '["Newton''s hierarchy", "The Planck force scale", "The Einstein model"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '03a2c722-6a3d-46df-af91-4fc2403f1991';
+
 -- What did Buddha teach as the path to enlightenment?
 --   trimmed by rule: answers 24->20 chars
 UPDATE public.questions SET
@@ -9851,6 +11897,96 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '35f2b15e-51fc-4525-aaa8-bc474286c2c6';
+
+-- What did Neanderthal skeletons reveal about their health?
+--   hand-rewritten: answers 41->25 chars
+UPDATE public.questions SET
+    question_text = 'What did Neanderthal skeletons reveal about their health?',
+    correct_answer = 'Arthritis was common',
+    incorrect_answers = '["Their bones were perfect", "No bone disease existed", "Only violence killed them"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '049cfb4c-32ab-4de1-96c4-18be049c9203';
+
+-- What does 'algebra' etymologically derive from?
+--   hand-rewritten: answers 27->22 chars
+UPDATE public.questions SET
+    question_text = 'What does ''algebra'' etymologically derive from?',
+    correct_answer = 'Reuniting broken parts',
+    incorrect_answers = '["Calculating numbers", "Unknown quantities", "Solving equations"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '20c3634d-8f9e-4558-8073-350f251d360f';
+
+-- What does 'empiricism' derive from meaning?
+--   hand-rewritten: answers 24->19 chars
+UPDATE public.questions SET
+    question_text = 'What does ''empiricism'' derive from meaning?',
+    correct_answer = 'Experience',
+    incorrect_answers = '["Empire or rule", "Emotion or feeling", "Eternity or lasting"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0b937372-580a-4cff-8125-7b0a71331968';
+
+-- What does 'nadir' mean in astronomical terminology?
+--   hand-rewritten: answers 31->21 chars
+UPDATE public.questions SET
+    question_text = 'What does ''nadir'' mean in astronomical terminology?',
+    correct_answer = 'The point below you',
+    incorrect_answers = '["The highest sky point", "The celestial pole", "The Sun''s direction"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '19c6afcb-c07c-4d00-a80f-f49b3d7688e1';
+
+-- What does a VPN protect when using public WiFi?
+--   hand-rewritten: answers 36->22 chars
+UPDATE public.questions SET
+    question_text = 'What does a VPN protect when using public WiFi?',
+    correct_answer = 'Encryption and privacy',
+    incorrect_answers = '["Malware prevention", "Speed optimisation", "Extra bandwidth"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0c3ba89d-fcba-41f4-bdb7-95a615db7acd';
 
 -- What does the skull emoji (💀) mean in internet slang?
 --   hand-rewritten: question 53->38 chars, answers 41->23 chars
@@ -9888,6 +12024,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '589c37e8-3dc5-494f-a855-976e7b2b7048';
 
+-- What geographical features isolated ancient Greek city-states?
+--   hand-rewritten: answers 40->21 chars
+UPDATE public.questions SET
+    question_text = 'What geographical features isolated ancient Greek city-states?',
+    correct_answer = 'Mountains and islands',
+    incorrect_answers = '["Plains and valleys", "Deserts and steppes", "Tropical rainforest"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '01e3e80c-c78f-4a74-98b8-509ca5da64c1';
+
 -- What geological process was primarily responsible for the formation of the distinctive Scandinavian fjords?
 --   hand-rewritten: question 107->45 chars
 UPDATE public.questions SET
@@ -9924,6 +12078,42 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '4cd354c6-7b17-457e-9812-abb7f758c766';
 
+-- What governing body manages Egyptian antiquities?
+--   hand-rewritten: answers 32->21 chars
+UPDATE public.questions SET
+    question_text = 'What governing body manages Egyptian antiquities?',
+    correct_answer = 'A government ministry',
+    incorrect_answers = '["The Cairo bureau", "A heritage council", "A preservation board"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1a2b7839-1d94-4cd7-b2e0-95f6486bdc50';
+
+-- What honor did Henrietta Leavitt receive from Harvard Observatory?
+--   hand-rewritten: question 66->60 chars, answers 35->22 chars
+UPDATE public.questions SET
+    question_text = 'What post did Henrietta Leavitt hold at Harvard Observatory?',
+    correct_answer = 'Curator of Photographs',
+    incorrect_answers = '["Director of Research", "Chief Astronomer", "Head of Calculations"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '10f56d08-4232-4f7f-b081-33812db27198';
+
 -- What imaging technique maps cloud-shrouded planetary surfaces?
 --   trimmed by rule: answers 30->19 chars
 UPDATE public.questions SET
@@ -9941,6 +12131,42 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '01d3f603-b395-43b8-bb3b-cd70e02b350d';
+
+-- What internet phenomenon caused GameStop stock volatility?
+--   hand-rewritten: answers 41->21 chars
+UPDATE public.questions SET
+    question_text = 'What internet phenomenon caused GameStop stock volatility?',
+    correct_answer = 'The GameStop squeeze',
+    incorrect_answers = '["The Dogecoin surge", "TikTok stock tipsters", "A 4chan forum raid"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '13c4128c-80d7-4e95-9467-069b12c353a6';
+
+-- What is 'chiaroscuro' in artistic terminology?
+--   hand-rewritten: answers 28->22 chars
+UPDATE public.questions SET
+    question_text = 'What is ''chiaroscuro'' in artistic terminology?',
+    correct_answer = 'Light against shadow',
+    incorrect_answers = '["A type of paint", "An architectural style", "A Renaissance period"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1e192585-04bf-484d-bf8b-9e7f175f5ba0';
 
 -- What is a common myth surrounding the recording process of Queen's iconic song, "Bohemian Rhapsody"?
 --   hand-rewritten: question 100->51 chars, answers 98->22 chars
@@ -9996,6 +12222,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'f0d6a7b5-ab2a-4ba1-9ce9-7ace5af66a19';
 
+-- What is the linguistic concept for historical language relations?
+--   hand-rewritten: no textual change
+UPDATE public.questions SET
+    question_text = 'What is the linguistic concept for historical language relations?',
+    correct_answer = 'Comparative linguistics',
+    incorrect_answers = '["Phonetic transcription", "Morpheme analysis", "Syntactic parsing"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '2bcc78b2-de59-451e-8d58-72c40ccfeccc';
+
 -- What is the name of the artifact classification system developed by Christian Jürgensen Thomsen?
 --   hand-rewritten: question 96->52 chars
 UPDATE public.questions SET
@@ -10031,6 +12275,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '6dd92db9-4564-4260-9d57-4baf43caa6b4';
+
+-- What mistaken assumption did Newton make about time?
+--   hand-rewritten: answers 40->21 chars
+UPDATE public.questions SET
+    question_text = 'What mistaken assumption did Newton make about time?',
+    correct_answer = 'Time flows uniformly',
+    incorrect_answers = '["Time is circular", "Time is an illusion", "Only gravity bends it"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0bbf46bf-1a04-41fe-995b-c38e6ef63e7c';
 
 -- What number multiplies any number to give zero?
 --   hand-rewritten: question 47->43 chars, answers 2->12 chars
@@ -10068,6 +12330,42 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '6686f3a5-d533-45f9-90b3-5009becf072e';
 
+-- What psychological effect does viewing the night sky have on human perspective?
+--   hand-rewritten: question 79->57 chars, answers 38->21 chars
+UPDATE public.questions SET
+    question_text = 'What effect does looking at the night sky have on people?',
+    correct_answer = 'It humbles people',
+    incorrect_answers = '["It raises anxiety", "It sharpens eyesight", "It builds maths skill"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0b77c430-fe31-46b9-a027-b229a3d7dc75';
+
+-- What reversed our understanding of Mercury's orbit?
+--   hand-rewritten: answers 28->21 chars
+UPDATE public.questions SET
+    question_text = 'What reversed our understanding of Mercury''s orbit?',
+    correct_answer = 'General relativity',
+    incorrect_answers = '["Newton''s gravity law", "Kepler''s observations", "Galileo''s telescope"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '12e97454-0582-4339-b648-7de9a647064f';
+
 -- What scale, developed in 1935, measures earthquake magnitude?
 --   trimmed by rule: answers 22->16 chars
 UPDATE public.questions SET
@@ -10103,6 +12401,60 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'ccc36c38-3f6c-4cfd-9c7b-54a79f5644cc';
+
+-- What species conservation success occurred post-2010?
+--   hand-rewritten: answers 21->23 chars
+UPDATE public.questions SET
+    question_text = 'What species conservation success occurred post-2010?',
+    correct_answer = 'Arabian oryx revival',
+    incorrect_answers = '["Dodo resurrection", "Passenger pigeon return", "Thylacine revival"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1eedf30e-2333-4522-8e8b-5b6ee0e94ac4';
+
+-- What substance makes diamonds sparkle brilliantly?
+--   hand-rewritten: answers 21->21 chars
+UPDATE public.questions SET
+    question_text = 'What substance makes diamonds sparkle brilliantly?',
+    correct_answer = 'It bends light hard',
+    incorrect_answers = '["Its surface polish", "An inner light source", "A clear coating"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '3492d3af-4c9f-438e-a130-8d3f9b8db782';
+
+-- What substance seals ancient Roman structures?
+--   hand-rewritten: answers 21->21 chars
+UPDATE public.questions SET
+    question_text = 'What substance seals ancient Roman structures?',
+    correct_answer = 'Volcanic ash concrete',
+    incorrect_answers = '["Plain lime mortar", "Natural bitumen", "Baked clay paste"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '122caa95-288c-468a-ac10-29e3ef5e074e';
 
 -- What surgical complication does sterile protocol prevent?
 --   trimmed by rule: answers 29->20 chars
@@ -10212,6 +12564,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '422110ae-83c8-4d27-8894-227f3eba81ae';
 
+-- What was the first music video ever aired on MTV?
+--   hand-rewritten: no textual change
+UPDATE public.questions SET
+    question_text = 'What was the first music video ever aired on MTV?',
+    correct_answer = 'Video Killed the Radio Star',
+    incorrect_answers = '["Billie Jean", "Like a Virgin", "Hungry Like the Wolf"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '34db7449-d99e-4dc4-86de-eea81408b3c0';
+
 -- What was the official White House explanation for Donald Trump's "Covfefe" tweet?
 --   hand-rewritten: question 81->52 chars, answers 59->22 chars
 UPDATE public.questions SET
@@ -10229,6 +12599,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'f634d48d-b3dc-4064-9bb2-f288b3e229ba';
+
+-- What was the original meaning of 'therapeia' in Greek?
+--   hand-rewritten: answers 21->21 chars
+UPDATE public.questions SET
+    question_text = 'What was the original meaning of ''therapeia'' in Greek?',
+    correct_answer = 'Service or attendance',
+    incorrect_answers = '["Physical exercise", "Deep contemplation", "Public speaking"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '3761e1cd-e83b-4032-8e25-53b26436b9a9';
 
 -- What was the primary military application that first utilized integrated circuits on a large scale?
 --   hand-rewritten: question 99->51 chars
@@ -10254,6 +12642,24 @@ UPDATE public.questions SET
     question_text = 'What first used integrated circuits at large scale?',
     correct_answer = 'Missile guidance systems',
     incorrect_answers = '["Early satellite communication", "Submarine sonar arrays", "Radar jamming technology"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '2d0f89d7-7c69-4c6f-87c3-b572d9982dc2';
+
+-- What was the primary military application that first utilized integrated circuits on a large scale?
+--   hand-rewritten: question 99->51 chars, answers 29->18 chars
+UPDATE public.questions SET
+    question_text = 'What first used integrated circuits at large scale?',
+    correct_answer = 'Missile guidance',
+    incorrect_answers = '["Home computers", "Pocket calculators", "Television sets"]'::jsonb,
     original_question_text = COALESCE(original_question_text, question_text),
     original_correct_answer = COALESCE(original_correct_answer, correct_answer),
     original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
@@ -10283,6 +12689,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'df3f738b-8bac-4cb7-8bdd-e1695b7810cd';
+
+-- What's the longest continuous siege in history?
+--   hand-rewritten: answers 33->23 chars
+UPDATE public.questions SET
+    question_text = 'What''s the longest continuous siege in history?',
+    correct_answer = 'Ceuta, by Morocco',
+    incorrect_answers = '["Masada, by Rome", "Acre, by the Crusaders", "Candia, by the Ottomans"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '34886972-191f-485d-b4fe-c6ec8ea887e2';
 
 -- What's the scientific classification of X-Men's human subspecies?
 --   trimmed by rule: answers 21->16 chars
@@ -10355,6 +12779,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '8ee4bef6-6ed3-47be-a5e0-bbc66424668e';
+
+-- Which 1888 group is known for its yellow-bordered magazine?
+--   hand-rewritten: answers 27->19 chars
+UPDATE public.questions SET
+    question_text = 'Which 1888 group is known for its yellow-bordered magazine?',
+    correct_answer = 'National Geographic',
+    incorrect_answers = '["Royal Geographical", "The Smithsonian", "UNESCO"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '29a6a5b8-dee0-4086-b726-94068b4b0f7a';
 
 -- Which 18th-century Prussian “Philosopher King” reformed universities and founded Berlin’s Academy?
 --   hand-rewritten: question 98->45 chars
@@ -10445,6 +12887,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'f0d00105-69b0-4956-92a2-4a5978d6bd42';
+
+-- Which 2020 Golden Joystick Award did The Last of Us Part II win?
+--   hand-rewritten: no textual change
+UPDATE public.questions SET
+    question_text = 'Which 2020 Golden Joystick Award did The Last of Us Part II win?',
+    correct_answer = 'Ultimate Game of the Year',
+    incorrect_answers = '["Best Multiplayer Game", "Best Family Game", "PC Game of the Year"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '31b0f9ec-8d9b-42c6-9314-bcaddda15dcb';
 
 -- Which Apple TV+ series is praised for its realistic multi-decade evolution of a lunar colony?
 --   hand-rewritten: question 93->58 chars
@@ -10571,6 +13031,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '8d19df8b-fe16-4a58-88f7-b42014213bf5';
+
+-- Which TikTok trend used NASA footage and space aesthetics?
+--   hand-rewritten: question 58->55 chars, answers 31->22 chars
+UPDATE public.questions SET
+    question_text = 'Which TikTok trend paired NASA footage with a pop song?',
+    correct_answer = 'The NASA trend',
+    incorrect_answers = '["Space Oddity challenge", "Mars rover dance-off", "Cosmic dust filter"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '32c8525b-4d68-4d86-bd01-c5def2d0e2ce';
 
 -- Which U.S. academic society promotes documentation and preservation of indigenous languages?
 --   hand-rewritten: question 92->56 chars, answers 39->25 chars
@@ -10733,6 +13211,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '08bb2295-4404-43f8-acb7-c7ac187c8f65';
+
+-- Which ancient Egyptian mummies showed atherosclerosis?
+--   hand-rewritten: answers 40->23 chars
+UPDATE public.questions SET
+    question_text = 'Which ancient Egyptian mummies showed atherosclerosis?',
+    correct_answer = 'Royal mummies did',
+    incorrect_answers = '["None showed disease", "Only labourers did", "The evidence is unclear"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '33561458-792f-4c35-9a06-251c873939a2';
 
 -- Which ancient civilization first developed large-scale canal irrigation in the Fertile Crescent?
 --   hand-rewritten: question 96->63 chars
@@ -11292,6 +13788,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '6b8439da-0b3e-4420-af2e-d9c4543c9939';
 
+-- Which early Lost promise later became a major viewer complaint?
+--   hand-rewritten: answers 38->22 chars
+UPDATE public.questions SET
+    question_text = 'Which early Lost promise later became a major viewer complaint?',
+    correct_answer = 'All would be explained',
+    incorrect_answers = '["It would end at five", "No flashbacks at all", "A real island setting"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '147344df-0747-4b8c-b722-0edd954ec8b1';
+
 -- Which early civilization used cordons sanitaires to fight plague during the Justinian Plague?
 --   hand-rewritten: question 93->59 chars
 UPDATE public.questions SET
@@ -11309,6 +13823,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'f99ba0e9-7309-437f-962e-aefd14a01e74';
+
+-- Which economic theory explains trade benefits from differences in labor productivity?
+--   hand-rewritten: question 85->57 chars, answers 31->25 chars
+UPDATE public.questions SET
+    question_text = 'Which theory explains trade gains from productivity gaps?',
+    correct_answer = 'Comparative advantage',
+    incorrect_answers = '["The Heckscher-Ohlin model", "Stolper-Samuelson", "The Rybczynski theorem"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '34d84432-7718-4a48-9357-1d559bb4741e';
 
 -- Which facial muscle is primarily responsible for raising the corners of the mouth into a smile?
 --   hand-rewritten: question 95->51 chars
@@ -11345,6 +13877,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '2cce5865-07c4-4126-9e7c-47cf7cc139db';
+
+-- Which famous book, detailing travels, is attributed to Marco Polo?
+--   hand-rewritten: answers 25->20 chars
+UPDATE public.questions SET
+    question_text = 'Which famous book, detailing travels, is attributed to Marco Polo?',
+    correct_answer = 'The Travels',
+    incorrect_answers = '["Silk Road Chronicles", "Journey to the East", "The Venetian Voyager"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '2b99ae08-75fa-4a1c-8db1-5d228dede965';
 
 -- Which famous bridge nearly collapsed during construction in 1940?
 --   trimmed by rule: answers 21->14 chars
@@ -11399,6 +13949,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '9fc08e0d-1ea3-44a0-982e-c7ac6a66156d';
+
+-- Which figure is wrongly credited with early European mapping of the Dead Sea?
+--   hand-rewritten: question 77->46 chars, answers 41->22 chars
+UPDATE public.questions SET
+    question_text = 'Who first mapped the Nile''s source for Europe?',
+    correct_answer = 'John Hanning Speke',
+    incorrect_answers = '["David Livingstone", "Henry Morton Stanley", "Richard Francis Burton"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0a3dadfa-4ecd-4efe-8289-6c666fd6660f';
 
 -- Which film features a protagonist admitted to a mental institution after a suicide attempt?
 --   hand-rewritten: question 91->61 chars
@@ -11598,6 +14166,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'b70b3a80-11bb-4a7c-9aca-41a542cf089a';
 
+-- Which is the world's largest sovereign wealth fund by assets?
+--   hand-rewritten: answers 39->21 chars
+UPDATE public.questions SET
+    question_text = 'Which is the world''s largest sovereign wealth fund by assets?',
+    correct_answer = 'Norway''s oil fund',
+    incorrect_answers = '["China Investment Corp", "Abu Dhabi''s authority", "Saudi Arabia''s PIF"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '269b1b1e-c21d-4472-8a8d-25e4616c2be9';
+
 -- Which lab technique determines soil mineral composition?
 --   trimmed by rule: answers 23->17 chars
 UPDATE public.questions SET
@@ -11651,6 +14237,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '6a47f7c8-cf13-4f06-85b0-a2bcd0004a15';
+
+-- Which large-scale human formation technique defined the 2008 Beijing Opening Ceremony?
+--   hand-rewritten: question 86->58 chars, answers 25->22 chars
+UPDATE public.questions SET
+    question_text = 'Which technique defined the 2008 Beijing opening ceremony?',
+    correct_answer = 'Mass choreography',
+    incorrect_answers = '["Abstract expressionism", "Cubist composition", "Surrealist imagery"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '0620db00-bae6-4fa6-ab08-d51f5d40fd32';
 
 -- Which law links a galaxy’s recessional velocity to its distance, showing universal expansion?
 --   hand-rewritten: question 93->49 chars
@@ -11742,6 +14346,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '8a9c0bf6-6457-4c61-b3f4-d3c6406f1823';
 
+-- Which marine mammal holds the record for the longest recorded dive duration?
+--   hand-rewritten: question 76->52 chars, answers 21->21 chars
+UPDATE public.questions SET
+    question_text = 'Which marine mammal holds the longest recorded dive?',
+    correct_answer = 'Cuvier''s beaked whale',
+    incorrect_answers = '["The sperm whale", "The Weddell seal", "The walrus"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '115b22ab-4264-4b44-ae1e-0a0a5ca7d115';
+
 -- Which mathematical constant, approximately 3.14159, represents the ratio of a circle's circumference to its diameter?
 --   hand-rewritten: question 117->61 chars
 UPDATE public.questions SET
@@ -11778,6 +14400,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'b8d25a02-fdb5-4b44-8a56-0fa57db2a2b9';
 
+-- Which mechanism links chronic stress to physical illness?
+--   hand-rewritten: answers 25->22 chars
+UPDATE public.questions SET
+    question_text = 'Which mechanism links chronic stress to physical illness?',
+    correct_answer = 'Cortisol weakens you',
+    incorrect_answers = '["Stress damages DNA", "The mind makes illness", "Genetics alone"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '32b13151-b51d-4c5d-b76a-08c961914c3b';
+
 -- Which meme aesthetic uses heavy saturation, contrast, and JPEG artifacts for a “fried” look?
 --   hand-rewritten: question 92->58 chars
 UPDATE public.questions SET
@@ -11795,6 +14435,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '08054492-64f9-4a95-b25c-57637002703b';
+
+-- Which meme from the 2012 Olympics shows a gymnast’s unimpressed face?
+--   hand-rewritten: answers 24->21 chars
+UPDATE public.questions SET
+    question_text = 'Which meme from the 2012 Olympics shows a gymnast’s unimpressed face?',
+    correct_answer = 'McKayla Not Impressed',
+    incorrect_answers = '["Expanding Brain", "Drake Approval", "Distracted Boyfriend"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '01f6bf51-7cf9-497e-bef0-b2603aeab8d4';
 
 -- Which meme showed a basketball player acting confused?
 --   trimmed by rule: answers 29->20 chars
@@ -11885,6 +14543,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'a9138a70-7185-4f3a-b299-8d132fa38742';
+
+-- Which migration pattern spans the most geographic distance?
+--   hand-rewritten: answers 24->21 chars
+UPDATE public.questions SET
+    question_text = 'Which migration pattern spans the most geographic distance?',
+    correct_answer = 'The Arctic tern',
+    incorrect_answers = '["The grey whale", "The monarch butterfly", "The wildebeest"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '3009adce-43ec-4512-9dfd-78ccf1798bd9';
 
 -- Which mountain range famously hosted the alpine skiing events for the 1960 Winter Olympics?
 --   hand-rewritten: question 91->51 chars
@@ -13200,6 +15876,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'bf39d603-11cb-421a-b467-5e7df251b366';
 
+-- Which social psychology concept did Milgram study in 1967?
+--   hand-rewritten: answers 22->22 chars
+UPDATE public.questions SET
+    question_text = 'Which social psychology concept did Milgram study in 1967?',
+    correct_answer = 'The small world idea',
+    incorrect_answers = '["Weak tie theory", "Dunbar''s number", "Social exchange theory"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '3ac73992-6c03-4026-84a4-4c7da4062e50';
+
 -- Which solar event is blamed for major tech disruption risks?
 --   trimmed by rule: answers 27->13 chars
 UPDATE public.questions SET
@@ -13380,6 +16074,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '837c1f1c-14ec-4fa5-ba3a-887c2e7aa39c';
 
+-- Which statement best describes The Office’s central theme and daily challenges?
+--   hand-rewritten: question 79->44 chars, answers 36->21 chars
+UPDATE public.questions SET
+    question_text = 'What is the central subject of ''The Office''?',
+    correct_answer = 'Office life',
+    incorrect_answers = '["Hospital emergencies", "Police investigations", "Restaurant kitchens"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1bd8146d-a458-4b69-b677-7914529ebc58';
+
 -- Which statement best describes a key architectural difference between Egyptian and Mayan pyramids?
 --   hand-rewritten: question 98->42 chars, answers 31->22 chars
 UPDATE public.questions SET
@@ -13506,6 +16218,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '86a936b1-9de3-46f7-ab75-a040a6c56d5b';
 
+-- Which symbol in IEC 61131-3 FBD represents a function block’s ‘Enable’ input?
+--   hand-rewritten: question 77->53 chars, answers 36->21 chars
+UPDATE public.questions SET
+    question_text = 'Which symbol marks a function block''s ''Enable'' input?',
+    correct_answer = 'A circle at the input',
+    incorrect_answers = '["A pointing triangle", "A square bracket", "An asterisk"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1b3ad75a-da90-40ee-aecb-ea6eee1bd77a';
+
 -- Which synthetic compounds depleted Earth's ozone layer?
 --   trimmed by rule: answers 26->19 chars
 UPDATE public.questions SET
@@ -13523,6 +16253,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '37b5d3ef-59c9-43cb-9bdd-26826c1a42f3';
+
+-- Which system shows parental TV content ratings in the U.S.?
+--   hand-rewritten: answers 28->22 chars
+UPDATE public.questions SET
+    question_text = 'Which system shows parental TV content ratings in the U.S.?',
+    correct_answer = 'Age-based letter codes',
+    incorrect_answers = '["A one-to-ten scale", "Colour-coded bands", "Star ratings"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '208425c8-8930-47c7-9b25-40fdbfb65d38';
 
 -- Which technology creates 3D models of dig sites by stitching together multiple overlapping photographs?
 --   hand-rewritten: question 103->54 chars
@@ -13595,6 +16343,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '54f278ec-ff07-466f-86aa-4b23bafb1dcd';
+
+-- Which tree bark compound treats malaria effectively?
+--   hand-rewritten: answers 30->21 chars
+UPDATE public.questions SET
+    question_text = 'Which tree bark compound treats malaria effectively?',
+    correct_answer = 'Quinine from cinchona',
+    incorrect_answers = '["Oak bark extract", "Birch bark tar", "Maple sap syrup"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '046217db-c946-4508-814b-a78fc34d529c';
 
 -- Which unfinished Pyongyang skyscraper has stood mostly vacant since its exterior was completed in 1992?
 --   hand-rewritten: question 103->54 chars
@@ -13722,6 +16488,24 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = 'b433945d-a06f-4c25-bee9-0b7f1137c8aa';
 
+-- Why do hot air balloons rise through the atmosphere?
+--   hand-rewritten: answers 35->22 chars
+UPDATE public.questions SET
+    question_text = 'Why do hot air balloons rise through the atmosphere?',
+    correct_answer = 'Hot air is lighter',
+    incorrect_answers = '["Helium escapes gravity", "Wind pushes them up", "Sunlight propels them"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '335e0b09-1c40-404e-b4c3-d82062433ca1';
+
 -- Why do marathon runners carb-load before competition?
 --   hand-rewritten: question 53->48 chars, answers 33->21 chars
 UPDATE public.questions SET
@@ -13739,6 +16523,24 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = '791c6359-818f-49fd-b8c5-51b23cbaa70c';
+
+-- Why do mutations sometimes benefit organisms?
+--   hand-rewritten: answers 42->22 chars
+UPDATE public.questions SET
+    question_text = 'Why do mutations sometimes benefit organisms?',
+    correct_answer = 'They can aid survival',
+    incorrect_answers = '["All mutations help", "It is pure chance", "The habitat prefers it"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1a620a3e-8126-46e0-b48e-f57fd7de5748';
 
 -- Why do some frogs secrete toxic skin compounds?
 --   hand-rewritten: answers 19->22 chars
@@ -13793,5 +16595,23 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'b2a297b3-0f5b-4a98-9530-72f960082963';
+
+-- World's first analog computer, discovered in 1901?
+--   hand-rewritten: answers 21->21 chars
+UPDATE public.questions SET
+    question_text = 'World''s first analog computer, discovered in 1901?',
+    correct_answer = 'Antikythera mechanism',
+    incorrect_answers = '["The Jacquard loom", "The aeolipile", "The orrery"]'::jsonb,
+    original_question_text = COALESCE(original_question_text, question_text),
+    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
+    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+    in_production = false,
+    shorten_status = 'pending_review',
+    answer_shorten_status = 'pending_review',
+    quality_status = NULL,
+    quality_issues = NULL,
+    last_quality_check = now(),
+    updated_at = now()
+  WHERE id = '1cf2eec3-dc8a-41c9-8cb1-79ee524d289d';
 
 COMMIT;
