@@ -207,6 +207,7 @@ FORCE_RETIRE = {
     '59cb5e50': 'self-answering in any phrasing: gold leaf is made of gold',
     '62f91b16': 'answer looks wrong — Cyberpunk: Edgerunners took Anime of the Year in 2023',
     '89e53f4b': 'the TOP500 number one changes every list; El Capitan has since passed Frontier',
+    'cdf2220c': 'same question as ab2a3631 (the psychologist who fabricated data)',
 }
 
 retire = {}
