@@ -212,6 +212,12 @@ FORCE_RETIRE = {
     '0b0a0045': 'same question as e12a42bc (swallowed gum and the seven-year myth)',
     '22c73bfd': 'third copy of the swallowed-gum myth; e12a42bc survives',
     '39432591': 'same question as ba4b020e (scientific consensus on AI consciousness)',
+    'cd3ac0ea': 'another copy of the brain-10% myth; df304a6c survives',
+    'cd9f704e': 'third copy of the McKayla Maroney meme question',
+    'cf2c8db2': 'third copy of the Antikythera mechanism question',
+    'ba2e634c': 'third copy of the Arctic tern migration question',
+    'c2177df2': 'same paradox question as 76c15b35, with a filler adverb in the stem',
+    'b6ce32d3': 'same question as 93946f4b (eight glasses of water a day)',
 }
 
 retire = {}
