@@ -129,7 +129,25 @@ and `quiz-question-card.tsx` computes
 fails to load gets the text back instead of four unlabelled buttons. So the
 fallback stem has to read sensibly on its own ("Which animal is shown?").
 
-Two things the builder does that are not obvious:
+### Shape matters as much as subject
+
+The card renders the picture into a strip roughly **2.4:1** (`w-full h-36`), and
+`object-contain` never crops. A landscape shot nearly fills it; a portrait one
+used to sit between two slabs of grey.
+
+So **prefer landscape**. The builder records each thumbnail's aspect ratio from
+the API — free, where measuring the file is another download — and lists
+anything under **1.2** at the end of a run for a second look. It is a
+preference, not a rejection: a portrait painting *is* portrait, and cropping
+"which painting is this?" to a wide strip asks a different question.
+
+For the shapes that cannot be changed, `quiz-question-card.tsx` fills the strip
+with a blurred, scaled copy of the picture itself behind the contained one.
+Same `src`, so the second copy comes from cache, and it works for whatever
+aspect ratio a future question arrives with rather than only the shapes we
+happened to pick.
+
+Two more things the builder does that are not obvious:
 
 - It asks the API for a **960 px thumbnail**, not the original. Several of
   these originals are tens of megabytes; the existing Georgian photo questions

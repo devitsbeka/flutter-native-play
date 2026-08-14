@@ -102,7 +102,31 @@ SUBJECTS = [
 # A page's lead image is chosen to illustrate an article, not to be guessed
 # from. Where it cannot work as a question, name a replacement here rather than
 # dropping the subject.
+# The card renders a picture into a strip about 2.4:1, so a landscape shot
+# fills far more of it than a portrait one. Prefer landscape when the subject
+# allows it — a landmark almost always does. It is only a preference: a
+# portrait painting IS portrait, and cropping "which painting is this?" to a
+# wide strip asks a different question. The card fills the gap with a blurred
+# copy of the picture, so a portrait subject looks deliberate rather than
+# broken; this threshold decides what gets flagged for a second look, not what
+# gets rejected.
+PORTRAIT_BELOW = 1.2
+
 IMAGE_OVERRIDE = {
+    # Both articles lead with a portrait shot, which in a 2.4:1 strip is mostly
+    # blurred backdrop. These two subjects are the rare case where a landscape
+    # shot is just as recognisable — a tower seen across the Trocadero, a
+    # statue on its peak above the cloud line. Most are not: searching for
+    # landscape versions of the paintings and portraits in this batch returned
+    # views *from* the Eiffel Tower, a group photo where Einstein cannot be
+    # picked out, and Whitney Houston instead of Mandela.
+    'Eiffel Tower':
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/'
+        'Eiffel_Tower_as_seen_from_Trocadero.jpg/'
+        '960px-Eiffel_Tower_as_seen_from_Trocadero.jpg',
+    'Christ the Redeemer (statue)':
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/'
+        'Redentor_Over_Clouds_1.jpg/960px-Redentor_Over_Clouds_1.jpg',
     # The article leads with a dark sunset skyline in which the tower is a
     # hairline. This one is daytime, with the tower legible at card size.
     'Burj Khalifa':
@@ -161,9 +185,17 @@ def fetch_thumbs(titles):
             title = p.get('title')
             while title in back:           # redirect then normalization
                 title = back[title]
-            src = p.get('thumbnail', {}).get('source')
+            thumb = p.get('thumbnail', {})
+            src = thumb.get('source')
             if src:
-                CACHE[title] = src.split('?')[0]   # drop the API's tracking params
+                # Keep the dimensions too. Aspect ratio is what decides how a
+                # picture sits in the card's 2.4:1 strip, and asking the API is
+                # free where measuring the file is another download.
+                CACHE[title] = {
+                    'url': src.split('?')[0],      # drop the API's tracking params
+                    'w': thumb.get('width'),
+                    'h': thumb.get('height'),
+                }
         json.dump(CACHE, open(CACHE_PATH, 'w'), ensure_ascii=False, indent=1)
         time.sleep(2)
 
@@ -206,7 +238,10 @@ fetch_thumbs([s[0] for s in SUBJECTS])
 
 rows, failures = [], []
 for title, cat, qtext, correct, wrong in SUBJECTS:
-    src = CACHE.get(title)
+    entry = CACHE.get(title)
+    if isinstance(entry, str):
+        entry = {'url': entry, 'w': None, 'h': None}
+    src = entry['url'] if entry else None
     if not src:
         failures.append((title, 'no thumbnail')); continue
     verdict, code = check(src)
@@ -220,12 +255,20 @@ for title, cat, qtext, correct, wrong in SUBJECTS:
         'image_url': src,
         'subject': title,
         'cdn_verified': verdict == 'ok',
+        'aspect': round(entry['w'] / entry['h'], 2) if entry.get('w') and entry.get('h') else None,
     })
     print(f'  {verdict:10s} {title:32s} {src[:60]}', flush=True)
     json.dump(rows, open('image-questions.json', 'w'), ensure_ascii=False, indent=1)
 
 for t, why in failures:
     print(f'  FAIL {t:32s} {why}', file=sys.stderr)
+portrait = [r for r in rows if r['aspect'] and r['aspect'] < PORTRAIT_BELOW]
+if portrait:
+    print(f'\n{len(portrait)} portrait or near-square — check a landscape shot exists:',
+          file=sys.stderr)
+    for r in sorted(portrait, key=lambda r: r['aspect']):
+        print(f"  {r['aspect']:.2f}  {r['subject']}", file=sys.stderr)
+
 live = sum(1 for r in rows if r['cdn_verified'])
 print(f'\n{len(rows)} rows, {live} confirmed live by the CDN, '
       f'{len(rows) - live} rate-limited (URL from the API, not checked), '
