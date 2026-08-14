@@ -596,9 +596,13 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                               setProfileUserId(friend.friendId);
                             }}
                             disabled={!isBrowseMode && (isInviting || isInvited)}
+                            // The picked ring is drawn inside the tile. Outside
+                            // it — which is where a plain `ring` goes — the
+                            // grid scrolls, and the top and side edges of it
+                            // were being cut off against the scroll box.
                             className={`flex flex-col items-center p-2.5 rounded-xl transition-all disabled:opacity-70 ${
                               marked
-                                ? "bg-white/25 ring-2 ring-white" 
+                                ? "bg-white/25 ring-2 ring-inset ring-white"
                                 : "bg-white/10 hover:bg-white/15"
                             }`}
                             whileHover={{ scale: 1.02 }}
@@ -715,6 +719,10 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
               {isPreRoomMode && (
                 <GreenPlayButton
                   onClick={handleClose}
+                  // Slate until somebody is picked. Still pressable — leaving
+                  // with nobody is a real answer, and the corner chevron being
+                  // the only way out is what this button exists to fix.
+                  tone={selectedCount > 0 ? "green" : "muted"}
                   className="mx-auto mt-3 h-14 w-full max-w-[460px] text-base"
                   icon={<Check className="w-5 h-5" />}
                 >
