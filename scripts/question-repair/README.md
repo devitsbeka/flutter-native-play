@@ -13,6 +13,8 @@ then gets promoted with the existing bulk action.
 | `print-batch.py` | Prints one batch of the rewrite queue in a compact form |
 | `rewrites.jsonl` | The rewritten questions, one JSON object per line |
 | `build-migration.py` | Validates the rewrites, emits `migration.sql` |
+| `build-image-questions.py` | Resolves photo subjects to verified Wikipedia images → `image-questions.json` |
+| `build-image-sql.py` | Validates those and emits `image-questions.sql` |
 
 All four expect `en_raw.jsonl` and `categories.json` in the working directory.
 Regenerate them with `scripts/audit-questions.mjs` or:
@@ -114,6 +116,43 @@ UPDATE public.questions SET
     is_active = true, in_production = true
   WHERE quality_status LIKE 'retired_%' OR shorten_status = 'pending_review';
 ```
+
+## Photo questions
+
+A photo question is a row with an `image_url` and nothing else new: every
+gameplay surface already passes `hideQuestionText={!!image_url}`, so the card
+renders the picture and four buttons with no visible stem.
+
+`question_text` is still written, for two reasons. The column is `NOT NULL`,
+and `quiz-question-card.tsx` computes
+`effectiveHideText = hideQuestionText && !imageFailed` — a player whose image
+fails to load gets the text back instead of four unlabelled buttons. So the
+fallback stem has to read sensibly on its own ("Which animal is shown?").
+
+Two things the builder does that are not obvious:
+
+- It asks the API for a **960 px thumbnail**, not the original. Several of
+  these originals are tens of megabytes; the existing Georgian photo questions
+  use 960px thumbs for the same reason.
+- It **batches 20 titles per request**. Wikimedia rate-limits, and the first
+  version — one lookup plus one HEAD per subject — lost 27 of 50 subjects to
+  429s that look exactly like dead URLs. Batching moves the lookup to three
+  requests and leaves the throttle budget for verifying the images themselves.
+
+Every URL is confirmed to return `200` with an `image/*` content type before
+it is written out, because a wrong path does not fail loudly — it silently
+degrades the question to text-only, which for a photo question means a stem
+that gives the answer away.
+
+```sh
+python3 build-image-questions.py    # -> image-questions.json (+ image-thumbs.json cache)
+python3 build-image-sql.py          # -> image-questions.sql
+```
+
+`build-image-sql.py` refuses to emit anything if a question is over 70
+characters, an answer is over 48, an option set has duplicates, or two subjects
+resolved to the same picture. The insert is keyed `WHERE NOT EXISTS` on
+`image_url`, so running it twice does not duplicate the batch.
 
 ## The paste-ready file
 

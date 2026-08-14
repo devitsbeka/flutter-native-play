@@ -11,10 +11,20 @@ the card falls back to showing the text if the image fails to load
 connection gets a working question instead of four buttons and no prompt, so
 the fallback has to read sensibly on its own.
 
-Images come from Wikipedia's lead image for the subject, which is what the 292
-existing photo questions already hotlink. Every URL is fetched and checked
-before it is written out — a made-up Wikimedia path returns 404 and silently
-degrades the question to text-only.
+Images come from Wikipedia's lead image for the subject, which is what the
+existing Georgian photo questions already hotlink. Two details matter:
+
+  * The API is asked for a **960 px thumbnail**, not the original. Several of
+    these originals are 20-50 MB — a player on mobile data would watch a blank
+    card while one downloaded. The existing photo questions use 960px thumbs
+    for the same reason.
+  * Titles are batched 20 at a time. The whole set of 50 resolves in three
+    requests instead of fifty, which is what kept the first version of this
+    script under Wikimedia's rate limit for the lookup but not for the
+    verification pass.
+
+Every URL is still fetched and checked before it is written out — a made-up
+Wikimedia path returns 404 and silently degrades the question to text-only.
 """
 import json, subprocess, sys, time, urllib.parse
 
@@ -50,7 +60,7 @@ SUBJECTS = [
     ("Colosseum", 'geography', "Which landmark is shown?", "Colosseum", ["Pula Arena", "Arles Amphitheatre", "Verona Arena"]),
     ("Taj Mahal", 'geography', "Which landmark is shown?", "Taj Mahal", ["Humayun's Tomb", "Badshahi Mosque", "Bibi Ka Maqbara"]),
     ("Machu Picchu", 'geography', "Which landmark is shown?", "Machu Picchu", ["Chichen Itza", "Tikal", "Choquequirao"]),
-    ("Christ the Redeemer", 'geography', "Which landmark is shown?", "Christ the Redeemer", ["Cristo de la Concordia", "Christ of Havana", "Christ the King"]),
+    ("Christ the Redeemer (statue)", 'geography', "Which landmark is shown?", "Christ the Redeemer", ["Cristo de la Concordia", "Christ of Havana", "Christ the King"]),
     ("Golden Gate Bridge", 'geography', "Which bridge is shown?", "Golden Gate Bridge", ["Brooklyn Bridge", "Bay Bridge", "Mackinac Bridge"]),
     ("Stonehenge", 'geography', "Which landmark is shown?", "Stonehenge", ["Avebury", "Callanish Stones", "Carnac Stones"]),
     ("Petra", 'geography', "Which landmark is shown?", "Petra", ["Abu Simbel", "Ellora Caves", "Hegra"]),
@@ -90,68 +100,90 @@ SUBJECTS = [
 ]
 
 UA = 'MyTriviaQuestionBuilder/1.0 (contact: hello@itsbeka.com)'
-# Wikimedia returns 429 when hit in a tight loop. One request every second or so
-# is well inside what the API asks for, and the cache means a rerun after a
-# failure does not spend the budget again on subjects that already resolved.
-THROTTLE = 1.2
-CACHE_PATH = 'image-cache.json'
+BATCH = 20            # api.php accepts up to 50 titles; 20 keeps each URL short
+THUMB_PX = 960
+CACHE_PATH = 'image-thumbs.json'
 try:
     CACHE = json.load(open(CACHE_PATH))
 except (FileNotFoundError, json.JSONDecodeError):
     CACHE = {}
 
-def lead_image(title, attempts=4):
-    """Wikipedia's lead image for a page — the same source the existing photo
-    questions use. Returns a bare upload.wikimedia.org URL.
+def fetch_thumbs(titles):
+    """Resolve page titles to 960px thumbnail URLs, 20 titles per request.
 
-    Retries: the API occasionally returns an empty body through the proxy, and
-    one blip should not drop a subject from the batch."""
-    url = ('https://en.wikipedia.org/w/api.php?action=query&format=json'
-           '&prop=pageimages&piprop=original&titles=' + urllib.parse.quote(title))
-    if title in CACHE:
-        return CACHE[title]
+    The API rewrites titles twice on the way in — `normalized` for whitespace
+    and case, `redirects` for a page that moved — so the reply has to be mapped
+    back to the title that was asked for, or nothing matches the SUBJECTS
+    table."""
+    todo = [t for t in titles if t not in CACHE]
+    for i in range(0, len(todo), BATCH):
+        chunk = todo[i:i + BATCH]
+        url = ('https://en.wikipedia.org/w/api.php?action=query&format=json'
+               '&redirects=1&prop=pageimages&piprop=thumbnail'
+               f'&pithumbsize={THUMB_PX}&titles='
+               + urllib.parse.quote('|'.join(chunk), safe=''))
+        # api.php occasionally answers with an empty body through the proxy.
+        # One blip should not drop twenty subjects from the batch.
+        q = None
+        for attempt in range(4):
+            try:
+                r = subprocess.run(['curl', '-s', '--retry', '3', '--retry-delay', '3',
+                                    '-H', f'User-Agent: {UA}', url],
+                                   capture_output=True, text=True, timeout=90)
+                q = json.loads(r.stdout).get('query', {})
+                break
+            except (json.JSONDecodeError, subprocess.TimeoutExpired):
+                time.sleep(3 * (attempt + 1))
+        if q is None:
+            print(f'  batch of {len(chunk)} unresolved', file=sys.stderr)
+            continue
+        back = {n['to']: n['from'] for n in q.get('normalized', [])}
+        back.update({n['to']: n['from'] for n in q.get('redirects', [])})
+        for p in q.get('pages', {}).values():
+            title = p.get('title')
+            while title in back:           # redirect then normalization
+                title = back[title]
+            src = p.get('thumbnail', {}).get('source')
+            if src:
+                CACHE[title] = src.split('?')[0]   # drop the API's tracking params
+        json.dump(CACHE, open(CACHE_PATH, 'w'), ensure_ascii=False, indent=1)
+        time.sleep(2)
+
+def check(url, attempts=5):
+    """Confirm the URL really serves an image.
+
+    upload.wikimedia.org rate-limits harder than api.php does and answers 429
+    with an HTML body, which would otherwise be written out as a working image.
+    A 429 is retried after a cool-off rather than treated as a dead URL."""
+    code = '?'
     for attempt in range(attempts):
+        time.sleep(3 + attempt * 5)
         try:
-            time.sleep(THROTTLE * (1 + attempt * 2))
-            r = subprocess.run(['curl', '-s', '--retry', '3', '--retry-delay', '3',
-                                '-H', f'User-Agent: {UA}', url],
-                               capture_output=True, text=True, timeout=60)
-            pages = json.loads(r.stdout).get('query', {}).get('pages', {})
-            for p in pages.values():
-                src = p.get('original', {}).get('source')
-                if src:
-                    CACHE[title] = src.split('?')[0]   # drop the API's tracking params
-                    json.dump(CACHE, open(CACHE_PATH, 'w'))
-                    return CACHE[title]
-            return None                            # page exists, simply has no image
-        except (json.JSONDecodeError, subprocess.TimeoutExpired):
-            time.sleep(1.5 * (attempt + 1))
-    return None
+            r = subprocess.run(
+                ['curl', '-sIL', '-H', f'User-Agent: {UA}', '-o', '/dev/null',
+                 '-w', '%{http_code} %{content_type}', url],
+                capture_output=True, text=True, timeout=45)
+        except subprocess.TimeoutExpired:
+            code = 'timeout'
+            continue
+        parts = r.stdout.split(' ', 1)
+        code, ctype = parts[0], (parts[1] if len(parts) > 1 else '')
+        if code == '200' and ctype.startswith('image/'):
+            return True, code
+        if code == '429':
+            time.sleep(30)
+    return False, code
 
-def check(url):
-    """Confirm the URL really serves an image, and how big it is."""
-    time.sleep(THROTTLE)
-    r = subprocess.run(
-        ['curl', '-sIL', '--retry', '3', '--retry-delay', '5', '--retry-all-errors',
-         '-H', f'User-Agent: {UA}', '-o', '/dev/null',
-         '-w', '%{http_code} %{content_type} %{size_download} %{url_effective}', url],
-        capture_output=True, text=True, timeout=30)
-    parts = r.stdout.split(' ', 3)
-    code, ctype = parts[0], (parts[1] if len(parts) > 1 else '')
-    return code == '200' and ctype.startswith('image/'), code, ctype
+fetch_thumbs([s[0] for s in SUBJECTS])
 
 rows, failures = [], []
 for title, cat, qtext, correct, wrong in SUBJECTS:
-    src = lead_image(title)
+    src = CACHE.get(title)
     if not src:
         failures.append((title, 'no lead image')); continue
-    try:
-        ok, code, ctype = check(src)
-    except subprocess.TimeoutExpired:
-        ok, code, ctype = False, 'timeout', ''
-
+    ok, code = check(src)
     if not ok:
-        failures.append((title, f'{code} {ctype}')); continue
+        failures.append((title, code)); continue
     rows.append({
         'category_id': CATEGORIES[cat],
         'question_text': qtext,
@@ -160,10 +192,9 @@ for title, cat, qtext, correct, wrong in SUBJECTS:
         'image_url': src,
         'subject': title,
     })
-    print(f'  ok   {title:32s} {src[:74]}')
+    print(f'  ok   {title:32s} {src[:70]}', flush=True)
+    json.dump(rows, open('image-questions.json', 'w'), ensure_ascii=False, indent=1)
 
 for t, why in failures:
     print(f'  FAIL {t:32s} {why}', file=sys.stderr)
-
-json.dump(rows, open('image-questions.json', 'w'), ensure_ascii=False, indent=1)
 print(f'\n{len(rows)} verified, {len(failures)} failed')
