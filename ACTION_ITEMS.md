@@ -135,7 +135,7 @@ rather than silently — that was deliberate — but it still doesn't work.
 |---|---|---|
 | `REVENUECAT_SECRET_API_KEY` | Supabase secret | Re-issued for the rebuilt project and set. Must still be a **V1** key — a V2 key returns 403 code 7723 against the `/subscribers` endpoint the code uses |
 | `REVENUECAT_WEBHOOK_SECRET` | Supabase secret + RevenueCat | Rotate alongside the rebuilt project. Supabase only ever shows a digest, so the old value cannot be read back to paste into the new webhook — generate a fresh one and set it in both places. The mechanism itself was verified: wrong and missing secrets both rejected with 401, correct one accepted |
-| `VITE_REVENUECAT_IOS_API_KEY` | Build env | **Needs the new value.** The original RevenueCat project was deleted and rebuilt, so the old `appl_…` key is dead and has been cleared from `.env.example`. A stale key is worse than none: `configure()` accepts it and `getOfferings()` returns nothing, so the paywall renders empty with only a console warning |
+| ~~`VITE_REVENUECAT_IOS_API_KEY`~~ | ~~Build env~~ | **Done** — re-issued for the rebuilt RevenueCat project and committed to `.env`. Public by design: it ships inside the binary and identifies the app, it does not authorise anything |
 | `VITE_ADMOB_IOS_REWARDED` | Build env | Falls back to a demo unit — ads show, revenue is zero |
 | `VITE_ADMOB_IOS_INTERSTITIAL` | Build env | Same |
 | `VITE_VIDEO_BASE_URL` | Build env | Native falls back to `https://mytrivia.io`; set it explicitly if videos move |
