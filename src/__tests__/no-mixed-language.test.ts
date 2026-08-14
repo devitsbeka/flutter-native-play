@@ -109,6 +109,9 @@ describe("no mixed language", () => {
       "categoryIconMap.ts",
       "localDate.ts",
       "AllButtons.tsx",
+      // Keyed by language and holds every language's copy side by side, the
+      // way src/locales does — the Georgian in it IS one of the translations.
+      "partyStarterPack.ts",
     ];
     const walk = (dir: string, acc: string[] = []): string[] => {
       for (const entry of readdirSync(dir)) {

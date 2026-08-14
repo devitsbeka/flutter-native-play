@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import useEmblaCarousel from "embla-carousel-react";
 import { useTriviaDrafts } from "@/hooks/useTriviaDrafts";
 import { IconOnboardingTooltip } from "@/components/shared/IconOnboardingTooltip";
+import { partyStarterPack } from "@/config/partyStarterPack";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
@@ -32,6 +33,44 @@ interface PersonalQuestion {
   answers: Answer[];
   iconSlug?: string;
   backgroundImageUrl?: string;
+}
+
+/**
+ * The ten cards a new party opens on — see config/partyStarterPack.
+ *
+ * The first answer of each is the correct one, which is what the pack is
+ * written for: a party card needs a right answer even before anybody has
+ * decided what it is.
+ */
+function starterQuestions(language: string): PersonalQuestion[] {
+  return partyStarterPack(language).map((q, idx) => ({
+    id: `starter-${idx}`,
+    question: q.question,
+    answers: q.answers.map((text, i) => ({
+      id: `a-starter-${idx}-${i}`,
+      text,
+      isCorrect: i === 0,
+    })),
+    iconSlug: q.iconSlug,
+  }));
+}
+
+/**
+ * The key the autosave compares against to decide whether anything changed.
+ *
+ * Shared with the seeding, so a party that was opened and closed without a
+ * single edit does not land in Drafts as ten questions nobody wrote.
+ */
+function draftPayloadKey(title: string, questions: PersonalQuestion[]): string {
+  return JSON.stringify({
+    title: title?.trim() || null,
+    questions: questions.map((q) => ({
+      question: q.question,
+      answers: q.answers.map((a) => ({ text: a.text, isCorrect: a.isCorrect })),
+      iconSlug: q.iconSlug,
+      backgroundImageUrl: q.backgroundImageUrl,
+    })),
+  });
 }
 
 interface ValidationError {
@@ -270,16 +309,7 @@ export function GameStylePersonalTrivia({
         iconSlug: q.icon_slug || undefined,
       }));
     }
-    return [{
-      id: "1",
-      question: "",
-      answers: [
-        { id: "a-1-0", text: "", isCorrect: true },
-        { id: "a-1-1", text: "", isCorrect: false },
-        { id: "a-1-2", text: "", isCorrect: false },
-        { id: "a-1-3", text: "", isCorrect: false },
-      ],
-    }];
+    return starterQuestions(language);
   });
 
   // Track current draft ID for updates
@@ -325,22 +355,17 @@ export function GameStylePersonalTrivia({
   // Reset to fresh state when opening without a draft or initial data
   useEffect(() => {
     if (isOpen && !resumeDraftId && !initialData) {
-      setQuestions([{
-        id: "1",
-        question: "",
-        answers: [
-          { id: "a-1-0", text: "", isCorrect: true },
-          { id: "a-1-1", text: "", isCorrect: false },
-          { id: "a-1-2", text: "", isCorrect: false },
-          { id: "a-1-3", text: "", isCorrect: false },
-        ],
-      }]);
+      const starter = starterQuestions(language);
+      setQuestions(starter);
       setTitle("");
       setCurrentDraftId(null);
       setCurrentIndex(0);
-      lastAutosavedPayloadRef.current = "";
+      // The pack as handed over counts as "nothing written yet": autosave
+      // skips a payload it has already seen, so priming it with the untouched
+      // pack keeps ten unedited questions out of Drafts until one is changed.
+      lastAutosavedPayloadRef.current = draftPayloadKey("", starter);
     }
-  }, [isOpen, resumeDraftId, initialData]);
+  }, [isOpen, resumeDraftId, initialData, language]);
 
   // Auto-save personal trivia drafts (debounced). This ensures the draft shows up in DraftsList
   // even if the user closes the modal or the UI freezes before manual save.
@@ -364,11 +389,9 @@ export function GameStylePersonalTrivia({
       backgroundImageUrl: q.backgroundImageUrl,
     }));
 
-    // Skip if payload hasn't changed (prevents redundant writes).
-    const payloadKey = JSON.stringify({
-      title: title?.trim() || null,
-      questions: questionsData,
-    });
+    // Skip if payload hasn't changed (prevents redundant writes, and keeps an
+    // untouched starter pack out of Drafts — see where it is seeded).
+    const payloadKey = draftPayloadKey(title, questions);
     if (payloadKey === lastAutosavedPayloadRef.current) return;
 
     if (autosaveTimerRef.current) {
