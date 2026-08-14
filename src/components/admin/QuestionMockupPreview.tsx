@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Crown, Zap, Check, Pencil } from 'lucide-react';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
+import { QUALITY_CONSTANTS } from '@/constants/questionQuality';
 
 interface QuestionMockupPreviewProps {
   question: string;
@@ -15,8 +16,9 @@ interface QuestionMockupPreviewProps {
   onAnswerEdit?: (correct: string, incorrect: string[]) => void;
 }
 
-const QUESTION_MAX_LENGTH = 65;
-const ANSWER_MAX_LENGTH = 16;
+// Was 65/16 — the 16 existed nowhere else in the codebase and flagged answers
+// the game renders comfortably. Take the shared values.
+const { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } = QUALITY_CONSTANTS;
 
 export function QuestionMockupPreview({
   question,

@@ -1,0 +1,275 @@
+#!/usr/bin/env python3
+"""Build photo questions: an image, four answers, no visible question text.
+
+The game already supports this. quiz-question-card.tsx takes hideQuestionText,
+and every gameplay surface passes `hideQuestionText={!!image_url}` — so a row
+with an image_url renders as the picture and four buttons, nothing else.
+
+question_text is still written, for two reasons: the column is NOT NULL, and
+the card falls back to showing the text if the image fails to load
+(`effectiveHideText = hideQuestionText && !imageFailed`). A player on a bad
+connection gets a working question instead of four buttons and no prompt, so
+the fallback has to read sensibly on its own.
+
+Images come from Wikipedia's lead image for the subject, which is what the
+existing Georgian photo questions already hotlink. Two details matter:
+
+  * The API is asked for a **960 px thumbnail**, not the original. Several of
+    these originals are 20-50 MB — a player on mobile data would watch a blank
+    card while one downloaded. The existing photo questions use 960px thumbs
+    for the same reason.
+  * Titles are batched 20 at a time. The whole set of 50 resolves in three
+    requests instead of fifty, which is what kept the first version of this
+    script under Wikimedia's rate limit for the lookup but not for the
+    verification pass.
+
+Every URL is still fetched and checked before it is written out — a made-up
+Wikimedia path returns 404 and silently degrades the question to text-only.
+"""
+import json, subprocess, sys, time, urllib.parse
+
+CATEGORIES = {
+    'animals':   '9e7ed994-2920-4a9e-b25a-cc97b15cf1bd',
+    'geography': 'b352d1cf-a825-48a3-b85b-b916368669a3',
+    'art':       'd0ac21f1-f19f-4fdb-8582-265d9c6c00ae',
+    'people':    'c38e0f1f-3325-4027-be2f-dcb253985096',
+    'architecture': '5e49f995-e562-42fa-a452-9a38ee8efeb0',
+}
+
+# (wikipedia page, category, fallback question, correct, [3 distractors])
+SUBJECTS = [
+    # ── animals ───────────────────────────────────────────────────────────
+    ("Red panda", 'animals', "Which animal is shown?", "Red panda", ["Raccoon", "Fox", "Marten"]),
+    ("Axolotl", 'animals', "Which animal is shown?", "Axolotl", ["Newt", "Olm", "Mudpuppy"]),
+    ("Narwhal", 'animals', "Which animal is shown?", "Narwhal", ["Beluga", "Porpoise", "Dolphin"]),
+    ("Okapi", 'animals', "Which animal is shown?", "Okapi", ["Zebra", "Antelope", "Tapir"]),
+    ("Ground pangolin", 'animals', "Which animal is shown?", "Pangolin", ["Armadillo", "Anteater", "Echidna"]),
+    ("Capybara", 'animals', "Which animal is shown?", "Capybara", ["Beaver", "Nutria", "Groundhog"]),
+    ("Toco toucan", 'animals', "Which bird is shown?", "Toucan", ["Hornbill", "Puffin", "Macaw"]),
+    ("Chameleon", 'animals', "Which animal is shown?", "Chameleon", ["Gecko", "Iguana", "Skink"]),
+    ("Manatee", 'animals', "Which animal is shown?", "Manatee", ["Walrus", "Seal", "Dugong"]),
+    ("Puffin", 'animals', "Which bird is shown?", "Puffin", ["Penguin", "Auk", "Tern"]),
+    ("Meerkat", 'animals', "Which animal is shown?", "Meerkat", ["Mongoose", "Prairie dog", "Ferret"]),
+    ("Platypus", 'animals', "Which animal is shown?", "Platypus", ["Otter", "Beaver", "Echidna"]),
+    ("Flamingo", 'animals', "Which bird is shown?", "Flamingo", ["Heron", "Stork", "Ibis"]),
+    ("Sloth", 'animals', "Which animal is shown?", "Sloth", ["Koala", "Lemur", "Loris"]),
+    ("Hedgehog", 'animals', "Which animal is shown?", "Hedgehog", ["Porcupine", "Shrew", "Mole"]),
+
+    # ── landmarks and geography ───────────────────────────────────────────
+    ("Eiffel Tower", 'geography', "Which landmark is shown?", "Eiffel Tower", ["Blackpool Tower", "Tokyo Tower", "Petrin Tower"]),
+    ("Colosseum", 'geography', "Which landmark is shown?", "Colosseum", ["Pula Arena", "Arles Amphitheatre", "Verona Arena"]),
+    ("Taj Mahal", 'geography', "Which landmark is shown?", "Taj Mahal", ["Humayun's Tomb", "Badshahi Mosque", "Bibi Ka Maqbara"]),
+    ("Machu Picchu", 'geography', "Which landmark is shown?", "Machu Picchu", ["Chichen Itza", "Tikal", "Choquequirao"]),
+    ("Christ the Redeemer (statue)", 'geography', "Which landmark is shown?", "Christ the Redeemer", ["Cristo de la Concordia", "Christ of Havana", "Christ the King"]),
+    ("Golden Gate Bridge", 'geography', "Which bridge is shown?", "Golden Gate Bridge", ["Brooklyn Bridge", "Bay Bridge", "Mackinac Bridge"]),
+    ("Stonehenge", 'geography', "Which landmark is shown?", "Stonehenge", ["Avebury", "Callanish Stones", "Carnac Stones"]),
+    ("Petra", 'geography', "Which landmark is shown?", "Petra", ["Abu Simbel", "Ellora Caves", "Hegra"]),
+    ("Neuschwanstein Castle", 'geography', "Which castle is shown?", "Neuschwanstein", ["Hohenzollern", "Pena Palace", "Bran Castle"]),
+    ("Sydney Opera House", 'geography', "Which building is shown?", "Sydney Opera House", ["Oslo Opera House", "Esplanade", "Elbphilharmonie"]),
+    ("Mount Fuji", 'geography', "Which mountain is shown?", "Mount Fuji", ["Mount Rainier", "Mount Ararat", "Mount Mayon"]),
+    ("Matterhorn", 'geography', "Which mountain is shown?", "Matterhorn", ["Mount Assiniboine", "Ama Dablam", "Eiger"]),
+    ("Angkor Wat", 'geography', "Which temple is shown?", "Angkor Wat", ["Borobudur", "Prambanan", "Bagan"]),
+    ("Moai", 'geography', "What are these statues?", "Moai", ["Olmec heads", "Buddhas of Bamiyan", "Terracotta Army"]),
+    ("Uluru", 'geography', "Which landmark is shown?", "Uluru", ["Kata Tjuta", "Devils Tower", "Table Mountain"]),
+
+    # ── art ───────────────────────────────────────────────────────────────
+    ("The Starry Night", 'art', "Which painting is shown?", "The Starry Night", ["Irises", "Wheatfield with Crows", "Cafe Terrace at Night"]),
+    ("The Scream", 'art', "Which painting is shown?", "The Scream", ["Anxiety", "Despair", "The Dance of Life"]),
+    ("Girl with a Pearl Earring", 'art', "Which painting is shown?", "Girl with a Pearl Earring", ["The Milkmaid", "The Lacemaker", "Study of a Young Woman"]),
+    ("The Great Wave off Kanagawa", 'art', "Which print is shown?", "The Great Wave", ["Red Fuji", "Rainstorm Beneath the Summit", "Ejiri in Suruga"]),
+    ("American Gothic", 'art', "Which painting is shown?", "American Gothic", ["The Midnight Ride", "Daughters of Revolution", "Stone City"]),
+    ("The Birth of Venus", 'art', "Which painting is shown?", "The Birth of Venus", ["Primavera", "Venus and Mars", "Pallas and the Centaur"]),
+    ("The Kiss (Klimt)", 'art', "Which painting is shown?", "The Kiss", ["Danae", "Judith and Holofernes", "The Tree of Life"]),
+    ("Mona Lisa", 'art', "Which painting is shown?", "Mona Lisa", ["La Belle Ferronniere", "Lady with an Ermine", "Ginevra de' Benci"]),
+    ("The Night Watch", 'art', "Which painting is shown?", "The Night Watch", ["The Anatomy Lesson", "The Syndics", "The Jewish Bride"]),
+    ("The Garden of Earthly Delights", 'art', "Which painting is shown?", "Garden of Delights", ["The Last Judgment", "The Haywain Triptych", "The Temptation"]),
+
+    # ── architecture ──────────────────────────────────────────────────────
+    ("Sagrada Família", 'architecture', "Which building is shown?", "Sagrada Familia", ["Casa Mila", "Palau de la Musica", "Cologne Cathedral"]),
+    ("Guggenheim Museum Bilbao", 'architecture', "Which museum is shown?", "Guggenheim Bilbao", ["Walt Disney Hall", "Dancing House", "MAXXI Museum"]),
+    ("Burj Khalifa", 'architecture', "Which skyscraper is shown?", "Burj Khalifa", ["Shanghai Tower", "Taipei 101", "One World Trade"]),
+    ("Fallingwater", 'architecture', "Which house is shown?", "Fallingwater", ["Villa Savoye", "Farnsworth House", "Glass House"]),
+    ("Hagia Sophia", 'architecture', "Which building is shown?", "Hagia Sophia", ["Blue Mosque", "Suleymaniye Mosque", "St Mark's Basilica"]),
+
+    # ── famous people ─────────────────────────────────────────────────────
+    ("Albert Einstein", 'people', "Who is shown?", "Albert Einstein", ["Niels Bohr", "Max Planck", "Erwin Schrodinger"]),
+    ("Frida Kahlo", 'people', "Who is shown?", "Frida Kahlo", ["Diego Rivera", "Remedios Varo", "Tina Modotti"]),
+    ("Nelson Mandela", 'people', "Who is shown?", "Nelson Mandela", ["Desmond Tutu", "Kofi Annan", "Kwame Nkrumah"]),
+    ("Marie Curie", 'people', "Who is shown?", "Marie Curie", ["Lise Meitner", "Rosalind Franklin", "Irene Joliot-Curie"]),
+    ("The Tramp", 'people', "Who is shown?", "Charlie Chaplin", ["Buster Keaton", "Harold Lloyd", "Stan Laurel"]),
+]
+
+# A page's lead image is chosen to illustrate an article, not to be guessed
+# from. Where it cannot work as a question, name a replacement here rather than
+# dropping the subject.
+# The card renders a picture into a strip about 2.4:1, so a landscape shot
+# fills far more of it than a portrait one. Prefer landscape when the subject
+# allows it — a landmark almost always does. It is only a preference: a
+# portrait painting IS portrait, and cropping "which painting is this?" to a
+# wide strip asks a different question. The card fills the gap with a blurred
+# copy of the picture, so a portrait subject looks deliberate rather than
+# broken; this threshold decides what gets flagged for a second look, not what
+# gets rejected.
+PORTRAIT_BELOW = 1.2
+
+IMAGE_OVERRIDE = {
+    # Both articles lead with a portrait shot, which in a 2.4:1 strip is mostly
+    # blurred backdrop. These two subjects are the rare case where a landscape
+    # shot is just as recognisable — a tower seen across the Trocadero, a
+    # statue on its peak above the cloud line. Most are not: searching for
+    # landscape versions of the paintings and portraits in this batch returned
+    # views *from* the Eiffel Tower, a group photo where Einstein cannot be
+    # picked out, and Whitney Houston instead of Mandela.
+    'Eiffel Tower':
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/'
+        'Eiffel_Tower_as_seen_from_Trocadero.jpg/'
+        '960px-Eiffel_Tower_as_seen_from_Trocadero.jpg',
+    'Christ the Redeemer (statue)':
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/'
+        'Redentor_Over_Clouds_1.jpg/960px-Redentor_Over_Clouds_1.jpg',
+    # The article leads with a dark sunset skyline in which the tower is a
+    # hairline. This one is daytime, with the tower legible at card size.
+    'Burj Khalifa':
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/'
+        'Burj_Khalifa_Image.jpg/960px-Burj_Khalifa_Image.jpg',
+    # The lead image is a wild-type axolotl, which is brown and reads as any
+    # other salamander. The animal people picture is the leucistic one.
+    'Axolotl':
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/'
+        'Leucistic_Axolotl_front_2010-02-24.JPG/'
+        '960px-Leucistic_Axolotl_front_2010-02-24.JPG',
+}
+
+UA = 'MyTriviaQuestionBuilder/1.0 (contact: hello@itsbeka.com)'
+BATCH = 20            # api.php accepts up to 50 titles; 20 keeps each URL short
+THUMB_PX = 960
+CACHE_PATH = 'image-thumbs.json'
+try:
+    CACHE = json.load(open(CACHE_PATH))
+except (FileNotFoundError, json.JSONDecodeError):
+    CACHE = {}
+
+def fetch_thumbs(titles):
+    """Resolve page titles to 960px thumbnail URLs, 20 titles per request.
+
+    The API rewrites titles twice on the way in — `normalized` for whitespace
+    and case, `redirects` for a page that moved — so the reply has to be mapped
+    back to the title that was asked for, or nothing matches the SUBJECTS
+    table."""
+    CACHE.update(IMAGE_OVERRIDE)
+    todo = [t for t in titles if t not in CACHE]
+    for i in range(0, len(todo), BATCH):
+        chunk = todo[i:i + BATCH]
+        url = ('https://en.wikipedia.org/w/api.php?action=query&format=json'
+               '&redirects=1&prop=pageimages&piprop=thumbnail'
+               f'&pithumbsize={THUMB_PX}&titles='
+               + urllib.parse.quote('|'.join(chunk), safe=''))
+        # api.php occasionally answers with an empty body through the proxy.
+        # One blip should not drop twenty subjects from the batch.
+        q = None
+        for attempt in range(4):
+            try:
+                r = subprocess.run(['curl', '-s', '--retry', '3', '--retry-delay', '3',
+                                    '-H', f'User-Agent: {UA}', url],
+                                   capture_output=True, text=True, timeout=90)
+                q = json.loads(r.stdout).get('query', {})
+                break
+            except (json.JSONDecodeError, subprocess.TimeoutExpired):
+                time.sleep(3 * (attempt + 1))
+        if q is None:
+            print(f'  batch of {len(chunk)} unresolved', file=sys.stderr)
+            continue
+        back = {n['to']: n['from'] for n in q.get('normalized', [])}
+        back.update({n['to']: n['from'] for n in q.get('redirects', [])})
+        for p in q.get('pages', {}).values():
+            title = p.get('title')
+            while title in back:           # redirect then normalization
+                title = back[title]
+            thumb = p.get('thumbnail', {})
+            src = thumb.get('source')
+            if src:
+                # Keep the dimensions too. Aspect ratio is what decides how a
+                # picture sits in the card's 2.4:1 strip, and asking the API is
+                # free where measuring the file is another download.
+                CACHE[title] = {
+                    'url': src.split('?')[0],      # drop the API's tracking params
+                    'w': thumb.get('width'),
+                    'h': thumb.get('height'),
+                }
+        json.dump(CACHE, open(CACHE_PATH, 'w'), ensure_ascii=False, indent=1)
+        time.sleep(2)
+
+def check(url, attempts=4):
+    """Best-effort confirmation that the CDN serves this URL right now.
+
+    Existence is not in question: `pageimages` only returns a `thumbnail.source`
+    for a file that exists, with the real pixel dimensions of the thumbnail it
+    generated — unlike a hand-built path, an API-returned URL cannot be a typo.
+
+    What this adds is a live 200 from upload.wikimedia.org, and that host
+    rate-limits far harder than api.php: it answers 429 with an HTML body, and
+    a shared egress IP can sit in that state for a while. So a 429 is reported
+    as *unverified*, never as a dead URL — dropping a good subject because the
+    CDN was busy is the worse error, and a wrong path would show up here as a
+    404, which is still fatal.
+    """
+    code = '?'
+    for attempt in range(attempts):
+        time.sleep(2 + attempt * 4)
+        try:
+            r = subprocess.run(
+                ['curl', '-sIL', '-H', f'User-Agent: {UA}', '-o', '/dev/null',
+                 '-w', '%{http_code} %{content_type}', url],
+                capture_output=True, text=True, timeout=45)
+        except subprocess.TimeoutExpired:
+            code = 'timeout'
+            continue
+        parts = r.stdout.split(' ', 1)
+        code, ctype = parts[0], (parts[1] if len(parts) > 1 else '')
+        if code == '200' and ctype.startswith('image/'):
+            return 'ok', code
+        if code in ('429', 'timeout'):
+            time.sleep(20)
+            continue
+        return 'dead', code                 # 404, 403 — a real problem
+    return 'unverified', code
+
+fetch_thumbs([s[0] for s in SUBJECTS])
+
+rows, failures = [], []
+for title, cat, qtext, correct, wrong in SUBJECTS:
+    entry = CACHE.get(title)
+    if isinstance(entry, str):
+        entry = {'url': entry, 'w': None, 'h': None}
+    src = entry['url'] if entry else None
+    if not src:
+        failures.append((title, 'no thumbnail')); continue
+    verdict, code = check(src)
+    if verdict == 'dead':
+        failures.append((title, code)); continue
+    rows.append({
+        'category_id': CATEGORIES[cat],
+        'question_text': qtext,
+        'correct_answer': correct,
+        'incorrect_answers': wrong,
+        'image_url': src,
+        'subject': title,
+        'cdn_verified': verdict == 'ok',
+        'aspect': round(entry['w'] / entry['h'], 2) if entry.get('w') and entry.get('h') else None,
+    })
+    print(f'  {verdict:10s} {title:32s} {src[:60]}', flush=True)
+    json.dump(rows, open('image-questions.json', 'w'), ensure_ascii=False, indent=1)
+
+for t, why in failures:
+    print(f'  FAIL {t:32s} {why}', file=sys.stderr)
+portrait = [r for r in rows if r['aspect'] and r['aspect'] < PORTRAIT_BELOW]
+if portrait:
+    print(f'\n{len(portrait)} portrait or near-square — check a landscape shot exists:',
+          file=sys.stderr)
+    for r in sorted(portrait, key=lambda r: r['aspect']):
+        print(f"  {r['aspect']:.2f}  {r['subject']}", file=sys.stderr)
+
+live = sum(1 for r in rows if r['cdn_verified'])
+print(f'\n{len(rows)} rows, {live} confirmed live by the CDN, '
+      f'{len(rows) - live} rate-limited (URL from the API, not checked), '
+      f'{len(failures)} failed')

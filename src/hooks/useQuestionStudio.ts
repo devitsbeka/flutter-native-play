@@ -101,18 +101,36 @@ export const useQuestionStudio = () => {
       
       if (catsError) throw catsError;
 
-      // Fetch counts per category
-      let countsQuery = supabase
-        .from('questions')
-        .select('category_id, in_production');
-      
-      if (language !== 'all') {
-        countsQuery = countsQuery.eq('language', language);
+      // Fetch counts per category.
+      //
+      // This has to paginate. PostgREST caps a request at max_rows = 1000
+      // (supabase/config.toml), and it does so silently — the query returns
+      // 1000 rows with no error and no indication that more exist. Counting
+      // those client-side is why the header read "Production 957 / Library 43":
+      // that is not the bank, it is the first page of it, and the two always
+      // summed to exactly 1000 against a category list showing 7,344.
+      const COUNTS_PAGE_SIZE = 1000;
+      const countsData: { category_id: string; in_production: boolean | null }[] = [];
+
+      for (let offset = 0; ; offset += COUNTS_PAGE_SIZE) {
+        let countsQuery = supabase
+          .from('questions')
+          .select('category_id, in_production')
+          .order('id', { ascending: true })
+          .range(offset, offset + COUNTS_PAGE_SIZE - 1);
+
+        if (language !== 'all') {
+          countsQuery = countsQuery.eq('language', language);
+        }
+
+        const { data: page, error: countsError } = await countsQuery;
+
+        if (countsError) throw countsError;
+        if (!page?.length) break;
+
+        countsData.push(...page);
+        if (page.length < COUNTS_PAGE_SIZE) break;
       }
-      
-      const { data: countsData, error: countsError } = await countsQuery;
-      
-      if (countsError) throw countsError;
 
       // Calculate counts
       const countMap: Record<string, { library: number; production: number }> = {};

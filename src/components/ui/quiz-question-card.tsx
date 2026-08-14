@@ -123,6 +123,27 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             {imageStatus === "loading" && (
               <div className="absolute inset-0 bg-gray-200 animate-pulse" />
             )}
+            {/* The strip is about 2.4:1 and object-contain never crops, so any
+                picture narrower than that used to sit between two slabs of
+                grey. Cropping instead is not an option: for "which painting is
+                this?" the portrait canvas IS the answer, and Mona Lisa cut to a
+                wide strip is a different question.
+
+                So fill the gap with the picture itself, scaled up and blurred.
+                It costs no extra request - same src, so the browser serves the
+                second copy from cache - and it works for whatever aspect ratio
+                a future question arrives with, instead of only for the shapes
+                we happened to pick. */}
+            <img
+              src={imageUrl!}
+              alt=""
+              aria-hidden="true"
+              className={cn(
+                "absolute inset-0 w-full h-full object-cover scale-125 blur-xl",
+                imageStatus !== "loaded" && "opacity-0"
+              )}
+              decoding="async"
+            />
             <img
               src={imageUrl!}
               alt="Question"

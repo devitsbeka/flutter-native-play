@@ -40,3 +40,19 @@ blob-report/
 # public by design, and three separate build systems read it.
 .env.local
 .env.*.local
+
+# Snapshots of the live question bank, pulled by scripts/audit-questions.mjs and
+# rebuilt by scripts/question-repair. Derived data that goes stale — the
+# hand-authored rewrites.jsonl is the part worth keeping.
+scripts/question-repair/en_raw.jsonl
+scripts/question-repair/ka_raw.jsonl
+scripts/question-repair/categories.json
+scripts/question-repair/worklist.json
+scripts/question-repair/residue.json
+scripts/question-repair/migration.sql
+scripts/question-repair/tiers.json
+scripts/question-repair/priority.json
+scripts/question-repair/image-cache.json
+scripts/question-repair/image-questions.json
+scripts/question-repair/staged_ids.json
+scripts/question-repair/build.log

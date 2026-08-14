@@ -7,7 +7,10 @@ import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 // App-wide character limits - strict for gameplay display
 const QUESTION_MAX_LENGTH = 70;
-const ANSWER_MAX_LENGTH = 35;
+// 20, not 35, to match src/constants/questionQuality.ts. The looser number here
+// and in run-generation-job is what let the bank fill with answers that crowd
+// the button; quiz-answer-button.tsx gives them two clamped lines.
+const ANSWER_MAX_LENGTH = 20;
 
 // Fisher-Yates shuffle for randomizing answer positions
 function shuffleArray<T>(array: T[]): T[] {
