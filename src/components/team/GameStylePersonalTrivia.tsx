@@ -82,12 +82,18 @@ interface ValidationError {
 interface GameStylePersonalTriviaProps {
   isOpen: boolean;
   onClose: () => void;
+  /**
+   * Returning exactly `true` means the trivia was persisted, and the draft
+   * behind it is cleared. Anything else keeps the draft — CreateRoomPage
+   * holds the questions in memory for a room that does not exist yet, and
+   * throwing its draft away there would lose them.
+   */
   onSave: (questions: Array<{
     question_text: string;
     correct_answer: string;
     incorrect_answers: string[];
     icon_slug?: string | null;
-  }>, title: string) => void;
+  }>, title: string) => void | boolean | Promise<void | boolean>;
   initialData?: {
     title: string;
     questions: Array<{
@@ -273,7 +279,7 @@ export function GameStylePersonalTrivia({
 }: GameStylePersonalTriviaProps) {
   const { t, language } = useLanguage();
   const { toast } = useToast();
-  const { saveDraft, loadDraft } = useTriviaDrafts();
+  const { saveDraft, loadDraft, consumeDraft } = useTriviaDrafts();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editingField, setEditingField] = useState<"question" | string | null>(null);
@@ -703,7 +709,7 @@ export function GameStylePersonalTrivia({
     return errors;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const errors = validateQuestions();
     
     if (errors.length > 0) {
@@ -744,7 +750,14 @@ export function GameStylePersonalTrivia({
       };
     });
 
-    onSave(formattedQuestions, title || "MyTrivia Party");
+    const saved = await onSave(formattedQuestions, title || "MyTrivia Party");
+
+    // A saved party is a trivia now, not a draft. It used to be both, so the
+    // one you had just named went on sitting under "saved drafts" and looked
+    // like it had not saved at all.
+    if (saved === true && currentDraftId) {
+      await consumeDraft(currentDraftId);
+    }
     onClose();
   };
 

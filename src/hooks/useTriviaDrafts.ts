@@ -116,6 +116,24 @@ export function useTriviaDrafts() {
     return data as TriviaDraftData;
   };
 
+  /**
+   * The draft has become a real trivia, so it stops being a draft.
+   *
+   * Silent, unlike deleteDraft: nobody threw this away, it graduated, and
+   * "draft deleted" landing right after "saved!" reads like something went
+   * wrong. Failure is swallowed for the same reason — the trivia is saved
+   * either way, and a leftover draft is a great deal better than an error
+   * about one.
+   */
+  const consumeDraft = async (draftId: string) => {
+    try {
+      await supabase.from("trivia_drafts").delete().eq("id", draftId);
+    } catch (error) {
+      console.error("Could not clear the saved draft:", error);
+    }
+    queryClient.invalidateQueries({ queryKey: ["trivia-drafts"] });
+  };
+
   return {
     drafts: draftsQuery.data,
     isLoading: draftsQuery.isLoading,
@@ -124,5 +142,6 @@ export function useTriviaDrafts() {
     deleteDraft: deleteDraftMutation.mutate,
     isDeletingDraft: deleteDraftMutation.isPending,
     loadDraft,
+    consumeDraft,
   };
 }

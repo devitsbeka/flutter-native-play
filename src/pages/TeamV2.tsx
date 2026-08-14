@@ -1127,8 +1127,8 @@ function TeamContentV2() {
         resumeDraftId={personalTriviaDraftId}
         onDraftResumed={() => setPersonalTriviaDraftId(null)}
         onSave={async (questions, title) => {
-          if (!user) return;
-          
+          if (!user) return false;
+
           const { error } = await supabase.from("user_quiz_posts").insert([{
             user_id: user.id,
             title: title || "MyTrivia Party",
@@ -1139,16 +1139,20 @@ function TeamContentV2() {
             questions: questions,
             is_public: false,
           }]);
-          
+
           if (error) {
             toast.error(t("extra.saveErrorToast"));
             console.error(error);
-            return;
+            return false;
           }
-          
+
           setShowPersonalTriviaModal(false);
+          // Land on the list the trivia was just added to, at the top of it.
+          setSortFilter("all");
           setActiveTab("my-content");
           toast.success(t("extra.myTriviaPartySaved"));
+          // Tells the editor the draft behind this is spent.
+          return true;
         }}
       />
       <CreateBlindTriviaModal

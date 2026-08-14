@@ -1183,14 +1183,16 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
       )
     : myCollections;
 
-  // Apply type filter first - "trivias" shows only standalone, "collections" shows only collections, "personal" shows MyTrivia Party
+  // "collections" shows only collections, "personal" narrows to MyTrivia
+  // Party, and "trivias" shows every standalone trivia — parties included.
+  // It used to exclude them, so a party you had just made and named was
+  // nowhere on the one list called "trivias", and the only way to see it was
+  // to know about a filter you had never picked.
   let standalonePosts = sortFilter === "collections"
     ? []
     : sortFilter === "personal"
       ? searchFilteredPosts.filter(p => p.subject === "personal")
-      : sortFilter === "trivias"
-        ? searchFilteredPosts.filter(p => p.subject !== "personal")
-        : [...searchFilteredPosts];
+      : [...searchFilteredPosts];
   let filteredCollections = sortFilter === "trivias" || sortFilter === "personal" ? [] : [...(searchFilteredCollections || [])];
   
   // Apply visibility filter
@@ -1238,17 +1240,20 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
     ...standalonePosts.map(p => ({ type: 'standalone' as const, data: p })),
   ];
   
-  // Apply unified sorting for default case (newest first)
-  if (sortFilter === "all" || sortFilter === "trivias" || sortFilter === "collections") {
-    unifiedFeed = unifiedFeed.sort((a, b) => 
-      new Date(b.data.created_at).getTime() - new Date(a.data.created_at).getTime()
-    );
-  } else if (sortFilter === "most_liked") {
+  // Newest first unless an engagement sort was asked for. Written as an
+  // exclusion rather than a list of filters so a new filter is date-sorted by
+  // default instead of coming out in whatever order the arrays were built —
+  // which is what "personal", "private" and "published" used to do.
+  if (sortFilter === "most_liked") {
     unifiedFeed = unifiedFeed.sort((a, b) => (b.data.likes_count || 0) - (a.data.likes_count || 0));
   } else if (sortFilter === "most_saved") {
     unifiedFeed = unifiedFeed.sort((a, b) => (b.data.saves_count || 0) - (a.data.saves_count || 0));
   } else if (sortFilter === "most_played") {
     unifiedFeed = unifiedFeed.sort((a, b) => (b.data.plays_count || 0) - (a.data.plays_count || 0));
+  } else {
+    unifiedFeed = unifiedFeed.sort(
+      (a, b) => new Date(b.data.created_at).getTime() - new Date(a.data.created_at).getTime(),
+    );
   }
   
   const hasContent = unifiedFeed.length > 0;
