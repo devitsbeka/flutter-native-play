@@ -142,16 +142,16 @@ lines = ["""-- English question bank repair.
 --      back with a single UPDATE. Where a duplicate was retired, the surviving
 --      twin is named in the comment above it.
 --
---   2. Repaired questions that passed every check go straight back to
---      production. These rows were already being served: a hand rewrite was
---      fact-checked when it was written, and a rule trim only removes words the
---      question itself already supplied. Neither can be less correct than what
---      is live right now, so parking them in the Library would take working
---      questions out of the game for no reason.
+--   2. Repaired questions that still ask the same thing go straight back to
+--      production. These rows were already being served, and a shorter phrasing
+--      of the same question cannot be less correct than what is live right now.
+--      An answer of 22 characters against a target of 20 is not a reason to pull
+--      a working question out of the game.
 --
---   3. Repaired questions that tripped a warning — an answer over 20 chars that
---      could not be shortened without renaming a proper noun, or a set still
---      unbalanced — go to the Library instead, for a look before promotion.
+--   3. Repaired questions that ask something DIFFERENT wait in the Library.
+--      Where the original could not be shortened without losing its point, it
+--      was replaced with a better question on the same subject — a real editorial
+--      call, and the one worth a second pair of eyes.
 --
 -- Every rewrite keeps the original text in original_question_text /
 -- original_correct_answer / original_incorrect_answers, so the studio can show
@@ -188,14 +188,38 @@ for reason in ('duplicate_conflicting', 'duplicate', 'unfixable'):
             f"quality_status = {sql('retired_' + reason)}, updated_at = now() "
             f"WHERE id = {sql(qid)};\n")
 
-# A repaired question goes straight back to production when it is clean: every
-# hard check passed and nothing was flagged for a person to look at. That is
-# safe because these rows were ALREADY being served — a hand rewrite was
-# fact-checked when it was written, and a rule trim only removes words the
-# question already supplied, so neither can be less correct than what is live
-# now. Anything carrying a warning goes to the Library instead.
-promote = [a for a in applied if not a['warned']]
-stage = [a for a in applied if a['warned']]
+# What the Library is for.
+#
+# The first cut of this held back anything that tripped a warning — an answer
+# of 22 characters against a target of 20, or a set whose lengths differ by 9.
+# That is the wrong test. Those render fine, they were already being served,
+# and holding 754 of them back removes working questions from the game to wait
+# for a review that is not going to happen.
+#
+# What actually deserves a second pair of eyes is a rewrite that changed the
+# QUESTION — not its length, its substance. Shortening "Which statement best
+# characterizes the culinary diversity of Indian curries?" to "How do Indian
+# curries differ across the country's regions?" asks the same thing. Replacing
+# a vague question about the setting of Friends with "Which coffee house do the
+# regulars gather in?" does not; that is a new question, and it is the kind of
+# call worth checking. Content-word overlap separates the two.
+STOPWORDS = set(
+    'what which who whom whose when where why how the a an of in on for to is '
+    'are was were did does do by with from that this these those it its as at '
+    'or and'.split())
+
+def content_words(text):
+    return {w for w in norm(text).split() if len(w) > 2 and w not in STOPWORDS}
+
+def rewrote_the_question(a):
+    before = content_words(by_id[a['id']]['question_text'])
+    after = content_words(a['q'])
+    if not before or not after:
+        return False
+    return len(before & after) / len(before | after) < 0.5
+
+promote = [a for a in applied if not rewrote_the_question(a)]
+stage = [a for a in applied if rewrote_the_question(a)]
 
 def emit(a, to_production):
     orig = by_id[a['id']]
@@ -231,9 +255,10 @@ lines.append("-- Every hard check passed and nothing needs a second opinion. The
 for a in sorted(promote, key=lambda x: by_id[x['id']]['question_text']):
     emit(a, True)
 
-lines.append(f"\n\n-- ── 3. repaired but staged in the Library for review ({len(stage)}) ──────\n")
-lines.append("-- An answer over 20 chars that could not be shortened without renaming a\n"
-             "-- proper noun, or a set still unbalanced. Readable, but worth a look.\n")
+lines.append(f"\n\n-- ── 3. rewritten questions held in the Library for review ({len(stage)}) ─────\n")
+lines.append("-- These do not ask quite what they asked before. The original could not be\n"
+             "-- shortened without losing the point, so it was replaced with a better\n"
+             "-- question on the same subject. Everything else went straight to production.\n")
 for a in sorted(stage, key=lambda x: by_id[x['id']]['question_text']):
     emit(a, False)
 
