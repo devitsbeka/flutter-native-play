@@ -159,3 +159,87 @@
 {"id": "737e151f", "q": "At what Celsius temperature does water freeze?", "c": "0", "w": ["4", "-4", "32"]}
 {"id": "81036a13", "q": "What geographic factor causes iodine deficiency?", "c": "Glaciation and rain", "w": ["High nitrogen soil", "Frequent earthquakes", "Wide river deltas"]}
 {"id": "826b1521", "q": "What is absolute zero in Celsius?", "c": "-273.15", "w": ["0", "100", "-100"]}
+{"id": "3e2e0aef", "q": "In Python, which notation marks a function's return type?", "c": "An arrow", "w": ["A colon", "An equals sign", "A semicolon"]}
+{"id": "47ffbaae", "q": "What is any non-zero number raised to the power of zero?", "c": "One", "w": ["Zero", "The number itself", "Infinity"]}
+{"id": "745d2792", "q": "Which anime genre covers everyday high school life?", "c": "Slice of Life", "w": ["Mecha", "Isekai", "Harem"]}
+{"id": "8ba23b3c", "q": "How tall was Napoleon next to other Frenchmen?", "c": "About average", "w": ["Far shorter", "Unusually tall", "Exactly five foot two"]}
+{"id": "8c018548", "q": "Which Muhammad Ali line best shows his self-belief?", "c": "I am the greatest", "w": ["Float like a butterfly", "Service is your rent", "It's not bragging"]}
+{"id": "8d125a6a", "q": "What language problem did ancient Olympic athletes face?", "c": "Many Greek dialects", "w": ["Non-Greek languages", "Different scripts", "No shared language"]}
+{"id": "8e569cdb", "q": "Which element added in 2016 was named after Japan?", "c": "Nihonium", "w": ["Moscovium", "Tennessine", "Oganesson"]}
+{"id": "8e99cd1a", "q": "How did printing change regional languages?", "c": "It standardised them", "w": ["Dialects multiplied", "All variation ended", "Only local speech grew"]}
+{"id": "9209adca", "q": "What unexpected harm do dams do to rivers?", "c": "They block fish", "w": ["They clean the water", "They end all floods", "They add biodiversity"]}
+{"id": "942c8ceb", "q": "How do theories of knowledge differ across cultures?", "c": "They vary a great deal", "w": ["They are identical", "One fits everyone", "Only the West has them"]}
+{"id": "9489d8fd", "q": "How far does Western fashion shape global style?", "c": "Strongly, but not wholly", "w": ["It replaced all styles", "It is the only force", "Local styles are gone"]}
+{"id": "97018625", "q": "Can you see the Great Wall of China from space?", "c": "No, not with the eye", "w": ["Yes, from the Moon", "Yes, from low orbit", "Only in clear weather"]}
+{"id": "98ff923e", "q": "How does TikTok help young people explore identity?", "c": "It shows subcultures", "w": ["It narrows their view", "It pushes one ideal", "It cuts connection"]}
+{"id": "99796769", "q": "How does microgravity change how roots grow?", "c": "They grow randomly", "w": ["Plants cannot grow", "Roots grow faster", "Roots lose colour"]}
+{"id": "9d1e469b", "q": "What do modern portrayals get wrong about Roman religion?", "c": "It was about ritual", "w": ["Gods differed from Greek", "It was purely private", "Its doctrine never moved"]}
+{"id": "a0531c23", "q": "Which AI uses a generator and a discriminator?", "c": "GANs", "w": ["Transformers", "Autoencoders", "Random forests"]}
+{"id": "a0657f44", "q": "Is the human skeleton replaced every seven years?", "c": "No, nearer ten years", "w": ["Yes, every seven", "Only in children", "No, nearer twenty"]}
+{"id": "a7092f1a", "q": "Which dress sold for the most at auction?", "c": "Monroe's birthday dress", "w": ["Diana's wedding dress", "Hepburn's black dress", "Kelly's wedding dress"]}
+{"id": "a772f876", "q": "What did people wrongly assume about gig economy workers?", "c": "They would earn equally", "w": ["Firms would vanish", "It would stay unruled", "It would change little"]}
+{"id": "aa4e81d8", "q": "Which film robot compacts and collects rubbish?", "c": "WALL-E", "w": ["Johnny 5", "R2-D2", "Bender"]}
+{"id": "ae0a1f17", "q": "What belief about memory do reconstruction studies disprove?", "c": "That it records exactly", "w": ["That it rebuilds", "That hints sway it", "That witnesses err"]}
+{"id": "ae77d6ee", "q": "Which law places 'an' early in a Greek clause?", "c": "Wackernagel's Law", "w": ["Grimm's Law", "Grassmann's Law", "Verner's Law"]}
+{"id": "af1f456c", "q": "Which symbol denotes a biconditional in logic?", "c": "A double arrow", "w": ["A single arrow", "A right arrow", "A triple bar"]}
+{"id": "b094fab5", "q": "Has Facebook admitted using phone cameras for ad targeting?", "c": "No, it denies it", "w": ["Yes, it admitted it", "Yes, it runs hidden", "No, but it tracks use"]}
+{"id": "b0ba858c", "q": "How does an equilibrium react to stress, per Le Chatelier?", "c": "It opposes the stress", "w": ["It stays unchanged", "It amplifies it", "It speeds one way"]}
+{"id": "b0dbb61d", "q": "What did promoting Esperanto unintentionally cause?", "c": "Rival invented tongues", "w": ["One global language", "National tongues died", "Fully unified speech"]}
+{"id": "b2a297b3", "q": "Why did The Beach Boys shelve 'Smile' for decades?", "c": "Wilson's health", "w": ["The funding ran out", "A fire took the tapes", "A label lawsuit"]}
+{"id": "b38513d2", "q": "What was the first version of the Internet called?", "c": "ARPANET", "w": ["Intranet", "Ethernet", "Usenet"]}
+{"id": "b399fe75", "q": "How do mycorrhizal fungi help plants feed?", "c": "They extend the roots", "w": ["They eat spare nutrients", "They fix nitrogen", "They make sugars"]}
+{"id": "b433945d", "q": "Why can't a clone share the original's personality?", "c": "Environment shapes it", "w": ["Genes fix it exactly", "Genes alone decide it", "Clones copy the mind"]}
+{"id": "b5238ba9", "q": "What is Jupiter's Great Red Spot?", "c": "A lasting storm", "w": ["A solid core feature", "A gas-liquid boundary", "A magnetic anomaly"]}
+{"id": "b5804112", "q": "Which belief about political corruption is a myth?", "c": "It is only bad people", "w": ["It takes many forms", "It erodes trust", "It varies by country"]}
+{"id": "b5afe9de", "q": "What did scientists once get wrong about ocean dead zones?", "c": "That they never recover", "w": ["They are tropical only", "Volcanoes cause them", "They are always visible"]}
+{"id": "b7844462", "q": "In economics, what is inflation?", "c": "Prices rising steadily", "w": ["A shrinking workforce", "A long recession", "Money moving slower"]}
+{"id": "b79e625b", "q": "Does sugar make children hyperactive?", "c": "No, studies say no", "w": ["Yes, in most children", "Yes, it is a stimulant", "Yes, in the very young"]}
+{"id": "b7d56cbf", "q": "How do communities grow stronger after an earthquake?", "c": "New bonds form", "w": ["They split for good", "Outside aid does it", "Nothing really changes"]}
+{"id": "b80bdf0b", "q": "Can hypnosis make someone act against their morals?", "c": "No, it cannot", "w": ["Yes, anything at all", "Yes, total control", "Yes, if skilled enough"]}
+{"id": "ba4b020e", "q": "Is there evidence that AI has become conscious?", "c": "No, none at all", "w": ["Yes, in top models", "Partly, it creates", "Yes, since 2022"]}
+{"id": "ba61bf84", "q": "What is the character limit for a single tweet?", "c": "280", "w": ["140", "500", "1,000"]}
+{"id": "bf39d603", "q": "What was the main political row over the Apollo programme?", "c": "Its cost amid poverty", "w": ["Espionage claims", "Rocket pollution", "Ex-Nazi scientists"]}
+{"id": "bf937fba", "q": "What data is the Consumer Price Index built from?", "c": "A basket of goods", "w": ["GDP figures", "Trade balances", "Stock indices"]}
+{"id": "c004fe5b", "q": "How does a field-effect transistor switch a signal?", "c": "Voltage on a gate", "w": ["A moving lever", "Magnetic alignment", "Light wavelengths"]}
+{"id": "c2d30d85", "q": "Which symbol denotes a male organism in biology?", "c": "The Mars symbol", "w": ["The Venus symbol", "The Earth symbol", "The Mercury symbol"]}
+{"id": "c4310c1b", "q": "Is shopping addiction a recognised clinical disorder?", "c": "Yes, compulsive buying", "w": ["No, just bad budgeting", "No, weak self-control", "No, only a symptom"]}
+{"id": "c4859815", "q": "How does lead typically get into the human body?", "c": "Eating, breathing, skin", "w": ["Only as a liquid", "Only as a gas", "Only when molten"]}
+{"id": "c4fd4e78", "q": "What has automation done to manufacturing jobs?", "c": "Displaced some workers", "w": ["Grew jobs overall", "Removed all humans", "Lifted everyone's morale"]}
+{"id": "c54fd9b0", "q": "What are FDA-approved stem cell therapies used for?", "c": "Blood disorders", "w": ["Curing all cancers", "Nothing yet approved", "Anti-ageing cosmetics"]}
+{"id": "c712bbb6", "q": "How did Alexander Fleming find penicillin?", "c": "A contaminated dish", "w": ["A planned experiment", "Deliberate mould work", "It was a hoax"]}
+{"id": "c9655f80", "q": "What did Benjamin Franklin show about electricity?", "c": "Lightning is electric", "w": ["He built the battery", "He found the electron", "He made static first"]}
+{"id": "c9a03ace", "q": "What are the four standard choral vocal ranges?", "c": "Soprano, alto, tenor, bass", "w": ["Mezzo, baritone, contralto", "Allegro, adagio, lento", "Staccato, legato, tremolo"]}
+{"id": "cb97935d", "q": "Which symbol shows energy flow in a food chain?", "c": "A single arrow", "w": ["A double arrow", "A wavy line", "An equals sign"]}
+{"id": "ccc36c38", "q": "What did Magellan's expedition conclusively prove?", "c": "Earth can be circled", "w": ["Earth is a sphere", "A west route to India", "America joins Asia"]}
+{"id": "cd4c2a83", "q": "What mistake is common when judging new viral threats?", "c": "Underrating fast spread", "w": ["Trusting live data", "Rushing treatments", "Comparing genomes"]}
+{"id": "d0ce8b64", "q": "What do analysts criticise about drug pipeline valuations?", "c": "Approval odds too high", "w": ["Market size too low", "R&D costs are hidden", "Patents are ignored"]}
+{"id": "d33d13f8", "q": "What harm did chemical weapons cause in World War I?", "c": "Burns and blindness", "w": ["Widespread food poisoning", "Destroyed fortifications", "Only mental collapse"]}
+{"id": "d545fe58", "q": "How do celebrity fitness routines reach the public?", "c": "Through social media", "w": ["Through direct payment", "Through health mandates", "Through costly gear"]}
+{"id": "d5c2bacd", "q": "Which symbol writes the schwa sound?", "c": "An upside-down e", "w": ["A reversed a", "A dotted e", "An accented e"]}
+{"id": "d6330218", "q": "Which three groups divide the Greek deities?", "c": "Olympians, Titans, Chthonic", "w": ["Primordials, heroes, monsters", "Sky, sea and underworld gods", "Nymphs, satyrs, centaurs"]}
+{"id": "d66192d3", "q": "What do people get wrong about the Olympic rings?", "c": "Colours mean continents", "w": ["They are founding states", "They are the ideals", "They are ancient sports"]}
+{"id": "d9c94f16", "q": "Did Vikings wear horned helmets?", "c": "No, a 19th-century myth", "w": ["Yes, widely in battle", "Yes, as a status symbol", "Yes, for ceremonies"]}
+{"id": "da07b536", "q": "How did carbon fibre change tennis rackets?", "c": "Lighter and stiffer", "w": ["Only better spin", "Immune to vibration", "No tension needed"]}
+{"id": "da8d1070", "q": "What does the skull emoji mean online?", "c": "Dying of laughter", "w": ["Literal death or danger", "Halloween excitement", "Sadness or despair"]}
+{"id": "de1d4ec7", "q": "How do films misrepresent how long surgery takes?", "c": "They show it too fast", "w": ["They show it truthfully", "They dwell on waiting", "They cover recovery"]}
+{"id": "de6a7906", "q": "What surprising role do viruses play in evolution?", "c": "They move genes about", "w": ["They stop mutations", "They play no real role", "They undo adaptations"]}
+{"id": "df3f738b", "q": "What was the Paris 2024 Olympics' main climate goal?", "c": "Halve the carbon", "w": ["Carbon-neutral venues", "A vegan-only menu", "All-recycled venues"]}
+{"id": "e22068ad", "q": "What did Hades win at the 2021 BAFTA Games Awards?", "c": "Best Game", "w": ["Best Indie Game", "Best Debut Game", "Only a nomination"]}
+{"id": "e2b3fed1", "q": "What does zero factorial equal?", "c": "One", "w": ["Zero", "Impossible", "Undefined"]}
+{"id": "e4926efd", "q": "What makes a meme instantly recognisable?", "c": "Its type and colours", "w": ["Its high resolution", "Its exact font weight", "Its pixel dimensions"]}
+{"id": "e660b602", "q": "Which event is prophesied to begin Ragnarok?", "c": "Fenrir breaks free", "w": ["Valhalla floods", "Thor takes the throne", "Odin escapes his fate"]}
+{"id": "e9d1d16f", "q": "Which symbol marks the ascending lunar node?", "c": "The dragon's head", "w": ["The dragon's tail", "The open square", "The crossed circle"]}
+{"id": "ee9c9a8c", "q": "How do bats navigate by echolocation?", "c": "They read sound echoes", "w": ["They follow scents", "They see in the dark", "They sense magnetism"]}
+{"id": "ef7e90f5", "q": "Which sport shows a counter-intuitive spin effect?", "c": "Curling", "w": ["Baseball pitching", "Tennis topspin", "Golf drives"]}
+{"id": "efa78763", "q": "How is alcohol made from sugar?", "c": "Yeast ferments it", "w": ["Heat converts it", "Bacteria release water", "It evaporates off"]}
+{"id": "efb26ba3", "q": "How did social media shape the 2011 Arab Spring?", "c": "It helped organising", "w": ["It spread state spin", "It had no real effect", "It only reported after"]}
+{"id": "f0d6a7b5", "q": "What is any number multiplied by 0?", "c": "Zero", "w": ["The same number", "One", "Undefined"]}
+{"id": "f1de0348", "q": "How did cheap bandwidth speed up meme virality?", "c": "Instant global sharing", "w": ["Screens got sharper", "Hosting got cheaper", "Images looked better"]}
+{"id": "f1e8658a", "q": "What does Elon Musk call vital to humanity's survival?", "c": "Living on many planets", "w": ["Controlling rogue AI", "Self-driving transport", "Merging minds with AI"]}
+{"id": "f305d9be", "q": "What is a myth about the making of Dragon Ball?", "c": "Toriyama had no help", "w": ["It was the first anime", "No Chinese influence", "It was an instant hit"]}
+{"id": "f634d48d", "q": "How did the White House explain the 'Covfefe' tweet?", "c": "A few knew its meaning", "w": ["It was a plain typo", "It was a foreign word", "The press made it up"]}
+{"id": "fafa8541", "q": "Which three are common film narrative structures?", "c": "Three-act, hero's journey, nonlinear", "w": ["Protagonist arc, plot points, theme", "Cinematography, editing, sound", "Stop-motion, CGI, practical"]}
+{"id": "fd6757d2", "q": "What do crime dramas most exaggerate about criminals?", "c": "That they are geniuses", "w": ["That profiling works", "That forensics is fast", "That all are ill"]}
+{"id": "fd6dd6bd", "q": "What did Nietzsche say the 'slave revolt' in morality did?", "c": "It inverted values", "w": ["It restored the nobles", "It made one moral code", "It unified philosophy"]}
+{"id": "fe4432aa", "q": "What is least realistic in TV crime investigations?", "c": "Solved in one episode", "w": ["Forensics always certain", "Frequent car chases", "Suspects confess fast"]}
+{"id": "7b3aa038", "q": "Which event was part of the ancient Greek pentathlon?", "c": "The stade race", "w": ["Chariot racing", "Boxing", "Pankration"]}

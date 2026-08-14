@@ -198,6 +198,7 @@ FORCE_RETIRE = {
     'a5cc5ad0': 'unanswerable trivia: a single index\'s country count for one year',
     'cb44da4f': 'stale and self-defeating: answer is 35 since Feb 2025, and 35 is a distractor',
     'f3a221d6': 'wrong and nonsensical: aphakic people do see UV; "eye exercises" is not a real premise',
+    'c15f9c15': 'same question as a7092f1a (most expensive dress at auction), with an "as of 2023" stamp',
 }
 
 retire = {}
