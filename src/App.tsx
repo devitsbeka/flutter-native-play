@@ -10,6 +10,7 @@ import { BackgroundGenerationProvider } from "@/contexts/BackgroundGenerationCon
 import { PlayerProfileProvider } from "@/contexts/PlayerProfileContext";
 import { AvatarModalProvider } from "@/contexts/AvatarModalContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { LanguageFollowsCountry } from "@/components/shared/LanguageFollowsCountry";
 import { PostHogProvider } from "@/providers/PostHogProvider";
 import { VipProvider } from "@/contexts/VipContext";
 import { FriendsProvider } from "@/contexts/FriendsContext";
@@ -138,6 +139,9 @@ const FreshBuildGuard = () => {
 const App = () => (
   <LanguageProvider>
     <AuthProvider>
+      {/* The account's country decides the language. Inside AuthProvider
+          because LanguageProvider is outside it. */}
+      <LanguageFollowsCountry />
       <PostHogProvider>
       <VipProvider>
       <SoundProvider>

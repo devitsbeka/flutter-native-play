@@ -69,3 +69,32 @@ export function languageForCountry(countryCode: string | null | undefined): stri
   if (!countryCode) return "en";
   return COUNTRY_TO_LANGUAGE[countryCode.toLowerCase()] || "en";
 }
+
+export interface LanguageSyncInput {
+  /** ?lang= on the address the tab was opened with, if it named a real one. */
+  override: string | null;
+  /** The country on the account. Null while it is still being worked out. */
+  countryCode: string | null | undefined;
+  /** What the app is showing now. */
+  current: string;
+}
+
+/**
+ * The language to switch to, or null to leave it alone.
+ *
+ * The account's country is what decides: picking a country in settings is the
+ * only language control the app has. The two could still drift apart, because
+ * the country lives on the profile and the language in this device's
+ * localStorage — a phone that was once opened with ?lang=en, or that signed
+ * into an account created somewhere else, kept the language it had behind a
+ * profile that said otherwise.
+ *
+ * ?lang= is the exception, and stays one: it is how the other translations
+ * get looked at without touching an account.
+ */
+export function languageToApply({ override, countryCode, current }: LanguageSyncInput): string | null {
+  if (override) return null;
+  if (!countryCode) return null;
+  const wanted = languageForCountry(countryCode);
+  return wanted === current ? null : wanted;
+}

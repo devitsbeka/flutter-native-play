@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useCallback, useMemo, useState, useEffect } from 'react';
 import { translations, LANGUAGES, DEFAULT_LANGUAGE, getLanguage, getRegionForLanguage } from '@/locales';
+import { languageOverride } from '@/utils/languageOverride';
 
 
 interface LanguageContextType {
@@ -17,12 +18,11 @@ const STORAGE_KEY = 'preferredLanguage';
 
 function getStoredLanguage(): string {
   try {
-    // Check for ?lang= query parameter (force override)
-    const params = new URLSearchParams(window.location.search);
-    const langParam = params.get('lang');
-    if (langParam && translations[langParam]) {
-      localStorage.setItem(STORAGE_KEY, langParam);
-      return langParam;
+    // ?lang= outranks everything for this tab — see utils/languageOverride.
+    const override = languageOverride();
+    if (override) {
+      localStorage.setItem(STORAGE_KEY, override);
+      return override;
     }
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored && translations[stored]) return stored;
