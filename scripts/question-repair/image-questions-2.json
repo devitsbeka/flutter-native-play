@@ -1,0 +1,1622 @@
+[
+ {
+  "category_id": "cd03367e-62fd-425e-a81a-cd5664149e14",
+  "category": "cinema",
+  "question_text": "Who is shown?",
+  "correct_answer": "Alfred Hitchcock",
+  "incorrect_answers": [
+   "Orson Welles",
+   "John Huston",
+   "Billy Wilder"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/94/Hitchcock%2C_Alfred_02.jpg",
+  "subject": "Alfred Hitchcock",
+  "cdn_verified": true,
+  "aspect": 0.83
+ },
+ {
+  "category_id": "cd03367e-62fd-425e-a81a-cd5664149e14",
+  "category": "cinema",
+  "question_text": "Who is shown?",
+  "correct_answer": "Steven Spielberg",
+  "incorrect_answers": [
+   "George Lucas",
+   "Ron Howard",
+   "James Cameron"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/MKr25402_Steven_Spielberg_%28Berlinale_2023%29_%283x4_cropped%29.jpg/960px-MKr25402_Steven_Spielberg_%28Berlinale_2023%29_%283x4_cropped%29.jpg",
+  "subject": "Steven Spielberg",
+  "cdn_verified": true,
+  "aspect": 0.75
+ },
+ {
+  "category_id": "cd03367e-62fd-425e-a81a-cd5664149e14",
+  "category": "cinema",
+  "question_text": "Who is shown?",
+  "correct_answer": "Quentin Tarantino",
+  "incorrect_answers": [
+   "Guy Ritchie",
+   "Robert Rodriguez",
+   "Paul Thomas Anderson"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Quentin_Tarantino_by_Gage_Skidmore.jpg/960px-Quentin_Tarantino_by_Gage_Skidmore.jpg",
+  "subject": "Quentin Tarantino",
+  "cdn_verified": true,
+  "aspect": 0.75
+ },
+ {
+  "category_id": "cd03367e-62fd-425e-a81a-cd5664149e14",
+  "category": "cinema",
+  "question_text": "Who is shown?",
+  "correct_answer": "Audrey Hepburn",
+  "incorrect_answers": [
+   "Grace Kelly",
+   "Elizabeth Taylor",
+   "Ingrid Bergman"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/AudreyKHepburn.jpg/960px-AudreyKHepburn.jpg",
+  "subject": "Audrey Hepburn",
+  "cdn_verified": true,
+  "aspect": 0.72
+ },
+ {
+  "category_id": "cd03367e-62fd-425e-a81a-cd5664149e14",
+  "category": "cinema",
+  "question_text": "Who is shown?",
+  "correct_answer": "Marilyn Monroe",
+  "incorrect_answers": [
+   "Jayne Mansfield",
+   "Lana Turner",
+   "Veronica Lake"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Monroecirca1953.jpg/960px-Monroecirca1953.jpg",
+  "subject": "Marilyn Monroe",
+  "cdn_verified": true,
+  "aspect": 0.68
+ },
+ {
+  "category_id": "cd03367e-62fd-425e-a81a-cd5664149e14",
+  "category": "cinema",
+  "question_text": "Who is shown?",
+  "correct_answer": "Bruce Lee",
+  "incorrect_answers": [
+   "Jackie Chan",
+   "Jet Li",
+   "Donnie Yen"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Bruce_Lee_as_Chen_Zhen_%284x5_cropped%29.jpg/960px-Bruce_Lee_as_Chen_Zhen_%284x5_cropped%29.jpg",
+  "subject": "Bruce Lee",
+  "cdn_verified": true,
+  "aspect": 0.8
+ },
+ {
+  "category_id": "cd03367e-62fd-425e-a81a-cd5664149e14",
+  "category": "cinema",
+  "question_text": "Who is shown?",
+  "correct_answer": "Clint Eastwood",
+  "incorrect_answers": [
+   "Robert Redford",
+   "Paul Newman",
+   "Steve McQueen"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Clint_Eastwood_visits_MCB_Camp_Pendleton_%281%29_%28cropped%29.jpg",
+  "subject": "Clint Eastwood",
+  "cdn_verified": true,
+  "aspect": 0.67
+ },
+ {
+  "category_id": "cd03367e-62fd-425e-a81a-cd5664149e14",
+  "category": "cinema",
+  "question_text": "Who is shown?",
+  "correct_answer": "Morgan Freeman",
+  "incorrect_answers": [
+   "Denzel Washington",
+   "Samuel L. Jackson",
+   "James Earl Jones"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Morgan_Freeman_at_The_Pentagon_on_2_August_2023_-_230802-D-PM193-3363_%28cropped%29.jpg/960px-Morgan_Freeman_at_The_Pentagon_on_2_August_2023_-_230802-D-PM193-3363_%28cropped%29.jpg",
+  "subject": "Morgan Freeman",
+  "cdn_verified": true,
+  "aspect": 0.75
+ },
+ {
+  "category_id": "cd03367e-62fd-425e-a81a-cd5664149e14",
+  "category": "cinema",
+  "question_text": "Who is shown?",
+  "correct_answer": "Meryl Streep",
+  "incorrect_answers": [
+   "Glenn Close",
+   "Helen Mirren",
+   "Judi Dench"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Meryl_Streep-_Press_conference_for_the_film_%22The_Devil_Wears_Prada_2%22_-_55194765350_%28cropped1%29.jpg/960px-Meryl_Streep-_Press_conference_for_the_film_%22The_Devil_Wears_Prada_2%22_-_55194765350_%28cropped1%29.jpg",
+  "subject": "Meryl Streep",
+  "cdn_verified": true,
+  "aspect": 0.75
+ },
+ {
+  "category_id": "cd03367e-62fd-425e-a81a-cd5664149e14",
+  "category": "cinema",
+  "question_text": "Which landmark is shown?",
+  "correct_answer": "Hollywood Sign",
+  "incorrect_answers": [
+   "Sunset Strip",
+   "Walk of Fame",
+   "Griffith Observatory"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Hollywood_sign_%288485145044%29.jpg/960px-Hollywood_sign_%288485145044%29.jpg",
+  "subject": "Hollywood Sign",
+  "cdn_verified": true,
+  "aspect": 1.5
+ },
+ {
+  "category_id": "ae1bcb74-802a-4169-a549-56200c4a4873",
+  "category": "tv",
+  "question_text": "Who is shown?",
+  "correct_answer": "Bryan Cranston",
+  "incorrect_answers": [
+   "Jon Hamm",
+   "Michael C. Hall",
+   "Kyle MacLachlan"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/BryanCranston-byPhilipRomano_%28cropped%29.jpg/960px-BryanCranston-byPhilipRomano_%28cropped%29.jpg",
+  "subject": "Bryan Cranston",
+  "cdn_verified": true,
+  "aspect": 0.68
+ },
+ {
+  "category_id": "ae1bcb74-802a-4169-a549-56200c4a4873",
+  "category": "tv",
+  "question_text": "Who is shown?",
+  "correct_answer": "Peter Dinklage",
+  "incorrect_answers": [
+   "Warwick Davis",
+   "Danny Woodburn",
+   "Tony Cox"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Peter_Dinklage_by_Gage_Skidmore_2.jpg/960px-Peter_Dinklage_by_Gage_Skidmore_2.jpg",
+  "subject": "Peter Dinklage",
+  "cdn_verified": true,
+  "aspect": 0.77
+ },
+ {
+  "category_id": "ae1bcb74-802a-4169-a549-56200c4a4873",
+  "category": "tv",
+  "question_text": "Who is shown?",
+  "correct_answer": "Jennifer Aniston",
+  "incorrect_answers": [
+   "Courteney Cox",
+   "Lisa Kudrow",
+   "Jennifer Garner"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/16/JenniferAnistonHWoFFeb2012.jpg",
+  "subject": "Jennifer Aniston",
+  "cdn_verified": true,
+  "aspect": 0.95
+ },
+ {
+  "category_id": "ae1bcb74-802a-4169-a549-56200c4a4873",
+  "category": "tv",
+  "question_text": "Who is shown?",
+  "correct_answer": "David Attenborough",
+  "incorrect_answers": [
+   "Brian Cox",
+   "Jane Goodall",
+   "Carl Sagan"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/David_Attenborough_in_2025.jpg/960px-David_Attenborough_in_2025.jpg",
+  "subject": "David Attenborough",
+  "cdn_verified": true,
+  "aspect": 0.75
+ },
+ {
+  "category_id": "ae1bcb74-802a-4169-a549-56200c4a4873",
+  "category": "tv",
+  "question_text": "Who is shown?",
+  "correct_answer": "Oprah Winfrey",
+  "incorrect_answers": [
+   "Whoopi Goldberg",
+   "Ellen DeGeneres",
+   "Tyra Banks"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Oprah_Winfrey_2016.jpg/960px-Oprah_Winfrey_2016.jpg",
+  "subject": "Oprah Winfrey",
+  "cdn_verified": true,
+  "aspect": 0.69
+ },
+ {
+  "category_id": "ae1bcb74-802a-4169-a549-56200c4a4873",
+  "category": "tv",
+  "question_text": "Which walled city is shown?",
+  "correct_answer": "Dubrovnik",
+  "incorrect_answers": [
+   "Kotor",
+   "Split",
+   "Valletta"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/The_walls_of_the_fortress_and_View_of_the_old_city._panorama.jpg/960px-The_walls_of_the_fortress_and_View_of_the_old_city._panorama.jpg",
+  "subject": "Dubrovnik",
+  "cdn_verified": true,
+  "aspect": 1.61
+ },
+ {
+  "category_id": "ae1bcb74-802a-4169-a549-56200c4a4873",
+  "category": "tv",
+  "question_text": "Which country house is shown?",
+  "correct_answer": "Highclere Castle",
+  "incorrect_answers": [
+   "Blenheim Palace",
+   "Chatsworth House",
+   "Castle Howard"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Highclere_Castle_%282019%29.jpg/960px-Highclere_Castle_%282019%29.jpg",
+  "subject": "Highclere Castle",
+  "cdn_verified": true,
+  "aspect": 1.33
+ },
+ {
+  "category_id": "ae1bcb74-802a-4169-a549-56200c4a4873",
+  "category": "tv",
+  "question_text": "Which valley is shown?",
+  "correct_answer": "Monument Valley",
+  "incorrect_answers": [
+   "Bryce Canyon",
+   "Arches",
+   "Canyonlands"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Monument_Valley%2C_Utah%2C_USA_%2823611451292%29.jpg/960px-Monument_Valley%2C_Utah%2C_USA_%2823611451292%29.jpg",
+  "subject": "Monument Valley",
+  "cdn_verified": true,
+  "aspect": 1.5
+ },
+ {
+  "category_id": "80b2b8b6-8637-43a2-b78b-6fe502609fa1",
+  "category": "music",
+  "question_text": "Which instrument is shown?",
+  "correct_answer": "Cello",
+  "incorrect_answers": [
+   "Double bass",
+   "Viola",
+   "Violin"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Cello_front_side.png",
+  "subject": "Cello",
+  "cdn_verified": true,
+  "aspect": 0.66
+ },
+ {
+  "category_id": "80b2b8b6-8637-43a2-b78b-6fe502609fa1",
+  "category": "music",
+  "question_text": "Which instrument is shown?",
+  "correct_answer": "Sitar",
+  "incorrect_answers": [
+   "Veena",
+   "Tanpura",
+   "Sarod"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Sitar%2C_late_19th_Century.jpg/960px-Sitar%2C_late_19th_Century.jpg",
+  "subject": "Sitar",
+  "cdn_verified": true,
+  "aspect": 0.65
+ },
+ {
+  "category_id": "80b2b8b6-8637-43a2-b78b-6fe502609fa1",
+  "category": "music",
+  "question_text": "Which instrument is shown?",
+  "correct_answer": "Accordion",
+  "incorrect_answers": [
+   "Concertina",
+   "Bandoneon",
+   "Harmonium"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/A_converter_free-bass_piano-accordion_and_a_Russian_bayan.jpg/960px-A_converter_free-bass_piano-accordion_and_a_Russian_bayan.jpg",
+  "subject": "Accordion",
+  "cdn_verified": true,
+  "aspect": 0.74
+ },
+ {
+  "category_id": "80b2b8b6-8637-43a2-b78b-6fe502609fa1",
+  "category": "music",
+  "question_text": "Which instrument is shown?",
+  "correct_answer": "Bagpipes",
+  "incorrect_answers": [
+   "Hurdy-gurdy",
+   "Shawm",
+   "Uilleann pipes"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f4/HighlandersPiperMajor.jpg",
+  "subject": "Great Highland bagpipe",
+  "cdn_verified": true,
+  "aspect": 0.67
+ },
+ {
+  "category_id": "80b2b8b6-8637-43a2-b78b-6fe502609fa1",
+  "category": "music",
+  "question_text": "Which instrument is shown?",
+  "correct_answer": "Theremin",
+  "incorrect_answers": [
+   "Ondes Martenot",
+   "Moog synth",
+   "Mellotron"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Etherwave_Theremin_Kit.jpg/960px-Etherwave_Theremin_Kit.jpg",
+  "subject": "Theremin",
+  "cdn_verified": true,
+  "aspect": 1.23
+ },
+ {
+  "category_id": "80b2b8b6-8637-43a2-b78b-6fe502609fa1",
+  "category": "music",
+  "question_text": "Which instrument is shown?",
+  "correct_answer": "Harp",
+  "incorrect_answers": [
+   "Lyre",
+   "Zither",
+   "Kora"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Harp.png",
+  "subject": "Harp",
+  "cdn_verified": true,
+  "aspect": 0.8
+ },
+ {
+  "category_id": "80b2b8b6-8637-43a2-b78b-6fe502609fa1",
+  "category": "music",
+  "question_text": "Which instrument is shown?",
+  "correct_answer": "Trombone",
+  "incorrect_answers": [
+   "Trumpet",
+   "French horn",
+   "Tuba"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Yamaha_Tenor_trombone_YSL-891Z_%28re-crop%29.jpg/960px-Yamaha_Tenor_trombone_YSL-891Z_%28re-crop%29.jpg",
+  "subject": "Trombone",
+  "cdn_verified": true,
+  "aspect": 2.87
+ },
+ {
+  "category_id": "80b2b8b6-8637-43a2-b78b-6fe502609fa1",
+  "category": "music",
+  "question_text": "Who is shown?",
+  "correct_answer": "Bob Dylan",
+  "incorrect_answers": [
+   "Leonard Cohen",
+   "Neil Young",
+   "Tom Waits"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/DylanYoungKilkenny140719v2_%2850_of_52%29_%2852246124397%29_%28cropped%29.jpg/960px-DylanYoungKilkenny140719v2_%2850_of_52%29_%2852246124397%29_%28cropped%29.jpg",
+  "subject": "Bob Dylan",
+  "cdn_verified": true,
+  "aspect": 0.75
+ },
+ {
+  "category_id": "80b2b8b6-8637-43a2-b78b-6fe502609fa1",
+  "category": "music",
+  "question_text": "Who is shown?",
+  "correct_answer": "Elton John",
+  "incorrect_answers": [
+   "Billy Joel",
+   "Rod Stewart",
+   "Barry Manilow"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/61/EltonDocBFILFF101024_%284_of_17%29_%28cropped%29.jpg",
+  "subject": "Elton John",
+  "cdn_verified": true,
+  "aspect": 0.75
+ },
+ {
+  "category_id": "80b2b8b6-8637-43a2-b78b-6fe502609fa1",
+  "category": "music",
+  "question_text": "Who is shown?",
+  "correct_answer": "Dolly Parton",
+  "incorrect_answers": [
+   "Reba McEntire",
+   "Loretta Lynn",
+   "Tammy Wynette"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Dolly_Parton_in_2022.jpg",
+  "subject": "Dolly Parton",
+  "cdn_verified": true,
+  "aspect": 0.7
+ },
+ {
+  "category_id": "80b2b8b6-8637-43a2-b78b-6fe502609fa1",
+  "category": "music",
+  "question_text": "Who is shown?",
+  "correct_answer": "Snoop Dogg",
+  "incorrect_answers": [
+   "Dr. Dre",
+   "Ice Cube",
+   "Nas"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Snoop_Dogg%2C_WrestleMania_XL_%28cropped%29_%28cropped%29.jpg",
+  "subject": "Snoop Dogg",
+  "cdn_verified": true,
+  "aspect": 0.78
+ },
+ {
+  "category_id": "a4e83e6a-93dd-450a-b7ed-00c10278089e",
+  "category": "games",
+  "question_text": "Which console is shown?",
+  "correct_answer": "NES",
+  "incorrect_answers": [
+   "Atari 7800",
+   "Master System",
+   "ColecoVision"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/NES-Console-Set.png/960px-NES-Console-Set.png",
+  "subject": "Nintendo Entertainment System",
+  "cdn_verified": true,
+  "aspect": 1.84
+ },
+ {
+  "category_id": "a4e83e6a-93dd-450a-b7ed-00c10278089e",
+  "category": "games",
+  "question_text": "Which handheld is shown?",
+  "correct_answer": "Game Boy",
+  "incorrect_answers": [
+   "Game Gear",
+   "Lynx",
+   "Neo Geo Pocket"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Game-Boy-FL.png/960px-Game-Boy-FL.png",
+  "subject": "Game Boy",
+  "cdn_verified": true,
+  "aspect": 0.82
+ },
+ {
+  "category_id": "a4e83e6a-93dd-450a-b7ed-00c10278089e",
+  "category": "games",
+  "question_text": "Which console is shown?",
+  "correct_answer": "PlayStation 2",
+  "incorrect_answers": [
+   "Xbox",
+   "GameCube",
+   "Dreamcast"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/PS2-Versions.png/960px-PS2-Versions.png",
+  "subject": "PlayStation 2",
+  "cdn_verified": true,
+  "aspect": 1.13
+ },
+ {
+  "category_id": "a4e83e6a-93dd-450a-b7ed-00c10278089e",
+  "category": "games",
+  "question_text": "Which console is shown?",
+  "correct_answer": "Nintendo 64",
+  "incorrect_answers": [
+   "Saturn",
+   "Jaguar",
+   "3DO"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Nintendo-64-wController-L.jpg/960px-Nintendo-64-wController-L.jpg",
+  "subject": "Nintendo 64",
+  "cdn_verified": true,
+  "aspect": 2.19
+ },
+ {
+  "category_id": "a4e83e6a-93dd-450a-b7ed-00c10278089e",
+  "category": "games",
+  "question_text": "Which console is shown?",
+  "correct_answer": "Dreamcast",
+  "incorrect_answers": [
+   "Saturn",
+   "PlayStation",
+   "Nintendo 64"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Dreamcast_logo_Japan.svg/960px-Dreamcast_logo_Japan.svg.png",
+  "subject": "Dreamcast",
+  "cdn_verified": true,
+  "aspect": 1.32
+ },
+ {
+  "category_id": "a4e83e6a-93dd-450a-b7ed-00c10278089e",
+  "category": "games",
+  "question_text": "Which console is shown?",
+  "correct_answer": "Atari 2600",
+  "incorrect_answers": [
+   "Intellivision",
+   "Odyssey 2",
+   "Vectrex"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Atari-2600-Wood-4Sw-Set.png/960px-Atari-2600-Wood-4Sw-Set.png",
+  "subject": "Atari 2600",
+  "cdn_verified": true,
+  "aspect": 1.64
+ },
+ {
+  "category_id": "a4e83e6a-93dd-450a-b7ed-00c10278089e",
+  "category": "games",
+  "question_text": "Which console is shown?",
+  "correct_answer": "Switch",
+  "incorrect_answers": [
+   "Steam Deck",
+   "Wii U",
+   "PS Vita"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Nintendo_Switch_logo.svg/960px-Nintendo_Switch_logo.svg.png",
+  "subject": "Nintendo Switch",
+  "cdn_verified": true,
+  "aspect": 1.0
+ },
+ {
+  "category_id": "a4e83e6a-93dd-450a-b7ed-00c10278089e",
+  "category": "games",
+  "question_text": "Which puzzle is shown?",
+  "correct_answer": "Rubik's Cube",
+  "incorrect_answers": [
+   "Pyraminx",
+   "Megaminx",
+   "Soma cube"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/61/Rubiks_cube_solved.jpg",
+  "subject": "Rubik's Cube",
+  "cdn_verified": true,
+  "aspect": 1.0
+ },
+ {
+  "category_id": "6713f663-9f5e-46fe-874e-d1e808abab79",
+  "category": "space",
+  "question_text": "Which planet is shown?",
+  "correct_answer": "Saturn",
+  "incorrect_answers": [
+   "Uranus",
+   "Neptune",
+   "Jupiter"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Saturn_global_view_from_Cassini%2C_rings_open_Better_Colour.png/960px-Saturn_global_view_from_Cassini%2C_rings_open_Better_Colour.png",
+  "subject": "Saturn",
+  "cdn_verified": true,
+  "aspect": 2.5
+ },
+ {
+  "category_id": "6713f663-9f5e-46fe-874e-d1e808abab79",
+  "category": "space",
+  "question_text": "Which planet is shown?",
+  "correct_answer": "Jupiter",
+  "incorrect_answers": [
+   "Saturn",
+   "Venus",
+   "Neptune"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Jupiter_OPAL_2024.png/960px-Jupiter_OPAL_2024.png",
+  "subject": "Jupiter",
+  "cdn_verified": true,
+  "aspect": 1.1
+ },
+ {
+  "category_id": "6713f663-9f5e-46fe-874e-d1e808abab79",
+  "category": "space",
+  "question_text": "Which planet is shown?",
+  "correct_answer": "Mars",
+  "incorrect_answers": [
+   "Mercury",
+   "Venus",
+   "Ceres"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Mars_-_August_30_2021_-_Flickr_-_Kevin_M._Gill.png/960px-Mars_-_August_30_2021_-_Flickr_-_Kevin_M._Gill.png",
+  "subject": "Mars",
+  "cdn_verified": true,
+  "aspect": 1.0
+ },
+ {
+  "category_id": "6713f663-9f5e-46fe-874e-d1e808abab79",
+  "category": "space",
+  "question_text": "Which planet is shown?",
+  "correct_answer": "Neptune",
+  "incorrect_answers": [
+   "Uranus",
+   "Earth",
+   "Jupiter"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Neptune_Voyager2_color_calibrated.png/960px-Neptune_Voyager2_color_calibrated.png",
+  "subject": "Neptune",
+  "cdn_verified": true,
+  "aspect": 1.0
+ },
+ {
+  "category_id": "6713f663-9f5e-46fe-874e-d1e808abab79",
+  "category": "space",
+  "question_text": "Which spacecraft is shown?",
+  "correct_answer": "Hubble",
+  "incorrect_answers": [
+   "James Webb",
+   "Kepler",
+   "Chandra"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Hubble_2009_close-up_2.jpg/960px-Hubble_2009_close-up_2.jpg",
+  "subject": "Hubble Space Telescope",
+  "cdn_verified": true,
+  "aspect": 1.51
+ },
+ {
+  "category_id": "6713f663-9f5e-46fe-874e-d1e808abab79",
+  "category": "space",
+  "question_text": "Which station is shown?",
+  "correct_answer": "ISS",
+  "incorrect_answers": [
+   "Mir",
+   "Skylab",
+   "Tiangong"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/The_station_pictured_from_the_SpaceX_Crew_Dragon_5.jpg/960px-The_station_pictured_from_the_SpaceX_Crew_Dragon_5.jpg",
+  "subject": "International Space Station",
+  "cdn_verified": true,
+  "aspect": 1.5
+ },
+ {
+  "category_id": "6713f663-9f5e-46fe-874e-d1e808abab79",
+  "category": "space",
+  "question_text": "Which rover is shown?",
+  "correct_answer": "Curiosity",
+  "incorrect_answers": [
+   "Sojourner",
+   "Opportunity",
+   "Perseverance"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Curiosity_Self-Portrait_at_%27Big_Sky%27_Drilling_Site.jpg/960px-Curiosity_Self-Portrait_at_%27Big_Sky%27_Drilling_Site.jpg",
+  "subject": "Curiosity (rover)",
+  "cdn_verified": true,
+  "aspect": 0.73
+ },
+ {
+  "category_id": "6713f663-9f5e-46fe-874e-d1e808abab79",
+  "category": "space",
+  "question_text": "Which nebula is shown?",
+  "correct_answer": "Orion Nebula",
+  "incorrect_answers": [
+   "Crab Nebula",
+   "Eagle Nebula",
+   "Ring Nebula"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg/960px-Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg",
+  "subject": "Orion Nebula",
+  "cdn_verified": true,
+  "aspect": 1.0
+ },
+ {
+  "category_id": "6713f663-9f5e-46fe-874e-d1e808abab79",
+  "category": "space",
+  "question_text": "Which galaxy is shown?",
+  "correct_answer": "Milky Way",
+  "incorrect_answers": [
+   "Andromeda",
+   "Triangulum",
+   "Whirlpool"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/ESO-VLT-Laser-phot-33a-07.jpg/960px-ESO-VLT-Laser-phot-33a-07.jpg",
+  "subject": "Milky Way",
+  "cdn_verified": true,
+  "aspect": 1.5
+ },
+ {
+  "category_id": "6713f663-9f5e-46fe-874e-d1e808abab79",
+  "category": "space",
+  "question_text": "Which rocket is shown?",
+  "correct_answer": "Saturn V",
+  "incorrect_answers": [
+   "Soyuz",
+   "Falcon 9",
+   "Space Shuttle"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Apollo_11_Launch_-_GPN-2000-000630.jpg/960px-Apollo_11_Launch_-_GPN-2000-000630.jpg",
+  "subject": "Saturn V",
+  "cdn_verified": true,
+  "aspect": 0.8
+ },
+ {
+  "category_id": "25442741-92ef-4d73-8ea3-071fdd20201a",
+  "category": "sport",
+  "question_text": "Who is shown?",
+  "correct_answer": "Usain Bolt",
+  "incorrect_answers": [
+   "Yohan Blake",
+   "Tyson Gay",
+   "Justin Gatlin"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Usain_Bolt_smiling_Berlin_2009.JPG",
+  "subject": "Usain Bolt",
+  "cdn_verified": true,
+  "aspect": 0.8
+ },
+ {
+  "category_id": "25442741-92ef-4d73-8ea3-071fdd20201a",
+  "category": "sport",
+  "question_text": "Who is shown?",
+  "correct_answer": "Serena Williams",
+  "incorrect_answers": [
+   "Venus Williams",
+   "Naomi Osaka",
+   "Sloane Stephens"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Guests_at_the_2026_Met_Gala_209_%28cropped%29.jpg",
+  "subject": "Serena Williams",
+  "cdn_verified": true,
+  "aspect": 0.61
+ },
+ {
+  "category_id": "25442741-92ef-4d73-8ea3-071fdd20201a",
+  "category": "sport",
+  "question_text": "Who is shown?",
+  "correct_answer": "Lionel Messi",
+  "incorrect_answers": [
+   "Sergio Aguero",
+   "Luis Suarez",
+   "Antoine Griezmann"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg/960px-Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg",
+  "subject": "Lionel Messi",
+  "cdn_verified": true,
+  "aspect": 0.67
+ },
+ {
+  "category_id": "25442741-92ef-4d73-8ea3-071fdd20201a",
+  "category": "sport",
+  "question_text": "Who is shown?",
+  "correct_answer": "Michael Phelps",
+  "incorrect_answers": [
+   "Ryan Lochte",
+   "Caeleb Dressel",
+   "Ian Thorpe"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Michael_Phelps_Rio_Olympics_2016.jpg/960px-Michael_Phelps_Rio_Olympics_2016.jpg",
+  "subject": "Michael Phelps",
+  "cdn_verified": true,
+  "aspect": 0.76
+ },
+ {
+  "category_id": "25442741-92ef-4d73-8ea3-071fdd20201a",
+  "category": "sport",
+  "question_text": "Who is shown?",
+  "correct_answer": "Muhammad Ali",
+  "incorrect_answers": [
+   "Joe Frazier",
+   "George Foreman",
+   "Sonny Liston"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Muhammad_Ali_NYWTS.jpg/960px-Muhammad_Ali_NYWTS.jpg",
+  "subject": "Muhammad Ali",
+  "cdn_verified": true,
+  "aspect": 0.8
+ },
+ {
+  "category_id": "25442741-92ef-4d73-8ea3-071fdd20201a",
+  "category": "sport",
+  "question_text": "Who is shown?",
+  "correct_answer": "Roger Federer",
+  "incorrect_answers": [
+   "Rafael Nadal",
+   "Novak Djokovic",
+   "Andy Murray"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Roger_Federer_2015_%28cropped%29.jpg/960px-Roger_Federer_2015_%28cropped%29.jpg",
+  "subject": "Roger Federer",
+  "cdn_verified": true,
+  "aspect": 0.72
+ },
+ {
+  "category_id": "25442741-92ef-4d73-8ea3-071fdd20201a",
+  "category": "sport",
+  "question_text": "Which sport is shown?",
+  "correct_answer": "Curling",
+  "incorrect_answers": [
+   "Bocce",
+   "Shuffleboard",
+   "Petanque"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Curling%2C_overall_view_of_the_Tim_Hortons_Brier_venue_-_Edmonton%2C_Canada.jpg",
+  "subject": "Curling",
+  "cdn_verified": true,
+  "aspect": 1.33
+ },
+ {
+  "category_id": "25442741-92ef-4d73-8ea3-071fdd20201a",
+  "category": "sport",
+  "question_text": "Which sport is shown?",
+  "correct_answer": "Sumo",
+  "incorrect_answers": [
+   "Judo",
+   "Wrestling",
+   "Aikido"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Asashoryu_fight_Jan08.JPG/960px-Asashoryu_fight_Jan08.JPG",
+  "subject": "Sumo",
+  "cdn_verified": true,
+  "aspect": 1.22
+ },
+ {
+  "category_id": "25442741-92ef-4d73-8ea3-071fdd20201a",
+  "category": "sport",
+  "question_text": "Which sport is shown?",
+  "correct_answer": "Badminton",
+  "incorrect_answers": [
+   "Squash",
+   "Table tennis",
+   "Padel"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Olympics_2012_Mixed_Doubles_Final.jpg/960px-Olympics_2012_Mixed_Doubles_Final.jpg",
+  "subject": "Badminton",
+  "cdn_verified": true,
+  "aspect": 1.51
+ },
+ {
+  "category_id": "25442741-92ef-4d73-8ea3-071fdd20201a",
+  "category": "sport",
+  "question_text": "Which stadium is shown?",
+  "correct_answer": "Wembley",
+  "incorrect_answers": [
+   "Old Trafford",
+   "Anfield",
+   "Emirates"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/London_Wembley.jpg/960px-London_Wembley.jpg",
+  "subject": "Wembley Stadium",
+  "cdn_verified": true,
+  "aspect": 1.34
+ },
+ {
+  "category_id": "5de491b3-b02f-4402-b1d5-f1506ac3513d",
+  "category": "cuisine",
+  "question_text": "Which dish is shown?",
+  "correct_answer": "Sushi",
+  "incorrect_answers": [
+   "Sashimi",
+   "Poke",
+   "Ceviche"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Sushi_platter.jpg/960px-Sushi_platter.jpg",
+  "subject": "Sushi",
+  "cdn_verified": true,
+  "aspect": 1.0
+ },
+ {
+  "category_id": "5de491b3-b02f-4402-b1d5-f1506ac3513d",
+  "category": "cuisine",
+  "question_text": "Which dish is shown?",
+  "correct_answer": "Paella",
+  "incorrect_answers": [
+   "Risotto",
+   "Jambalaya",
+   "Biryani"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/01_Paella_Valenciana_original.jpg/960px-01_Paella_Valenciana_original.jpg",
+  "subject": "Paella",
+  "cdn_verified": true,
+  "aspect": 1.5
+ },
+ {
+  "category_id": "5de491b3-b02f-4402-b1d5-f1506ac3513d",
+  "category": "cuisine",
+  "question_text": "Which dish is shown?",
+  "correct_answer": "Pho",
+  "incorrect_answers": [
+   "Ramen",
+   "Laksa",
+   "Udon"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Bowl_of_Meatball_pho.jpg/960px-Bowl_of_Meatball_pho.jpg",
+  "subject": "Pho",
+  "cdn_verified": true,
+  "aspect": 1.33
+ },
+ {
+  "category_id": "5de491b3-b02f-4402-b1d5-f1506ac3513d",
+  "category": "cuisine",
+  "question_text": "Which dish is shown?",
+  "correct_answer": "Ramen",
+  "incorrect_answers": [
+   "Pho",
+   "Udon",
+   "Soba"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Shoyu_Ramen%EF%BC%88Tokyo_Ramen%EF%BC%89_-_01.jpg/960px-Shoyu_Ramen%EF%BC%88Tokyo_Ramen%EF%BC%89_-_01.jpg",
+  "subject": "Ramen",
+  "cdn_verified": true,
+  "aspect": 1.33
+ },
+ {
+  "category_id": "5de491b3-b02f-4402-b1d5-f1506ac3513d",
+  "category": "cuisine",
+  "question_text": "Which dish is shown?",
+  "correct_answer": "Taco",
+  "incorrect_answers": [
+   "Burrito",
+   "Quesadilla",
+   "Empanada"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/001_Tacos_de_carnitas%2C_carne_asada_y_al_pastor.jpg/960px-001_Tacos_de_carnitas%2C_carne_asada_y_al_pastor.jpg",
+  "subject": "Taco",
+  "cdn_verified": true,
+  "aspect": 1.33
+ },
+ {
+  "category_id": "5de491b3-b02f-4402-b1d5-f1506ac3513d",
+  "category": "cuisine",
+  "question_text": "Which pastry is shown?",
+  "correct_answer": "Croissant",
+  "incorrect_answers": [
+   "Brioche",
+   "Danish",
+   "Palmier"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Croissant-Petr_Kratochvil.jpg/960px-Croissant-Petr_Kratochvil.jpg",
+  "subject": "Croissant",
+  "cdn_verified": true,
+  "aspect": 1.5
+ },
+ {
+  "category_id": "5de491b3-b02f-4402-b1d5-f1506ac3513d",
+  "category": "cuisine",
+  "question_text": "Which dessert is shown?",
+  "correct_answer": "Baklava",
+  "incorrect_answers": [
+   "Kunafa",
+   "Strudel",
+   "Halva"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Baklava%281%29.png",
+  "subject": "Baklava",
+  "cdn_verified": true,
+  "aspect": 1.5
+ },
+ {
+  "category_id": "5de491b3-b02f-4402-b1d5-f1506ac3513d",
+  "category": "cuisine",
+  "question_text": "Which soup is shown?",
+  "correct_answer": "Borscht",
+  "incorrect_answers": [
+   "Gazpacho",
+   "Minestrone",
+   "Goulash"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Borscht_served.jpg/960px-Borscht_served.jpg",
+  "subject": "Borscht",
+  "cdn_verified": true,
+  "aspect": 1.53
+ },
+ {
+  "category_id": "5de491b3-b02f-4402-b1d5-f1506ac3513d",
+  "category": "cuisine",
+  "question_text": "Which food is shown?",
+  "correct_answer": "Falafel",
+  "incorrect_answers": [
+   "Kofta",
+   "Croquette",
+   "Arancini"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Falafels_2.jpg/960px-Falafels_2.jpg",
+  "subject": "Falafel",
+  "cdn_verified": true,
+  "aspect": 1.78
+ },
+ {
+  "category_id": "5de491b3-b02f-4402-b1d5-f1506ac3513d",
+  "category": "cuisine",
+  "question_text": "Which dish is shown?",
+  "correct_answer": "Poutine",
+  "incorrect_answers": [
+   "Chili fries",
+   "Nachos",
+   "Loaded fries"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Food_at_WIkimanian_2017_02.jpg/960px-Food_at_WIkimanian_2017_02.jpg",
+  "subject": "Poutine",
+  "cdn_verified": true,
+  "aspect": 1.78
+ },
+ {
+  "category_id": "5de491b3-b02f-4402-b1d5-f1506ac3513d",
+  "category": "cuisine",
+  "question_text": "Which dish is shown?",
+  "correct_answer": "Pierogi",
+  "incorrect_answers": [
+   "Ravioli",
+   "Gyoza",
+   "Momo"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Pierogi_z_mas%C5%82em_-_2023.03.31.jpg/960px-Pierogi_z_mas%C5%82em_-_2023.03.31.jpg",
+  "subject": "Pierogi",
+  "cdn_verified": true,
+  "aspect": 1.01
+ },
+ {
+  "category_id": "5de491b3-b02f-4402-b1d5-f1506ac3513d",
+  "category": "cuisine",
+  "question_text": "Which food is shown?",
+  "correct_answer": "Kimchi",
+  "incorrect_answers": [
+   "Sauerkraut",
+   "Pickles",
+   "Tsukemono"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Various_kimchi.jpg",
+  "subject": "Kimchi",
+  "cdn_verified": true,
+  "aspect": 1.5
+ },
+ {
+  "category_id": "5de491b3-b02f-4402-b1d5-f1506ac3513d",
+  "category": "cuisine",
+  "question_text": "Which dessert is shown?",
+  "correct_answer": "Macaron",
+  "incorrect_answers": [
+   "Macaroon",
+   "Meringue",
+   "Whoopie pie"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/VanillaMacaron.jpg/960px-VanillaMacaron.jpg",
+  "subject": "Macaron",
+  "cdn_verified": true,
+  "aspect": 1.14
+ },
+ {
+  "category_id": "0ab371b2-85c5-4016-b14e-8e352caa6e6d",
+  "category": "history",
+  "question_text": "Which artefact is shown?",
+  "correct_answer": "Rosetta Stone",
+  "incorrect_answers": [
+   "Code of Hammurabi",
+   "Cyrus Cylinder",
+   "Behistun relief"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Rosetta_Stone.JPG/960px-Rosetta_Stone.JPG",
+  "subject": "Rosetta Stone",
+  "cdn_verified": true,
+  "aspect": 0.85
+ },
+ {
+  "category_id": "0ab371b2-85c5-4016-b14e-8e352caa6e6d",
+  "category": "history",
+  "question_text": "What is shown?",
+  "correct_answer": "Terracotta Army",
+  "incorrect_answers": [
+   "Moai",
+   "Nok sculptures",
+   "Ashoka pillars"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/51714-Terracota-Army.jpg/960px-51714-Terracota-Army.jpg",
+  "subject": "Terracotta Army",
+  "cdn_verified": true,
+  "aspect": 1.51
+ },
+ {
+  "category_id": "0ab371b2-85c5-4016-b14e-8e352caa6e6d",
+  "category": "history",
+  "question_text": "Which artefact is shown?",
+  "correct_answer": "Tutankhamun's mask",
+  "incorrect_answers": [
+   "Mask of Agamemnon",
+   "Nefertiti bust",
+   "Sarcophagus of Seti"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/CairoEgMuseumTaaMaskMostlyPhotographed.jpg/960px-CairoEgMuseumTaaMaskMostlyPhotographed.jpg",
+  "subject": "Mask of Tutankhamun",
+  "cdn_verified": true,
+  "aspect": 0.8
+ },
+ {
+  "category_id": "0ab371b2-85c5-4016-b14e-8e352caa6e6d",
+  "category": "history",
+  "question_text": "Which monument is shown?",
+  "correct_answer": "Great Sphinx",
+  "incorrect_answers": [
+   "Abu Simbel",
+   "Karnak",
+   "Luxor Temple"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Sphinx_with_the_third_pyramid.jpg/960px-Sphinx_with_the_third_pyramid.jpg",
+  "subject": "Great Sphinx of Giza",
+  "cdn_verified": true,
+  "aspect": 1.61
+ },
+ {
+  "category_id": "0ab371b2-85c5-4016-b14e-8e352caa6e6d",
+  "category": "history",
+  "question_text": "Which temple is shown?",
+  "correct_answer": "Parthenon",
+  "incorrect_answers": [
+   "Temple of Hephaestus",
+   "Erechtheion",
+   "Temple of Zeus"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/The_Parthenon_in_Athens.jpg/960px-The_Parthenon_in_Athens.jpg",
+  "subject": "Parthenon",
+  "cdn_verified": true,
+  "aspect": 1.42
+ },
+ {
+  "category_id": "0ab371b2-85c5-4016-b14e-8e352caa6e6d",
+  "category": "history",
+  "question_text": "Which structure is shown?",
+  "correct_answer": "Great Pyramid",
+  "incorrect_answers": [
+   "Pyramid of Djoser",
+   "Nubian pyramids",
+   "Pyramid of the Sun"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Great_Pyramid_of_Giza_-_Pyramid_of_Khufu.jpg/960px-Great_Pyramid_of_Giza_-_Pyramid_of_Khufu.jpg",
+  "subject": "Great Pyramid of Giza",
+  "cdn_verified": true,
+  "aspect": 1.78
+ },
+ {
+  "category_id": "0ab371b2-85c5-4016-b14e-8e352caa6e6d",
+  "category": "history",
+  "question_text": "Which artefact is shown?",
+  "correct_answer": "Bayeux Tapestry",
+  "incorrect_answers": [
+   "Book of Kells",
+   "Magna Carta",
+   "Domesday Book"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Odo_bayeux_tapestry.png/960px-Odo_bayeux_tapestry.png",
+  "subject": "Bayeux Tapestry",
+  "cdn_verified": true,
+  "aspect": 1.38
+ },
+ {
+  "category_id": "0ab371b2-85c5-4016-b14e-8e352caa6e6d",
+  "category": "history",
+  "question_text": "Which vessel is shown?",
+  "correct_answer": "Viking longship",
+  "incorrect_answers": [
+   "Roman galley",
+   "Chinese junk",
+   "Greek trireme"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Osebergskipet_2016.jpg/960px-Osebergskipet_2016.jpg",
+  "subject": "Oseberg ship",
+  "cdn_verified": true,
+  "aspect": 1.39
+ },
+ {
+  "category_id": "23f43d93-5fc3-4a00-9381-f1efb1cf7765",
+  "category": "tech",
+  "question_text": "Which aircraft is shown?",
+  "correct_answer": "Concorde",
+  "incorrect_answers": [
+   "Tupolev Tu-144",
+   "Boeing 747",
+   "Airbus A380"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/British_Airways_Concorde_G-BOAC_03.jpg/960px-British_Airways_Concorde_G-BOAC_03.jpg",
+  "subject": "Concorde",
+  "cdn_verified": true,
+  "aspect": 1.51
+ },
+ {
+  "category_id": "23f43d93-5fc3-4a00-9381-f1efb1cf7765",
+  "category": "tech",
+  "question_text": "Which device is shown?",
+  "correct_answer": "Enigma machine",
+  "incorrect_answers": [
+   "Bombe",
+   "Colossus",
+   "Lorenz cipher"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Enigma_%28crittografia%29_-_Museo_scienza_e_tecnologia_Milano.jpg/960px-Enigma_%28crittografia%29_-_Museo_scienza_e_tecnologia_Milano.jpg",
+  "subject": "Enigma machine",
+  "cdn_verified": true,
+  "aspect": 0.92
+ },
+ {
+  "category_id": "23f43d93-5fc3-4a00-9381-f1efb1cf7765",
+  "category": "tech",
+  "question_text": "What is shown?",
+  "correct_answer": "Vinyl record",
+  "incorrect_answers": [
+   "Laserdisc",
+   "Compact disc",
+   "MiniDisc"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Vinilos_distintos_tama%C3%B1os.jpg/960px-Vinilos_distintos_tama%C3%B1os.jpg",
+  "subject": "Phonograph record",
+  "cdn_verified": true,
+  "aspect": 2.56
+ },
+ {
+  "category_id": "23f43d93-5fc3-4a00-9381-f1efb1cf7765",
+  "category": "tech",
+  "question_text": "Which device is shown?",
+  "correct_answer": "Typewriter",
+  "incorrect_answers": [
+   "Teleprinter",
+   "Linotype",
+   "Adding machine"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/MEK_II-371.jpg/960px-MEK_II-371.jpg",
+  "subject": "Typewriter",
+  "cdn_verified": true,
+  "aspect": 1.05
+ },
+ {
+  "category_id": "23f43d93-5fc3-4a00-9381-f1efb1cf7765",
+  "category": "tech",
+  "question_text": "Which device is shown?",
+  "correct_answer": "Rotary phone",
+  "incorrect_answers": [
+   "Switchboard",
+   "Telegraph key",
+   "Pager"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Rotarydial.JPG/960px-Rotarydial.JPG",
+  "subject": "Rotary dial",
+  "cdn_verified": true,
+  "aspect": 0.86
+ },
+ {
+  "category_id": "23f43d93-5fc3-4a00-9381-f1efb1cf7765",
+  "category": "tech",
+  "question_text": "What is shown?",
+  "correct_answer": "Floppy disk",
+  "incorrect_answers": [
+   "Zip disk",
+   "Cassette tape",
+   "Punched card"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Floppy_disk_2009_G1.jpg/960px-Floppy_disk_2009_G1.jpg",
+  "subject": "Floppy disk",
+  "cdn_verified": true,
+  "aspect": 2.06
+ },
+ {
+  "category_id": "8d7a3d46-705b-43a8-8a40-d57d86615721",
+  "category": "fashion",
+  "question_text": "Which garment is shown?",
+  "correct_answer": "Kimono",
+  "incorrect_answers": [
+   "Hanbok",
+   "Cheongsam",
+   "Ao dai"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Young_Woman_at_Kennin-ji_Zen_Temple_-_Kyoto_-_Japan_-_01_%2847929418887%29.jpg/960px-Young_Woman_at_Kennin-ji_Zen_Temple_-_Kyoto_-_Japan_-_01_%2847929418887%29.jpg",
+  "subject": "Kimono",
+  "cdn_verified": true,
+  "aspect": 0.75
+ },
+ {
+  "category_id": "8d7a3d46-705b-43a8-8a40-d57d86615721",
+  "category": "fashion",
+  "question_text": "Which garment is shown?",
+  "correct_answer": "Sari",
+  "incorrect_answers": [
+   "Lehenga",
+   "Salwar kameez",
+   "Kaftan"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Maharani_Vijaya_Raje_Scindia_of_Gwalior%2C_ca.1940.jpg/960px-Maharani_Vijaya_Raje_Scindia_of_Gwalior%2C_ca.1940.jpg",
+  "subject": "Sari",
+  "cdn_verified": true,
+  "aspect": 0.64
+ },
+ {
+  "category_id": "8d7a3d46-705b-43a8-8a40-d57d86615721",
+  "category": "fashion",
+  "question_text": "Which garment is shown?",
+  "correct_answer": "Kilt",
+  "incorrect_answers": [
+   "Sarong",
+   "Lederhosen",
+   "Toga"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/e2/Scottish_mercenaries_in_the_Thirty_Years_War.jpg",
+  "subject": "Kilt",
+  "cdn_verified": true,
+  "aspect": 1.74
+ },
+ {
+  "category_id": "8d7a3d46-705b-43a8-8a40-d57d86615721",
+  "category": "fashion",
+  "question_text": "Which hat is shown?",
+  "correct_answer": "Sombrero",
+  "incorrect_answers": [
+   "Panama hat",
+   "Boater",
+   "Fedora"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/CharroHatsMAPDF.JPG/960px-CharroHatsMAPDF.JPG",
+  "subject": "Sombrero",
+  "cdn_verified": true,
+  "aspect": 1.49
+ },
+ {
+  "category_id": "f86cec23-8436-47e8-be96-9f4be204ceb0",
+  "category": "religion",
+  "question_text": "Which cathedral is shown?",
+  "correct_answer": "St Basil's",
+  "incorrect_answers": [
+   "Kazan Cathedral",
+   "Church of the Savior",
+   "Assumption Cathedral"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Saint_Basil%27s_Cathedral_in_Moscow.jpg/960px-Saint_Basil%27s_Cathedral_in_Moscow.jpg",
+  "subject": "Saint Basil's Cathedral",
+  "cdn_verified": true,
+  "aspect": 0.9
+ },
+ {
+  "category_id": "f86cec23-8436-47e8-be96-9f4be204ceb0",
+  "category": "religion",
+  "question_text": "Which temple is shown?",
+  "correct_answer": "Golden Temple",
+  "incorrect_answers": [
+   "Akshardham",
+   "Meenakshi Temple",
+   "Lotus Temple"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/The_Golden_Temple_of_Amrithsar_7.jpg/960px-The_Golden_Temple_of_Amrithsar_7.jpg",
+  "subject": "Golden Temple",
+  "cdn_verified": true,
+  "aspect": 1.5
+ },
+ {
+  "category_id": "f86cec23-8436-47e8-be96-9f4be204ceb0",
+  "category": "religion",
+  "question_text": "Which palace is shown?",
+  "correct_answer": "Potala Palace",
+  "incorrect_answers": [
+   "Tashilhunpo",
+   "Jokhang",
+   "Punakha Dzong"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Potala_Palace_HQ.jpg/960px-Potala_Palace_HQ.jpg",
+  "subject": "Potala Palace",
+  "cdn_verified": true,
+  "aspect": 1.78
+ },
+ {
+  "category_id": "f86cec23-8436-47e8-be96-9f4be204ceb0",
+  "category": "religion",
+  "question_text": "Which cathedral is shown?",
+  "correct_answer": "Notre-Dame",
+  "incorrect_answers": [
+   "Reims Cathedral",
+   "Chartres Cathedral",
+   "Amiens Cathedral"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Notre-Dame_de_Paris%2C_4_October_2017.jpg/960px-Notre-Dame_de_Paris%2C_4_October_2017.jpg",
+  "subject": "Notre-Dame de Paris",
+  "cdn_verified": true,
+  "aspect": 1.51
+ },
+ {
+  "category_id": "9e7ed994-2920-4a9e-b25a-cc97b15cf1bd",
+  "category": "animals",
+  "question_text": "Which animal is shown?",
+  "correct_answer": "Quokka",
+  "incorrect_answers": [
+   "Wallaby",
+   "Wombat",
+   "Bandicoot"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/5/54/Quokka_at_rottnest_%28cropped%29.jpg",
+  "subject": "Quokka",
+  "cdn_verified": true,
+  "aspect": 1.4
+ },
+ {
+  "category_id": "9e7ed994-2920-4a9e-b25a-cc97b15cf1bd",
+  "category": "animals",
+  "question_text": "Which animal is shown?",
+  "correct_answer": "Fennec fox",
+  "incorrect_answers": [
+   "Arctic fox",
+   "Bat-eared fox",
+   "Corsac fox"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Fennec_Fox_Vulpes_zerda.jpg/960px-Fennec_Fox_Vulpes_zerda.jpg",
+  "subject": "Fennec fox",
+  "cdn_verified": true,
+  "aspect": 1.29
+ },
+ {
+  "category_id": "9e7ed994-2920-4a9e-b25a-cc97b15cf1bd",
+  "category": "animals",
+  "question_text": "Which animal is shown?",
+  "correct_answer": "Tapir",
+  "incorrect_answers": [
+   "Peccary",
+   "Wild boar",
+   "Anteater"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Tapiridae.png/960px-Tapiridae.png",
+  "subject": "Tapir",
+  "cdn_verified": true,
+  "aspect": 1.5
+ },
+ {
+  "category_id": "9e7ed994-2920-4a9e-b25a-cc97b15cf1bd",
+  "category": "animals",
+  "question_text": "Which animal is shown?",
+  "correct_answer": "Lemur",
+  "incorrect_answers": [
+   "Loris",
+   "Bushbaby",
+   "Tarsier"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Ring-tailed_lemur_%28Lemur_catta%29.jpg/960px-Ring-tailed_lemur_%28Lemur_catta%29.jpg",
+  "subject": "Ring-tailed lemur",
+  "cdn_verified": true,
+  "aspect": 0.67
+ },
+ {
+  "category_id": "9e7ed994-2920-4a9e-b25a-cc97b15cf1bd",
+  "category": "animals",
+  "question_text": "Which animal is shown?",
+  "correct_answer": "Wombat",
+  "incorrect_answers": [
+   "Badger",
+   "Marmot",
+   "Quokka"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Vombatus_ursinus_-Maria_Island_National_Park.jpg/960px-Vombatus_ursinus_-Maria_Island_National_Park.jpg",
+  "subject": "Wombat",
+  "cdn_verified": true,
+  "aspect": 1.5
+ },
+ {
+  "category_id": "9e7ed994-2920-4a9e-b25a-cc97b15cf1bd",
+  "category": "animals",
+  "question_text": "Which bird is shown?",
+  "correct_answer": "Kiwi",
+  "incorrect_answers": [
+   "Weka",
+   "Takahe",
+   "Tinamou"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/TeTuatahianui.jpg/960px-TeTuatahianui.jpg",
+  "subject": "Kiwi (bird)",
+  "cdn_verified": true,
+  "aspect": 0.75
+ },
+ {
+  "category_id": "9e7ed994-2920-4a9e-b25a-cc97b15cf1bd",
+  "category": "animals",
+  "question_text": "Which animal is shown?",
+  "correct_answer": "Sea otter",
+  "incorrect_answers": [
+   "River otter",
+   "Mink",
+   "Fur seal"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/0/02/Sea_Otter_%28Enhydra_lutris%29_%2825169790524%29_crop.jpg",
+  "subject": "Sea otter",
+  "cdn_verified": true,
+  "aspect": 1.09
+ },
+ {
+  "category_id": "9e7ed994-2920-4a9e-b25a-cc97b15cf1bd",
+  "category": "animals",
+  "question_text": "Which animal is shown?",
+  "correct_answer": "Seahorse",
+  "incorrect_answers": [
+   "Pipefish",
+   "Sea dragon",
+   "Trumpetfish"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Hippocampus_hippocampus_%28on_Ascophyllum_nodosum%29.jpg/960px-Hippocampus_hippocampus_%28on_Ascophyllum_nodosum%29.jpg",
+  "subject": "Seahorse",
+  "cdn_verified": true,
+  "aspect": 0.75
+ },
+ {
+  "category_id": "9e7ed994-2920-4a9e-b25a-cc97b15cf1bd",
+  "category": "animals",
+  "question_text": "Which animal is shown?",
+  "correct_answer": "Mandrill",
+  "incorrect_answers": [
+   "Baboon",
+   "Macaque",
+   "Mangabey"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Mandrill_Albert_September_2015_Zoo_Berlin_%282%29.jpg/960px-Mandrill_Albert_September_2015_Zoo_Berlin_%282%29.jpg",
+  "subject": "Mandrill",
+  "cdn_verified": true,
+  "aspect": 0.77
+ },
+ {
+  "category_id": "9e7ed994-2920-4a9e-b25a-cc97b15cf1bd",
+  "category": "animals",
+  "question_text": "Which bird is shown?",
+  "correct_answer": "Blue jay",
+  "incorrect_answers": [
+   "Kingfisher",
+   "Bluebird",
+   "Magpie"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Blue_jay_in_PP_%2830960%29.jpg/960px-Blue_jay_in_PP_%2830960%29.jpg",
+  "subject": "Blue jay",
+  "cdn_verified": true,
+  "aspect": 0.73
+ },
+ {
+  "category_id": "16f4b260-ccbd-4885-abac-604115bf3b74",
+  "category": "nature",
+  "question_text": "Which plant is shown?",
+  "correct_answer": "Venus flytrap",
+  "incorrect_answers": [
+   "Pitcher plant",
+   "Sundew",
+   "Butterwort"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Venus_Flytrap_showing_trigger_hairs.jpg/960px-Venus_Flytrap_showing_trigger_hairs.jpg",
+  "subject": "Venus flytrap",
+  "cdn_verified": true,
+  "aspect": 0.91
+ },
+ {
+  "category_id": "16f4b260-ccbd-4885-abac-604115bf3b74",
+  "category": "nature",
+  "question_text": "Which tree is shown?",
+  "correct_answer": "Baobab",
+  "incorrect_answers": [
+   "Banyan",
+   "Dragon tree",
+   "Joshua tree"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Adansonia_grandidieri04.jpg/960px-Adansonia_grandidieri04.jpg",
+  "subject": "Adansonia grandidieri",
+  "cdn_verified": true,
+  "aspect": 0.75
+ },
+ {
+  "category_id": "16f4b260-ccbd-4885-abac-604115bf3b74",
+  "category": "nature",
+  "question_text": "Which tree is shown?",
+  "correct_answer": "Giant sequoia",
+  "incorrect_answers": [
+   "Douglas fir",
+   "Kauri",
+   "Redwood"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Grizzly_Giant_Mariposa_Grove.jpg/960px-Grizzly_Giant_Mariposa_Grove.jpg",
+  "subject": "Sequoiadendron giganteum",
+  "cdn_verified": true,
+  "aspect": 0.54
+ },
+ {
+  "category_id": "16f4b260-ccbd-4885-abac-604115bf3b74",
+  "category": "nature",
+  "question_text": "What is shown?",
+  "correct_answer": "Aurora",
+  "incorrect_answers": [
+   "Airglow",
+   "Zodiacal light",
+   "Noctilucent cloud"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Aurora_borealis_over_Eielson_Air_Force_Base%2C_Alaska.jpg/960px-Aurora_borealis_over_Eielson_Air_Force_Base%2C_Alaska.jpg",
+  "subject": "Aurora",
+  "cdn_verified": true,
+  "aspect": 1.53
+ },
+ {
+  "category_id": "16f4b260-ccbd-4885-abac-604115bf3b74",
+  "category": "nature",
+  "question_text": "What is shown?",
+  "correct_answer": "Cherry blossom",
+  "incorrect_answers": [
+   "Plum blossom",
+   "Magnolia",
+   "Apple blossom"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Sakura_and_Moss_Pink_-_%E6%A1%9C%28%E3%81%95%E3%81%8F%E3%82%89%29%E3%81%A8%E8%8A%9D%E6%A1%9C%28%E3%81%97%E3%81%B0%E3%81%96%E3%81%8F%E3%82%89%29.jpg/960px-Sakura_and_Moss_Pink_-_%E6%A1%9C%28%E3%81%95%E3%81%8F%E3%82%89%29%E3%81%A8%E8%8A%9D%E6%A1%9C%28%E3%81%97%E3%81%B0%E3%81%96%E3%81%8F%E3%82%89%29.jpg",
+  "subject": "Cherry blossom",
+  "cdn_verified": true,
+  "aspect": 0.67
+ },
+ {
+  "category_id": "16f4b260-ccbd-4885-abac-604115bf3b74",
+  "category": "nature",
+  "question_text": "Which plant is shown?",
+  "correct_answer": "Giant water lily",
+  "incorrect_answers": [
+   "Lotus",
+   "Water hyacinth",
+   "Duckweed"
+  ],
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Victoria_amazonica_edit_1.jpg/960px-Victoria_amazonica_edit_1.jpg",
+  "subject": "Victoria amazonica",
+  "cdn_verified": true,
+  "aspect": 0.83
+ }
+]
