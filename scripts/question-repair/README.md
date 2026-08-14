@@ -139,10 +139,19 @@ Two things the builder does that are not obvious:
   429s that look exactly like dead URLs. Batching moves the lookup to three
   requests and leaves the throttle budget for verifying the images themselves.
 
-Every URL is confirmed to return `200` with an `image/*` content type before
-it is written out, because a wrong path does not fail loudly — it silently
-degrades the question to text-only, which for a photo question means a stem
-that gives the answer away.
+A wrong path does not fail loudly — it silently degrades the question to
+text-only, which for a photo question means a stem that gives the answer away.
+Two separate things guard against that:
+
+- **Existence** comes from the API. `pageimages` only returns a
+  `thumbnail.source` for a file that exists, together with the real pixel
+  dimensions of the thumbnail it generated. An API-returned URL cannot be a
+  typo the way a hand-built path can.
+- **A live 200** is then requested from `upload.wikimedia.org`, and recorded
+  per row as `cdn_verified`. That host rate-limits much harder than `api.php`,
+  and a shared egress IP can sit in 429 for a long stretch, so a 429 marks the
+  row unverified rather than dropping it. A `404` or `403` still fails the
+  subject outright — that is the case this check exists for.
 
 ```sh
 python3 build-image-questions.py    # -> image-questions.json (+ image-thumbs.json cache)

@@ -149,15 +149,23 @@ def fetch_thumbs(titles):
         json.dump(CACHE, open(CACHE_PATH, 'w'), ensure_ascii=False, indent=1)
         time.sleep(2)
 
-def check(url, attempts=5):
-    """Confirm the URL really serves an image.
+def check(url, attempts=4):
+    """Best-effort confirmation that the CDN serves this URL right now.
 
-    upload.wikimedia.org rate-limits harder than api.php does and answers 429
-    with an HTML body, which would otherwise be written out as a working image.
-    A 429 is retried after a cool-off rather than treated as a dead URL."""
+    Existence is not in question: `pageimages` only returns a `thumbnail.source`
+    for a file that exists, with the real pixel dimensions of the thumbnail it
+    generated — unlike a hand-built path, an API-returned URL cannot be a typo.
+
+    What this adds is a live 200 from upload.wikimedia.org, and that host
+    rate-limits far harder than api.php: it answers 429 with an HTML body, and
+    a shared egress IP can sit in that state for a while. So a 429 is reported
+    as *unverified*, never as a dead URL — dropping a good subject because the
+    CDN was busy is the worse error, and a wrong path would show up here as a
+    404, which is still fatal.
+    """
     code = '?'
     for attempt in range(attempts):
-        time.sleep(3 + attempt * 5)
+        time.sleep(2 + attempt * 4)
         try:
             r = subprocess.run(
                 ['curl', '-sIL', '-H', f'User-Agent: {UA}', '-o', '/dev/null',
@@ -169,10 +177,12 @@ def check(url, attempts=5):
         parts = r.stdout.split(' ', 1)
         code, ctype = parts[0], (parts[1] if len(parts) > 1 else '')
         if code == '200' and ctype.startswith('image/'):
-            return True, code
-        if code == '429':
-            time.sleep(30)
-    return False, code
+            return 'ok', code
+        if code in ('429', 'timeout'):
+            time.sleep(20)
+            continue
+        return 'dead', code                 # 404, 403 — a real problem
+    return 'unverified', code
 
 fetch_thumbs([s[0] for s in SUBJECTS])
 
@@ -180,9 +190,9 @@ rows, failures = [], []
 for title, cat, qtext, correct, wrong in SUBJECTS:
     src = CACHE.get(title)
     if not src:
-        failures.append((title, 'no lead image')); continue
-    ok, code = check(src)
-    if not ok:
+        failures.append((title, 'no thumbnail')); continue
+    verdict, code = check(src)
+    if verdict == 'dead':
         failures.append((title, code)); continue
     rows.append({
         'category_id': CATEGORIES[cat],
@@ -191,10 +201,14 @@ for title, cat, qtext, correct, wrong in SUBJECTS:
         'incorrect_answers': wrong,
         'image_url': src,
         'subject': title,
+        'cdn_verified': verdict == 'ok',
     })
-    print(f'  ok   {title:32s} {src[:70]}', flush=True)
+    print(f'  {verdict:10s} {title:32s} {src[:60]}', flush=True)
     json.dump(rows, open('image-questions.json', 'w'), ensure_ascii=False, indent=1)
 
 for t, why in failures:
     print(f'  FAIL {t:32s} {why}', file=sys.stderr)
-print(f'\n{len(rows)} verified, {len(failures)} failed')
+live = sum(1 for r in rows if r['cdn_verified'])
+print(f'\n{len(rows)} rows, {live} confirmed live by the CDN, '
+      f'{len(rows) - live} rate-limited (URL from the API, not checked), '
+      f'{len(failures)} failed')
