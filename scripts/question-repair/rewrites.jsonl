@@ -1093,159 +1093,239 @@
 {"id": "b4bdcf42", "c": "Silica in the lungs", "w": ["It only rusts gear", "It carries sound", "It causes magnetism"]}
 {"id": "b5f903e1", "q": "Does a broken mirror bring seven years of bad luck?", "c": "No, a Roman myth", "w": ["Yes, it is proven", "Yes, statistically", "Only in some cultures"]}
 {"id": "b626bd95", "q": "What does 'Cosmos' explain most thoroughly?", "c": "How stars make elements", "w": ["How black holes form", "Planetary geology", "Cosmic inflation"]}
-{"id":"b68c4c0f","q":"Who is called the 'Godmother of Rock and Roll'?","c":"Rosetta Tharpe","w":["Chuck Berry","Elvis Presley","Bill Haley"]}
-{"id":"b6ce32d3","c":"No, it varies","w":["Yes, always eight","Yes, that is minimum","Only in summer"]}
-{"id":"b6e9886a","q":"Why do marketers rank video top on social media?","c":"It drives engagement","w":["It is cheapest to make","It uses less data","Everyone prefers it"]}
-{"id":"b74db747","q":"How do strong supplier ties improve production?","c":"Shorter lead times","w":["Better staff morale","Happier customers","Wider marketing reach"]}
-{"id":"b78c3ec2","c":"More divisors appear","w":["It is purely random","A limit of mathematics","There is no pattern"]}
-{"id":"b85a1735","c":"Stack buffer overflow","w":["Integer underflow","Type confusion","Off-by-one errors"]}
-{"id":"b85fa0d5","c":"No, they spring back","w":["Yes, damage is lasting","Only after a year","They never fully return"]}
-{"id":"b8ea8c0b","c":"Magnets versus X-rays","w":["They are identical","CT uses heat imaging","MRI uses a dye"]}
-{"id":"b92e41f5","c":"Outsized influence","w":["Most abundant","Top predators","Foundation species"]}
-{"id":"b9329cb5","c":"It became a dwarf planet","w":["It was always a moon","It was never found","It is bigger than Earth"]}
-{"id":"b979d9f1","c":"Graphics Processing Unit","w":["General Processing Unit","Grid Processing Unit","Global Processing Unit"]}
-{"id":"ba0be6d8","c":"What you cannot control","w":["All suffering equally","Hedonistic impulses","Suppressing emotion"]}
-{"id":"ba69eb20","c":"Fletcher-Munson curves","w":["The sone scale","The decibel logarithm","The Doppler effect"]}
-{"id":"bab4b713","c":"Yes, under feathers","w":["No, they never had knees","Only one species does","They have fins instead"]}
-{"id":"bb37057b","c":"The vine and wine body","w":["A viticulture authority","A wine standards board","A vineyard commission"]}
-{"id":"bb931111","c":"Human moderation","w":["AI system upkeep","Data storage fees","Server upgrades"]}
-{"id":"bcef0d0a","q":"Which human ancestor was first described in 2010?","c":"Australopithecus sediba","w":["Homo floresiensis","Homo naledi","Homo heidelbergensis"]}
-{"id":"bd09ff89","c":"Neutron degeneracy","w":["Gravitational collapse","Nuclear fusion","Quantum field pressure"]}
-{"id":"bde84f8c","c":"Yes, a 1987 hit","w":["No, another artist","A recent invention","Named after Rick"]}
-{"id":"bdf4ac78","c":"Marvel's Spider-Man 2","w":["Final Fantasy XVI","Starfield","Hogwarts Legacy"]}
-{"id":"bdf84190","c":"Handling and humidity","w":["Earthquake damage","Bedouin vandalism","A desert fire"]}
-{"id":"be0256dc","c":"Hubble","w":["James Webb","Spitzer","Kepler"]}
-{"id":"be09df53","c":"The Soviet collapse","w":["China's steady growth","The nuclear arms race","The Sputnik launch"]}
-{"id":"be14f986","c":"That it understood them","w":["That it did maths","That it was sentient","That it had memories"]}
-{"id":"be4f3a4f","c":"Earth, air, fire, water","w":["Atoms and empty void","One primal substance","Infinite substances"]}
-{"id":"be86c7b1","q":"How do Arabic dialects differ despite a shared script?","c":"Sound and vocabulary","w":["They are all alike","Only in the writing","Standard Arabic varies"]}
-{"id":"be9fa986","c":"Poor transport links","w":["Extreme altitude","Desert terrain","A tropical climate"]}
-{"id":"bf50dd57","q":"What lasting harm do long sieges cause?","c":"Mass trauma","w":["Collective euphoria","Better physical health","Universal resilience"]}
-{"id":"bf5696dd","c":"Good, but not perfect","w":["Yes, perfect always","No memory at all","Only other elephants"]}
-{"id":"bfbe6021","c":"Some can, after surgery","w":["Never possible at all","Everyone can see it","Only animals can"]}
-{"id":"c03cb7fd","c":"No, chaos prevents it","w":["Yes, weeks ahead","Yes, from seismic data","Yes, animals warn us"]}
-{"id":"c12bcd7c","c":"Bandaranaike","w":["Margaret Thatcher","Indira Gandhi","Golda Meir"]}
-{"id":"c1d4316f","c":"A Saudi ministry","w":["An Islamic council","A Mecca administration","A pilgrimage board"]}
-{"id":"c1e16aa2","c":"JoJo's Bizarre Adventure","w":["Fullmetal Alchemist","Steins;Gate","Code Geass"]}
-{"id":"c2cedf61","q":"Which body leads autonomous vehicle safety standards?","c":"The ISO","w":["NHTSA","A robotics union","An auto vehicle board"]}
-{"id":"c2ff2183","c":"Light and together","w":["Latin for light-making","Old English for plants","German for energy"]}
-{"id":"c34c9293","c":"Julius Lilienfeld","w":["John Bardeen","William Shockley","Walter Brattain"]}
-{"id":"c389cbe8","q":"How does TikTok change a song's lifespan?","c":"It shortens it","w":["People listen less","Production costs rise","Discovery narrows"]}
-{"id":"c411e157","c":"Human suffering","w":["Forbidden knowledge","Divine punishment","Greed and corruption"]}
-{"id":"c4605d00","c":"Programmatic ads","w":["Email newsletters","Broadcast television","Print newspapers"]}
-{"id":"c4899ad7","c":"Yes, in Egypt","w":["No medicinal use","A modern discovery","The claim is disputed"]}
-{"id":"c48ca0db","c":"Confused Math Lady","w":["Expanding Brain","The Drake meme","Stonks"]}
-{"id":"c4c950fb","q":"Which APA award did Carl Rogers receive?","c":"Distinguished Scientist","w":["A Nobel in psychology","The Medal of Freedom","A philosophy award"]}
-{"id":"c5797f64","q":"What geological factor made the Tower of Pisa lean?","c":"Soft subsoil","w":["A sudden earthquake","A medieval siege engine","Deliberate design"]}
-{"id":"c57a9ad9","q":"What biologically limits human maximum strength?","c":"Muscle and nerves","w":["Daily protein intake","Willpower alone","Better equipment"]}
-{"id":"c6c7eb46","c":"Turkish defence","w":["Supply failures","Bad weather","Command breakdown"]}
-{"id":"c904af30","c":"Riemann and Lobachevsky","w":["Euclid and Pythagoras","Thales and Archimedes","Newton and Leibniz"]}
-{"id":"c9f3de5a","c":"Total data theft","w":["A brief slowdown","Users locked out","Cache corruption"]}
-{"id":"ca069f2b","q":"What is the physical state of Earth's core?","c":"Solid in, liquid out","w":["Entirely solid","Entirely liquid","A gaseous centre"]}
-{"id":"ca6c7b9b","c":"Boycotts","w":["Weapon displays","Military parades","Tank demonstrations"]}
-{"id":"ca800822","c":"Yes, extensively","w":["No, only law","It was forbidden","It was added later"]}
-{"id":"cac633c0","q":"Which sensitive link drew criticism of 'People You May Know'?","c":"A shared psychiatrist","w":["Shared politics","The same university","The same building"]}
-{"id":"cae6ff79","c":"Motion shifts pitch","w":["Sound has one speed","Distance changes nothing","Only light does this"]}
-{"id":"caead7ec","q":"Which 1964 synthesiser pioneered voltage control?","c":"The Moog Modular","w":["The ARP 2600","The Prophet-5","The Minimoog"]}
-{"id":"cb1bb915","q":"Which London tower nicknamed 'The Gherkin' opened in 2004?","c":"30 St Mary Axe","w":["The Burj Khalifa","The Bird's Nest","The Millau Viaduct"]}
-{"id":"cbb2f017","c":"The Legend of Zelda","w":["The Elder Scrolls","The Witcher","Final Fantasy"]}
-{"id":"cc16df0f","c":"It is the only thing","w":["It is everything","Losing builds character","How you play matters"]}
-{"id":"cc19657b","c":"Hinton, LeCun, Bengio","w":["Hassabis and Silver","Ng, Li and Thrun","Minsky and McCarthy"]}
-{"id":"cc2aa358","q":"Which exponent gives the largest known prime?","c":"2^136,279,841 - 1","w":["2^82,589,933 - 1","2^77,232,917 - 1","2^74,207,281 - 1"]}
-{"id":"cc30a0fd","q":"What do SpaceX fans call an exploding landing?","c":"Rapid disassembly","w":["To Infinity and Beyond","Hold My Beer","Just a Scratch"]}
-{"id":"ccd66116","c":"Competitive exclusion","w":["Niche partitioning","Resource allocation","Predation avoidance"]}
-{"id":"cd6c10f3","q":"Which structure took the longest to build?","c":"The Great Wall","w":["Sagrada Familia","Notre-Dame","The Taj Mahal"]}
-{"id":"cdb6d45a","c":"Italian marks, pp to ff","w":["Decibel numbers","Percentage values","Numbered scales"]}
-{"id":"ce0f6373","c":"Instant global finance","w":["Military use only","Trade went down","Regional impact only"]}
-{"id":"ce0f82be","c":"One, for screenplay","w":["Best Picture","Four Oscars","Best Director only"]}
-{"id":"ce4d2a12","c":"The Moon's pull","w":["The solar wind","Earth's rotation","A passing asteroid"]}
-{"id":"ce4e6050","c":"Algae and plankton","w":["Fish","Zooplankton","Bacteria"]}
-{"id":"cf2228b3","c":"Neurons in their arms","w":["They have no brain","They think backwards","They use one arm"]}
-{"id":"d070ff6d","q":"What harm does acid mine drainage do to rivers?","c":"Acid and heavy metals","w":["Softer water","Mineral deposits","Neutralised pH"]}
-{"id":"d09d3233","c":"Varied, by billions","w":["All exactly the same","All as old as Earth","Rocks do not age"]}
-{"id":"d0ba81dc","c":"Taste aversion","w":["Operant conditioning","Classical conditioning","Observational learning"]}
-{"id":"d0fbdf42","c":"No, Wallace too","w":["Yes, entirely alone","Taken from Lamarck","Copied from Malthus"]}
-{"id":"d15d5ffa","c":"Grief","w":["Bipolar episodes","Generalised anxiety","Schizophrenia"]}
-{"id":"d1ba27ac","c":"Toxins build up top","w":["Rapid reproduction","Energy lost per level","Faster mutation"]}
-{"id":"d1c16609","c":"Theravada, Mahayana, Vajrayana","w":["Monastic and lay practice","Northern and Southern","Ancient and modern schools"]}
-{"id":"b9329cb5","c":"It became a dwarf planet","w":["It was always a moon","It was never found","It is bigger than Earth"]}
-{"id":"d21e5cd6","c":"An uncovering","w":["The end of the world","Divine punishment","A catastrophe"]}
-{"id":"d294a590","q":"Which mechanic reflects a limited day in life sims?","c":"Limited daily actions","w":["Abundant resources","Random events","Permanent choices"]}
-{"id":"d2af6b2c","c":"A zero derivative","w":["A local maximum","An inflection point","An integer root"]}
-{"id":"d2c3fc3d","q":"Which diagram sorts stars by heat and brightness?","c":"Hertzsprung-Russell","w":["Hubble classification","The Messier catalogue","The bright star catalogue"]}
-{"id":"d2d424f4","c":"Self-reference","w":["Infinite regression","Circular logic","Axiomatic conflict"]}
-{"id":"d3068108","q":"What is the common complaint about instant replay?","c":"It stops the game","w":["Referees never err","Fewer injuries","No bad calls left"]}
-{"id":"d31002ee","q":"Which Egyptian tomb was built around 2560 BCE?","c":"The Great Pyramid","w":["The Sphinx","Karnak Temple","Abu Simbel"]}
-{"id":"d331dc0b","q":"How did early AI pioneers expect computers to play chess?","c":"By pattern search","w":["By brute force alone","By feeling emotion","By random moves"]}
-{"id":"d3b78bdf","c":"Rungrado in Pyongyang","w":["Michigan Stadium","Salt Lake Stadium","AT&T Stadium"]}
-{"id":"d3d13b5f","c":"They outcompete natives","w":["More diversity","Better genetics","Steadier climate"]}
-{"id":"d49ea6b0","c":"Headdresses","w":["Shoe soles","Jacket linings","Belt buckles"]}
-{"id":"d4efef84","q":"What mainly drives animals to migrate?","c":"Seasonal food supply","w":["More predators about","Searching for mates","Unusual warm spells"]}
-{"id":"d4fef931","c":"Dawkins' gene analogy","w":["An internet joke image","Viral online content","A social media trend"]}
-{"id":"d502edc7","c":"Serious bone loss","w":["No effect at all","Temporary softening","Denser bone"]}
-{"id":"d573e673","c":"By cell and nutrition","w":["By size and habitat","By how they breed","By how old they are"]}
-{"id":"d57bd028","c":"Silicate rock","w":["Hydrogen gas","Frozen nitrogen","Cheese"]}
-{"id":"d6f4cfe1","q":"Which dining category lost revenue to casual luxury in 2023?","c":"Michelin restaurants","w":["Fast casual chains","Food trucks","Upscale casual dining"]}
-{"id":"d71e316e","c":"Montreal's Olympic","w":["Yankee Stadium","AT&T Park","SoFi Stadium"]}
-{"id":"d771d985","q":"Which salt-based mummification inspires horror fiction?","c":"Egyptian natron","w":["Chinese silk wrapping","Nordic ice storage","Roman ash burial"]}
-{"id":"d7bb16ca","c":"It recycles ATP","w":["It eases soreness","It boosts oxygen use","It cuts inflammation"]}
-{"id":"d80b8f09","c":"Adding and removing","w":["Lasting and fleeting","Figurative, abstract","Ancient and modern"]}
-{"id":"d8d9300b","c":"Tuxedo Park","w":["Savile Row","Versailles","Milan"]}
-{"id":"d95ebdcd","c":"Power only when shared","w":["Secrecy builds wealth","Privacy comes first","Data must be controlled"]}
-{"id":"d9c2bc7d","q":"Which US body adopted its first ethics code in 1953?","c":"The psychologists","w":["The doctors","The sociologists","The lawyers"]}
-{"id":"da28325b","c":"Celebrity worship","w":["Fandom","Admiration","A fanbase"]}
-{"id":"da2b78ff","q":"Which foundation runs Oprah Winfrey's philanthropy?","c":"Her own foundation","w":["The Gates Foundation","The Ford Foundation","The MacArthur Foundation"]}
-{"id":"da45f1c3","q":"What turned the tide against Napoleon at Waterloo?","c":"Prussian reinforcements","w":["A British naval blockade","The Russian winter","An Austrian cavalry charge"]}
-{"id":"da63bb31","c":"Possible, never seen","w":["Entirely fictional","Proven to exist","Only inside black holes"]}
-{"id":"da9cd318","c":"Artificial Intelligence","w":["Automated Integration","Advanced Imaging","Algorithmic Interface"]}
-{"id":"daa153d6","c":"Flinders Petrie","w":["Mortimer Wheeler","Grahame Clark","Dorothy Garrod"]}
-{"id":"daaad99b","c":"The ESIC","w":["A gaming standards body","A competitive play group","A digital ethics council"]}
-{"id":"dab1b6e8","c":"Stone ribbed vaults","w":["Timber framing","Concrete arches","Mud brick"]}
-{"id":"db138f9f","c":"Currents in the core","w":["The solar wind","Asteroid impacts","Plate collisions"]}
-{"id":"db521bac","c":"One arcsecond parallax","w":["A light-year squared","An AU times an AU","The distance to Polaris"]}
-{"id":"dbb09a77","c":"Dynamic difficulty","w":["Procedural generation","A player skill tree","A core gameplay loop"]}
-{"id":"dc66c62f","c":"Chirping","w":["Swift flight","Nesting habits","Migration"]}
-{"id":"dc6bc7ad","c":"Clerestory windows","w":["Thermal mass walls","Solar panels","Green roofs"]}
-{"id":"dc86ee99","c":"Alternating bands","w":["Uniform high pressure","Falling toward poles","High at the equator"]}
-{"id":"dcad7c76","c":"Saint-Exupery","w":["Jules Verne","H.G. Wells","Isaac Asimov"]}
-{"id":"dd8ebc6b","c":"Cristiano Ronaldo","w":["Pele","Lionel Messi","Josef Bican"]}
-{"id":"ddf04f4d","c":"Zodiac constellations","w":["Early telescopes","Bronze astrolabes","Wooden quadrants"]}
-{"id":"de622b0d","q":"Which is the longest narrative film released commercially?","c":"Amra Ekta Cinema Banabo","w":["Satantango","Shoah","Out 1"]}
-{"id":"dec4b49c","c":"Golden State","w":["Cleveland","Oklahoma City","San Antonio"]}
-{"id":"ded0bd52","q":"Which psychology finding replicates most reliably?","c":"Classical conditioning","w":["Priming effects","Power pose effects","Stereotype threat"]}
-{"id":"df0606d1","c":"HyperText Markup","w":["HighText Machine","HyperTool Markup","HyperText Module"]}
-{"id":"df0c7c52","c":"It made issues jokes","w":["It widened debate","It improved fact-checks","It deepened policy talk"]}
-{"id":"df1c31b5","q":"What causes seasonal mood disorder at high latitudes?","c":"Months of darkness","w":["Cosmic radiation","Magnetic pole shifts","Temperature inversions"]}
-{"id":"dfb1c726","c":"A defined category","w":["A public vote","Self-declaration","Historical precedent"]}
-{"id":"dff64056","c":"Finch beak shapes","w":["Volcanic rock forms","Ocean current patterns","Marsupial migration"]}
-{"id":"e089195f","q":"What immediately triggered the First World War?","c":"An assassination","w":["The invasion of Belgium","Russian mobilisation","A naval blockade"]}
-{"id":"e1114be4","c":"Idleness","w":["Resistance to motion","Inner strength","A constant state"]}
-{"id":"e12a42bc","c":"No, it passes","w":["Yes, always","Sometimes it does","Seven years minimum"]}
-{"id":"e12cde26","c":"As percentages","w":["As fractions","As ratios","As raw counts"]}
-{"id":"e17c4d63","c":"Vertebrate, invertebrate","w":["Endotherm and ectotherm","Land and water dwelling","Prokaryote and eukaryote"]}
-{"id":"e1fc74c6","c":"Sowing by moon phase","w":["Following the sun only","Measuring soil warmth","Watching the wind"]}
-{"id":"e228eb0d","q":"How does a creole differ from a pidgin?","c":"It is a first language","w":["A pidgin is richer","It has one source","Pidgins are official"]}
-{"id":"e2457310","c":"Sound left spelling behind","w":["It simplified the rules","It unified UK and US","It changed the vocabulary"]}
-{"id":"e29f3b95","c":"Doudna and Charpentier","w":["Church and Zhang","Baker and Jumper","Kariko and Weissman"]}
-{"id":"e2b747b5","c":"Kitti's hog-nosed bat","w":["The pygmy mouse lemur","The feathertail glider","The American shrew mole"]}
-{"id":"e2f5f1c0","q":"Which political shift is tied to the rise of monotheism?","c":"Central authority","w":["Direct democracy","Matriarchal rule","Scattered tribes"]}
-{"id":"e34c7b27","c":"Humanistic psychology","w":["Behaviourism","Psychodynamic theory","Cognitive psychology"]}
-{"id":"e3857203","c":"Perhaps, but overstated","w":["Proven by archaeology","Entirely fictional","Only in the myths"]}
-{"id":"e393956e","c":"Stirling Bridge","w":["Bannockburn","Culloden","Flodden"]}
-{"id":"e3b1fe22","c":"Measure with a sextant","w":["Identify constellations","Track star brightness","Calculate star distance"]}
-{"id":"e3c0718a","c":"Rock, metal, organics","w":["Purely metal","Only ice and gas","Only silicate rock"]}
-{"id":"e430748c","c":"The modern monarchy","w":["The Tudor period","The Victorian era","The Elizabethan age"]}
-{"id":"e477081d","c":"They were walked","w":["They show spacecraft","They are Roman roads","They only track stars"]}
-{"id":"e49241b0","c":"Mass curves spacetime","w":["Gravity makes spacetime","They are unrelated","Spacetime is a field"]}
-{"id":"e4fc3ad4","c":"Alexander Graham Bell","w":["Antonio Meucci","Elisha Gray","Thomas Edison"]}
-{"id":"e5838f68","c":"Stress builds and slips","w":["Underground water","Magma always triggers","The Moon's gravity"]}
-{"id":"e693e92f","c":"Graduated pressure","w":["They warm the feet","They vibrate gently","They emit infrared"]}
-{"id":"e72d3775","q":"How does game physics usually differ from real physics?","c":"It is exaggerated","w":["Strictly Newtonian","Perfect fluid flow","Predictable materials"]}
-{"id":"e802b441","q":"What made Tycho Brahe think Earth stood still?","c":"No stellar parallax","w":["Moons around Venus","Comets in the air","Galaxies beyond us"]}
-{"id":"e81ea5ee","q":"Which clothing category got cheaper in late 2023?","c":"Men's underwear","w":["Women's dresses","Footwear","Jewellery and watches"]}
-{"id":"e84d5750","c":"Alexander Graham Bell","w":["Thomas Edison","Elisha Gray","Guglielmo Marconi"]}
-{"id":"e85f6381","c":"Their algae leave","w":["Carbonate dissolves","The fish move away","Waves grow stronger"]}
-{"id":"e8a26958","c":"Primary and secondary","w":["Ancient and modern","Written and spoken","Official and personal"]}
-{"id":"e8aab0d3","c":"Luxury signals status","w":["Practical need","Entertainment value","Product quality"]}
-{"id":"e95d6fab","q":"Which mechanic drives the biggest speedrun time-saves?","c":"Glitches","w":["Difficulty settings","Achievement systems","Leaderboards"]}
-{"id":"e977ed4c","c":"Tsimanouskaya","w":["Simone Biles","Laurel Hubbard","Rayssa Leal"]}
+{"id": "b68c4c0f", "q": "Who is called the 'Godmother of Rock and Roll'?", "c": "Rosetta Tharpe", "w": ["Chuck Berry", "Elvis Presley", "Bill Haley"]}
+{"id": "b6ce32d3", "c": "No, it varies", "w": ["Yes, always eight", "Yes, that is minimum", "Only in summer"]}
+{"id": "b6e9886a", "q": "Why do marketers rank video top on social media?", "c": "It drives engagement", "w": ["It is cheapest to make", "It uses less data", "Everyone prefers it"]}
+{"id": "b74db747", "q": "How do strong supplier ties improve production?", "c": "Shorter lead times", "w": ["Better staff morale", "Happier customers", "Wider marketing reach"]}
+{"id": "b78c3ec2", "c": "More divisors appear", "w": ["It is purely random", "A limit of mathematics", "There is no pattern"]}
+{"id": "b85a1735", "c": "Stack buffer overflow", "w": ["Integer underflow", "Type confusion", "Off-by-one errors"]}
+{"id": "b85fa0d5", "c": "No, they spring back", "w": ["Yes, damage is lasting", "Only after a year", "They never fully return"]}
+{"id": "b8ea8c0b", "c": "Magnets versus X-rays", "w": ["They are identical", "CT uses heat imaging", "MRI uses a dye"]}
+{"id": "b92e41f5", "c": "Outsized influence", "w": ["Most abundant", "Top predators", "Foundation species"]}
+{"id": "b9329cb5", "c": "It became a dwarf planet", "w": ["It was always a moon", "It was never found", "It is bigger than Earth"]}
+{"id": "b979d9f1", "c": "Graphics Processing Unit", "w": ["General Processing Unit", "Grid Processing Unit", "Global Processing Unit"]}
+{"id": "ba0be6d8", "c": "What you cannot control", "w": ["All suffering equally", "Hedonistic impulses", "Suppressing emotion"]}
+{"id": "ba69eb20", "c": "Fletcher-Munson curves", "w": ["The sone scale", "The decibel logarithm", "The Doppler effect"]}
+{"id": "bab4b713", "c": "Yes, under feathers", "w": ["No, they never had knees", "Only one species does", "They have fins instead"]}
+{"id": "bb37057b", "c": "The vine and wine body", "w": ["A viticulture authority", "A wine standards board", "A vineyard commission"]}
+{"id": "bb931111", "c": "Human moderation", "w": ["AI system upkeep", "Data storage fees", "Server upgrades"]}
+{"id": "bcef0d0a", "q": "Which human ancestor was first described in 2010?", "c": "Australopithecus sediba", "w": ["Homo floresiensis", "Homo naledi", "Homo heidelbergensis"]}
+{"id": "bd09ff89", "c": "Neutron degeneracy", "w": ["Gravitational collapse", "Nuclear fusion", "Quantum field pressure"]}
+{"id": "bde84f8c", "c": "Yes, a 1987 hit", "w": ["No, another artist", "A recent invention", "Named after Rick"]}
+{"id": "bdf4ac78", "c": "Marvel's Spider-Man 2", "w": ["Final Fantasy XVI", "Starfield", "Hogwarts Legacy"]}
+{"id": "bdf84190", "c": "Handling and humidity", "w": ["Earthquake damage", "Bedouin vandalism", "A desert fire"]}
+{"id": "be0256dc", "c": "Hubble", "w": ["James Webb", "Spitzer", "Kepler"]}
+{"id": "be09df53", "c": "The Soviet collapse", "w": ["China's steady growth", "The nuclear arms race", "The Sputnik launch"]}
+{"id": "be14f986", "c": "That it understood them", "w": ["That it did maths", "That it was sentient", "That it had memories"]}
+{"id": "be4f3a4f", "c": "Earth, air, fire, water", "w": ["Atoms and empty void", "One primal substance", "Infinite substances"]}
+{"id": "be86c7b1", "q": "How do Arabic dialects differ despite a shared script?", "c": "Sound and vocabulary", "w": ["They are all alike", "Only in the writing", "Standard Arabic varies"]}
+{"id": "be9fa986", "c": "Poor transport links", "w": ["Extreme altitude", "Desert terrain", "A tropical climate"]}
+{"id": "bf50dd57", "q": "What lasting harm do long sieges cause?", "c": "Mass trauma", "w": ["Collective euphoria", "Better physical health", "Universal resilience"]}
+{"id": "bf5696dd", "c": "Good, but not perfect", "w": ["Yes, perfect always", "No memory at all", "Only other elephants"]}
+{"id": "bfbe6021", "c": "Some can, after surgery", "w": ["Never possible at all", "Everyone can see it", "Only animals can"]}
+{"id": "c03cb7fd", "c": "No, chaos prevents it", "w": ["Yes, weeks ahead", "Yes, from seismic data", "Yes, animals warn us"]}
+{"id": "c12bcd7c", "c": "Bandaranaike", "w": ["Margaret Thatcher", "Indira Gandhi", "Golda Meir"]}
+{"id": "c1d4316f", "c": "A Saudi ministry", "w": ["An Islamic council", "A Mecca administration", "A pilgrimage board"]}
+{"id": "c1e16aa2", "c": "JoJo's Bizarre Adventure", "w": ["Fullmetal Alchemist", "Steins;Gate", "Code Geass"]}
+{"id": "c2cedf61", "q": "Which body leads autonomous vehicle safety standards?", "c": "The ISO", "w": ["NHTSA", "A robotics union", "An auto vehicle board"]}
+{"id": "c2ff2183", "c": "Light and together", "w": ["Latin for light-making", "Old English for plants", "German for energy"]}
+{"id": "c34c9293", "c": "Julius Lilienfeld", "w": ["John Bardeen", "William Shockley", "Walter Brattain"]}
+{"id": "c389cbe8", "q": "How does TikTok change a song's lifespan?", "c": "It shortens it", "w": ["People listen less", "Production costs rise", "Discovery narrows"]}
+{"id": "c411e157", "c": "Human suffering", "w": ["Forbidden knowledge", "Divine punishment", "Greed and corruption"]}
+{"id": "c4605d00", "c": "Programmatic ads", "w": ["Email newsletters", "Broadcast television", "Print newspapers"]}
+{"id": "c4899ad7", "c": "Yes, in Egypt", "w": ["No medicinal use", "A modern discovery", "The claim is disputed"]}
+{"id": "c48ca0db", "c": "Confused Math Lady", "w": ["Expanding Brain", "The Drake meme", "Stonks"]}
+{"id": "c4c950fb", "q": "Which APA award did Carl Rogers receive?", "c": "Distinguished Scientist", "w": ["A Nobel in psychology", "The Medal of Freedom", "A philosophy award"]}
+{"id": "c5797f64", "q": "What geological factor made the Tower of Pisa lean?", "c": "Soft subsoil", "w": ["A sudden earthquake", "A medieval siege engine", "Deliberate design"]}
+{"id": "c57a9ad9", "q": "What biologically limits human maximum strength?", "c": "Muscle and nerves", "w": ["Daily protein intake", "Willpower alone", "Better equipment"]}
+{"id": "c6c7eb46", "c": "Turkish defence", "w": ["Supply failures", "Bad weather", "Command breakdown"]}
+{"id": "c904af30", "c": "Riemann and Lobachevsky", "w": ["Euclid and Pythagoras", "Thales and Archimedes", "Newton and Leibniz"]}
+{"id": "c9f3de5a", "c": "Total data theft", "w": ["A brief slowdown", "Users locked out", "Cache corruption"]}
+{"id": "ca069f2b", "q": "What is the physical state of Earth's core?", "c": "Solid in, liquid out", "w": ["Entirely solid", "Entirely liquid", "A gaseous centre"]}
+{"id": "ca6c7b9b", "c": "Boycotts", "w": ["Weapon displays", "Military parades", "Tank demonstrations"]}
+{"id": "ca800822", "c": "Yes, extensively", "w": ["No, only law", "It was forbidden", "It was added later"]}
+{"id": "cac633c0", "q": "Which sensitive link drew criticism of 'People You May Know'?", "c": "A shared psychiatrist", "w": ["Shared politics", "The same university", "The same building"]}
+{"id": "cae6ff79", "c": "Motion shifts pitch", "w": ["Sound has one speed", "Distance changes nothing", "Only light does this"]}
+{"id": "caead7ec", "q": "Which 1964 synthesiser pioneered voltage control?", "c": "The Moog Modular", "w": ["The ARP 2600", "The Prophet-5", "The Minimoog"]}
+{"id": "cb1bb915", "q": "Which London tower nicknamed 'The Gherkin' opened in 2004?", "c": "30 St Mary Axe", "w": ["The Burj Khalifa", "The Bird's Nest", "The Millau Viaduct"]}
+{"id": "cbb2f017", "c": "The Legend of Zelda", "w": ["The Elder Scrolls", "The Witcher", "Final Fantasy"]}
+{"id": "cc16df0f", "c": "It is the only thing", "w": ["It is everything", "Losing builds character", "How you play matters"]}
+{"id": "cc19657b", "c": "Hinton, LeCun, Bengio", "w": ["Hassabis and Silver", "Ng, Li and Thrun", "Minsky and McCarthy"]}
+{"id": "cc2aa358", "q": "Which exponent gives the largest known prime?", "c": "2^136,279,841 - 1", "w": ["2^82,589,933 - 1", "2^77,232,917 - 1", "2^74,207,281 - 1"]}
+{"id": "cc30a0fd", "q": "What do SpaceX fans call an exploding landing?", "c": "Rapid disassembly", "w": ["To Infinity and Beyond", "Hold My Beer", "Just a Scratch"]}
+{"id": "ccd66116", "c": "Competitive exclusion", "w": ["Niche partitioning", "Resource allocation", "Predation avoidance"]}
+{"id": "cd6c10f3", "q": "Which structure took the longest to build?", "c": "The Great Wall", "w": ["Sagrada Familia", "Notre-Dame", "The Taj Mahal"]}
+{"id": "cdb6d45a", "c": "Italian marks, pp to ff", "w": ["Decibel numbers", "Percentage values", "Numbered scales"]}
+{"id": "ce0f6373", "c": "Instant global finance", "w": ["Military use only", "Trade went down", "Regional impact only"]}
+{"id": "ce0f82be", "c": "One, for screenplay", "w": ["Best Picture", "Four Oscars", "Best Director only"]}
+{"id": "ce4d2a12", "c": "The Moon's pull", "w": ["The solar wind", "Earth's rotation", "A passing asteroid"]}
+{"id": "ce4e6050", "c": "Algae and plankton", "w": ["Fish", "Zooplankton", "Bacteria"]}
+{"id": "cf2228b3", "c": "Neurons in their arms", "w": ["They have no brain", "They think backwards", "They use one arm"]}
+{"id": "d070ff6d", "q": "What harm does acid mine drainage do to rivers?", "c": "Acid and heavy metals", "w": ["Softer water", "Mineral deposits", "Neutralised pH"]}
+{"id": "d09d3233", "c": "Varied, by billions", "w": ["All exactly the same", "All as old as Earth", "Rocks do not age"]}
+{"id": "d0ba81dc", "c": "Taste aversion", "w": ["Operant conditioning", "Classical conditioning", "Observational learning"]}
+{"id": "d0fbdf42", "c": "No, Wallace too", "w": ["Yes, entirely alone", "Taken from Lamarck", "Copied from Malthus"]}
+{"id": "d15d5ffa", "c": "Grief", "w": ["Bipolar episodes", "Generalised anxiety", "Schizophrenia"]}
+{"id": "d1ba27ac", "c": "Toxins build up top", "w": ["Rapid reproduction", "Energy lost per level", "Faster mutation"]}
+{"id": "d1c16609", "c": "Theravada, Mahayana, Vajrayana", "w": ["Monastic and lay practice", "Northern and Southern", "Ancient and modern schools"]}
+{"id": "b9329cb5", "c": "It became a dwarf planet", "w": ["It was always a moon", "It was never found", "It is bigger than Earth"]}
+{"id": "d21e5cd6", "c": "An uncovering", "w": ["The end of the world", "Divine punishment", "A catastrophe"]}
+{"id": "d294a590", "q": "Which mechanic reflects a limited day in life sims?", "c": "Limited daily actions", "w": ["Abundant resources", "Random events", "Permanent choices"]}
+{"id": "d2af6b2c", "c": "A zero derivative", "w": ["A local maximum", "An inflection point", "An integer root"]}
+{"id": "d2c3fc3d", "q": "Which diagram sorts stars by heat and brightness?", "c": "Hertzsprung-Russell", "w": ["Hubble classification", "The Messier catalogue", "The bright star catalogue"]}
+{"id": "d2d424f4", "c": "Self-reference", "w": ["Infinite regression", "Circular logic", "Axiomatic conflict"]}
+{"id": "d3068108", "q": "What is the common complaint about instant replay?", "c": "It stops the game", "w": ["Referees never err", "Fewer injuries", "No bad calls left"]}
+{"id": "d31002ee", "q": "Which Egyptian tomb was built around 2560 BCE?", "c": "The Great Pyramid", "w": ["The Sphinx", "Karnak Temple", "Abu Simbel"]}
+{"id": "d331dc0b", "q": "How did early AI pioneers expect computers to play chess?", "c": "By pattern search", "w": ["By brute force alone", "By feeling emotion", "By random moves"]}
+{"id": "d3b78bdf", "c": "Rungrado in Pyongyang", "w": ["Michigan Stadium", "Salt Lake Stadium", "AT&T Stadium"]}
+{"id": "d3d13b5f", "c": "They outcompete natives", "w": ["More diversity", "Better genetics", "Steadier climate"]}
+{"id": "d49ea6b0", "c": "Headdresses", "w": ["Shoe soles", "Jacket linings", "Belt buckles"]}
+{"id": "d4efef84", "q": "What mainly drives animals to migrate?", "c": "Seasonal food supply", "w": ["More predators about", "Searching for mates", "Unusual warm spells"]}
+{"id": "d4fef931", "c": "Dawkins' gene analogy", "w": ["An internet joke image", "Viral online content", "A social media trend"]}
+{"id": "d502edc7", "c": "Serious bone loss", "w": ["No effect at all", "Temporary softening", "Denser bone"]}
+{"id": "d573e673", "c": "By cell and nutrition", "w": ["By size and habitat", "By how they breed", "By how old they are"]}
+{"id": "d57bd028", "c": "Silicate rock", "w": ["Hydrogen gas", "Frozen nitrogen", "Cheese"]}
+{"id": "d6f4cfe1", "q": "Which dining category lost revenue to casual luxury in 2023?", "c": "Michelin restaurants", "w": ["Fast casual chains", "Food trucks", "Upscale casual dining"]}
+{"id": "d71e316e", "c": "Montreal's Olympic", "w": ["Yankee Stadium", "AT&T Park", "SoFi Stadium"]}
+{"id": "d771d985", "q": "Which salt-based mummification inspires horror fiction?", "c": "Egyptian natron", "w": ["Chinese silk wrapping", "Nordic ice storage", "Roman ash burial"]}
+{"id": "d7bb16ca", "c": "It recycles ATP", "w": ["It eases soreness", "It boosts oxygen use", "It cuts inflammation"]}
+{"id": "d80b8f09", "c": "Adding and removing", "w": ["Lasting and fleeting", "Figurative, abstract", "Ancient and modern"]}
+{"id": "d8d9300b", "c": "Tuxedo Park", "w": ["Savile Row", "Versailles", "Milan"]}
+{"id": "d95ebdcd", "c": "Power only when shared", "w": ["Secrecy builds wealth", "Privacy comes first", "Data must be controlled"]}
+{"id": "d9c2bc7d", "q": "Which US body adopted its first ethics code in 1953?", "c": "The psychologists", "w": ["The doctors", "The sociologists", "The lawyers"]}
+{"id": "da28325b", "c": "Celebrity worship", "w": ["Fandom", "Admiration", "A fanbase"]}
+{"id": "da2b78ff", "q": "Which foundation runs Oprah Winfrey's philanthropy?", "c": "Her own foundation", "w": ["The Gates Foundation", "The Ford Foundation", "The MacArthur Foundation"]}
+{"id": "da45f1c3", "q": "What turned the tide against Napoleon at Waterloo?", "c": "Prussian reinforcements", "w": ["A British naval blockade", "The Russian winter", "An Austrian cavalry charge"]}
+{"id": "da63bb31", "c": "Possible, never seen", "w": ["Entirely fictional", "Proven to exist", "Only inside black holes"]}
+{"id": "da9cd318", "c": "Artificial Intelligence", "w": ["Automated Integration", "Advanced Imaging", "Algorithmic Interface"]}
+{"id": "daa153d6", "c": "Flinders Petrie", "w": ["Mortimer Wheeler", "Grahame Clark", "Dorothy Garrod"]}
+{"id": "daaad99b", "c": "The ESIC", "w": ["A gaming standards body", "A competitive play group", "A digital ethics council"]}
+{"id": "dab1b6e8", "c": "Stone ribbed vaults", "w": ["Timber framing", "Concrete arches", "Mud brick"]}
+{"id": "db138f9f", "c": "Currents in the core", "w": ["The solar wind", "Asteroid impacts", "Plate collisions"]}
+{"id": "db521bac", "c": "One arcsecond parallax", "w": ["A light-year squared", "An AU times an AU", "The distance to Polaris"]}
+{"id": "dbb09a77", "c": "Dynamic difficulty", "w": ["Procedural generation", "A player skill tree", "A core gameplay loop"]}
+{"id": "dc66c62f", "c": "Chirping", "w": ["Swift flight", "Nesting habits", "Migration"]}
+{"id": "dc6bc7ad", "c": "Clerestory windows", "w": ["Thermal mass walls", "Solar panels", "Green roofs"]}
+{"id": "dc86ee99", "c": "Alternating bands", "w": ["Uniform high pressure", "Falling toward poles", "High at the equator"]}
+{"id": "dcad7c76", "c": "Saint-Exupery", "w": ["Jules Verne", "H.G. Wells", "Isaac Asimov"]}
+{"id": "dd8ebc6b", "c": "Cristiano Ronaldo", "w": ["Pele", "Lionel Messi", "Josef Bican"]}
+{"id": "ddf04f4d", "c": "Zodiac constellations", "w": ["Early telescopes", "Bronze astrolabes", "Wooden quadrants"]}
+{"id": "de622b0d", "q": "Which is the longest narrative film released commercially?", "c": "Amra Ekta Cinema Banabo", "w": ["Satantango", "Shoah", "Out 1"]}
+{"id": "dec4b49c", "c": "Golden State", "w": ["Cleveland", "Oklahoma City", "San Antonio"]}
+{"id": "ded0bd52", "q": "Which psychology finding replicates most reliably?", "c": "Classical conditioning", "w": ["Priming effects", "Power pose effects", "Stereotype threat"]}
+{"id": "df0606d1", "c": "HyperText Markup", "w": ["HighText Machine", "HyperTool Markup", "HyperText Module"]}
+{"id": "df0c7c52", "c": "It made issues jokes", "w": ["It widened debate", "It improved fact-checks", "It deepened policy talk"]}
+{"id": "df1c31b5", "q": "What causes seasonal mood disorder at high latitudes?", "c": "Months of darkness", "w": ["Cosmic radiation", "Magnetic pole shifts", "Temperature inversions"]}
+{"id": "dfb1c726", "c": "A defined category", "w": ["A public vote", "Self-declaration", "Historical precedent"]}
+{"id": "dff64056", "c": "Finch beak shapes", "w": ["Volcanic rock forms", "Ocean current patterns", "Marsupial migration"]}
+{"id": "e089195f", "q": "What immediately triggered the First World War?", "c": "An assassination", "w": ["The invasion of Belgium", "Russian mobilisation", "A naval blockade"]}
+{"id": "e1114be4", "c": "Idleness", "w": ["Resistance to motion", "Inner strength", "A constant state"]}
+{"id": "e12a42bc", "c": "No, it passes", "w": ["Yes, always", "Sometimes it does", "Seven years minimum"]}
+{"id": "e12cde26", "c": "As percentages", "w": ["As fractions", "As ratios", "As raw counts"]}
+{"id": "e17c4d63", "c": "Vertebrate, invertebrate", "w": ["Endotherm and ectotherm", "Land and water dwelling", "Prokaryote and eukaryote"]}
+{"id": "e1fc74c6", "c": "Sowing by moon phase", "w": ["Following the sun only", "Measuring soil warmth", "Watching the wind"]}
+{"id": "e228eb0d", "q": "How does a creole differ from a pidgin?", "c": "It is a first language", "w": ["A pidgin is richer", "It has one source", "Pidgins are official"]}
+{"id": "e2457310", "c": "Sound left spelling behind", "w": ["It simplified the rules", "It unified UK and US", "It changed the vocabulary"]}
+{"id": "e29f3b95", "c": "Doudna and Charpentier", "w": ["Church and Zhang", "Baker and Jumper", "Kariko and Weissman"]}
+{"id": "e2b747b5", "c": "Kitti's hog-nosed bat", "w": ["The pygmy mouse lemur", "The feathertail glider", "The American shrew mole"]}
+{"id": "e2f5f1c0", "q": "Which political shift is tied to the rise of monotheism?", "c": "Central authority", "w": ["Direct democracy", "Matriarchal rule", "Scattered tribes"]}
+{"id": "e34c7b27", "c": "Humanistic psychology", "w": ["Behaviourism", "Psychodynamic theory", "Cognitive psychology"]}
+{"id": "e3857203", "c": "Perhaps, but overstated", "w": ["Proven by archaeology", "Entirely fictional", "Only in the myths"]}
+{"id": "e393956e", "c": "Stirling Bridge", "w": ["Bannockburn", "Culloden", "Flodden"]}
+{"id": "e3b1fe22", "c": "Measure with a sextant", "w": ["Identify constellations", "Track star brightness", "Calculate star distance"]}
+{"id": "e3c0718a", "c": "Rock, metal, organics", "w": ["Purely metal", "Only ice and gas", "Only silicate rock"]}
+{"id": "e430748c", "c": "The modern monarchy", "w": ["The Tudor period", "The Victorian era", "The Elizabethan age"]}
+{"id": "e477081d", "c": "They were walked", "w": ["They show spacecraft", "They are Roman roads", "They only track stars"]}
+{"id": "e49241b0", "c": "Mass curves spacetime", "w": ["Gravity makes spacetime", "They are unrelated", "Spacetime is a field"]}
+{"id": "e4fc3ad4", "c": "Alexander Graham Bell", "w": ["Antonio Meucci", "Elisha Gray", "Thomas Edison"]}
+{"id": "e5838f68", "c": "Stress builds and slips", "w": ["Underground water", "Magma always triggers", "The Moon's gravity"]}
+{"id": "e693e92f", "c": "Graduated pressure", "w": ["They warm the feet", "They vibrate gently", "They emit infrared"]}
+{"id": "e72d3775", "q": "How does game physics usually differ from real physics?", "c": "It is exaggerated", "w": ["Strictly Newtonian", "Perfect fluid flow", "Predictable materials"]}
+{"id": "e802b441", "q": "What made Tycho Brahe think Earth stood still?", "c": "No stellar parallax", "w": ["Moons around Venus", "Comets in the air", "Galaxies beyond us"]}
+{"id": "e81ea5ee", "q": "Which clothing category got cheaper in late 2023?", "c": "Men's underwear", "w": ["Women's dresses", "Footwear", "Jewellery and watches"]}
+{"id": "e84d5750", "c": "Alexander Graham Bell", "w": ["Thomas Edison", "Elisha Gray", "Guglielmo Marconi"]}
+{"id": "e85f6381", "c": "Their algae leave", "w": ["Carbonate dissolves", "The fish move away", "Waves grow stronger"]}
+{"id": "e8a26958", "c": "Primary and secondary", "w": ["Ancient and modern", "Written and spoken", "Official and personal"]}
+{"id": "e8aab0d3", "c": "Luxury signals status", "w": ["Practical need", "Entertainment value", "Product quality"]}
+{"id": "e95d6fab", "q": "Which mechanic drives the biggest speedrun time-saves?", "c": "Glitches", "w": ["Difficulty settings", "Achievement systems", "Leaderboards"]}
+{"id": "e977ed4c", "c": "Tsimanouskaya", "w": ["Simone Biles", "Laurel Hubbard", "Rayssa Leal"]}
+{"id": "e9f15476", "q": "Which tradition promotes bone broth for joint health?", "c": "Chinese medicine", "w": ["Ayurvedic medicine", "Ancient Greek medicine", "Medieval herbalism"]}
+{"id": "eaa590a8", "q": "Which 2022 event drove Brent crude near $140?", "c": "The invasion of Ukraine", "w": ["OPEC+ output cuts", "Gulf refinery closures", "The 2008 recession"]}
+{"id": "eb063a37", "c": "The cell wall", "w": ["DNA replication", "The immune response", "Bacterial reproduction"]}
+{"id": "ebbb979e", "c": "Machine learning", "w": ["Quantum filtering", "Laser ablation", "Radio interferometry"]}
+{"id": "ec0a63c5", "c": "No, it is proportional", "w": ["Yes, up to 45%", "Yes, more than half", "Yes, over 60%"]}
+{"id": "ec737709", "c": "Lasting lung damage", "w": ["Greater endurance", "Better night vision", "Faster healing"]}
+{"id": "ecfdc63d", "c": "Intense radiation", "w": ["Extreme cold", "Magnetic inversion", "Meteor showers"]}
+{"id": "ed447862", "c": "Usually harmful", "w": ["Always beneficial", "No impact at all", "Merely non-native"]}
+{"id": "edac821d", "q": "Which two regions differ most in life expectancy?", "c": "Africa and Europe", "w": ["America and Asia", "Oceania and Brazil", "Poland and Vietnam"]}
+{"id": "edb17371", "c": "Electron configuration", "w": ["Valence structure", "Atomic mass number", "Isotope notation"]}
+{"id": "ee29e424", "c": "Spin cuts friction", "w": ["Magnetic ice", "A gravity anomaly", "Aerodynamic lift"]}
+{"id": "ee3e1092", "c": "He faked the Moon landing", "w": ["He feared heights", "He never left the studio", "He wrote the score"]}
+{"id": "ee82efcf", "c": "A water mould", "w": ["Bacterial wilt", "An insect plague", "Depleted soil"]}
+{"id": "ef228179", "q": "What does altitude training boost for sea-level racing?", "c": "Red blood cells", "w": ["Muscle memory", "Lactic acid", "Lung capacity"]}
+{"id": "ef6623d9", "c": "Mindfulness-based CBT", "w": ["Psychoanalysis", "Gestalt therapy", "Humanistic therapy"]}
+{"id": "efe684fc", "c": "It tops the food chain", "w": ["It breaks down waste", "It produces plants", "It grazes on plants"]}
+{"id": "f05c9963", "c": "Small step, giant leap", "w": ["Houston, we have a problem", "The Eagle has landed", "I can see the Earth"]}
+{"id": "f0d965f2", "q": "Which terms split true accounts from invented stories?", "c": "Non-fiction and fiction", "w": ["Truth and invention", "Fact and narrative", "History and story"]}
+{"id": "f0ef8026", "c": "High-heat grilling", "w": ["Sous vide cooking", "Steaming vegetables", "Spherification"]}
+{"id": "f14b69df", "q": "Which fabric shifts colour like a rainbow with angle?", "c": "Holographic polyester", "w": ["Iridescent nylon", "Metallic cotton", "Fluorescent wool"]}
+{"id": "f2360edb", "c": "The current holder", "w": ["A former politician", "The challenger", "Any candidate"]}
+{"id": "f2728b59", "c": "An infection theory", "w": ["Vitamin C shortage", "Genetic mutations", "Poor sanitation"]}
+{"id": "f2dc452a", "q": "Which GTA game drew the biggest boycott over its content?", "c": "San Andreas", "w": ["Grand Theft Auto III", "Grand Theft Auto IV", "Grand Theft Auto V"]}
+{"id": "f32c17c9", "c": "It caches subresults", "w": ["Parallel processing", "Recursive optimising", "Lazy evaluation"]}
+{"id": "f36a9657", "c": "Molotov-Ribbentrop", "w": ["Watergate", "Iran-Contra", "Teapot Dome"]}
+{"id": "f383d75b", "c": "Region and momentum", "w": ["By colour coding", "In alphabetical order", "By creator ranking"]}
+{"id": "f429b0c0", "c": "Depp against Heard", "w": ["Musk buying Twitter", "The Oscars slap", "The Astroworld tragedy"]}
+{"id": "f47e2baa", "c": "Indicative, imperative", "w": ["Past, present, future", "Active, passive, middle", "Infinitive and gerund"]}
+{"id": "f51fdbd5", "c": "Mostly wrong, it is empty", "w": ["Generally realistic", "Slightly overcrowded", "Completely accurate"]}
+{"id": "f54f8def", "q": "Which laws describe how planets orbit the Sun?", "c": "Kepler's laws", "w": ["Newton's orbital laws", "Galileo's celestial laws", "Tycho's harmonic laws"]}
+{"id": "f55021c1", "c": "It neutralises acids", "w": ["It adds a fragrance", "It kills bacteria", "It absorbs moisture"]}
+{"id": "f5b8487f", "q": "Which meme-driven bubble burst in 2022?", "c": "NFTs", "w": ["Government bonds", "Blue-chip commodities", "Currency pairs"]}
+{"id": "f5ff65bf", "c": "Magma rises at rifts", "w": ["Continents collide", "Erosion piles up", "Gravity settles it"]}
+{"id": "f661f5f7", "q": "Why did Chilcot say the Iraq WMD intelligence failed?", "c": "The evidence was weak", "w": ["Iraq hid the weapons", "It was fabricated", "Inspectors missed them"]}
+{"id": "f70eccdb", "c": "A pyroclastic flow", "w": ["An overflow of lava", "A mudslide", "A collapsing ash cloud"]}
+{"id": "f812cc2a", "c": "Clay through boulder", "w": ["By colour order", "By density ranking", "By geological age"]}
+{"id": "f898a561", "q": "Which condition is linked to idealised social media?", "c": "Body dysmorphia", "w": ["Phonophobia", "Acrophobia", "Claustrophobia"]}
+{"id": "f89aacc3", "q": "Which body sets global surgical standards?", "c": "The surgical colleges", "w": ["The WHO", "A surgical practice council", "A college of surgeons"]}
+{"id": "f8a058ff", "c": "Object-oriented ontology", "w": ["A positivism revival", "Cartesian dualism", "Kantian idealism"]}
+{"id": "f94714b0", "c": "A hummingbird", "w": ["A running cheetah", "A sidewinding snake", "A salmon upstream"]}
+{"id": "f9b69e90", "c": "Standardised IQ tests", "w": ["Measuring brain size", "Timing reactions", "Analysing skull shape"]}
+{"id": "f9caf6f7", "q": "What economic base funded Old Kingdom pyramids?", "c": "Farming surplus", "w": ["Gold mining", "The spice trade", "Papyrus exports"]}
+{"id": "fa1b0c02", "c": "Action, RPG, strategy", "w": ["Single, multi, MMO", "2D, 3D, VR and AR", "Console, PC, mobile"]}
+{"id": "faa93fb9", "c": "Thompson and Ritchie", "w": ["Linus Torvalds", "Bill Gates", "Steve Jobs"]}
+{"id": "fab072ff", "c": "Breathing toxic fumes", "w": ["Better preservation", "Better reaction control", "Less contamination"]}
+{"id": "fac1213d", "c": "It spread the ideas", "w": ["It prevented reform", "There is no link", "Reform came first"]}
+{"id": "fae813a2", "c": "Kilometre asteroids", "w": ["Solar prominences", "Meteoroid showers", "Comet nuclei only"]}
+{"id": "faee76ea", "c": "The Lighthouse", "w": ["Colossus of Rhodes", "Temple of Artemis", "Mausoleum at Halicarnassus"]}
+{"id": "fb0ab81a", "c": "Los Angeles 1984", "w": ["Munich 1972", "Sydney 2000", "Berlin 1936"]}
+{"id": "fbdedd74", "q": "Which light-based scan transformed eye care after 2005?", "c": "Coherence tomography", "w": ["Positron tomography", "Ultrasound imaging", "Magnetic resonance"]}
+{"id": "fc1c2813", "c": "Patterns at all scales", "w": ["Only irregular shapes", "Only two dimensions", "They have finite length"]}
+{"id": "fc789479", "c": "Heat and rainfall", "w": ["Altitude and latitude", "Soil type and sunlight", "Wind speed and humidity"]}
+{"id": "fccdb002", "c": "Pheromone pathfinding", "w": ["Hierarchical command", "Individual decisions", "Random movement"]}
+{"id": "fdb1cf11", "c": "How we perceive it", "w": ["Its molecular weight", "Its reaction rates", "Its thermal expansion"]}
+{"id": "fec0337e", "c": "A national painting prize", "w": ["A Guggenheim Fellowship", "A Nobel Prize", "A Venice Biennale prize"]}
+{"id": "fee73a92", "c": "Mass-energy equivalence", "w": ["Constant light speed", "Indivisible atoms", "The phlogiston theory"]}
+{"id": "ff8edef2", "c": "A critical thinking body", "w": ["A critical thinking society", "A global logic institute", "A library federation"]}
+{"id": "00d08406", "q": "Which Roman aqueduct bridge has three tiers of arches?", "c": "The Pont du Gard", "w": ["The Pantheon", "The Colosseum", "The Temple of Zeus"]}
+{"id": "00ed30c2", "q": "Which physical trait most reliably predicts higher pay?", "c": "Height", "w": ["Eye colour", "Hair colour", "Blood type"]}
+{"id": "016cddf5", "q": "Which principle ties inertia to the whole universe?", "c": "Mach's principle", "w": ["The relativity axiom", "The inertial frame law", "The cosmic mass theorem"]}
+{"id": "01add865", "q": "Which university built the first webcam, for a coffee pot?", "c": "Cambridge", "w": ["Stanford", "MIT", "Carnegie Mellon"]}
+{"id": "020dda8b", "q": "Which famous fractal set carries its discoverer's name?", "c": "The Mandelbrot set", "w": ["The Julia set", "The Lorenz attractor", "The Koch snowflake"]}
+{"id": "026a0822", "q": "What did Pasteur and Koch prove about disease?", "c": "Germs cause it", "w": ["Cells cause it", "Viruses were isolated", "Enzymes cause it"]}
+{"id": "02950652", "q": "What is content that spreads fast with funny variants called?", "c": "A meme", "w": ["Clickbait", "An algorithm", "Phishing"]}
+{"id": "02c936ee", "q": "Which anime term excuses physics for dramatic effect?", "c": "Rule of Cool", "w": ["Suspension of disbelief", "Deus ex machina", "Plot armour"]}
+{"id": "0373303a", "q": "Which software is standard for social science statistics?", "c": "SPSS", "w": ["Microsoft Word", "Google Chrome", "Adobe Photoshop"]}
+{"id": "0384b2d7", "q": "Which spectroscopy identifies functional groups in a molecule?", "c": "Infrared", "w": ["Ultraviolet-visible", "Raman", "Nuclear magnetic"]}
+{"id": "039a3a8f", "q": "Which dig tool is linked to repetitive wrist strain?", "c": "The trowel", "w": ["The shovel", "The dental pick", "The theodolite"]}
+{"id": "04a30010", "q": "Which clean-lined style dominated luxury hotels after 2005?", "c": "Minimalism", "w": ["Neo-Baroque revival", "Deconstructivism", "Industrial chic"]}
+{"id": "04c594df", "q": "Which state means no one gains without another losing?", "c": "Pareto optimality", "w": ["Kaldor-Hicks efficiency", "Technical efficiency", "Allocative efficiency"]}
+{"id": "04e4a989", "q": "Which chain cooked plant burgers on meat grills in 2021?", "c": "Burger King", "w": ["McDonald's", "KFC", "Subway"]}
+{"id": "05bcd5ae", "q": "Which two are credited with inventing calculus?", "c": "Newton and Leibniz", "w": ["Euler and Lagrange", "D'Alembert and Laplace", "Gauss and Riemann"]}
+{"id": "065b8a09", "q": "What did Einstein call 'spooky action at a distance'?", "c": "Entanglement", "w": ["Relativity", "Constant light speed", "Mass-energy equivalence"]}
+{"id": "06c080fa", "q": "What inspired the title of 'Black Hole Sun'?", "c": "A misheard phrase", "w": ["An actual black hole", "A solar eclipse", "A dream of a supernova"]}
+{"id": "07c62f70", "q": "Which theory disputes the Warren Commission on JFK?", "c": "A wider conspiracy", "w": ["Oswald acted alone", "The single bullet held", "Ballistics matched"]}
+{"id": "07cb3c47", "q": "Which UN agency leads on air quality monitoring?", "c": "UNEP", "w": ["The WHO", "UNESCO", "The WMO"]}
+{"id": "0827e569", "q": "Besides earth and stone, what built the Great Wall?", "c": "Bricks", "w": ["Concrete", "Steel", "Glass"]}
+{"id": "0853f595", "q": "Which esports event first aired live on US cable in 2016?", "c": "A CS:GO Major", "w": ["The LoL Worlds", "The Dota 2 International", "The Overwatch League"]}
+{"id": "087b5064", "q": "What made Tutankhamun's tomb unique in 1922?", "c": "It was nearly intact", "w": ["It held the oldest mummy", "It proved female pharaohs", "It was the largest tomb"]}
+{"id": "f2075e6c", "q": "Roughly how many followers does Instagram's own account have?", "c": "Around 670 million", "w": ["Around 420 million", "Around 520 million", "Around 780 million"]}
