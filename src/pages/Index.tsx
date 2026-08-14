@@ -70,7 +70,6 @@ const SCENE_EDGE_FADE: React.CSSProperties = {
 import guestMascotVideo from "@/assets/guest-welcome-avatar.mp4";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
-import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
 import { oauth } from "@/integrations/oauth";
 
 // Header greeting for the main page — rotates every 6 hours so it stays
@@ -154,7 +153,6 @@ import { useMissions } from "@/hooks/useMissions";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
-import { InviteFriendsModal, useInviteModalVisibility } from "@/components/home/InviteFriendsModal";
 import { FriendJoinedModal } from "@/components/home/FriendJoinedModal";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { PlayOptionsModal } from "@/components/home/PlayOptionsModal";
@@ -356,7 +354,6 @@ export default function Index() {
   }, [user, profile]);
 
   // Invite Friends Modal state
-  const { visible: inviteModalVisible, dismiss: dismissInvite, setVisible: setInviteModalVisible } = useInviteModalVisibility(isVip, vipLoading, showWelcomeOnboarding, freeGamesExhausted);
   const [friendJoinedModalOpen, setFriendJoinedModalOpen] = useState(false);
 
   const [friendModalVariant, setFriendModalVariant] = useState<"inviter" | "invited">("inviter");
@@ -496,8 +493,7 @@ export default function Index() {
     } else {
       // Check if user can play (lifetime limit for non-PRO, or regen play)
       if (!canPlay && !isVip) {
-        // Show invite modal first, then PRO upgrade on dismiss
-        setInviteModalVisible(true);
+        setShowGuestMaxPlaysModal(true);
         return;
       }
 
@@ -753,7 +749,7 @@ export default function Index() {
           onLevel={() => setShowLevelModal(true)}
           onShop={() => setIsGemShopOpen(true)}
           onAvatar={() => openAvatarModal()}
-          onAddFriend={() => setInviteModalVisible(true)}
+          onAddFriend={() => setShowAddFriendModal(true)}
           onMenu={() => setIsSideMenuOpen(true)}
         />
         {/* Modals reachable from the homepage */}
@@ -769,16 +765,11 @@ export default function Index() {
           onContinue={() => {
             setShowLevelModal(false);
             if (user && !canPlay && !isVip) {
-              setInviteModalVisible(true);
+              setShowGuestMaxPlaysModal(true);
               return;
             }
             navigate("/game");
           }}
-        />
-        <InviteFriendsModal
-          open={inviteModalVisible}
-          onOpenChange={setInviteModalVisible}
-          onDismiss={() => dismissInvite()}
         />
         <NotEnoughStakeModal
           isOpen={showNotEnoughCoinsModal}
@@ -841,7 +832,7 @@ export default function Index() {
           setShowLevelModal(false);
           // Check play limit before navigating (was previously bypassed)
           if (user && !canPlay && !isVip) {
-            setInviteModalVisible(true);
+            setShowGuestMaxPlaysModal(true);
             return;
           }
           navigate("/game");
@@ -1177,26 +1168,6 @@ export default function Index() {
           onClose={() => setShowPlayOptions(false)}
           onQuickGame={() => void startQuickGame()}
           onPlayWithFriends={handlePlayWithFriends}
-        />
-
-        {/* Floating Gift Button - the non-blocking entry to the invite offer
-            (the modal no longer auto-opens; it interrupted every app open) */}
-        <AnimatePresence>
-          {user && !isVip && !vipLoading && freeGamesExhausted && !inviteModalVisible && !showWelcomeOnboarding ? (
-            <FloatingGiftButton onClick={() => setInviteModalVisible(true)} />
-          ) : null}
-        </AnimatePresence>
-
-        {/* Invite Friends Modal */}
-        <InviteFriendsModal
-          open={inviteModalVisible}
-          onOpenChange={setInviteModalVisible}
-          onDismiss={() => {
-            // Just close. Chaining the play-limit modal here meant two forced
-            // popups back to back; the limit modal now appears only when the
-            // user actually tries to play (guardPlay / Game entry).
-            dismissInvite();
-          }}
         />
 
         {/* Friend Joined Modal */}

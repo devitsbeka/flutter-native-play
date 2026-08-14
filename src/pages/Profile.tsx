@@ -77,7 +77,6 @@ export default function Profile() {
 
   // Get current tier from subscription - only if actively VIP
   const currentTier = isVip ? (subscription?.vip_tier as ProTier | undefined) : undefined;
-  const friendInvitesRemaining = isVip ? ((subscription as any)?.friend_invites_remaining || 0) : 0;
 
   // Dynamic PRO label
   const getProLabel = () => {
@@ -258,7 +257,6 @@ export default function Profile() {
               >
                 <ProPlansSection
                   currentTier={currentTier}
-                  friendInvitesRemaining={friendInvitesRemaining}
                   subscriptionStartDate={(subscription as any)?.started_at}
                   subscriptionExpiryDate={(subscription as any)?.expires_at}
                 />

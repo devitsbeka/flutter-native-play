@@ -1,13 +1,10 @@
-import { siteUrl } from "@/config/site";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Loader2, ChevronLeft, ChevronRight, Copy, Share2 } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
-import { useFriendInvites } from "@/hooks/useFriendInvites";
 import { useStorePrice } from "@/hooks/useStorePrice";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { toast } from "sonner";
 import crownIcon from "@/assets/crown-icon.png";
 import friendsIcon from "@/assets/group-of-people.png";
 import gamepadIcon from "@/assets/pro-banner/banner-gamepad.webp";
@@ -16,11 +13,9 @@ import noAdsIcon from "@/assets/pro-banner/banner-no-ads.webp";
 import { dealToShopItem, useLiveDeals, DealBannerCard } from "./DailyDealsRow";
 import {
   ProTierBanner,
-  InviteBanner,
   HEADER_SOLO,
   HEADER_FAMILY,
   SKIN_WHITE,
-  SKIN_INVITE,
 } from "./ProBannerCard";
 import type { ShopItem } from "@/hooks/useShopData";
 
@@ -36,7 +31,7 @@ const REEL_GAP = 12;
 
 // "pro" is the solo tier's slide type — the two subscription slides, which
 // `slides: "pro"` keeps and everything else drops.
-type SlideType = "invite" | "pro" | "family" | "deal";
+type SlideType = "pro" | "family" | "deal";
 
 // Frame 636:169 — the artwork for each promise a PRO tier makes, at the
 // size the frame draws it. Not a uniform set, so each carries its own.
@@ -54,10 +49,9 @@ interface ProBannerReelProps {
   isPurchasing: string | null;
   onItemClick: (item: ShopItem) => void;
   /**
-   * "pro" keeps the ways to get PRO — the two subscription tiers and the
-   * invite offer, which hands out ten days of it — and drops the timed
-   * package deals. Packages are the shop's business; carrying them on the
-   * profile made a three-offer reel look like a five-offer one.
+   * "pro" keeps the two subscription tiers and drops the timed package
+   * deals. Packages are the shop's business; carrying them on the profile
+   * made a two-offer reel look like a four-offer one.
    */
   slides?: "all" | "pro";
 }
@@ -72,8 +66,6 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
   const [currentIndex, setCurrentIndex] = useState(0);
   const { subscription, isVip } = useVipStatus();
   const { initiateProCheckout, isProcessing } = useProPurchase();
-  const { createLinkInvite } = useFriendInvites();
-  const [sharing, setSharing] = useState(false);
   const navigate = useNavigate();
   const currentTier = isVip ? subscription?.vip_tier : undefined;
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -107,12 +99,6 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
     {
       type: "deal" as SlideType,
       id: "deal-hourly" as const,
-    },
-    {
-      type: "invite" as SlideType,
-      id: "invite" as const,
-      name: t("extra.inviteMiniTitle"),
-      skin: SKIN_WHITE,
     },
     {
       type: "pro" as SlideType,
@@ -286,48 +272,6 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
     await initiateProCheckout(SIDEBAR_TO_STRIPE_TIER[tierId]);
   };
 
-  // Copying the link is the other half of the invite banner's pair: the
-  // share sheet is not offered by every browser, and a link on the clipboard
-  // goes wherever the player wants to put it.
-  const handleCopy = async () => {
-    if (sharing) return;
-    setSharing(true);
-    try {
-      const referralCode = await createLinkInvite("friend_pro");
-      if (referralCode) {
-        await navigator.clipboard.writeText(siteUrl(`/auth?mode=signup&ref=${referralCode}`));
-        toast.success(t("extra.linkCopiedInvite"));
-      }
-    } finally {
-      setSharing(false);
-    }
-  };
-
-  // The banner's own button already stops propagation, so the event is
-  // optional here — other call sites still pass one.
-  const handleShare = async (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (sharing) return;
-    setSharing(true);
-    try {
-      const referralCode = await createLinkInvite("friend_pro");
-      if (referralCode) {
-        const link = siteUrl(`/auth?mode=signup&ref=${referralCode}`);
-        const shareText = t("extra.getProFree");
-        if (navigator.share) {
-          try {
-            await navigator.share({ title: "My Trivia", text: shareText, url: link });
-          } catch { /* cancelled */ }
-        } else {
-          await navigator.clipboard.writeText(link);
-          toast.success(t("extra.linkCopiedInvite"));
-        }
-      }
-    } finally {
-      setSharing(false);
-    }
-  };
-
 
   return (
     <div ref={containerRef} className="relative px-4 pt-4 pb-2 md:pb-4">
@@ -370,24 +314,6 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
                 isPurchased={purchasedItems.has(activeDeal.id)}
                 isLoading={isPurchasing === activeDeal.id}
                 onBuy={() => onItemClick(dealToShopItem(activeDeal, t(activeDeal.nameKey)))}
-              />
-            ) : slide.type === "invite" ? (
-              <InviteBanner
-                skin={SKIN_INVITE}
-                art={friendsIcon}
-                crown={crownIcon}
-                headline={t("extra.inviteFriends")}
-                body={`${t("extra.shareLink")} ${t("extra.tenDayPro")}`}
-                reward={t("extra.tenDayPro")}
-                copyLabel={<><Copy className="size-[18px]" />{t("extra.copyBtn")}</>}
-                onCopy={() => void handleCopy()}
-                copyDisabled={sharing}
-                onClick={handleCardClick}
-                actionLabel={
-                  sharing ? <Loader2 className="size-5 animate-spin" /> : <><Share2 className="size-[18px]" />{t("extra.shareBtn")}</>
-                }
-                actionDisabled={sharing}
-                onAction={() => handleShare()}
               />
             ) : (
               (() => {

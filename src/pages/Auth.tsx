@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
-import { ArrowLeft, Mail, Lock, User, Apple, Gift } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User, Apple } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { z } from "zod";
 import { translateErrorMessage } from "@/utils/errorTranslations";
@@ -27,11 +27,9 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { ReturningUserPicker } from "@/components/auth/ReturningUserPicker";
-import { callRpc } from "@/integrations/supabase/rpc";
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
-  const referralCode = searchParams.get('ref');
   const returnTo = searchParams.get('returnTo');
   const { t } = useLanguage();
   const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
@@ -116,55 +114,8 @@ export default function Auth() {
             notify.error(t("common.error"), { description: translateErrorMessage(error.message) });
           }
         } else {
-          trackSignupCompleted('email', !!referralCode);
-          // Handle referral code if present
-          if (referralCode && data?.user) {
-            try {
-              // Resolve the code through the server. Reading profiles by
-              // referral_code directly is no longer permitted - that query
-              // shape was also what let anyone list every code in the table.
-              const { data: inviterProfile } = await callRpc<{ user_id: string; nickname: string | null }>(
-                'resolve_referral_code', { p_code: referralCode });
-
-              if (inviterProfile) {
-                const inviterNickname = inviterProfile.nickname || "true";
-
-                // Create a new friend_invites row for this specific signup
-                const { data: newInvite } = await supabase
-                  .from('friend_invites')
-                  .insert({
-                    inviter_id: inviterProfile.user_id,
-                    invited_email: `ref_${referralCode}_${Date.now()}@placeholder.local`,
-                    invited_user_id: data.user.id,
-                    tier_granted: 'standard',
-                    status: 'pending',
-                    referral_code: null,
-                  })
-                  .select('id')
-                  .single();
-
-                if (newInvite) {
-                  // Process referral reward via secure DB function
-                  await supabase.rpc('process_referral_reward', {
-                    p_invite_id: newInvite.id,
-                    p_new_user_id: data.user.id,
-                  });
-                }
-
-                // Store flag for the invited user modal on home page
-                sessionStorage.setItem("referral_welcome", inviterNickname);
-
-                notify.success(t("extra.referralWelcome"), { 
-                  description: t("extra.referralProDays"), 
-                  icon: toastIcon(ICON_URLS.partyPopper) 
-                });
-              }
-            } catch (err) {
-              console.error('Error processing referral:', err);
-            }
-          } else {
-            notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: toastIcon(ICON_URLS.partyPopper) });
-          }
+          trackSignupCompleted('email', false);
+          notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: toastIcon(ICON_URLS.partyPopper) });
           navigate(returnTo ? decodeURIComponent(returnTo) : "/");
         }
       } else {
@@ -282,29 +233,6 @@ export default function Auth() {
       </motion.button>
 
       <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
-        {/* Referral Banner */}
-        {referralCode && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full mb-6 p-4 rounded-xl bg-primary/10 border border-primary/20"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <Gift className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  {t("extra.referralInvited")}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {t("extra.referralSignup")}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

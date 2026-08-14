@@ -4,11 +4,9 @@ import crownIcon from "@/assets/crown-icon.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp, Share2, Check, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
-import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { format } from "date-fns";
-import { FriendInvitesTracker } from "./FriendInvitesTracker";
 import { useSearchParams } from "react-router-dom";
 import { getPriceDisplay } from "@/utils/currency";
 import { ProBannerReel } from "@/components/shop/MobileProCarousel";
@@ -23,7 +21,6 @@ interface TierConfig {
   name: string;
   nameKa: string;
   price: number;
-  friendInvites: number;
   xpMultiplier: number;
   icon: React.ElementType;
   gradient: string;
@@ -46,7 +43,6 @@ export const PRO_TIERS: TierConfig[] = [
     name: 'PRO',
     nameKa: 'PRO',
     price: 3.99,
-    friendInvites: 1,
     xpMultiplier: 2,
     icon: Crown,
     gradient: 'linear-gradient(135deg, #EC4899 0%, #DB2777 50%, #BE185D 100%)',
@@ -56,7 +52,6 @@ export const PRO_TIERS: TierConfig[] = [
       { icon: Zap, text: 'extra.xpBonus' },
       { icon: Shield, text: 'extra.noAds' },
       { icon: Star, text: 'extra.vipBadge' },
-      { icon: Users, text: 'extra.friendInvite', highlight: true, count: 1 },
     ]
   },
   {
@@ -64,7 +59,6 @@ export const PRO_TIERS: TierConfig[] = [
     name: 'Friends PRO',
     nameKa: 'სამეგობრო PRO',
     price: 7.99,
-    friendInvites: 5,
     xpMultiplier: 2,
     icon: Users,
     gradient: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 50%, #5B21B6 100%)',
@@ -76,28 +70,24 @@ export const PRO_TIERS: TierConfig[] = [
       { icon: Shield, text: 'extra.noAds' },
       { icon: Star, text: 'extra.vipBadge' },
       { icon: Gift, text: 'extra.dailyRewards' },
-      { icon: Users, text: 'extra.friendInvite', highlight: true, count: 5 },
     ]
   }
 ];
 
 interface ProPlansSectionProps {
   currentTier?: ProTier | null;
-  friendInvitesRemaining?: number;
   subscriptionStartDate?: string;
   subscriptionExpiryDate?: string;
 }
 
 export function ProPlansSection({
   currentTier,
-  friendInvitesRemaining = 0,
   subscriptionStartDate,
   subscriptionExpiryDate
 }: ProPlansSectionProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [purchasedTierName, setPurchasedTierName] = useState("");
   const { initiateProCheckout, isProcessing: purchasing } = useProPurchase();
@@ -146,11 +136,9 @@ export function ProPlansSection({
     : t("extra.proUnlimited");
 
 
-  // Same list, but the friend-invites line calls out how many more than solo
-  const upgradeBenefits = familyTier.benefits.map(b => {
-    const base = b.count ? t(b.text, { count: b.count }) : t(b.text);
-    return b.icon === Users ? `${base} (4 ${t("extra.moreExcl") || "more!"})` : base;
-  });
+  const upgradeBenefits = familyTier.benefits.map(b =>
+    b.count ? t(b.text, { count: b.count }) : t(b.text),
+  );
 
   return (
     <div className="space-y-4">
@@ -200,56 +188,15 @@ export function ProPlansSection({
         </>
       )}
 
-      {/* SCENARIO 3: PRO Family - Show invite management */}
+      {/* SCENARIO 3: PRO Family */}
       {isFamilyPro && (
-        <>
-          <ProBannerCard
-            tier={familyTier}
-            badge="active"
-            subtitle={expiryText}
-            minHeightClass="min-h-[180px]"
-          >
-            {/* Invites Section */}
-            <div className="rounded-xl p-3 mt-3" style={{ background: "rgba(255,255,255,0.15)" }}>
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-white" />
-                <span className="font-medium text-white text-sm">{t("extra.proInviteFriendsLabel")}</span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-white/80">
-                  {t("extra.proInvitesLeft", { count: friendInvitesRemaining })}
-                </span>
-                {friendInvitesRemaining > 0 && (
-                  <motion.button
-                    onClick={() => setShowInviteModal(true)}
-                    className="px-4 py-1.5 rounded-full text-sm font-bold"
-                    style={{
-                      background: "rgba(255,255,255,0.95)",
-                      color: familyTier.depthColor,
-                      boxShadow: "0 2px 0 rgba(0,0,0,0.15)",
-                    }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {t("extra.proInviteAction")}
-                  </motion.button>
-                )}
-              </div>
-            </div>
-          </ProBannerCard>
-
-          {/* Friend invites tracker */}
-          <FriendInvitesTracker />
-        </>
+        <ProBannerCard
+          tier={familyTier}
+          badge="active"
+          subtitle={expiryText}
+          minHeightClass="min-h-[180px]"
+        />
       )}
-
-      {/* Invite Modal */}
-      <ProInviteFriendsModal
-        isOpen={showInviteModal}
-        onClose={() => setShowInviteModal(false)}
-        invitesRemaining={friendInvitesRemaining}
-        currentTier={currentTier}
-      />
 
       {/* Purchase Success Modal */}
       <PurchaseSuccessModal

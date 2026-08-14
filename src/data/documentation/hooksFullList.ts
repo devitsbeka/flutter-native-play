@@ -54,7 +54,6 @@ export const ALL_HOOKS_FULL: HookDocFull[] = [
 
   // ============= SOCIAL =============
   { name: "useFriends", path: "src/hooks/useFriends.ts", description: "Fetches and manages friend list.", category: "Social", returns: ["friends", "loading", "addFriend", "removeFriend"], usedIn: ["FriendsList"] },
-  { name: "useFriendInvites", path: "src/hooks/useFriendInvites.ts", description: "Manages pending friend invitations.", category: "Social", returns: ["invites", "accept", "decline", "loading"], usedIn: ["FriendsPage"] },
   { name: "useFriendsWithSound", path: "src/hooks/useFriendsWithSound.ts", description: "Friends hook with notification sounds.", category: "Social", returns: ["friends", "newFriendSound"], usedIn: ["FriendsList"] },
   { name: "useChat", path: "src/hooks/useChat.ts", description: "Direct messaging between users.", category: "Social", params: ["friendId"], returns: ["messages", "sendMessage", "loading"], usedIn: ["ChatModal"] },
   { name: "useTypingIndicator", path: "src/hooks/useTypingIndicator.ts", description: "Real-time typing indicator for chats.", category: "Social", params: ["chatId"], returns: ["isTyping", "setTyping"], usedIn: ["ChatModal"] },
