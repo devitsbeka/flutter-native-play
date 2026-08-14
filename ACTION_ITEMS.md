@@ -3,6 +3,11 @@
 Everything here blocks progress and cannot be done from inside the repo.
 Ordered by what unblocks the most downstream work.
 
+> **Doing the work?** Follow
+> [`docs/LAUNCH_RUNBOOK.md`](docs/LAUNCH_RUNBOOK.md) instead — same items,
+> arranged in the order they have to happen, with the verification step for
+> each. This file is the inventory; the runbook is the sequence.
+
 Full context for each is in [`docs/IOS_LAUNCH_PLAN.md`](docs/IOS_LAUNCH_PLAN.md).
 
 ---
@@ -105,6 +110,14 @@ offering are all wired correctly. See `src/hooks/useStorePrice.ts`.
 
 ## 2. Third-party accounts
 
+- [ ] **Supabase Apple provider** — add `io.mytrivia.app` to the Apple
+      provider's **Client IDs** (Authentication → Providers → Apple). Native
+      Sign in with Apple sends the bundle id as the client id
+      (`AuthContext.tsx:330`) and Supabase validates the token audience
+      against that list. Miss it and every native Apple sign-in fails while
+      the web flow keeps working, which makes it read as a device problem.
+      Guideline 4.8 makes this mandatory, not optional, because Google
+      sign-in is offered.
 - [ ] **RevenueCat** — create the project and the iOS app config
 - [ ] **AdMob** — register the iOS app, create a **dedicated iOS** rewarded
       unit and a **real** interstitial unit (the interstitials currently point
