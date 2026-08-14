@@ -231,6 +231,24 @@ the **web** flow keeps working, which makes it look like a device problem.
 - [ ] Leave the Services ID, Team ID and key configuration as-is; those serve
       the web redirect flow
 
+Three different `.p8` files come out of the Apple developer account and are
+easy to swap by mistake, because two of them are named `AuthKey_*`:
+
+| File | Created under | Belongs to |
+|---|---|---|
+| `AuthKey_*.p8` (APNs enabled) | Keys → Apple Push Notification service | Firebase, for push |
+| `SubscriptionKey_*.p8` | Users and Access → Integrations → In-App Purchase | RevenueCat |
+| `AuthKey_*.p8` (Sign in with Apple enabled) | Keys → Sign in with Apple | Supabase's Apple provider secret |
+
+Each downloads exactly once.
+
+**The Apple client secret expires.** It is a JWT and Apple caps its lifetime at
+six months, so web Apple sign-in stops working twice a year unless the secret
+is regenerated from the same key. Nothing warns you: existing sessions keep
+working and only new sign-ins fail. Put a calendar reminder against it. The
+native path does not use this secret, so iOS keeps working while the web does
+not — the reverse of the Client IDs failure above
+
 **Check:** on device, Apple sign-in completes and lands you signed in. This
 one cannot be verified from here — it needs a real build.
 
