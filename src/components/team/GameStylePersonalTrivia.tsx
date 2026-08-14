@@ -895,10 +895,29 @@ export function GameStylePersonalTrivia({
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          key="backdrop"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col max-w-[700px] md:max-w-[600px] mx-auto"
+          // The editor is a 700px column down the middle of the screen, so on
+          // anything wider than a phone the page it opened from was still
+          // sitting there in full focus on either side — rooms, tabs, the
+          // sidebar, all live and all clickable. Behind glass now, and inert:
+          // it swallows the clicks that used to reach the page.
+          //
+          // Above 50 on purpose: the desktop nav and the bottom bar are both
+          // z-50, and a backdrop under them would have left the chrome sharp
+          // on top of the blur. The panel stays one step higher again.
+          className="fixed inset-0 z-[90] bg-[#2A0E4F]/55 backdrop-blur-md"
+        />
+      )}
+      {isOpen && (
+        <motion.div
+          key="panel"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex flex-col max-w-[700px] md:max-w-[600px] mx-auto"
           style={{
             background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)",
           }}
