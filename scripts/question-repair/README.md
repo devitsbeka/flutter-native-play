@@ -114,3 +114,27 @@ UPDATE public.questions SET
     is_active = true, in_production = true
   WHERE quality_status LIKE 'retired_%' OR shorten_status = 'pending_review';
 ```
+
+## The paste-ready file
+
+`build-compact-sql.py` re-emits `migration.sql` as five bulk statements instead
+of 1,713 single-row ones:
+
+```sh
+python3 build-compact-sql.py migration.sql question-repair.sql
+```
+
+The verbose migration is 1.4 MB, nearly all of it the same 14-line `SET` clause
+repeated once per row. Folding the rows into `UPDATE ... FROM (VALUES ...)`
+leaves only the text that differs and brings it to 308 KB, which pastes into the
+Supabase SQL editor.
+
+Both were applied to separate schemas of a Postgres seeded with all 7,839 live
+English rows and the resulting tables compared column by column: **0 rows
+differ**. Running the compact file a second time is also safe — the ids are
+fixed and `COALESCE` keeps the first original it saw.
+
+`COALESCE(q.original_question_text, q.question_text)` still does the right thing
+in the bulk form: Postgres evaluates every `SET` expression against the
+pre-`UPDATE` row, so a row that already has an original keeps it and a row that
+does not gets the text being replaced.
