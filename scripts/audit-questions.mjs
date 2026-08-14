@@ -115,14 +115,35 @@ const options = (q) => {
   return [String(q.correct_answer), ...wrong.map(String)];
 };
 
+/**
+ * Flatten text for word overlap and substring tests, where punctuation really is
+ * noise. NOT for comparing answer options against each other — see sameOption.
+ */
 const normalize = (s) =>
   String(s)
     .normalize("NFKC")
     .toLowerCase()
     .replace(/[‘’]/g, "'")
-    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
+
+/**
+ * Compare two answer options for real duplication.
+ *
+ * Stripping every punctuation mark collapses whole families of legitimate
+ * answers into the same string: $/€/£/¥ and √/÷/±/∑ all become empty, "a² + b²
+ * = c²" and "a + b = c" both become "a b c", and "MR=MC" matches "MR>MC". Only
+ * leading and trailing punctuation is noise — "Grumpy Cat." and "Grumpy Cat"
+ * are the same answer, but everything inside the string carries meaning.
+ */
+const sameOption = (s) =>
+  String(s)
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^[.,;:!?'"“”‘’\s]+|[.,;:!?'"“”‘’\s]+$/g, "");
 
 const STOP = new Set(
   ("what which who whom whose when where why how the a an of in on for to is are was " +
@@ -162,7 +183,7 @@ const CHECKS = [
     severity: "broken",
     describe: (q) => {
       const seen = new Map();
-      for (const o of options(q)) seen.set(normalize(o), (seen.get(normalize(o)) ?? 0) + 1);
+      for (const o of options(q)) seen.set(sameOption(o), (seen.get(sameOption(o)) ?? 0) + 1);
       const dupes = [...seen].filter(([, n]) => n > 1).map(([k]) => k || "(empty)");
       return dupes.length ? `repeated option text: ${dupes.join(", ")}` : null;
     },
@@ -351,12 +372,52 @@ for (const q of scope) {
 // Duplicate detection needs the whole set, so it runs outside the per-row loop.
 const signatures = scope.map((q) => [q, contentWords(q.question_text)]);
 const index = new Map();
+const documentFrequency = new Map();
 for (const [q, words] of signatures) {
   for (const w of words) {
     if (!index.has(w)) index.set(w, []);
     index.get(w).push([q, words]);
+    documentFrequency.set(w, (documentFrequency.get(w) ?? 0) + 1);
   }
 }
+
+/**
+ * Two questions that differ by a RARE word are about different things, however
+ * much of the rest matches: "human heart" against "giraffe's heart" both answer
+ * four, and "which language did Gosling create" against "what year was C++
+ * created" share three of four content words. A word used in only a handful of
+ * questions is the subject, not filler.
+ *
+ * The exception is a rare word that only narrows the same question — permanent
+ * teeth, the observable universe, normal body temperature, a year in the stem.
+ * That list is curated by reading the pairs rather than inferred, because
+ * guessing wrong here reports a real question as a duplicate.
+ */
+const RARE_DF = 6;
+const QUALIFIERS = new Set(
+  ("permanent observable weight physicist rounded normal naked intact starting " +
+    "lineup astronaut wisdom incl approximately exactly roughly officially " +
+    "currently known confirmed total average adult modern famous iconic entire " +
+    "whole single overall precise scientific").split(" "),
+);
+const isQualifier = (w) => QUALIFIERS.has(w) || /^(1[5-9]|20)\d\d$/.test(w);
+
+const differsBySubject = (a, b) => {
+  for (const w of a) if (!b.has(w) && (documentFrequency.get(w) ?? 0) <= RARE_DF && !isQualifier(w)) return true;
+  for (const w of b) if (!a.has(w) && (documentFrequency.get(w) ?? 0) <= RARE_DF && !isQualifier(w)) return true;
+  return false;
+};
+
+/** Pairs that read as duplicates and are not, confirmed by hand. */
+const PROTECTED = new Set([
+  "182761b1|492bb178", // female vs male scientific symbol
+  "1b639059|6bbc98bc", // solar flares: ionosphere vs technology
+  "332aa526|7210b135", // first 3D vector arcade game vs first arcade game
+  "a12c25a3|b6df7ecb", // Dead Sea Scrolls: century vs year
+  "a8ab09a8|c1668875", // pi to two decimal places vs to five
+  "b5238ba9|c97f8c25", // the Great Red Spot: what it is vs where it is
+]);
+const isProtected = (a, b) => PROTECTED.has([a.slice(0, 8), b.slice(0, 8)].sort().join("|"));
 const seenPair = new Set();
 for (const [q, words] of signatures) {
   if (words.size < 3) continue;
@@ -376,6 +437,8 @@ for (const [q, words] of signatures) {
     if (!entry) continue;
     const [other, otherWords] = entry;
     if (jaccard(words, otherWords) < 0.7) continue;
+    if (isProtected(q.id, other.id)) continue;
+    if (differsBySubject(words, otherWords)) continue;
     seenPair.add(key);
     const sameAnswer = normalize(q.correct_answer) === normalize(other.correct_answer);
     findings.push({
