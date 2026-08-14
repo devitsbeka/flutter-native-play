@@ -54,10 +54,25 @@ export function useGemPurchase() {
 
     try {
       const { data, error } = await supabase.functions.invoke("create-gem-checkout", {
-        // Only the pack id. The server looks up how many gems it grants and
-        // what it costs; sending those from here made them negotiable, which
-        // is exactly what they must not be.
-        body: { productId: product.id },
+        // `productId` is the only field the server reads. It looks up how many
+        // gems the pack grants and what it costs; taking those from the request
+        // is what let a signed-in caller name their own price.
+        //
+        // `gems` and `priceGel` are sent anyway, and ignored. The client and
+        // the edge functions deploy through different pipelines — Cloudflare
+        // from a merge, Supabase from a separate functions deploy — so there is
+        // always a window where one is new and the other is not. The new
+        // function ignores extra fields, but the *old* one rejects the request
+        // without them ("Missing required fields"), which would take gem
+        // checkout down on the web for the length of that window.
+        //
+        // Safe to drop once the deployed functions are known to be current;
+        // pointless to drop before then.
+        body: {
+          productId: product.id,
+          gems: product.gems,
+          priceGel: product.priceGel,
+        },
       });
 
       if (error) {
