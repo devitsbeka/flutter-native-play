@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
-import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X, Sparkles, Image, RefreshCw, Lightbulb, Save, Loader2 } from "lucide-react";
+import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Sparkles, RefreshCw, Lightbulb, Save, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast as sonnerToast } from "sonner";
@@ -32,7 +32,6 @@ interface PersonalQuestion {
   question: string;
   answers: Answer[];
   iconSlug?: string;
-  backgroundImageUrl?: string;
 }
 
 /**
@@ -69,7 +68,6 @@ function draftPayloadKey(title: string, questions: PersonalQuestion[]): string {
       question: q.question,
       answers: q.answers.map((a) => ({ text: a.text, isCorrect: a.isCorrect })),
       iconSlug: q.iconSlug,
-      backgroundImageUrl: q.backgroundImageUrl,
     })),
   });
 }
@@ -288,14 +286,12 @@ export function GameStylePersonalTrivia({
   const { user } = useAuth();
   const [title, setTitle] = useState(initialData?.title || "");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
   const [errorField, setErrorField] = useState<{questionIndex: number; field: string; answerId?: string} | null>(null);
   const [iconPickerIndex, setIconPickerIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize questions with new Answer structure
   const [questions, setQuestions] = useState<PersonalQuestion[]>(() => {
@@ -338,7 +334,6 @@ export function GameStylePersonalTrivia({
           isCorrect: a.isCorrect || false,
         })),
         iconSlug: q.iconSlug,
-        backgroundImageUrl: q.backgroundImageUrl,
       }));
       
       if (loadedQuestions.length > 0) {
@@ -387,7 +382,6 @@ export function GameStylePersonalTrivia({
       question: q.question,
       answers: q.answers.map((a) => ({ text: a.text, isCorrect: a.isCorrect })),
       iconSlug: q.iconSlug,
-      backgroundImageUrl: q.backgroundImageUrl,
     }));
 
     // Skip if payload hasn't changed (prevents redundant writes, and keeps an
@@ -619,101 +613,6 @@ export function GameStylePersonalTrivia({
     setQuestions(newQuestions);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: t("common.error"),
-        description: t("extra.ptImageOnlyError"),
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: t("common.error"),
-        description: t("extra.ptImageTooBig"),
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `trivia-bg-${Date.now()}.${fileExt}`;
-      const filePath = `trivia-backgrounds/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('trivia-backgrounds')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        // Bucket might not exist, try to use a generic bucket or handle gracefully
-        console.error('Upload error:', uploadError);
-        
-        // Create a local URL for preview (fallback)
-        const localUrl = URL.createObjectURL(file);
-        const newQuestions = [...questions];
-        newQuestions[currentIndex] = {
-          ...newQuestions[currentIndex],
-          backgroundImageUrl: localUrl,
-        };
-        setQuestions(newQuestions);
-        
-        toast({
-          title: t("extra.ptImageAddedLocal"),
-          description: t("extra.ptLocalPreview"),
-          duration: 2000,
-        });
-        return;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('trivia-backgrounds')
-        .getPublicUrl(filePath);
-
-      const newQuestions = [...questions];
-      newQuestions[currentIndex] = {
-        ...newQuestions[currentIndex],
-        backgroundImageUrl: publicUrl,
-      };
-      setQuestions(newQuestions);
-
-      toast({
-        title: t("extra.ptImageUploaded"),
-        duration: 2000,
-      });
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast({
-        title: t("common.error"),
-        description: t("extra.ptUploadFailed"),
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  const removeBackgroundImage = () => {
-    const newQuestions = [...questions];
-    newQuestions[currentIndex] = {
-      ...newQuestions[currentIndex],
-      backgroundImageUrl: undefined,
-    };
-    setQuestions(newQuestions);
-  };
-
   const handleGenerateAI = async (index: number) => {
     setIsGeneratingAI(true);
     setGeneratingIndex(index);
@@ -864,7 +763,6 @@ export function GameStylePersonalTrivia({
     for (const q of questions) {
       if (q.question.trim()) return true;
       if (q.iconSlug) return true;
-      if (q.backgroundImageUrl) return true;
       for (const answer of q.answers) {
         if (answer.text.trim()) return true;
       }
@@ -967,19 +865,6 @@ export function GameStylePersonalTrivia({
           {/* Action Toolbar - circular buttons */}
           <div className="px-4 pb-3">
             <div className="flex items-center justify-center gap-2">
-              {/* Photo Upload Button */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="h-10 w-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-all disabled:opacity-50"
-              >
-                {isUploading ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <Image className="w-4 h-4" />
-                )}
-              </button>
-
               {/* Duplicate Button */}
               <button
                 onClick={handleDuplicate}
@@ -998,15 +883,6 @@ export function GameStylePersonalTrivia({
             </div>
           </div>
 
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="hidden"
-          />
-
           {/* Carousel */}
           <div className="flex-1 overflow-hidden" ref={emblaRef}>
             <div className="flex h-full">
@@ -1015,49 +891,22 @@ export function GameStylePersonalTrivia({
                   key={question.id}
                   className="flex-[0_0_100%] min-w-0 px-4 flex flex-col"
                 >
-                  {/* Question Card with optional background image */}
+                  {/* Question Card */}
                   <div className="relative rounded-3xl overflow-hidden shadow-lg mb-4">
-                    {/* Background Image */}
-                    {question.backgroundImageUrl && (
-                      <>
-                        <img 
-                          src={question.backgroundImageUrl} 
-                          className="absolute inset-0 w-full h-full object-cover"
-                          alt=""
-                        />
-                        {/* Purple gradient overlay for readability */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-[#5B21B6]/80 via-[#5B21B6]/70 to-[#5B21B6]/90" />
-                        {/* Remove background button */}
-                        <button
-                          onClick={removeBackgroundImage}
-                          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </>
-                    )}
-                    
-                    {/* Content */}
-                    <div className={cn(
-                      "relative z-10 p-5",
-                      !question.backgroundImageUrl && "bg-[#5B21B6]"
-                    )}>
+                    <div className="relative z-10 p-5 bg-[#5B21B6]">
                       {/* Question Counter */}
                       <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/20 text-white text-xs font-medium">
                         {index + 1}/{questions.length}
                       </div>
 
-                      {/* AI Generate Button - top right, positioned left of X button when bg exists */}
+                      {/* AI Generate Button */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleGenerateAI(index);
                         }}
                         disabled={isGeneratingAI}
-                        className={cn(
-                          "absolute top-3 z-30 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all disabled:opacity-50",
-                          question.backgroundImageUrl ? "right-14" : "right-3"
-                        )}
+                        className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all disabled:opacity-50"
                       >
                         {isGeneratingAI && generatingIndex === index ? (
                           <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -1349,8 +1198,7 @@ export function GameStylePersonalTrivia({
                               const questionsData = questions.map(q => ({
                                 question: q.question,
                                 answers: q.answers.map(a => ({ text: a.text, isCorrect: a.isCorrect })),
-                                iconSlug: q.iconSlug,
-                                backgroundImageUrl: q.backgroundImageUrl
+                                iconSlug: q.iconSlug
                               }));
 
                               const saved = await saveDraft({
