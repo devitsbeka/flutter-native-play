@@ -1,0 +1,17 @@
+INSERT INTO public.questions (language,category_id,question_text,correct_answer,incorrect_answers,image_url,difficulty,level_number,is_active,in_production)
+SELECT * FROM (VALUES
+  ('en','6713f663-9f5e-46fe-874e-d1e808abab79'::uuid,'Which station is shown?','ISS','["Mir", "Skylab", "Tiangong"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/The_station_pictured_from_the_SpaceX_Crew_Dragon_5.jpg/960px-The_station_pictured_from_the_SpaceX_Crew_Dragon_5.jpg','easy',1,true,false),
+  ('en','6713f663-9f5e-46fe-874e-d1e808abab79'::uuid,'Which rover is shown?','Curiosity','["Sojourner", "Opportunity", "Lunokhod"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Curiosity_Self-Portrait_at_%27Big_Sky%27_Drilling_Site.jpg/960px-Curiosity_Self-Portrait_at_%27Big_Sky%27_Drilling_Site.jpg','medium',1,true,false),
+  ('en','6713f663-9f5e-46fe-874e-d1e808abab79'::uuid,'Which nebula is shown?','Orion Nebula','["Crab Nebula", "Eagle Nebula", "Ring Nebula"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg/960px-Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg','medium',1,true,false),
+  ('en','6713f663-9f5e-46fe-874e-d1e808abab79'::uuid,'Which galaxy is shown?','Milky Way','["Andromeda", "Triangulum", "Whirlpool"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/ESO-VLT-Laser-phot-33a-07.jpg/960px-ESO-VLT-Laser-phot-33a-07.jpg','medium',1,true,false),
+  ('en','6713f663-9f5e-46fe-874e-d1e808abab79'::uuid,'Which rocket is shown?','Saturn V','["Soyuz", "Falcon 9", "Space Shuttle"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Apollo_11_Launch_-_GPN-2000-000630.jpg/960px-Apollo_11_Launch_-_GPN-2000-000630.jpg','medium',1,true,false),
+  ('en','25442741-92ef-4d73-8ea3-071fdd20201a'::uuid,'Who is shown?','Usain Bolt','["Yohan Blake", "Tyson Gay", "Justin Gatlin"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/c/c3/Usain_Bolt_smiling_Berlin_2009.JPG','easy',1,true,false),
+  ('en','25442741-92ef-4d73-8ea3-071fdd20201a'::uuid,'Who is shown?','Lionel Messi','["Sergio Aguero", "Luis Suarez", "Antoine Griezmann"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg/960px-Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg','easy',1,true,false),
+  ('en','25442741-92ef-4d73-8ea3-071fdd20201a'::uuid,'Who is shown?','Michael Phelps','["Ryan Lochte", "Caeleb Dressel", "Ian Thorpe"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Michael_Phelps_Rio_Olympics_2016.jpg/960px-Michael_Phelps_Rio_Olympics_2016.jpg','medium',1,true,false),
+  ('en','25442741-92ef-4d73-8ea3-071fdd20201a'::uuid,'Who is shown?','Muhammad Ali','["Joe Frazier", "George Foreman", "Sonny Liston"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Muhammad_Ali_NYWTS.jpg/960px-Muhammad_Ali_NYWTS.jpg','easy',1,true,false),
+  ('en','25442741-92ef-4d73-8ea3-071fdd20201a'::uuid,'Who is shown?','Roger Federer','["Rafael Nadal", "Novak Djokovic", "Andy Murray"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Roger_Federer_2015_%28cropped%29.jpg/960px-Roger_Federer_2015_%28cropped%29.jpg','easy',1,true,false)
+) AS v(language,category_id,question_text,correct_answer,incorrect_answers,image_url,difficulty,level_number,is_active,in_production)
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.questions p
+   WHERE p.image_url = v.image_url AND p.language = 'en'
+);

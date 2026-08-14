@@ -1,0 +1,17 @@
+INSERT INTO public.questions (language,category_id,question_text,correct_answer,incorrect_answers,image_url,difficulty,level_number,is_active,in_production)
+SELECT * FROM (VALUES
+  ('en','9e7ed994-2920-4a9e-b25a-cc97b15cf1bd'::uuid,'Which animal is shown?','Lemur','["Loris", "Bushbaby", "Tarsier"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Ring-tailed_lemur_%28Lemur_catta%29.jpg/960px-Ring-tailed_lemur_%28Lemur_catta%29.jpg','medium',1,true,false),
+  ('en','9e7ed994-2920-4a9e-b25a-cc97b15cf1bd'::uuid,'Which animal is shown?','Wombat','["Badger", "Marmot", "Quokka"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Vombatus_ursinus_-Maria_Island_National_Park.jpg/960px-Vombatus_ursinus_-Maria_Island_National_Park.jpg','medium',1,true,false),
+  ('en','9e7ed994-2920-4a9e-b25a-cc97b15cf1bd'::uuid,'Which bird is shown?','Kiwi','["Weka", "Takahe", "Tinamou"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Juvenile_little-spotted_kiwi_%28Apteryx_owenii%29.jpg/960px-Juvenile_little-spotted_kiwi_%28Apteryx_owenii%29.jpg','medium',1,true,false),
+  ('en','9e7ed994-2920-4a9e-b25a-cc97b15cf1bd'::uuid,'Which animal is shown?','Sea otter','["River otter", "Mink", "Fur seal"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/0/02/Sea_Otter_%28Enhydra_lutris%29_%2825169790524%29_crop.jpg','easy',1,true,false),
+  ('en','9e7ed994-2920-4a9e-b25a-cc97b15cf1bd'::uuid,'Which animal is shown?','Seahorse','["Pipefish", "Sea dragon", "Trumpetfish"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Hippocampus_hippocampus_%28on_Ascophyllum_nodosum%29.jpg/960px-Hippocampus_hippocampus_%28on_Ascophyllum_nodosum%29.jpg','medium',1,true,false),
+  ('en','9e7ed994-2920-4a9e-b25a-cc97b15cf1bd'::uuid,'Which animal is shown?','Mandrill','["Baboon", "Macaque", "Mangabey"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Mandrill_Albert_September_2015_Zoo_Berlin_%282%29.jpg/960px-Mandrill_Albert_September_2015_Zoo_Berlin_%282%29.jpg','medium',1,true,false),
+  ('en','9e7ed994-2920-4a9e-b25a-cc97b15cf1bd'::uuid,'Which bird is shown?','Blue jay','["Kingfisher", "Bluebird", "Magpie"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Blue_jay_in_PP_%2830960%29.jpg/960px-Blue_jay_in_PP_%2830960%29.jpg','medium',1,true,false),
+  ('en','16f4b260-ccbd-4885-abac-604115bf3b74'::uuid,'Which plant is shown?','Venus flytrap','["Pitcher plant", "Sundew", "Butterwort"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Venus_Flytrap_showing_trigger_hairs.jpg/960px-Venus_Flytrap_showing_trigger_hairs.jpg','medium',1,true,false),
+  ('en','16f4b260-ccbd-4885-abac-604115bf3b74'::uuid,'Which tree is shown?','Baobab','["Banyan", "Dragon tree", "Joshua tree"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Adansonia_grandidieri04.jpg/960px-Adansonia_grandidieri04.jpg','medium',1,true,false),
+  ('en','16f4b260-ccbd-4885-abac-604115bf3b74'::uuid,'Which tree is shown?','Giant sequoia','["Douglas fir", "Kauri", "Ponderosa pine"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Grizzly_Giant_Mariposa_Grove.jpg/960px-Grizzly_Giant_Mariposa_Grove.jpg','medium',1,true,false)
+) AS v(language,category_id,question_text,correct_answer,incorrect_answers,image_url,difficulty,level_number,is_active,in_production)
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.questions p
+   WHERE p.image_url = v.image_url AND p.language = 'en'
+);

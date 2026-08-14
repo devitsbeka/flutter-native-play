@@ -1,0 +1,17 @@
+INSERT INTO public.questions (language,category_id,question_text,correct_answer,incorrect_answers,image_url,difficulty,level_number,is_active,in_production)
+SELECT * FROM (VALUES
+  ('en','0ab371b2-85c5-4016-b14e-8e352caa6e6d'::uuid,'Which monument is shown?','Great Sphinx','["Abu Simbel", "Karnak", "Luxor Temple"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Sphinx_with_the_third_pyramid.jpg/960px-Sphinx_with_the_third_pyramid.jpg','easy',1,true,false),
+  ('en','0ab371b2-85c5-4016-b14e-8e352caa6e6d'::uuid,'Which temple is shown?','Parthenon','["Temple of Hephaestus", "Erechtheion", "Temple of Zeus"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/The_Parthenon_in_Athens.jpg/960px-The_Parthenon_in_Athens.jpg','easy',1,true,false),
+  ('en','0ab371b2-85c5-4016-b14e-8e352caa6e6d'::uuid,'Which structure is shown?','Great Pyramid','["Pyramid of Djoser", "Nubian pyramids", "Pyramid of the Sun"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Great_Pyramid_of_Giza_-_Pyramid_of_Khufu.jpg/960px-Great_Pyramid_of_Giza_-_Pyramid_of_Khufu.jpg','easy',1,true,false),
+  ('en','0ab371b2-85c5-4016-b14e-8e352caa6e6d'::uuid,'Which artefact is shown?','Bayeux Tapestry','["Book of Kells", "Magna Carta", "Domesday Book"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Odo_bayeux_tapestry.png/960px-Odo_bayeux_tapestry.png','medium',1,true,false),
+  ('en','0ab371b2-85c5-4016-b14e-8e352caa6e6d'::uuid,'Which vessel is shown?','Viking longship','["Roman galley", "Chinese junk", "Greek trireme"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Osebergskipet_2016.jpg/960px-Osebergskipet_2016.jpg','medium',1,true,false),
+  ('en','23f43d93-5fc3-4a00-9381-f1efb1cf7765'::uuid,'Which aircraft is shown?','Concorde','["Tupolev Tu-144", "Boeing 747", "Airbus A380"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/British_Airways_Concorde_G-BOAC_03.jpg/960px-British_Airways_Concorde_G-BOAC_03.jpg','easy',1,true,false),
+  ('en','23f43d93-5fc3-4a00-9381-f1efb1cf7765'::uuid,'Which device is shown?','Enigma machine','["Bombe", "Colossus", "Lorenz cipher"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Enigma_%28crittografia%29_-_Museo_scienza_e_tecnologia_Milano.jpg/960px-Enigma_%28crittografia%29_-_Museo_scienza_e_tecnologia_Milano.jpg','medium',1,true,false),
+  ('en','23f43d93-5fc3-4a00-9381-f1efb1cf7765'::uuid,'What is shown?','Vinyl record','["Laserdisc", "Compact disc", "MiniDisc"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Vinilos_distintos_tama%C3%B1os.jpg/960px-Vinilos_distintos_tama%C3%B1os.jpg','medium',1,true,false),
+  ('en','23f43d93-5fc3-4a00-9381-f1efb1cf7765'::uuid,'Which device is shown?','Typewriter','["Teleprinter", "Linotype", "Adding machine"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/MEK_II-371.jpg/960px-MEK_II-371.jpg','easy',1,true,false),
+  ('en','23f43d93-5fc3-4a00-9381-f1efb1cf7765'::uuid,'Which device is shown?','Rotary phone','["Switchboard", "Telegraph key", "Pager"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Rotarydial.JPG/960px-Rotarydial.JPG','medium',1,true,false)
+) AS v(language,category_id,question_text,correct_answer,incorrect_answers,image_url,difficulty,level_number,is_active,in_production)
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.questions p
+   WHERE p.image_url = v.image_url AND p.language = 'en'
+);

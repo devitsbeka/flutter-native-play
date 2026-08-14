@@ -1,0 +1,17 @@
+INSERT INTO public.questions (language,category_id,question_text,correct_answer,incorrect_answers,image_url,difficulty,level_number,is_active,in_production)
+SELECT * FROM (VALUES
+  ('en','23f43d93-5fc3-4a00-9381-f1efb1cf7765'::uuid,'What is shown?','Floppy disk','["Zip disk", "Cassette tape", "Punched card"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Floppy_disk_2009_G1.jpg/960px-Floppy_disk_2009_G1.jpg','easy',1,true,false),
+  ('en','8d7a3d46-705b-43a8-8a40-d57d86615721'::uuid,'Which garment is shown?','Kimono','["Hanbok", "Cheongsam", "Ao dai"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Young_Woman_at_Kennin-ji_Zen_Temple_-_Kyoto_-_Japan_-_01_%2847929418887%29.jpg/960px-Young_Woman_at_Kennin-ji_Zen_Temple_-_Kyoto_-_Japan_-_01_%2847929418887%29.jpg','easy',1,true,false),
+  ('en','8d7a3d46-705b-43a8-8a40-d57d86615721'::uuid,'Which garment is shown?','Sari','["Lehenga", "Salwar kameez", "Kaftan"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Maharani_Vijaya_Raje_Scindia_of_Gwalior%2C_ca.1940.jpg/960px-Maharani_Vijaya_Raje_Scindia_of_Gwalior%2C_ca.1940.jpg','medium',1,true,false),
+  ('en','f86cec23-8436-47e8-be96-9f4be204ceb0'::uuid,'Which cathedral is shown?','St Basil''s','["Kazan Cathedral", "Church of the Savior", "Assumption Cathedral"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Saint_Basil%27s_Cathedral_in_Moscow.jpg/960px-Saint_Basil%27s_Cathedral_in_Moscow.jpg','easy',1,true,false),
+  ('en','f86cec23-8436-47e8-be96-9f4be204ceb0'::uuid,'Which temple is shown?','Golden Temple','["Akshardham", "Meenakshi Temple", "Lotus Temple"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/The_Golden_Temple_of_Amrithsar_7.jpg/960px-The_Golden_Temple_of_Amrithsar_7.jpg','medium',1,true,false),
+  ('en','f86cec23-8436-47e8-be96-9f4be204ceb0'::uuid,'Which palace is shown?','Potala Palace','["Tashilhunpo", "Jokhang", "Punakha Dzong"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Potala_Palace_HQ.jpg/960px-Potala_Palace_HQ.jpg','medium',1,true,false),
+  ('en','f86cec23-8436-47e8-be96-9f4be204ceb0'::uuid,'Which cathedral is shown?','Notre-Dame','["Reims Cathedral", "Chartres Cathedral", "Amiens Cathedral"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Notre-Dame_de_Paris%2C_4_October_2017.jpg/960px-Notre-Dame_de_Paris%2C_4_October_2017.jpg','easy',1,true,false),
+  ('en','9e7ed994-2920-4a9e-b25a-cc97b15cf1bd'::uuid,'Which animal is shown?','Quokka','["Wallaby", "Wombat", "Bandicoot"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/5/54/Quokka_at_rottnest_%28cropped%29.jpg','medium',1,true,false),
+  ('en','9e7ed994-2920-4a9e-b25a-cc97b15cf1bd'::uuid,'Which animal is shown?','Fennec fox','["Arctic fox", "Bat-eared fox", "Corsac fox"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Fennec_Fox_Vulpes_zerda.jpg/960px-Fennec_Fox_Vulpes_zerda.jpg','medium',1,true,false),
+  ('en','9e7ed994-2920-4a9e-b25a-cc97b15cf1bd'::uuid,'Which animal is shown?','Tapir','["Peccary", "Wild boar", "Anteater"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Malayan_Tapir_%28Tapirus_indicus%29_%288729168612%29.jpg/960px-Malayan_Tapir_%28Tapirus_indicus%29_%288729168612%29.jpg','medium',1,true,false)
+) AS v(language,category_id,question_text,correct_answer,incorrect_answers,image_url,difficulty,level_number,is_active,in_production)
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.questions p
+   WHERE p.image_url = v.image_url AND p.language = 'en'
+);

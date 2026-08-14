@@ -1,0 +1,17 @@
+INSERT INTO public.questions (language,category_id,question_text,correct_answer,incorrect_answers,image_url,difficulty,level_number,is_active,in_production)
+SELECT * FROM (VALUES
+  ('en','ae1bcb74-802a-4169-a549-56200c4a4873'::uuid,'Who is shown?','Bryan Cranston','["Jon Hamm", "Michael C. Hall", "Kyle MacLachlan"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/BryanCranston-byPhilipRomano_%28cropped%29.jpg/960px-BryanCranston-byPhilipRomano_%28cropped%29.jpg','medium',1,true,false),
+  ('en','ae1bcb74-802a-4169-a549-56200c4a4873'::uuid,'Who is shown?','Peter Dinklage','["Warwick Davis", "Danny Woodburn", "Tony Cox"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Peter_Dinklage_by_Gage_Skidmore_2.jpg/960px-Peter_Dinklage_by_Gage_Skidmore_2.jpg','medium',1,true,false),
+  ('en','ae1bcb74-802a-4169-a549-56200c4a4873'::uuid,'Who is shown?','Jennifer Aniston','["Courteney Cox", "Lisa Kudrow", "Jennifer Garner"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/1/16/JenniferAnistonHWoFFeb2012.jpg','easy',1,true,false),
+  ('en','ae1bcb74-802a-4169-a549-56200c4a4873'::uuid,'Who is shown?','David Attenborough','["Brian Cox", "Jane Goodall", "Carl Sagan"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/David_Attenborough_in_2025.jpg/960px-David_Attenborough_in_2025.jpg','medium',1,true,false),
+  ('en','ae1bcb74-802a-4169-a549-56200c4a4873'::uuid,'Who is shown?','Oprah Winfrey','["Whoopi Goldberg", "Ellen DeGeneres", "Tyra Banks"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Oprah_Winfrey_2016.jpg/960px-Oprah_Winfrey_2016.jpg','easy',1,true,false),
+  ('en','ae1bcb74-802a-4169-a549-56200c4a4873'::uuid,'Which walled city is shown?','Dubrovnik','["Kotor", "Split", "Valletta"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/The_walls_of_the_fortress_and_View_of_the_old_city._panorama.jpg/960px-The_walls_of_the_fortress_and_View_of_the_old_city._panorama.jpg','medium',1,true,false),
+  ('en','ae1bcb74-802a-4169-a549-56200c4a4873'::uuid,'Which country house is shown?','Highclere Castle','["Blenheim Palace", "Chatsworth House", "Castle Howard"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Highclere_Castle_%282019%29.jpg/960px-Highclere_Castle_%282019%29.jpg','medium',1,true,false),
+  ('en','ae1bcb74-802a-4169-a549-56200c4a4873'::uuid,'Which valley is shown?','Monument Valley','["Bryce Canyon", "Arches", "Canyonlands"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Monument_Valley%2C_Utah%2C_USA_%2823611451292%29.jpg/960px-Monument_Valley%2C_Utah%2C_USA_%2823611451292%29.jpg','medium',1,true,false),
+  ('en','80b2b8b6-8637-43a2-b78b-6fe502609fa1'::uuid,'Which instrument is shown?','Cello','["Double bass", "Viola", "Violin"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/5/5f/Cello_front_side.png','easy',1,true,false),
+  ('en','80b2b8b6-8637-43a2-b78b-6fe502609fa1'::uuid,'Which instrument is shown?','Sitar','["Veena", "Tanpura", "Sarod"]'::jsonb,'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Sitar%2C_late_19th_Century.jpg/960px-Sitar%2C_late_19th_Century.jpg','medium',1,true,false)
+) AS v(language,category_id,question_text,correct_answer,incorrect_answers,image_url,difficulty,level_number,is_active,in_production)
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.questions p
+   WHERE p.image_url = v.image_url AND p.language = 'en'
+);
