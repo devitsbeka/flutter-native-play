@@ -1,4 +1,5 @@
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { formatWeekdayShort } from "@/utils/localDate";
 import { useMissionStreak } from "@/hooks/useMissionStreak";
 import coinPurse from "@/assets/icons/icon-coin-purse.png";
 import missionsCrystal from "@/assets/figma-home/missions-crystal.png";
@@ -16,7 +17,6 @@ import missionsCrystal from "@/assets/figma-home/missions-crystal.png";
 const CARD_SHADOW =
   "0px 2px 8px 0px rgba(102,51,153,0.06), 0px 8px 24px 0px rgba(102,51,153,0.12)";
 
-const DAY_LABELS = ["ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ", "კვ"];
 const SLOT_WEEKDAYS = [0, 1, 2, 3, 4, 5, 6]; // 0 = Monday
 
 type DayState = "done" | "failed" | "pending";
@@ -38,6 +38,7 @@ export function WeekMissionsStrip({
   dailyRewardClaimed = false,
   className = "",
 }: WeekMissionsStripProps) {
+  const { t, language } = useLanguage();
   const { streak, currentStreak } = useMissionStreak();
 
   const today = new Date();
@@ -82,8 +83,16 @@ export function WeekMissionsStrip({
             labels — on a 360px phone the labels are what runs out first. */}
         <div className="absolute left-[16px] right-[14px] top-[16px] flex items-end justify-between">
           <div className="flex flex-1 items-end justify-between pr-[8px]">
-          {DAY_LABELS.map((label, i) => {
-            const weekday = SLOT_WEEKDAYS[i];
+          {SLOT_WEEKDAYS.map((weekday) => {
+            // Named from the day itself in whatever language is being read.
+            // A fixed Georgian list here put ორშ/სამ/ოთხ under an English
+            // page — and localDate already knows every language's short
+            // weekday, including the one browsers cannot do.
+            const label = formatWeekdayShort(
+              new Date(`${dateOfWeekday(weekday)}T00:00:00Z`),
+              language,
+              { utc: true },
+            );
             const state = dayState(weekday);
             const isToday = weekday === todayIdx;
             const isFuture = weekday > todayIdx;

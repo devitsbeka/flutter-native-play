@@ -22,7 +22,8 @@ interface AirbnbCategoryCardProps {
   isFavorite?: boolean;
   leaderboardRank?: number | null;
   videoUrl?: string;
-  hasNewLevels?: boolean;
+  /** Badge this card as a newly added category. */
+  isNewCategory?: boolean;
   /** Controls whether the video should load/play */
   isVideoActive?: boolean;
   onFavoriteClick?: (e: React.MouseEvent) => void;
@@ -89,7 +90,7 @@ export function AirbnbCategoryCard({
   isFavorite = false,
   leaderboardRank,
   videoUrl,
-  hasNewLevels = false,
+  isNewCategory = false,
   isVideoActive,
   onFavoriteClick,
   onClick,
@@ -255,7 +256,7 @@ export function AirbnbCategoryCard({
                 </div>
               )}
 
-              {hasNewLevels && (
+              {isNewCategory && (
                 <div
                   className="px-3 py-2 rounded-full flex items-center justify-center border-2 border-purple-300"
                   style={{
@@ -269,7 +270,7 @@ export function AirbnbCategoryCard({
                 </div>
               )}
 
-              {badge && !leaderboardRank && !hasNewLevels && (
+              {badge && !leaderboardRank && !isNewCategory && (
                 <div
                   className="px-3 py-2 rounded-full bg-white flex items-center justify-center border-2 border-white/80"
                   style={{

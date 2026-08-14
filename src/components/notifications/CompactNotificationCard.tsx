@@ -9,17 +9,10 @@ import { ResolvedAvatarImage } from '@/components/ui/resolved-avatar-image';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { getNotificationConfig } from '@/config/notificationConfig';
 import { useLanguage } from '@/contexts/LanguageContext';
-import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
-import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
-import pushButton3d from "@/assets/icons/push-button-3d.png";
 
 // 3D icon mapping for trivia notification types
-const TRIVIA_TYPE_ICONS: Record<string, string> = {
-  trivia_liked: purpleHeart3d,
-  trivia_saved: bookmark3d,
-  trivia_played: pushButton3d,
-};
 import { Notification } from '@/hooks/useNotifications';
+import { NotificationIcon } from '@/components/notifications/NotificationIcon';
 import { shouldDismissSwipe, SWIPE_THRESHOLD, SWIPE_LIMIT } from '@/utils/swipeToDismiss';
 import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
 
@@ -153,6 +146,15 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   };
   
   const subtitle = getSubtitle();
+
+  // Nothing more specific to show — no sender, no room art, no trivia cover —
+  // so the notification's own icon takes the main slot and the corner badge
+  // stands down.
+  const showsOwnIcon =
+    avatarContent.type !== 'icon_slug' &&
+    !(avatarContent.type === 'image' && avatarContent.src) &&
+    !senderName &&
+    !avatarUrl;
 
   // Prevent double-firing from both touch and click on mobile
   const handleAcceptClick = (e: React.MouseEvent) => {
@@ -347,7 +349,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                 className="w-full h-full object-cover"
               />
             </div>
-          ) : (
+          ) : senderName || avatarUrl ? (
             <Avatar className="w-11 h-11">
               <ResolvedAvatarImage src={avatarUrl} />
               <AvatarFallback 
@@ -359,19 +361,23 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                 {senderName ? senderName.charAt(0).toUpperCase() : <Icon className="w-5 h-5" />}
               </AvatarFallback>
             </Avatar>
+          ) : (
+            /* Nobody sent it — a reward, a level, a system note — so the
+               notification's own artwork takes the slot instead of an
+               initial-less avatar. */
+            <NotificationIcon type={notification.type} size={44} />
           )}
           
-          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center bg-card border-2 border-border shadow-sm">
-            {TRIVIA_TYPE_ICONS[notification.type] ? (
-              <img 
-                src={TRIVIA_TYPE_ICONS[notification.type]} 
-                alt=""
-                className="w-3.5 h-3.5 object-contain"
-              />
-            ) : (
-              <Icon className={cn("w-2.5 h-2.5", config.color)} />
-            )}
-          </div>
+          {/* The type badge, on the corner of whatever the slot is showing.
+              Dropped when the slot is already this very icon at full size. */}
+          {!showsOwnIcon && (
+            <NotificationIcon
+              type={notification.type}
+              size={22}
+              radius={11}
+              className="absolute -bottom-1 -right-1"
+            />
+          )}
         </div>
 
         {/* Content */}

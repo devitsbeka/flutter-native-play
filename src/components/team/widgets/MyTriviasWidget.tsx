@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MyTriviasWidgetProps {
   onViewAll: () => void;
@@ -19,6 +20,7 @@ interface Trivia {
 }
 
 export function MyTriviasWidget({ onViewAll }: MyTriviasWidgetProps) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -49,7 +51,7 @@ export function MyTriviasWidget({ onViewAll }: MyTriviasWidgetProps) {
       <div className="flex items-center gap-2 text-foreground">
         <Sparkles className="w-4 h-4" />
         <span className="text-sm font-bold tracking-wide">
-          ჩემი ტრივიები
+          {t("extra.myTriviasWidget")}
         </span>
       </div>
 
@@ -98,7 +100,7 @@ export function MyTriviasWidget({ onViewAll }: MyTriviasWidgetProps) {
         onClick={onViewAll}
         className="w-full flex items-center justify-center gap-1 text-sm text-primary hover:underline py-1"
       >
-        ყველა ტრივია
+        {t("extra.allTriviasBtn")}
         <ChevronRight className="w-3 h-3" />
       </button>
     </motion.div>

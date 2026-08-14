@@ -121,7 +121,7 @@ export function TeamRightSidebar({
           <div className="flex items-center gap-2 text-foreground">
             <Trophy className="w-4 h-4" />
             <span className="text-sm font-bold tracking-wide">
-              კვირის გამოწვევა
+              {t("extra.weeklyChallenge")}
             </span>
           </div>
 
@@ -131,8 +131,8 @@ export function TeamRightSidebar({
           >
             <div className="flex items-center justify-between mb-2">
               <div>
-                <p className="font-semibold text-foreground text-sm">ითამაშე 10 თამაში</p>
-                <p className="text-xs text-muted-foreground">3/10 შესრულებულია</p>
+                <p className="font-semibold text-foreground text-sm">{t("extra.playNGames", { count: 10 })}</p>
+                <p className="text-xs text-muted-foreground">{t("extra.nOfMDone", { done: 3, total: 10 })}</p>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </div>
@@ -152,7 +152,7 @@ export function TeamRightSidebar({
           <div className="flex items-center gap-2 text-foreground">
             <Users className="w-4 h-4" />
             <span className="text-sm font-bold tracking-wide">
-              მეგობრები ონლაინ
+              {t("extra.friendsOnline")}
             </span>
           </div>
 
@@ -176,7 +176,7 @@ export function TeamRightSidebar({
                     
                     <div className="flex-1 text-left min-w-0">
                       <p className="font-medium text-foreground text-sm truncate">{friend.nickname}</p>
-                      <p className="text-xs text-green-600">ონლაინ</p>
+                      <p className="text-xs text-green-600">{t("team.online")}</p>
                     </div>
                     
                     <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -185,7 +185,7 @@ export function TeamRightSidebar({
               </div>
             ) : (
               <div className="p-4 text-center text-sm text-muted-foreground">
-                არცერთი მეგობარი არ არის ონლაინ
+                {t("extra.noFriendsOnline")}
               </div>
             )}
           </div>

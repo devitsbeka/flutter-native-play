@@ -12,6 +12,7 @@ import shieldOuter from "@/assets/figma-home/shield-outer.svg";
 import shieldInner from "@/assets/figma-home/shield-inner.svg";
 import swordLine from "@/assets/figma-home/sword-line.svg";
 import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Figma: Hom / node 601:1104 — left widget stack (profile card + level
 // shield, glass weekly-streak strip, daily missions and chest buttons).
@@ -116,6 +117,7 @@ export function SceneHero({
   onQuickPlay,
   playButton,
 }: SceneHeroProps) {
+  const { t } = useLanguage();
   // The purse greys out once today's reward is taken.
   const { canClaimDaily } = useRewardTimers();
 
@@ -126,7 +128,7 @@ export function SceneHero({
       {onSceneClick && (
         <button
           type="button"
-          aria-label="შეცვალე სცენა"
+          aria-label={t("extra.changeScene")}
           onClick={onSceneClick}
           className="absolute inset-0 pointer-events-auto cursor-pointer"
         />
@@ -138,7 +140,7 @@ export function SceneHero({
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.25, type: "spring" }}
-        className="absolute left-4 xl:left-[56px] top-[53px] h-[370px] w-[356px] pointer-events-auto"
+        className="absolute left-4 lg:left-[26px] top-[53px] h-[370px] w-[356px] pointer-events-auto"
       >
         {/* Profile card (node 601:1129) */}
         <div
@@ -166,7 +168,7 @@ export function SceneHero({
         {/* Level shield (node 601:1152) - overlaps the card's top-right corner */}
         <button
           type="button"
-          aria-label={`დონე ${level}`}
+          aria-label={`${t("modals.levelLabel")} ${level}`}
           onClick={onLevelClick}
           className="absolute left-[252px] top-[-2px] z-10 h-[93px] w-[82.06px]"
         >
@@ -188,7 +190,7 @@ export function SceneHero({
             {level}
           </p>
           <p className="absolute left-[45.8px] top-[46.66px] -translate-x-1/2 text-[9.85px] font-bold leading-[14.78px] text-[rgba(255,255,255,0.7)] whitespace-nowrap">
-            დონე
+            {t("modals.levelLabel")}
           </p>
         </button>
 
@@ -215,7 +217,7 @@ export function SceneHero({
             icon={<img alt="" className="size-[24px]" src={swordLine} />}
             className="absolute left-0 top-[298px] h-[60px] w-full gap-3 font-['Inter'] text-[14px] lg:hidden"
           >
-            სწრაფი თამაში
+            {t("extra.sidebarQuickPlay")}
           </GreenPlayButton>
         )}
       </motion.div>

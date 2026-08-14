@@ -5,7 +5,6 @@ import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
 import { useCategoryPlayLimit } from "@/hooks/useCategoryPlayLimit";
 import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
-import { InviteFriendsModal } from "@/components/home/InviteFriendsModal";
 
 interface PlayGuardContextValue {
   /**
@@ -45,7 +44,6 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
   const { canPlayLevel } = useCategoryPlayLimit();
 
   const [showModal, setShowModal] = useState(false);
-  const [showInviteModal, setShowInviteModal] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
   const onAllowRef = useRef<(() => void) | undefined>();
 
@@ -63,9 +61,11 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
       // it only stamped a timestamp, which is idempotent; a counter is not.)
       if (canPlay) return true;
 
-      // User can't play — show invite modal first, then play limit modal on dismiss
+      // Out of games. Straight to the modal that can do something about it —
+      // buy the next game, or go PRO. Asking them to invite a friend first
+      // answered a question nobody had stopped to ask.
       onAllowRef.current = onAllow;
-      setShowInviteModal(true);
+      setShowModal(true);
       return false;
     },
     [user, canPlay, vipLoading],
@@ -96,6 +96,15 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
     onAllowRef.current = undefined;
   }, []);
 
+  // Games just bought are games to be played: the action that was blocked
+  // runs now rather than making the player tap it a second time.
+  const handlePurchased = useCallback(() => {
+    setShowModal(false);
+    const onAllow = onAllowRef.current;
+    onAllowRef.current = undefined;
+    onAllow?.();
+  }, []);
+
   return (
     <PlayGuardContext.Provider value={{ guardPlay, guardCategoryPlay }}>
       {children}
@@ -106,11 +115,7 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
         regenPlayAvailable={regenPlayAvailable}
         timeUntilNextPlay={timeUntilNextPlay}
         onPlayWithRegen={handlePlayWithRegen}
-      />
-      <InviteFriendsModal
-        open={showInviteModal}
-        onOpenChange={setShowInviteModal}
-        onDismiss={() => setShowModal(true)}
+        onPurchased={handlePurchased}
       />
       <ProRequiredModal
         isOpen={showProModal}

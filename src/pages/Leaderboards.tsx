@@ -19,7 +19,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getCountryFlag } from "@/data/opponents";
-import { countryCoordinates } from "@/lib/countryCoordinates";
+import { countryName } from "@/utils/countryName";
 import { formatCompactNumber } from "@/lib/utils";
 import { useMyLeaderboardRank } from "@/hooks/useMyLeaderboardRank";
 
@@ -188,22 +188,6 @@ const BoardRow = forwardRef<HTMLButtonElement, {
   );
 });
 
-// The player's country, named in the app language (e.g. საქართველო, not
-// "Country"); falls back to the generic tab label for unknown codes.
-// Georgian names come from the app's own country data — browsers often ship
-// no 'ka' locale data for Intl.DisplayNames and silently fall back to English.
-function localCountryName(countryCode: string, language: string, fallback: string): string {
-  if (language === "ka") {
-    const name = countryCoordinates[countryCode.toLowerCase()]?.name;
-    if (name) return name;
-  }
-  try {
-    return new Intl.DisplayNames([language], { type: "region" }).of(countryCode.toUpperCase()) || fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 export default function Leaderboards() {
   const { user, profile } = useAuth();
   const { t, language } = useLanguage();
@@ -279,9 +263,15 @@ export default function Leaderboards() {
     }
   }, [user]);
 
+  // Tbilisi's landmarks are the local board's backdrop only when the local
+  // board IS Georgia. A player in the United States was being shown the
+  // Georgian skyline under a board titled "United States"; the world artwork
+  // is the honest answer for every other country, and for no country at all.
+  const showGeorgianBackdrop = scope === "local" && countryCode?.toLowerCase() === "ge";
+
   const tabs: { id: Scope; label: string }[] = [
     ...(countryCode
-      ? [{ id: "local" as Scope, label: localCountryName(countryCode, language, t("leaderboard.localTab")) }]
+      ? [{ id: "local" as Scope, label: countryName(countryCode, language, t("leaderboard.localTab")) }]
       : []),
     { id: "global", label: t("leaderboard.global") },
   ];
@@ -319,13 +309,13 @@ export default function Leaderboards() {
         <img
           src={bgLeaderGeorgia}
           alt=""
-          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none transition-[opacity,filter] duration-[800ms] ease-out ${scope === "global" ? "opacity-0 blur-md" : "opacity-100 blur-0"}`}
+          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none transition-[opacity,filter] duration-[800ms] ease-out ${showGeorgianBackdrop ? "opacity-100 blur-0" : "opacity-0 blur-md"}`}
           draggable={false}
         />
         <img
           src={bgLeaderGlobal}
           alt=""
-          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none transition-[opacity,filter] duration-[800ms] ease-out ${scope === "global" ? "opacity-100 blur-0" : "opacity-0 blur-md"}`}
+          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none transition-[opacity,filter] duration-[800ms] ease-out ${showGeorgianBackdrop ? "opacity-0 blur-md" : "opacity-100 blur-0"}`}
           draggable={false}
         />
 

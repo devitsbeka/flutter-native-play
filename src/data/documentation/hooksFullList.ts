@@ -99,7 +99,7 @@ export const ALL_HOOKS_FULL: HookDocFull[] = [
   { name: "usePushNotifications", path: "src/hooks/usePushNotifications.ts", description: "Manages push notification permissions and tokens.", category: "Notifications", returns: ["requestPermission", "token", "enabled"], usedIn: ["Settings"] },
   { name: "useGenerationNotifications", path: "src/hooks/useGenerationNotifications.ts", description: "Shows notifications for AI generation progress.", category: "Notifications", returns: ["notify", "dismiss"], usedIn: ["Admin"] },
   { name: "useNewContentIndicators", path: "src/hooks/useNewContentIndicators.ts", description: "Tracks new content badges for navigation.", category: "Notifications", returns: ["newContent", "markSeen"], usedIn: ["Navigation"] },
-  { name: "useNewLevels", path: "src/hooks/useNewLevels.ts", description: "Detects newly available levels.", category: "Notifications", returns: ["newLevels", "loading"], usedIn: ["HomeScreen"] },
+  { name: "useNewCategories", path: "src/hooks/useNewCategories.ts", description: "Which categories were added recently and not yet opened.", category: "Notifications", returns: ["newCategories", "isNewCategory", "loading"], usedIn: ["Discover"] },
 
   // ============= ADMIN =============
   { name: "useAdminCategories", path: "src/hooks/useAdminCategories.ts", description: "CRUD operations for categories.", category: "Admin", returns: ["categories", "create", "update", "delete", "loading"], usedIn: ["AdminCategories"] },

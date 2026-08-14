@@ -197,6 +197,110 @@ SELECT pg_temp.must_fail(
   $$SELECT public.claim_leaderboard_reward('33333333-3333-3333-3333-333333333333')$$,
   'claiming the same leaderboard reward twice');
 
+-- ── extra plays: the quota is sold, not given ──────────────────────────────
+--
+-- buy_extra_plays() is the one function that takes payment and moves the
+-- free-play quota in the same breath, so both halves are checked: what the
+-- player is charged, what they get back, and every way the pack is refused.
+
+SELECT set_config('test.uid','11111111-1111-1111-1111-111111111111', false);
+
+UPDATE public.profiles
+   SET coins = 5000, gems = 10,
+       free_plays_used = 5, free_plays_window_start = now(),
+       free_plays_ad_grants = 0
+ WHERE user_id = '11111111-1111-1111-1111-111111111111';
+
+-- A pack the price list does not have, and a way of paying it does not take.
+SELECT pg_temp.must_equal(
+  (public.buy_extra_plays(2, 'coins') ->> 'reason'), 'bad_pack',
+  'a pack size that is not sold');
+SELECT pg_temp.must_equal(
+  (public.buy_extra_plays(1, 'wishes') ->> 'reason'), 'bad_source',
+  'paying with something that is not a currency');
+SELECT pg_temp.must_equal(
+  (public.buy_extra_plays(3, 'ad') ->> 'reason'), 'bad_pack',
+  'one ad buying the three-game pack');
+
+-- One game for 500 coins: the quota drops by one and so does the balance.
+SELECT pg_temp.must_equal(
+  (public.buy_extra_plays(1, 'coins') ->> 'remaining')::integer, 1,
+  'one game bought with coins');
+SELECT pg_temp.must_equal(
+  (SELECT coins FROM public.profiles
+    WHERE user_id = '11111111-1111-1111-1111-111111111111'), 4500,
+  'coins taken for one game');
+
+-- Three games for 3 gems, from a quota that has three to give back.
+UPDATE public.profiles SET free_plays_used = 5
+ WHERE user_id = '11111111-1111-1111-1111-111111111111';
+SELECT pg_temp.must_equal(
+  (public.buy_extra_plays(3, 'gems') ->> 'remaining')::integer, 3,
+  'three games bought with gems');
+SELECT pg_temp.must_equal(
+  (SELECT gems FROM public.profiles
+    WHERE user_id = '11111111-1111-1111-1111-111111111111'), 7,
+  'gems taken for three games');
+
+-- A pack bigger than the hole it fills is refused rather than half-honoured:
+-- two games used, three bought, one paid for and thrown away.
+SELECT pg_temp.must_equal(
+  (public.buy_extra_plays(3, 'coins') ->> 'reason'), 'nothing_to_buy',
+  'a pack larger than the games actually used');
+
+-- An empty wallet buys nothing, and is told so rather than going negative.
+UPDATE public.profiles
+   SET coins = 100, gems = 0, free_plays_used = 5
+ WHERE user_id = '11111111-1111-1111-1111-111111111111';
+SELECT pg_temp.must_equal(
+  (public.buy_extra_plays(1, 'coins') ->> 'reason'), 'insufficient_funds',
+  'buying a game without the coins for it');
+SELECT pg_temp.must_equal(
+  (public.buy_extra_plays(1, 'gems') ->> 'reason'), 'insufficient_funds',
+  'buying a game without the gems for it');
+SELECT pg_temp.must_equal(
+  (SELECT coins FROM public.profiles
+    WHERE user_id = '11111111-1111-1111-1111-111111111111'), 100,
+  'a refused purchase leaves the balance alone');
+
+-- Ads cost nothing and cannot be seen from here, so the window caps how many
+-- games the claim is worth however many times it is made.
+SELECT pg_temp.must_equal(
+  (public.buy_extra_plays(1, 'ad') ->> 'remaining')::integer, 1,
+  'the first ad game');
+UPDATE public.profiles SET free_plays_used = 5
+ WHERE user_id = '11111111-1111-1111-1111-111111111111';
+SELECT public.buy_extra_plays(1, 'ad');
+UPDATE public.profiles SET free_plays_used = 5
+ WHERE user_id = '11111111-1111-1111-1111-111111111111';
+SELECT public.buy_extra_plays(1, 'ad');
+UPDATE public.profiles SET free_plays_used = 5
+ WHERE user_id = '11111111-1111-1111-1111-111111111111';
+SELECT pg_temp.must_equal(
+  (public.buy_extra_plays(1, 'ad') ->> 'reason'), 'ad_limit',
+  'a fourth ad game in the same window');
+
+-- A window that has aged out is already a fresh five; there is nothing to
+-- sell, and consuming a play opens a new one with the ad allowance cleared.
+UPDATE public.profiles
+   SET free_plays_window_start = now() - interval '4 hours', free_plays_used = 5
+ WHERE user_id = '11111111-1111-1111-1111-111111111111';
+SELECT pg_temp.must_equal(
+  (public.buy_extra_plays(1, 'coins') ->> 'reason'), 'nothing_to_buy',
+  'buying games the expired window already gives back');
+SELECT public.consume_free_play();
+SELECT pg_temp.must_equal(
+  (SELECT free_plays_ad_grants FROM public.profiles
+    WHERE user_id = '11111111-1111-1111-1111-111111111111'), 0,
+  'a fresh window clears the ad allowance');
+
+-- Neither function is callable by a visitor who is not signed in.
+SELECT set_config('test.uid','', false);
+SELECT pg_temp.must_equal(
+  (public.buy_extra_plays(1, 'coins') ->> 'reason'), 'not_authenticated',
+  'buying games while signed out');
+SELECT set_config('test.uid','11111111-1111-1111-1111-111111111111', false);
+
 -- ── the ledger recorded all of it ──────────────────────────────────────────
 
 DO $$

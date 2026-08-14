@@ -1,11 +1,11 @@
 import { siteUrl } from "@/config/site";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight, Copy, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import { useFriendInvites } from "@/hooks/useFriendInvites";
-import { getPriceDisplay } from "@/utils/currency";
+import { useStorePrice } from "@/hooks/useStorePrice";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import crownIcon from "@/assets/crown-icon.png";
@@ -20,6 +20,7 @@ import {
   HEADER_SOLO,
   HEADER_FAMILY,
   SKIN_WHITE,
+  SKIN_INVITE,
 } from "./ProBannerCard";
 import type { ShopItem } from "@/hooks/useShopData";
 
@@ -33,7 +34,9 @@ const SIDEBAR_TO_STRIPE_TIER: Record<SimplifiedTier, ProTierId> = {
 /** gap-3 between banners, in px — the reel needs the number to page by. */
 const REEL_GAP = 12;
 
-type SlideType = "invite" | "solo" | "family" | "deal";
+// "pro" is the solo tier's slide type — the two subscription slides, which
+// `slides: "pro"` keeps and everything else drops.
+type SlideType = "invite" | "pro" | "family" | "deal";
 
 // Frame 636:169 — the artwork for each promise a PRO tier makes, at the
 // size the frame draws it. Not a uniform set, so each carries its own.
@@ -50,10 +53,21 @@ interface ProBannerReelProps {
   purchasedItems: Set<string>;
   isPurchasing: string | null;
   onItemClick: (item: ShopItem) => void;
+  /**
+   * "pro" keeps the ways to get PRO — the two subscription tiers and the
+   * invite offer, which hands out ten days of it — and drops the timed
+   * package deals. Packages are the shop's business; carrying them on the
+   * profile made a three-offer reel look like a five-offer one.
+   */
+  slides?: "all" | "pro";
 }
 
-export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick }: ProBannerReelProps) {
+export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slides = "all" }: ProBannerReelProps) {
   const { t } = useLanguage();
+  const resolvePrice = useStorePrice();
+  // The web helper supplied this alongside the price; StoreKit's string
+  // carries only the amount, so the period label comes from i18n.
+  const monthLabel = t("extra.perMonthShort");
   const { dailyDeal, hourlyDeal, dailyRemaining, hourlyRemaining } = useLiveDeals();
   const [currentIndex, setCurrentIndex] = useState(0);
   const { subscription, isVip } = useVipStatus();
@@ -85,7 +99,7 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick }: Pro
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
   }, []);
 
-  const SLIDES = useMemo(() => [
+  const ALL_SLIDES = useMemo(() => [
     {
       type: "deal" as SlideType,
       id: "deal-daily" as const,
@@ -131,6 +145,11 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick }: Pro
       ],
     },
   ], [t]);
+
+  const SLIDES = useMemo(
+    () => (slides === "pro" ? ALL_SLIDES.filter((s) => s.type !== "deal") : ALL_SLIDES),
+    [ALL_SLIDES, slides],
+  );
 
   // Captions sit on their tile's true centre, not the frame's own values,
   // which drift a few px off and read as misaligned once the captions all
@@ -181,10 +200,19 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick }: Pro
   // knowing the sidebar exists. 360 is the width below which a banner's
   // captions stop being readable.
   const [perView, setPerView] = useState(1);
+  // One banner's width, which is what decides whether the three benefits fit
+  // side by side or have to become a list. Measured rather than guessed from
+  // the viewport: the same reel is narrower on the shop page than on the
+  // profile at the same screen width.
+  const [bannerWidth, setBannerWidth] = useState(0);
   useEffect(() => {
     const el = reelRef.current;
     if (!el) return;
-    const measure = () => setPerView(Math.max(1, Math.min(3, Math.floor(el.clientWidth / 360))));
+    const measure = () => {
+      const pv = Math.max(1, Math.min(3, Math.floor(el.clientWidth / 360)));
+      setPerView(pv);
+      setBannerWidth((el.clientWidth - REEL_GAP * (pv - 1)) / pv);
+    };
     measure();
     if (typeof ResizeObserver === "undefined") {
       window.addEventListener("resize", measure);
@@ -258,6 +286,23 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick }: Pro
     await initiateProCheckout(SIDEBAR_TO_STRIPE_TIER[tierId]);
   };
 
+  // Copying the link is the other half of the invite banner's pair: the
+  // share sheet is not offered by every browser, and a link on the clipboard
+  // goes wherever the player wants to put it.
+  const handleCopy = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const referralCode = await createLinkInvite("friend_pro");
+      if (referralCode) {
+        await navigator.clipboard.writeText(siteUrl(`/auth?mode=signup&ref=${referralCode}`));
+        toast.success(t("extra.linkCopiedInvite"));
+      }
+    } finally {
+      setSharing(false);
+    }
+  };
+
   // The banner's own button already stops propagation, so the event is
   // optional here — other call sites still pass one.
   const handleShare = async (e?: React.MouseEvent) => {
@@ -296,10 +341,12 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick }: Pro
         onClickCapture={swallowClickAfterDrag}
         onTouchStart={() => { lastInteraction.current = Date.now(); }}
         className="flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain scrollbar-hide gap-3 rounded-3xl"
-        // touch-action pins the gesture to one axis: without it a swipe that
-        // drifts vertically scrolls the page mid-drag and the banner slides
-        // out from under the finger.
-        style={{ touchAction: "pan-x" }}
+        // The browser picks the axis at the start of the gesture and keeps
+        // it, so a horizontal swipe still moves only the reel. Pinning this
+        // to pan-x alone also swallowed vertical drags, and the banner is
+        // most of a phone screen — so the page could not be scrolled at all
+        // while the finger was on it.
+        style={{ touchAction: "pan-x pan-y" }}
       >
         {SLIDES.map((slide) => {
           const isDealSlide = slide.type === "deal";
@@ -307,7 +354,11 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick }: Pro
           return (
           <div
             key={slide.id}
-            className="shrink-0 snap-center"
+            // Centred, because the slides are not all the same height: a
+            // tier card with its benefits stacked into a list is taller than
+            // the invite card beside it. Top-aligned, the shorter one hung
+            // from the ceiling with the difference below it.
+            className="flex shrink-0 snap-center items-center"
             style={{ width: `calc((100% - ${REEL_GAP * (perView - 1)}px) / ${perView})` }}
           >
             {isDealSlide ? (
@@ -322,28 +373,44 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick }: Pro
               />
             ) : slide.type === "invite" ? (
               <InviteBanner
-                skin={SKIN_WHITE}
+                skin={SKIN_INVITE}
                 art={friendsIcon}
                 crown={crownIcon}
-                headline={t("extra.inviteMiniTitle")}
+                headline={t("extra.inviteFriends")}
+                body={`${t("extra.shareLink")} ${t("extra.tenDayPro")}`}
                 reward={t("extra.tenDayPro")}
+                copyLabel={<><Copy className="size-[18px]" />{t("extra.copyBtn")}</>}
+                onCopy={() => void handleCopy()}
+                copyDisabled={sharing}
                 onClick={handleCardClick}
-                actionLabel={sharing ? <Loader2 className="size-5 animate-spin" /> : t("extra.inviteBtn")}
+                actionLabel={
+                  sharing ? <Loader2 className="size-5 animate-spin" /> : <><Share2 className="size-[18px]" />{t("extra.shareBtn")}</>
+                }
                 actionDisabled={sharing}
                 onAction={() => handleShare()}
               />
             ) : (
               (() => {
                 const state = getButtonText(slide.id as SimplifiedTier, currentTier);
-                const price = getPriceDisplay(slide.price!);
+                // StoreKit's own localized string on native — a price compiled
+                // into the bundle is wrong in every storefront but one.
+                const price = resolvePrice(slide.id as string, slide.price!);
                 return (
                   <ProTierBanner
                     skin={slide.skin!}
                     header={slide.header!}
                     name={slide.name}
-                    price={`${price.symbol}${price.value}${price.suffix}`}
-                    month={price.monthLabel}
+                    price={price.display}
+                    month={monthLabel}
                     tiles={proTiles(slide.benefits!)}
+                    // Three tiles need roughly 420px of banner to stay
+                    // readable; below that they become a list.
+                    //
+                    // Only where this reel is showing the tiers alone. In
+                    // the shop it sits beside deal and invite banners built
+                    // to the frame's height, and a taller card there would
+                    // leave every other slide with a gap under it.
+                    stacked={slides === "pro" && bannerWidth > 0 && bannerWidth < 420}
                     onClick={handleCardClick}
                     dimmed={isProcessing}
                     actionLabel={isProcessing ? <Loader2 className="size-5 animate-spin" /> : state.text}

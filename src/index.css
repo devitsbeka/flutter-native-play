@@ -439,3 +439,25 @@
     justify-content: start;
   }
 }
+
+/* Toasts.
+   
+   sonner's richColors paints a success message green — text, icon and all —
+   which is the one colour in the app that means nothing here. Success is the
+   ordinary case (mission complete, reward collected, saved), so it takes the
+   app's own purple; errors keep red, because red is the colour that has to
+   stay legible as a warning. Only the success and info palettes are
+   overridden — sonner reads these off the toaster element. */
+/* `:root` on the front is not decoration: sonner defines these on
+   [data-sonner-toaster][data-theme="light"] and injects that stylesheet at
+   runtime, so a plain [data-sonner-toaster] rule here is both less specific
+   and earlier in the cascade, and loses twice. */
+:root [data-sonner-toaster][data-theme] {
+  --success-bg: #F7F3FF;
+  --success-border: #DDD0FA;
+  --success-text: #5B21B6;
+
+  --info-bg: #F2F6FF;
+  --info-border: #CBD9F7;
+  --info-text: #1E40AF;
+}

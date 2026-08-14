@@ -16,7 +16,7 @@ import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
 import { MissionsModal } from "@/components/home/MissionsModal";
 import { LevelInfoModal } from "@/components/home/LevelInfoModal";
-import { NotEnoughCoinsModal } from "@/components/home/NotEnoughCoinsModal";
+import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -272,7 +272,7 @@ export default function Index() {
   const { step, startOnboarding, setStep, hasCompletedOnboarding } = useOnboarding();
   const { openAvatarModal } = useAvatarModal();
   const goHomeOrRefresh = useGoHomeOrRefresh();
-  const { coins, gems, addCoins, exchangeGemsForCoins } = useCurrency();
+  const { coins, gems, addCoins } = useCurrency();
   const { powerUps } = useUserPowerUps();
   const { totalStars } = useTotalStars();
   const { canClaimDaily, canClaimChest } = useRewardTimers();
@@ -290,6 +290,17 @@ export default function Index() {
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
   const [isSoundModalOpen, setIsSoundModalOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
+
+  // `/?daily=1` opens the daily rewards on arrival. The rewards modal lives
+  // here, so screens elsewhere that want to point a player at it — the
+  // out-of-coins modal after a match, for one — send them to this URL rather
+  // than growing a second copy of the modal. The parameter is cleared once
+  // it has been acted on so a refresh does not reopen it.
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("daily") !== "1") return;
+    setIsDailyRewardsOpen(true);
+    navigate(location.pathname, { replace: true });
+  }, [location.search, location.pathname, navigate]);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
   const [isAdFreeModalOpen, setIsAdFreeModalOpen] = useState(false);
   const [isGemShopOpen, setIsGemShopOpen] = useState(false);
@@ -515,29 +526,6 @@ export default function Index() {
     setShowPlayOptions(false);
     navigate("/team", { state: { openCreateRoom: true } });
   }, [navigate]);
-
-  // Handle exchange gems for coins — single atomic RPC (a separate
-  // spend-then-add pair could take the gems and never deliver the coins),
-  // guarded against double-taps while the request is in flight.
-  const isExchangingGemsRef = useRef(false);
-  const handleExchangeGems = useCallback(async () => {
-    if (isExchangingGemsRef.current) return;
-    const gemsNeeded = Math.ceil((stakeAmount - coins) / REWARDS.GEM_TO_COINS_RATE);
-    if (gemsNeeded <= 0 || gems < gemsNeeded) return;
-
-    isExchangingGemsRef.current = true;
-    try {
-      // Only the amount given up is passed; the server applies the rate.
-      const success = await exchangeGemsForCoins(gemsNeeded);
-      if (success) {
-        setShowNotEnoughCoinsModal(false);
-      } else {
-        toast({ title: t("shop.purchaseFailed"), variant: "destructive" });
-      }
-    } finally {
-      isExchangingGemsRef.current = false;
-    }
-  }, [stakeAmount, coins, gems, exchangeGemsForCoins]);
 
   // Guest welcome panel handlers
   const handleGuestCreateAccount = useCallback(async (username: string, password: string) => {
@@ -792,17 +780,10 @@ export default function Index() {
           onOpenChange={setInviteModalVisible}
           onDismiss={() => dismissInvite()}
         />
-        <NotEnoughCoinsModal
+        <NotEnoughStakeModal
           isOpen={showNotEnoughCoinsModal}
           onClose={() => setShowNotEnoughCoinsModal(false)}
-          currentCoins={coins}
-          requiredCoins={stakeAmount}
-          userGems={gems}
-          onExchangeGems={handleExchangeGems}
-          onOpenDailyRewards={() => {
-            setShowNotEnoughCoinsModal(false);
-            setIsDailyRewardsOpen(true);
-          }}
+          onDailyRewards={() => setIsDailyRewardsOpen(true)}
         />
         <DailyRewardsModal
           isOpen={isDailyRewardsOpen}
@@ -888,17 +869,10 @@ export default function Index() {
         timeUntilNextPlay={timeUntilNextPlay}
         onPlayWithRegen={handlePlayWithRegen}
       />
-      <NotEnoughCoinsModal
+      <NotEnoughStakeModal
         isOpen={showNotEnoughCoinsModal}
         onClose={() => setShowNotEnoughCoinsModal(false)}
-        currentCoins={coins}
-        requiredCoins={stakeAmount}
-        userGems={gems}
-        onExchangeGems={handleExchangeGems}
-        onOpenDailyRewards={() => {
-          setShowNotEnoughCoinsModal(false);
-          setIsDailyRewardsOpen(true);
-        }}
+        onDailyRewards={() => setIsDailyRewardsOpen(true)}
       />
       {/* Main layout with desktop navigation */}
       <MainLayout
@@ -933,11 +907,19 @@ export default function Index() {
             Mounted only when the viewport is actually xl, so smaller
             screens never download the media. */}
         {!isSceneViewport ? null : sceneUrl ? (
-          /* Generated 16:9 scene: the whole artwork fits in the band BELOW
-             the friends reel (top 230px), bottom-anchored and centered, so
-             the subject can never sit under the reel and nothing is
-             cropped at any resolution. Its top and side edges feather into
-             the page's own pastel background - no fill layers, no seams. */
+          /* Generated scene: the whole artwork fits in the band BELOW the
+             friends reel (top 230px), bottom-anchored and centered, so the
+             subject can never sit under the reel and nothing is cropped at
+             any resolution. Its top and side edges feather into the page's
+             own pastel background - no fill layers, no seams.
+
+             The box takes the artwork's own shape rather than being pinned
+             to 16:9. A portrait scene inside a forced 16:9 box was fitted to
+             that box's height and then letterboxed inside it — measured at
+             1600x1038, a 768x1152 scene drew at 288x432 where the band had
+             room for 539x808, so it read as a small card floating on the
+             page. A 16:9 scene is unaffected: measured identically at
+             1436x808 either way. */
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -955,14 +937,14 @@ export default function Index() {
                   loop
                   muted
                   playsInline
-                  className="max-h-full max-w-full aspect-video object-contain"
+                  className="max-h-full max-w-full object-contain"
                   style={SCENE_EDGE_FADE}
                 />
               ) : (
                 <img
                   src={sceneUrl}
                   alt=""
-                  className="max-h-full max-w-full aspect-video object-contain"
+                  className="max-h-full max-w-full object-contain"
                   draggable={false}
                   style={SCENE_EDGE_FADE}
                 />
@@ -989,13 +971,25 @@ export default function Index() {
         {/* Guests on phones get their header from MobileGuestHero (burger +
             search only, no wordmark — the wordmark is in the body there). */}
         <header
-          className={`relative z-20 px-4 py-3 md:pt-4 safe-top border-b border-border/30 lg:border-b-0 ${
+          // The greeting, the friends strip below it and the scene's widget
+          // stack are one column on lg+, so they share one left inset. That
+          // inset is 26px from lg, which is where the search and bell glyphs
+          // sit on the other side: they are 20px icons centred in 40px
+          // buttons against 16px of padding, so their visible edge lands at
+          // 16 + 10. Text and avatars carry no such inset, so matching the
+          // buttons' 16px of padding left this column looking tighter than
+          // the icons opposite it. Matching the glyphs instead makes the two
+          // sides read as equal.
+          className={`relative z-20 px-4 py-3 md:pt-4 lg:pl-[26px] safe-top border-b border-border/30 lg:border-b-0 ${
             !user ? "hidden md:block" : ""
           }`}
         >
           <div className="flex items-center justify-between gap-3 md:min-h-12">
-            {/* Left side: Burger menu (mobile only) - Hidden for guests */}
-            <div className="flex items-center gap-2">
+            {/* Left side: Burger menu (mobile only) - Hidden for guests.
+                Gone entirely from md up rather than left empty: an empty flex
+                child still takes the row's gap, and that gap was what moved
+                the greeting 12px off the column everything else lines up on. */}
+            <div className="flex items-center gap-2 md:hidden">
               {/* Burger Menu - Mobile Only, Hidden for Guests */}
               {user && (
                 <motion.button
@@ -1136,7 +1130,7 @@ export default function Index() {
             so the avatars land 16px below the page top — the same offset the reel
             has inside the rooms page header, keeping the two pages in sync. */}
         {user && (
-          <div className="relative z-20 px-4">
+          <div className="relative z-20 px-4 lg:pl-[26px]">
             <div className="lg:pointer-events-auto">
               <FriendsStoriesBar
                 onAddFriendClick={() => setShowAddFriendModal(true)}

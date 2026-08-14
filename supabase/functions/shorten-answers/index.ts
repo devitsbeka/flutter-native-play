@@ -4,8 +4,15 @@ import { getCorsHeaders } from "../_shared/cors.ts";
 import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 import { rejectAnswerSet } from "../_shared/answerQuality.ts";
 
-const MAX_ANSWER_LENGTH = 20;
-const AGGRESSIVE_THRESHOLD = 12;
+// Measured, not guessed: rendered in the real answer button at a 390px
+// phone width, text stays on two lines up to about 28 characters and the
+// line-clamp starts cutting at 32. The old limit of 20 was well inside what
+// fits, so it rewrote answers that were never in trouble — "Geiger-Müller
+// counter" came back as "Geiger-Müller Cntr" and "HyperText Markup Language"
+// as "HyperText Markup L.". Shortening should only touch answers that
+// actually overflow.
+const MAX_ANSWER_LENGTH = 28;
+const AGGRESSIVE_THRESHOLD = 20;
 const BATCH_SIZE = 10;
 
 interface AnswerShortenResult {

@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
 import { useFriendInvites } from "@/hooks/useFriendInvites";
 import { useClipboard } from "@/hooks/use-clipboard";
-import { Copy, Check, Share2 } from "lucide-react";
+import { Copy, Check, Share2, X, Loader2 } from "lucide-react";
 import { useVipStatus } from "@/hooks/useVipStatus";
+import { InviteBanner, SKIN_INVITE } from "@/components/shop/ProBannerCard";
 import crownIcon from "@/assets/icons/icon-vip-crown.png";
 import groupOfPeopleIcon from "@/assets/icons/group-of-people.png";
 import { siteUrl } from "@/config/site";
@@ -110,154 +110,73 @@ export function InviteFriendsModal({ open, onOpenChange, onDismiss }: InviteFrie
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="max-w-[340px] p-0 overflow-hidden border-none bg-transparent shadow-none [&>button]:hidden">
-        <style>{`
-          @property --border-angle {
-            syntax: '<angle>';
-            initial-value: 0deg;
-            inherits: false;
-          }
-          @keyframes borderSpin {
-            to { --border-angle: 360deg; }
-          }
-        `}</style>
+      {/* The banner is 575 design pixels wide and scales to its box, so the
+          dialog gives it a phone-friendly width and lets it size itself. */}
+      <DialogContent className="max-w-[420px] border-none bg-transparent p-0 shadow-none [&>button]:hidden">
         <DialogTitle className="sr-only">{t("extra.inviteFriendsTitle")}</DialogTitle>
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.85, opacity: 0 }}
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
-          className="relative rounded-3xl overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, #667eea 0%, #a855f7 40%, #ec4899 100%)",
-            boxShadow: "0 8px 0 rgba(88,28,135,0.5), 0 16px 40px rgba(124,58,237,0.4)",
-            padding: "3px",
-          }}
+          className="relative px-2"
         >
-          {/* Animated gradient border */}
-          <div
-            className="absolute inset-0 rounded-3xl"
-            style={{
-              background: "conic-gradient(from var(--border-angle, 0deg), #FFD700, #ec4899, #667eea, #a855f7, #FFD700)",
-              animation: "borderSpin 4s linear infinite",
-            }}
-          />
-          <div
-            className="relative rounded-[calc(1.5rem-3px)] overflow-hidden"
-            style={{
-              background: "linear-gradient(135deg, #667eea 0%, #a855f7 40%, #ec4899 100%)",
-            }}
-          >
-          <div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full pointer-events-none"
-            style={{
-              background: "radial-gradient(circle, rgba(236,72,153,0.3) 0%, transparent 70%)",
-            }}
-          />
-
-          <div className="relative flex flex-col items-center px-6 pt-8 pb-6">
-            <motion.div
-              animate={{ y: [0, -8, 0], rotate: [-3, 3, -3] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="mb-4"
-            >
-              <img src={groupOfPeopleIcon} alt="" className="w-20 h-20 object-contain" />
-            </motion.div>
-
-            <motion.h2
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="font-display font-bold text-white text-center mb-2"
-              style={{ fontSize: "1.54rem", marginTop: "-5px" }}
-            >
-              {t("extra.inviteFriends")}
-            </motion.h2>
-
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="text-white/80 text-center leading-relaxed mb-4"
-              style={{ fontSize: "0.95rem" }}
-            >
-              {t("extra.shareLink")}{" "}
-              <span className="font-semibold text-yellow-300">{t("extra.tenDayPro")}</span>!
-            </motion.p>
-
-            {/* PRO badge */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center gap-2 px-4 py-2 rounded-full mb-5"
-              style={{
-                background: "rgba(255,255,255,0.15)",
-                backdropFilter: "blur(10px)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              }}
-            >
-              <img src={crownIcon} alt="" className="w-6 h-6 object-contain" />
-              <span className="font-display text-sm font-bold text-white">
-                {t("extra.proGift")}
-              </span>
-            </motion.div>
-
-            {/* Action buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="w-full flex gap-2"
-            >
-              <ChunkyButton
-                variant="white"
-                size="md"
-                className="flex-1 min-w-0"
-                onClick={handleCopy}
-                disabled={!referralLink}
-                icon={copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-              >
+          {/* The same banner the shop and the profile show. This popup used
+              to draw its own purple-gradient version of the offer, so the
+              two said the same thing in two designs and only one of them was
+              the one in the frame. */}
+          <InviteBanner
+            skin={SKIN_INVITE}
+            art={groupOfPeopleIcon}
+            crown={crownIcon}
+            headline={t("extra.inviteFriends")}
+            body={`${t("extra.shareLink")} ${t("extra.tenDayPro")}`}
+            reward={t("extra.tenDayPro")}
+            copyLabel={
+              <>
+                {copied ? <Check className="size-[18px]" /> : <Copy className="size-[18px]" />}
                 {copied ? t("extra.copiedBtn") : t("extra.copyBtn")}
-              </ChunkyButton>
-
-              <ChunkyButton
-                  variant="whitePurple"
-                  size="md"
-                  className="flex-1 min-w-0"
-                  onClick={handleShare}
-                  disabled={!referralLink}
-                  icon={<Share2 className="w-5 h-5" />}
-                >
+              </>
+            }
+            onCopy={handleCopy}
+            copyDisabled={!referralLink}
+            actionLabel={
+              generating ? (
+                <Loader2 className="size-5 animate-spin" />
+              ) : (
+                <>
+                  <Share2 className="size-[18px]" />
                   {t("extra.shareBtn")}
-                </ChunkyButton>
-            </motion.div>
+                </>
+              )
+            }
+            onAction={() => void handleShare()}
+            actionDisabled={!referralLink}
+          />
 
-            <AnimatePresence>
-              {shared && (
-                <motion.p
-                  initial={{ opacity: 0, y: 5, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: "auto" }}
-                  exit={{ opacity: 0, y: 5, height: 0 }}
-                  className="text-white/90 text-center text-xs leading-relaxed mt-3 px-2"
-                >
-                  {t("extra.sharedConfirmation")}{" "}
-                  <span className="font-semibold text-yellow-300">{t("extra.tenDayProSuffix")}</span>!
-                </motion.p>
-              )}
-            </AnimatePresence>
+          {/* Dismiss. The banner owns the card's own edges, so this sits
+              above it rather than inside. */}
+          <button
+            type="button"
+            onClick={handleClose}
+            aria-label={t("extra.laterBtn")}
+            className="absolute right-5 top-3 flex size-9 items-center justify-center rounded-full bg-white/70 text-[#543990] shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
+          >
+            <X className="size-4" />
+          </button>
 
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.35 }}
-              onClick={handleClose}
-              className="mt-4 text-xs text-white/50 hover:text-white/80 transition-colors"
-            >
-              {t("extra.laterBtn")}
-            </motion.button>
-          </div>
-          </div>
+          <AnimatePresence>
+            {shared && (
+              <motion.p
+                initial={{ opacity: 0, y: 5, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                exit={{ opacity: 0, y: 5, height: 0 }}
+                className="mt-2 px-2 text-center text-xs leading-relaxed text-white"
+              >
+                {t("extra.sharedConfirmation")}{" "}
+                <span className="font-semibold text-yellow-300">{t("extra.tenDayProSuffix")}</span>!
+              </motion.p>
+            )}
+          </AnimatePresence>
         </motion.div>
       </DialogContent>
     </Dialog>

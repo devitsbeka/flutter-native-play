@@ -31,8 +31,17 @@ import {
  * appear it switches over on the next load. Neither ordering can leave
  * players unable to start a game.
  */
+/** What came of a pack purchase; `reason` is the server's word for a refusal. */
+export interface ExtraPlayResult {
+  ok: boolean;
+  reason?: string;
+}
+
+/** Fired when the quota moves outside a hook's own doing. See the listener. */
+const PLAY_LIMIT_CHANGED = "mytrivia:play-limit-changed";
+
 export function usePlayLimit() {
-  const { profile, user } = useAuth();
+  const { profile, user, setProfileLocal } = useAuth();
   const { isVip, loading: vipLoading } = useVipStatus();
   const [now, setNow] = useState(Date.now());
 
@@ -54,7 +63,7 @@ export function usePlayLimit() {
       return;
     }
     let cancelled = false;
-    void (async () => {
+    const read = async () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("free_plays_used, free_plays_window_start" as "*")
@@ -72,8 +81,18 @@ export function usePlayLimit() {
         used: row?.free_plays_used ?? 0,
         start: row?.free_plays_window_start ? Date.parse(row.free_plays_window_start) : null,
       });
-    })();
-    return () => { cancelled = true; };
+    };
+    void read();
+
+    // Several screens hold their own copy of this hook, and the quota is not
+    // in the profile row they all share — so a pack of games bought inside a
+    // modal would leave every other copy still believing there is nothing
+    // left to play. Whoever changes it says so, and they all re-read.
+    window.addEventListener(PLAY_LIMIT_CHANGED, read);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(PLAY_LIMIT_CHANGED, read);
+    };
   }, [user]);
 
   const windowMode = windowSupported === true;
@@ -178,6 +197,64 @@ export function usePlayLimit() {
     return true;
   }, [user, isVip, windowMode, freeGamesExhausted, regenPlayAvailable, useRegenPlay]);
 
+  /**
+   * Buy a pack of extra games with coins, gems, or a watched ad.
+   *
+   * The price is not sent — buy_extra_plays() charges from its own list and
+   * moves the quota in the same lock, so this is one call rather than a debit
+   * and a grant that could half-land. What comes back is the new state of
+   * both, which is applied here so the "n/5" and the balances agree with the
+   * server immediately.
+   *
+   * Only the window rule can sell anything: the legacy rule counts against a
+   * lifetime statistic that must not be edited to hand out a game. Callers
+   * gate the offer on `windowMode` — this refuses as well, so a stale render
+   * cannot charge anyone.
+   */
+  const buyExtraPlays = useCallback(
+    async (games: number, source: "coins" | "gems" | "ad"): Promise<ExtraPlayResult> => {
+      if (!user) return { ok: false, reason: "not_authenticated" };
+      if (!windowMode) return { ok: false, reason: "unsupported" };
+
+      const client = supabase as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{
+          data: {
+            ok?: boolean;
+            reason?: string;
+            used?: number;
+            window_start?: string;
+            coins?: number;
+            gems?: number;
+          } | null;
+          error: { message: string } | null;
+        }>;
+      };
+      const { data: result, error } = await client.rpc("buy_extra_plays", {
+        p_games: games,
+        p_source: source,
+      });
+
+      if (error) {
+        console.error("[usePlayLimit] buy_extra_plays failed:", error);
+        return { ok: false, reason: "failed" };
+      }
+      if (!result?.ok) {
+        return { ok: false, reason: result?.reason ?? "failed" };
+      }
+
+      setPlayWindow({
+        used: result.used ?? 0,
+        start: result.window_start ? Date.parse(result.window_start) : null,
+      });
+      if (typeof result.coins === "number" && typeof result.gems === "number") {
+        setProfileLocal({ coins: result.coins, gems: result.gems });
+      }
+      window.dispatchEvent(new CustomEvent(PLAY_LIMIT_CHANGED));
+      return { ok: true };
+    },
+    [user, windowMode, setProfileLocal],
+  );
+
   return {
     playsRemaining,
     playsUsed,
@@ -191,6 +268,7 @@ export function usePlayLimit() {
     timeUntilNextPlay,
     useRegenPlay,
     consumePlay,
+    buyExtraPlays,
     /** True once the per-window quota is the rule in force. */
     windowMode,
     freeGamesExhausted,

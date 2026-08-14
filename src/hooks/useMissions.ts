@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createNotification } from "./useNotifications";
+import { t } from "@/lib/i18n";
+import { missionTitle } from "@/utils/missionText";
 import { useAuth } from "./useAuth";
 import {
   dayKindOf,
@@ -808,17 +810,22 @@ export function useMissions() {
             console.error("Mission reward grant failed:", grantError);
           }
 
+          // Written in the language the player is in right now, and read back
+          // through the notification translator, which rebuilds it from the
+          // numbers stored alongside — so the row still reads correctly to
+          // someone who switches language tomorrow.
+          const name = missionTitle(mission.mission_id, mission.mission_title);
           const rewardBits = [
-            mission.reward_coins > 0 ? `${mission.reward_coins} მონეტა` : null,
-            mission.reward_gems > 0 ? `${mission.reward_gems} ალმასი` : null,
+            mission.reward_coins > 0 ? `${mission.reward_coins} ${t("common.coins")}` : null,
+            mission.reward_gems > 0 ? `${mission.reward_gems} ${t("common.gems")}` : null,
             mission.reward_xp > 0 ? `${mission.reward_xp} XP` : null,
           ].filter(Boolean).join(" · ");
 
           void createNotification(
             user.id,
             "reward",
-            `მისია შესრულებულია: ${mission.mission_title}`,
-            rewardBits ? `ჯილდო: ${rewardBits}` : undefined,
+            t("missions.completedTitle", { mission: name }),
+            rewardBits ? `${t("missions.rewardLabel")}: ${rewardBits}` : undefined,
             {
               mission_id: mission.mission_id,
               coins: mission.reward_coins,
@@ -829,8 +836,8 @@ export function useMissions() {
             }
           );
 
-          toast.success(`🎯 ${mission.mission_title} — შესრულებულია!`, {
-            description: rewardBits ? `ჯილდო: ${rewardBits}` : undefined,
+          toast.success(t("missions.completedTitle", { mission: name }), {
+            description: rewardBits ? `${t("missions.rewardLabel")}: ${rewardBits}` : undefined,
           });
         }
 

@@ -5,7 +5,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useNewLevels } from "@/hooks/useNewLevels";
+import { useNewCategories } from "@/hooks/useNewCategories";
 import { useCategoryPlayLimit } from "@/hooks/useCategoryPlayLimit";
 import { useFavorites } from "@/hooks/useFavorites";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -57,7 +57,7 @@ export default function CategoryPage() {
   const { t } = useLanguage();
   const { categories, loading: categoriesLoading } = useCategories();
   const { getCategoryProgress, getLevelStars, isLevelCompleted, loading, refetch } = useCategoryProgress();
-  const { clearNewLevelBadge } = useNewLevels();
+  const { markCategorySeen } = useNewCategories();
   const { canPlayLevel, isCategoryBlocked, getLevelsPlayedInCategory, maxFreeLevelsPerCategory, isVip } = useCategoryPlayLimit();
   const { toggleFavorite, isFavorite } = useFavorites();
 
@@ -112,9 +112,9 @@ export default function CategoryPage() {
   // Clear the "NEW!" badge when user views the category
   useEffect(() => {
     if (user && category?.uuid && category?.totalLevels) {
-      clearNewLevelBadge(category.uuid, category.totalLevels);
+      markCategorySeen(category.uuid, category.totalLevels);
     }
-  }, [user, category?.uuid, category?.totalLevels, clearNewLevelBadge]);
+  }, [user, category?.uuid, category?.totalLevels, markCategorySeen]);
 
   // Track category viewed
   useEffect(() => {
