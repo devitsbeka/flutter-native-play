@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Users } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Friend, useFriends } from "@/hooks/useFriends";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -14,6 +14,29 @@ function StaticPlaceholder({ className }: { className?: string }) {
     />
   );
 }
+
+/**
+ * A slot for a friend who isn't there yet.
+ *
+ * They fade to the right — the first is the strongest, each one after it
+ * lighter — so the strip reads as room to grow. The empty strip used to put a
+ * grey box saying "no friends yet" beside the add button, which announced the
+ * absence instead of inviting anyone to fix it.
+ */
+function FriendSlotPlaceholder({ index }: { index: number }) {
+  return (
+    <div
+      className="flex flex-col items-center gap-2 flex-shrink-0"
+      style={{ opacity: 0.48 - index * 0.12 }}
+    >
+      <StaticPlaceholder className="w-16 h-16 rounded-full" />
+      <StaticPlaceholder className="w-12 h-3 rounded" />
+    </div>
+  );
+}
+
+/** Add button plus three of these: four circles across an empty strip. */
+const EMPTY_FRIEND_SLOTS = 3;
 
 interface FriendsStoriesBarProps {
   onAddFriendClick: () => void;
@@ -75,14 +98,9 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
         {/* Friends */}
         <AnimatePresence>
           {sortedFriends.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-100"
-            >
-              <Users className="w-5 h-5 text-slate-400" />
-              <span className="text-sm text-slate-500">{t('team.noFriendsYet')}</span>
-            </motion.div>
+            Array.from({ length: EMPTY_FRIEND_SLOTS }).map((_, index) => (
+              <FriendSlotPlaceholder key={`empty-${index}`} index={index} />
+            ))
           ) : (
             sortedFriends.map((friend, index) => (
               <FriendStoryAvatar
@@ -99,20 +117,10 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
         </AnimatePresence>
 
         {/* Static placeholder slots with fade-out */}
-        {sortedFriends.length > 0 && skeletonCount > 0 && (
-          <>
-            {Array.from({ length: skeletonCount }).map((_, index) => (
-              <div
-                key={`skeleton-${index}`}
-                className="flex flex-col items-center gap-2 flex-shrink-0"
-                style={{ opacity: 0.48 - (index * 0.12) }}
-              >
-                <StaticPlaceholder className="w-16 h-16 rounded-full" />
-                <StaticPlaceholder className="w-12 h-3 rounded" />
-              </div>
-            ))}
-          </>
-        )}
+        {sortedFriends.length > 0 &&
+          Array.from({ length: skeletonCount }).map((_, index) => (
+            <FriendSlotPlaceholder key={`skeleton-${index}`} index={index} />
+          ))}
       </div>
     </div>
   );
