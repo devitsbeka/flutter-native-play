@@ -4,8 +4,14 @@ import { getCorsHeaders } from "../_shared/cors.ts";
 import { factCheckQuestions } from "../_shared/factCheck.ts";
 import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
+// Kept in step with src/constants/questionQuality.ts. This file used to allow
+// 35-character answers, which is how the bank filled with content that needed
+// a repair pass: quiz-answer-button.tsx renders two clamped lines, so anything
+// much past 20 crowds the button and anything past 48 is ellipsized outright.
 const QUESTION_MAX_LENGTH = 70;
-const ANSWER_MAX_LENGTH = 35;
+const ANSWER_MAX_LENGTH = 20;
+/** Past here the answer is not merely long, it is cut off mid-word. */
+const ANSWER_HARD_LIMIT = 48;
 
 interface GeneratedQuestion {
   question_text: string;
@@ -51,7 +57,7 @@ function getDifficultyForBatch(distribution: { easy: number; medium: number; har
   return 'hard';
 }
 
-function isValidQuestion(q: GeneratedQuestion): { valid: boolean; warnings: string[] } {
+function isValidQuestion(q: GeneratedQuestion): { valid: boolean; warnings: string[]; rejected: boolean } {
   const warnings: string[] = [];
   
   if (!q.question_text || q.question_text.length > QUESTION_MAX_LENGTH) {
@@ -68,8 +74,19 @@ function isValidQuestion(q: GeneratedQuestion): { valid: boolean; warnings: stri
       warnings.push(`Incorrect answer too long: ${ans.length}/${ANSWER_MAX_LENGTH}`);
     }
   }
-  
-  return { valid: warnings.length === 0, warnings };
+
+  // A proper noun can legitimately run past the target — "Philosophical
+  // Investigations" cannot be shortened without becoming a different book — so
+  // over-length alone only withholds auto-approval and sends it for review.
+  // Past the clamp it is not a judgement call: the player never sees the end of
+  // the string, so it is rejected outright however good the question is.
+  const clipped = [q.correct_answer, ...(q.incorrect_answers || [])]
+    .filter((a) => a && a.length > ANSWER_HARD_LIMIT);
+  for (const a of clipped) {
+    warnings.push(`Answer is cut off at ${a.length}/${ANSWER_HARD_LIMIT} chars: "${a.slice(0, 30)}…"`);
+  }
+
+  return { valid: warnings.length === 0, warnings, rejected: clipped.length > 0 };
 }
 
 function normalizeText(text: string): string {
@@ -370,7 +387,14 @@ serve(async (req) => {
           category_id: currentCategory.id,
           category_name: currentCategory.name,
           icon_slug: q.icon_slug || null,
-          status: job.auto_approve && validation.valid && !isDuplicate ? 'approved' : 'pending',
+          // `rejected` means the answer is longer than the button can show, so
+          // no amount of auto_approve should let it through — it is not a
+          // borderline call, the player would see the text cut off.
+          status: validation.rejected
+            ? 'rejected'
+            : job.auto_approve && validation.valid && !isDuplicate
+              ? 'approved'
+              : 'pending',
           is_duplicate: isDuplicate,
           duplicate_of: duplicateOf || null,
           validation_warnings: validation.warnings.length > 0 ? validation.warnings : null,

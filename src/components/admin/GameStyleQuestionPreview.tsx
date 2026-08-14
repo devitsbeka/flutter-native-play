@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { Crown, Zap, Check, Pencil, ImagePlus } from 'lucide-react';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { Badge } from '@/components/ui/badge';
+import { QUALITY_CONSTANTS } from '@/constants/questionQuality';
 
 interface GameStyleQuestionPreviewProps {
   question: string;
@@ -18,8 +19,11 @@ interface GameStyleQuestionPreviewProps {
   onAnswerEdit?: (correct: string, incorrect: string[]) => void;
 }
 
-const QUESTION_MAX_LENGTH = 110;
-const ANSWER_MAX_LENGTH = 25;
+// These counters tell a reviewer whether what they are approving will fit.
+// They used to read 110/25 against a validator enforcing 70/20, so the screen
+// people approve imports on was the most permissive number in the codebase and
+// content authored to it needed a repair pass later. Take the shared values.
+const { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } = QUALITY_CONSTANTS;
 
 const DIFFICULTY_LABELS: Record<string, string> = {
   easy: 'მარტივი',
