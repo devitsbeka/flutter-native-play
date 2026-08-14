@@ -43,24 +43,23 @@ was deleted and replaced. Everything below is confirmed against the code.
 
 Still open on the products:
 
-- [x] ~~Localized display names and descriptions on all six~~
-- [ ] **Review screenshots — the last thing holding "Missing Metadata".** One
-      per product, six in total. Localizations alone do not clear the state.
+- [x] ~~Localizations and review screenshots on all six~~ — every product
+      reads **Ready to Submit** in App Store Connect and in RevenueCat, which
+      is the same fact seen twice: RevenueCat mirrors Apple's status, so six
+      green rows there means StoreKit will return them in sandbox.
 
-      This is not cosmetic: **StoreKit does not return products in that state,
-      even in sandbox**, so `getOfferings()` comes back empty, the paywall
-      shows compiled fallback prices, and no purchase can be tested at all.
-      The symptom is indistinguishable from a dead API key or a broken
-      offering — both of which are now the things you would reasonably suspect
-      first, which is what makes meeting this on the Mac expensive.
+      Subscriptions show "Prepare for Submission" rather than "Ready to
+      Submit". Same state, different wording, and it does not clear until the
+      first build ships — "your first subscription group must be submitted
+      with a new app version". Not to be confused with **Missing Metadata**,
+      which looks similar and means StoreKit returns nothing at all.
 
-      No Mac needed. The screenshot is reviewer-facing only, never shown to a
-      user, and replaceable at any time. Open mytrivia.io in a browser window
-      narrowed to phone width and capture the shop and the PRO paywall — same
-      UI the app renders. One shop capture serves all four gem packs, one
-      paywall capture serves both subscriptions. Apple wants at least
-      640x920px; App Store Connect rejects undersized images with a clear
-      message rather than silently.
+      Screenshots were captured with `scripts/capture-store-screenshots.mjs`
+      against the dev server. App Store Connect validates them against real
+      device resolutions, not the 640x920 minimum its own documentation
+      quotes — a 780x986 crop was rejected, the same content as a full
+      1242x2208 screen was accepted.
+
 - [ ] **`io.mytrivia.adfree` — deliberately not created.** `AdFreeModal` is
       mounted in `Index.tsx` but `setIsAdFreeModalOpen(true)` is never called,
       so nothing in the app can open it. An in-app purchase with no reachable
