@@ -163,15 +163,27 @@ The iOS bundle went from 394 MB to **130 MB** by pruning the video library
 out of it and streaming instead. Two follow-ups need a machine with ffmpeg,
 which this environment doesn't have.
 
-- [ ] **Generate `public/videos/mobile/*.mp4`** (480px, H.264).
+- [ ] **Generate `public/videos/mobile/*.mp4`** — the script is written, it
+      just needs a machine with ffmpeg:
 
-      Only the WebM variants were ever generated. **WebM does not play in
-      WKWebView below iOS 17.4**, and this app supports iOS 15 — so on most
-      iPhones in service the `<source>` chain skips the WebM and falls through
-      to the *desktop* MP4, several megabytes each. Extend
-      `scripts/convert-videos-webm.sh` to emit H.264 at the mobile size, then
-      set `VITE_MOBILE_MP4_AVAILABLE=true`. The code already prefers them when
-      that flag is on.
+      ```bash
+      brew install ffmpeg          # if needed
+      bash scripts/convert-videos-mobile-mp4.sh
+      ```
+
+      Then set `VITE_MOBILE_MP4_AVAILABLE=true` in `.env` and rebuild. The
+      files existing is **not** what switches this on — `getResponsiveVideoSrc`
+      reads the flag, so without it phones keep getting the desktop MP4.
+
+      Only WebM variants were ever generated, and **WKWebView cannot play WebM
+      below iOS 17.4** while this app supports iOS 15. So on most iPhones in
+      service the `<source>` chain skips every WebM and falls through to the
+      *desktop* MP4 — 720p, several megabytes each, 63 of them. The mobile
+      tier exists and is empty for exactly the devices that need it most.
+
+      Encoding is H.264 main/4.0, yuv420p, `+faststart`, 480px, no audio —
+      chosen for the iOS 15 floor rather than for size. Takes a while at
+      `preset slow`; it is a one-time cost and re-running skips what exists.
 
 - [ ] **Re-encode or move the 8 MP4s imported from `src/assets/`** — 46 MB.
 
