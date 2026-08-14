@@ -199,6 +199,14 @@ FORCE_RETIRE = {
     'cb44da4f': 'stale and self-defeating: answer is 35 since Feb 2025, and 35 is a distractor',
     'f3a221d6': 'wrong and nonsensical: aphakic people do see UV; "eye exercises" is not a real premise',
     'c15f9c15': 'same question as a7092f1a (most expensive dress at auction), with an "as of 2023" stamp',
+    '1e270c9d': 'IMDb episode ratings move continuously; no answer stays right',
+    '41747e0d': 'most-followed account on X changes; the answer dates immediately',
+    '4c836800': "Voyager 1's distance grows every day, so any fixed figure is wrong",
+    '46e3d657': 'invented programme name with real organisations as distractors',
+    '3798e93b': 'shortest known exoplanet orbit is a moving record',
+    '59cb5e50': 'self-answering in any phrasing: gold leaf is made of gold',
+    '62f91b16': 'answer looks wrong — Cyberpunk: Edgerunners took Anime of the Year in 2023',
+    '89e53f4b': 'the TOP500 number one changes every list; El Capitan has since passed Frontier',
 }
 
 retire = {}
