@@ -606,7 +606,7 @@ UPDATE public.questions SET is_active = false, in_production = false, quality_st
 UPDATE public.questions SET is_active = false, in_production = false, quality_status = 'retired_unfixable', updated_at = now() WHERE id = '8982ce69-df21-4845-90b3-741bd3429666';
 
 
--- ── 2. repaired and cleared for production (885) ─────────────
+-- ── 2. repaired and cleared for production (883) ─────────────
 -- Every hard check passed and nothing needs a second opinion. These rows
 -- were already being served; they are the same questions, shorter.
 
@@ -1887,24 +1887,6 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'bab4b713-a0fa-4715-b967-29a5a8e91fdf';
-
--- Do people actually need eight glasses of water daily?
---   hand-rewritten: answers 30->20 chars
-UPDATE public.questions SET
-    question_text = 'Do people actually need eight glasses of water daily?',
-    correct_answer = 'No, it varies',
-    incorrect_answers = '["Yes, always eight", "Yes, that is minimum", "Only in summer"]'::jsonb,
-    original_question_text = COALESCE(original_question_text, question_text),
-    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
-    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
-    in_production = true,
-    shorten_status = 'shortened',
-    answer_shorten_status = 'shortened',
-    quality_status = NULL,
-    quality_issues = NULL,
-    last_quality_check = now(),
-    updated_at = now()
-  WHERE id = 'b6ce32d3-1335-4530-990d-f73048ed00a6';
 
 -- Do plants actually communicate with each other?
 --   hand-rewritten: answers 41->22 chars
@@ -15640,24 +15622,6 @@ UPDATE public.questions SET
     updated_at = now()
   WHERE id = '16177a94-7aaa-4fb5-b43c-2bc4282793bb';
 
--- Who got the first U.S. patent for the telephone in 1876?
---   hand-rewritten: no textual change
-UPDATE public.questions SET
-    question_text = 'Who got the first U.S. patent for the telephone in 1876?',
-    correct_answer = 'Alexander Graham Bell',
-    incorrect_answers = '["Thomas Edison", "Elisha Gray", "Guglielmo Marconi"]'::jsonb,
-    original_question_text = COALESCE(original_question_text, question_text),
-    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
-    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
-    in_production = true,
-    shorten_status = 'shortened',
-    answer_shorten_status = 'shortened',
-    quality_status = NULL,
-    quality_issues = NULL,
-    last_quality_check = now(),
-    updated_at = now()
-  WHERE id = 'e84d5750-d2fa-4c50-85d7-95a263e00335';
-
 -- Who has the most career goals in official football matches?
 --   hand-rewritten: answers 30->17 chars
 UPDATE public.questions SET
@@ -16541,7 +16505,7 @@ UPDATE public.questions SET
   WHERE id = '1cf2eec3-dc8a-41c9-8cb1-79ee524d289d';
 
 
--- ── 3. rewritten questions held in the Library for review (642) ─────
+-- ── 3. rewritten questions held in the Library for review (641) ─────
 -- These do not ask quite what they asked before. The original could not be
 -- shortened without losing the point, so it was replaced with a better
 -- question on the same subject. Everything else went straight to production.
@@ -25347,24 +25311,6 @@ UPDATE public.questions SET
     last_quality_check = now(),
     updated_at = now()
   WHERE id = 'e660b602-7eb8-4998-9347-92e78730e175';
-
--- Which of these exoplanets is currently known to have the shortest orbital period around its parent star?
---   hand-rewritten: question 104->54 chars
-UPDATE public.questions SET
-    question_text = 'Which known exoplanet has the shortest orbital period?',
-    correct_answer = 'Kepler-70b',
-    incorrect_answers = '["Proxima Centauri b", "TRAPPIST-1b", "55 Cancri e"]'::jsonb,
-    original_question_text = COALESCE(original_question_text, question_text),
-    original_correct_answer = COALESCE(original_correct_answer, correct_answer),
-    original_incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
-    in_production = false,
-    shorten_status = 'pending_review',
-    answer_shorten_status = 'pending_review',
-    quality_status = NULL,
-    quality_issues = NULL,
-    last_quality_check = now(),
-    updated_at = now()
-  WHERE id = '3798e93b-3f51-40e0-ba66-479d3c5da0fc';
 
 -- Which of these famous Muhammad Ali quotes most directly expresses his self-belief and confidence?
 --   hand-rewritten: question 97->51 chars, answers 68->22 chars

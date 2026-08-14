@@ -111,6 +111,15 @@ for d in rewrites:
     if max(lens) - min(lens) > SPREAD:
         warnings.append(f'{sid}: answer spread {max(lens)-min(lens)}'); warned_ids.add(sid)
 
+    # A question can be rewritten in one batch and then retired in a later one,
+    # once a duplicate turns up that the clustering had not reached. Both
+    # statements then land in the file, the rewrite comes second, and it clears
+    # quality_status and puts the row back in production — silently undoing the
+    # retirement. Retire wins: there is no point rewriting a row that is being
+    # taken out of the game.
+    if full in wl['retire']:
+        continue
+
     applied.append({'id': full, 'q': q, 'c': c, 'w': list(w),
                     'hand': sid in HAND, 'warned': sid in warned_ids})
 
