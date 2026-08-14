@@ -1,0 +1,192 @@
+[
+ {
+  "id": "36f043cf",
+  "kind": "wrong_answer",
+  "note": "first king of Abkhazia was Leon II (c.780); Leon I was an archon, never king",
+  "fix": {
+   "correct_answer": "ლეონ II",
+   "incorrect_answers": [
+    "ლეონ I",
+    "თეოდოსი",
+    "ბაგრატ III"
+   ]
+  }
+ },
+ {
+  "id": "d0696708",
+  "kind": "wrong_answer",
+  "note": "Vakhtang founded Tbilisi in the 5th c.; Dachi moved the capital there in the 6th",
+  "fix": {
+   "correct_answer": "VI ს.",
+   "incorrect_answers": [
+    "IV ს.",
+    "V ს.",
+    "VII ს."
+   ]
+  }
+ },
+ {
+  "id": "2df1c56e",
+  "kind": "wrong_answer",
+  "note": "Solomon I is remembered for banning the slave trade, not the death penalty; stem also 92 chars",
+  "fix": {
+   "question_text": "რომელმა მეფემ აკრძალა ტყვის სყიდვა იმერეთში?",
+   "correct_answer": "სოლომონ I",
+   "incorrect_answers": [
+    "ერეკლე II",
+    "ვახტანგ VI",
+    "თეიმურაზ II"
+   ]
+  }
+ },
+ {
+  "id": "f08fce6f",
+  "kind": "grammar",
+  "note": "\"იმპერიებას\" is not a word, and the options mix dative with genitive",
+  "fix": {
+   "question_text": "რომელ იმპერიას ებრძოდა ვახტანგ გორგასალი?",
+   "correct_answer": "სასანურ ირანს",
+   "incorrect_answers": [
+    "ბიზანტიას",
+    "ოსმალეთს",
+    "რომს"
+   ]
+  }
+ },
+ {
+  "id": "2d80d9d8",
+  "kind": "broken_stem",
+  "note": "\"მონღოლეთში\" says in Mongolia; the organ functioned in Georgia under Mongol rule",
+  "fix": {
+   "question_text": "მონღოლთა ბატონობის დროს რომელი ორგანო მართავდა საქართველოს?",
+   "correct_answer": "დარბაზი",
+   "incorrect_answers": [
+    "სენატი",
+    "სამდივნო",
+    "უმაღლესი საბჭო"
+   ]
+  }
+ },
+ {
+  "id": "c7de9f80",
+  "kind": "broken_stem",
+  "note": "\"დაიპყრო ბიზანტია, საქართველოც\" is not a sentence, and the Ottomans never took all of Georgia",
+  "fix": {
+   "question_text": "რომელმა იმპერიამ დაიპყრო ბიზანტია 1453 წელს?",
+   "correct_answer": "ოსმალეთი",
+   "incorrect_answers": [
+    "სპარსეთი",
+    "რომი",
+    "მონღოლეთი"
+   ]
+  }
+ },
+ {
+  "id": "5f847e8e",
+  "kind": "broken_stem",
+  "note": "picture question, stem is an unfinished noun phrase",
+  "fix": {
+   "question_text": "ვინ არის ფოტოზე გამოსახული პოლიტიკური მოღვაწე?"
+  }
+ },
+ {
+  "id": "c407523f",
+  "kind": "broken_stem",
+  "note": "picture question, stem is an unfinished noun phrase",
+  "fix": {
+   "question_text": "ბაგრატიონთა რომელი წარმომადგენელია გამოსახული?"
+  }
+ },
+ {
+  "id": "c3488ba2",
+  "kind": "broken_stem",
+  "note": "stem cut mid-sentence, no question mark",
+  "fix": {
+   "question_text": "რომელი ქართველი ეროვნული გმირია გამოსახული?"
+  }
+ },
+ {
+  "id": "4b364e21",
+  "kind": "broken_stem",
+  "note": "picture question, stem is an unfinished noun phrase",
+  "fix": {
+   "question_text": "საქართველოს რომელი პრემიერ-მინისტრია გამოსახული?"
+  }
+ },
+ {
+  "id": "04df5b9d",
+  "kind": "bad_distractor",
+  "note": "\"მაყარაშვილი ბარბარე\" is an invented name",
+  "fix": {
+   "incorrect_answers": [
+    "მესროპ მაშტოცი",
+    "წმინდა ნინო",
+    "იოანე ზოსიმე"
+   ]
+  }
+ },
+ {
+  "id": "3d505ed1",
+  "kind": "answer_in_question",
+  "note": "the stem names Zhinvali and the answer is Zhinvali",
+  "action": "retire"
+ },
+ {
+  "id": "ffc13763",
+  "kind": "time_sensitive",
+  "note": "\"ამჟამინდელი თავმჯდომარე\" — the answer changes with every party congress",
+  "action": "retire"
+ },
+ {
+  "id": "d8047524",
+  "kind": "ambiguous",
+  "note": "Gurandukht was a queen consort/regent, never reigned from a city; the fact is not established",
+  "action": "retire"
+ },
+ {
+  "id": "8108cb31",
+  "kind": "grammar",
+  "note": "space before the question mark",
+  "fix": {
+   "question_text": "ქართულ წყაროებში როგორ მოიხსენიებდნენ ვაინახურ ტომებს?"
+  }
+ },
+ {
+  "id": "84913ec6",
+  "kind": "grammar",
+  "note": "space before the question mark",
+  "fix": {
+   "question_text": "რომელ ქართველ მეფეს შეარქვეს ხალხში „პატარა კახი“?"
+  }
+ },
+ {
+  "id": "795b4e99",
+  "kind": "doubtful",
+  "note": "Simon I, not Luarsab I, is the king associated with Ottoman dealings against the Qizilbash; sources disagree",
+  "action": "flag"
+ },
+ {
+  "id": "e4976eac",
+  "kind": "doubtful",
+  "note": "Alexandropol fortress construction is not attributed to Andronikashvili in any standard source",
+  "action": "flag"
+ },
+ {
+  "id": "c6a1e616",
+  "kind": "ambiguous",
+  "note": "Tashiskari 1609 was fought against a Crimean Tatar raiding force; both 'Ottoman' and 'Crimean Khanate' are defensible and both are options",
+  "action": "retire"
+ },
+ {
+  "id": "b1fa4ec4",
+  "kind": "ambiguous",
+  "note": "\"რა იყო გვიანფეოდალური წოდება?\" — აზნაური, მონა and კოლონი are all estates of the period",
+  "action": "retire"
+ },
+ {
+  "id": "f352e0b6",
+  "kind": "ambiguous",
+  "note": "\"რომელი იყო გვიანი ბრინჯაოს კულტურა?\" names no region; Colchian and East Georgian both qualify",
+  "action": "retire"
+ }
+]

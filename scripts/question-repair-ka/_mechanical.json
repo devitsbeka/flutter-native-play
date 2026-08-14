@@ -1,0 +1,278 @@
+[
+ {
+  "id": "d5f5dc17",
+  "kind": "broken_stem",
+  "note": "in-production question with an empty question_text; the options are Bollywood actors",
+  "fix": {
+   "question_text": "ვინ არის ბოლივუდის ყველაზე ცნობილი მსახიობი, „ბოლივუდის მეფე“?"
+  }
+ },
+ {
+  "id": "b0db93e7",
+  "kind": "broken_stem",
+  "note": "stem cut mid-sentence after „ტექნოლოგიის“",
+  "fix": {
+   "question_text": "რისთვის გამოიყენება ოპტიკურბოჭკოვანი ტექნოლოგია?"
+  }
+ },
+ {
+  "id": "3150cdd2",
+  "kind": "foreign_char",
+  "note": "π written as Cyrillic п in three options and as Georgian პ in the correct answer",
+  "fix": {
+   "correct_answer": "π",
+   "incorrect_answers": [
+    "2π",
+    "π/2",
+    "3π"
+   ]
+  }
+ },
+ {
+  "id": "20ccfbed",
+  "kind": "foreign_char",
+  "note": "\"კოფი ანანი\" spelt with Hebrew vav, pe and yod in place of Georgian ო, ფ, ი",
+  "fix": {
+   "incorrect_answers": [
+    "კოფი ანანი",
+    "დაგ ჰამარშელდი",
+    "უ ტანი"
+   ]
+  }
+ },
+ {
+  "id": "42cb0074",
+  "kind": "foreign_char",
+  "note": "\"კოალიცია\" spelt with Hebrew vav and alef in place of Georgian ო and ა",
+  "fix": {
+   "incorrect_answers": [
+    "უმრავლესობა",
+    "კოალიცია",
+    "კაბინეტი"
+   ]
+  }
+ },
+ {
+  "id": "302b6028",
+  "kind": "foreign_char",
+  "note": "\"კონტენტი\" spelt with Cyrillic к and о",
+  "fix": {
+   "correct_answer": "ვირუსული კონტენტი"
+  }
+ },
+ {
+  "id": "41dd3444",
+  "kind": "foreign_char",
+  "note": "\"ოფ ძა ვოლ\" contains a Gujarati letter",
+  "fix": {
+   "incorrect_answers": [
+    "ოფ ძა ვოლ",
+    "ბედი",
+    "ცუდი"
+   ]
+  }
+ },
+ {
+  "id": "4fde57d9",
+  "kind": "foreign_char",
+  "note": "Sarah Vaughan's given name written in Hebrew script",
+  "fix": {
+   "incorrect_answers": [
+    "ბილი ჰოლიდეი",
+    "ნინა სიმონი",
+    "სარა ვონი"
+   ]
+  }
+ },
+ {
+  "id": "0d4b2bae",
+  "kind": "grammar",
+  "note": "doubled straight apostrophes around the title",
+  "fix": {
+   "question_text": "ვინ ითამაშა „დექსტერის“ მთავარ როლში?"
+  }
+ },
+ {
+  "id": "03ba8570",
+  "kind": "grammar",
+  "note": "trailing space in the correct answer",
+  "fix": {
+   "correct_answer": "მჭადი ნიგვზით"
+  }
+ },
+ {
+  "id": "7667b2c4",
+  "kind": "grammar",
+  "note": "leading space in the correct answer",
+  "fix": {
+   "correct_answer": "ნახირი"
+  }
+ },
+ {
+  "id": "781b7365",
+  "kind": "grammar",
+  "note": "leading space in a distractor",
+  "fix": {
+   "incorrect_answers": [
+    "ერთი",
+    "მინუს ერთი",
+    "ათი"
+   ]
+  }
+ },
+ {
+  "id": "84d74a8b",
+  "kind": "grammar",
+  "note": "leading space in the correct answer",
+  "fix": {
+   "correct_answer": "არისტოტელე"
+  }
+ },
+ {
+  "id": "9b935dd6",
+  "kind": "grammar",
+  "note": "leading space in the correct answer",
+  "fix": {
+   "correct_answer": "არისტოტელე"
+  }
+ },
+ {
+  "id": "ccbe5411",
+  "kind": "grammar",
+  "note": "leading space in a distractor",
+  "fix": {
+   "incorrect_answers": [
+    "მოხარშული ხორცი",
+    "შემწვარი ბოსტნეული",
+    "შემწვარი ხორცი"
+   ]
+  }
+ },
+ {
+  "id": "eb478223",
+  "kind": "grammar",
+  "note": "trailing space in a distractor",
+  "fix": {
+   "incorrect_answers": [
+    "მოხარშული ხაჭაპური",
+    "ლობიო კეცზე",
+    "ბოსტნეული კეცზე"
+   ]
+  }
+ },
+ {
+  "id": "d2d2e3ae",
+  "kind": "grammar",
+  "note": "double space inside an option",
+  "fix": {
+   "correct_answer": "ტეილორის მწკრივი 0-ზე"
+  }
+ },
+ {
+  "id": "490d0558",
+  "kind": "grammar",
+  "note": "space before the question mark",
+  "fix": {
+   "question_text": "არისტოტელეს მიხედვით, რა არის ადამიანის საბოლოო მიზანი?"
+  }
+ },
+ {
+  "id": "524fc6e0",
+  "kind": "grammar",
+  "note": "space before the question mark",
+  "fix": {
+   "question_text": "ძველ ეგვიპტეში რომელი ნუბიელი შენაერთი იცავდა ფარაონს?"
+  }
+ },
+ {
+  "id": "78135fe1",
+  "kind": "grammar",
+  "note": "space before the question mark",
+  "fix": {
+   "question_text": "ვინ წარმოთქვა ფრაზა „კამათელი გაგორებულია“?"
+  }
+ },
+ {
+  "id": "80e28133",
+  "kind": "grammar",
+  "note": "space before the question mark",
+  "fix": {
+   "question_text": "რომელმა ფიზიკოსმა შექმნა World Wide Web?"
+  }
+ },
+ {
+  "id": "edf3be04",
+  "kind": "grammar",
+  "note": "space before the question mark",
+  "fix": {
+   "question_text": "რომელი როლი შეასრულა ელიზაბეტ ტეილორმა?"
+  }
+ },
+ {
+  "id": "06699b02",
+  "kind": "clipped_answer",
+  "note": "two of four options end in a cut Georgian word; stem is also a colon fragment",
+  "fix": {
+   "question_text": "რას ეწოდება ფასების საერთო დონის ზრდა?",
+   "correct_answer": "ინფლაცია",
+   "incorrect_answers": [
+    "დეფლაცია",
+    "რეცესია",
+    "სტაგნაცია"
+   ]
+  }
+ },
+ {
+  "id": "8cdfbeb0",
+  "kind": "contradiction",
+  "note": "identical stem to 3e32bc11 with a different answer; both are right in their own field, so the medical copy now says so",
+  "fix": {
+   "question_text": "რა არის დეჰიდრატაცია ორგანიზმისთვის?"
+  }
+ },
+ {
+  "id": "558a7260",
+  "kind": "doubtful",
+  "note": "its twin attributed „იყო და არა იყო რა“ to Dumbadze and was retired; the Shengelaia attribution still wants a second pair of eyes",
+  "action": "flag"
+ },
+ {
+  "id": "1c360076",
+  "kind": "doubtful",
+  "note": "\"წარმატება არ იყიდება, ის მოიპოვება შრომითა და ნიჭით\" is not attributable to any of the four writers offered",
+  "action": "retire"
+ },
+ {
+  "id": "dfbcdf0d",
+  "kind": "duplicate_options",
+  "note": "all four options say \"no, it is impossible\" — there is nothing to choose between",
+  "fix": {
+   "correct_answer": "არა, შეუძლებელია",
+   "incorrect_answers": [
+    "დიახ, ბირთვული აფეთქებით",
+    "დიახ, თუ ყველა ერთად გაიქცევა",
+    "დიახ, დიდი ძრავებით"
+   ]
+  }
+ },
+ {
+  "id": "eecac649",
+  "kind": "duplicate_options",
+  "note": "თანავარსკვლავედი appears twice among the four options",
+  "fix": {
+   "incorrect_answers": [
+    "ვარსკვლავთა ჯგუფი",
+    "თანავარსკვლავედი",
+    "გალაქტიკა"
+   ]
+  }
+ },
+ {
+  "id": "deb7c127",
+  "kind": "broken_stem",
+  "note": "the entire question text is \"?\"",
+  "fix": {
+   "question_text": "ვინ არის ფოტოზე გამოსახული მომღერალი?"
+  }
+ }
+]
