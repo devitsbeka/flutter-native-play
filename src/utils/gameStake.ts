@@ -17,8 +17,10 @@
 
 import { REWARDS } from "@/config/rewardConfig";
 
+export type GameOutcome = "win" | "draw" | "lose";
+
 export interface GameSettlementInput {
-  outcome: "win" | "draw" | "lose";
+  outcome: GameOutcome;
   /** The player's balance as the game ends. */
   coins: number;
   /** PRO players do not pay the stake. They still earn the win. */

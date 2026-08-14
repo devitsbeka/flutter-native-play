@@ -231,14 +231,14 @@ const PlayerCard = ({
 );
 
 export function MatchResultScreen() {
-  const { userScore, opponentScore, opponent, resetGame, startMatchmaking, userAnswerHistory, opponentAnswerHistory } = useGame();
+  const { userScore, opponentScore, opponent, matchId, resetGame, startMatchmaking, userAnswerHistory, opponentAnswerHistory } = useGame();
   const { user, profile, updateProfile } = useAuth();
   const { openProfile } = usePlayerProfile();
   const { addCoins } = useCurrency();
   const { playSound } = useSound();
   const { trackMissionEvent } = useMissions();
   const { t } = useLanguage();
-  const { awardWin, awardDraw, awardLose, hasEnoughCoins } = useGameStake();
+  const { settleGame, hasEnoughCoins } = useGameStake();
   const { exhaustionInfo } = useTrivia();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -367,18 +367,14 @@ export function MatchResultScreen() {
         const oldLevelInfo = calculateLevel(oldPoints);
         const newLevelInfo = calculateLevel(newPoints);
 
-        // Post-game rewards: Win +500, Lose -500, Draw 0.
+        // Post-game settlement: Win +500, Lose -500, Draw 0 — decided by the
+        // server, which is also the only thing that knows whether it landed.
         //
-        // The badge shows what the award actually moved, not what it set out
-        // to move: a credit the server capped or a debit it refused both used
-        // to be announced as a full ±500 that never reached the balance.
-        if (isWin) {
-          setCoinChange(await awardWin());
-        } else if (isDraw) {
-          setCoinChange(await awardDraw());
-        } else {
-          setCoinChange(await awardLose());
-        }
+        // The badge shows what actually moved, not what it set out to move:
+        // a credit the day's ceiling refused, or a debit larger than the
+        // balance, both used to be announced as a full ±500 that never
+        // reached the profile.
+        setCoinChange(await settleGame(isWin ? "win" : isDraw ? "draw" : "lose", matchId));
 
         // === Correct-answer milestone level-up (every 20 correct answers) ===
         const sessionData = missionTracker.getSessionData();

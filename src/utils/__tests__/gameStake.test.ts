@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { resolveGameSettlement } from "@/utils/gameStake";
 import { REWARDS } from "@/config/rewardConfig";
 
@@ -60,5 +62,45 @@ describe("quick game settlement", () => {
     const won = resolveGameSettlement({ outcome: "win", coins: 1000, isVip: false });
     const lost = resolveGameSettlement({ outcome: "lose", coins: 1000 + won.delta, isVip: false });
     expect(won.delta + lost.delta).toBe(0);
+  });
+});
+
+describe("the database settles for the same amounts", () => {
+  // Settlement is decided by settle_quick_game() now — the client sends the
+  // outcome and nothing else. This file's numbers are what the app *shows*
+  // (the badge, the "you need 500 to play" gate), so if the two drift the
+  // player is told one thing and charged another. The SQL is read rather
+  // than trusted.
+  const sql = readFileSync(
+    join(process.cwd(), "supabase/migrations/20260814120000_settle_quick_game.sql"),
+    "utf8",
+  );
+
+  it("stakes what rewardConfig stakes", () => {
+    const stake = sql.match(/v_stake\s+constant integer := (\d+);/);
+    expect(stake, "settle_quick_game() has no v_stake constant").toBeTruthy();
+    expect(Number(stake![1])).toBe(REWARDS.GAME_STAKE);
+    // One number, both directions: a win pays the stake back and then some,
+    // which is only true while these two are equal.
+    expect(REWARDS.GAME_WIN_REWARD).toBe(REWARDS.GAME_STAKE);
+  });
+
+  it("counts the day's ceiling against wins and losses together", () => {
+    // The bug: the ceiling counted `stake_win` alone, so a player whose wins
+    // and losses cancelled out was still refused at their 41st win while
+    // every loss kept landing. Both kinds have to be in the sum.
+    const total = sql.match(/SELECT COALESCE\(SUM\(coins\), 0\) INTO v_net_day[\s\S]*?AND created_at/);
+    expect(total, "the daily total is not computed the way this test expects").toBeTruthy();
+    expect(total![0]).toContain("'stake_win'");
+    expect(total![0]).toContain("'stake_loss'");
+  });
+
+  it("keeps the function off PUBLIC, per the rule in AGENTS.md", () => {
+    expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.settle_quick_game\(text, text\) FROM PUBLIC, anon;/);
+    expect(sql).toMatch(/GRANT EXECUTE ON FUNCTION public\.settle_quick_game\(text, text\) TO authenticated;/);
+  });
+
+  it("records the match so one game cannot be settled twice", () => {
+    expect(sql).toMatch(/CREATE UNIQUE INDEX IF NOT EXISTS currency_grants_stake_reference_unique/);
   });
 });

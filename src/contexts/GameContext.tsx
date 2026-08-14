@@ -84,6 +84,15 @@ function planOpponentTurn(
 
 interface GameState {
   phase: GamePhase;
+  /**
+   * This match, named once when it starts.
+   *
+   * The settlement carries it, and the database records it, so a result
+   * screen that mounts twice for one game pays it once. Empty until a match
+   * begins — settling without an id still works, it just loses that
+   * protection.
+   */
+  matchId: string;
   opponent: FakeOpponent | null;
   questions: TriviaQuestion[];
   currentQuestionIndex: number;
@@ -149,6 +158,7 @@ const defaultPowerUps: PowerUpState[] = [
 
 const initialState: GameState = {
   phase: "home",
+  matchId: "",
   opponent: null,
   questions: [],
   currentQuestionIndex: 0,
@@ -183,6 +193,12 @@ const initialState: GameState = {
   replacedAnswer: null,
   questionReplaced: false,
 };
+
+/** An id for one match. `randomUUID` is missing on older WebViews. */
+function newMatchId(): string {
+  const uuid = globalThis.crypto?.randomUUID?.();
+  return uuid ?? `m-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -225,7 +241,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [state.phase, resetAskedQuestions]);
 
   const startMatchmaking = useCallback(async (categoryId?: string) => {
-    setState(prev => ({ ...prev, phase: "matchmaking" }));
+    setState(prev => ({ ...prev, phase: "matchmaking", matchId: newMatchId() }));
     setSelectedCategoryId(categoryId || null);
     
     // Reset mission tracker for new game session
@@ -305,6 +321,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setState(prev => ({
         ...prev,
         phase: "playing",
+        // Normally minted at matchmaking; routes that start a game without it
+        // get one here, so every match that can be settled has an id.
+        matchId: prev.matchId || newMatchId(),
         questions,
         currentQuestionIndex: 0,
         userScore: 0,
