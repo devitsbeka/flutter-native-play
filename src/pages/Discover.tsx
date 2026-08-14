@@ -7,7 +7,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCategoryRanks } from "@/hooks/useUserCategoryRanks";
-import { useNewLevels } from "@/hooks/useNewLevels";
+import { useNewCategories } from "@/hooks/useNewCategories";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { IconTabBar } from "@/components/shared/IconTabBar";
 import { SectionHeader } from "@/components/discover/SectionHeader";
@@ -71,7 +71,7 @@ export default function Discover() {
   const { progress } = useCategoryProgress();
   const { favorites, toggleFavorite } = useFavorites();
   const { ranks: leaderboardRanks } = useUserCategoryRanks();
-  const { newLevelCategories } = useNewLevels();
+  const { newCategories } = useNewCategories();
 
   // Transform progress to simple number map
   const progressMap = useMemo(() => {
@@ -126,8 +126,8 @@ export default function Discover() {
       const aTotalLevels = (a as any).totalLevels || (a as any).total_levels || 20;
       const bTotalLevels = (b as any).totalLevels || (b as any).total_levels || 20;
 
-      const aHasNew = newLevelCategories.has(a.uuid || a.id);
-      const bHasNew = newLevelCategories.has(b.uuid || b.id);
+      const aHasNew = newCategories.has(a.uuid || a.id);
+      const bHasNew = newCategories.has(b.uuid || b.id);
       const aCompleted = aProgress >= aTotalLevels;
       const bCompleted = bProgress >= bTotalLevels;
 
@@ -143,7 +143,7 @@ export default function Discover() {
 
       return 0;
     });
-  }, [categories, favorites, progressMap, newLevelCategories]);
+  }, [categories, favorites, progressMap, newCategories]);
 
   // Popular categories — a curated dozen of the topics people actually
   // search and play the most (cinema, TV, music, sports...), in that order.
@@ -291,7 +291,7 @@ export default function Discover() {
                 progress={progressMap}
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
-                newLevelCategories={newLevelCategories}
+                newCategories={newCategories}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />
@@ -313,7 +313,7 @@ export default function Discover() {
                   progress={progressMap}
                   favorites={favorites}
                   leaderboardRanks={leaderboardRanks}
-                  newLevelCategories={newLevelCategories}
+                  newCategories={newCategories}
                   onCategoryClick={handleCategoryClick}
                   onFavoriteToggle={toggleFavorite}
                   getBadge={getBadge}
@@ -329,7 +329,7 @@ export default function Discover() {
                     progress={progressMap}
                     favorites={favorites}
                     leaderboardRanks={leaderboardRanks}
-                    newLevelCategories={newLevelCategories}
+                    newCategories={newCategories}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -345,7 +345,7 @@ export default function Discover() {
                     progress={progressMap}
                     favorites={favorites}
                     leaderboardRanks={leaderboardRanks}
-                    newLevelCategories={newLevelCategories}
+                    newCategories={newCategories}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -361,7 +361,7 @@ export default function Discover() {
                     progress={progressMap}
                     favorites={favorites}
                     leaderboardRanks={leaderboardRanks}
-                    newLevelCategories={newLevelCategories}
+                    newCategories={newCategories}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -378,7 +378,7 @@ export default function Discover() {
                       progress={progressMap}
                       favorites={favorites}
                       leaderboardRanks={leaderboardRanks}
-                      newLevelCategories={newLevelCategories}
+                      newCategories={newCategories}
                       onCategoryClick={handleCategoryClick}
                       onFavoriteToggle={toggleFavorite}
                     />
@@ -396,7 +396,7 @@ export default function Discover() {
                       progress={progressMap}
                       favorites={favorites}
                       leaderboardRanks={leaderboardRanks}
-                      newLevelCategories={newLevelCategories}
+                      newCategories={newCategories}
                       onCategoryClick={handleCategoryClick}
                       onFavoriteToggle={toggleFavorite}
                     />
@@ -412,7 +412,7 @@ export default function Discover() {
                 progress={progressMap}
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
-                newLevelCategories={newLevelCategories}
+                newCategories={newCategories}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />
@@ -432,7 +432,7 @@ export default function Discover() {
                 progress={progressMap}
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
-                newLevelCategories={newLevelCategories}
+                newCategories={newCategories}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
                 getBadge={getBadge}
@@ -446,7 +446,7 @@ export default function Discover() {
                 progress={progressMap}
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
-                newLevelCategories={newLevelCategories}
+                newCategories={newCategories}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />
@@ -468,7 +468,7 @@ export default function Discover() {
                 progress={progressMap}
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
-                newLevelCategories={newLevelCategories}
+                newCategories={newCategories}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />

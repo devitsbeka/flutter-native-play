@@ -21,7 +21,7 @@ interface CategoryCarouselProps {
   progress: Record<string, number>;
   favorites: Set<string>;
   leaderboardRanks?: Record<string, number>;
-  newLevelCategories?: Set<string>;
+  newCategories?: Set<string>;
   onCategoryClick: (categoryId: string) => void;
   onFavoriteToggle: (categoryUuid: string) => void;
   getBadge?: (category: Category, index: number) => string | undefined;
@@ -32,7 +32,7 @@ function CategoryCarouselComponent({
   progress,
   favorites,
   leaderboardRanks = {},
-  newLevelCategories,
+  newCategories,
   onCategoryClick,
   onFavoriteToggle,
   getBadge,
@@ -142,7 +142,7 @@ function CategoryCarouselComponent({
                 isFavorite={favorites.has(favoriteId)}
                 leaderboardRank={leaderboardRanks[category.id]}
                 videoUrl={CATEGORY_VIDEOS[category.category_id || category.id]}
-                hasNewLevels={newLevelCategories?.has(category.uuid || category.id) ?? false}
+                isNewCategory={newCategories?.has(category.uuid || category.id) ?? false}
                 isVideoActive={index >= activeCardIndex - 1 && index <= activeCardIndex + 1}
                 onFavoriteClick={(e) => {
                   e.stopPropagation();
