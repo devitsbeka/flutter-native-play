@@ -133,15 +133,15 @@ rather than silently — that was deliberate — but it still doesn't work.
 
 | Value | Where it goes | What breaks without it |
 |---|---|---|
-| ~~`REVENUECAT_SECRET_API_KEY`~~ | ~~Supabase secret~~ | **Done and verified.** Must be a **V1** key — a V2 key returns 403 code 7723 against the `/subscribers` endpoint the code uses |
-| ~~`REVENUECAT_WEBHOOK_SECRET`~~ | ~~Supabase secret + RevenueCat~~ | **Done and verified** — wrong and missing secrets both rejected with 401, correct one accepted |
-| ~~`VITE_REVENUECAT_IOS_API_KEY`~~ | ~~Build env~~ | **Done** — in `.env.example`; copy to your local `.env` |
+| `REVENUECAT_SECRET_API_KEY` | Supabase secret | Re-issued for the rebuilt project and set. Must still be a **V1** key — a V2 key returns 403 code 7723 against the `/subscribers` endpoint the code uses |
+| `REVENUECAT_WEBHOOK_SECRET` | Supabase secret + RevenueCat | Rotate alongside the rebuilt project. Supabase only ever shows a digest, so the old value cannot be read back to paste into the new webhook — generate a fresh one and set it in both places. The mechanism itself was verified: wrong and missing secrets both rejected with 401, correct one accepted |
+| `VITE_REVENUECAT_IOS_API_KEY` | Build env | **Needs the new value.** The original RevenueCat project was deleted and rebuilt, so the old `appl_…` key is dead and has been cleared from `.env.example`. A stale key is worse than none: `configure()` accepts it and `getOfferings()` returns nothing, so the paywall renders empty with only a console warning |
 | `VITE_ADMOB_IOS_REWARDED` | Build env | Falls back to a demo unit — ads show, revenue is zero |
 | `VITE_ADMOB_IOS_INTERSTITIAL` | Build env | Same |
 | `VITE_VIDEO_BASE_URL` | Build env | Native falls back to `https://mytrivia.io`; set it explicitly if videos move |
 | ~~Apple **Team ID**~~ | ~~AASA file~~ | **Done** — `T38XQSM4L3` |
 
-Both RevenueCat secrets are set and verified. Neither goes in the repo, in
+Neither RevenueCat secret goes in the repo, in
 `.env`, or in a workflow — they are platform secrets, and the secret key can
 read and modify every subscriber on the account. See
 [`supabase/functions/README-entitlements.md`](supabase/functions/README-entitlements.md).
