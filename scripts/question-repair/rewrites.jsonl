@@ -1329,3 +1329,83 @@
 {"id": "0853f595", "q": "Which esports event first aired live on US cable in 2016?", "c": "A CS:GO Major", "w": ["The LoL Worlds", "The Dota 2 International", "The Overwatch League"]}
 {"id": "087b5064", "q": "What made Tutankhamun's tomb unique in 1922?", "c": "It was nearly intact", "w": ["It held the oldest mummy", "It proved female pharaohs", "It was the largest tomb"]}
 {"id": "f2075e6c", "q": "Roughly how many followers does Instagram's own account have?", "c": "Around 670 million", "w": ["Around 420 million", "Around 520 million", "Around 780 million"]}
+{"id":"08a65a2e","q":"What is the core idea of Godel's incompleteness theorems?"}
+{"id":"0993da4b","q":"Which planet has the solar system's largest volcanic plateau?"}
+{"id":"0993f428","q":"Which Pokemon in Red and Blue caused a memory glitch?"}
+{"id":"0a7d720f","q":"Whose seven colour contrasts underpin anime art teaching?"}
+{"id":"0b5fc235","q":"What pain drop counts as 'moderate' in chronic pain trials?"}
+{"id":"0bdaede2","q":"Which WWI tactic used stormtroopers to bypass strongpoints?"}
+{"id":"0c221c38","q":"Which Kenyan lioness famously adopted oryx calves?"}
+{"id":"0c332954","q":"Which format beats GIF for animated memes?"}
+{"id":"0d76db7b","q":"Which monarch had the longest verified reign in history?"}
+{"id":"0e98be39","q":"What coats phone internals to repel water?"}
+{"id":"0f45bff5","q":"What system ranks organisms by their place in the food chain?"}
+{"id":"0f85a707","q":"Which trait helps athletes recover from setbacks?"}
+{"id":"0fb68f2a","q":"Which religious text has the longest hand-copying tradition?"}
+{"id":"1071c0ad","q":"Which field studies how emotion shapes economic decisions?"}
+{"id":"11c86062","q":"Which meal did people eat less of while listening to music?"}
+{"id":"12a06f5e","q":"Which in-game concert drew the most concurrent viewers?","c":"Fortnite's Astronomical","w":["An Among Us stream","Twitch Rivals","Minecraft Live"]}
+{"id":"12ae865c","q":"Which theorem links triangles in perspective from a point?"}
+{"id":"131adca5","q":"Which US body collects digital performance royalties?"}
+{"id":"133375ab","q":"Which British cooking show was revived in 2005?"}
+{"id":"1437a502","q":"Whose 'Midnights' broke a Spotify streaming record in 2022?"}
+{"id":"147f836a","q":"Which effect bends light back on the same side of the normal?"}
+{"id":"1519017a","q":"Which body created the CEFR language framework?"}
+{"id":"151b11b6","q":"Which ancient general shares a name with Hannibal Lecter?"}
+{"id":"15639a95","q":"Which dating principle is credited to William Smith?"}
+{"id":"15846d79","q":"Which body writes the standards for lab accreditation?"}
+{"id":"15a0cf84","q":"Which empire kept an unbroken identity the longest?"}
+{"id":"15d4dbe3","q":"Which WhatsApp Business feature helps small firms sell?"}
+{"id":"16177a45","q":"Which mineral in diamonds revealed water in the mantle?"}
+{"id":"17df48c7","q":"Which venomous snake is named from Portuguese for 'hood'?"}
+{"id":"1901eae1","q":"Which Olympic host city sits at the highest altitude?"}
+{"id":"194eb35d","q":"Which living animal has the strongest recorded bite?"}
+{"id":"1a0485cc","q":"Who said maths is the language God wrote the universe in?"}
+{"id":"1b5337b4","q":"What does a carbon tax do to fossil-fuel plants at once?"}
+{"id":"1bd3828a","q":"Who is credited with finding Tutankhamun's tomb in 1922?"}
+{"id":"1c1cd1d2","q":"Which finance meme trend drew regulator attention?","c":"TikTok options trading","w":["Crypto talk on Discord","Reddit stock tips","YouTube trading videos"]}
+{"id":"1c77799e","q":"How did cloud abstraction create unexpected costs?"}
+{"id":"1d1844e0","q":"Who shortlisted 'Big Mood' for Word of the Year in 2018?"}
+{"id":"1d32367c","q":"Which animated series has trainers in stadium tournaments?"}
+{"id":"1dcaeb28","q":"Who built the first neural network model with Walter Pitts?"}
+{"id":"1e1f11bb","q":"Which framework standardises chemical hazard labelling?","c":"The Harmonized System","w":["The ISO standard","A WHO safety programme","The UN environment arm"]}
+{"id":"1fb44090","q":"Which diversity index is most sensitive to rare species?"}
+{"id":"20184615","q":"What was the Ugandan Knuckles meme?","c":"A viral phenomenon","w":["An official award","A government study","A marketing campaign"]}
+{"id":"201faa3f","q":"How do consumers usually react to a celebrity diet?","c":"They try it briefly","w":["They change for good","They take months","They waste less food"]}
+{"id":"21f606b6","q":"What two error types occur in hypothesis testing?"}
+{"id":"21ffd2dd","q":"Which climate system defines zones by plants and rainfall?"}
+{"id":"230b15ac","q":"Which siege approach did Sun Tzu prefer?","c":"Winning without a fight","w":["Repeated frontal assaults","Sapping and mining","Starving them out"]}
+{"id":"2329198c","q":"Did Socrates write any philosophy himself?"}
+{"id":"2361eff6","q":"Which trace mineral shortage most affects mood?"}
+{"id":"23b47222","q":"Which animal is loudest for its body size?"}
+{"id":"23bd09ae","q":"Which star's 1838 parallax first measured stellar distance?"}
+{"id":"24ac5e07","q":"What share of mobile game revenue came from ads in 2023?","c":"43%","w":["Under 15%","Over 70%","Around 20%"]}
+{"id":"254c20b9","q":"Which pet trend drives growth through 'humanisation'?"}
+{"id":"258c9a89","q":"Has Thomas Piketty won the Nobel in economics?","c":"No, not yet","w":["Yes, in 2019","Yes, in 2021","Yes, in 2014"]}
+{"id":"25b50ab3","q":"What must mastering for vinyl preserve?","c":"Dynamic range","w":["Higher sample rates","Lower costs","Digital compression"]}
+{"id":"25e15395","q":"Whose career was hit by testosterone rule disputes?"}
+{"id":"25e3a795","q":"Which sort is O(n log n) average but O(n squared) worst?"}
+{"id":"263b7b78","q":"Which subreddit exploded during the GameStop squeeze?"}
+{"id":"268da07a","q":"Which Drake video gave us a famous reaction meme?","c":"Hotline Bling","w":["God's Plan","Started From The Bottom","One Dance"]}
+{"id":"26a7aae1","q":"In which decade did jeans become US youth rebellion wear?"}
+{"id":"27a899be","q":"Who pioneered story manga with 1947's New Treasure Island?"}
+{"id":"281370e6","q":"Which built-in tool shows a channel's audience demographics?","c":"YouTube Analytics","w":["Google Trends","Spotify for Podcasters","Meta Business Suite"]}
+{"id":"285cb2ea","q":"Who won a 2016 Breakthrough Prize for gravitational waves?"}
+{"id":"28df05e6","q":"Which robots are measured in nanometres?"}
+{"id":"2931ec40","q":"What is the FTC cap on nonfunctional 'Other Fiber'?"}
+{"id":"2b03b041","q":"Which instrument splits starlight for chemical analysis?"}
+{"id":"2b49fc4f","q":"What is maliciously posting someone's private data called?"}
+{"id":"2c343d88","q":"Which quantum principle allows many states at once?"}
+{"id":"2ca95ef0","q":"Which Greek letter is Christian shorthand for God?"}
+{"id":"2ce0713c","q":"Which '2001' design element predicted real spacecraft tech?"}
+{"id":"2e1f227c","q":"In Portal, who wrote 'The cake is a lie' on the walls?"}
+{"id":"2e3ec438","q":"Which logic gate is true if any input is true?"}
+{"id":"2e43c46f","q":"Which Blizzard game closed its servers for a sequel?"}
+{"id":"2e72b531","q":"Which Stoic idea names the highest moral excellence?"}
+{"id":"3220ffe2","q":"How many trailing digits of Graham's number are known?","c":"About 20,000","w":["About 100","About 1,000","All of them"]}
+{"id":"33e0cd63","q":"Which fictional cannibal psychiatrist loves Bach?"}
+{"id":"346fe9a5","q":"Which symbol marks measurement uncertainty in reports?"}
+{"id":"35125a38","q":"Which ancient script is the ancestor of Greek and Latin?"}
+{"id":"351b336e","q":"Who is the man in the 'Distracted Boyfriend' photo?","c":"A stock photo model","w":["An Italian fashion model","A TikTok influencer","A music video actor"]}
+{"id":"3570f008","q":"Which art installation was removed over safety fears?"}
+{"id":"357bd8f8","q":"In which decade did Survivor-style reality TV take off?"}
