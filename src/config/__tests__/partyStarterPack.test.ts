@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { PARTY_STARTER_PACK, partyStarterPack, type StarterQuestion } from "@/config/partyStarterPack";
+import {
+  PARTY_STARTER_COUNT,
+  PARTY_STARTER_PACK,
+  partyStarterPack,
+  partyStarterPool,
+  pickStarterQuestions,
+  type StarterQuestion,
+} from "@/config/partyStarterPack";
 
 // The editor's own limits, from GameStylePersonalTrivia.
 const QUESTION_MAX = 65;
@@ -9,10 +16,12 @@ const LANGUAGES = Object.keys(PARTY_STARTER_PACK);
 const GEORGIAN = /[Ⴀ-ჿ]/;
 const LATIN = /[A-Za-z]/;
 
-describe("the party starter pack", () => {
-  it("opens a new party on ten questions", () => {
+describe("the party starter pool", () => {
+  it("holds far more than a party is seeded with", () => {
+    // The point of the pool: two parties made the same evening are not the
+    // same ten cards.
     for (const lang of LANGUAGES) {
-      expect(PARTY_STARTER_PACK[lang], lang).toHaveLength(10);
+      expect(PARTY_STARTER_PACK[lang].length, lang).toBeGreaterThanOrEqual(PARTY_STARTER_COUNT * 3);
     }
   });
 
@@ -39,10 +48,10 @@ describe("the party starter pack", () => {
     }
   });
 
-  it("asks ten different things", () => {
+  it("never asks the same thing twice", () => {
     for (const lang of LANGUAGES) {
       const questions = PARTY_STARTER_PACK[lang].map((q) => q.question);
-      expect(new Set(questions).size, lang).toBe(10);
+      expect(new Set(questions).size, lang).toBe(questions.length);
     }
   });
 
@@ -63,10 +72,10 @@ describe("the party starter pack", () => {
     }
   });
 
-  it("asks the same ten things in every language", () => {
-    // Same order, same icons: a player switching language should get the same
-    // pack, not a different game.
-    const slugs = (pack: StarterQuestion[]) => pack.map((q) => q.iconSlug);
+  it("asks the same things in every language", () => {
+    // Same order, same icons: a player switching language gets the same pool,
+    // not a different game.
+    const slugs = (pool: StarterQuestion[]) => pool.map((q) => q.iconSlug);
     for (const lang of LANGUAGES) {
       expect(slugs(PARTY_STARTER_PACK[lang]), lang).toEqual(slugs(PARTY_STARTER_PACK.en));
     }
@@ -83,10 +92,68 @@ describe("the party starter pack", () => {
     }
   });
 
-  it("falls back to English for a language with no pack of its own", () => {
-    // de/es/fr/it/pt spread English translations; they get the English pack.
-    expect(partyStarterPack("de")).toBe(PARTY_STARTER_PACK.en);
-    expect(partyStarterPack("")).toBe(PARTY_STARTER_PACK.en);
-    expect(partyStarterPack("ka")).toBe(PARTY_STARTER_PACK.ka);
+  it("falls back to English for a language with no pool of its own", () => {
+    // de/es/fr/it/pt spread English translations; they get the English pool.
+    expect(partyStarterPool("de")).toBe(PARTY_STARTER_PACK.en);
+    expect(partyStarterPool("")).toBe(PARTY_STARTER_PACK.en);
+    expect(partyStarterPool("ka")).toBe(PARTY_STARTER_PACK.ka);
+  });
+});
+
+describe("drawing a party from the pool", () => {
+  const pool = PARTY_STARTER_PACK.ka;
+
+  it("deals ten", () => {
+    expect(partyStarterPack("ka")).toHaveLength(PARTY_STARTER_COUNT);
+  });
+
+  it("never deals the same question twice", () => {
+    // A shuffle that samples with replacement would show a card twice in one
+    // party, which is the one thing a player would notice immediately.
+    for (let attempt = 0; attempt < 200; attempt++) {
+      const drawn = partyStarterPack("ka");
+      expect(new Set(drawn.map((q) => q.question)).size).toBe(PARTY_STARTER_COUNT);
+    }
+  });
+
+  it("deals a different hand next time", () => {
+    // Ten from 36 twice over: identical hands are possible in principle and
+    // vanishingly unlikely, so twenty draws all agreeing means it is not
+    // shuffling at all.
+    const hands = new Set(
+      Array.from({ length: 20 }, () => partyStarterPack("ka").map((q) => q.question).join("|")),
+    );
+    expect(hands.size).toBeGreaterThan(1);
+  });
+
+  it("can reach every question in the pool", () => {
+    // A shuffle that only ever touches the front of the deck would leave the
+    // back half of the pool unseen forever.
+    const seen = new Set<string>();
+    for (let i = 0; i < 500; i++) {
+      for (const q of partyStarterPack("ka")) seen.add(q.question);
+    }
+    expect(seen.size).toBe(pool.length);
+  });
+
+  it("is a shuffle of the pool, not new questions", () => {
+    const known = new Set(pool.map((q) => q.question));
+    for (const q of partyStarterPack("ka")) {
+      expect(known.has(q.question), q.question).toBe(true);
+    }
+  });
+
+  it("deals the whole pool and no more when asked for too many", () => {
+    const drawn = pickStarterQuestions(pool, pool.length + 50);
+    expect(drawn).toHaveLength(pool.length);
+    expect(new Set(drawn.map((q) => q.question)).size).toBe(pool.length);
+  });
+
+  it("takes its randomness from the caller", () => {
+    // rng() === 0 always picks the first of what is left, so the deck comes
+    // back in the order it was written. Fixes the hand for a test that needs
+    // to know what it is going to get.
+    const drawn = pickStarterQuestions(pool, 3, () => 0);
+    expect(drawn.map((q) => q.question)).toEqual(pool.slice(0, 3).map((q) => q.question));
   });
 });

@@ -38,9 +38,10 @@ interface PersonalQuestion {
 /**
  * The ten cards a new party opens on — see config/partyStarterPack.
  *
- * The first answer of each is the correct one, which is what the pack is
- * written for: a party card needs a right answer even before anybody has
- * decided what it is.
+ * Ten drawn at random from a much larger pool, so two parties made the same
+ * evening are not the same ten questions. The first answer of each is the
+ * correct one, which is what the pack is written for: a party card needs a
+ * right answer even before anybody has decided what it is.
  */
 function starterQuestions(language: string): PersonalQuestion[] {
   return partyStarterPack(language).map((q, idx) => ({
