@@ -230,7 +230,23 @@ export function useInAppPurchases() {
         const result = await plugin.purchasePackage({ aPackage: targetPackage });
         customerInfo = result.customerInfo;
       } else {
-        // Fallback: purchase by product ID directly
+        // No package carries this product, which always means the RevenueCat
+        // offering is misconfigured — the product is missing from it, or a
+        // package points at the wrong one. That has happened: the gems_5000
+        // package was once wired to io.mytrivia.gems.1500, leaving the 5000
+        // pack in no package at all.
+        //
+        // The fallback still runs, because failing a purchase the user asked
+        // for is worse than attempting it. But it is announced first: it is
+        // reached only from a broken configuration, and the same fault also
+        // drops the product out of `products`, so the paywall quietly shows
+        // the price compiled into the bundle instead of the store's. Silent,
+        // and wrong on every storefront that is not the US.
+        console.error(
+          `[iap] ${productId} is in no RevenueCat offering. Add it as a ` +
+            `package in the default offering — until then its paywall price ` +
+            `is the compiled fallback, not the store's.`,
+        );
         const result = await plugin.purchaseStoreProduct({
           product: { identifier: productId }
         });
