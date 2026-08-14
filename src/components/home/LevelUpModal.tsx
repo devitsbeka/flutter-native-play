@@ -19,6 +19,30 @@ const POWER_UP_ICONS: Record<string, string> = {
   "time-drain": timeDrainIcon,
 };
 
+/**
+ * The two reward icons are drawn at different scales inside their own files:
+ * the coin sits in a wide margin of transparent pixels, the power-up hexagons
+ * fill their PNGs edge to edge. At the same box size the coin therefore came
+ * out a third smaller than the power-up beside it, which is what it looked
+ * like — measured in Chromium at the old `h-12` on both:
+ *
+ *   coin  box 48 -> artwork 31x32
+ *   power box 48 -> artwork 48x48
+ *
+ * So the box is sized from the artwork instead. 71px of coin box draws 48px
+ * of coin:
+ *
+ *   coin  box 71 -> artwork 45x48
+ *   power box 48 -> artwork 48x48
+ *
+ * Both then sit in a slot as tall as the larger box, so the numbers below
+ * stay in line and the coin's transparent margin has somewhere to go rather
+ * than reaching down into "+150".
+ */
+const REWARD_ART_PX = 48;
+const COIN_BOX_PX = 71;
+const REWARD_SLOT_PX = COIN_BOX_PX;
+
 const POWER_UP_TRANSLATION_KEYS: Record<string, string> = {
   "5050": "shop.powerUpNames.fiftyFifty",
   "freeze": "shop.powerUpNames.freeze",
@@ -131,7 +155,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel, awarded
             transition={{ delay: 0.5 }}
             className="mb-6 text-center text-lg font-medium text-gray-500"
           >
-            🎯 {correctAnswers} {t("modals.correctAnswers")}
+            {correctAnswers} {t("modals.correctAnswers")}
           </motion.p>
         )}
 
@@ -153,13 +177,27 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel, awarded
           </div>
           <div className="flex justify-center gap-6">
             <div className="flex min-w-[70px] flex-col items-center text-center">
-              <img src={coinIcon} alt="" className="h-12 w-12 object-contain" />
+              <span className="flex items-center justify-center" style={{ height: REWARD_SLOT_PX }}>
+                <img
+                  src={coinIcon}
+                  alt=""
+                  className="max-w-none object-contain"
+                  style={{ width: COIN_BOX_PX, height: COIN_BOX_PX }}
+                />
+              </span>
               <p className="mt-1 text-xl font-bold text-gray-800">+{levelUpCoins}</p>
               <p className="text-sm font-medium text-gray-500">{t("modals.coin")}</p>
             </div>
             {awardedPowerUp && POWER_UP_ICONS[awardedPowerUp] && (
               <div className="flex min-w-[70px] flex-col items-center text-center">
-                <img src={POWER_UP_ICONS[awardedPowerUp]} alt={awardedPowerUp} className="h-12 w-12 object-contain" />
+                <span className="flex items-center justify-center" style={{ height: REWARD_SLOT_PX }}>
+                  <img
+                    src={POWER_UP_ICONS[awardedPowerUp]}
+                    alt={awardedPowerUp}
+                    className="object-contain"
+                    style={{ width: REWARD_ART_PX, height: REWARD_ART_PX }}
+                  />
+                </span>
                 <p className="mt-1 text-xl font-bold text-gray-800">+1</p>
                 <p className="text-sm font-medium text-gray-500">{t(POWER_UP_TRANSLATION_KEYS[awardedPowerUp])}</p>
               </div>
