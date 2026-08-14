@@ -50,3 +50,5 @@ scripts/question-repair/categories.json
 scripts/question-repair/worklist.json
 scripts/question-repair/residue.json
 scripts/question-repair/migration.sql
+scripts/question-repair/tiers.json
+scripts/question-repair/priority.json
