@@ -5,12 +5,24 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 
-// Static placeholder component (no shimmer)
+/**
+ * Static placeholder component (no shimmer).
+ *
+ * 15% darker than it was — rgb(236,204,242) taken to rgb(201,173,206), the
+ * alpha left alone. The old fill was within a few points of the lavender it
+ * sits on, so at 23% effective opacity the circles were all but invisible,
+ * and raising the alpha barely moved them: measured against the strip's
+ * background, +15 points of alpha changed the blend by about one value per
+ * channel. The colour was the thing that was too light, so that is what
+ * changed.
+ */
+const PLACEHOLDER_FILL = 'rgba(201, 173, 206, 0.48)';
+
 function StaticPlaceholder({ className }: { className?: string }) {
   return (
-    <div 
+    <div
       className={`${className}`}
-      style={{ backgroundColor: 'rgba(236, 204, 242, 0.48)' }}
+      style={{ backgroundColor: PLACEHOLDER_FILL }}
     />
   );
 }
