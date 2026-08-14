@@ -63,10 +63,13 @@ if problems:
         print('  ' + p, file=sys.stderr)
     sys.exit(f'{len(problems)} problems — not emitting SQL')
 
+live = sum(1 for r in rows if r.get('cdn_verified'))
 out = [
-    '-- ' + str(len(rows)) + ' English photo questions, staged in the Library.',
-    '-- Every image_url was fetched and confirmed to return 200 with an',
-    '-- image content-type before this file was written.',
+    f'-- {len(rows)} English photo questions, staged in the Library.',
+    '-- Every image_url came from the Wikipedia API, which only returns a',
+    f'-- thumbnail for a file that exists. {live} of {len(rows)} were also',
+    '-- fetched and confirmed to return 200 with an image content-type;',
+    '-- the rest were rate-limited by the CDN at build time, not missing.',
     '',
     'INSERT INTO public.questions',
     '  (language, category_id, question_text, correct_answer, incorrect_answers,',
