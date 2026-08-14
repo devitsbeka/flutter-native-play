@@ -226,10 +226,37 @@ that list, every native Apple sign-in fails with an audience mismatch — while
 the **web** flow keeps working, which makes it look like a device problem.
 
 - [ ] Supabase dashboard → **Authentication** → **Providers** → **Apple**
-- [ ] Add `io.mytrivia.app` to **Client IDs** (comma-separated alongside the
-      existing web Services ID — keep both)
-- [ ] Leave the Services ID, Team ID and key configuration as-is; those serve
-      the web redirect flow
+- [ ] **Client IDs** — both, comma-separated:
+      `io.mytrivia.signin, io.mytrivia.app`
+
+      The Services ID is what the browser flow presents; the bundle id is what
+      the native flow presents. Supabase checks an incoming token's audience
+      against this list, so a list with only one of them breaks exactly one
+      platform and leaves the other looking fine.
+
+- [ ] **Secret Key (for OAuth)** — generated from the Sign in with Apple key,
+      with the **Services ID** as Client ID. Putting the bundle id there
+      produces a JWT whose `sub` Apple rejects at the token exchange with
+      `invalid_client`. The native flow does not use this secret at all.
+
+Supporting objects, if they do not already exist:
+
+| Thing | Value |
+|---|---|
+| Services ID | `io.mytrivia.signin`, Sign In with Apple enabled |
+| Primary App ID | `io.mytrivia.app` |
+| Domains | `mytrivia.io, www.mytrivia.io` |
+| Return URL | `https://sqwpzezkhpqkdyltvsim.supabase.co/auth/v1/callback` |
+| Key | `AuthKey_*.p8` from Keys → Sign in with Apple |
+
+Apple's web configuration is only stored after **Continue** *and* **Save** —
+returning to the Services ID page is not confirmation.
+
+Domain verification (`apple-developer-domain-association.txt` under
+`public/.well-known/`) is **not** required for sign-in to work. It is required
+for Apple's private email relay, so that users who choose "Hide My Email" can
+receive mail at their `@privaterelay.appleid.com` address. Configured
+separately under More → Configure on the Services ID
 
 Three different `.p8` files come out of the Apple developer account and are
 easy to swap by mistake, because two of them are named `AuthKey_*`:
