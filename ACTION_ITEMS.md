@@ -43,15 +43,24 @@ was deleted and replaced. Everything below is confirmed against the code.
 
 Still open on the products:
 
-- [ ] **Clear "Missing Metadata" on all six.** Each needs a localized display
-      name, a description, and a review screenshot. This is not cosmetic:
-      **StoreKit does not return products in that state, even in sandbox**, so
-      `getOfferings()` comes back empty, the paywall shows compiled fallback
-      prices, and no purchase can be tested at all. The symptom is identical
-      to a dead API key, which makes it expensive to debug on the Mac. The
-      screenshot is reviewer-facing only, never shown to users, and can be
-      replaced later — one simulator capture of the shop covers all four gem
-      packs.
+- [x] ~~Localized display names and descriptions on all six~~
+- [ ] **Review screenshots — the last thing holding "Missing Metadata".** One
+      per product, six in total. Localizations alone do not clear the state.
+
+      This is not cosmetic: **StoreKit does not return products in that state,
+      even in sandbox**, so `getOfferings()` comes back empty, the paywall
+      shows compiled fallback prices, and no purchase can be tested at all.
+      The symptom is indistinguishable from a dead API key or a broken
+      offering — both of which are now the things you would reasonably suspect
+      first, which is what makes meeting this on the Mac expensive.
+
+      No Mac needed. The screenshot is reviewer-facing only, never shown to a
+      user, and replaceable at any time. Open mytrivia.io in a browser window
+      narrowed to phone width and capture the shop and the PRO paywall — same
+      UI the app renders. One shop capture serves all four gem packs, one
+      paywall capture serves both subscriptions. Apple wants at least
+      640x920px; App Store Connect rejects undersized images with a clear
+      message rather than silently.
 - [ ] **`io.mytrivia.adfree` — deliberately not created.** `AdFreeModal` is
       mounted in `Index.tsx` but `setIsAdFreeModalOpen(true)` is never called,
       so nothing in the app can open it. An in-app purchase with no reachable
@@ -74,13 +83,14 @@ Still open on the products:
       returning 200, secret key confirmed **V1** (a V2 key returns 403 code
       7723 against the `/subscribers` endpoint `_shared/iap.ts` calls, and
       every symptom of that is server-side).
-- [ ] **RevenueCat offering** — create the default offering and add **all six
-      products as packages**. This is the load-bearing step and it fails
-      silently: `useInAppPurchases` builds its product list from
-      `getOfferings()`, and `purchase()` locates the package by walking
-      `offerings.all`, so a product outside every offering leaves
-      `targetPackage` null and the buy button does nothing at all.
-      Entitlements are optional — nothing in this repo reads RevenueCat's.
+- [x] ~~**RevenueCat offering**~~ — `default`, six packages, one product each.
+      Worth recording how this went wrong once: the `gems_5000` package was
+      wired to `io.mytrivia.gems.1500`, leaving the 5000 pack in no package at
+      all. Nothing announced it. `products` is built from offering packages, so
+      the pack would have shown the `$34.99` compiled into the bundle instead
+      of the store price — right by coincidence in the US, wrong everywhere
+      else, on the screen a reviewer taps to buy. `purchase()` now logs when it
+      falls through to the no-package path.
 - [ ] **AdMob** — register the iOS app, create a **dedicated iOS** rewarded
       unit and a **real** interstitial unit (the interstitials currently point
       at Google's demo units, which serve ads and earn nothing)
