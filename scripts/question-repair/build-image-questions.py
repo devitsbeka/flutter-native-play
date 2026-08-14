@@ -40,12 +40,12 @@ CATEGORIES = {
 SUBJECTS = [
     # ── animals ───────────────────────────────────────────────────────────
     ("Red panda", 'animals', "Which animal is shown?", "Red panda", ["Raccoon", "Fox", "Marten"]),
-    ("Axolotl", 'animals', "Which animal is shown?", "Axolotl", ["Newt", "Salamander", "Mudpuppy"]),
+    ("Axolotl", 'animals', "Which animal is shown?", "Axolotl", ["Newt", "Olm", "Mudpuppy"]),
     ("Narwhal", 'animals', "Which animal is shown?", "Narwhal", ["Beluga", "Porpoise", "Dolphin"]),
     ("Okapi", 'animals', "Which animal is shown?", "Okapi", ["Zebra", "Antelope", "Tapir"]),
-    ("Pangolin", 'animals', "Which animal is shown?", "Pangolin", ["Armadillo", "Anteater", "Echidna"]),
+    ("Ground pangolin", 'animals', "Which animal is shown?", "Pangolin", ["Armadillo", "Anteater", "Echidna"]),
     ("Capybara", 'animals', "Which animal is shown?", "Capybara", ["Beaver", "Nutria", "Groundhog"]),
-    ("Toucan", 'animals', "Which bird is shown?", "Toucan", ["Hornbill", "Puffin", "Macaw"]),
+    ("Toco toucan", 'animals', "Which bird is shown?", "Toucan", ["Hornbill", "Puffin", "Macaw"]),
     ("Chameleon", 'animals', "Which animal is shown?", "Chameleon", ["Gecko", "Iguana", "Skink"]),
     ("Manatee", 'animals', "Which animal is shown?", "Manatee", ["Walrus", "Seal", "Dugong"]),
     ("Puffin", 'animals', "Which bird is shown?", "Puffin", ["Penguin", "Auk", "Tern"]),
@@ -96,8 +96,25 @@ SUBJECTS = [
     ("Frida Kahlo", 'people', "Who is shown?", "Frida Kahlo", ["Diego Rivera", "Remedios Varo", "Tina Modotti"]),
     ("Nelson Mandela", 'people', "Who is shown?", "Nelson Mandela", ["Desmond Tutu", "Kofi Annan", "Kwame Nkrumah"]),
     ("Marie Curie", 'people', "Who is shown?", "Marie Curie", ["Lise Meitner", "Rosalind Franklin", "Irene Joliot-Curie"]),
-    ("Charlie Chaplin", 'people', "Who is shown?", "Charlie Chaplin", ["Buster Keaton", "Harold Lloyd", "Stan Laurel"]),
+    ("The Tramp", 'people', "Who is shown?", "Charlie Chaplin", ["Buster Keaton", "Harold Lloyd", "Stan Laurel"]),
 ]
+
+# A page's lead image is chosen to illustrate an article, not to be guessed
+# from. Where it cannot work as a question, name a replacement here rather than
+# dropping the subject.
+IMAGE_OVERRIDE = {
+    # The article leads with a dark sunset skyline in which the tower is a
+    # hairline. This one is daytime, with the tower legible at card size.
+    'Burj Khalifa':
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/'
+        'Burj_Khalifa_Image.jpg/960px-Burj_Khalifa_Image.jpg',
+    # The lead image is a wild-type axolotl, which is brown and reads as any
+    # other salamander. The animal people picture is the leucistic one.
+    'Axolotl':
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/'
+        'Leucistic_Axolotl_front_2010-02-24.JPG/'
+        '960px-Leucistic_Axolotl_front_2010-02-24.JPG',
+}
 
 UA = 'MyTriviaQuestionBuilder/1.0 (contact: hello@itsbeka.com)'
 BATCH = 20            # api.php accepts up to 50 titles; 20 keeps each URL short
@@ -115,6 +132,7 @@ def fetch_thumbs(titles):
     and case, `redirects` for a page that moved — so the reply has to be mapped
     back to the title that was asked for, or nothing matches the SUBJECTS
     table."""
+    CACHE.update(IMAGE_OVERRIDE)
     todo = [t for t in titles if t not in CACHE]
     for i in range(0, len(todo), BATCH):
         chunk = todo[i:i + BATCH]
