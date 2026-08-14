@@ -7,4 +7,16 @@
 #
 # The publisher id is the account id from AdMob (Settings → Account
 # information), NOT an ad unit id.
+#
+# There are two, because the apps sit in two AdMob accounts: the iOS app was
+# registered under MyGameStudio Ltd while the existing Android inventory stays
+# under the original account. Both must be listed — a buyer checking this file
+# for pub-3462589915085372 and not finding it treats every iOS request as
+# unauthorised, which is a silent revenue loss rather than an error anyone
+# sees. Listing an extra publisher costs nothing.
+
+# iOS — MyGameStudio Ltd
+google.com, pub-3462589915085372, DIRECT, f08c47fec0942fa0
+
+# Android
 google.com, pub-1329033152352928, DIRECT, f08c47fec0942fa0
