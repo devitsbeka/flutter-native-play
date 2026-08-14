@@ -157,6 +157,58 @@ describe("repo invariants", () => {
     ).toEqual([]);
   });
 
+  it("keeps the web gem catalog in step with the client's", () => {
+    // Three lists name gem packs: gemPacks.ts drives both client surfaces,
+    // _shared/gems.ts prices the Stripe checkout and decides what the webhook
+    // credits, and _shared/iap.ts does the same for the App Store. If the web
+    // catalog is missing a pack the shop offers, checkout returns
+    // UNKNOWN_PRODUCT and the pack simply cannot be bought; if it disagrees on
+    // the gem count, the buyer is charged one amount and credited another.
+    const packs = (source: string, re: RegExp) =>
+      new Map([...read(source).matchAll(re)].map((m) => [m[1], Number(m[2])]));
+
+    const client = packs(
+      "src/config/gemPacks.ts",
+      /id:\s*"(gems_\w+)"[\s\S]*?\bgems:\s*(\d+)/g,
+    );
+    const server = packs(
+      "supabase/functions/_shared/gems.ts",
+      /(gems_\w+):\s*\{[\s\S]*?\bgems:\s*(\d+)/g,
+    );
+
+    expect(client.size, "no packs parsed from gemPacks.ts").toBeGreaterThan(0);
+    expect([...server.keys()].sort()).toEqual([...client.keys()].sort());
+
+    for (const [id, gems] of client) {
+      expect(server.get(id), `pack ${id} grant`).toBe(gems);
+    }
+  });
+
+  it("never lets the Stripe webhook run unsigned", () => {
+    // It used to fall back to JSON.parse(body) with a console warning when
+    // STRIPE_WEBHOOK_SECRET was unset. The endpoint is public and runs with
+    // verify_jwt = false, because Stripe carries no Supabase session — so that
+    // fallback meant anyone who knew the URL could post a made-up
+    // checkout.session.completed and be credited, with no payment involved.
+    // Comments stripped first: the note above the guard in that file names
+    // the call it is banning, and matching the file text would flag it.
+    const source = read("supabase/functions/stripe-gem-webhook/index.ts")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+
+    expect(
+      /JSON\.parse\(\s*body\s*\)/.test(source),
+      "stripe-gem-webhook parses the request body directly. Events must only " +
+        "come from constructEvent/constructEventAsync, which verifies Stripe's " +
+        "signature — parsing the body is how the unauthenticated path returns.",
+    ).toBe(false);
+
+    expect(
+      /constructEventAsync?\(/.test(source),
+      "stripe-gem-webhook no longer verifies the Stripe signature.",
+    ).toBe(true);
+  });
+
   it("keeps both PRO subscriptions on a monthly identifier", () => {
     // PRO and Friends PRO differ by friend invites, not billing period, and
     // both render a "/month" label (PRO_TIERS in ProPlansSection.tsx). They

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { getCorsHeaders, isNativeAppOrigin } from "../_shared/cors.ts";
+import { lookupGemPack } from "../_shared/gems.ts";
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -63,44 +64,29 @@ serve(async (req) => {
       );
     }
 
-    const { productId, gems, priceGel, productName } = await req.json();
+    const { productId } = await req.json();
 
-    if (!productId || !gems || !priceGel) {
+    // The only thing taken from the request is *which* pack. Quantity and
+    // price come from the server catalog.
+    //
+    // This used to read `{ gems, priceGel }` from the body, use priceGel as
+    // the Stripe amount and put gems into session metadata, which the webhook
+    // then credited. Anyone signed in could ask for five million gems at one
+    // tetri and be charged exactly that.
+    //
+    // An unknown product id is refused rather than falling back to a generic
+    // line item built from the request — that fallback was the hole's second
+    // half, since it made any made-up id work.
+    const pack = lookupGemPack(productId);
+    if (!pack) {
+      console.warn(`Refused checkout for unknown gem pack: ${JSON.stringify(productId)}`);
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
+        JSON.stringify({ error: "UNKNOWN_PRODUCT" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Product configuration with proper SKU and descriptions
-    const productConfigs: Record<string, { name: string; description: string; sku: string }> = {
-      gems_100: {
-        name: "100 ალმასი - პატარა პაკეტი",
-        description: "100 ალმასის შეძენა MyTrivia-ში. გამოიყენეთ სუპერ ძალების გასააქტიურებლად!",
-        sku: "GEMS_100_GEL",
-      },
-      gems_500: {
-        name: "500 ალმასი - საშუალო პაკეტი", 
-        description: "500 ალმასის შეძენა MyTrivia-ში. იდეალური მოთამაშეებისთვის!",
-        sku: "GEMS_500_GEL",
-      },
-      gems_1500: {
-        name: "1500 ალმასი - დიდი პაკეტი (+20% ბონუსი)",
-        description: "1500 ალმასის შეძენა MyTrivia-ში. პოპულარული არჩევანი 20% ბონუსით!",
-        sku: "GEMS_1500_GEL",
-      },
-      gems_5000: {
-        name: "5000 ალმასი - მეგა პაკეტი (+40% ბონუსი)",
-        description: "5000 ალმასის შეძენა MyTrivia-ში. საუკეთესო ფასი 40% ბონუსით!",
-        sku: "GEMS_5000_GEL",
-      },
-    };
-
-    const productConfig = productConfigs[productId] || {
-      name: productName || `${gems} ალმასი`,
-      description: `${gems} ალმასის შეძენა MyTrivia-ში`,
-      sku: `GEMS_${gems}_GEL`,
-    };
+    const sku = `GEMS_${pack.gems}_USD`;
 
     // Get or create Stripe customer
     const { data: profile } = await supabase
@@ -133,9 +119,9 @@ serve(async (req) => {
       .from("gem_purchases")
       .insert({
         user_id: userData.user.id,
-        product_id: productId,
-        gems_received: gems,
-        amount_gel: priceGel,
+        product_id: pack.id,
+        gems_received: pack.gems,
+        amount_gel: pack.priceUsd,
         status: "pending",
       })
       .select()
@@ -156,17 +142,22 @@ serve(async (req) => {
       line_items: [
         {
           price_data: {
-            currency: "gel",
+            // USD, because that is the currency the catalog prices are in —
+            // and what App Store Connect charges for the same packs. This was
+            // `currency: "gel"` with the USD figure passed straight through,
+            // so a $0.99 pack took ₾0.99, about a third of its price, while
+            // the UI displayed the converted ₾2.72.
+            currency: "usd",
             product_data: {
-              name: productConfig.name,
-              description: productConfig.description,
+              name: pack.name,
+              description: pack.description,
               metadata: {
-                sku: productConfig.sku,
-                gems: gems.toString(),
-                product_id: productId,
+                sku,
+                gems: pack.gems.toString(),
+                product_id: pack.id,
               },
             },
-            unit_amount: Math.round(priceGel * 100), // Convert to tetri
+            unit_amount: Math.round(pack.priceUsd * 100), // cents
           },
           quantity: 1,
         },
@@ -175,20 +166,23 @@ serve(async (req) => {
       success_url: `${origin}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop/cancel`,
       locale: "auto", // Auto-detect user's locale (Georgian not supported by Stripe)
+      // `gems` rides along for readability in the Stripe dashboard only. The
+      // webhook re-derives the grant from product_id against the same catalog
+      // rather than trusting this, so editing it in Stripe changes nothing.
       metadata: {
         user_id: userData.user.id,
-        product_id: productId,
-        gems: gems.toString(),
+        product_id: pack.id,
+        gems: pack.gems.toString(),
         purchase_id: purchaseRecord.id,
-        sku: productConfig.sku,
+        sku,
       },
       payment_intent_data: {
-        description: productConfig.name,
+        description: pack.name,
         metadata: {
           user_id: userData.user.id,
-          product_id: productId,
-          gems: gems.toString(),
-          sku: productConfig.sku,
+          product_id: pack.id,
+          gems: pack.gems.toString(),
+          sku,
         },
       },
     });

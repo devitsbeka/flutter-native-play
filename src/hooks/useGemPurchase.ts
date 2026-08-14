@@ -54,12 +54,10 @@ export function useGemPurchase() {
 
     try {
       const { data, error } = await supabase.functions.invoke("create-gem-checkout", {
-        body: {
-          productId: product.id,
-          gems: product.gems,
-          priceGel: product.priceGel,
-          productName: product.name,
-        },
+        // Only the pack id. The server looks up how many gems it grants and
+        // what it costs; sending those from here made them negotiable, which
+        // is exactly what they must not be.
+        body: { productId: product.id },
       });
 
       if (error) {
