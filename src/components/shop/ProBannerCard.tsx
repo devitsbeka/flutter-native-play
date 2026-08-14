@@ -60,22 +60,6 @@ export const SKIN_WHITE: BannerSkin = {
   pillFill: "rgba(64,38,102,0.07)",
 };
 
-// Frame 676:188 — the invite offer is the one banner that is not white. It
-// is selling PRO by giving it away, so it gets the colour the PRO tiers do
-// not, and a gold wash inside the top edge.
-export const SKIN_INVITE: BannerSkin = {
-  ...SKIN_WHITE,
-  // Flat, but written as a gradient: the card paints this through
-  // background-image, which ignores a bare colour.
-  bg: "linear-gradient(#FBDAFF, #FBDAFF)",
-  wave: "rgba(255,255,255,0.55)",
-  ink: "#543990",
-  inkSoft: "rgba(84,57,144,0.5)",
-  tileFill: "linear-gradient(180deg, #FBDAFF 31%, #FFFFFF 100%)",
-  tileEdge: "#B5CF3D",
-  innerGlow: "inset 0px 20px 42px 0px rgba(244,187,26,0.13)",
-};
-
 /** Lifts the top edge of a tile so it reads as a pane, not a hole. */
 const GLASS_SHEEN = "inset 0px 1px 0px 0px rgba(255,255,255,0.7)";
 
@@ -647,92 +631,6 @@ export function ProTierBanner({
         : tiles.map((tile) => (
             <BannerTile key={tile.labelCenter} skin={skin} left={tileLeft(tile)} top={164} height={130} {...tile} />
           ))}
-    </ProBannerCard>
-  );
-}
-
-/**
- * Frame 676:188 — invite friends, get PRO.
- *
- * The one banner that is not white, and the one with two buttons: copying
- * the link and sharing it are the same weight of action, so neither is the
- * other's afterthought. It replaced 636:222, which said the same thing on a
- * white card with a single button.
- */
-export function InviteBanner({
-  skin,
-  art,
-  crown,
-  headline,
-  body,
-  reward,
-  actionLabel,
-  onAction,
-  actionDisabled,
-  copyLabel,
-  onCopy,
-  copyDisabled,
-  onClick,
-}: {
-  skin: BannerSkin;
-  art: string;
-  crown: string;
-  headline: ReactNode;
-  /** The sentence under the headline. */
-  body: ReactNode;
-  /** What the invite is worth, on the pill. */
-  reward: ReactNode;
-  actionLabel: ReactNode;
-  onAction: () => void;
-  actionDisabled?: boolean;
-  copyLabel: ReactNode;
-  onCopy: () => void;
-  copyDisabled?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <ProBannerCard
-      skin={skin}
-      onClick={onClick}
-      actionLabel={actionLabel}
-      actionDisabled={actionDisabled}
-      onAction={onAction}
-      secondaryAction={{ label: copyLabel, onAction: onCopy, disabled: copyDisabled }}
-    >
-      {/* Art beside the copy, both reading off the same left edge — the
-          headline sets the column and the sentence runs under it. */}
-      <div className="absolute left-[48px] top-[44px] flex w-[479px] items-start gap-[20px]">
-        <img
-          src={art}
-          alt=""
-          draggable={false}
-          className="size-[88px] shrink-0 max-w-none object-contain"
-        />
-        <div className="min-w-0 flex-1 pt-[6px]">
-          <p className="font-display text-[24px] font-extrabold leading-none" style={{ color: skin.ink }}>
-            {headline}
-          </p>
-          <p className="mt-[10px] text-[18px] font-medium leading-[1.53]" style={{ color: "#44246B" }}>
-            {body}
-          </p>
-        </div>
-      </div>
-
-      {/* The reward, on its own pane: 376 wide against a 575 card, centred. */}
-      <div
-        className="absolute left-[287.5px] top-[218px] flex h-[78px] w-[376px] -translate-x-1/2 items-center justify-center gap-[12px] rounded-[24px] border border-solid"
-        style={{ backgroundImage: skin.tileFill, borderColor: skin.tileEdge, boxShadow: GLASS_SHEEN }}
-      >
-        <img
-          src={crown}
-          alt=""
-          draggable={false}
-          className="size-[48.7px] shrink-0 max-w-none object-contain"
-        />
-        <p className="whitespace-nowrap text-center text-[20px] font-semibold leading-none" style={{ color: skin.ink }}>
-          {reward}
-        </p>
-      </div>
     </ProBannerCard>
   );
 }
