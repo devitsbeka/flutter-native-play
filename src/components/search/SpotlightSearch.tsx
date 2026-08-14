@@ -13,9 +13,7 @@ import {
   Bell, 
   HelpCircle, 
   LogOut,
-  Sparkles,
   Users,
-  Zap,
   Command,
   ChevronLeft,
   X
@@ -44,6 +42,11 @@ import { Input } from "@/components/ui/input";
 import { SearchHorizontalLists } from "./SearchHorizontalLists";
 import { usePlayGuard } from "@/contexts/PlayGuardContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
+import roomsIcon from "@/assets/icons/rooms-icon.png";
+import gamepadIcon from "@/assets/playlimit/gamepad.png";
+import compassIcon from "@/assets/icons/icon-compass.png";
+import powersIcon from "@/assets/icons/icon-powers.png";
+import crownIcon from "@/assets/crown-icon.png";
 
 interface SpotlightSearchProps {
   className?: string;
@@ -64,6 +67,22 @@ const COMMAND_KEYS = [
   { command: "/team", labelKey: "extra.ssTeam", descKey: "extra.ssDescTeam", icon: Users, action: "navigate" as const, path: "/team" },
   { command: "/logout", labelKey: "extra.ssLogout", descKey: "extra.ssDescLogout", icon: LogOut, action: "logout" as const },
 ];
+
+/**
+ * The artwork in front of an action row.
+ *
+ * These rows used to be a white line glyph on a saturated gradient tile,
+ * sitting directly above category rows that are drawn icons on nothing. Same
+ * list, two visual languages. The tile is gone and the drawn icon renders at
+ * the size the categories use, so the whole list reads as one thing.
+ */
+function RowIcon({ src }: { src: string }) {
+  return (
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center">
+      <img src={src} alt="" className="h-[30px] w-[30px] object-contain" draggable={false} />
+    </div>
+  );
+}
 
 const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = "bar" }) => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -500,9 +519,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                     onSelect={() => handleCommandSelect(COMMANDS[0])}
                     className="flex items-center gap-3 cursor-pointer"
                   >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
-                      <Plus className="w-4 h-4 text-white" />
-                    </div>
+                    <RowIcon src={roomsIcon} />
                     <span>{t("extra.ssCreateNewRoom")}</span>
                   </CommandItem>
                   <CommandItem 
@@ -512,18 +529,14 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                     }}
                     className="flex items-center gap-3 cursor-pointer"
                   >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500">
-                      <Zap className="w-4 h-4 text-white" />
-                    </div>
+                    <RowIcon src={gamepadIcon} />
                     <span>{t("extra.ssStartGame")}</span>
                   </CommandItem>
                   <CommandItem 
                     onSelect={() => { setOpen(false); navigate("/discover"); }}
                     className="flex items-center gap-3 cursor-pointer"
                   >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
-                      <Search className="w-4 h-4 text-white" />
-                    </div>
+                    <RowIcon src={compassIcon} />
                     <span>{t("extra.ssDiscover")}</span>
                   </CommandItem>
                 </CommandGroup>
@@ -667,19 +680,20 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                     onSelect={() => { setOpen(false); navigate("/power-ups"); }}
                     className="flex items-center gap-3 cursor-pointer"
                   >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500">
-                      <Zap className="w-4 h-4 text-white" />
-                    </div>
+                    <RowIcon src={powersIcon} />
                     <span>{t("extra.ssPowers")}</span>
                   </CommandItem>
-                  <CommandItem 
-                    onSelect={() => { setOpen(false); navigate("/vip"); }}
+                  {/* PRO, under the crown — the app's word for it everywhere
+                      else. This used to say VIP and open /vip, a page from
+                      before the PRO tiers existed; the deals live on the
+                      profile now. */}
+                  <CommandItem
+                    value="PRO VIP"
+                    onSelect={() => { setOpen(false); navigate("/profile?tab=PRO"); }}
                     className="flex items-center gap-3 cursor-pointer"
                   >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500">
-                      <Trophy className="w-4 h-4 text-white" />
-                    </div>
-                    <span>VIP</span>
+                    <RowIcon src={crownIcon} />
+                    <span>PRO</span>
                   </CommandItem>
                 </CommandGroup>
               </>

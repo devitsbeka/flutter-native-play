@@ -26,7 +26,6 @@ const TeamV2 = lazy(() => import("@/pages/TeamV2"));
 const Leaderboards = lazy(() => import("@/pages/Leaderboards"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
-const VIP = lazy(() => import("@/pages/VIP"));
 const PowerUps = lazy(() => import("@/pages/PowerUps"));
 const Support = lazy(() => import("@/pages/Support"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
@@ -201,7 +200,6 @@ const pageCategories: CategoryDefinition[] = [
     titleGe: "მაღაზია და VIP",
     icon: "💎",
     pages: [
-      { id: "vip", label: "VIP", labelGe: "VIP", Component: VIP, route: "/vip" },
       { id: "powerups", label: "Power-Ups", labelGe: "ძალები", Component: PowerUps, route: "/power-ups" },
     ],
   },

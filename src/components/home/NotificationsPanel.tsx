@@ -341,7 +341,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
       case 'billing':
       case 'subscription':
         onClose();
-        navigate('/vip');
+        navigate('/profile?tab=PRO');
         break;
       default:
         setDetailNotification(notification);

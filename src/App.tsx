@@ -59,7 +59,6 @@ const TVDisplay = lazy(() => import("./pages/TVDisplay"));
 const TVHostController = lazy(() => import("./pages/TVHostController"));
 const TVLobby = lazy(() => import("./pages/TVLobby"));
 const TVJoin = lazy(() => import("./pages/TVJoin"));
-const VIP = lazy(() => import("./pages/VIP"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 
 
@@ -207,7 +206,8 @@ const App = () => (
                 <Route path="/join/session/:sessionId" element={<TVJoin />} />
                 <Route path="/join/:code" element={<TVJoin />} />
                 <Route path="/controller/:code" element={<Navigate to="/join" replace />} />
-                <Route path="/vip" element={<VIP />} />
+                {/* The VIP page is gone — PRO is sold from the profile. */}
+                <Route path="/vip" element={<Navigate to="/profile?tab=PRO" replace />} />
                 <Route path="/discover" element={<Discover />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />

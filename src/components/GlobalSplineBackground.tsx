@@ -5,7 +5,7 @@ import { useIsBreakpointDown } from "@/hooks/use-breakpoint";
 import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 
 // Pages where the background should be visible
-const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/profile", "/auth", "/vip", "/power-ups"];
+const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/profile", "/auth", "/power-ups"];
 
 // Pages where particles should be disabled for performance
 const NO_PARTICLES_PAGES = ["/", "/discover", "/game", "/leaderboards", "/power-ups"];

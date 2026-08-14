@@ -280,7 +280,7 @@ export default function Notifications() {
         break;
       case 'billing':
       case 'subscription':
-        navigate('/vip');
+        navigate('/profile?tab=PRO');
         break;
       default:
         setDetailNotification(notification);
