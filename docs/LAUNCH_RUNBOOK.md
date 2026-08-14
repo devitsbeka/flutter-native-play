@@ -184,10 +184,22 @@ RevenueCat but sit **outside an offering** are not returned to the app at all.
 - [ ] Upload the **App Store Connect API key** (In-App Purchase key) so
       RevenueCat can validate receipts server-side
 - [ ] **Products** → add all six ids, exactly as created in Phase 2
-- [ ] **Entitlements** → create `pro`, `pro_plus`, `ad_free`; attach the
-      matching subscription/non-consumable products
-- [ ] **Offerings** → create the default offering → add **all six**
-      products as packages
+- [ ] **Offerings** → create the default offering → add **all six** products
+      as packages. **This is the load-bearing step.** `useInAppPurchases`
+      builds its product list from `getOfferings()`, and `purchase()` finds
+      the package by walking `offerings.all` — so a product that exists in
+      RevenueCat but sits outside every offering cannot be bought at all.
+      `targetPackage` stays null and the purchase silently does nothing. The
+      paywall also falls back to the price compiled into the bundle.
+- [ ] **Entitlements** — *optional, and not what makes this work.*
+      `_shared/iap.ts` reads `subscriber.subscriptions` and
+      `non_subscriptions`, both keyed by product id, and resolves them through
+      its own CATALOG. RevenueCat's entitlement names are never consulted by
+      either the client or the server; "entitlement" in this repo means the
+      app's `vip_tier`. Creating `pro` and `pro_plus` and attaching the two
+      subscriptions is still worth ten seconds — it makes RevenueCat's own
+      charts read correctly — but nothing breaks without them. Skip `ad_free`
+      until that product exists (see 2.3).
 - [ ] Confirm the webhook still points at
       `https://sqwpzezkhpqkdyltvsim.supabase.co/functions/v1/revenuecat-webhook`
 
