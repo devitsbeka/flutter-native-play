@@ -1803,6 +1803,7 @@ export const en: KaTranslations = {
     sidebarContinue: "Continue playing",
     sidebarLevelSuffix: "Level {level}",
     sidebarQuickPlay: "Quick game",
+    changeScene: "Change scene",
     playNGames: "Play {count} games",
     nOfMDone: "{done}/{total} completed",
     task: "Task",

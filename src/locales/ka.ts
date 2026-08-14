@@ -1802,6 +1802,7 @@ export const ka = {
     sidebarContinue: "გააგრძელე თამაში",
     sidebarLevelSuffix: "{level} დონე",
     sidebarQuickPlay: "სწრაფი თამაში",
+    changeScene: "შეცვალე სცენა",
     playNGames: "ითამაშე {count} თამაში",
     nOfMDone: "{done}/{total} შესრულებულია",
     task: "დავალება",

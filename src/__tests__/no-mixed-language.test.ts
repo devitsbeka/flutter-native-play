@@ -25,7 +25,12 @@ import { join } from "node:path";
  */
 
 const SWEPT = [
+  "src/components/home/AvatarCircle.tsx",
+  "src/components/home/MobileHome.tsx",
+  "src/components/home/SceneHero.tsx",
   "src/components/home/SceneSidebar.tsx",
+  "src/components/home/WeekMissionsStrip.tsx",
+  "src/components/home/widgets/DidYouKnowWidget.tsx",
   "src/components/profile/CountrySelectModal.tsx",
   "src/components/team/TeamRightSidebar.tsx",
   "src/components/team/widgets/MyTriviasWidget.tsx",
@@ -56,12 +61,16 @@ function offendingLines(file: string): string[] {
       if (trimmed.includes("*/")) inBlockComment = false;
       return;
     }
-    if (trimmed.startsWith("/*")) {
+    // `{/* … */}` is how a comment is written inside JSX.
+    if (trimmed.startsWith("/*") || trimmed.startsWith("{/*")) {
       if (!trimmed.includes("*/")) inBlockComment = true;
       return;
     }
     if (trimmed.startsWith("//") || trimmed.startsWith("*")) return;
-    if (!GEORGIAN.test(line)) return;
+    // Drop a trailing `// …` comment before judging the line. The negative
+    // lookbehind for ":" keeps "https://" from being read as one.
+    const code = line.replace(/(^|[^:])\/\/.*$/, "$1");
+    if (!GEORGIAN.test(code)) return;
     if (DATA_SENTINELS.some((s) => line.includes(s))) return;
     out.push(`${file}:${i + 1}  ${trimmed.slice(0, 100)}`);
   });
@@ -117,6 +126,6 @@ describe("no mixed language", () => {
       (f) => !SWEPT.includes(f.split("\\").join("/")) && offendingLines(f).length > 0,
     );
     // Ratchet: this may fall as tiers are swept, and must never climb.
-    expect(remaining.length).toBeLessThanOrEqual(95);
+    expect(remaining.length).toBeLessThanOrEqual(90);
   });
 });
