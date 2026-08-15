@@ -157,13 +157,17 @@ export default function Profile() {
                     />
                   ) : (
                     <h2 className="font-slackey text-gray-800 capitalize font-black flex items-center gap-2" style={{ fontSize: 28 }}>
-                      {profile.nickname}
                       {/* Reads next to the name rather than on the avatar:
                           the avatar here is a carousel the player scrolls
                           through, and a crown pinned to whichever slot is
                           centred would look like a property of that avatar
-                          rather than of them. */}
+                          rather than of them.
+
+                          Before the name, not after: a long nickname is
+                          truncated, and a badge trailing it was the first
+                          thing pushed off the end. */}
                       <ProBadge variant="pill" size="lg" />
+                      {profile.nickname}
                     </h2>
                   )}
                   <button

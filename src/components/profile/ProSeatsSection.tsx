@@ -75,15 +75,22 @@ export function ProSeatsSection() {
       <div className="flex items-center justify-center gap-2 mb-1">
         <img src={crownIcon} alt="" className="w-6 h-6 object-contain" draggable={false} />
         <h3 className="font-bold text-base">{t("extra.proSeatsTitle")}</h3>
+        {/* The count belongs to the title — it is how many of the thing the
+            title names you still have. On its own line under the explanation
+            it read as a third, unrelated fact. */}
+        <span className="rounded-full bg-purple-100 dark:bg-purple-900/40 px-2 py-0.5 text-xs font-bold text-purple-700 dark:text-purple-300">
+          {t("extra.proSeatsSubtitle", { used: seatsUsed, total: seatsTotal })}
+        </span>
       </div>
       {/* What the seat is and what happens to it, before the button that
           spends one. The card used to say "0 of 1 seats used" and nothing
-          else, which names a quantity without saying what a seat does. */}
-      <p className="text-sm text-muted-foreground text-center">
+          else, which names a quantity without saying what a seat does.
+
+          Held to a readable measure rather than the card's full width: at
+          358px this ran the whole way across in two long lines, which is
+          where centred text stops looking centred. */}
+      <p className="mx-auto max-w-[30ch] text-sm text-muted-foreground text-center">
         {t("extra.proSeatsHow")}
-      </p>
-      <p className="text-sm font-semibold mb-3 mt-1 text-center">
-        {t("extra.proSeatsSubtitle", { used: seatsUsed, total: seatsTotal })}
       </p>
 
       {loading ? (
@@ -192,15 +199,17 @@ export function ProSeatsSection() {
                   )}
                 </div>
               ) : (
+                /* A button, not a line of coloured text. It is the one thing
+                   this card exists to do, and as a link it read as a footnote
+                   under the explanation. No crown on it: the header already
+                   carries one, and a second, differently drawn one two lines
+                   below read as a different mark for the same thing. */
                 <button
                   type="button"
                   onClick={() => setPicking(true)}
-                  className="mx-auto flex items-center gap-2 text-sm font-bold text-purple-700 dark:text-purple-300"
+                  className="mx-auto flex items-center justify-center rounded-full bg-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-[0_4px_0_0_rgba(88,28,135,0.35)] active:translate-y-0.5 active:shadow-[0_2px_0_0_rgba(88,28,135,0.35)] transition-all"
                 >
-                  {/* No crown here: the card's header already carries one, and
-                      a second, differently drawn one two lines below it read
-                      as a different mark for the same thing. */}
-                  {t("extra.proSeatsGive", { count: seatsFree })}
+                  {t("extra.proSeatsGive")}
                 </button>
               )}
             </div>
