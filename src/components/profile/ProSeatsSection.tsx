@@ -192,7 +192,9 @@ export function ProSeatsSection() {
                   onClick={() => setPicking(true)}
                   className="flex items-center gap-2 text-sm font-bold text-purple-700 dark:text-purple-300"
                 >
-                  <Crown className="w-4 h-4" />
+                  {/* No crown here: the card's header already carries one, and
+                      a second, differently drawn one two lines below it read
+                      as a different mark for the same thing. */}
                   {t("extra.proSeatsGive", { count: seatsFree })}
                 </button>
               )}

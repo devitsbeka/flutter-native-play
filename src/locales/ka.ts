@@ -2462,7 +2462,7 @@ export const ka = {
     mobileSoloBenefit2: "PRO ფუნქციები + 1 მეგობარი",
     proSeatsTitle: "აჩუქე PRO მეგობარს",
     proSeatsSubtitle: "გამოყენებულია {used} / {total}",
-    proSeatsHow: "აირჩიე მეგობარი სიიდან. ის მიიღებს სრულ PRO-ს მანამ, სანამ შენი გამოწერა აქტიურია — და ნებისმიერ დროს შეგიძლია დაბრუნება.",
+    proSeatsHow: "აირჩიე მეგობარი სიიდან. ის მიიღებს სრულ PRO-ს მანამ, სანამ შენი გამოწერა აქტიურია.",
     proSeatsGive: "PRO-ს ჩუქება (დარჩა {count})",
     proSeatsRevoke: "დაბრუნება",
     proSeatsSend: "PRO-ს გაგზავნა",

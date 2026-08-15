@@ -2463,7 +2463,7 @@ export const en: KaTranslations = {
     mobileSoloBenefit2: "PRO features + 1 friend",
     proSeatsTitle: "Give PRO to a friend",
     proSeatsSubtitle: "{used} of {total} seats used",
-    proSeatsHow: "Pick someone from your friends list. They get full PRO for as long as your subscription lasts, and you can take it back whenever you like.",
+    proSeatsHow: "Pick someone from your friends list. They get full PRO for as long as your subscription lasts.",
     proSeatsGive: "Give PRO ({count} left)",
     proSeatsRevoke: "Take back",
     proSeatsSend: "Send PRO",
