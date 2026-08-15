@@ -109,9 +109,25 @@ with no error raised anywhere along the path.
 
 ### 2.1 Subscription group, then the two subscriptions
 
-Both PRO tiers bill **monthly**. PRO and Friends PRO differ by friend invites
-(1 vs 5), not by billing period, and the app renders both with a "/month"
-label — see `PRO_TIERS` in `src/components/profile/ProPlansSection.tsx`.
+Both PRO tiers bill **monthly** — they are feature tiers, not billing periods,
+and the app renders both with a "/month" label. See `PRO_TIERS` in
+`src/components/profile/ProPlansSection.tsx`.
+
+They used to differ by friend invites, 1 against 5. That offer was retired
+(`20260814230000_retire_referral_pro_grant.sql`) because it minted PRO for
+anyone who called it and never paid out anyway, so the only remaining
+difference between the tiers is daily rewards. The App Store descriptions
+have to say so:
+
+| Product | Description |
+|---|---|
+| `io.mytrivia.pro.monthly` | `Double XP, no ads and a VIP badge.` |
+| `io.mytrivia.proplus.monthly` | `Double XP, no ads, VIP badge and daily rewards.` |
+
+That text is shown at the moment of purchase, so a benefit listed there and
+absent from the app is guideline 2.3.1. "Friends PRO" also now names a tier
+with no friend features, and $7.99 against $3.99 is a lot of weight for one
+benefit — both worth a decision before submission.
 Making either one yearly puts a price on screen that doesn't match what Apple
 charges, which is a guideline 2.3.1 rejection on the same screen that shows
 it.
