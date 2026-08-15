@@ -1,0 +1,436 @@
+{
+ "protect": [
+  [
+   "189c5e68",
+   "e5549c84",
+   "2016 Rio and 2012 London are different games"
+  ],
+  [
+   "2da7051d",
+   "30483dc3",
+   "first king of Iberia and first king of a united Georgia are different men"
+  ],
+  [
+   "53f2e0b6",
+   "96b9bd6a",
+   "one asks which state is NOT a permanent member, the other which IS"
+  ],
+  [
+   "5bc61284",
+   "e85eaa6f",
+   "the compound sodium chloride and the mineral halite are different answers to different questions"
+  ],
+  [
+   "5e14a3b3",
+   "86b3bb5a",
+   "the Mongol invasions in general and their arrival in Georgia are scoped differently"
+  ],
+  [
+   "68e3f197",
+   "911b7e05",
+   "the 16th and the 32nd president"
+  ],
+  [
+   "6a2f9a38",
+   "bebb5ee4",
+   "largest egg and which animal lays eggs"
+  ],
+  [
+   "c6fadf2e",
+   "f9feded2",
+   "where the largest volcano is and what it is called"
+  ],
+  [
+   "fa2b6f25",
+   "53e8f0a7",
+   "what creates the magnetic field is not what it is called"
+  ],
+  [
+   "68046264",
+   "27829378",
+   "largest internal organ is the liver; largest organ is the skin"
+  ],
+  [
+   "ae5d0988",
+   "c538d6a3",
+   "chongouri and chianouri are both traditional, and neither is an option in the other"
+  ],
+  [
+   "30ff3eb2",
+   "3ae02e61",
+   "how many planets and which is largest are different questions"
+  ],
+  [
+   "30ff3eb2",
+   "8d5c733e",
+   "how many planets and which is hottest are different questions"
+  ],
+  [
+   "3ae02e61",
+   "8d5c733e",
+   "largest and hottest are different planets"
+  ],
+  [
+   "55d45592",
+   "8eddec42",
+   "who formulated the laws and what the laws are called"
+  ],
+  [
+   "3e32bc11",
+   "8cdfbeb0",
+   "dehydration in chemistry and in the body; the medical stem now says so"
+  ],
+  [
+   "9bb4d46a",
+   "fa2b6f25",
+   "what the field is called and what creates it"
+  ]
+ ],
+ "retire": [
+  [
+   "a91a0fb0",
+   "04f97f18",
+   "same question; არქტიკის ოკეანე is the standard form"
+  ],
+  [
+   "6de785cb",
+   "066ec98c",
+   "same question; HTTP transfers pages, which is what the surviving answer says"
+  ],
+  [
+   "34e077d8",
+   "11ae96ea",
+   "same question, weaker distractors"
+  ],
+  [
+   "8c8b78ae",
+   "19c27df8",
+   "same question; გოთიკა is the style's name, გოთური its adjective"
+  ],
+  [
+   "1e39cb7f",
+   "4d9db4b5",
+   "same question; surviving copy uses the short unit forms"
+  ],
+  [
+   "234023f9",
+   "c320824e",
+   "same question; გრენლანდია is the standard spelling"
+  ],
+  [
+   "25f9413f",
+   "269c6509",
+   "same question, surviving copy is shorter"
+  ],
+  [
+   "52b45914",
+   "28554ae7",
+   "measles is caused by a Morbillivirus, of the Paramyxoviridae family; the surviving copy names the genus"
+  ],
+  [
+   "3c133c3e",
+   "290c9c23",
+   "same question"
+  ],
+  [
+   "e95b3f82",
+   "290c9c23",
+   "same question, spelt-out regnal numbers"
+  ],
+  [
+   "29a094a3",
+   "48a104b5",
+   "same question; \"გვერდი ვერ მოიძებნა\" says what 404 means"
+  ],
+  [
+   "29afd234",
+   "6804a1f3",
+   "same question, filed under mathematics"
+  ],
+  [
+   "9ed53122",
+   "2d5f8d41",
+   "same question"
+  ],
+  [
+   "dbbcaa51",
+   "2d5f8d41",
+   "same question, and offers Mozart as a painter"
+  ],
+  [
+   "556cc252",
+   "2d5f8d41",
+   "same question, title spelt ვარსკვლავიანი"
+  ],
+  [
+   "e0da2981",
+   "2d5f8d41",
+   "same question, title spelt ვარსკვლავიანი"
+  ],
+  [
+   "e66afeb4",
+   "2fee2538",
+   "same question; ჩედვიკი is the standard spelling"
+  ],
+  [
+   "7b437909",
+   "30ff3eb2",
+   "same question"
+  ],
+  [
+   "7e99215e",
+   "3ae02e61",
+   "same question"
+  ],
+  [
+   "9b9f1a92",
+   "8d5c733e",
+   "same question"
+  ],
+  [
+   "363fe9e8",
+   "994e8ee5",
+   "same question"
+  ],
+  [
+   "50a9a68e",
+   "383e1235",
+   "same question"
+  ],
+  [
+   "c55029c1",
+   "417849ad",
+   "satsivi is a walnut sauce, not an onion one"
+  ],
+  [
+   "fcb0b45b",
+   "41c2bb1a",
+   "the stapes is უზანგი; \"დაფის ძვალი\" names the incus"
+  ],
+  [
+   "bbde2f5d",
+   "45d86c53",
+   "same question"
+  ],
+  [
+   "8d893c20",
+   "52cb003e",
+   "same question; growth is measured as GDP growth"
+  ],
+  [
+   "53e8f0a7",
+   "9bb4d46a",
+   "same question; მაგნიტოსფერო is the standard spelling"
+  ],
+  [
+   "a9b0f872",
+   "8eddec42",
+   "same question"
+  ],
+  [
+   "e9ded474",
+   "8eddec42",
+   "same question"
+  ],
+  [
+   "de685689",
+   "590778c9",
+   "same question; მინდვრის შპატი is the Georgian term for feldspar"
+  ],
+  [
+   "730119a7",
+   "5e5d0e97",
+   "same question"
+  ],
+  [
+   "a596679c",
+   "5efdf5ff",
+   "same question"
+  ],
+  [
+   "ee546fc0",
+   "6045992f",
+   "same question; surviving copy carries the unit"
+  ],
+  [
+   "606c759c",
+   "a3f5e138",
+   "Earth's outer layer is the crust; the lithosphere is crust plus upper mantle"
+  ],
+  [
+   "814b56b0",
+   "27829378",
+   "same question"
+  ],
+  [
+   "a439c02a",
+   "27829378",
+   "same question"
+  ],
+  [
+   "bf52a257",
+   "27829378",
+   "same question"
+  ],
+  [
+   "dd4941bc",
+   "27829378",
+   "same question"
+  ],
+  [
+   "ed6745b9",
+   "27829378",
+   "same question"
+  ],
+  [
+   "f3fa273d",
+   "27829378",
+   "same question"
+  ],
+  [
+   "e5ca0b95",
+   "68514c38",
+   "same question"
+  ],
+  [
+   "f1141594",
+   "6e5c7213",
+   "same question"
+  ],
+  [
+   "6f951fd3",
+   "bf939f8d",
+   "same question, surviving copy gives the full name"
+  ],
+  [
+   "bcc75c9f",
+   "70cbc585",
+   "same question, surviving copy gives the full name"
+  ],
+  [
+   "cf700c7c",
+   "73c40bb8",
+   "same question; the retired copy's answer runs to 38 characters"
+  ],
+  [
+   "768288bc",
+   "cd1be581",
+   "same question; ლურჯი is the standard term for blue stars"
+  ],
+  [
+   "7708d0ee",
+   "76c5380c",
+   "same question, the two answers are the same pair reordered"
+  ],
+  [
+   "86317a91",
+   "d048c6c8",
+   "same question, surviving copy gives the full name"
+  ],
+  [
+   "946661fc",
+   "e15d1c35",
+   "same question"
+  ],
+  [
+   "953caabc",
+   "f2c2e8fe",
+   "same question"
+  ],
+  [
+   "9f430d32",
+   "bf652b68",
+   "both stems say \"known for moving slowly\" and answer with a different animal"
+  ],
+  [
+   "ab1e5e38",
+   "c538d6a3",
+   "same question, same answer"
+  ],
+  [
+   "c7f568c5",
+   "b1113075",
+   "the surviving copy explains API; the retired one answers \"ურთიერთქმედების API\""
+  ],
+  [
+   "b46c9fa5",
+   "e56d4a29",
+   "German classical idealism begins with Kant; the retired copy's answer is 29 characters"
+  ],
+  [
+   "f295a79b",
+   "c0559c9e",
+   "the fastest animal is the peregrine falcon; the cheetah is the fastest on land, which other questions already ask"
+  ],
+  [
+   "c3cc017e",
+   "c97c8f2a",
+   "same question, surviving copy gives the full name"
+  ],
+  [
+   "d0e8cfa0",
+   "e83fdaff",
+   "same question"
+  ],
+  [
+   "0826a1cc",
+   "09f50864",
+   "filigree is a goldsmith's technique in fine wire; \"რკინის სამკაული\" is wrong"
+  ],
+  [
+   "0e1be3eb",
+   "45cd1b3d",
+   "a quasar is an active galactic nucleus, which the surviving answer names"
+  ],
+  [
+   "d8812de1",
+   "28b1d9be",
+   "adsorption is accumulation on a surface; შეწოვა is absorption, the other process"
+  ],
+  [
+   "ad169072",
+   "558a7260",
+   "\"იყო და არა იყო რა\" is not among Dumbadze's titles"
+  ],
+  [
+   "d491fc2c",
+   "fc01755c",
+   "bioluminescence is light emitted by an organism; \"ცოცხალი შუქი\" is a loose gloss"
+  ],
+  [
+   "11f4f417",
+   "958508bd",
+   "same question as the surviving shoti copy"
+  ],
+  [
+   "329acc39",
+   "6e5c7213",
+   "„მთავარი“ and „პრინცი“ are two Georgian titles of the same Machiavelli book"
+  ],
+  [
+   "3624da17",
+   "6229d869",
+   "the retired copy's answer repeats its own stem word for word"
+  ],
+  [
+   "8af35ffa",
+   "2faf3929",
+   "same question about the culmination of the golden age"
+  ],
+  [
+   "bafbe4ca",
+   "04397dd5",
+   "same question about the monarch the golden age is credited to"
+  ],
+  [
+   "c859300b",
+   "6a442248",
+   "same question about the dagger dance"
+  ],
+  [
+   "f828833d",
+   "3a726c2c",
+   "same question about gozinaqi"
+  ]
+ ]
+}

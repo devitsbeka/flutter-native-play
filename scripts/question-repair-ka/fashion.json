@@ -1,0 +1,16 @@
+[
+{"id":"f65cd72a","kind":"foreign_char","note":"\"MINIMALIST DESIGN\" is capitalised English among Georgian options","fix":{"incorrect_answers":["თანამედროვე ტექნოლოგიები","მინიმალისტური დიზაინი","სტანდარტული ფერები"]}},
+{"id":"4f628710","kind":"wrong_answer","note":"Louis Vuitton the man died in 1892; the menswear creative director was Virgil Abloh, and all four options are brands rather than people","action":"retire"},
+{"id":"0b4f96a5","kind":"doubtful","note":"\"მუშტრის კაბა\" is not a garment","action":"retire"},
+{"id":"21b00e38","kind":"bad_distractor","note":"\"უგულებელყოფა\" means neglect and is not a part of a bag","fix":{"incorrect_answers":["სახელური","ბალთა","ღვედი"]}},
+{"id":"ff3e3c26","kind":"grammar","note":"\"ჰალსტუხის გათვალისწინებით\" does not belong in this stem","fix":{"question_text":"რა ჰქვია სამოსის ყელის ნაწილს?"}},
+{"id":"a2800e33","kind":"contradiction","note":"names Converse the pioneer of sports shoes while 16b290ed names Adidas","action":"flag"},
+{"id":"9af0da6a","kind":"wrong_answer","note":"a bag worn on the wrist is a wristlet; a clutch is carried in the hand, as five other questions here say","action":"flag"},
+{"id":"8238f2ec","kind":"wrong_answer","note":"a clutch is not knitted; the stem's description does not match its answer","action":"flag"},
+{"id":"c3f239ef","kind":"ambiguous","note":"a cap is headwear, not a detail of a garment","action":"flag"},
+{"id":"00fd3272","kind":"doubtful","note":"\"ლუპა\" is a magnifying glass; the textile loop is ლუპი","action":"flag"},
+{"id":"b115a281","kind":"doubtful","note":"a total look is head-to-toe coordination, not head-to-toe one brand","action":"flag"},
+{"id":"5c3cb15a","kind":"ambiguous","note":"\"what is cosmetics in fashion\" answered with \"make-up\" is circular","action":"flag"},
+{"id":"405ec1fa","kind":"ambiguous","note":"\"a type of shoe sole\" fits the heel offered as a distractor as well as the platform","action":"flag"},
+{"id":"2b7fe407","kind":"ambiguous","note":"formalwear uses several dark colours; nothing marks charcoal as the answer","action":"flag"}
+]

@@ -1,0 +1,17 @@
+[
+{"id":"52219848","kind":"wrong_answer","note":"the world's first woman prime minister was Sirimavo Bandaranaike in 1960; Thatcher was Britain's","fix":{"question_text":"ვინ იყო ბრიტანეთის პირველი ქალი პრემიერ-მინისტრი?"}},
+{"id":"887dfb1d","kind":"wrong_answer","note":"Bob Kane co-created Batman; Superman is Siegel and Shuster's, so the stem has no single answer","fix":{"question_text":"ვინ შექმნა სუპერგმირი Batman?"}},
+{"id":"837b7351","kind":"broken_stem","note":"stem asks who played Elizabeth Taylor and answers with a role she played","fix":{"question_text":"რომელი როლი შეასრულა ელიზაბეტ ტეილორმა 1963 წლის ფილმში?"}},
+{"id":"c9cd4bad","kind":"broken_stem","note":"\"დედოფლის სოლო ჰიტი\" translates the band Queen as \"the queen\", and calls a band single a solo","fix":{"question_text":"ვინ მღეროდა Queen-ის ჰიტში „Somebody to Love“?"}},
+{"id":"223c6a77","kind":"broken_stem","note":"\"რომელი ტრაგედიის ავტორს ერქვა სოფოკლე\" inverts the question it means to ask","fix":{"question_text":"რომელი ტრაგედია დაწერა სოფოკლემ?"}},
+{"id":"df33b318","kind":"type_mismatch","note":"asks which woman first climbed Everest and offers two men","fix":{"incorrect_answers":["ვანდა რუტკევიჩი","ლიდია ბრედი","ალისონ ჰარგრივსი"]}},
+{"id":"3ef20047","kind":"type_mismatch","note":"asks which woman won two Nobels and offers Linus Pauling","fix":{"incorrect_answers":["ირენ ჟოლიო-კიური","დოროთი ჰოჯკინი","ბარბარა მაკკლინტოკი"]}},
+{"id":"81130396","kind":"wrong_answer","note":"the telescope was invented by Hans Lippershey; Galileo improved it and first turned it on the sky, which 9a728424 asks correctly","action":"flag"},
+{"id":"837f5b57","kind":"ambiguous","note":"Nero persecuted Christians locally; the empire-wide bans were Diocletian's, and he is a distractor here","action":"flag"},
+{"id":"d43e8498","kind":"ambiguous","note":"Augustus is the first Roman emperor, not the first known emperor in history","action":"flag"},
+{"id":"2fac416e","kind":"doubtful","note":"„ვეფხვის ქურდი“ is not a documented Georgian title","action":"flag"},
+{"id":"228671e8","kind":"doubtful","note":"„გენერლის ყვარყვარე“ is not an Amirejibi title; Yvaryvare is Kakabadze's character","action":"flag"},
+{"id":"121acd9a","kind":"doubtful","note":"„ბაბო და ნიკო“ is not a documented Kldiashvili title","action":"flag"},
+{"id":"6fbff03c","kind":"doubtful","note":"„ბაბუაწვერა“ is not a documented Vazha title","action":"flag"},
+{"id":"fc3662ad","kind":"doubtful","note":"„მოცეკვავე მოკასინები“ is not a documented Rcheulishvili title","action":"flag"}
+]

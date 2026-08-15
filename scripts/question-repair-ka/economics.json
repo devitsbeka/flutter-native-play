@@ -1,0 +1,18 @@
+[
+{"id":"ec4e44d2","kind":"duplicate_options","note":"საჯარო ვალი, ეროვნული ვალი and მთავრობის ვალი are the same thing; three of four options are the answer","action":"retire"},
+{"id":"3d29b102","kind":"doubtful","note":"there is no \"Schmidt model\" in economics","action":"retire"},
+{"id":"1c913dd6","kind":"grammar","note":"\"აფორიზაცია\" is not a word","fix":{"incorrect_answers":["დევალვაცია","დეფლაცია","ინფლაცია"]}},
+{"id":"375cdaff","kind":"grammar","note":"\"დეფაციტი\" is a typo for დეფიციტი","fix":{"incorrect_answers":["დეფლაცია","დეფიციტი","პროფიციტი"]}},
+{"id":"a58a08ac","kind":"grammar","note":"stem ends with two question marks","fix":{"question_text":"რომელი სტრატეგია ამცირებს რისკს აქტივების გადანაწილებით?"}},
+{"id":"52cb003e","kind":"grammar","note":"\"გაცვლითი კრება\" is not an economic term","fix":{"incorrect_answers":["ფასების კლება","უმუშევრობა","ვაჭრობის დეფიციტი"]}},
+{"id":"1cbbd615","kind":"clipped_answer","note":"second option cut to \"ყველაზე დაბალი დანახ.\"","fix":{"correct_answer":"დაბალი ალტერნატიული ხარჯი","incorrect_answers":["ყველაზე დაბალი დანახარჯი","მონოპოლია ბაზარზე","უპირატესობა უცხოურ ბაზრებზე"]}},
+{"id":"631c643d","kind":"clipped_answer","note":"correct answer cut to \"ოპტიმ. გადასახადი\"","fix":{"correct_answer":"ოპტიმალური გადასახადი","incorrect_answers":["ინფლაცია ფულზე","უმუშევრობა და ინფლაცია","ზრდა კაპიტალზე"]}},
+{"id":"f999cc98","kind":"clipped_answer","note":"two options cut at \"კომ.\"","fix":{"correct_answer":"სესხი კომერციულ ბანკებს","incorrect_answers":["სესხი ფიზიკურ პირებს","დეპოზიტი კომერციულ ბანკში","სუბსიდია მთავრობისგან"]}},
+{"id":"afc63adf","kind":"clipped_answer","note":"correct answer cut to \"სახსრები ცენტრ. ბანკში\"","fix":{"correct_answer":"სახსრები ცენტრალურ ბანკში"}},
+{"id":"6da5d933","kind":"clipped_answer","note":"two options cut mid-word","fix":{"correct_answer":"ნაღდი და ბანკის რეზერვები","incorrect_answers":["მხოლოდ ნაღდი ფული","დეპოზიტი და ინვესტიცია","ვალი და ფასიანი ქაღალდები"]}},
+{"id":"c8d2dcd8","kind":"clipped_answer","note":"correct answer cut to \"სახელმწ. ინტეგრაცია\"","fix":{"correct_answer":"სახელმწიფოთა ინტეგრაცია"}},
+{"id":"94345af3","kind":"clipped_answer","note":"third option cut to \"შედარებითი უპირატ.\"","fix":{"incorrect_answers":["ბაზრის კონტროლი","შედარებითი უპირატესობა","ეფექტიანი წარმოება"]}},
+{"id":"dfde08ac","kind":"doubtful","note":"the World Bank lends to states; the bank for central banks is the BIS","action":"flag"},
+{"id":"bb0b5c6d","kind":"doubtful","note":"long-term cross-border capital investment is პირდაპირი უცხოური ინვესტიცია, not \"საინვესტიციო ნაკადი\"","action":"flag"},
+{"id":"4ae3cb27","kind":"ambiguous","note":"\"მტკიცე + რისკი\" does not name the components of an interest rate","action":"flag"}
+]

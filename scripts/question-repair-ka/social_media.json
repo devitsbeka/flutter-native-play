@@ -1,0 +1,23 @@
+[
+{"id":"12ba9b4e","kind":"wrong_answer","note":"Elon Musk owns X, not Jack Dorsey — and Musk is offered as a distractor; 3d9763a4 answers the same question correctly","action":"retire"},
+{"id":"39729402","kind":"duplicate_option","note":"\"ნიუს ფიდი\" and \"ფიდი\" are the same option twice, and \"რა ქვია\" is a typo","action":"retire"},
+{"id":"4ff95048","kind":"ambiguous","note":"Reels and Shorts are the US alternatives to TikTok and both are offered; Likee is not a US product","action":"retire"},
+{"id":"181ef177","kind":"doubtful","note":"Google+ was shut down entirely rather than dropping a \"pin\"; the question describes nothing that happened","action":"retire"},
+{"id":"fdc392c1","kind":"doubtful","note":"\"კვარტალურად რამდენი მომხმარებელია\" is not a question, and any user-count figure goes stale within a year","action":"retire"},
+{"id":"3ac9f8ff","kind":"miscategorised","note":"which continent has the most people, filed under social media","action":"retire"},
+{"id":"052a3a84","kind":"grammar","note":"a stray closing quotation mark after the question mark","fix":{"question_text":"რა არის LinkedIn?"}},
+{"id":"19df1a91","kind":"grammar","note":"a stray \"'ე.წ.'\" in the middle of the stem","fix":{"question_text":"რა არის Social CRM?"}},
+{"id":"178600d5","kind":"clipped_text","note":"\"ს-მედიაში\" is a truncation, and \"ეფილიეიტ\" is an untranslated affiliate","fix":{"question_text":"რა არის აფილირებული მარკეტინგი სოციალურ მედიაში?"}},
+{"id":"36f3d865","kind":"grammar","note":"\"ეფიმერული\"; e46b00a1 writes ეფემერული","fix":{"question_text":"რომელ პლატფორმაზეა შესაძლებელი ეფემერული პოსტები?"}},
+{"id":"fd3c6d9e","kind":"broken_stem","note":"\"ჯგუფური ჩატისთვის, ნომრით\" trails off into a comma splice","fix":{"question_text":"რომელი აპლიკაცია იყენებს ტელეფონის ნომერს ჯგუფური ჩატისთვის?"}},
+{"id":"ef3b61be","kind":"clipped_answer","note":"three options cut to \"მონაცემთ.\", \"მიკერძ. ალგო.\" and \"სოც.\"","fix":{"correct_answer":"ინფორმაციული იზოლაცია","incorrect_answers":["მონაცემთა ბუშტი","მიკერძოებული ალგორითმი","სოციალური რეზონანსი"]}},
+{"id":"48004dd7","kind":"clipped_answer","note":"all four options are abbreviated — \"ალგორითმ.\", \"კონტ.\", \"მნ. შერჩევა\", \"სოც.\"","fix":{"correct_answer":"ალგორითმული ფილტრი","incorrect_answers":["კონტენტური ფილტრი","მექანიკური შერჩევა","სოციალური ბუშტი"]}},
+{"id":"f775b4fc","kind":"clipped_answer","note":"option cut to \"კონფიდენც.\"","fix":{"incorrect_answers":["მონაცემთა კონფიდენციალურობა","ალგორითმების სირთულე","მომხმარებლის პოპულარობა"]}},
+{"id":"a1a80406","kind":"clipped_answer","note":"the answer is cut to \"ინტერნეტის მთავარი\" — Reddit's motto is the front page of the internet","fix":{"correct_answer":"ინტერნეტის მთავარი გვერდი","incorrect_answers":["უდიდესი სოციალური ქსელი","რაც გაინტერესებს","ყოველდღიური სიახლე"]}},
+{"id":"c327eadc","kind":"clipped_answer","note":"the answer joins two words with a slash","fix":{"correct_answer":"სასაცილო გამოსახულება"}},
+{"id":"0cb5cd5a","kind":"grammar","note":"\"შორტები\"; 4f94a83e writes შორტსი","fix":{"correct_answer":"შორტსი"}},
+{"id":"8151a616","kind":"doubtful","note":"\"ბეიბი ფეის\" and \"სი გულაგ\" are not videos","fix":{"incorrect_answers":["ბეიბი","დესპასიტო","შეიქ იტ ოფ"]}},
+{"id":"5010bc1f","kind":"doubtful","note":"Libra was renamed Diem and the project was wound up in 2022; Facebook has no virtual currency now","action":"flag"},
+{"id":"05294c04","kind":"ambiguous","note":"cyberpsychology, offered as a distractor, studies online behaviour as squarely as digital ethnography","action":"flag"},
+{"id":"4360f977","kind":"ambiguous","note":"\"ვირტუალური იდენტობა\", offered as a distractor, is at least as good a name for a digital image as \"online reputation\"","action":"flag"}
+]

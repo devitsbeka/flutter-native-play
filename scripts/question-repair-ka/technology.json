@@ -1,0 +1,19 @@
+[
+{"id":"613dcf6b","kind":"wrong_answer","note":"the relation runs the other way — deep learning rests on neural networks, not neural networks on deep learning","action":"retire"},
+{"id":"b3310b64","kind":"broken_stem","note":"noun-phrase stem, and Shor's name is translated as the preposition \"შორის\"","fix":{"question_text":"რომელი კვანტური ალგორითმი შლის RSA-სა და ECC-ს?","correct_answer":"შორის ალგორითმი"}},
+{"id":"45c37a4f","kind":"broken_stem","note":"\"ექვსნათიანი სტრიქონი\" is not a phrase in Georgian","fix":{"question_text":"რა ჰქვია 16-ობით სისტემაში ჩაწერილ კოდს?"}},
+{"id":"72e7b3bc","kind":"grammar","note":"\"ასაწყობი პრინტერი\" garbles the movable-type press","fix":{"question_text":"როდის გამოიგონეს ასოთამწყობი სტამბა?"}},
+{"id":"82e365f7","kind":"grammar","note":"\"აიფი მისამართი\" spells IP out phonetically","fix":{"question_text":"რა არის IP მისამართი ინტერნეტში?"}},
+{"id":"dd09f082","kind":"grammar","note":"the stem asks for a target and the options give actions","fix":{"question_text":"რა არის ჰაკერების მთავარი მიზანი?"}},
+{"id":"1b161018","kind":"clipped_answer","note":"the answer cut to \"შეუნახავი მდგომ\" and an option to \"ცენტრ.\"","fix":{"correct_answer":"მდგომარეობის არქონა","incorrect_answers":["მჭიდრო კავშირი","ორმხრივი კავშირი","ცენტრალური კონტროლი"]}},
+{"id":"8bc54a43","kind":"clipped_answer","note":"all four options are abbreviated — \"სწ.\", \"ს.\", \"არაზედამხედ.\", \"ნახ.ზედამხედ.\"","fix":{"correct_answer":"განმტკიცებითი სწავლა","incorrect_answers":["ზედამხედველობითი სწავლა","არაზედამხედველობითი სწავლა","ნახევრად ზედამხედველობითი"]}},
+{"id":"73d1b99f","kind":"clipped_answer","note":"answer cut to \"გლ. პოზიც. სისტემა\"","fix":{"correct_answer":"გლობალური პოზიციონირების სისტემა"}},
+{"id":"c9a00698","kind":"clipped_answer","note":"two options cut to \"რადიონავ.\" and \"ოპტიკურ-ბოჭკ. ნავ.\"","fix":{"incorrect_answers":["მიწისზედა რადიონავიგაცია","წყალქვეშა აკუსტიკური ნავიგაცია","ოპტიკურ-ბოჭკოვანი ნავიგაცია"]}},
+{"id":"c96de687","kind":"clipped_text","note":"the stem cuts \"მაქსიმალური\" to \"მაქს.\"","fix":{"question_text":"რა ტერმინით აღინიშნება მონაცემთა გადაცემის მაქსიმალური სიჩქარე?"}},
+{"id":"7f579e60","kind":"clipped_answer","note":"the last option joins two words with a slash","fix":{"incorrect_answers":["A და B","X და Y","მართალი და მცდარი"]}},
+{"id":"e16d98f6","kind":"mixed_script","note":"three options left in Latin script","fix":{"incorrect_answers":["ჰუავეი","შაომი","გუგლი"]}},
+{"id":"11c3d8b1","kind":"mixed_script","note":"all four options left in Latin script; 91155124 transliterates the same companies","fix":{"correct_answer":"მაიკროსოფტს","incorrect_answers":["მეტას","გუგლს","ეპლს"]}},
+{"id":"91487c56","kind":"grammar","note":"\"ბილ გეიტსი\" and \"მარკ ზაკერბერგი\"; the bank writes გეითსი and ცუკერბერგი","fix":{"incorrect_answers":["ბილ გეითსი","სტივ ჯობსი","მარკ ცუკერბერგი"]}},
+{"id":"c6b66c91","kind":"grammar","note":"same \"ბილ გეიტსი\"","fix":{"incorrect_answers":["სტივ ჯობსი","ბილ გეითსი","ჯეფ ბეზოსი"]}},
+{"id":"6c53dad2","kind":"ambiguous","note":"a glitch is a small software fault too, and it is offered as a distractor","action":"flag"}
+]

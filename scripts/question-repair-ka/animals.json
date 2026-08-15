@@ -1,0 +1,16 @@
+[
+{"id":"d396f5c6","kind":"wrong_answer","note":"\"ღრძილებით\" means \"with gums\"; the word for gills is ლაყუჩები","fix":{"question_text":"რომელი ფეხსახსრიანი სუნთქავს ლაყუჩებით?"}},
+{"id":"9675af1b","kind":"wrong_answer","note":"a spider is not an insect; 8aea8841 asks the same thing and says ცხოველი","fix":{"question_text":"რომელი ცხოველი აკეთებს ქსელს?"}},
+{"id":"53f41e1b","kind":"grammar","note":"\"dominant female\" is English inside a Georgian stem","fix":{"question_text":"რომელი ზღვის თევზი იცვლის სქესს დომინანტი მდედრის სიკვდილის შემდეგ?"}},
+{"id":"c281f12d","kind":"grammar","note":"\"რაოდეობით\" is a typo for რაოდენობით","fix":{"question_text":"რომელი ყლაპავს დიდი რაოდენობით მიკროპლასტმასს ფილტრაციისას?"}},
+{"id":"90c4d0ce","kind":"grammar","note":"\"ძილით ძილი\" repeats the noun","fix":{"question_text":"რომელ ზღვის ძუძუმწოვარს სძინავს ტვინის ერთი ნახევრით?"}},
+{"id":"771f6dfe","kind":"grammar","note":"\"კოლა\" is a typo for კოალა","fix":{"incorrect_answers":["აქლემი","კოალა","გველი"]}},
+{"id":"a7c2c8f3","kind":"type_mismatch","note":"a bird question offering \"ავსტრალიური გველი\" — an Australian snake — as an option","fix":{"incorrect_answers":["იმპერატორული პინგვინი","ზარნაშო","ალბატროსი"]}},
+{"id":"859ee979","kind":"bad_distractor","note":"\"ორგანიზმი\" is not a class parallel to reptile; an iguana is one","fix":{"incorrect_answers":["ამფიბია","ძუძუმწოვარი","ფრინველი"]}},
+{"id":"45e111e2","kind":"answer_in_question","note":"asks which bird is indigo and answers \"ინდიგოსფერი გრანულა\", which is not a bird","action":"retire"},
+{"id":"fab7e097","kind":"doubtful","note":"\"სუამუსი\" is not a documented name for any reptile","action":"flag"},
+{"id":"d1834211","kind":"doubtful","note":"the stem states as fact that wolves howl at the full moon, which they do not","action":"flag"},
+{"id":"d6aae36a","kind":"doubtful","note":"butterflies form a chrysalis; the cocoon is a moth's","action":"flag"},
+{"id":"4568da0e","kind":"ambiguous","note":"salmon, offered as a distractor, also live in fresh water","action":"flag"},
+{"id":"3337be9c","kind":"ambiguous","note":"mussels, offered as a distractor, also produce pearls","action":"flag"}
+]

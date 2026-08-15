@@ -1,0 +1,19 @@
+[
+{"id":"52f6ed8f","kind":"wrong_answer","note":"the Segovia aqueduct is Roman (რომაული); რომანული is Romanesque, a different period","fix":{"correct_answer":"რომაული","incorrect_answers":["რომანული","გოთური","ბაროკო"]}},
+{"id":"ee539382","kind":"wrong_answer","note":"a pyramid is a tomb, not an element of Egyptian temples; the colonnade offered as a distractor is one","fix":{"correct_answer":"კოლონადა","incorrect_answers":["გუმბათი","თაღი","კონტრფორსი"]}},
+{"id":"d040c87b","kind":"wrong_answer","note":"the Eridu settlement dates to c.5400 BC but its ziggurat to c.2100 BC","fix":{"correct_answer":"დაახლ. ძვ.წ. 2100","incorrect_answers":["დაახლ. ძვ.წ. 5400","დაახლ. ძვ.წ. 1500","დაახლ. ახ.წ. 100"]}},
+{"id":"cb699689","kind":"grammar","note":"\"პერუსეპოლისი\" is a typo for პერსეპოლისი","fix":{"correct_answer":"პერსეპოლისი"}},
+{"id":"9712fda7","kind":"grammar","note":"\"გოტიკა\" is spelt გოთიკა everywhere else in the bank","fix":{"incorrect_answers":["გოთიკა","მოდერნი","ბრუტალიზმი"]}},
+{"id":"526c0655","kind":"grammar","note":"\"გოტიკას\" is spelt გოთიკას everywhere else in the bank","fix":{"question_text":"რომელი სტილი მოჰყვება გოთიკას?"}},
+{"id":"38f72107","kind":"grammar","note":"stem is missing its interrogative","fix":{"question_text":"რომელ სტილშია აშენებული თელ-ავივის „თეთრი ქალაქი“?"}},
+{"id":"429f5873","kind":"grammar","note":"\"აფრებიან გუმბათებიანი\" doubles the adjectival suffix","fix":{"question_text":"რომელ სტილს ახასიათებს აფრებიანი გუმბათი და მოზაიკა?"}},
+{"id":"1eafe810","kind":"grammar","note":"\"გამომყენებელი\" is not a word","fix":{"question_text":"რომელ სტილს ახასიათებს მრგვალი თაღები?"}},
+{"id":"250e8d3a","kind":"grammar","note":"noun-phrase stem, and a pylon is a gateway rather than a column","fix":{"question_text":"რა ჰქვია ეგვიპტური ტაძრის მასიურ შესასვლელს?"}},
+{"id":"d8d77554","kind":"broken_stem","note":"\"ფალაოს სასახლე\" names no building; Wright is famous for Fallingwater","fix":{"question_text":"რომელმა არქიტექტორმა დააპროექტა „ჩანჩქერის სახლი“?"}},
+{"id":"de52acd3","kind":"doubtful","note":"\"ტრაბახი\" is not an architectural term — the word means boasting","action":"retire"},
+{"id":"c990e1e6","kind":"doubtful","note":"no \"Gate of the World\" tower is documented at Al Khobar","action":"flag"},
+{"id":"dac0ee7a","kind":"doubtful","note":"the 1980s Sioni-quarter reconstruction is not attributed to Kaplanishvili in any published source","action":"flag"},
+{"id":"a767953d","kind":"doubtful","note":"the Maiden Tower is Shirvanshah-era local work; \"Persian\" is not the standard attribution","action":"flag"},
+{"id":"98e938e8","kind":"ambiguous","note":"\"famous for its supports\" fits every option; 433f7fbb asks the flying-buttress question properly","action":"flag"},
+{"id":"a66f161f","kind":"ambiguous","note":"opera houses are built in several plan shapes","action":"flag"}
+]

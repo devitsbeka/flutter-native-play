@@ -1,0 +1,921 @@
+{
+ "retire": {
+  "a91a0fb0-081a-4208-8ee4-4a4b5c61ee9e": {
+   "survivor": "04f97f18-bacc-4c86-8eb2-0d086da6ade0",
+   "why": "same question; არქტიკის ოკეანე is the standard form"
+  },
+  "6de785cb-ac8b-44e2-bdcb-e73327cb0929": {
+   "survivor": "066ec98c-23db-4355-aa1f-9b7adc697ed5",
+   "why": "same question; HTTP transfers pages, which is what the surviving answer says"
+  },
+  "34e077d8-6a6a-4d2d-a4dd-c20605f9e39d": {
+   "survivor": "11ae96ea-3916-4eb5-99b8-00c439f1b8bf",
+   "why": "same question, weaker distractors"
+  },
+  "8c8b78ae-996e-4b4f-bdbc-6b0d9a5efe66": {
+   "survivor": "19c27df8-f31a-49ba-85bd-ad0daee0caa4",
+   "why": "same question; გოთიკა is the style's name, გოთური its adjective"
+  },
+  "1e39cb7f-0fae-4ec2-b948-c5b0a964c85d": {
+   "survivor": "4d9db4b5-2474-453d-b529-9b2f1ce18818",
+   "why": "same question; surviving copy uses the short unit forms"
+  },
+  "234023f9-c95d-442a-96a2-79c2cd376ee7": {
+   "survivor": "c320824e-70c2-46c3-bb21-2a7f290dc3cc",
+   "why": "same question; გრენლანდია is the standard spelling"
+  },
+  "25f9413f-cc02-4357-bb16-838733858b53": {
+   "survivor": "269c6509-75c9-4f18-bbe3-13f1261ab062",
+   "why": "same question, surviving copy is shorter"
+  },
+  "52b45914-2692-47ca-a438-0b4131556b8b": {
+   "survivor": "28554ae7-0840-4ff6-b329-df036737c532",
+   "why": "measles is caused by a Morbillivirus, of the Paramyxoviridae family; the surviving copy names the genus"
+  },
+  "3c133c3e-6984-470f-8123-5fb5622532d7": {
+   "survivor": "290c9c23-8b8f-4960-8bfd-dfdbf833a3a3",
+   "why": "same question"
+  },
+  "e95b3f82-87c7-4832-8b72-c7bb4e1b5d95": {
+   "survivor": "290c9c23-8b8f-4960-8bfd-dfdbf833a3a3",
+   "why": "same question, spelt-out regnal numbers"
+  },
+  "29a094a3-247b-42bf-9020-b86a7f92aa1b": {
+   "survivor": "48a104b5-dcbd-4be7-a654-8892b09c45df",
+   "why": "same question; \"გვერდი ვერ მოიძებნა\" says what 404 means"
+  },
+  "29afd234-27c0-444c-a068-86da7510d39c": {
+   "survivor": "6804a1f3-ddee-43d4-9c2a-31d90240ae7a",
+   "why": "same question, filed under mathematics"
+  },
+  "9ed53122-ea81-4f37-8587-4ed6eaa67047": {
+   "survivor": "2d5f8d41-9f21-43db-a847-d88375bef17f",
+   "why": "same question"
+  },
+  "dbbcaa51-766f-41fb-9f63-1f94ad0729a5": {
+   "survivor": "2d5f8d41-9f21-43db-a847-d88375bef17f",
+   "why": "same question, and offers Mozart as a painter"
+  },
+  "556cc252-f124-4465-87ed-2b5630c5a44a": {
+   "survivor": "2d5f8d41-9f21-43db-a847-d88375bef17f",
+   "why": "same question, title spelt ვარსკვლავიანი"
+  },
+  "e0da2981-d78a-4a61-87ff-49fc9a1e3f5e": {
+   "survivor": "2d5f8d41-9f21-43db-a847-d88375bef17f",
+   "why": "same question, title spelt ვარსკვლავიანი"
+  },
+  "e66afeb4-626e-46bc-9be8-38b61f76feb7": {
+   "survivor": "2fee2538-aa31-4ec6-bd1c-23775fc99466",
+   "why": "same question; ჩედვიკი is the standard spelling"
+  },
+  "7b437909-6254-4fa1-9922-4bb0a7061566": {
+   "survivor": "30ff3eb2-d1de-4f27-8956-f0ab85b1f36b",
+   "why": "same question"
+  },
+  "7e99215e-7664-4ec6-b841-a174369b3660": {
+   "survivor": "3ae02e61-653c-4a5c-8f0c-c3b589481f0b",
+   "why": "same question"
+  },
+  "9b9f1a92-38e7-40d8-aaeb-62cbf3d87c26": {
+   "survivor": "8d5c733e-077e-4523-88b9-8fce2346466c",
+   "why": "same question"
+  },
+  "363fe9e8-4c3f-4763-9d59-e7a7ca88cba1": {
+   "survivor": "994e8ee5-5d3b-47fa-af25-92700afa62d5",
+   "why": "same question"
+  },
+  "50a9a68e-6c70-4791-9423-2783cd64b341": {
+   "survivor": "383e1235-72e7-4fc5-88df-0f0c7b15096d",
+   "why": "same question"
+  },
+  "c55029c1-ca23-4e9a-aad5-a9aeb76ec7f0": {
+   "survivor": "417849ad-e66e-48c3-9187-224342be95e1",
+   "why": "satsivi is a walnut sauce, not an onion one"
+  },
+  "fcb0b45b-055a-4502-bb11-5528e0ebda05": {
+   "survivor": "41c2bb1a-f46e-4ee8-95ad-d05043a6abd0",
+   "why": "the stapes is უზანგი; \"დაფის ძვალი\" names the incus"
+  },
+  "bbde2f5d-429f-416a-8bad-44b2381571bd": {
+   "survivor": "45d86c53-2640-40c6-a5c5-b5ea8acea7db",
+   "why": "same question"
+  },
+  "8d893c20-ef1e-44ac-801d-60f4edb578cc": {
+   "survivor": "52cb003e-cd46-48ee-b703-e7150ffe153b",
+   "why": "same question; growth is measured as GDP growth"
+  },
+  "53e8f0a7-b3ee-490c-ae46-d2731e935477": {
+   "survivor": "9bb4d46a-02b9-4c23-ab70-96729ea14a9f",
+   "why": "same question; მაგნიტოსფერო is the standard spelling"
+  },
+  "a9b0f872-41f3-4e38-b779-267b681eb60e": {
+   "survivor": "8eddec42-aab4-4459-91e9-4de137acc95e",
+   "why": "same question"
+  },
+  "e9ded474-9010-480a-bae9-b4f1d06876c3": {
+   "survivor": "8eddec42-aab4-4459-91e9-4de137acc95e",
+   "why": "same question"
+  },
+  "de685689-26f6-4db0-a849-101c4cb0630e": {
+   "survivor": "590778c9-ca4e-40f6-8722-22ada5f9b8b7",
+   "why": "same question; მინდვრის შპატი is the Georgian term for feldspar"
+  },
+  "730119a7-a1bd-4544-bb7b-ba93d6fec170": {
+   "survivor": "5e5d0e97-7863-4bf8-82b2-8015121073ed",
+   "why": "same question"
+  },
+  "a596679c-777f-4dfa-bbe7-b93b9dfb1283": {
+   "survivor": "5efdf5ff-1556-4d57-9211-f13165aa0cc2",
+   "why": "same question"
+  },
+  "ee546fc0-0620-46df-84a5-8340cfbe005b": {
+   "survivor": "6045992f-e1eb-4e24-9592-53883bb83eaa",
+   "why": "same question; surviving copy carries the unit"
+  },
+  "606c759c-105a-4d1b-8fc3-d58cd056577f": {
+   "survivor": "a3f5e138-42dd-42e2-9ef7-d44f23a28cf3",
+   "why": "Earth's outer layer is the crust; the lithosphere is crust plus upper mantle"
+  },
+  "814b56b0-6448-40f6-94fe-1176dd7e204f": {
+   "survivor": "27829378-7f57-465d-8616-9a0254e2d2e3",
+   "why": "same question"
+  },
+  "a439c02a-e67f-4c37-a5dc-c4b98f651269": {
+   "survivor": "27829378-7f57-465d-8616-9a0254e2d2e3",
+   "why": "same question"
+  },
+  "bf52a257-e454-4e5c-b572-330472b56c65": {
+   "survivor": "27829378-7f57-465d-8616-9a0254e2d2e3",
+   "why": "same question"
+  },
+  "dd4941bc-a4cd-47cb-9a8e-6f51bf94787c": {
+   "survivor": "27829378-7f57-465d-8616-9a0254e2d2e3",
+   "why": "same question"
+  },
+  "ed6745b9-23ed-49b9-a40a-dea493935870": {
+   "survivor": "27829378-7f57-465d-8616-9a0254e2d2e3",
+   "why": "same question"
+  },
+  "f3fa273d-087c-4596-8892-4cdab1351cac": {
+   "survivor": "27829378-7f57-465d-8616-9a0254e2d2e3",
+   "why": "same question"
+  },
+  "e5ca0b95-079e-43b1-80e1-9d58a59970f4": {
+   "survivor": "68514c38-a172-41fe-8eda-2d3f1b437ca7",
+   "why": "same question"
+  },
+  "f1141594-1714-4376-a6b2-c744ed22f488": {
+   "survivor": "6e5c7213-4740-439a-91cd-c667fef87060",
+   "why": "same question"
+  },
+  "6f951fd3-115d-48ad-a444-fe9c61131b1d": {
+   "survivor": "bf939f8d-f016-4246-84b7-8d1850856ea6",
+   "why": "same question, surviving copy gives the full name"
+  },
+  "bcc75c9f-71bc-45be-8479-7853343df249": {
+   "survivor": "70cbc585-de9b-4505-a7bf-c83f9c4a54d7",
+   "why": "same question, surviving copy gives the full name"
+  },
+  "cf700c7c-ed46-46d2-971d-8af7535c0ca3": {
+   "survivor": "73c40bb8-a066-4206-89c4-3799db709c12",
+   "why": "same question; the retired copy's answer runs to 38 characters"
+  },
+  "768288bc-8309-491c-b05b-705e383ffd57": {
+   "survivor": "cd1be581-88d7-4e6d-aba6-565a4b2e6490",
+   "why": "same question; ლურჯი is the standard term for blue stars"
+  },
+  "7708d0ee-27f7-40b6-a0bb-b9ed4b05f2ad": {
+   "survivor": "76c5380c-975a-4aa9-a80a-fe525f2998d0",
+   "why": "same question, the two answers are the same pair reordered"
+  },
+  "86317a91-f7ad-43a9-b8e0-6c5b922534da": {
+   "survivor": "d048c6c8-34dc-4bd9-bda7-f6782dff9fab",
+   "why": "same question, surviving copy gives the full name"
+  },
+  "946661fc-1783-4266-a63b-5065a37b9516": {
+   "survivor": "e15d1c35-fa17-498c-865e-224a17e110af",
+   "why": "same question"
+  },
+  "953caabc-7852-4694-b417-e6926a5a32df": {
+   "survivor": "f2c2e8fe-6d06-4999-b5d7-0723559679a3",
+   "why": "same question"
+  },
+  "9f430d32-7699-42f6-94eb-adc22e975500": {
+   "survivor": "bf652b68-b8e7-49b8-acc5-aae29a0f7e4d",
+   "why": "both stems say \"known for moving slowly\" and answer with a different animal"
+  },
+  "ab1e5e38-8207-492e-8c53-33cbdcd16dac": {
+   "survivor": "c538d6a3-9898-49da-a04f-1ae57792871b",
+   "why": "same question, same answer"
+  },
+  "c7f568c5-af40-4fef-b815-0925d7ce99d9": {
+   "survivor": "b1113075-434b-49a1-b1cf-158b2dea8dc5",
+   "why": "the surviving copy explains API; the retired one answers \"ურთიერთქმედების API\""
+  },
+  "b46c9fa5-c476-457e-bdea-d7a7da4648f7": {
+   "survivor": "e56d4a29-b2f4-4065-a0b4-c8857d47bbcb",
+   "why": "German classical idealism begins with Kant; the retired copy's answer is 29 characters"
+  },
+  "f295a79b-0c0a-4342-a456-547ec193a96b": {
+   "survivor": "c0559c9e-d7bc-407c-9982-196c023b4e03",
+   "why": "the fastest animal is the peregrine falcon; the cheetah is the fastest on land, which other questions already ask"
+  },
+  "c3cc017e-cb50-4445-b481-f4f578510e50": {
+   "survivor": "c97c8f2a-0af4-44c7-bc95-689f3173771e",
+   "why": "same question, surviving copy gives the full name"
+  },
+  "d0e8cfa0-b23d-4ba8-b455-60e280aed1db": {
+   "survivor": "e83fdaff-daa1-4e9b-9403-9695ccc29a4a",
+   "why": "same question"
+  },
+  "0826a1cc-e8c6-41e7-b507-696416ee3b53": {
+   "survivor": "09f50864-65ed-4948-a9ae-220d560da456",
+   "why": "filigree is a goldsmith's technique in fine wire; \"რკინის სამკაული\" is wrong"
+  },
+  "0e1be3eb-ebb4-4394-8cde-52b890abf4fd": {
+   "survivor": "45cd1b3d-2e09-4984-ae10-a23a9b072007",
+   "why": "a quasar is an active galactic nucleus, which the surviving answer names"
+  },
+  "d8812de1-8c7a-4b64-8f5a-f6a30f0d27cc": {
+   "survivor": "28b1d9be-8d4e-4713-bf9b-ffd76a55838c",
+   "why": "adsorption is accumulation on a surface; შეწოვა is absorption, the other process"
+  },
+  "ad169072-7841-48e6-9061-25c1163b830a": {
+   "survivor": "558a7260-24e4-411a-a6dd-45db8dc0d9e7",
+   "why": "\"იყო და არა იყო რა\" is not among Dumbadze's titles"
+  },
+  "d491fc2c-a16d-4d29-ade4-33b80f688350": {
+   "survivor": "fc01755c-9666-4be5-b0a7-c854cb7b3f22",
+   "why": "bioluminescence is light emitted by an organism; \"ცოცხალი შუქი\" is a loose gloss"
+  },
+  "11f4f417-b265-4a46-afe7-16ec66cb5a58": {
+   "survivor": "958508bd-ccf0-4100-865b-baf1053ea8af",
+   "why": "same question as the surviving shoti copy"
+  },
+  "329acc39-6059-45cc-91af-3d02e72f8943": {
+   "survivor": "6e5c7213-4740-439a-91cd-c667fef87060",
+   "why": "„მთავარი“ and „პრინცი“ are two Georgian titles of the same Machiavelli book"
+  },
+  "3624da17-e587-40ce-9f61-6d4f5448b732": {
+   "survivor": "6229d869-17c1-483d-9dba-692b40b36342",
+   "why": "the retired copy's answer repeats its own stem word for word"
+  },
+  "8af35ffa-3848-492a-b559-a390f0cbc182": {
+   "survivor": "2faf3929-f986-459d-a0a8-8d1c5152f298",
+   "why": "same question about the culmination of the golden age"
+  },
+  "bafbe4ca-fbb1-443d-850d-107f7696e8ce": {
+   "survivor": "04397dd5-f9c6-4a81-9c6a-9a78aeeddae7",
+   "why": "same question about the monarch the golden age is credited to"
+  },
+  "c859300b-afd0-4a4c-8f8f-18ab99d3263c": {
+   "survivor": "6a442248-d6e2-47b6-a895-4d017b7ca0db",
+   "why": "same question about the dagger dance"
+  },
+  "f828833d-15af-4836-92a3-7d024bddd994": {
+   "survivor": "3a726c2c-84ef-4ee3-b55c-6977f18ddd52",
+   "why": "same question about gozinaqi"
+  },
+  "fc67bf35-09b9-4a72-84a4-175c869620a8": {
+   "survivor": "60cfd124-0c4f-45c8-8faa-51005b88872e",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "8cf04751-4492-4232-a46a-ef3a42fa68d1": {
+   "survivor": "71967297-4535-4045-acb7-56540a53aeeb",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "fd398755-36fe-4077-b195-429fc0f4da05": {
+   "survivor": "069a88ce-a8a5-4e72-b085-8127476e2abf",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "a0945173-790d-4220-b938-c4b4ae31d524": {
+   "survivor": "8554a675-28ee-433a-8e1b-ccf092f72858",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "a8ec05ae-e3f6-4446-b9c6-11b96604fc0b": {
+   "survivor": "5fdd51e6-1e43-466a-9b2e-24f2caafbc93",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "2bcdf247-3fb4-4acc-8d15-2d3d375f9d13": {
+   "survivor": "c04bee00-214a-4aa7-9f99-888f7b044cb1",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "7470a407-61c4-43c9-b54f-5680ce53b9fd": {
+   "survivor": "858b5397-eccc-4427-b532-8af4f78fb98e",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "82226b99-12e0-48a1-9cbd-83d46e77002e": {
+   "survivor": "1750498f-64c3-4bec-8ec1-489ad50a17ad",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "d015476f-5801-4955-81ac-f9000f84ee48": {
+   "survivor": "d53dfe28-a4f5-4557-91ee-3444e348fce1",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "357cf1af-1f75-41c2-83b7-4a9f9ae5b5eb": {
+   "survivor": "d53dfe28-a4f5-4557-91ee-3444e348fce1",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "2079ceae-fd27-4faa-a547-18b63f9db1f0": {
+   "survivor": "a0020d01-5d6b-45c2-9253-f94dde8a95c6",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "319f35a5-171b-4bd5-b13b-08f636646370": {
+   "survivor": "262195ec-855c-4f05-bf23-d03608feca76",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "4499b3ed-f959-4d8a-ad13-694354a2003a": {
+   "survivor": "262195ec-855c-4f05-bf23-d03608feca76",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "9b935dd6-a3b9-44bd-b6c7-6a68c3113a77": {
+   "survivor": "262195ec-855c-4f05-bf23-d03608feca76",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "092c965f-20f7-415c-9845-a0202230b604": {
+   "survivor": "262195ec-855c-4f05-bf23-d03608feca76",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "2249beda-056b-4f0b-96e8-5ef3cae9e6fb": {
+   "survivor": "262195ec-855c-4f05-bf23-d03608feca76",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "e7e08225-04fa-432b-a11a-9d5025da034c": {
+   "survivor": "369481ba-1ee3-4236-a2b2-e8add493020c",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "465f1e96-87af-4636-9e90-3c64e121ecc1": {
+   "survivor": "369481ba-1ee3-4236-a2b2-e8add493020c",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "f2e3e45c-e6f1-4e68-ba6e-ec4832c5cde7": {
+   "survivor": "369481ba-1ee3-4236-a2b2-e8add493020c",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "ff6a3723-95b7-4113-8cee-e546147df7b5": {
+   "survivor": "50d56662-6741-4cc8-a750-f2340a5e522e",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "51654c55-8eb4-40b4-859d-1f9d4a8c4009": {
+   "survivor": "98c81f0f-aabd-4a06-af51-8e58c4534d36",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "34e61f37-7fd8-4497-9cac-ae10ed28ab66": {
+   "survivor": "b0f04a7b-146b-4209-9a9d-d8931c3b4732",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "f0c909e5-0681-41ea-bab9-9bb06aad4214": {
+   "survivor": "cb07f23c-e6bf-4187-a83a-e94ba2e45ac5",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "967fa74d-8a34-47e0-8024-33401d660aab": {
+   "survivor": "27f80937-bd85-4c8d-8364-c71a43f6e870",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "a9137b1e-c948-4bf7-939c-344404fbbd49": {
+   "survivor": "27f80937-bd85-4c8d-8364-c71a43f6e870",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "79989a94-7709-45a6-8347-66bb4c38e948": {
+   "survivor": "27f80937-bd85-4c8d-8364-c71a43f6e870",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "e3d0b6e1-8de9-4d9a-9ca3-58f329cb6d0e": {
+   "survivor": "561daec9-c1a8-4fba-9a18-432c904dc8fb",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "d5f8a30f-5766-488e-a1a2-a08bfe6956e1": {
+   "survivor": "6d3fe7c2-7bd1-408c-a48c-7f32535072ac",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "b89af193-f231-4c5d-b0e0-c17696216b9e": {
+   "survivor": "6d3fe7c2-7bd1-408c-a48c-7f32535072ac",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "49f9483d-9c25-4c00-b173-4cfd7c956536": {
+   "survivor": "6dcd9fbc-baad-4100-bc1f-070fac93ba86",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "c325c297-3277-428f-96e2-61a8c6e14596": {
+   "survivor": "6dcd9fbc-baad-4100-bc1f-070fac93ba86",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "91523e78-b7ef-480e-81a8-96f65e5ee92b": {
+   "survivor": "a020051c-c3f5-4be9-afae-a4c97cbbc49e",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "8ec8056c-13b8-4d0c-9213-cefcd43d1c44": {
+   "survivor": "2d40fd33-3485-472b-b9fc-3b55adc6fb40",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "238b2386-f12c-4af9-b94d-8477a2da68a5": {
+   "survivor": "65658597-d3e7-46af-bd15-8f51a78e8dab",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "af962a45-d590-4c10-a96a-ef70edaf488b": {
+   "survivor": "3dc593d2-e3e5-46dd-9167-47418f044270",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "7a6876ed-60c2-4de8-afd2-f8077d8e5d7d": {
+   "survivor": "2831ae77-6f70-4959-9fc5-e5eb33997147",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "50f0acfc-ff0b-4498-a9df-4db6edab9b12": {
+   "survivor": "af662358-8599-4ad8-b61b-1542c41f6d87",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "65279ff4-8e74-4efb-b37b-0119c872adcb": {
+   "survivor": "913e18e0-a331-4dd0-a3f9-0e12f0b8a1c7",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "d5b7e3b5-6525-480c-bda0-7fa6342c1a0a": {
+   "survivor": "d02e6fe8-b4d1-4110-b15c-af55f8516564",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "c2dde0c2-c4cc-48bc-aa4c-53cd02a4bdf7": {
+   "survivor": "d02e6fe8-b4d1-4110-b15c-af55f8516564",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "9ecbe425-7786-41e3-8145-9f43f46641a7": {
+   "survivor": "34651ead-7242-4cee-9af6-8c11710f425f",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "686a97d1-4273-42f6-9c99-f4203d353f56": {
+   "survivor": "5442ed26-3150-4532-a41f-b412bee50603",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "5bf44cc2-42b7-40c0-b563-5003a3a3295d": {
+   "survivor": "673f0159-4556-489a-af7d-9fcd77a97703",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "6443270d-12f5-40d1-8316-d33e847c8b20": {
+   "survivor": "673f0159-4556-489a-af7d-9fcd77a97703",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "1039d6e4-a976-44ce-a2b4-5e96a9e47365": {
+   "survivor": "1d469d8b-5b28-4389-9150-8e6a61e3df05",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "fd2c50d6-fad9-4e5c-870a-54546bf6882f": {
+   "survivor": "1d469d8b-5b28-4389-9150-8e6a61e3df05",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "12ca85a5-f32a-4163-89a8-13a842b80065": {
+   "survivor": "46a6fa23-e117-4cf0-9407-37f738a7c16f",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "c0de5b4a-01ba-4bbc-9e42-cc8710f92077": {
+   "survivor": "40cc5729-1dcd-4e5f-a8bd-7027ec44904d",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "3b3cd996-b42d-4acf-9729-6a4eff4fde81": {
+   "survivor": "015b9740-fd13-44e8-b3d6-cb9bff017441",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "3bc932ad-04b5-4be3-84a3-129bf5318f30": {
+   "survivor": "96defc1a-f551-4d06-8e75-1515cc910412",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "4f3a2cd0-6801-43e8-a617-018aa324bf97": {
+   "survivor": "a2a4ed7e-3591-47b1-acf4-5a41e55d89f2",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "80ad2f96-021f-4783-b0c0-59c14581c7ad": {
+   "survivor": "832f4fad-eb53-487e-ac5d-e76cbd27addb",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "0c1ba8aa-6fed-4ce5-bd03-66f1f9af5294": {
+   "survivor": "61695fdc-7ad6-4763-b858-d216f810fb7c",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "95703b23-c5f2-4965-b722-058cd2093686": {
+   "survivor": "1dd310fa-c0f1-4007-bca2-f162ceabee42",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "22dd8621-7a33-4373-9dbb-9ad95a9ea356": {
+   "survivor": "43ea3462-119b-4c0c-bbf1-0982c8fce047",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "6cc27080-c04b-4d01-905a-fc99b9b22a01": {
+   "survivor": "43ea3462-119b-4c0c-bbf1-0982c8fce047",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "2cdd9e2e-11ea-41d3-84e0-85d4f12d2453": {
+   "survivor": "43ea3462-119b-4c0c-bbf1-0982c8fce047",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "ecb5c3c1-6534-402b-bdea-e0fac8b0ea2f": {
+   "survivor": "69b8f56d-db6f-4e3f-bb63-acb1e5db5b27",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "4677c615-9a94-406d-87fa-7760412601a1": {
+   "survivor": "97bb1f73-2a45-4f33-9629-b64f7720fe2c",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "f44928cf-84ee-4e97-beab-eace8f1ad063": {
+   "survivor": "4b52f467-d077-4b02-aed5-15bbe0155461",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "04d371a7-4963-46ba-9f84-6171bc362aa1": {
+   "survivor": "4b52f467-d077-4b02-aed5-15bbe0155461",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "82e16a6c-033f-47b1-88b0-6c22a2e44c91": {
+   "survivor": "de6a2e32-944a-4fa4-b547-c08e2fa73b12",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "73eea483-17e9-43d5-8aef-8ae8e2bd81db": {
+   "survivor": "031362dd-ebc3-4c3c-a344-6a6163afaa9c",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "5b2d8d08-c427-42d3-9559-173d8e15bd78": {
+   "survivor": "2c01176e-f233-4ac7-98ff-f56caca265e0",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "47c73a41-8536-43f4-b50c-4bd2df166f61": {
+   "survivor": "d42b3148-1394-4909-8287-1b995dd1a2aa",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "2df9ecd7-3ffa-44b5-9290-48f76b706aad": {
+   "survivor": "d42b3148-1394-4909-8287-1b995dd1a2aa",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "dace08b9-161a-4e5f-b0d7-69cd460ccac8": {
+   "survivor": "7dd9ad39-758a-428b-82ae-9ba481b7cc83",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "39c3e55b-e1b6-4c79-bc87-af0454fb853f": {
+   "survivor": "03edf14d-8056-4a89-84b0-f30170f2b68a",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "20b00ab3-b0a1-4c41-bbe2-ee5704cb569b": {
+   "survivor": "f1ce0123-3b40-45a9-b8f7-7b290b3b6be7",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "62842202-b887-4700-ad25-0b47cb7808f9": {
+   "survivor": "a6fbe238-823c-4159-bf5b-fea2ed7265c8",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "122b2eae-9642-446a-952a-9b0af9156924": {
+   "survivor": "d716becf-6778-43ad-a142-5fdda3325910",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "cbd3dfa8-b3af-4ff6-83cf-be23e9b6eca9": {
+   "survivor": "2e28769f-e328-4529-92cd-dc3eb7721b63",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "0540b27e-0a61-42c6-b547-531a3b6402f6": {
+   "survivor": "e533ff1f-92a2-48c3-842b-b920b187ebd3",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "c4a2437e-dccf-4e1a-8937-ffa51860ed39": {
+   "survivor": "e533ff1f-92a2-48c3-842b-b920b187ebd3",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "76204bc4-c95a-42b4-b22b-39e880bb95f9": {
+   "survivor": "f63c64ee-b7fa-4dd7-a4ec-c4108ac5e792",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "bd17ed2a-6c33-45fb-9461-045bff7d4512": {
+   "survivor": "f63c64ee-b7fa-4dd7-a4ec-c4108ac5e792",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "965f69d0-a6dd-4ad5-918b-bf5408771e29": {
+   "survivor": "a82cc0ea-a7ba-4150-8ffc-4a3406a4cbb9",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "e533fbaf-c4f9-464d-aaca-4c253362f0cb": {
+   "survivor": "eda8ac4d-d8e5-4724-b764-1451106a93e2",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "a6cb0d88-e2a2-4165-95c2-1c95379998a7": {
+   "survivor": "74c33dc0-66f6-4f83-af98-a6354aa02755",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "4794133a-1374-4d0a-b13c-f06101b8facc": {
+   "survivor": "e92aa546-e022-4d67-9158-15b73c28b3c0",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "da105af1-3cbe-4af3-a8c6-ad77b554e4e4": {
+   "survivor": "f6b56083-6f22-4189-aabc-759eb84d8960",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "bca101cf-81fc-40a0-8aaa-c33a3ff2b400": {
+   "survivor": "f6b56083-6f22-4189-aabc-759eb84d8960",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "6ff2348e-c3f9-4b6d-a98f-d5af2b26453d": {
+   "survivor": "f6b56083-6f22-4189-aabc-759eb84d8960",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "80593432-ffb8-4de0-a1bc-4f80cd8bea3b": {
+   "survivor": "39c1c410-3e3b-4f3f-a45b-ac70a0e05b4a",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "ebe7db46-6e54-442e-8664-ab5e1ee294a6": {
+   "survivor": "f21b64b6-97a6-4ba2-8fd8-470cb977a56d",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "584b456f-6eaa-49aa-b08b-575f205679a2": {
+   "survivor": "66fb9964-28f6-4d44-b3e0-fbcbe8ef4665",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "a13d46bd-5759-443a-bf48-0df8f142ca75": {
+   "survivor": "66fb9964-28f6-4d44-b3e0-fbcbe8ef4665",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "a750981f-e6d8-4c83-9a0a-d2f64f417a48": {
+   "survivor": "d1052201-201a-4377-9830-8bfb7cde28d0",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "7ebfa951-6366-409e-9730-761b9e341be8": {
+   "survivor": "92f47dc2-160b-4420-a981-5eb8c58c7826",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "274f0de0-35fe-4c49-bb71-1091e87f1328": {
+   "survivor": "fa18f57f-6696-4512-92a3-1d47a9f01574",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "42483cfb-b3cc-435d-8b08-1bd3629551ed": {
+   "survivor": "c020b77a-70eb-44df-8263-4581de743a51",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "689fa4fb-b7dc-422d-8454-ed0e562f289f": {
+   "survivor": "3ac056e2-708f-4410-9693-2f370227cde3",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "fcd607fc-eb8c-491a-9de3-2b451e86148f": {
+   "survivor": "8deb6d55-dbe1-40f1-ac1e-7406a2ef180a",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "8b4b3aa4-0b78-463f-8632-f9a0b8324395": {
+   "survivor": "27ceb8a4-b07f-43d9-a92c-f5c2ccf72212",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "e33009df-3b3d-42e5-a50b-6463ece9405f": {
+   "survivor": "5e3c134f-ed80-4bc9-921a-e8a15bdcc1af",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "ae51c8bf-2612-4588-9bab-e472ac84adfc": {
+   "survivor": "5e3c134f-ed80-4bc9-921a-e8a15bdcc1af",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "9d41ffb2-1cdb-4225-8a56-89c9971600a4": {
+   "survivor": "788caabd-aadd-41a7-825c-f2c9867d5a60",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "6a04ecbd-e261-49c9-b0c3-9dcc9c34f2fb": {
+   "survivor": "6cd66dc2-ff73-476f-b489-2e0df7e16ead",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "7dd69b17-8ae0-4f8f-9607-b2e8a88e7476": {
+   "survivor": "fcbb8e36-2f63-47d8-8360-43876f936ce6",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "1aaa5a3b-5777-49ac-8b2c-c514c2c9be9b": {
+   "survivor": "9fc908b5-9bf7-43d4-8edd-382e79f5267e",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "0e15bacd-668d-456f-bb68-9692eed1c4bd": {
+   "survivor": "c3dc4505-0dbe-466b-8478-34d114137f19",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "d34a60d0-9184-4465-8631-9d73c7daf76b": {
+   "survivor": "3081d2c3-804b-4852-a9b5-2c1953635957",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "096cb647-5a9a-49a7-9f11-48088fff94b5": {
+   "survivor": "595e1df2-8f83-42b8-bdd2-7370f8bbe8a8",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "6188aaa4-7806-492b-b7f5-2f89fe07939b": {
+   "survivor": "386271a4-a719-40f6-9fde-a03cb4d428fe",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "95b13685-6446-4c6d-a396-7d16e837c8c1": {
+   "survivor": "cacce46c-11b8-4c11-b386-b27dc7298b3d",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "bca4c680-5af9-470d-a0bb-e56d9f3ace9d": {
+   "survivor": "4fe17b94-da17-4505-8f07-b337bffb8ef4",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "60e66c93-38c6-4575-bfe7-ae06081a53c8": {
+   "survivor": "333cd176-956d-44c3-b991-a68ace771a7c",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "7b34c760-c654-40e9-b285-d749b60bd45c": {
+   "survivor": "d92af455-155a-4b1e-b0e5-4ce5e8ec024e",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "3c7abebc-6340-416f-9da7-f1469b5fac48": {
+   "survivor": "241fad09-c8ec-44af-9d35-e609d944811e",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "4a86fbe2-e189-4828-b50d-0ac89cb93937": {
+   "survivor": "9e896311-ed02-4e25-98b6-198e54e1ca25",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "7487f775-06be-48ae-b68f-f58ca44fa2a9": {
+   "survivor": "36813b57-7829-44cc-bd05-5d751681423e",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "83a2ba6e-376f-4b37-bb5b-ee9cd51fd948": {
+   "survivor": "45462fd1-5bcc-48fe-8b01-b560cd0c6b8f",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "722a1781-eeaa-4691-9172-d99a4079984c": {
+   "survivor": "b1164f62-2134-4d37-83cb-49a2a37e02cf",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "0b44c299-4613-4681-a12c-35c8800979c4": {
+   "survivor": "f57dd692-7fcd-4914-99cc-e17a1ace7308",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "c12565ef-cf3f-4c94-86e4-0cc7dbca8dad": {
+   "survivor": "4624dee8-675a-4b63-bdc6-f2733dae9cb9",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "c0b6417c-0914-417e-b3b2-4bff4627b7c9": {
+   "survivor": "49c1209a-145b-4103-918a-76c7e8612b16",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "61de1a84-71db-48b0-8045-0656f041fcd7": {
+   "survivor": "8f7fae09-a8b5-4f8d-94ec-73004aae46cb",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "0ff00f45-d2c9-4044-86b5-59ea512f724f": {
+   "survivor": "d955af03-ade0-4a28-847a-ee11d576d7cc",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "73a25a64-b81e-49ec-9260-a75f040ca73a": {
+   "survivor": "312fe554-3ac4-4b52-b303-7bdb82bc1a46",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "9dd75dca-5a4c-436d-9ee8-3c77503c8cd3": {
+   "survivor": "ac04aad2-2b72-4e4f-9eab-698a8e4ae3ab",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "eb185108-00c8-47e9-b484-cb2c4002b4b3": {
+   "survivor": "a9122006-f064-4c93-98d0-6617c110b745",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "2b0629ca-9bfa-431b-ac5e-9adffc68b7cb": {
+   "survivor": "b2348887-20b7-417e-b9c7-c642fccb4823",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "a1868ab3-2bfd-4155-8e15-d980c7a8a7cb": {
+   "survivor": "15debd6a-8fd0-42fa-b360-d5a2acb93554",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "046260e0-9b34-47f0-8af3-56c28a508e0f": {
+   "survivor": "29e776a5-ed41-4a39-9340-1088c01483e2",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "435aa91f-10c3-4aac-b9fc-309486272a62": {
+   "survivor": "47b0faba-a36d-44bf-8cfc-982912128a6c",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "9cf5b4dd-8b3b-4fd5-b0ac-9f46fc056b86": {
+   "survivor": "47b0faba-a36d-44bf-8cfc-982912128a6c",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "064237f2-a7f0-4cd8-97a7-9b45090130c5": {
+   "survivor": "c91bf6ff-b210-4d3a-9a95-7e309f0b5d6d",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "0f5dd930-2e49-40df-a2db-a208cf6eabcf": {
+   "survivor": "968c5c35-8c0c-4ae3-a2fa-36315b63444b",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "ba2d16f3-4b40-4513-8b5a-2fea5a9080f6": {
+   "survivor": "620ac33d-1cc6-4625-98f4-23fc4a9fdc59",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "87322850-1126-4b10-b1d3-59cc08829b98": {
+   "survivor": "483414a7-a209-4fbc-b678-60d2ae7882a7",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "3defd40e-4a50-4385-812d-bc817357a48d": {
+   "survivor": "6668b6e3-3488-4ae8-801c-b0c4ddb3053f",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "dd32b787-5909-4496-a1ec-1115a72e2c70": {
+   "survivor": "652ca6f7-8679-4c49-b279-e4aaac71b213",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "26c9d7cf-4508-490c-9ca4-591868b3864b": {
+   "survivor": "f4cbd315-e681-41af-9141-0602c411e017",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "f3d87843-afa8-47ea-8883-f8bb9e79b8c3": {
+   "survivor": "fe649041-5b60-4534-b0a6-c6078afe3e07",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "1eac0890-eac3-44dc-b00f-e44775838bf3": {
+   "survivor": "282f1774-978b-47f0-bd24-059ca4d5639f",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "294dbca7-3088-45c6-9723-a020d73b2b0e": {
+   "survivor": "1ae2b6fc-45ba-4738-95dc-6e42fecc1db0",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "07423372-6d27-4c7b-b187-fe35b4c7f4a3": {
+   "survivor": "8cc5e678-3de4-4b4b-a340-681248bee0c3",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "2cb6fd1c-e1d7-4495-a9da-f0340dbdab3a": {
+   "survivor": "317e2cfd-b2f1-4b21-a20e-4720cfd7151a",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "33ba2c10-c247-49f0-accb-452ffff1dda6": {
+   "survivor": "a8fad154-2902-4525-8718-bb37d9cf524f",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "06c3ed5e-ecf7-44f1-8160-da8a941b17e1": {
+   "survivor": "ac3de382-4462-416a-ad35-73e8407901ec",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "2e383576-e7c3-4469-8350-06cbcc7cc3c7": {
+   "survivor": "cff9e395-b653-44a6-be41-cd8d9d052f5b",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "b7e6cfbf-cb12-4d69-93c9-6561ee35bbef": {
+   "survivor": "ab832592-19ca-4684-9cc0-b3f6df461d4d",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "7b3dd13f-6a27-4de7-8738-80b424d19739": {
+   "survivor": "b44f90aa-d291-42be-983b-3e59e1fba6a7",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "cf733b3f-673a-45a7-9cea-1502f14996b1": {
+   "survivor": "2a78a3c1-7a9b-431f-a349-a58f76210bc9",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "5dafb65e-e2ea-470e-8c3a-9ab1b534578d": {
+   "survivor": "107ef866-12dc-4e53-a892-acae16d2278c",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "59598a6b-d436-4ddb-8c2c-820ab6db39a1": {
+   "survivor": "3739b6e5-391c-4626-8c50-0c563ba537c3",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "9ee5eaf5-c96f-4f95-a014-f24919fe95d1": {
+   "survivor": "8d314f73-aafc-4d3d-9354-f621e110b2fd",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "f917b4e9-9e0d-44aa-a51a-f1fa12ddc80a": {
+   "survivor": "0d481635-f605-4b33-a941-022ffb1e1501",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "f4308e10-2fee-42ba-9bd6-1f985fc386a8": {
+   "survivor": "4a312536-d83d-46b5-8d08-6b9328d8523d",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "bd508844-6db2-4c71-8fee-90ce2611d8c5": {
+   "survivor": "5015d419-a581-4335-b475-7a86b1f69f8f",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "147e6f71-1152-424e-8c5d-aadf1ba36a10": {
+   "survivor": "8115a2ec-95c6-48ef-9ada-1a6468e4662d",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "b885d6b2-b806-414b-a377-2f0d971253d9": {
+   "survivor": "34f46bc8-6acc-442f-9a29-05650e2d660e",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "af1d9a90-2f0f-4db7-b9ab-9b4c5b836928": {
+   "survivor": "b1ff69b6-a8ff-47f4-9795-34b33b23375d",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "eec07508-b375-45b6-9b9f-245660c8c8ca": {
+   "survivor": "c239f55d-b16b-4452-aea2-f0e4efb1fa92",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "abaf30b3-6dd8-4283-88e6-6703a1a9de75": {
+   "survivor": "55776f8a-6bf7-457a-8ece-b234af46d372",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "8f3f8c58-fd44-48cc-a453-c41bd49a7d5c": {
+   "survivor": "52219848-2ea6-4672-9f10-27986443c687",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "30bcc0af-d469-4831-aea2-dc71d6fab11a": {
+   "survivor": "8d9bbf84-25fa-41ef-a64d-cdab74077cce",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "30687d73-28ce-4dd8-9526-5d4619cf1b20": {
+   "survivor": "ebbe9a7d-6cc7-46c8-af8d-99464aaf358f",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "41793875-61a3-409c-b49c-48ea0a642083": {
+   "survivor": "40411ca4-f498-4890-9e15-067e09709d33",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  },
+  "8a746c6f-98f2-461d-887d-471c70308877": {
+   "survivor": "7cbe9f0f-263e-4c35-90b1-aeb55b625769",
+   "why": "same question, same answer; kept the copy that fits the render limits"
+  }
+ },
+ "unresolved": []
+}

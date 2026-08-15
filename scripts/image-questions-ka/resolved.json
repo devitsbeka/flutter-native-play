@@ -1,0 +1,1402 @@
+[
+ {
+  "cat": "animals",
+  "difficulty": "easy",
+  "stem": "რომელი ცხოველია გამოსახული?",
+  "answer": "ჟირაფი",
+  "wrong": [
+   "ზებრა",
+   "აქლემი",
+   "ანტილოპა"
+  ],
+  "wiki": "Giraffe",
+  "index": 0,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Giraffe_Mikumi_National_Park.jpg/1280px-Giraffe_Mikumi_National_Park.jpg"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "easy",
+  "stem": "რომელი ცხოველია გამოსახული?",
+  "answer": "კენგურუ",
+  "wrong": [
+   "კოალა",
+   "ლემური",
+   "ოპოსუმი"
+  ],
+  "wiki": "Kangaroo",
+  "index": 1,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Forester_kangaroo_%28Macropus_giganteus_tasmaniensis%29_juvenile_hopping_Esk_Valley.jpg/1280px-Forester_kangaroo_%28Macropus_giganteus_tasmaniensis%29_juvenile_hopping_Esk_Valley.jpg"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "easy",
+  "stem": "რომელი ცხოველია გამოსახული?",
+  "answer": "პანდა",
+  "wrong": [
+   "ენოტი",
+   "კოალა",
+   "ყავისფერი დათვი"
+  ],
+  "wiki": "Giant panda",
+  "index": 2,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Grosser_Panda.JPG/1280px-Grosser_Panda.JPG"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "easy",
+  "stem": "რომელი ფრინველია გამოსახული?",
+  "answer": "ფლამინგო",
+  "wrong": [
+   "ყანჩა",
+   "პელიკანი",
+   "წერო"
+  ],
+  "wiki": "Flamingo",
+  "index": 3,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Flamingos_Laguna_Colorada.jpg/1280px-Flamingos_Laguna_Colorada.jpg"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "easy",
+  "stem": "რომელი ცხოველია გამოსახული?",
+  "answer": "ზღარბი",
+  "wrong": [
+   "თხუნელა",
+   "მაჩვი",
+   "ციყვი"
+  ],
+  "wiki": "Hedgehog",
+  "index": 4,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/72/Igel.JPG"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "medium",
+  "stem": "რომელი ცხოველია გამოსახული?",
+  "answer": "ლამა",
+  "wrong": [
+   "აქლემი",
+   "თხა",
+   "ცხვარი"
+  ],
+  "wiki": "Llama",
+  "index": 5,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Llamas%2C_Vernagt-Stausee%2C_Italy.jpg/1280px-Llamas%2C_Vernagt-Stausee%2C_Italy.jpg"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "medium",
+  "stem": "რომელი ზღვის ცხოველია გამოსახული?",
+  "answer": "რვაფეხა",
+  "wrong": [
+   "კალმახი",
+   "მედუზა",
+   "კიბორჩხალა"
+  ],
+  "wiki": "Octopus",
+  "index": 6,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Octopus2.jpg/1280px-Octopus2.jpg"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "medium",
+  "stem": "რომელი ფრინველია გამოსახული?",
+  "answer": "ტუკანი",
+  "wrong": [
+   "თუთიყუში",
+   "კოლიბრი",
+   "კაკაბი"
+  ],
+  "wiki": "Toco toucan",
+  "index": 7,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/006_Toco_toucan_in_Encontro_das_%C3%81guas_State_Park_Photo_by_Giles_Laurent.jpg/1280px-006_Toco_toucan_in_Encontro_das_%C3%81guas_State_Park_Photo_by_Giles_Laurent.jpg"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "easy",
+  "stem": "რომელი ცხოველია გამოსახული?",
+  "answer": "ჰიპოპოტამი",
+  "wrong": [
+   "მარტორქა",
+   "სპილო",
+   "კამეჩი"
+  ],
+  "wiki": "Hippopotamus",
+  "index": 8,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Portrait_Hippopotamus_in_the_water.jpg/1280px-Portrait_Hippopotamus_in_the_water.jpg"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "easy",
+  "stem": "რომელი ცხოველია გამოსახული?",
+  "answer": "კოალა",
+  "wrong": [
+   "პანდა",
+   "ლემური",
+   "ოპოსუმი"
+  ],
+  "wiki": "Koala",
+  "index": 9,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/49/Koala_climbing_tree.jpg"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "easy",
+  "stem": "რომელი ცხოველია გამოსახული?",
+  "answer": "ზებრა",
+  "wrong": [
+   "ცხენი",
+   "ვირი",
+   "ანტილოპა"
+  ],
+  "wiki": "Zebra",
+  "index": 10,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/96/Plains_Zebra_Equus_quagga_cropped.jpg"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "easy",
+  "stem": "რომელი ცხოველია გამოსახული?",
+  "answer": "მარტორქა",
+  "wrong": [
+   "ჰიპოპოტამი",
+   "კამეჩი",
+   "სპილო"
+  ],
+  "wiki": "Rhinoceros",
+  "index": 11,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/081_White_rhinoceros_%28male%29_in_the_Kalahari_Desert_of_Namibia_Photo_by_Giles_Laurent.jpg/1280px-081_White_rhinoceros_%28male%29_in_the_Kalahari_Desert_of_Namibia_Photo_by_Giles_Laurent.jpg"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "easy",
+  "stem": "რომელი ფრინველია გამოსახული?",
+  "answer": "პინგვინი",
+  "wrong": [
+   "ალბატროსი",
+   "თოლია",
+   "პელიკანი"
+  ],
+  "wiki": "Penguin",
+  "index": 12,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/South_Shetland-2016-Deception_Island%E2%80%93Chinstrap_penguin_%28Pygoscelis_antarctica%29_04.jpg/1280px-South_Shetland-2016-Deception_Island%E2%80%93Chinstrap_penguin_%28Pygoscelis_antarctica%29_04.jpg"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "medium",
+  "stem": "რომელი ქვეწარმავალია გამოსახული?",
+  "answer": "ქამელეონი",
+  "wrong": [
+   "იგუანა",
+   "გეკონი",
+   "ხვლიკი"
+  ],
+  "wiki": "Chameleon",
+  "index": 13,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Panther_Chameleon_738367_%28cropped%29.jpg/1280px-Panther_Chameleon_738367_%28cropped%29.jpg"
+ },
+ {
+  "cat": "animals",
+  "difficulty": "medium",
+  "stem": "რომელი ცხოველია გამოსახული?",
+  "answer": "ლემური",
+  "wrong": [
+   "მაიმუნი",
+   "კოალა",
+   "ენოტი"
+  ],
+  "wiki": "Ring-tailed lemur",
+  "index": 14,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Ring-tailed_lemur_%28Lemur_catta%29.jpg/1280px-Ring-tailed_lemur_%28Lemur_catta%29.jpg"
+ },
+ {
+  "cat": "nature",
+  "difficulty": "easy",
+  "stem": "რომელი ბუნებრივი მოვლენაა გამოსახული?",
+  "answer": "ცისარტყელა",
+  "wrong": [
+   "ჩრდილოეთის ნათება",
+   "მირაჟი",
+   "ელვა"
+  ],
+  "wiki": "Rainbow",
+  "index": 15,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Double-alaskan-rainbow.jpg/1280px-Double-alaskan-rainbow.jpg"
+ },
+ {
+  "cat": "nature",
+  "difficulty": "medium",
+  "stem": "რომელი ბუნებრივი მოვლენაა გამოსახული?",
+  "answer": "ჩრდილოეთის ნათება",
+  "wrong": [
+   "ცისარტყელა",
+   "ელვა",
+   "მეტეორი"
+  ],
+  "wiki": "Aurora",
+  "index": 16,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Aurora_borealis_over_Eielson_Air_Force_Base%2C_Alaska.jpg/1280px-Aurora_borealis_over_Eielson_Air_Force_Base%2C_Alaska.jpg"
+ },
+ {
+  "cat": "nature",
+  "difficulty": "easy",
+  "stem": "რომელი ბუნებრივი მოვლენაა გამოსახული?",
+  "answer": "ტორნადო",
+  "wrong": [
+   "ცუნამი",
+   "ზვავი",
+   "წყალდიდობა"
+  ],
+  "wiki": "Tornado",
+  "index": 17,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/F5_tornado_Elie_Manitoba_2007.jpg/1280px-F5_tornado_Elie_Manitoba_2007.jpg"
+ },
+ {
+  "cat": "nature",
+  "difficulty": "easy",
+  "stem": "რომელი ბუნებრივი მოვლენაა გამოსახული?",
+  "answer": "ვულკანის ამოფრქვევა",
+  "wrong": [
+   "მიწისძვრა",
+   "გეიზერი",
+   "ზვავი"
+  ],
+  "wiki": "Volcano",
+  "index": 18,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Augustine_volcano_Jan_24_2006_-_Cyrus_Read.jpg/1280px-Augustine_volcano_Jan_24_2006_-_Cyrus_Read.jpg"
+ },
+ {
+  "cat": "nature",
+  "difficulty": "medium",
+  "stem": "რა არის გამოსახული?",
+  "answer": "გეიზერი",
+  "wrong": [
+   "ჩანჩქერი",
+   "ვულკანი",
+   "წყარო"
+  ],
+  "wiki": "Geyser",
+  "index": 19,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Yellowstone_National_Park_%28WY%2C_USA%29%2C_Old_Faithful_Geyser_--_2022_--_2599.jpg/1280px-Yellowstone_National_Park_%28WY%2C_USA%29%2C_Old_Faithful_Geyser_--_2022_--_2599.jpg"
+ },
+ {
+  "cat": "nature",
+  "difficulty": "easy",
+  "stem": "რა არის გამოსახული?",
+  "answer": "ჩანჩქერი",
+  "wrong": [
+   "გეიზერი",
+   "მდინარე",
+   "ტბა"
+  ],
+  "wiki": "Waterfall",
+  "index": 20,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Cascada_Dynjandi%2C_Vestfir%C3%B0ir%2C_Islandia%2C_2014-08-14%2C_DD_136-138_HDR.JPG/1280px-Cascada_Dynjandi%2C_Vestfir%C3%B0ir%2C_Islandia%2C_2014-08-14%2C_DD_136-138_HDR.JPG"
+ },
+ {
+  "cat": "nature",
+  "difficulty": "medium",
+  "stem": "რომელი ლანდშაფტია გამოსახული?",
+  "answer": "უდაბნო",
+  "wrong": [
+   "სტეპი",
+   "ტუნდრა",
+   "სავანა"
+  ],
+  "wiki": "Erg Chebbi",
+  "index": 21,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Merzouga_Dunes_2011.jpg/1280px-Merzouga_Dunes_2011.jpg"
+ },
+ {
+  "cat": "nature",
+  "difficulty": "medium",
+  "stem": "რომელი მცენარეა გამოსახული?",
+  "answer": "ბამბუკი",
+  "wrong": [
+   "ლერწამი",
+   "პალმა",
+   "ევკალიპტი"
+  ],
+  "wiki": "Bamboo",
+  "index": 22,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Bamboo_forest.jpg"
+ },
+ {
+  "cat": "nature",
+  "difficulty": "easy",
+  "stem": "რომელი ყვავილია გამოსახული?",
+  "answer": "მზესუმზირა",
+  "wrong": [
+   "გვირილა",
+   "ტიტა",
+   "ვარდი"
+  ],
+  "wiki": "Common sunflower",
+  "index": 23,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Sunflower_sky_backdrop.jpg/1280px-Sunflower_sky_backdrop.jpg"
+ },
+ {
+  "cat": "nature",
+  "difficulty": "easy",
+  "stem": "რომელი მცენარეა გამოსახული?",
+  "answer": "კაქტუსი",
+  "wrong": [
+   "ალოე",
+   "აგავა",
+   "პალმა"
+  ],
+  "wiki": "Saguaro",
+  "index": 24,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Carnegiea_gigantea_in_Saguaro_National_Park_near_Tucson%2C_Arizona_during_November_%2858%29.jpg/1280px-Carnegiea_gigantea_in_Saguaro_National_Park_near_Tucson%2C_Arizona_during_November_%2858%29.jpg"
+ },
+ {
+  "cat": "biology",
+  "difficulty": "medium",
+  "stem": "რომელი სტრუქტურაა გამოსახული?",
+  "answer": "დნმ-ის სპირალი",
+  "wrong": [
+   "ცილა",
+   "ვირუსი",
+   "უჯრედის მემბრანა"
+  ],
+  "wiki": "Nucleic acid double helix",
+  "index": 25,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/db/DNA_orbit_animated_static_thumb.png"
+ },
+ {
+  "cat": "biology",
+  "difficulty": "easy",
+  "stem": "რომელი მწერია გამოსახული?",
+  "answer": "ფუტკარი",
+  "wrong": [
+   "ბუზი",
+   "ჭიანჭველა",
+   "პეპელა"
+  ],
+  "wiki": "Western honey bee",
+  "index": 26,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Apis_mellifera_Western_honey_bee.jpg/1280px-Apis_mellifera_Western_honey_bee.jpg"
+ },
+ {
+  "cat": "biology",
+  "difficulty": "medium",
+  "stem": "რომელი მცენარეა გამოსახული?",
+  "answer": "გვიმრა",
+  "wrong": [
+   "ხავსი",
+   "სოკო",
+   "წყალმცენარე"
+  ],
+  "wiki": "Athyrium filix-femina",
+  "index": 27,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Athyrium_filix-femina0.jpg/1280px-Athyrium_filix-femina0.jpg"
+ },
+ {
+  "cat": "biology",
+  "difficulty": "easy",
+  "stem": "რომელი ორგანიზმია გამოსახული?",
+  "answer": "სოკო",
+  "wrong": [
+   "ხავსი",
+   "ლიქენი",
+   "გვიმრა"
+  ],
+  "wiki": "Amanita muscaria",
+  "index": 28,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Amanita_muscaria_3_vliegenzwammen_op_rij.jpg/1280px-Amanita_muscaria_3_vliegenzwammen_op_rij.jpg"
+ },
+ {
+  "cat": "biology",
+  "difficulty": "easy",
+  "stem": "რა არის გამოსახული?",
+  "answer": "თაფლის ფიჭა",
+  "wrong": [
+   "ობობის ქსელი",
+   "ჩიტის ბუდე",
+   "ჭიანჭველების ბუდე"
+  ],
+  "wiki": "Honeycomb",
+  "index": 29,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Honey_comb.jpg"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "easy",
+  "stem": "რომელი ქვეყნის დროშაა გამოსახული?",
+  "answer": "ვიეტნამი",
+  "wrong": [
+   "ჩინეთი",
+   "მაროკო",
+   "თურქეთი"
+  ],
+  "wiki": "Flag of Vietnam",
+  "index": 30,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Flag_of_Vietnam.svg/1280px-Flag_of_Vietnam.svg.png"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "easy",
+  "stem": "რომელი ქვეყნის დროშაა გამოსახული?",
+  "answer": "შვედეთი",
+  "wrong": [
+   "ნორვეგია",
+   "ფინეთი",
+   "დანია"
+  ],
+  "wiki": "Flag of Sweden",
+  "index": 31,
+  "image_url": "https://upload.wikimedia.org/wikipedia/en/thumb/4/4c/Flag_of_Sweden.svg/1280px-Flag_of_Sweden.svg.png"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "easy",
+  "stem": "რომელი ქვეყნის დროშაა გამოსახული?",
+  "answer": "პორტუგალია",
+  "wrong": [
+   "ბრაზილია",
+   "ბოლივია",
+   "კამერუნი"
+  ],
+  "wiki": "Flag of Portugal",
+  "index": 32,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Flag_of_Portugal_%28official%29.svg/1280px-Flag_of_Portugal_%28official%29.svg.png"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "easy",
+  "stem": "რომელი ქვეყნის დროშაა გამოსახული?",
+  "answer": "საბერძნეთი",
+  "wrong": [
+   "ისრაელი",
+   "ურუგვაი",
+   "არგენტინა"
+  ],
+  "wiki": "Flag of Greece",
+  "index": 33,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Flag_of_Greece.svg/1280px-Flag_of_Greece.svg.png"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "easy",
+  "stem": "რომელი ქვეყნის დროშაა გამოსახული?",
+  "answer": "თურქეთი",
+  "wrong": [
+   "ტუნისი",
+   "პაკისტანი",
+   "აზერბაიჯანი"
+  ],
+  "wiki": "Flag of Turkey",
+  "index": 34,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Flag_of_Turkey.svg/1280px-Flag_of_Turkey.svg.png"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "medium",
+  "stem": "რომელი ქვეყნის დროშაა გამოსახული?",
+  "answer": "სამხრეთ კორეა",
+  "wrong": [
+   "იაპონია",
+   "ტაივანი",
+   "მონღოლეთი"
+  ],
+  "wiki": "Flag of South Korea",
+  "index": 35,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Flag_of_South_Korea.svg/1280px-Flag_of_South_Korea.svg.png"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "easy",
+  "stem": "რომელი ქვეყნის დროშაა გამოსახული?",
+  "answer": "შვეიცარია",
+  "wrong": [
+   "დანია",
+   "კანადა",
+   "ავსტრია"
+  ],
+  "wiki": "Flag of Switzerland",
+  "index": 36,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Flag_of_Switzerland_%28Pantone%29.svg/1280px-Flag_of_Switzerland_%28Pantone%29.svg.png"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "medium",
+  "stem": "რომელი ქვეყნის დროშაა გამოსახული?",
+  "answer": "იამაიკა",
+  "wrong": [
+   "გაიანა",
+   "ბარბადოსი",
+   "გრენადა"
+  ],
+  "wiki": "Flag of Jamaica",
+  "index": 37,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Flag_of_Jamaica.svg/1280px-Flag_of_Jamaica.svg.png"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "medium",
+  "stem": "რომელი ქვეყნის დროშაა გამოსახული?",
+  "answer": "ნეპალი",
+  "wrong": [
+   "ბუტანი",
+   "შვეიცარია",
+   "ტაივანი"
+  ],
+  "wiki": "Flag of Nepal",
+  "index": 38,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Flag_of_Nepal.svg/1280px-Flag_of_Nepal.svg.png"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "easy",
+  "stem": "რომელი ქვეყნის დროშაა გამოსახული?",
+  "answer": "კენია",
+  "wrong": [
+   "მალავი",
+   "უგანდა",
+   "ზიმბაბვე"
+  ],
+  "wiki": "Flag of Kenya",
+  "index": 39,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Flag_of_Kenya.svg/1280px-Flag_of_Kenya.svg.png"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "easy",
+  "stem": "რომელი ღირსშესანიშნაობაა გამოსახული?",
+  "answer": "ნიაგარის ჩანჩქერი",
+  "wrong": [
+   "ვიქტორიის ჩანჩქერი",
+   "ანხელის ჩანჩქერი",
+   "იგუასუს ჩანჩქერი"
+  ],
+  "wiki": "Niagara Falls",
+  "index": 40,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/3Falls_Niagara.jpg/1280px-3Falls_Niagara.jpg"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "easy",
+  "stem": "რომელი ღირსშესანიშნაობაა გამოსახული?",
+  "answer": "გრანდ კანიონი",
+  "wrong": [
+   "ველიკი კანიონი",
+   "დარიალის ხეობა",
+   "დიდი ხეობა"
+  ],
+  "wiki": "Grand Canyon",
+  "index": 41,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Canyon_River_Tree_%28165872763%29.jpeg/1280px-Canyon_River_Tree_%28165872763%29.jpeg"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "easy",
+  "stem": "რომელი ღირსშესანიშნაობაა გამოსახული?",
+  "answer": "პიზის კოშკი",
+  "wrong": [
+   "ბიგ-ბენი",
+   "ეიფელის კოშკი",
+   "ბურჯ ხალიფა"
+  ],
+  "wiki": "Leaning Tower of Pisa",
+  "index": 42,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Italy_-_Pisa_-_Leaning_Tower.jpg/1280px-Italy_-_Pisa_-_Leaning_Tower.jpg"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "medium",
+  "stem": "რომელი ღირსშესანიშნაობაა გამოსახული?",
+  "answer": "სტოუნჰენჯი",
+  "wrong": [
+   "კარნაკი",
+   "ნიუგრეინჯი",
+   "გებეკლი-თეფე"
+  ],
+  "wiki": "Stonehenge",
+  "index": 43,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Stonehenge2007_07_30.jpg/1280px-Stonehenge2007_07_30.jpg"
+ },
+ {
+  "cat": "geography",
+  "difficulty": "easy",
+  "stem": "რომელი ღირსშესანიშნაობაა გამოსახული?",
+  "answer": "მოაი",
+  "wrong": [
+   "სტოუნჰენჯი",
+   "ნაზკას ხაზები",
+   "ტერაკოტის არმია"
+  ],
+  "wiki": "Moai",
+  "index": 44,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/5/50/AhuTongariki.JPG"
+ },
+ {
+  "cat": "architecture",
+  "difficulty": "easy",
+  "stem": "რომელი ციხე-სასახლეა გამოსახული?",
+  "answer": "ნოიშვანშტაინი",
+  "wrong": [
+   "ვინძორი",
+   "ედინბურგის ციხე",
+   "ვერსალი"
+  ],
+  "wiki": "Neuschwanstein Castle",
+  "index": 45,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Schloss_Neuschwanstein_2013.jpg/1280px-Schloss_Neuschwanstein_2013.jpg"
+ },
+ {
+  "cat": "architecture",
+  "difficulty": "medium",
+  "stem": "რომელი ტაძარია გამოსახული?",
+  "answer": "ბასილის ტაძარი",
+  "wrong": [
+   "ჰაგია სოფია",
+   "ნოტრ-დამი",
+   "წმინდა პეტრე"
+  ],
+  "wiki": "Saint Basil's Cathedral",
+  "index": 46,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Saint_Basil%27s_Cathedral_in_Moscow.jpg/1280px-Saint_Basil%27s_Cathedral_in_Moscow.jpg"
+ },
+ {
+  "cat": "architecture",
+  "difficulty": "easy",
+  "stem": "რომელი შენობაა გამოსახული?",
+  "answer": "ბიგ-ბენი",
+  "wrong": [
+   "პიზის კოშკი",
+   "ბელფრიდი",
+   "სპასკაიას კოშკი"
+  ],
+  "wiki": "Big Ben",
+  "index": 47,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Elizabeth_Tower_and_the_north_front_of_the_Palace_of_Westminster%2C_London.jpg/1280px-Elizabeth_Tower_and_the_north_front_of_the_Palace_of_Westminster%2C_London.jpg"
+ },
+ {
+  "cat": "architecture",
+  "difficulty": "medium",
+  "stem": "რომელი ტაძარია გამოსახული?",
+  "answer": "ნოტრ-დამი",
+  "wrong": [
+   "კიოლნის ტაძარი",
+   "შარტრის ტაძარი",
+   "მილანის ტაძარი"
+  ],
+  "wiki": "Notre-Dame de Paris",
+  "index": 48,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Notre-Dame_de_Paris%2C_4_October_2017.jpg/1280px-Notre-Dame_de_Paris%2C_4_October_2017.jpg"
+ },
+ {
+  "cat": "architecture",
+  "difficulty": "medium",
+  "stem": "რომელი შენობაა გამოსახული?",
+  "answer": "ბრანდენბურგის კარი",
+  "wrong": [
+   "ტრიუმფის თაღი",
+   "ტიტუსის თაღი",
+   "პროპილეა"
+  ],
+  "wiki": "Brandenburg Gate",
+  "index": 49,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Brandenburger_Tor_abends.jpg/1280px-Brandenburger_Tor_abends.jpg"
+ },
+ {
+  "cat": "architecture",
+  "difficulty": "easy",
+  "stem": "რომელი მუზეუმია გამოსახული?",
+  "answer": "ლუვრი",
+  "wrong": [
+   "ერმიტაჟი",
+   "პრადო",
+   "უფიცი"
+  ],
+  "wiki": "Louvre",
+  "index": 50,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Louvre_Museum_Wikimedia_Commons.jpg/1280px-Louvre_Museum_Wikimedia_Commons.jpg"
+ },
+ {
+  "cat": "architecture",
+  "difficulty": "medium",
+  "stem": "რომელი ღირსშესანიშნაობაა გამოსახული?",
+  "answer": "ჩიჩენ-იცა",
+  "wrong": [
+   "ტიკალი",
+   "ტეოტიუაკანი",
+   "პალენკე"
+  ],
+  "wiki": "Chichen Itza",
+  "index": 51,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Chichen_Itza_3.jpg/1280px-Chichen_Itza_3.jpg"
+ },
+ {
+  "cat": "architecture",
+  "difficulty": "medium",
+  "stem": "რომელი ტაძარია გამოსახული?",
+  "answer": "ანგკორ-ვატი",
+  "wrong": [
+   "ბორობუდური",
+   "შვედაგონი",
+   "ბაგანი"
+  ],
+  "wiki": "Angkor Wat",
+  "index": 52,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Angkor_Wat.jpg/1280px-Angkor_Wat.jpg"
+ },
+ {
+  "cat": "architecture",
+  "difficulty": "medium",
+  "stem": "რომელი შენობაა გამოსახული?",
+  "answer": "ჰაგია სოფია",
+  "wrong": [
+   "ლურჯი მეჩეთი",
+   "ბასილის ტაძარი",
+   "ნოტრ-დამი"
+  ],
+  "wiki": "Hagia Sophia",
+  "index": 53,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Hagia_Sophia_%28228968325%29.jpeg/1280px-Hagia_Sophia_%28228968325%29.jpeg"
+ },
+ {
+  "cat": "architecture",
+  "difficulty": "easy",
+  "stem": "რომელი ხიდია გამოსახული?",
+  "answer": "ტაუერის ხიდი",
+  "wrong": [
+   "ბრუკლინის ხიდი",
+   "ოქროს კარიბჭე",
+   "რიალტო"
+  ],
+  "wiki": "Tower Bridge",
+  "index": 54,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Tower_Bridge_at_Dawn.jpg/1280px-Tower_Bridge_at_Dawn.jpg"
+ },
+ {
+  "cat": "art",
+  "difficulty": "easy",
+  "stem": "რომელი ნახატია გამოსახული?",
+  "answer": "მონა ლიზა",
+  "wrong": [
+   "ბოლო ვახშამი",
+   "ვენერას დაბადება",
+   "ღამის დარაჯი"
+  ],
+  "wiki": "Mona Lisa",
+  "index": 55,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/1280px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg"
+ },
+ {
+  "cat": "art",
+  "difficulty": "easy",
+  "stem": "რომელი ნახატია გამოსახული?",
+  "answer": "ვარსკვლავიანი ღამე",
+  "wrong": [
+   "ყვირილი",
+   "მზესუმზირები",
+   "ირისები"
+  ],
+  "wiki": "The Starry Night",
+  "index": 56,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/1280px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"
+ },
+ {
+  "cat": "art",
+  "difficulty": "easy",
+  "stem": "რომელი ნახატია გამოსახული?",
+  "answer": "ყვირილი",
+  "wrong": [
+   "ვარსკვლავიანი ღამე",
+   "გერნიკა",
+   "შეშფოთება"
+  ],
+  "wiki": "The Scream",
+  "index": 57,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Edvard_Munch_-_The_Scream.jpg/1280px-Edvard_Munch_-_The_Scream.jpg"
+ },
+ {
+  "cat": "art",
+  "difficulty": "medium",
+  "stem": "რომელი ნახატია გამოსახული?",
+  "answer": "ვენერას დაბადება",
+  "wrong": [
+   "პრიმავერა",
+   "ბოლო ვახშამი",
+   "ათენის სკოლა"
+  ],
+  "wiki": "The Birth of Venus",
+  "index": 58,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Sandro_Botticelli_-_La_nascita_di_Venere_-_Google_Art_Project_-_edited.jpg/1280px-Sandro_Botticelli_-_La_nascita_di_Venere_-_Google_Art_Project_-_edited.jpg"
+ },
+ {
+  "cat": "art",
+  "difficulty": "medium",
+  "stem": "რომელი ნახატია გამოსახული?",
+  "answer": "ბოლო ვახშამი",
+  "wrong": [
+   "ათენის სკოლა",
+   "მონა ლიზა",
+   "ღამის დარაჯი"
+  ],
+  "wiki": "The Last Supper (Leonardo)",
+  "index": 59,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/The_Last_Supper_-_Leonardo_Da_Vinci_-_High_Resolution_32x16.jpg/1280px-The_Last_Supper_-_Leonardo_Da_Vinci_-_High_Resolution_32x16.jpg"
+ },
+ {
+  "cat": "art",
+  "difficulty": "medium",
+  "stem": "რომელი ნახატია გამოსახული?",
+  "answer": "ღამის დარაჯი",
+  "wrong": [
+   "ბოლო ვახშამი",
+   "ვენერას დაბადება",
+   "ათენის სკოლა"
+  ],
+  "wiki": "The Night Watch",
+  "index": 60,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/La_ronda_de_noche%2C_por_Rembrandt_van_Rijn.jpg/1280px-La_ronda_de_noche%2C_por_Rembrandt_van_Rijn.jpg"
+ },
+ {
+  "cat": "art",
+  "difficulty": "medium",
+  "stem": "ვინ არის ამ ნახატის ავტორი?",
+  "answer": "ვინსენტ ვან გოგი",
+  "wrong": [
+   "კლოდ მონე",
+   "პოლ გოგენი",
+   "ედუარ მანე"
+  ],
+  "wiki": "Sunflowers (Van Gogh series)",
+  "index": 61,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Vincent_Willem_van_Gogh_127.jpg/1280px-Vincent_Willem_van_Gogh_127.jpg"
+ },
+ {
+  "cat": "art",
+  "difficulty": "medium",
+  "stem": "ვინ არის ამ ფრესკის ავტორი?",
+  "answer": "მიქელანჯელო",
+  "wrong": [
+   "რაფაელი",
+   "ლეონარდო",
+   "ბოტიჩელი"
+  ],
+  "wiki": "The Creation of Adam",
+  "index": 62,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg/1280px-Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg"
+ },
+ {
+  "cat": "art",
+  "difficulty": "medium",
+  "stem": "რომელი ქანდაკებაა გამოსახული?",
+  "answer": "მოაზროვნე",
+  "wrong": [
+   "დავითი",
+   "ვენერა მილოსელი",
+   "პიეტა"
+  ],
+  "wiki": "The Thinker",
+  "index": 63,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Le_Penseur_by_Rodin_%28Kunsthalle_Bielefeld%29_2014-04-10.JPG/1280px-Le_Penseur_by_Rodin_%28Kunsthalle_Bielefeld%29_2014-04-10.JPG"
+ },
+ {
+  "cat": "art",
+  "difficulty": "easy",
+  "stem": "რომელი ქანდაკებაა გამოსახული?",
+  "answer": "დავითი",
+  "wrong": [
+   "მოაზროვნე",
+   "პიეტა",
+   "ვენერა მილოსელი"
+  ],
+  "wiki": "David (Michelangelo)",
+  "index": 64,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/%27David%27_by_Michelangelo_Fir_JBU004.jpg/1280px-%27David%27_by_Michelangelo_Fir_JBU004.jpg"
+ },
+ {
+  "cat": "astronomy",
+  "difficulty": "medium",
+  "stem": "რომელი პლანეტაა გამოსახული?",
+  "answer": "იუპიტერი",
+  "wrong": [
+   "მარსი",
+   "ვენერა",
+   "ნეპტუნი"
+  ],
+  "wiki": "Jupiter",
+  "index": 65,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Jupiter_OPAL_2024.png/1280px-Jupiter_OPAL_2024.png"
+ },
+ {
+  "cat": "astronomy",
+  "difficulty": "easy",
+  "stem": "რა არის გამოსახული?",
+  "answer": "კოსმოსური სადგური",
+  "wrong": [
+   "სატელიტი",
+   "რაკეტა",
+   "შატლი"
+  ],
+  "wiki": "International Space Station",
+  "index": 66,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/The_station_pictured_from_the_SpaceX_Crew_Dragon_5.jpg/1280px-The_station_pictured_from_the_SpaceX_Crew_Dragon_5.jpg"
+ },
+ {
+  "cat": "astronomy",
+  "difficulty": "medium",
+  "stem": "რომელი ნისლეულია გამოსახული?",
+  "answer": "ორიონის ნისლეული",
+  "wrong": [
+   "კიბოს ნისლეული",
+   "არწივის ნისლეული",
+   "ცხენის თავი"
+  ],
+  "wiki": "Orion Nebula",
+  "index": 67,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg/1280px-Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg"
+ },
+ {
+  "cat": "astronomy",
+  "difficulty": "medium",
+  "stem": "რომელი გალაქტიკაა გამოსახული?",
+  "answer": "ანდრომედა",
+  "wrong": [
+   "სომბრერო",
+   "ვირლპული",
+   "ტრიანგულუმი"
+  ],
+  "wiki": "Andromeda Galaxy",
+  "index": 68,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Andromeda_Galaxy_2025.png/1280px-Andromeda_Galaxy_2025.png"
+ },
+ {
+  "cat": "astronomy",
+  "difficulty": "easy",
+  "stem": "რომელი ასტრონომიული მოვლენაა?",
+  "answer": "მზის დაბნელება",
+  "wrong": [
+   "მთვარის დაბნელება",
+   "მეტეორული წვიმა",
+   "პარადი"
+  ],
+  "wiki": "Solar eclipse",
+  "index": 69,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Solar_eclipse_1999_4.jpg/1280px-Solar_eclipse_1999_4.jpg"
+ },
+ {
+  "cat": "astronomy",
+  "difficulty": "medium",
+  "stem": "რომელი კოსმოსური ტელესკოპია?",
+  "answer": "ჰაბლი",
+  "wrong": [
+   "ჯეიმს ვები",
+   "კეპლერი",
+   "ჩანდრა"
+  ],
+  "wiki": "Hubble Space Telescope",
+  "index": 70,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Hubble_2009_close-up_2.jpg/1280px-Hubble_2009_close-up_2.jpg"
+ },
+ {
+  "cat": "astronomy",
+  "difficulty": "medium",
+  "stem": "რომელი ციური სხეულია გამოსახული?",
+  "answer": "კომეტა",
+  "wrong": [
+   "ასტეროიდი",
+   "მეტეორიტი",
+   "ჯუჯა პლანეტა"
+  ],
+  "wiki": "Comet Hale–Bopp",
+  "index": 71,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Comet_Hale-Bopp_1995O1.jpg/1280px-Comet_Hale-Bopp_1995O1.jpg"
+ },
+ {
+  "cat": "astronomy",
+  "difficulty": "easy",
+  "stem": "რომელი ციური სხეულია გამოსახული?",
+  "answer": "მთვარე",
+  "wrong": [
+   "მერკური",
+   "მარსი",
+   "ვენერა"
+  ],
+  "wiki": "Moon",
+  "index": 72,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/FullMoon2010.jpg/1280px-FullMoon2010.jpg"
+ },
+ {
+  "cat": "geology",
+  "difficulty": "medium",
+  "stem": "რომელი მინერალია გამოსახული?",
+  "answer": "ამეთვისტო",
+  "wrong": [
+   "კვარცი",
+   "პირიტი",
+   "მალაქიტი"
+  ],
+  "wiki": "Amethyst",
+  "index": 73,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Amatista_Laye_2.jpg/1280px-Amatista_Laye_2.jpg"
+ },
+ {
+  "cat": "geology",
+  "difficulty": "medium",
+  "stem": "რომელი მინერალია გამოსახული?",
+  "answer": "პირიტი",
+  "wrong": [
+   "ოქრო",
+   "ამეთვისტო",
+   "მალაქიტი"
+  ],
+  "wiki": "Pyrite",
+  "index": 74,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Pyrite_-_Huanzala_mine%2C_Huallanca%2C_Bolognesi%2C_Ancash%2C_Peru.jpg/1280px-Pyrite_-_Huanzala_mine%2C_Huallanca%2C_Bolognesi%2C_Ancash%2C_Peru.jpg"
+ },
+ {
+  "cat": "geology",
+  "difficulty": "medium",
+  "stem": "რომელი მინერალია გამოსახული?",
+  "answer": "მალაქიტი",
+  "wrong": [
+   "ამეთვისტო",
+   "პირიტი",
+   "ტურმალინი"
+  ],
+  "wiki": "Malachite",
+  "index": 75,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Malachite%2C_Zaire.jpg/1280px-Malachite%2C_Zaire.jpg"
+ },
+ {
+  "cat": "geology",
+  "difficulty": "medium",
+  "stem": "რომელი ქანია გამოსახული?",
+  "answer": "ობსიდიანი",
+  "wrong": [
+   "გრანიტი",
+   "კირქვა",
+   "მარმარილო"
+  ],
+  "wiki": "Obsidian",
+  "index": 76,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Lipari-Obsidienne_%285%29.jpg/1280px-Lipari-Obsidienne_%285%29.jpg"
+ },
+ {
+  "cat": "geology",
+  "difficulty": "medium",
+  "stem": "რომელი ქანია გამოსახული?",
+  "answer": "ბაზალტი",
+  "wrong": [
+   "გრანიტი",
+   "ქვიშაქვა",
+   "მარმარილო"
+  ],
+  "wiki": "Giant's Causeway",
+  "index": 77,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Causeway-code_poet-4.jpg/1280px-Causeway-code_poet-4.jpg"
+ },
+ {
+  "cat": "world_cuisine",
+  "difficulty": "easy",
+  "stem": "რომელი კერძია გამოსახული?",
+  "answer": "სუში",
+  "wrong": [
+   "საშიმი",
+   "დიმ სამი",
+   "ონიგირი"
+  ],
+  "wiki": "Sushi",
+  "index": 78,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Sushi_platter.jpg/1280px-Sushi_platter.jpg"
+ },
+ {
+  "cat": "world_cuisine",
+  "difficulty": "easy",
+  "stem": "რომელი კერძია გამოსახული?",
+  "answer": "პიცა",
+  "wrong": [
+   "ფოკაჩა",
+   "ქიში",
+   "ლაჰმაჯო"
+  ],
+  "wiki": "Pizza",
+  "index": 79,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Pizza-3007395.jpg/1280px-Pizza-3007395.jpg"
+ },
+ {
+  "cat": "world_cuisine",
+  "difficulty": "medium",
+  "stem": "რომელი კერძია გამოსახული?",
+  "answer": "პაელა",
+  "wrong": [
+   "რიზოტო",
+   "ფლავი",
+   "ჯამბალაია"
+  ],
+  "wiki": "Paella",
+  "index": 80,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/01_Paella_Valenciana_original.jpg/1280px-01_Paella_Valenciana_original.jpg"
+ },
+ {
+  "cat": "world_cuisine",
+  "difficulty": "easy",
+  "stem": "რომელი კერძია გამოსახული?",
+  "answer": "ტაკო",
+  "wrong": [
+   "ბურიტო",
+   "კესადილია",
+   "ენჩილადა"
+  ],
+  "wiki": "Taco",
+  "index": 81,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/001_Tacos_de_carnitas%2C_carne_asada_y_al_pastor.jpg/1280px-001_Tacos_de_carnitas%2C_carne_asada_y_al_pastor.jpg"
+ },
+ {
+  "cat": "world_cuisine",
+  "difficulty": "easy",
+  "stem": "რომელი ნამცხვარია გამოსახული?",
+  "answer": "კრუასანი",
+  "wrong": [
+   "ბრიოში",
+   "შტრუდელი",
+   "ბაგეტი"
+  ],
+  "wiki": "Croissant",
+  "index": 82,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/2a/Croissant-Petr_Kratochvil.jpg"
+ },
+ {
+  "cat": "world_cuisine",
+  "difficulty": "medium",
+  "stem": "რომელი კერძია გამოსახული?",
+  "answer": "რამენი",
+  "wrong": [
+   "ფო",
+   "უდონი",
+   "ლაფშა"
+  ],
+  "wiki": "Ramen",
+  "index": 83,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Shoyu_Ramen%EF%BC%88Tokyo_Ramen%EF%BC%89_-_01.jpg/1280px-Shoyu_Ramen%EF%BC%88Tokyo_Ramen%EF%BC%89_-_01.jpg"
+ },
+ {
+  "cat": "world_cuisine",
+  "difficulty": "medium",
+  "stem": "რომელი ცომეულია გამოსახული?",
+  "answer": "ბრეცელი",
+  "wrong": [
+   "ბაგელი",
+   "კრენდელი",
+   "გრისინი"
+  ],
+  "wiki": "Pretzel",
+  "index": 84,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/BrezelnSalz02_%28cropped%29.JPG/1280px-BrezelnSalz02_%28cropped%29.JPG"
+ },
+ {
+  "cat": "georgian_culture",
+  "difficulty": "easy",
+  "stem": "რომელი ტაძარია გამოსახული?",
+  "answer": "სვეტიცხოველი",
+  "wrong": [
+   "ჯვრის მონასტერი",
+   "გელათი",
+   "ბაგრატის ტაძარი"
+  ],
+  "wiki": "Svetitskhoveli Cathedral",
+  "index": 85,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Svetitskhoveli_Cathedral_09.23_%283%29.jpg/1280px-Svetitskhoveli_Cathedral_09.23_%283%29.jpg"
+ },
+ {
+  "cat": "georgian_culture",
+  "difficulty": "medium",
+  "stem": "რომელი ტაძარია გამოსახული?",
+  "answer": "ჯვრის მონასტერი",
+  "wrong": [
+   "სვეტიცხოველი",
+   "გელათი",
+   "ალავერდი"
+  ],
+  "wiki": "Jvari (monastery)",
+  "index": 86,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Georgia_Jvari_monastery_IMG_9345_2070.jpg/1280px-Georgia_Jvari_monastery_IMG_9345_2070.jpg"
+ },
+ {
+  "cat": "georgian_culture",
+  "difficulty": "medium",
+  "stem": "რომელი ქართული ძეგლია გამოსახული?",
+  "answer": "კაცხის სვეტი",
+  "wrong": [
+   "გერგეტის ტაძარი",
+   "ვარძია",
+   "უფლისციხე"
+  ],
+  "wiki": "Katskhi pillar",
+  "index": 87,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Katskhi_Pillar2_%28edited%29.jpg/1280px-Katskhi_Pillar2_%28edited%29.jpg"
+ },
+ {
+  "cat": "georgian_culture",
+  "difficulty": "medium",
+  "stem": "რომელი ისტორიული ძეგლია გამოსახული?",
+  "answer": "ვარძია",
+  "wrong": [
+   "უფლისციხე",
+   "დავით გარეჯი",
+   "ნარიყალა"
+  ],
+  "wiki": "Vardzia",
+  "index": 88,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/2025-05-25_Vardzia_9.jpg/1280px-2025-05-25_Vardzia_9.jpg"
+ },
+ {
+  "cat": "georgian_culture",
+  "difficulty": "medium",
+  "stem": "რომელი ისტორიული ძეგლია გამოსახული?",
+  "answer": "უფლისციხე",
+  "wrong": [
+   "ვარძია",
+   "ნარიყალა",
+   "შიომღვიმე"
+  ],
+  "wiki": "Uplistsikhe",
+  "index": 89,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Middle_ages_Basilica_on_the_top_of_the_cave%2C_Uplistsikhe_20230920_%28II%29.jpg/1280px-Middle_ages_Basilica_on_the_top_of_the_cave%2C_Uplistsikhe_20230920_%28II%29.jpg"
+ },
+ {
+  "cat": "georgian_culture",
+  "difficulty": "easy",
+  "stem": "თბილისის რომელი ციხეა გამოსახული?",
+  "answer": "ნარიყალა",
+  "wrong": [
+   "რაბათი",
+   "ანანური",
+   "გონიო"
+  ],
+  "wiki": "Narikala",
+  "index": 90,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Tbilisi_IMG_8846_1920.jpg/1280px-Tbilisi_IMG_8846_1920.jpg"
+ },
+ {
+  "cat": "georgian_culture",
+  "difficulty": "medium",
+  "stem": "რომელი ციხეა გამოსახული?",
+  "answer": "ანანური",
+  "wrong": [
+   "ნარიყალა",
+   "რაბათი",
+   "გონიო"
+  ],
+  "wiki": "Ananuri",
+  "index": 91,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Georgian_Fortress_Ananuri.jpg/1280px-Georgian_Fortress_Ananuri.jpg"
+ },
+ {
+  "cat": "georgian_culture",
+  "difficulty": "easy",
+  "stem": "რომელი სასმისია გამოსახული?",
+  "answer": "ყანწი",
+  "wrong": [
+   "ქვევრი",
+   "დოქი",
+   "აზარფეშა"
+  ],
+  "wiki": "Drinking horn",
+  "index": 92,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Drinkhoorn_roordahuizum.JPG/1280px-Drinkhoorn_roordahuizum.JPG"
+ },
+ {
+  "cat": "sports",
+  "difficulty": "medium",
+  "stem": "რომელი სპორტია გამოსახული?",
+  "answer": "კრიკეტი",
+  "wrong": [
+   "ბეისბოლი",
+   "გოლფი",
+   "ჰოკეი"
+  ],
+  "wiki": "Cricket",
+  "index": 93,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Pollock_to_Hussey.jpg"
+ },
+ {
+  "cat": "sports",
+  "difficulty": "easy",
+  "stem": "რომელი სპორტია გამოსახული?",
+  "answer": "რაგბი",
+  "wrong": [
+   "ამერიკული ფეხბურთი",
+   "ფეხბურთი",
+   "ჰენდბოლი"
+  ],
+  "wiki": "Rugby union",
+  "index": 94,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/2014_Women%27s_Six_Nations_Championship_-_France_Italy_%2851%29.jpg/1280px-2014_Women%27s_Six_Nations_Championship_-_France_Italy_%2851%29.jpg"
+ },
+ {
+  "cat": "sports",
+  "difficulty": "easy",
+  "stem": "რომელი სპორტია გამოსახული?",
+  "answer": "გოლფი",
+  "wrong": [
+   "კრიკეტი",
+   "ბილიარდი",
+   "ჰოკეი"
+  ],
+  "wiki": "Golf",
+  "index": 95,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Golfer_swing.jpg/1280px-Golfer_swing.jpg"
+ },
+ {
+  "cat": "sports",
+  "difficulty": "medium",
+  "stem": "რომელი სპორტია გამოსახული?",
+  "answer": "ფარიკაობა",
+  "wrong": [
+   "კრივი",
+   "ძიუდო",
+   "ჭიდაობა"
+  ],
+  "wiki": "Fencing",
+  "index": 96,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Final_Trophee_Monal_2012_n08.jpg/1280px-Final_Trophee_Monal_2012_n08.jpg"
+ },
+ {
+  "cat": "sports",
+  "difficulty": "easy",
+  "stem": "რომელი სპორტია გამოსახული?",
+  "answer": "სერფინგი",
+  "wrong": [
+   "ვინდსერფინგი",
+   "ნიჩბოსნობა",
+   "წყალზე თხილამური"
+  ],
+  "wiki": "Surfing",
+  "index": 97,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Mavericks_Surf_Contest_2010b.jpg/1280px-Mavericks_Surf_Contest_2010b.jpg"
+ },
+ {
+  "cat": "sports",
+  "difficulty": "easy",
+  "stem": "რომელი სპორტია გამოსახული?",
+  "answer": "ჰოკეი",
+  "wrong": [
+   "ფიგურული სრიალი",
+   "კერლინგი",
+   "ბენდი"
+  ],
+  "wiki": "Ice hockey",
+  "index": 98,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Pittsburgh_Penguins%2C_Washington_Capitals%2C_Bryan_Rust_%2833744033514%29.jpg/1280px-Pittsburgh_Penguins%2C_Washington_Capitals%2C_Bryan_Rust_%2833744033514%29.jpg"
+ },
+ {
+  "cat": "sports",
+  "difficulty": "easy",
+  "stem": "რომელი სპორტია გამოსახული?",
+  "answer": "ბოულინგი",
+  "wrong": [
+   "კერლინგი",
+   "ბილიარდი",
+   "პეტანკი"
+  ],
+  "wiki": "Bowling",
+  "index": 99,
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/US_Navy_090819-N-2259V-119_A_Sailor_releases_the_ball_down_the_lane_at_a_bowling_competition_during_the_2009_San_Diego_Surface_Line_Week.jpg/1280px-US_Navy_090819-N-2259V-119_A_Sailor_releases_the_ball_down_the_lane_at_a_bowling_competition_during_the_2009_San_Diego_Surface_Line_Week.jpg"
+ }
+]

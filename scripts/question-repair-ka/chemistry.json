@@ -1,0 +1,12 @@
+[
+{"id":"577d04fe","kind":"answer_in_question","note":"asks which element diamond is an allotrope of and answers \"diamond\"","fix":{"correct_answer":"ნახშირბადი","incorrect_answers":["სილიციუმი","ბორი","ჟანგბადი"]}},
+{"id":"ee594911","kind":"wrong_answer","note":"tinplate is steel coated with tin; aluminium is not in it","fix":{"correct_answer":"კალა","incorrect_answers":["ალუმინი","რკინა","სპილენძი"]}},
+{"id":"ea748660","kind":"wrong_answer","note":"the half-life is a duration, not the process; \"ნახევრის დრო\" sits among the distractors","fix":{"correct_answer":"ნახევრის დაშლის დრო","incorrect_answers":["სრული დაშლის დრო","რეაქციის დრო","ნაშთის დრო"]}},
+{"id":"0ce7f4cb","kind":"grammar","note":"\"ირაუმი\" is a typo for ირიდიუმი","fix":{"incorrect_answers":["ირიდიუმი","პლატინა","ვოლფრამი"]}},
+{"id":"e7bc85fb","kind":"grammar","note":"\"ნეგატიური ატომი\" should be ელექტროუარყოფითი, as 7e84e129 has it","fix":{"question_text":"რომელია ყველაზე ელექტროუარყოფითი ატომი?"}},
+{"id":"75676aad","kind":"broken_stem","note":"stem breaks off after \"რეაქციის...\"","fix":{"question_text":"რას აკეთებს კატალიზატორი რეაქციაში?"}},
+{"id":"8fd62dfd","kind":"wrong_answer","note":"hydrogen is the lightest gas; the stem is only right if it says inert, which the options imply","fix":{"question_text":"რომელია ყველაზე მსუბუქი ინერტული აირი?"}},
+{"id":"42ad1c31","kind":"ambiguous","note":"the atom offered as a distractor is the smallest particle of an element; the molecule is the smallest of a compound","action":"flag"},
+{"id":"3624a9d2","kind":"ambiguous","note":"coal is a rock and carbon an element; the stem conflates them","action":"flag"},
+{"id":"e763cfbf","kind":"doubtful","note":"the walnut's principal protein is glutelin, not albumin","action":"flag"}
+]
