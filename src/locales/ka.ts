@@ -2459,7 +2459,7 @@ export const ka = {
     familyProBenefit2: "ყველა PRO ფუნქცია",
     familyProBenefit3: "რეკლამების გარეშე",
     mobileSoloBenefit1: "ულიმიტო თამაში",
-    mobileSoloBenefit2: "PRO ფუნქციები + 1 მეგობარი",
+    mobileSoloBenefit2: "ყველა PRO ფუნქცია",
     proSeatsTitle: "აჩუქე PRO მეგობარს",
     proSeatsSubtitle: "გამოყენებულია {used} / {total}",
     proSeatsGive: "PRO-ს ჩუქება (დარჩა {count})",

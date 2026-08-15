@@ -2460,7 +2460,7 @@ export const en: KaTranslations = {
     familyProBenefit2: "All PRO features",
     familyProBenefit3: "No ads",
     mobileSoloBenefit1: "Unlimited play",
-    mobileSoloBenefit2: "PRO features + 1 friend",
+    mobileSoloBenefit2: "All PRO features",
     proSeatsTitle: "Give PRO to a friend",
     proSeatsSubtitle: "{used} of {total} seats used",
     proSeatsGive: "Give PRO ({count} left)",

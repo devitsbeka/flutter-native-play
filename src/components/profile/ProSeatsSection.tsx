@@ -9,19 +9,23 @@ import { useLanguage } from "@/contexts/LanguageContext";
 /**
  * Give your PRO to a friend.
  *
- * PRO carries one seat, Friends PRO five — the benefit the tier cards
- * advertise. The seat count shown here is only for display: `grant_pro_seat`
+ * Friends PRO carries five seats and is the only tier that does — solo PRO is
+ * one subscription for one player, which is what its name says and what its
+ * price buys. The count shown here is only for display: `grant_pro_seat`
  * reads the allowance from the paid subscription itself and refuses past it,
  * so a stale number on screen cannot turn into an extra seat.
  *
- * Rendered only for an active subscriber, because there is nothing to say to
- * anyone else — the paywall is a screen away and this would just be a locked
- * panel taking up room on it.
+ * The whole section stays out of the way for anyone with no seats, which is
+ * every solo subscriber and everyone who is not subscribed at all. It briefly
+ * offered solo PRO a single seat, and "0 of 1 seats used" turned out to be a
+ * whole panel for one invitation.
+ *
+ * Mirrors pro_seat_allowance() in 20260815120000_solo_pro_has_no_seats.sql;
+ * proSeats.test.ts reads the number back out of the SQL so the two cannot
+ * drift.
  */
 
 const SEATS_BY_TIER: Record<string, number> = {
-  pro: 1,
-  standard: 1,
   pro_plus: 5,
   pro_master: 5,
 };

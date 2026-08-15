@@ -110,24 +110,27 @@ with no error raised anywhere along the path.
 ### 2.1 Subscription group, then the two subscriptions
 
 Both PRO tiers bill **monthly** — they are feature tiers, not billing periods,
-and the app renders both with a "/month" label. See `PRO_TIERS` in
-`src/components/profile/ProPlansSection.tsx`.
+and the app renders both with a "/month" label. The prices and benefit lines
+live in `ProBannerReel` (`src/components/shop/MobileProCarousel.tsx`), which
+is the single set of PRO cards the app draws.
 
-They used to differ by friend invites, 1 against 5. That offer was retired
-(`20260814230000_retire_referral_pro_grant.sql`) because it minted PRO for
-anyone who called it and never paid out anyway, so the only remaining
-difference between the tiers is daily rewards. The App Store descriptions
-have to say so:
+What separates them is seats. Solo PRO is one subscription for one player;
+Friends PRO carries five seats its owner can give to friends, and each seat is
+full PRO for as long as the subscription that paid for it lasts
+(`20260815090000_pro_seats.sql`, narrowed to Friends PRO only by
+`20260815120000_solo_pro_has_no_seats.sql`). Friends PRO also carries daily
+rewards. The App Store descriptions have to match:
 
 | Product | Description |
 |---|---|
 | `io.mytrivia.pro.monthly` | `Double XP, no ads and a VIP badge.` |
-| `io.mytrivia.proplus.monthly` | `Double XP, no ads, VIP badge and daily rewards.` |
+| `io.mytrivia.proplus.monthly` | `Double XP, no ads, VIP badge, daily rewards, and PRO for 5 friends.` |
 
 That text is shown at the moment of purchase, so a benefit listed there and
-absent from the app is guideline 2.3.1. "Friends PRO" also now names a tier
-with no friend features, and $7.99 against $3.99 is a lot of weight for one
-benefit — both worth a decision before submission.
+absent from the app is guideline 2.3.1 — which is why the seat allowance, the
+panel that draws the seats and the benefit line on each card are held together
+by `src/__tests__/proSeats.test.ts`. Do not describe friends on the solo tier:
+it has no seats, and the panel does not render for it.
 Making either one yearly puts a price on screen that doesn't match what Apple
 charges, which is a guideline 2.3.1 rejection on the same screen that shows
 it.
