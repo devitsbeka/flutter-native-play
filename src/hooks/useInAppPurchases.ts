@@ -196,13 +196,32 @@ async function initStore(): Promise<IAPProduct[]> {
     return [];
   }
 
-  // Verbose purchase logging is for development. In a release build it writes
-  // transaction internals to the device console.
-  await plugin.setLogLevel({
-    level: import.meta.env.DEV ? (LOG_LEVEL?.DEBUG ?? "DEBUG") : (LOG_LEVEL?.ERROR ?? "ERROR"),
-  });
-  await plugin.configure({ apiKey });
+  // setLogLevel and configure are bounded too.
+  //
+  // They were not, and that is where it hung. The timeouts added for the
+  // StoreKit queries all sat downstream of these two lines, so they never got
+  // the chance to fire: initStore stopped here, `storeInit` — a module-level
+  // singleton every caller shares — never settled, and purchase() awaited it
+  // forever. The `finally` that clears `purchasing` never ran, which is the
+  // spinner, and because the call never reached the bridge there was no
+  // native log either. Silent, unbounded, and identical for every product,
+  // which is why gems and PRO failed the same way.
+  //
+  // Each is announced separately. "configure hung" and "the very first bridge
+  // call hung" are different faults — the second means the native plugin is
+  // not answering at all — and they were indistinguishable from one line.
+  iapLog("setLogLevel…");
+  await withTimeout(
+    plugin.setLogLevel({
+      level: import.meta.env.DEV ? (LOG_LEVEL?.DEBUG ?? "DEBUG") : (LOG_LEVEL?.ERROR ?? "ERROR"),
+    }),
+    "setLogLevel",
+  );
 
+  iapLog("configure…");
+  await withTimeout(plugin.configure({ apiKey }), "configure");
+
+  iapLog("getOfferings…");
   const offerings = await withTimeout(plugin.getOfferings(), "getOfferings");
 
   const mapped: IAPProduct[] = [];
