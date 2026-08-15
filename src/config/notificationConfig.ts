@@ -58,6 +58,15 @@ export const NOTIFICATION_TYPE_CONFIG: Record<string, NotificationTypeConfig> = 
     label: 'მეგობრობის მოთხოვნა',
     labelEn: 'Friend Request',
   },
+  // Your own copy of a request you sent. Quieter than the one you receive:
+  // it is a record, not something to act on.
+  friend_request_sent: {
+    icon: UserPlus,
+    color: 'text-slate-400',
+    bgColor: 'bg-slate-500/20',
+    label: 'მოთხოვნა გაგზავნილია',
+    labelEn: 'Request Sent',
+  },
   friend_accepted: {
     icon: UserCheck,
     color: 'text-green-400',

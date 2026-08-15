@@ -14,6 +14,7 @@ import { ka } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { shortTimeAgo } from '@/utils/shortTimeAgo';
+import { typeInTab, type NotificationTab } from '@/config/notificationTabs';
 import { CompactNotificationCard } from '@/components/notifications/CompactNotificationCard';
 import { NotificationDetailModal } from '@/components/notifications/NotificationDetailModal';
 import { CompactGenerationCard } from '@/components/notifications/CompactGenerationCard';
@@ -42,27 +43,13 @@ export default function Notifications() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [displayLimit, setDisplayLimit] = useState(20);
   const [clearingAll, setClearingAll] = useState(false);
-  const [activeTab, setActiveTab] = useState<'games' | 'social' | 'trivia'>('games');
+  const [activeTab, setActiveTab] = useState<NotificationTab>('games');
   const [detailNotification, setDetailNotification] = useState<Notification | null>(null);
 
   const dateLocale = language === 'ka' ? ka : enUS;
 
-  // Tab category mapping. Games is the CATCH-ALL: any type not explicitly
-  // social or trivia lands there (rewards, level-ups, system, messages...).
-  // With fixed per-tab lists, unlisted types were invisible AND never got
-  // marked read — the bell badge could never clear.
-  const SOCIAL_TYPES = ['friend_request', 'friend_accepted'];
-  const TRIVIA_TYPES = ['trivia_liked', 'trivia_saved', 'trivia_played'];
-  const typeInTab = useCallback(
-    (type: string, tab: 'games' | 'social' | 'trivia') =>
-      tab === 'social'
-        ? SOCIAL_TYPES.includes(type)
-        : tab === 'trivia'
-          ? TRIVIA_TYPES.includes(type)
-          : !SOCIAL_TYPES.includes(type) && !TRIVIA_TYPES.includes(type),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
+  // Tab mapping lives in config/notificationTabs.ts — this file and
+  // NotificationsPanel.tsx each had their own copy of it.
 
   // Filter notifications by active tab
   const filteredNotifications = useMemo(() => {
@@ -70,7 +57,7 @@ export default function Notifications() {
   }, [notifications, activeTab, typeInTab]);
 
   // Get unread count per tab
-  const getUnreadCount = (tab: 'games' | 'social' | 'trivia') => {
+  const getUnreadCount = (tab: NotificationTab) => {
     return notifications.filter(n => typeInTab(n.type, tab) && !n.read_at).length;
   };
 
@@ -291,7 +278,9 @@ export default function Notifications() {
   const handleClearAll = async () => {
     setClearingAll(true);
     try {
-      await clearAllNotifications();
+      // This tab's notifications, not the account's. The button lives under
+      // one tab's list and reads as belonging to it.
+      await clearAllNotifications(filteredNotifications.map((n) => n.id));
       toast.success(t("extra.notifAllDeleted"));
     } catch (error) {
       toast.error(t("extra.errorOccurred"));
@@ -333,7 +322,7 @@ export default function Notifications() {
 
       {/* Tabs */}
       <div className="relative z-10 px-4 pt-3 max-w-[700px] md:max-w-[600px] mx-auto">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'games' | 'social' | 'trivia')} className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as NotificationTab)} className="w-full">
           <TabsList className="grid grid-cols-3 w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto">
             <TabsTrigger value="games" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
               <Gamepad2 className="w-3.5 h-3.5" />

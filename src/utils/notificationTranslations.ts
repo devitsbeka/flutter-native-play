@@ -42,6 +42,7 @@ export function translateNotificationTitle(
     'game_started': 'notifications.gameStarted',
     'room_invite': 'notifications.gameRoomInvitation',
     'friend_request': 'notifications.friendRequest',
+    'friend_request_sent': 'notifications.friendRequestSent',
     'friend_accepted': 'notifications.friendAccepted',
     'challenge': 'notifications.challengeReceived',
     'game_result': 'notifications.gameResult',
@@ -118,6 +119,7 @@ export function translateNotificationMessage(
     'game_started': 'notifications.gameStartedBy',
     'room_invite': 'notifications.invitedYouToPlay',
     'friend_request': 'notifications.friendRequestFrom',
+    'friend_request_sent': 'notifications.friendRequestSentTo',
     'friend_accepted': 'notifications.friendAcceptedBy',
   };
 
