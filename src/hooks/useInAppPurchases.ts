@@ -39,6 +39,19 @@ const ALL_PRODUCT_IDS: string[] = [
   ...Object.values(GEM_PACK_PRODUCTS),
 ];
 
+// Diagnostics that survive a production build.
+//
+// vite.config.ts lists console.log/debug/info as `pure` for production, so
+// esbuild deletes those calls outright. Breadcrumbs written with console.log
+// therefore exist in the source, exist in the repo, and are absent from the
+// exact build anyone would be debugging — which is how three device captures
+// came back silent and were read as "this code never ran".
+//
+// The purchase path is the one place where "it did nothing and said nothing"
+// is the whole bug report, so its trace is written at warn. One line per
+// launch, not per render.
+const iapLog = (...args: unknown[]) => console.warn("[iap]", ...args);
+
 // A StoreKit query that never comes back is a spinner that never stops.
 //
 // getOfferings and getProducts both reach StoreKit, and StoreKit does not
@@ -107,14 +120,14 @@ async function loadPurchasesPlugin() {
       // purchase() — waits with it. From the device that is a buy button that
       // spins with an empty console, and from the log it is indistinguishable
       // from the hook never having mounted at all.
-      console.log("[iap] importing @revenuecat/purchases-capacitor…");
+      iapLog("importing @revenuecat/purchases-capacitor…");
       const module = await withTimeout(
         import("@revenuecat/purchases-capacitor"),
         "import(@revenuecat/purchases-capacitor)",
       );
       Purchases = module.Purchases;
       LOG_LEVEL = module.LOG_LEVEL;
-      console.log("[iap] plugin module loaded");
+      iapLog("plugin module loaded");
       return Purchases;
     } catch (e) {
       console.error("[iap] Failed to load RevenueCat Purchases plugin:", e);
@@ -156,7 +169,7 @@ async function initStore(): Promise<IAPProduct[]> {
   // First line of the whole path, so a silent run can be told apart from a
   // run that never started. Absent this, "the hook never mounted" and "the
   // hook mounted and hung on the very next line" produce identical logs.
-  console.log(`[iap] initStore on ${Capacitor.getPlatform()}`);
+  iapLog(`initStore on ${Capacitor.getPlatform()}`);
   if (!Capacitor.isNativePlatform()) return [];
 
   const plugin = await loadPurchasesPlugin();
@@ -228,7 +241,7 @@ async function initStore(): Promise<IAPProduct[]> {
     }
   }
 
-  console.log("RevenueCat initialized, products:", mapped);
+  iapLog("RevenueCat initialized, products:", mapped);
 
   // Nothing from offerings *and* nothing from StoreKit means the store itself
   // is returning no products for this build. Say so once, plainly, because
