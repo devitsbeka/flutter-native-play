@@ -3,8 +3,15 @@ name: Deploy to Cloudflare
 on:
   push:
     branches: [main]
-    # CI minutes are metered on this private repo, so don't spend a full
-    # build-and-deploy on changes that cannot alter what ships.
+    # The repo is public, so standard-runner minutes are free and this is no
+    # longer about cost. It stays because a deploy takes ~3.5 minutes and a
+    # README edit cannot change what ships, so the wait buys nothing.
+    #
+    # Worth knowing when a deploy needs re-running: a path filter also means
+    # an EMPTY commit will not trigger this workflow. A push with no changed
+    # files matches the filter and is skipped, so `--allow-empty` is not a
+    # way to retry — use "Re-run all jobs" in the Actions UI, or the
+    # workflow_dispatch below.
     paths-ignore:
       - '**/*.md'
       - 'docs/**'
