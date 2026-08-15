@@ -25,7 +25,19 @@ export const IAP_PRODUCTS = {
 
 // Gem consumables are defined alongside the packs they sell, in
 // src/config/gemPacks.ts, so the shop and the store SKUs cannot drift apart.
+// Imported as well as re-exported: `export { X } from` is a pure re-export and
+// does not bind X in this module's scope.
+import { GEM_PACK_PRODUCTS } from "@/config/gemPacks";
 export { GEM_PACK_PRODUCTS } from "@/config/gemPacks";
+
+// Every id the app can sell, for the direct StoreKit query below. Offerings
+// are the normal route; this is the list to fall back to when they come back
+// empty, which is a RevenueCat dashboard state and not something the user of
+// a shipped build can be asked to wait out.
+const ALL_PRODUCT_IDS: string[] = [
+  ...Object.values(IAP_PRODUCTS),
+  ...Object.values(GEM_PACK_PRODUCTS),
+];
 
 export interface IAPProduct {
   productId: string;
@@ -162,9 +174,60 @@ export function useInAppPurchases() {
           }
         }
 
+        // Offerings came back with nothing in them. Ask StoreKit directly for
+        // the ids we know about, rather than rendering a shop with no prices.
+        //
+        // An empty offering is a dashboard state — a product not added to a
+        // package, a package pointing at the wrong id, an offering that isn't
+        // current — and none of it is visible or fixable from the device. The
+        // consequence without this was not a blank price but a *wrong* one:
+        // useStorePrice falls back to the figure compiled into the bundle, and
+        // for a Georgian user that fallback is 2.75x the USD number rendered
+        // as ₾. An invented price next to a real App Store charge is exactly
+        // what guideline 2.3.1 rejects for.
+        if (mappedProducts.length === 0) {
+          console.warn(
+            "[iap] No offerings returned any products. Querying StoreKit " +
+              "directly for known ids. Check the default offering in RevenueCat.",
+          );
+          try {
+            const direct = await plugin.getProducts({
+              productIdentifiers: ALL_PRODUCT_IDS,
+            });
+            for (const product of direct?.products ?? []) {
+              mappedProducts.push({
+                productId: product.identifier,
+                title: product.title || product.identifier,
+                description: product.description || "",
+                price: product.priceString || "",
+                priceAmountMicros: Math.round((product.price || 0) * 1000000),
+                priceCurrencyCode: product.currencyCode || "USD",
+              });
+            }
+          } catch (e) {
+            console.error("[iap] Direct getProducts failed:", e);
+          }
+        }
+
         setProducts(mappedProducts);
         setIsInitialized(true);
         console.log("RevenueCat initialized, products:", mappedProducts);
+
+        // Nothing from offerings *and* nothing from StoreKit means the store
+        // itself is returning no products for this build — an unsigned Paid
+        // Applications agreement, ids that don't exist in App Store Connect,
+        // or a bundle id that doesn't match. Say so once, plainly, because
+        // every downstream symptom (fallback prices, dead buy buttons) looks
+        // like an app bug rather than a store one.
+        if (mappedProducts.length === 0) {
+          console.error(
+            "[iap] StoreKit returned zero products for " +
+              `${ALL_PRODUCT_IDS.length} known ids on ${platform}. Purchases ` +
+              "cannot work in this build. Check: Paid Applications agreement " +
+              "active in App Store Connect, product ids exist and are at " +
+              "least 'Ready to Submit', and the bundle id matches.",
+          );
+        }
       } catch (error) {
         console.error("Failed to initialize IAP:", error);
       } finally {
@@ -247,9 +310,36 @@ export function useInAppPurchases() {
             `package in the default offering — until then its paywall price ` +
             `is the compiled fallback, not the store's.`,
         );
-        const result = await plugin.purchaseStoreProduct({
-          product: { identifier: productId }
-        });
+
+        // Fetch the real StoreProduct before buying it.
+        //
+        // This used to hand purchaseStoreProduct a hand-made
+        // `{ identifier: productId }`. The plugin's signature takes a full
+        // PurchasesStoreProduct — priceString, currencyCode, the StoreKit
+        // handle, all of it — so the native side received an object with
+        // every field but one missing and never came back. On the device that
+        // was a buy button that spun forever or took the app down with it,
+        // with nothing logged, because the promise neither resolved nor
+        // rejected.
+        const found = await plugin.getProducts({ productIdentifiers: [productId] });
+        const storeProduct = found?.products?.find(
+          (p: any) => p.identifier === productId,
+        );
+
+        if (!storeProduct) {
+          // The store does not know this id. Nothing can be purchased, and
+          // there is no object to pass on — stop here rather than call into
+          // StoreKit with something invented.
+          console.error(
+            `[iap] StoreKit has no product ${productId}. It is missing from ` +
+              `App Store Connect, not yet 'Ready to Submit', or the Paid ` +
+              `Applications agreement is not active.`,
+          );
+          toast.error("This item isn't available from the store right now.");
+          return { success: false, error: "product_not_found" };
+        }
+
+        const result = await plugin.purchaseStoreProduct({ product: storeProduct });
         customerInfo = result.customerInfo;
       }
 

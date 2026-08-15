@@ -51,16 +51,35 @@ export function useStorePrice() {
   const { getProduct } = useInAppPurchases();
 
   return (tierOrProductId: string, fallbackUsd: number): StorePrice => {
-    const fallback = () => {
+    // Web: the site takes payment in GEL through Stripe, so a converted GEL
+    // figure is the price actually charged. Unchanged.
+    const webFallback = () => {
       const p = getPriceDisplay(fallbackUsd);
       return { display: `${p.symbol}${p.value}${p.suffix}`, fromStore: false };
     };
 
-    if (!Capacitor.isNativePlatform()) return fallback();
+    // Native: never convert. Apple charges the App Store Connect tier in the
+    // storefront's own currency, and `usdToGel` is a constant 2.75 multiplier
+    // that has no relationship to it. A Georgian user was shown "10.97 ₾" for
+    // a product Apple would charge some other ₾ amount for — a price on the
+    // screen that does not match the price in the sheet, which is what
+    // guideline 2.3.1 rejects for, and which a reviewer sees by looking.
+    //
+    // The USD figure is at least the real configured price of the tier, so it
+    // is what to show while the store has not answered. Callers that can
+    // render a skeleton should prefer `fromStore` over this.
+    const nativeFallback = () => ({
+      display: `$${fallbackUsd.toFixed(2).replace(/\.00$/, "")}`,
+      fromStore: false,
+    });
+
+    if (!Capacitor.isNativePlatform()) return webFallback();
 
     const productId = TIER_TO_PRODUCT[tierOrProductId] ?? tierOrProductId;
     const product = getProduct(productId);
 
-    return product?.price ? { display: product.price, fromStore: true } : fallback();
+    return product?.price
+      ? { display: product.price, fromStore: true }
+      : nativeFallback();
   };
 }
