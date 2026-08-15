@@ -203,10 +203,33 @@ serve(async (req) => {
 
     console.log(`Sending ${notification_type} notification to ${user_ids?.length || 'all'} users`);
 
-    // Get FCM access token
+    // Get FCM access token.
+    //
+    // Checked here rather than trusting the `!`: with the secret unset this
+    // was JSON.parse(undefined), which throws 'SyntaxError: "undefined" is
+    // not valid JSON' and reaches the caller as a 500 that names neither the
+    // secret nor the fact that it is missing. getFCMAccessToken has the clear
+    // message, but it is called two lines later and never got the chance.
     const serviceAccountJson = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
-    const serviceAccount = JSON.parse(serviceAccountJson!);
-    const projectId = serviceAccount.project_id;
+    if (!serviceAccountJson) {
+      console.error('FIREBASE_SERVICE_ACCOUNT is not set; cannot send');
+      return new Response(
+        JSON.stringify({ error: 'FIREBASE_SERVICE_ACCOUNT not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    let projectId: string;
+    try {
+      projectId = JSON.parse(serviceAccountJson).project_id;
+      if (!projectId) throw new Error('no project_id in FIREBASE_SERVICE_ACCOUNT');
+    } catch (e) {
+      console.error('FIREBASE_SERVICE_ACCOUNT is not usable JSON:', e);
+      return new Response(
+        JSON.stringify({ error: 'FIREBASE_SERVICE_ACCOUNT is malformed' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
     
     const accessToken = await getFCMAccessToken();
 
