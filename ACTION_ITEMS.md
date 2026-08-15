@@ -101,11 +101,15 @@ Still open on the products:
          Firebase SDK raises on launch — this is a crash, not a degradation
       3. Project settings → **Cloud Messaging** → upload the **APNs auth key
          (.p8)** with its Key ID and Team ID `T38XQSM4L3`
-      4. Copy the **project id** into the `FIREBASE_PROJECT_ID` Supabase
-         secret if it is not already set — `send-push-notification` puts it in
-         the `messages:send` URL
-      5. Confirm the service-account credentials the sender signs its JWT with
-         are current for this project
+      4. Project settings → **Service accounts** → *Generate new private key*.
+         Paste the whole JSON file into the Supabase secret
+         **`FIREBASE_SERVICE_ACCOUNT`** — that is the only Firebase secret the
+         sender reads, and it takes `project_id` from inside the JSON rather
+         than from a separate setting.
+
+         This one is a real secret, unlike the SDK keys in `.env`: it signs
+         the JWT that authorises sending to every device you have a token for.
+         Supabase platform secret only, never the repo.
 
       The client half is done: the app now takes its token from
       `@capacitor-firebase/messaging` rather than `@capacitor/push-notifications`.
