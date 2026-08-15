@@ -3,8 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { toast } from "sonner";
-import { VIP_DAILY_POWERUPS } from "@/utils/vipMultipliers";
-import { PowerUpType } from "@/hooks/useUserPowerUps";
 
 interface DailyVipRewardsState {
   powersClaimed: boolean;
@@ -12,13 +10,7 @@ interface DailyVipRewardsState {
   loading: boolean;
 }
 
-// Map VIP power-up keys to database power-up types
-const POWERUP_TYPE_MAP: Record<keyof typeof VIP_DAILY_POWERUPS, PowerUpType> = {
-  FREEZE: "freeze",
-  FIFTY_FIFTY: "5050",
-  REPLACE: "replace",
-  TIME_DRAIN: "time-drain",
-};
+// Which power-ups a day is worth now lives in claim_daily_vip_powers().
 
 export function useDailyVipRewards() {
   const { user } = useAuth();
@@ -63,67 +55,51 @@ export function useDailyVipRewards() {
     fetchDailyStatus();
   }, [fetchDailyStatus]);
 
-  // Claim daily power-ups
+  /**
+   * Today's PRO power-ups, in one server call.
+   *
+   * This used to grant four power-ups in a loop without checking any of the
+   * four writes, then mark the day claimed — and that last write was the only
+   * one it did check. A grant that failed left the player told they had their
+   * powers, without them, and unable to claim again. It also read a quantity
+   * and wrote it back, so two tabs claiming at once lost an increment.
+   *
+   * claim_daily_vip_powers() checks the subscription, refuses a second claim
+   * on the same day, and grants all four in one transaction — nothing is
+   * marked claimed unless every power-up landed.
+   */
   const claimDailyPowerUps = useCallback(async (): Promise<boolean> => {
     if (!user || !isVip || state.powersClaimed) return false;
 
-    try {
-      const today = new Date().toISOString().split("T")[0];
+    // Cast rather than regenerate the whole database type file — see the note
+    // in AGENTS.md about what regenerating it deletes.
+    const client = supabase as unknown as {
+      rpc: (fn: string) => Promise<{
+        data: { ok?: boolean; reason?: string } | null;
+        error: { message: string } | null;
+      }>;
+    };
 
-      // Grant power-ups using the user_power_ups table
-      const powerUpEntries = Object.entries(VIP_DAILY_POWERUPS) as [keyof typeof VIP_DAILY_POWERUPS, number][];
-      
-      for (const [key, amount] of powerUpEntries) {
-        const powerUpType = POWERUP_TYPE_MAP[key];
-        
-        // Check if record exists
-        const { data: existing } = await supabase
-          .from("user_power_ups")
-          .select("quantity")
-          .eq("user_id", user.id)
-          .eq("power_up_type", powerUpType)
-          .maybeSingle();
+    const { data, error } = await client.rpc("claim_daily_vip_powers");
 
-        if (existing) {
-          // Update existing
-          await supabase
-            .from("user_power_ups")
-            .update({ quantity: (existing.quantity || 0) + amount })
-            .eq("user_id", user.id)
-            .eq("power_up_type", powerUpType);
-        } else {
-          // Insert new
-          await supabase
-            .from("user_power_ups")
-            .insert({
-              user_id: user.id,
-              power_up_type: powerUpType,
-              quantity: amount,
-            });
-        }
-      }
-
-      // Upsert daily record
-      const { error } = await supabase
-        .from("user_daily_vip_rewards")
-        .upsert({
-          user_id: user.id,
-          reward_date: today,
-          powers_claimed: true,
-        }, {
-          onConflict: "user_id,reward_date",
-        });
-
-      if (error) throw error;
-
-      setState(prev => ({ ...prev, powersClaimed: true }));
-      toast.success("VIP ძალები მიღებულია!");
-      return true;
-    } catch (error) {
+    if (error) {
       console.error("Error claiming daily power-ups:", error);
       toast.error("ძალების მიღება ვერ მოხერხდა");
       return false;
     }
+
+    if (!data?.ok) {
+      // already_claimed is not a failure worth a message — the state below
+      // catches this device up with what the server already knows.
+      if (data?.reason === "already_claimed") {
+        setState(prev => ({ ...prev, powersClaimed: true }));
+      }
+      return false;
+    }
+
+    setState(prev => ({ ...prev, powersClaimed: true }));
+    toast.success("VIP ძალები მიღებულია!");
+    return true;
   }, [user, isVip, state.powersClaimed]);
 
   // Mark spins as granted (called from useRewards)

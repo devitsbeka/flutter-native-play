@@ -442,4 +442,82 @@ BEGIN
   END IF;
 END $$;
 
+-- ── a score increment is bounded ───────────────────────────────────────────
+--
+-- increment_participant_score takes the amount from the caller. Before it was
+-- clamped, one call with 999999 set a room score to 999999.
+
+INSERT INTO auth.users (id, email) VALUES
+  ('44444444-4444-4444-4444-444444444444','d@test')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.game_rooms (id, room_code, host_user_id, status)
+VALUES ('55555555-5555-5555-5555-555555555555','ASRT01',
+        '44444444-4444-4444-4444-444444444444','playing')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.room_participants (room_id, user_id, status, nickname, score)
+VALUES ('55555555-5555-5555-5555-555555555555',
+        '44444444-4444-4444-4444-444444444444','joined','D',0)
+ON CONFLICT DO NOTHING;
+UPDATE public.room_participants SET score = 0
+ WHERE room_id = '55555555-5555-5555-5555-555555555555';
+
+SELECT set_config('test.uid','44444444-4444-4444-4444-444444444444', false);
+SELECT public.increment_participant_score('55555555-5555-5555-5555-555555555555', 999999);
+SELECT pg_temp.must_equal(
+  (SELECT score FROM public.room_participants
+    WHERE room_id = '55555555-5555-5555-5555-555555555555'), 275,
+  'a delta of 999999 is clamped to one question''s maximum');
+
+UPDATE public.room_participants SET score = 0
+ WHERE room_id = '55555555-5555-5555-5555-555555555555';
+SELECT public.increment_participant_score('55555555-5555-5555-5555-555555555555', 250);
+SELECT public.increment_participant_score('55555555-5555-5555-5555-555555555555', 275);
+SELECT pg_temp.must_equal(
+  (SELECT score FROM public.room_participants
+    WHERE room_id = '55555555-5555-5555-5555-555555555555'), 525,
+  'two honest answers are not clamped');
+
+-- ── the daily PRO power-ups land together or not at all ────────────────────
+
+DELETE FROM public.user_power_ups WHERE user_id = '44444444-4444-4444-4444-444444444444';
+DELETE FROM public.user_daily_vip_rewards WHERE user_id = '44444444-4444-4444-4444-444444444444';
+
+SELECT pg_temp.must_equal(
+  (public.claim_daily_vip_powers() ->> 'reason'), 'not_pro',
+  'a player with no subscription claims nothing');
+SELECT pg_temp.must_equal(
+  (SELECT count(*) FROM public.user_power_ups
+    WHERE user_id = '44444444-4444-4444-4444-444444444444'), 0::bigint,
+  'and is given nothing');
+
+INSERT INTO public.vip_subscriptions (user_id, vip_tier, expires_at)
+VALUES ('44444444-4444-4444-4444-444444444444','pro', now() + interval '30 days')
+ON CONFLICT (user_id) DO UPDATE SET expires_at = EXCLUDED.expires_at;
+
+SELECT pg_temp.must_equal(
+  (public.claim_daily_vip_powers() ->> 'ok'), 'true',
+  'a PRO player claims the day');
+SELECT pg_temp.must_equal(
+  (SELECT count(*) FROM public.user_power_ups
+    WHERE user_id = '44444444-4444-4444-4444-444444444444'
+      AND quantity = 1), 4::bigint,
+  'and gets one of each of the four');
+SELECT pg_temp.must_equal(
+  (public.claim_daily_vip_powers() ->> 'reason'), 'already_claimed',
+  'a second claim on the same day');
+SELECT pg_temp.must_equal(
+  (SELECT sum(quantity) FROM public.user_power_ups
+    WHERE user_id = '44444444-4444-4444-4444-444444444444'), 4::bigint,
+  'and hands out nothing the second time');
+
+DO $$
+BEGIN
+  IF has_function_privilege('anon', 'public.claim_daily_vip_powers()', 'EXECUTE') THEN
+    RAISE EXCEPTION 'ASSERTION FAILED: anon can claim daily PRO powers';
+  END IF;
+  IF has_function_privilege('anon', 'public.increment_participant_score(uuid, integer)', 'EXECUTE') THEN
+    RAISE EXCEPTION 'ASSERTION FAILED: anon can move a room score';
+  END IF;
+END $$;
+
 \echo 'All entitlement and currency assertions hold.'

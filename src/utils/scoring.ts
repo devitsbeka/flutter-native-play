@@ -22,6 +22,19 @@ export const QUESTION_TIME_SECONDS = 15;
  */
 export const FIRST_ANSWER_BONUS = 25;
 
+/**
+ * The most one question can pay anybody: the base, a full clock of time
+ * bonus, and the first-answer bonus on top.
+ *
+ * The server clamps a single score increment to this — increment_participant_score
+ * takes the amount as a parameter, so without a ceiling a client could send
+ * any number it liked. `scoring.test.ts` reads the number back out of the
+ * migration, so raising it here without raising it there fails the build
+ * rather than silently capping real scores.
+ */
+export const MAX_QUESTION_POINTS =
+  BASE_POINTS + QUESTION_TIME_SECONDS * TIME_BONUS_MULTIPLIER + FIRST_ANSWER_BONUS;
+
 export const calculatePoints = (isCorrect: boolean, timeRemaining: number): number => {
   if (!isCorrect) return 0;
 
