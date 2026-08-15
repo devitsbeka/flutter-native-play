@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { typeInTab, type NotificationTab } from '@/config/notificationTabs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell, BellOff, Gamepad2, Users, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -32,26 +33,17 @@ const formatTimeAgo = (date: Date, t: (key: string, params?: Record<string, stri
 };
 
 // Tab category mapping
-type NotifTab = 'games' | 'social' | 'trivia';
-
-const SOCIAL_TYPES = ['friend_request', 'friend_accepted'];
-const TRIVIA_TYPES = ['trivia_liked', 'trivia_saved', 'trivia_played'];
-
 /**
- * Which tab a notification belongs in.
+ * Which tab a notification belongs in — see config/notificationTabs.ts.
  *
- * Games is everything else rather than a list of its own, the way the
- * notifications page already sorts them. Naming all three explicitly covered
- * nine of the twenty-one types that exist, so a welcome, a level-up, an
- * achievement or a reward appeared in no tab at all — invisible here, while
- * still counted in the bell's badge.
+ * That file is shared with the notifications page, which carried a
+ * byte-identical copy of these lists. Games is everything else rather than a
+ * list of its own: naming all three explicitly covered nine of the twenty-one
+ * types that exist, so a welcome, a level-up, an achievement or a reward
+ * appeared in no tab at all — invisible here, while still counted in the
+ * bell's badge.
  */
-const typeInTab = (type: string, tab: NotifTab): boolean =>
-  tab === 'social'
-    ? SOCIAL_TYPES.includes(type)
-    : tab === 'trivia'
-      ? TRIVIA_TYPES.includes(type)
-      : !SOCIAL_TYPES.includes(type) && !TRIVIA_TYPES.includes(type);
+type NotifTab = NotificationTab;
 
 interface NotificationsPanelProps {
   isOpen: boolean;

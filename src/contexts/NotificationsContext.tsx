@@ -49,7 +49,8 @@ export interface NotificationsContextType {
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
-  clearAllNotifications: () => Promise<void>;
+  /** Omit `ids` to clear the whole account; pass them to clear one tab. */
+  clearAllNotifications: (ids?: string[]) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -241,18 +242,26 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const clearAllNotifications = useCallback(async () => {
+  /**
+   * Delete notifications, optionally only the ones in `ids`.
+   *
+   * The button that calls this sits under a tab, beneath that tab's list, and
+   * said "delete all" — and deleted every notification the account had,
+   * including the two tabs the player was not looking at. Passing the ids the
+   * tab is showing makes it mean what it looks like it means; passing nothing
+   * keeps the old whole-account behaviour for any caller that wants it.
+   */
+  const clearAllNotifications = useCallback(async (ids?: string[]) => {
     if (!user) return;
+    if (ids && ids.length === 0) return;
 
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .delete()
-        .eq('user_id', user.id);
+      const query = supabase.from('notifications').delete().eq('user_id', user.id);
+      const { error } = ids ? await query.in('id', ids) : await query;
 
       if (error) throw error;
 
-      setNotifications([]);
+      setNotifications((prev) => (ids ? prev.filter((n) => !ids.includes(n.id)) : []));
     } catch (error) {
       console.error('[Notifications] Error clearing all:', error);
       throw error;
