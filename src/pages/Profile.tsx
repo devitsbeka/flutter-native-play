@@ -180,7 +180,10 @@ export default function Profile() {
                     onClick={() => (editingName ? void saveName() : startNameEdit())}
                     disabled={savingName}
                     aria-label={editingName ? t("common.save") : t("settings.editName")}
-                    className="w-9 h-9 rounded-full bg-white/70 border border-border/40 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-white transition-colors shrink-0"
+                    /* No disc behind it, same reasoning as the crown on the
+                       other side of the name. It keeps the 36px box: that is
+                       the tap target, and it is only the paint that goes. */
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors shrink-0"
                   >
                     {savingName ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
