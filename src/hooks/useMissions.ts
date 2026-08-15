@@ -432,7 +432,15 @@ export type MissionEvent =
   | "perfect_win"
   | "friend_game"
   | "tv_played"
-  | "friend_invited";
+  | "friend_invited"
+  /**
+   * Asking someone into a room you are hosting. Separate from
+   * `friend_invited`, which is sending a friend *request*: the two missions
+   * ask for different things — "invite a friend to a game" against "add N new
+   * friends" — and inviting someone you are already friends with must not
+   * advance the one about making new ones.
+   */
+  | "invited_to_room";
 
 const EVENT_MISSIONS: Record<MissionEvent, string[]> = {
   game_played: ["play_games", "weekly_play_games"],
@@ -451,7 +459,14 @@ const EVENT_MISSIONS: Record<MissionEvent, string[]> = {
   perfect_win: ["perfect_round", "weekly_perfect"],
   friend_game: ["play_friend", "weekly_friend_games"],
   tv_played: ["play_tv"],
-  friend_invited: ["invite_to_play", "weekly_invite_friend"],
+  // "დაამატე {n} ახალი მეგობარი" — new friends, so only a friend request.
+  friend_invited: ["weekly_invite_friend"],
+  // "მოიწვიე მეგობარი თამაშში" — invite a friend into a game. This is the
+  // event that says so. It used to hang off friend_invited, which fires only
+  // when a friend *request* is sent, so inviting a friend you already had into
+  // a room — the obvious way to complete a mission worded like this — advanced
+  // nothing at all.
+  invited_to_room: ["invite_to_play"],
 };
 
 // Export mission helpers for UI
