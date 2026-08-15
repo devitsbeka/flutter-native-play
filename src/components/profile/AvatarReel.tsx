@@ -303,15 +303,20 @@ export function AvatarReel() {
                   className="relative rounded-full transition-transform duration-200 ease-out"
                   style={{ transform: `scale(${isCenter ? CENTER_SCALE : 1})` }}
                 >
+                  {/* Grey, not the brand purple. This slot sits in a row of
+                      faces and is the one thing in it that is not a face;
+                      drawn in the accent colour it pulled the eye first, and
+                      the avatar the player has actually chosen — the one
+                      wearing the green tick — came second. */}
                   <div
                     className={`w-16 h-16 rounded-full flex items-center justify-center bg-white/80 border-2 border-dashed ${
-                      isCenter ? "border-primary" : "border-primary/40"
+                      isCenter ? "border-slate-400" : "border-slate-300"
                     }`}
                   >
-                    <Camera className="w-6 h-6 text-primary" />
+                    <Camera className="w-6 h-6 text-slate-500" />
                   </div>
-                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary border-2 border-white flex items-center justify-center">
-                    <Plus className="w-3 h-3 text-primary-foreground" strokeWidth={3.5} />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-slate-400 border-2 border-white flex items-center justify-center">
+                    <Plus className="w-3 h-3 text-white" strokeWidth={3.5} />
                   </div>
                 </div>
               </button>
