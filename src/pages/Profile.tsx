@@ -255,11 +255,7 @@ export default function Profile() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                <ProPlansSection
-                  currentTier={currentTier}
-                  subscriptionStartDate={(subscription as any)?.started_at}
-                  subscriptionExpiryDate={(subscription as any)?.expires_at}
-                />
+                <ProPlansSection />
               </motion.div>
             )}
 
