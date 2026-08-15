@@ -9,7 +9,9 @@ import { translations } from "@/locales";
 
 /** The real locale strings, so a missing or renamed key fails here. */
 const translator = (lang: "ka" | "en") => (key: string, vars?: Record<string, string | number>) => {
-  const dict = translations[lang] as Record<string, Record<string, string>>;
+  // Through unknown: a locale namespace is not uniformly Record<string,string>
+  // — powerups holds objects — and the direct cast is rejected outright.
+  const dict = translations[lang] as unknown as Record<string, Record<string, unknown>>;
   const [ns, name] = key.split(".");
   const raw = dict[ns]?.[name];
   if (typeof raw !== "string") throw new Error(`missing ${lang} string: ${key}`);
