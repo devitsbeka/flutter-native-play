@@ -4,6 +4,7 @@ import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { useSearchParams } from "react-router-dom";
 import { ProBannerReel } from "@/components/shop/MobileProCarousel";
 import { useNavigate } from "react-router-dom";
+import { ProSeatsSection } from "./ProSeatsSection";
 
 // The reel marks bought deals; nothing here is bought from this screen.
 const EMPTY_PURCHASES: Set<string> = new Set();
@@ -59,6 +60,10 @@ export function ProPlansSection() {
         isPurchasing={null}
         onItemClick={() => navigate("/power-ups")}
       />
+
+      {/* Only renders for an active subscriber; the seat allowance and every
+          rule about it come from the database. */}
+      <ProSeatsSection />
 
       {/* Purchase Success Modal */}
       <PurchaseSuccessModal
