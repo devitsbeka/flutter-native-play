@@ -18,8 +18,13 @@ import crownIcon from "@/assets/crown-icon.png";
  */
 
 interface ProBadgeProps {
-  /** `crown` is the round badge that sits on an avatar; `pill` reads "PRO". */
-  variant?: "crown" | "pill";
+  /**
+   * `crown` is the round badge that sits on an avatar, `pill` reads "PRO",
+   * and `mark` is the crown on its own — no disc, no word. The disc exists to
+   * lift a gold crown off a photograph; beside a name on a plain background
+   * there is nothing to lift it off, and it just draws a circle.
+   */
+  variant?: "crown" | "pill" | "mark";
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
   /** Skips the subscription check — for previews and showcases. */
@@ -66,6 +71,23 @@ export function ProBadge({ variant = "crown", size = "md", className, force }: P
     transition: { type: "spring" as const, stiffness: 400, damping: 15 },
     style: { background: PILL_BG, boxShadow: BADGE_SHADOW },
   };
+
+  if (variant === "mark") {
+    // Sized from the box the disc would have occupied, so swapping between
+    // the two does not change how much room the badge takes beside a name.
+    const box = CROWN_SIZES[size].box;
+    return (
+      <motion.img
+        initial={common.initial}
+        animate={common.animate}
+        transition={common.transition}
+        src={crownIcon}
+        alt="PRO"
+        draggable={false}
+        className={cn("object-contain", box, className)}
+      />
+    );
+  }
 
   if (variant === "pill") {
     const s = PILL_SIZES[size];

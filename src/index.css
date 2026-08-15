@@ -212,6 +212,14 @@
     overflow-y: scroll;
     overscroll-behavior: none;
     overscroll-behavior-y: none;
+    /* The wash, in the one place nothing else paints: behind the status bar
+       on a home-screen install, and in the rubber-band gap at either end of a
+       scroll. Body is transparent and every screen paints its own background,
+       so this is only ever seen at the edges — where it used to be the
+       browser's white. Same value as index.html's theme-color and
+       nativeShell's APP_BACKGROUND; those three are the app's page wash and
+       have to move together. */
+    background-color: #f8e6ff;
   }
 
   body {

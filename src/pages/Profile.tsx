@@ -167,12 +167,12 @@ export default function Profile() {
                           truncated, and a badge trailing it was the first
                           thing pushed off the end.
 
-                          The crown alone, without the word PRO beside it —
-                          the mark says it. White behind it on purpose: the
-                          crown is gold and the page is lavender, and it also
-                          balances the white edit button on the other side of
-                          the name. */}
-                      <ProBadge variant="crown" size="xl" />
+                          The crown alone: no word beside it, and no disc
+                          behind it. The disc is there to lift a gold crown
+                          off a photograph, which is what the avatar badge
+                          needs; against the page there is nothing to lift it
+                          off and it just drew a circle. */}
+                      <ProBadge variant="mark" size="xl" />
                       {profile.nickname}
                     </h2>
                   )}
