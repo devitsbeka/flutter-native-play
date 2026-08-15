@@ -22,9 +22,13 @@
 -- The table stays. It holds whatever rows were written and its owner can
 -- still read them; it just cannot be written to by a client any more.
 
-REVOKE ALL ON FUNCTION public.process_referral_reward(uuid, uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.process_referral_reward(uuid, uuid) FROM anon;
-REVOKE ALL ON FUNCTION public.process_referral_reward(uuid, uuid) FROM authenticated;
+-- Just the drop. It used to be preceded by three REVOKEs, which read as
+-- belt-and-braces and were in fact the one statement here that could fail:
+-- DROP removes a function's privileges with it, so on any re-run the
+-- function was already gone and REVOKE raised "function does not exist"
+-- while the DROP beside it was guarded by IF EXISTS. A migration that only
+-- works the first time is one a half-finished paste cannot be recovered
+-- from, which is exactly when it gets run twice.
 DROP FUNCTION IF EXISTS public.process_referral_reward(uuid, uuid);
 
 -- Nothing in the app writes invites now, and an unused write policy is just
