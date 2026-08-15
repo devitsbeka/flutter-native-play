@@ -165,8 +165,14 @@ export default function Profile() {
 
                           Before the name, not after: a long nickname is
                           truncated, and a badge trailing it was the first
-                          thing pushed off the end. */}
-                      <ProBadge variant="pill" size="lg" />
+                          thing pushed off the end.
+
+                          The crown alone, without the word PRO beside it —
+                          the mark says it. White behind it on purpose: the
+                          crown is gold and the page is lavender, and it also
+                          balances the white edit button on the other side of
+                          the name. */}
+                      <ProBadge variant="crown" size="xl" />
                       {profile.nickname}
                     </h2>
                   )}

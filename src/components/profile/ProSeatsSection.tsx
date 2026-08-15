@@ -207,7 +207,13 @@ export function ProSeatsSection() {
                 <button
                   type="button"
                   onClick={() => setPicking(true)}
-                  className="mx-auto flex items-center justify-center rounded-full bg-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-[0_4px_0_0_rgba(88,28,135,0.35)] active:translate-y-0.5 active:shadow-[0_2px_0_0_rgba(88,28,135,0.35)] transition-all"
+                  /* Green, the colour this app gives to "do the thing" —
+                     purple was the tab bar and the card's own accent, so the
+                     button read as more of the same furniture. Not gold
+                     either: the tier banner directly below has a gold button
+                     that buys a subscription, and this one spends a seat. */
+                  className="mx-auto flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-bold text-white shadow-[0_4px_0_0_#047857] active:translate-y-0.5 active:shadow-[0_2px_0_0_#047857] transition-all"
+                  style={{ background: "linear-gradient(to bottom, #6ee7b7, #10b981 50%, #059669)" }}
                 >
                   {t("extra.proSeatsGive")}
                 </button>
