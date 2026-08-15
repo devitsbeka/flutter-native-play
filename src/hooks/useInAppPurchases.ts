@@ -88,15 +88,29 @@ let LOG_LEVEL: any = null;
 
 async function loadPurchasesPlugin() {
   if (Purchases) return Purchases;
-  
+
   if (Capacitor.isNativePlatform()) {
     try {
-      const module = await import("@revenuecat/purchases-capacitor");
+      // Announced before and after, and bounded.
+      //
+      // This line was the blind spot. A dynamic import is a chunk fetch, and
+      // a fetch that stalls rather than fails leaves the promise pending
+      // forever: no plugin call reaches the native bridge, no `catch` runs so
+      // nothing is logged, and every caller awaiting this — including
+      // purchase() — waits with it. From the device that is a buy button that
+      // spins with an empty console, and from the log it is indistinguishable
+      // from the hook never having mounted at all.
+      console.log("[iap] importing @revenuecat/purchases-capacitor…");
+      const module = await withTimeout(
+        import("@revenuecat/purchases-capacitor"),
+        "import(@revenuecat/purchases-capacitor)",
+      );
       Purchases = module.Purchases;
       LOG_LEVEL = module.LOG_LEVEL;
+      console.log("[iap] plugin module loaded");
       return Purchases;
     } catch (e) {
-      console.warn("Failed to load RevenueCat Purchases plugin:", e);
+      console.error("[iap] Failed to load RevenueCat Purchases plugin:", e);
       return null;
     }
   }
@@ -132,6 +146,10 @@ function toIAPProduct(product: any): IAPProduct {
 }
 
 async function initStore(): Promise<IAPProduct[]> {
+  // First line of the whole path, so a silent run can be told apart from a
+  // run that never started. Absent this, "the hook never mounted" and "the
+  // hook mounted and hung on the very next line" produce identical logs.
+  console.log(`[iap] initStore on ${Capacitor.getPlatform()}`);
   if (!Capacitor.isNativePlatform()) return [];
 
   const plugin = await loadPurchasesPlugin();
