@@ -3154,6 +3154,8 @@ export const ka = {
     timeYesterday: "გუშინ",
     timeDayShort: "{count}დღე",
     timeWeekShort: "{count}კვ",
+    timeMonthShort: "{count}თვე",
+    timeYearShort: "{count}წ",
     // Chat time
     chatToday: "დღეს",
     chatYesterday: "გუშინ",

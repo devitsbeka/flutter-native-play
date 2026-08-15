@@ -3155,6 +3155,8 @@ export const en: KaTranslations = {
     timeYesterday: "yesterday",
     timeDayShort: "{count}d",
     timeWeekShort: "{count}w",
+    timeMonthShort: "{count}mo",
+    timeYearShort: "{count}y",
     // Chat time
     chatToday: "Today",
     chatYesterday: "Yesterday",

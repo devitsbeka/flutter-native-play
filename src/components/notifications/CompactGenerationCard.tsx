@@ -2,8 +2,8 @@ import { useState, useEffect, memo } from 'react';
 import { motion } from 'framer-motion';
 import { Check, X, Loader2, User, ImageIcon, Sparkles, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
-import { ka, enUS } from 'date-fns/locale';
+import { ka } from 'date-fns/locale';
+import { shortTimeAgo } from '@/utils/shortTimeAgo';
 import { GenerationNotification } from '@/hooks/useGenerationNotifications';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -44,7 +44,8 @@ export const CompactGenerationCard = memo(function CompactGenerationCard({
       }
       return `${t('extra.generatingStatus')}...`;
     }
-    return formatDistanceToNow(notification.startedAt, { addSuffix: false, locale: dateLocale });
+    // Same short form as the notification rows it sits among.
+    return shortTimeAgo(notification.startedAt, t);
   };
 
   const handleUseImage = (e: React.MouseEvent) => {

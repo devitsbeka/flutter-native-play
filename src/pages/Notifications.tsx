@@ -10,10 +10,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useFriends } from '@/hooks/useFriends';
 import { useGameInvitations } from '@/hooks/useGameInvitations';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
 import { ka } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { shortTimeAgo } from '@/utils/shortTimeAgo';
 import { CompactNotificationCard } from '@/components/notifications/CompactNotificationCard';
 import { NotificationDetailModal } from '@/components/notifications/NotificationDetailModal';
 import { CompactGenerationCard } from '@/components/notifications/CompactGenerationCard';
@@ -424,10 +424,7 @@ export default function Notifications() {
                   onDeclineInvite={handleDeclineInvite}
                   onDismiss={deleteNotification}
                   actionLoading={actionLoading}
-                  timeAgo={formatDistanceToNow(new Date(notification.created_at), {
-                    addSuffix: false,
-                    locale: dateLocale,
-                  })}
+                  timeAgo={shortTimeAgo(notification.created_at, t)}
                 />
               ))}
             </AnimatePresence>
