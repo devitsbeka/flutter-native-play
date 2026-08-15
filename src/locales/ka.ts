@@ -637,7 +637,7 @@ export const ka = {
   moderation: {
     thisPlayer: "ეს მოთამაშე",
     sheetSubtitle: "აირჩიე რა გინდა რომ მოხდეს",
-    report: "დაფიქსირება",
+    report: "დარეპორტება",
     block: "დაბლოკვა",
     blocked: "მოთამაშე დაბლოკილია",
     unblocked: "ბლოკი მოხსნილია",

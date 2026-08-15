@@ -303,6 +303,7 @@ function PlayerFeedItemComponent({
         onClose={() => setModerationOpen(false)}
         userId={player.user_id}
         displayName={player.nickname}
+        avatarUrl={player.avatar_url}
       />
       
       {/* Content Card */}
