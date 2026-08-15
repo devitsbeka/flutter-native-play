@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Capabilities for the App target.
+
+  Xcode writes this file when you tick capabilities in Signing & Capabilities,
+  which is why it did not exist: nobody had opened the project on a Mac. That
+  made the three capabilities below inert no matter what the App ID said —
+  push registered and delivered nothing, Sign in with Apple failed, universal
+  links opened Safari.
+
+  Written here so the Mac session is a build rather than a configuration
+  exercise. Xcode reads it as-is; it does not need to author it.
+
+  aps-environment stays `development`. Xcode rewrites it to `production` when
+  exporting an App Store build, so setting it here would only be wrong for
+  every TestFlight and device build in between.
+-->
+<plist version="1.0">
+<dict>
+	<key>aps-environment</key>
+	<string>development</string>
+
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:mytrivia.io</string>
+		<string>applinks:www.mytrivia.io</string>
+	</array>
+</dict>
+</plist>
