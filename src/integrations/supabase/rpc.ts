@@ -23,3 +23,36 @@ export async function callRpc<TResult>(
   };
   return client.rpc(fn, args);
 }
+
+/**
+ * Read from a table that is not in the generated `types.ts` yet.
+ *
+ * Same bargain as `callRpc` above, for the same reason: a table added in a
+ * migration is unknown to the client until the types are regenerated
+ * out-of-band, and the usual `(supabase as any).from(...)` throws away
+ * checking on the result as well as the table name.
+ *
+ * Here only the builder is untyped. The caller declares the row shape and the
+ * returned rows are checked against it, so a column rename still surfaces at
+ * the call site rather than as `undefined` at runtime.
+ */
+export async function selectRows<TRow>(
+  table: string,
+  build: (query: PostgrestLikeBuilder) => PostgrestLikeBuilder,
+): Promise<{ data: TRow[] | null; error: { message: string } | null }> {
+  const client = supabase as unknown as {
+    from: (name: string) => PostgrestLikeBuilder;
+  };
+  return build(client.from(table)) as unknown as Promise<{
+    data: TRow[] | null;
+    error: { message: string } | null;
+  }>;
+}
+
+/** The subset of the query builder these call sites use. */
+interface PostgrestLikeBuilder {
+  select: (columns: string) => PostgrestLikeBuilder;
+  eq: (column: string, value: unknown) => PostgrestLikeBuilder;
+  is: (column: string, value: unknown) => PostgrestLikeBuilder;
+  order: (column: string, opts?: { ascending?: boolean }) => PostgrestLikeBuilder;
+}
