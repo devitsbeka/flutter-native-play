@@ -104,3 +104,39 @@ WHERE language = 'ka' AND quality_status = 'needs_review';
 
 Un-retiring restores 250 rows including the 229 duplicates, so the bank goes
 back to serving the same question twice. That is the state it is in today.
+
+
+## Batch 2 — the hand read of the other forty-one categories
+
+Batch 1 covered what a rule can find bank-wide, plus a fact-check of the four
+Georgia-specific categories. Batch 2 is the read of the remaining forty-one,
+one findings file per category:
+
+```bash
+set -a && . ./.env && set +a
+python3 scripts/question-repair-ka/build-migration-2.py
+```
+
+It emits `supabase/migrations/20260816120000_question_repair_ka_batch2.sql`
+and refuses to write anything whose rewrite would not fit the card — over 90
+characters in a stem, over 48 in an option, a repeated option, or an option
+count other than four.
+
+`build-migration-2.py` reads every `<category>.json` in this directory **except**
+the ones batch 1 consumed (`dup_decisions.json`, `shorten.json`,
+`answer_fixes.json`, `duplicates-resolved.json`, `_mechanical.json` and the
+four `georgian_*.json` files). Findings whose row is no longer live — retired
+by batch 1 — are reported and skipped rather than resurrected.
+
+Rolling batch 2 back:
+
+```sql
+UPDATE public.questions
+   SET question_text = COALESCE(original_question_text, question_text),
+       correct_answer = COALESCE(original_correct_answer, correct_answer),
+       incorrect_answers = COALESCE(original_incorrect_answers, incorrect_answers),
+       is_active = true, in_production = true, quality_status = NULL
+ WHERE language = 'ka'
+   AND updated_at >= '2026-08-16'
+   AND quality_status IN ('retired_ka_repair', 'repaired_ka', 'needs_review');
+```

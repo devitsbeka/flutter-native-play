@@ -1,7 +1,17 @@
 # Georgian question bank — audit and repair
 
-8,303 Georgian questions were in production. 250 are retired, 179 rewritten,
-53 flagged for a Georgian editor.
+8,303 Georgian questions were in production, in two passes.
+
+**Batch 1** (`20260815120000_question_repair_ka.sql`, applied): 250 retired,
+179 rewritten, 53 flagged — the defects a rule can find across the whole bank,
+plus a hand fact-check of the four Georgia-specific categories.
+
+**Batch 2** (`20260816120000_question_repair_ka_batch2.sql`): 296 retired,
+765 rewritten, 207 flagged — the hand read of the other forty-one categories,
+which batch 1 explicitly did not cover.
+
+Together: **546 retired, 944 rewritten, 260 flagged**, leaving 7,757 questions
+in production.
 
 Run `node scripts/audit-questions.mjs --lang ka` to reproduce the counts.
 
@@ -57,10 +67,12 @@ read as duplicates and are not — the 16th and the 32nd US president, the
 largest organ and the largest *internal* organ, how many planets and which is
 the largest — are recorded there too, so a later run cannot collapse them.
 
-## Coverage — read this before trusting the factual column
+## Coverage
 
-Three of the four things asked for are covered across all 8,303 questions,
-because they can be checked by rule:
+Every one of the 45 categories has now been read.
+
+Three of the four things asked for were covered across all 8,303 questions in
+batch 1, because they can be checked by rule:
 
 - **length** — every stem and option measured
 - **duplicates** — every pair scored, whole bank
@@ -68,24 +80,63 @@ because they can be checked by rule:
   options, self-answering stems, stems that are not questions, machine-clipped
   answers, all swept bank-wide
 
-**Factual accuracy was read by hand for four categories** — საქართველოს
-ისტორია, ქართული ლიტერატურა, ქართული კულტურა, ქართული სამზარეულო, 885
-questions — plus every one of the 54 self-disagreeing duplicate clusters,
-which are spread across all 45 categories. That is roughly 12% of the bank
-read closely, chosen as the Georgia-specific categories where an error is both
-likeliest and least forgivable.
+**Factual accuracy** was read by hand for four categories in batch 1 —
+საქართველოს ისტორია, ქართული ლიტერატურა, ქართული კულტურა, ქართული სამზარეულო,
+885 questions — and for the remaining forty-one in batch 2. Batch 2 turned up
+**1,265 findings in 7,418 questions**, roughly one defect for every six.
 
-**The other 41 categories have not been fact-checked.** Their length,
-duplicate, grammar and structure defects are repaired; a wrong answer sitting
-quietly in ფიზიკა or ანიმე და მანგა would not have been found by this pass.
-The four categories that were read turned up 11 wrong answers and 35 claims
-that could not be verified, in 885 questions. Extrapolating that rate, the
-unread 7,400 hold on the order of 90 wrong answers and 290 doubtful ones.
+| kind | count | what it is |
+|---|---|---|
+| grammar and spelling | 365 | wrong case, typos, and one term spelt four ways across four questions |
+| doubtful | 224 | a claim, a name or a term that could not be verified |
+| broken stem | 187 | circular, self-answering, or not a sentence |
+| ambiguous | 138 | a distractor as correct as the answer |
+| clipped answer | 121 | an option cut mid-word by an earlier length pass |
+| wrong answer | 103 | the marked answer is false |
+| mixed script | 43 | Latin letters inside Georgian words |
+| contradiction | 25 | two questions in the bank teaching opposite facts |
+| miscategorised | 20 | a film question under television, a village under medicine |
+| other | 39 | duplicate options, answer-in-question, truncated stems |
+
+The batch-1 extrapolation was low. It predicted about 90 wrong answers in the
+unread 7,400; the read found 103, plus 224 unverifiable claims against a
+predicted 290 — but it did not predict the 121 clipped options, which are
+damage the *earlier* automated shortening pass did to this bank before this
+audit began.
+
+### What the read kept finding
+
+**Clipped options.** `„დამუხტ. ნაწილ. ზონა“`, `„გლ. პოზიც. სისტემა“`,
+`„პასუხ. განცალკევება“` — an option truncated mid-word, sometimes all four in
+one question. 121 of them.
+
+**One thing under many names.** Reinforcement learning appears as
+`გაძლიერებითი`, `გაძლიერებული` and `განმტკიცებითი სწავლა`; Breaking Bad as
+`მძიმე დანაშაული`, `ბრეიქინ ბედი`, `ცუდი არ არის` and `არასწორი არ არის` —
+the last two as *distractors in a question whose answer is the first*. Stranger
+Things has four Georgian titles, the Vedas three, Huitzilopochtli four
+spellings across four questions.
+
+**Word-by-word translation of a proper name.** `Solid Snake` became
+`გველის მყარი`, `Professor Oak` became `მუხა` (the tree), the vagus nerve
+became `საშოს ნერვი`, `Manos de Piedra` became a boxer called `კასტელო`,
+Shor's algorithm became `შორის` (the preposition "between").
+
+**Trick stems with no subject.** `რა ჰქვია კუნძულს, სადაც ავსტრალიის
+დედაქალაქი მდებარეობს?` → *there is no such island*. `რომელ კუნძულზე
+მდებარეობს ეთიოპია?` → *none*. `რომელი თანამგზავრია ვენერას ყველაზე ახლოს?`
+→ *it has none*.
+
+**Contradictions across categories.** Vitamin C and vitamin E each marked *the*
+antioxidant; karma assigned to Buddhism in one question and Hinduism in two;
+the "sport of kings" answered chess five times and equestrianism once; the
+"language of the gods" Sanskrit in one question and Egyptian in another, each
+offering the other's answer as a wrong option.
 
 ## Flagged, not fixed
 
-53 questions are marked `quality_status = 'needs_review'` and **left in
-production**. These are claims this pass could not verify, not claims it found
+260 questions are marked `quality_status = 'needs_review'` and **left in
+production** — 53 from batch 1 and 207 from batch 2. These are claims this pass could not verify, not claims it found
 wrong — retiring a question on a hunch is its own kind of error. Examples:
 
 - `ვინ არის ქართული პროზის დედოფალი?` — not an established epithet
@@ -93,6 +144,18 @@ wrong — retiring a question on a hunch is its own kind of error. Examples:
 - `რა არის ტრადიციული ქართული ცივი სუპი?` → `ოქროში`, which appears to be okroshka
 - `რომელ საუკუნეს მიეკუთვნება ასომთავრულის შექმნა?` says IV, while three other
   questions in the bank say V
+
+Batch 2 flagged, in the same spirit:
+
+- `რომელი ვიტამინი არის ანტიოქსიდანტი?` → C, while another question answers E
+- `რომელი სპორტის სახეობაა ცნობილი როგორც 'მეფეთა სპორტი'?` → equestrianism,
+  against five questions answering chess for the same epithet
+- `რომელია საქართველოს ამჟამინდელი პრეზიდენტი?` — out of date since
+  December 2024
+- `რა ჰქვია Facebook-ის ვირტუალურ ვალუტას?` → Libra, a project wound up in 2022
+- `რომელი მინერალი ჰქვია „მეოცნებე ქვა“?` — not an established epithet
+- `რომელი ცხოველი გახდა ინტერნეტ მემების სიმბოლო?` → cat, with dog and frog
+  offered as wrong answers
 
 They are queryable:
 
