@@ -107,7 +107,14 @@ function CategoryCarouselComponent({
       <div
         ref={scrollRef}
         className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-4 snap-x snap-mandatory"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+        // No -webkit-overflow-scrolling: touch. It used to be how you got
+        // momentum scrolling on iOS, and it did it by putting the scroller on
+        // a legacy accelerated path where absolutely-positioned children are
+        // rasterized separately — which is where content inside a scroller
+        // flickers, vanishes, and reappears mid-scroll. iOS has had momentum
+        // scrolling by default since 13, so the property buys nothing and
+        // costs that.
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {categories.map((category, index) => {
           // Use uuid for favorites if available, fallback to id

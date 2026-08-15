@@ -155,7 +155,9 @@ export function IconTabBar({ tabs, activeTab, onTabChange, compact = false }: Ic
           paddingRight: 16,
           scrollbarWidth: "none",
           msOverflowStyle: "none",
-          WebkitOverflowScrolling: "touch",
+          // -webkit-overflow-scrolling: touch removed — see the note in
+          // CategoryCarousel. It is the same deprecated legacy scrolling path,
+          // on the same page, and iOS has not needed it since 13.
         }}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}

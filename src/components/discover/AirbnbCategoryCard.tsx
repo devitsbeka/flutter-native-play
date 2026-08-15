@@ -179,8 +179,16 @@ export function AirbnbCategoryCard({
               style={innerFrameStyle}
             />
 
-            {/* Video content container */}
-            <div className="absolute inset-0 rounded-[20px] overflow-hidden">
+            {/* Media layer: the video and its own gradients, and nothing
+                else. Everything a player can read or press is in the layer
+                below this one — see the note there. */}
+            <div
+              className="absolute inset-0 rounded-[20px] overflow-hidden z-0"
+              // Promoted deliberately, so the compositor sorts this layer and
+              // the overlay one by z-index rather than deciding for itself
+              // where the video's own layer belongs.
+              style={{ transform: "translateZ(0)" }}
+            >
             {/* Top shine effect */}
             <div
               className="absolute inset-x-0 top-0 h-1/3 pointer-events-none z-[1]"
@@ -210,6 +218,32 @@ export function AirbnbCategoryCard({
                 />
               </div>
             )}
+            </div>
+
+            {/* Overlay layer: heart, rank, badges, progress.
+
+                These used to sit inside the media container, above the video
+                by z-index alone, and on iOS they came and went while the page
+                scrolled — visible for a frame mid-scroll, gone once it
+                settled. A playing <video> inside a rounded overflow-hidden box
+                is promoted to its own compositing layer there, and paint order
+                stops deciding what covers what; the overlays were being
+                composited under the video and only surfaced during the
+                repaints a scroll forces.
+
+                So they are no longer in that box. This is a sibling of the
+                media layer with its own rounded clip and no video in it, and
+                translateZ(0) promotes it to a layer of its own, above the
+                video's. Nothing here depends on out-painting a composited
+                sibling any more.
+
+                Chromium and desktop Safari never showed the fault — this is
+                the third fix aimed at this symptom, and the first two moved
+                z-index around, which is exactly the thing iOS was ignoring. */}
+            <div
+              className="absolute inset-0 rounded-[20px] overflow-hidden z-10"
+              style={{ transform: "translateZ(0)", isolation: "isolate" }}
+            >
 
             {/* Heart/Favorite Button - Chunky style */}
             <button
