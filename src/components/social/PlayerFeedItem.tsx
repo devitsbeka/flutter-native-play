@@ -1,7 +1,7 @@
-import { useState, useMemo, useEffect, useRef, lazy, memo, Suspense } from "react";
+import { useState, useMemo, lazy, memo, Suspense } from "react";
 
-import { UserPlus, UserCheck, Clock, Play, Layers, Hourglass, Pencil, MoreVertical, Flag, Ban } from "lucide-react";
-import { ReportBlockSheet } from "@/components/social/ReportBlockSheet";
+import { UserPlus, UserCheck, Clock, Play, Layers, Hourglass, Pencil } from "lucide-react";
+import { PlayerOverflowMenu } from "@/components/social/PlayerOverflowMenu";
 import { useAuth } from "@/hooks/useAuth";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
@@ -89,24 +89,7 @@ function PlayerFeedItemComponent({
   const [isLoading, setIsLoading] = useState(false);
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [moderationView, setModerationView] = useState<"reasons" | "confirmBlock" | null>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // Close on a tap anywhere else.
-  //
-  // A `fixed inset-0` catcher would have been simpler and would not have
-  // worked: this card sets content-visibility: auto, and paint containment
-  // makes the card the containing block for fixed descendants — the overlay
-  // would have covered the card it lives in and nothing else.
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onDown = (e: PointerEvent) => {
-      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
-    };
-    document.addEventListener("pointerdown", onDown, true);
-    return () => document.removeEventListener("pointerdown", onDown, true);
-  }, [menuOpen]);
 
   const { user: currentUser } = useAuth();
   const currentUserId = currentUser?.id;
@@ -262,7 +245,11 @@ function PlayerFeedItemComponent({
       }}
     >
       {/* Player Header */}
-      <div className="p-3 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-sm">
+      {/* relative z-30: backdrop-blur makes this a stacking context, so the
+          dropdown inside it cannot lift itself above the content card below —
+          the whole header has to. Without it the menu opened behind the
+          trivia. */}
+      <div className="relative z-30 p-3 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           {/* Avatar - Clickable to open profile */}
           <div 
@@ -303,69 +290,10 @@ function PlayerFeedItemComponent({
           {/* Report / block. Guideline 1.2 wants this reachable from the
               content itself, so it sits on the card rather than in settings.
               Hidden on your own posts, where it would be nonsense. */}
-          {currentUserId && currentUserId !== player.user_id && (
-            <div className="relative">
-              <button
-                type="button"
-                aria-label={t("moderation.report")}
-                aria-expanded={menuOpen}
-                onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
-                className="p-1.5 rounded-full text-muted-foreground hover:bg-muted active:scale-95 transition"
-              >
-                <MoreVertical className="w-4 h-4" />
-              </button>
-
-              {/* A menu hanging off the button, not a panel in the middle of
-                  the feed. Two choices and a way out — the name and picture
-                  that used to head it are already on the row this hangs from,
-                  a hand's width above it. */}
-              {menuOpen && (
-                <>
-                  <div
-                    ref={menuRef}
-                    onClick={(e) => e.stopPropagation()}
-                    className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-2xl border border-border/60 bg-popover shadow-lg"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => { setMenuOpen(false); setModerationView("reasons"); }}
-                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted"
-                    >
-                      <Flag className="h-4 w-4 shrink-0 text-amber-500" />
-                      {t("moderation.report")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setMenuOpen(false); setModerationView("confirmBlock"); }}
-                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-medium text-destructive hover:bg-destructive/10"
-                    >
-                      <Ban className="h-4 w-4 shrink-0" />
-                      {t("moderation.block")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMenuOpen(false)}
-                      className="w-full border-t border-border/60 px-3.5 py-2.5 text-center text-sm font-semibold text-muted-foreground hover:bg-muted"
-                    >
-                      {t("common.cancel")}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+          <PlayerOverflowMenu userId={player.user_id} displayName={player.nickname} />
         </div>
       </div>
 
-      {/* Opens straight at the step the menu chose — its own menu view is
-          what the dropdown above replaced. */}
-      <ReportBlockSheet
-        open={moderationView !== null}
-        view={moderationView ?? "reasons"}
-        onClose={() => setModerationView(null)}
-        userId={player.user_id}
-        displayName={player.nickname}
-      />
       
       {/* Content Card */}
       <div
