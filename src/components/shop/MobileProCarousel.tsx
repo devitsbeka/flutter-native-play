@@ -29,6 +29,21 @@ const SIDEBAR_TO_STRIPE_TIER: Record<SimplifiedTier, ProTierId> = {
 /** gap-3 between banners, in px — the reel needs the number to page by. */
 const REEL_GAP = 12;
 
+/**
+ * Does the player's subscription already cover this tier?
+ *
+ * Friends PRO contains solo, so it answers for both cards; solo answers only
+ * for its own. Lifted out of getButtonText because the shop needs the same
+ * answer before the slide is built, and a `const` arrow declared further down
+ * the component cannot be read from a useMemo above it.
+ */
+function ownsTier(tierId: SimplifiedTier, currentTier: string | undefined): boolean {
+  const normalized = currentTier === "standard" ? "solo" : currentTier;
+  if (normalized === "family" || normalized === "pro_plus") return true;
+  if (normalized === "solo" || normalized === "pro") return tierId === "solo";
+  return false;
+}
+
 // "pro" is the solo tier's slide type — the two subscription slides, which
 // `slides: "pro"` keeps and everything else drops.
 type SlideType = "pro" | "family" | "deal";
@@ -132,10 +147,18 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
     },
   ], [t]);
 
-  const SLIDES = useMemo(
-    () => (slides === "pro" ? ALL_SLIDES.filter((s) => s.type !== "deal") : ALL_SLIDES),
-    [ALL_SLIDES, slides],
-  );
+  const SLIDES = useMemo(() => {
+    // The profile's PRO tab keeps every tier: it is where a subscriber goes
+    // to see what they are on, and dropping the one they own would leave a
+    // subscriber's own plan page showing only the tier above it.
+    if (slides === "pro") return ALL_SLIDES.filter((s) => s.type !== "deal");
+    // The shop is a list of things to buy. A tier the player is already on is
+    // not one, and it was taking a full-width slide — with a gold button —
+    // to say so.
+    return ALL_SLIDES.filter(
+      (s) => s.type === "deal" || !ownsTier(s.id as SimplifiedTier, currentTier),
+    );
+  }, [ALL_SLIDES, slides, currentTier]);
 
   // Captions sit on their tile's true centre, not the frame's own values,
   // which drift a few px off and read as misaligned once the captions all
@@ -164,17 +187,10 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
       labelCenter: PRO_COLUMNS[i].labelCenter,
     }));
 
-  const getButtonText = (tierId: SimplifiedTier, currentTierVal: string | undefined) => {
-    const normalizedTier = currentTierVal === "standard" ? "solo" : currentTierVal;
-    if (normalizedTier === "family" || normalizedTier === "pro_plus") {
-      return { text: t("extra.activeStatus"), isActive: true };
-    }
-    if (normalizedTier === "solo" || normalizedTier === "pro") {
-      if (tierId === "solo") return { text: t("extra.activeStatus"), isActive: true };
-      if (tierId === "family") return { text: t("extra.purchaseBtn"), isActive: false };
-    }
-    return { text: t("extra.purchaseBtn"), isActive: false };
-  };
+  const getButtonText = (tierId: SimplifiedTier, currentTierVal: string | undefined) =>
+    ownsTier(tierId, currentTierVal)
+      ? { text: t("extra.activeStatus"), isActive: true }
+      : { text: t("extra.purchaseBtn"), isActive: false };
 
   // Native scroll-snap reel: swiping is the browser's own smooth scrolling.
   // Auto-advance only steps in after 8s without the user touching the reel.
@@ -341,6 +357,7 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
                     dimmed={isProcessing}
                     actionLabel={isProcessing ? <Loader2 className="size-5 animate-spin" /> : state.text}
                     actionDisabled={state.isActive || isProcessing}
+                    actionActive={state.isActive && !isProcessing}
                     onAction={() => handleUpgrade(slide.id as SimplifiedTier)}
                   />
                 );

@@ -55,6 +55,19 @@ export function translateNotificationTitle(
   // in when it was written. mission_id does not change, so the name is looked
   // up from that and only falls back to the stored words for a mission this
   // build does not know.
+  // A seat moving is three different events under one icon, told apart by
+  // the kind the RPC wrote — the same shape as a mission read out of
+  // data.mission_id below.
+  if (type === 'subscription' && typeof data?.kind === 'string') {
+    const seatTitles: Record<string, string> = {
+      pro_seat_granted: 'extra.proSeatGotTitle',
+      pro_seat_sent: 'extra.proSeatSentTitle',
+      pro_seat_revoked: 'extra.proSeatEndedTitle',
+    };
+    const key = seatTitles[data.kind];
+    if (key) return getTranslation(key);
+  }
+
   if (type === 'reward' && data?.mission_id) {
     const name = missionTitle(data.mission_id as string, '');
     if (name) return getTranslation('missions.completedTitle').replace('{mission}', name);
@@ -84,6 +97,21 @@ export function translateNotificationMessage(
   data?: NotificationData
 ): string | null {
   if (!originalMessage) return null;
+
+  if (type === 'subscription' && typeof data?.kind === 'string') {
+    const seatMessages: Record<string, string> = {
+      pro_seat_granted: 'extra.proSeatGotBody',
+      pro_seat_sent: 'extra.proSeatSentBody',
+      pro_seat_revoked: 'extra.proSeatEndedBody',
+    };
+    const key = seatMessages[data.kind];
+    if (key) {
+      return getTranslation(key).replace(
+        '{name}',
+        (data.sender_nickname as string) || getTranslation('extra.proSeatsUnknown'),
+      );
+    }
+  }
 
   // Map notification types to translation keys with dynamic content
   const messageMap: Record<string, string> = {

@@ -46,6 +46,12 @@ export function ProPlansSection() {
 
   return (
     <div className="space-y-4">
+      {/* Only renders for an active subscriber, so for everyone else this
+          screen still opens on the offer. For a subscriber the offer has
+          already been taken and the thing they came here to do — hand their
+          spare PRO to a friend — was two banners down the page. */}
+      <ProSeatsSection />
+
       {/* The shop's banner reel is the whole screen now. It marks the tier
           the player is on as active and the one above it as buyable, and it
           is the same component the shop uses, so a price or a benefit is
@@ -60,10 +66,6 @@ export function ProPlansSection() {
         isPurchasing={null}
         onItemClick={() => navigate("/power-ups")}
       />
-
-      {/* Only renders for an active subscriber; the seat allowance and every
-          rule about it come from the database. */}
-      <ProSeatsSection />
 
       {/* Purchase Success Modal */}
       <PurchaseSuccessModal

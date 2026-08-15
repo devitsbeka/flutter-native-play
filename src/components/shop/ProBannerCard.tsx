@@ -9,6 +9,7 @@
 // against a 396 card, so exactly half of it hangs below. It paints above
 // the card, and the stage reserves room for its shadow.
 
+import { Check } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export const BANNER_DESIGN_W = 575;
@@ -167,6 +168,12 @@ interface ProBannerCardProps {
   actionLabel: ReactNode;
   onAction?: () => void;
   actionDisabled?: boolean;
+  /**
+   * This card is the tier the player is already on. Draws the quiet face —
+   * see ACTIVE_BUTTON — rather than the gold one, so "Active" stops looking
+   * like a second thing to buy.
+   */
+  actionActive?: boolean;
   /** Full-width strip above the title (deal countdown). */
   topStrip?: ReactNode;
   onClick?: () => void;
@@ -190,14 +197,19 @@ interface ProBannerCardProps {
 }
 
 // The three specks of light and the top lip that every button on these cards
-// carries (nodes 636:161-163).
-function ButtonFace({ fill }: { fill: string }) {
+// carries (nodes 636:161-163). `quiet` drops the speculars: they are lit for
+// the gold face and on a pale one they read as dust.
+function ButtonFace({ fill, quiet }: { fill: string; quiet?: boolean }) {
   return (
     <>
       <span aria-hidden className="absolute inset-0 rounded-[24px]" style={{ backgroundImage: fill }} />
-      <span aria-hidden className="absolute left-[16.42px] top-[8.42px] size-[5.152px] rounded-full bg-white opacity-[0.49]" />
-      <span aria-hidden className="absolute left-[195.16px] top-[17.36px] size-[5.283px] rounded-full bg-white opacity-[0.35]" />
-      <span aria-hidden className="absolute left-[32.71px] top-[40.71px] size-[4.589px] rounded-full bg-[rgba(255,255,255,0.8)] opacity-[0.58]" />
+      {!quiet && (
+        <>
+          <span aria-hidden className="absolute left-[16.42px] top-[8.42px] size-[5.152px] rounded-full bg-white opacity-[0.49]" />
+          <span aria-hidden className="absolute left-[195.16px] top-[17.36px] size-[5.283px] rounded-full bg-white opacity-[0.35]" />
+          <span aria-hidden className="absolute left-[32.71px] top-[40.71px] size-[4.589px] rounded-full bg-[rgba(255,255,255,0.8)] opacity-[0.58]" />
+        </>
+      )}
       <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_3px_0px_0px_rgba(255,255,255,0.35)]" />
     </>
   );
@@ -206,12 +218,27 @@ function ButtonFace({ fill }: { fill: string }) {
 const GOLD_BUTTON =
   "linear-gradient(180.6543874615296deg, rgb(226,213,32) 13.506%, rgb(187,32,143) 90.414%, rgb(129,225,201) 194.33%)";
 
+/**
+ * The face a tier wears once you are on it.
+ *
+ * The gold button is the card selling itself, and it was drawn identically
+ * whether it said "Buy" or "Active" — the same shout, the same glow, for a
+ * button that does nothing. A tier you already own has nothing left to sell,
+ * so it goes quiet: the card's own pale fill, its ink instead of white, a
+ * check, and none of the lift or the green glow that says *press me*.
+ */
+const ACTIVE_BUTTON = "linear-gradient(180deg, #F4EEFC 0%, #E6DAF7 100%)";
+const ACTIVE_BORDER = "rgba(64,38,102,0.16)";
+const ACTIVE_SHADOW = "0px 2px 0px 0px rgba(64,38,102,0.10), 0px 6px 16px 0px rgba(64,38,102,0.10)";
+const BUY_SHADOW = "0px 6px 0px 0px #7e2378, 0px 10px 24px 0px rgba(16,185,129,0.5)";
+
 export function ProBannerCard({
   skin,
   children,
   actionLabel,
   onAction,
   actionDisabled,
+  actionActive,
   topStrip,
   onClick,
   dimmed,
@@ -309,10 +336,20 @@ export function ProBannerCard({
                 onAction?.();
               }}
               disabled={actionDisabled}
-              className="relative flex h-[62px] w-[244px] items-center justify-center gap-[10px] rounded-[24px] border-[3px] border-solid border-[#9fa8a3] p-[3px] shadow-[0px_6px_0px_0px_#7e2378,0px_10px_24px_0px_rgba(16,185,129,0.5)] disabled:cursor-not-allowed"
+              className="relative flex h-[62px] w-[244px] items-center justify-center gap-[10px] rounded-[24px] border-[3px] border-solid p-[3px] disabled:cursor-not-allowed"
+              style={{
+                borderColor: actionActive ? ACTIVE_BORDER : "#9fa8a3",
+                boxShadow: actionActive ? ACTIVE_SHADOW : BUY_SHADOW,
+              }}
             >
-              <ButtonFace fill={GOLD_BUTTON} />
-              <span className="relative flex items-center gap-[10px] whitespace-nowrap text-[18px] font-bold leading-[30.95px] tracking-[-0.18px] text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)]">
+              <ButtonFace fill={actionActive ? ACTIVE_BUTTON : GOLD_BUTTON} quiet={actionActive} />
+              <span
+                className={`relative flex items-center gap-[8px] whitespace-nowrap text-[18px] font-bold leading-[30.95px] tracking-[-0.18px] ${
+                  actionActive ? "" : "text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)]"
+                }`}
+                style={actionActive ? { color: skin.ink } : undefined}
+              >
+                {actionActive && <Check className="size-[18px]" strokeWidth={3} />}
                 {actionLabel}
               </span>
             </button>
@@ -325,11 +362,21 @@ export function ProBannerCard({
               onAction?.();
             }}
             disabled={actionDisabled}
-            className="absolute left-[68px] z-20 flex h-[77px] w-[424px] items-center justify-center gap-[3px] rounded-[24px] border-[3px] border-solid border-[#9fa8a3] p-[3px] shadow-[0px_6px_0px_0px_#7e2378,0px_10px_24px_0px_rgba(16,185,129,0.5)] disabled:cursor-not-allowed"
-            style={{ top: buttonTop }}
+            className="absolute left-[68px] z-20 flex h-[77px] w-[424px] items-center justify-center gap-[3px] rounded-[24px] border-[3px] border-solid p-[3px] disabled:cursor-not-allowed"
+            style={{
+              top: buttonTop,
+              borderColor: actionActive ? ACTIVE_BORDER : "#9fa8a3",
+              boxShadow: actionActive ? ACTIVE_SHADOW : BUY_SHADOW,
+            }}
           >
-            <ButtonFace fill={GOLD_BUTTON} />
-            <span className="relative whitespace-nowrap text-[18px] font-bold leading-[30.95px] tracking-[-0.18px] text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)]">
+            <ButtonFace fill={actionActive ? ACTIVE_BUTTON : GOLD_BUTTON} quiet={actionActive} />
+            <span
+              className={`relative flex items-center gap-[8px] whitespace-nowrap text-[18px] font-bold leading-[30.95px] tracking-[-0.18px] ${
+                actionActive ? "" : "text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)]"
+              }`}
+              style={actionActive ? { color: skin.ink } : undefined}
+            >
+              {actionActive && <Check className="size-[20px]" strokeWidth={3} />}
               {actionLabel}
             </span>
           </button>
@@ -556,6 +603,7 @@ export function ProTierBanner({
   actionLabel,
   onAction,
   actionDisabled,
+  actionActive,
   onClick,
   dimmed,
   stacked,
@@ -569,6 +617,8 @@ export function ProTierBanner({
   actionLabel: ReactNode;
   onAction: () => void;
   actionDisabled?: boolean;
+  /** The tier the player is already on — draws the quiet button. */
+  actionActive?: boolean;
   onClick?: () => void;
   dimmed?: boolean;
   /** Benefits as a list rather than a row — see the note on BannerRow. */
@@ -581,6 +631,7 @@ export function ProTierBanner({
       dimmed={dimmed}
       actionLabel={actionLabel}
       actionDisabled={actionDisabled}
+      actionActive={actionActive}
       onAction={onAction}
       cardHeight={stacked ? stackedCardHeight(tiles.length) : undefined}
     >

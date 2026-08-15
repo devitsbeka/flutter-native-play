@@ -7,6 +7,7 @@ import { useProSeats } from "@/hooks/useProSeats";
 import { useLanguage } from "@/contexts/LanguageContext";
 import crownIcon from "@/assets/crown-icon.png";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 
 /**
  * Give your PRO to a friend.
@@ -34,6 +35,10 @@ export function ProSeatsSection() {
   const { friends } = useFriends();
   const [picking, setPicking] = useState(false);
   const [addingFriend, setAddingFriend] = useState(false);
+  // Which row is in flight. `busy` from the hook disables them all, which is
+  // right, but without this every row would spin and none would say which
+  // friend the seat was going to.
+  const [sending, setSending] = useState<string | null>(null);
 
   const tier = subscription?.vip_tier ?? "";
   // A seat-granted subscription confers no seats of its own — otherwise one
@@ -55,8 +60,8 @@ export function ProSeatsSection() {
   // not be in the friends list any more. The seat is still real and still
   // revocable — falling back to a label keeps it visible instead of rendering
   // a blank row nobody can act on.
-  const nameOf = (id: string) =>
-    friends.find((f) => f.friendId === id)?.nickname ?? t("extra.proSeatsUnknown");
+  const holderOf = (id: string) => friends.find((f) => f.friendId === id);
+  const nameOf = (id: string) => holderOf(id)?.nickname ?? t("extra.proSeatsUnknown");
 
   if (!isVip || seatsTotal === 0) return null;
 
@@ -88,7 +93,15 @@ export function ProSeatsSection() {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 bg-purple-50 dark:bg-purple-900/20"
               >
-                <span className="font-semibold text-sm truncate">{nameOf(seat.holderId)}</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <SafeAvatar
+                    avatarUrl={holderOf(seat.holderId)?.avatarUrl}
+                    fallback={nameOf(seat.holderId)}
+                    className="w-9 h-9 shrink-0 border border-purple-200"
+                    fallbackClassName="text-xs"
+                  />
+                  <span className="font-semibold text-sm truncate">{nameOf(seat.holderId)}</span>
+                </span>
                 <button
                   type="button"
                   disabled={busy}
@@ -122,25 +135,55 @@ export function ProSeatsSection() {
           {seatsFree > 0 && grantable.length > 0 && (
             <div className="mt-3">
               {picking ? (
-                <div className="max-h-48 overflow-y-auto flex flex-col gap-1">
+                <div className="max-h-64 overflow-y-auto flex flex-col gap-1">
                   {grantable.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-2">
                       {t("extra.proSeatsNoFriends")}
                     </p>
                   ) : (
-                    grantable.map((f) => (
-                      <button
-                        key={f.friendId}
-                        type="button"
-                        disabled={busy}
-                        onClick={async () => {
-                          if (await grant(f.friendId)) setPicking(false);
-                        }}
-                        className="text-left rounded-xl px-3 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 disabled:opacity-50 font-semibold text-sm"
-                      >
-                        {f.nickname}
-                      </button>
-                    ))
+                    /* A face and a named action, rather than a list of names
+                       that turn out to be buttons: the row said nothing about
+                       what tapping it would spend, and a seat is not a thing
+                       to hand over by accident. */
+                    grantable.map((f) => {
+                      const inFlight = sending === f.friendId;
+                      return (
+                        <div
+                          key={f.friendId}
+                          className="flex items-center justify-between gap-3 rounded-xl px-2 py-1.5"
+                        >
+                          <span className="flex min-w-0 items-center gap-2">
+                            <SafeAvatar
+                              avatarUrl={f.avatarUrl}
+                              fallback={f.nickname}
+                              className="w-9 h-9 shrink-0 border border-purple-200"
+                              fallbackClassName="text-xs"
+                            />
+                            <span className="font-semibold text-sm truncate">{f.nickname}</span>
+                          </span>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={async () => {
+                              setSending(f.friendId);
+                              try {
+                                if (await grant(f.friendId)) setPicking(false);
+                              } finally {
+                                setSending(null);
+                              }
+                            }}
+                            className="flex shrink-0 items-center gap-1.5 rounded-full bg-purple-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm disabled:opacity-50"
+                          >
+                            {inFlight ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Crown className="w-3.5 h-3.5" />
+                            )}
+                            {t("extra.proSeatsSend")}
+                          </button>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               ) : (
