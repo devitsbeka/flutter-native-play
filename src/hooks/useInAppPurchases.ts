@@ -127,10 +127,36 @@ async function loadPurchasesPlugin() {
       );
       Purchases = module.Purchases;
       LOG_LEVEL = module.LOG_LEVEL;
-      iapLog("plugin module loaded");
+
+      // Report what actually came back, not merely that something did.
+      //
+      // This line used to announce "plugin module loaded" unconditionally,
+      // one statement after the assignment above and without looking at it.
+      // So it attested to the import resolving and nothing else — and when
+      // `module.Purchases` was undefined, the caller's `if (!plugin) return`
+      // took a branch with no logging on it at all. The trace stopped dead
+      // between two lines with nothing between them, which cost a full
+      // capture cycle to narrow.
+      if (!Purchases) {
+        iapLog(
+          "module resolved but Purchases is",
+          typeof Purchases,
+          "— exports:",
+          Object.keys(module ?? {}).join(", ") || "(none)",
+        );
+        return null;
+      }
+
+      iapLog("plugin module loaded, Purchases is", typeof Purchases);
       return Purchases;
     } catch (e) {
-      console.error("[iap] Failed to load RevenueCat Purchases plugin:", e);
+      // Warn, not error. Across every capture tonight [warn] reached the
+      // device console and [error] was never once observed — whether because
+      // it is not forwarded or because it was never called could not be told
+      // apart, precisely because the only evidence would itself have been an
+      // error line. Both silent exits from this path used to log at error,
+      // so both were invisible. Nothing here is worth losing to that.
+      iapLog("Failed to load RevenueCat Purchases plugin:", String(e));
       return null;
     }
   }
@@ -173,7 +199,12 @@ async function initStore(): Promise<IAPProduct[]> {
   if (!Capacitor.isNativePlatform()) return [];
 
   const plugin = await loadPurchasesPlugin();
-  if (!plugin) return [];
+  if (!plugin) {
+    // Was a bare `return []`. It is one of only two ways out of initStore
+    // before the store is touched, and it said nothing on the way.
+    iapLog("no plugin available — purchases disabled for this launch");
+    return [];
+  }
 
   // Get platform-specific API key.
   //
@@ -189,8 +220,8 @@ async function initStore(): Promise<IAPProduct[]> {
       : import.meta.env.VITE_REVENUECAT_ANDROID_API_KEY;
 
   if (!apiKey) {
-    console.error(
-      `[iap] No RevenueCat key for ${platform}. Purchases are disabled. ` +
+    iapLog(
+      `No RevenueCat key for ${platform}. Purchases are disabled. ` +
         `Set VITE_REVENUECAT_${platform.toUpperCase()}_API_KEY.`,
     );
     return [];
