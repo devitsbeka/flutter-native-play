@@ -10,13 +10,14 @@ plus a hand fact-check of the four Georgia-specific categories.
 765 rewritten, 207 flagged — the hand read of the other forty-one categories,
 which batch 1 explicitly did not cover.
 
-**Batch 3** (`20260817120000_question_repair_ka_batch3.sql`): 5 retired. Batch 2
-standardised wording — one name written three ways became one name — and five
-of those rewrites collapsed a pair of questions onto the same stem. The
-duplicate resolution ran before those rewrites existed, so it could not have
-seen them. This batch retires the loser of each pair.
+**Batch 3** (`20260817120000_question_repair_ka_batch3.sql`): 42 retired across
+31 groups. Batches 1 and 2 both rewrote question text — batch 1 shortened
+stems, batch 2 fixed grammar and standardised names — and the duplicate
+clustering ran *before* either rewrite existed, so it clustered text that is no
+longer in the bank. Re-clustering the live text turns up 31 groups that now ask
+the same question and take the same answer. Each group keeps one row.
 
-Together: **551 retired, 944 rewritten, 260 flagged**, leaving 7,752 questions
+Together: **588 retired, 944 rewritten, 260 flagged**, leaving 7,715 questions
 in production.
 
 Run `node scripts/audit-questions.mjs --lang ka` to reproduce the counts.

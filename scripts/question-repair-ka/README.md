@@ -142,22 +142,35 @@ UPDATE public.questions
 ```
 
 
-## Batch 3 — the five collisions batch 2 created
+## Batch 3 — the duplicates the rewrites created
 
-Batch 2 standardised wording, and five of its rewrites landed two questions on
-the same stem. The duplicate clustering ran before those rewrites existed, so
-it could not have seen them. `20260817120000_question_repair_ka_batch3.sql` is
-hand-written — five `UPDATE`s, each naming its survivor in a comment above it:
+Both earlier batches rewrote question text: batch 1 shortened stems that
+overflowed the card, batch 2 fixed grammar and standardised names. The
+duplicate clustering ran **before** either rewrite existed, so it clustered
+text that is no longer in the bank, and it could not see the pairs those
+rewrites produced:
 
 ```
-bdbbaa62 -> keep 06b8918f   Zarathustra: ნიცშე vs ფრიდრიხ ნიცშე
-841f1c6f -> keep 366affe2   founder of genetics: მენდელი vs გრეგორ მენდელი
-15d1709d -> keep 646b1e6b   which element is diamond — same stem, same answer
-3e2de5ef -> keep 6668b6e3   Saturn's rings — word-for-word identical
-8a2bb0db -> keep e97ae666   subfield of AI — near-identical
+"რომელი პლანეტაა ცნობილი თავისი სისტემით?"   unclear, so batch 2 rewrote it
+"რომელი პლანეტაა ცნობილი თავისი რგოლებით?"   which is already another question
 ```
 
-Rolling it back is the same statement with `updated_at >= '2026-08-17'`.
+```bash
+set -a && . ./.env && set +a
+python3 scripts/question-repair-ka/build-migration-3.py
+```
 
-If a later batch rewrites more stems, re-run the duplicate check **after** it
-is applied, not before — that is the gap this batch closes.
+The clustering runs against the **live** text: every non-media question is
+grouped by its correct answer, stems are compared inside each group by word
+overlap and character 4-grams, and only clusters containing at least one
+changed row are kept — clusters of untouched rows were already judged in batch
+1. That turned up 31 groups; the survivor of each is recorded by hand in
+`duplicates-batch3.json`, and the script refuses to emit anything if an id is
+not live or is named in two clusters.
+
+`20260817120000_question_repair_ka_batch3.sql` retires 42 rows. Rolling it back
+is the batch-2 statement with `updated_at >= '2026-08-17'`.
+
+**If a later pass rewrites question text, re-run this clustering afterwards.**
+Rewriting and de-duplicating in the same batch cannot work: the de-duplication
+sees the old text.
