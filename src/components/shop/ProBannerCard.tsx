@@ -81,39 +81,40 @@ const WAVE_TALL =
 const WAVE_SHORT =
   "M0 0.11241C0 0.11241 0 0.112408 128.5 68.0609C186.156 98.5483 226.335 86.3554 289.5 86.3774C352.86 86.3995 394.421 101.76 451 68.0609C575 -5.79615 575 0.11241 575 0.11241V216C575 229.255 564.255 240 551 240H24C10.7452 240 0 229.255 0 216V0.11241Z";
 
+// The waves are the foot of the card, so they hang from its bottom edge
+// rather than from a fixed y.
+//
+// The frame gives them a top — 167.9, 156, 140 against a 396-tall card — and
+// that is what they were drawn at. It is the same measurement read from the
+// other end while the card is 396 tall, and only that: a phone stacks the
+// benefits into a list, which makes the card ~550, and the waves still ended
+// at 396 with a band of bare white card under them.
+//
+// So each layer keeps the gap the frame leaves beneath it (396 minus its own
+// bottom edge) and is positioned by that instead.
+const WAVE_LAYERS = [
+  { path: WAVE_TALL, height: 228, bottom: 0.1, opacity: 0.35 },
+  { path: WAVE_SHORT, height: 240, bottom: 0, opacity: 0.16 },
+  { path: WAVE_SHORT, height: 240, bottom: 16, opacity: 0.1 },
+];
+
 function WaveStack({ fill }: { fill: string }) {
   return (
     <>
-      <svg
-        aria-hidden
-        className="absolute left-0 top-[167.9px] block"
-        width={575}
-        height={228}
-        viewBox="0 0 575 228"
-        preserveAspectRatio="none"
-      >
-        <path d={WAVE_TALL} fill={fill} opacity={0.35} />
-      </svg>
-      <svg
-        aria-hidden
-        className="absolute left-0 top-[156px] block"
-        width={575}
-        height={240}
-        viewBox="0 0 575 240"
-        preserveAspectRatio="none"
-      >
-        <path d={WAVE_SHORT} fill={fill} opacity={0.16} />
-      </svg>
-      <svg
-        aria-hidden
-        className="absolute left-0 top-[140px] block"
-        width={575}
-        height={240}
-        viewBox="0 0 575 240"
-        preserveAspectRatio="none"
-      >
-        <path d={WAVE_SHORT} fill={fill} opacity={0.1} />
-      </svg>
+      {WAVE_LAYERS.map((layer, i) => (
+        <svg
+          key={i}
+          aria-hidden
+          className="absolute left-0 block"
+          style={{ bottom: layer.bottom }}
+          width={575}
+          height={layer.height}
+          viewBox={`0 0 575 ${layer.height}`}
+          preserveAspectRatio="none"
+        >
+          <path d={layer.path} fill={fill} opacity={layer.opacity} />
+        </svg>
+      ))}
     </>
   );
 }
