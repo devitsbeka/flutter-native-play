@@ -76,15 +76,21 @@ const STORE_QUERY_TIMEOUT_MS = 15_000;
 // build failed on ten of them. Taking PromiseLike<any> and returning T keeps
 // the timeout without narrowing what the plugin hands back.
 function withTimeout<T = any>(work: PromiseLike<T>, label: string): Promise<T> {
+  // The timer is cleared once the race settles. Without that, a call that
+  // answered in 100ms still left a timer armed for the remaining 14.9s, which
+  // then rejected into a promise Promise.race had already discarded — an
+  // unhandled rejection per bounded call, every one of them a lie about a
+  // call that had in fact succeeded.
+  let timer: ReturnType<typeof setTimeout>;
   return Promise.race([
     work,
-    new Promise<T>((_, reject) =>
-      setTimeout(
+    new Promise<T>((_, reject) => {
+      timer = setTimeout(
         () => reject(new Error(`${label} did not answer within ${STORE_QUERY_TIMEOUT_MS}ms`)),
         STORE_QUERY_TIMEOUT_MS,
-      ),
-    ),
-  ]);
+      );
+    }),
+  ]).finally(() => clearTimeout(timer));
 }
 
 export interface IAPProduct {
@@ -106,8 +112,34 @@ export interface PurchaseResult {
 let Purchases: any = null;
 let LOG_LEVEL: any = null;
 
-async function loadPurchasesPlugin() {
-  if (Purchases) return Purchases;
+/**
+ * A box around the plugin proxy. Never hand the proxy back directly.
+ *
+ * `registerPlugin` returns a Proxy whose `get` trap manufactures a method for
+ * any property name it is not specifically told about — it special-cases
+ * `$$typeof`, `toJSON`, `addListener` and `removeListener`, and nothing else.
+ * `then` therefore reads as a function, which makes the proxy a **thenable**.
+ *
+ * Resolving a promise with a thenable adopts it: JavaScript calls
+ * `value.then(resolve, reject)` and waits to be called back. What it reaches
+ * here is Capacitor's generic method wrapper, which dispatches a `Purchases.then()`
+ * call that does not exist and never invokes either callback. The
+ * CapacitorException it raises lands in an internal promise nobody observes.
+ *
+ * So `return Purchases` from an `async` function does not return. The caller's
+ * `await` never settles, never rejects, and logs nothing — the whole store
+ * init sits pending behind one `return` statement. Because `storeInit` is a
+ * module-level singleton, every later visit awaits the same stuck promise,
+ * which is why the buy button spun forever and the log stayed flat.
+ *
+ * A plain object is not thenable, so the box is returned as-is.
+ */
+interface PluginHolder {
+  plugin: any;
+}
+
+async function loadPurchasesPlugin(): Promise<PluginHolder | null> {
+  if (Purchases) return { plugin: Purchases };
 
   if (Capacitor.isNativePlatform()) {
     try {
@@ -148,7 +180,10 @@ async function loadPurchasesPlugin() {
       }
 
       iapLog("plugin module loaded, Purchases is", typeof Purchases);
-      return Purchases;
+
+      // Boxed, because returning the proxy itself from an `async` function
+      // hangs forever. See the note on PluginHolder.
+      return { plugin: Purchases };
     } catch (e) {
       // Warn, not error. Across every capture tonight [warn] reached the
       // device console and [error] was never once observed — whether because
@@ -198,7 +233,7 @@ async function initStore(): Promise<IAPProduct[]> {
   iapLog(`initStore on ${Capacitor.getPlatform()}`);
   if (!Capacitor.isNativePlatform()) return [];
 
-  const plugin = await loadPurchasesPlugin();
+  const plugin = (await loadPurchasesPlugin())?.plugin;
   if (!plugin) {
     // Was a bare `return []`. It is one of only two ways out of initStore
     // before the store is touched, and it said nothing on the way.
@@ -362,7 +397,7 @@ export function useInAppPurchases() {
     ensureStore().then(async () => {
       if (!alive) return;
       try {
-        const plugin = await loadPurchasesPlugin();
+        const plugin = (await loadPurchasesPlugin())?.plugin;
         await plugin?.logIn({ appUserID: user.id });
       } catch (e) {
         console.error("[iap] logIn failed:", e);
@@ -389,7 +424,7 @@ export function useInAppPurchases() {
     setPurchasing(true);
 
     try {
-      const plugin = await loadPurchasesPlugin();
+      const plugin = (await loadPurchasesPlugin())?.plugin;
       if (!plugin) {
         throw new Error("Purchase plugin not available");
       }
@@ -545,7 +580,7 @@ export function useInAppPurchases() {
     setPurchasing(true);
 
     try {
-      const plugin = await loadPurchasesPlugin();
+      const plugin = (await loadPurchasesPlugin())?.plugin;
       if (!plugin) {
         throw new Error("Purchase plugin not available");
       }
