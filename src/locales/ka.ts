@@ -2466,6 +2466,7 @@ export const ka = {
     proSeatsGive: "PRO-ს ჩუქება (დარჩა {count})",
     proSeatsRevoke: "დაბრუნება",
     proSeatsNoFriends: "ჯერ დაამატე მეგობარი, შემდეგ შეძლებ PRO-ს ჩუქებას.",
+    proSeatsAddFriend: "მეგობრების მოძებნა",
     proSeatsUnknown: "მოთამაშე",
     mobileSoloBenefit3: "რეკლამის გარეშე",
     mobileFamilyBenefit1: "ულიმიტო თამაში",

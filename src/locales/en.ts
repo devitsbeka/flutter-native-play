@@ -2467,6 +2467,7 @@ export const en: KaTranslations = {
     proSeatsGive: "Give PRO ({count} left)",
     proSeatsRevoke: "Take back",
     proSeatsNoFriends: "Add a friend first, then you can give them PRO.",
+    proSeatsAddFriend: "Find friends",
     proSeatsUnknown: "Player",
     mobileSoloBenefit3: "No ads",
     mobileFamilyBenefit1: "Unlimited play",

@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Loader2, UserMinus } from "lucide-react";
+import { Crown, Loader2, UserMinus, UserPlus } from "lucide-react";
 import { useVipStatus } from "@/contexts/VipContext";
 import { useFriends } from "@/hooks/useFriends";
 import { useProSeats } from "@/hooks/useProSeats";
 import { useLanguage } from "@/contexts/LanguageContext";
 import crownIcon from "@/assets/crown-icon.png";
+import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 
 /**
  * Give your PRO to a friend.
@@ -32,6 +33,7 @@ export function ProSeatsSection() {
   const { subscription, isVip } = useVipStatus();
   const { friends } = useFriends();
   const [picking, setPicking] = useState(false);
+  const [addingFriend, setAddingFriend] = useState(false);
 
   const tier = subscription?.vip_tier ?? "";
   // A seat-granted subscription confers no seats of its own — otherwise one
@@ -100,12 +102,21 @@ export function ProSeatsSection() {
             ))}
           </ul>
 
-          {/* Nobody to give it to yet. Said here rather than only after the
-              button is pressed, so the answer arrives before the dead end. */}
+          {/* Nobody to give it to yet. Saying "add a friend first" and
+              leaving it there is half an answer — the other half is a way to
+              do it without going to find the screen that does. */}
           {seatsFree > 0 && grantable.length === 0 && !picking && (
-            <p className="mt-3 text-sm text-muted-foreground">
-              {t("extra.proSeatsNoFriends")}
-            </p>
+            <div className="mt-3 flex flex-col items-start gap-2">
+              <p className="text-sm text-muted-foreground">{t("extra.proSeatsNoFriends")}</p>
+              <button
+                type="button"
+                onClick={() => setAddingFriend(true)}
+                className="flex items-center gap-2 text-sm font-bold text-purple-700 dark:text-purple-300"
+              >
+                <UserPlus className="w-4 h-4" />
+                {t("extra.proSeatsAddFriend")}
+              </button>
+            </div>
           )}
 
           {seatsFree > 0 && grantable.length > 0 && (
@@ -146,6 +157,8 @@ export function ProSeatsSection() {
           )}
         </>
       )}
+
+      <InviteFriendsModal isOpen={addingFriend} onClose={() => setAddingFriend(false)} />
     </div>
   );
 }
