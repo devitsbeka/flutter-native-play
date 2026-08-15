@@ -50,7 +50,12 @@ export function ProPlansSection() {
           screen still opens on the offer. For a subscriber the offer has
           already been taken and the thing they came here to do — hand their
           spare PRO to a friend — was two banners down the page. */}
-      <ProSeatsSection />
+      {/* px-4 is the reel's own horizontal padding (ProBannerReel's root), so
+          the card lines up edge for edge with the tier banners below it
+          rather than sitting a few pixels wider on both sides. */}
+      <div className="px-4">
+        <ProSeatsSection />
+      </div>
 
       {/* The shop's banner reel is the whole screen now. It marks the tier
           the player is on as active and the one above it as buyable, and it

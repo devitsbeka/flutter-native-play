@@ -67,17 +67,22 @@ export function ProSeatsSection() {
 
   return (
     <div className="rounded-2xl p-4 bg-white/70 dark:bg-white/5 border border-purple-200/60">
-      <div className="flex items-center gap-2 mb-1">
+      {/* Centred, like the tier banners under it: this card sits in the same
+          column and reads as one of them, and a left-ragged block above a
+          row of centred ones looked like it had come loose. The friend rows
+          below stay left-aligned — a list of faces is read down its left
+          edge, not from the middle. */}
+      <div className="flex items-center justify-center gap-2 mb-1">
         <img src={crownIcon} alt="" className="w-6 h-6 object-contain" draggable={false} />
         <h3 className="font-bold text-base">{t("extra.proSeatsTitle")}</h3>
       </div>
       {/* What the seat is and what happens to it, before the button that
           spends one. The card used to say "0 of 1 seats used" and nothing
           else, which names a quantity without saying what a seat does. */}
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground text-center">
         {t("extra.proSeatsHow")}
       </p>
-      <p className="text-sm font-semibold mb-3 mt-1">
+      <p className="text-sm font-semibold mb-3 mt-1 text-center">
         {t("extra.proSeatsSubtitle", { used: seatsUsed, total: seatsTotal })}
       </p>
 
@@ -119,8 +124,8 @@ export function ProSeatsSection() {
               leaving it there is half an answer — the other half is a way to
               do it without going to find the screen that does. */}
           {seatsFree > 0 && grantable.length === 0 && !picking && (
-            <div className="mt-3 flex flex-col items-start gap-2">
-              <p className="text-sm text-muted-foreground">{t("extra.proSeatsNoFriends")}</p>
+            <div className="mt-3 flex flex-col items-center gap-2">
+              <p className="text-sm text-muted-foreground text-center">{t("extra.proSeatsNoFriends")}</p>
               <button
                 type="button"
                 onClick={() => setAddingFriend(true)}
@@ -190,7 +195,7 @@ export function ProSeatsSection() {
                 <button
                   type="button"
                   onClick={() => setPicking(true)}
-                  className="flex items-center gap-2 text-sm font-bold text-purple-700 dark:text-purple-300"
+                  className="mx-auto flex items-center gap-2 text-sm font-bold text-purple-700 dark:text-purple-300"
                 >
                   {/* No crown here: the card's header already carries one, and
                       a second, differently drawn one two lines below it read
