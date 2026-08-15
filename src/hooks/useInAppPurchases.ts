@@ -55,7 +55,14 @@ const ALL_PRODUCT_IDS: string[] = [
 // legitimately longer than this.
 const STORE_QUERY_TIMEOUT_MS = 15_000;
 
-function withTimeout<T>(work: Promise<T>, label: string): Promise<T> {
+// `work` is typed loosely on purpose. Every caller passes a plugin call, and
+// the plugin is `any` — the RevenueCat types are only present in a native
+// build. Declaring the parameter as Promise<T> makes TypeScript try to read T
+// out of `any` and settle on `unknown`, so the awaited offerings lost every
+// property the callers then read (`.current`, `.all`, `.products`) and the
+// build failed on ten of them. Taking PromiseLike<any> and returning T keeps
+// the timeout without narrowing what the plugin hands back.
+function withTimeout<T = any>(work: PromiseLike<T>, label: string): Promise<T> {
   return Promise.race([
     work,
     new Promise<T>((_, reject) =>
