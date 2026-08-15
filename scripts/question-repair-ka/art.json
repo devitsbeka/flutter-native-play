@@ -1,18 +1,120 @@
 [
-{"id":"dcad7114","kind":"grammar","note":"\"ფიგიასი\" is a typo for ფიდიასი","fix":{"correct_answer":"ფიდიასი"}},
-{"id":"483c870d","kind":"grammar","note":"\"მიშელანჯელო\" is spelt მიქელანჯელო everywhere else, and Rodin is a sculptor offered as a sculpture","fix":{"question_text":"რომელია მიქელანჯელოს ცნობილი ქანდაკება?","incorrect_answers":["ვენერა მილოსელი","მოაზროვნე","პიეტა ბერნინისა"]}},
-{"id":"0625c700","kind":"grammar","note":"\"პოინტილიზმი\" is spelt პუანტილიზმი in the three other questions on it","fix":{"question_text":"რომელი მხატვარი იყო პუანტილიზმის ფუძემდებელი?"}},
-{"id":"d08ec44b","kind":"grammar","note":"\"რომაული\" is Roman; the style meant here is რომანული","fix":{"incorrect_answers":["რომანული","ბაროკო","რენესანსი"]}},
-{"id":"f1a5e65b","kind":"grammar","note":"\"რა არის ... შემქმნელი\" should ask ვინ, and the piece is „მომაკვდავი გედი“","fix":{"question_text":"ვინ დადგა ბალეტი „მომაკვდავი გედი“?"}},
-{"id":"059fc844","kind":"grammar","note":"\"ქანდაკების სახე, კედელში თუ რელიეფით\" is not a sentence","fix":{"question_text":"რა ჰქვია კედელზე რელიეფად შესრულებულ ქანდაკებას?"}},
-{"id":"517b6b85","kind":"bad_distractor","note":"\"იოჰან სებასტიან\" is a truncated composer's name offered as a painter","fix":{"incorrect_answers":["პიტერ ბრეიგელი","ალბრეხტ დიურერი","ლუკას კრანახი"]}},
-{"id":"52618c4d","kind":"wrong_answer","note":"„გამჭვირვალე ლეპტოპის მუსიკა“ is not a Magritte painting or any other","action":"retire"},
-{"id":"a4ba76bd","kind":"wrong_answer","note":"The Thinker is Rodin's, from the 19th century, not an ancient Greek statue","action":"retire"},
-{"id":"37ab408f","kind":"answer_in_question","note":"the stem names the Venus de Milo and the answer is the Venus de Milo","action":"retire"},
-{"id":"68543bf5","kind":"wrong_answer","note":"Giorgi Leonidze was a poet; he painted nothing","action":"retire"},
-{"id":"6f7bf4e0","kind":"doubtful","note":"\"ფლოუ დიზაინი\" is not a documented style","action":"retire"},
-{"id":"c819bf80","kind":"ambiguous","note":"a rainbow has no principal colour","action":"flag"},
-{"id":"7dc7cfd4","kind":"ambiguous","note":"\"a branch of fine art\" fits several of the options","action":"flag"},
-{"id":"9d69cf65","kind":"ambiguous","note":"all four options are \"sand X\", and the stem gives nothing to choose between them","action":"flag"},
-{"id":"517b6b85","kind":"doubtful","note":"Bosch's famous triptych is The Garden of Earthly Delights; \"Gothic triptych\" names nothing","action":"flag"}
+{
+"id": "dcad7114",
+"kind": "grammar",
+"note": "\"ფიგიასი\" is a typo for ფიდიასი",
+"fix": {
+"correct_answer": "ფიდიასი"
+}
+},
+{
+"id": "483c870d",
+"kind": "grammar",
+"note": "\"მიშელანჯელო\" is spelt მიქელანჯელო everywhere else, and Rodin is a sculptor offered as a sculpture",
+"fix": {
+"question_text": "რომელია მიქელანჯელოს ცნობილი ქანდაკება?",
+"incorrect_answers": [
+"ვენერა მილოსელი",
+"მოაზროვნე",
+"პიეტა ბერნინისა"
+]
+}
+},
+{
+"id": "0625c700",
+"kind": "grammar",
+"note": "\"პოინტილიზმი\" is spelt პუანტილიზმი in the three other questions on it",
+"fix": {
+"question_text": "რომელი მხატვარი იყო პუანტილიზმის ფუძემდებელი?"
+}
+},
+{
+"id": "d08ec44b",
+"kind": "grammar",
+"note": "\"რომაული\" is Roman; the style meant here is რომანული",
+"fix": {
+"incorrect_answers": [
+"რომანული",
+"ბაროკო",
+"რენესანსი"
+]
+}
+},
+{
+"id": "f1a5e65b",
+"kind": "grammar",
+"note": "\"რა არის ... შემქმნელი\" should ask ვინ, and the piece is „მომაკვდავი გედი“",
+"fix": {
+"question_text": "ვინ დადგა ბალეტი „მომაკვდავი გედი“?"
+}
+},
+{
+"id": "059fc844",
+"kind": "grammar",
+"note": "\"ქანდაკების სახე, კედელში თუ რელიეფით\" is not a sentence",
+"fix": {
+"question_text": "რა ჰქვია კედელზე რელიეფად შესრულებულ ქანდაკებას?"
+}
+},
+{
+"id": "517b6b85",
+"kind": "bad_distractor",
+"note": "\"იოჰან სებასტიან\" is a truncated composer's name offered as a painter; the stem also calls Bosch's triptych \"Gothic\", which names nothing — his famous one is The Garden of Earthly Delights",
+"fix": {
+"incorrect_answers": [
+"პიტერ ბრეიგელი",
+"ალბრეხტ დიურერი",
+"ლუკას კრანახი"
+]
+},
+"action": "flag"
+},
+{
+"id": "52618c4d",
+"kind": "wrong_answer",
+"note": "„გამჭვირვალე ლეპტოპის მუსიკა“ is not a Magritte painting or any other",
+"action": "retire"
+},
+{
+"id": "a4ba76bd",
+"kind": "wrong_answer",
+"note": "The Thinker is Rodin's, from the 19th century, not an ancient Greek statue",
+"action": "retire"
+},
+{
+"id": "37ab408f",
+"kind": "answer_in_question",
+"note": "the stem names the Venus de Milo and the answer is the Venus de Milo",
+"action": "retire"
+},
+{
+"id": "68543bf5",
+"kind": "wrong_answer",
+"note": "Giorgi Leonidze was a poet; he painted nothing",
+"action": "retire"
+},
+{
+"id": "6f7bf4e0",
+"kind": "doubtful",
+"note": "\"ფლოუ დიზაინი\" is not a documented style",
+"action": "retire"
+},
+{
+"id": "c819bf80",
+"kind": "ambiguous",
+"note": "a rainbow has no principal colour",
+"action": "flag"
+},
+{
+"id": "7dc7cfd4",
+"kind": "ambiguous",
+"note": "\"a branch of fine art\" fits several of the options",
+"action": "flag"
+},
+{
+"id": "9d69cf65",
+"kind": "ambiguous",
+"note": "all four options are \"sand X\", and the stem gives nothing to choose between them",
+"action": "flag"
+}
 ]
