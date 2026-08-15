@@ -1,0 +1,23 @@
+[
+{"id":"37b7101b","kind":"broken_stem","note":"Professor Oak's name is translated as the tree — \"მუხა\" — and the other three options are trees too","action":"retire"},
+{"id":"c6cddaf2","kind":"wrong_answer","note":"Sonic's fox friend is Tails; none of the four options names him","action":"retire"},
+{"id":"0640fca8","kind":"broken_stem","note":"\"Solid Snake\" is translated word by word and inverted into \"გველის მყარი\"; the other options are not names","action":"retire"},
+{"id":"7a137bc5","kind":"broken_stem","note":"the Doom Slayer's name is rendered \"განწირულთა\", and the distractors are job titles","action":"retire"},
+{"id":"1e08ac23","kind":"wrong_answer","note":"Reaper is translated as \"მოკვდავი\" and is not a general; Overwatch has no famous general","action":"retire"},
+{"id":"a4e6c060","kind":"broken_stem","note":"\"საზღვარგარეთ\" and \"მორიგი ზარი\" are word-by-word translations of game titles that name nothing","action":"retire"},
+{"id":"5ba37819","kind":"broken_stem","note":"\"what are Minecraft's breakable blocks called\" answered \"cubes\", against spheres, pyramids and cylinders","action":"retire"},
+{"id":"b500731c","kind":"broken_stem","note":"Pac-Man has one ghost of each colour, so \"most often found\" has no answer","action":"retire"},
+{"id":"3ae79808","kind":"duplicate_option","note":"\"განი\" and \"გეინონი\" are the same character offered twice","action":"retire"},
+{"id":"0aad6b02","kind":"grammar","note":"\"რეზიდენტი ბოროტი\" translates Resident Evil word by word","fix":{"correct_answer":"რეზიდენტ ივილი","incorrect_answers":["საილენტ ჰილი","დედ სფეისი","აუტლასტი"]}},
+{"id":"ee837b36","kind":"mixed_script","note":"the answer opens with a capital Georgian letter the script does not have, and \"ფარ ქარი\" is a garbled Far Cry","fix":{"correct_answer":"დარკ სოულსი","incorrect_answers":["ფარ კრაი","კასტლევანია","ბიოშოკი"]}},
+{"id":"8daca2e0","kind":"duplicate_option","note":"\"მორიგი დღე\" and \"მოკვდი სხვა დღეს\" are two renderings of Die Another Day","fix":{"incorrect_answers":["კაზინო როიალი","მოკვდი სხვა დღეს","სკაიფოლი"]}},
+{"id":"290455f1","kind":"wrong_answer","note":"champions are the characters in League of Legends, not the players","fix":{"question_text":"რა ჰქვია League of Legends-ის პერსონაჟებს?"}},
+{"id":"c2ed1a5b","kind":"grammar","note":"\"რომელი თამაშია Minecraft-ის ჟანრი\" swaps game and genre","fix":{"question_text":"რომელ ჟანრს მიეკუთვნება Minecraft?"}},
+{"id":"68852b70","kind":"grammar","note":"as written the console released the company","fix":{"question_text":"რომელმა კომპანიამ გამოუშვა Xbox 360?"}},
+{"id":"5c695e03","kind":"grammar","note":"all four options put the rank after the name","fix":{"correct_answer":"კომანდერი შეპარდი","incorrect_answers":["კაპიტანი შეპარდი","სერჟანტი რაიდერი","ოფიცერი ვექსელი"]}},
+{"id":"a63fe984","kind":"clipped_answer","note":"answer cut to \"ღია სამყაროს მოქმედ.\"","fix":{"correct_answer":"ღია სამყაროს მოქმედება"}},
+{"id":"2486fc5b","kind":"grammar","note":"\"განიონი\"; 8655a316 writes განონდორფი","fix":{"incorrect_answers":["ზელდა","განონდორფი","იმპა"]}},
+{"id":"03016830","kind":"grammar","note":"\"ბაუზერი\"; 8bb36737 and c9d93f40 write ბოუზერი","fix":{"correct_answer":"ბოუზერი"}},
+{"id":"e424d594","kind":"doubtful","note":"\"ნენსი\" is not a video-game protagonist","fix":{"incorrect_answers":["გერალტი","ლინკი","კრატოსი"]}},
+{"id":"ba3da5ee","kind":"doubtful","note":"\"არიასა\" is not a character","fix":{"incorrect_answers":["ლინკი","კრატოსი","ეზიო"]}}
+]
