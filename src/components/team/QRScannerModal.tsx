@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
+import { joinCodeFromQr } from "@/utils/joinCodeFromQr";
 import { ChevronLeft, ScanLine, AlertCircle, Flashlight, ZoomIn, ZoomOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -23,6 +24,48 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
   const [zoomCapability, setZoomCapability] = useState<{min: number; max: number; step: number} | null>(null);
   const [torchEnabled, setTorchEnabled] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
+  // The decode callback fires on every frame, so a QR that is not a game code
+  // would otherwise raise fifteen toasts a second for as long as it is held up.
+  const lastRejectionRef = useRef(0);
+
+  /**
+   * Stop the camera, whatever state it is in.
+   *
+   * Html5Qrcode.stop() *throws* — synchronously, and a string rather than an
+   * Error — when the scanner is not currently scanning:
+   *
+   *   if (!this.stateManagerProxy.isScanning()) {
+   *     throw "Cannot stop, scanner is not running or paused.";
+   *   }
+   *
+   * Every call site here used `.stop().catch(() => {})`, which catches a
+   * rejected promise and does nothing at all for a synchronous throw. So when
+   * the camera had failed to start — permission refused, no camera, or simply
+   * still starting — the throw escaped:
+   *
+   *   · from the back button's handler, before it could call onClose, so the
+   *     screen would not close;
+   *   · from the effect's cleanup on unmount, which is why leaving via the
+   *     home button produced "დაფიქსირდა შეცდომა" instead of the home page.
+   *
+   * Both reports, one cause. The ref is cleared first so a second call is a
+   * no-op even if this one throws.
+   */
+  const stopScanner = useCallback(async () => {
+    const scanner = scannerRef.current;
+    scannerRef.current = null;
+    if (!scanner) return;
+    try {
+      await scanner.stop();
+    } catch {
+      // Was not running. Nothing to stop, and nothing worth reporting.
+    }
+    try {
+      scanner.clear();
+    } catch {
+      // Nothing rendered to clear.
+    }
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -104,12 +147,9 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
     return () => {
       mounted = false;
       clearTimeout(timer);
-      if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
-        scannerRef.current = null;
-      }
+      void stopScanner();
     };
-  }, [open]);
+  }, [open, stopScanner]);
 
   const handleZoomChange = async (value: number) => {
     if (scannerRef.current && zoomCapability) {
@@ -138,66 +178,31 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
     }
   };
 
-  const handleScan = (decodedText: string) => {
-    // Stop scanner first
-    if (scannerRef.current) {
-      scannerRef.current.stop().catch(() => {});
-      scannerRef.current = null;
-    }
+  const handleScan = async (decodedText: string) => {
+    const code = joinCodeFromQr(decodedText);
 
-    // Try to extract join code from URL
-    let code: string | null = null;
-
-    try {
-      // Check if it's a URL
-      if (decodedText.includes("/join")) {
-        const url = new URL(decodedText);
-        // Try query param first: /join?code=XXXXXX
-        code = url.searchParams.get("code");
-        
-        // Try path format: /join/XXXXXX
-        if (!code) {
-          const pathMatch = url.pathname.match(/\/join\/([A-Z0-9]+)/i);
-          if (pathMatch) {
-            code = pathMatch[1];
-          }
-        }
-      } else if (/^[A-Z0-9]{4,8}$/i.test(decodedText.trim())) {
-        // Plain code format
-        code = decodedText.trim().toUpperCase();
-      }
-    } catch {
-      // Not a valid URL, check if it's a plain code
-      if (/^[A-Z0-9]{4,8}$/i.test(decodedText.trim())) {
-        code = decodedText.trim().toUpperCase();
-      }
-    }
-
-    if (code) {
-      toast.success(t("extra.codeFound"), { description: code });
-      handleClose();
-      navigate(`/join?code=${code}`);
-    } else {
+    if (!code) {
+      // Keep scanning. This used to stop the camera and then try to restart
+      // it by returning a cleanup function from a plain callback — which is
+      // not an effect, so nothing ever ran it. One poster on a wall and the
+      // scanner was dead until you left the screen and came back.
+      const now = Date.now();
+      if (now - lastRejectionRef.current < 2000) return;
+      lastRejectionRef.current = now;
       toast.error(t("extra.invalidQrCode"), {
         description: t("extra.qrNoGameCode"),
       });
-      // Restart scanner after error
-      if (open) {
-        const timer = setTimeout(() => {
-          if (scannerRef.current === null && open) {
-            // Re-trigger effect by closing and opening
-          }
-        }, 1500);
-        return () => clearTimeout(timer);
-      }
+      return;
     }
+
+    await stopScanner();
+    toast.success(t("extra.codeFound"), { description: code });
+    onClose();
+    navigate(`/join?code=${code}`);
   };
 
-  const handleClose = () => {
-    if (scannerRef.current) {
-      scannerRef.current.stop().catch(() => {});
-      scannerRef.current = null;
-    }
+  const handleClose = async () => {
+    await stopScanner();
     onClose();
   };
 
@@ -210,7 +215,11 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-background flex flex-col"
+          /* Above the bottom navigation, which sits at z-[60] and z-[70]. At
+             z-50 the tab bar floated over a full-screen camera view: the home
+             button was on top of the viewfinder and reachable while scanning,
+             which is how leaving this screen mid-scan was discovered at all. */
+          className="fixed inset-0 z-[100] bg-background flex flex-col"
         >
           {/* Fixed Header */}
           <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
