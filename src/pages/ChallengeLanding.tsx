@@ -346,8 +346,11 @@ export default function ChallengeLanding() {
             />
           </div>
 
-          {/* Question Card with Overlapping Icon */}
-          <div className="px-4 flex-shrink-0 -mt-1 mb-0 relative">
+          {/* Question Card with Overlapping Icon.
+              mt-3, not -mt-1: the icon hangs 16px above the card (-top-4), so
+              a negative margin here pulled it up into the category name in the
+              row above and the two nearly touched. */}
+          <div className="px-4 flex-shrink-0 mt-3 mb-0 relative">
             {/* Category Icon overlapping card */}
             <div className="absolute left-1/2 -translate-x-1/2 -top-4 z-20">
               <DynamicIcon 
