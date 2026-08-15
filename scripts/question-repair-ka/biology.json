@@ -1,0 +1,14 @@
+[
+{"id":"1b0b92f1","kind":"wrong_answer","note":"no bacterium has chloroplasts — all four options are equally correct","action":"retire"},
+{"id":"5c450b24","kind":"type_mismatch","note":"asks which insect migrates and offers a laurel and a hawk as options","fix":{"incorrect_answers":["ჭრიჭინა","ფუტკარი","კალია"]}},
+{"id":"d913e744","kind":"grammar","note":"\"გლეხოვი\" is not a word","fix":{"incorrect_answers":["შეწოვა","ფოტოსინთეზი","სუნთქვა"]}},
+{"id":"860c7bf5","kind":"grammar","note":"\"ესტრუქცია\" is not a word","fix":{"incorrect_answers":["რეპლიკაცია","ტრანსლაცია","მუტაცია"]}},
+{"id":"507fe23e","kind":"grammar","note":"a product is not a reaction","fix":{"question_text":"რომელია გლიკოლიზის საბოლოო პროდუქტი?"}},
+{"id":"3900f4b0","kind":"grammar","note":"noun-phrase stem with no interrogative","fix":{"question_text":"რა ჰქვია მედუზის შრეებს შორის არსებულ ჟელესებრ ნივთიერებას?"}},
+{"id":"3c7c1993","kind":"grammar","note":"noun-phrase stem with no interrogative","fix":{"question_text":"რომელი ქვეწარმავალია კიდურების გარეშე?"}},
+{"id":"408dedce","kind":"grammar","note":"noun-phrase stem with no interrogative","fix":{"question_text":"რომელი მეცნიერება შეისწავლის მემკვიდრეობითობასა და ცვალებადობას?"}},
+{"id":"d7f9cd6d","kind":"wrong_answer","note":"eukaryote does not mean multicellular — yeast is a unicellular eukaryote","action":"flag"},
+{"id":"7261043c","kind":"doubtful","note":"\"ქერქსერა\" is not a word; the dead outer layer is the რიტიდომი","action":"flag"},
+{"id":"9f23383e","kind":"doubtful","note":"a cofactor assists catalysis; it does not bind enzyme to substrate","action":"flag"},
+{"id":"8f4abfa5","kind":"ambiguous","note":"flavonoids and anthocyanins, both offered as distractors, are also not chlorophyll","action":"flag"}
+]
