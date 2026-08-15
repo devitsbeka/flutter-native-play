@@ -251,7 +251,15 @@ interface MultiplayerState {
   questions: TriviaQuestion[];
   currentQuestionIndex: number;
   myScore: number;
-  lastQuestionResult: { correct: boolean; points: number } | null;
+  /**
+   * The result of the last answer *this device* submitted.
+   *
+   * Carries the question it belongs to. submitAnswer only sets this after
+   * four network round trips, and the player can be two questions further on
+   * by the time it lands — without the index there is no way to tell a result
+   * for the question on screen from one for a question already gone.
+   */
+  lastQuestionResult: { correct: boolean; points: number; questionIndex: number } | null;
   timePerQuestion: number;
   // Keyed by question_index -> user_id so late-arriving realtime inserts are
   // never dropped when a player has already advanced to the next question
@@ -1809,7 +1817,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     setState(prev => ({
       ...prev,
       myScore: newScore,
-      lastQuestionResult: { correct: isCorrect, points },
+      // Stamped with the question this is the result *of*, captured before the
+      // awaits above rather than read after them.
+      lastQuestionResult: {
+        correct: isCorrect,
+        points,
+        questionIndex: state.currentQuestionIndex,
+      },
     }));
   }, [state.currentRoom, state.questions, state.currentQuestionIndex, state.myScore, user]);
 
@@ -1868,8 +1882,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     if (total === 0) return none;
 
     // If the current question was already answered before the phone locked,
-    // the away time only affects the questions after it
-    const answeredCurrent = state.lastQuestionResult !== null;
+    // the away time only affects the questions after it.
+    //
+    // Compared by index, not by "a result exists": nothing clears the previous
+    // question's result when the next one starts, so a bare null check called
+    // every question after the first one already answered.
+    const answeredCurrent = state.lastQuestionResult?.questionIndex === state.currentQuestionIndex;
     const firstUnanswered = state.currentQuestionIndex + (answeredCurrent ? 1 : 0);
     const questionsLeft = total - firstUnanswered;
     if (questionsLeft <= 0) return none;

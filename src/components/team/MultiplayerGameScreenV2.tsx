@@ -137,13 +137,23 @@ export function MultiplayerGameScreenV2() {
     setTimeRemaining(timePerQuestion);
   }, [currentQuestionIndex, timePerQuestion]);
 
-  // The result landing is now only a backstop: handleAnswer reveals and plays
-  // the sound the moment the player taps. This still catches the one path that
-  // does not go through it — a reveal driven by the server rather than by this
-  // device — and re-playing is guarded by answerRevealed already being true.
+  // A result may only reveal the question it is the result of.
+  //
+  // This effect shipped without the index check and immediately started
+  // revealing the *next* question: submitAnswer sets lastQuestionResult only
+  // after four network round trips, and since the reveal became instant the
+  // player can be on the following question by the time it lands. Then this
+  // ran, set answerRevealed on a question nobody had answered, and the correct
+  // option sat there green before it had been read.
+  //
+  // It could not happen before the reveal was made instant — the reveal *was*
+  // this effect, so advancing before the result arrived was impossible. My
+  // change created the race; the stamp closes it.
   useEffect(() => {
-    if (lastQuestionResult) setAnswerRevealed(true);
-  }, [lastQuestionResult]);
+    if (lastQuestionResult?.questionIndex === currentQuestionIndex) {
+      setAnswerRevealed(true);
+    }
+  }, [lastQuestionResult, currentQuestionIndex]);
 
   const handleAnswer = useCallback((answer: string) => {
     // selectedAnswer guard: the timer can still fire handleAnswer("") after a
