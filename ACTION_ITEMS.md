@@ -93,8 +93,27 @@ Still open on the products:
 - [ ] **AdMob** — register the iOS app, create a **dedicated iOS** rewarded
       unit and a **real** interstitial unit (the interstitials currently point
       at Google's demo units, which serve ads and earn nothing)
-- [ ] **Firebase** — project, plus an **APNs authentication key (.p8)**
-      uploaded. Push cannot deliver to iOS without it.
+- [ ] **Firebase** — the console half of push. In order:
+
+      1. Create the project, add an **iOS app** on bundle id `io.mytrivia.app`
+      2. Download **`GoogleService-Info.plist`** and drag it into the **App
+         target** in Xcode (tick *Copy items if needed*). Without it the
+         Firebase SDK raises on launch — this is a crash, not a degradation
+      3. Project settings → **Cloud Messaging** → upload the **APNs auth key
+         (.p8)** with its Key ID and Team ID `T38XQSM4L3`
+      4. Copy the **project id** into the `FIREBASE_PROJECT_ID` Supabase
+         secret if it is not already set — `send-push-notification` puts it in
+         the `messages:send` URL
+      5. Confirm the service-account credentials the sender signs its JWT with
+         are current for this project
+
+      The client half is done: the app now takes its token from
+      `@capacitor-firebase/messaging` rather than `@capacitor/push-notifications`.
+      Those return different things — an FCM registration token against an
+      APNs device token — and the sender speaks FCM, which answers an APNs
+      token with INVALID_ARGUMENT. Registration would have succeeded,
+      `push_tokens` would have filled, every send would have reported success,
+      and nothing would have arrived.
 - [ ] **Sentry** or equivalent — iOS crash reporting
 
 ## 3. Values to fill in

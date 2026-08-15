@@ -21,8 +21,24 @@ import { useAuth } from "@/hooks/useAuth";
  *    a settings toggle or a contextual moment, not from mount.
  * 2. **Registering is not the same as being asked.** If permission is already
  *    granted — a reinstall, a returning player — the token is refreshed
- *    quietly on every launch, because APNs tokens rotate and a stale one
- *    fails silently.
+ *    quietly on every launch, because tokens rotate and a stale one fails
+ *    silently.
+ *
+ * The token comes from `@capacitor-firebase/messaging`, not from
+ * `@capacitor/push-notifications`, and that distinction is the whole reason
+ * push still would not have worked once it was mounted. The two return
+ * different things: the Capacitor plugin hands back the **APNs device
+ * token**, while `send-push-notification` posts to FCM's `messages:send`,
+ * whose `token` field wants an **FCM registration token**. FCM answers an
+ * APNs token with INVALID_ARGUMENT.
+ *
+ * So the shape of the original bug survived being fixed: registration
+ * succeeded, `push_tokens` filled up, the sender reported success per call,
+ * and nothing was ever delivered. One FCM sender now serves iOS and Android
+ * alike, which is also why Firebase is in the iOS build at all.
+ *
+ * Only this plugin registers. Calling `PushNotifications.register()` as well
+ * would have both racing to claim APNs.
  */
 
 export type PushPermission = "granted" | "denied" | "prompt" | "unsupported";
@@ -69,46 +85,43 @@ export function usePushNotifications() {
 
     (async () => {
       try {
-        const { PushNotifications } = await import("@capacitor/push-notifications");
+        const { FirebaseMessaging } = await import("@capacitor-firebase/messaging");
 
-        const registration = await PushNotifications.addListener("registration", (t) => {
-          setToken(t.value);
-          persistToken(t.value);
+        const received = await FirebaseMessaging.addListener("tokenReceived", ({ token: t }) => {
+          setToken(t);
+          persistToken(t);
         });
-
-        const registrationError = await PushNotifications.addListener(
-          "registrationError",
-          (err) => console.error("[push] Registration failed:", err),
-        );
 
         // Tapping a notification should land on the thing it is about, not
         // just open the app on whatever screen it was last showing.
-        const action = await PushNotifications.addListener(
-          "pushNotificationActionPerformed",
+        const action = await FirebaseMessaging.addListener(
+          "notificationActionPerformed",
           ({ notification }) => {
-            const route = notification.data?.route ?? notification.data?.deep_link;
+            const data = notification.data as Record<string, unknown> | undefined;
+            const route = data?.route ?? data?.deep_link;
             if (typeof route === "string" && route.startsWith("/")) navigate(route);
           },
         );
 
         if (cancelled) {
-          registration.remove();
-          registrationError.remove();
+          received.remove();
           action.remove();
           return;
         }
 
-        disposers = [
-          () => registration.remove(),
-          () => registrationError.remove(),
-          () => action.remove(),
-        ];
+        disposers = [() => received.remove(), () => action.remove()];
 
-        // Already granted (reinstall, or a returning player): re-register so
-        // a rotated APNs token is picked up. This does not show a prompt.
-        const status = await PushNotifications.checkPermissions();
+        // Already granted (reinstall, or a returning player): fetch the token
+        // again rather than waiting for it to rotate. This shows no prompt.
+        const status = await FirebaseMessaging.checkPermissions();
         setPermission(status.receive === "prompt-with-rationale" ? "prompt" : status.receive);
-        if (status.receive === "granted") await PushNotifications.register();
+        if (status.receive === "granted") {
+          const { token: current } = await FirebaseMessaging.getToken();
+          if (current) {
+            setToken(current);
+            void persistToken(current);
+          }
+        }
       } catch (error) {
         console.warn("[push] Setup failed:", error);
       }
@@ -129,19 +142,25 @@ export function usePushNotifications() {
     if (!supported) return "unsupported";
 
     try {
-      const { PushNotifications } = await import("@capacitor/push-notifications");
-      const result = await PushNotifications.requestPermissions();
+      const { FirebaseMessaging } = await import("@capacitor-firebase/messaging");
+      const result = await FirebaseMessaging.requestPermissions();
       const next: PushPermission =
         result.receive === "prompt-with-rationale" ? "prompt" : result.receive;
       setPermission(next);
 
-      if (next === "granted") await PushNotifications.register();
+      if (next === "granted") {
+        const { token: fresh } = await FirebaseMessaging.getToken();
+        if (fresh) {
+          setToken(fresh);
+          void persistToken(fresh);
+        }
+      }
       return next;
     } catch (error) {
       console.error("[push] Permission request failed:", error);
       return "denied";
     }
-  }, [supported]);
+  }, [supported, persistToken]);
 
   /**
    * Drop this device's token.
