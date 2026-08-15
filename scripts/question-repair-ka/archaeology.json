@@ -1,0 +1,23 @@
+[
+{"id":"3632566e","kind":"wrong_answer","note":"Venus figurines are Upper Palaeolithic, not Lower","fix":{"question_text":"რა ეწოდება ზედა პალეოლითის ქალის ქანდაკებებს?"}},
+{"id":"4ac7cf9f","kind":"wrong_answer","note":"a ziggurat is a temple, not a burial structure — be5f9ae6 says so in the same bank","fix":{"question_text":"რა ეწოდება მესოპოტამიის საკულტო საფეხურებიან ნაგებობას?"}},
+{"id":"a83b1fa9","kind":"grammar","note":"the alloy is ელექტრუმი; ელექტრონი is the particle","fix":{"correct_answer":"ელექტრუმი"}},
+{"id":"26a7bb08","kind":"grammar","note":"\"კარნაჩების\" is a typo for კარნაკის","fix":{"question_text":"რომელ ცივილიზაციას უკავშირდება კარნაკის ქვების რიგები?"}},
+{"id":"0d19c6e0","kind":"grammar","note":"\"არქაეომეტრია\" is spelt არქეომეტრია","fix":{"correct_answer":"არქეომეტრია"}},
+{"id":"0ffe8318","kind":"grammar","note":"\"არტეფაქტების ერთობლიობა ადგილას\" is not a sentence","fix":{"question_text":"რას ეწოდება არტეფაქტების ერთობლიობა ერთ ადგილას?"}},
+{"id":"f50afbdd","kind":"wrong_answer","note":"\"მასალაჩიქი\" is not a word; the tool of delicate excavation is the trowel","fix":{"correct_answer":"მასტარი","incorrect_answers":["ნიჩაბი","წერაქვი","სტეტოსკოპი"]}},
+{"id":"992f05ff","kind":"wrong_answer","note":"Jericho is in the Levant; all three distractors — Ur, Lagash, Kish — are the Mesopotamian cities the stem asks for","action":"retire"},
+{"id":"fe5e4bc3","kind":"wrong_answer","note":"a Bronze Age war chariot is not a \"კიბორგი\", and none of the four options names one","action":"retire"},
+{"id":"07e06a10","kind":"wrong_answer","note":"there is no \"Qesel culture\", and the name is half Latin inside a Georgian option","action":"retire"},
+{"id":"be467c05","kind":"contradiction","note":"names the Olmec the oldest American civilisation while 03eeb55f names Norte Chico, which is older and is the accepted answer","action":"retire"},
+{"id":"4488646b","kind":"doubtful","note":"\"ეზრახოვკა\" is not an archaeological term","action":"retire"},
+{"id":"a8b70e2f","kind":"doubtful","note":"there is no \"გრეფინი\" dating method","action":"retire"},
+{"id":"774e0b89","kind":"doubtful","note":"\"ობის ხე\" names nothing in archaeology and the answer describes fungal decay","action":"retire"},
+{"id":"a3a13c40","kind":"doubtful","note":"\"ოდეისის კულტურა\" is not a documented culture","action":"retire"},
+{"id":"5ff5de27","kind":"doubtful","note":"St Petersburg University was founded in 1724 by imperial decree, not by any archaeologist","action":"retire"},
+{"id":"502bdac5","kind":"doubtful","note":"\"ეპიმორფული\" is not a term for a copy of an artefact","action":"flag"},
+{"id":"7fb1db9e","kind":"doubtful","note":"\"არქეოტოპოგრაფია\" is not an established discipline name","action":"flag"},
+{"id":"a28c18dd","kind":"type_mismatch","note":"terra sigillata is a ware, not a technique, and the three distractors are dating methods","action":"flag"},
+{"id":"971d195a","kind":"ambiguous","note":"asks who Schliemann was and answers with his first name","action":"flag"},
+{"id":"76881c44","kind":"ambiguous","note":"the search for Atlantis has no datable start","action":"flag"}
+]

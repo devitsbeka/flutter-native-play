@@ -1,0 +1,16 @@
+[
+{"id":"d059852f","kind":"wrong_answer","note":"Zoro's hair is green; the red-haired One Piece swordsman is Shanks","fix":{"question_text":"რომელი პერსონაჟია ცნობილი მწვანე თმითა და სამი ხმლით?"}},
+{"id":"b8ae999c","kind":"wrong_answer","note":"the Bleach term is Shinigami; \"შიკიგამი\" is a different thing and \"სინოიგამი\" is a misspelling of the right answer","fix":{"question_text":"რა ჰქვია სულის მჟღავნებლებს ანიმეში Bleach?","correct_answer":"შინიგამი","incorrect_answers":["შიკიგამი","კუინსი","ჰოლოუ"]}},
+{"id":"17438c03","kind":"truncated_answer","note":"correct answer cut to \"გოგონა, რომელმაც\"","fix":{"correct_answer":"დროში მხტუნავი გოგო"}},
+{"id":"fd8c1416","kind":"grammar","note":"\"Sain Seiya\" is a typo for Saint Seiya","fix":{"question_text":"რა ჰქვია მეომრებს „Saint Seiya“-დან?"}},
+{"id":"2250e518","kind":"grammar","note":"\"შიშველ ფეხსაცმლიანი ჯინი\" is a broken back-translation of Barefoot Gen, and the stem asks for a series but answers a genre","fix":{"question_text":"რა ჟანრის მანგაა „ფეხშიშველა გენი“?","correct_answer":"ანტისაომარი მანგა","incorrect_answers":["ფანტასტიკა","რომანტიკა","კომედია"]}},
+{"id":"2f1815c5","kind":"type_mismatch","note":"stem asks which series it belongs to, options are demographics","fix":{"question_text":"რომელი დემოგრაფიული ჟანრისაა Fullmetal Alchemist?"}},
+{"id":"72d7367c","kind":"wrong_answer","note":"Deadpool does not appear in My Hero Academia; all four options are invented","action":"retire"},
+{"id":"59cd0f6e","kind":"wrong_answer","note":"\"ჩამპლუ\" is not an anime genre; 5ed96332 asks the same thing correctly","action":"retire"},
+{"id":"1318f100","kind":"broken_stem","note":"\"ბლექ მუსი\" names no film","action":"retire"},
+{"id":"7a34a7a6","kind":"doubtful","note":"\"იომი\" is not a term for right-to-left manga format","action":"flag"},
+{"id":"f744c103","kind":"doubtful","note":"\"მანგა თვალები\" is not a term of art and repeats the stem","action":"flag"},
+{"id":"2e595005","kind":"ambiguous","note":"alter egos appear across the medium; nothing marks Persona 4 as the answer","action":"flag"},
+{"id":"1e10df2c","kind":"ambiguous","note":"Gundam, offered as a distractor, is at least as famous for giant robots as Evangelion","action":"flag"},
+{"id":"c62f46e2","kind":"ambiguous","note":"\"the superhero anime series\" names no series","action":"flag"}
+]
