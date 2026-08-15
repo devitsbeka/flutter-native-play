@@ -10,7 +10,13 @@ plus a hand fact-check of the four Georgia-specific categories.
 765 rewritten, 207 flagged — the hand read of the other forty-one categories,
 which batch 1 explicitly did not cover.
 
-Together: **546 retired, 944 rewritten, 260 flagged**, leaving 7,757 questions
+**Batch 3** (`20260817120000_question_repair_ka_batch3.sql`): 5 retired. Batch 2
+standardised wording — one name written three ways became one name — and five
+of those rewrites collapsed a pair of questions onto the same stem. The
+duplicate resolution ran before those rewrites existed, so it could not have
+seen them. This batch retires the loser of each pair.
+
+Together: **551 retired, 944 rewritten, 260 flagged**, leaving 7,752 questions
 in production.
 
 Run `node scripts/audit-questions.mjs --lang ka` to reproduce the counts.

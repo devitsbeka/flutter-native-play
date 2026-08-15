@@ -140,3 +140,24 @@ UPDATE public.questions
    AND updated_at >= '2026-08-16'
    AND quality_status IN ('retired_ka_repair', 'repaired_ka', 'needs_review');
 ```
+
+
+## Batch 3 — the five collisions batch 2 created
+
+Batch 2 standardised wording, and five of its rewrites landed two questions on
+the same stem. The duplicate clustering ran before those rewrites existed, so
+it could not have seen them. `20260817120000_question_repair_ka_batch3.sql` is
+hand-written — five `UPDATE`s, each naming its survivor in a comment above it:
+
+```
+bdbbaa62 -> keep 06b8918f   Zarathustra: ნიცშე vs ფრიდრიხ ნიცშე
+841f1c6f -> keep 366affe2   founder of genetics: მენდელი vs გრეგორ მენდელი
+15d1709d -> keep 646b1e6b   which element is diamond — same stem, same answer
+3e2de5ef -> keep 6668b6e3   Saturn's rings — word-for-word identical
+8a2bb0db -> keep e97ae666   subfield of AI — near-identical
+```
+
+Rolling it back is the same statement with `updated_at >= '2026-08-17'`.
+
+If a later batch rewrites more stems, re-run the duplicate check **after** it
+is applied, not before — that is the gap this batch closes.
