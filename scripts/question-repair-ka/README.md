@@ -174,3 +174,39 @@ is the batch-2 statement with `updated_at >= '2026-08-17'`.
 **If a later pass rewrites question text, re-run this clustering afterwards.**
 Rewriting and de-duplicating in the same batch cannot work: the de-duplication
 sees the old text.
+
+
+## Batch 4 — the review queue, read
+
+Batches 1 and 2 left 260 questions at `quality_status = 'needs_review'` and in
+production. That status was never meant to be permanent: it marked a claim the
+pass could not verify, or a question with more than one defensible answer — not
+a question it had found wrong.
+
+```bash
+set -a && . ./.env && set +a
+python3 scripts/question-repair-ka/build-migration-4.py
+```
+
+Decisions are in `review-flagged.json`, one per question, each with the reason:
+
+| | | |
+|---|---:|---|
+| `retire` | 173 | the fact is wrong, the term is invented, or the stem cannot be repaired without inventing content |
+| `rewrite` | 51 | tighten the stem, swap the wrong answer that was as correct as the right one, or correct the answer |
+| `unflag` | 15 | sound on a second look |
+| `recategorise` | 7 | right question, wrong category |
+| `editor` | 17 | needs a Georgian specialist; left flagged and left in production |
+
+The script refuses to write unless every flagged question has exactly one
+decision, and it checks rewrites against **70/20** — the gameplay limits from
+`src/constants/questionQuality.ts`, not the card's render limits. A repair that
+overshot those would delete the question rather than fix it, because
+`isValidQuestionLength` drops it before a game ever sees it.
+
+The duplicate re-clustering from batch 3 was run again **after** these rewrites,
+before the migration was written. It caught one: tightening "who was the first
+emperor in history" to "who was Rome's first emperor" landed it word for word on
+`cff9e395`, which already asks that. That question is retired instead.
+
+Rolling back is the batch-2 statement with `updated_at >= '2026-08-19'`.

@@ -17,8 +17,16 @@ clustering ran *before* either rewrite existed, so it clustered text that is no
 longer in the bank. Re-clustering the live text turns up 31 groups that now ask
 the same question and take the same answer. Each group keeps one row.
 
-Together: **588 retired, 944 rewritten, 260 flagged**, leaving 7,715 questions
-in production.
+**Batch 4** (`20260819120000_question_review_ka.sql`): the review queue, read.
+Batches 1 and 2 left 260 questions at `needs_review` and in production — claims
+that pass could not verify, not claims it found wrong. All 260 were read: 173
+retired, 51 repaired, 15 sound after a second look, 7 moved to the right
+category, and **17 left flagged** for a Georgian editor. Three questions the
+review reached through a flagged one were retired with them.
+
+Together: **761 retired, 995 rewritten, 17 flagged**. With the 100 image
+questions added in `20260818120000_image_questions_ka.sql`, that leaves **7,642
+questions in production**.
 
 Run `node scripts/audit-questions.mjs --lang ka` to reproduce the counts.
 
