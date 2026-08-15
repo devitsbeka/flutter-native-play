@@ -39,6 +39,34 @@ const ALL_PRODUCT_IDS: string[] = [
   ...Object.values(GEM_PACK_PRODUCTS),
 ];
 
+// A StoreKit query that never comes back is a spinner that never stops.
+//
+// getOfferings and getProducts both reach StoreKit, and StoreKit does not
+// promise to answer: with no App Store account on the device, no network, or
+// a storefront it cannot resolve, the request can sit open indefinitely. The
+// plugin surfaces that as a promise that neither resolves nor rejects, so
+// every `finally` downstream — including the one that clears `purchasing` —
+// simply never runs.
+//
+// 15s is past any healthy fetch and short enough that a stuck one reads as a
+// failure rather than as the app being broken. Deliberately not applied to
+// purchasePackage/purchaseStoreProduct: those are open for as long as the
+// user takes with the payment sheet, and Face ID plus a password prompt is
+// legitimately longer than this.
+const STORE_QUERY_TIMEOUT_MS = 15_000;
+
+function withTimeout<T>(work: Promise<T>, label: string): Promise<T> {
+  return Promise.race([
+    work,
+    new Promise<T>((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`${label} did not answer within ${STORE_QUERY_TIMEOUT_MS}ms`)),
+        STORE_QUERY_TIMEOUT_MS,
+      ),
+    ),
+  ]);
+}
+
 export interface IAPProduct {
   productId: string;
   title: string;
@@ -75,168 +103,188 @@ async function loadPurchasesPlugin() {
   return null;
 }
 
+// The store is configured once per process, not once per component.
+//
+// `useInAppPurchases` is called by useStorePrice, which is called by every
+// ShopItemCard as well as the sidebar and the carousel — so opening the shop
+// mounted six or more copies of this hook, each running its own effect and
+// each calling configure() and getOfferings() concurrently. RevenueCat
+// documents configure() as a once-per-launch call; racing it against its own
+// in-flight offerings fetch is undefined, and the observed shape of that was
+// a promise that never settled and a buy button that spun forever.
+//
+// One shared promise, one shared result, and every hook instance reads from
+// it. The promise is cleared on failure so a later mount can retry rather
+// than inheriting a permanent error.
+let storeInit: Promise<IAPProduct[]> | null = null;
+let storeProducts: IAPProduct[] = [];
+const storeSubscribers = new Set<(p: IAPProduct[]) => void>();
+
+function toIAPProduct(product: any): IAPProduct {
+  return {
+    productId: product.identifier,
+    title: product.title || product.identifier,
+    description: product.description || "",
+    price: product.priceString || "",
+    priceAmountMicros: Math.round((product.price || 0) * 1000000),
+    priceCurrencyCode: product.currencyCode || "USD",
+  };
+}
+
+async function initStore(): Promise<IAPProduct[]> {
+  if (!Capacitor.isNativePlatform()) return [];
+
+  const plugin = await loadPurchasesPlugin();
+  if (!plugin) return [];
+
+  // Get platform-specific API key.
+  //
+  // No placeholder fallback. It used to default to "appl_CONFIGURE_IN_ENV",
+  // which configure() accepts happily — then getOfferings() returns nothing
+  // and the paywall renders with no products at all. The only symptom was a
+  // console warning, so the failure looked like "the store is empty today"
+  // rather than "nobody set the key".
+  const platform = Capacitor.getPlatform();
+  const apiKey =
+    platform === "ios"
+      ? import.meta.env.VITE_REVENUECAT_IOS_API_KEY
+      : import.meta.env.VITE_REVENUECAT_ANDROID_API_KEY;
+
+  if (!apiKey) {
+    console.error(
+      `[iap] No RevenueCat key for ${platform}. Purchases are disabled. ` +
+        `Set VITE_REVENUECAT_${platform.toUpperCase()}_API_KEY.`,
+    );
+    return [];
+  }
+
+  // Verbose purchase logging is for development. In a release build it writes
+  // transaction internals to the device console.
+  await plugin.setLogLevel({
+    level: import.meta.env.DEV ? (LOG_LEVEL?.DEBUG ?? "DEBUG") : (LOG_LEVEL?.ERROR ?? "ERROR"),
+  });
+  await plugin.configure({ apiKey });
+
+  const offerings = await withTimeout(plugin.getOfferings(), "getOfferings");
+
+  const mapped: IAPProduct[] = [];
+  const add = (product: any) => {
+    if (product && !mapped.find((p) => p.productId === product.identifier)) {
+      mapped.push(toIAPProduct(product));
+    }
+  };
+
+  for (const pkg of offerings?.current?.availablePackages ?? []) add(pkg.storeProduct);
+  for (const key of Object.keys(offerings?.all ?? {})) {
+    for (const pkg of offerings.all[key].availablePackages ?? []) add(pkg.storeProduct);
+  }
+
+  // Offerings came back with nothing in them. Ask StoreKit directly for the
+  // ids we know about, rather than rendering a shop with no prices.
+  //
+  // An empty offering is a dashboard state — a product not added to a
+  // package, a package pointing at the wrong id, an offering that isn't
+  // current — and none of it is visible or fixable from the device. The
+  // consequence without this was not a blank price but a *wrong* one:
+  // useStorePrice falls back to the figure compiled into the bundle.
+  if (mapped.length === 0) {
+    console.warn(
+      "[iap] No offerings returned any products. Querying StoreKit directly " +
+        "for known ids. Check the default offering in RevenueCat.",
+    );
+    try {
+      const direct = await withTimeout(
+        plugin.getProducts({ productIdentifiers: ALL_PRODUCT_IDS }),
+        "getProducts",
+      );
+      for (const product of direct?.products ?? []) add(product);
+    } catch (e) {
+      console.error("[iap] Direct getProducts failed:", e);
+    }
+  }
+
+  console.log("RevenueCat initialized, products:", mapped);
+
+  // Nothing from offerings *and* nothing from StoreKit means the store itself
+  // is returning no products for this build. Say so once, plainly, because
+  // every downstream symptom (fallback prices, dead buy buttons) looks like an
+  // app bug rather than a store one.
+  if (mapped.length === 0) {
+    console.error(
+      `[iap] StoreKit returned zero products for ${ALL_PRODUCT_IDS.length} ` +
+        `known ids on ${platform}: ${ALL_PRODUCT_IDS.join(", ")}. Purchases ` +
+        "cannot work in this build. Check: Paid Applications agreement active, " +
+        "product ids exist and are at least 'Ready to Submit', bundle id " +
+        "matches, and that newly created products have finished propagating.",
+    );
+  }
+
+  return mapped;
+}
+
+function ensureStore(): Promise<IAPProduct[]> {
+  if (!storeInit) {
+    storeInit = initStore()
+      .then((p) => {
+        storeProducts = p;
+        storeSubscribers.forEach((fn) => fn(p));
+        return p;
+      })
+      .catch((e) => {
+        console.error("[iap] Store initialization failed:", e);
+        // Cleared so a later mount retries. A timed-out first fetch on a bad
+        // connection should not disable the shop for the rest of the session.
+        storeInit = null;
+        return [];
+      });
+  }
+  return storeInit;
+}
+
 export function useInAppPurchases() {
   const { user } = useAuth();
-  const [products, setProducts] = useState<IAPProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<IAPProduct[]>(storeProducts);
+  const [loading, setLoading] = useState(storeProducts.length === 0);
   const [purchasing, setPurchasing] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(storeProducts.length > 0);
 
-  // Initialize the plugin and fetch products
   useEffect(() => {
-    const initialize = async () => {
-      if (!Capacitor.isNativePlatform()) {
-        setLoading(false);
-        return;
-      }
+    let alive = true;
+    storeSubscribers.add(setProducts);
 
+    ensureStore().then((p) => {
+      if (!alive) return;
+      setProducts(p);
+      setIsInitialized(p.length > 0);
+      setLoading(false);
+    });
+
+    return () => {
+      alive = false;
+      storeSubscribers.delete(setProducts);
+    };
+  }, []);
+
+  // Identify the user to RevenueCat once the store is up. Separate from
+  // initialization because sign-in happens on its own schedule, and a logIn
+  // failure must not take the product catalog down with it.
+  useEffect(() => {
+    if (!user?.id || !Capacitor.isNativePlatform()) return;
+    let alive = true;
+    ensureStore().then(async () => {
+      if (!alive) return;
       try {
         const plugin = await loadPurchasesPlugin();
-        if (!plugin) {
-          setLoading(false);
-          return;
-        }
-
-        // Get platform-specific API key.
-        //
-        // No placeholder fallback. It used to default to
-        // "appl_CONFIGURE_IN_ENV", which configure() accepts happily — then
-        // getOfferings() returns nothing and the paywall renders with no
-        // products at all. The only symptom was a console warning, so the
-        // failure looked like "the store is empty today" rather than "nobody
-        // set the key".
-        const platform = Capacitor.getPlatform();
-        const apiKey =
-          platform === "ios"
-            ? import.meta.env.VITE_REVENUECAT_IOS_API_KEY
-            : import.meta.env.VITE_REVENUECAT_ANDROID_API_KEY;
-
-        if (!apiKey) {
-          console.error(
-            `[iap] No RevenueCat key for ${platform}. Purchases are disabled. ` +
-            `Set VITE_REVENUECAT_${platform.toUpperCase()}_API_KEY.`,
-          );
-          setLoading(false);
-          return;
-        }
-
-        // Verbose purchase logging is for development. In a release build it
-        // writes transaction internals to the device console.
-        await plugin.setLogLevel({
-          level: import.meta.env.DEV ? (LOG_LEVEL?.DEBUG ?? "DEBUG") : (LOG_LEVEL?.ERROR ?? "ERROR"),
-        });
-        await plugin.configure({ apiKey });
-
-        // If user is logged in, identify them in RevenueCat
-        if (user?.id) {
-          await plugin.logIn({ appUserID: user.id });
-        }
-
-        // Fetch offerings (products are organized in offerings)
-        const offerings = await plugin.getOfferings();
-        
-        // Map offerings packages to our IAPProduct interface
-        const mappedProducts: IAPProduct[] = [];
-        
-        if (offerings?.current?.availablePackages) {
-          for (const pkg of offerings.current.availablePackages) {
-            const product = pkg.storeProduct;
-            if (product) {
-              mappedProducts.push({
-                productId: product.identifier,
-                title: product.title || product.identifier,
-                description: product.description || "",
-                price: product.priceString || "",
-                priceAmountMicros: Math.round((product.price || 0) * 1000000),
-                priceCurrencyCode: product.currencyCode || "USD",
-              });
-            }
-          }
-        }
-
-        // Also check all offerings for our specific products
-        if (offerings?.all) {
-          for (const offeringKey of Object.keys(offerings.all)) {
-            const offering = offerings.all[offeringKey];
-            for (const pkg of offering.availablePackages || []) {
-              const product = pkg.storeProduct;
-              if (product && !mappedProducts.find(p => p.productId === product.identifier)) {
-                mappedProducts.push({
-                  productId: product.identifier,
-                  title: product.title || product.identifier,
-                  description: product.description || "",
-                  price: product.priceString || "",
-                  priceAmountMicros: Math.round((product.price || 0) * 1000000),
-                  priceCurrencyCode: product.currencyCode || "USD",
-                });
-              }
-            }
-          }
-        }
-
-        // Offerings came back with nothing in them. Ask StoreKit directly for
-        // the ids we know about, rather than rendering a shop with no prices.
-        //
-        // An empty offering is a dashboard state — a product not added to a
-        // package, a package pointing at the wrong id, an offering that isn't
-        // current — and none of it is visible or fixable from the device. The
-        // consequence without this was not a blank price but a *wrong* one:
-        // useStorePrice falls back to the figure compiled into the bundle, and
-        // for a Georgian user that fallback is 2.75x the USD number rendered
-        // as ₾. An invented price next to a real App Store charge is exactly
-        // what guideline 2.3.1 rejects for.
-        if (mappedProducts.length === 0) {
-          console.warn(
-            "[iap] No offerings returned any products. Querying StoreKit " +
-              "directly for known ids. Check the default offering in RevenueCat.",
-          );
-          try {
-            const direct = await plugin.getProducts({
-              productIdentifiers: ALL_PRODUCT_IDS,
-            });
-            for (const product of direct?.products ?? []) {
-              mappedProducts.push({
-                productId: product.identifier,
-                title: product.title || product.identifier,
-                description: product.description || "",
-                price: product.priceString || "",
-                priceAmountMicros: Math.round((product.price || 0) * 1000000),
-                priceCurrencyCode: product.currencyCode || "USD",
-              });
-            }
-          } catch (e) {
-            console.error("[iap] Direct getProducts failed:", e);
-          }
-        }
-
-        setProducts(mappedProducts);
-        setIsInitialized(true);
-        console.log("RevenueCat initialized, products:", mappedProducts);
-
-        // Nothing from offerings *and* nothing from StoreKit means the store
-        // itself is returning no products for this build — an unsigned Paid
-        // Applications agreement, ids that don't exist in App Store Connect,
-        // or a bundle id that doesn't match. Say so once, plainly, because
-        // every downstream symptom (fallback prices, dead buy buttons) looks
-        // like an app bug rather than a store one.
-        if (mappedProducts.length === 0) {
-          console.error(
-            "[iap] StoreKit returned zero products for " +
-              `${ALL_PRODUCT_IDS.length} known ids on ${platform}. Purchases ` +
-              "cannot work in this build. Check: Paid Applications agreement " +
-              "active in App Store Connect, product ids exist and are at " +
-              "least 'Ready to Submit', and the bundle id matches.",
-          );
-        }
-      } catch (error) {
-        console.error("Failed to initialize IAP:", error);
-      } finally {
-        setLoading(false);
+        await plugin?.logIn({ appUserID: user.id });
+      } catch (e) {
+        console.error("[iap] logIn failed:", e);
       }
+    });
+    return () => {
+      alive = false;
     };
-
-    initialize();
   }, [user?.id]);
+
 
   // Purchase a product
   const purchase = useCallback(async (productId: string): Promise<PurchaseResult> => {
@@ -259,7 +307,7 @@ export function useInAppPurchases() {
       }
 
       // Get offerings to find the package for this product
-      const offerings = await plugin.getOfferings();
+      const offerings = await withTimeout(plugin.getOfferings(), "getOfferings");
       let targetPackage = null;
 
       // Search through all offerings for the product
@@ -321,7 +369,10 @@ export function useInAppPurchases() {
         // was a buy button that spun forever or took the app down with it,
         // with nothing logged, because the promise neither resolved nor
         // rejected.
-        const found = await plugin.getProducts({ productIdentifiers: [productId] });
+        const found = await withTimeout(
+          plugin.getProducts({ productIdentifiers: [productId] }),
+          "getProducts",
+        );
         const storeProduct = found?.products?.find(
           (p: any) => p.identifier === productId,
         );
