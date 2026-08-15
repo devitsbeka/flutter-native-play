@@ -24,15 +24,57 @@ interface SupabaseStorageAdapter {
   removeItem(key: string): Promise<void> | void;
 }
 
+/**
+ * Read-through cache in front of UserDefaults.
+ *
+ * supabase-js reads the session out of storage to attach a token, and it does
+ * that per request rather than once — so on native every read was a round trip
+ * across the Capacitor bridge. A seven-minute session was measured at 356
+ * `Preferences.get` crossings for a value that changes only when the token
+ * refreshes, roughly hourly.
+ *
+ * That rate is under one per second, so this is not a stall and was not
+ * blocking anything: it is waste, on a serial queue shared with every other
+ * plugin, and it costs battery for no benefit.
+ *
+ * Nothing outside this module writes these keys, so the cache cannot go stale
+ * behind our back: supabase-js is the only writer, and it writes through
+ * `setItem`/`removeItem` below.
+ *
+ * `inFlight` is separate from `cache` and matters on the first read, when a
+ * burst of concurrent callers would otherwise each open their own bridge call
+ * for the same key before any of them had an answer to cache.
+ */
+const cache = new Map<string, string | null>();
+const inFlight = new Map<string, Promise<string | null>>();
+
 const preferencesAdapter: SupabaseStorageAdapter = {
   async getItem(key) {
-    const { value } = await Preferences.get({ key });
-    return value ?? null;
+    if (cache.has(key)) return cache.get(key) ?? null;
+
+    const pending = inFlight.get(key);
+    if (pending) return pending;
+
+    const read = Preferences.get({ key })
+      .then(({ value }) => {
+        const resolved = value ?? null;
+        cache.set(key, resolved);
+        return resolved;
+      })
+      .finally(() => {
+        inFlight.delete(key);
+      });
+
+    inFlight.set(key, read);
+    return read;
   },
   async setItem(key, value) {
+    // Cache first, so a read racing this write cannot serve the old token.
+    cache.set(key, value);
     await Preferences.set({ key, value });
   },
   async removeItem(key) {
+    cache.set(key, null);
     await Preferences.remove({ key });
   },
 };
