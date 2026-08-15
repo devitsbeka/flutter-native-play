@@ -1,31 +1,28 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Loader2, UserMinus, UserPlus } from "lucide-react";
+import { Crown, Loader2, UserMinus } from "lucide-react";
 import { useVipStatus } from "@/contexts/VipContext";
 import { useFriends } from "@/hooks/useFriends";
 import { useProSeats } from "@/hooks/useProSeats";
 import { useLanguage } from "@/contexts/LanguageContext";
+import crownIcon from "@/assets/crown-icon.png";
 
 /**
  * Give your PRO to a friend.
  *
- * Friends PRO carries five seats and is the only tier that does — solo PRO is
- * one subscription for one player, which is what its name says and what its
- * price buys. The count shown here is only for display: `grant_pro_seat`
+ * PRO carries one seat, Friends PRO five — the benefit the tier cards
+ * advertise. The seat count shown here is only for display: `grant_pro_seat`
  * reads the allowance from the paid subscription itself and refuses past it,
  * so a stale number on screen cannot turn into an extra seat.
  *
- * The whole section stays out of the way for anyone with no seats, which is
- * every solo subscriber and everyone who is not subscribed at all. It briefly
- * offered solo PRO a single seat, and "0 of 1 seats used" turned out to be a
- * whole panel for one invitation.
- *
- * Mirrors pro_seat_allowance() in 20260815120000_solo_pro_has_no_seats.sql;
- * proSeats.test.ts reads the number back out of the SQL so the two cannot
- * drift.
+ * Rendered only for an active subscriber, because there is nothing to say to
+ * anyone else — the paywall is a screen away and this would just be a locked
+ * panel taking up room on it.
  */
 
 const SEATS_BY_TIER: Record<string, number> = {
+  pro: 1,
+  standard: 1,
   pro_plus: 5,
   pro_master: 5,
 };
@@ -64,10 +61,16 @@ export function ProSeatsSection() {
   return (
     <div className="rounded-2xl p-4 bg-white/70 dark:bg-white/5 border border-purple-200/60">
       <div className="flex items-center gap-2 mb-1">
-        <Crown className="w-5 h-5 text-purple-600" />
+        <img src={crownIcon} alt="" className="w-6 h-6 object-contain" draggable={false} />
         <h3 className="font-bold text-base">{t("extra.proSeatsTitle")}</h3>
       </div>
-      <p className="text-sm text-muted-foreground mb-3">
+      {/* What the seat is and what happens to it, before the button that
+          spends one. The card used to say "0 of 1 seats used" and nothing
+          else, which names a quantity without saying what a seat does. */}
+      <p className="text-sm text-muted-foreground">
+        {t("extra.proSeatsHow")}
+      </p>
+      <p className="text-sm font-semibold mb-3 mt-1">
         {t("extra.proSeatsSubtitle", { used: seatsUsed, total: seatsTotal })}
       </p>
 
@@ -97,7 +100,15 @@ export function ProSeatsSection() {
             ))}
           </ul>
 
-          {seatsFree > 0 && (
+          {/* Nobody to give it to yet. Said here rather than only after the
+              button is pressed, so the answer arrives before the dead end. */}
+          {seatsFree > 0 && grantable.length === 0 && !picking && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              {t("extra.proSeatsNoFriends")}
+            </p>
+          )}
+
+          {seatsFree > 0 && grantable.length > 0 && (
             <div className="mt-3">
               {picking ? (
                 <div className="max-h-48 overflow-y-auto flex flex-col gap-1">
@@ -127,7 +138,7 @@ export function ProSeatsSection() {
                   onClick={() => setPicking(true)}
                   className="flex items-center gap-2 text-sm font-bold text-purple-700 dark:text-purple-300"
                 >
-                  <UserPlus className="w-4 h-4" />
+                  <Crown className="w-4 h-4" />
                   {t("extra.proSeatsGive", { count: seatsFree })}
                 </button>
               )}

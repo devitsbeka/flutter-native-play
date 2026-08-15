@@ -71,19 +71,9 @@ BEGIN
     format('SELECT public.grant_pro_seat(%L::uuid)', f1),
     'a player with no subscription cannot grant a seat');
 
-  -- 2. Solo PRO is one subscription for one player. It briefly carried a
-  --    single seat; the tier means what its name says, and five seats are
-  --    what Friends PRO is for (20260815120000_solo_pro_has_no_seats).
+  -- 2. A PRO subscriber gets exactly one.
   PERFORM pg_temp.give_sub(solo, 'pro', 30);
   PERFORM pg_temp.as_user(solo);
-  PERFORM pg_temp.must_fail(
-    format('SELECT public.grant_pro_seat(%L::uuid)', f1),
-    'solo PRO has no seat to give');
-
-  -- 3. Friends PRO grants, and what the holder receives is real PRO marked as
-  --    a seat rather than a purchase.
-  PERFORM pg_temp.give_sub(boss, 'pro_plus', 30);
-  PERFORM pg_temp.as_user(boss);
   PERFORM public.grant_pro_seat(f1);
 
   SELECT vip_tier, purchase_platform INTO v_tier, v_platform
@@ -91,40 +81,45 @@ BEGIN
   PERFORM pg_temp.must_equal(v_tier, 'pro', 'seat holder is PRO');
   PERFORM pg_temp.must_equal(v_platform, 'seat', 'seat holder row is marked as a seat');
 
-  -- 4. A seat confers no seats of its own. Without this one subscription
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.grant_pro_seat(%L::uuid)', f2),
+    'PRO cannot grant a second seat');
+
+  -- 3. A seat confers no seats of its own. Without this one subscription
   --    chains into unlimited PRO.
   PERFORM pg_temp.as_user(f1);
   PERFORM pg_temp.must_fail(
     format('SELECT public.grant_pro_seat(%L::uuid)', f2),
     'a seat holder cannot grant seats onward');
 
-  -- 5. Nobody grants themselves anything.
-  PERFORM pg_temp.as_user(boss);
+  -- 4. Nobody grants themselves anything.
+  PERFORM pg_temp.as_user(solo);
   PERFORM pg_temp.must_fail(
-    format('SELECT public.grant_pro_seat(%L::uuid)', boss),
+    format('SELECT public.grant_pro_seat(%L::uuid)', solo),
     'cannot grant a seat to yourself');
 
-  -- 6. Anonymous callers are refused. This is the shape of the hole in
+  -- 5. Anonymous callers are refused. This is the shape of the hole in
   --    process_referral_reward, which anon could execute.
   PERFORM set_config('test.uid', '', false);
   PERFORM pg_temp.must_fail(
     format('SELECT public.grant_pro_seat(%L::uuid)', f3),
     'anonymous caller cannot grant a seat');
 
-  -- 7. Five is the whole allowance, and the sixth is refused. f1 already
-  --    holds one from step 3, so four more fill it.
+  -- 6. Friends PRO carries five, and refuses the sixth.
+  PERFORM pg_temp.give_sub(boss, 'pro_plus', 30);
   PERFORM pg_temp.as_user(boss);
   PERFORM public.grant_pro_seat(f2);
   PERFORM public.grant_pro_seat(f3);
   PERFORM public.grant_pro_seat(f4);
   PERFORM public.grant_pro_seat(f5);
+  PERFORM public.grant_pro_seat(f6);
 
   SELECT count(*) INTO v_live FROM public.pro_seats
   WHERE granter_id = boss AND revoked_at IS NULL;
   PERFORM pg_temp.must_equal(v_live, 5, 'Friends PRO grants five seats');
 
   PERFORM pg_temp.must_fail(
-    format('SELECT public.grant_pro_seat(%L::uuid)', f6),
+    'SELECT public.grant_pro_seat(''50000000-0000-0000-0000-000000000009''::uuid)',
     'Friends PRO cannot grant a sixth seat');
 
   -- 7. A paying player is never overwritten by a seat.
@@ -139,23 +134,20 @@ BEGIN
   SELECT expires_at INTO v_exp FROM public.vip_subscriptions WHERE user_id = f2;
   PERFORM pg_temp.must_equal(v_exp, v_boss_exp, 'a renewal extends every live seat');
 
-  -- 9. Downgrading to solo PRO takes every seat back, because solo carries
-  --    none. It used to keep the oldest one.
+  -- 9. Downgrade to PRO keeps the oldest seat and revokes the newest four.
   PERFORM pg_temp.give_sub(boss, 'pro', 60);
   SELECT count(*) INTO v_live FROM public.pro_seats
   WHERE granter_id = boss AND revoked_at IS NULL;
-  PERFORM pg_temp.must_equal(v_live, 0, 'downgrading to solo leaves no live seat');
+  PERFORM pg_temp.must_equal(v_live, 1, 'downgrade leaves one live seat');
 
-  SELECT expires_at INTO v_exp FROM public.vip_subscriptions WHERE user_id = f5;
+  SELECT count(*) INTO v_live FROM public.pro_seats
+  WHERE granter_id = boss AND holder_id = f2 AND revoked_at IS NULL;
+  PERFORM pg_temp.must_equal(v_live, 1, 'the seat kept is the oldest one');
+
+  SELECT expires_at INTO v_exp FROM public.vip_subscriptions WHERE user_id = f6;
   PERFORM pg_temp.must_equal(v_exp <= now(), true, 'a revoked seat holder loses PRO');
-  SELECT expires_at INTO v_exp FROM public.vip_subscriptions WHERE user_id = f2;
-  PERFORM pg_temp.must_equal(v_exp <= now(), true, 'and so does the oldest one');
 
-  -- 10. The subscription ending takes any seats with it. Back to Friends PRO
-  --     first, since solo has none to lose.
-  PERFORM pg_temp.give_sub(boss, 'pro_plus', 60);
-  PERFORM pg_temp.as_user(boss);
-  PERFORM public.grant_pro_seat(f6);
+  -- 10. The subscription ending takes its seats with it.
   UPDATE public.vip_subscriptions
   SET expires_at = now() - interval '1 minute' WHERE user_id = boss;
 
@@ -163,13 +155,11 @@ BEGIN
   WHERE granter_id = boss AND revoked_at IS NULL;
   PERFORM pg_temp.must_equal(v_live, 0, 'an expired subscription revokes every seat');
 
-  SELECT expires_at INTO v_exp FROM public.vip_subscriptions WHERE user_id = f6;
+  SELECT expires_at INTO v_exp FROM public.vip_subscriptions WHERE user_id = f2;
   PERFORM pg_temp.must_equal(v_exp <= now(), true, 'the last seat holder loses PRO too');
 
   -- 11. A granter can take a seat back by hand.
-  PERFORM pg_temp.give_sub(boss, 'pro_plus', 60);
-  PERFORM pg_temp.as_user(boss);
-  PERFORM public.grant_pro_seat(f1);
+  PERFORM pg_temp.as_user(solo);
   PERFORM public.revoke_pro_seat(f1);
   SELECT expires_at INTO v_exp FROM public.vip_subscriptions WHERE user_id = f1;
   PERFORM pg_temp.must_equal(v_exp <= now(), true, 'revoking a seat ends the holder''s PRO');

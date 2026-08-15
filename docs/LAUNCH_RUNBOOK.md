@@ -114,23 +114,21 @@ and the app renders both with a "/month" label. The prices and benefit lines
 live in `ProBannerReel` (`src/components/shop/MobileProCarousel.tsx`), which
 is the single set of PRO cards the app draws.
 
-What separates them is seats. Solo PRO is one subscription for one player;
-Friends PRO carries five seats its owner can give to friends, and each seat is
-full PRO for as long as the subscription that paid for it lasts
-(`20260815090000_pro_seats.sql`, narrowed to Friends PRO only by
-`20260815120000_solo_pro_has_no_seats.sql`). Friends PRO also carries daily
-rewards. The App Store descriptions have to match:
+What separates them is seats. PRO carries one seat and Friends PRO five: a
+seat is full PRO for a friend, lasting as long as the subscription that paid
+for it, revocable at any time (`20260815090000_pro_seats.sql`). Friends PRO
+also carries daily rewards. The App Store descriptions have to match:
 
 | Product | Description |
 |---|---|
-| `io.mytrivia.pro.monthly` | `Double XP, no ads and a VIP badge.` |
+| `io.mytrivia.pro.monthly` | `Double XP, no ads, a VIP badge, and PRO for 1 friend.` |
 | `io.mytrivia.proplus.monthly` | `Double XP, no ads, VIP badge, daily rewards, and PRO for 5 friends.` |
 
 That text is shown at the moment of purchase, so a benefit listed there and
 absent from the app is guideline 2.3.1 — which is why the seat allowance, the
 panel that draws the seats and the benefit line on each card are held together
-by `src/__tests__/proSeats.test.ts`. Do not describe friends on the solo tier:
-it has no seats, and the panel does not render for it.
+by `src/__tests__/proSeats.test.ts`. Change the number of seats a tier carries
+and that test tells you every place the number has to change with it.
 Making either one yearly puts a price on screen that doesn't match what Apple
 charges, which is a guideline 2.3.1 rejection on the same screen that shows
 it.
