@@ -137,19 +137,13 @@ export function MultiplayerGameScreenV2() {
     setTimeRemaining(timePerQuestion);
   }, [currentQuestionIndex, timePerQuestion]);
 
-  // Handle answer result
+  // The result landing is now only a backstop: handleAnswer reveals and plays
+  // the sound the moment the player taps. This still catches the one path that
+  // does not go through it — a reveal driven by the server rather than by this
+  // device — and re-playing is guarded by answerRevealed already being true.
   useEffect(() => {
-    if (lastQuestionResult) {
-      setAnswerRevealed(true);
-      if (lastQuestionResult.correct) {
-        playSound("correct-answer");
-        vibrate(50);
-      } else {
-        playSound("wrong-answer");
-        vibrate([50, 50, 50]);
-      }
-    }
-  }, [lastQuestionResult, playSound, vibrate]);
+    if (lastQuestionResult) setAnswerRevealed(true);
+  }, [lastQuestionResult]);
 
   const handleAnswer = useCallback((answer: string) => {
     // selectedAnswer guard: the timer can still fire handleAnswer("") after a
@@ -159,8 +153,30 @@ export function MultiplayerGameScreenV2() {
     // Play tap sound for True/False selection
     playSound("button-click");
     vibrate(30);
+
+    // Reveal now, from what this device already knows.
+    //
+    // The colours used to wait for lastQuestionResult, which submitAnswer sets
+    // only after four sequential round trips: the first-correct claim, the
+    // player_answers insert, the score RPC and the participant update. On a
+    // phone that is most of a second of a button that looks unpressed, and it
+    // is worst on a correct answer, which is the one that runs all four.
+    //
+    // Nothing is being trusted here that was not already: correctAnswer is in
+    // the question this device is holding, and getAnswerState has always
+    // compared against it. The writes still decide the score — this only stops
+    // the player waiting on them to find out what they already picked.
+    setAnswerRevealed(true);
+    if (answer === currentQuestion?.correctAnswer) {
+      playSound("correct-answer");
+      vibrate(50);
+    } else {
+      playSound("wrong-answer");
+      vibrate([50, 50, 50]);
+    }
+
     submitAnswer(answer, timeRemaining);
-  }, [answerRevealed, selectedAnswer, submitAnswer, timeRemaining, playSound, vibrate]);
+  }, [answerRevealed, selectedAnswer, submitAnswer, timeRemaining, playSound, vibrate, currentQuestion]);
 
   const handleNext = useCallback(() => {
     nextQuestion();

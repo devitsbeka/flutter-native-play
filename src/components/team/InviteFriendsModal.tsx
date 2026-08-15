@@ -284,8 +284,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
       // when participant is added to room_participants table
       
       setSentRequests(prev => new Set([...prev, userId]));
+      // "მოიწვიე მეგობარი თამაშში". This is that, and until now nothing here
+      // told the missions so.
+      void trackMissionEvent("invited_to_room", 1);
       toast.success(t("extra.inviteSent"));
-      
+
       // Auto-close modal after brief delay for visual feedback
       setTimeout(() => {
         handleClose();
