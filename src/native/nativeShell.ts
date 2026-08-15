@@ -9,7 +9,7 @@ import { Capacitor } from "@capacitor/core";
  */
 
 /** The page wash the app paints behind everything (see index.html theme-color). */
-const APP_BACKGROUND = "#f8e6ff";
+const APP_BACKGROUND = "#fbfaf8";
 
 let statusBarReady = false;
 

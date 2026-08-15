@@ -212,14 +212,20 @@
     overflow-y: scroll;
     overscroll-behavior: none;
     overscroll-behavior-y: none;
-    /* The wash, in the one place nothing else paints: behind the status bar
-       on a home-screen install, and in the rubber-band gap at either end of a
-       scroll. Body is transparent and every screen paints its own background,
-       so this is only ever seen at the edges — where it used to be the
-       browser's white. Same value as index.html's theme-color and
-       nativeShell's APP_BACKGROUND; those three are the app's page wash and
-       have to move together. */
-    background-color: #f8e6ff;
+    /* Seen in the one place nothing else paints: behind the status bar, and
+       in the rubber-band gap at either end of a scroll.
+
+       It is the header colour, not the page wash. iOS reserves the status bar
+       area and paints it from here, and what sits directly under it on nearly
+       every screen is a header — PageHeader, the home bar, a modal's title
+       row — all of them bg-background. Filled with the lavender wash instead,
+       the strip read as a band of some other page above the header rather
+       than as part of it.
+
+       The token, not a literal, so it follows the theme. index.html's
+       theme-color and nativeShell's APP_BACKGROUND are the same colour by
+       hand and have to move with it. */
+    background-color: hsl(var(--background));
   }
 
   body {
