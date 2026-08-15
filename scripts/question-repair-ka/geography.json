@@ -1,0 +1,13 @@
+[
+{"id":"9c2bcf9e","kind":"grammar","note":"\"იზის\" is a typo for \"გიზის\" (Giza)","fix":{"question_text":"გიზის დიდი პირამიდა სად მდებარეობს?"}},
+{"id":"d8eb0e60","kind":"broken_stem","note":"circular — the equator is 0 degrees latitude, so the stem asks which latitude crosses itself","action":"retire"},
+{"id":"1745e79b","kind":"wrong_answer","note":"the Black Sea does not lie between the North and Caspian seas; the geography of the stem is garbled","action":"retire"},
+{"id":"2e11e605","kind":"broken_stem","note":"the answer \"აღმოსავლეთ\" is a bare adjective, and the stem never says it is asking for the East China Sea","action":"retire"},
+{"id":"0da72e80","kind":"ambiguous","note":"\"the number of deserts on Earth\" has no agreed figure; every option is defensible","action":"retire"},
+{"id":"eb7e7e0e","kind":"broken_stem","note":"trick stem whose answer is \"there is no such island\" — Canberra is not on an island, so the question has no subject","action":"retire"},
+{"id":"2d276833","kind":"broken_stem","note":"same trick shape — Ethiopia is not on an island, so \"არავითარი\" is the answer to a question that was never asked","action":"retire"},
+{"id":"6343e3a0","kind":"broken_stem","note":"noun phrase ending in a colon rather than a question","fix":{"question_text":"რომელია მსოფლიოს უდიდესი მარილიანი ტბა?"}},
+{"id":"f6293cc1","kind":"grammar","note":"the distractor is spelt \"ნილი\"; the river is \"ნილოსი\" everywhere else in the bank. The stem is also loose — Brazil borders ten countries and several rivers form parts of that border","fix":{"incorrect_answers":["ნილოსი","მისისიპი","დუნაი"]},"action":"flag"},
+{"id":"53cd8996","kind":"contradiction","note":"answers \"roof of the world\" as the Pamirs; 36ffd950 answers the same epithet as the Tibetan plateau. Both are used, so one of the two has to go or a player is marked wrong for the right answer","action":"flag"},
+{"id":"36ffd950","kind":"contradiction","note":"see 53cd8996","action":"flag"}
+]
