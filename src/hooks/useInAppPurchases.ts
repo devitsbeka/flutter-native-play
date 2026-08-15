@@ -272,7 +272,14 @@ export function useInAppPurchases() {
         return { success: true };
       }
 
-      return { success: false, error: "Purchase failed" };
+      // No customerInfo and no throw. This is what an unmatched product does:
+      // the fallback above hands purchaseStoreProduct a hand-made
+      // `{ identifier }` rather than a real StoreProduct, and it can resolve
+      // without buying anything. Silent until now — the button simply did
+      // nothing, which is indistinguishable from a dead tap handler.
+      console.error(`[iap] ${productId} returned no customerInfo — nothing was purchased`);
+      toast.error("The store did not respond. Please try again.");
+      return { success: false, error: "no_customer_info" };
     } catch (error: any) {
       console.error("Purchase error:", error);
       

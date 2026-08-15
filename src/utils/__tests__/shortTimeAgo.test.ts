@@ -9,7 +9,11 @@ import { translations } from "@/locales";
 
 /** The real locale strings, so a missing or renamed key fails here. */
 const translator = (lang: "ka" | "en") => (key: string, vars?: Record<string, string | number>) => {
-  const dict = translations[lang] as Record<string, Record<string, string>>;
+  // Via unknown: locale namespaces nest deeper than two levels (powerups.
+  // fiftyFifty.name), so the direct assertion does not compile. The lookup
+  // below only reads two levels and rejects anything that is not a string,
+  // which is the check that matters.
+  const dict = translations[lang] as unknown as Record<string, Record<string, string>>;
   const [ns, name] = key.split(".");
   const raw = dict[ns]?.[name];
   if (typeof raw !== "string") throw new Error(`missing ${lang} string: ${key}`);

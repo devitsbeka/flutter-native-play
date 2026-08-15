@@ -4,7 +4,8 @@ import gemIcon from "@/assets/icons/icon-gem.webp";
 import coinIcon from "@/assets/icons/icon-coin.webp";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { formatPrice } from "@/utils/currency";
+import { useStorePrice } from "@/hooks/useStorePrice";
+import { GEM_PACK_PRODUCTS } from "@/config/gemPacks";
 
 export type ShopItemBadge = "popular" | "best-value" | "limited" | "new" | null;
 export type ShopItemCurrency = "gems" | "coins" | "lari";
@@ -32,6 +33,7 @@ export interface ShopItemCardProps {
 }
 
 export function ShopItemCard({
+  id,
   name,
   description,
   price,
@@ -51,6 +53,15 @@ export function ShopItemCard({
   const { t } = useLanguage();
   const currencyIcon = currency === "gems" ? gemIcon : currency === "coins" ? coinIcon : null;
   const isLari = currency === "lari";
+  // Real-money items must show StoreKit's own price on iOS, not the USD figure
+  // in the catalog run through utils/currency's hardcoded 2.75 GEL rate. A
+  // Georgian player was being quoted "2.72 ₾" for a $0.99 pack: a number Apple
+  // never charges, on the card they tap to buy, which is guideline 2.3.1.
+  //
+  // Falls back to the converted figure while offerings load, so the card does
+  // not render blank — and a price that still looks converted after a second
+  // is the visible sign that the store returned nothing.
+  const storePrice = useStorePrice();
   // Hero bundles opt in to their own gradient fill so they stand apart from
   // the regular lavender-white content cards; white text rides on top of it.
   const hasGradient = vibrant && !!gradient && gradient !== "transparent";
@@ -70,7 +81,7 @@ export function ShopItemCard({
   ) : (
     <>
       {isLari ? (
-        <span className="font-bold text-base sm:text-lg text-pink-600 dark:text-pink-400">{formatPrice(price)}</span>
+        <span className="font-bold text-base sm:text-lg text-pink-600 dark:text-pink-400">{storePrice(GEM_PACK_PRODUCTS[id] ?? id, price).display}</span>
       ) : (
         <div className="flex items-center justify-center gap-1">
           <img src={currencyIcon!} alt="" width={24} height={24} loading="lazy" decoding="async" className="w-4 h-4 sm:w-5 sm:h-5" />
