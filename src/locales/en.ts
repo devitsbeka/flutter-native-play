@@ -2247,6 +2247,7 @@ export const en: KaTranslations = {
     vipActiveMsg: "VIP is active!",
     vipDaysRemaining: "{days} days remaining",
     restoring: "Processing...",
+    restoreDescription: "Already bought something? Bring it back to this account.",
     restorePurchases: "Restore purchases",
     vipXpBonus: "2x XP Bonus",
     vipXpDesc: "Get double XP in every game",

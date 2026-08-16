@@ -2246,6 +2246,7 @@ export const ka = {
     vipActiveMsg: "VIP აქტიურია!",
     vipDaysRemaining: "{days} დღე დარჩენილია",
     restoring: "მიმდინარეობს...",
+    restoreDescription: "უკვე იყიდე რამე? დააბრუნე ამ ანგარიშზე.",
     restorePurchases: "შესყიდვების აღდგენა",
     vipXpBonus: "2x XP ბონუსი",
     vipXpDesc: "მიიღე ორმაგი XP ყველა თამაშში",

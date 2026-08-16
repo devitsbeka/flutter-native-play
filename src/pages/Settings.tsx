@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { currentBuildLabel, checkForUpdateNow } from "@/hooks/useFreshBuildGuard";
 import { NotificationSettingsRow } from "@/components/settings/NotificationSettingsRow";
+import { RestorePurchasesRow } from "@/components/settings/RestorePurchasesRow";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -254,6 +255,11 @@ export default function Settings() {
           {/* Notifications — the only place the permission prompt is asked
               for. Above Help because it is a setting rather than a link out. */}
           <NotificationSettingsRow />
+
+          {/* Restore purchases. Apple requires this to exist and a reviewer
+              looks for it here; it is also the only repair a player has after
+              a reinstall or a new device. */}
+          <RestorePurchasesRow />
 
           {/* Help */}
           <motion.button
