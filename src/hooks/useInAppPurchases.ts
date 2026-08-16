@@ -575,23 +575,26 @@ export function useInAppPurchases() {
         // no gems, so waiting on that would be waiting for something that is
         // never coming.
         const expectsGems = Object.values(GEM_PACK_PRODUCTS).includes(productId);
-        let synced = await syncEntitlements();
+        const synced = await syncEntitlements();
 
         if (expectsGems && synced.success && synced.gemsCredited === 0) {
-          for (const wait of [1500, 3000, 5000]) {
-            iapLog(`no gems credited yet, re-syncing in ${wait}ms`);
-            await new Promise((r) => setTimeout(r, wait));
-            synced = await syncEntitlements();
-            if (!synced.success || synced.gemsCredited > 0) break;
-          }
-        }
-
-        if (expectsGems && synced.success && synced.gemsCredited === 0) {
-          // Out of patience, not out of options: the RevenueCat webhook
-          // credits the same transaction server-side, and Restore replays it
-          // on demand. Saying "completed" here would be a lie the balance
-          // immediately contradicts.
-          iapLog("purchase succeeded but nothing was credited after retries");
+          // Not credited on the first ask. Stop waiting in front of the user
+          // and keep waiting behind them.
+          //
+          // A blocking retry loop was tried and was the wrong shape: 1.5s +
+          // 3s + 5s held the spinner for nine seconds and then reported
+          // failure, while sandbox propagation from StoreKit to RevenueCat
+          // regularly takes longer than that. Two identical purchases a
+          // minute apart landed on opposite sides of that cutoff — one
+          // credited, one declared failed — and both were fine.
+          //
+          // The money has moved and the webhook will credit it regardless, so
+          // there is nothing for the player to do and no reason to make them
+          // watch. creditConsumables claims each transaction in iap_events
+          // before crediting, so the poll and the webhook cannot both apply
+          // the same purchase.
+          iapLog("not credited yet — polling in the background");
+          void pollForCredit(refreshBalance);
           await refreshBalance();
           toast.success("Purchase completed — your gems will appear shortly.");
           return { success: true };
@@ -711,6 +714,34 @@ export function useInAppPurchases() {
     getProduct,
     IAP_PRODUCTS,
   };
+}
+
+/**
+ * Keep asking for the credit after the user has been let go.
+ *
+ * Runs detached: nothing awaits it, so the shop stays interactive and the
+ * spinner is already gone. It exists because RevenueCat's REST subscriber
+ * record is eventually consistent and sandbox is slow — the transaction is
+ * real from the moment the sheet closes, but the server cannot see it yet.
+ *
+ * Bounded at roughly a minute. Past that the webhook has had every chance,
+ * and Restore covers a player who somehow still has nothing.
+ */
+async function pollForCredit(onCredited: () => Promise<void>): Promise<void> {
+  for (const wait of [2000, 4000, 8000, 15000, 30000]) {
+    await new Promise((r) => setTimeout(r, wait));
+    const result = await syncEntitlements();
+    if (result.success && result.gemsCredited > 0) {
+      iapLog(`credited ${result.gemsCredited} gems after waiting`);
+      await onCredited();
+      return;
+    }
+  }
+
+  // The webhook may still land after this gives up, so re-read the balance
+  // once more rather than leaving a stale number on screen.
+  iapLog("no credit seen within a minute; leaving it to the webhook");
+  await onCredited();
 }
 
 interface EntitlementSync {
