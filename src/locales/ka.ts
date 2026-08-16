@@ -1913,7 +1913,7 @@ export const ka = {
     saveErrorToast: "შეცდომა შენახვისას",
     myTriviaPartySaved: "MyTrivia Party შენახულია!",
     noOnePlayedTrivia: "ჯერ არავის უთამაშია",
-    pingHostBtn: "მოიწვიე სათამაშოდ",
+    pingHostBtn: "დაუძახე ჰოსტს",
     pingHostSent: "ჰოსტს შეტყობინება გაეგზავნა! 🔔",
     pingHostNotifTitle: "{name}: მოდი ვითამაშოთ!",
     pingHostOpenRoom: "ოთახში შესვლა",
