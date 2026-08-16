@@ -81,6 +81,7 @@ function convertQuizToSamplePost(quiz: any, profile: any) {
 }
 
 import { SortFilter } from "./FeedFiltersBar";
+import { matchesQuery } from "@/utils/searchMatch";
 
 interface MyTriviaTabProps {
   onCreateQuiz?: () => void;
@@ -1166,20 +1167,20 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   const allStandalonePosts = myPosts?.filter(post => !post.collection_id) || [];
   
   // Apply search filter
+  //
+  // matchesQuery rather than a raw includes, so a Georgian title answers to a
+  // Latin keyboard the same way the rooms list does — "ზეიმის მოედანი" from
+  // `zeimis`, or from `ze`.
   const searchLower = searchQuery.toLowerCase().trim();
-  const searchFilteredPosts = searchLower 
-    ? allStandalonePosts.filter(post => 
-        post.title?.toLowerCase().includes(searchLower) ||
-        post.subject?.toLowerCase().includes(searchLower) ||
-        post.hashtags?.some((h: string) => h.toLowerCase().includes(searchLower))
+  const searchFilteredPosts = searchLower
+    ? allStandalonePosts.filter(post =>
+        matchesQuery(searchQuery, [post.title, post.subject, ...(post.hashtags ?? [])])
       )
     : allStandalonePosts;
-  
-  const searchFilteredCollections = searchLower 
-    ? myCollections?.filter(col => 
-        col.title?.toLowerCase().includes(searchLower) ||
-        col.description?.toLowerCase().includes(searchLower) ||
-        col.hashtags?.some((h: string) => h.toLowerCase().includes(searchLower))
+
+  const searchFilteredCollections = searchLower
+    ? myCollections?.filter(col =>
+        matchesQuery(searchQuery, [col.title, col.description, ...(col.hashtags ?? [])])
       )
     : myCollections;
 

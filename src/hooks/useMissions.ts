@@ -1352,12 +1352,33 @@ export function useWeekBonus(): WeekBonusState {
       .select("id");
     if (error || !won || won.length === 0) return false;
 
-    const { data: currency } = await supabase.rpc("credit_gameplay_reward", {
-      p_kind: "mission",
-      p_coins: WEEK_BONUS.coins,
-      p_gems: WEEK_BONUS.gems,
-      p_reference: WEEK_BONUS.mission_id,
-    });
+    const { data: currency, error: currencyError } = await supabase.rpc(
+      "credit_gameplay_reward",
+      {
+        p_kind: "mission",
+        p_coins: WEEK_BONUS.coins,
+        p_gems: WEEK_BONUS.gems,
+        p_reference: WEEK_BONUS.mission_id,
+      }
+    );
+
+    // The flag above is the double-claim guard, so it has to be set before the
+    // payout — which means a payout that fails has to give it back. This
+    // error was being discarded: the guard stayed set, the currency never
+    // arrived, and seven perfect days paid nothing but confetti. Putting the
+    // flag back leaves the package claimable, so the next attempt can pay.
+    if (currencyError) {
+      console.error("[weekBonus] credit failed, releasing the claim", currencyError);
+      await supabase
+        .from("user_missions")
+        .update({ reward_claimed: false })
+        .eq("user_id", user.id)
+        .eq("mission_id", WEEK_BONUS.mission_id)
+        .eq("mission_date", weekStart);
+      queryClient.invalidateQueries({ queryKey: ["week-bonus", user.id, weekStart] });
+      return false;
+    }
+
     if (currency && currency.length > 0) {
       setProfileLocal({ coins: currency[0].new_coins, gems: currency[0].new_gems });
     }
