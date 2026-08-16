@@ -12,7 +12,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useAds } from "@/hooks/useAds";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { supabase } from "@/integrations/supabase/client";
-import { ChallengeShareModal } from "@/components/challenge/ChallengeShareModal";
+import { useChallengeShare } from "@/hooks/useChallengeShare";
 import { ArrowLeft, Star, Crown, Shuffle, Library, ChevronRight, Loader2, Gift, Share2 } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import trophyWinIcon from "@/assets/icons/trophy-win.png";
@@ -77,13 +77,12 @@ export function GameResultsScreenV2() {
   } = useMultiplayerV2();
 
   const { queue, addToQueue } = useRoomCategoryQueue(currentRoom?.id || null);
+  const { share, sharing } = useChallengeShare();
 
   const [isStartingRematch, setIsStartingRematch] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
-  const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [challengeQuestions, setChallengeQuestions] = useState<any[]>([]);
-  const [myCorrectAnswers, setMyCorrectAnswers] = useState<number | undefined>(undefined);
-  const hasAutoOpenedChallenge = useRef(false);
+  const hasFetchedChallengeQuestions = useRef(false);
 
   // Sort participants by score and assign ranks
   const rankedParticipants: RankedParticipant[] = [...participants]
@@ -265,34 +264,26 @@ export function GameResultsScreenV2() {
     }
   }, [user, profile, myScore, myRank, isWin, isHost, currentRoom, updateProfile, rankedParticipants, addCoins, participants, maybeShowInterstitial]);
 
-  // Auto-open challenge share modal
-  // Prefetch challenge-share data so the share button opens instantly.
-  // The modal itself no longer auto-opens - popping a share sheet over every
-  // round's results interrupted multi-round play.
+  // Prefetch the questions a challenge link carries, so sharing is one tap
+  // and not a wait.
+  //
+  // The correct-answer count used to be fetched here too. It existed only to
+  // print "(2 correct)" inside the dialog that is gone, so it was a round trip
+  // on every results screen for something nobody reads.
   useEffect(() => {
-    if (hasAutoOpenedChallenge.current || !currentRoom?.current_game_id || !user) return;
+    if (hasFetchedChallengeQuestions.current || !currentRoom?.current_game_id || !user) return;
 
-    hasAutoOpenedChallenge.current = true;
+    hasFetchedChallengeQuestions.current = true;
 
-    const fetchAndOpen = async () => {
-      // Fetch questions
+    const fetchQuestions = async () => {
       const { data: qData } = await supabase
         .from("room_questions")
         .select("question_text, correct_answer, incorrect_answers, icon_slug")
         .eq("game_id", currentRoom.current_game_id!)
         .order("question_index");
       setChallengeQuestions(qData || []);
-
-      // Fetch correct answer count
-      const { count } = await supabase
-        .from("player_answers")
-        .select("*", { count: "exact", head: true })
-        .eq("room_id", currentRoom.id)
-        .eq("user_id", user.id)
-        .eq("is_correct", true);
-      setMyCorrectAnswers(count ?? undefined);
     };
-    fetchAndOpen();
+    fetchQuestions();
   }, [currentRoom, user]);
 
   const handleBackToRoom = () => {
@@ -674,16 +665,34 @@ export function GameResultsScreenV2() {
               {t("extra.addCategory")}
             </ChunkyButton>
 
-            {/* Challenge Friends button */}
-            <ChunkyButton
-              variant="gold"
-              size="lg"
-              className="w-full"
-              onClick={() => setShowChallengeModal(true)}
-              icon={<Share2 className="w-5 h-5" />}
+            {/* Challenge a friend.
+                A text button, not a third chunky one: the two above it are
+                what to do next, and this is a way to pass the game on. It
+                used to open a dialog that showed the score and category the
+                screen behind it was already showing, and then offered this
+                same share — so the share happens here directly. */}
+            <button
+              type="button"
+              onClick={() =>
+                void share({
+                  score: myScore,
+                  totalQuestions: currentRoom?.total_questions || challengeQuestions.length,
+                  categoryName: currentRoom?.category_name,
+                  categoryIconSlug: null,
+                  roomId: currentRoom?.id,
+                  questions: challengeQuestions,
+                })
+              }
+              disabled={sharing}
+              className="mx-auto flex items-center gap-2 py-3 text-sm font-bold text-white/80 hover:text-white disabled:opacity-60 transition-colors"
             >
+              {sharing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Share2 className="w-4 h-4" />
+              )}
               {t("extra.challengeFriend")}
-            </ChunkyButton>
+            </button>
 
           </>
         ) : (
@@ -709,18 +718,6 @@ export function GameResultsScreenV2() {
         excludeTriviaId={currentRoom?.user_trivia_id}
       />
 
-      {/* Challenge Share Modal */}
-      <ChallengeShareModal
-        open={showChallengeModal}
-        onOpenChange={setShowChallengeModal}
-        score={myScore}
-        totalQuestions={currentRoom?.total_questions || challengeQuestions.length}
-        correctAnswers={myCorrectAnswers}
-        categoryName={currentRoom?.category_name}
-        categoryIconSlug={null}
-        roomId={currentRoom?.id}
-        questions={challengeQuestions}
-      />
       </div>
     </div>
     </>

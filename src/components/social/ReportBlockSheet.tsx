@@ -1,28 +1,26 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flag, Ban, ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import {
   useContentModeration,
   REPORT_REASONS,
   type ReportReason,
 } from "@/hooks/useContentModeration";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { SafeAvatar } from "@/components/shared/SafeAvatar";
 
 interface ReportBlockSheetProps {
   open: boolean;
   onClose: () => void;
+  /**
+   * Which step to show. There is no menu step any more: the two choices are a
+   * dropdown on the card's overflow button, so this opens straight at the
+   * reason list or the block confirmation.
+   */
+  view: "reasons" | "confirmBlock";
   /** The author being reported or blocked. */
   userId: string;
   /** Shown in the confirmation copy. */
   displayName?: string;
-  /**
-   * Their picture, shown beside the name at the top of the sheet. A name on
-   * its own is easy to misread as the name of the sheet rather than the
-   * person it is about — which matters here, where one of the two choices is
-   * irreversible from the reader's side.
-   */
-  avatarUrl?: string | null;
   /** Optional content this is about, recorded on the report. */
   context?: { messageId?: string; roomId?: string };
   /** Called after a successful block, so the caller can dismiss the content. */
@@ -30,31 +28,31 @@ interface ReportBlockSheetProps {
 }
 
 /**
- * The report-and-block sheet, shared by every surface showing someone else's
- * content.
+ * What happens after the overflow menu's choice: pick a reason, or confirm a
+ * block.
  *
- * Guideline 1.2 wants both actions reachable from the content itself, not
- * buried in settings — so this is designed to be opened from an overflow
- * menu on a quiz post, a comment or a profile.
+ * It used to open on a menu of its own — the same two choices, in a panel in
+ * the middle of the feed, under the name and picture of the person whose row
+ * you had just tapped. The choices are a dropdown on that button now, and
+ * this is only the step after.
+ *
+ * Guideline 1.2 wants both actions reachable from the content itself rather
+ * than from settings, which the dropdown satisfies.
  */
 export function ReportBlockSheet({
   open,
   onClose,
+  view,
   userId,
   displayName,
-  avatarUrl,
   context,
   onBlocked,
 }: ReportBlockSheetProps) {
   const { t } = useLanguage();
   const { reportUser, blockUser } = useContentModeration();
-  const [view, setView] = useState<"menu" | "reasons" | "confirmBlock">("menu");
   const [busy, setBusy] = useState(false);
 
-  const close = () => {
-    setView("menu");
-    onClose();
-  };
+  const close = () => onClose();
 
   const submitReport = async (reason: ReportReason) => {
     setBusy(true);
@@ -91,70 +89,10 @@ export function ReportBlockSheet({
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-[440px] rounded-t-[28px] bg-background p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-[28px]"
           >
-            {view === "menu" && (
-              <>
-                {/* Who this is about: face, name, and what the sheet is for.
-                    The name used to sit alone as a heading, which read as the
-                    sheet's own title. */}
-                <div className="mb-4 flex items-center gap-3">
-                  <SafeAvatar
-                    avatarUrl={avatarUrl}
-                    fallback={displayName || "?"}
-                    className="h-11 w-11 shrink-0"
-                    fallbackClassName="text-sm"
-                  />
-                  <div className="min-w-0">
-                    <p className="truncate text-base font-bold leading-tight text-foreground">
-                      {displayName || t("moderation.thisPlayer")}
-                    </p>
-                    <p className="truncate text-sm text-muted-foreground">
-                      {t("moderation.sheetSubtitle")}
-                    </p>
-                  </div>
-                </div>
-
-                {/* The two choices, as one group. They were separate blocks
-                    with 16px of padding all round and nothing between them,
-                    so the space inside a row and the space between rows were
-                    the same and the pair did not read as a list. */}
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => setView("reasons")}
-                    className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left hover:bg-muted"
-                  >
-                    <Flag className="h-5 w-5 shrink-0 text-amber-500" />
-                    <span className="flex-1 font-medium text-foreground">
-                      {t("moderation.report")}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => setView("confirmBlock")}
-                    className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left hover:bg-destructive/10"
-                  >
-                    <Ban className="h-5 w-5 shrink-0 text-destructive" />
-                    <span className="flex-1 font-medium text-destructive">
-                      {t("moderation.block")}
-                    </span>
-                  </button>
-                </div>
-
-                {/* Separated from the choices and given a surface of its own,
-                    so leaving does not look like a third thing to do to this
-                    player. */}
-                <button
-                  onClick={close}
-                  className="mt-3 h-12 w-full rounded-2xl bg-muted font-semibold text-foreground hover:bg-muted/70"
-                >
-                  {t("common.cancel")}
-                </button>
-              </>
-            )}
-
             {view === "reasons" && (
               <>
                 <button
-                  onClick={() => setView("menu")}
+                  onClick={close}
                   className="mb-3 flex items-center gap-1 text-sm text-muted-foreground"
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -164,8 +102,8 @@ export function ReportBlockSheet({
                   {t("moderation.reportReasonTitle")}
                 </h2>
 
-                {/* Same rhythm as the menu behind it — these were the same
-                    padding-only blocks. */}
+                {/* One group, even rhythm: these were padding-only blocks
+                    with the same space inside a row as between rows. */}
                 <div className="flex flex-col gap-1">
                   {REPORT_REASONS.map((reason) => (
                     <button
@@ -199,7 +137,7 @@ export function ReportBlockSheet({
                   {t("moderation.block")}
                 </button>
                 <button
-                  onClick={() => setView("menu")}
+                  onClick={close}
                   className="mt-2 h-12 w-full rounded-2xl font-semibold text-muted-foreground"
                 >
                   {t("common.cancel")}

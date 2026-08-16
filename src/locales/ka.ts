@@ -687,6 +687,8 @@ export const ka = {
   // ==========================================
   missions: {
     completedTitle: "მისია შესრულებულია: {mission}",
+    dayCompleteTitle: "დღე დასრულებულია! ყველა მისია შესრულდა",
+    weekCompleteTitle: "იდეალური კვირა! 7 დღე ზედიზედ",
     rewardLabel: "ჯილდო",
     weekPackage: "კვირის პაკეტი",
     pastDay: "დასრულებული დღე",

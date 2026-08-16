@@ -11,6 +11,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ka, enUS } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
+import { PlayerOverflowMenu } from "@/components/social/PlayerOverflowMenu";
 
 interface CreatorPortfolioCardProps {
   creator: Creator;
@@ -175,6 +176,11 @@ function CreatorPortfolioCardComponent({ creator, onPlayTrivia, onLikeTrivia, on
             <Eye className="w-4 h-4" />
             <span>{t("extra.profileBtnLabel")}</span>
           </Button>
+          {/* This card is the tablet and desktop feed. It had no report or
+              block anywhere on it — the affordance existed only on the phone
+              layout, which is the one place guideline 1.2 was already
+              satisfied. */}
+          <PlayerOverflowMenu userId={creator.user_id} displayName={creator.nickname} />
         </div>
       </div>
       

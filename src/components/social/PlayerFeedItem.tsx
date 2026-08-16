@@ -1,7 +1,7 @@
 import { useState, useMemo, lazy, memo, Suspense } from "react";
 
-import { UserPlus, UserCheck, Clock, Play, Layers, Hourglass, Pencil, MoreVertical } from "lucide-react";
-import { ReportBlockSheet } from "@/components/social/ReportBlockSheet";
+import { UserPlus, UserCheck, Clock, Play, Layers, Hourglass, Pencil } from "lucide-react";
+import { PlayerOverflowMenu } from "@/components/social/PlayerOverflowMenu";
 import { useAuth } from "@/hooks/useAuth";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
@@ -89,7 +89,8 @@ function PlayerFeedItemComponent({
   const [isLoading, setIsLoading] = useState(false);
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [moderationOpen, setModerationOpen] = useState(false);
+
+
   const { user: currentUser } = useAuth();
   const currentUserId = currentUser?.id;
 
@@ -244,7 +245,11 @@ function PlayerFeedItemComponent({
       }}
     >
       {/* Player Header */}
-      <div className="p-3 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-sm">
+      {/* relative z-30: backdrop-blur makes this a stacking context, so the
+          dropdown inside it cannot lift itself above the content card below —
+          the whole header has to. Without it the menu opened behind the
+          trivia. */}
+      <div className="relative z-30 p-3 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           {/* Avatar - Clickable to open profile */}
           <div 
@@ -285,26 +290,10 @@ function PlayerFeedItemComponent({
           {/* Report / block. Guideline 1.2 wants this reachable from the
               content itself, so it sits on the card rather than in settings.
               Hidden on your own posts, where it would be nonsense. */}
-          {currentUserId && currentUserId !== player.user_id && (
-            <button
-              type="button"
-              aria-label={t("moderation.report")}
-              onClick={(e) => { e.stopPropagation(); setModerationOpen(true); }}
-              className="p-1.5 rounded-full text-muted-foreground hover:bg-muted active:scale-95 transition"
-            >
-              <MoreVertical className="w-4 h-4" />
-            </button>
-          )}
+          <PlayerOverflowMenu userId={player.user_id} displayName={player.nickname} />
         </div>
       </div>
 
-      <ReportBlockSheet
-        open={moderationOpen}
-        onClose={() => setModerationOpen(false)}
-        userId={player.user_id}
-        displayName={player.nickname}
-        avatarUrl={player.avatar_url}
-      />
       
       {/* Content Card */}
       <div

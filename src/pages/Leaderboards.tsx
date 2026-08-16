@@ -4,7 +4,6 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import bgLeaderGeorgia from "@/assets/bgleader-georgia.webp";
 import bgLeaderGlobal from "@/assets/bgleader-global.webp";
 import starIcon from "@/assets/thiings/star.png";
 import trophyGold from "@/assets/trophy-gold.png";
@@ -263,12 +262,6 @@ export default function Leaderboards() {
     }
   }, [user]);
 
-  // Tbilisi's landmarks are the local board's backdrop only when the local
-  // board IS Georgia. A player in the United States was being shown the
-  // Georgian skyline under a board titled "United States"; the world artwork
-  // is the honest answer for every other country, and for no country at all.
-  const showGeorgianBackdrop = scope === "local" && countryCode?.toLowerCase() === "ge";
-
   const tabs: { id: Scope; label: string }[] = [
     ...(countryCode
       ? [{ id: "local" as Scope, label: countryName(countryCode, language, t("leaderboard.localTab")) }]
@@ -298,24 +291,22 @@ export default function Leaderboards() {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* Scope-matched backdrop: Georgian landmarks locally, world landmarks
-            globally — both stay mounted so switching tabs crossfades instead
-            of flashing a re-download. On md+ the artwork scales like the
-            homepage scene: width-driven, bottom-anchored 16:9 box whose
-            mask-faded top melts into the light page background (whole map
-            visible on squarer screens, top crops on ultrawide via the
-            container's overflow-hidden). Phones keep the full-screen cover
-            crop — a width-driven strip would be too short there. */}
-        <img
-          src={bgLeaderGeorgia}
-          alt=""
-          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none transition-[opacity,filter] duration-[800ms] ease-out ${showGeorgianBackdrop ? "opacity-100 blur-0" : "opacity-0 blur-md"}`}
-          draggable={false}
-        />
+        {/* One backdrop for every board, local or global.
+            Georgia had artwork of its own (@/assets/bgleader-georgia.webp) and
+            no other country did, so the toggle changed the whole scene for one
+            country and nothing for the rest. Until each country has its own,
+            the world landmarks are what every board gets — which also means
+            there is nothing to crossfade between when the tab changes.
+            On md+ the artwork scales like the homepage scene: width-driven,
+            bottom-anchored 16:9 box whose mask-faded top melts into the light
+            page background (whole map visible on squarer screens, top crops on
+            ultrawide via the container's overflow-hidden). Phones keep the
+            full-screen cover crop — a width-driven strip would be too short
+            there. */}
         <img
           src={bgLeaderGlobal}
           alt=""
-          className={`absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none transition-[opacity,filter] duration-[800ms] ease-out ${showGeorgianBackdrop ? "opacity-0 blur-md" : "opacity-100 blur-0"}`}
+          className="absolute inset-0 w-full h-full object-cover object-[center_30%] md:top-auto md:h-auto md:aspect-video md:object-[center_bottom] md:[mask-image:linear-gradient(to_bottom,transparent_0,black_200px)] pointer-events-none select-none"
           draggable={false}
         />
 

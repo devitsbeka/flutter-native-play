@@ -117,17 +117,35 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       >
         {/* Image for Image Trivia questions */}
         {hasImage && !hasVideo && !hasAudio && (
-          <div className="w-full h-36 overflow-hidden bg-gray-100 relative flex items-start justify-center">
+          <div className="w-full h-36 overflow-hidden bg-gray-100 relative flex items-center justify-center">
             {/* Skeleton while the image downloads - a silently empty card
                 looks broken on slow connections */}
             {imageStatus === "loading" && (
               <div className="absolute inset-0 bg-gray-200 animate-pulse" />
             )}
+
+            {/* The same picture, blurred, filling the band behind itself.
+                object-contain fits the whole image, which is the point — a
+                photograph must not be cropped when the answer might be in the
+                cropped part — but anything not 2:1 then left flat grey down
+                both sides. scale-110 because a blur samples past its own
+                edges and would otherwise show a soft grey frame. */}
+            <img
+              src={imageUrl!}
+              alt=""
+              aria-hidden
+              className={cn(
+                "absolute inset-0 w-full h-full object-cover scale-110 blur-2xl",
+                imageStatus === "loaded" ? "opacity-95" : "opacity-0"
+              )}
+              decoding="async"
+            />
+
             <img
               src={imageUrl!}
               alt="Question"
               className={cn(
-                "w-full h-full object-contain object-top relative",
+                "w-full h-full object-contain relative",
                 imageStatus !== "loaded" && "opacity-0"
               )}
               loading="eager"

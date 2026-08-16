@@ -1,4 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import confetti from "canvas-confetti";
+import { toast } from "sonner";
 import { missionTitle, missionDescription } from "@/utils/missionText";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -113,7 +115,7 @@ const chipStyle = { border: "1.5px solid #E8E0F5", boxShadow: "0 2px 0 #EDE6F7" 
 // One fixed row of four chips so every mission card has the same height
 function RewardChips({ mission }: { mission: Mission }) {
   return (
-    <div className="grid grid-cols-4 gap-1.5">
+    <div className="grid grid-cols-[1fr_1.35fr_1fr_1fr] gap-1.5">
       <div
         className="flex items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5"
         style={chipStyle}
@@ -244,13 +246,15 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
     return `${when} · ${t(day.kind === "past" ? "missions.pastDay" : "missions.futureDay")}`;
   })();
   const { currentStreak } = useMissionStreak();
-  const [activeTab, setActiveTab] = useState<"daily" | "weekly">("daily");
-  const [dailyIndex, setDailyIndex] = useState(0);
-  const [weeklyIndex, setWeeklyIndex] = useState(0);
+  const [index, setIndex] = useState(0);
 
-  const missions = activeTab === "daily" ? dailyMissions : weeklyMissions;
-  const index = activeTab === "daily" ? dailyIndex : weeklyIndex;
-  const setIndex = activeTab === "daily" ? setDailyIndex : setWeeklyIndex;
+  // One track for both kinds. The weekly ones are only in it while the sheet
+  // is showing today: the day strip can walk back to last Tuesday, and this
+  // week's weekly missions have nothing to do with that day's dailies.
+  const missions = useMemo(
+    () => (day.kind === "today" ? [...dailyMissions, ...weeklyMissions] : dailyMissions),
+    [day.kind, dailyMissions, weeklyMissions]
+  );
   const safeIndex = missions.length > 0 ? Math.min(index, missions.length - 1) : 0;
   const mission = missions[safeIndex];
 
@@ -286,9 +290,7 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
   // Start each open on the first unfinished mission
   useEffect(() => {
     if (!isOpen) return;
-    setActiveTab("daily");
-    setDailyIndex(Math.max(0, dailyMissions.findIndex((m) => !m.completed)));
-    setWeeklyIndex(Math.max(0, weeklyMissions.findIndex((m) => !m.completed)));
+    setIndex(Math.max(0, missions.findIndex((m) => !m.completed)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
@@ -300,7 +302,7 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
     if (!el || el.clientWidth === 0) return;
     el.scrollTo({ left: safeIndex * el.clientWidth, behavior: "auto" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, activeTab, missions.length]);
+  }, [isOpen, missions.length]);
 
   return (
     <AnimatePresence mode="wait">
@@ -400,8 +402,23 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
                       disabled={claimingBonus}
                       onClick={async () => {
                         setClaimingBonus(true);
-                        await weekBonus.claim();
+                        const paid = await weekBonus.claim();
                         setClaimingBonus(false);
+                        // Seven perfect days is the biggest thing this sheet
+                        // hands out, and it was landing with the same quiet
+                        // toast as answering ten questions.
+                        if (paid) {
+                          confetti({
+                            particleCount: 160,
+                            spread: 75,
+                            origin: { y: 0.5 },
+                            colors: ["#FFD700", "#A855F7", "#22C55E", "#F97316"],
+                            zIndex: 9999,
+                          });
+                          toast.success(t("missions.weekCompleteTitle"), {
+                            description: `${t("missions.rewardLabel")}: ${WEEK_BONUS.coins} ${t("common.coins")} · ${WEEK_BONUS.gems} ${t("common.gems")} · ${WEEK_BONUS.xp} XP`,
+                          });
+                        }
                       }}
                       className="mt-2 w-full rounded-full bg-white py-1.5 text-xs font-bold text-[#B45309] disabled:opacity-60"
                     >
@@ -428,23 +445,6 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
                 <div className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#0F766E]">
                   {currentStreak} {t("missions.days")}
                 </div>
-              </div>
-
-              {/* Daily / Weekly tabs */}
-              <div className="mt-3 grid grid-cols-2 gap-1 rounded-full bg-[#EFE9F7] p-1">
-                {(["daily", "weekly"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`rounded-full py-1.5 text-sm font-bold transition-all ${
-                      activeTab === tab
-                        ? "bg-white text-[#402666] shadow-sm"
-                        : "text-slate-500 hover:text-slate-600"
-                    }`}
-                  >
-                    {t(`missions.${tab}`)}
-                  </button>
-                ))}
               </div>
 
               {/* Carousel. A scroll-snap track rather than one swapped card:
