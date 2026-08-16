@@ -155,6 +155,12 @@ verify_jwt = true
 [functions.send-push-notification]
 verify_jwt = true
 
+# Player-triggered, so the JWT is the whole basis for deciding whether the
+# caller may announce this invitation. The function re-reads the invitation
+# and refuses one whose sender is not the caller.
+[functions.send-game-invite-push]
+verify_jwt = true
+
 [functions.notify-new-levels]
 verify_jwt = true
 

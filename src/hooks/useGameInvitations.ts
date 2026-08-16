@@ -150,17 +150,38 @@ export function useGameInvitations() {
           }
         }
 
-        const { error } = await supabase.from("game_invitations").insert({
-          sender_id: user.id,
-          receiver_id: receiverId,
-          room_id: roomId,
-        });
+        const { data: created, error } = await supabase
+          .from("game_invitations")
+          .insert({
+            sender_id: user.id,
+            receiver_id: receiverId,
+            room_id: roomId,
+          })
+          .select("id")
+          .single();
 
         if (error) throw error;
-        
+
         // Notification is created automatically by database trigger (notify_room_invite)
-        // when participant is added to room_participants table
-        
+        // when participant is added to room_participants table. That is the
+        // in-app bell only — it reaches a player who already has the app open.
+        //
+        // The push is what reaches someone who does not, which is the whole
+        // point of inviting them. Sent by id and nothing else: the endpoint
+        // re-reads the invitation, checks this caller is its sender, and
+        // composes the text itself, so this cannot become a way to put
+        // arbitrary words on someone's lock screen.
+        //
+        // Deliberately not awaited and never fatal. A friend who has push
+        // switched off, or a delivery that fails, must not turn a sent
+        // invitation into a failed one — the invitation is already in the
+        // database and visible in their app.
+        if (created?.id) {
+          void supabase.functions
+            .invoke("send-game-invite-push", { body: { invitationId: created.id } })
+            .catch((e) => console.warn("[invite] push failed:", e));
+        }
+
         notify.success("მოწვევა გაიგზავნა!", { icon: "✉️" });
         return true;
       } catch (error) {
