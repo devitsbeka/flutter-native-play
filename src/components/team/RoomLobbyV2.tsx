@@ -933,7 +933,7 @@ export function RoomLobbyV2() {
       </div>
 
       {/* Fixed Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 px-4 pb-6 pt-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 safe-bottom z-20 px-4 pb-6 pt-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
         <div className="max-w-[520px] mx-auto">
           {isHost ? (
             // Show different button based on context

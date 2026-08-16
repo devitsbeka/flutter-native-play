@@ -701,7 +701,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
           </div>
 
           {/* Fixed Footer */}
-          <div className="fixed bottom-0 left-0 right-0 z-[10000] border-t border-white/10 bg-primary">
+          <div className="fixed bottom-0 left-0 right-0 safe-bottom z-[10000] border-t border-white/10 bg-primary">
             <div className="mx-auto w-full max-w-[520px] p-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
               <motion.button
                 onClick={() => {

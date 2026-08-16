@@ -252,7 +252,7 @@ export default function CollectionLobby() {
       </div>
 
       {/* Fixed Play */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent pb-6">
+      <div className="fixed bottom-0 left-0 right-0 safe-bottom p-4 bg-gradient-to-t from-background via-background to-transparent pb-6">
         <motion.div
           className="mx-auto w-full max-w-xl"
           initial={{ opacity: 0, y: 20 }}

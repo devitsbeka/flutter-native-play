@@ -296,7 +296,7 @@ export default function Notifications() {
 
   return (
     <MainLayout showPlayButton={false}>
-    <div className="min-h-screen pb-8 relative overflow-hidden">
+    <div className="min-h-screen pb-8 relative">
       {/* Video Background */}
       <div className="fixed inset-0">
         <PingPongVideo src={MAP_VIDEOS.default} className="opacity-40" />
@@ -306,10 +306,10 @@ export default function Notifications() {
       {/* The shared header. The bell that used to sit beside the title is
           gone with it — the page is the notifications list, so an icon
           repeating that said nothing the title did not. */}
-      <PageHeader title={t("extra.notifActivity")} className="relative z-10" />
+      <PageHeader title={t("extra.notifActivity")} className="z-20" />
 
       {/* Tabs */}
-      <div className="relative z-10 px-4 pt-3 max-w-[700px] md:max-w-[600px] mx-auto">
+      <div className="sticky top-[calc(76px_+_var(--safe-top))] z-10 bg-background/95 backdrop-blur-md px-4 pt-3 pb-3 max-w-[700px] md:max-w-[600px] mx-auto">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as NotificationTab)} className="w-full">
           <TabsList className="grid grid-cols-3 w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto">
             <TabsTrigger value="games" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
