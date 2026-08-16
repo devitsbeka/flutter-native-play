@@ -642,22 +642,26 @@ export function RoomLobbyV2() {
   const roomName = currentRoom.room_name || t("extra.gameRoomDefault");
 
   return (
+    /* The room's gradient runs under the status bar, and the header still
+       clears it.
+       #root carries a padding-top of --safe-top so every screen's content
+       misses the clock. That is right for a screen whose background is the
+       page wash, and wrong here: it would leave a band of the wash above a
+       dark gradient. Cancelling with a negative margin and re-adding the
+       same value as padding puts the background back at the true top edge
+       while leaving everything inside exactly where the root put it. */
     <div 
       className="min-h-screen relative flex flex-col"
-      style={{ background: roomGradient?.gradient || 'var(--background)' }}
+      style={{
+        background: roomGradient?.gradient || 'var(--background)',
+        marginTop: "calc(-1 * var(--safe-top))",
+        paddingTop: "var(--safe-top)",
+      }}
     >
-      {/* Sticky Header
-          The blur strip runs to the top edge — the status bar overlays the
-          webview now, so the room's gradient continues under the clock and
-          this frosts it rather than stopping short of it. Only the row
-          inside is inset, which is why the padding is on the row and not on
-          the strip. */}
+      {/* Sticky Header */}
       <div className="sticky top-0 z-30 w-full">
         {/* Header content with subtle background blur */}
-        <div
-          style={{ paddingTop: "calc(1rem + var(--safe-top))" }}
-          className="px-4 sm:px-6 pb-4 backdrop-blur-md bg-black/10"
-        >
+        <div className="px-4 sm:px-6 py-4 backdrop-blur-md bg-black/10">
           <div className="flex items-center justify-between">
             <motion.button
               onClick={handleExitRoom}

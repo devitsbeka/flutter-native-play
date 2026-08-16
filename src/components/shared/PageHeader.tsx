@@ -41,7 +41,7 @@ export function PageHeader({
     <header className={`sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/30 ${className}`}>
       {/* 76px tall like the home header, so the search/bell icons land at
           the same vertical spot on every page */}
-      <div className="flex items-center justify-between px-4 h-[76px] safe-top w-full">
+      <div className="flex items-center justify-between px-4 h-[76px] w-full">
         {/* Left: Back button + Title */}
         <div className="flex items-center gap-3">
           {showBack && (

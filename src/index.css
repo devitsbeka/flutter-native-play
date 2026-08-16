@@ -248,6 +248,48 @@
     background-color: hsl(var(--background));
   }
 
+  /* Every screen clears the status bar from one place.
+   *
+   * The bar overlays the webview, which is what lets a background run to the
+   * top edge — and the bill is that anything anchored to the top has to keep
+   * out from under the clock. Roughly forty components draw their own top row
+   * (PageHeader, the home wordmark bar, TeamV2's tab strip, the game
+   * headers), so paying that bill per screen means finding them one at a time
+   * and missing the ones nobody opened.
+   *
+   * #root is the one place they all sit inside. Fixed layers are unaffected —
+   * the global background, modals, the bottom nav all position against the
+   * viewport, not this box — so full-bleed art keeps bleeding.
+   *
+   * A screen that must paint its own background *under* the bar cancels this
+   * with a negative margin and re-adds the inset as padding; see RoomLobbyV2.
+   */
+  #root {
+    padding-top: var(--safe-top);
+  }
+
+  /* iOS draws its own play button over a video it has not started.
+   *
+   * It is a shadow-DOM control, so no React prop touches it — the element
+   * already has autoPlay, loop, muted and playsInline, and `controls` is not
+   * set. WKWebView still paints a start-playback glyph in the middle of any
+   * video it has decided not to autoplay yet, which on the home screen is a
+   * grey ▶ sitting on the player's own scene.
+   *
+   * Every video in this app is decorative and looping — scenes, avatars, the
+   * ambient blob — so none of them should ever offer playback controls. The
+   * media controls are hidden outright rather than per component; a video
+   * that genuinely needs controls can opt back in with `controls`, which
+   * paints a different set.
+   */
+  video::-webkit-media-controls-start-playback-button,
+  video::-webkit-media-controls-play-button,
+  video::-webkit-media-controls-panel,
+  video::-webkit-media-controls {
+    display: none !important;
+    -webkit-appearance: none;
+  }
+
   body {
     @apply text-foreground antialiased;
     font-family: var(--font-sans);
