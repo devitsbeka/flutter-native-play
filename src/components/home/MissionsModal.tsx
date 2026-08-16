@@ -108,44 +108,51 @@ interface Mission {
   reward_power_up: string | null;
   reward_power_up_count: number;
   completed: boolean;
+  mission_type?: string;
 }
 
 const chipStyle = { border: "1.5px solid #E8E0F5", boxShadow: "0 2px 0 #EDE6F7" };
 
-// One fixed row of four chips so every mission card has the same height
+// One row of equal chips, and only for rewards the mission actually pays.
+// This used to be a fixed four-column grid, which drew a "0" gem chip on
+// every daily — the dailies deliberately pay no gems, and a zero-reward chip
+// reads as a broken promise rather than a fixed layout. A reward that is
+// zero simply is not there.
 function RewardChips({ mission }: { mission: Mission }) {
-  return (
-    <div className="grid grid-cols-[1fr_1.35fr_1fr_1fr] gap-1.5">
-      <div
-        className="flex items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5"
-        style={chipStyle}
-      >
+  const chips: React.ReactNode[] = [];
+
+  if (mission.reward_coins > 0) {
+    chips.push(
+      <div key="coins" className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5" style={chipStyle}>
         <img src={coinIcon} alt="" className="shrink-0" width={18} height={18} />
         <span className="text-xs font-bold text-[#402666]">{mission.reward_coins}</span>
-      </div>
-      <div
-        className="flex items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5"
-        style={chipStyle}
-      >
+      </div>,
+    );
+  }
+  if (mission.reward_xp > 0) {
+    chips.push(
+      <div key="xp" className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5" style={chipStyle}>
         <img src={xpSparkIcon} alt="" className="shrink-0" width={18} height={18} />
         <span className="text-xs font-bold text-[#402666]">{mission.reward_xp}XP</span>
-      </div>
-      <div
-        className="flex items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5"
-        style={chipStyle}
-      >
+      </div>,
+    );
+  }
+  if (mission.reward_gems > 0) {
+    chips.push(
+      <div key="gems" className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5" style={chipStyle}>
         <img src={gemIcon} alt="" className="shrink-0" width={18} height={18} />
         <span className="text-xs font-bold text-[#402666]">{mission.reward_gems}</span>
-      </div>
-      <div
-        className="flex items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5"
-        style={chipStyle}
-      >
+      </div>,
+    );
+  }
+  if (mission.reward_power_up) {
+    chips.push(
+      <div key="power" className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5" style={chipStyle}>
         {mission.reward_power_up === "time-drain" ? (
           <TimeIcon size={18} />
         ) : (
           <img
-            src={POWER_UP_ICONS[mission.reward_power_up || ""] || power5050}
+            src={POWER_UP_ICONS[mission.reward_power_up] || power5050}
             alt=""
             className="shrink-0"
             width={18}
@@ -155,9 +162,11 @@ function RewardChips({ mission }: { mission: Mission }) {
         <span className="text-xs font-bold text-[#402666]">
           {mission.reward_power_up_count || 1}x
         </span>
-      </div>
-    </div>
-  );
+      </div>,
+    );
+  }
+
+  return <div className="flex gap-1.5">{chips}</div>;
 }
 
 function MissionCard({ mission, t }: { mission: Mission; t: (key: string) => string }) {
@@ -173,11 +182,22 @@ function MissionCard({ mission, t }: { mission: Mission; t: (key: string) => str
       }}
     >
       {/* Icon + title + description */}
-      <img
-        src={MISSION_ICONS[getMissionIcon(mission.mission_id)]}
-        alt=""
-        className="h-11 w-11 object-contain"
-      />
+      <div className="flex items-start justify-between">
+        <img
+          src={MISSION_ICONS[getMissionIcon(mission.mission_id)]}
+          alt=""
+          className="h-11 w-11 object-contain"
+        />
+        {/* Weeklies share the carousel with the dailies and nothing on the
+            card said which was which — so a week-sized target read as
+            today's ask, and a mission that looks impossible on sight
+            engages nobody. */}
+        {mission.mission_type === "weekly" && (
+          <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-bold text-violet-700">
+            {t("missions.weeklyBadge")}
+          </span>
+        )}
+      </div>
       {/* Named from mission_id rather than from the row's stored title: the
           row was written in whatever language the app was in when the
           mission was handed out. */}

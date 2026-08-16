@@ -302,13 +302,23 @@ const DAILY_POOL: PoolMission[] = [
   },
 ];
 
+// Weeklies pay coins and XP, never gems — the 10 gems in WEEK_BONUS are the
+// only gems in the whole mission system, so "finish all seven days" stays the
+// one thing they buy. The gem amounts that used to sit here (5-15 per
+// mission) quietly out-paid the streak they were supposed to make desirable.
+//
+// Targets are sized to a week of casual play, not a grind: the old
+// advanced tier asked for 100 correct answers and 10 categories, which read
+// as impossible on a card that does not say "this week" — a mission a player
+// writes off on sight engages nobody. Roughly: a target a player who opens
+// the app most days hits by Friday.
 const WEEKLY_POOL: PoolMission[] = [
   {
     mission_id: "weekly_wins",
     title: "კვირის ჩემპიონი",
     description: "მოიგე {n} თამაში ამ კვირაში",
-    beginner: { target: 8, xp: 150, coins: 350, gems: 6 },
-    advanced: { target: 15, xp: 200, coins: 500, gems: 10 },
+    beginner: { target: 5, xp: 150, coins: 400, gems: 0 },
+    advanced: { target: 10, xp: 200, coins: 600, gems: 0 },
     power_up: "5050",
     power_up_count: 3,
     color_theme: "purple",
@@ -318,8 +328,8 @@ const WEEKLY_POOL: PoolMission[] = [
     mission_id: "weekly_answers",
     title: "ცოდნის ექსპერტი",
     description: "გაეცი {n} სწორი პასუხი",
-    beginner: { target: 50, xp: 120, coins: 300, gems: 5 },
-    advanced: { target: 100, xp: 150, coins: 400, gems: 8 },
+    beginner: { target: 30, xp: 120, coins: 350, gems: 0 },
+    advanced: { target: 60, xp: 150, coins: 500, gems: 0 },
     power_up: "freeze",
     power_up_count: 2,
     color_theme: "cyan",
@@ -329,8 +339,8 @@ const WEEKLY_POOL: PoolMission[] = [
     mission_id: "weekly_invite_friend",
     title: "მეგობრობა",
     description: "დაამატე {n} ახალი მეგობარი",
-    beginner: { target: 1, xp: 80, coins: 150, gems: 2 },
-    advanced: { target: 2, xp: 100, coins: 200, gems: 3 },
+    beginner: { target: 1, xp: 80, coins: 200, gems: 0 },
+    advanced: { target: 2, xp: 100, coins: 250, gems: 0 },
     power_up: "5050",
     power_up_count: 1,
     color_theme: "rose",
@@ -340,8 +350,8 @@ const WEEKLY_POOL: PoolMission[] = [
     mission_id: "weekly_categories",
     title: "მულტიკატეგორია",
     description: "ითამაშე {n} სხვადასხვა კატეგორიაში",
-    beginner: { target: 5, xp: 130, coins: 280, gems: 4 },
-    advanced: { target: 10, xp: 180, coins: 350, gems: 6 },
+    beginner: { target: 3, xp: 130, coins: 320, gems: 0 },
+    advanced: { target: 5, xp: 180, coins: 420, gems: 0 },
     power_up: "replace",
     power_up_count: 2,
     color_theme: "amber",
@@ -351,8 +361,8 @@ const WEEKLY_POOL: PoolMission[] = [
     mission_id: "weekly_perfect",
     title: "პერფექციონისტი",
     description: "მოიგე {n} თამაში 100% სიზუსტით",
-    beginner: { target: 2, xp: 180, coins: 400, gems: 8 },
-    advanced: { target: 5, xp: 250, coins: 600, gems: 15 },
+    beginner: { target: 1, xp: 180, coins: 450, gems: 0 },
+    advanced: { target: 3, xp: 250, coins: 700, gems: 0 },
     power_up: "time-drain",
     power_up_count: 2,
     color_theme: "rose",
@@ -362,8 +372,8 @@ const WEEKLY_POOL: PoolMission[] = [
     mission_id: "weekly_friend_games",
     title: "მეგობრების კვირა",
     description: "ითამაშე {n} თამაში მეგობრებთან",
-    beginner: { target: 2, xp: 140, coins: 300, gems: 5 },
-    advanced: { target: 5, xp: 190, coins: 450, gems: 8 },
+    beginner: { target: 1, xp: 140, coins: 350, gems: 0 },
+    advanced: { target: 3, xp: 190, coins: 520, gems: 0 },
     power_up: "time-drain",
     power_up_count: 2,
     color_theme: "emerald",
@@ -373,8 +383,8 @@ const WEEKLY_POOL: PoolMission[] = [
     mission_id: "weekly_play_games",
     title: "კვირის მარათონი",
     description: "ითამაშე {n} თამაში ამ კვირაში",
-    beginner: { target: 10, xp: 120, coins: 300, gems: 4 },
-    advanced: { target: 25, xp: 170, coins: 450, gems: 7 },
+    beginner: { target: 7, xp: 120, coins: 350, gems: 0 },
+    advanced: { target: 15, xp: 170, coins: 520, gems: 0 },
     power_up: "replace",
     power_up_count: 2,
     color_theme: "blue",

@@ -697,6 +697,7 @@ export const en: KaTranslations = {
     weekCompleteTitle: "Perfect week! All 7 days",
     rewardLabel: "Reward",
     weekPackage: "Week package",
+    weeklyBadge: "This week",
     pastDay: "Past day",
     futureDay: "Upcoming day",
     title: "Missions",

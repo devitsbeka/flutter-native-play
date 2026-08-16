@@ -695,6 +695,7 @@ export const ka = {
     weekCompleteTitle: "იდეალური კვირა! 7 დღე ზედიზედ",
     rewardLabel: "ჯილდო",
     weekPackage: "კვირის პაკეტი",
+    weeklyBadge: "ამ კვირაში",
     pastDay: "დასრულებული დღე",
     futureDay: "მომავალი დღე",
     title: "მისიები",
