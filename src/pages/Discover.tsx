@@ -16,6 +16,7 @@ import { CategoryGrid } from "@/components/discover/CategoryGrid";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 import { HeaderActions } from "@/components/shared/HeaderActions";
+import { matchesQuery } from "@/utils/searchMatch";
 
 // ─── Lazy Section: only mounts children when scrolled near viewport ─────
 
@@ -86,12 +87,11 @@ export default function Discover() {
   const filteredCategories = useMemo(() => {
     let result = categories;
 
+    // Latin spelling finds a Georgian category, same as the rooms list:
+    // "ბუნება" answers to `buneba` and to `bu`.
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (cat) =>
-          cat.name.toLowerCase().includes(query) ||
-          cat.description?.toLowerCase().includes(query)
+      result = result.filter((cat) =>
+        matchesQuery(searchQuery, [cat.name, cat.description])
       );
     }
 

@@ -3,6 +3,7 @@ import { compareRooms } from "@/utils/roomOrder";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { matchesQuery } from "@/utils/searchMatch";
 
 export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "active" | "completed";
 
@@ -445,13 +446,14 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
     }
 
     // Apply search
+    //
+    // Through matchesQuery, so a Georgian room name is reachable from a Latin
+    // keyboard: "ზეიმის მოედანი" answers to `zeimis moedani` and to `ze`. This
+    // was a raw `includes`, which meant the name had to be typed in the script
+    // it was saved in — and most people search a Georgian name in Latin.
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (room) =>
-          room.room_name?.toLowerCase().includes(query) ||
-          room.category_name?.toLowerCase().includes(query) ||
-          room.room_code.toLowerCase().includes(query)
+      result = result.filter((room) =>
+        matchesQuery(searchQuery, [room.room_name, room.category_name, room.room_code])
       );
     }
 
