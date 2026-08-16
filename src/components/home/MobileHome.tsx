@@ -353,7 +353,7 @@ export function MobileProfileCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 26 }}
       className="md:hidden absolute inset-x-0 z-20 mx-6"
-      style={{ bottom: `calc(${NAV_H} + 56px)` }}
+      style={{ bottom: `calc(${NAV_H} + 81px)` }}
     >
       <WeekMissionsStrip
         className="h-[94px]"
