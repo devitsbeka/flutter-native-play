@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from "react";
+import React, { memo, useMemo, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Heart } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -76,7 +76,12 @@ function prefetchVideo(videoUrl: string) {
   document.head.appendChild(link);
 }
 
-export function AirbnbCategoryCard({
+/**
+ * Memoised, because the carousel re-renders on every keystroke of the search
+ * box and almost none of these cards actually change. The props are all
+ * primitives apart from the two callbacks, which the carousel keeps stable.
+ */
+function AirbnbCategoryCardComponent({
   id,
   categoryId,
   iconSlug,
@@ -423,3 +428,5 @@ export function AirbnbCategoryCard({
     </div>
   );
 }
+
+export const AirbnbCategoryCard = memo(AirbnbCategoryCardComponent);

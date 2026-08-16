@@ -35,6 +35,25 @@ export function PingPongVideo({
   const preloadedUrl = getVideoBlobUrl(webmSrc);
   const videoSrc = preloadedUrl !== webmSrc ? preloadedUrl : webmSrc;
 
+  /**
+   * Whether there is a <video> in the DOM at all.
+   *
+   * There always was one — `preload="none"` and a load() gated on visibility
+   * kept it from fetching, so the element looked free. It is not. Each one is
+   * a media element the compositor gives its own layer, next to the layer the
+   * card already forces with translateZ(0), and creating and destroying them
+   * is browser work that no amount of memoising React saves.
+   *
+   * That is the search box. One character matches most of the catalogue, so a
+   * keystroke mounted forty cards and eighty layers, and the profile put 405ms
+   * of a four-character search in "(program)" — style, layout and media — 
+   * against 60ms of actual JavaScript.
+   *
+   * Once loaded it stays: scrolling a card out of view and back must not
+   * re-download it.
+   */
+  const shouldMount = (active && isInView) || isReady;
+
   // Intersection Observer - detect when video enters viewport
   useEffect(() => {
     const container = containerRef.current;
@@ -174,20 +193,22 @@ export function PingPongVideo({
           onError={() => setPosterError(true)}
         />
       )}
-      <video
-        ref={videoRef}
-        muted
-        playsInline
-        loop
-        preload="none"
-        style={style}
-        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
-          isReady && !videoError ? 'opacity-100' : 'opacity-0'
-        } ${className}`}
-      >
-        <source src={videoSrc} type="video/webm" />
-        <source src={mp4Src} type="video/mp4" />
-      </video>
+      {shouldMount && (
+        <video
+          ref={videoRef}
+          muted
+          playsInline
+          loop
+          preload="none"
+          style={style}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+            isReady && !videoError ? 'opacity-100' : 'opacity-0'
+          } ${className}`}
+        >
+          <source src={videoSrc} type="video/webm" />
+          <source src={mp4Src} type="video/mp4" />
+        </video>
+      )}
     </div>
   );
 }

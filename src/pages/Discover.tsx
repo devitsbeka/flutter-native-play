@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, useDeferredValue } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback, useDeferredValue } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -189,7 +189,10 @@ export default function Discover() {
     }
   }, [categories]);
 
-  const handleCategoryClick = (categoryId: string) => {
+  // Stable, so the memoised cards below actually skip a re-render. A new
+  // function identity every keystroke would defeat memo() on all forty of
+  // them, which is the same as not having it.
+  const handleCategoryClick = useCallback((categoryId: string) => {
     const stored = localStorage.getItem("recentlyViewedCategories");
     let ids: string[] = [];
     try {
@@ -201,14 +204,23 @@ export default function Discover() {
     localStorage.setItem("recentlyViewedCategories", JSON.stringify(ids));
 
     navigate(`/category/${categoryId}`);
-  };
+  }, [navigate]);
 
-  const getBadge = (_category: any, index: number) => {
+  const getBadge = useCallback((_category: any, index: number) => {
     if (index < 2) return t("discover.trending");
     return undefined;
-  };
+  }, [t]);
 
-  const isSearching = searchQuery.trim().length > 0;
+  // Read the DEFERRED query, not the live one.
+  //
+  // This flag swaps the entire page — four category carousels out, the
+  // results carousel in. Derived from `searchQuery` it flipped during the
+  // urgent render that puts the character in the box, so the first keystroke
+  // paid for tearing down and rebuilding the whole page before the caret
+  // moved: 273ms to show one letter, against ~100ms for every letter after.
+  // Deferred, the swap happens in the interruptible pass that the list
+  // already renders in, and the character appears at once.
+  const isSearching = deferredQuery.trim().length > 0;
 
   return (
     <MainLayout showPlayButton={false}>

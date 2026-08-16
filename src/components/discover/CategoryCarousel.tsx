@@ -27,6 +27,25 @@ interface CategoryCarouselProps {
   getBadge?: (category: Category, index: number) => string | undefined;
 }
 
+/**
+ * How many cards go into the DOM before the player has scrolled anywhere.
+ *
+ * A card is not cheap: a promoted media layer, a <video>, two gradient
+ * overlays and an inset box-shadow. Mounting forty of them costs style
+ * recalculation, layerization and paint, none of which React memoisation
+ * touches — a trace of a four-character search spent 57ms in
+ * UpdateLayoutTree and 39ms in Layerize against 60ms of JavaScript, on a
+ * desktop.
+ *
+ * The search box is where that bites: one character matches most of the
+ * catalogue, so every keystroke tore down and rebuilt the whole set. Twelve
+ * is roughly ten screens of a carousel that shows 1.2 cards at a time, so
+ * nobody reaches the end before the next batch is in.
+ */
+const CARD_PAGE = 12;
+/** Extend once the player is within this many cards of the end. */
+const EXTEND_WITHIN = 3;
+
 function CategoryCarouselComponent({
   categories,
   progress,
@@ -40,6 +59,25 @@ function CategoryCarouselComponent({
   const scrollRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const [activeCardIndex, setActiveCardIndex] = useState(0);
+
+  // Reset on every new list — a keystroke that narrows the search must not
+  // leave the window open at whatever the previous query grew it to.
+  const [visibleCount, setVisibleCount] = useState(CARD_PAGE);
+  useEffect(() => {
+    setVisibleCount(CARD_PAGE);
+    if (scrollRef.current) scrollRef.current.scrollLeft = 0;
+  }, [categories]);
+
+  const shown = categories.length <= CARD_PAGE ? categories : categories.slice(0, visibleCount);
+
+  const extendIfNearEnd = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const cardWidth = el.clientWidth * 0.8;
+    if (el.scrollLeft + el.clientWidth >= el.scrollWidth - cardWidth * EXTEND_WITHIN) {
+      setVisibleCount((n) => n + CARD_PAGE);
+    }
+  }, []);
 
   // Track which card is most visible/centered using IntersectionObserver
   useEffect(() => {
@@ -70,7 +108,7 @@ function CategoryCarouselComponent({
     cardRefs.current.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();
-  }, [categories.length]);
+  }, [categories.length, shown.length]);
 
   const scroll = useCallback((direction: "left" | "right") => {
     if (scrollRef.current) {
@@ -106,6 +144,7 @@ function CategoryCarouselComponent({
       {/* Scrollable Container - Native scroll only */}
       <div
         ref={scrollRef}
+        onScroll={extendIfNearEnd}
         className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-4 snap-x snap-mandatory"
         // No -webkit-overflow-scrolling: touch. It used to be how you got
         // momentum scrolling on iOS, and it did it by putting the scroller on
@@ -116,7 +155,7 @@ function CategoryCarouselComponent({
         // costs that.
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
-        {categories.map((category, index) => {
+        {shown.map((category, index) => {
           // Use uuid for favorites if available, fallback to id
           const favoriteId = category.uuid || category.id;
           // Get the category's actual total levels from database
