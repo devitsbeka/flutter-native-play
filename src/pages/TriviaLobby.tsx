@@ -154,7 +154,7 @@ export default function TriviaLobby() {
   const samplePost = convertToSamplePost(trivia, creator);
 
   return (
-    <div className="h-[100dvh] bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] flex flex-col overflow-hidden">
+    <div className="h-[100dvh] bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] flex flex-col overflow-hidden safe-bleed">
       {/* Hero Section with Cover - fixed height */}
       <div className="h-56 relative overflow-hidden flex-shrink-0">
         {trivia.cover_image ? (
@@ -172,14 +172,14 @@ export default function TriviaLobby() {
         {/* Back Button */}
         <button
           onClick={handleBack}
-          className="absolute top-4 left-4 z-20 w-12 h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors-offset"
+          className="absolute left-4 z-20 w-12 h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors-offset" style={{ top: `calc(1rem + ${SAFE_TOP})` }}
           
         >
           <ArrowLeft className="w-6 h-6 text-white" />
         </button>
 
         {/* Header Right Side - Edit + Avatar */}
-        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+        <div className="absolute right-4 z-10 flex items-center gap-2" style={{ top: `calc(1rem + ${SAFE_TOP})` }}>
           {creator && (
             <button onClick={() => openProfile(creator.user_id)}>
               <SafeAvatar

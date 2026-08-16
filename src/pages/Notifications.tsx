@@ -18,6 +18,7 @@ import { typeInTab, type NotificationTab } from '@/config/notificationTabs';
 import { CompactNotificationCard } from '@/components/notifications/CompactNotificationCard';
 import { NotificationDetailModal } from '@/components/notifications/NotificationDetailModal';
 import { CompactGenerationCard } from '@/components/notifications/CompactGenerationCard';
+import { PageHeader } from "@/components/shared/PageHeader";
 import { PingPongVideo } from '@/components/shared/PingPongVideo';
 import { MAP_VIDEOS } from '@/config/videoConfig';
 import { supabase } from '@/integrations/supabase/client';
@@ -297,28 +298,15 @@ export default function Notifications() {
     <MainLayout showPlayButton={false}>
     <div className="min-h-screen pb-8 relative overflow-hidden">
       {/* Video Background */}
-      <div className="fixed inset-0 safe-screen">
+      <div className="fixed inset-0">
         <PingPongVideo src={MAP_VIDEOS.default} className="opacity-40" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/80" />
       </div>
 
-      {/* Header - reduced size */}
-      <div className="relative z-10 px-4 pt-4 pb-3 border-b border-border/40">
-        <div className="flex items-center justify-between mb-2 max-w-[700px] md:max-w-[600px] mx-auto w-full">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
-              <Bell className="w-4 h-4 text-primary" />
-            </div>
-            <h1 className="font-bold text-base text-foreground">{t("extra.notifActivity")}</h1>
-          </div>
-          <button
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
-          >
-            <X className="w-4 h-4 text-foreground" />
-          </button>
-        </div>
-      </div>
+      {/* The shared header. The bell that used to sit beside the title is
+          gone with it — the page is the notifications list, so an icon
+          repeating that said nothing the title did not. */}
+      <PageHeader title={t("extra.notifActivity")} className="relative z-10" />
 
       {/* Tabs */}
       <div className="relative z-10 px-4 pt-3 max-w-[700px] md:max-w-[600px] mx-auto">

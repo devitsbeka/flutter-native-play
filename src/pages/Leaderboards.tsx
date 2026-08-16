@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { MainLayout } from "@/components/layout/MainLayout";
 import bgLeaderGlobal from "@/assets/bgleader-global.webp";
 import starIcon from "@/assets/thiings/star.png";
@@ -310,24 +310,9 @@ export default function Leaderboards() {
           draggable={false}
         />
 
-        {/* Header */}
-        <div className="relative shrink-0 z-50 px-4 pt-4 pb-3 bg-background/95 backdrop-blur-md border-b border-border/30">
-          <div className="flex items-center justify-between min-h-12">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => (location.key !== "default" ? navigate(-1) : navigate("/"))}
-                className="md:hidden w-10 h-10 -ml-1 rounded-full bg-white/80 shadow-sm flex items-center justify-center text-slate-700"
-                aria-label="Back"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
-                {t("extra.ratingTitle")}
-              </h1>
-            </div>
-            <HeaderActions />
-          </div>
-        </div>
+        {/* The shared header, so the title and back button sit where they do
+            on every other page instead of at this page's own offsets. */}
+        <PageHeader title={t("extra.ratingTitle")} rightElements={<HeaderActions />} />
 
         <div className="relative flex-1 min-h-0 w-full max-w-xl mx-auto px-4 pt-5 pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:pb-8 flex flex-col">
           {/* Tabs - centered pills */}

@@ -118,7 +118,7 @@ export default function CollectionLobby() {
   const heroGradientProps = getGradientProps(collection.cover_gradient);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] pb-32">
+    <div className="min-h-screen bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] pb-32 safe-bleed">
       {/* Hero */}
       <div className="h-56 relative overflow-hidden">
         {collection.cover_image ? (
@@ -142,12 +142,12 @@ export default function CollectionLobby() {
 
         <button
           onClick={handleBack}
-          className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+          className="absolute left-4 z-10 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors" style={{ top: `calc(1rem + ${SAFE_TOP})` }}
         >
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
 
-        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+        <div className="absolute right-4 z-10 flex items-center gap-2" style={{ top: `calc(1rem + ${SAFE_TOP})` }}>
           {isOwner && (
             <button
               onClick={() => setIsEditCollectionOpen(true)}

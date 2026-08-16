@@ -251,7 +251,7 @@ export default function CategoryPage() {
       />
 
 
-      <div className="min-h-screen flex flex-col relative bg-background">
+      <div className="min-h-screen flex flex-col relative bg-background safe-bleed">
         {/* Category Video Header Section - fixed height for clean tab positioning */}
         <div className="relative h-[48vh] min-h-[340px] overflow-hidden">
           <div className="absolute inset-0">
@@ -270,7 +270,7 @@ export default function CategoryPage() {
           />
           
           {/* Navigation buttons */}
-          <div className="absolute top-12 left-5 right-5 flex items-center justify-between z-10">
+          <div className="absolute left-5 right-5 flex items-center justify-between z-10" style={{ top: `calc(3rem + ${SAFE_TOP})` }}>
             <button
               onClick={() => navigate("/discover")}
               className="flex h-11 w-11 items-center justify-center rounded-full bg-black/25 backdrop-blur-md border border-white/20"
