@@ -68,6 +68,33 @@ disagree with the tables and with each other.
 
 If one appears to be missing, check the branch before writing a new one.
 
+## 4a. Edge functions and migrations are deployed **through Lovable**, not the CLI
+
+Nobody here has a Supabase personal access token or dashboard CLI access, and
+none of the workflows in `.github/workflows/` run `supabase functions deploy` —
+`deploy.yml` builds the web app, `pr-checks.yml` runs the migration tests, and
+that is all. Stop proposing `npx supabase functions deploy` and stop asking for
+`SUPABASE_ACCESS_TOKEN`. It has been asked for more than once and the answer
+does not change.
+
+The path is: merge to `main`, then ask Lovable to deploy. Lovable holds the
+Supabase connection for this project.
+
+Two consequences worth planning around:
+
+- **A new function is not live because it is on `main`.** Existing functions
+  get redeployed from `main`; one Lovable has never seen has to be deployed
+  explicitly. `send-game-invite-push` sat at HTTP 404 while every other
+  function answered 401, which is what that looks like from outside.
+- **Shipping an iOS build deploys nothing server-side.** The archive carries
+  the client only. A client calling a function that was never deployed fails
+  exactly where the failure is hardest to see — and where the call is
+  fire-and-forget, as the invite push deliberately is, it fails silently.
+
+When asking Lovable, ask for the deploy and nothing else. It syncs the whole
+repo, and every extra pass is a chance for it to regenerate
+`src/integrations/supabase/types.ts` — see rule 1 for what that costs.
+
 ## 5. `.env` is tracked on purpose
 
 It holds only the Supabase project ref and the **publishable** (anon) key,
