@@ -1,10 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The launch screen, which iOS shows before a single line of the app has run.
+
+  It used to be Capacitor's stock `Splash` image on `systemBackgroundColor` —
+  a 2732x2732 logo card scaled to fill, over a background that is white in
+  light mode and black in dark mode. Two things were wrong with it. It was
+  visibly a different screen from the app, which is what "I don't want to see
+  the Capacitor startup screen" is describing; and in dark mode it flashed
+  black before the app's own light wash arrived.
+
+  Now it is nothing but the app's background colour. iOS requires a launch
+  screen and will not let one be skipped, so the goal is not to remove it but
+  to make it indistinguishable from the app appearing: solid #FBFAF8, the same
+  value as `html` in index.css and APP_BACKGROUND in nativeShell.ts, held only
+  until React paints its first route. Not a system colour, because a system
+  colour follows the device's appearance and this wash does not.
+
+  The `Splash` imageset stays in Assets.xcassets — the SplashScreen plugin
+  still references it — but nothing displays it any more.
+-->
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17132" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17105"/>
-        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -12,21 +31,15 @@
         <scene sceneID="EHf-IW-A2E">
             <objects>
                 <viewController id="01J-lp-oVM" sceneMemberID="viewController">
-                    <imageView key="view" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Splash" id="snD-IY-ifK">
+                    <view key="view" contentMode="scaleToFill" id="snD-IY-ifK">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                    </imageView>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" red="0.98431372549019602" green="0.98039215686274506" blue="0.97254901960784312" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="53" y="375"/>
         </scene>
     </scenes>
-    <resources>
-        <image name="Splash" width="1366" height="1366"/>
-        <systemColor name="systemBackgroundColor">
-            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-    </resources>
 </document>

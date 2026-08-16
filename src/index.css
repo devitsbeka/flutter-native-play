@@ -40,6 +40,26 @@
  * a footer can make room for the keyboard instead of iOS scrolling the whole
  * document and pushing the header off screen. It stays 0 on the web.
  */
+/* The utilities that spend the tokens below.
+ *
+ * `safe-top` was already written on PageHeader and defined nowhere — not
+ * here, not in tailwind.config.ts. It was an inert class name on the one
+ * component every screen puts at the top, which is why nothing reserved room
+ * for the status bar even on the screens that looked like they did.
+ */
+@layer utilities {
+  .safe-top {
+    padding-top: var(--safe-top);
+  }
+  .safe-bottom {
+    padding-bottom: var(--safe-bottom);
+  }
+  .safe-x {
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
+  }
+}
+
 @layer base {
   :root {
     --safe-top: env(safe-area-inset-top, 0px);

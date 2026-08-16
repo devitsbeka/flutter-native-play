@@ -9,32 +9,63 @@ import { Capacitor } from "@capacitor/core";
  */
 
 /** The page wash the app paints behind everything (see index.html theme-color). */
-const APP_BACKGROUND = "#fbfaf8";
+export const APP_BACKGROUND = "#fbfaf8";
 
 let statusBarReady = false;
 
 /**
- * Status bar: dark glyphs on the light lavender wash.
+ * Status bar: the app paints it, not the system.
  *
- * `setOverlaysWebView(false)` keeps the webview below the status bar rather
- * than under it. The alternative — overlaying and paying for it with
- * safe-area padding everywhere — only works if every screen remembers the
- * padding, and the audit found roughly twenty that do and an unknown number
- * that don't.
+ * `setOverlaysWebView(false)` kept the webview *below* the status bar, so
+ * that strip was never the app's to draw — iOS filled it from the window,
+ * which is black. Every screen therefore had a black band across the top
+ * that belonged to no page, most visibly over the game rooms, where the
+ * gradient stopped dead at the notch.
+ *
+ * Overlaying means the webview owns the full screen and any fixed background
+ * runs edge to edge under the clock. The cost is that content has to keep out
+ * from under it, which is what `--safe-top` and the `.safe-top` utility are
+ * for. That utility was already written on PageHeader and defined nowhere, so
+ * the padding this needs was missing on every screen rather than on some of
+ * them — see index.css.
+ *
+ * The style is the dark-glyph one, because the app is light nearly
+ * everywhere. A screen with a dark background of its own can call
+ * `setStatusBarStyle("light")` on entry and put it back on exit.
  */
 export async function configureStatusBar(): Promise<void> {
   if (!Capacitor.isNativePlatform() || statusBarReady) return;
 
   try {
     const { StatusBar, Style } = await import("@capacitor/status-bar");
+    await StatusBar.setOverlaysWebView({ overlay: true });
     await StatusBar.setStyle({ style: Style.Light });
-    await StatusBar.setOverlaysWebView({ overlay: false });
     if (Capacitor.getPlatform() === "android") {
-      await StatusBar.setBackgroundColor({ color: APP_BACKGROUND });
+      // Transparent rather than the wash: with the webview overlaying, a
+      // solid colour here would paint a band back over the page.
+      await StatusBar.setBackgroundColor({ color: "#00000000" });
     }
     statusBarReady = true;
   } catch (error) {
     console.warn("[native] Status bar setup failed:", error);
+  }
+}
+
+/**
+ * Flip the status bar glyphs for a screen that is dark under them.
+ *
+ * `"light"` means light glyphs for a dark background — the opposite of
+ * Capacitor's `Style.Light`, which means *dark* glyphs for a light one. The
+ * naming has caught enough people that this wrapper takes the plain-English
+ * word and does the translation here.
+ */
+export async function setStatusBarStyle(mode: "light" | "dark"): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    const { StatusBar, Style } = await import("@capacitor/status-bar");
+    await StatusBar.setStyle({ style: mode === "light" ? Style.Dark : Style.Light });
+  } catch (error) {
+    console.warn("[native] Status bar style change failed:", error);
   }
 }
 

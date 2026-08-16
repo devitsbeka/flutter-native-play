@@ -2,7 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- viewport-fit=cover is what makes env(safe-area-inset-*) report real
+         numbers. Without it every inset reads 0, so --safe-top is 0, and any
+         padding derived from it silently does nothing — which is what was
+         happening while the status bar strip sat outside the webview
+         entirely. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <!-- Tints the browser's status/toolbar area. It must match the app's own
          page wash (the lavender GlobalSplineBackground, measured #f8e6ff at
          the top of the page) — the brand violet that used to sit here painted
