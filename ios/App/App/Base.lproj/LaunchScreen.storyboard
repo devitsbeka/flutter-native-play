@@ -2,22 +2,21 @@
 <!--
   The launch screen, which iOS shows before a single line of the app has run.
 
-  It used to be Capacitor's stock `Splash` image on `systemBackgroundColor` —
-  a 2732x2732 logo card scaled to fill, over a background that is white in
-  light mode and black in dark mode. Two things were wrong with it. It was
-  visibly a different screen from the app, which is what "I don't want to see
-  the Capacitor startup screen" is describing; and in dark mode it flashed
-  black before the app's own light wash arrived.
+  It carries the same landmarks artwork as src/components/SplashScreen.tsx,
+  cropped the same way, so the two read as one screen instead of two. That was
+  the complaint: iOS mandates a launch screen and the app adds its own, and
+  when they looked different the open went wash, then artwork, then home —
+  three screens for one launch.
 
-  Now it is nothing but the app's background colour. iOS requires a launch
-  screen and will not let one be skipped, so the goal is not to remove it but
-  to make it indistinguishable from the app appearing: solid #FBFAF8, the same
-  value as `html` in index.css and APP_BACKGROUND in nativeShell.ts, held only
-  until React paints its first route. Not a system colour, because a system
-  colour follows the device's appearance and this wash does not.
+  Matching means matching the crop, not just the file. The React splash paints
+  it `bg-cover bg-center` over #bcabee, so the asset is a square rendered the
+  same way and this view is scaleAspectFill; a square cropped centre-out lands
+  on the same part of the image at every device aspect. The background colour
+  is the art's own sky, so no edge can show through before the image draws.
 
-  The `Splash` imageset stays in Assets.xcassets — the SplashScreen plugin
-  still references it — but nothing displays it any more.
+  It was briefly Capacitor's stock Splash logo card on systemBackgroundColor,
+  which was visibly a different screen and flashed black in dark mode; and
+  before that, a solid wash, which was still a second screen.
 -->
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17132" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
@@ -31,15 +30,18 @@
         <scene sceneID="EHf-IW-A2E">
             <objects>
                 <viewController id="01J-lp-oVM" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="snD-IY-ifK">
+                    <imageView key="view" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Splash" id="snD-IY-ifK">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" red="0.98431372549019602" green="0.98039215686274506" blue="0.97254901960784312" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                    </view>
+                        <color key="backgroundColor" red="0.73725490196078436" green="0.6705882352941176" blue="0.93333333333333335" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </imageView>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="53" y="375"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="Splash" width="1024" height="1024"/>
+    </resources>
 </document>

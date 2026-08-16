@@ -43,11 +43,11 @@ const config: CapacitorConfig = {
       // webview or holds a still image over a ready app; both read as the app
       // being slow.
       launchAutoHide: false,
-      // Matches `html` in index.css, APP_BACKGROUND in nativeShell.ts and the
-      // LaunchScreen storyboard. It was #f8e6ff — the lavender from
-      // index.html's theme-color — so the launch went white, then lavender,
-      // then the app's cream wash: three colours before the first frame.
-      backgroundColor: '#fbfaf8',
+      // The artwork's own sky, matching the LaunchScreen storyboard and the
+      // fill behind SplashScreen.tsx's background image. This is what shows
+      // in the instant before the image draws, so any other value is a flash
+      // of a colour that belongs to no screen.
+      backgroundColor: '#bcabee',
       showSpinner: false,
     },
   },
