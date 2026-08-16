@@ -933,7 +933,7 @@ export function RoomLobbyV2() {
       </div>
 
       {/* Fixed Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 safe-bottom z-20 px-4 pb-6 pt-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 z-20 px-5 pt-4 pb-[calc(1.5rem_+_var(--safe-bottom))] bg-gradient-to-t from-black/60 via-black/30 to-transparent">
         <div className="max-w-[520px] mx-auto">
           {isHost ? (
             // Show different button based on context
@@ -1005,7 +1005,7 @@ export function RoomLobbyV2() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 safe-screen bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom))]"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}

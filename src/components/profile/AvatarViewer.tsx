@@ -100,17 +100,17 @@ export function AvatarViewer({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 safe-screen z-[120] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-6 p-6"
+          className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-6 p-6 pt-[calc(1.5rem_+_var(--safe-top))] pb-[calc(1.5rem_+_var(--safe-bottom))]"
           onClick={onClose}
         >
           <button
             type="button"
             onClick={onClose}
             aria-label={t("common.close")}
-            /* `absolute` resolves against the padding box, and .safe-screen
-               is that padding — so this already clears the status bar. Adding
-               the inset again here is the double-spacing bug this app has
-               shipped twice. */
+            /* `absolute` resolves against the padding box, and the backdrop's
+               padding already carries the status-bar inset — so this clears
+               it. Adding the inset again here is the double-spacing bug this
+               app has shipped twice. */
             className="absolute right-4 top-4 w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center"
           >
             <X className="w-5 h-5" />

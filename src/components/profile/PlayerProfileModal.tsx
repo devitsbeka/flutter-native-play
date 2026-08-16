@@ -264,7 +264,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 safe-screen z-[100] bg-background flex flex-col overflow-hidden p-4"
+            className="fixed inset-0 z-[100] bg-background flex flex-col overflow-hidden p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom))]"
           >
             {/* Bubble background video + soft wash, same as the room page */}
             <div className="absolute inset-0 -z-10 pointer-events-none" aria-hidden>

@@ -76,7 +76,7 @@ export function CreateTriviaTypeModal({
           </div>
 
           {/* Content (no page scroll; drafts scroll internally if needed) */}
-          <div className="flex-1 overflow-hidden px-4 py-6 safe-bottom max-w-2xl mx-auto w-full">
+          <div className="flex-1 overflow-hidden px-4 py-6 pb-[calc(1.5rem_+_var(--safe-bottom))] max-w-2xl mx-auto w-full">
             <div className="flex h-full flex-col space-y-3">
             {/* Single Trivia Card */}
             <motion.button

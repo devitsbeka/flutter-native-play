@@ -490,7 +490,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
 
             {/* Fixed Footer */}
             {selectedSlug && (
-              <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-border/30 bg-background safe-bottom">
+              <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem_+_var(--safe-bottom))] border-t border-border/30 bg-background">
                 <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
                   <button
                   onClick={handleRemove}

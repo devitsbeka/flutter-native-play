@@ -1072,7 +1072,7 @@ export function GameStylePersonalTrivia({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 safe-screen z-[60] bg-black/50 flex items-center justify-center p-4"
+                className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom))]"
                 onClick={() => setShowDeleteConfirm(false)}
               >
                 <motion.div
@@ -1119,7 +1119,7 @@ export function GameStylePersonalTrivia({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 safe-screen z-[60] bg-black/50 flex items-center justify-center p-4"
+                className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom))]"
                 onClick={() => {
                   if (!showDraftNameInput) {
                     setShowExitConfirm(false);

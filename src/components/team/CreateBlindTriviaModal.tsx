@@ -17,6 +17,7 @@ import { useTriviaDrafts } from "@/hooks/useTriviaDrafts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { edgeFunctionMessage } from "@/utils/edgeFunctionError";
 
 interface GeneratedQuestion {
   question_text: string;
@@ -288,7 +289,11 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
       console.error("Error generating quiz:", error);
       toastHook({
         title: t("extra.cbtErrorToastTitle"),
-        description: error instanceof Error ? error.message : t("extra.cbtErrorToastDesc"),
+        // The function says why — out of AI credits, rate limited, every
+        // question failed the fact check. `invoke` leaves that on the
+        // response body and hands back "Edge Function returned a non-2xx
+        // status code", which is what a player saw for all of them.
+        description: await edgeFunctionMessage(error, t("extra.cbtErrorToastDesc")),
         variant: "destructive",
       });
     } finally {

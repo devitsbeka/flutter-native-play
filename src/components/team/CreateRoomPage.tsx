@@ -847,7 +847,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 safe-screen z-50 bg-background flex flex-col overflow-hidden p-4"
+      className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom))]"
     >
       {/* Bubble background video behind the whole page, washed light so the
           form stays readable (negative z paints it under the content) */}

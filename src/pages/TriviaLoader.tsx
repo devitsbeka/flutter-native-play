@@ -27,7 +27,7 @@ export default function TriviaLoader() {
   }, []);
 
   return (
-    <div className="fixed inset-0 safe-screen z-[9999] flex flex-col items-center justify-between overflow-hidden pt-10 pb-16">
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-between overflow-hidden pt-[calc(2.5rem_+_var(--safe-top))] pb-[calc(4rem_+_var(--safe-bottom))]">
       {/* Video Background */}
       <video
         autoPlay

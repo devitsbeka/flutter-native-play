@@ -592,6 +592,10 @@ export const ka = {
   // ==========================================
   errors: {
     deleteFailed: "წაშლა ვერ მოხერხდა",
+    aiOutOfCredits: "კითხვების გენერატორს AI კრედიტები ამოეწურა. სცადე მოგვიანებით.",
+    aiBusy: "კითხვების გენერატორი დატვირთულია. სცადე ცოტა ხანში.",
+    signInRequired: "ამისთვის საჭიროა ანგარიშზე შესვლა.",
+    serviceUnavailable: "ეს ამჟამად მიუწვდომელია.",
     failedToReadImage: "სურათის დამუშავება ვერ მოხერხდა",
     generic: "რაღაც შეცდომა მოხდა",
     network: "ინტერნეტთან კავშირი არ არის",
@@ -2742,7 +2746,7 @@ export const ka = {
     fourOptionsDesc2: "კლასიკური Quiz ფორმატი",
     trueFalseOption2: "მართალი / მცდარი",
     trueFalseDesc2: "სწრაფი True/False",
-    addRoundBtn2: "+ დაამატე რაუნდი",
+    addRoundBtn2: "დაამატე რაუნდი",
     aiWillGenerate2: "AI დააგენერირებს {count} კითხვას",
     writeTopicSingle: "ჩაწერე თემა",
     writeTopicsMulti: "ჩაწერე რა თემებზე გსურს რაუნდები",

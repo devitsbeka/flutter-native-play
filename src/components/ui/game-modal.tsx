@@ -457,7 +457,7 @@ export function GameModal({
           initial={{ opacity: 0, pointerEvents: "none" }}
           animate={{ opacity: 1, pointerEvents: "auto" }}
           exit={{ opacity: 0, pointerEvents: "none" }}
-          className="fixed inset-0 safe-screen bg-black/80 z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom))]"
           onClick={!disableBackdropClick && onClose ? handleClose : undefined}
         >
           <motion.div

@@ -142,7 +142,7 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
         </div>
       </motion.div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-8 safe-bottom max-w-2xl lg:mx-auto">
+      <div className="flex-1 overflow-y-auto px-4 pb-[calc(2rem_+_var(--safe-bottom))] max-w-2xl lg:mx-auto">
         <div className="space-y-3 mb-4">
           {topOptions.map((option, index) => (
             <motion.button

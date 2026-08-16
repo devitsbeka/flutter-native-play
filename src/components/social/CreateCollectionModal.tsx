@@ -15,6 +15,7 @@ import confetti from "canvas-confetti";
 import iconCollections from "@/assets/icon-collections.png";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import { shuffleArray } from "@/utils/shuffle";
+import { edgeFunctionMessage } from "@/utils/edgeFunctionError";
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
 type CreatorMode = "edit" | "play" | null;
@@ -308,9 +309,16 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         });
 
         // Check for FunctionsHttpError (422, 500, etc.)
+        //
+        // `error.message` is the same fixed sentence for every one of those —
+        // "Edge Function returned a non-2xx status code" — and the reason the
+        // function wrote is on the response body it never reads. That
+        // sentence, in English, over a Georgian screen, is what this modal
+        // showed when the AI provider ran out of credits.
         if (error) {
-          const errorMessage = error.message || `რაუნდი "${roundName}" ვერ დაგენერირდა`;
-          throw new Error(errorMessage);
+          throw new Error(
+            await edgeFunctionMessage(error, `რაუნდი "${roundName}" ვერ დაგენერირდა`),
+          );
         }
 
         // Also check for error in the data itself (edge function error response)
@@ -635,7 +643,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 safe-screen z-[60] bg-black/50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4 pt-[calc(1rem_+_var(--safe-top))] pb-[calc(1rem_+_var(--safe-bottom))]"
           onClick={() => setShowRoundSettings(false)}
         >
           <motion.div

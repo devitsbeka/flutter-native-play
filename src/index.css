@@ -48,6 +48,21 @@
  * for the status bar even on the screens that looked like they did.
  */
 @layer utilities {
+  /* NOTE, before adding one of these to an element that already has padding:
+   * they REPLACE it, they do not add to it.
+   *
+   * The doubled selectors below exist so these outrank `p-4` — a modal's own
+   * padding used to win and its contents sat under the status bar. The same
+   * specificity cuts the other way and just as quietly: `safe-bottom pb-6`
+   * gives you the inset and silently discards the 24px, which is how the
+   * start-game button in the room lobby came to sit on the bottom edge.
+   *
+   * Wanting both means writing both:
+   *   safe-bottom pb-6  ->  pb-[calc(1.5rem_+_var(--safe-bottom))]
+   *
+   * src/__tests__/repo-invariants.test.ts fails on the combination.
+   */
+
   /* Full-screen overlays inset themselves, because nothing else can.
    *
    * #root's padding covers every screen rendered inside it, and reaches none

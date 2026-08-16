@@ -168,7 +168,7 @@ export function EditQuestionDialog({
           </div>
 
           {/* Fixed Footer */}
-          <div className="fixed bottom-0 left-0 right-0 z-[60] p-5 border-t border-white/10 bg-[#7E7ADB]/95 backdrop-blur-sm safe-bottom">
+          <div className="fixed bottom-0 left-0 right-0 z-[60] p-5 pb-[calc(1.25rem_+_var(--safe-bottom))] border-t border-white/10 bg-[#7E7ADB]/95 backdrop-blur-sm">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
               <ChunkyButton
               onClick={handleSave}

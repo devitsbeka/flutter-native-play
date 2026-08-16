@@ -594,6 +594,10 @@ export const en: KaTranslations = {
   // ==========================================
   errors: {
     deleteFailed: "Delete failed",
+    aiOutOfCredits: "The question generator has run out of AI credits. Try again later.",
+    aiBusy: "The question generator is busy right now. Try again in a moment.",
+    signInRequired: "Sign in to use this.",
+    serviceUnavailable: "This is not available right now.",
     failedToReadImage: "Failed to process image",
     generic: "Something went wrong",
     network: "No internet connection",
@@ -2743,7 +2747,7 @@ export const en: KaTranslations = {
     fourOptionsDesc2: "Classic Quiz format",
     trueFalseOption2: "True / False",
     trueFalseDesc2: "Quick True/False",
-    addRoundBtn2: "+ Add round",
+    addRoundBtn2: "Add round",
     aiWillGenerate2: "AI will generate {count} questions",
     writeTopicSingle: "Write a topic",
     writeTopicsMulti: "Write what topics you want rounds about",

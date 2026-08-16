@@ -74,7 +74,7 @@ export function CreateRoomScreen({
         </div>
       </motion.div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-8 safe-bottom">
+      <div className="flex-1 overflow-y-auto px-4 pb-[calc(2rem_+_var(--safe-bottom))]">
         <div className="max-w-xl mx-auto">
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="text-sm font-medium text-white/70 mb-3 flex items-center gap-2">
             <Zap className="w-4 h-4" />
@@ -113,7 +113,7 @@ export function CreateRoomScreen({
         </div>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="flex-shrink-0 px-4 pb-6 safe-bottom">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="flex-shrink-0 px-4 pb-[calc(1.5rem_+_var(--safe-bottom))]">
         <div className="max-w-xl mx-auto">
           <ChunkyButton variant="secondary" size="lg" onClick={handleCreate} disabled={!selectedType} className="w-full">
             {t("extra.createRoom")}

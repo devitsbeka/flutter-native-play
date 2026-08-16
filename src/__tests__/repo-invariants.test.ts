@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync, existsSync } from "node:fs";
+import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
 /**
@@ -230,6 +230,62 @@ describe("repo invariants", () => {
         "Both PRO tiers bill monthly — if an annual plan is genuinely being " +
         "added, give it its own tier and its own /year label rather than " +
         "renaming an existing monthly product.",
+    ).toEqual([]);
+  });
+
+  it("never puts a safe-area utility on the same element as its own padding", () => {
+    // `.safe-top` / `.safe-bottom` / `.safe-screen` are written as doubled
+    // selectors (`.safe-bottom.safe-bottom`) so they outrank the utilities
+    // that were beating them — a modal's `p-4` used to win and the contents
+    // sat under the status bar.
+    //
+    // That specificity cuts the other way too, and silently: an element
+    // carrying both `safe-bottom` and `pb-6` gets the inset ONLY, and the
+    // 24px the design asked for is discarded with nothing to show for it.
+    // That is how the start-game button in the room lobby ended up against
+    // the bottom of the screen.
+    //
+    // The two cannot be combined, so combine them by hand:
+    //   `safe-bottom pb-6` -> `pb-[calc(1.5rem_+_var(--safe-bottom))]`
+    const offenders: string[] = [];
+
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir)) {
+        const full = resolve(dir, entry);
+        if (statSync(full).isDirectory()) {
+          walk(full);
+          continue;
+        }
+        if (!/\.tsx$/.test(entry)) continue;
+
+        const source = readFileSync(full, "utf8");
+        for (const match of source.matchAll(/class(?:Name)?="([^"]*)"/g)) {
+          const classes = match[1].split(/\s+/);
+          const has = (name: string) => classes.includes(name);
+          // Only bare utilities count — `pb-[calc(... var(--safe-bottom))]`
+          // is the fix, not the fault.
+          const padded = (prefixes: string[]) =>
+            classes.some((c) => prefixes.some((p) => new RegExp(`^${p}-\\d`).test(c)));
+
+          const bottomClash =
+            (has("safe-bottom") || has("safe-screen")) && padded(["pb", "py", "p"]);
+          const topClash = (has("safe-top") || has("safe-screen")) && padded(["pt", "py"]);
+
+          if (bottomClash || topClash) {
+            offenders.push(`${full.slice(resolve(REPO).length + 1)}: ${match[1]}`);
+          }
+        }
+      }
+    };
+
+    walk(resolve(REPO, "src"));
+
+    expect(
+      offenders,
+      "These elements ask for a safe-area inset and their own padding on the " +
+        "same element. The doubled safe-* selector wins and the padding is " +
+        "dropped:\n" +
+        offenders.join("\n"),
     ).toEqual([]);
   });
 
