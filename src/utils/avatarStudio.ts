@@ -136,6 +136,17 @@ export interface SessionResetInput {
   wasOpen: boolean;
   /** Whether a generation is running right now. */
   generationInFlight: boolean;
+  /**
+   * Whether a finished generation is waiting on the preview step, unseen.
+   *
+   * The modal closes itself once a generation is under way and the shell
+   * reopens it when the result lands — so the open transition that shows the
+   * result is, by definition, one where nothing is in flight any more. Judged
+   * on `generationInFlight` alone this reset fires on exactly that
+   * transition and puts the gallery up instead: the generation the player
+   * waited a minute for is on screen for no frames at all.
+   */
+  awaitingPreview?: boolean;
 }
 
 /**
@@ -153,7 +164,9 @@ export const shouldResetSession = ({
   isOpen,
   wasOpen,
   generationInFlight,
-}: SessionResetInput): boolean => isOpen && !wasOpen && !generationInFlight;
+  awaitingPreview = false,
+}: SessionResetInput): boolean =>
+  isOpen && !wasOpen && !generationInFlight && !awaitingPreview;
 
 /**
  * Whether applying a scene still needs to upload it.

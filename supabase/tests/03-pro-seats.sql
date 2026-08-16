@@ -169,5 +169,52 @@ BEGIN
     format('SELECT public.revoke_pro_seat(%L::uuid)', f4),
     'cannot revoke a seat you did not grant');
 
+  -- ── what "already has their own subscription" is allowed to mean ────────
+  --
+  -- solo is PRO with its one seat free again after step 11.
+
+  -- 13. Shop VIP is not a subscription anyone pays for. Refusing on it meant
+  --     refusing every player who had ever spent coins on VIP days — which is
+  --     what the bug report was: friends who had none were told they had one.
+  PERFORM pg_temp.give_sub(f3, 'standard', 10, 'shop');
+  PERFORM pg_temp.as_user(solo);
+  PERFORM public.grant_pro_seat(f3);
+
+  SELECT vip_tier, purchase_platform INTO v_tier, v_platform
+  FROM public.vip_subscriptions WHERE user_id = f3;
+  PERFORM pg_temp.must_equal(v_tier, 'pro', 'a player holding shop VIP can be given PRO');
+  PERFORM pg_temp.must_equal(v_platform, 'seat', 'and the seat takes the row over');
+
+  SELECT prior_expires_at INTO v_exp FROM public.pro_seats
+  WHERE holder_id = f3 AND revoked_at IS NULL;
+  PERFORM pg_temp.must_equal(v_exp IS NOT NULL, true, 'the seat records what it displaced');
+
+  -- 14. The displaced days come back when the seat ends. Without this the
+  --     gift leaves the friend worse off than before it arrived.
+  PERFORM public.revoke_pro_seat(f3);
+  SELECT vip_tier, purchase_platform, expires_at INTO v_tier, v_platform, v_exp
+  FROM public.vip_subscriptions WHERE user_id = f3;
+  PERFORM pg_temp.must_equal(v_tier, 'standard', 'ending the seat gives the tier back');
+  PERFORM pg_temp.must_equal(v_platform, 'shop', 'and the platform');
+  PERFORM pg_temp.must_equal(v_exp > now(), true, 'and the days that were left on it');
+
+  -- 15. Ad-free is a one-off unlock, not a subscription — and never conferred
+  --     PRO, so owning it cannot be a reason to refuse PRO.
+  PERFORM pg_temp.give_sub(f4, 'ad_free', 3650, 'ios');
+  PERFORM public.grant_pro_seat(f4);
+  SELECT vip_tier INTO v_tier FROM public.vip_subscriptions WHERE user_id = f4;
+  PERFORM pg_temp.must_equal(v_tier, 'pro', 'an ad-free owner can be given PRO');
+
+  PERFORM public.revoke_pro_seat(f4);
+  SELECT vip_tier INTO v_tier FROM public.vip_subscriptions WHERE user_id = f4;
+  PERFORM pg_temp.must_equal(v_tier, 'ad_free', 'and keeps the ad-free unlock afterwards');
+
+  -- 16. PRO somebody already holds is still never overwritten, however they
+  --     came by it. A seat would replace a lifetime admin grant with a term.
+  PERFORM pg_temp.give_sub(f5, 'pro', 3650, 'admin_grant');
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.grant_pro_seat(%L::uuid)', f5),
+    'cannot overwrite PRO the player already holds');
+
   RAISE NOTICE '--- all pro-seat assertions held ---';
 END $$;

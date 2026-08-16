@@ -61,18 +61,54 @@ const PENDING_ROUTE_KEY = "push:pendingRoute";
 // elsewhere.
 let listenersBound = false;
 
+/**
+ * Whether the player wants notifications, separately from whether iOS has
+ * been asked.
+ *
+ * These are not the same switch and the app needs both. iOS grants permission
+ * once and never takes it back from inside the app, so a settings toggle that
+ * only read the permission could be turned on and never off — and turning it
+ * off by deleting the token alone does not hold, because the launch refresh
+ * below would put the row straight back on the next launch.
+ *
+ * Stored locally rather than on the profile: it describes this device, and
+ * the row it controls in `push_tokens` is this device's row.
+ */
+const ENABLED_KEY = "push:enabled";
+
+function readEnabled(): boolean {
+  try {
+    return localStorage.getItem(ENABLED_KEY) !== "false";
+  } catch {
+    return true;
+  }
+}
+
+function writeEnabled(value: boolean): void {
+  try {
+    localStorage.setItem(ENABLED_KEY, String(value));
+  } catch {
+    /* private mode; the in-memory state still holds for this session */
+  }
+}
+
 export function usePushNotifications() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [permission, setPermission] = useState<PushPermission>("unsupported");
   const [token, setToken] = useState<string | null>(null);
+  const [enabled, setEnabledState] = useState<boolean>(readEnabled);
 
   const supported = Capacitor.isNativePlatform();
 
   /** Store or refresh this device's token against the signed-in user. */
   const persistToken = useCallback(
     async (value: string) => {
-      if (!user) return;
+      // Read the preference rather than closing over it: the token refresh
+      // and the tokenReceived listener both land here from instances that
+      // were mounted before the player turned notifications off, and writing
+      // the row back is exactly what "off" has to prevent.
+      if (!user || !readEnabled()) return;
       const { error } = await supabase
         .from("push_tokens")
         .upsert(
@@ -224,17 +260,96 @@ export function usePushNotifications() {
    * Turning notifications off in the app has to remove the row, not just stop
    * asking — the sender reads the table directly, so a token left behind
    * keeps receiving.
+   *
+   * The token is asked for again rather than trusted from state: this hook
+   * has two instances, and the one the settings row renders may never have
+   * seen a `tokenReceived`. Leaving the row behind because `token` was null
+   * would be the same silent failure as not deleting it at all.
    */
   const unregister = useCallback(async () => {
-    if (!user || !token) return;
-    await supabase.from("push_tokens").delete().eq("user_id", user.id).eq("token", token);
+    if (!user) return;
+
+    let value = token;
+    if (!value && supported) {
+      try {
+        const { FirebaseMessaging } = await import("@capacitor-firebase/messaging");
+        value = (await FirebaseMessaging.getToken()).token ?? null;
+      } catch {
+        /* nothing to look up; fall through */
+      }
+    }
+    if (!value) return;
+
+    await supabase.from("push_tokens").delete().eq("user_id", user.id).eq("token", value);
     setToken(null);
-  }, [user, token]);
+  }, [user, token, supported]);
+
+  /**
+   * The settings toggle.
+   *
+   * On means "this device may be sent notifications", which needs both the
+   * iOS permission and a stored token. Off removes the token — iOS keeps the
+   * permission, because the app cannot give it back, but nothing is sent.
+   *
+   * Returns where it landed rather than what was asked for: turning it on
+   * when the player then declines the iOS dialog leaves it off, and the
+   * switch has to follow.
+   */
+  const setEnabled = useCallback(
+    async (next: boolean): Promise<boolean> => {
+      writeEnabled(next);
+      setEnabledState(next);
+
+      if (!supported) return next;
+
+      if (!next) {
+        await unregister();
+        return false;
+      }
+
+      let granted = permission === "granted";
+      if (!granted) {
+        granted = (await requestPermission()) === "granted";
+      } else {
+        try {
+          const { FirebaseMessaging } = await import("@capacitor-firebase/messaging");
+          const { token: fresh } = await FirebaseMessaging.getToken();
+          if (fresh) {
+            setToken(fresh);
+            await persistToken(fresh);
+          }
+        } catch (error) {
+          console.warn("[push] Could not refresh token:", error);
+        }
+      }
+
+      if (!granted) {
+        // Declined, or previously denied and never asked again. Saying it is
+        // on when nothing can arrive is the lie this whole feature has
+        // already told once.
+        writeEnabled(false);
+        setEnabledState(false);
+        return false;
+      }
+      return true;
+    },
+    [supported, permission, requestPermission, persistToken, unregister],
+  );
 
   // A token that arrived before sign-in belongs to whoever signs in next.
   useEffect(() => {
     if (user && token) persistToken(token);
   }, [user, token, persistToken]);
 
-  return { supported, permission, token, requestPermission, unregister };
+  return {
+    supported,
+    permission,
+    token,
+    // On only when iOS agrees as well: permission denied in Settings means
+    // nothing is delivered whatever this device last chose.
+    enabled: enabled && permission === "granted",
+    requestPermission,
+    setEnabled,
+    unregister,
+  };
 }

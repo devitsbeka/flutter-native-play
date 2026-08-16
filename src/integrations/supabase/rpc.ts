@@ -14,14 +14,30 @@ import { supabase } from "./client";
 export async function callRpc<TResult>(
   fn: string,
   args?: Record<string, unknown>,
-): Promise<{ data: TResult | null; error: { message: string } | null }> {
+): Promise<{ data: TResult | null; error: RpcError | null }> {
   const client = supabase as unknown as {
     rpc: (
       name: string,
       params?: Record<string, unknown>,
-    ) => Promise<{ data: TResult | null; error: { message: string } | null }>;
+    ) => Promise<{ data: TResult | null; error: RpcError | null }>;
   };
   return client.rpc(fn, args);
+}
+
+/**
+ * What PostgREST returns when a function raises.
+ *
+ * `hint` is carried because `message` is written in English inside the
+ * migration and shown to a player reading the app in Georgian. A function
+ * that raises `USING HINT = 'some_code'` gets that code through untouched,
+ * which the caller can look up in the locale files — the message is then the
+ * fallback for a code the build does not know rather than the only option.
+ */
+export interface RpcError {
+  message: string;
+  hint?: string | null;
+  details?: string | null;
+  code?: string | null;
 }
 
 /**

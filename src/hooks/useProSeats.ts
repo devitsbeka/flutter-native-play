@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { callRpc, selectRows } from "@/integrations/supabase/rpc";
+import { callRpc, selectRows, type RpcError } from "@/integrations/supabase/rpc";
 import { useAuth } from "@/hooks/useAuth";
+import { t } from "@/lib/i18n";
 import { toast } from "sonner";
 
 /**
@@ -33,6 +34,28 @@ interface GrantResult {
   seats_used: number;
   seats_total: number;
   expires_at: string;
+}
+
+/**
+ * The refusal, in the player's language.
+ *
+ * Each `RAISE EXCEPTION` in the seat functions carries a code as its HINT, so
+ * this is a lookup and not a second copy of the rules — the database still
+ * decides, and a code with no entry falls through to the English sentence it
+ * came with rather than to a blank toast.
+ */
+const SEAT_ERRORS: Record<string, string> = {
+  pro_seat_signed_out: "extra.proSeatErrSignedOut",
+  pro_seat_self: "extra.proSeatErrSelf",
+  pro_seat_no_subscription: "extra.proSeatErrNoSubscription",
+  pro_seat_none_free: "extra.proSeatErrNoneFree",
+  pro_seat_holder_has_pro: "extra.proSeatErrHolderHasPro",
+  pro_seat_not_found: "extra.proSeatErrNotFound",
+};
+
+function seatErrorMessage(error: RpcError): string {
+  const key = error.hint ? SEAT_ERRORS[error.hint] : undefined;
+  return key ? t(key) : error.message;
 }
 
 export function useProSeats(seatsTotal: number) {
@@ -81,15 +104,15 @@ export function useProSeats(seatsTotal: number) {
     async (holderId: string): Promise<boolean> => {
       setBusy(true);
       try {
-        // The server's message is shown as-is. It knows why it refused —
-        // subscription lapsed, seats full, the friend already pays for their
-        // own — and restating those checks here would be a second copy of the
-        // rules, free to drift from the one that is enforced.
+        // The server decides why it refused — subscription lapsed, seats
+        // full, the friend already holds PRO — and restating those checks
+        // here would be a second copy of the rules, free to drift from the
+        // one that is enforced. Only the wording is ours.
         const { data, error } = await callRpc<GrantResult>("grant_pro_seat", {
           p_holder_id: holderId,
         });
         if (error) {
-          toast.error(error.message);
+          toast.error(seatErrorMessage(error));
           return false;
         }
         await refresh();
@@ -112,7 +135,7 @@ export function useProSeats(seatsTotal: number) {
           p_holder_id: holderId,
         });
         if (error) {
-          toast.error(error.message);
+          toast.error(seatErrorMessage(error));
           return false;
         }
         await refresh();

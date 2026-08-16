@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 /**
@@ -16,7 +16,27 @@ import { join } from "node:path";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
-const SQL = read("supabase/migrations/20260815140000_pro_seat_notifications.sql");
+/**
+ * The migration that currently defines `grant_pro_seat` — the last one, since
+ * each redefinition replaces the one before it. Named by path, this test went
+ * on checking a definition the database had stopped running: the file it was
+ * pinned to was superseded, and a later migration could have dropped a `kind`
+ * with the test still green.
+ */
+const liveSeatMigration = (): string => {
+  const dir = "supabase/migrations";
+  const file = readdirSync(join(process.cwd(), dir))
+    .filter((f) => f.endsWith(".sql"))
+    .sort()
+    .reverse()
+    .find((f) =>
+      read(join(dir, f)).includes("FUNCTION public.grant_pro_seat"),
+    );
+  if (!file) throw new Error("no migration defines grant_pro_seat");
+  return read(join(dir, file));
+};
+
+const SQL = liveSeatMigration();
 const TRANSLATOR = read("src/utils/notificationTranslations.ts");
 const EN = read("src/locales/en.ts");
 const KA = read("src/locales/ka.ts");

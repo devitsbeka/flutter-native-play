@@ -453,15 +453,13 @@ export function RoomIconPickerModal({
                   </div>
                   
                   <div className="grid grid-cols-4 gap-3">
-                    {recentIcons.slice(0, 4).map((icon, index) => (
-                      <motion.button
+                    {recentIcons.slice(0, 4).map((icon) => (
+                      <button
                         key={icon.id}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: index * 0.03 }}
+                        type="button"
                         onClick={() => handleIconClick(icon)}
                         disabled={isGeneratingName}
-                        className={`relative aspect-square rounded-xl bg-muted/50 hover:bg-muted border-2 transition-all flex items-center justify-center overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed ${
+                        className={`relative aspect-square rounded-xl bg-muted/50 hover:bg-muted border-2 transition-colors flex items-center justify-center overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed ${
                           selectedIcon === icon.icon_url
                             ? "border-primary ring-2 ring-primary/30 bg-primary/10"
                             : "border-transparent hover:border-border"
@@ -471,18 +469,14 @@ export function RoomIconPickerModal({
                           src={icon.icon_url}
                           alt={icon.title}
                           className="w-12 h-12 object-contain"
-                          loading="lazy"
+                          decoding="async"
                         />
                         {selectedIcon === icon.icon_url && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center"
-                          >
+                          <span className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
                             <Check className="w-3 h-3 text-primary-foreground" />
-                          </motion.div>
+                          </span>
                         )}
-                      </motion.button>
+                      </button>
                     ))}
                   </div>
                 </>
@@ -520,58 +514,66 @@ export function RoomIconPickerModal({
                 )}
               </div>
 
-              {/* Icons grid - 4 columns */}
+              {/* Icons grid - 4 columns
+               *
+               * Deliberately unanimated, and not inside AnimatePresence.
+               *
+               * Each tile used to fade and scale in on a `delay: index * 0.03`
+               * stagger, so the last of 28 started 0.8s after the first and
+               * the grid spent a second half-drawn — the icons looked like
+               * they were failing to load rather than arriving. Worse, an
+               * AnimatePresence in `mode="sync"` keeps the outgoing set
+               * mounted while the incoming one animates in, so switching
+               * category briefly laid two grids over each other and every
+               * tile jumped a cell as the old ones left.
+               *
+               * The images are what the player is waiting for; a tile that
+               * simply appears with its icon in it is both faster and
+               * steadier than one that animates in around a slot that is
+               * still empty. */}
               <div className="grid grid-cols-4 gap-3 pb-4">
-                <AnimatePresence mode="sync">
-                  {isDisplayLoading ? (
-                    Array.from({ length: 28 }).map((_, i) => (
-                      <motion.div
-                        key={`skeleton-${i}`}
-                        initial={{ opacity: 0.5 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0.5 }}
-                        className="aspect-square rounded-xl bg-muted animate-pulse"
+                {isDisplayLoading ? (
+                  Array.from({ length: 28 }).map((_, i) => (
+                    <div
+                      key={`skeleton-${i}`}
+                      className="aspect-square rounded-xl bg-muted animate-pulse"
+                    />
+                  ))
+                ) : displayIcons.length === 0 && searchQuery.trim() ? (
+                  <div className="col-span-4 py-12 text-center text-muted-foreground text-sm">
+                    {t("extra.iconNotFound")}
+                  </div>
+                ) : (
+                  displayIcons.map((icon) => (
+                    <button
+                      key={icon.id}
+                      type="button"
+                      onClick={() => handleIconClick(icon)}
+                      disabled={isGeneratingName}
+                      className={`relative aspect-square rounded-xl bg-muted/50 hover:bg-muted border-2 transition-colors flex items-center justify-center overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed ${
+                        selectedIcon === icon.icon_url
+                          ? "border-primary ring-2 ring-primary/30 bg-primary/10"
+                          : "border-transparent hover:border-border"
+                      }`}
+                    >
+                      {/* Eager, and decoded off the main thread. These are
+                          small icons in a grid that is mostly on screen the
+                          moment it opens; deferring them bought nothing and
+                          left empty squares scrolling past. */}
+                      <img
+                        src={icon.icon_url}
+                        alt={icon.title}
+                        className="w-12 h-12 object-contain"
+                        decoding="async"
                       />
-                    ))
-                  ) : displayIcons.length === 0 && searchQuery.trim() ? (
-                    <div className="col-span-4 py-12 text-center text-muted-foreground text-sm">
-                      {t("extra.iconNotFound")}
-                    </div>
-                  ) : (
-                    displayIcons.map((icon, index) => (
-                      <motion.button
-                        key={icon.id}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ delay: index * 0.03 }}
-                        onClick={() => handleIconClick(icon)}
-                        disabled={isGeneratingName}
-                        className={`relative aspect-square rounded-xl bg-muted/50 hover:bg-muted border-2 transition-all flex items-center justify-center overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed ${
-                          selectedIcon === icon.icon_url
-                            ? "border-primary ring-2 ring-primary/30 bg-primary/10"
-                            : "border-transparent hover:border-border"
-                        }`}
-                      >
-                        <img
-                          src={icon.icon_url}
-                          alt={icon.title}
-                          className="w-12 h-12 object-contain"
-                          loading="lazy"
-                        />
-                        {selectedIcon === icon.icon_url && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center"
-                          >
-                            <Check className="w-3 h-3 text-primary-foreground" />
-                          </motion.div>
-                        )}
-                      </motion.button>
-                    ))
-                  )}
-                </AnimatePresence>
+                      {selectedIcon === icon.icon_url && (
+                        <span className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="w-3 h-3 text-primary-foreground" />
+                        </span>
+                      )}
+                    </button>
+                  ))
+                )}
               </div>
               </div>
             </div>

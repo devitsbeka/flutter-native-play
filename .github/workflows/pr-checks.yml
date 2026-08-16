@@ -107,3 +107,16 @@ jobs:
         run: |
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/02-assertions.sql
+
+      # Written at the same time as the seat feature and never wired up, so
+      # the rules about who may give PRO away — and to whom — were the one
+      # part of the entitlement SQL nothing executed. The refusal that turned
+      # out to be wrong ("that player already has their own subscription",
+      # raised at every player who had ever bought VIP days with coins) would
+      # have been caught here.
+      - name: Assert PRO seat rules
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/03-pro-seats.sql

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Check, Plus, Sparkles, X } from "lucide-react";
+import { Camera, Check, Maximize2, Plus, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { AvatarViewer } from "@/components/profile/AvatarViewer";
 
 interface ReelItem {
   id: string;
@@ -54,6 +55,8 @@ export function AvatarReel() {
   // An uploaded photo avatar isn't a preset or a generation — pin it as the
   // first slot for the session so the user can always scroll back to it.
   const [customUrl, setCustomUrl] = useState<string | null>(null);
+  // The avatar being looked at full size. Null when the viewer is closed.
+  const [viewing, setViewing] = useState<ReelItem | null>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -225,6 +228,13 @@ export function AvatarReel() {
       openAvatarModal();
       return;
     }
+    // Tapping the one already focused opens it full size. 128px in a strip
+    // is the largest a player could ever see a picture they paid to have
+    // made, and the tap that would have enlarged it did nothing.
+    if (idx === focusedIdx && idx === centerIdx) {
+      setViewing(items[idx]);
+      return;
+    }
     setFocusedIdx(idx);
     if (idx !== centerIdx) centerItem(idx);
   };
@@ -392,6 +402,19 @@ export function AvatarReel() {
               {t("extra.avatarChooseBtn")}
             </button>
           )}
+          {/* Full size, and from there the animate button. Spelled out as its
+              own control rather than left to the second tap alone: a gesture
+              nothing on screen mentions is a feature only the person who
+              wrote it knows about. */}
+          {items[centerIdx].kind !== "create" && (
+            <button
+              onClick={() => setViewing(items[centerIdx])}
+              className="w-8 h-8 rounded-full bg-white text-primary border border-border/40 flex items-center justify-center shadow-lg"
+              aria-label={t("extra.avatarViewLarge")}
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
+          )}
           {/* The studio makes a new avatar from a photo, which is worth
               offering whatever is centred — it used to be hidden on the
               presets, so a player wearing a mascot had no way to reach it. */}
@@ -407,6 +430,20 @@ export function AvatarReel() {
           </div>
         </>
       )}
+
+      <AvatarViewer
+        isOpen={viewing !== null}
+        onClose={() => setViewing(null)}
+        imageUrl={viewing ? resolveItem(viewing) : ""}
+        animatedUrl={viewing?.animatedUrl}
+        onAnimated={(videoUrl) => {
+          // Keep the reel's own copy in step, so reopening the viewer plays
+          // the loop instead of starting a second animation of the same face.
+          setGenerated((prev) =>
+            prev.map((g) => (g.id === viewing?.id ? { ...g, animatedUrl: videoUrl } : g)),
+          );
+        }}
+      />
     </div>
   );
 }

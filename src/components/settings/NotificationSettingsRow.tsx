@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
-import { Bell, Check, Loader2 } from "lucide-react";
+import { Bell, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Switch } from "@/components/ui/switch";
 
 /**
  * The switch that turns push notifications on.
@@ -20,19 +21,31 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * thing that asks was missing.
  *
  * Native only. On the web there is nothing to grant.
+ *
+ * A switch rather than a button that turns into the word "On". Every other
+ * setting on this screen is a switch, and one that reports a state it will
+ * not let you change reads as a status line — the player asked for the
+ * on/off they get everywhere else. Turning it off deletes this device's push
+ * token, which is what actually stops delivery; iOS keeps the permission,
+ * because an app cannot hand that back, and turning it on again re-registers
+ * without a second dialog.
  */
 export function NotificationSettingsRow({ delay = 0.22 }: { delay?: number }) {
   const { t } = useLanguage();
-  const { supported, permission, requestPermission } = usePushNotifications();
+  const { supported, permission, enabled, setEnabled } = usePushNotifications();
   const [asking, setAsking] = useState(false);
 
   if (!supported) return null;
 
-  const granted = permission === "granted";
   // Denied is terminal in-app: iOS will not show the dialog a second time, so
-  // offering a button that silently does nothing would be worse than saying
-  // where the switch actually lives.
+  // a switch that could be flipped on and would silently do nothing is worse
+  // than one held off with the reason next to it.
   const denied = permission === "denied";
+  // The permission is read asynchronously on mount, and until it answers the
+  // hook reports "unsupported" — which on a native device means "not asked
+  // yet", not "no". Drawing the switch off during that shows a player with
+  // notifications on a switch that says they are off, then flips it.
+  const checking = permission === "unsupported";
 
   return (
     <motion.div
@@ -54,33 +67,25 @@ export function NotificationSettingsRow({ delay = 0.22 }: { delay?: number }) {
         </span>
       </div>
 
-      {granted ? (
-        <span className="flex items-center gap-1 text-success font-bold text-sm shrink-0">
-          <Check className="w-5 h-5" />
-          {t("extra.pushEnabled")}
-        </span>
-      ) : denied ? null : (
-        <button
-          type="button"
-          disabled={asking}
-          onClick={async () => {
-            setAsking(true);
-            try {
-              await requestPermission();
-            } finally {
-              setAsking(false);
-            }
-          }}
-          className="shrink-0 rounded-full px-4 py-2 text-sm font-bold text-white shadow-[0_3px_0_0_#6d28d9] active:translate-y-0.5 active:shadow-[0_1px_0_0_#6d28d9] transition-all disabled:opacity-50"
-          style={{ background: "linear-gradient(to bottom, #a78bfa, #8b5cf6 50%, #7c3aed)" }}
-        >
-          {asking ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            t("extra.pushEnable")
-          )}
-        </button>
-      )}
+      <span className="shrink-0 flex items-center justify-center w-11">
+        {asking || checking ? (
+          <Loader2 className="w-5 h-5 animate-spin text-purple-500" />
+        ) : (
+          <Switch
+            checked={enabled}
+            disabled={denied}
+            aria-label={t("extra.pushTitle")}
+            onCheckedChange={async (next) => {
+              setAsking(true);
+              try {
+                await setEnabled(next);
+              } finally {
+                setAsking(false);
+              }
+            }}
+          />
+        )}
+      </span>
     </motion.div>
   );
 }

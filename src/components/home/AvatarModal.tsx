@@ -39,6 +39,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { generateAndRecordPortrait, generatePublicPortrait } from "@/utils/portraitAvatar";
 import { SCENE_ANIMATION_PROMPT } from "@/config/sceneAnimationPrompt";
+import { useAnimateAvatar } from "@/hooks/useAnimateAvatar";
 
 // Import mascot avatars
 import mascotAvatar1 from '@/assets/avatars/mascot-avatar-1.png';
@@ -80,8 +81,14 @@ interface AvatarModalProps {
   onClose: () => void;
   onComplete?: () => void;
   /** Reports a running generation to the shell so it can show a floating
-      progress chip while the modal is closed and reopen it when done. */
-  onGeneratingChange?: (active: boolean, thumb?: string | null) => void;
+      progress chip while the modal is closed and reopen it when done.
+      `kind` says whether finishing should bring the modal back: a new avatar
+      or scene has to be chosen, an animation applies itself. */
+  onGeneratingChange?: (
+    active: boolean,
+    thumb?: string | null,
+    kind?: "generation" | "animation",
+  ) => void;
 }
 
 interface AvatarGeneration {
@@ -215,6 +222,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     return false;
   })();
   const navigate = useNavigate();
+  const { animate: runAnimation } = useAnimateAvatar();
   const [step, setStep] = useState<"gallery" | "upload" | "camera" | "generating" | "preview">("gallery");
 
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
@@ -251,6 +259,10 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   // the regression this guards against.
   const generationInFlight = useRef(false);
   const wasOpen = useRef(false);
+  // A finished generation nobody has looked at yet. Set when the result
+  // lands on the preview step, consumed by the reset below — without it the
+  // reopen that exists to show the result resets straight past it.
+  const awaitingPreview = useRef(false);
   // The scene generated in this session, already uploaded and recorded.
   // Applying it later only has to flip which scene is current.
   const storedScene = useRef<{ sceneUrl: string; sourceUrl: string | null } | null>(null);
@@ -260,6 +272,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
         isOpen,
         wasOpen: wasOpen.current,
         generationInFlight: generationInFlight.current,
+        awaitingPreview: awaitingPreview.current,
       })
     ) {
       setIsLoading(false);
@@ -271,6 +284,9 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       setFailure(null);
       setStep("gallery");
     }
+    // Consumed on the open transition either way: the result has now been
+    // shown, and the next opening is an ordinary one.
+    if (isOpen && !wasOpen.current) awaitingPreview.current = false;
     wasOpen.current = isOpen;
   }, [isOpen]);
 
@@ -475,6 +491,36 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     }
   };
 
+  /**
+   * Step out of the way once the work is plainly under way.
+   *
+   * Generating a scene takes a minute and animating one takes several, and
+   * this modal is a full-screen page — sitting on a spinner for that long is
+   * the app doing nothing while the player watches. It is already built to
+   * be closed mid-generation: the request is a plain promise that does not
+   * care whether anything is rendering, the shell shows a floating bubble
+   * while it runs, and a finished generation brings this back on the preview.
+   * Nothing used the door.
+   *
+   * A beat rather than immediately: the modal has just changed to the
+   * generating step, and closing on the same frame reads as the tap having
+   * dismissed the screen rather than started anything.
+   */
+  const autoCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleAutoClose = useCallback(() => {
+    if (autoCloseTimer.current) clearTimeout(autoCloseTimer.current);
+    autoCloseTimer.current = setTimeout(() => {
+      autoCloseTimer.current = null;
+      // Only if it is still running. A generation that failed or came back
+      // fast has already put something on screen worth staying for.
+      if (generationInFlight.current) onClose();
+    }, 2500);
+  }, [onClose]);
+
+  useEffect(() => () => {
+    if (autoCloseTimer.current) clearTimeout(autoCloseTimer.current);
+  }, []);
+
   // Scenes and avatars have SEPARATE budgets — see avatarStudio.ts.
   const quota = calculateAvatarQuota(generations, isVip);
   const activeQuota = flowKind === "scene" ? quota.scene : quota.avatar;
@@ -511,7 +557,8 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     setIsLoading(true);
     setStep("generating");
     generationInFlight.current = true;
-    onGeneratingChange?.(true, uploadedImage);
+    onGeneratingChange?.(true, uploadedImage, "generation");
+    scheduleAutoClose();
 
     try {
       // Upload the image to storage
@@ -557,6 +604,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
 
         await loadGenerations();
         setGeneratedAvatar(portraitUrl);
+        awaitingPreview.current = true;
         setStep("preview");
         confetti({
           particleCount: 80,
@@ -601,6 +649,7 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
       await loadGenerations();
 
       setGeneratedAvatar(storedSceneUrl);
+      awaitingPreview.current = true;
       setStep("preview");
       
       confetti({
@@ -1077,77 +1126,43 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
     }
 
     setIsAnimating(true);
+    // Kling takes minutes, and the poll below runs on this component whether
+    // or not it is on screen. Reported and closed like a generation, with
+    // the scene as the bubble's thumbnail — but as an "animation", so the
+    // modal does not reappear several minutes later: the finished loop
+    // becomes the homepage background on its own.
+    generationInFlight.current = true;
+    onGeneratingChange?.(true, scene.avatar_url, "animation");
+    scheduleAutoClose();
 
     try {
-      toast.info(t("avatar.startingAnimation"), { duration: 5000 });
-
-      const { data, error } = await supabase.functions.invoke("animate-avatar", {
-        body: {
-          mode: "scene",
-          imageUrl: scene.avatar_url,
-          userId: user.id,
-          promptOverride: SCENE_ANIMATION_PROMPT,
-        },
+      // The two-call protocol, the eight-minute budget and the retry on a
+      // failed poll all live in useAnimateAvatar now — the profile reel
+      // animates through the same code, and a second copy of a poll this
+      // long is a second set of timings to keep in step.
+      const videoUrl = await runAnimation({
+        mode: "scene",
+        imageUrl: scene.avatar_url,
+        userId: user.id,
+        promptOverride: SCENE_ANIMATION_PROMPT,
       });
 
-      if (error) throw new Error(error.message);
-      if (!data.success) throw new Error(data.error || "Failed to start animation");
-
-      const { requestId, statusUrl, responseUrl } = data;
-      if (!requestId || !statusUrl || !responseUrl) {
-        throw new Error("No request ID or URLs received");
-      }
-
-      toast.info(t("avatar.animationStarted"), { duration: 3000 });
-
-      // Kling takes a few minutes — poll every 5 seconds for up to 8 minutes
-      const maxAttempts = 96;
-      for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-
-        const { data: statusData, error: statusError } = await supabase.functions.invoke("animate-avatar", {
-          body: {
-            mode: "scene",
-            imageUrl: scene.avatar_url,
-            userId: user.id,
-            requestId,
-            statusUrl,
-            responseUrl,
-          },
+      if (videoUrl) {
+        toast.success(t("avatar.avatarAnimated"), { duration: 5000 });
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#A855F7", "#EC4899", "#3B82F6"],
         });
-
-        if (statusError) {
-          console.error("Status check error:", statusError);
-          continue;
-        }
-
-        if (statusData?.success && statusData?.videoUrl) {
-          toast.success(t("avatar.avatarAnimated"), { duration: 5000 });
-          confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ["#A855F7", "#EC4899", "#3B82F6"],
-          });
-          // The homepage picks the loop up through the scene query
-          queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
-          loadGenerations();
-          setIsAnimating(false);
-          return;
-        }
-
-        // Show progress every 30 seconds (every 6th attempt)
-        if ((attempt + 1) % 6 === 0) {
-          toast.info(t("avatar.stillProcessing", { time: Math.round((attempt + 1) * 5 / 60) }), { duration: 2000 });
-        }
+        // The homepage picks the loop up through the scene query
+        queryClient.invalidateQueries({ queryKey: ["user-scene", user.id] });
+        loadGenerations();
       }
-
-      toast.error(t("avatar.animationTakingLong"));
-    } catch (error) {
-      console.error("Error animating scene:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to animate scene");
     } finally {
       setIsAnimating(false);
+      generationInFlight.current = false;
+      onGeneratingChange?.(false);
     }
   };
 

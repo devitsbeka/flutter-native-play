@@ -177,6 +177,23 @@ describe("shouldResetSession", () => {
     ).toBe(false);
   });
 
+  it("does not reset on the reopen that delivers a finished generation", () => {
+    // The modal now steps out of the way once a generation is under way and
+    // the shell reopens it when the result lands. That reopen is a genuine
+    // closed -> open transition with nothing in flight any more — the two
+    // conditions this used to reset on — so judged on those alone it would
+    // put the gallery up over the preview and the generation would be on
+    // screen for no frames at all.
+    expect(
+      shouldResetSession({
+        isOpen: true,
+        wasOpen: false,
+        generationInFlight: false,
+        awaitingPreview: true,
+      })
+    ).toBe(false);
+  });
+
   it("does not reset while closed", () => {
     for (const wasOpen of [true, false]) {
       for (const generationInFlight of [true, false]) {
