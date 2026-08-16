@@ -121,7 +121,13 @@ export function UniversalBottomNav({
         className="relative overflow-visible"
         style={{
           background: "#F8F9FA",
-          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          // Half the home-indicator inset, not all of it. The row already
+          // carries py-5, so reserving the full 34px put roughly 54px of
+          // empty bar under the icons and floated the whole nav visibly high.
+          // Half keeps the icons clear of the indicator without the gap
+          // reading as a mistake. The floor matters on devices with no
+          // indicator at all, where the inset is 0.
+          paddingBottom: "max(0.25rem, calc(env(safe-area-inset-bottom, 0px) / 2))",
           boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 3px rgba(0, 0, 0, 0.05)",
         }}
       >

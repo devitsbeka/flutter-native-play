@@ -752,7 +752,7 @@ function TeamContentV2() {
       {/* Flex wrapper for main content + right sidebar */}
       <div className="flex min-h-full">
         {/* Main Content Area */}
-        <div id="team-main-content" className="flex-1 flex flex-col pb-24 lg:pb-0 bg-background min-w-0">
+        <div id="team-main-content" className="flex-1 flex flex-col pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] lg:pb-0 bg-background min-w-0">
           {/* STICKY: Tabs - sits below the page header */}
           <div className="sticky z-20 bg-background/95 backdrop-blur-md w-full max-w-full" style={{ top: headerHeight }}>
               {/* Unified Tab Bar - compact left-aligned tabs on md+, with the

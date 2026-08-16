@@ -71,7 +71,13 @@ export function MainLayout({
         className={`flex-1 relative bg-transparent scrollbar-hide overflow-x-hidden ${
           disableScroll 
             ? 'h-[100dvh] overflow-hidden md:h-screen md:overflow-y-auto md:pb-0' 
-            : 'h-[100dvh] md:h-screen overflow-y-auto pb-24 md:pb-0'
+            // pb-24 was 96px against a nav that is 80px plus the home
+            // indicator's 34 — so the last ~18px of every page sat behind it,
+            // and anything the page ended with (the streak panel on home) was
+            // clipped. Computed from the same token the nav uses, plus the
+            // inset it adds, plus a gap so content stops short of it rather
+            // than touching.
+            : 'h-[100dvh] md:h-screen overflow-y-auto pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:pb-0'
         }`}
       >
         {children}

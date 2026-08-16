@@ -67,6 +67,12 @@
     --safe-left: env(safe-area-inset-left, 0px);
     --safe-right: env(safe-area-inset-right, 0px);
     --keyboard-height: 0px;
+
+    /* The mobile bottom nav's own height, before the home-indicator inset.
+     * Named so pages can reserve exactly the room it occupies instead of
+     * guessing at a pb-24 that was 18px short of it — which is what put the
+     * streak panel behind the nav. */
+    --bottom-nav-height: 80px;
   }
 }
 

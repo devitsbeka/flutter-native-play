@@ -207,7 +207,7 @@ export default function Discover() {
 
   return (
     <MainLayout showPlayButton={false}>
-      <div className="min-h-screen pb-24 bg-[#F8F6FC]">
+      <div className="min-h-screen pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] bg-[#F8F6FC]">
 
         {/* Sticky header section */}
         <div className="sticky top-0 z-20 bg-[#F8F6FC]/95">

@@ -302,7 +302,7 @@ export default function PowerUps() {
               instead, so every pixel past that width goes to the shop rather
               than stretching a video — which is what squeezed the product
               grid whenever the left menu was expanded. */}
-          <div className="flex-1 min-w-0 relative pb-24 md:pb-0 bg-transparent scroll-smooth scrollbar-hide overflow-y-auto">
+          <div className="flex-1 min-w-0 relative pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:pb-0 bg-transparent scroll-smooth scrollbar-hide overflow-y-auto">
             <GlobalSplineBackground />
 
             {/* Standard Shop Layout - Hero carousel + product grids */}

@@ -329,7 +329,7 @@ export default function Leaderboards() {
           </div>
         </div>
 
-        <div className="relative flex-1 min-h-0 w-full max-w-xl mx-auto px-4 pt-5 pb-24 md:pb-8 flex flex-col">
+        <div className="relative flex-1 min-h-0 w-full max-w-xl mx-auto px-4 pt-5 pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:pb-8 flex flex-col">
           {/* Tabs - centered pills */}
           <div className="flex items-center justify-center gap-2 px-2">
             {tabs.map((tab) => {
