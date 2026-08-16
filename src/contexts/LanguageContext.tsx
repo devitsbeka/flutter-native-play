@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useCallback, useMemo, useState, useEffect } from 'react';
 import { translations, LANGUAGES, DEFAULT_LANGUAGE, getLanguage, getRegionForLanguage } from '@/locales';
 import { languageOverride } from '@/utils/languageOverride';
+import { stripEmojisExceptFlags } from '@/utils/stripEmojisExceptFlags';
 
 
 interface LanguageContextType {
@@ -44,26 +45,6 @@ function getNestedValue(obj: any, path: string): string | undefined {
   }
   
   return typeof value === 'string' ? value : undefined;
-}
-
-// Remove emojis from user-facing translation strings.
-// Exception: keep country-flag emojis (regional indicator symbols).
-function stripEmojisExceptFlags(input: string): string {
-  if (!input) return input;
-
-  return Array.from(input)
-    .filter((ch) => {
-      const cp = ch.codePointAt(0) ?? 0;
-      const isRegionalIndicator = cp >= 0x1f1e6 && cp <= 0x1f1ff;
-      if (isRegionalIndicator) return true;
-
-      // Unicode property escape (supported in modern browsers)
-      const isEmoji = /\p{Extended_Pictographic}/u.test(ch);
-      return !isEmoji;
-    })
-    .join("")
-    .replace(/\s{2,}/g, " ")
-    .trim();
 }
 
 function translateWithFallback(lang: string, key: string, params?: Record<string, string | number>): string {
