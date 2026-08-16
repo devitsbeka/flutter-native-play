@@ -26,6 +26,16 @@ import crystalHourglass from "@/assets/crystal-hourglass.png";
 import crownIcon from "@/assets/icons/crown-2.png";
 
 // Pastel color palettes for consistent styling with Discover page
+/**
+ * The lavender-white fill every card on this page uses.
+ *
+ * Opaque. It was rgba(...,0.92), and the two cards that matter here straddle
+ * the category video — so the title bar and the tab row had the video showing
+ * through them, which reads as a rendering fault rather than as glass at that
+ * opacity. Written once because the same literal appeared three times.
+ */
+const CARD_FILL = '#FCF7FF';
+
 const PASTEL_PALETTES = [
   { base: '#E8F5E9', accent: '#C8E6C9', highlight: '#A5D6A7' },
   { base: '#E3F2FD', accent: '#BBDEFB', highlight: '#90CAF9' },
@@ -312,7 +322,7 @@ export default function CategoryPage() {
               className="flex items-center justify-between px-6 py-6 rounded-[24px]"
               // Main page card recipe — lavender-white, #e8e0f5 border, chunky lip
               style={{
-                background: 'rgba(252,247,255,0.92)',
+                background: CARD_FILL,
                 boxShadow: '0 3.6px 0 0 #d8d0e8, 0 5.4px 14.5px 0 rgba(0,0,0,0.1), inset 0 1.8px 0 0 #ffffff',
                 border: '1.5px solid #e8e0f5',
               }}
@@ -335,7 +345,7 @@ export default function CategoryPage() {
             <div
               className="flex gap-1 rounded-[24px] p-3"
               style={{
-                background: 'rgba(252,247,255,0.92)',
+                background: CARD_FILL,
                 boxShadow: '0 3.6px 0 0 #d8d0e8, 0 5.4px 14.5px 0 rgba(0,0,0,0.1), inset 0 1.8px 0 0 #ffffff',
                 border: '1.5px solid #e8e0f5',
               }}
@@ -425,7 +435,7 @@ export default function CategoryPage() {
                 if (isProLocked) return "linear-gradient(135deg, #F3E8FF, #E9D5FF)";
                 if (!isUnlocked) return "linear-gradient(135deg, #E2E8F0, #CBD5E1)";
                 if (isCompleted && stars > 0) return getCompletedGradient(stars);
-                return "rgba(252,247,255,0.92)";
+                return CARD_FILL;
               };
 
               const isNeutralTile =
