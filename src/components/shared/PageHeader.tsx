@@ -38,7 +38,25 @@ export function PageHeader({
   };
 
   return (
-    <header className={`sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/30 ${className}`}>
+    /* The header paints the status bar strip, so the two are one surface.
+     *
+     * #root insets every page below the clock, which leaves the strip showing
+     * whatever `html` paints — a band of page wash sitting above the header
+     * rather than part of it. Pulling the header up by the inset and adding
+     * it back as padding puts its own background behind the clock, and leaves
+     * the 76px row exactly where it was. Sticky still sticks to the top of
+     * the scroll container, so the strip stays covered while the page moves.
+     *
+     * Opaque rather than /95: a translucent strip lets the page slide visibly
+     * underneath the clock, which is the seam this is here to remove.
+     */
+    <header
+      style={{
+        marginTop: "calc(-1 * var(--safe-top))",
+        paddingTop: "var(--safe-top)",
+      }}
+      className={`sticky top-0 z-20 bg-background backdrop-blur-md border-b border-border/30 ${className}`}
+    >
       {/* 76px tall like the home header, so the search/bell icons land at
           the same vertical spot on every page */}
       <div className="flex items-center justify-between px-4 h-[76px] w-full">

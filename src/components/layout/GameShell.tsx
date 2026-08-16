@@ -78,7 +78,7 @@ export function GameShell({ title, children }: GameShellProps) {
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
   return (
-    <div className="fixed inset-0 safe-screen overflow-hidden bg-[#ddc2f9] z-10">
+    <div className="fixed inset-0 overflow-hidden bg-[#ddc2f9] z-10">
       <SideMenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
       <div
         className="absolute left-0 top-1/2"
