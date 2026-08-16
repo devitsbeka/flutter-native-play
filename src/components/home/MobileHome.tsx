@@ -92,10 +92,15 @@ export function MobileSceneBackground({
     // Inline rather than a Tailwind arbitrary property: that ships
     // `mask-image` alone, which iOS below 15.4 ignores outright — and an
     // ignored mask is precisely the hard top edge this is here to prevent.
-    // Lifted clear of the nav rather than sitting on it, so the character
-    // is not half-hidden behind the bar and the week strip above it.
+    // Sits on the nav again. The +80px lift (and the strip's +81 below)
+    // were tuned while the shell was 93px taller than the screen — the
+    // 100dvh-inside-a-padded-root bug — so everything anchored to its
+    // bottom rendered that much lower than written, and the lifts made it
+    // look right. The geometry is honest now; keeping the lifts strands
+    // the scene and the strip high above the nav with a band of empty
+    // wash under them.
     const style: React.CSSProperties = {
-      bottom: `calc(${NAV_H} + 80px)`,
+      bottom: NAV_H,
       ...SCENE_TOP_FADE,
     };
     return (
@@ -125,10 +130,9 @@ export function MobileSceneBackground({
 
   if (!showDefaultScene) return null;
 
-  // 1136 / 500 wide, left edge at -239 / 500. It used to reach to 13px off
-  // the frame bottom and run on behind the nav; lifted clear of it now, in
-  // step with the generated-scene branch above, so the character is not
-  // half-hidden by the bar and the week strip sitting over it.
+  // 1136 / 500 wide, left edge at -239 / 500. Reaches to 13px off the frame
+  // bottom and runs on behind the nav, as designed — see the note in the
+  // generated-scene branch for why the +80px lift is gone.
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -138,7 +142,7 @@ export function MobileSceneBackground({
     >
       <div
         className="absolute left-[-47.8vw] w-[227.2vw] aspect-video [mask-image:linear-gradient(to_bottom,transparent_0,black_140px)]"
-        style={{ bottom: `calc(${NAV_H} + 80px)` }}
+        style={{ bottom: "calc(13px + var(--safe-bottom))" }}
       >
         <video
           src={defaultVideoSrc}
@@ -359,7 +363,10 @@ export function MobileProfileCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 26 }}
       className="md:hidden absolute inset-x-0 z-20 mx-6"
-      style={{ bottom: `calc(${NAV_H} + 81px)` }}
+      // Close to the nav with a clear gap — not touching it, not floating
+      // high above it. The +81px this used to carry was compensation for
+      // the oversized-shell bug; see the scene note above.
+      style={{ bottom: `calc(${NAV_H} + 14px)` }}
     >
       <WeekMissionsStrip
         className="h-[94px]"

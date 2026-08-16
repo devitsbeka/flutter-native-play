@@ -285,7 +285,11 @@ export default function Leaderboards() {
       {/* Fixed to the viewport; only the board card's row list scrolls.
           The classic three-trophies illustration is the page background. */}
       <div
-        className="relative h-[100dvh] md:h-screen w-full max-w-[100vw] flex flex-col overflow-hidden"
+        // The height MainLayout actually gives it. A bare 100dvh inside the
+        // inset-padded root is 93px taller than the visible page on a
+        // notched phone, and the overflow all lands at the bottom — which
+        // is where the pinned own-rank row sits, half behind the nav.
+        className="relative h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] md:h-screen w-full max-w-[100vw] flex flex-col overflow-hidden"
         onWheel={forwardWheel}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}

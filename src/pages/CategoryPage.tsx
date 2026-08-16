@@ -282,17 +282,22 @@ export default function CategoryPage() {
               scrolling to the top first. z-30 keeps them over the level grid
               that now passes underneath. */}
           <div className="fixed left-5 right-5 flex items-center justify-between z-30" style={{ top: "calc(3rem + var(--safe-top))" }}>
+            {/* Solid white, not black/25 glass: these are fixed, so once
+                the hero scrolls away they float over the white level grid,
+                where a translucent dark circle all but disappears — "lost
+                in the air". White with a shadow reads on the video and on
+                the grid alike. */}
             <button
               onClick={() => navigate("/discover")}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-black/25 backdrop-blur-md border border-white/20"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 backdrop-blur-md shadow-md border border-black/5"
             >
-              <ArrowLeft className="h-5 w-5 text-white" />
+              <ArrowLeft className="h-5 w-5 text-slate-700" />
             </button>
             <div className="flex items-center gap-2">
               {!user && (
                 <button
                   onClick={() => navigate("/auth")}
-                  className="flex items-center gap-1.5 text-sm text-white font-medium bg-black/25 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full"
+                  className="flex items-center gap-1.5 text-sm text-slate-700 font-medium bg-white/90 backdrop-blur-md shadow-md border border-black/5 px-4 py-2 rounded-full"
                 >
                   <LogIn className="h-4 w-4" />
                   {t('auth.signIn')}
@@ -307,11 +312,11 @@ export default function CategoryPage() {
                 disabled={!favoriteId}
                 aria-label={t('discover.favorites')}
                 aria-pressed={favorited}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-black/25 backdrop-blur-md border border-white/20 active:scale-95 transition-transform"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 backdrop-blur-md shadow-md border border-black/5 active:scale-95 transition-transform"
               >
                 <Heart
                   className={`h-5 w-5 transition-colors ${
-                    favorited ? "fill-red-500 text-red-500" : "text-white"
+                    favorited ? "fill-red-500 text-red-500" : "text-slate-500"
                   }`}
                 />
               </button>
