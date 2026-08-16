@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { missionTitle, missionDescription } from "@/utils/missionText";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -244,13 +244,15 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
     return `${when} · ${t(day.kind === "past" ? "missions.pastDay" : "missions.futureDay")}`;
   })();
   const { currentStreak } = useMissionStreak();
-  const [activeTab, setActiveTab] = useState<"daily" | "weekly">("daily");
-  const [dailyIndex, setDailyIndex] = useState(0);
-  const [weeklyIndex, setWeeklyIndex] = useState(0);
+  const [index, setIndex] = useState(0);
 
-  const missions = activeTab === "daily" ? dailyMissions : weeklyMissions;
-  const index = activeTab === "daily" ? dailyIndex : weeklyIndex;
-  const setIndex = activeTab === "daily" ? setDailyIndex : setWeeklyIndex;
+  // One track for both kinds. The weekly ones are only in it while the sheet
+  // is showing today: the day strip can walk back to last Tuesday, and this
+  // week's weekly missions have nothing to do with that day's dailies.
+  const missions = useMemo(
+    () => (day.kind === "today" ? [...dailyMissions, ...weeklyMissions] : dailyMissions),
+    [day.kind, dailyMissions, weeklyMissions]
+  );
   const safeIndex = missions.length > 0 ? Math.min(index, missions.length - 1) : 0;
   const mission = missions[safeIndex];
 
@@ -286,9 +288,7 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
   // Start each open on the first unfinished mission
   useEffect(() => {
     if (!isOpen) return;
-    setActiveTab("daily");
-    setDailyIndex(Math.max(0, dailyMissions.findIndex((m) => !m.completed)));
-    setWeeklyIndex(Math.max(0, weeklyMissions.findIndex((m) => !m.completed)));
+    setIndex(Math.max(0, missions.findIndex((m) => !m.completed)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
@@ -300,7 +300,7 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
     if (!el || el.clientWidth === 0) return;
     el.scrollTo({ left: safeIndex * el.clientWidth, behavior: "auto" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, activeTab, missions.length]);
+  }, [isOpen, missions.length]);
 
   return (
     <AnimatePresence mode="wait">
@@ -428,23 +428,6 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
                 <div className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#0F766E]">
                   {currentStreak} {t("missions.days")}
                 </div>
-              </div>
-
-              {/* Daily / Weekly tabs */}
-              <div className="mt-3 grid grid-cols-2 gap-1 rounded-full bg-[#EFE9F7] p-1">
-                {(["daily", "weekly"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`rounded-full py-1.5 text-sm font-bold transition-all ${
-                      activeTab === tab
-                        ? "bg-white text-[#402666] shadow-sm"
-                        : "text-slate-500 hover:text-slate-600"
-                    }`}
-                  >
-                    {t(`missions.${tab}`)}
-                  </button>
-                ))}
               </div>
 
               {/* Carousel. A scroll-snap track rather than one swapped card:
