@@ -16,13 +16,25 @@ import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
  * channel. The colour was the thing that was too light, so that is what
  * changed.
  */
-const PLACEHOLDER_FILL = 'rgba(201, 173, 206, 0.48)';
+// Slate, not the mauve this used to be — on a near-white strip a pale purple
+// tint reads as a rendering artefact, and grey reads as an empty slot.
+const PLACEHOLDER_GREY = '100, 116, 139';
 
-function StaticPlaceholder({ className }: { className?: string }) {
+/**
+ * How solid each empty slot is, first to last.
+ *
+ * Written out rather than computed. The ramp used to be a wrapper opacity of
+ * `0.48 - index * 0.12` over a fill that was itself 48% — two faint numbers
+ * multiplied, so the first slot landed at 23% and the last at 11%, and the
+ * strip looked empty rather than like room to grow.
+ */
+const SLOT_ALPHAS = [0.55, 0.34, 0.18];
+
+function StaticPlaceholder({ className, alpha }: { className?: string; alpha: number }) {
   return (
     <div
       className={`${className}`}
-      style={{ backgroundColor: PLACEHOLDER_FILL }}
+      style={{ backgroundColor: `rgba(${PLACEHOLDER_GREY}, ${alpha})` }}
     />
   );
 }
@@ -36,13 +48,13 @@ function StaticPlaceholder({ className }: { className?: string }) {
  * absence instead of inviting anyone to fix it.
  */
 function FriendSlotPlaceholder({ index }: { index: number }) {
+  // The name bar under each circle is a shade lighter than its circle, so a
+  // slot reads as one thing rather than two.
+  const alpha = SLOT_ALPHAS[index] ?? SLOT_ALPHAS[SLOT_ALPHAS.length - 1];
   return (
-    <div
-      className="flex flex-col items-center gap-2 flex-shrink-0"
-      style={{ opacity: 0.48 - index * 0.12 }}
-    >
-      <StaticPlaceholder className="w-16 h-16 rounded-full" />
-      <StaticPlaceholder className="w-12 h-3 rounded" />
+    <div className="flex flex-col items-center gap-2 flex-shrink-0">
+      <StaticPlaceholder className="w-16 h-16 rounded-full" alpha={alpha} />
+      <StaticPlaceholder className="w-12 h-3 rounded" alpha={alpha * 0.75} />
     </div>
   );
 }
@@ -72,8 +84,10 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0">
-            <StaticPlaceholder className="w-16 h-16 rounded-full" />
-            <StaticPlaceholder className="w-12 h-3 rounded" />
+            {/* The loading strip is uniform: it stands for friends that are
+                about to arrive, not for room to add more. */}
+            <StaticPlaceholder className="w-16 h-16 rounded-full" alpha={0.3} />
+            <StaticPlaceholder className="w-12 h-3 rounded" alpha={0.22} />
           </div>
         ))}
       </div>
