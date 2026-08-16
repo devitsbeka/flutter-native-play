@@ -721,6 +721,7 @@ function TeamContentV2() {
             scanner keeps its place beside the shared search and bell. */}
         <PageHeader
           title={t("extra.navOnlineGame")}
+          showBack={false}
           rightElements={
             <div className="flex items-center gap-1">
               <motion.button

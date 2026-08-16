@@ -12,6 +12,11 @@ import botAvatar6 from '@/assets/avatars/bot-avatar-6.png';
 import botAvatar7 from '@/assets/avatars/bot-avatar-7.png';
 import botAvatar8 from '@/assets/avatars/bot-avatar-8.png';
 import botAvatar9 from '@/assets/avatars/bot-avatar-9.png';
+import friendGloria from "@/assets/figma-home/friend-gloria.png";
+import friendTiko from "@/assets/figma-home/friend-tiko.png";
+import friendGiga from "@/assets/figma-home/friend-giga.png";
+import friendGiorgi from "@/assets/figma-home/friend-giorgi.png";
+import friendTrivia from "@/assets/figma-home/friend-trivia.png";
 import botAvatar10 from '@/assets/avatars/bot-avatar-10.png';
 import mascotAvatar1 from '@/assets/avatars/mascot-avatar-1.png';
 import mascotAvatar2 from '@/assets/avatars/mascot-avatar-2.png';
@@ -29,6 +34,14 @@ const RELATIVE_ASSET_PATTERN = /^src\/assets\//;
 // Detect Vite build-time hashed asset paths (e.g., /assets/bot-avatar-4-uiIFWm1y.png)
 // These paths are only valid during the build that created them
 const VITE_HASHED_ASSET_PATTERN = /^\/assets\/.*-[a-zA-Z0-9]{8}\.(png|jpg|jpeg|webp|gif|svg)$/;
+
+const FRIEND_AVATAR_MAP: Record<string, string> = {
+  gloria: friendGloria,
+  tiko: friendTiko,
+  giga: friendGiga,
+  giorgi: friendGiorgi,
+  trivia: friendTrivia,
+};
 
 /**
  * Attempts to recover a broken Vite-hashed avatar URL by extracting the avatar number
@@ -51,6 +64,17 @@ function recoverViteHashedAvatar(avatarUrl: string): string | undefined {
     if (BOT_AVATAR_MAP[filename]) {
       console.info('Recovered broken Vite-hashed avatar:', avatarUrl, '→', filename);
       return BOT_AVATAR_MAP[filename];
+    }
+  }
+  // Named friend portraits. These are stored the same way and were the only
+  // ones never in the map, so they were what logged "Unrecoverable" — about
+  // twenty times a session on the home screen, once per row that showed one.
+  const friendMatch = avatarUrl.match(/friend-([a-z]+)/i);
+  if (friendMatch && friendMatch[1]) {
+    const recovered = FRIEND_AVATAR_MAP[friendMatch[1].toLowerCase()];
+    if (recovered) {
+      console.info('Recovered broken Vite-hashed avatar:', avatarUrl, '→', friendMatch[0]);
+      return recovered;
     }
   }
   return undefined;

@@ -6,11 +6,11 @@ import { HeaderActions } from "@/components/shared/HeaderActions";
 interface PageHeaderProps {
   title: string;
   onBack?: () => void;
-  /** Off by default. The bottom nav is how you move between these screens,
-      so an arrow back to wherever you happened to come from is a second,
-      inconsistent way to navigate — and it moved the title sideways on the
-      pages that had it. Pass true only where a screen is genuinely a
-      sub-page of another. */
+  /** On by default, because most pages are sub-pages. The bottom nav only
+      reaches five destinations — home, explore, shop, rating and online
+      game — and those pass `false`: an arrow back to wherever you happened
+      to come from is a second, inconsistent way to move between screens the
+      nav already switches. Everywhere else it is the only way out. */
   showBack?: boolean;
   /** Defaults to the search and bell every top-level page carries. Pass
       something else only when the page has controls of its own. */
@@ -21,7 +21,7 @@ interface PageHeaderProps {
 export function PageHeader({
   title,
   onBack,
-  showBack = false,
+  showBack = true,
   rightElements,
   className = "",
 }: PageHeaderProps) {

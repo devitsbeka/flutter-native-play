@@ -297,7 +297,7 @@ export default function PowerUps() {
             Its own pt-[env(safe-area-inset-top)] is gone: #root already
             insets the page, and PageHeader paints the status bar strip
             itself, so the manual one was a second inset on top of both. */}
-        <PageHeader title={t("menu.shop")} />
+        <PageHeader title={t("menu.shop")} showBack={false} />
 
         {/* The currency pills are the shop's own, not header furniture, so
             they sit on their own row underneath. Keeping them in the header

@@ -312,7 +312,7 @@ export default function Leaderboards() {
 
         {/* The shared header, so the title and back button sit where they do
             on every other page instead of at this page's own offsets. */}
-        <PageHeader title={t("extra.ratingTitle")} rightElements={<HeaderActions />} />
+        <PageHeader title={t("extra.ratingTitle")} showBack={false} rightElements={<HeaderActions />} />
 
         <div className="relative flex-1 min-h-0 w-full max-w-xl mx-auto px-4 pt-5 pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:pb-8 flex flex-col">
           {/* Tabs - centered pills */}
