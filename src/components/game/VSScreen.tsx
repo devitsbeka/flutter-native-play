@@ -405,8 +405,15 @@ export function VSScreen() {
         </motion.div>
       </motion.div>
 
-      {/* Header */}
+      {/* Header
+          marginTop rather than padding: the status bar overlays the webview
+          now (nativeShell.configureStatusBar), so a top row that only had
+          pt-4 sat under the clock. Margin because pt-4 here is design
+          spacing, and an inline paddingTop would replace it rather than add
+          to it. The background keeps running underneath either way, which is
+          the point of overlaying. */}
       <motion.div 
+        style={{ marginTop: "var(--safe-top)" }}
         className="flex items-center justify-between px-4 pt-4 pb-2 relative z-30 shrink-0"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

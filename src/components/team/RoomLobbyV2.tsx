@@ -646,10 +646,18 @@ export function RoomLobbyV2() {
       className="min-h-screen relative flex flex-col"
       style={{ background: roomGradient?.gradient || 'var(--background)' }}
     >
-      {/* Sticky Header */}
+      {/* Sticky Header
+          The blur strip runs to the top edge — the status bar overlays the
+          webview now, so the room's gradient continues under the clock and
+          this frosts it rather than stopping short of it. Only the row
+          inside is inset, which is why the padding is on the row and not on
+          the strip. */}
       <div className="sticky top-0 z-30 w-full">
         {/* Header content with subtle background blur */}
-        <div className="px-4 sm:px-6 py-4 backdrop-blur-md bg-black/10">
+        <div
+          style={{ paddingTop: "calc(1rem + var(--safe-top))" }}
+          className="px-4 sm:px-6 pb-4 backdrop-blur-md bg-black/10"
+        >
           <div className="flex items-center justify-between">
             <motion.button
               onClick={handleExitRoom}

@@ -168,6 +168,16 @@ const App = () => (
               richColors
               closeButton
               duration={4000}
+              // One at a time. Sonner stacks three by default, and with
+              // toast() called in ~580 places a single action can raise
+              // several at once — a column of cards down the screen for what
+              // is usually one event described three ways. Extras still
+              // queue and appear as the current one leaves.
+              visibleToasts={1}
+              // Clear of the status bar, which the webview now draws under.
+              // Object form, not a bare string: a string sets every side, so
+              // it would indent the toasts horizontally as well.
+              offset={{ top: "calc(1rem + var(--safe-top))" }}
               style={{ zIndex: 2147483647 }}
             />
 
