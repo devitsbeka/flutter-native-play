@@ -43,6 +43,10 @@ import { useAuth } from "@/hooks/useAuth";
 
 export type PushPermission = "granted" | "denied" | "prompt" | "unsupported";
 
+// Where a tapped notification wanted to go, held across the moment between
+// the tap arriving and the router being able to honour it.
+const PENDING_ROUTE_KEY = "push:pendingRoute";
+
 // Module scope, not a ref.
 //
 // A ref is per-instance, and this hook now has two callers: PushRegistrar at
@@ -109,7 +113,23 @@ export function usePushNotifications() {
           ({ notification }) => {
             const data = notification.data as Record<string, unknown> | undefined;
             const route = data?.route ?? data?.deep_link;
-            if (typeof route === "string" && route.startsWith("/")) navigate(route);
+            if (typeof route !== "string" || !route.startsWith("/")) return;
+
+            // Parked before navigating, and drained on mount.
+            //
+            // A tap that cold-starts the app delivers this while the router
+            // may still be mounting, and a navigate() into a router that is
+            // not ready goes nowhere quietly — the app opens on the home
+            // screen and the tap looks ignored. Writing it down first means
+            // the destination survives that race and is applied as soon as
+            // there is somewhere to apply it to.
+            try {
+              sessionStorage.setItem(PENDING_ROUTE_KEY, route);
+            } catch {
+              /* private mode; the direct navigate below still covers the
+                 common case where the app was already running */
+            }
+            navigate(route);
           },
         );
       } catch (error) {
@@ -117,6 +137,20 @@ export function usePushNotifications() {
       }
     })();
   }, [supported, persistToken, navigate]);
+
+  // Apply a destination left behind by a tap that arrived before the router
+  // could handle it. Cleared first, so a failed navigation cannot strand the
+  // player on the same screen every launch from then on.
+  useEffect(() => {
+    let route: string | null = null;
+    try {
+      route = sessionStorage.getItem(PENDING_ROUTE_KEY);
+      if (route) sessionStorage.removeItem(PENDING_ROUTE_KEY);
+    } catch {
+      return;
+    }
+    if (route && route.startsWith("/")) navigate(route);
+  }, [navigate]);
 
   // Read the current permission on every mount, separately from binding.
   //

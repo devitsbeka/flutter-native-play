@@ -76,7 +76,7 @@ Deno.serve(async (req: Request) => {
 
     const [{ data: sender }, { data: room }] = await Promise.all([
       supabase.from("profiles").select("nickname").eq("user_id", user.id).maybeSingle(),
-      supabase.from("game_rooms").select("room_name").eq("id", invite.room_id).maybeSingle(),
+      supabase.from("game_rooms").select("room_name, room_code").eq("id", invite.room_id).maybeSingle(),
     ]);
 
     const who = sender?.nickname?.trim() || "A friend";
@@ -88,8 +88,21 @@ Deno.serve(async (req: Request) => {
       : `${who} invited you to a game`;
 
     // `route` is what usePushNotifications navigates to when the notification
-    // is tapped. Without it the app opens on whatever screen it was last on,
-    // which is a worse answer to "come and play" than not notifying at all.
+    // is tapped, and it has to be the room rather than the screen the room
+    // lives on. `/team` alone just opens the app — the player still has to
+    // find the invitation and accept it, which is most of the work the
+    // notification was supposed to save them.
+    //
+    // `/team?join=CODE` is the existing invite deep link: RoomRedirect maps
+    // /room/:code onto it, and TeamV2 consumes `?join=` by joining directly
+    // for a signed-in player. The code is the room's `room_code`, not its id
+    // — the id is a uuid TeamV2 does not look up.
+    //
+    // Falls back to `/team` if the room has no code, which is better than a
+    // link that lands on a join attempt that cannot succeed.
+    const joinCode = room?.room_code?.trim();
+    const route = joinCode ? `/team?join=${encodeURIComponent(joinCode)}` : "/team";
+
     const { sent, failed } = await sendToUsers(
       supabase,
       [invite.receiver_id],
@@ -97,7 +110,7 @@ Deno.serve(async (req: Request) => {
       body,
       {
         type: "game_invite",
-        route: "/team",
+        route,
         room_id: String(invite.room_id),
         invitation_id: String(invite.id),
       },
