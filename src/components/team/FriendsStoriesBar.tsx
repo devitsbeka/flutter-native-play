@@ -16,9 +16,10 @@ import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
  * channel. The colour was the thing that was too light, so that is what
  * changed.
  */
-// Slate, not the mauve this used to be — on a near-white strip a pale purple
-// tint reads as a rendering artefact, and grey reads as an empty slot.
-const PLACEHOLDER_GREY = '100, 116, 139';
+// The app's own --primary (263 60% 59%) rather than slate. The strip sat on a
+// near-white card when this was grey, where a purple tint read as a rendering
+// artefact; it sits on the lavender scene now, and grey reads as dirt on it.
+const PLACEHOLDER_PURPLE = '136, 88, 213';
 
 /**
  * How solid each empty slot is, first to last.
@@ -28,13 +29,17 @@ const PLACEHOLDER_GREY = '100, 116, 139';
  * multiplied, so the first slot landed at 23% and the last at 11%, and the
  * strip looked empty rather than like room to grow.
  */
-const SLOT_ALPHAS = [0.55, 0.34, 0.18];
+// Purple carries further than slate at the same alpha, so the first two come
+// down 10 and 5 points; the last one was already faint enough to leave. The
+// ramp still falls left to right, which is what makes the strip read as room
+// to grow rather than three of something.
+const SLOT_ALPHAS = [0.45, 0.29, 0.18];
 
 function StaticPlaceholder({ className, alpha }: { className?: string; alpha: number }) {
   return (
     <div
       className={`${className}`}
-      style={{ backgroundColor: `rgba(${PLACEHOLDER_GREY}, ${alpha})` }}
+      style={{ backgroundColor: `rgba(${PLACEHOLDER_PURPLE}, ${alpha})` }}
     />
   );
 }
