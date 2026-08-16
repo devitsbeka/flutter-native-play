@@ -103,7 +103,7 @@ function GameContent() {
   const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result" || phase === "match-result";
 
   return (
-    <div className="h-[100dvh] w-full flex flex-col relative overflow-hidden bg-[#7E7ADB]">
+    <div className="h-[100dvh] w-full flex flex-col relative overflow-hidden bg-[#7E7ADB]" style={{ marginTop: "calc(-1 * var(--safe-top))", paddingTop: "var(--safe-top)" }}>
       {/* White Radial Mask - only show for match-result phase */}
       {!hasOwnBackground && (
         <div 

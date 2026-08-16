@@ -331,8 +331,6 @@ export function QuizGameScreenProd() {
     <div className="w-full h-full bg-[#7E7ADB] overflow-hidden">
       {/* Content wrapper with max-width for desktop/tablet, centered */}
       <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
-      {/* Safe area padding for notched phones */}
-      <div className="pt-[env(safe-area-inset-top)]" />
 
       {/* Header - Different layout for solo vs challenge mode */}
       <div className="flex items-center justify-between px-4 pt-3 py-1 mb-2 [@media(max-height:700px)]:py-0.5 [@media(max-height:700px)]:mb-1 [@media(max-height:600px)]:pt-1 [@media(max-height:600px)]:py-0 [@media(max-height:600px)]:mb-0.5 flex-shrink-0">
