@@ -77,6 +77,10 @@ export default function UserAnalytics() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [updatedAgoText, setUpdatedAgoText] = useState('0s ago');
+  // A failed load used to render as an empty table, which reads as "you have
+  // no users" rather than "the query did not run". Keeping the reason lets
+  // the page say which it is.
+  const [loadError, setLoadError] = useState<string | null>(null);
   const lastUpdatedRef = useRef<Date>(new Date());
 
   const fetchAllUsers = useCallback(async (showRefreshing = false) => {
@@ -145,8 +149,19 @@ export default function UserAnalytics() {
       const now = new Date();
       setLastUpdated(now);
       lastUpdatedRef.current = now;
+      setLoadError(null);
     } catch (err) {
       console.error('Error fetching analytics users:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      setLoadError(
+        // PGRST202 is PostgREST's "no such function": the admin_user_economy
+        // migration has not reached this database. Worth naming, because the
+        // generic message sends you looking for missing users instead.
+        /PGRST202|Could not find the function/i.test(message)
+          ? 'admin_user_economy() is missing from the database — apply supabase/migrations/20260731000000_lock_wallet_columns.sql'
+          : message
+      );
+      setUsers([]);
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -370,6 +385,16 @@ export default function UserAnalytics() {
             </Card>
 
             {/* User Table */}
+            {loadError && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm">
+                <p className="font-medium text-destructive">
+                  მომხმარებლების ჩატვირთვა ვერ მოხერხდა
+                </p>
+                <p className="mt-1 font-mono text-xs text-destructive/80 break-all">
+                  {loadError}
+                </p>
+              </div>
+            )}
             <UserAnalyticsTable
               users={filteredUsers}
               loading={loading}
