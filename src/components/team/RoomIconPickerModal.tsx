@@ -335,7 +335,7 @@ export function RoomIconPickerModal({
           className="fixed inset-0 safe-screen z-50 bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] h-[100dvh] flex flex-col"
         >
           {/* Header */}
-          <div className="flex-shrink-0 bg-background/95 backdrop-blur-md border-b border-border/30 pt-[env(safe-area-inset-top)]">
+          <div className="flex-shrink-0 bg-background/95 backdrop-blur-md border-b border-border/30">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-3">
                 <button 

@@ -27,6 +27,7 @@ import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
+import { PageHeader } from "@/components/shared/PageHeader";
 // Served from public/ - not bundled, streams straight from the CDN
 const SHOP_SCENE_VIDEO = "/videos/shop-scene.mp4";
 const SHOP_SCENE_VIDEO_WEBM = "/videos/shop-scene.webm";
@@ -289,13 +290,22 @@ export default function PowerUps() {
     <MainLayout showPlayButton={false}>
       {/* Main scrollable container */}
       <div className="min-h-full flex flex-col">
-        {/* Sticky header - works within MainLayout's scrollable main */}
-        <div className="sticky top-0 z-30 pt-[env(safe-area-inset-top)]">
-          <ShopHeader
-            onHelpClick={() => setShowTutorialModal(true)}
-            onCurrencyPlusClick={handleCurrencyPlusClick}
-          />
-        </div>
+        {/* The same header every other page uses, so moving between them does
+            not shift the title or the back button. The shop's currency pills
+            keep their place on the right of it.
+
+            Its own pt-[env(safe-area-inset-top)] is gone: #root already
+            insets the page, and PageHeader paints the status bar strip
+            itself, so the manual one was a second inset on top of both. */}
+        <PageHeader
+          title={t("menu.shop")}
+          rightElements={
+            <ShopHeader
+              onHelpClick={() => setShowTutorialModal(true)}
+              onCurrencyPlusClick={handleCurrencyPlusClick}
+            />
+          }
+        />
 
         <div className="flex flex-1 min-h-0">
           {/* Main content. No percentage cap: the scene beside it is capped
