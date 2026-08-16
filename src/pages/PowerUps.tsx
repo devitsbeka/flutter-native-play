@@ -297,15 +297,18 @@ export default function PowerUps() {
             Its own pt-[env(safe-area-inset-top)] is gone: #root already
             insets the page, and PageHeader paints the status bar strip
             itself, so the manual one was a second inset on top of both. */}
-        <PageHeader
-          title={t("menu.shop")}
-          rightElements={
-            <ShopHeader
-              onHelpClick={() => setShowTutorialModal(true)}
-              onCurrencyPlusClick={handleCurrencyPlusClick}
-            />
-          }
-        />
+        <PageHeader title={t("menu.shop")} />
+
+        {/* The currency pills are the shop's own, not header furniture, so
+            they sit on their own row underneath. Keeping them in the header
+            would have given this page a different right-hand side from every
+            other one, which is the inconsistency being removed. */}
+        <div className="px-4 pt-3">
+          <ShopHeader
+            onHelpClick={() => setShowTutorialModal(true)}
+            onCurrencyPlusClick={handleCurrencyPlusClick}
+          />
+        </div>
 
         <div className="flex flex-1 min-h-0">
           {/* Main content. No percentage cap: the scene beside it is capped

@@ -1,11 +1,19 @@
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
+import { HeaderActions } from "@/components/shared/HeaderActions";
 
 interface PageHeaderProps {
   title: string;
   onBack?: () => void;
+  /** Off by default. The bottom nav is how you move between these screens,
+      so an arrow back to wherever you happened to come from is a second,
+      inconsistent way to navigate — and it moved the title sideways on the
+      pages that had it. Pass true only where a screen is genuinely a
+      sub-page of another. */
   showBack?: boolean;
+  /** Defaults to the search and bell every top-level page carries. Pass
+      something else only when the page has controls of its own. */
   rightElements?: React.ReactNode;
   className?: string;
 }
@@ -13,7 +21,7 @@ interface PageHeaderProps {
 export function PageHeader({
   title,
   onBack,
-  showBack = true,
+  showBack = false,
   rightElements,
   className = "",
 }: PageHeaderProps) {
@@ -82,16 +90,16 @@ export function PageHeader({
           </motion.h1>
         </div>
 
-        {/* Right: Action elements */}
-        {rightElements && (
-          <motion.div
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-2"
-          >
-            {rightElements}
-          </motion.div>
-        )}
+        {/* Right: search and bell by default, so every page carries the same
+            pair in the same place as Explore. A page passes its own only when
+            it has controls of its own to put there. */}
+        <motion.div
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-2"
+        >
+          {rightElements ?? <HeaderActions />}
+        </motion.div>
       </div>
     </header>
   );

@@ -45,6 +45,7 @@ import { GuestJoinModal } from "@/components/controller/GuestJoinModal";
 
 import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { useProGating } from "@/hooks/useProGating";
@@ -713,32 +714,27 @@ function TeamContentV2() {
           right like every other page header; the friends reel rides the same
           row on md+ so it sits as high as possible */}
       <div ref={headerRef} className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/30">
-        <div className="flex items-center gap-3 px-4 py-2">
-          {/* Left: Logo - aligned to left edge (lg+ shows it in the sidebar) */}
-          <div className="flex items-center gap-4 lg:hidden shrink-0">
-            <MyTriviaLiveLogo responsive />
-          </div>
-
-          {/* lg+: the sidebar holds the logo, so the header leads with the
-              page title; the friends reel lives on its own row below */}
-          <h1 className="hidden lg:block font-display text-xl font-bold text-[#402666] truncate">
-            {t("extra.navOnlineGame")}
-          </h1>
-
-          <div className="flex items-center gap-1 ml-auto shrink-0">
-            {/* QR Scanner */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setShowQRScanner(true)}
-              className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
-            >
-              <ScanLine className="w-5 h-5 text-gray-600" />
-            </motion.button>
-
-            <HeaderActions />
-          </div>
-        </div>
+        {/* The same header as every other page: the page's name on the left,
+            no back arrow, actions on the right. It replaces a row that led
+            with the wordmark on mobile and the title only on lg+, so the
+            title appeared and disappeared depending on the width. The QR
+            scanner keeps its place beside the shared search and bell. */}
+        <PageHeader
+          title={t("extra.navOnlineGame")}
+          rightElements={
+            <div className="flex items-center gap-1">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowQRScanner(true)}
+                className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
+              >
+                <ScanLine className="w-5 h-5 text-gray-600" />
+              </motion.button>
+              <HeaderActions />
+            </div>
+          }
+        />
 
         {/* Friends reel: its own full-width row under the header, all sizes */}
         <div className="px-4">
