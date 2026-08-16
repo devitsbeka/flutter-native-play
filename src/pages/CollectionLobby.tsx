@@ -142,12 +142,12 @@ export default function CollectionLobby() {
 
         <button
           onClick={handleBack}
-          className="absolute left-4 z-10 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors" style={{ top: `calc(1rem + ${SAFE_TOP})` }}
+          className="absolute left-4 z-10 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors" style={{ top: "calc(1rem + var(--safe-top))" }}
         >
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
 
-        <div className="absolute right-4 z-10 flex items-center gap-2" style={{ top: `calc(1rem + ${SAFE_TOP})` }}>
+        <div className="absolute right-4 z-10 flex items-center gap-2" style={{ top: "calc(1rem + var(--safe-top))" }}>
           {isOwner && (
             <button
               onClick={() => setIsEditCollectionOpen(true)}

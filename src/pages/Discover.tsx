@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useDeferredValue } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -55,6 +55,11 @@ export default function Discover() {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  // The input reads searchQuery so the caret never lags; the filtering reads
+  // this, which React is free to leave a frame behind. Without it every
+  // keystroke re-filtered and re-rendered the whole grid before the character
+  // appeared, which is the delay when typing.
+  const deferredQuery = useDeferredValue(searchQuery);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
@@ -89,9 +94,9 @@ export default function Discover() {
 
     // Latin spelling finds a Georgian category, same as the rooms list:
     // "ბუნება" answers to `buneba` and to `bu`.
-    if (searchQuery.trim()) {
+    if (deferredQuery.trim()) {
       result = result.filter((cat) =>
-        matchesQuery(searchQuery, [cat.name, cat.description])
+        matchesQuery(deferredQuery, [cat.name, cat.description])
       );
     }
 
@@ -100,7 +105,7 @@ export default function Discover() {
     }
 
     return result;
-  }, [categories, searchQuery, activeTab]);
+  }, [categories, deferredQuery, activeTab]);
 
   // Group categories by type
   const classicCategories = useMemo(

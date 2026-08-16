@@ -972,7 +972,10 @@ export function RoomLobbyV2() {
               );
             })()
           ) : (
-            <div className="text-center py-2 space-y-3">
+            /* space-y-5, not 3: the button carries a chunky drop shadow that
+               eats most of a 12px gap, so the caption read as attached to it
+               rather than as a separate line. */
+            <div className="text-center py-2 space-y-5">
               <ChunkyButton
                 variant="white"
                 size="lg"

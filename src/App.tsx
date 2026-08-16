@@ -22,6 +22,7 @@ import { SplashScreen } from "@/components/SplashScreen";
 import "@/components/game/VideoPreloader";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { UserPresenceTracker } from "@/components/UserPresenceTracker";
+import { ScrollLockGuard } from "@/components/ScrollLockGuard";
 import { PushRegistrar } from "@/native/PushRegistrar";
 import { AdminAIPromptSync } from "@/components/system/AdminAIPromptSync";
 import { StaleAnimationCleanup } from "@/components/system/StaleAnimationCleanup";
@@ -188,6 +189,7 @@ const App = () => (
             <GlobalSplineBackground />
             
             <UserPresenceTracker />
+            <ScrollLockGuard />
             <PushRegistrar />
             <AdminAIPromptSync />
             <StaleAnimationCleanup />

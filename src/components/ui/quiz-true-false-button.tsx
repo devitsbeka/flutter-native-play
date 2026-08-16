@@ -1,3 +1,4 @@
+import { memo } from "react";
 import * as React from "react";
 import { motion, AnimatePresence, type Easing } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,7 @@ interface QuizTrueFalseButtonProps {
   className?: string;
 }
 
-export function QuizTrueFalseButton({
+function QuizTrueFalseButtonBase({
   variant,
   state = "default",
   onClick,
@@ -234,3 +235,5 @@ export function QuizTrueFalseButton({
     </motion.button>
   );
 }
+
+export const QuizTrueFalseButton = memo(QuizTrueFalseButtonBase);

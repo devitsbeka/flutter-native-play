@@ -270,7 +270,11 @@ export default function CategoryPage() {
           />
           
           {/* Navigation buttons */}
-          <div className="absolute left-5 right-5 flex items-center justify-between z-10" style={{ top: `calc(3rem + ${SAFE_TOP})` }}>
+          {/* Fixed, not absolute: these used to be pinned to the hero, so both
+              controls scrolled away with it and there was no way back without
+              scrolling to the top first. z-30 keeps them over the level grid
+              that now passes underneath. */}
+          <div className="fixed left-5 right-5 flex items-center justify-between z-30" style={{ top: "calc(3rem + var(--safe-top))" }}>
             <button
               onClick={() => navigate("/discover")}
               className="flex h-11 w-11 items-center justify-center rounded-full bg-black/25 backdrop-blur-md border border-white/20"

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -319,4 +320,5 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
 
 QuizQuestionCard.displayName = "QuizQuestionCard";
 
-export { QuizQuestionCard };
+const QuizQuestionCardMemo = memo(QuizQuestionCard);
+export { QuizQuestionCardMemo as QuizQuestionCard };

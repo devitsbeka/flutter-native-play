@@ -1,3 +1,4 @@
+import { memo } from "react";
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -175,4 +176,5 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
 
 QuizAnswerButton.displayName = "QuizAnswerButton";
 
-export { QuizAnswerButton };
+const QuizAnswerButtonMemo = memo(QuizAnswerButton);
+export { QuizAnswerButtonMemo as QuizAnswerButton };

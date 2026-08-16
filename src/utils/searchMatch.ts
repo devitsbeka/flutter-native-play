@@ -17,9 +17,33 @@ import { transliterateGeorgian } from "@/utils/transliteration";
  * together here. That is a feature for a search box: someone typing a name
  * they have only heard is not going to pick the right one.
  */
+/**
+ * Folded forms, kept between keystrokes.
+ *
+ * The fold is pure and the inputs repeat constantly: every category name and
+ * description is folded again on every character typed, so a list of a
+ * hundred categories transliterated two hundred strings per keystroke and did
+ * it from scratch each time. Transliteration walks the string character by
+ * character, and that work was landing on the main thread between the key
+ * press and the caret moving.
+ *
+ * Bounded, because the query itself passes through here too and is different
+ * every time — without a cap this would grow one entry per character typed
+ * for the life of the session.
+ */
+const keyCache = new Map<string, string>();
+const KEY_CACHE_MAX = 2000;
+
 export function searchKey(value: string | null | undefined): string {
   if (!value) return "";
-  return transliterateGeorgian(value.toLowerCase());
+
+  const cached = keyCache.get(value);
+  if (cached !== undefined) return cached;
+
+  const folded = transliterateGeorgian(value.toLowerCase());
+  if (keyCache.size >= KEY_CACHE_MAX) keyCache.clear();
+  keyCache.set(value, folded);
+  return folded;
 }
 
 /**

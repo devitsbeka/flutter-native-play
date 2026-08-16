@@ -1,3 +1,4 @@
+import { memo } from "react";
 import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -67,4 +68,5 @@ const QuizProgressDots = React.forwardRef<HTMLDivElement, QuizProgressDotsProps>
 
 QuizProgressDots.displayName = "QuizProgressDots";
 
-export { QuizProgressDots };
+const QuizProgressDotsMemo = memo(QuizProgressDots);
+export { QuizProgressDotsMemo as QuizProgressDots };
