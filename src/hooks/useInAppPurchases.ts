@@ -405,7 +405,7 @@ function ensureStore(): Promise<IAPProduct[]> {
 }
 
 export function useInAppPurchases() {
-  const { user } = useAuth();
+  const { user, fetchProfile } = useAuth();
   const [products, setProducts] = useState<IAPProduct[]>(storeProducts);
   const [loading, setLoading] = useState(storeProducts.length === 0);
   const [purchasing, setPurchasing] = useState(false);
@@ -436,6 +436,11 @@ export function useInAppPurchases() {
     void ensureIdentified(user.id);
   }, [user?.id]);
 
+
+  // Re-read the profile so the balance on screen matches the database.
+  const refreshBalance = useCallback(async () => {
+    if (user?.id) await fetchProfile(user.id);
+  }, [user?.id, fetchProfile]);
 
   // Purchase a product
   const purchase = useCallback(async (productId: string): Promise<PurchaseResult> => {
@@ -556,7 +561,41 @@ export function useInAppPurchases() {
         // decided server-side: we ask the backend to re-read this user from
         // RevenueCat and write the result. Nothing about the transaction is
         // sent from here, because nothing sent from here could be trusted.
-        const synced = await syncEntitlements();
+        //
+        // Retried for gem packs, because RevenueCat's REST API is eventually
+        // consistent. The SDK hands back customerInfo the moment the sheet
+        // closes, but verify-receipt reads the subscriber record over HTTP,
+        // and for a second or two after a purchase that record does not yet
+        // list the transaction. The sync then succeeds truthfully with
+        // gemsCredited: 0 — a charged card, a success toast, and a balance
+        // that does not move. Restoring a minute later worked, which is the
+        // same call winning the same race.
+        //
+        // Only consumables are retried: a subscription legitimately credits
+        // no gems, so waiting on that would be waiting for something that is
+        // never coming.
+        const expectsGems = Object.values(GEM_PACK_PRODUCTS).includes(productId);
+        let synced = await syncEntitlements();
+
+        if (expectsGems && synced.success && synced.gemsCredited === 0) {
+          for (const wait of [1500, 3000, 5000]) {
+            iapLog(`no gems credited yet, re-syncing in ${wait}ms`);
+            await new Promise((r) => setTimeout(r, wait));
+            synced = await syncEntitlements();
+            if (!synced.success || synced.gemsCredited > 0) break;
+          }
+        }
+
+        if (expectsGems && synced.success && synced.gemsCredited === 0) {
+          // Out of patience, not out of options: the RevenueCat webhook
+          // credits the same transaction server-side, and Restore replays it
+          // on demand. Saying "completed" here would be a lie the balance
+          // immediately contradicts.
+          iapLog("purchase succeeded but nothing was credited after retries");
+          await refreshBalance();
+          toast.success("Purchase completed — your gems will appear shortly.");
+          return { success: true };
+        }
 
         if (!synced.success) {
           // The money moved even though the sync didn't. Say so honestly
@@ -565,6 +604,15 @@ export function useInAppPurchases() {
           toast.error("Purchase went through, but activating it failed. It will appear shortly.");
           return { success: false, error: "sync_failed" };
         }
+
+        // Pull the new balance before saying so. The gems are credited to
+        // `profiles` by the server, and the header reads that row out of the
+        // auth context — which is loaded once on launch and never refetched.
+        // Without this the credit is real, the toast is true, and the number
+        // on screen is yesterday's until the app is restarted. That is
+        // indistinguishable from the purchase having been lost, and it is
+        // what "I had those gems on launch" was.
+        await refreshBalance();
 
         toast.success("Purchase completed!");
         return { success: true };
@@ -597,7 +645,7 @@ export function useInAppPurchases() {
     } finally {
       setPurchasing(false);
     }
-  }, [user]);
+  }, [user, refreshBalance]);
 
   // Restore previous purchases
   const restorePurchases = useCallback(async (): Promise<boolean> => {
@@ -632,6 +680,7 @@ export function useInAppPurchases() {
       }
 
       if (synced.tier || synced.gemsCredited > 0) {
+        await refreshBalance();
         toast.success("Purchases restored!");
         return true;
       }
@@ -645,7 +694,7 @@ export function useInAppPurchases() {
     } finally {
       setPurchasing(false);
     }
-  }, [user]);
+  }, [user, refreshBalance]);
 
   // Get product by ID
   const getProduct = useCallback((productId: string): IAPProduct | undefined => {
