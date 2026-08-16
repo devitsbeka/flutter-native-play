@@ -373,24 +373,28 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
                       {weekBonus.daysComplete}/7
                     </span>
                   </div>
-                  <div className="mt-2 flex items-center gap-1.5">
-                    <span className="flex items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-bold text-white">
-                      <img src={coinIcon} alt="" width={13} height={13} />
+                  {/* The three prizes, about 15% larger than they were: 13px
+                      icons to 15, 11px numerals to 12.6, and the padding and
+                      gaps opened up to match. They are the reason to come back
+                      on day five and were the smallest thing on the card. */}
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="flex items-center gap-1 rounded-full bg-white/25 px-2.5 py-1 text-[12.6px] font-bold text-white">
+                      <img src={coinIcon} alt="" width={15} height={15} />
                       {WEEK_BONUS.coins}
                     </span>
-                    <span className="flex items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-bold text-white">
-                      <img src={gemIcon} alt="" width={13} height={13} />
+                    <span className="flex items-center gap-1 rounded-full bg-white/25 px-2.5 py-1 text-[12.6px] font-bold text-white">
+                      <img src={gemIcon} alt="" width={15} height={15} />
                       {WEEK_BONUS.gems}
                     </span>
-                    <span className="flex items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-bold text-white">
+                    <span className="flex items-center gap-1 rounded-full bg-white/25 px-2.5 py-1 text-[12.6px] font-bold text-white">
                       {weekBonusPowerUp(weekStartOf(todayKey())) === "time-drain" ? (
-                        <TimeIcon size={13} />
+                        <TimeIcon size={15} />
                       ) : (
                         <img
                           src={POWER_UP_ICONS[weekBonusPowerUp(weekStartOf(todayKey()))] || power5050}
                           alt=""
-                          width={13}
-                          height={13}
+                          width={15}
+                          height={15}
                         />
                       )}
                       {WEEK_BONUS.power_up_count}x
