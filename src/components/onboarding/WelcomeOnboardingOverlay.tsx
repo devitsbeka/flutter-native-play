@@ -29,10 +29,17 @@ const STEPS = [
   { id: "play", titleKey: "extra.onboardingPlayTitle", descKey: "extra.onboardingPlayDesc", icon: playIcon },
 ] as const;
 
-const TOOLTIP_WIDTH = 280;
+// The card and everything in it is sized 15% up from the original
+// 280/16px layout — the text was the smallest on any surface of the app.
+const TOOLTIP_WIDTH = 322;
 const PADDING = 12;
-const DESKTOP_TOOLTIP_HEIGHT = 220;
+const DESKTOP_TOOLTIP_HEIGHT = 253;
 const SPOTLIGHT_PADDING = 10;
+
+// 322 unless the screen cannot take it. A 320px-wide phone has no room for
+// 322 plus both margins, and a fixed width there pushes the card's left edge
+// off-screen — at 280 it still fit, so the width had never had to bend.
+const tooltipWidth = () => Math.min(TOOLTIP_WIDTH, window.innerWidth - PADDING * 2);
 
 const NAV_STEP_IDS = ["explore", "shop", "rank", "team"];
 
@@ -211,20 +218,22 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
       const anchorCenterY = targetRect.top + targetRect.height / 2;
       const unclampedTop = anchorCenterY - 60;
       const top = Math.max(PADDING, Math.min(window.innerHeight - DESKTOP_TOOLTIP_HEIGHT - PADDING, unclampedTop));
-      const left = Math.min(targetRect.right + 16, window.innerWidth - TOOLTIP_WIDTH - PADDING);
-      return { position: "absolute", top, left, width: TOOLTIP_WIDTH };
+      const width = tooltipWidth();
+      const left = Math.min(targetRect.right + 16, window.innerWidth - width - PADDING);
+      return { position: "absolute", top, left, width };
     }
 
     // Bottom nav or desktop play: position above the target
     const anchorCenterX = targetRect.left + targetRect.width / 2;
-    let left = anchorCenterX - TOOLTIP_WIDTH / 2;
+    const width = tooltipWidth();
+    let left = anchorCenterX - width / 2;
     if (left < PADDING) left = PADDING;
-    if (left + TOOLTIP_WIDTH > window.innerWidth - PADDING) {
-      left = window.innerWidth - PADDING - TOOLTIP_WIDTH;
+    if (left + width > window.innerWidth - PADDING) {
+      left = window.innerWidth - PADDING - width;
     }
     const tooltipEstimatedHeight = 170;
     const top = targetRect.top - tooltipEstimatedHeight - 10;
-    return { position: "absolute", top: Math.max(PADDING, top), left, width: TOOLTIP_WIDTH };
+    return { position: "absolute", top: Math.max(PADDING, top), left, width };
   };
 
   const getArrowStyle = (): React.CSSProperties => {
@@ -238,10 +247,10 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
       const arrowTop = Math.max(16, Math.min(180, anchorCenterY - tooltipTop));
       return {
         position: "absolute",
-        top: arrowTop - 6,
-        left: -6,
-        width: 12,
-        height: 12,
+        top: arrowTop - 7,
+        left: -7,
+        width: 14,
+        height: 14,
         transform: "rotate(45deg)",
         background: "hsl(var(--card))",
         borderLeft: "2px solid hsl(var(--primary))",
@@ -253,13 +262,13 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
     const anchorCenterX = targetRect.left + targetRect.width / 2;
     const tooltipStyle = getTooltipStyle();
     const tooltipLeft = (tooltipStyle.left as number) || 0;
-    const arrowLeft = Math.max(20, Math.min(TOOLTIP_WIDTH - 20, anchorCenterX - tooltipLeft));
+    const arrowLeft = Math.max(20, Math.min(tooltipWidth() - 20, anchorCenterX - tooltipLeft));
     return {
       position: "absolute",
-      bottom: -6,
-      left: arrowLeft - 6,
-      width: 12,
-      height: 12,
+      bottom: -7,
+      left: arrowLeft - 7,
+      width: 14,
+      height: 14,
       transform: "rotate(45deg)",
       background: "hsl(var(--card))",
       borderRight: "2px solid hsl(var(--primary))",
@@ -335,7 +344,7 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
             {/* Card with spinning conic-gradient border */}
             <div className="relative">
               {/* Spinning conic-gradient border */}
-              <div className="absolute -inset-[2px] rounded-2xl overflow-hidden">
+              <div className="absolute -inset-[2px] rounded-[18px] overflow-hidden">
                 <div
                   className="absolute inset-0 animate-spin-slow"
                   style={{
@@ -350,52 +359,52 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
               </div>
 
               {/* Card content */}
-              <div className="relative bg-card rounded-2xl p-4">
+              <div className="relative bg-card rounded-[18px] p-[18px]">
                 {/* Pulse glow */}
                 <div
-                  className="absolute inset-0 rounded-2xl opacity-50 animate-pulse-shadow pointer-events-none"
+                  className="absolute inset-0 rounded-[18px] opacity-50 animate-pulse-shadow pointer-events-none"
                   style={{ boxShadow: "0 0 30px hsl(var(--primary) / 0.3)" }}
                 />
 
-                <div className="relative z-10 flex flex-col gap-3">
+                <div className="relative z-10 flex flex-col gap-[14px]">
                   {/* Icon + text */}
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-[14px]">
                     <img
                       src={step.icon}
                       alt=""
-                      className="w-10 h-10 flex-shrink-0 drop-shadow-lg"
+                      className="w-[46px] h-[46px] flex-shrink-0 drop-shadow-lg"
                     />
                     <div>
-                      <h3 className="text-sm font-bold text-foreground mb-0.5">
+                      <h3 className="text-base font-bold text-foreground mb-0.5">
                         {t(step.titleKey)}
                       </h3>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
                         {t(step.descKey)}
                       </p>
                     </div>
                   </div>
 
                   {/* Step dots + counter */}
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-[7px]">
                     {STEPS.map((_, i) => (
                       <div
                         key={i}
-                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                        className={`h-[7px] rounded-full transition-all duration-300 ${
                           i === currentStep
-                            ? "w-5 bg-primary"
+                            ? "w-[23px] bg-primary"
                             : i < currentStep
-                            ? "w-1.5 bg-primary/50"
-                            : "w-1.5 bg-muted-foreground/20"
+                            ? "w-[7px] bg-primary/50"
+                            : "w-[7px] bg-muted-foreground/20"
                         }`}
                       />
                     ))}
-                    <span className="ml-auto text-[11px] text-muted-foreground">
+                    <span className="ml-auto text-[13px] text-muted-foreground">
                       {currentStep + 1}/{STEPS.length}
                     </span>
                   </div>
 
                   {/* Buttons */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-[9px]">
                     <motion.button
                       onClick={handleNext}
                       animate={{
@@ -406,7 +415,7 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
                         ],
                       }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                      className="flex-1 px-4 py-2 rounded-full font-semibold text-xs text-white cursor-pointer"
+                      className="flex-1 px-[18px] py-[9px] rounded-full font-semibold text-sm text-white cursor-pointer"
                       style={{
                         background: "linear-gradient(135deg, hsl(var(--primary)), hsl(280, 80%, 60%))",
                       }}
@@ -416,7 +425,7 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
                     {!isLastStep && (
                       <button
                         onClick={handleSkip}
-                        className="px-3 py-2 rounded-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        className="px-[14px] py-[9px] rounded-full text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
                         {t("common.skip")}
                       </button>
