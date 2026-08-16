@@ -47,14 +47,20 @@ export function MainLayout({
   }
 
   return (
-    // 100dvh, not 100vh. On iOS, 100vh is the LARGE viewport - the height the
-    // page would have if the browser chrome were hidden - so an h-screen
-    // scroll container is taller than what is actually on screen. The document
-    // then has somewhere to scroll, and scrolling it drags the whole shell up
-    // behind the status bar and Dynamic Island: the cropped top on refresh.
-    // dvh matches the visible area, so the document itself never scrolls and
-    // the sticky header stays where it belongs.
-    <div className={`min-h-[100dvh] flex w-full ${className}`}>
+    // 100dvh MINUS the safe-area insets, not 100vh and not a bare 100dvh.
+    //
+    // 100vh is the LARGE viewport on iOS — the height the page would have if
+    // the browser chrome were hidden — so an h-screen scroll container is
+    // taller than what is on screen, the document gets somewhere to scroll,
+    // and scrolling it drags the whole shell up behind the status bar and
+    // Dynamic Island. That was the cropped top on refresh, and dvh fixed it.
+    //
+    // Then #root took a padding of --safe-top and --safe-bottom, and a child
+    // of exactly 100dvh made the document taller than the viewport again by
+    // precisely those two insets — the same drag, from the other end, on
+    // every page in the app. The height has to be what is left after the
+    // padding, which on the web (both insets 0) is still 100dvh.
+    <div className={`min-h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] flex w-full ${className}`}>
       {/* Desktop/Tablet Left Navigation */}
       <UnifiedDesktopNav
         onPlayClick={onPlayClick}
@@ -70,14 +76,14 @@ export function MainLayout({
         id="main-scroll-container"
         className={`flex-1 relative bg-transparent scrollbar-hide overflow-x-hidden ${
           disableScroll 
-            ? 'h-[100dvh] overflow-hidden md:h-screen md:overflow-y-auto md:pb-0' 
+            ? 'h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-hidden md:h-screen md:overflow-y-auto md:pb-0' 
             // pb-24 was 96px against a nav that is 80px plus the home
             // indicator's 34 — so the last ~18px of every page sat behind it,
             // and anything the page ended with (the streak panel on home) was
             // clipped. Computed from the same token the nav uses, plus the
             // inset it adds, plus a gap so content stops short of it rather
             // than touching.
-            : 'h-[100dvh] md:h-screen overflow-y-auto pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:pb-0'
+            : 'h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] md:h-screen overflow-y-auto pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:pb-0'
         }`}
       >
         {children}

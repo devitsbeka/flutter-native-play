@@ -301,7 +301,18 @@ export default function PowerUps() {
             they sit on their own row underneath. Keeping them in the header
             would have given this page a different right-hand side from every
             other one, which is the inconsistency being removed. */}
-        <div className="px-4 pt-3">
+        {/* `relative z-10`, or this row is invisible.
+         *
+         * GlobalSplineBackground paints four `fixed inset-0` layers at
+         * z-index 0 through 3. A positioned element with z-index 0 paints
+         * ABOVE an unpositioned in-flow block — that is the CSS painting
+         * order, steps 4 and 8 — so this row was drawn and then covered by
+         * the lavender wash. The coins and gems were on the shop page the
+         * whole time, under the background.
+         *
+         * PageHeader above never showed the symptom because it is `sticky
+         * z-20`, which is a positioned element that outranks the wash. */}
+        <div className="relative z-10 px-4 pt-3">
           <ShopHeader
             onHelpClick={() => setShowTutorialModal(true)}
             onCurrencyPlusClick={handleCurrencyPlusClick}
