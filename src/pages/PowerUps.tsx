@@ -310,13 +310,10 @@ export default function PowerUps() {
          * the lavender wash. The coins and gems were on the shop page the
          * whole time, under the background.
          *
-         * PageHeader above never showed the symptom because it is `sticky
-         * z-20`, which is a positioned element that outranks the wash. */}
-        <div className="relative z-10 px-4 pt-3">
-          <ShopHeader
-            onHelpClick={() => setShowTutorialModal(true)}
-            onCurrencyPlusClick={handleCurrencyPlusClick}
-          />
+         * No side padding: the band is designed full-bleed, attached to the
+         * header above it — its own top stroke and drop shadow are the seam. */}
+        <div className="relative z-10">
+          <ShopHeader onPiggyClick={() => handleCurrencyPlusClick("coins")} />
         </div>
 
         <div className="flex flex-1 min-h-0">

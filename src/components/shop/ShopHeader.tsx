@@ -1,71 +1,67 @@
-import { motion } from "framer-motion";
-import { HelpCircle } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { HeaderActions } from "@/components/shared/HeaderActions";
 import { useCurrency } from "@/hooks/useCurrency";
-import { formatCompactNumber } from "@/lib/utils";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import piggyBank from "@/assets/icons/piggy-bank.png";
 
 interface ShopHeaderProps {
-  onHelpClick: () => void;
-  onCurrencyPlusClick?: (currencyType: "coins" | "gems") => void;
+  /** The piggy bank — the one action the wallet band carries. */
+  onPiggyClick?: () => void;
 }
 
-export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
-  const { t } = useLanguage();
+/**
+ * The shop's wallet band, per Figma node 716:346.
+ *
+ * A full-width white strip directly under PageHeader: coins and gems in
+ * pale-pink stroked circles with the counts beside them in Slackey, and a
+ * piggy bank on the right that leads to buying more. Numbers are written in
+ * full — the design shows 1,531,391 and 5,391, not "1.5M" and "5K"; the shop
+ * is where a player decides whether to spend, and a rounded balance is the
+ * wrong input for that decision.
+ *
+ * What the old version had that this deliberately does not: a second search
+ * button, a second bell, and a help button. PageHeader already carries
+ * search and notifications one row above, so the shop page was showing both
+ * pairs — the design has neither.
+ */
+export function ShopHeader({ onPiggyClick }: ShopHeaderProps) {
   const { coins, gems } = useCurrency();
 
-  const WalletDisplay = () => (
-    <div className="flex items-center gap-3">
-      {/* Coins */}
-      <div className="flex items-center gap-1.5">
-        <div className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
-          <img src={coinIcon} alt="" className="w-4 h-4" />
-        </div>
-        <span className="font-bold text-sm text-foreground">{coins.toLocaleString()}</span>
-      </div>
-      
-      {/* Gems */}
-      <div className="flex items-center gap-1.5">
-        <div className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
-          <img src={gemIcon} alt="" className="w-4 h-4" />
-        </div>
-        <span className="font-bold text-sm text-foreground">{formatCompactNumber(gems)}</span>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="bg-background/95 backdrop-blur-md border-b border-border/30">
-      <div className="px-4 py-3">
-        <div className="flex items-center justify-between">
-          {/* Left side: title */}
-          <h1 className="hidden md:block text-xl font-display font-bold text-foreground uppercase tracking-wide">
-            {t("shop.title")}
-          </h1>
-
-          {/* Wallet + action icons - spread on mobile */}
-          <div className="flex items-center justify-between md:justify-end gap-3 flex-1 md:flex-none">
-            <WalletDisplay />
-            
-            <div className="flex items-center gap-1">
-              {/* Divider - desktop/tablet only */}
-              <div className="hidden md:block w-px h-6 bg-border/50 mr-2" />
-              
-              <motion.button
-                onClick={onHelpClick}
-                className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <HelpCircle className="w-5 h-5 text-muted-foreground" />
-              </motion.button>
-
-              <HeaderActions />
-            </div>
-          </div>
+    <div
+      className="w-full bg-white border-t border-[#EFE9F7]"
+      style={{ boxShadow: "0 6px 16px rgba(64, 38, 102, 0.10)" }}
+    >
+      <div className="mx-auto flex w-full max-w-[700px] items-center gap-4 px-5 py-3">
+        {/* Coins */}
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="flex size-[53px] shrink-0 items-center justify-center rounded-full border border-[rgba(250,214,255,0.43)] bg-[rgba(250,214,255,0.13)]">
+            <img src={coinIcon} alt="" className="size-[38px] object-contain" />
+          </span>
+          <span className="truncate font-slackey text-[20px] leading-none text-black">
+            {coins.toLocaleString()}
+          </span>
         </div>
+
+        {/* Gems */}
+        <div className="ml-3 flex min-w-0 items-center gap-2.5">
+          <span className="flex size-[53px] shrink-0 items-center justify-center rounded-full border border-[rgba(250,214,255,0.43)] bg-[rgba(250,214,255,0.13)]">
+            <img src={gemIcon} alt="" className="size-[38px] object-contain" />
+          </span>
+          <span className="truncate font-slackey text-[20px] leading-none text-black">
+            {gems.toLocaleString()}
+          </span>
+        </div>
+
+        {/* Piggy bank — buy more. Pushed to the far edge by the design's own
+            layout: wallet group flexes, the piggy does not. */}
+        <button
+          type="button"
+          onClick={onPiggyClick}
+          aria-label="Buy currency"
+          className="ml-auto shrink-0 active:scale-95 transition-transform"
+        >
+          <img src={piggyBank} alt="" className="size-[72px] object-contain" />
+        </button>
       </div>
     </div>
   );
