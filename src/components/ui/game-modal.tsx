@@ -183,7 +183,13 @@ export function GameModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 safe-screen z-[100] flex md:items-center md:justify-center md:bg-black/50 md:backdrop-blur-[2px] md:p-6"
+            // No safe-screen on this wrapper. It is transparent on mobile, so
+            // padding it by the insets left two uncovered strips — behind the
+            // status bar and behind the home indicator — showing whatever page
+            // the modal opened over. Over a game that was two purple bands
+            // bracketing a lavender screen. The panel now reaches both edges
+            // and the insets are paid inside it, by the header and footer.
+            className="fixed inset-0 z-[100] flex md:items-center md:justify-center md:bg-black/50 md:backdrop-blur-[2px] md:p-6"
             onClick={!disableBackdropClick && onClose ? handleClose : undefined}
           >
           <motion.div
@@ -195,7 +201,6 @@ export function GameModal({
             className="relative flex flex-col w-full h-full md:h-auto md:max-h-[85vh] md:w-[60%] md:min-w-[560px] md:max-w-3xl md:rounded-3xl md:overflow-hidden md:shadow-2xl"
             style={{
               background: "linear-gradient(180deg, #FDFAFF 0%, #F6E8FF 100%)",
-              paddingBottom: "env(safe-area-inset-bottom)",
             }}
           >
             {/* Ambient brand blobs - the same soft bubble background the rest
@@ -207,11 +212,17 @@ export function GameModal({
               <div className="absolute top-2/3 left-[-5rem] w-72 h-72 rounded-full bg-pink-200/30 blur-3xl" />
             </div>
 
-            {/* Fixed Header */}
+            {/* Fixed Header. Carries the status-bar inset itself, so the bar
+                sits on this surface — its translucent white over the panel's
+                near-white gradient reads as one continuous top, instead of a
+                differently-coloured strip above the header. min-h rather than
+                h: a fixed height is border-box, so the inset padding would
+                squash the row instead of extending it. */}
             <motion.div
-              className="sticky top-0 z-10 flex items-center h-14 px-2 border-b border-purple-900/10 backdrop-blur-md"
+              className="sticky top-0 z-10 flex items-center min-h-14 px-2 border-b border-purple-900/10 backdrop-blur-md"
               style={{
                 background: "rgba(255,255,255,0.72)",
+                paddingTop: "var(--safe-top)",
               }}
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -333,13 +344,16 @@ export function GameModal({
               </div>
             </motion.div>
             
-            {/* Fixed Footer */}
+            {/* Fixed Footer. No surface of its own — the white card it used
+                to paint behind the button was a second colour on a screen
+                that is supposed to be one background, and the button carries
+                its own weight. It pays the home-indicator inset on top of its
+                padding, since the panel now runs to the bottom edge. */}
             {effectiveFooter && (
-              <motion.div 
-                className="sticky bottom-0 px-5 py-4 border-t border-gray-200/60"
+              <motion.div
+                className="sticky bottom-0 px-5 pt-4"
                 style={{
-                  background: "linear-gradient(180deg, #FAFAFA 0%, #FFFFFF 100%)",
-                  paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
+                  paddingBottom: "calc(1rem + var(--safe-bottom))",
                 }}
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}

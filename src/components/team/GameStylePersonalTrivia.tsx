@@ -834,8 +834,11 @@ export function GameStylePersonalTrivia({
             background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)",
           }}
         >
-          {/* Header with Title - Added more top spacing */}
-          <div className="pt-[calc(env(safe-area-inset-top,8px)+16px)] px-4 py-3 flex items-center justify-between">
+          {/* Header. Its own 16px only — the safe-screen wrapper already pays
+              the status-bar inset, so adding env(safe-area-inset-top) here
+              again was a second copy of it: ~75px of dead purple above the
+              title on a notched phone. */}
+          <div className="pt-4 px-4 py-3 flex items-center justify-between">
             <button
               onClick={handleBackClick}
               className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
