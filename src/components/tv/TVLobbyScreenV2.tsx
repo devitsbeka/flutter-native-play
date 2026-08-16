@@ -557,7 +557,7 @@ export const TVLobbyScreenV2: React.FC = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 safe-screen z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
               onClick={() => setShowCategoryDropdown(false)}
             >
               <motion.div

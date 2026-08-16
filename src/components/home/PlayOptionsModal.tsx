@@ -67,7 +67,7 @@ export function PlayOptionsModal({
           transition={{ duration: 0.25 }}
           // The page still shows through, but blurred/washed enough that the
           // purple title stays readable over busy scene artwork
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 px-6 bg-white/30 backdrop-blur-[14px]"
+          className="fixed inset-0 safe-screen z-[100] flex flex-col items-center justify-center gap-8 px-6 bg-white/30 backdrop-blur-[14px]"
           onClick={onClose}
         >
           <motion.h2

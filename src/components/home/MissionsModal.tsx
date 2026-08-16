@@ -312,7 +312,7 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
+          className="fixed inset-0 safe-screen z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
           onClick={onClose}
         >
           <motion.div

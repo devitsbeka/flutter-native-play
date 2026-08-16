@@ -580,7 +580,7 @@ const ActiveModalViewer = memo(function ActiveModalViewer({
   const { Component, modalProps = {}, label, labelGe } = page;
   
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col">
+    <div className="fixed inset-0 safe-screen z-50 bg-black/80 backdrop-blur-sm flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-background/80 border-b">
         <div>

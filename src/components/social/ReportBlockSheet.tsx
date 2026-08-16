@@ -77,7 +77,7 @@ export function ReportBlockSheet({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={close}
-          className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/50 sm:items-center"
+          className="fixed inset-0 safe-screen z-[10000] flex items-end justify-center bg-black/50 sm:items-center"
           role="dialog"
           aria-modal="true"
         >

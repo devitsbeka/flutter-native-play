@@ -101,7 +101,7 @@ export function NotificationDetailModal({ notification, onClose }: NotificationD
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           // Above the notifications panel (z-[9999])
-          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
+          className="fixed inset-0 safe-screen z-[10000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
           onClick={onClose}
         >
           <motion.div

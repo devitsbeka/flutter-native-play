@@ -214,7 +214,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
+              className="fixed inset-0 safe-screen z-[200] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
               onClick={onClose}
             >
               <motion.div

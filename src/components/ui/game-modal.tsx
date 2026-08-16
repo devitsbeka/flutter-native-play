@@ -183,7 +183,7 @@ export function GameModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[100] flex md:items-center md:justify-center md:bg-black/50 md:backdrop-blur-[2px] md:p-6"
+            className="fixed inset-0 safe-screen z-[100] flex md:items-center md:justify-center md:bg-black/50 md:backdrop-blur-[2px] md:p-6"
             onClick={!disableBackdropClick && onClose ? handleClose : undefined}
           >
           <motion.div
@@ -457,7 +457,7 @@ export function GameModal({
           initial={{ opacity: 0, pointerEvents: "none" }}
           animate={{ opacity: 1, pointerEvents: "auto" }}
           exit={{ opacity: 0, pointerEvents: "none" }}
-          className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 safe-screen bg-black/80 z-[100] flex items-center justify-center p-4"
           onClick={!disableBackdropClick && onClose ? handleClose : undefined}
         >
           <motion.div
