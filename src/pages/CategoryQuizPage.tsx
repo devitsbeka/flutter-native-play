@@ -1093,11 +1093,9 @@ export default function CategoryQuizPage() {
   }
   return (
     // Full-width purple background on desktop/tablet (prevents white gutters)
-    <div className="w-full h-[100dvh] bg-[#7E7ADB] overflow-hidden">
+    <div className="w-full h-[100dvh] bg-[#7E7ADB] overflow-hidden" style={{ marginTop: "calc(-1 * var(--safe-top))", paddingTop: "var(--safe-top)" }}>
       {/* Content wrapper with max-width for desktop/tablet, centered */}
       <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
-        {/* Safe area padding for notched phones */}
-        <div className="pt-[env(safe-area-inset-top)]" />
 
       {/* Header - Solo mode with category name and timer */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2 flex-shrink-0 [@media(max-height:700px)]:py-1 [@media(max-height:600px)]:pt-1 [@media(max-height:600px)]:pb-0.5">

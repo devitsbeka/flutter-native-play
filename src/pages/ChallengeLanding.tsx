@@ -321,10 +321,8 @@ export default function ChallengeLanding() {
     const progressPercent = (timeRemaining / TIME_PER_QUESTION) * 100;
 
     return (
-      <div className="w-full h-[100dvh] bg-[#7E7ADB] overflow-hidden">
+      <div className="w-full h-[100dvh] bg-[#7E7ADB] overflow-hidden" style={{ marginTop: "calc(-1 * var(--safe-top))", paddingTop: "var(--safe-top)" }}>
         <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
-          {/* Safe area padding */}
-          <div className="pt-[env(safe-area-inset-top)]" />
 
           {/* Header: Back | Category | Timer */}
           <div className="flex items-center justify-between px-4 pt-3 py-1 mb-2 flex-shrink-0">

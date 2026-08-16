@@ -50,9 +50,8 @@ const DemoPlayerContent: React.FC = () => {
   });
 
   return (
-    <div className="w-full min-h-screen bg-[#7E7ADB] overflow-hidden">
+    <div className="w-full min-h-screen bg-[#7E7ADB] overflow-hidden" style={{ marginTop: "calc(-1 * var(--safe-top))", paddingTop: "var(--safe-top)" }}>
       <div className="w-full min-h-screen flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
-        <div className="pt-[env(safe-area-inset-top)]" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-3 py-1 mb-2 flex-shrink-0">
