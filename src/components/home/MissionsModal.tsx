@@ -113,7 +113,7 @@ const chipStyle = { border: "1.5px solid #E8E0F5", boxShadow: "0 2px 0 #EDE6F7" 
 // One fixed row of four chips so every mission card has the same height
 function RewardChips({ mission }: { mission: Mission }) {
   return (
-    <div className="grid grid-cols-4 gap-1.5">
+    <div className="grid grid-cols-[1fr_1.35fr_1fr_1fr] gap-1.5">
       <div
         className="flex items-center justify-center gap-1 rounded-full bg-white px-1.5 py-1.5"
         style={chipStyle}
