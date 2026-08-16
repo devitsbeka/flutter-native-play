@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,12 +43,25 @@ import { useAuth } from "@/hooks/useAuth";
 
 export type PushPermission = "granted" | "denied" | "prompt" | "unsupported";
 
+// Module scope, not a ref.
+//
+// A ref is per-instance, and this hook now has two callers: PushRegistrar at
+// the app root and the notifications row in Settings. Two instances would
+// each bind their own tokenReceived and notificationActionPerformed
+// listeners, so one tapped notification would navigate twice and one token
+// would be upserted twice.
+//
+// Never torn down either. PushRegistrar lives for the life of the app, and
+// push listeners are app-lifetime things: unbinding them because a settings
+// screen closed would drop the token refresh that arrives while the player is
+// elsewhere.
+let listenersBound = false;
+
 export function usePushNotifications() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [permission, setPermission] = useState<PushPermission>("unsupported");
   const [token, setToken] = useState<string | null>(null);
-  const listenersBound = useRef(false);
 
   const supported = Capacitor.isNativePlatform();
 
@@ -77,24 +90,21 @@ export function usePushNotifications() {
   // or the registration callback fires into nothing and the token is lost
   // until the next launch.
   useEffect(() => {
-    if (!supported || listenersBound.current) return;
-    listenersBound.current = true;
-
-    let disposers: Array<() => void> = [];
-    let cancelled = false;
+    if (!supported || listenersBound) return;
+    listenersBound = true;
 
     (async () => {
       try {
         const { FirebaseMessaging } = await import("@capacitor-firebase/messaging");
 
-        const received = await FirebaseMessaging.addListener("tokenReceived", ({ token: t }) => {
+        await FirebaseMessaging.addListener("tokenReceived", ({ token: t }) => {
           setToken(t);
-          persistToken(t);
+          void persistToken(t);
         });
 
         // Tapping a notification should land on the thing it is about, not
         // just open the app on whatever screen it was last showing.
-        const action = await FirebaseMessaging.addListener(
+        await FirebaseMessaging.addListener(
           "notificationActionPerformed",
           ({ notification }) => {
             const data = notification.data as Record<string, unknown> | undefined;
@@ -102,37 +112,49 @@ export function usePushNotifications() {
             if (typeof route === "string" && route.startsWith("/")) navigate(route);
           },
         );
+      } catch (error) {
+        console.warn("[push] Listener setup failed:", error);
+      }
+    })();
+  }, [supported, persistToken, navigate]);
 
-        if (cancelled) {
-          received.remove();
-          action.remove();
-          return;
-        }
+  // Read the current permission on every mount, separately from binding.
+  //
+  // These were one effect, which meant the permission state was a side effect
+  // of being the instance that happened to bind the listeners. The settings
+  // row would then have sat at "unsupported" forever and rendered nothing,
+  // whatever the real permission was.
+  //
+  // Shows no prompt: checkPermissions only reports. The token refresh is here
+  // too, because tokens rotate and a stale one fails silently.
+  useEffect(() => {
+    if (!supported) return;
+    let cancelled = false;
 
-        disposers = [() => received.remove(), () => action.remove()];
-
-        // Already granted (reinstall, or a returning player): fetch the token
-        // again rather than waiting for it to rotate. This shows no prompt.
+    (async () => {
+      try {
+        const { FirebaseMessaging } = await import("@capacitor-firebase/messaging");
         const status = await FirebaseMessaging.checkPermissions();
+        if (cancelled) return;
+
         setPermission(status.receive === "prompt-with-rationale" ? "prompt" : status.receive);
+
         if (status.receive === "granted") {
           const { token: current } = await FirebaseMessaging.getToken();
-          if (current) {
+          if (!cancelled && current) {
             setToken(current);
             void persistToken(current);
           }
         }
       } catch (error) {
-        console.warn("[push] Setup failed:", error);
+        console.warn("[push] Permission check failed:", error);
       }
     })();
 
     return () => {
       cancelled = true;
-      for (const dispose of disposers) dispose();
-      listenersBound.current = false;
     };
-  }, [supported, persistToken, navigate]);
+  }, [supported, persistToken]);
 
   /**
    * Ask for permission. Call from a settings toggle or a moment where the
