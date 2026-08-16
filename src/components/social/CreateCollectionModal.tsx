@@ -697,7 +697,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50"
+          className="fixed inset-0 safe-screen z-50"
           style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}
         >
           {/* Header */}
@@ -828,7 +828,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50"
+        className="fixed inset-0 safe-screen z-50"
         style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}
       >
         {/* Header */}

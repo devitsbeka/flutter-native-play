@@ -105,7 +105,7 @@ export function PurchaseSuccessModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md"
+          className="fixed inset-0 safe-screen z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md"
           onClick={handleClose}
         >
           <motion.div

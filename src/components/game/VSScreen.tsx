@@ -323,7 +323,7 @@ export function VSScreen() {
 
   return (
     <div 
-      className="h-[100dvh] w-full relative overflow-hidden"
+      className="h-[100dvh] w-full relative overflow-hidden safe-bleed"
       style={{ background: "#7E7ADB" }}
     >
       {/* Content wrapper with max-width for desktop/tablet, centered */}

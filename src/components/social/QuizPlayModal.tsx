@@ -349,7 +349,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-[#7E7BDC]"
+          className="fixed inset-0 safe-screen z-50 bg-[#7E7BDC]"
         >
           {/* Background pattern */}
           <div className="absolute inset-0 opacity-10">

@@ -107,7 +107,7 @@ const PreviewWinScreen = ({ onClose }: { onClose: () => void }) => (
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col"
+      className="fixed inset-0 safe-screen z-50 flex flex-col"
       style={{ background: "#858EE7" }}
     >
       <FloatingConfetti />
@@ -184,7 +184,7 @@ const PreviewLoseScreen = ({ onClose }: { onClose: () => void }) => (
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col"
+      className="fixed inset-0 safe-screen z-50 flex flex-col"
       style={{ background: "#858EE7" }}
     >
       <div className="flex-1 flex flex-col items-center justify-center px-6">

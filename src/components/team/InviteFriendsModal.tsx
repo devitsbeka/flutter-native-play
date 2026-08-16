@@ -361,7 +361,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           // Render above any lobby layers/stacking contexts
-          className="fixed inset-0 z-[9999] flex flex-col overflow-hidden"
+          className="fixed inset-0 safe-screen z-[9999] flex flex-col overflow-hidden"
           style={{
             background:
               // Fully opaque purple background (no glass/see-through feel)

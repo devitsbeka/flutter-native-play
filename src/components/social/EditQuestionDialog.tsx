@@ -79,7 +79,7 @@ export function EditQuestionDialog({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[200] bg-[#7E7ADB]"
+          className="fixed inset-0 safe-screen z-[200] bg-[#7E7ADB]"
         >
           {/* Fixed Header */}
           <div className="fixed top-0 left-0 right-0 z-50 bg-[#7E7ADB]/90 backdrop-blur-md border-b border-white/10 safe-top">

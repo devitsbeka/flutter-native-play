@@ -253,7 +253,7 @@ export function LoggedInHomeV2({
     // z-10 lifts the page above GlobalSplineBackground's fixed overlays
     // (white radial mask at z-1, particles at z-2/3) which otherwise paint
     // a white fade over the whole homepage.
-    <div className="fixed inset-0 overflow-hidden bg-[#ddc2f9] z-10">
+    <div className="fixed inset-0 safe-screen overflow-hidden bg-[#ddc2f9] z-10">
       <div
         className="absolute left-0 top-1/2 origin-top-left"
         style={{

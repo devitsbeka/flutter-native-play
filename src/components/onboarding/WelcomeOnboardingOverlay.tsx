@@ -284,7 +284,7 @@ export function WelcomeOnboardingOverlay({ isOpen, onClose }: WelcomeOnboardingO
   return (
     <AnimatePresence>
       {isOpen && targetRect && (
-        <div className="fixed inset-0" style={{ zIndex: 10000 }}>
+        <div className="fixed inset-0 safe-screen" style={{ zIndex: 10000 }}>
           {/* SVG mask backdrop - pointer-events-none so tooltip buttons work */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none">
             <defs>

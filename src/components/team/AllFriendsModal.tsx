@@ -88,7 +88,7 @@ export function AllFriendsModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background flex flex-col"
+            className="fixed inset-0 safe-screen z-50 bg-background flex flex-col"
           >
             {/* Fixed Header */}
             <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">

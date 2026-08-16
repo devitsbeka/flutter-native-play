@@ -596,7 +596,7 @@ export function MatchResultScreen() {
       />
 
       <div 
-        className="h-[100dvh] w-full flex flex-col relative overflow-hidden max-w-[700px] mx-auto"
+        className="h-[100dvh] w-full flex flex-col relative overflow-hidden max-w-[700px] mx-auto safe-bleed"
         style={{
           background: "#7E7ADB",
         }}

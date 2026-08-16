@@ -140,7 +140,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-background flex flex-col overflow-hidden"
+            className="fixed inset-0 safe-screen z-[60] bg-background flex flex-col overflow-hidden"
           >
             {/* Video background */}
             <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>

@@ -376,7 +376,7 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] flex flex-col"
+          className="fixed inset-0 safe-screen z-[100] bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] flex flex-col"
         >
           {/* Fixed Header */}
           <div className="flex-shrink-0 sticky top-0 z-10 bg-background border-b border-border">

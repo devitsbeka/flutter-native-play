@@ -357,7 +357,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[100] bg-background flex flex-col"
+            className="fixed inset-0 safe-screen z-[100] bg-background flex flex-col"
           >
             {/* Header with search bar */}
             <div className="flex items-center gap-3 p-4 border-b border-border">

@@ -651,12 +651,8 @@ export function RoomLobbyV2() {
        same value as padding puts the background back at the true top edge
        while leaving everything inside exactly where the root put it. */
     <div 
-      className="min-h-screen relative flex flex-col"
-      style={{
-        background: roomGradient?.gradient || 'var(--background)',
-        marginTop: "calc(-1 * var(--safe-top))",
-        paddingTop: "var(--safe-top)",
-      }}
+      className="min-h-screen relative flex flex-col safe-bleed"
+      style={{ background: roomGradient?.gradient || 'var(--background)' }}
     >
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 w-full">

@@ -149,7 +149,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[100] flex flex-col"
+          className="fixed inset-0 safe-screen z-[100] flex flex-col"
           style={{
             background: "linear-gradient(180deg, #FDFAFF 0%, #F6E8FF 100%)",
           }}

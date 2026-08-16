@@ -338,7 +338,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF]"
+            className="fixed inset-0 safe-screen z-[200] bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF]"
           >
             {/* Fixed Header */}
             <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">

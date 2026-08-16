@@ -100,7 +100,7 @@ export default function IconReview() {
     : `${currentIndex + 1} / ${stats.total}`;
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col">
+    <div className="fixed inset-0 safe-screen bg-background flex flex-col">
       {/* Header */}
       <header className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur z-30">
         <Button 

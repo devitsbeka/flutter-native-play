@@ -490,7 +490,7 @@ export function AddRoundToCollectionModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900"
+          className="fixed inset-0 safe-screen z-50 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900"
         >
           {/* Fixed Header */}
           <div className="fixed top-0 left-0 right-0 z-50 bg-purple-900/90 backdrop-blur-md border-b border-white/10 safe-top">

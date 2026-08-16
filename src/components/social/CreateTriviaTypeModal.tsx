@@ -47,7 +47,7 @@ export function CreateTriviaTypeModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[49]"
+            className="fixed inset-0 safe-screen z-[49]"
             style={{ background: "#4C1D95" }}
           />
           <motion.div
@@ -55,7 +55,7 @@ export function CreateTriviaTypeModal({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-50 flex flex-col overflow-hidden"
+            className="fixed inset-0 safe-screen z-50 flex flex-col overflow-hidden"
             style={{
               background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)",
             }}

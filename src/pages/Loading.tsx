@@ -28,7 +28,7 @@ export default function Loading() {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 safe-screen z-[9999] flex flex-col items-center justify-center overflow-hidden">
       {/* Background Image — centered so phones crop to the trophies in the
           middle of the 16:9 artwork and wide screens show it whole */}
       <div

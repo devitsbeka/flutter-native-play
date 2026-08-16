@@ -111,7 +111,7 @@ export default function AdventureMapAdmin() {
 
   return (
     <div 
-      className="fixed inset-0 overflow-hidden bg-sky-400 select-none"
+      className="fixed inset-0 safe-screen overflow-hidden bg-sky-400 select-none"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}

@@ -226,7 +226,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className={`fixed inset-0 z-[100] flex flex-col ${
+          className={`fixed inset-0 safe-screen z-[100] flex flex-col ${
             viewMode === "questions" ? "bg-[#7E7ADB]" : "bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF]"
           }`}
         >

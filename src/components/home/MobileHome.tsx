@@ -27,7 +27,10 @@ const AUTH_GRADIENT = STAT_GRADIENT;
 
 // The bottom nav is 88px of chrome (20px padding + 48px items) plus the
 // device inset; scene art is anchored off it exactly as in the frame.
-const NAV_H = "calc(88px + env(safe-area-inset-bottom))";
+// The nav's real height, from the same token the nav and the layout use.
+// This was a hand-written "88px + inset" that no longer matched either, so
+// the week strip sat against the nav's top edge instead of clear of it.
+const NAV_H = "calc(var(--bottom-nav-height) + var(--safe-bottom))";
 
 // Dissolves the scene artwork's top edge into the page wash. Both spellings
 // ship: iOS below 15.4 only understands the -webkit- one, and there the
@@ -350,7 +353,7 @@ export function MobileProfileCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 26 }}
       className="md:hidden absolute inset-x-0 z-20 mx-6"
-      style={{ bottom: `calc(${NAV_H} + 36px)` }}
+      style={{ bottom: `calc(${NAV_H} + 56px)` }}
     >
       <WeekMissionsStrip
         className="h-[94px]"

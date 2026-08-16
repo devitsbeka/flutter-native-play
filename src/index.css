@@ -272,6 +272,49 @@
    */
   #root {
     padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+  }
+
+  /* Full-screen overlays inset themselves, because nothing else can.
+   *
+   * #root's padding covers every screen rendered inside it, and reaches none
+   * of the ~54 `fixed inset-0` overlays — a fixed element is positioned
+   * against the viewport, so it sits over the status bar and the home
+   * indicator no matter what its ancestors do. That is every full-screen
+   * modal in the app: the profile sheet, the picker screens, the editors,
+   * the result screens.
+   *
+   * The background stays on the element, so it still paints the whole screen;
+   * only the contents move in.
+   */
+  .safe-screen {
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+  }
+
+  /* A full-screen page whose own background must reach the very edges.
+   *
+   * #root's padding is right for a screen sitting on the page wash and wrong
+   * for one that paints its own dark background: it leaves a band of cream
+   * above the gradient, which is the white strip over the game screens.
+   * Cancelling the inset with a negative margin and re-adding it as padding
+   * puts the background back at the true edge and leaves the contents exactly
+   * where the root put them.
+   */
+  .safe-bleed {
+    margin-top: calc(-1 * var(--safe-top));
+    padding-top: var(--safe-top);
+    margin-bottom: calc(-1 * var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+  }
+
+  /* Sonner renders into its own portal on <body>, so it is a fixed overlay
+   * too and lands under the clock. Its `offset` prop did not survive — the
+   * position is set inline on the toaster element — so it is overridden by
+   * selector rather than by prop.
+   */
+  [data-sonner-toaster][data-y-position="top"] {
+    top: calc(var(--safe-top) + 0.75rem) !important;
   }
 
   /* iOS draws its own play button over a video it has not started.

@@ -35,7 +35,7 @@ export function PlayerOverflowMenu({ userId, displayName, className }: PlayerOve
   // menu, a tap on the button closed here and then re-opened in the button's
   // own onClick, so the dots could not be used to dismiss what they opened.
   //
-  // A `fixed inset-0` catcher instead of a listener does not work here — the
+  // A `fixed inset-0 safe-screen` catcher instead of a listener does not work here — the
   // feed card sets content-visibility: auto, and paint containment makes that
   // card the containing block for fixed descendants, so the overlay would
   // cover its own card and nothing else.

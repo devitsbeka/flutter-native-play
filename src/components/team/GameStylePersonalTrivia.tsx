@@ -820,7 +820,7 @@ export function GameStylePersonalTrivia({
           // Above 50 on purpose: the desktop nav and the bottom bar are both
           // z-50, and a backdrop under them would have left the chrome sharp
           // on top of the blur. The panel stays one step higher again.
-          className="fixed inset-0 z-[90] bg-[#2A0E4F]/55 backdrop-blur-md"
+          className="fixed inset-0 safe-screen z-[90] bg-[#2A0E4F]/55 backdrop-blur-md"
         />
       )}
       {isOpen && (
@@ -829,7 +829,7 @@ export function GameStylePersonalTrivia({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex flex-col max-w-[700px] md:max-w-[600px] mx-auto"
+          className="fixed inset-0 safe-screen z-[100] flex flex-col max-w-[700px] md:max-w-[600px] mx-auto"
           style={{
             background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)",
           }}

@@ -219,7 +219,7 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
              z-50 the tab bar floated over a full-screen camera view: the home
              button was on top of the viewfinder and reachable while scanning,
              which is how leaving this screen mid-scan was discovered at all. */
-          className="fixed inset-0 z-[100] bg-background flex flex-col"
+          className="fixed inset-0 safe-screen z-[100] bg-background flex flex-col"
         >
           {/* Fixed Header */}
           <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
