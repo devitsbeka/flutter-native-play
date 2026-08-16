@@ -345,6 +345,46 @@ async function initStore(): Promise<IAPProduct[]> {
   return mapped;
 }
 
+// Who RevenueCat currently believes it is talking to.
+//
+// A purchase is attributed to whatever app user id is configured at the
+// moment it completes. If logIn has not landed yet, that is RevenueCat's own
+// anonymous id ($RCAnonymousID:…), and the purchase is recorded against it —
+// while verify-receipt asks RevenueCat about the *Supabase* user id and is
+// correctly told there is nothing there. The store charges, the sheet says
+// "You're all set", the sync returns success with gemsCredited: 0, and the
+// balance never moves.
+//
+// This used to be fire-and-forget from an effect that nothing waited on, so
+// whether a purchase was attributed correctly came down to whether the user
+// tapped Buy before or after a network round trip finished.
+let identifiedAs: string | null = null;
+let identifyInFlight: Promise<void> | null = null;
+
+function ensureIdentified(userId: string): Promise<void> {
+  if (identifiedAs === userId) return Promise.resolve();
+  if (identifyInFlight) return identifyInFlight;
+
+  identifyInFlight = (async () => {
+    await ensureStore();
+    const plugin = (await loadPurchasesPlugin())?.plugin;
+    if (!plugin) return;
+    // RevenueCat transfers purchases made while anonymous onto the id being
+    // logged in, so this also repairs a purchase that raced ahead of it.
+    await withTimeout(plugin.logIn({ appUserID: userId }), "logIn");
+    identifiedAs = userId;
+    iapLog("identified to RevenueCat as", userId);
+  })()
+    .catch((e) => {
+      iapLog("logIn failed — purchases would be attributed anonymously:", String(e));
+    })
+    .finally(() => {
+      identifyInFlight = null;
+    });
+
+  return identifyInFlight;
+}
+
 function ensureStore(): Promise<IAPProduct[]> {
   if (!storeInit) {
     storeInit = initStore()
@@ -393,19 +433,7 @@ export function useInAppPurchases() {
   // failure must not take the product catalog down with it.
   useEffect(() => {
     if (!user?.id || !Capacitor.isNativePlatform()) return;
-    let alive = true;
-    ensureStore().then(async () => {
-      if (!alive) return;
-      try {
-        const plugin = (await loadPurchasesPlugin())?.plugin;
-        await plugin?.logIn({ appUserID: user.id });
-      } catch (e) {
-        console.error("[iap] logIn failed:", e);
-      }
-    });
-    return () => {
-      alive = false;
-    };
+    void ensureIdentified(user.id);
   }, [user?.id]);
 
 
@@ -428,6 +456,12 @@ export function useInAppPurchases() {
       if (!plugin) {
         throw new Error("Purchase plugin not available");
       }
+
+      // Identify before charging, never after. The alternative is a purchase
+      // attributed to an anonymous id that this account cannot be credited
+      // for. Awaited rather than assumed: the effect that starts this runs on
+      // mount, and a fast tap beats a network round trip.
+      await ensureIdentified(user.id);
 
       // Get offerings to find the package for this product
       const offerings = await withTimeout(plugin.getOfferings(), "getOfferings");
