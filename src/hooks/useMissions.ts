@@ -6,6 +6,7 @@ import { createNotification } from "./useNotifications";
 import { t } from "@/lib/i18n";
 import { missionTitle } from "@/utils/missionText";
 import { useAuth } from "./useAuth";
+import { useMissionStreak } from "./useMissionStreak";
 import {
   dayKindOf,
   rotationForDate,
@@ -146,13 +147,17 @@ export const MISSION_THEMES = {
 // same way per ISO-ish week. Feature missions (friends, TV) are part of the
 // pool so players are nudged across the whole app.
 
+// Dailies pay coins, XP and power-ups — no gems. Five of these run a day at
+// 1-3 gems each, which was 35-60 gems a week from the rotation alone against
+// 3 for finishing all seven days, so the week bonus was the smaller prize by
+// an order of magnitude. Gems are the week's currency now; see WEEK_BONUS.
 const DAILY_POOL: PoolMission[] = [
   {
     mission_id: "play_games",
     title: "მარათონელი",
     description: "ითამაშე {n} თამაში დღეს",
-    beginner: { target: 3, xp: 25, coins: 60, gems: 1 },
-    advanced: { target: 5, xp: 35, coins: 80, gems: 1 },
+    beginner: { target: 3, xp: 25, coins: 60, gems: 0 },
+    advanced: { target: 5, xp: 35, coins: 80, gems: 0 },
     power_up: "5050",
     power_up_count: 1,
     color_theme: "emerald",
@@ -162,8 +167,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "answer_correct",
     title: "სწორი პასუხები",
     description: "გაეცი {n} სწორი პასუხი",
-    beginner: { target: 10, xp: 30, coins: 50, gems: 1 },
-    advanced: { target: 25, xp: 45, coins: 90, gems: 1 },
+    beginner: { target: 10, xp: 30, coins: 50, gems: 0 },
+    advanced: { target: 25, xp: 45, coins: 90, gems: 0 },
     power_up: "freeze",
     power_up_count: 1,
     color_theme: "blue",
@@ -173,8 +178,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "win_games",
     title: "გამარჯვებული",
     description: "მოიგე {n} თამაში",
-    beginner: { target: 1, xp: 30, coins: 60, gems: 1 },
-    advanced: { target: 3, xp: 50, coins: 100, gems: 2 },
+    beginner: { target: 1, xp: 30, coins: 60, gems: 0 },
+    advanced: { target: 3, xp: 50, coins: 100, gems: 0 },
     power_up: "5050",
     power_up_count: 1,
     color_theme: "purple",
@@ -184,8 +189,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "play_categories",
     title: "კატეგორიების მკვლევარი",
     description: "ითამაშე {n} სხვადასხვა კატეგორიაში",
-    beginner: { target: 2, xp: 30, coins: 60, gems: 1 },
-    advanced: { target: 4, xp: 40, coins: 80, gems: 1 },
+    beginner: { target: 2, xp: 30, coins: 60, gems: 0 },
+    advanced: { target: 4, xp: 40, coins: 80, gems: 0 },
     power_up: "freeze",
     power_up_count: 1,
     color_theme: "orange",
@@ -195,8 +200,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "perfect_round",
     title: "მიზანდასახული",
     description: "მოიგე თამაში 100% სიზუსტით",
-    beginner: { target: 1, xp: 50, coins: 100, gems: 2 },
-    advanced: { target: 1, xp: 60, coins: 120, gems: 3 },
+    beginner: { target: 1, xp: 50, coins: 100, gems: 0 },
+    advanced: { target: 1, xp: 60, coins: 120, gems: 0 },
     power_up: "replace",
     power_up_count: 1,
     color_theme: "rose",
@@ -206,8 +211,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "play_friend",
     title: "მეგობრული მატჩი",
     description: "ითამაშე მეგობრებთან ერთად ოთახში",
-    beginner: { target: 1, xp: 40, coins: 80, gems: 1 },
-    advanced: { target: 1, xp: 40, coins: 80, gems: 1 },
+    beginner: { target: 1, xp: 40, coins: 80, gems: 0 },
+    advanced: { target: 1, xp: 40, coins: 80, gems: 0 },
     power_up: "replace",
     power_up_count: 1,
     color_theme: "cyan",
@@ -217,8 +222,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "play_tv",
     title: "დიდი ეკრანი",
     description: "ითამაშე TV-ზე მეგობრებთან ერთად",
-    beginner: { target: 1, xp: 50, coins: 100, gems: 2 },
-    advanced: { target: 1, xp: 50, coins: 100, gems: 2 },
+    beginner: { target: 1, xp: 50, coins: 100, gems: 0 },
+    advanced: { target: 1, xp: 50, coins: 100, gems: 0 },
     power_up: "time-drain",
     power_up_count: 1,
     color_theme: "amber",
@@ -228,8 +233,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "category_movies",
     title: "კინომოყვარული",
     description: "ითამაშე კინოს კატეგორიაში",
-    beginner: { target: 1, xp: 25, coins: 60, gems: 1 },
-    advanced: { target: 1, xp: 30, coins: 70, gems: 1 },
+    beginner: { target: 1, xp: 25, coins: 60, gems: 0 },
+    advanced: { target: 1, xp: 30, coins: 70, gems: 0 },
     power_up: "5050",
     power_up_count: 1,
     color_theme: "rose",
@@ -240,8 +245,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "category_music",
     title: "მელომანი",
     description: "ითამაშე მუსიკის კატეგორიაში",
-    beginner: { target: 1, xp: 25, coins: 60, gems: 1 },
-    advanced: { target: 1, xp: 30, coins: 70, gems: 1 },
+    beginner: { target: 1, xp: 25, coins: 60, gems: 0 },
+    advanced: { target: 1, xp: 30, coins: 70, gems: 0 },
     power_up: "freeze",
     power_up_count: 1,
     color_theme: "purple",
@@ -252,8 +257,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "category_animals",
     title: "ველური სამყარო",
     description: "ითამაშე ცხოველების კატეგორიაში",
-    beginner: { target: 1, xp: 25, coins: 60, gems: 1 },
-    advanced: { target: 1, xp: 30, coins: 70, gems: 1 },
+    beginner: { target: 1, xp: 25, coins: 60, gems: 0 },
+    advanced: { target: 1, xp: 30, coins: 70, gems: 0 },
     power_up: "replace",
     power_up_count: 1,
     color_theme: "emerald",
@@ -264,8 +269,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "category_sports",
     title: "სპორტული სული",
     description: "ითამაშე სპორტის კატეგორიაში",
-    beginner: { target: 1, xp: 25, coins: 60, gems: 1 },
-    advanced: { target: 1, xp: 30, coins: 70, gems: 1 },
+    beginner: { target: 1, xp: 25, coins: 60, gems: 0 },
+    advanced: { target: 1, xp: 30, coins: 70, gems: 0 },
     power_up: "5050",
     power_up_count: 1,
     color_theme: "orange",
@@ -276,8 +281,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "category_cuisine",
     title: "გემოვნების ექსპერტი",
     description: "ითამაშე ქართული სამზარეულოს კატეგორიაში",
-    beginner: { target: 1, xp: 25, coins: 60, gems: 1 },
-    advanced: { target: 1, xp: 30, coins: 70, gems: 1 },
+    beginner: { target: 1, xp: 25, coins: 60, gems: 0 },
+    advanced: { target: 1, xp: 30, coins: 70, gems: 0 },
     power_up: "freeze",
     power_up_count: 1,
     color_theme: "amber",
@@ -288,8 +293,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "invite_to_play",
     title: "მოიწვიე მეგობარი",
     description: "მოიწვიე მეგობარი თამაშში",
-    beginner: { target: 1, xp: 35, coins: 70, gems: 1 },
-    advanced: { target: 1, xp: 40, coins: 90, gems: 1 },
+    beginner: { target: 1, xp: 35, coins: 70, gems: 0 },
+    advanced: { target: 1, xp: 40, coins: 90, gems: 0 },
     power_up: "replace",
     power_up_count: 1,
     color_theme: "cyan",
@@ -662,6 +667,7 @@ const EMPTY_MISSIONS: MissionsData = { daily: [], weekly: [] };
 
 export function useMissions() {
   const { user, profile, updateProfile, setProfileLocal } = useAuth();
+  const { recordDailyCompletion } = useMissionStreak();
   const queryClient = useQueryClient();
   const queryKey = ["missions", user?.id];
   const gamesPlayed = profile?.games_played || 0;
@@ -773,6 +779,108 @@ export function useMissions() {
     [user, profile, updateProfile, setProfileLocal, queryClient]
   );
 
+  /**
+   * Called when a daily mission completes: if it was the last one the day
+   * asked for, close the day out.
+   *
+   * Two things happen here that nothing else in the app was doing. The
+   * streak row gets its day recorded — useMissionStreak has always exposed
+   * recordDailyCompletion() and nothing ever called it, so last_completion_date
+   * stayed null, the streak never left its starting value, and WeekMissionsStrip,
+   * which colours a day from exactly those two fields, marked finished days
+   * "failed" the moment they were in the past. And the day bonus is paid, so
+   * clearing a whole day is worth marginally more than the missions in it.
+   *
+   * The write is conditional on the row not already being there, the same
+   * shape the week bonus uses: two missions finishing in the same second
+   * both see an unfinished day otherwise, and both pay.
+   */
+  const closeOutDayIfFinished = useCallback(
+    async (justCompletedId: string) => {
+      if (!user) return;
+      const today = todayKey();
+
+      const { data: rows, error } = await supabase
+        .from("user_missions")
+        .select("id, mission_id, completed")
+        .eq("user_id", user.id)
+        .eq("mission_date", today)
+        .eq("mission_type", "daily");
+      if (error || !rows) return;
+
+      // The row for the mission that just finished may still read false here:
+      // this runs right after its update and the select can race it.
+      const need = dailyPoolForDate(today).map((m) => m.mission_id);
+      const done = new Set(
+        rows.filter((r) => r.completed || r.id === justCompletedId).map((r) => r.mission_id)
+      );
+      if (!need.every((id) => done.has(id))) return;
+
+      // One ledger row per day. Unique on (user, mission_id, date), so a
+      // second caller inserts nothing and the update below finds no row.
+      await supabase.from("user_missions").upsert(
+        [
+          {
+            user_id: user.id,
+            mission_id: DAY_BONUS.mission_id,
+            mission_title: "day_bonus",
+            mission_description: null,
+            target_value: 1,
+            current_progress: 1,
+            completed: true,
+            reward_xp: DAY_BONUS.xp,
+            reward_coins: DAY_BONUS.coins,
+            reward_gems: DAY_BONUS.gems,
+            reward_power_up: null,
+            reward_power_up_count: 0,
+            mission_date: today,
+            mission_type: "daily",
+          },
+        ],
+        { onConflict: "user_id,mission_id,mission_date", ignoreDuplicates: true }
+      );
+
+      const { data: won } = await supabase
+        .from("user_missions")
+        .update({ reward_claimed: true })
+        .eq("user_id", user.id)
+        .eq("mission_id", DAY_BONUS.mission_id)
+        .eq("mission_date", today)
+        .eq("reward_claimed", false)
+        .select("id");
+      if (!won || won.length === 0) return;
+
+      // The streak first: the strip reads it, and it should be right even if
+      // the payout below throws.
+      await recordDailyCompletion();
+
+      const { data: currency } = await supabase.rpc("credit_gameplay_reward", {
+        p_kind: "mission",
+        p_coins: DAY_BONUS.coins,
+        p_gems: DAY_BONUS.gems,
+        p_reference: DAY_BONUS.mission_id,
+      });
+      if (currency && currency.length > 0) {
+        setProfileLocal({ coins: currency[0].new_coins, gems: currency[0].new_gems });
+      }
+      if (profile) {
+        await updateProfile({ total_points: (profile.total_points || 0) + DAY_BONUS.xp });
+      }
+
+      void createNotification(
+        user.id,
+        "reward",
+        t("missions.dayCompleteTitle"),
+        `${t("missions.rewardLabel")}: ${DAY_BONUS.coins} ${t("common.coins")} · ${DAY_BONUS.xp} XP`,
+        { mission_id: DAY_BONUS.mission_id, coins: DAY_BONUS.coins, gems: 0, xp: DAY_BONUS.xp }
+      );
+      toast.success(t("missions.dayCompleteTitle"), {
+        description: `${t("missions.rewardLabel")}: ${DAY_BONUS.coins} ${t("common.coins")} · ${DAY_BONUS.xp} XP`,
+      });
+    },
+    [user, profile, recordDailyCompletion, setProfileLocal, updateProfile]
+  );
+
   const updateMissionProgress = useCallback(
     async (
       missionId: string,
@@ -854,6 +962,13 @@ export function useMissions() {
           toast.success(t("missions.completedTitle", { mission: name }), {
             description: rewardBits ? `${t("missions.rewardLabel")}: ${rewardBits}` : undefined,
           });
+
+          // Was that the last one the day asked for? Only dailies count —
+          // weekly missions run across the whole week and finishing one says
+          // nothing about today.
+          if (mission.mission_type === "daily") {
+            void closeOutDayIfFinished(mission.id);
+          }
         }
 
         return {
@@ -871,7 +986,7 @@ export function useMissions() {
         return { completed: false, xpEarned: 0 };
       }
     },
-    [user, dailyMissions, weeklyMissions, grantMissionRewards]
+    [user, dailyMissions, weeklyMissions, grantMissionRewards, closeOutDayIfFinished]
   );
 
   // Report a gameplay EVENT — advances every active daily + weekly mission
@@ -1100,12 +1215,26 @@ export function useDailyMissionsFor(dateISO: string | null): DayMissions {
  * Deliberately a mixed package rather than a pile of one currency: coins to
  * spend, gems to save, and a couple of power-ups to actually change a game.
  */
+// Seven perfect days. This has to beat any single day by a wide margin —
+// that is the whole reason to keep going on day five — so it carries the
+// gems the dailies no longer pay, plus more coins and XP than a day can
+// produce, plus the confetti.
 export const WEEK_BONUS = {
   mission_id: "week_bonus",
   coins: 2000,
-  gems: 3,
+  gems: 10,
   xp: 250,
   power_up_count: 2,
+} as const;
+
+// Finishing everything a single day asked for. Small on purpose: it is a nod
+// for the day, not a second payday on top of the missions themselves, and it
+// is what keeps the streak worth defending between the big weekly payout.
+export const DAY_BONUS = {
+  mission_id: "day_bonus",
+  coins: 150,
+  gems: 0,
+  xp: 40,
 } as const;
 
 export interface WeekBonusState {

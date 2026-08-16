@@ -689,6 +689,8 @@ export const en: KaTranslations = {
   // ==========================================
   missions: {
     completedTitle: "Mission complete: {mission}",
+    dayCompleteTitle: "Day complete! Every mission done",
+    weekCompleteTitle: "Perfect week! All 7 days",
     rewardLabel: "Reward",
     weekPackage: "Week package",
     pastDay: "Past day",

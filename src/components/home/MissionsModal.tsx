@@ -1,4 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import confetti from "canvas-confetti";
+import { toast } from "sonner";
 import { missionTitle, missionDescription } from "@/utils/missionText";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -400,8 +402,23 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
                       disabled={claimingBonus}
                       onClick={async () => {
                         setClaimingBonus(true);
-                        await weekBonus.claim();
+                        const paid = await weekBonus.claim();
                         setClaimingBonus(false);
+                        // Seven perfect days is the biggest thing this sheet
+                        // hands out, and it was landing with the same quiet
+                        // toast as answering ten questions.
+                        if (paid) {
+                          confetti({
+                            particleCount: 160,
+                            spread: 75,
+                            origin: { y: 0.5 },
+                            colors: ["#FFD700", "#A855F7", "#22C55E", "#F97316"],
+                            zIndex: 9999,
+                          });
+                          toast.success(t("missions.weekCompleteTitle"), {
+                            description: `${t("missions.rewardLabel")}: ${WEEK_BONUS.coins} ${t("common.coins")} · ${WEEK_BONUS.gems} ${t("common.gems")} · ${WEEK_BONUS.xp} XP`,
+                          });
+                        }
                       }}
                       className="mt-2 w-full rounded-full bg-white py-1.5 text-xs font-bold text-[#B45309] disabled:opacity-60"
                     >
