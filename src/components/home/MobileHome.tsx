@@ -92,7 +92,12 @@ export function MobileSceneBackground({
     // Inline rather than a Tailwind arbitrary property: that ships
     // `mask-image` alone, which iOS below 15.4 ignores outright — and an
     // ignored mask is precisely the hard top edge this is here to prevent.
-    const style: React.CSSProperties = { bottom: NAV_H, ...SCENE_TOP_FADE };
+    // Lifted clear of the nav rather than sitting on it, so the character
+    // is not half-hidden behind the bar and the week strip above it.
+    const style: React.CSSProperties = {
+      bottom: `calc(${NAV_H} + 80px)`,
+      ...SCENE_TOP_FADE,
+    };
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -120,9 +125,10 @@ export function MobileSceneBackground({
 
   if (!showDefaultScene) return null;
 
-  // 1136 / 500 wide, left edge at -239 / 500, reaching to 13px off the frame
-  // bottom — it runs on behind the nav, but its fade to the page wash lands
-  // exactly on the nav's top edge, so nothing hard-edged ever shows.
+  // 1136 / 500 wide, left edge at -239 / 500. It used to reach to 13px off
+  // the frame bottom and run on behind the nav; lifted clear of it now, in
+  // step with the generated-scene branch above, so the character is not
+  // half-hidden by the bar and the week strip sitting over it.
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -132,7 +138,7 @@ export function MobileSceneBackground({
     >
       <div
         className="absolute left-[-47.8vw] w-[227.2vw] aspect-video [mask-image:linear-gradient(to_bottom,transparent_0,black_140px)]"
-        style={{ bottom: "calc(13px + env(safe-area-inset-bottom))" }}
+        style={{ bottom: `calc(${NAV_H} + 80px)` }}
       >
         <video
           src={defaultVideoSrc}
