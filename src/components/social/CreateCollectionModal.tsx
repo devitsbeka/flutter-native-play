@@ -84,6 +84,28 @@ const COVER_GRADIENTS = [
 
 const DEFAULT_QUESTIONS_PER_ROUND = 5;
 
+/**
+ * Take the collection back out when its rounds don't make it in.
+ *
+ * A round points at its collection, so the collection row has to exist first
+ * — which means a round that fails to insert leaves a collection behind with
+ * nothing in it. That shell still renders a card in Explore, and opening it
+ * lands on "collection not found", because a collection with no rounds is
+ * indistinguishable from one that was never there.
+ *
+ * Seven of them reached production from a single failed seeding run before
+ * anyone noticed. There is no transaction to lean on from the client, so the
+ * cleanup is explicit.
+ *
+ * Failing to clean up is not worth surfacing on top of the error the caller
+ * is already about to show — the collection is empty either way, and the
+ * cleanup migration sweeps whatever is left.
+ */
+async function removeEmptyCollection(collectionId: string) {
+  const { error } = await supabase.from("quiz_collections").delete().eq("id", collectionId);
+  if (error) console.error("[collection] could not remove the empty collection", error);
+}
+
 export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated, draftId, initialRoundSubject }: CreateCollectionModalProps) {
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -413,33 +435,40 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
 
       if (collectionError) throw collectionError;
 
-      for (let i = 0; i < rounds.length; i++) {
-        const round = rounds[i];
-        const questions = roundQuestions[i];
-        const convertedQuestions = convertToGeneratedQuestions(questions).map(q => ({
-          ...q,
-          difficulty: round.difficulty || "medium",
-          icon_slug: q.icon_slug || null,
-        }));
-        
-        const { error: postError } = await supabase
-          .from("user_quiz_posts")
-          .insert([{
-            user_id: user.id,
-            title: round.subject,
-            subject: round.subject,
-            questions: convertedQuestions as unknown as any,
-            question_count: questions.length,
-            answer_format: round.answerFormat,
-            cover_gradient: coverGradient,
-            cover_image: null,
-            is_public: isPublic,
-            collection_id: collection.id,
-            round_number: i + 1,
-            is_blind: creatorMode === "play", // Track if creator saw answers
-          }]);
+      try {
+        for (let i = 0; i < rounds.length; i++) {
+          const round = rounds[i];
+          const questions = roundQuestions[i];
+          const convertedQuestions = convertToGeneratedQuestions(questions).map(q => ({
+            ...q,
+            difficulty: round.difficulty || "medium",
+            icon_slug: q.icon_slug || null,
+          }));
 
-        if (postError) throw postError;
+          const { error: postError } = await supabase
+            .from("user_quiz_posts")
+            .insert([{
+              user_id: user.id,
+              title: round.subject,
+              subject: round.subject,
+              questions: convertedQuestions as unknown as any,
+              question_count: questions.length,
+              answer_format: round.answerFormat,
+              cover_gradient: coverGradient,
+              cover_image: null,
+              is_public: isPublic,
+              collection_id: collection.id,
+              round_number: i + 1,
+              is_blind: creatorMode === "play", // Track if creator saw answers
+            }]);
+
+          if (postError) throw postError;
+        }
+      } catch (roundError) {
+        // Half a collection is worse than none: it publishes a card that
+        // cannot be opened. Undo it and report the original failure.
+        await removeEmptyCollection(collection.id);
+        throw roundError;
       }
 
       if (currentDraftId) {
@@ -486,33 +515,40 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
 
       if (collectionError) throw collectionError;
 
-      for (let i = 0; i < rounds.length; i++) {
-        const round = rounds[i];
-        const questions = roundQuestions[i];
-        const convertedQuestions = convertToGeneratedQuestions(questions).map(q => ({
-          ...q,
-          difficulty: round.difficulty || "medium",
-          icon_slug: q.icon_slug || null,
-        }));
-        
-        const { error: postError } = await supabase
-          .from("user_quiz_posts")
-          .insert([{
-            user_id: user.id,
-            title: round.subject,
-            subject: round.subject,
-            questions: convertedQuestions as unknown as any,
-            question_count: questions.length,
-            answer_format: round.answerFormat,
-            cover_gradient: coverGradient,
-            cover_image: null,
-            is_public: false,
-            collection_id: collection.id,
-            round_number: i + 1,
-            is_blind: true, // Creator never saw answers (play mode)
-          }]);
+      try {
+        for (let i = 0; i < rounds.length; i++) {
+          const round = rounds[i];
+          const questions = roundQuestions[i];
+          const convertedQuestions = convertToGeneratedQuestions(questions).map(q => ({
+            ...q,
+            difficulty: round.difficulty || "medium",
+            icon_slug: q.icon_slug || null,
+          }));
 
-        if (postError) throw postError;
+          const { error: postError } = await supabase
+            .from("user_quiz_posts")
+            .insert([{
+              user_id: user.id,
+              title: round.subject,
+              subject: round.subject,
+              questions: convertedQuestions as unknown as any,
+              question_count: questions.length,
+              answer_format: round.answerFormat,
+              cover_gradient: coverGradient,
+              cover_image: null,
+              is_public: false,
+              collection_id: collection.id,
+              round_number: i + 1,
+              is_blind: true, // Creator never saw answers (play mode)
+            }]);
+
+          if (postError) throw postError;
+        }
+      } catch (roundError) {
+        // Same as the publish path: an empty collection is a dead card, so
+        // it goes back out before the error surfaces.
+        await removeEmptyCollection(collection.id);
+        throw roundError;
       }
 
       if (currentDraftId) {
