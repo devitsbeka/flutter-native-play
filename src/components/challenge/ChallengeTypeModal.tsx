@@ -123,7 +123,7 @@ export function ChallengeTypeModal({
           }}
         >
           {/* Fixed Header */}
-          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-4 safe-top">
+          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-4">
             <button
               onClick={onClose}
               className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center"

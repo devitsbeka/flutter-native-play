@@ -363,7 +363,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="flex-1 h-full overflow-y-auto pt-[60px] pb-32 safe-top"
+                className="flex-1 h-full overflow-y-auto pt-[60px] pb-32"
               >
                 <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
                   <div className="p-4 space-y-5">

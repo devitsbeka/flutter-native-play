@@ -655,7 +655,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
             </div>
           </div>
 
-          <div className="h-full overflow-y-auto pt-[80px] pb-40 safe-top">
+          <div className="h-full overflow-y-auto pt-[80px] pb-40">
             <div className="max-w-[700px] md:max-w-[600px] mx-auto w-full p-5">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -763,7 +763,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
             </div>
           </div>
 
-          <div className="h-full overflow-y-auto pt-[60px] pb-32 safe-top">
+          <div className="h-full overflow-y-auto pt-[60px] pb-32">
             <div className="max-w-[700px] md:max-w-[600px] mx-auto w-full p-5">
               <AnimatePresence mode="wait">
                 {renderStep()}

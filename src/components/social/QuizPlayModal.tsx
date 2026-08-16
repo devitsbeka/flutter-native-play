@@ -360,7 +360,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
           </div>
 
           {/* Header */}
-          <div className="relative z-10 flex items-center justify-between px-4 py-4 safe-top">
+          <div className="relative z-10 flex items-center justify-between px-4 py-4">
             <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/30">
                 {resolveAvatarUrl(currentRoundPost?.avatarUrl || post.avatarUrl) ? (

@@ -51,7 +51,7 @@ export function ReturningUserPicker({ user, onSignIn, onAddUser, onSwitchUser }:
         background: "linear-gradient(180deg, #0f0f23 0%, #1a1a3e 50%, #2d1b4e 100%)",
       }}
     >
-      <div className="absolute top-6 left-0 right-0 safe-top flex items-center justify-center px-6">
+      <div className="absolute top-6 left-0 right-0 flex items-center justify-center px-6">
         <button onClick={() => navigate(-1)} className="absolute left-6 p-2 text-white/70 hover:text-white transition-colors">
           <ArrowLeft className="w-6 h-6" />
         </button>

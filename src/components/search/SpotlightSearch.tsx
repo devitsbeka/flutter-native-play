@@ -360,7 +360,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             className="fixed inset-0 z-[100] bg-background flex flex-col"
           >
             {/* Header with search bar */}
-            <div className="flex items-center gap-3 p-4 border-b border-border safe-top">
+            <div className="flex items-center gap-3 p-4 border-b border-border">
               <motion.button
                 onClick={() => handleOpenChange(false)}
                 whileTap={{ scale: 0.9 }}

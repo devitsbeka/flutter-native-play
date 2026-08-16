@@ -172,7 +172,7 @@ export default function TriviaLobby() {
         {/* Back Button */}
         <button
           onClick={handleBack}
-          className="absolute top-4 left-4 z-20 w-12 h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors safe-top-offset"
+          className="absolute top-4 left-4 z-20 w-12 h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors-offset"
           style={{ marginTop: 'max(0px, env(safe-area-inset-top))' }}
         >
           <ArrowLeft className="w-6 h-6 text-white" />

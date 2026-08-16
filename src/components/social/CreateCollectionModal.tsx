@@ -718,7 +718,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
           </div>
 
           {/* Content */}
-          <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
+          <div className="h-full overflow-y-auto pt-[60px] pb-24">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full p-5">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -865,7 +865,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         </div>
 
         {/* Content */}
-        <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
+        <div className="h-full overflow-y-auto pt-[60px] pb-24">
           <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full p-5">
             <AnimatePresence>
               {/* Step 1: Mode Selection */}

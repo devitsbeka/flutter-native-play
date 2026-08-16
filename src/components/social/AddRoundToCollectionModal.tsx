@@ -522,7 +522,7 @@ export function AddRoundToCollectionModal({
           </div>
 
           {/* Scrollable Content */}
-          <div className="h-full overflow-y-auto pt-[60px] pb-6 safe-top">
+          <div className="h-full overflow-y-auto pt-[60px] pb-6">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full p-5">
               <AnimatePresence mode="wait">
                 {renderStep()}

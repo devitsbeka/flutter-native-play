@@ -128,7 +128,7 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex-shrink-0 flex items-center gap-3 px-4 py-4 safe-top"
+        className="flex-shrink-0 flex items-center gap-3 px-4 py-4"
       >
         <button
           onClick={onClose}

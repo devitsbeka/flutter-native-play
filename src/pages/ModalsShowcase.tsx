@@ -505,7 +505,7 @@ export default function ModalsShowcase() {
     <div className="min-h-[100dvh] bg-slate-900 flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-slate-800/80">
-        <div className="flex items-center justify-between px-4 h-16 safe-top">
+        <div className="flex items-center justify-between px-4 h-16">
           {/* Left: Back button */}
           <motion.button
             initial={{ opacity: 0, x: -10 }}

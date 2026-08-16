@@ -971,7 +971,7 @@ export default function Index() {
           // buttons' 16px of padding left this column looking tighter than
           // the icons opposite it. Matching the glyphs instead makes the two
           // sides read as equal.
-          className={`relative z-20 px-4 py-3 md:pt-4 lg:pl-[26px] safe-top border-b border-border/30 lg:border-b-0 ${
+          className={`relative z-20 px-4 py-3 md:pt-4 lg:pl-[26px] border-b border-border/30 lg:border-b-0 ${
             !user ? "hidden md:block" : ""
           }`}
         >
