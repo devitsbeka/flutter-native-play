@@ -32,7 +32,7 @@ export default function DeleteAccount() {
 
   if (deleted) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center space-y-4">
           <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto">
             <Shield className="w-8 h-8 text-green-500" />
@@ -54,7 +54,7 @@ export default function DeleteAccount() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+    <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background flex items-center justify-center p-6">
       <div className="max-w-lg w-full space-y-8">
         {/* Header */}
         <div className="text-center space-y-3">

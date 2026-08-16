@@ -95,6 +95,23 @@ When asking Lovable, ask for the deploy and nothing else. It syncs the whole
 repo, and every extra pass is a chance for it to regenerate
 `src/integrations/supabase/types.ts` — see rule 1 for what that costs.
 
+## 4b. The document does not scroll on iOS — every page owns its scrolling
+
+`nativeShell.ts` calls `Keyboard.setScroll({ isDisabled: true })`, whose iOS
+implementation is `webView.scrollView.scrollEnabled = NO`. That kills the
+webview's document scroller for the life of the app — deliberately, so iOS
+cannot drag the page around when the keyboard opens.
+
+The consequence: a page whose content just grows (`min-h-screen` and let the
+document scroll) works in every browser and is **frozen solid on the
+device**. The category landing page shipped that way twice. Standalone pages
+must be a fixed-height box that scrolls itself:
+
+- plain page: `h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto`
+- full-bleed page: `h-[100dvh] overflow-y-auto safe-bleed`
+
+Pages inside MainLayout already scroll in its container and need nothing.
+
 ## 5. `.env` is tracked on purpose
 
 It holds only the Supabase project ref and the **publishable** (anon) key,

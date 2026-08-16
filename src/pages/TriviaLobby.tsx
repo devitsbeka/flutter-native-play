@@ -153,8 +153,11 @@ export default function TriviaLobby() {
   const gradientProps = getGradientProps(trivia.cover_gradient);
   const samplePost = convertToSamplePost(trivia, creator);
 
+  // h, not min-h: a min-height box grows with its content, so the
+  // overflow-y-auto on it never engages and scrolling falls through to the
+  // document — which the native shell keeps disabled on iOS (AGENTS.md 4b).
   return (
-    <div className="min-h-[100dvh] bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] flex flex-col overflow-y-auto safe-bleed">
+    <div className="h-[100dvh] bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] flex flex-col overflow-y-auto safe-bleed">
       {/* Hero Section with Cover - fixed height */}
       <div className="h-56 relative overflow-hidden flex-shrink-0">
         {trivia.cover_image ? (

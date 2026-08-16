@@ -103,6 +103,14 @@ export async function configureKeyboard(): Promise<void> {
     const { Keyboard, KeyboardResize } = await import("@capacitor/keyboard");
 
     await Keyboard.setResizeMode({ mode: KeyboardResize.None });
+    // NOTE this does far more than its name says. The iOS implementation is
+    // webView.scrollView.scrollEnabled = NO — the webview's DOCUMENT
+    // scroller is off, permanently, for the whole app. That is wanted (it is
+    // what stops iOS dragging the page around when the keyboard opens), but
+    // it means NO PAGE may rely on document scrolling: every screen must own
+    // an overflow-y-auto container. A page that forgets scrolls perfectly in
+    // every browser and is frozen solid on the device — that was the
+    // category page, twice.
     await Keyboard.setScroll({ isDisabled: true });
 
     const setHeight = (px: number) =>

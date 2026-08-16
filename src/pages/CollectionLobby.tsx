@@ -117,8 +117,13 @@ export default function CollectionLobby() {
 
   const heroGradientProps = getGradientProps(collection.cover_gradient);
 
+  // Scrolls itself — the document scroller is disabled on iOS (see
+  // CategoryPage). The old pb-32 sat on the same element as safe-bleed,
+  // whose doubled selector overrides padding-bottom, so the clearance for
+  // the fixed CTA was silently discarded; it lives inside now.
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] pb-32 safe-bleed">
+    <div className="h-[100dvh] overflow-y-auto bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] safe-bleed">
+      <div className="pb-32">
       {/* Hero */}
       <div className="h-56 relative overflow-hidden">
         {collection.cover_image ? (
@@ -249,6 +254,8 @@ export default function CollectionLobby() {
             ))}
           </div>
         </motion.div>
+      </div>
+
       </div>
 
       {/* Fixed Play */}

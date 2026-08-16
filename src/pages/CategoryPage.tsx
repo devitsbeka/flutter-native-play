@@ -251,7 +251,14 @@ export default function CategoryPage() {
       />
 
 
-      <div className="min-h-screen flex flex-col relative bg-background safe-bleed">
+      {/* Its own scroller, because the document does not scroll on iOS.
+          nativeShell calls Keyboard.setScroll({isDisabled:true}), whose iOS
+          implementation is webView.scrollView.scrollEnabled = NO — the
+          webview's document scroller is off for the life of the app. Every
+          MainLayout page scrolls in an inner container and never noticed;
+          this page relied on the document and was frozen solid on device
+          while scrolling fine in every browser. */}
+      <div className="h-[100dvh] overflow-y-auto flex flex-col relative bg-background safe-bleed">
         {/* Category Video Header Section - fixed height for clean tab positioning */}
         <div className="relative h-[48vh] min-h-[340px] overflow-hidden">
           <div className="absolute inset-0">
@@ -366,7 +373,7 @@ export default function CategoryPage() {
         </div>
 
         {/* Main Content Section - clean white background */}
-        <div className="flex-1 px-5 md:px-24 lg:px-32 pt-5 pb-8 overflow-auto">
+        <div className="flex-1 px-5 md:px-24 lg:px-32 pt-5 pb-8">
           <div className="max-w-3xl mx-auto">
             {/* Mobile: Tab-based content */}
             <div className="md:hidden">

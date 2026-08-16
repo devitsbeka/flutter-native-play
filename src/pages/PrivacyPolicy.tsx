@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
   const isEnglish = language === 'en';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background">
       <PageHeader title={t("legal.privacyPolicy")} />
       
       <div className="p-4 pb-12 max-w-[700px] md:max-w-[600px] mx-auto">

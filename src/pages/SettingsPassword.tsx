@@ -52,7 +52,7 @@ export default function SettingsPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background">
       <PageHeader title={t("settings.changePassword")} />
 
       <div className="p-4 pb-12 space-y-6 max-w-[700px] md:max-w-[600px] mx-auto">

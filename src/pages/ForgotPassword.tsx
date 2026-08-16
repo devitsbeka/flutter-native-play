@@ -174,7 +174,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-6 bg-gradient-to-b from-background via-background to-primary/10 relative z-10">
+    <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto flex flex-col p-6 bg-gradient-to-b from-background via-background to-primary/10 relative z-10">
       {/* Back Button */}
       <motion.button
         initial={{ opacity: 0, x: -20 }}

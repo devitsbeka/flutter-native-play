@@ -1159,7 +1159,15 @@ export default function CategoryQuizPage() {
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
         <div className="flex-1 min-h-0 px-4 pt-2 flex gap-3 items-center justify-center">
-          <AnimatePresence>
+          {/* popLayout, or the question change stalls: in the default mode an
+              exiting element keeps its layout slot until its exit animation
+              ends, so the OLD answers held their places — with a staggered
+              exit delay on top — while the NEW ones mounted underneath and
+              then jumped up. That was the "answers show after some delay":
+              they were on screen, below the leavers. popLayout lifts leavers
+              out of the flow immediately. Quick game never had this because
+              its answers do not animate out. */}
+          <AnimatePresence mode="popLayout">
             {currentQuestion?.allAnswers?.map((answer, index) => {
               const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
               if (hiddenAnswers.includes(answer)) return null;
@@ -1168,9 +1176,11 @@ export default function CategoryQuizPage() {
                 <motion.div
                   key={`${currentQuestionIndex}-${index}`}
                   initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: index * 0.05 }}
+                  animate={{ opacity: 1, scale: 1, transition: { delay: index * 0.05 } }}
+                  // Exit fast and without the stagger — the transition prop
+                  // applied to both directions, so the last leaver used to
+                  // wait 150ms before even starting to go.
+                  exit={{ opacity: 0, transition: { duration: 0.1 } }}
                   className="flex-1"
                 >
                   <QuizTrueFalseButton
@@ -1186,7 +1196,8 @@ export default function CategoryQuizPage() {
         </div>
       ) : (
         <div className="flex-1 px-4 pt-2 flex flex-col gap-2 overflow-y-auto min-h-0">
-          <AnimatePresence>
+          {/* popLayout — see the true/false block above. */}
+          <AnimatePresence mode="popLayout">
             {currentQuestion?.allAnswers?.map((answer, index) => {
               // Skip hidden answers (from 50/50 power-up)
               if (hiddenAnswers.includes(answer)) return null;
@@ -1195,9 +1206,8 @@ export default function CategoryQuizPage() {
                 <motion.div
                   key={`${currentQuestionIndex}-${index}`}
                   initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ delay: index * 0.05 }}
+                  animate={{ opacity: 1, x: 0, transition: { delay: index * 0.05 } }}
+                  exit={{ opacity: 0, transition: { duration: 0.1 } }}
                   className="flex-shrink-0"
                 >
                   <QuizAnswerButton
