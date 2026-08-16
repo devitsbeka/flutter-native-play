@@ -290,12 +290,10 @@ export default function PowerUps() {
     <MainLayout showPlayButton={false}>
       {/* Main scrollable container */}
       <div className="min-h-full flex flex-col">
-        {/* The same header every other page uses, so moving between them does
-            not shift the title or the back button. The shop's currency pills
-            keep their place on the right of it.
-
-            Its own pt-[env(safe-area-inset-top)] is gone: #root already
-            insets the page, and PageHeader paints the status bar strip
+        {/* The same header every other page uses — opaque, and pinned, so it
+            does not shift or let content show through as the page scrolls
+            under it. Its own pt-[env(safe-area-inset-top)] is gone: #root
+            insets the page and PageHeader paints the status bar strip
             itself, so the manual one was a second inset on top of both. */}
         <PageHeader title={t("menu.shop")} showBack={false} />
 

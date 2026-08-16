@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useCategories } from "@/hooks/useCategories";
-import { toWebmUrl } from "@/config/videoConfig";
+import { toWebmUrl, videoUrl } from "@/config/videoConfig";
 
 // CSS clip-path squircle paths (pixel units for 220x220 container)
 const MAIN_BLOB_PATH = "M110,26.4 C171.6,26.4 193.6,48.4 193.6,110 C193.6,171.6 171.6,193.6 110,193.6 C48.4,193.6 26.4,171.6 26.4,110 C26.4,48.4 48.4,26.4 110,26.4";
@@ -57,8 +57,19 @@ export function InteractiveBlobVideo({ iconUrl, iconSlug, videoSrc, isLocked, sh
     return "";
   }, [iconUrl, iconSlug]);
 
-  // WebM URL for video
-  const webmSrc = useMemo(() => videoSrc ? toWebmUrl(videoSrc) : undefined, [videoSrc]);
+  // Both sources go through videoUrl().
+  //
+  // The category videos are not in the iOS bundle — prune-ios-videos strips
+  // all but a first-run handful, and everything else streams from
+  // VIDEO_BASE_URL. A raw `/videos/foo.mp4` resolves against
+  // capacitor://localhost, so on device it pointed inside the bundle at a
+  // file that had been removed: the blob rendered empty with WebKit's own
+  // play glyph over it, which is what "the icon doesn't render" looks like.
+  const resolvedSrc = useMemo(() => (videoSrc ? videoUrl(videoSrc) : undefined), [videoSrc]);
+  const webmSrc = useMemo(
+    () => (videoSrc ? videoUrl(toWebmUrl(videoSrc)) : undefined),
+    [videoSrc],
+  );
 
   // Generate random slot sequence when animation should start
   useEffect(() => {
@@ -156,7 +167,7 @@ export function InteractiveBlobVideo({ iconUrl, iconSlug, videoSrc, isLocked, sh
         }}
       >
         <AnimatePresence mode="wait">
-          {isLocked && videoSrc ? (
+          {isLocked && resolvedSrc ? (
             <motion.div
               key="video"
               className="absolute inset-0 flex items-center justify-center"
@@ -174,7 +185,7 @@ export function InteractiveBlobVideo({ iconUrl, iconSlug, videoSrc, isLocked, sh
                 style={{ pointerEvents: 'none' }}
               >
                 {webmSrc && <source src={webmSrc} type="video/webm" />}
-                <source src={videoSrc} type="video/mp4" />
+                <source src={resolvedSrc} type="video/mp4" />
               </video>
             </motion.div>
           ) : (

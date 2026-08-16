@@ -415,7 +415,7 @@ export function AvatarCircle({
       {/* "გააცოცხლე ავატარი" animate prompt button - above level badge */}
       {showAnimatePrompt && !hideStats && (
         <motion.button
-          className="absolute left-1/2 -translate-x-1/2 z-30 flex items-center justify-center gap-1.5 px-6 py-2 rounded-full pointer-events-auto"
+          className="absolute inset-x-0 mx-auto w-fit z-30 flex items-center justify-center gap-1.5 px-6 py-2 rounded-full pointer-events-auto"
           style={{
             bottom: 38,
             background: "linear-gradient(135deg, #EC4899 0%, #8B5CF6 50%, #3B82F6 100%)",

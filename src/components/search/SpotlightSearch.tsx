@@ -383,7 +383,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                   <motion.button
                     onClick={() => setQuery("")}
                     whileTap={{ scale: 0.9 }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-background"
+                    className="absolute right-3 inset-y-0 my-auto h-fit p-1 rounded-full hover:bg-background"
                   >
                     <X className="w-4 h-4 text-muted-foreground" />
                   </motion.button>

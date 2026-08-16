@@ -365,7 +365,7 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
                   {/* Player avatars who picked this answer */}
                   {playersWhoChoseThis.length > 0 && (
                     <motion.div 
-                      className="absolute right-3 top-1/2 -translate-y-1/2 flex -space-x-1.5"
+                      className="absolute right-3 inset-y-0 my-auto h-fit flex -space-x-1.5"
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                     >
