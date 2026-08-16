@@ -1591,6 +1591,36 @@ export type Database = {
           },
         ]
       }
+      pro_seats: {
+        Row: {
+          granted_at: string
+          granter_id: string
+          holder_id: string
+          id: string
+          revoked_at: string | null
+          revoked_reason: string | null
+          seq: number
+        }
+        Insert: {
+          granted_at?: string
+          granter_id: string
+          holder_id: string
+          id?: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          seq?: never
+        }
+        Update: {
+          granted_at?: string
+          granter_id?: string
+          holder_id?: string
+          id?: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          seq?: never
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age_group: string | null
@@ -4004,6 +4034,7 @@ export type Database = {
         Args: { p_delta: number; p_type: string }
         Returns: number
       }
+      admin_user_economy: { Args: never; Returns: Json }
       apply_currency_grant: {
         Args: {
           p_coins: number
@@ -4035,6 +4066,7 @@ export type Database = {
           streak: number
         }[]
       }
+      claim_daily_vip_powers: { Args: never; Returns: Json }
       claim_leaderboard_reward: {
         Args: { p_reward_id: string }
         Returns: {
@@ -4090,6 +4122,7 @@ export type Database = {
           weekly_xp: number
         }[]
       }
+      get_my_private_profile: { Args: never; Returns: Json }
       get_questions_sorted_by_length: {
         Args: {
           p_category_id?: string
@@ -4128,6 +4161,7 @@ export type Database = {
           unread_count: number
         }[]
       }
+      grant_pro_seat: { Args: { p_holder_id: string }; Returns: Json }
       grant_vip_days: {
         Args: { p_duration: string }
         Returns: {
@@ -4151,15 +4185,17 @@ export type Database = {
         Args: { p_player_identifier: string; p_session_id: string }
         Returns: boolean
       }
-      process_referral_reward: {
-        Args: { p_invite_id: string; p_new_user_id: string }
-        Returns: undefined
+      pro_seat_allowance: {
+        Args: { p_expires_at: string; p_platform: string; p_tier: string }
+        Returns: number
       }
       reset_room_participants: {
         Args: { p_room_id: string; p_status?: string }
         Returns: undefined
       }
       reset_tv_session_scores: { Args: { p_session_id: string }; Returns: Json }
+      resolve_referral_code: { Args: { p_code: string }; Returns: Json }
+      revoke_pro_seat: { Args: { p_holder_id: string }; Returns: Json }
       search_questions: {
         Args: {
           p_category_id?: string
