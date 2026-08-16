@@ -396,8 +396,20 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
           {/* Scrollable Content */}
           <div className="relative z-10 flex-1 overflow-y-auto">
             {/* Clear the fixed footer, which is a button taller when there
-                is a "ready" to press. */}
-            <div className={`mx-auto w-full max-w-[520px] p-4 ${isPreRoomMode ? "pb-56" : "pb-36"}`}>
+                is a "ready" to press.
+
+                The inset is part of the sum because the footer pads itself by
+                it: as a constant 9rem, the clearance was 55px on a phone with
+                no home bar and 21px on one with, so the share row ended up
+                sitting on the footer's top rule exactly where the bar made the
+                footer tallest. */}
+            <div
+              className={`mx-auto w-full max-w-[520px] p-4 ${
+                isPreRoomMode
+                  ? "pb-[calc(15rem+env(safe-area-inset-bottom))]"
+                  : "pb-[calc(10rem+env(safe-area-inset-bottom))]"
+              }`}
+            >
               <div className="space-y-[18px] sm:space-y-5">
                 {/* Search Section */}
                 <div>
@@ -659,7 +671,9 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                 {/* Share Options - One Row */}
                 <div className="w-full">
                   <div className="mx-auto w-full max-w-[520px]">
-                    <div className="flex items-center justify-center gap-8 flex-nowrap overflow-x-auto overflow-y-visible py-2">
+                    {/* Roomier below than above: the labels are the last thing
+                        on the screen before the footer's rule. */}
+                    <div className="flex items-center justify-center gap-8 flex-nowrap overflow-x-auto overflow-y-visible pt-2 pb-4">
                       {shareOptions.map((option, index) => {
                         const IconComponent = option.icon;
                         return (
