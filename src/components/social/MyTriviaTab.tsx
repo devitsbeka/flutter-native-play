@@ -1268,6 +1268,31 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   }
 
   if (!hasContent) {
+    // An active search with no hits says "no trivia found" — it must not
+    // fall through to the onboarding carousel or the "create your first
+    // trivia" card, both of which read as answers to a different question.
+    if (searchLower) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="px-4"
+        >
+          <div className="bg-card border border-border rounded-2xl flex flex-col items-center justify-center py-12 px-6">
+            <div className="w-20 h-20 rounded-2xl overflow-hidden mb-4">
+              <img src={triviaBuzzerIcon} alt="" className="w-full h-full object-contain" />
+            </div>
+            <h3 className="text-base font-semibold text-foreground mb-1.5">
+              {t("extra.searchTriviaNotFound")}
+            </h3>
+            <p className="text-muted-foreground text-center text-xs max-w-xs">
+              {t("extra.searchTryDifferent")}
+            </p>
+          </div>
+        </motion.div>
+      );
+    }
+
     // Dynamic empty state message based on filter
     const getEmptyStateMessage = () => {
       switch (sortFilter) {

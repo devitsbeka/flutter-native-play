@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Loader2, Users } from "lucide-react";
+import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
 import { usePlayerFeedItems } from "@/hooks/usePlayerFeedItems";
 import { useContentModeration } from "@/hooks/useContentModeration";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -181,13 +182,19 @@ export function ExplorePortfolioFeed({
       <>
         {playersSection}
         <div className="flex flex-col items-center justify-center py-16 gap-4">
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-            <Users className="w-8 h-8 text-muted-foreground" />
-          </div>
+          {searchQuery ? (
+            <img src={triviaBuzzerIcon} alt="" className="w-20 h-20 object-contain" />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+              <Users className="w-8 h-8 text-muted-foreground" />
+            </div>
+          )}
           <div className="text-center">
-            <h3 className="font-semibold text-foreground mb-1">პოსტები ვერ მოიძებნა</h3>
+            <h3 className="font-semibold text-foreground mb-1">
+              {searchQuery ? t("extra.searchTriviaNotFound") : "პოსტები ვერ მოიძებნა"}
+            </h3>
             <p className="text-sm text-muted-foreground">
-              {searchQuery ? "სცადეთ სხვა საძიებო სიტყვა" : "ჯერ არავის არ აქვს გამოქვეყნებული ტრივია"}
+              {searchQuery ? t("extra.searchTryDifferent") : "ჯერ არავის არ აქვს გამოქვეყნებული ტრივია"}
             </p>
           </div>
         </div>

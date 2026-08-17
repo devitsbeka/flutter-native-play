@@ -223,8 +223,12 @@ export function MyRoomsSection({
     return <div className="min-h-[200px]" />;
   }
 
+  // An active search with no hits is its own state — "no room found" — not
+  // "you have no rooms" and certainly not the feature onboarding.
+  const searching = searchQuery.trim().length > 0;
+
   // Show feature onboarding carousel for new users with no rooms
-  const showOnboardingCarousel = rooms.length === 0 && activeFilter === "all" && !hasSeenOnboarding;
+  const showOnboardingCarousel = rooms.length === 0 && activeFilter === "all" && !hasSeenOnboarding && !searching;
 
   return (
     <div>
@@ -256,19 +260,28 @@ export function MyRoomsSection({
               <img src={danceFloorIcon} alt="" className="w-full h-full object-contain" />
             </div>
             <h3 className="text-base font-semibold text-foreground mb-1.5">
-              {activeFilter === "all" ? t("extra.noRoomsYet") : 
+              {searching ? t("extra.searchRoomNotFound") :
+               activeFilter === "all" ? t("extra.noRoomsYet") :
                activeFilter === "my_rooms" ? t("extra.noRoomsCreated") :
                activeFilter === "friends_rooms" ? t("extra.friendsNoRooms") :
                activeFilter === "active" ? t("extra.noActiveRoomsMsg") :
                t("extra.noCompletedRooms")}
             </h3>
-            {activeFilter === "all" && (
-              <p className="text-muted-foreground text-xs text-center mb-5">
-                {t("extra.createRoomInvite")}
+            {searching ? (
+              <p className="text-muted-foreground text-xs text-center">
+                {t("extra.searchTryDifferent")}
               </p>
-            )}
-            {onCreateRoom && activeFilter === "all" && (
-              <ChunkyButton onClick={onCreateRoom} size="sm">{t("extra.addRoom")}</ChunkyButton>
+            ) : (
+              <>
+                {activeFilter === "all" && (
+                  <p className="text-muted-foreground text-xs text-center mb-5">
+                    {t("extra.createRoomInvite")}
+                  </p>
+                )}
+                {onCreateRoom && activeFilter === "all" && (
+                  <ChunkyButton onClick={onCreateRoom} size="sm">{t("extra.addRoom")}</ChunkyButton>
+                )}
+              </>
             )}
           </motion.div>
         )

@@ -1875,6 +1875,10 @@ export const ka = {
     generatingQuestions: "კითხვების გენერირება...",
     quizOutOfQuestionsDesc: "ამ კატეგორიის ყველა კითხვას უპასუხე! მალე ახალი კითხვები დაემატება და შეგატყობინებთ.",
     quizExploreOtherCategories: "სხვა კატეგორიების ნახვა",
+    // Search empty states (team tabs)
+    searchTriviaNotFound: "ტრივია ვერ მოიძებნა",
+    searchRoomNotFound: "ოთახი ვერ მოიძებნა",
+    searchTryDifferent: "სცადეთ სხვა საძიებო სიტყვა",
     // Team tabs
     tabExplore: "აღმოაჩინე",
     tabRooms: "ოთახები",

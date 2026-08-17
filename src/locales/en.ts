@@ -1876,6 +1876,10 @@ export const en: KaTranslations = {
     generatingQuestions: "Generating questions...",
     quizOutOfQuestionsDesc: "You've answered every question in this category! New questions are coming soon and we'll let you know.",
     quizExploreOtherCategories: "Explore other categories",
+    // Search empty states (team tabs)
+    searchTriviaNotFound: "No trivia found",
+    searchRoomNotFound: "No room found",
+    searchTryDifferent: "Try a different search term",
     // Team tabs
     tabExplore: "Explore",
     tabRooms: "Rooms",
