@@ -37,6 +37,7 @@ const SWEPT = [
   "src/components/home/MissionsModal.tsx",
   "src/pages/Leaderboards.tsx",
   "src/pages/Settings.tsx",
+  "src/pages/TVHostController.tsx",
   "src/utils/countryName.ts",
   "src/utils/missionText.ts",
   "src/utils/notificationTranslations.ts",

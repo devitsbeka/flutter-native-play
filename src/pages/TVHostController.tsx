@@ -467,10 +467,10 @@ const TVHostController: React.FC = () => {
         })
         .eq('id', sessionId);
 
-      toast.success(`${category.name} არჩეულია!`);
+      toast.success(t("extra.tvhCategorySelected", { name: category.name }));
     } catch (error) {
       console.error('Error selecting category:', error);
-      toast.error('კატეგორიის არჩევა ვერ მოხერხდა');
+      toast.error(t("extra.tvhCategorySelectFailed"));
       setSelectedCategory(null);
     }
   };
@@ -490,7 +490,7 @@ const TVHostController: React.FC = () => {
         } else if (firstQueueItem.categoryId) {
           await startGame(firstQueueItem.categoryId);
         } else {
-          toast.error('არასწორი რაუნდის ტიპი');
+          toast.error(t("extra.tvhInvalidRoundType"));
           return;
         }
         
@@ -519,11 +519,11 @@ const TVHostController: React.FC = () => {
           if (randomCat) {
             await startGame(randomCat.id);
           } else {
-            toast.error('კატეგორიები ვერ მოიძებნა');
+            toast.error(t("extra.tvhCategoriesNotFound"));
             return;
           }
         } else {
-          toast.error('არასწორი რაუნდის ტიპი');
+          toast.error(t("extra.tvhInvalidRoundType"));
           return;
         }
         
@@ -536,14 +536,14 @@ const TVHostController: React.FC = () => {
 
       // Otherwise use selected category
       if (!selectedCategory?.id) {
-        toast.error('გთხოვთ აირჩიოთ კატეგორია');
+        toast.error(t("extra.tvhSelectCategoryFirst"));
         return;
       }
 
       await startGame(selectedCategory.id);
     } catch (error) {
       tvLogError('handleStartGame', error);
-      toast.error('თამაშის დაწყება ვერ მოხერხდა');
+      toast.error(t("extra.tvStartGameFailed"));
     }
   };
 
@@ -571,11 +571,11 @@ const TVHostController: React.FC = () => {
     await addToQueue(item);
     
     if (item.source_type === "category") {
-      toast.success(`${item.category_name} დაემატა რიგში`);
+      toast.success(t("extra.tvhAddedToQueue", { name: item.category_name }));
     } else if (item.source_type === "random") {
-      toast.success('შემთხვევითი რაუნდი დაემატა');
+      toast.success(t("extra.tvhRandomRoundAdded"));
     } else if (item.source_type === "user_trivia") {
-      toast.success(`${item.category_name || 'ტრივია'} დაემატა რიგში`);
+      toast.success(t("extra.tvhAddedToQueue", { name: item.category_name || t("extra.trivia") }));
     }
     
     setShowCategoryPicker(false);
@@ -584,7 +584,7 @@ const TVHostController: React.FC = () => {
   // Add category to queue (legacy)
   const handleAddToQueue = async (category: Category) => {
     await addCategoryToQueue({ id: category.id, name: category.name });
-    toast.success(`${category.name} დაემატა რიგში`);
+    toast.success(t("extra.tvhAddedToQueue", { name: category.name }));
   };
 
   const handleEndGame = async () => {
@@ -595,7 +595,7 @@ const TVHostController: React.FC = () => {
       .update({ status: 'completed' })
       .eq('id', sessionId);
 
-    toast.success('თამაში დასრულდა!');
+    toast.success(t("extra.gameOverExcl"));
     navigate('/team');
   };
 
@@ -612,13 +612,13 @@ const TVHostController: React.FC = () => {
     
     setRoomName(newName.trim());
     setRoomIcon(newIcon);
-    toast.success('ოთახი განახლდა!');
+    toast.success(t("team.roomUpdated"));
   };
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(gameCode || '');
     setCopied(true);
-    toast.success('კოდი დაკოპირდა!');
+    toast.success(t("extra.tvhCodeCopied"));
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -665,12 +665,12 @@ const TVHostController: React.FC = () => {
           <AlertCircle className="w-16 h-16 text-orange-400 mx-auto mb-4" />
           <p className="text-orange-300 text-xl font-bold mb-2">{error}</p>
           <p className="text-purple-300/70 text-sm mb-6">
-            {error === 'No session ID' 
-              ? 'TV სესიის ID ვერ მოიძებნა. გთხოვთ სცადოთ თავიდან.' 
-              : 'გთხოვთ სცადოთ თავიდან.'}
+            {error === 'No session ID'
+              ? t("extra.tvhNoSessionId")
+              : t("extra.tvhTryAgain")}
           </p>
           <ChunkyButton onClick={() => navigate('/team')}>
-            უკან
+            {t("common.back")}
           </ChunkyButton>
         </div>
       </div>
@@ -714,9 +714,9 @@ const TVHostController: React.FC = () => {
           </motion.div>
         </AnimatePresence>
         <p className="text-2xl text-white font-bold">
-          {countdownValue === 0 ? 'დაიწყო!' : 'მოემზადე!'}
+          {countdownValue === 0 ? t("extra.gameStarted") : t("extra.getReadyController")}
         </p>
-        <p className="text-purple-200 mt-2">მოემზადე პასუხებისთვის!</p>
+        <p className="text-purple-200 mt-2">{t("extra.getReadyForAnswers")}</p>
       </div>
     );
   }
@@ -731,7 +731,7 @@ const TVHostController: React.FC = () => {
           className="mb-4"
         >
           <span className="px-4 py-2 rounded-full bg-purple-500/30 border border-purple-400/50 text-purple-200 font-medium">
-            რაუნდი {roundNumber}
+            {t("extra.roundTitle")} {roundNumber}
           </span>
         </motion.div>
 
@@ -741,7 +741,7 @@ const TVHostController: React.FC = () => {
           transition={{ delay: 0.2 }}
           className="mb-8 flex flex-col items-center"
         >
-          <h2 className="text-xl font-bold text-white">{categoryName || 'კატეგორია'}</h2>
+          <h2 className="text-xl font-bold text-white">{categoryName || t("extra.categoryTitle")}</h2>
         </motion.div>
 
         <ChunkyButton
@@ -750,7 +750,7 @@ const TVHostController: React.FC = () => {
           onClick={() => markReady()}
           icon={<Check className="w-5 h-5" />}
         >
-          მზად ვარ
+          {t("extra.imReady")}
         </ChunkyButton>
       </div>
     );
@@ -775,7 +775,7 @@ const TVHostController: React.FC = () => {
           {/* Question text */}
           {currentQuestion && (
             <div className="bg-white/10 rounded-xl p-4 mb-4 max-w-sm w-full">
-              <p className="text-purple-300 text-xs mb-1">კითხვა {currentQuestionIndex + 1}/{totalQuestions}</p>
+              <p className="text-purple-300 text-xs mb-1">{t("extra.questionCountDisplay", { current: currentQuestionIndex + 1, total: totalQuestions })}</p>
               <p className="text-white font-semibold text-center text-sm">{currentQuestion.question_text}</p>
             </div>
           )}
@@ -783,7 +783,7 @@ const TVHostController: React.FC = () => {
           {/* Correct answer */}
           {currentQuestion && (
             <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-3 mb-4 max-w-sm w-full">
-              <p className="text-green-300 text-xs mb-1">სწორი პასუხი:</p>
+              <p className="text-green-300 text-xs mb-1">{t("extra.crCorrectAnswer")}</p>
               <p className="text-white font-semibold text-center">{currentQuestion.correct_answer}</p>
             </div>
           )}
@@ -791,13 +791,13 @@ const TVHostController: React.FC = () => {
           {/* Per-question bonus delta */}
           {scoreDelta > 0 ? (
             <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-xl px-6 py-3 mb-4">
-              <p className="text-green-400 text-lg font-bold text-center">+{scoreDelta} ქულა</p>
-              <p className="text-yellow-300/60 text-xs text-center">შეცდომებზე მოგების ბონუსი</p>
+              <p className="text-green-400 text-lg font-bold text-center">{t("extra.plusPoints", { count: scoreDelta })}</p>
+              <p className="text-yellow-300/60 text-xs text-center">{t("extra.tvhMistakesBonus")}</p>
             </div>
           ) : (
             <div className="bg-white/10 rounded-xl px-6 py-3 mb-4">
-              <p className="text-purple-400 text-lg font-semibold text-center">ბონუსი არაა</p>
-              <p className="text-purple-300/60 text-xs text-center">ყველამ სწორად უპასუხა</p>
+              <p className="text-purple-400 text-lg font-semibold text-center">{t("extra.tvhNoBonus")}</p>
+              <p className="text-purple-300/60 text-xs text-center">{t("extra.tvhEveryoneCorrect")}</p>
             </div>
           )}
 
@@ -805,10 +805,10 @@ const TVHostController: React.FC = () => {
           <div className="flex items-center gap-2 mb-4">
             <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
             <span className="text-white text-xl font-bold">{observerScore}</span>
-            <span className="text-purple-300 text-sm">ქულა</span>
+            <span className="text-purple-300 text-sm">{t("game.points")}</span>
           </div>
 
-          <p className="text-purple-300/60 text-sm">შემდეგი კითხვა მალე...</p>
+          <p className="text-purple-300/60 text-sm">{t("extra.crNextQuestionSoon")}</p>
         </div>
       );
     }
@@ -836,21 +836,21 @@ const TVHostController: React.FC = () => {
         <h2 className={`text-3xl font-bold mb-2 ${
           didAnswer ? (isCorrect ? 'text-green-400' : 'text-red-400') : 'text-gray-400'
         }`}>
-          {didAnswer ? (isCorrect ? 'სწორია!' : 'არასწორია!') : 'დრო ამოიწურა!'}
+          {didAnswer ? (isCorrect ? t("extra.crCorrect") : t("extra.crIncorrect")) : t("extra.crTimeExpired")}
         </h2>
-        
+
         {!isCorrect && currentQuestion && (
           <p className="text-purple-300 text-center mb-4">
-            პასუხი: {currentQuestion.correct_answer}
+            {t("extra.crAnswer")}{currentQuestion.correct_answer}
           </p>
         )}
-        
+
         <div className="bg-white/10 rounded-xl px-6 py-3 mb-4">
-          <span className="text-purple-300">შენი ქულა: </span>
+          <span className="text-purple-300">{t("extra.crYourScore")}</span>
           <span className="text-white text-2xl font-bold">{myScore}</span>
         </div>
-        
-        <p className="text-purple-300/60">შემდეგი კითხვა მალე...</p>
+
+        <p className="text-purple-300/60">{t("extra.crNextQuestionSoon")}</p>
       </div>
     );
   }
@@ -872,10 +872,10 @@ const TVHostController: React.FC = () => {
       try {
         // Start direct category selection (no poll)
         await startDirectSelection();
-        toast.success('აირჩიე კატეგორიები!');
+        toast.success(t("extra.selectCategories"));
       } catch (error) {
         console.error('Error starting direct selection:', error);
-        toast.error('ვერ მოხერხდა');
+        toast.error(t("extra.tvhActionFailed"));
       }
     };
 
@@ -883,10 +883,10 @@ const TVHostController: React.FC = () => {
       try {
         // Initiate the category poll for voting
         await pollHook.initiatePoll();
-        toast.success('ხმის მიცემა დაწყებულია!');
+        toast.success(t("extra.tvVotingStarted"));
       } catch (error) {
         console.error('Error initiating poll:', error);
-        toast.error('ვერ მოხერხდა');
+        toast.error(t("extra.tvhActionFailed"));
       }
     };
 
@@ -987,12 +987,12 @@ const TVHostController: React.FC = () => {
               <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain shrink-0" />
             )}
             {/* Room name */}
-            <span className="font-bold text-white truncate">{roomName || 'TV თამაში'}</span>
+            <span className="font-bold text-white truncate">{roomName || t("extra.tvhTvGame")}</span>
             {/* Edit button */}
             <button
               onClick={() => setShowIconPicker(true)}
               className="p-2 rounded-full hover:bg-white/10 shrink-0"
-              title="შეცვალე სახელი/აიკონი"
+              title={t("extra.ripTitle")}
             >
               <Edit2 className="w-4 h-4 text-purple-300" />
             </button>
@@ -1007,7 +1007,7 @@ const TVHostController: React.FC = () => {
         >
           <div className="flex items-center gap-2 mb-3">
             <QrCode className="w-5 h-5 text-purple-300" />
-            <h2 className="font-bold text-white">მოთამაშეებმა დაასკანერონ</h2>
+            <h2 className="font-bold text-white">{t("extra.tvhPlayersScan")}</h2>
           </div>
 
           <div className="flex gap-4">
@@ -1015,7 +1015,7 @@ const TVHostController: React.FC = () => {
               <QRCodeSVG value={joinUrl} size={100} level="H" />
             </div>
             <div className="flex-1 flex flex-col justify-center">
-              <p className="text-sm text-purple-200 mb-1">კოდი:</p>
+              <p className="text-sm text-purple-200 mb-1">{t("extra.tvhCodeLabel")}</p>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-mono font-bold text-white tracking-wider">
                   {displayCode}
@@ -1029,7 +1029,7 @@ const TVHostController: React.FC = () => {
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <Users className="w-4 h-4 text-purple-300" />
-                <span className="text-sm text-purple-200">{players.length} მოთამაშე</span>
+                <span className="text-sm text-purple-200">{t("extra.tvhPlayersCount", { count: players.length })}</span>
               </div>
             </div>
           </div>
@@ -1071,7 +1071,7 @@ const TVHostController: React.FC = () => {
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-white font-bold flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-purple-300" />
-              რაუნდების რიგი ({queue.length})
+              {t("extra.tvhRoundsQueue", { count: queue.length })}
             </h3>
             {/* Add round button */}
             <button
@@ -1089,7 +1089,7 @@ const TVHostController: React.FC = () => {
             >
               <div className="flex flex-col items-center gap-2">
                 <Plus className="w-8 h-8 text-purple-300" />
-                <p className="text-purple-300 text-sm">აირჩიე კატეგორიები</p>
+                <p className="text-purple-300 text-sm">{t("extra.selectCategories")}</p>
               </div>
             </button>
           ) : (
@@ -1122,7 +1122,7 @@ const TVHostController: React.FC = () => {
                     <button
                       onClick={() => handleReplaceQueueItem(item.id)}
                       className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-                      title="ჩანაცვლება"
+                      title={t("extra.powerReplace")}
                     >
                       <RefreshCw className="w-4 h-4 text-purple-300" />
                     </button>
@@ -1131,7 +1131,7 @@ const TVHostController: React.FC = () => {
                     <button
                       onClick={() => removeFromQueue(item.id)}
                       className="p-1.5 rounded-lg bg-white/10 hover:bg-red-500/30 transition-colors"
-                      title="წაშლა"
+                      title={t("extra.editorDeleteBtn")}
                     >
                       <X className="w-4 h-4 text-white/60 hover:text-red-300" />
                     </button>
@@ -1154,10 +1154,10 @@ const TVHostController: React.FC = () => {
           >
             <Play className="w-5 h-5 mr-2" />
             {queue.length === 0
-              ? 'დაამატე რაუნდები რიგში'
+              ? t("extra.tvhAddRoundsToQueue")
               : players.length < 1
-                ? 'საჭიროა მინ. 1 მოთამაშე'
-                : `დაწყება (${queue.length} რაუნდი)`}
+                ? t("extra.tvhNeedMinPlayer")
+                : t("extra.startRoundsBtn", { count: queue.length })}
           </ChunkyButton>
         </div>
         )}
@@ -1180,7 +1180,7 @@ const TVHostController: React.FC = () => {
           onSelectRandom={() => {
             handlePickerAddToQueue({
               source_type: "random",
-              category_name: "შემთხვევითი",
+              category_name: t("extra.randomOption"),
             });
           }}
           onSelectTrivia={(trivia) => {
@@ -1221,7 +1221,7 @@ const TVHostController: React.FC = () => {
         >
           <div className="flex items-center gap-2">
             <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain" />
-            <span className="font-bold text-white">მართვის პანელი</span>
+            <span className="font-bold text-white">{t("extra.tvhControlPanel")}</span>
           </div>
           <button 
             onClick={() => navigate('/team')}
@@ -1239,7 +1239,7 @@ const TVHostController: React.FC = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-purple-200 mb-1">კოდი:</p>
+              <p className="text-sm text-purple-200 mb-1">{t("extra.tvhCodeLabel")}</p>
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-mono font-bold text-white tracking-wider">
                   {displayCode}
@@ -1295,7 +1295,7 @@ const TVHostController: React.FC = () => {
         >
           <h3 className="text-white font-bold text-lg mb-3 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-purple-300" />
-            აირჩიე კატეგორია
+            {t("extra.chooseCategory")}
           </h3>
           <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
             {categories.map((category, index) => (
@@ -1338,11 +1338,11 @@ const TVHostController: React.FC = () => {
             disabled={players.length < 1 || !selectedCategory}
           >
             <Play className="w-5 h-5 mr-2" />
-            {!selectedCategory 
-              ? 'აირჩიე კატეგორია' 
-              : players.length < 1 
-                ? 'საჭიროა მინ. 1 მოთამაშე' 
-                : `დაწყება: ${selectedCategory.name}`}
+            {!selectedCategory
+              ? t("extra.chooseCategory")
+              : players.length < 1
+                ? t("extra.tvhNeedMinPlayer")
+                : t("extra.tvhStartWithCategory", { name: selectedCategory.name })}
           </ChunkyButton>
         </div>
       </div>
@@ -1356,15 +1356,15 @@ const TVHostController: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-          <h2 className="text-white text-xl font-bold mb-2">თამაში არ არის მზად</h2>
-          <p className="text-purple-300 mb-2">კითხვები ვერ ჩაიტვირთა</p>
-          <p className="text-purple-400 text-sm mb-6">გთხოვ დაიწყე ახალი თამაში</p>
+          <h2 className="text-white text-xl font-bold mb-2">{t("extra.gameNotReady")}</h2>
+          <p className="text-purple-300 mb-2">{t("extra.questionsNotLoaded")}</p>
+          <p className="text-purple-400 text-sm mb-6">{t("extra.tvhStartNewGame")}</p>
           <div className="flex gap-3 justify-center">
             <ChunkyButton onClick={() => navigate('/team')} variant="secondary">
-              უკან
+              {t("common.back")}
             </ChunkyButton>
             <ChunkyButton onClick={handleEndGame} variant="white">
-              ახალი თამაში
+              {t("extra.newGame")}
             </ChunkyButton>
           </div>
         </div>
@@ -1391,7 +1391,7 @@ const TVHostController: React.FC = () => {
           <span className="text-purple-300 text-sm">Q{currentQuestionIndex + 1}/{totalQuestions}</span>
           <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${timeRemaining <= 5 ? 'bg-red-500/30' : 'bg-white/10'}`}>
             <Clock className="w-4 h-4 text-purple-300" />
-            <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-400' : 'text-white'}`}>{timeRemaining}წმ</span>
+            <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-400' : 'text-white'}`}>{t("extra.secondsShort", { time: timeRemaining })}</span>
           </div>
           <div className="flex items-center gap-1">
             <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
@@ -1428,12 +1428,12 @@ const TVHostController: React.FC = () => {
 
         {/* Observer badge + end game */}
         <div className="mt-auto pt-4 flex items-center justify-between">
-          <span className="text-yellow-300/60 text-xs">აკვირდები — ქულებს იღებ შეცდომებზე</span>
+          <span className="text-yellow-300/60 text-xs">{t("extra.tvhObserverHint")}</span>
           <ChunkyButton
             variant="secondary"
             onClick={handleEndGame}
           >
-            დასრულება
+            {t("extra.tvhFinish")}
           </ChunkyButton>
         </div>
       </div>
@@ -1446,11 +1446,11 @@ const TVHostController: React.FC = () => {
       <div className="flex items-center justify-between mb-4">
         <span className="text-purple-300 text-sm">Q{currentQuestionIndex + 1}/{totalQuestions}</span>
         <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${timeRemaining <= 5 ? 'bg-red-500/30' : 'bg-white/10'}`}>
-          <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-400' : 'text-white'}`}>{timeRemaining}წმ</span>
+          <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-400' : 'text-white'}`}>{t("extra.secondsShort", { time: timeRemaining })}</span>
         </div>
         <div className="flex items-center gap-1">
           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-          <span className="text-white font-bold text-sm">{myScore} ქულა</span>
+          <span className="text-white font-bold text-sm">{myScore} {t("game.points")}</span>
         </div>
       </div>
 
@@ -1471,8 +1471,8 @@ const TVHostController: React.FC = () => {
         <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex-1 flex flex-col">
           <div className="flex-1 flex flex-col items-center justify-center">
             <Check className="w-16 h-16 text-green-400 mb-4" />
-            <p className="text-white text-xl font-bold">პასუხი გაგზავნილია!</p>
-            <p className="text-purple-300">დაველოდოთ სხვა მოთამაშეებს...</p>
+            <p className="text-white text-xl font-bold">{t("extra.answerSubmitted")}</p>
+            <p className="text-purple-300">{t("extra.tvhWaitOthers")}</p>
           </div>
         </motion.div>
       ) : (
@@ -1510,7 +1510,7 @@ const TVHostController: React.FC = () => {
           className="w-full"
           onClick={handleEndGame}
         >
-          თამაშის დასრულება
+          {t("extra.tvhEndGame")}
         </ChunkyButton>
       </div>
     </div>
