@@ -5,6 +5,7 @@ import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TVPlayModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
   categoryId,
   categoryName,
 }) => {
+  const { t } = useLanguage();
   const [code, setCode] = useState('');
   const [isPairing, setIsPairing] = useState(false);
   const [pairSuccess, setPairSuccess] = useState(false);
@@ -34,7 +36,7 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
 
   const handlePair = async () => {
     if (code.length !== 6) {
-      setError('შეიყვანეთ 6-სიმბოლოიანი კოდი');
+      setError(t("extra.tpmEnter6Code"));
       return;
     }
 
@@ -51,7 +53,7 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
         .single();
 
       if (findError || !session) {
-        setError('კოდი ვერ მოიძებნა. შეამოწმეთ TV ეკრანზე კოდი.');
+        setError(t("extra.tpmCodeNotFound"));
         setIsPairing(false);
         return;
       }
@@ -80,7 +82,7 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
       }, 1500);
     } catch (err) {
       console.error('Pairing error:', err);
-      setError('დაფიქსირდა შეცდომა. სცადეთ თავიდან.');
+      setError(t("extra.tpmErrorTryAgain"));
     } finally {
       setIsPairing(false);
     }
@@ -120,8 +122,8 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
                   <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-foreground">TV-ზე თამაში</h2>
-                  <p className="text-sm text-muted-foreground">შეიყვანეთ კოდი TV-დან</p>
+                  <h2 className="text-xl font-bold text-foreground">{t("tv.playOnTV")}</h2>
+                  <p className="text-sm text-muted-foreground">{t("extra.enterCodeFromTV")}</p>
                 </div>
               </div>
               <button
@@ -146,15 +148,15 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
                 >
                   <CheckCircle2 className="w-20 h-20 text-green-500" />
                 </motion.div>
-                <p className="text-xl font-bold text-foreground">დაკავშირებულია!</p>
-                <p className="text-sm text-muted-foreground">TV ეკრანზე გამოჩნდება ლობი...</p>
+                <p className="text-xl font-bold text-foreground">{t("tv.connected")}</p>
+                <p className="text-sm text-muted-foreground">{t("extra.tpmLobbyAppears")}</p>
               </motion.div>
             ) : (
               <>
                 {/* Code Input */}
                 <div className="mb-6">
                   <p className="text-center text-muted-foreground mb-4">
-                    გახსენით <span className="font-bold text-foreground">mytrivia.io/tv</span> თქვენს TV-ზე
+                    {t("extra.tpmOpenPrefix")} <span className="font-bold text-foreground">mytrivia.io/tv</span> {t("extra.tpmOpenSuffix")}
                   </p>
                   
                   <Input
@@ -189,14 +191,14 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
                   className="w-full"
                   icon={isPairing ? <Loader2 className="w-5 h-5 animate-spin" /> : <img src={retroTvIcon} alt="TV" className="w-5 h-5 object-contain" />}
                 >
-                  {isPairing ? 'კავშირდება...' : 'დაკავშირება'}
+                  {isPairing ? t("tv.connecting") : t("tv.connect")}
                 </ChunkyButton>
 
                 {/* Instructions */}
                 <div className="mt-6 space-y-2 text-center text-sm text-muted-foreground">
-                  <p>1. გახსენით mytrivia.io/tv ბრაუზერში</p>
-                  <p>2. შეიყვანეთ 6-სიმბოლოიანი კოდი</p>
-                  <p>3. მოიწვიეთ მეგობრები QR კოდით</p>
+                  <p>{t("extra.tpmStep1")}</p>
+                  <p>{t("extra.tpmStep2")}</p>
+                  <p>{t("extra.tpmStep3")}</p>
                 </div>
               </>
             )}

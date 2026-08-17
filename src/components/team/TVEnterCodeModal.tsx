@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { getQuestions, resolveCategoryUuid } from '@/services/questionService';
 import { markQuestionsAsAsked } from '@/services/questionTracker';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TVEnterCodeModalProps {
   open: boolean;
@@ -26,6 +27,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [code, setCode] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -49,7 +51,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
         .maybeSingle();
 
       if (error || !session) {
-        toast.error('კოდი არ მოიძებნა ან უკვე დაკავშირებულია');
+        toast.error(t("extra.tecCodeNotFound"));
         setIsConnecting(false);
         return;
       }
@@ -57,7 +59,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
       // Resolve category UUID
       const categoryUUID = await resolveCategoryUuid(categoryId);
       if (!categoryUUID) {
-        toast.error('კატეგორია ვერ მოიძებნა');
+        toast.error(t("extra.csmCategoryNotFound"));
         setIsConnecting(false);
         return;
       }
@@ -70,7 +72,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
       });
 
       if (result.questions.length === 0) {
-        toast.error('კითხვები ვერ მოიძებნა ამ ენაზე');
+        toast.error(t("extra.tecNoQuestionsLang"));
         setIsConnecting(false);
         return;
       }
@@ -85,7 +87,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
         });
 
         if (result.exhaustionInfo.usedFallback) {
-          toast.info('ზოგიერთი კითხვა სხვა კატეგორიიდანაა');
+          toast.info(t("extra.tecFallbackQuestions"));
         }
       }
 
@@ -119,8 +121,8 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
       if (claimError || !claim?.claimed) {
         toast.error(
           claim?.reason === 'not_authenticated'
-            ? 'ტელევიზორის დასაკავშირებლად გაიარე ავტორიზაცია'
-            : 'კოდი არ მოიძებნა ან უკვე დაკავშირებულია'
+            ? t("extra.tecAuthRequired")
+            : t("extra.tecCodeNotFound")
         );
         setIsConnecting(false);
         return;
@@ -151,7 +153,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
       setSessionId(claimedSessionId);
       setIsConnected(true);
 
-      toast.success('წარმატებით დაკავშირდა!');
+      toast.success(t("extra.tecConnectedSuccess"));
 
       // Navigate to the host controller page (host controls the game, not plays as guest)
       setTimeout(() => {
@@ -161,7 +163,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
 
     } catch (error) {
       console.error('Error connecting to TV:', error);
-      toast.error('დაკავშირება ვერ მოხერხდა');
+      toast.error(t("tv.connectionFailed"));
     } finally {
       setIsConnecting(false);
     }
@@ -190,7 +192,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                 <img src={retroTvIcon} alt="TV" className="w-5 h-5 object-contain" />
               </div>
-              <h2 className="text-lg font-bold text-foreground">TV-სთან დაკავშირება</h2>
+              <h2 className="text-lg font-bold text-foreground">{t("tv.connectToTV")}</h2>
             </div>
           </div>
 
@@ -212,8 +214,8 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
                   >
                     <Check className="w-10 h-10 text-white" />
                   </motion.div>
-                  <h3 className="text-xl font-bold text-foreground mb-2">დაკავშირებულია!</h3>
-                  <p className="text-muted-foreground">გადამისამართება მართვის პანელზე...</p>
+                  <h3 className="text-xl font-bold text-foreground mb-2">{t("tv.connected")}</h3>
+                  <p className="text-muted-foreground">{t("extra.tecRedirecting")}</p>
                 </motion.div>
               ) : (
                 <motion.div
@@ -224,7 +226,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
                   className="py-4 w-full max-w-md"
                 >
                   <p className="text-muted-foreground text-center mb-6">
-                    შეიყვანე 4-ციფრიანი კოდი რომელიც ნაჩვენებია TV ეკრანზე
+                    {t("extra.tecEnterCodeHint")}
                   </p>
 
                   <div className="flex justify-center mb-6">
@@ -251,15 +253,15 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
                     {isConnecting ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                        დაკავშირება...
+                        {t("extra.connecting")}
                       </>
                     ) : (
-                      'დაკავშირება'
+                      t("tv.connect")
                     )}
                   </ChunkyButton>
 
                   <p className="text-sm text-muted-foreground text-center mt-4">
-                    ჯერ გახსენი <span className="text-primary font-medium">mytrivia.io/tv</span> შენს TV-ზე
+                    {t("extra.tecOpenTvPrefix")} <span className="text-primary font-medium">mytrivia.io/tv</span> {t("extra.tecOpenTvSuffix")}
                   </p>
                 </motion.div>
               )}

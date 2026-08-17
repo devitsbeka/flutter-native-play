@@ -4429,6 +4429,26 @@ export const ka = {
     chlChallenge: "ჩელენჯი",
     chlYouLost: "ამჯერად დამარცხდი!",
     chlSignupHint: "დარეგისტრირდი რომ შეინახო შედეგი და გამოწვიო მეგობრები",
+    // TVEnterCodeModal
+    tecCodeNotFound: "კოდი არ მოიძებნა ან უკვე დაკავშირებულია",
+    tecNoQuestionsLang: "კითხვები ვერ მოიძებნა ამ ენაზე",
+    tecFallbackQuestions: "ზოგიერთი კითხვა სხვა კატეგორიიდანაა",
+    tecAuthRequired: "ტელევიზორის დასაკავშირებლად გაიარე ავტორიზაცია",
+    tecConnectedSuccess: "წარმატებით დაკავშირდა!",
+    tecRedirecting: "გადამისამართება მართვის პანელზე...",
+    tecEnterCodeHint: "შეიყვანე 4-ციფრიანი კოდი რომელიც ნაჩვენებია TV ეკრანზე",
+    tecOpenTvPrefix: "ჯერ გახსენი",
+    tecOpenTvSuffix: "შენს TV-ზე",
+    // TVPlayModal
+    tpmEnter6Code: "შეიყვანეთ 6-სიმბოლოიანი კოდი",
+    tpmCodeNotFound: "კოდი ვერ მოიძებნა. შეამოწმეთ TV ეკრანზე კოდი.",
+    tpmErrorTryAgain: "დაფიქსირდა შეცდომა. სცადეთ თავიდან.",
+    tpmLobbyAppears: "TV ეკრანზე გამოჩნდება ლობი...",
+    tpmOpenPrefix: "გახსენით",
+    tpmOpenSuffix: "თქვენს TV-ზე",
+    tpmStep1: "1. გახსენით mytrivia.io/tv ბრაუზერში",
+    tpmStep2: "2. შეიყვანეთ 6-სიმბოლოიანი კოდი",
+    tpmStep3: "3. მოიწვიეთ მეგობრები QR კოდით",
   },
 
   // ==========================================

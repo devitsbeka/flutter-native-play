@@ -4,6 +4,7 @@ import { Trophy, Clock, Users } from "lucide-react";
 import { useRecentRooms, RecentRoom } from "@/hooks/useRecentRooms";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AllRecentRoomsModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface AllRecentRoomsModalProps {
 
 export function AllRecentRoomsModal({ isOpen, onClose }: AllRecentRoomsModalProps) {
   const { rooms, loading } = useRecentRooms(50);
+  const { t } = useLanguage();
 
   const formatTimeAgo = (dateString: string | null) => {
     if (!dateString) return "";
@@ -22,16 +24,16 @@ export function AllRecentRoomsModal({ isOpen, onClose }: AllRecentRoomsModalProp
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 60) return `${diffMins} წთ წინ`;
-    if (diffHours < 24) return `${diffHours} სთ წინ`;
-    return `${diffDays} დღე წინ`;
+    if (diffMins < 60) return t("extra.minutesAgo", { count: diffMins });
+    if (diffHours < 24) return t("extra.hoursAgo", { count: diffHours });
+    return t("extra.daysAgoLong", { count: diffDays });
   };
 
   return (
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      title="ყველა თამაში"
+      title={t("extra.allGames")}
       iconSrc={triviaBuzzer}
       showSparkles={false}
       className="max-w-md"
@@ -61,7 +63,7 @@ export function AllRecentRoomsModal({ isOpen, onClose }: AllRecentRoomsModalProp
             >
               <Users className="w-8 h-8 text-gray-400" />
             </div>
-            <p className="text-gray-500 font-medium">ჯერ არ გითამაშია</p>
+            <p className="text-gray-500 font-medium">{t("extra.notPlayedYet")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -74,7 +76,7 @@ export function AllRecentRoomsModal({ isOpen, onClose }: AllRecentRoomsModalProp
 
       <div className="mt-4">
         <GameModalFooter
-          primaryLabel="დახურვა"
+          primaryLabel={t("common.close")}
           onPrimary={onClose}
           primaryVariant="secondary"
         />
@@ -84,6 +86,7 @@ export function AllRecentRoomsModal({ isOpen, onClose }: AllRecentRoomsModalProp
 }
 
 function RoomListItem({ room, index, formatTimeAgo }: { room: RecentRoom; index: number; formatTimeAgo: (date: string | null) => string }) {
+  const { t } = useLanguage();
   const squadName = `SQUAD ${room.room_code?.slice(-4).toUpperCase() || index + 1}`;
 
   return (
@@ -142,12 +145,12 @@ function RoomListItem({ room, index, formatTimeAgo }: { room: RecentRoom; index:
               </div>
             )}
           </div>
-          <p className="text-gray-500 text-xs truncate">{room.category_name || "ზოგადი"}</p>
+          <p className="text-gray-500 text-xs truncate">{room.category_name || t("extra.generalCategory")}</p>
         </div>
 
         {/* Score & Time */}
         <div className="text-right">
-          <p className="text-gray-800 font-bold text-sm">{room.my_score} ქულა</p>
+          <p className="text-gray-800 font-bold text-sm">{t("extra.scorePoints", { score: room.my_score })}</p>
           <div className="flex items-center gap-1 text-gray-400 text-xs">
             <Clock className="w-3 h-3" />
             <span>{formatTimeAgo(room.played_at)}</span>

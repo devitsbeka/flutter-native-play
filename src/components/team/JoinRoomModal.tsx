@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { KeyRound, Delete } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface JoinRoomModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface JoinRoomModalProps {
 
 export function JoinRoomModal({ isOpen, onClose }: JoinRoomModalProps) {
   const { enterRoom, loading } = useMultiplayerV2();
+  const { t } = useLanguage();
   const [code, setCode] = useState("");
 
   const handleKeyPress = (key: string) => {
@@ -45,8 +47,8 @@ export function JoinRoomModal({ isOpen, onClose }: JoinRoomModalProps) {
       onClose={onClose}
       variant="info"
       icon={<KeyRound className="w-10 h-10" />}
-      title="შეუერთდი ოთახს"
-      subtitle="შეიყვანე 6-ნიშნა კოდი"
+      title={t("extra.joinRoomTitle")}
+      subtitle={t("extra.enterCodeSubtitle")}
       showSparkles
     >
       <div className="space-y-4 mt-2">
@@ -117,11 +119,11 @@ export function JoinRoomModal({ isOpen, onClose }: JoinRoomModalProps) {
 
       <div className="mt-4">
         <GameModalFooter
-          primaryLabel={loading ? "შესვლა..." : "შესვლა"}
+          primaryLabel={loading ? t("extra.joiningBtn") : t("extra.joinBtn")}
           onPrimary={handleJoin}
           primaryIcon={<KeyRound className="w-5 h-5" />}
           isLoading={loading || code.length < 6}
-          secondaryLabel="გაუქმება"
+          secondaryLabel={t("common.cancel")}
           onSecondary={onClose}
         />
       </div>

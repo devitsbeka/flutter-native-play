@@ -4398,6 +4398,26 @@ export const en: KaTranslations = {
     chlChallenge: "Challenge",
     chlYouLost: "You lost this time!",
     chlSignupHint: "Sign up to save your result and challenge friends",
+    // TVEnterCodeModal
+    tecCodeNotFound: "Code not found or already connected",
+    tecNoQuestionsLang: "No questions found in this language",
+    tecFallbackQuestions: "Some questions are from another category",
+    tecAuthRequired: "Sign in to connect the TV",
+    tecConnectedSuccess: "Connected successfully!",
+    tecRedirecting: "Redirecting to the control panel...",
+    tecEnterCodeHint: "Enter the 4-digit code shown on the TV screen",
+    tecOpenTvPrefix: "First open",
+    tecOpenTvSuffix: "on your TV",
+    // TVPlayModal
+    tpmEnter6Code: "Enter the 6-character code",
+    tpmCodeNotFound: "Code not found. Check the code on the TV screen.",
+    tpmErrorTryAgain: "An error occurred. Please try again.",
+    tpmLobbyAppears: "The lobby will appear on the TV screen...",
+    tpmOpenPrefix: "Open",
+    tpmOpenSuffix: "on your TV",
+    tpmStep1: "1. Open mytrivia.io/tv in a browser",
+    tpmStep2: "2. Enter the 6-character code",
+    tpmStep3: "3. Invite friends with the QR code",
   },
 
   systemErrors: {
