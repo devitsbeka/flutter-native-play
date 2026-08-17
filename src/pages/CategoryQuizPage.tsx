@@ -9,6 +9,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import crystalHourglass from "@/assets/crystal-hourglass.png";
 import { useCategoryPlayLimit } from "@/hooks/useCategoryPlayLimit";
 import { useToast } from "@/hooks/use-toast";
 import { showMissionCompleteToast } from "@/components/mission/MissionCompleteToast";
@@ -135,6 +136,7 @@ export default function CategoryQuizPage() {
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [outOfQuestions, setOutOfQuestions] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(15);
   const [showResults, setShowResults] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -182,6 +184,11 @@ export default function CategoryQuizPage() {
   const hasFetched = useRef(false);
   const hasSaved = useRef(false);
   const previousLevelId = useRef(levelId);
+  // Bumped by resetQuiz so the fetch effect re-runs on a same-level replay.
+  // Its deps are [categoryId, levelId], which a replay does not change —
+  // resetQuiz cleared hasFetched and set loading, and then nothing fetched:
+  // the endless "generating questions" spinner after the results screen.
+  const [fetchNonce, setFetchNonce] = useState(0);
 
   // Reset state when levelId changes (navigating to next level)
   useEffect(() => {
@@ -247,6 +254,7 @@ export default function CategoryQuizPage() {
     hasFetched.current = true;
     setLoading(true);
     setError(null);
+    setOutOfQuestions(false);
 
     const fetchQuestionsFromService = async () => {
       try {
@@ -280,7 +288,10 @@ export default function CategoryQuizPage() {
         });
         
         if (result.questions.length === 0) {
-          setError(t("discover.noQuestionsError"));
+          // The category has nothing left to ask. That is the player's
+          // achievement, not a failure — celebrate it instead of showing
+          // the generic something-went-wrong screen.
+          setOutOfQuestions(true);
           setLoading(false);
           return;
         }
@@ -325,7 +336,7 @@ export default function CategoryQuizPage() {
     };
 
     fetchQuestionsFromService();
-  }, [categoryId, levelId]);
+  }, [categoryId, levelId, fetchNonce]);
 
   // Timer - pauses when frozen
   useEffect(() => {
@@ -820,6 +831,7 @@ export default function CategoryQuizPage() {
   }, [questions.length, currentQuestionIndex, isAnswered, selectedAnswer, currentQuestion, score]);
   // Shared reset function for replay
   const resetQuiz = useCallback(() => {
+    setFetchNonce((n) => n + 1);
     hasFetched.current = false;
     hasSaved.current = false;
     setQuestions([]);
@@ -864,6 +876,56 @@ export default function CategoryQuizPage() {
           />
           <p className="text-muted-foreground">{t("extra.generatingQuestions")}</p>
         </div>
+      </div>
+    );
+  }
+
+  if (outOfQuestions) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 relative">
+        <button
+          onClick={() => navigate(`/category/${categoryId}`)}
+          className="fixed left-4 z-30 w-11 h-11 rounded-full bg-white/90 backdrop-blur-md shadow-md border border-black/5 flex items-center justify-center"
+          style={{ top: "calc(var(--safe-top) + 16px)" }}
+        >
+          <ArrowLeft className="w-5 h-5 text-slate-700" />
+        </button>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center max-w-sm"
+        >
+          <motion.img
+            src={crystalHourglass}
+            alt=""
+            className="w-24 h-24 mx-auto mb-5 object-contain"
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <h2 className="text-2xl font-display font-bold text-foreground mb-2">
+            {t("extra.quizOutOfQuestionsTitle")}
+          </h2>
+          <p className="text-muted-foreground mb-8">
+            {t("extra.quizOutOfQuestionsDesc")}
+          </p>
+          <div className="space-y-3">
+            <ChunkyButton
+              variant="primary"
+              className="w-full"
+              onClick={() => navigate(`/category/${categoryId}`)}
+            >
+              {t("extra.chooseDifferentLevel")}
+            </ChunkyButton>
+            <ChunkyButton
+              variant="secondary"
+              className="w-full"
+              onClick={() => navigate("/discover")}
+            >
+              {t("extra.quizExploreOtherCategories")}
+            </ChunkyButton>
+          </div>
+        </motion.div>
       </div>
     );
   }

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { missionTitle, missionDescription } from "@/utils/missionText";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { RewardChipsRow } from "@/components/mission/MissionCompleteToast";
 import { ChevronLeft, ChevronRight, Check, Star, X } from "lucide-react";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
@@ -431,7 +432,13 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
                             zIndex: 9999,
                           });
                           toast.success(t("missions.weekCompleteTitle"), {
-                            description: `${t("missions.rewardLabel")}: ${WEEK_BONUS.coins} ${t("common.coins")} · ${WEEK_BONUS.gems} ${t("common.gems")} · ${WEEK_BONUS.xp} XP`,
+                            description: (
+                              <RewardChipsRow
+                                coins={WEEK_BONUS.coins}
+                                gems={WEEK_BONUS.gems}
+                                xp={WEEK_BONUS.xp}
+                              />
+                            ),
                           });
                         }
                       }}

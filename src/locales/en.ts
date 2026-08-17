@@ -1874,6 +1874,9 @@ export const en: KaTranslations = {
     chooseDifferentLevel: "Choose Different Level",
     goToHome: "Go to Home",
     generatingQuestions: "Generating questions...",
+    quizOutOfQuestionsTitle: "Way to go, champion!",
+    quizOutOfQuestionsDesc: "You've answered everything this category has for now. New questions are on their way — we'll let you know the moment they land.",
+    quizExploreOtherCategories: "Explore other categories",
     // Team tabs
     tabExplore: "Explore",
     tabRooms: "Rooms",

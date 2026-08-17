@@ -1,4 +1,6 @@
+import { createElement } from "react";
 import { useCallback, useEffect, useMemo } from "react";
+import { RewardChipsRow } from "@/components/mission/MissionCompleteToast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -804,8 +806,11 @@ export function useMissions() {
         `${t("missions.rewardLabel")}: ${DAY_BONUS.coins} ${t("common.coins")} · ${DAY_BONUS.xp} XP`,
         { mission_id: DAY_BONUS.mission_id, coins: DAY_BONUS.coins, gems: 0, xp: DAY_BONUS.xp }
       );
+      // Chips with the app's own coin/XP art, not a text receipt. This is a
+      // .ts file, so the JSX lives in MissionCompleteToast.tsx and is built
+      // here with createElement.
       toast.success(t("missions.dayCompleteTitle"), {
-        description: `${t("missions.rewardLabel")}: ${DAY_BONUS.coins} ${t("common.coins")} · ${DAY_BONUS.xp} XP`,
+        description: createElement(RewardChipsRow, { coins: DAY_BONUS.coins, xp: DAY_BONUS.xp }),
       });
     },
     [user, profile, recordDailyCompletion, setProfileLocal, updateProfile]
@@ -890,7 +895,13 @@ export function useMissions() {
           );
 
           toast.success(t("missions.completedTitle", { mission: name }), {
-            description: rewardBits ? `${t("missions.rewardLabel")}: ${rewardBits}` : undefined,
+            description: createElement(RewardChipsRow, {
+              coins: mission.reward_coins,
+              gems: mission.reward_gems,
+              xp: mission.reward_xp,
+              powerUp: mission.reward_power_up,
+              powerUpCount: mission.reward_power_up_count,
+            }),
           });
 
           // Was that the last one the day asked for? Only dailies count —

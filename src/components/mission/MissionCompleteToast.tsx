@@ -1,9 +1,71 @@
 import { motion } from "framer-motion";
-import { Sparkles, Coins, Gem, Star } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import confetti from "canvas-confetti";
 import xpSparkIcon from "@/assets/level/xp-spark.png";
+import coinIcon from "@/assets/icons/icon-coin.png";
+import gemIcon from "@/assets/icons/icon-gem.png";
+import power5050 from "@/assets/powers/5050.png";
+import powerFreeze from "@/assets/powers/freeze.png";
+import powerReplace from "@/assets/powers/replace.png";
+import powerTimeDrain from "@/assets/powers/time-drain.png";
 import { useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+const POWER_UP_ICONS: Record<string, string> = {
+  "5050": power5050,
+  freeze: powerFreeze,
+  replace: powerReplace,
+  "time-drain": powerTimeDrain,
+};
+
+interface RewardAmounts {
+  coins?: number;
+  gems?: number;
+  xp?: number;
+  powerUp?: string | null;
+  powerUpCount?: number;
+}
+
+/**
+ * The reward line of a toast, as icon chips rather than a sentence.
+ *
+ * "ჯილდო: 80 მონეტები · 35 XP" is accurate and reads like a receipt. The
+ * app has an icon for every one of these — the coin, the gem, the XP spark,
+ * the power-up art — and everywhere else rewards are shown as icon chips, so
+ * the toasts now match. Exported for the plain sonner toasts in useMissions,
+ * which cannot hold JSX of their own in a .ts file.
+ */
+export function RewardChipsRow({ coins = 0, gems = 0, xp = 0, powerUp, powerUpCount = 0 }: RewardAmounts) {
+  const chip = "flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold";
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 mt-1">
+      {coins > 0 && (
+        <span className={`${chip} bg-amber-100 text-amber-700`}>
+          <img src={coinIcon} alt="" className="w-4 h-4 object-contain" />
+          +{coins}
+        </span>
+      )}
+      {xp > 0 && (
+        <span className={`${chip} bg-violet-100 text-violet-700`}>
+          <img src={xpSparkIcon} alt="" className="w-4 h-4 object-contain" />
+          +{xp} XP
+        </span>
+      )}
+      {gems > 0 && (
+        <span className={`${chip} bg-purple-100 text-purple-700`}>
+          <img src={gemIcon} alt="" className="w-4 h-4 object-contain" />
+          +{gems}
+        </span>
+      )}
+      {powerUp && powerUpCount > 0 && POWER_UP_ICONS[powerUp] && (
+        <span className={`${chip} bg-emerald-100 text-emerald-700`}>
+          <img src={POWER_UP_ICONS[powerUp]} alt="" className="w-4 h-4 object-contain" />
+          +{powerUpCount}
+        </span>
+      )}
+    </div>
+  );
+}
 
 interface MissionCompleteToastProps {
   missionTitle: string;
@@ -98,7 +160,7 @@ export function MissionCompleteToast({
             transition={{ delay: 0.2, type: "spring" }}
             className="flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs font-bold"
           >
-            <Coins className="w-3.5 h-3.5" />
+            <img src={coinIcon} alt="" className="w-4 h-4 object-contain" />
             +{coins}
           </motion.div>
         )}
@@ -107,9 +169,9 @@ export function MissionCompleteToast({
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.3, type: "spring" }}
-            className="flex items-center gap-1 bg-cyan-100 text-cyan-700 px-2 py-1 rounded-full text-xs font-bold"
+            className="flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-bold"
           >
-            <Gem className="w-3.5 h-3.5" />
+            <img src={gemIcon} alt="" className="w-4 h-4 object-contain" />
             +{gems}
           </motion.div>
         )}
@@ -120,7 +182,10 @@ export function MissionCompleteToast({
             transition={{ delay: 0.4, type: "spring" }}
             className="flex items-center gap-1 bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-bold"
           >
-            ⚡ +{powerUpCount} {POWER_UP_NAMES[powerUp] || powerUp}
+            {POWER_UP_ICONS[powerUp] && (
+              <img src={POWER_UP_ICONS[powerUp]} alt="" className="w-4 h-4 object-contain" />
+            )}
+            +{powerUpCount} {POWER_UP_NAMES[powerUp] || powerUp}
           </motion.div>
         )}
       </div>
