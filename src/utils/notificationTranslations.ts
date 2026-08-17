@@ -16,6 +16,22 @@ function getCurrentLanguage(): string {
   }
 }
 
+// The stored Georgian text of a key, for recognizing rows the database wrote
+// verbatim (e.g. the migration-written welcome notification) — kept out of
+// this file's source so the no-mixed-language sweep stays clean.
+function kaText(key: string): string {
+  const keys = key.split('.');
+  let result: unknown = translations[DEFAULT_LANGUAGE];
+  for (const k of keys) {
+    if (result && typeof result === 'object' && k in result) {
+      result = (result as Record<string, unknown>)[k];
+    } else {
+      return '';
+    }
+  }
+  return typeof result === 'string' ? result : '';
+}
+
 function getTranslation(key: string): string {
   const lang = getCurrentLanguage();
   const keys = key.split('.');
@@ -74,6 +90,13 @@ export function translateNotificationTitle(
     if (name) return getTranslation('missions.completedTitle').replace('{mission}', name);
   }
 
+  // The welcome row is written by a migration in Georgian for EVERY account,
+  // under the shared 'system' type — match its known text rather than the
+  // type, so other system rows keep their stored words.
+  if (type === 'system' && originalTitle === kaText('extra.welcomeNotifTitle')) {
+    return getTranslation('extra.welcomeNotifTitle');
+  }
+
   const translationKey = titleMap[type];
   if (translationKey) {
     let translation = getTranslation(translationKey);
@@ -122,6 +145,12 @@ export function translateNotificationMessage(
     'friend_request_sent': 'notifications.friendRequestSentTo',
     'friend_accepted': 'notifications.friendAcceptedBy',
   };
+
+  // See the matching title branch: the migration-written welcome row is
+  // Georgian for every account and shares the 'system' type.
+  if (type === 'system' && originalMessage === kaText('extra.welcomeNotifMsg')) {
+    return getTranslation('extra.welcomeNotifMsg');
+  }
 
   // "Reward: 350 coins · 6 gems · 180 XP" — rebuilt from the numbers stored
   // alongside the notification rather than read back as a Georgian sentence.

@@ -271,7 +271,39 @@ export async function resolveCategoryUuid(slugOrUuid: string): Promise<string | 
 }
 
 /**
- * Get category info by UUID
+ * The category's display name in the player's language.
+ *
+ * `categories.name` is the Georgian name — there is one row per category and
+ * every row is Georgian; translations live in `category_translations`, keyed
+ * by the category UUID and a language code. Every question this service
+ * formats carries a category name into a header directly above the question,
+ * so reading `name` raw is exactly the "Georgian category title on an
+ * English question" bug. Falls back to the Georgian name only when no
+ * translation row exists.
+ */
+async function translateCategoryNames(
+  names: Map<string, string>,
+): Promise<Map<string, string>> {
+  const language = getPreferredLanguage();
+  if (language === DEFAULT_LANGUAGE || names.size === 0) return names;
+
+  const { data, error } = await supabase
+    .from('category_translations')
+    .select('category_id, name')
+    .eq('language', language)
+    .in('category_id', [...names.keys()]);
+
+  if (error || !data) return names;
+
+  const out = new Map(names);
+  for (const row of data) {
+    if (row.name) out.set(row.category_id, row.name);
+  }
+  return out;
+}
+
+/**
+ * Get category info by UUID — name resolved in the player's language.
  */
 async function getCategoryInfo(uuid: string): Promise<{ name: string; slug: string; icon: string; totalLevels: number } | null> {
   const { data, error } = await supabase
@@ -279,11 +311,13 @@ async function getCategoryInfo(uuid: string): Promise<{ name: string; slug: stri
     .select('name, category_id, icon, total_levels')
     .eq('id', uuid)
     .single();
-  
+
   if (error || !data) return null;
-  
+
+  const translated = await translateCategoryNames(new Map([[uuid, data.name]]));
+
   return {
-    name: data.name,
+    name: translated.get(uuid) || data.name,
     slug: data.category_id,
     icon: data.icon,
     totalLevels: data.total_levels,
@@ -890,8 +924,14 @@ async function getMultiCategoryVSQuestions(
     .eq('in_production', true)
     .eq('language', language);
   
-  const categoryMap = new Map(categories.map(c => [c.id, c]));
-  
+  // Category names in the player's language — the raw rows are all Georgian.
+  const translatedNames = await translateCategoryNames(
+    new Map(categories.map(c => [c.id, c.name])),
+  );
+  const categoryMap = new Map(
+    categories.map(c => [c.id, { ...c, name: translatedNames.get(c.id) || c.name }]),
+  );
+
   const selectedQuestions: FormattedQuestion[] = [];
   
   if (allQuestions && allQuestions.length > 0) {

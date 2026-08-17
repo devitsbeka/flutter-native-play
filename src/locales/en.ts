@@ -1570,6 +1570,8 @@ export const en: KaTranslations = {
     challenge: "Challenge",
   },
   missionPool: {
+    day_bonusTitle: "Day complete!",
+    week_bonusTitle: "Weekly package",
     play_gamesTitle: "Marathoner",
     play_gamesDesc: "Play {n} games today",
     answer_correctTitle: "Correct answers",
@@ -1876,6 +1878,9 @@ export const en: KaTranslations = {
     generatingQuestions: "Generating questions...",
     quizOutOfQuestionsDesc: "You've answered every question in this category! New questions are coming soon and we'll let you know.",
     quizExploreOtherCategories: "Explore other categories",
+    // Migration-written welcome notification, re-translated at display
+    welcomeNotifTitle: "Welcome to MyTrivia! 🎉",
+    welcomeNotifMsg: "Hi! Welcome to the game — good luck and have fun!",
     // Search empty states (team tabs)
     searchTriviaNotFound: "No trivia found",
     searchRoomNotFound: "No room found",

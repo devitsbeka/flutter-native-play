@@ -2630,11 +2630,15 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Handle __mixed__ category - triggers multi-category mode
       const isMixedCategory = nextItem.category_id === "__mixed__";
       const newCategoryId = nextItem.source_type === "random" ? null : (isMixedCategory ? undefined : nextItem.category_id);
-      const newCategoryName = nextItem.source_type === "random" 
-        ? "შემთხვევითი" 
+      // Through t(), not hardcoded Georgian — TVGameContext already does
+      // this with the same keys. (The name is still a snapshot in this
+      // writer's language once persisted; per-viewer resolution is a wider
+      // refactor tracked separately.)
+      const newCategoryName = nextItem.source_type === "random"
+        ? tStandalone("extra.randomOption")
         : isMixedCategory
-          ? "სხვადასხვა"
-          : (nextItem.category_name || "კატეგორია");
+          ? tStandalone("extra.tvMixedCategory")
+          : (nextItem.category_name || tStandalone("extra.categoryType"));
       
       // Get used question IDs
       const { data: freshRoom } = await supabase

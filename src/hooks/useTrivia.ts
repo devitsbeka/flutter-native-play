@@ -88,7 +88,10 @@ export function useTrivia() {
       // Map to TriviaQuestion format
       const formattedQuestions: TriviaQuestion[] = result.questions.map((q: FormattedQuestion) => ({
         id: q.id,
-        category: q.category || 'ზოგადი',
+        // No hardcoded-Georgian fallback: an empty header beats a header in
+        // the wrong language. q.category arrives already localized from
+        // questionService.
+        category: q.category || '',
         categoryId: q.categorySlug || '',
         categoryIcon: '📚',
         categoryIconSlug: undefined,

@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
     console.log(`Found ${categories?.length || 0} categories`);
 
     // Find users who have played these categories and have outdated last_seen_total_levels
-    const usersToNotify: Map<string, { categoryId: string; categoryName: string; newLevels: number }[]> = new Map();
+    const usersToNotify: Map<string, { categoryId: string; categoryUuid: string; categoryName: string; newLevels: number }[]> = new Map();
 
     for (const category of categories || []) {
       // Find users whose last_seen_total_levels < current total_levels
@@ -154,6 +154,7 @@ Deno.serve(async (req) => {
           const existing = usersToNotify.get(record.user_id) || [];
           existing.push({
             categoryId: category.category_id || category.id,
+            categoryUuid: category.id,
             categoryName: category.name,
             newLevels: newLevelCount,
           });
@@ -208,6 +209,22 @@ Deno.serve(async (req) => {
       ]),
     );
 
+    // The interpolated category name must be in the recipient's language too:
+    // categories.name is the Georgian name; per-language names live in
+    // category_translations. Without this an English push read
+    // '1 new level added to "მეცნიერება"!'.
+    const langsInPlay = [...new Set([...langByUser.values()])].filter((l) => l !== "ka");
+    const nameByLangAndUuid = new Map<string, string>();
+    if (langsInPlay.length > 0) {
+      const { data: catTrans } = await supabase
+        .from("category_translations")
+        .select("category_id, language, name")
+        .in("language", langsInPlay);
+      for (const row of catTrans || []) {
+        if (row.name) nameByLangAndUuid.set(`${row.language}:${row.category_id}`, row.name);
+      }
+    }
+
     const MESSAGES: Record<string, { title: string; one: (cat: string, n: number) => string; many: (count: number) => string }> = {
       ka: {
         title: "🎮 ახალი დონეები!",
@@ -253,10 +270,14 @@ Deno.serve(async (req) => {
 
       // Create notification message
       const primaryCategory = userCategories[0];
-      const msg = MESSAGES[langByUser.get(tokenRecord.user_id) || "ka"] ?? MESSAGES.ka;
+      const userLang = langByUser.get(tokenRecord.user_id) || "ka";
+      const msg = MESSAGES[userLang] ?? MESSAGES.ka;
       const title = msg.title;
+      const localizedName =
+        nameByLangAndUuid.get(`${userLang}:${primaryCategory.categoryUuid}`) ||
+        primaryCategory.categoryName;
       const body = userCategories.length === 1
-        ? msg.one(primaryCategory.categoryName, primaryCategory.newLevels)
+        ? msg.one(localizedName, primaryCategory.newLevels)
         : msg.many(userCategories.length);
 
       const data = {

@@ -1569,6 +1569,10 @@ export const ka = {
     challenge: "გამოწვევა",
   },
   missionPool: {
+    // The day/week bonus rows write their titles into notifications in the
+    // writer's language; these keys let the display re-translate them.
+    day_bonusTitle: "დღე დასრულებულია!",
+    week_bonusTitle: "კვირის პაკეტი",
     play_gamesTitle: "მარათონელი",
     play_gamesDesc: "ითამაშე {n} თამაში დღეს",
     answer_correctTitle: "სწორი პასუხები",
@@ -1875,6 +1879,9 @@ export const ka = {
     generatingQuestions: "კითხვების გენერირება...",
     quizOutOfQuestionsDesc: "ამ კატეგორიის ყველა კითხვას უპასუხე! მალე ახალი კითხვები დაემატება და შეგატყობინებთ.",
     quizExploreOtherCategories: "სხვა კატეგორიების ნახვა",
+    // Migration-written welcome notification, re-translated at display
+    welcomeNotifTitle: "მოგესალმებით MyTrivia-ში! 🎉",
+    welcomeNotifMsg: "გამარჯობა! კეთილი იყოს შენი მობრძანება ჩვენს თამაშში. გისურვებთ წარმატებებს!",
     // Search empty states (team tabs)
     searchTriviaNotFound: "ტრივია ვერ მოიძებნა",
     searchRoomNotFound: "ოთახი ვერ მოიძებნა",
