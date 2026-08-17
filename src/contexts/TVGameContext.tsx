@@ -674,6 +674,29 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const newPhase = mapDbStatusToPhase(session.status);
       const questionChanged = newIndex !== prevIndex;
 
+      // NEVER apply a fetch that is older than what the screen already
+      // shows. This function races the realtime stream by design — it exists
+      // to recover from missed events — and a slow response fired during
+      // question N can resolve just after the stream has advanced everyone
+      // to N+1. Applying it walked the whole UI BACK to the previous
+      // question for a beat until the next event re-corrected it: the
+      // "shows the old question for a second" flash. Question index is
+      // monotonic within a round, so an index behind the current one can
+      // only be stale. (Same-index responses still apply: phase changes
+      // like question -> reveal carry no index movement.)
+      const prevRound = stateRef.current.roundNumber;
+      const fetchedRound = session.round_number ?? prevRound;
+      if (
+        session.current_question_index != null &&
+        newIndex < prevIndex &&
+        // A new round resets the index to 0 legitimately — only a backward
+        // index within the SAME round proves the response is stale.
+        fetchedRound <= prevRound
+      ) {
+        console.log('[refetchSessionData] ⏭️ Stale fetch (question', newIndex, '<', prevIndex, 'in round', fetchedRound, ') - discarded');
+        return;
+      }
+
       // Update state with fetched data
       setState(prev => ({
         ...prev,

@@ -147,6 +147,30 @@ async function selectWithValidImages<T extends { id: string; imageUrl?: string |
   return selected;
 }
 
+/**
+ * Drop questions that ASK the same thing, whatever row they live in.
+ *
+ * The pools contain duplicate rows — same question text imported or
+ * generated more than once under different ids — and every selection here
+ * dedupes by id only, so a 10-question TV round could serve the same
+ * question two or three times. Ids are unique by construction; the text is
+ * what repeats, so the text is what gets deduped. Normalised so case,
+ * punctuation and whitespace do not make two questions different. Applied
+ * to every mode: TV rounds, category levels and VS matches all drew from
+ * the same duplicate-bearing pools.
+ */
+function dedupeByQuestionText<T extends { question: string }>(pool: T[]): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const q of pool) {
+    const key = q.question.toLowerCase().replace(/[?.!,;:'"()]/g, "").replace(/\s+/g, " ").trim();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(q);
+  }
+  return out;
+}
+
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -483,7 +507,7 @@ async function getCategoryQuestions(
   }
   
   // Shuffle and select
-  const selected = await selectWithValidImages(shuffleArray(validQuestions), count);
+  const selected = await selectWithValidImages(dedupeByQuestionText(shuffleArray(validQuestions)), count);
   
   // FIX: Mark as seen for CATEGORY (not level-specific)
   // This ensures questions won't repeat across any level
@@ -636,7 +660,7 @@ async function getTVQuestions(
   }
   
   // Shuffle and select
-  const selected = await selectWithValidImages(shuffleArray(validQuestions), count);
+  const selected = await selectWithValidImages(dedupeByQuestionText(shuffleArray(validQuestions)), count);
   
   // Mark as asked
   if (selected.length > 0) {
@@ -781,7 +805,7 @@ async function getSingleCategoryVSQuestions(
     };
   }
   
-  const selected = await selectWithValidImages(shuffleArray(validQuestions), count);
+  const selected = await selectWithValidImages(dedupeByQuestionText(shuffleArray(validQuestions)), count);
   
   // Mark as seen
   if (selected.length > 0) {

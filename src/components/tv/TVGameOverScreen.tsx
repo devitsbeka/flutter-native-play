@@ -7,6 +7,11 @@ import { ChunkyButton } from '@/components/ui/chunky-button';
 import crown2 from '@/assets/icons/crown-2.png';
 import { AppIcon } from '@/components/shared/AppIcon';
 import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
+import medalGold from '@/assets/icons/medal-gold.png';
+import medalSilver from '@/assets/icons/medal-silver.png';
+import medalBronze from '@/assets/icons/medal-bronze.png';
+
+const RANK_MEDALS: Record<number, string> = { 1: medalGold, 2: medalSilver, 3: medalBronze };
 
 interface Player {
   id: string;
@@ -155,22 +160,30 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                       : 'bg-white/10'
                   }`}
                 >
-                  {/* Rank */}
-                  <div className="w-10 flex justify-center">
+                  {/* Medal above the avatar, with a hair of air between
+                      them — a gap-1 column, so the trophy sits ON TOP of the
+                      player it belongs to instead of floating in its own
+                      side column, and never touches the picture. Gold,
+                      silver and bronze by rank; the one generic medal this
+                      used to draw made first and second place look the
+                      same. */}
+                  <div className="flex w-12 shrink-0 flex-col items-center gap-1">
                     {rank <= 3 ? (
-                      <AppIcon slug="medal" size={28} />
+                      <img
+                        src={RANK_MEDALS[rank]}
+                        alt={`#${rank}`}
+                        className="h-6 w-6 object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]"
+                      />
                     ) : (
-                      <span className="text-lg font-bold text-purple-300">#{rank}</span>
+                      <span className="text-sm font-bold leading-6 text-purple-300">#{rank}</span>
                     )}
-                  </div>
-                  
-                  {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
-                    <SafeAvatarImage
-                      avatarUrl={player.avatar_url}
-                      fallback={player.nickname}
-                      className="w-full h-full object-cover"
-                    />
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
+                      <SafeAvatarImage
+                        avatarUrl={player.avatar_url}
+                        fallback={player.nickname}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   </div>
                   
                   {/* Name */}
