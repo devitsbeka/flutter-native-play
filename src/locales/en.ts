@@ -1928,6 +1928,7 @@ export const en: KaTranslations = {
     pingHostSent: "The host has been notified! 🔔",
     pingHostNotifTitle: "{name}: Let's play!",
     pingHostOpenRoom: "Open room",
+    pingHostReturnRoom: "Back to the room",
     photoFaceRequiredTitle: "Please upload a photo with a face",
     photoFaceRequiredDesc: "Animation needs a photo where a face is visible",
     animationStartingTitle: "Animation starting...",

@@ -1927,6 +1927,7 @@ export const ka = {
     pingHostSent: "ჰოსტს შეტყობინება გაეგზავნა! 🔔",
     pingHostNotifTitle: "{name}: მოდი ვითამაშოთ!",
     pingHostOpenRoom: "ოთახში შესვლა",
+    pingHostReturnRoom: "ოთახში დაბრუნება",
     photoFaceRequiredTitle: "გთხოვთ ატვირთოთ ფოტო სახით",
     photoFaceRequiredDesc: "ანიმაციისთვის საჭიროა ფოტო, რომელზეც სახე ჩანს",
     animationStartingTitle: "ანიმაცია იწყება...",

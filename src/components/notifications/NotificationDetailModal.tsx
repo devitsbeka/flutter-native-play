@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check } from "lucide-react";
 import { Notification } from "@/hooks/useNotifications";
@@ -75,6 +76,7 @@ interface NotificationDetailModalProps {
  */
 export function NotificationDetailModal({ notification, onClose }: NotificationDetailModalProps) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!notification) return;
@@ -95,6 +97,14 @@ export function NotificationDetailModal({ notification, onClose }: NotificationD
   const hasRewards = coins > 0 || gems > 0 || xp > 0 || (!!powerUp && powerUpCount > 0);
 
   const icon = missionId ? MISSION_ICONS[getMissionIcon(missionId)] : giftIcon;
+
+  // "Someone is calling you back to the room" is an errand, not a trophy:
+  // its button goes to the room instead of merely closing the popup — a
+  // generic "continue" that did nothing was the whole complaint.
+  const pingRoomCode =
+    notification?.type === "room_ping" && typeof data.room_code === "string"
+      ? (data.room_code as string)
+      : null;
 
   return (
     <AnimatePresence mode="wait">
@@ -180,10 +190,13 @@ export function NotificationDetailModal({ notification, onClose }: NotificationD
             )}
 
             <SunsetButton
-              onClick={onClose}
+              onClick={() => {
+                onClose();
+                if (pingRoomCode) navigate(`/team?join=${encodeURIComponent(pingRoomCode)}`);
+              }}
               className="mt-6"
             >
-              {t("common.continue")}
+              {pingRoomCode ? t("extra.pingHostReturnRoom") : t("common.continue")}
             </SunsetButton>
           </motion.div>
         </motion.div>
