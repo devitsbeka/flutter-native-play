@@ -436,13 +436,6 @@ export function AvatarReel() {
         onClose={() => setViewing(null)}
         imageUrl={viewing ? resolveItem(viewing) : ""}
         animatedUrl={viewing?.animatedUrl}
-        onAnimated={(videoUrl) => {
-          // Keep the reel's own copy in step, so reopening the viewer plays
-          // the loop instead of starting a second animation of the same face.
-          setGenerated((prev) =>
-            prev.map((g) => (g.id === viewing?.id ? { ...g, animatedUrl: videoUrl } : g)),
-          );
-        }}
       />
     </div>
   );
