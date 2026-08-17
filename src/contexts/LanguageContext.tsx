@@ -2,6 +2,7 @@ import React, { createContext, useContext, useCallback, useMemo, useState, useEf
 import { translations, LANGUAGES, DEFAULT_LANGUAGE, getLanguage, getRegionForLanguage } from '@/locales';
 import { languageOverride } from '@/utils/languageOverride';
 import { stripEmojisExceptFlags } from '@/utils/stripEmojisExceptFlags';
+import { supabase } from '@/integrations/supabase/client';
 
 
 interface LanguageContextType {
@@ -29,6 +30,23 @@ function getStoredLanguage(): string {
     if (stored && translations[stored]) return stored;
   } catch {}
   return DEFAULT_LANGUAGE;
+}
+
+// Best-effort write of the player's language to their profile. Quiet on
+// every failure — language switching must never depend on the network.
+async function syncPreferredLanguage(lang: string): Promise<void> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const userId = data.session?.user?.id;
+    if (!userId) return;
+    await supabase
+      .from('profiles')
+      .update({ preferred_language: lang })
+      .eq('user_id', userId)
+      .neq('preferred_language', lang);
+  } catch {
+    /* offline or signed out — the next change or sign-in tries again */
+  }
 }
 
 // Helper to get nested value from object using dot notation
@@ -92,6 +110,25 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       // Dispatch storage event so useCategories and other hooks pick it up
       window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: lang }));
     } catch {}
+    void syncPreferredLanguage(lang);
+  }, []);
+
+  // The server has to know the choice too: push notifications are composed
+  // server-side in the RECIPIENT's language, read from
+  // profiles.preferred_language — a column that localStorage alone never
+  // reached, so every push went out in the column's default regardless of
+  // what the player picked. Synced on every change and once per sign-in
+  // (covers choosing a language while logged out, and accounts created
+  // before this sync existed).
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        // Deferred: Supabase runs this callback synchronously inside its
+        // auth lock, and issuing requests from there can deadlock.
+        setTimeout(() => void syncPreferredLanguage(getStoredLanguage()), 0);
+      }
+    });
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   // Listen for external storage changes (e.g. another tab)

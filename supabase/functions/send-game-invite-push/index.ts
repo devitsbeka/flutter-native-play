@@ -74,18 +74,62 @@ Deno.serve(async (req: Request) => {
       return json({ sent: 0, skipped: "not_pending" });
     }
 
-    const [{ data: sender }, { data: room }] = await Promise.all([
+    const [{ data: sender }, { data: room }, { data: receiver }] = await Promise.all([
       supabase.from("profiles").select("nickname").eq("user_id", user.id).maybeSingle(),
       supabase.from("game_rooms").select("room_name, room_code").eq("id", invite.room_id).maybeSingle(),
+      // The push is composed in the RECIPIENT's language — the one they
+      // picked in the app, synced to profiles.preferred_language. The
+      // sender's language is irrelevant: it is not their lock screen.
+      supabase.from("profiles").select("preferred_language").eq("user_id", invite.receiver_id).maybeSingle(),
     ]);
 
     const who = sender?.nickname?.trim() || "A friend";
     const where = room?.room_name?.trim();
 
-    const title = "Come and play 🎮";
-    const body = where
-      ? `${who} invited you to ${where}`
-      : `${who} invited you to a game`;
+    // One entry per app language; the column default is 'ka', so players who
+    // never touched the switcher get Georgian — the app's home audience.
+    const MESSAGES: Record<string, { title: string; room: (n: string, w: string) => string; plain: (n: string) => string }> = {
+      ka: {
+        title: "მოდი, ითამაშე 🎮",
+        room: (n, w) => `${n} გიწვევს ოთახში „${w}“`,
+        plain: (n) => `${n} გიწვევს თამაშში`,
+      },
+      en: {
+        title: "Come and play 🎮",
+        room: (n, w) => `${n} invited you to ${w}`,
+        plain: (n) => `${n} invited you to a game`,
+      },
+      de: {
+        title: "Komm und spiel mit 🎮",
+        room: (n, w) => `${n} hat dich zu „${w}“ eingeladen`,
+        plain: (n) => `${n} hat dich zu einem Spiel eingeladen`,
+      },
+      es: {
+        title: "¡Ven a jugar! 🎮",
+        room: (n, w) => `${n} te invitó a ${w}`,
+        plain: (n) => `${n} te invitó a una partida`,
+      },
+      fr: {
+        title: "Viens jouer 🎮",
+        room: (n, w) => `${n} t'a invité à ${w}`,
+        plain: (n) => `${n} t'a invité à une partie`,
+      },
+      it: {
+        title: "Vieni a giocare 🎮",
+        room: (n, w) => `${n} ti ha invitato a ${w}`,
+        plain: (n) => `${n} ti ha invitato a una partita`,
+      },
+      pt: {
+        title: "Vem jogar 🎮",
+        room: (n, w) => `${n} convidou você para ${w}`,
+        plain: (n) => `${n} convidou você para um jogo`,
+      },
+    };
+    const lang = receiver?.preferred_language ?? "ka";
+    const msg = MESSAGES[lang] ?? MESSAGES.ka;
+
+    const title = msg.title;
+    const body = where ? msg.room(who, where) : msg.plain(who);
 
     // `route` is what usePushNotifications navigates to when the notification
     // is tapped, and it has to be the room rather than the screen the room

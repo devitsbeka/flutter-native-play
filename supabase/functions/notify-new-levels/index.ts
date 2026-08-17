@@ -195,6 +195,57 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${pushTokens?.length || 0} push tokens for ${userIds.length} users`);
 
+    // Each push is composed in its RECIPIENT's app language
+    // (profiles.preferred_language, default 'ka').
+    const { data: langRows } = await supabase
+      .from("profiles")
+      .select("user_id, preferred_language")
+      .in("user_id", userIds);
+    const langByUser = new Map<string, string>(
+      (langRows || []).map((r: { user_id: string; preferred_language: string | null }) => [
+        r.user_id,
+        r.preferred_language || "ka",
+      ]),
+    );
+
+    const MESSAGES: Record<string, { title: string; one: (cat: string, n: number) => string; many: (count: number) => string }> = {
+      ka: {
+        title: "🎮 ახალი დონეები!",
+        one: (cat, n) => `კატეგორიაში "${cat}" ${n} ახალი დონე დაემატა! გააგრძელე თამაში.`,
+        many: (count) => `${count} კატეგორიაში ახალი დონეები დაემატა! გააგრძელე თამაში.`,
+      },
+      en: {
+        title: "🎮 New levels!",
+        one: (cat, n) => `${n} new level${n === 1 ? "" : "s"} added to "${cat}"! Keep playing.`,
+        many: (count) => `New levels added in ${count} categories! Keep playing.`,
+      },
+      de: {
+        title: "🎮 Neue Level!",
+        one: (cat, n) => `${n} neue${n === 1 ? "s" : ""} Level in „${cat}“! Spiel weiter.`,
+        many: (count) => `Neue Level in ${count} Kategorien! Spiel weiter.`,
+      },
+      es: {
+        title: "🎮 ¡Nuevos niveles!",
+        one: (cat, n) => `¡${n} nivel${n === 1 ? "" : "es"} nuevo${n === 1 ? "" : "s"} en "${cat}"! Sigue jugando.`,
+        many: (count) => `¡Nuevos niveles en ${count} categorías! Sigue jugando.`,
+      },
+      fr: {
+        title: "🎮 Nouveaux niveaux !",
+        one: (cat, n) => `${n} nouveau${n === 1 ? "" : "x"} niveau${n === 1 ? "" : "x"} dans « ${cat} » ! Continue à jouer.`,
+        many: (count) => `Nouveaux niveaux dans ${count} catégories ! Continue à jouer.`,
+      },
+      it: {
+        title: "🎮 Nuovi livelli!",
+        one: (cat, n) => `${n} nuov${n === 1 ? "o livello" : "i livelli"} in "${cat}"! Continua a giocare.`,
+        many: (count) => `Nuovi livelli in ${count} categorie! Continua a giocare.`,
+      },
+      pt: {
+        title: "🎮 Novos níveis!",
+        one: (cat, n) => `${n} ${n === 1 ? "novo nível" : "novos níveis"} em "${cat}"! Continue jogando.`,
+        many: (count) => `Novos níveis em ${count} categorias! Continue jogando.`,
+      },
+    };
+
     // Send notifications
     for (const tokenRecord of pushTokens || []) {
       const userCategories = usersToNotify.get(tokenRecord.user_id);
@@ -202,10 +253,11 @@ Deno.serve(async (req) => {
 
       // Create notification message
       const primaryCategory = userCategories[0];
-      const title = "🎮 ახალი დონეები!";
+      const msg = MESSAGES[langByUser.get(tokenRecord.user_id) || "ka"] ?? MESSAGES.ka;
+      const title = msg.title;
       const body = userCategories.length === 1
-        ? `კატეგორიაში "${primaryCategory.categoryName}" ${primaryCategory.newLevels} ახალი დონე დაემატა! გააგრძელე თამაში.`
-        : `${userCategories.length} კატეგორიაში ახალი დონეები დაემატა! გააგრძელე თამაში.`;
+        ? msg.one(primaryCategory.categoryName, primaryCategory.newLevels)
+        : msg.many(userCategories.length);
 
       const data = {
         type: "new_levels",
