@@ -46,7 +46,7 @@ export function ReturningUserPicker({ user, onSignIn, onAddUser, onSwitchUser }:
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center p-6 relative z-10"
+      className="h-[100dvh] overflow-y-auto safe-bleed flex flex-col items-center justify-center p-6 relative z-10"
       style={{
         background: "linear-gradient(180deg, #0f0f23 0%, #1a1a3e 50%, #2d1b4e 100%)",
       }}

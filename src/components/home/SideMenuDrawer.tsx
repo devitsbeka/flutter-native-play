@@ -178,7 +178,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
             </div>
 
             {/* Scrollable Content */}
-            <div className="relative z-10 flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
+            <div className="relative z-10 flex-1 overflow-y-auto">
               {/* User Profile Section */}
               <div className="p-3 border-b border-border/30">
                 {user ? (

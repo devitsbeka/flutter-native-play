@@ -102,7 +102,7 @@ export default function Profile() {
 
   return (
     <MainLayout showPlayButton={false}>
-      <div className="min-h-screen relative flex flex-col">
+      <div className="min-h-full relative flex flex-col">
           {/* Full-page Video Background */}
           <video 
             autoPlay 

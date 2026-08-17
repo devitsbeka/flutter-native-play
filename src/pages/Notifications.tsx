@@ -296,7 +296,7 @@ export default function Notifications() {
 
   return (
     <MainLayout showPlayButton={false}>
-    <div className="min-h-screen pb-8 relative">
+    <div className="min-h-full pb-8 relative">
       {/* Video Background */}
       <div className="fixed inset-0">
         <PingPongVideo src={MAP_VIDEOS.default} className="opacity-40" />

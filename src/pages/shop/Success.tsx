@@ -33,7 +33,7 @@ export default function ShopSuccess() {
   }, [gems]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center p-4">
+    <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-gradient-to-b from-background to-muted flex p-4"><div className="m-auto w-full flex justify-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -116,6 +116,7 @@ export default function ShopSuccess() {
           </motion.p>
         )}
       </motion.div>
+      </div>
     </div>
   );
 }

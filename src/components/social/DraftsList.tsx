@@ -47,13 +47,18 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
   }
 
   return (
-    <div className="pt-4">
-      <div className="flex items-center gap-2 mb-3 px-1">
+    // h-full + flex column, because the list below clamps itself with
+    // flex-1/min-h-0. It used to be max-h-full against an auto-height
+    // parent — a percentage with nothing to resolve against, so the list
+    // never scrolled and the type-picker's overflow-hidden silently cropped
+    // any draft past the fold.
+    <div className="pt-4 h-full flex flex-col min-h-0">
+      <div className="flex items-center gap-2 mb-3 px-1 shrink-0">
         <FileText className="w-[18px] h-[18px] text-white/60" />
         <span className="text-[14px] font-medium text-white/60">{t("extra.draftsSavedDrafts")}</span>
       </div>
-      
-      <div className="space-y-2 max-h-full overflow-y-auto pr-1">
+
+      <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1">
         {/* Trivia Drafts (both trivia and personal) */}
         {triviaDrafts?.slice(0, 5).map((draft) => {
           const questionCount = Array.isArray(draft.questions) ? draft.questions.length : 0;

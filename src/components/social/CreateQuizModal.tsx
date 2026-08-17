@@ -872,7 +872,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="fixed bottom-0 left-0 right-0 p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] z-[201]"
+                className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1.5rem_+_var(--safe-bottom))] z-[201]"
                 style={{ background: "linear-gradient(to top, rgba(76,29,149,0.98) 0%, rgba(76,29,149,0.9) 50%, transparent 100%)" }}
               >
                 <div className="space-y-2 max-w-sm mx-auto">

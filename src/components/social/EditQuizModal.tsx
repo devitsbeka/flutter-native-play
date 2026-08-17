@@ -657,7 +657,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
           )}
 
           {/* Fixed Footer - Save Button (always visible) */}
-          <div className={`flex-shrink-0 fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 ${
+          <div className={`flex-shrink-0 fixed bottom-0 left-0 right-0 z-50 p-4 pb-[calc(1rem_+_var(--safe-bottom))] ${
             viewMode === "questions" 
               ? "bg-[#7E7ADB]/90 backdrop-blur-sm border-t border-white/10" 
               : "bg-background border-t border-border"

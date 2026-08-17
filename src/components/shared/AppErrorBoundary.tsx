@@ -74,7 +74,7 @@ export class AppErrorBoundary extends Component<Props, State> {
     return (
       <div
         style={{
-          minHeight: "100dvh",
+          minHeight: "calc(100dvh - var(--safe-top) - var(--safe-bottom))",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

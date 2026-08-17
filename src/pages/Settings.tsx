@@ -105,7 +105,7 @@ export default function Settings() {
 
   return (
     <MainLayout showPlayButton={false}>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-full bg-background">
         <PageHeader title={t("settings.title")} />
 
         <div className="p-4 pb-12 space-y-2 max-w-[700px] md:max-w-[600px] mx-auto">

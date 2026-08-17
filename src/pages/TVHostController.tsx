@@ -967,7 +967,7 @@ const TVHostController: React.FC = () => {
   // Lobby phase - shows queue and ready to start
   if (localPhase === 'lobby') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 pb-28 overflow-y-auto">
+      <div className="h-[100dvh] safe-bleed overflow-y-auto bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 pb-32">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1145,7 +1145,7 @@ const TVHostController: React.FC = () => {
         {/* Start Game Button - hidden while the category picker is open so it
             can never cover the picker's own "choose"/"add to queue" buttons */}
         {!showCategoryPicker && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent z-[100]">
+        <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem_+_var(--safe-bottom))] bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent z-[100]">
           <ChunkyButton
             variant="primary"
             className="w-full"
@@ -1213,7 +1213,7 @@ const TVHostController: React.FC = () => {
     const joinUrlCustom = `https://mytrivia.io/join?code=${displayCode}`;
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
+      <div className="h-[100dvh] safe-bleed overflow-y-auto bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 pb-32">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1324,7 +1324,7 @@ const TVHostController: React.FC = () => {
         </motion.div>
 
         {/* Start Game Button - fixed at bottom */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent">
+        <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem_+_var(--safe-bottom))] bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent">
           <ChunkyButton
             variant="primary"
             className="w-full"

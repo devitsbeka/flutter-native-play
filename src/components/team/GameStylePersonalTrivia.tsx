@@ -1057,7 +1057,7 @@ export function GameStylePersonalTrivia({
           </div>
 
           {/* Footer with Save Button - More bottom spacing */}
-          <div className="px-4 pb-[calc(env(safe-area-inset-bottom,16px)+12px)] pt-2">
+          <div className="px-4 pb-3 pt-2">
             <ChunkyButton 
               onClick={handleSave}
               className="w-full"
