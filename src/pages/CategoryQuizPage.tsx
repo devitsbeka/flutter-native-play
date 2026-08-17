@@ -359,13 +359,17 @@ export default function CategoryQuizPage() {
         return; // Don't decrement while frozen
       }
       
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          handleTimeUp();
-          return 0;
-        }
-        return prev - 1;
-      });
+      // Counts down and nothing else. Running out of time is handled by the
+      // effect below, off the clock that observed it.
+      //
+      // handleTimeUp() used to be called from inside this updater, which is
+      // how a brand-new question could open with its answer already revealed:
+      // an updater is not allowed to have side effects — React may run it more
+      // than once, and the setIsAnswered(true) it queued could land after the
+      // player had already moved on, marking the NEXT question answered by
+      // nobody. The tell was the clock: a genuine timeout shows 0, and those
+      // questions were showing whatever the new question had counted down to.
+      setTimeRemaining((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
 
     return () => clearInterval(timer);
@@ -597,6 +601,15 @@ export default function CategoryQuizPage() {
       });
     }
   }, [isAnswered, categoryId, levelId, currentQuestionIndex, questions, usedPowerUpsThisQuestion]);
+
+  // Out of time. Reads the live state rather than whatever the interval closed
+  // over, so it can only ever fire for the question actually on screen: moving
+  // on sets the clock back to full, and this stops being true.
+  useEffect(() => {
+    if (loading || showResults || isAnswered || questions.length === 0) return;
+    if (timeRemaining > 0) return;
+    handleTimeUp();
+  }, [timeRemaining, loading, showResults, isAnswered, questions.length, handleTimeUp]);
 
   const handleAnswerSelect = (answer: string) => {
     if (isAnswered) return;
