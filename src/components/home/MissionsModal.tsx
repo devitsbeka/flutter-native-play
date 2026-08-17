@@ -548,23 +548,42 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
               {/* Start / continue — routes to where this mission is played.
                   Only today can be acted on: a past day is settled and a
                   future one has not opened, so both close instead of
-                  sending the player somewhere that cannot help them. */}
-              <SunsetButton
-                onClick={() => {
-                  onClose();
-                  if (day.kind === "today" && mission && !mission.completed) {
-                    const dest = missionDestination(mission.mission_id);
-                    navigate(dest.to, dest.state ? { state: dest.state } : undefined);
-                  }
-                }}
-                className="mt-4"
-              >
-                {day.kind !== "today"
-                  ? t("common.close")
-                  : mission && !mission.completed && mission.current_progress === 0
-                    ? t("missions.startBtn")
-                    : t("missions.continueBtn")}
-              </SunsetButton>
+                  sending the player somewhere that cannot help them.
+                  A finished mission is settled too: it gets a greyscale
+                  "completed" chip in the CTA's place — same geometry as
+                  SunsetButton, drained of its gradient — instead of a
+                  "continue" that leads to work already done. */}
+              {mission?.completed ? (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-200 font-display text-base font-bold text-slate-500"
+                  style={{
+                    border: "2px solid #E2E8F0",
+                    boxShadow: "0 4px 0 0 #CBD5E1, inset 0 1.5px 0 0 rgba(255,255,255,0.6)",
+                  }}
+                >
+                  <Check className="h-5 w-5" />
+                  {t("missions.completedLabel")}
+                </button>
+              ) : (
+                <SunsetButton
+                  onClick={() => {
+                    onClose();
+                    if (day.kind === "today" && mission && !mission.completed) {
+                      const dest = missionDestination(mission.mission_id);
+                      navigate(dest.to, dest.state ? { state: dest.state } : undefined);
+                    }
+                  }}
+                  className="mt-4"
+                >
+                  {day.kind !== "today"
+                    ? t("common.close")
+                    : mission && mission.current_progress === 0
+                      ? t("missions.startBtn")
+                      : t("missions.continueBtn")}
+                </SunsetButton>
+              )}
             </div>
           </motion.div>
         </motion.div>
