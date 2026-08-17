@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { supabase } from '@/integrations/supabase/client';
 import { SafeAvatar } from '@/components/shared/SafeAvatar';
+import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 import { Crown, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import goldMedal from '@/assets/trophy-gold.png';
@@ -167,18 +168,10 @@ export const TVResultsScreen: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center pt-4 mb-1 flex-shrink-0"
       >
-        {/* MyTrivia Logo */}
+        {/* Crown logo — the hand-written "MyTrivia + LIVE" text pair was the
+            pre-rebrand logo and kept resurfacing on the TV. */}
         <div className="flex items-center justify-center mb-2">
-          <span
-            className="text-4xl font-slackey text-white"
-            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}
-          >
-            MyTrivia
-          </span>
-          <span className="ml-2 px-2 py-1 rounded-md text-xs font-bold text-white bg-red-500 flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-            LIVE
-          </span>
+          <MyTriviaLiveLogo size="lg" textColor="light" />
         </div>
         <p className="text-purple-300 text-lg">{t("extra.tvFinalResults")}</p>
       </motion.div>

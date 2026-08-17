@@ -8,6 +8,7 @@ import { useTVPoll, PollSuggestion } from '@/hooks/useTVPoll';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
+import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 
 
 export const TVPollScreen: React.FC = () => {
@@ -75,18 +76,9 @@ export const TVPollScreen: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center justify-between mb-3"
       >
-        {/* Logo - Top Left */}
+        {/* Crown logo - Top Left (was the pre-rebrand "MyTrivia + LIVE" text pair) */}
         <div className="flex items-center gap-2">
-          <span 
-            className="text-2xl font-slackey text-white"
-            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}
-          >
-            MyTrivia
-          </span>
-          <span className="px-2 py-1 rounded-md text-xs font-bold text-white bg-red-500 flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-            LIVE
-          </span>
+          <MyTriviaLiveLogo size="md" textColor="light" />
         </div>
 
         {/* Timer (voting phase only) */}
