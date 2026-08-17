@@ -188,15 +188,6 @@ function MissionCard({ mission, t }: { mission: Mission; t: (key: string) => str
           alt=""
           className="h-11 w-11 object-contain"
         />
-        {/* Weeklies share the carousel with the dailies and nothing on the
-            card said which was which — so a week-sized target read as
-            today's ask, and a mission that looks impossible on sight
-            engages nobody. */}
-        {mission.mission_type === "weekly" && (
-          <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-bold text-violet-700">
-            {t("missions.weeklyBadge")}
-          </span>
-        )}
       </div>
       {/* Named from mission_id rather than from the row's stored title: the
           row was written in whatever language the app was in when the

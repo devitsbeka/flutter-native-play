@@ -147,7 +147,9 @@ export const MISSION_THEMES = {
 // same way per ISO-ish week. Feature missions (friends, TV) are part of the
 // pool so players are nudged across the whole app.
 
-// Dailies pay coins, XP and power-ups — no gems. Five of these run a day at
+// Dailies pay 60-120 coins, 150-200 XP and 1-2 power-ups — never gems.
+// The two effortful one-shots (a perfect game, a TV night) carry the double
+// power-up. Historical note: five of these once ran a day at
 // 1-3 gems each, which was 35-60 gems a week from the rotation alone against
 // 3 for finishing all seven days, so the week bonus was the smaller prize by
 // an order of magnitude. Gems are the week's currency now; see WEEK_BONUS.
@@ -156,8 +158,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "play_games",
     title: "მარათონელი",
     description: "ითამაშე {n} თამაში დღეს",
-    beginner: { target: 3, xp: 25, coins: 60, gems: 0 },
-    advanced: { target: 5, xp: 35, coins: 80, gems: 0 },
+    beginner: { target: 3, xp: 150, coins: 60, gems: 0 },
+    advanced: { target: 5, xp: 160, coins: 80, gems: 0 },
     power_up: "5050",
     power_up_count: 1,
     color_theme: "emerald",
@@ -167,8 +169,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "answer_correct",
     title: "სწორი პასუხები",
     description: "გაეცი {n} სწორი პასუხი",
-    beginner: { target: 10, xp: 30, coins: 50, gems: 0 },
-    advanced: { target: 25, xp: 45, coins: 90, gems: 0 },
+    beginner: { target: 10, xp: 150, coins: 70, gems: 0 },
+    advanced: { target: 25, xp: 170, coins: 90, gems: 0 },
     power_up: "freeze",
     power_up_count: 1,
     color_theme: "blue",
@@ -178,8 +180,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "win_games",
     title: "გამარჯვებული",
     description: "მოიგე {n} თამაში",
-    beginner: { target: 1, xp: 30, coins: 60, gems: 0 },
-    advanced: { target: 3, xp: 50, coins: 100, gems: 0 },
+    beginner: { target: 1, xp: 160, coins: 80, gems: 0 },
+    advanced: { target: 3, xp: 180, coins: 100, gems: 0 },
     power_up: "5050",
     power_up_count: 1,
     color_theme: "purple",
@@ -189,8 +191,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "play_categories",
     title: "კატეგორიების მკვლევარი",
     description: "ითამაშე {n} სხვადასხვა კატეგორიაში",
-    beginner: { target: 2, xp: 30, coins: 60, gems: 0 },
-    advanced: { target: 4, xp: 40, coins: 80, gems: 0 },
+    beginner: { target: 2, xp: 150, coins: 70, gems: 0 },
+    advanced: { target: 4, xp: 170, coins: 90, gems: 0 },
     power_up: "freeze",
     power_up_count: 1,
     color_theme: "orange",
@@ -200,10 +202,10 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "perfect_round",
     title: "მიზანდასახული",
     description: "მოიგე თამაში 100% სიზუსტით",
-    beginner: { target: 1, xp: 50, coins: 100, gems: 0 },
-    advanced: { target: 1, xp: 60, coins: 120, gems: 0 },
+    beginner: { target: 1, xp: 190, coins: 110, gems: 0 },
+    advanced: { target: 1, xp: 200, coins: 120, gems: 0 },
     power_up: "replace",
-    power_up_count: 1,
+    power_up_count: 2,
     color_theme: "rose",
     icon: "target",
   },
@@ -211,8 +213,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "play_friend",
     title: "მეგობრული მატჩი",
     description: "ითამაშე მეგობრებთან ერთად ოთახში",
-    beginner: { target: 1, xp: 40, coins: 80, gems: 0 },
-    advanced: { target: 1, xp: 40, coins: 80, gems: 0 },
+    beginner: { target: 1, xp: 170, coins: 90, gems: 0 },
+    advanced: { target: 1, xp: 170, coins: 90, gems: 0 },
     power_up: "replace",
     power_up_count: 1,
     color_theme: "cyan",
@@ -222,10 +224,10 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "play_tv",
     title: "დიდი ეკრანი",
     description: "ითამაშე TV-ზე მეგობრებთან ერთად",
-    beginner: { target: 1, xp: 50, coins: 100, gems: 0 },
-    advanced: { target: 1, xp: 50, coins: 100, gems: 0 },
+    beginner: { target: 1, xp: 180, coins: 100, gems: 0 },
+    advanced: { target: 1, xp: 180, coins: 100, gems: 0 },
     power_up: "time-drain",
-    power_up_count: 1,
+    power_up_count: 2,
     color_theme: "amber",
     icon: "tv",
   },
@@ -233,8 +235,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "category_movies",
     title: "კინომოყვარული",
     description: "ითამაშე კინოს კატეგორიაში",
-    beginner: { target: 1, xp: 25, coins: 60, gems: 0 },
-    advanced: { target: 1, xp: 30, coins: 70, gems: 0 },
+    beginner: { target: 1, xp: 150, coins: 60, gems: 0 },
+    advanced: { target: 1, xp: 150, coins: 70, gems: 0 },
     power_up: "5050",
     power_up_count: 1,
     color_theme: "rose",
@@ -245,8 +247,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "category_music",
     title: "მელომანი",
     description: "ითამაშე მუსიკის კატეგორიაში",
-    beginner: { target: 1, xp: 25, coins: 60, gems: 0 },
-    advanced: { target: 1, xp: 30, coins: 70, gems: 0 },
+    beginner: { target: 1, xp: 150, coins: 60, gems: 0 },
+    advanced: { target: 1, xp: 150, coins: 70, gems: 0 },
     power_up: "freeze",
     power_up_count: 1,
     color_theme: "purple",
@@ -257,8 +259,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "category_animals",
     title: "ველური სამყარო",
     description: "ითამაშე ცხოველების კატეგორიაში",
-    beginner: { target: 1, xp: 25, coins: 60, gems: 0 },
-    advanced: { target: 1, xp: 30, coins: 70, gems: 0 },
+    beginner: { target: 1, xp: 150, coins: 60, gems: 0 },
+    advanced: { target: 1, xp: 150, coins: 70, gems: 0 },
     power_up: "replace",
     power_up_count: 1,
     color_theme: "emerald",
@@ -269,8 +271,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "category_sports",
     title: "სპორტული სული",
     description: "ითამაშე სპორტის კატეგორიაში",
-    beginner: { target: 1, xp: 25, coins: 60, gems: 0 },
-    advanced: { target: 1, xp: 30, coins: 70, gems: 0 },
+    beginner: { target: 1, xp: 150, coins: 60, gems: 0 },
+    advanced: { target: 1, xp: 150, coins: 70, gems: 0 },
     power_up: "5050",
     power_up_count: 1,
     color_theme: "orange",
@@ -281,8 +283,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "category_cuisine",
     title: "გემოვნების ექსპერტი",
     description: "ითამაშე ქართული სამზარეულოს კატეგორიაში",
-    beginner: { target: 1, xp: 25, coins: 60, gems: 0 },
-    advanced: { target: 1, xp: 30, coins: 70, gems: 0 },
+    beginner: { target: 1, xp: 150, coins: 60, gems: 0 },
+    advanced: { target: 1, xp: 150, coins: 70, gems: 0 },
     power_up: "freeze",
     power_up_count: 1,
     color_theme: "amber",
@@ -293,8 +295,8 @@ const DAILY_POOL: PoolMission[] = [
     mission_id: "invite_to_play",
     title: "მოიწვიე მეგობარი",
     description: "მოიწვიე მეგობარი თამაშში",
-    beginner: { target: 1, xp: 35, coins: 70, gems: 0 },
-    advanced: { target: 1, xp: 40, coins: 90, gems: 0 },
+    beginner: { target: 1, xp: 170, coins: 80, gems: 0 },
+    advanced: { target: 1, xp: 180, coins: 100, gems: 0 },
     power_up: "replace",
     power_up_count: 1,
     color_theme: "cyan",
@@ -302,98 +304,17 @@ const DAILY_POOL: PoolMission[] = [
   },
 ];
 
-// Weeklies pay coins and XP, never gems — the 10 gems in WEEK_BONUS are the
-// only gems in the whole mission system, so "finish all seven days" stays the
-// one thing they buy. The gem amounts that used to sit here (5-15 per
-// mission) quietly out-paid the streak they were supposed to make desirable.
-//
-// Targets are sized to a week of casual play, not a grind: the old
-// advanced tier asked for 100 correct answers and 10 categories, which read
-// as impossible on a card that does not say "this week" — a mission a player
-// writes off on sight engages nobody. Roughly: a target a player who opens
-// the app most days hits by Friday.
-const WEEKLY_POOL: PoolMission[] = [
-  {
-    mission_id: "weekly_wins",
-    title: "კვირის ჩემპიონი",
-    description: "მოიგე {n} თამაში ამ კვირაში",
-    beginner: { target: 5, xp: 150, coins: 400, gems: 0 },
-    advanced: { target: 10, xp: 200, coins: 600, gems: 0 },
-    power_up: "5050",
-    power_up_count: 3,
-    color_theme: "purple",
-    icon: "trophy",
-  },
-  {
-    mission_id: "weekly_answers",
-    title: "ცოდნის ექსპერტი",
-    description: "გაეცი {n} სწორი პასუხი",
-    beginner: { target: 30, xp: 120, coins: 350, gems: 0 },
-    advanced: { target: 60, xp: 150, coins: 500, gems: 0 },
-    power_up: "freeze",
-    power_up_count: 2,
-    color_theme: "cyan",
-    icon: "check",
-  },
-  {
-    mission_id: "weekly_invite_friend",
-    title: "მეგობრობა",
-    description: "დაამატე {n} ახალი მეგობარი",
-    beginner: { target: 1, xp: 80, coins: 200, gems: 0 },
-    advanced: { target: 2, xp: 100, coins: 250, gems: 0 },
-    power_up: "5050",
-    power_up_count: 1,
-    color_theme: "rose",
-    icon: "hearts",
-  },
-  {
-    mission_id: "weekly_categories",
-    title: "მულტიკატეგორია",
-    description: "ითამაშე {n} სხვადასხვა კატეგორიაში",
-    beginner: { target: 3, xp: 130, coins: 320, gems: 0 },
-    advanced: { target: 5, xp: 180, coins: 420, gems: 0 },
-    power_up: "replace",
-    power_up_count: 2,
-    color_theme: "amber",
-    icon: "map",
-  },
-  {
-    mission_id: "weekly_perfect",
-    title: "პერფექციონისტი",
-    description: "მოიგე {n} თამაში 100% სიზუსტით",
-    beginner: { target: 1, xp: 180, coins: 450, gems: 0 },
-    advanced: { target: 3, xp: 250, coins: 700, gems: 0 },
-    power_up: "time-drain",
-    power_up_count: 2,
-    color_theme: "rose",
-    icon: "target",
-  },
-  {
-    mission_id: "weekly_friend_games",
-    title: "მეგობრების კვირა",
-    description: "ითამაშე {n} თამაში მეგობრებთან",
-    beginner: { target: 1, xp: 140, coins: 350, gems: 0 },
-    advanced: { target: 3, xp: 190, coins: 520, gems: 0 },
-    power_up: "time-drain",
-    power_up_count: 2,
-    color_theme: "emerald",
-    icon: "hearts",
-  },
-  {
-    mission_id: "weekly_play_games",
-    title: "კვირის მარათონი",
-    description: "ითამაშე {n} თამაში ამ კვირაში",
-    beginner: { target: 7, xp: 120, coins: 350, gems: 0 },
-    advanced: { target: 15, xp: 170, coins: 520, gems: 0 },
-    power_up: "replace",
-    power_up_count: 2,
-    color_theme: "blue",
-    icon: "shoe",
-  },
-];
+// There are no weekly missions. Dailies are the whole game: finish every
+// mission on all seven days and the week package (WEEK_BONUS) pays out. The
+// weekly pool that lived here read as a second, impossible set of dailies —
+// "win 10 games" on a card next to "win 1 game" — and splitting the player's
+// attention between two ladders made both feel worse. The rotation returns
+// empty so no weekly row is ever created; rows from earlier weeks stay in
+// the table and simply stop rendering.
+const WEEKLY_POOL: PoolMission[] = [];
 
 const DAILY_ACTIVE_COUNT = 5;
-const WEEKLY_ACTIVE_COUNT = 4;
+const WEEKLY_ACTIVE_COUNT = 0;
 // Players with this many finished games get the advanced targets/rewards
 const ADVANCED_GAMES_THRESHOLD = 30;
 
@@ -458,12 +379,11 @@ export type MissionEvent =
   | "invited_to_room";
 
 const EVENT_MISSIONS: Record<MissionEvent, string[]> = {
-  game_played: ["play_games", "weekly_play_games"],
-  correct_answers: ["answer_correct", "weekly_answers"],
-  game_won: ["win_games", "weekly_wins"],
+  game_played: ["play_games"],
+  correct_answers: ["answer_correct"],
+  game_won: ["win_games"],
   categories_played: [
     "play_categories",
-    "weekly_categories",
     // Tag-gated: only the category named advances these.
     "category_movies",
     "category_music",
@@ -471,11 +391,11 @@ const EVENT_MISSIONS: Record<MissionEvent, string[]> = {
     "category_sports",
     "category_cuisine",
   ],
-  perfect_win: ["perfect_round", "weekly_perfect"],
-  friend_game: ["play_friend", "weekly_friend_games"],
+  perfect_win: ["perfect_round"],
+  friend_game: ["play_friend"],
   tv_played: ["play_tv"],
   // "დაამატე {n} ახალი მეგობარი" — new friends, so only a friend request.
-  friend_invited: ["weekly_invite_friend"],
+  friend_invited: [],
   // "მოიწვიე მეგობარი თამაშში" — invite a friend into a game. This is the
   // event that says so. It used to hang off friend_invited, which fires only
   // when a friend *request* is sent, so inviting a friend you already had into

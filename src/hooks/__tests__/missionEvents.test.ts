@@ -53,9 +53,12 @@ describe("missions and the events that advance them", () => {
 
   it("keeps room invites off the make-new-friends mission", () => {
     const map = eventMissions();
-    // weekly_invite_friend is "add {n} new friends". Inviting someone you are
-    // already friends with into a room is not that.
-    expect(map.friend_invited).toContain("weekly_invite_friend");
+    // The "add {n} new friends" mission retired with the weekly pool.
+    // friend_invited stays a wired event with nothing listening, so a future
+    // friends mission plugs back in without re-plumbing the call sites — but
+    // whatever listens must never be fed by invited_to_room: inviting someone
+    // you are already friends with into a room is not making a friend.
+    expect(map.friend_invited).toEqual([]);
     expect(map.invited_to_room ?? []).not.toContain("weekly_invite_friend");
   });
 
