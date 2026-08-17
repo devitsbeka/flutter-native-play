@@ -1080,9 +1080,6 @@ export default function Index() {
                 });
               }
             }}
-            /* No Facebook provider is configured for this app, so the
-               button opens the full auth screen instead. */
-            onFacebook={() => navigate("/auth?mode=signup")}
             onEmail={() => navigate("/auth?mode=signup")}
             onMenu={() => setIsSideMenuOpen(true)}
             onTerms={() => navigate("/terms")}

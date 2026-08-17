@@ -157,17 +157,32 @@ export async function configureDeepLinks(
         const refreshToken = fragment.get("refresh_token");
         const code = parsed.searchParams.get("code");
 
+        // The OAuth pages open in an SFSafariViewController sheet
+        // (@capacitor/browser). It does not dismiss itself when the redirect
+        // jumps back into the app — without this the player signs in and
+        // returns to a browser sheet sitting over the app they just entered.
+        const closeAuthBrowser = async () => {
+          try {
+            const { Browser } = await import("@capacitor/browser");
+            await Browser.close();
+          } catch {
+            /* no sheet open — the link came from somewhere else */
+          }
+        };
+
         if (accessToken && refreshToken) {
           await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
+          void closeAuthBrowser();
           navigate("/");
           return;
         }
 
         if (code) {
           await supabase.auth.exchangeCodeForSession(code);
+          void closeAuthBrowser();
           navigate("/");
           return;
         }

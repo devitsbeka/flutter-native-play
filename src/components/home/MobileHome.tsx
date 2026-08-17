@@ -391,17 +391,6 @@ function AppleGlyph() {
   );
 }
 
-function FacebookGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-[24px]" aria-hidden>
-      <path
-        fill="#1877F2"
-        d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.09 24 18.1 24 12.07z"
-      />
-    </svg>
-  );
-}
-
 function GoogleGlyph() {
   return (
     <svg viewBox="0 0 18.5 18.5" className="size-[18.498px]" aria-hidden>
@@ -461,7 +450,6 @@ function AuthIconButton({
 
 interface MobileGuestHeroProps {
   onApple: () => void;
-  onFacebook: () => void;
   onGoogle: () => void;
   onEmail: () => void;
   onMenu: () => void;
@@ -474,7 +462,6 @@ interface MobileGuestHeroProps {
 // the middle, provider buttons and the terms note above the nav.
 export function MobileGuestHero({
   onApple,
-  onFacebook,
   onGoogle,
   onEmail,
   onMenu,
@@ -563,9 +550,10 @@ export function MobileGuestHero({
             </span>
             <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_1.86px_0px_0px_white]" />
           </button>
-          <AuthIconButton onClick={onFacebook} label="Facebook">
-            <FacebookGlyph />
-          </AuthIconButton>
+          {/* No Facebook button: no Facebook provider is configured, and
+              the placeholder that opened the signup form instead read as
+              broken sign-in — which is exactly how it was reported. Restore
+              it only once a real Meta app is wired into Supabase Auth. */}
           <AuthIconButton onClick={onGoogle} label="Google">
             <GoogleGlyph />
           </AuthIconButton>

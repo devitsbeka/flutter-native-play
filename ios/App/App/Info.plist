@@ -4,6 +4,21 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<!-- The OAuth return leg. Universal links (applinks:mytrivia.io) cannot
+	     carry it: iOS refuses to open an app from a server-side redirect
+	     chain, which is exactly what an OAuth callback is. A custom scheme
+	     opens the app unconditionally, and appUrlOpen picks the tokens up. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>io.mytrivia.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>mytrivia</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>MyTrivia</string>
 	<key>CFBundleExecutable</key>
