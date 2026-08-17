@@ -311,8 +311,13 @@ export default function PowerUps() {
          * whole time, under the background.
          *
          * No side padding: the band is designed full-bleed, attached to the
-         * header above it — its own top stroke and drop shadow are the seam. */}
-        <div className="relative z-10">
+         * header above it — its own top stroke and drop shadow are the seam.
+         *
+         * Sticky at top-[76px]: PageHeader's row is exactly 76px and sticks
+         * at 0, so the band parks flush under it and the two scroll as one
+         * fixed header stack. Same z as the header — anything meant to pass
+         * beneath them must stay below 20. */}
+        <div className="sticky top-[76px] z-20">
           <ShopHeader onPiggyClick={() => handleCurrencyPlusClick("coins")} />
         </div>
 

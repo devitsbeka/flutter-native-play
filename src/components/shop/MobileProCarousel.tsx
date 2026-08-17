@@ -382,7 +382,12 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
               lastInteraction.current = Date.now();
               scrollToIndex(Math.min(lastIndex, Math.max(0, currentIndex + dir)));
             }}
-            className={`absolute top-1/2 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-[rgba(64,38,102,0.1)] bg-white/90 text-[#402666] shadow-[0_4px_14px_rgba(64,38,102,0.18)] backdrop-blur transition-opacity ${
+            // z-[15], deliberately below the sticky header stack (z-20): these used
+            // to share z-20 and sit later in the DOM, so equal z-index resolved by
+            // document order and the arrows scrolled OVER the page header instead
+            // of under it. 15 keeps them above the carousel cards, which are all
+            // z-auto or z-10.
+            className={`absolute top-1/2 z-[15] flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-[rgba(64,38,102,0.1)] bg-white/90 text-[#402666] shadow-[0_4px_14px_rgba(64,38,102,0.18)] backdrop-blur transition-opacity ${
               atEnd || lastIndex === 0 ? "pointer-events-none opacity-0" : "opacity-100 hover:bg-white"
             } ${dir < 0 ? "left-1" : "right-1"}`}
           >

@@ -26,42 +26,46 @@ interface ShopHeaderProps {
 export function ShopHeader({ onPiggyClick }: ShopHeaderProps) {
   const { coins, gems } = useCurrency();
 
+  // Sizes are the Figma node's, scaled by 0.85: circle 53 -> 45, icon
+  // 38 -> 32, count 20 -> 17, piggy 72 -> 61. The row is exactly 76px tall —
+  // the same as PageHeader's — so the two sticky bands read as one header
+  // stack rather than two different furniture heights.
   return (
     <div
       className="w-full bg-white border-t border-[#EFE9F7]"
       style={{ boxShadow: "0 6px 16px rgba(64, 38, 102, 0.10)" }}
     >
-      <div className="mx-auto flex w-full max-w-[700px] items-center gap-4 px-5 py-3">
+      <div className="mx-auto flex h-[76px] w-full max-w-[700px] items-center gap-4 px-5">
+        {/* Piggy bank — buy more. Leads the row, mirrored so it faces the
+            balances it feeds. */}
+        <button
+          type="button"
+          onClick={onPiggyClick}
+          aria-label="Buy currency"
+          className="shrink-0 active:scale-95 transition-transform"
+        >
+          <img src={piggyBank} alt="" className="size-[61px] -scale-x-100 object-contain" />
+        </button>
+
         {/* Coins */}
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span className="flex size-[53px] shrink-0 items-center justify-center rounded-full border border-[rgba(250,214,255,0.43)] bg-[rgba(250,214,255,0.13)]">
-            <img src={coinIcon} alt="" className="size-[38px] object-contain" />
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex size-[45px] shrink-0 items-center justify-center rounded-full border border-[rgba(250,214,255,0.43)] bg-[rgba(250,214,255,0.13)]">
+            <img src={coinIcon} alt="" className="size-[32px] object-contain" />
           </span>
-          <span className="truncate font-slackey text-[20px] leading-none text-black">
+          <span className="truncate font-slackey text-[17px] leading-none text-black">
             {coins.toLocaleString()}
           </span>
         </div>
 
         {/* Gems */}
-        <div className="ml-3 flex min-w-0 items-center gap-2.5">
-          <span className="flex size-[53px] shrink-0 items-center justify-center rounded-full border border-[rgba(250,214,255,0.43)] bg-[rgba(250,214,255,0.13)]">
-            <img src={gemIcon} alt="" className="size-[38px] object-contain" />
+        <div className="ml-2 flex min-w-0 items-center gap-2">
+          <span className="flex size-[45px] shrink-0 items-center justify-center rounded-full border border-[rgba(250,214,255,0.43)] bg-[rgba(250,214,255,0.13)]">
+            <img src={gemIcon} alt="" className="size-[32px] object-contain" />
           </span>
-          <span className="truncate font-slackey text-[20px] leading-none text-black">
+          <span className="truncate font-slackey text-[17px] leading-none text-black">
             {gems.toLocaleString()}
           </span>
         </div>
-
-        {/* Piggy bank — buy more. Pushed to the far edge by the design's own
-            layout: wallet group flexes, the piggy does not. */}
-        <button
-          type="button"
-          onClick={onPiggyClick}
-          aria-label="Buy currency"
-          className="ml-auto shrink-0 active:scale-95 transition-transform"
-        >
-          <img src={piggyBank} alt="" className="size-[72px] object-contain" />
-        </button>
       </div>
     </div>
   );
