@@ -119,7 +119,10 @@ export default function PushNotifications() {
           title,
           body,
           notification_type: notificationType,
-          data: deepLink ? { screen: deepLink } : undefined,
+          // `route` — the key usePushNotifications navigates on when the
+          // notification is tapped. This sent `screen`, which nothing reads,
+          // so a test push opened the app and went nowhere.
+          data: deepLink ? { route: deepLink } : undefined,
         },
       });
 
@@ -227,7 +230,7 @@ export default function PushNotifications() {
               <Label htmlFor="deepLink">Deep Link (არასავალდებულო)</Label>
               <Input
                 id="deepLink"
-                placeholder="მაგ: /rewards"
+                placeholder="მაგ: /leaderboards ან /team?join=ABC123"
                 value={deepLink}
                 onChange={e => setDeepLink(e.target.value)}
               />
