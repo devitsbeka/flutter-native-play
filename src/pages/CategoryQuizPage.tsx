@@ -887,7 +887,7 @@ export default function CategoryQuizPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center relative">
+      <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] bg-background flex items-center justify-center relative">
         {/* Back button */}
         <button
           onClick={() => navigate(-1)}
@@ -910,9 +910,12 @@ export default function CategoryQuizPage() {
     );
   }
 
+  // Fixed height + own scroller, not min-h-screen: the native shell kills
+  // document scrolling (AGENTS.md 4b), and m-auto centers while staying
+  // reachable when content is taller than a small phone.
   if (outOfQuestions) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6 relative">
+      <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background flex p-6 relative">
         <button
           onClick={() => navigate(`/category/${categoryId}`)}
           className="fixed left-4 z-30 w-11 h-11 rounded-full bg-white/90 backdrop-blur-md shadow-md border border-black/5 flex items-center justify-center"
@@ -924,7 +927,7 @@ export default function CategoryQuizPage() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-sm"
+          className="m-auto text-center max-w-sm"
         >
           <motion.img
             src={newQuestionsPaper}
@@ -959,8 +962,8 @@ export default function CategoryQuizPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="text-center max-w-sm">
+      <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background flex p-6">
+        <div className="m-auto text-center max-w-sm">
           <div className="text-6xl mb-4">😕</div>
           <h2 className="text-xl font-bold text-foreground mb-2">{t("extra.oopsTitle")}</h2>
           <p className="text-muted-foreground mb-6">{error}</p>
@@ -1020,7 +1023,7 @@ export default function CategoryQuizPage() {
             }}
           />
         )}
-        <div className="min-h-screen bg-background flex items-center justify-center p-6 relative">
+        <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background flex p-6 relative">
           {/* Back button */}
           <button
             onClick={() => navigate(`/category/${categoryId}`)}
@@ -1028,11 +1031,11 @@ export default function CategoryQuizPage() {
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          
+
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-center max-w-sm w-full"
+            className="m-auto text-center max-w-sm w-full"
           >
             {/* Result emoji with animation */}
             <motion.div 

@@ -74,7 +74,7 @@ const TVJoinContent: React.FC = () => {
   // Show loading instead of error when waiting for questions
   if (hasInvalidState) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
+      <div className="h-[100dvh] safe-bleed bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-purple-300 mx-auto mb-4 animate-spin" />
           <h2 className="text-white text-xl font-bold mb-2">{t("extra.loadingQuestions")}</h2>

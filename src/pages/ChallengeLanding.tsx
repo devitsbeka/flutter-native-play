@@ -233,7 +233,7 @@ export default function ChallengeLanding() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#7E7ADB]">
+      <div className="h-[100dvh] safe-bleed flex items-center justify-center bg-[#7E7ADB]">
         <Loader2 className="w-8 h-8 animate-spin text-white" />
       </div>
     );
@@ -241,7 +241,7 @@ export default function ChallengeLanding() {
 
   if (error || !challenge) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-[#7E7ADB]">
+      <div className="h-[100dvh] safe-bleed flex items-center justify-center p-4 bg-[#7E7ADB]">
         <div className="text-center">
           <p className="text-xl font-bold text-white mb-2">😔 ჩელენჯი ვერ მოიძებნა</p>
           <p className="text-white/60">ბმული არასწორია ან ვადაგასულია</p>
@@ -251,13 +251,16 @@ export default function ChallengeLanding() {
   }
 
   // ============ LANDING PHASE ============
+  // Own scroller (AGENTS.md 4b): document scroll is dead in the native
+  // shell, and this card stack outgrows a small phone. m-auto keeps it
+  // centered when it fits and reachable when it doesn't.
   if (phase === "landing") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#7E7ADB]">
+      <div className="h-[100dvh] overflow-y-auto safe-bleed flex flex-col p-4 bg-[#7E7ADB]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-sm space-y-6"
+          className="m-auto w-full max-w-sm space-y-6"
         >
           {/* Challenger info */}
           <div className="text-center space-y-3">
@@ -410,11 +413,11 @@ export default function ChallengeLanding() {
     const tied = playerScore === challenge.challenger_score;
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#7E7ADB]">
+      <div className="h-[100dvh] overflow-y-auto safe-bleed flex flex-col p-4 bg-[#7E7ADB]">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-sm space-y-6"
+          className="m-auto w-full max-w-sm space-y-6"
         >
           {/* Result header */}
           <div className="text-center">

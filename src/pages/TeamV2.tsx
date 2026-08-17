@@ -657,7 +657,7 @@ function TeamContentV2() {
   // Show loading when phase is set but room isn't ready yet
   if (phase !== "idle" && !currentRoom) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
       </div>
     );
@@ -669,7 +669,7 @@ function TeamContentV2() {
   const inviteCode = searchParams.get("join") || searchParams.get("room");
   if (!user && inviteCode && !guestSignInBlocked) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
       </div>
     );
@@ -678,8 +678,8 @@ function TeamContentV2() {
   // Show login prompt if not authenticated
   if (!user) {
     return (
-      <div className="min-h-screen relative overflow-hidden">
-        <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 py-8">
+      <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto relative">
+        <div className="relative z-10 min-h-full flex flex-col items-center justify-center px-6 py-8">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}

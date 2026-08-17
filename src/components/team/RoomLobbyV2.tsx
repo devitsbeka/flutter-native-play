@@ -650,14 +650,27 @@ export function RoomLobbyV2() {
        dark gradient. Cancelling with a negative margin and re-adding the
        same value as padding puts the background back at the true top edge
        while leaving everything inside exactly where the root put it. */
-    <div 
-      className="min-h-screen relative flex flex-col safe-bleed"
+    /* h-[100dvh] + overflow-y-auto, NOT min-h-screen: the native shell
+       disables the document scroller outright (AGENTS.md 4b), so a page
+       that merely grows past the viewport is frozen solid on device — the
+       lobby shipped that way and could not be scrolled at all once the TV
+       card and player strip pushed content below the fold. A fixed-height
+       box that scrolls itself is the recipe every standalone page uses. */
+    <div
+      className="h-[100dvh] overflow-y-auto relative flex flex-col safe-bleed"
       style={{ background: roomGradient?.gradient || 'var(--background)' }}
     >
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-30 w-full">
+      {/* Sticky Header. Pins at the scroller's very top — the true screen
+          edge — so it swallows the root's safe-top padding with a negative
+          margin and carries the inset itself: at rest nothing moves, and
+          once pinned the blur extends under the status bar instead of the
+          header sliding beneath the clock. */}
+      <div className="sticky top-0 z-30 w-full" style={{ marginTop: "calc(-1 * var(--safe-top))" }}>
         {/* Header content with subtle background blur */}
-        <div className="px-4 sm:px-6 py-4 backdrop-blur-md bg-black/10">
+        <div
+          className="px-4 sm:px-6 pb-4 backdrop-blur-md bg-black/10"
+          style={{ paddingTop: "calc(var(--safe-top) + 1rem)" }}
+        >
           <div className="flex items-center justify-between">
             <motion.button
               onClick={handleExitRoom}
