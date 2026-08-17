@@ -9,7 +9,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import crystalHourglass from "@/assets/crystal-hourglass.png";
+import newQuestionsPaper from "@/assets/new-questions-paper.png";
 import { useCategoryPlayLimit } from "@/hooks/useCategoryPlayLimit";
 import { useToast } from "@/hooks/use-toast";
 import { showMissionCompleteToast } from "@/components/mission/MissionCompleteToast";
@@ -48,7 +48,7 @@ import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useAds } from "@/hooks/useAds";
 import { adService } from "@/services/adService";
 import { PowerUpEffectOverlay } from "@/components/game/PowerUpEffectOverlay";
-import { ActivePowerUpIndicator, PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
+import { PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
 import { useAIIconSlug } from "@/hooks/useAIIconSlug";
 import { trackQuizStarted, trackQuizQuestionAnswered, trackQuizCompleted, trackQuizAbandoned, trackPowerUpUsed } from "@/lib/analytics";
@@ -180,6 +180,8 @@ export default function CategoryQuizPage() {
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [activePowerUpEffect, setActivePowerUpEffect] = useState<PowerUpType | null>(null);
   const [activeScreenEffect, setActiveScreenEffect] = useState<PowerUpType | null>(null);
+  // Momentary "+5წ" pill over the time power button after using it.
+  const [showTimeDrainBadge, setShowTimeDrainBadge] = useState(false);
   
   const hasFetched = useRef(false);
   const hasSaved = useRef(false);
@@ -675,9 +677,14 @@ export default function CategoryQuizPage() {
 
     trackPowerUpUsed(type, "quiz", categoryId!);
 
-    // Show power-up effect animation
-    setActivePowerUpEffect(type);
-    
+    // Top-center icon+name flash: only for 50/50 and replace. Freeze and
+    // time-drain announce themselves as badges over their own buttons in
+    // the power bar instead — the top flash collided with the question
+    // header ("the label covers the difficulty pill" bug).
+    if (type === "5050" || type === "replace") {
+      setActivePowerUpEffect(type);
+    }
+
     // Show screen effect for visual feedback
     setActiveScreenEffect(type);
     // Clear screen effect after animation (except freeze which persists)
@@ -700,6 +707,9 @@ export default function CategoryQuizPage() {
         // Freeze timer for 10 seconds
         setTimerFrozen(true);
         setFreezeEndTime(Date.now() + 10000);
+        // Seed the countdown so the badge doesn't show a stale 0 until the
+        // first timer tick.
+        setFreezeTimeRemaining(10);
         break;
       }
       case "replace": {
@@ -721,6 +731,8 @@ export default function CategoryQuizPage() {
         // Add 5 seconds to timer
         setTimerBonus(prev => prev + 5);
         setTimeRemaining(prev => prev + 5);
+        setShowTimeDrainBadge(true);
+        setTimeout(() => setShowTimeDrainBadge(false), 1500);
         break;
       }
     }
@@ -759,6 +771,24 @@ export default function CategoryQuizPage() {
       state: usedPowerUpsThisQuestion.has(type) || (type === "5050" && isTF) ? ("disabled" as const) : ("default" as const),
     }));
   }, [powerUps, usedPowerUpsThisQuestion, questions, currentQuestionIndex]);
+
+  // Status pills shown above their own power buttons (see QuizPowerUpBar):
+  // the frozen-timer countdown lives over the freeze cube, the "+5წ"
+  // confirmation over the time cube. Nothing power-related renders at the
+  // top of the screen, where it used to cover the difficulty pill.
+  const powerBarBadges = useMemo(() => {
+    const badges: Partial<Record<UIPowerUpType, string>> = {};
+    if (timerFrozen) {
+      badges.freeze =
+        freezeTimeRemaining > 0
+          ? `${t("extra.timerFrozen")} · ${t("extra.secondsShort", { time: freezeTimeRemaining })}`
+          : t("extra.timerFrozen");
+    }
+    if (showTimeDrainBadge) {
+      badges.hint = `+${t("extra.secondsShort", { time: 5 })}`;
+    }
+    return badges;
+  }, [timerFrozen, freezeTimeRemaining, showTimeDrainBadge, t]);
 
   const currentQuestion = questions[currentQuestionIndex];
   const starPercentage = (score / Math.max(questions.length, 1)) * 100;
@@ -897,16 +927,13 @@ export default function CategoryQuizPage() {
           className="text-center max-w-sm"
         >
           <motion.img
-            src={crystalHourglass}
+            src={newQuestionsPaper}
             alt=""
-            className="w-24 h-24 mx-auto mb-5 object-contain"
+            className="w-32 h-32 mx-auto mb-5 object-contain"
             animate={{ y: [0, -6, 0] }}
             transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
           />
-          <h2 className="text-2xl font-display font-bold text-foreground mb-2">
-            {t("extra.quizOutOfQuestionsTitle")}
-          </h2>
-          <p className="text-muted-foreground mb-8">
+          <p className="text-lg font-medium text-foreground mb-8">
             {t("extra.quizOutOfQuestionsDesc")}
           </p>
           <div className="space-y-3">
@@ -1318,6 +1345,7 @@ export default function CategoryQuizPage() {
                   allowZeroClick
                   powerUps={powerUpsForUI}
                   onPowerUpClick={handleUsePowerUp}
+                  badges={powerBarBadges}
                 />
               </motion.div>
             )}
@@ -1385,13 +1413,6 @@ export default function CategoryQuizPage() {
       <PowerUpEffectOverlay
         activeEffect={activePowerUpEffect}
         onComplete={() => setActivePowerUpEffect(null)}
-      />
-
-      {/* Persistent freeze indicator */}
-      <ActivePowerUpIndicator
-        type="freeze"
-        isVisible={timerFrozen}
-        remainingTime={freezeTimeRemaining}
       />
 
       {/* Screen-wide power-up effects */}

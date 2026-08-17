@@ -17,7 +17,7 @@ import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-butt
 import { useAIIcon } from "@/hooks/useAIIcon";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useUserPowerUps, PowerUpType as DBPowerUpType } from "@/hooks/useUserPowerUps";
-import { ActivePowerUpIndicator, PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
+import { PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
 import { AnswerChoiceAvatars, type AnswerChooser } from "@/components/game/AnswerChoiceAvatars";
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -68,6 +68,8 @@ export function QuizGameScreenProd() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerRevealed, setAnswerRevealed] = useState(false);
   const [freezeTimeLeft, setFreezeTimeLeft] = useState(0);
+  // Momentary "+10წ" pill over the time power button after using it.
+  const [showTimeDrainBadge, setShowTimeDrainBadge] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
@@ -214,9 +216,27 @@ export function QuizGameScreenProd() {
         hint: "time-drain",
       };
       usePowerUp(contextTypeMap[type]);
+
+      if (type === "hint") {
+        setShowTimeDrainBadge(true);
+        setTimeout(() => setShowTimeDrainBadge(false), 1500);
+      }
     },
     [dbPowerUps, consumeFromDB, usePowerUp]
   );
+
+  // Status pills above their own power buttons (see QuizPowerUpBar.badges) —
+  // never at the top of the screen, where they covered the question header.
+  const powerBarBadges = useMemo(() => {
+    const badges: Partial<Record<UIPowerUpType, string>> = {};
+    if (playerTimerFrozen && freezeTimeLeft > 0) {
+      badges.freeze = `${t("extra.timerFrozen")} · ${t("extra.secondsShort", { time: freezeTimeLeft })}`;
+    }
+    if (showTimeDrainBadge) {
+      badges.hint = `+${t("extra.secondsShort", { time: 10 })}`;
+    }
+    return badges;
+  }, [playerTimerFrozen, freezeTimeLeft, showTimeDrainBadge, t]);
 
   // Get answer button state
   const getAnswerState = useCallback(
@@ -533,19 +553,13 @@ export function QuizGameScreenProd() {
                 <QuizPowerUpBar
                   powerUps={powerUpsForUI}
                   onPowerUpClick={handleUsePowerUp}
+                  badges={powerBarBadges}
                 />
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </div>
-
-      {/* Persistent freeze indicator */}
-      <ActivePowerUpIndicator
-        type="freeze"
-        isVisible={playerTimerFrozen && freezeTimeLeft > 0}
-        remainingTime={freezeTimeLeft}
-      />
 
       {/* Screen-wide freeze effect */}
       <PowerUpScreenEffect type="freeze" isActive={playerTimerFrozen && freezeTimeLeft > 0} />

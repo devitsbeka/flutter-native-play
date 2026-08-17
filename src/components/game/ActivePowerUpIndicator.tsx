@@ -1,95 +1,20 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Snowflake, Clock, Shuffle, Sparkles } from "lucide-react";
+import { Snowflake } from "lucide-react";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
-import { useLanguage } from "@/contexts/LanguageContext";
 
-interface ActivePowerUpIndicatorProps {
-  type: PowerUpType;
-  remainingTime?: number;
-  isVisible: boolean;
-}
+// There used to be an ActivePowerUpIndicator here — a "დრო გაყინულია"
+// pill fixed near the top of the screen. It sat exactly where the
+// difficulty pill and question header live and covered them, so the
+// status labels now render inside QuizPowerUpBar (its `badges` prop),
+// anchored above the power-up that caused them.
 
-function getPowerUpConfig(t: (key: string) => string): Record<PowerUpType, {
-  icon: React.ReactNode;
-  label: string;
-  color: string;
-  bgColor: string;
-  glowColor: string;
-}> {
-  return {
-    "5050": {
-      icon: <Sparkles className="w-4 h-4" />,
-      label: "50/50",
-      color: "#A855F7",
-      bgColor: "linear-gradient(135deg, #A855F7 0%, #7C3AED 100%)",
-      glowColor: "rgba(168, 85, 247, 0.4)",
-    },
-    "freeze": {
-      icon: <Snowflake className="w-4 h-4" />,
-      label: t("extra.timerFrozen"),
-      color: "#22D3EE",
-      bgColor: "linear-gradient(135deg, #22D3EE 0%, #0891B2 100%)",
-      glowColor: "rgba(34, 211, 238, 0.4)",
-    },
-    "replace": {
-      icon: <Shuffle className="w-4 h-4" />,
-      label: t("extra.powerUpReplaceShort"),
-      color: "#10B981",
-      bgColor: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
-      glowColor: "rgba(16, 185, 129, 0.4)",
-    },
-    "time-drain": {
-      icon: <Clock className="w-4 h-4" />,
-      label: t("extra.timePlus"),
-      color: "#F59E0B",
-      bgColor: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
-      glowColor: "rgba(245, 158, 11, 0.4)",
-    },
-  };
-}
-
-export function ActivePowerUpIndicator({ type, remainingTime, isVisible }: ActivePowerUpIndicatorProps) {
-  const { t } = useLanguage();
-  const config = getPowerUpConfig(t)[type];
-
-  return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.8, y: -10 }}
-          className="fixed top-20 left-0 right-0 z-40 pointer-events-none flex justify-center"
-        >
-          <motion.div
-            className="flex items-center gap-2 px-4 py-2 rounded-full font-bold"
-            style={{
-              color: config.color,
-              textShadow: `0 2px 8px ${config.glowColor}, 0 0 20px ${config.glowColor}`,
-            }}
-            animate={{
-              scale: [1, 1.05, 1],
-            }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
-            {config.icon}
-            <span>{config.label}</span>
-            {remainingTime !== undefined && remainingTime > 0 && (
-              <motion.span
-                key={remainingTime}
-                initial={{ scale: 1.2 }}
-                animate={{ scale: 1 }}
-                className="bg-black/30 rounded-full px-2 py-0.5 text-sm"
-              >
-                {t("extra.secondsShort", { time: remainingTime })}
-              </motion.span>
-            )}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
+// The effect frames must stay inside the safe area: `inset-0` on a real
+// device puts the top border behind the notch and the bottom behind the
+// home indicator, which is why the freeze frame looked cropped.
+const SAFE_FRAME = {
+  top: "var(--safe-top)",
+  bottom: "var(--safe-bottom)",
+} as const;
 
 // Screen-wide effect overlays for each power-up
 export function PowerUpScreenEffect({ type, isActive }: { type: PowerUpType | null; isActive: boolean }) {
@@ -105,7 +30,8 @@ export function PowerUpScreenEffect({ type, isActive }: { type: PowerUpType | nu
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 pointer-events-none z-30"
+              className="fixed left-0 right-0 pointer-events-none z-30"
+              style={SAFE_FRAME}
             >
               <div className="absolute top-0 left-0 w-40 h-40 bg-gradient-radial from-purple-500/30 to-transparent" />
               <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-radial from-purple-500/30 to-transparent" />
@@ -123,7 +49,8 @@ export function PowerUpScreenEffect({ type, isActive }: { type: PowerUpType | nu
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 pointer-events-none z-30"
+              className="fixed left-0 right-0 pointer-events-none z-30"
+              style={SAFE_FRAME}
             >
             {/* Ice border glow */}
               <motion.div
@@ -172,7 +99,8 @@ export function PowerUpScreenEffect({ type, isActive }: { type: PowerUpType | nu
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 pointer-events-none z-30"
+              className="fixed left-0 right-0 pointer-events-none z-30"
+              style={SAFE_FRAME}
             >
               {/* Golden border pulse */}
               <motion.div
@@ -213,7 +141,8 @@ export function PowerUpScreenEffect({ type, isActive }: { type: PowerUpType | nu
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 pointer-events-none z-30"
+              className="fixed left-0 right-0 pointer-events-none z-30"
+              style={SAFE_FRAME}
             >
               {/* Swirl effect */}
               <motion.div

@@ -106,4 +106,4 @@ const QuizPowerUpButton = React.forwardRef<HTMLButtonElement, QuizPowerUpButtonP
 
 QuizPowerUpButton.displayName = "QuizPowerUpButton";
 
-export { QuizPowerUpButton, powerUpConfig };
+export { QuizPowerUpButton, powerUpConfig, POWER_UP_BADGE_GRADIENTS };

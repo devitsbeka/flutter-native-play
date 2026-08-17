@@ -1873,8 +1873,7 @@ export const ka = {
     chooseDifferentLevel: "სხვა დონის არჩევა",
     goToHome: "მთავარ გვერდზე",
     generatingQuestions: "კითხვების გენერირება...",
-    quizOutOfQuestionsTitle: "ყოჩაღ, ჩემპიონო!",
-    quizOutOfQuestionsDesc: "ამ კატეგორიის ყველა კითხვას უპასუხე! ახალი კითხვები მალე დაემატება — შეგატყობინებთ, როგორც კი ჩამოვა.",
+    quizOutOfQuestionsDesc: "ამ კატეგორიის ყველა კითხვას უპასუხე! მალე ახალი კითხვები დაემატება და შეგატყობინებთ.",
     quizExploreOtherCategories: "სხვა კატეგორიების ნახვა",
     // Team tabs
     tabExplore: "აღმოაჩინე",
