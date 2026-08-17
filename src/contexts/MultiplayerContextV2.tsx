@@ -1852,8 +1852,26 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         });
       }
 
-      // Wait for score to propagate (increased from 200ms to allow observer bonus to sync)
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // The results screen ranks by room_participants.score, so wait until
+      // every answering player's row reads "finished" — each player writes
+      // that AFTER their final score lands — instead of sleeping a fixed
+      // 500ms and hoping the writes propagated. Bounded: if someone is slow
+      // the wait expires and results show with live realtime updates, which
+      // is exactly what the old sleep degenerated to every time.
+      if (state.currentRoom) {
+        for (let i = 0; i < 6; i++) {
+          const { data: rows } = await supabase
+            .from("room_participants")
+            .select("status")
+            .eq("room_id", state.currentRoom.id);
+          if (rows && rows.length > 0) {
+            const finished = rows.filter(r => r.status === "finished").length;
+            const answerers = rows.length - (state.hostIsObserver ? 1 : 0);
+            if (finished >= answerers) break;
+          }
+          await new Promise(resolve => setTimeout(resolve, 250));
+        }
+      }
       setState(prev => ({ ...prev, phase: "results" }));
     } else {
       // Keep opponentAnswers - it's keyed per question_index, wiping it here

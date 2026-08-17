@@ -412,27 +412,19 @@ export function useCategoryProgress() {
           ? Math.max(0, (score - prevScore) * 10 + Math.max(0, stars - prevStars) * 20)
           : 0;
 
-        const { data: currentProfile } = await supabase
-          .from("profiles")
-          .select("total_points, games_played, games_won, current_streak, best_streak")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (currentProfile) {
-          const gamesWon = percentage >= 60 ? 1 : 0;
-          const newStreak = percentage >= 60 ? (currentProfile.current_streak || 0) + 1 : 0;
-          const newBestStreak = Math.max(newStreak, currentProfile.best_streak || 0);
-
-          await supabase
-            .from("profiles")
-            .update({
-              total_points: (currentProfile.total_points || 0) + pointsEarned,
-              games_played: (currentProfile.games_played || 0) + 1,
-              games_won: (currentProfile.games_won || 0) + gamesWon,
-              current_streak: newStreak,
-              best_streak: newBestStreak,
-            })
-            .eq("user_id", user.id);
+        // One atomic increment instead of read-here-add-in-JS-write-back:
+        // the absolute write raced the results screen's and the missions'
+        // settlements on the same row, and whichever landed last erased the
+        // others' XP. The RPC also owns the streak arithmetic against live
+        // values.
+        const { error: statsError } = await supabase.rpc("increment_profile_stats", {
+          p_points: Math.min(Math.max(0, Math.round(pointsEarned)), 5000),
+          p_games_played: 1,
+          p_games_won: percentage >= 60 ? 1 : 0,
+          p_streak_action: percentage >= 60 ? "win" : "reset",
+        });
+        if (statsError) {
+          console.error("Error updating profile stats:", statsError);
         }
 
         // Update category stats

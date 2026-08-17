@@ -675,35 +675,25 @@ export function useMissions() {
       }
 
       if (mission.reward_xp > 0) {
-        await updateProfile({
-          total_points: (profile.total_points || 0) + mission.reward_xp,
-        });
+        // Increment RPC, not an absolute write from a snapshot: a game
+        // settling at the same moment used to erase this XP (or lose its
+        // own) — last absolute write won.
+        const { data: statsData, error: statsError } = await supabase.rpc(
+          "increment_profile_stats",
+          { p_points: Math.min(mission.reward_xp, 5000) },
+        );
+        if (statsError) throw statsError;
+        if (statsData) setProfileLocal(statsData as Record<string, number>);
       }
 
       if (mission.reward_power_up && mission.reward_power_up_count > 0) {
-        const { data: existingPowerUp } = await supabase
-          .from("user_power_ups")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("power_up_type", mission.reward_power_up)
-          .single();
-
-        if (existingPowerUp) {
-          await supabase
-            .from("user_power_ups")
-            .update({
-              quantity: (existingPowerUp.quantity || 0) + mission.reward_power_up_count,
-            })
-            .eq("id", existingPowerUp.id);
-        } else {
-          await supabase
-            .from("user_power_ups")
-            .insert({
-              user_id: user.id,
-              power_up_type: mission.reward_power_up,
-              quantity: mission.reward_power_up_count,
-            });
-        }
+        // Atomic upsert-increment — the read-add-write it replaces could
+        // drop a grant landing alongside a level-up's.
+        const { error: powerError } = await supabase.rpc("adjust_power_up", {
+          p_type: mission.reward_power_up,
+          p_delta: mission.reward_power_up_count,
+        });
+        if (powerError) throw powerError;
         queryClient.invalidateQueries({ queryKey: ["user-power-ups", user.id] });
       }
 
@@ -808,7 +798,10 @@ export function useMissions() {
         setProfileLocal({ coins: currency[0].new_coins, gems: currency[0].new_gems });
       }
       if (profile) {
-        await updateProfile({ total_points: (profile.total_points || 0) + DAY_BONUS.xp });
+        const { data: bonusStats } = await supabase.rpc("increment_profile_stats", {
+          p_points: Math.min(DAY_BONUS.xp, 5000),
+        });
+        if (bonusStats) setProfileLocal(bonusStats as Record<string, number>);
       }
 
       void createNotification(

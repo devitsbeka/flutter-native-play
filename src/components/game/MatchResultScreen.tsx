@@ -232,7 +232,7 @@ const PlayerCard = ({
 
 export function MatchResultScreen() {
   const { userScore, opponentScore, opponent, matchId, resetGame, startMatchmaking, userAnswerHistory, opponentAnswerHistory } = useGame();
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, setProfileLocal } = useAuth();
   const { openProfile } = usePlayerProfile();
   const { addCoins } = useCurrency();
   const { playSound } = useSound();
@@ -376,60 +376,54 @@ export function MatchResultScreen() {
         // reached the profile.
         setCoinChange(await settleGame(isWin ? "win" : isDraw ? "draw" : "lose", matchId));
 
-        // === Correct-answer milestone level-up (every 20 correct answers) ===
+        // === Settle the profile counters in ONE atomic increment ===
+        // The database adds; the client no longer writes absolute totals
+        // computed from a snapshot, so a mission or level bonus settling in
+        // parallel can't erase this game's XP (or vice versa). The returned
+        // row is the live truth the milestone math below runs against.
         const sessionData = missionTracker.getSessionData();
         const sessionCorrectAnswers = sessionData.correctAnswers;
-        const oldTotalCorrect = (currentProfile as any).total_correct_answers || 0;
-        const newTotalCorrect = oldTotalCorrect + sessionCorrectAnswers;
+        const { data: statsData, error: statsError } = await supabase.rpc("increment_profile_stats", {
+          p_points: Math.min(Math.round(userScore), 5000),
+          p_games_played: 1,
+          p_games_won: isWin ? 1 : 0,
+          p_correct_answers: Math.min(sessionCorrectAnswers, 500),
+          p_streak_action: isWin ? "win" : "reset",
+        });
+        if (statsError) throw statsError;
+        const stats = (statsData ?? {}) as Record<string, number>;
+        setProfileLocal(stats);
+
+        // Interstitial cadence check now that this game counts as completed
+        void maybeShowInterstitial(stats.games_played ?? (currentProfile.games_played || 0) + 1);
+
+        // === Correct-answer milestone level-up (every 20 correct answers) ===
+        // Computed from the RPC's returned totals — the actual before/after —
+        // instead of a possibly-stale client snapshot.
+        const newTotalCorrect = stats.total_correct_answers ?? 0;
+        const oldTotalCorrect = Math.max(0, newTotalCorrect - sessionCorrectAnswers);
         const threshold = REWARDS.LEVEL_UP_CORRECT_ANSWERS_THRESHOLD;
         const oldMilestone = Math.floor(oldTotalCorrect / threshold);
         const newMilestone = Math.floor(newTotalCorrect / threshold);
-        
+
         let levelUpCoins = 0;
         let randomPowerUp: string | undefined;
-        
+
         if (newMilestone > oldMilestone) {
           levelUpCoins = REWARDS.LEVEL_UP_COINS;
           const powerUpTypes = REWARDS.LEVEL_UP_POWER_UP_TYPES;
           randomPowerUp = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
           setAwardedPowerUp(randomPowerUp);
-          
-          // Credit the random power-up to database
+
+          // Atomic upsert-increment — the read-add-write it replaces could
+          // drop a grant landing at the same moment as a mission's.
           if (randomPowerUp) {
-            const { data: existingPowerUp } = await supabase
-              .from("user_power_ups")
-              .select("quantity")
-              .eq("user_id", currentUser.id)
-              .eq("power_up_type", randomPowerUp)
-              .maybeSingle();
-            
-            await supabase.from("user_power_ups").upsert({
-              user_id: currentUser.id,
-              power_up_type: randomPowerUp,
-              quantity: (existingPowerUp?.quantity || 0) + 1,
+            const { error: powerError } = await supabase.rpc("adjust_power_up", {
+              p_type: randomPowerUp,
+              p_delta: 1,
             });
+            if (powerError) console.error("Level-up power-up grant failed:", powerError);
           }
-        }
-
-        await updateProfile({
-          total_points: newPoints,
-          games_played: (currentProfile.games_played || 0) + 1,
-          games_won: isWin ? (currentProfile.games_won || 0) + 1 : currentProfile.games_won,
-          current_streak: isWin ? (currentProfile.current_streak || 0) + 1 : 0,
-          best_streak: isWin
-            ? Math.max(currentProfile.best_streak || 0, (currentProfile.current_streak || 0) + 1)
-            : currentProfile.best_streak,
-        });
-
-        // Interstitial cadence check now that this game counts as completed
-        void maybeShowInterstitial((currentProfile.games_played || 0) + 1);
-
-        // Update total_correct_answers separately (not in updateProfile to avoid type issues)
-        if (sessionCorrectAnswers > 0) {
-          await supabase
-            .from("profiles")
-            .update({ total_correct_answers: newTotalCorrect } as any)
-            .eq("user_id", currentUser.id);
         }
 
         // Level-up coins added atomically via RPC (separate from game rewards)
@@ -511,7 +505,13 @@ export function MatchResultScreen() {
         }
       };
 
-      updateStats();
+      // Guard flips synchronously above to block a concurrent second run,
+      // but a FAILED settlement hands it back so a remount retries — one
+      // network error used to eat the game's coins and XP with no retry.
+      updateStats().catch((e) => {
+        console.error("[MatchResult] settlement failed, will retry on next mount:", e);
+        hasCheckedLevelUp.current = false;
+      });
     }
   // The ref guard is what keeps this to one run; the deps only decide when it
   // is first allowed to happen, which is as soon as there is a profile to

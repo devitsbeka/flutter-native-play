@@ -4200,6 +4200,16 @@ export type Database = {
         Args: { p_delta: number; p_room_id: string }
         Returns: undefined
       }
+      increment_profile_stats: {
+        Args: {
+          p_correct_answers?: number
+          p_games_played?: number
+          p_games_won?: number
+          p_points?: number
+          p_streak_action?: string
+        }
+        Returns: Json
+      }
       increment_quiz_plays: { Args: { post_id: string }; Returns: undefined }
       is_tv_session_participant: {
         Args: { p_player_identifier: string; p_session_id: string }

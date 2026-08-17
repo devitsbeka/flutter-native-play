@@ -544,9 +544,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.log('[prepareForPlaying] ✅ Cleaned', count, 'stale answers');
       }
 
-      // FIX P0: Wait 300ms (was 100ms) for DB consistency + replication
-      // This prevents checkAndAdvanceIfAllAnswered from seeing empty table as "all answered"
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Read back until the delete is actually visible instead of sleeping
+      // a fixed 300ms and hoping — checkAndAdvanceIfAllAnswered must not
+      // run against stale rows. On a non-host device the delete is
+      // RLS-scoped and rows may legitimately remain; the bounded loop then
+      // expires exactly like the old sleep did.
+      for (let i = 0; i < 5; i++) {
+        const { count: remaining } = await supabase
+          .from('player_answers')
+          .select('*', { count: 'exact', head: true })
+          .eq('tv_session_id', sessionId);
+        if (!remaining) break;
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
     }
 
     // Step 2: Verify and lock active player count (WITH suggester adjustment)

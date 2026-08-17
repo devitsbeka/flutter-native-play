@@ -24,7 +24,7 @@ import xpIcon from "@/assets/level/xp-spark.png";
 import { toast } from "sonner";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { CategoryPickerModal } from "./CategoryPickerModal";
-import { calculateMultiplayerPayout, nextStreak } from "@/utils/multiplayerPayout";
+import { calculateMultiplayerPayout } from "@/utils/multiplayerPayout";
 import { isGuestAccount } from "@/utils/guestAccount";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
@@ -46,7 +46,7 @@ interface RankedParticipant {
 
 export function GameResultsScreenV2() {
   const navigate = useNavigate();
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, setProfileLocal } = useAuth();
   const { playSound, vibrate } = useSound();
   const { t } = useLanguage();
   const { addCoins } = useCurrency();
@@ -201,16 +201,21 @@ export function GameResultsScreenV2() {
         }
 
         // Update profile stats — XP is placement-independent: every player
-        // banks their raw score in every mode.
-        await updateProfile({
-          total_points: (profile.total_points || 0) + myScore,
-          games_played: (profile.games_played || 0) + 1,
-          games_won: countsAsWin ? (profile.games_won || 0) + 1 : profile.games_won,
-          current_streak: nextStreak(profile.current_streak || 0, countsAsWin, isPractice),
-          best_streak: countsAsWin
-            ? Math.max(profile.best_streak || 0, (profile.current_streak || 0) + 1)
-            : profile.best_streak,
+        // banks their raw score in every mode. Increment RPC, not an
+        // absolute write: a mission settling in parallel reads the same
+        // starting total, and whichever absolute write landed last used to
+        // erase the other grant. The database does the addition now.
+        const { data: statsData, error: statsError } = await supabase.rpc("increment_profile_stats", {
+          p_points: Math.min(Math.round(myScore), 5000),
+          p_games_played: 1,
+          p_games_won: countsAsWin ? 1 : 0,
+          p_streak_action: countsAsWin ? "win" : isPractice ? "none" : "reset",
         });
+        if (statsError) {
+          console.error("[GameResults] increment_profile_stats failed:", statsError);
+        } else if (statsData) {
+          setProfileLocal(statsData as Record<string, number>);
+        }
 
         // Interstitial cadence check now that this game counts as completed
         void maybeShowInterstitial((profile.games_played || 0) + 1);
@@ -231,9 +236,20 @@ export function GameResultsScreenV2() {
         }
       };
 
-      updateStats();
+      // The guards flip synchronously above so a re-render can't start the
+      // chain twice — but a FAILED chain hands them back, so a remount
+      // retries instead of the round's payout being lost forever (the old
+      // behavior: one network error and the coins were gone with no retry).
+      // complete_room_round is idempotent server-side; the worst a retry
+      // can double is a coin grant whose first attempt half-landed, which
+      // beats guaranteed loss.
+      updateStats().catch((e) => {
+        console.error("[GameResults] settlement failed, will retry on next mount:", e);
+        hasUpdatedStats.current = false;
+        if (statsKey) processedResultsGames.delete(statsKey);
+      });
     }
-  }, [user, profile, myScore, myRank, isWin, isHost, currentRoom, updateProfile, rankedParticipants, addCoins, participants, maybeShowInterstitial]);
+  }, [user, profile, myScore, myRank, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, participants, maybeShowInterstitial]);
 
   // Prefetch the questions a challenge link carries, so sharing is one tap
   // and not a wait.
