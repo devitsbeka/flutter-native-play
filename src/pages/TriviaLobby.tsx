@@ -172,17 +172,20 @@ export default function TriviaLobby() {
           </>
         )}
 
-        {/* Back Button */}
+        {/* Corner controls. Fixed, on PageHeader's line, in the shared white
+            pill — the app-wide recipe (see CategoryPage). The old absolute
+            position added var(--safe-top) inside a scroller whose safe-bleed
+            padding had already paid it, so both controls sat a full inset
+            too deep — and scrolled away with the hero. */}
         <button
           onClick={handleBack}
-          className="absolute left-4 z-20 w-12 h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors-offset" style={{ top: "calc(1rem + var(--safe-top))" }}
-          
+          className="fixed left-4 z-30 w-11 h-11 rounded-full bg-white/90 backdrop-blur-md shadow-md border border-black/5 flex items-center justify-center active:scale-95 transition-transform" style={{ top: "calc(var(--safe-top) + 16px)" }}
         >
-          <ArrowLeft className="w-6 h-6 text-white" />
+          <ArrowLeft className="w-5 h-5 text-slate-700" />
         </button>
 
         {/* Header Right Side - Edit + Avatar */}
-        <div className="absolute right-4 z-10 flex h-12 items-center gap-2" style={{ top: "calc(1rem + var(--safe-top))" }}>
+        <div className="fixed right-4 z-30 flex h-11 items-center gap-2" style={{ top: "calc(var(--safe-top) + 16px)" }}>
           {creator && (
             <button onClick={() => openProfile(creator.user_id)}>
               <SafeAvatar

@@ -145,20 +145,21 @@ export default function CollectionLobby() {
           </>
         )}
 
+        {/* Corner controls — the shared recipe; see the note in TriviaLobby. */}
         <button
           onClick={handleBack}
-          className="absolute left-4 z-10 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors" style={{ top: "calc(1rem + var(--safe-top))" }}
+          className="fixed left-4 z-30 w-11 h-11 rounded-full bg-white/90 backdrop-blur-md shadow-md border border-black/5 flex items-center justify-center active:scale-95 transition-transform" style={{ top: "calc(var(--safe-top) + 16px)" }}
         >
-          <ArrowLeft className="w-5 h-5 text-white" />
+          <ArrowLeft className="w-5 h-5 text-slate-700" />
         </button>
 
-        <div className="absolute right-4 z-10 flex items-center gap-2" style={{ top: "calc(1rem + var(--safe-top))" }}>
+        <div className="fixed right-4 z-30 flex h-11 items-center gap-2" style={{ top: "calc(var(--safe-top) + 16px)" }}>
           {isOwner && (
             <button
               onClick={() => setIsEditCollectionOpen(true)}
-              className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+              className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-md shadow-md border border-black/5 flex items-center justify-center"
             >
-              <Pencil className="w-4 h-4 text-white" />
+              <Pencil className="w-4 h-4 text-slate-700" />
             </button>
           )}
           {creator && (

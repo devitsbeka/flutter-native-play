@@ -281,7 +281,7 @@ export default function CategoryPage() {
               controls scrolled away with it and there was no way back without
               scrolling to the top first. z-30 keeps them over the level grid
               that now passes underneath. */}
-          <div className="fixed left-5 right-5 flex items-center justify-between z-30" style={{ top: "calc(3rem + var(--safe-top))" }}>
+          <div className="fixed left-4 right-4 flex items-center justify-between z-30" style={{ top: "calc(var(--safe-top) + 16px)" }}>
             {/* Solid white, not black/25 glass: these are fixed, so once
                 the hero scrolls away they float over the white level grid,
                 where a translucent dark circle all but disappears — "lost
