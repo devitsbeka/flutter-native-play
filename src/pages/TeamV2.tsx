@@ -70,7 +70,7 @@ function TeamContentV2() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { t } = useLanguage();
   const { 
     phase, 
@@ -399,6 +399,16 @@ function TeamContentV2() {
     const joinCode = searchParams.get("join") || searchParams.get("room");
     if (!joinCode || phase !== "idle" || wasInRoomRef.current) return;
 
+    // A push-notification tap cold-starts the app straight onto
+    // /team?join=CODE, and for the first moments the stored session is still
+    // loading — user is null NOT because this is a guest, but because auth
+    // hasn't answered yet. Falling through to the guest branch here started
+    // an anonymous sign-in against a real account's half-loaded session, the
+    // join never ran for the signed-in player, and the tap "opened the app
+    // on the games tab" doing nothing. Wait; the effect re-runs when auth
+    // resolves and takes the right branch.
+    if (!user && authLoading) return;
+
     if (user) {
       // Authenticated user: join directly (once per code — the guest branch
       // below must stay re-runnable, it re-triggers this effect after
@@ -438,7 +448,7 @@ function TeamContentV2() {
         // The useEffect will re-trigger with the new user and auto-join
       })();
     }
-  }, [searchParams, user, phase, enterRoom, setSearchParams, showGuestJoinModal, pendingGuestJoinCode, guestSignInBlocked]);
+  }, [searchParams, user, authLoading, phase, enterRoom, setSearchParams, showGuestJoinModal, pendingGuestJoinCode, guestSignInBlocked]);
 
   // Handle guest joining a room via invite link
   const handleGuestJoinRoom = async (nickname: string) => {
