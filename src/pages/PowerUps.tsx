@@ -26,7 +26,7 @@ import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
-import { ShopHeader } from "@/components/shop/ShopHeader";
+import { ShopHeader, WalletPills } from "@/components/shop/ShopHeader";
 import { PageHeader } from "@/components/shared/PageHeader";
 // Served from public/ - not bundled, streams straight from the CDN
 const SHOP_SCENE_VIDEO = "/videos/shop-scene.mp4";
@@ -295,7 +295,16 @@ export default function PowerUps() {
             under it. Its own pt-[env(safe-area-inset-top)] is gone: #root
             insets the page and PageHeader paints the status bar strip
             itself, so the manual one was a second inset on top of both. */}
-        <PageHeader title={t("menu.shop")} showBack={false} />
+        {/* Above md the balances ride here, beside the title: the row is
+            already on screen and half empty, so spending a second full-width
+            band on two numbers was the waste. The piggy stays behind on the
+            phone band — at this width buying more is a tap away in the grid
+            below, and the header is not where a purchase belongs. */}
+        <PageHeader
+          title={t("menu.shop")}
+          showBack={false}
+          titleAccessory={<WalletPills className="ml-3 hidden md:flex" />}
+        />
 
         {/* The currency pills are the shop's own, not header furniture, so
             they sit on their own row underneath. Keeping them in the header
@@ -317,7 +326,7 @@ export default function PowerUps() {
          * at 0, so the band parks flush under it and the two scroll as one
          * fixed header stack. Same z as the header — anything meant to pass
          * beneath them must stay below 20. */}
-        <div className="sticky top-[76px] z-20">
+        <div className="sticky top-[76px] z-20 md:hidden">
           <ShopHeader onPiggyClick={() => handleCurrencyPlusClick("coins")} />
         </div>
 

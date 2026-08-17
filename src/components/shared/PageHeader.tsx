@@ -16,6 +16,10 @@ interface PageHeaderProps {
   /** Defaults to the search and bell every top-level page carries. Pass
       something else only when the page has controls of its own. */
   rightElements?: React.ReactNode;
+  /** Sits immediately after the title, inside the left group. The shop puts
+      its coin and gem pills here on tablet and desktop, where the row is
+      already on screen and half empty. */
+  titleAccessory?: React.ReactNode;
   className?: string;
 }
 
@@ -24,6 +28,7 @@ export function PageHeader({
   onBack,
   showBack = true,
   rightElements,
+  titleAccessory,
   className = "",
 }: PageHeaderProps) {
   const navigate = useNavigate();
@@ -107,6 +112,7 @@ export function PageHeader({
           >
             {title}
           </motion.h1>
+          {titleAccessory}
         </div>
 
         {/* Right: search and bell by default, so every page carries the same
