@@ -12,7 +12,7 @@ interface ShopHeaderProps {
 /**
  * Coins and gems, per Figma node 716:346.
  *
- * Pale-pink stroked circles with the counts beside them in Slackey. Numbers
+ * Pale-pink stroked circles with the counts beside them. Numbers
  * are written in full — the design shows 1,531,391 and 5,391, not "1.5M" and
  * "5K"; the shop is where a player decides whether to spend, and a rounded
  * balance is the wrong input for that decision.
@@ -32,7 +32,12 @@ export function WalletPills({ className }: { className?: string }) {
   const circle =
     "flex size-[36px] shrink-0 items-center justify-center rounded-full " +
     "border border-[rgba(250,214,255,0.43)] bg-[rgba(250,214,255,0.13)]";
-  const count = "truncate font-slackey text-[16px] leading-none text-black";
+  // Nunito Black in slate, the same face the home page sets its coin and gem
+  // pills in — this row is the same information in a different place, and it
+  // was reading in Slackey against Nunito everywhere else.
+  const count =
+    "truncate font-['Nunito'] text-[16px] font-black leading-none " +
+    "tracking-[-0.1462px] text-[#334155]";
 
   return (
     <div className={cn("flex items-center gap-5", className)}>

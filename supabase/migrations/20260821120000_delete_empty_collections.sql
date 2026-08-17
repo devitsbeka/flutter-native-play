@@ -18,14 +18,22 @@
 
 -- ── 1. The sweep ───────────────────────────────────────────────────────────
 --
--- The one-hour floor is not decoration. The client writes the collection and
--- then its rounds over several round trips, so a collection seconds old and
--- still empty is very likely mid-publish on somebody's phone. An hour is far
--- longer than that sequence can take and far shorter than a broken row should
--- be allowed to sit in the feed.
+-- Public only. A public collection with no rounds is a card in the feed that
+-- opens on "not found" — it is broken for everyone who can see it, and its
+-- owner did not ask for it to exist. A private one is nobody's problem but
+-- its owner's, and it is very often work in progress: the play-mode path
+-- writes its collection private, and someone who abandoned a draft still owns
+-- what they made. Those stay.
+--
+-- The one-hour floor is not decoration either. The client writes the
+-- collection and then its rounds over several round trips, so a collection
+-- seconds old and still empty is very likely mid-publish on somebody's phone.
+-- An hour is far longer than that sequence can take and far shorter than a
+-- broken row should be allowed to sit in the feed.
 
 DELETE FROM public.quiz_collections c
-WHERE c.created_at < now() - interval '1 hour'
+WHERE c.is_public = true
+  AND c.created_at < now() - interval '1 hour'
   AND NOT EXISTS (
     SELECT 1 FROM public.user_quiz_posts p WHERE p.collection_id = c.id
   );
@@ -38,13 +46,18 @@ WHERE c.created_at < now() - interval '1 hour'
 
 DO $$
 DECLARE
-  v_left integer;
+  v_public  integer;
+  v_private integer;
 BEGIN
-  SELECT count(*) INTO v_left
+  SELECT
+    count(*) FILTER (WHERE c.is_public),
+    count(*) FILTER (WHERE NOT c.is_public)
+  INTO v_public, v_private
     FROM public.quiz_collections c
    WHERE NOT EXISTS (
      SELECT 1 FROM public.user_quiz_posts p WHERE p.collection_id = c.id
    );
 
-  RAISE NOTICE 'empty collections remaining (younger than the 1h floor): %', v_left;
+  RAISE NOTICE 'empty collections left — public (under the 1h floor): %, private (left alone by design): %',
+    v_public, v_private;
 END $$;
