@@ -20,6 +20,8 @@ import iconShoe from "@/assets/missions/shoe.png";
 import iconTrophy from "@/assets/missions/trophy.png";
 import iconTv from "@/assets/missions/tv.png";
 import iconHearts from "@/assets/missions/hearts.png";
+import iconTelevision from "@/assets/missions/television.png";
+import iconMusic from "@/assets/missions/music.png";
 
 import power5050 from "@/assets/powers/5050.png";
 import powerFreeze from "@/assets/powers/freeze.png";
@@ -35,6 +37,8 @@ const MISSION_ICONS: Record<MissionIconKey, string> = {
   trophy: iconTrophy,
   tv: iconTv,
   hearts: iconHearts,
+  television: iconTelevision,
+  music: iconMusic,
 };
 
 const POWER_UP_ICONS: Record<string, string | null> = {

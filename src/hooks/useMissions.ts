@@ -62,7 +62,19 @@ interface MissionTier {
 // A mission template: {n} in title/description is replaced with the tier's
 // target. Beginners (few games played) get softer targets and rewards than
 // advanced players.
-export type MissionIconKey = "check" | "map" | "target" | "shoe" | "trophy" | "tv" | "hearts";
+export type MissionIconKey =
+  | "check"
+  | "map"
+  | "target"
+  | "shoe"
+  | "trophy"
+  | "tv"
+  | "hearts"
+  // "tv" belongs to TV mode and "hearts" to the friends mission — the cinema
+  // and music category missions carry their own icons so no two missions on
+  // the reel share a picture.
+  | "television"
+  | "music";
 
 interface PoolMission {
   mission_id: string;
@@ -242,7 +254,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up: "5050",
     power_up_count: 1,
     color_theme: "rose",
-    icon: "tv",
+    icon: "television",
     requires_tag: "movies",
   },
   {
@@ -254,7 +266,7 @@ const DAILY_POOL: PoolMission[] = [
     power_up: "freeze",
     power_up_count: 1,
     color_theme: "purple",
-    icon: "hearts",
+    icon: "music",
     requires_tag: "music",
   },
   {

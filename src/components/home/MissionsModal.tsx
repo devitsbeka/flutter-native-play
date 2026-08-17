@@ -30,6 +30,8 @@ import iconShoe from "@/assets/missions/shoe.png";
 import iconTrophy from "@/assets/missions/trophy.png";
 import iconTv from "@/assets/missions/tv.png";
 import iconHearts from "@/assets/missions/hearts.png";
+import iconTelevision from "@/assets/missions/television.png";
+import iconMusic from "@/assets/missions/music.png";
 import xpSparkIcon from "@/assets/level/xp-spark.png";
 
 const MISSION_ICONS: Record<MissionIconKey, string> = {
@@ -40,6 +42,8 @@ const MISSION_ICONS: Record<MissionIconKey, string> = {
   trophy: iconTrophy,
   tv: iconTv,
   hearts: iconHearts,
+  television: iconTelevision,
+  music: iconMusic,
 };
 
 // Power-up icons for reward chips
