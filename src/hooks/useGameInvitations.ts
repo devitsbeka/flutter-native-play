@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
+import { t as tStandalone } from "@/contexts/LanguageContext";
 
 export interface GameInvitation {
   id: string;
@@ -145,7 +146,7 @@ export function useGameInvitations() {
               .update({ status: "expired" })
               .eq("id", existing.id);
           } else {
-            notify.info("მოწვევა უკვე გაგზავნილია", { icon: "📧" });
+            notify.info(tStandalone("extra.inviteAlreadySent"), { icon: "📧" });
             return false;
           }
         }
@@ -182,11 +183,11 @@ export function useGameInvitations() {
             .catch((e) => console.warn("[invite] push failed:", e));
         }
 
-        notify.success("მოწვევა გაიგზავნა!", { icon: "✉️" });
+        notify.success(tStandalone("extra.inviteSentSuccess"), { icon: "✉️" });
         return true;
       } catch (error) {
         console.error("Error sending invitation:", error);
-        notify.error("მოწვევა ვერ გაიგზავნა");
+        notify.error(tStandalone("extra.inviteSendFailed"));
         return false;
       }
     },
@@ -230,7 +231,7 @@ export function useGameInvitations() {
         return (invitation.room as any)?.room_code || null;
       } catch (error) {
         console.error("Error accepting invitation:", error);
-        notify.error("მოწვევის მიღება ვერ მოხერხდა");
+        notify.error(tStandalone("extra.inviteAcceptFailed"));
         return null;
       }
     },
@@ -306,7 +307,7 @@ export function useGameInvitations() {
           playSound("game-invitation");
           
           // Show notification modal
-          notify.info(`${profile?.nickname || "მეგობარი"} გიწვევს თამაშში!`, { icon: "🎮" });
+          notify.info(tStandalone("extra.friendInvitesYouGame", { name: profile?.nickname || tStandalone("extra.friendFallback") }), { icon: "🎮" });
         }
       )
       .on(

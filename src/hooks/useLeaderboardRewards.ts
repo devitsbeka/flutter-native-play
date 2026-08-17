@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { t as tStandalone } from "@/contexts/LanguageContext";
 import { 
   WEEKLY_LEADERBOARD_REWARDS, 
   getRewardForRank,
@@ -128,11 +129,11 @@ export function useLeaderboardRewards(categoryId?: string) {
       // Update local state
       setUnclaimedRewards((prev) => prev.filter((r) => r.id !== rewardId));
 
-      toast.success(`მიღებულია ${claim.coins_awarded} მონეტა და ${claim.gems_awarded} ალმასი!`);
+      toast.success(tStandalone("extra.rewardClaimed", { coins: claim.coins_awarded, gems: claim.gems_awarded }));
       return true;
     } catch (error) {
       console.error("Error claiming reward:", error);
-      toast.error("ჯილდოს მიღება ვერ მოხერხდა");
+      toast.error(tStandalone("extra.rewardClaimFailed"));
       return false;
     }
   };
@@ -171,11 +172,11 @@ export function useLeaderboardRewards(categoryId?: string) {
         }))
       );
 
-      toast.success(frameId ? "ჩარჩო აქტივირებულია!" : "ჩარჩო გამოირთო");
+      toast.success(frameId ? tStandalone("extra.frameActivated") : tStandalone("extra.frameDeactivated"));
       return true;
     } catch (error) {
       console.error("Error equipping frame:", error);
-      toast.error("ჩარჩოს აქტივაცია ვერ მოხერხდა");
+      toast.error(tStandalone("extra.frameActivationFailed"));
       return false;
     }
   };

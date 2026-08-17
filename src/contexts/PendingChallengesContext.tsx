@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { toast } from "sonner";
+import { t as tStandalone } from "@/contexts/LanguageContext";
 
 export interface PendingChallenge {
   id: string;
@@ -93,7 +94,7 @@ export function PendingChallengesProvider({ children }: { children: ReactNode })
           id: room.id,
           roomCode: room.room_code,
           categoryName: room.category_name,
-          challengerNickname: profile?.nickname || "მოთამაშე",
+          challengerNickname: profile?.nickname || tStandalone("extra.playerFallback"),
           challengerAvatar: profile?.avatar_url || null,
           challengerCountry: profile?.country_code || null,
           challengerScore: scoreMap.get(room.id) ?? null,
@@ -107,8 +108,8 @@ export function PendingChallengesProvider({ children }: { children: ReactNode })
         if (!previousChallengeIds.current.has(challenge.id) && previousChallengeIds.current.size > 0) {
           playSound("friend-request");
           vibrate([100, 50, 100, 50, 100]);
-          toast.success(`${challenge.challengerNickname} გამოგიწვია თამაშში!`, {
-            description: challenge.categoryName || "ზოგადი ცოდნა",
+          toast.success(`${challenge.challengerNickname} ${tStandalone("extra.challengedYou")}`, {
+            description: challenge.categoryName || tStandalone("extra.generalKnowledge"),
             duration: 5000,
           });
         }
@@ -162,11 +163,11 @@ export function PendingChallengesProvider({ children }: { children: ReactNode })
       if (error) throw error;
 
       setPendingChallenges(prev => prev.filter(c => c.id !== challengeId));
-      toast.success("გამოწვევა უარყოფილია");
+      toast.success(tStandalone("extra.challengeDeclined"));
       return true;
     } catch (error) {
       console.error("Error declining challenge:", error);
-      toast.error("გამოწვევის უარყოფა ვერ მოხერხდა");
+      toast.error(tStandalone("extra.challengeDeclineFailed"));
       return false;
     }
   }, []);

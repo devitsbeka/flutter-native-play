@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useDailyVipRewards } from "@/hooks/useDailyVipRewards";
 import { toast } from "sonner";
+import { t as tStandalone } from "@/contexts/LanguageContext";
 
 export function useVipBenefitsAutoGrant() {
   const { user } = useAuth();
@@ -39,7 +40,7 @@ export function useVipBenefitsAutoGrant() {
     const autoClaim = async () => {
       const success = await claimDailyPowerUps();
       if (success) {
-        toast.success("VIP: მიღებულია 4 ძალა!", {
+        toast.success(tStandalone("extra.vipFourPowersGranted"), {
           icon: toastIcon(crownIcon),
           duration: 3000,
         });

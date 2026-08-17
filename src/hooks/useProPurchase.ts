@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { t as tStandalone } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
 import { useInAppPurchases, IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
@@ -40,7 +41,7 @@ export function useProPurchase() {
 
       if (data.error) {
         if (data.error === "STRIPE_NOT_CONFIGURED") {
-          toast.error("გადახდის სისტემა არ არის კონფიგურირებული");
+          toast.error(tStandalone("extra.ppPaymentNotConfigured"));
           return { success: false, error: "STRIPE_NOT_CONFIGURED" };
         }
         throw new Error(data.error);
@@ -55,7 +56,7 @@ export function useProPurchase() {
       return { success: false, error: "No checkout URL returned" };
     } catch (error) {
       console.error("PRO Checkout error:", error);
-      toast.error("გადახდის დაწყება ვერ მოხერხდა. გთხოვთ სცადოთ მოგვიანებით.");
+      toast.error(tStandalone("extra.ppPaymentStartFailed"));
       return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
     } finally {
       setIsProcessing(false);

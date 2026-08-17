@@ -123,7 +123,7 @@ export function useGameRoom() {
 
       if (roomError) {
         console.error("Room creation error:", roomError);
-        toast.error("ოთახის შექმნა ვერ მოხერხდა");
+        toast.error(t("extra.roomCreateFailed"));
         return null;
       }
 
@@ -144,7 +144,7 @@ export function useGameRoom() {
         console.error("Participant insert error:", participantError);
         // Clean up room if participant insert fails
         await supabase.from("game_rooms").delete().eq("id", room.id);
-        toast.error("ოთახის შექმნა ვერ მოხერხდა");
+        toast.error(t("extra.roomCreateFailed"));
         return null;
       }
 
@@ -173,7 +173,7 @@ export function useGameRoom() {
       return typedRoom;
     } catch (error) {
       console.error("Create room error:", error);
-      toast.error("ოთახის შექმნა ვერ მოხერხდა");
+      toast.error(t("extra.roomCreateFailed"));
       return null;
     } finally {
       setLoading(false);
@@ -197,7 +197,7 @@ export function useGameRoom() {
         .maybeSingle();
 
       if (roomError || !room) {
-        toast.error("ოთახი ვერ მოიძებნა ან გაუქმებულია");
+        toast.error(t("extra.gmRoomNotFoundOrCancelled"));
         return null;
       }
 
@@ -220,7 +220,7 @@ export function useGameRoom() {
 
       // If not already a participant and room is playing, block new joins
       if (!existingParticipant && room.status === "playing") {
-        toast.error("თამაში უკვე დაწყებულია");
+        toast.error(t("extra.mpGameAlreadyStarted"));
         return null;
       }
 
@@ -232,7 +232,7 @@ export function useGameRoom() {
           .eq("room_id", room.id);
 
         if (count && count >= room.max_players) {
-          toast.error("ოთახი სავსეა");
+          toast.error(t("extra.mpRoomFull"));
           return null;
         }
       }
@@ -260,7 +260,7 @@ export function useGameRoom() {
           challenger_completed_at: room.challenger_completed_at,
         };
         setCurrentRoom(typedRoom);
-        toast.success("წარმატებით დაბრუნდი ოთახში!");
+        toast.success(t("extra.gmRejoinedRoom"));
         return typedRoom;
       }
 
@@ -279,7 +279,7 @@ export function useGameRoom() {
 
       if (joinError) {
         console.error("Join room error:", joinError);
-        toast.error("ოთახში შესვლა ვერ მოხერხდა");
+        toast.error(t("extra.mpJoinFailed"));
         return null;
       }
 
@@ -305,11 +305,11 @@ export function useGameRoom() {
       };
 
       setCurrentRoom(typedRoom);
-      toast.success("წარმატებით შეუერთდი ოთახს!");
+      toast.success(t("extra.gmJoinedRoom"));
       return typedRoom;
     } catch (error) {
       console.error("Join room error:", error);
-      toast.error("ოთახში შესვლა ვერ მოხერხდა");
+      toast.error(t("extra.mpJoinFailed"));
       return null;
     } finally {
       setLoading(false);

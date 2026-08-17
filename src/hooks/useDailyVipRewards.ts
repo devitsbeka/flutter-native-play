@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { toast } from "sonner";
+import { t as tStandalone } from "@/contexts/LanguageContext";
 
 interface DailyVipRewardsState {
   powersClaimed: boolean;
@@ -84,7 +85,7 @@ export function useDailyVipRewards() {
 
     if (error) {
       console.error("Error claiming daily power-ups:", error);
-      toast.error("ძალების მიღება ვერ მოხერხდა");
+      toast.error(tStandalone("extra.vipPowersClaimFailed"));
       return false;
     }
 
@@ -98,7 +99,7 @@ export function useDailyVipRewards() {
     }
 
     setState(prev => ({ ...prev, powersClaimed: true }));
-    toast.success("VIP ძალები მიღებულია!");
+    toast.success(tStandalone("extra.vipPowersReceived"));
     return true;
   }, [user, isVip, state.powersClaimed]);
 

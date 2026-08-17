@@ -4430,6 +4430,26 @@ export const en: KaTranslations = {
     proSeatGiven: "PRO given",
     proSeatGivenCount: "PRO given — {used} of {total} seats used",
     proSeatRevoked: "Seat taken back",
+    // useGameRoom
+    gmRoomNotFoundOrCancelled: "Room not found or cancelled",
+    gmRejoinedRoom: "Welcome back to the room!",
+    gmJoinedRoom: "Joined the room!",
+    // useProPurchase
+    ppPaymentNotConfigured: "Payment system is not configured",
+    ppPaymentStartFailed: "Could not start the payment. Please try again later.",
+    // useVipBenefitsAutoGrant
+    vipFourPowersGranted: "VIP: 4 power-ups received!",
+    // Avatar frames
+    frameUnlockFailed: "Failed to unlock frame",
+    frameDescGalaxy: "Cosmic frame with stars",
+    frameDescFire: "Fiery animated frame",
+    frameDescIce: "Icy sparkling frame",
+    frameDescGolden: "Legendary golden crown",
+    frameDescNeon: "Glowing neon frame",
+    frameDescRainbow: "Multicolored rainbow frame",
+    frameDescVipCrown: "Exclusive golden royal crown",
+    frameDescVipDiamond: "Exclusive diamond frame",
+    frameDescVipRoyal: "Exclusive royal flame",
   },
 
   systemErrors: {

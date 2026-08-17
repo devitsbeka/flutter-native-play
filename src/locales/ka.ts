@@ -4461,6 +4461,26 @@ export const ka = {
     proSeatGiven: "PRO გადაცემულია",
     proSeatGivenCount: "PRO გადაცემულია — გამოყენებულია {used}/{total} ადგილი",
     proSeatRevoked: "ადგილი დაბრუნებულია",
+    // useGameRoom
+    gmRoomNotFoundOrCancelled: "ოთახი ვერ მოიძებნა ან გაუქმებულია",
+    gmRejoinedRoom: "წარმატებით დაბრუნდი ოთახში!",
+    gmJoinedRoom: "წარმატებით შეუერთდი ოთახს!",
+    // useProPurchase
+    ppPaymentNotConfigured: "გადახდის სისტემა არ არის კონფიგურირებული",
+    ppPaymentStartFailed: "გადახდის დაწყება ვერ მოხერხდა. გთხოვთ სცადოთ მოგვიანებით.",
+    // useVipBenefitsAutoGrant
+    vipFourPowersGranted: "VIP: მიღებულია 4 ძალა!",
+    // Avatar frames
+    frameUnlockFailed: "ჩარჩოს გახსნა ვერ მოხერხდა",
+    frameDescGalaxy: "კოსმოსური ჩარჩო ვარსკვლავებით",
+    frameDescFire: "ცეცხლოვანი ანიმაციური ჩარჩო",
+    frameDescIce: "ყინულოვანი ბრჭყვიალა ჩარჩო",
+    frameDescGolden: "ლეგენდარული ოქროს გვირგვინი",
+    frameDescNeon: "ნეონის ბრწყინვალე ჩარჩო",
+    frameDescRainbow: "ცისარტყელას მრავალფერი ჩარჩო",
+    frameDescVipCrown: "ექსკლუზიური ოქროს სამეფო გვირგვინი",
+    frameDescVipDiamond: "ექსკლუზიური ალმასის ჩარჩო",
+    frameDescVipRoyal: "ექსკლუზიური სამეფო ცეცხლი",
   },
 
   // ==========================================

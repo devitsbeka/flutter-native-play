@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { t as tStandalone } from "@/contexts/LanguageContext";
 
 export interface TriviaDraftData {
   id: string;
@@ -91,10 +92,10 @@ export function useTriviaDrafts() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["trivia-drafts"] });
-      toast.success("დრაფტი წაიშალა");
+      toast.success(tStandalone("extra.draftDeleted"));
     },
     onError: () => {
-      toast.error("დრაფტის წაშლა ვერ მოხერხდა");
+      toast.error(tStandalone("extra.draftDeleteFailed"));
     },
   });
 
@@ -109,7 +110,7 @@ export function useTriviaDrafts() {
       .single();
 
     if (error) {
-      toast.error("დრაფტის ჩატვირთვა ვერ მოხერხდა");
+      toast.error(tStandalone("extra.draftLoadFailed"));
       return null;
     }
 

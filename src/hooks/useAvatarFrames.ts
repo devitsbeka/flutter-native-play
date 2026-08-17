@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { t as tStandalone } from "@/contexts/LanguageContext";
 
 export interface AvatarFrame {
   id: string;
@@ -19,7 +20,7 @@ export const AVATAR_FRAMES: AvatarFrame[] = [
   {
     id: "galaxy",
     name: "Galaxy",
-    description: "კოსმოსური ჩარჩო ვარსკვლავებით",
+    get description() { return tStandalone("extra.frameDescGalaxy"); },
     price: 15,
     gradient: "from-indigo-500 via-purple-500 to-pink-500",
     borderStyle: "border-4 border-purple-400",
@@ -29,7 +30,7 @@ export const AVATAR_FRAMES: AvatarFrame[] = [
   {
     id: "fire",
     name: "Fire",
-    description: "ცეცხლოვანი ანიმაციური ჩარჩო",
+    get description() { return tStandalone("extra.frameDescFire"); },
     price: 25,
     gradient: "from-orange-500 via-red-500 to-yellow-500",
     borderStyle: "border-4 border-orange-400",
@@ -39,7 +40,7 @@ export const AVATAR_FRAMES: AvatarFrame[] = [
   {
     id: "ice",
     name: "Ice",
-    description: "ყინულოვანი ბრჭყვიალა ჩარჩო",
+    get description() { return tStandalone("extra.frameDescIce"); },
     price: 15,
     gradient: "from-cyan-400 via-blue-500 to-indigo-500",
     borderStyle: "border-4 border-cyan-400",
@@ -48,7 +49,7 @@ export const AVATAR_FRAMES: AvatarFrame[] = [
   {
     id: "golden",
     name: "Golden Crown",
-    description: "ლეგენდარული ოქროს გვირგვინი",
+    get description() { return tStandalone("extra.frameDescGolden"); },
     price: 50,
     gradient: "from-yellow-400 via-amber-500 to-orange-500",
     borderStyle: "border-4 border-yellow-400",
@@ -58,7 +59,7 @@ export const AVATAR_FRAMES: AvatarFrame[] = [
   {
     id: "neon",
     name: "Neon Glow",
-    description: "ნეონის ბრწყინვალე ჩარჩო",
+    get description() { return tStandalone("extra.frameDescNeon"); },
     price: 25,
     gradient: "from-green-400 via-cyan-500 to-blue-500",
     borderStyle: "border-4 border-green-400",
@@ -68,7 +69,7 @@ export const AVATAR_FRAMES: AvatarFrame[] = [
   {
     id: "rainbow",
     name: "Rainbow",
-    description: "ცისარტყელას მრავალფერი ჩარჩო",
+    get description() { return tStandalone("extra.frameDescRainbow"); },
     price: 40,
     gradient: "from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500",
     borderStyle: "border-4 border-pink-400",
@@ -78,7 +79,7 @@ export const AVATAR_FRAMES: AvatarFrame[] = [
   {
     id: "vip-crown",
     name: "Royal Crown",
-    description: "ექსკლუზიური ოქროს სამეფო გვირგვინი",
+    get description() { return tStandalone("extra.frameDescVipCrown"); },
     price: 0,
     gradient: "from-yellow-300 via-amber-400 to-yellow-600",
     borderStyle: "border-4 border-yellow-300",
@@ -89,7 +90,7 @@ export const AVATAR_FRAMES: AvatarFrame[] = [
   {
     id: "vip-diamond",
     name: "Diamond Elite",
-    description: "ექსკლუზიური ალმასის ჩარჩო",
+    get description() { return tStandalone("extra.frameDescVipDiamond"); },
     price: 0,
     gradient: "from-pink-400 via-purple-500 to-indigo-500",
     borderStyle: "border-4 border-pink-300",
@@ -100,7 +101,7 @@ export const AVATAR_FRAMES: AvatarFrame[] = [
   {
     id: "vip-royal",
     name: "Royal Flame",
-    description: "ექსკლუზიური სამეფო ცეცხლი",
+    get description() { return tStandalone("extra.frameDescVipRoyal"); },
     price: 0,
     gradient: "from-red-500 via-orange-500 to-yellow-400",
     borderStyle: "border-4 border-red-400",
@@ -164,7 +165,7 @@ export function useAvatarFrames() {
       return true;
     } catch (error) {
       console.error("Error unlocking frame:", error);
-      toast.error("ჩარჩოს გახსნა ვერ მოხერხდა");
+      toast.error(tStandalone("extra.frameUnlockFailed"));
       return false;
     }
   };
@@ -191,11 +192,11 @@ export function useAvatarFrames() {
       }
 
       setEquippedFrame(frameId);
-      toast.success(frameId ? "ჩარჩო აქტივირებულია!" : "ჩარჩო გამოირთო");
+      toast.success(frameId ? tStandalone("extra.frameActivated") : tStandalone("extra.frameDeactivated"));
       return true;
     } catch (error) {
       console.error("Error equipping frame:", error);
-      toast.error("ჩარჩოს აქტივაცია ვერ მოხერხდა");
+      toast.error(tStandalone("extra.frameActivationFailed"));
       return false;
     }
   };
