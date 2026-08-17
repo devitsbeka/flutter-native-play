@@ -1597,6 +1597,9 @@ export type Database = {
           granter_id: string
           holder_id: string
           id: string
+          prior_expires_at: string | null
+          prior_platform: string | null
+          prior_tier: string | null
           revoked_at: string | null
           revoked_reason: string | null
           seq: number
@@ -1606,6 +1609,9 @@ export type Database = {
           granter_id: string
           holder_id: string
           id?: string
+          prior_expires_at?: string | null
+          prior_platform?: string | null
+          prior_tier?: string | null
           revoked_at?: string | null
           revoked_reason?: string | null
           seq?: never
@@ -1615,6 +1621,9 @@ export type Database = {
           granter_id?: string
           holder_id?: string
           id?: string
+          prior_expires_at?: string | null
+          prior_platform?: string | null
+          prior_tier?: string | null
           revoked_at?: string | null
           revoked_reason?: string | null
           seq?: never
@@ -4096,6 +4105,10 @@ export type Database = {
           new_gems: number
         }[]
       }
+      end_pro_seat: {
+        Args: { p_reason: string; p_seat_id: string }
+        Returns: undefined
+      }
       ensure_admin_lifetime_pro: { Args: never; Returns: boolean }
       exchange_currency: {
         Args: { p_amount: number; p_direction: string }
@@ -4195,6 +4208,10 @@ export type Database = {
       pro_seat_allowance: {
         Args: { p_expires_at: string; p_platform: string; p_tier: string }
         Returns: number
+      }
+      pro_seat_holder_has_pro: {
+        Args: { p_expires_at: string; p_platform: string; p_tier: string }
+        Returns: boolean
       }
       reset_room_participants: {
         Args: { p_room_id: string; p_status?: string }
