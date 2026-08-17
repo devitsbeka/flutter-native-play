@@ -173,15 +173,12 @@ export function ShopStandardLayout({
   );
 
   return (
-    <div className="flex-1 pb-8">
-      {/* შეთავაზებები opens the page. Phones: one swipeable reel holds every
-          banner (deals, invite, PRO tiers). md+: the two PRO tiers open the
-          page and the deals grid re-appears after the coins section. */}
-      <div className="relative z-10 mx-3 sm:mx-4 mt-4 mb-3 flex items-center px-1">
-        <h2 className="text-lg md:text-xl font-display font-bold text-foreground">{t("shop.deals")}</h2>
-      </div>
+    <div className="flex-1 pt-4 pb-8">
+      {/* The reel opens the page with no heading over it. The banners say what
+          they are — a discount, an invite, a PRO tier — and "შეთავაზებები"
+          above them only repeated that, one line further from the offer.
 
-      {/* One reel at every width: it shows one banner on a phone and two or
+          One reel at every width: it shows one banner on a phone and two or
           three once there is room, so there is a single set of offers rather
           than a phone version and a desktop version that drift apart. */}
       <ProBannerReel
