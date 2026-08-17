@@ -6,8 +6,13 @@ import myTriviaLogo from "@/assets/mytrivia-logo.svg";
 import guestGeoMap from "@/assets/figma-home/guest-geo-map.webp";
 import coinChunky from "@/assets/figma-home/coin-chunky.png";
 import gemChunky from "@/assets/figma-home/gem-chunky.png";
-import shieldOuter from "@/assets/figma-home/shield-outer.svg";
-import shieldInner from "@/assets/figma-home/shield-inner.svg";
+// The 4x PNGs, not the Figma SVG exports. Both shields carry SVG filters
+// (inner/drop shadows, a foreignObject backdrop blur), and iOS WebKit
+// rasterizes a filtered SVG loaded through <img> at 1x CSS resolution and
+// upscales it to the retina screen — the badge shipped visibly blurry.
+// Pre-rendered at 4x (scripts: render via headless Chromium), it is crisp.
+import shieldOuter from "@/assets/figma-home/shield-outer.png";
+import shieldInner from "@/assets/figma-home/shield-inner.png";
 import { getCountryFlag } from "@/data/opponents";
 import { WeekMissionsStrip } from "@/components/home/WeekMissionsStrip";
 

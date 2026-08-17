@@ -8,8 +8,10 @@ import { WeekMissionsStrip } from "@/components/home/WeekMissionsStrip";
 import checkStreak from "@/assets/figma-home/check-streak.svg";
 import xDay from "@/assets/figma-home/x-day.svg";
 import timerLine from "@/assets/figma-home/timer-line.svg";
-import shieldOuter from "@/assets/figma-home/shield-outer.svg";
-import shieldInner from "@/assets/figma-home/shield-inner.svg";
+// 4x PNG renders of the Figma shield exports — see MobileHome for why the
+// filtered SVGs blur through <img> on iOS.
+import shieldOuter from "@/assets/figma-home/shield-outer.png";
+import shieldInner from "@/assets/figma-home/shield-inner.png";
 import swordLine from "@/assets/figma-home/sword-line.svg";
 import { GreenPlayButton } from "@/components/shared/GreenPlayButton";
 import { useLanguage } from "@/contexts/LanguageContext";
