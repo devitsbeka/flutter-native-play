@@ -51,6 +51,7 @@ import { PowerUpEffectOverlay } from "@/components/game/PowerUpEffectOverlay";
 import { PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
 import { useAIIconSlug } from "@/hooks/useAIIconSlug";
+import { useCategoryDisplayName } from "@/hooks/useCategoryDisplayName";
 import { trackQuizStarted, trackQuizQuestionAnswered, trackQuizCompleted, trackQuizAbandoned, trackPowerUpUsed } from "@/lib/analytics";
 import puzzleSphereIcon from "@/assets/icons/puzzle-sphere.png";
 
@@ -810,6 +811,14 @@ export default function CategoryQuizPage() {
   // Get AI-analyzed icon slug for current question (highest priority)
   const aiIconSlug = useAIIconSlug(currentQuestion?.question, dbCategory?.name);
 
+  // The heading in the player's language. categories.name is Georgian for
+  // everyone; the translations Discover already shows live in
+  // category_translations.
+  const categoryTitle = useCategoryDisplayName(
+    dbCategory?.id,
+    dbCategory?.name || category?.name,
+  );
+
   // Detect true/false questions
   const isTrueFalseQuestion = useMemo(() => {
     if (!currentQuestion?.allAnswers) return false;
@@ -1213,7 +1222,7 @@ export default function CategoryQuizPage() {
         
         {/* Center - Category name */}
         <span className="text-white font-bold text-base truncate max-w-[160px] text-center">
-          {dbCategory?.name || category?.name || "Quiz"}
+          {categoryTitle || "Quiz"}
         </span>
         
         {/* Right - Compact Timer */}
