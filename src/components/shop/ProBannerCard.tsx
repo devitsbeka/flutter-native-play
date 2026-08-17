@@ -535,8 +535,10 @@ function BannerRow({
 function BannerStripPill({ icon, fill, ink, children }: { icon: string; fill: string; ink: string; children: ReactNode }) {
   return (
     <div className="flex shrink-0 items-center justify-center gap-[3px] rounded-[24px] px-[9px] py-[5px]" style={{ background: fill }}>
-      <img src={icon} alt="" draggable={false} className="size-[18px] object-contain" />
-      <p className="whitespace-nowrap text-center text-[14px] font-semibold" style={{ color: ink }}>
+      {/* 18px/14px in the frame, +10% by request — the deal-name and
+          countdown pills were the hardest text to read on the banner. */}
+      <img src={icon} alt="" draggable={false} className="size-[20px] object-contain" />
+      <p className="whitespace-nowrap text-center text-[15.4px] font-semibold" style={{ color: ink }}>
         {children}
       </p>
     </div>

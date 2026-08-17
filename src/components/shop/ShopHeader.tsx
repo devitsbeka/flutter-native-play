@@ -36,17 +36,6 @@ export function ShopHeader({ onPiggyClick }: ShopHeaderProps) {
       style={{ boxShadow: "0 6px 16px rgba(64, 38, 102, 0.10)" }}
     >
       <div className="mx-auto flex h-[76px] w-full max-w-[700px] items-center gap-4 px-5">
-        {/* Piggy bank — buy more. Leads the row, mirrored so it faces the
-            balances it feeds. */}
-        <button
-          type="button"
-          onClick={onPiggyClick}
-          aria-label="Buy currency"
-          className="shrink-0 active:scale-95 transition-transform"
-        >
-          <img src={piggyBank} alt="" className="size-[61px] -scale-x-100 object-contain" />
-        </button>
-
         {/* Coins */}
         <div className="flex min-w-0 items-center gap-2">
           <span className="flex size-[45px] shrink-0 items-center justify-center rounded-full border border-[rgba(250,214,255,0.43)] bg-[rgba(250,214,255,0.13)]">
@@ -66,6 +55,17 @@ export function ShopHeader({ onPiggyClick }: ShopHeaderProps) {
             {gems.toLocaleString()}
           </span>
         </div>
+
+        {/* Piggy bank — buy more. Closes the row on the right, facing the
+            balances it feeds (the export already looks left). */}
+        <button
+          type="button"
+          onClick={onPiggyClick}
+          aria-label="Buy currency"
+          className="ml-auto shrink-0 active:scale-95 transition-transform"
+        >
+          <img src={piggyBank} alt="" className="size-[61px] object-contain" />
+        </button>
       </div>
     </div>
   );

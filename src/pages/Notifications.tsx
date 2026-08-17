@@ -308,8 +308,13 @@ export default function Notifications() {
           repeating that said nothing the title did not. */}
       <PageHeader title={t("extra.notifActivity")} className="z-20" />
 
-      {/* Tabs */}
-      <div className="sticky top-[calc(76px_+_var(--safe-top))] z-10 bg-background/95 backdrop-blur-md px-4 pt-3 pb-3 max-w-[700px] md:max-w-[600px] mx-auto">
+      {/* Tabs. Sticky offset is 76px — the PageHeader's height only. This
+          page scrolls inside MainLayout, whose scroller already starts below
+          the safe area, so adding var(--safe-top) here double-counts the
+          inset: sticky then pushes the strip 59px BELOW its flow position at
+          rest, which read as an empty band between header and content on
+          device (and never on web, where --safe-top is 0). */}
+      <div className="sticky top-[76px] z-10 bg-background/95 backdrop-blur-md px-4 pt-3 pb-3 max-w-[700px] md:max-w-[600px] mx-auto">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as NotificationTab)} className="w-full">
           <TabsList className="grid grid-cols-3 w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto">
             <TabsTrigger value="games" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
