@@ -117,7 +117,9 @@ export function useProSeats(seatsTotal: number) {
         }
         await refresh();
         toast.success(
-          data ? `PRO given — ${data.seats_used} of ${data.seats_total} seats used` : "PRO given",
+          data
+            ? t("extra.proSeatGivenCount", { used: data.seats_used, total: data.seats_total })
+            : t("extra.proSeatGiven"),
         );
         return true;
       } finally {
@@ -139,7 +141,7 @@ export function useProSeats(seatsTotal: number) {
           return false;
         }
         await refresh();
-        toast.success("Seat taken back");
+        toast.success(t("extra.proSeatRevoked"));
         return true;
       } finally {
         setBusy(false);

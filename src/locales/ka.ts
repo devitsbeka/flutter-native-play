@@ -4449,6 +4449,18 @@ export const ka = {
     tpmStep1: "1. გახსენით mytrivia.io/tv ბრაუზერში",
     tpmStep2: "2. შეიყვანეთ 6-სიმბოლოიანი კოდი",
     tpmStep3: "3. მოიწვიეთ მეგობრები QR კოდით",
+    // useInAppPurchases
+    iapItemUnavailable: "ეს პროდუქტი მაღაზიაში ამჟამად მიუწვდომელია.",
+    iapGemsShortly: "შესყიდვა დასრულდა — ალმასები მალე დაგერიცხება.",
+    iapActivationFailed: "შესყიდვა შესრულდა, მაგრამ გააქტიურება ვერ მოხერხდა. მალე გამოჩნდება.",
+    iapStoreNoResponse: "მაღაზიამ არ უპასუხა. სცადე თავიდან.",
+    iapRestoreOnlyMobile: "აღდგენა ხელმისაწვდომია მხოლოდ მობილურ აპლიკაციაში",
+    // useFavorites
+    favUpdateFailed: "ფავორიტის განახლება ვერ მოხერხდა",
+    // useProSeats
+    proSeatGiven: "PRO გადაცემულია",
+    proSeatGivenCount: "PRO გადაცემულია — გამოყენებულია {used}/{total} ადგილი",
+    proSeatRevoked: "ადგილი დაბრუნებულია",
   },
 
   // ==========================================

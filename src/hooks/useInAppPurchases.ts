@@ -3,6 +3,7 @@ import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { t as tStandalone } from "@/contexts/LanguageContext";
 
 // Product IDs configured in App Store Connect and mirrored in RevenueCat.
 // Must stay in sync with PRODUCTS in supabase/functions/_shared/iap.ts, which
@@ -445,12 +446,12 @@ export function useInAppPurchases() {
   // Purchase a product
   const purchase = useCallback(async (productId: string): Promise<PurchaseResult> => {
     if (!user) {
-      toast.error("Please sign in");
+      toast.error(tStandalone("iap.pleaseSignIn"));
       return { success: false, error: "Not authenticated" };
     }
 
     if (!Capacitor.isNativePlatform()) {
-      toast.error("Purchases only available in mobile app");
+      toast.error(tStandalone("iap.purchaseOnlyMobile"));
       return { success: false, error: "Not on native platform" };
     }
 
@@ -548,7 +549,7 @@ export function useInAppPurchases() {
               `App Store Connect, not yet 'Ready to Submit', or the Paid ` +
               `Applications agreement is not active.`,
           );
-          toast.error("This item isn't available from the store right now.");
+          toast.error(tStandalone("extra.iapItemUnavailable"));
           return { success: false, error: "product_not_found" };
         }
 
@@ -596,7 +597,7 @@ export function useInAppPurchases() {
           iapLog("not credited yet — polling in the background");
           void pollForCredit(refreshBalance);
           await refreshBalance();
-          toast.success("Purchase completed — your gems will appear shortly.");
+          toast.success(tStandalone("extra.iapGemsShortly"));
           return { success: true };
         }
 
@@ -604,7 +605,7 @@ export function useInAppPurchases() {
           // The money moved even though the sync didn't. Say so honestly
           // rather than reporting a failed purchase the user was charged for —
           // the webhook will settle it, and restore covers the rest.
-          toast.error("Purchase went through, but activating it failed. It will appear shortly.");
+          toast.error(tStandalone("extra.iapActivationFailed"));
           return { success: false, error: "sync_failed" };
         }
 
@@ -617,7 +618,7 @@ export function useInAppPurchases() {
         // what "I had those gems on launch" was.
         await refreshBalance();
 
-        toast.success("Purchase completed!");
+        toast.success(tStandalone("iap.purchaseComplete"));
         return { success: true };
       }
 
@@ -627,7 +628,7 @@ export function useInAppPurchases() {
       // without buying anything. Silent until now — the button simply did
       // nothing, which is indistinguishable from a dead tap handler.
       console.error(`[iap] ${productId} returned no customerInfo — nothing was purchased`);
-      toast.error("The store did not respond. Please try again.");
+      toast.error(tStandalone("extra.iapStoreNoResponse"));
       return { success: false, error: "no_customer_info" };
     } catch (error: any) {
       console.error("Purchase error:", error);
@@ -643,7 +644,7 @@ export function useInAppPurchases() {
         return { success: false, error: "cancelled" };
       }
       
-      toast.error("Purchase failed");
+      toast.error(tStandalone("iap.purchaseFailed"));
       return { success: false, error: error.message };
     } finally {
       setPurchasing(false);
@@ -653,12 +654,12 @@ export function useInAppPurchases() {
   // Restore previous purchases
   const restorePurchases = useCallback(async (): Promise<boolean> => {
     if (!user) {
-      toast.error("Please sign in");
+      toast.error(tStandalone("iap.pleaseSignIn"));
       return false;
     }
 
     if (!Capacitor.isNativePlatform()) {
-      toast.info("Restore only available in mobile app");
+      toast.info(tStandalone("extra.iapRestoreOnlyMobile"));
       return false;
     }
 
@@ -678,21 +679,21 @@ export function useInAppPurchases() {
 
       const synced = await syncEntitlements();
       if (!synced.success) {
-        toast.error("Restore failed");
+        toast.error(tStandalone("iap.restoreFailed"));
         return false;
       }
 
       if (synced.tier || synced.gemsCredited > 0) {
         await refreshBalance();
-        toast.success("Purchases restored!");
+        toast.success(tStandalone("iap.purchasesRestored"));
         return true;
       }
 
-      toast.info("No previous purchases found");
+      toast.info(tStandalone("iap.noPreviousPurchases"));
       return false;
     } catch (error: any) {
       console.error("Restore error:", error);
-      toast.error("Restore failed");
+      toast.error(tStandalone("iap.restoreFailed"));
       return false;
     } finally {
       setPurchasing(false);

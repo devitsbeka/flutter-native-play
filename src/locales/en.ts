@@ -4418,6 +4418,18 @@ export const en: KaTranslations = {
     tpmStep1: "1. Open mytrivia.io/tv in a browser",
     tpmStep2: "2. Enter the 6-character code",
     tpmStep3: "3. Invite friends with the QR code",
+    // useInAppPurchases
+    iapItemUnavailable: "This item isn't available from the store right now.",
+    iapGemsShortly: "Purchase completed — your gems will appear shortly.",
+    iapActivationFailed: "Purchase went through, but activating it failed. It will appear shortly.",
+    iapStoreNoResponse: "The store did not respond. Please try again.",
+    iapRestoreOnlyMobile: "Restore only available in mobile app",
+    // useFavorites
+    favUpdateFailed: "Failed to update favorite",
+    // useProSeats
+    proSeatGiven: "PRO given",
+    proSeatGivenCount: "PRO given — {used} of {total} seats used",
+    proSeatRevoked: "Seat taken back",
   },
 
   systemErrors: {

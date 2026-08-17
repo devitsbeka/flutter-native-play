@@ -2999,7 +2999,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Validate that either categoryId or userTriviaId is provided
     if (!categoryId && !userTriviaId) {
       tvLogError('startGame', 'No category ID or user trivia ID provided');
-      toast.error('Please select a category before starting');
+      toast.error(t('extra.tvhSelectCategoryFirst'));
       return;
     }
     

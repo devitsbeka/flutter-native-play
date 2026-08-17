@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { t as tStandalone } from "@/contexts/LanguageContext";
 
 export function useFavorites() {
   const { user } = useAuth();
@@ -94,7 +95,7 @@ export function useFavorites() {
         }
       } catch (error: any) {
         console.error("Error toggling favorite:", error);
-        toast.error("Failed to update favorite");
+        toast.error(tStandalone("extra.favUpdateFailed"));
         // Revert optimistic update
         setFavorites((prev) => {
           const next = new Set(prev);
