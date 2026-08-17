@@ -162,6 +162,25 @@ export function GameResultsScreenV2() {
       if (statsKey) processedResultsGames.add(statsKey);
 
       const updateStats = async () => {
+        // Round completion — the room-wide write-set (room_games completion
+        // snapshot, match history row, and every participant's cumulative
+        // total_score / total_rounds_played / total_wins) — happens in ONE
+        // idempotent SECURITY DEFINER RPC, called by every device; the first
+        // call applies it, the rest no-op. It replaced a host-only client
+        // loop that RLS silently reduced to the host's own row: every other
+        // player sat at 0 points / 0 rounds on the scoreboard forever.
+        // First in the chain and error-isolated, so a coins or profile
+        // failure below can never eat the round again.
+        if (currentRoom.current_game_id) {
+          const { error: roundError } = await supabase.rpc("complete_room_round", {
+            p_room_id: currentRoom.id,
+            p_game_id: currentRoom.current_game_id,
+          });
+          if (roundError) {
+            console.error("[GameResults] complete_room_round failed:", roundError);
+          }
+        }
+
         // Unified reward policy — see multiplayerPayout.ts for the rules.
         const { earnedCoins, isPractice, countsAsWin } = calculateMultiplayerPayout({
           playerCount: participants.length,
@@ -196,59 +215,11 @@ export function GameResultsScreenV2() {
         // Interstitial cadence check now that this game counts as completed
         void maybeShowInterstitial((profile.games_played || 0) + 1);
 
-        // Save to room_games
-        const playerScores = rankedParticipants.map(p => ({
-          user_id: p.user_id,
-          nickname: p.nickname,
-          score: p.score,
-          avatar_url: p.avatar_url,
-        }));
-        
-        if (currentRoom.current_game_id) {
-          await supabase
-            .from("room_games")
-            .update({
-              completed_at: new Date().toISOString(),
-              winner_user_id: rankedParticipants[0]?.user_id,
-              player_scores: playerScores,
-            })
-            .eq("id", currentRoom.current_game_id);
-        }
-
-        // Save to room_match_history for recent games display.
-        // Host only - every device runs this effect, so without the guard
-        // an N-player round inserts N duplicate history rows
-        if (isHost) {
-          await supabase
-            .from("room_match_history")
-            .insert({
-              room_id: currentRoom.id,
-              winner_user_id: rankedParticipants[0]?.user_id || null,
-              player_scores: playerScores,
-            });
-        }
-
-        // Update participant stats including cumulative total_score.
-        // Host only: previously every device wrote every participant's row
-        // from its own (possibly stale) snapshot — N players meant N
-        // overlapping read-modify-writes of the same cumulative totals,
-        // which could double-count or roll back scores.
-        if (isHost) {
-          const winnerId = rankedParticipants[0]?.user_id;
-          for (const p of participants) {
-            const isWinner = p.user_id === winnerId;
-            const participantScore = rankedParticipants.find(rp => rp.user_id === p.user_id)?.score || 0;
-            await supabase
-              .from("room_participants")
-              .update({
-                total_wins: isWinner ? (p.total_wins || 0) + 1 : p.total_wins || 0,
-                total_rounds_played: (p.total_rounds_played || 0) + 1,
-                total_score: (p.total_score || 0) + participantScore, // Add to cumulative score
-                last_played_at: new Date().toISOString(),
-              })
-              .eq("id", p.id);
-          }
-        }
+        // room_games completion, room_match_history, and the cumulative
+        // participant totals are all written by complete_room_round above —
+        // server-side, from live scores, once per round. The client-side
+        // versions this replaces were host-gated (RLS made anything else a
+        // silent no-op) and read from whichever snapshot this device had.
 
         // Every device still marks only its own "seen results" flag
         const myRow = participants.find(p => p.user_id === user.id);

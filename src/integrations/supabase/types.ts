@@ -2165,6 +2165,7 @@ export type Database = {
           questions_data: Json
           room_id: string
           started_at: string
+          totals_applied: boolean
           winner_user_id: string | null
         }
         Insert: {
@@ -2176,6 +2177,7 @@ export type Database = {
           questions_data?: Json
           room_id: string
           started_at?: string
+          totals_applied?: boolean
           winner_user_id?: string | null
         }
         Update: {
@@ -2187,6 +2189,7 @@ export type Database = {
           questions_data?: Json
           room_id?: string
           started_at?: string
+          totals_applied?: boolean
           winner_user_id?: string | null
         }
         Relationships: [
@@ -4075,6 +4078,10 @@ export type Database = {
           new_coins: number
           new_gems: number
         }[]
+      }
+      complete_room_round: {
+        Args: { p_game_id: string; p_room_id: string }
+        Returns: boolean
       }
       consume_free_play: { Args: never; Returns: Json }
       credit_gameplay_reward: {
