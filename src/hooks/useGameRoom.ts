@@ -333,18 +333,14 @@ export function useGameRoom() {
           .limit(1);
 
         if (otherParticipants && otherParticipants.length > 0) {
-          // Transfer host to another participant
+          // Transfer via the SECURITY DEFINER RPC — a direct is_host write
+          // on another player's row is silently dropped by RLS.
           const newHostId = otherParticipants[0].user_id;
-          await supabase
-            .from("game_rooms")
-            .update({ host_user_id: newHostId })
-            .eq("id", roomId);
-          
-          await supabase
-            .from("room_participants")
-            .update({ is_host: true })
-            .eq("room_id", roomId)
-            .eq("user_id", newHostId);
+          const { error: transferError } = await supabase.rpc("transfer_room_host", {
+            p_room_id: roomId,
+            p_new_host: newHostId,
+          });
+          if (transferError) throw transferError;
         } else {
           // No other participants, cancel the room
           await supabase

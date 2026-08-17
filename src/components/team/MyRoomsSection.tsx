@@ -192,23 +192,28 @@ export function MyRoomsSection({
       }
     }
     
-    // A finished room is reset for a rematch. The four writes are independent
-    // of each other, so they go out together rather than one after another —
-    // four sequential round-trips on a phone is most of the wait before the
-    // lobby appears.
+    // A finished room is reset for a rematch. Participants reset through
+    // the SECURITY DEFINER RPC — a direct room-wide UPDATE only ever
+    // touched the tapper's own row (RLS is own-row-only) and silently left
+    // everyone else at "finished" with last round's score, which is what
+    // corrupted rematches. The question/answer cleanup is host-only by
+    // policy; when a non-host opens the rematch it no-ops here and the
+    // host's round-start cleanup handles it instead.
     if (room.status === "completed") {
-      await Promise.all([
+      const [roomRes, , , resetRes] = await Promise.all([
         supabase
           .from("game_rooms")
           .update({ status: "waiting", started_at: null, completed_at: null })
           .eq("id", room.id),
         supabase.from("room_questions").delete().eq("room_id", room.id),
         supabase.from("player_answers").delete().eq("room_id", room.id),
-        supabase
-          .from("room_participants")
-          .update({ status: "joined", score: 0, current_question: 0 })
-          .eq("room_id", room.id),
+        supabase.rpc("reset_room_participants", {
+          p_room_id: room.id,
+          p_status: "joined",
+        }),
       ]);
+      if (roomRes.error) console.error("[MyRooms] rematch room reset failed:", roomRes.error);
+      if (resetRes.error) console.error("[MyRooms] rematch participant reset failed:", resetRes.error);
     }
     
     // Standard room join - goes to lobby

@@ -353,18 +353,33 @@ function TeamContentV2() {
     try {
       const { attemptId } = JSON.parse(pending);
       if (attemptId) {
+        // .select() so a zero-row match reads as the failure it is — the
+        // claim policy only covers ownerless rows, and RLS-filtered updates
+        // "succeed" silently. The pointer is only cleared once a row was
+        // actually claimed; before, it was removed unconditionally, so one
+        // silent miss orphaned the guest's score forever.
         supabase
           .from("challenge_attempts")
           .update({ user_id: user.id })
           .eq("id", attemptId)
-          .then(({ error }) => {
-            if (error) console.error("Failed to link challenge attempt:", error);
+          .select("id")
+          .then(({ data, error }) => {
+            if (error) {
+              console.error("Failed to link challenge attempt:", error);
+            } else if (!data || data.length === 0) {
+              console.warn("Challenge attempt claim matched no row:", attemptId);
+              localStorage.removeItem("pending_challenge_link");
+            } else {
+              localStorage.removeItem("pending_challenge_link");
+            }
           });
+      } else {
+        localStorage.removeItem("pending_challenge_link");
       }
     } catch (e) {
       console.error("Error parsing pending challenge:", e);
+      localStorage.removeItem("pending_challenge_link");
     }
-    localStorage.removeItem("pending_challenge_link");
   }, [user]);
 
   // Track room membership so a lingering ?room= code can't auto-rejoin the

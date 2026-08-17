@@ -4264,6 +4264,10 @@ export type Database = {
         }
         Returns: Json
       }
+      transfer_room_host: {
+        Args: { p_new_host: string; p_room_id: string }
+        Returns: undefined
+      }
       tv_advance_question: { Args: { p_session_id: string }; Returns: Json }
       tv_claim_session: {
         Args: {

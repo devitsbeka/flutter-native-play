@@ -2789,25 +2789,22 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     if (!state.currentRoom || !user) return;
     
     try {
-      await supabase
-        .from("room_participants")
-        .delete()
-        .eq("room_id", state.currentRoom.id)
-        .eq("user_id", user.id);
-      
-      // If host leaving, transfer or delete
+      // Hand the room over BEFORE deleting our own row: the transfer RPC
+      // requires the caller to still be the host. The old order updated
+      // game_rooms first (allowed) and then the new host's is_host flag
+      // directly — an own-row-only RLS policy reduced that to a silent
+      // zero-row no-op, so no room whose host left ever had a participant
+      // row saying is_host = true: the room vanished from the new host's
+      // "my parties", the crown disappeared, TV mode treated them as a
+      // guest. transfer_room_host does both writes atomically server-side.
       if (isHost && participants.length > 1) {
         const newHost = participants.find(p => p.user_id !== user.id);
         if (newHost) {
-          await supabase
-            .from("game_rooms")
-            .update({ host_user_id: newHost.user_id })
-            .eq("id", state.currentRoom.id);
-          
-          await supabase
-            .from("room_participants")
-            .update({ is_host: true })
-            .eq("id", newHost.id);
+          const { error: transferError } = await supabase.rpc("transfer_room_host", {
+            p_room_id: state.currentRoom.id,
+            p_new_host: newHost.user_id,
+          });
+          if (transferError) throw transferError;
         }
       } else if (isHost && participants.length === 1) {
         await supabase
@@ -2815,6 +2812,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .update({ status: "cancelled" })
           .eq("id", state.currentRoom.id);
       }
+
+      await supabase
+        .from("room_participants")
+        .delete()
+        .eq("room_id", state.currentRoom.id)
+        .eq("user_id", user.id);
       
       cleanupChannels();
       setState(initialState);

@@ -2238,8 +2238,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         
         if (existingPlayer) {
           // Player exists - update their is_active status to true (they're back!)
-          // CRITICAL FIX: Also preserve/set user_id for authenticated players
-          await supabase
+          // CRITICAL FIX: Also preserve/set user_id for authenticated players.
+          // .select() because this write crosses an RLS boundary when a
+          // signed-in player reclaims the guest row they made before signing
+          // up — that path needs the claim policy, and without it the update
+          // matches zero rows with no error while the player stays inactive.
+          const { data: updatedRows, error: updateError } = await supabase
             .from('tv_players')
             .update({
               is_active: true, // Returning players are always active
@@ -2247,7 +2251,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               avatar_url: avatarUrl || null,
               user_id: authUid || (existingPlayer as any).user_id, // Preserve or set user_id
             })
-            .eq('id', existingPlayer.id);
+            .eq('id', existingPlayer.id)
+            .select('id');
+          if (updateError || !updatedRows?.length) {
+            console.error('[TVGame] Reactivating existing player failed:', updateError ?? 'no rows matched (RLS)');
+          }
           tvLog('Updated existing tv_player as active', { playerId: playerId.slice(0, 8), userId: authUid?.slice(0, 8) });
         } else {
           // New player - insert them
