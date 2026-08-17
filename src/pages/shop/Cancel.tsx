@@ -2,9 +2,11 @@ import { motion } from "framer-motion";
 import { XCircle, ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ShopCancel() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-gradient-to-b from-background to-muted flex p-4"><div className="m-auto w-full flex justify-center">
@@ -31,10 +33,10 @@ export default function ShopCancel() {
           className="space-y-2"
         >
           <h1 className="text-3xl font-bold text-foreground">
-            გადახდა გაუქმებულია
+            {t("extra.shcPaymentCancelled")}
           </h1>
           <p className="text-muted-foreground">
-            თქვენი ტრანზაქცია არ დასრულებულა. თანხა არ ჩამოიჭრა.
+            {t("extra.shcNotCompleted")}
           </p>
         </motion.div>
 
@@ -45,11 +47,11 @@ export default function ShopCancel() {
           transition={{ delay: 0.4 }}
           className="p-6 rounded-2xl bg-card border shadow-sm text-left"
         >
-          <h3 className="font-medium mb-2">რა მოხდა?</h3>
+          <h3 className="font-medium mb-2">{t("extra.shcWhatHappened")}</h3>
           <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• გადახდა გაუქმდა თქვენი მოთხოვნით</li>
-            <li>• თანხა არ ჩამოიჭრა თქვენი ანგარიშიდან</li>
-            <li>• შეგიძლიათ ნებისმიერ დროს სცადოთ ხელახლა</li>
+            <li>• {t("extra.shcCancelledByYou")}</li>
+            <li>• {t("extra.shcNotCharged")}</li>
+            <li>• {t("extra.shcTryAnytime")}</li>
           </ul>
         </motion.div>
 
@@ -66,7 +68,7 @@ export default function ShopCancel() {
             size="lg"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
-            ხელახლა ცდა
+            {t("extra.shcTryAgain")}
           </Button>
           <Button
             onClick={() => navigate("/")}
@@ -74,7 +76,7 @@ export default function ShopCancel() {
             className="w-full"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            მთავარ გვერდზე გადასვლა
+            {t("extra.goToHomePage2")}
           </Button>
         </motion.div>
       </motion.div>

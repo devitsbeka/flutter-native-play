@@ -4380,6 +4380,14 @@ export const en: KaTranslations = {
     tvhWaitOthers: "Waiting for other players...",
     tvhEndGame: "End Game",
     tvhFinish: "Finish",
+    // Shop Cancel page
+    shcPaymentCancelled: "Payment Cancelled",
+    shcNotCompleted: "Your transaction was not completed. You have not been charged.",
+    shcWhatHappened: "What happened?",
+    shcCancelledByYou: "The payment was cancelled at your request",
+    shcNotCharged: "No money was taken from your account",
+    shcTryAnytime: "You can try again at any time",
+    shcTryAgain: "Try Again",
   },
 
   systemErrors: {

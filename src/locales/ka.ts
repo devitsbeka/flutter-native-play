@@ -4411,6 +4411,14 @@ export const ka = {
     tvhWaitOthers: "დაველოდოთ სხვა მოთამაშეებს...",
     tvhEndGame: "თამაშის დასრულება",
     tvhFinish: "დასრულება",
+    // Shop Cancel page
+    shcPaymentCancelled: "გადახდა გაუქმებულია",
+    shcNotCompleted: "თქვენი ტრანზაქცია არ დასრულებულა. თანხა არ ჩამოიჭრა.",
+    shcWhatHappened: "რა მოხდა?",
+    shcCancelledByYou: "გადახდა გაუქმდა თქვენი მოთხოვნით",
+    shcNotCharged: "თანხა არ ჩამოიჭრა თქვენი ანგარიშიდან",
+    shcTryAnytime: "შეგიძლიათ ნებისმიერ დროს სცადოთ ხელახლა",
+    shcTryAgain: "ხელახლა ცდა",
   },
 
   // ==========================================
