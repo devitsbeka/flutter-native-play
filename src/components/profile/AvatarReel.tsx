@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Check, Maximize2, Plus, Sparkles, X } from "lucide-react";
+import { Camera, Check, Maximize2, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -38,7 +38,7 @@ const CENTER_SCALE = 2; // the middle avatar is twice the size of the others
 // Snap carousel: dragging only browses (the centered item enlarges gently —
 // pure transform, no layout shifts, so the scroll stays fast). Tapping an
 // avatar focuses it: it grows fully and shows the "choose" chip plus the
-// avatar-studio (magic) button; the next drag dismisses the focus. The
+// view-full-size button; the next drag dismisses the focus. The
 // actual avatar keeps a persistent check badge wherever it sits. Order: the
 // player's own avatars (uploaded / AI-generated) first, then the presets.
 export function AvatarReel() {
@@ -48,7 +48,7 @@ export function AvatarReel() {
 
   const [busyId, setBusyId] = useState<string | null>(null);
   const [centerIdx, setCenterIdx] = useState(0);
-  // Index the user explicitly tapped — unlocks the choose/studio actions
+  // Index the user explicitly tapped — unlocks the choose/view actions
   const [focusedIdx, setFocusedIdx] = useState<number | null>(null);
   // The user's own AI-generated/animated avatars (avatar_generations rows)
   const [generated, setGenerated] = useState<ReelItem[]>([]);
@@ -219,7 +219,7 @@ export function AvatarReel() {
   };
 
   // Tapping focuses the avatar (centering it if needed) and reveals the
-  // choose/studio actions — applying happens only through the chip
+  // choose/view actions — applying happens only through the chip
   const handleItemClick = (idx: number) => {
     if (dragState.current.moved || busyId) return;
     // The create slot is an action, not a choice — one tap opens the studio
@@ -374,9 +374,14 @@ export function AvatarReel() {
         })}
       </div>
 
-      {/* Actions for the tapped avatar: "choose" applies it (hidden when
-          it's already the applied one), the magic button opens the avatar
-          studio (generate / animate). Dragging dismisses both. */}
+      {/* Actions for the tapped avatar: "choose" applies it (hidden when it's
+          already the applied one), and the arrows open it full size.
+          Dragging dismisses both.
+
+          There used to be a sparkles button beside them opening the avatar
+          studio. It read as the retired "animate" control — same icon, same
+          place — and the studio was never behind it anyway: the create slot
+          at the head of the reel opens it in one tap. */}
       {focusedIdx !== null && focusedIdx === centerIdx && items[centerIdx] && !busyId && (
         <>
           {/* Remove — top-right of the enlarged avatar; own avatars only,
@@ -413,18 +418,6 @@ export function AvatarReel() {
               aria-label={t("extra.avatarViewLarge")}
             >
               <Maximize2 className="w-4 h-4" />
-            </button>
-          )}
-          {/* The studio makes a new avatar from a photo, which is worth
-              offering whatever is centred — it used to be hidden on the
-              presets, so a player wearing a mascot had no way to reach it. */}
-          {items[centerIdx].kind !== "create" && (
-            <button
-              onClick={() => openAvatarModal()}
-              className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg"
-              aria-label="Avatar studio"
-            >
-              <Sparkles className="w-4 h-4 text-primary-foreground" />
             </button>
           )}
           </div>
