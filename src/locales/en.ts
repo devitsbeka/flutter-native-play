@@ -4388,6 +4388,16 @@ export const en: KaTranslations = {
     shcNotCharged: "No money was taken from your account",
     shcTryAnytime: "You can try again at any time",
     shcTryAgain: "Try Again",
+    // ChallengeLanding
+    chlNotFound: "Challenge not found",
+    chlLinkInvalid: "The link is invalid or has expired",
+    chlNameRequired: "Please enter your name",
+    chlInvitesYou: "invites you to a challenge!",
+    chlScoreToBeat: "Score to beat",
+    chlEnterName: "Enter your name",
+    chlChallenge: "Challenge",
+    chlYouLost: "You lost this time!",
+    chlSignupHint: "Sign up to save your result and challenge friends",
   },
 
   systemErrors: {

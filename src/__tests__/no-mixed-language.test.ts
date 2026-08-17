@@ -39,6 +39,7 @@ const SWEPT = [
   "src/pages/Settings.tsx",
   "src/pages/TVHostController.tsx",
   "src/pages/shop/Cancel.tsx",
+  "src/pages/ChallengeLanding.tsx",
   "src/utils/countryName.ts",
   "src/utils/missionText.ts",
   "src/utils/notificationTranslations.ts",

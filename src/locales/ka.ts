@@ -4419,6 +4419,16 @@ export const ka = {
     shcNotCharged: "თანხა არ ჩამოიჭრა თქვენი ანგარიშიდან",
     shcTryAnytime: "შეგიძლიათ ნებისმიერ დროს სცადოთ ხელახლა",
     shcTryAgain: "ხელახლა ცდა",
+    // ChallengeLanding
+    chlNotFound: "ჩელენჯი ვერ მოიძებნა",
+    chlLinkInvalid: "ბმული არასწორია ან ვადაგასულია",
+    chlNameRequired: "გთხოვთ შეიყვანოთ სახელი",
+    chlInvitesYou: "გიწვევს ჩელენჯში!",
+    chlScoreToBeat: "დასამარცხებელი შედეგი",
+    chlEnterName: "შეიყვანე სახელი",
+    chlChallenge: "ჩელენჯი",
+    chlYouLost: "ამჯერად დამარცხდი!",
+    chlSignupHint: "დარეგისტრირდი რომ შეინახო შედეგი და გამოწვიო მეგობრები",
   },
 
   // ==========================================

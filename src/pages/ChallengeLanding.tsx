@@ -16,8 +16,8 @@ import confettiPopperIcon from "@/assets/icons/confetti-popper.png";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { calculatePoints } from "@/utils/scoring";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
 const TIME_PER_QUESTION = 15;
 
 interface ChallengeData {
@@ -51,6 +51,8 @@ function shuffleAnswers(correct: string, incorrect: string[]): string[] {
 export default function ChallengeLanding() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const ANSWER_LABELS = [t("extra.answerLabelA"), t("extra.answerLabelB"), t("extra.answerLabelC"), t("extra.answerLabelD")];
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -87,7 +89,7 @@ export default function ChallengeLanding() {
         .single();
 
       if (fetchError || !data) {
-        setError("ჩელენჯი ვერ მოიძებნა");
+        setError(t("extra.chlNotFound"));
         setLoading(false);
         return;
       }
@@ -190,7 +192,7 @@ export default function ChallengeLanding() {
 
   const handleStart = () => {
     if (!playerName.trim()) {
-      toast.error("გთხოვთ შეიყვანოთ სახელი");
+      toast.error(t("extra.chlNameRequired"));
       return;
     }
     setPhase("playing");
@@ -243,8 +245,8 @@ export default function ChallengeLanding() {
     return (
       <div className="h-[100dvh] safe-bleed flex items-center justify-center p-4 bg-[#7E7ADB]">
         <div className="text-center">
-          <p className="text-xl font-bold text-white mb-2">😔 ჩელენჯი ვერ მოიძებნა</p>
-          <p className="text-white/60">ბმული არასწორია ან ვადაგასულია</p>
+          <p className="text-xl font-bold text-white mb-2">😔 {t("extra.chlNotFound")}</p>
+          <p className="text-white/60">{t("extra.chlLinkInvalid")}</p>
         </div>
       </div>
     );
@@ -274,17 +276,17 @@ export default function ChallengeLanding() {
             <h1 className="text-2xl font-bold text-white">
               {challenge.challenger_nickname}
             </h1>
-            <p className="text-white/70">გიწვევს ჩელენჯში!</p>
+            <p className="text-white/70">{t("extra.chlInvitesYou")}</p>
           </div>
 
           {/* Score to beat */}
           <div className="text-center p-5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
-            <p className="text-sm text-white/60 mb-1">დასამარცხებელი შედეგი</p>
+            <p className="text-sm text-white/60 mb-1">{t("extra.chlScoreToBeat")}</p>
             <p className="text-4xl font-bold text-white">
-              {challenge.challenger_score} ქულა
+              {challenge.challenger_score} {t("game.points")}
             </p>
             <p className="text-sm text-white/60 mt-1">
-              ({challenge.total_questions} კითხვა)
+              ({t("extra.questionsCount", { count: challenge.total_questions })})
             </p>
             {challenge.category_name && (
               <p className="text-sm text-white/60 mt-2">{challenge.category_name}</p>
@@ -294,7 +296,7 @@ export default function ChallengeLanding() {
           {/* Name input */}
           <div className="space-y-2">
             <Input
-              placeholder="შეიყვანე სახელი"
+              placeholder={t("extra.chlEnterName")}
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
               className="text-center text-lg h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40"
@@ -312,7 +314,7 @@ export default function ChallengeLanding() {
             disabled={!playerName.trim()}
             icon={<Play className="w-5 h-5" />}
           >
-            დაწყება
+            {t("extra.startBtn")}
           </ChunkyButton>
         </motion.div>
       </div>
@@ -337,7 +339,7 @@ export default function ChallengeLanding() {
             </button>
             
             <span className="text-white font-bold text-base truncate max-w-[160px] text-center">
-              {challenge.category_name || "ჩელენჯი"}
+              {challenge.category_name || t("extra.chlChallenge")}
             </span>
             
             <TimerBadge 
@@ -430,7 +432,7 @@ export default function ChallengeLanding() {
               {won ? <img src={confettiPopperIcon} alt="Win" className="w-16 h-16 mx-auto" /> : tied ? "🤝" : <img src={angryBoyIcon} alt="Defeat" className="w-16 h-16 mx-auto" />}
             </motion.div>
             <h1 className="text-2xl font-bold text-white">
-              {won ? "შენ მოიგე!" : tied ? "ფრე!" : "ამჯერად დამარცხდი!"}
+              {won ? t("extra.youWon") : tied ? t("extra.itsTie") : t("extra.chlYouLost")}
             </h1>
           </div>
 
@@ -467,10 +469,10 @@ export default function ChallengeLanding() {
               }}
               icon={<ArrowRight className="w-5 h-5" />}
             >
-              გაწევრიანდი უფასოდ
+              {t("extra.joinFreeBtn")}
             </ChunkyButton>
             <p className="text-center text-xs text-white/50">
-              დარეგისტრირდი რომ შეინახო შედეგი და გამოწვიო მეგობრები
+              {t("extra.chlSignupHint")}
             </p>
           </div>
         </motion.div>
