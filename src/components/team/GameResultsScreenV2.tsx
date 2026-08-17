@@ -413,7 +413,13 @@ export function GameResultsScreenV2() {
       onClose={() => setShowGuestSignUp(false)}
       message={t("extra.guestSaveScorePrompt")}
     />
-    <div className="h-[100dvh] w-full overflow-hidden bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
+    {/* safe-bleed, because this screen renders standalone inside the
+        safe-area-padded #root: a plain 100dvh box in there is taller than
+        the padded shell by both insets, and overflow-hidden was clipping
+        the bottom section — the next-round queue and the waiting-for-host
+        button — off the screen. Bled into the insets and self-padded, the
+        box is exactly the viewport and the gradient covers the status bar. */}
+    <div className="h-[100dvh] w-full overflow-hidden safe-bleed bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
       <div className="w-full h-full flex flex-col max-w-[700px] mx-auto">
       {/* Back Button Header */}
       <div className="flex items-center px-4 pt-3 pb-0 flex-shrink-0">
@@ -563,13 +569,15 @@ export function GameResultsScreenV2() {
         </motion.div>
       </div>
 
-      {/* Bottom Section: Next Round Preview + Buttons */}
+      {/* Bottom Section: Next Round Preview + Buttons. The home-indicator
+          inset is already the root's own padding (safe-bleed), so this
+          carries plain spacing — env(safe-area-inset-bottom) here again
+          would double-count the inset. */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="p-4 space-y-3"
-        style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom, 2rem))" }}
+        className="p-4 pb-5 space-y-3"
       >
         {/* Next Round Preview - show if queue has items */}
         {nextQueueItem && (
