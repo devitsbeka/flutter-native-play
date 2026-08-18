@@ -299,6 +299,15 @@ export default function Index() {
     setIsDailyRewardsOpen(true);
     navigate(location.pathname, { replace: true });
   }, [location.search, location.pathname, navigate]);
+  // Same contract for the missions modal — the mission-reminder pushes land
+  // on /?missions=1 so the tap opens the missions themselves, not just the
+  // home screen.
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("missions") !== "1") return;
+    setMissionsDate(null);
+    setShowMissionsModal(true);
+    navigate(location.pathname, { replace: true });
+  }, [location.search, location.pathname, navigate]);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
   const [isAdFreeModalOpen, setIsAdFreeModalOpen] = useState(false);
   const [isGemShopOpen, setIsGemShopOpen] = useState(false);

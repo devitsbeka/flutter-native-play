@@ -145,6 +145,35 @@ function TeamContentV2() {
     }
   }, [location.state, navigate, setShowCreateModal]);
 
+  // Push-notification deep links. A tapped push navigates with a URL, not
+  // router state, so the mission-CTA flows above get query-param twins:
+  // ?open=tv creates a room and lands in the lobby with TV mode on (the
+  // sidebar TV button's flow), ?open=trivia opens the trivia builder.
+  // While auth is still resolving the param stays put so the effect can
+  // re-run and act for the signed-in player — same race as ?join= below.
+  const attemptedOpenActionRef = useRef(false);
+  useEffect(() => {
+    const action = searchParams.get("open");
+    if (action !== "tv" && action !== "trivia") return;
+    if (!user && authLoading) return;
+    if (attemptedOpenActionRef.current) return;
+    attemptedOpenActionRef.current = true;
+
+    const next = new URLSearchParams(searchParams);
+    next.delete("open");
+    setSearchParams(next, { replace: true });
+
+    if (action === "tv") {
+      void gateWithRewardedAd(async () => {
+        const room = await createRoom();
+        if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
+      });
+    } else {
+      setShowCreateQuizModal(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, user, authLoading]);
+
   // Challenge context from URL - supports all types from ChallengeTypeModal
   type ChallengeType = "random" | "library" | "my-trivias" | "create" | "create-room" | "trivia" | "collection" | null;
   const [challengeContext, setChallengeContext] = useState<{
