@@ -10,6 +10,11 @@ import { sendToUsers } from "../_shared/push.ts";
  * icon and a deep-link route, so every firing exercises a different
  * look-and-landing.
  *
+ * Each push is composed in the RECIPIENT's language
+ * (profiles.preferred_language, default 'ka') — the same rule every other
+ * push in this project follows. Recipients are grouped by language and each
+ * group gets one send.
+ *
  * Two guards, because a function on a timer must not be able to spam players:
  *
  *   1. The caller has to present PUSH_TEST_SECRET — same pattern as the
@@ -33,32 +38,52 @@ interface TestPush {
 
 const SITE = "https://mytrivia.io";
 
-const MESSAGES: TestPush[] = [
-  {
-    title: "Create your Trivia 🕹️",
-    body: "Create your Trivia and play with friends.",
-    route: "/team",
-    icon: `${SITE}/push/joystick.png`,
-  },
-  {
-    title: "Trivia on the big screen 📺",
-    body: "Play Trivia with your friends and family on TV.",
-    route: "/team",
-    icon: `${SITE}/push/tv.png`,
-  },
-  {
-    title: "Rewards are waiting 🏆",
-    body: "Complete your daily mission and get rewards.",
-    route: "/",
-    icon: `${SITE}/push/trophy.png`,
-  },
-  {
-    title: "Almost there ✨",
-    body: "You have 1 mission to complete.",
-    route: "/",
-    icon: `${SITE}/push/crystal.png`,
-  },
-];
+// Four rotating messages × seven app languages. Index N is the same message
+// in every language, so the rotation stays in step across recipients.
+const MESSAGES: Record<string, TestPush[]> = {
+  ka: [
+    { title: "შექმენი შენი ტრივია 🕹️", body: "შექმენი ტრივია და ითამაშე მეგობრებთან ერთად.", route: "/team", icon: `${SITE}/push/joystick.png` },
+    { title: "ტრივია დიდ ეკრანზე 📺", body: "ითამაშე ტრივია მეგობრებთან და ოჯახთან ერთად TV-ზე.", route: "/team", icon: `${SITE}/push/tv.png` },
+    { title: "ჯილდოები გელოდება 🏆", body: "შეასრულე დღიური მისია და მიიღე ჯილდოები.", route: "/", icon: `${SITE}/push/trophy.png` },
+    { title: "ცოტაც დარჩა ✨", body: "1 მისია დაგრჩა შესასრულებელი.", route: "/", icon: `${SITE}/push/crystal.png` },
+  ],
+  en: [
+    { title: "Create your Trivia 🕹️", body: "Create your Trivia and play with friends.", route: "/team", icon: `${SITE}/push/joystick.png` },
+    { title: "Trivia on the big screen 📺", body: "Play Trivia with your friends and family on TV.", route: "/team", icon: `${SITE}/push/tv.png` },
+    { title: "Rewards are waiting 🏆", body: "Complete your daily mission and get rewards.", route: "/", icon: `${SITE}/push/trophy.png` },
+    { title: "Almost there ✨", body: "You have 1 mission to complete.", route: "/", icon: `${SITE}/push/crystal.png` },
+  ],
+  de: [
+    { title: "Erstelle dein Trivia 🕹️", body: "Erstelle dein Trivia und spiel mit Freunden.", route: "/team", icon: `${SITE}/push/joystick.png` },
+    { title: "Trivia auf dem großen Bildschirm 📺", body: "Spiel Trivia mit Freunden und Familie auf dem TV.", route: "/team", icon: `${SITE}/push/tv.png` },
+    { title: "Belohnungen warten 🏆", body: "Schließe deine Tagesmission ab und hol dir Belohnungen.", route: "/", icon: `${SITE}/push/trophy.png` },
+    { title: "Fast geschafft ✨", body: "Dir fehlt noch 1 Mission.", route: "/", icon: `${SITE}/push/crystal.png` },
+  ],
+  es: [
+    { title: "Crea tu Trivia 🕹️", body: "Crea tu Trivia y juega con amigos.", route: "/team", icon: `${SITE}/push/joystick.png` },
+    { title: "Trivia en pantalla grande 📺", body: "Juega Trivia con amigos y familia en la TV.", route: "/team", icon: `${SITE}/push/tv.png` },
+    { title: "Las recompensas te esperan 🏆", body: "Completa tu misión diaria y consigue recompensas.", route: "/", icon: `${SITE}/push/trophy.png` },
+    { title: "Ya casi ✨", body: "Te queda 1 misión por completar.", route: "/", icon: `${SITE}/push/crystal.png` },
+  ],
+  fr: [
+    { title: "Crée ton Trivia 🕹️", body: "Crée ton Trivia et joue avec tes amis.", route: "/team", icon: `${SITE}/push/joystick.png` },
+    { title: "Trivia sur grand écran 📺", body: "Joue au Trivia avec tes amis et ta famille sur la TV.", route: "/team", icon: `${SITE}/push/tv.png` },
+    { title: "Des récompenses t'attendent 🏆", body: "Termine ta mission du jour et gagne des récompenses.", route: "/", icon: `${SITE}/push/trophy.png` },
+    { title: "Presque fini ✨", body: "Il te reste 1 mission à accomplir.", route: "/", icon: `${SITE}/push/crystal.png` },
+  ],
+  it: [
+    { title: "Crea il tuo Trivia 🕹️", body: "Crea il tuo Trivia e gioca con gli amici.", route: "/team", icon: `${SITE}/push/joystick.png` },
+    { title: "Trivia sul grande schermo 📺", body: "Gioca a Trivia con amici e famiglia sulla TV.", route: "/team", icon: `${SITE}/push/tv.png` },
+    { title: "I premi ti aspettano 🏆", body: "Completa la missione del giorno e ottieni i premi.", route: "/", icon: `${SITE}/push/trophy.png` },
+    { title: "Ci sei quasi ✨", body: "Ti resta 1 missione da completare.", route: "/", icon: `${SITE}/push/crystal.png` },
+  ],
+  pt: [
+    { title: "Crie seu Trivia 🕹️", body: "Crie seu Trivia e jogue com amigos.", route: "/team", icon: `${SITE}/push/joystick.png` },
+    { title: "Trivia na tela grande 📺", body: "Jogue Trivia com amigos e família na TV.", route: "/team", icon: `${SITE}/push/tv.png` },
+    { title: "Recompensas esperando 🏆", body: "Complete sua missão diária e ganhe recompensas.", route: "/", icon: `${SITE}/push/trophy.png` },
+    { title: "Quase lá ✨", body: "Falta 1 missão para completar.", route: "/", icon: `${SITE}/push/crystal.png` },
+  ],
+};
 
 serve(async (req) => {
   const secret = Deno.env.get("PUSH_TEST_SECRET");
@@ -83,19 +108,40 @@ serve(async (req) => {
 
   // Stateless rotation: each ten-minute window picks the next message, so
   // there is no counter to store and a re-fired window sends the same thing.
-  const msg = MESSAGES[Math.floor(Date.now() / 600_000) % MESSAGES.length];
+  const idx = Math.floor(Date.now() / 600_000) % MESSAGES.en.length;
 
-  const result = await sendToUsers(
-    supabase,
-    userIds,
-    msg.title,
-    msg.body,
-    { route: msg.route, notification_type: "custom" },
-    msg.icon,
-  );
+  // Group recipients by their app language; one send per group.
+  const { data: langRows } = await supabase
+    .from("profiles")
+    .select("user_id, preferred_language")
+    .in("user_id", userIds);
+  const groups = new Map<string, string[]>();
+  for (const id of userIds) {
+    const lang =
+      (langRows ?? []).find((r: { user_id: string }) => r.user_id === id)
+        ?.preferred_language || "ka";
+    const key = MESSAGES[lang] ? lang : "ka";
+    groups.set(key, [...(groups.get(key) ?? []), id]);
+  }
+
+  let sent = 0;
+  let failed = 0;
+  for (const [lang, ids] of groups) {
+    const msg = MESSAGES[lang][idx];
+    const result = await sendToUsers(
+      supabase,
+      ids,
+      msg.title,
+      msg.body,
+      { route: msg.route, notification_type: "custom" },
+      msg.icon,
+    );
+    sent += result.sent;
+    failed += result.failed;
+  }
 
   return new Response(
-    JSON.stringify({ message: msg.title, recipients: userIds.length, ...result }),
+    JSON.stringify({ message: MESSAGES.en[idx].title, recipients: userIds.length, sent, failed }),
     { headers: { "Content-Type": "application/json" } },
   );
 });
