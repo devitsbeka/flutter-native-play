@@ -18,6 +18,7 @@ import { Target, ArrowLeft, Crown, TrendingUp, TrendingDown, Minus } from "lucid
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LevelUpModal } from "@/components/home/LevelUpModal";
 import { useGameStake } from "@/hooks/useGameStake";
+import { resolveGameSettlement } from "@/utils/gameStake";
 import { useTrivia, ExhaustionInfo } from "@/hooks/useTrivia";
 import { ExhaustionIndicator } from "@/components/ui/exhaustion-indicator";
 import { useToast } from "@/hooks/use-toast";
@@ -198,7 +199,7 @@ const PlayerCard = ({
       className="flex flex-col items-center mt-1"
     >
       <span className="text-3xl font-black text-white drop-shadow-sm">{score}</span>
-      <span className="text-white/70 text-xs font-semibold">{correctSummary}</span>
+      <span className="text-white/70 text-[13.2px] font-semibold">{correctSummary}</span>
     </motion.div>
     
 
@@ -374,7 +375,21 @@ export function MatchResultScreen() {
         // a credit the day's ceiling refused, or a debit larger than the
         // balance, both used to be announced as a full ±500 that never
         // reached the profile.
-        setCoinChange(await settleGame(isWin ? "win" : isDraw ? "draw" : "lose", matchId));
+        const applied = await settleGame(isWin ? "win" : isDraw ? "draw" : "lose", matchId);
+        if (applied !== 0) {
+          setCoinChange(applied);
+        } else {
+          // Nothing moved (PRO loss exemption, cap, or settle refused) —
+          // show the intended stake outcome so a win/lose always reads as
+          // one, computed by the same rules the server applies (PRO loss
+          // stays 0: the player genuinely lost nothing).
+          const intended = resolveGameSettlement({
+            outcome: isWin ? "win" : isDraw ? "draw" : "lose",
+            coins: currentProfile.coins || 0,
+            isVip,
+          });
+          setCoinChange(intended.credit > 0 ? intended.credit : -intended.debit);
+        }
 
         // === Settle the profile counters in ONE atomic increment ===
         // The database adds; the client no longer writes absolute totals
