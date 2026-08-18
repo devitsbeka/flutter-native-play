@@ -181,6 +181,12 @@ verify_jwt = false
 [functions.revenuecat-webhook]
 verify_jwt = false
 
+# TEMPORARY: the push test loop, fired by pg_cron — no session to verify.
+# Authenticated by PUSH_TEST_SECRET in x-cron-secret instead, and it only
+# ever sends to admin accounts. Remove with the function when testing ends.
+[functions.push-test-loop]
+verify_jwt = false
+
 # --- PUBLIC/READ-ONLY (can remain public if needed) ---
 [functions.search-question-image]
 verify_jwt = true

@@ -104,6 +104,7 @@ export async function sendToToken(
   title: string,
   body: string,
   data?: Record<string, string>,
+  imageUrl?: string,
 ): Promise<{ success: boolean; error?: string; unregistered?: boolean }> {
   try {
     const res = await fetch(
@@ -117,14 +118,29 @@ export async function sendToToken(
         body: JSON.stringify({
           message: {
             token,
-            notification: { title, body },
+            notification: { title, body, ...(imageUrl ? { image: imageUrl } : {}) },
             ...(data ? { data } : {}),
             apns: {
-              payload: { aps: { alert: { title, body }, sound: "default", badge: 1 } },
+              // mutable-content lets the iOS Notification Service Extension
+              // fetch and attach the image. Without the extension in the app,
+              // iOS simply shows the text — the field is inert, not harmful.
+              payload: {
+                aps: {
+                  alert: { title, body },
+                  sound: "default",
+                  badge: 1,
+                  ...(imageUrl ? { "mutable-content": 1 } : {}),
+                },
+              },
+              ...(imageUrl ? { fcm_options: { image: imageUrl } } : {}),
             },
             android: {
               priority: "high",
-              notification: { sound: "default", channelId: "game_notifications" },
+              notification: {
+                sound: "default",
+                channelId: "game_notifications",
+                ...(imageUrl ? { image: imageUrl } : {}),
+              },
             },
           },
         }),
@@ -161,6 +177,7 @@ export async function sendToUsers(
   title: string,
   body: string,
   data?: Record<string, string>,
+  imageUrl?: string,
 ): Promise<{ sent: number; failed: number }> {
   if (userIds.length === 0) return { sent: 0, failed: 0 };
 
@@ -177,7 +194,7 @@ export async function sendToUsers(
 
   const results = await Promise.all(
     rows.map(({ token }: { token: string }) =>
-      sendToToken(accessToken, account.project_id, token, title, body, data).then((r) => ({
+      sendToToken(accessToken, account.project_id, token, title, body, data, imageUrl).then((r) => ({
         token,
         ...r,
       })),
