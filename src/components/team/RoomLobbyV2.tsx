@@ -671,17 +671,25 @@ export function RoomLobbyV2() {
           className="px-4 sm:px-6 pb-4 backdrop-blur-md bg-black/10"
           style={{ paddingTop: "calc(var(--safe-top) + 1rem)" }}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <motion.button
               onClick={handleExitRoom}
-              className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 border border-white/[0.12]"
+              className="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-white/10 border border-white/[0.12]"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <ArrowLeft className="w-4 h-4 text-white" />
             </motion.button>
 
-            <div className="flex items-center gap-2">
+            {/* The room's name rides the sticky header: now that the lobby
+                scrolls, the in-content title row slides under the blur and
+                the player loses which room they're in — while this row had
+                nothing but empty space between its buttons. */}
+            <h1 className="min-w-0 flex-1 truncate text-center text-base font-bold text-white drop-shadow-sm">
+              {roomName}
+            </h1>
+
+            <div className="flex items-center gap-2 shrink-0">
               {/* TEMPORARILY HIDDEN - Chat toggle */}
               {/* <motion.button
                 onClick={() => setShowChat(!showChat)}
@@ -755,7 +763,11 @@ export function RoomLobbyV2() {
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto relative z-10 px-4 sm:px-6 pb-32 sm:max-w-[520px] mx-auto w-full will-change-transform">
 
-        {/* Room Name Section */}
+        {/* Room Name Section — host only: the sticky header now carries the
+            room's name for everyone, so for guests this row was the same
+            name a second time. For the host it is the rename/customize
+            control cluster and stays. */}
+        {isHost && (
         <div className="text-center mb-4 space-y-3">
 
           {/* Room Name */}
@@ -823,6 +835,7 @@ export function RoomLobbyV2() {
             </div>
           </motion.div>
         </div>
+        )}
 
         {/* Category Picker Section */}
         <CategoryPickerSection
