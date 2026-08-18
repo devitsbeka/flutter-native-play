@@ -71,6 +71,55 @@ export function InteractiveBlobVideo({ iconUrl, iconSlug, videoSrc, isLocked, sh
     [videoSrc],
   );
 
+  // The autoplay attribute is a request, not a guarantee: iOS refuses it in
+  // Low Power Mode and while a stream is still buffering, and paints its own
+  // play glyph over the paused element. So playback is driven imperatively —
+  // retried when the video becomes playable, when the app returns to the
+  // foreground, and on any tap (a user gesture is what Low Power Mode
+  // accepts) — and the video stays invisible until frames actually roll,
+  // with the category icon in its place, so the glyph never has a paused
+  // video to be drawn on.
+  // State, not a ref: AnimatePresence mounts the video only after the icon's
+  // exit animation, so an effect keyed on isLocked would run before the
+  // element exists and bind nothing. The callback ref re-runs the effect at
+  // the moment the element is actually there.
+  const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
+  const [videoPlaying, setVideoPlaying] = useState(false);
+  useEffect(() => {
+    setVideoPlaying(false);
+    const video = videoEl;
+    if (!video || !resolvedSrc) return;
+
+    const tryPlay = () => {
+      video.muted = true;
+      void video.play().catch(() => {});
+    };
+    const onPlaying = () => setVideoPlaying(true);
+    const onPause = () => setVideoPlaying(false);
+    const onVisible = () => {
+      if (!document.hidden) tryPlay();
+    };
+
+    video.addEventListener("playing", onPlaying);
+    video.addEventListener("pause", onPause);
+    video.addEventListener("canplay", tryPlay);
+    video.addEventListener("loadeddata", tryPlay);
+    document.addEventListener("visibilitychange", onVisible);
+    document.addEventListener("pointerdown", tryPlay, true);
+    document.addEventListener("touchend", tryPlay, true);
+    if (video.readyState >= 3) tryPlay();
+
+    return () => {
+      video.removeEventListener("playing", onPlaying);
+      video.removeEventListener("pause", onPause);
+      video.removeEventListener("canplay", tryPlay);
+      video.removeEventListener("loadeddata", tryPlay);
+      document.removeEventListener("visibilitychange", onVisible);
+      document.removeEventListener("pointerdown", tryPlay, true);
+      document.removeEventListener("touchend", tryPlay, true);
+    };
+  }, [videoEl, resolvedSrc]);
+
   // Generate random slot sequence when animation should start
   useEffect(() => {
     if (shouldAnimate && !isLocked && categoryIcons.length > 0 && iconsPreloaded) {
@@ -175,13 +224,21 @@ export function InteractiveBlobVideo({ iconUrl, iconSlug, videoSrc, isLocked, sh
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
             >
+              {!videoPlaying && lockedIconUrl && (
+                <img
+                  src={lockedIconUrl}
+                  alt=""
+                  className="absolute w-20 h-20 object-contain drop-shadow-lg"
+                />
+              )}
               <video
+                ref={setVideoEl}
                 autoPlay
                 loop
                 muted
                 playsInline
                 controls={false}
-                className="w-full h-full object-cover [&::-webkit-media-controls]:hidden [&::-webkit-media-controls-play-button]:hidden [&::-webkit-media-controls-start-playback-button]:hidden"
+                className={`w-full h-full object-cover transition-opacity duration-300 ${videoPlaying ? "opacity-100" : "opacity-0"} [&::-webkit-media-controls]:hidden [&::-webkit-media-controls-play-button]:hidden [&::-webkit-media-controls-start-playback-button]:hidden`}
                 style={{ pointerEvents: 'none' }}
               >
                 {webmSrc && <source src={webmSrc} type="video/webm" />}
