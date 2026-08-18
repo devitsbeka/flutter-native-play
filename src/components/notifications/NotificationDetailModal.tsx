@@ -142,7 +142,10 @@ export function NotificationDetailModal({ notification, onClose }: NotificationD
               {translateNotificationTitle(notification.type, notification.title, data)}
             </h2>
 
-            {notification.message && (
+            {/* No message line when reward chips follow — "ჯილდო: 120
+                მონეტები · 200 XP" as prose directly above the same numbers
+                as chips said everything twice. */}
+            {notification.message && !hasRewards && (
               <p className="mt-1.5 text-sm text-slate-500">
                 {translateNotificationMessage(notification.type, notification.message, data)}
               </p>
