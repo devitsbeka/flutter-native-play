@@ -86,8 +86,8 @@ Deno.serve(async (req: Request) => {
     const who = sender?.nickname?.trim() || "A friend";
     const where = room?.room_name?.trim();
 
-    // One entry per app language; the column default is 'ka', so players who
-    // never touched the switcher get Georgian — the app's home audience.
+    // One entry per app language; the column default is 'en', so players who
+    // never touched the switcher get English — the safe universal fallback.
     const MESSAGES: Record<string, { title: string; room: (n: string, w: string) => string; plain: (n: string) => string }> = {
       ka: {
         title: "მოდი, ითამაშე 🎮",
@@ -125,8 +125,8 @@ Deno.serve(async (req: Request) => {
         plain: (n) => `${n} convidou você para um jogo`,
       },
     };
-    const lang = receiver?.preferred_language ?? "ka";
-    const msg = MESSAGES[lang] ?? MESSAGES.ka;
+    const lang = receiver?.preferred_language ?? "en";
+    const msg = MESSAGES[lang] ?? MESSAGES.en;
 
     const title = msg.title;
     const body = where ? msg.room(who, where) : msg.plain(who);

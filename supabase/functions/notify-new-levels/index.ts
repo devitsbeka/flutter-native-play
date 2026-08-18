@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
     console.log(`Found ${pushTokens?.length || 0} push tokens for ${userIds.length} users`);
 
     // Each push is composed in its RECIPIENT's app language
-    // (profiles.preferred_language, default 'ka').
+    // (profiles.preferred_language, default 'en').
     const { data: langRows } = await supabase
       .from("profiles")
       .select("user_id, preferred_language")
@@ -205,7 +205,7 @@ Deno.serve(async (req) => {
     const langByUser = new Map<string, string>(
       (langRows || []).map((r: { user_id: string; preferred_language: string | null }) => [
         r.user_id,
-        r.preferred_language || "ka",
+        r.preferred_language || "en",
       ]),
     );
 
@@ -270,8 +270,8 @@ Deno.serve(async (req) => {
 
       // Create notification message
       const primaryCategory = userCategories[0];
-      const userLang = langByUser.get(tokenRecord.user_id) || "ka";
-      const msg = MESSAGES[userLang] ?? MESSAGES.ka;
+      const userLang = langByUser.get(tokenRecord.user_id) || "en";
+      const msg = MESSAGES[userLang] ?? MESSAGES.en;
       const title = msg.title;
       const localizedName =
         nameByLangAndUuid.get(`${userLang}:${primaryCategory.categoryUuid}`) ||

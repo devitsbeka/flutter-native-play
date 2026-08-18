@@ -88,7 +88,7 @@ export function useGameRoom() {
       }
 
       // Generate AI-powered funny room name based on random icon
-      const currentLanguage = localStorage.getItem('preferredLanguage') || 'ka';
+      const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
       let roomName = generateRoomName(currentLanguage); // fallback
       let roomIcon: string | null = null;
       

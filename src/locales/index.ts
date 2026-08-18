@@ -36,7 +36,11 @@ export type RegionCode = typeof LANGUAGES[number]['region'];
 
 // Get language metadata by code
 export function getLanguage(code: string) {
-  return LANGUAGES.find(l => l.code === code) || LANGUAGES[0];
+  return (
+    LANGUAGES.find(l => l.code === code) ||
+    LANGUAGES.find(l => l.code === DEFAULT_LANGUAGE) ||
+    LANGUAGES[0]
+  );
 }
 
 // Get region for a language
@@ -45,8 +49,16 @@ export function getRegionForLanguage(langCode: string): string {
   return lang?.region || 'global';
 }
 
-// Default language
-export const DEFAULT_LANGUAGE = 'ka';
+// The language a user gets before choosing one, and the missing-key
+// fallback. English: everyone can at least read it, whereas a Georgian
+// fallback is unreadable to anyone outside Georgia. en is type-checked
+// against ka, so falling back to it never lands on a missing key.
+export const DEFAULT_LANGUAGE = 'en';
+
+// The language the DATABASE content is written in: categories.name,
+// notification rows written by migrations, question base text. Not a UI
+// default — use it for "does this need a translation lookup" checks only.
+export const CONTENT_LANGUAGE = 'ka';
 
 // Re-export types
 export type { KaTranslations };

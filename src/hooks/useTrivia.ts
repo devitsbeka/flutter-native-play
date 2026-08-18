@@ -3,7 +3,7 @@ import { getQuestions, FormattedQuestion } from "@/services/questionService";
 import { clearGlobalAskedQuestions } from "@/services/questionTracker";
 
 const STORAGE_KEY = 'preferredLanguage';
-const DEFAULT_LANGUAGE = 'ka';
+const DEFAULT_LANGUAGE = 'en';
 
 export interface TriviaQuestion {
   id: string;

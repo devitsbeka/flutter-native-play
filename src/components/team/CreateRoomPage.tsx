@@ -196,7 +196,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   }, [acceptedFriends, pinnedFriendIds]);
 
   // Get current language for room name generation
-  const currentLanguage = localStorage.getItem('preferredLanguage') || 'ka';
+  const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
   const defaultFallback = currentLanguage === 'ka' ? 'სახალისო გუნდი' : 'Fun Squad';
 
   // Generate room name via edge function

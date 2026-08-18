@@ -1,5 +1,5 @@
 // Helper to translate notification content based on type and language
-import { translations, DEFAULT_LANGUAGE } from '@/locales';
+import { translations, DEFAULT_LANGUAGE, CONTENT_LANGUAGE } from '@/locales';
 import { missionTitle } from '@/utils/missionText';
 
 interface NotificationData {
@@ -21,7 +21,7 @@ function getCurrentLanguage(): string {
 // this file's source so the no-mixed-language sweep stays clean.
 function kaText(key: string): string {
   const keys = key.split('.');
-  let result: unknown = translations[DEFAULT_LANGUAGE];
+  let result: unknown = translations[CONTENT_LANGUAGE];
   for (const k of keys) {
     if (result && typeof result === 'object' && k in result) {
       result = (result as Record<string, unknown>)[k];

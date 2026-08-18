@@ -45,7 +45,7 @@ function getNamesByLang(lang: LangCode): Record<string, string[]> {
 }
 
 function normalizeLang(lang: string | null | undefined): LangCode {
-  if (!lang) return 'ka';
+  if (!lang) return 'en';
   const l = lang.toLowerCase().trim();
   if (['ka', 'en', 'fr', 'de', 'es', 'it', 'pt'].includes(l)) return l as LangCode;
   return 'en';

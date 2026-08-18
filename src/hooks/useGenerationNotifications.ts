@@ -6,7 +6,7 @@ import { ka } from '@/locales/ka';
 const locales: Record<string, any> = { en, ka };
 
 function getT() {
-  const lang = localStorage.getItem('preferredLanguage') || 'ka';
+  const lang = localStorage.getItem('preferredLanguage') || 'en';
   const loc = locales[lang] || ka;
   return (key: string) => {
     const parts = key.split('.');

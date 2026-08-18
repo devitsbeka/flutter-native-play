@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "preferredLanguage";
-const DEFAULT_LANGUAGE = "ka";
+// What a user with no stored choice reads in — see locales/index.ts.
+const DEFAULT_LANGUAGE = "en";
+// What categories.name is written in; no lookup needed when reading in it.
+const CONTENT_LANGUAGE = "ka";
 
 /**
  * A category's name in the language the player is actually reading.
@@ -40,7 +43,7 @@ export function useCategoryDisplayName(
     } catch {
       /* private mode — the base name stands */
     }
-    if (lang === DEFAULT_LANGUAGE) return;
+    if (lang === CONTENT_LANGUAGE) return;
 
     let cancelled = false;
     void supabase

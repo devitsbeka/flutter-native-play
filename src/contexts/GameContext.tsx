@@ -304,7 +304,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         console.error("No questions available at all");
         // Show toast with localized message and return to home
         const { toast } = await import("sonner");
-        const stored = localStorage.getItem('preferredLanguage') || 'ka';
+        const stored = localStorage.getItem('preferredLanguage') || 'en';
         const msg = stored === 'ka' ? 'კითხვები ვერ მოიძებნა ამ ენაზე' : 'No questions available in this language yet';
         toast.error(msg);
         setState(prev => ({ ...prev, phase: "home" }));

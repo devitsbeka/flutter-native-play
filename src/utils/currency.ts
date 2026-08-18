@@ -7,7 +7,7 @@ const USD_TO_GEL_RATE = 2.75;
  * Check if the user should see GEL pricing
  */
 export function shouldShowGel(): boolean {
-  const lang = localStorage.getItem('preferredLanguage') || 'ka';
+  const lang = localStorage.getItem('preferredLanguage') || 'en';
   return lang === 'ka';
 }
 

@@ -20,10 +20,11 @@ beforeEach(() => {
 const useLanguage = (lang: string) => localStorage.setItem("preferredLanguage", lang);
 
 describe("shouldShowGel", () => {
-  it("defaults to GEL when no language has been chosen", () => {
-    // Georgian is the primary market; an unset preference must not
-    // silently price the whole app in dollars.
-    expect(shouldShowGel()).toBe(true);
+  it("defaults to USD when no language has been chosen", () => {
+    // The app's default language is English, and GEL is meaningless to
+    // anyone outside Georgia — an unset preference prices in dollars.
+    // Picking Georgian switches to GEL (covered below).
+    expect(shouldShowGel()).toBe(false);
   });
 
   it("shows GEL for Georgian", () => {

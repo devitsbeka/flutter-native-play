@@ -11,7 +11,7 @@ import { sendToUsers } from "../_shared/push.ts";
  * look-and-landing.
  *
  * Each push is composed in the RECIPIENT's language
- * (profiles.preferred_language, default 'ka') — the same rule every other
+ * (profiles.preferred_language, default 'en') — the same rule every other
  * push in this project follows. Recipients are grouped by language and each
  * group gets one send.
  *
@@ -119,8 +119,8 @@ serve(async (req) => {
   for (const id of userIds) {
     const lang =
       (langRows ?? []).find((r: { user_id: string }) => r.user_id === id)
-        ?.preferred_language || "ka";
-    const key = MESSAGES[lang] ? lang : "ka";
+        ?.preferred_language || "en";
+    const key = MESSAGES[lang] ? lang : "en";
     groups.set(key, [...(groups.get(key) ?? []), id]);
   }
 

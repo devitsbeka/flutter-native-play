@@ -68,7 +68,7 @@ function getNestedValue(obj: any, path: string): string | undefined {
 function translateWithFallback(lang: string, key: string, params?: Record<string, string | number>): string {
   let value = getNestedValue(translations[lang], key);
   
-  // Fallback to Georgian if key not found
+  // Fallback to English if key not found
   if (!value && lang !== DEFAULT_LANGUAGE) {
     value = getNestedValue(translations[DEFAULT_LANGUAGE], key);
   }
@@ -164,7 +164,7 @@ export function useLanguage() {
   // During HMR or before provider mounts, return a fallback
   if (!context) {
     const lang = getStoredLanguage();
-    const currentLang = LANGUAGES.find(l => l.code === lang) || LANGUAGES[0];
+    const currentLang = getLanguage(lang);
 
     return {
       language: lang,

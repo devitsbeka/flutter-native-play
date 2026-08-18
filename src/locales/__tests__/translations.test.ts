@@ -100,10 +100,11 @@ describe("getLanguage / getRegionForLanguage", () => {
     expect(getRegionForLanguage("ka")).toBe("ge");
   });
 
-  it("falls back to the first language for an unknown code", () => {
+  it("falls back to the default language for an unknown code", () => {
     // Never undefined — callers read .flag and .nativeName straight off it.
-    expect(getLanguage("xx")).toBe(LANGUAGES[0]);
-    expect(getLanguage("")).toBe(LANGUAGES[0]);
+    const fallback = LANGUAGES.find((l) => l.code === DEFAULT_LANGUAGE)!;
+    expect(getLanguage("xx")).toBe(fallback);
+    expect(getLanguage("")).toBe(fallback);
   });
 
   it("falls back to the global region for an unknown code", () => {
@@ -175,8 +176,10 @@ describe("translation coverage", () => {
     });
   }
 
-  it("keeps the default language essentially fully translated", () => {
-    expect(translatedFraction(DEFAULT_LANGUAGE)).toBeGreaterThan(0.95);
+  it("keeps the base locale essentially fully translated", () => {
+    // ka is the content source-of-truth; DEFAULT_LANGUAGE itself is en, whose
+    // translatedFraction is 0 by definition (it IS the comparison baseline).
+    expect(translatedFraction(BASE_LOCALE)).toBeGreaterThan(0.95);
   });
 });
 

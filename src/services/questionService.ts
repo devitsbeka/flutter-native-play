@@ -96,7 +96,10 @@ interface RawQuestion {
 // ============================================================================
 
 const STORAGE_KEY = 'preferredLanguage';
-const DEFAULT_LANGUAGE = 'ka';
+// What a user with no stored choice reads in — see locales/index.ts.
+const DEFAULT_LANGUAGE = 'en';
+// What categories.name is written in; translation lookups are skipped for it.
+const CONTENT_LANGUAGE = 'ka';
 
 /**
  * Get user's preferred language
@@ -285,7 +288,7 @@ async function translateCategoryNames(
   names: Map<string, string>,
 ): Promise<Map<string, string>> {
   const language = getPreferredLanguage();
-  if (language === DEFAULT_LANGUAGE || names.size === 0) return names;
+  if (language === CONTENT_LANGUAGE || names.size === 0) return names;
 
   const { data, error } = await supabase
     .from('category_translations')

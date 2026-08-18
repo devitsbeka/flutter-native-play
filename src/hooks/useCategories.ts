@@ -4,7 +4,7 @@ import { Category } from '@/data/categories';
 import { preloadIcons } from '@/hooks/useIconLibrary';
 
 const STORAGE_KEY = 'preferredLanguage';
-const DEFAULT_LANGUAGE = 'ka';
+const DEFAULT_LANGUAGE = 'en';
 
 export interface DatabaseCategory {
   id: string; // UUID
