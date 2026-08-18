@@ -97,7 +97,9 @@ export function MyRoomsSection({
 
       if (error) throw error;
       if (!deleted || deleted.length === 0) {
-        toast.error(t("extra.roomDeleteFailed"));
+        // RLS matched no row: this player is not the room's host. Say that,
+        // not a generic failure.
+        toast.error(t("extra.roomDeleteHostOnly"));
         setDeletingRoomId(null);
         return;
       }
@@ -459,11 +461,12 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
   const handleDragEnd = (_: any, info: PanInfo) => {
-    // If swiped left past threshold, show delete confirmation
-    if (info.offset.x < -100) {
+    // Commit on distance OR a quick flick — half the old travel, and the
+    // card now visibly rides along the whole way.
+    if (info.offset.x < -60 || (info.offset.x < -30 && info.velocity.x < -500)) {
       setShowDeleteConfirm(true);
     }
-    // Let framer-motion spring handle snap-back (no manual x.set)
+    // dragSnapToOrigin springs the card home on release
     isSwiping.current = false;
   };
 
@@ -518,8 +521,13 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
           // in a staggered ripple every time one card left.
           transition={{ delay: index * 0.05, type: "spring", stiffness: 400, damping: 30 }}
           drag={isMobile ? "x" : false}
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.2}
+          // The card follows the finger for real (constraints used to be
+          // 0..0, so a 100px swipe moved it ~20px of pure elastic while the
+          // commit threshold still wanted 100px — "needed several swipes").
+          dragConstraints={{ left: -140, right: 0 }}
+          dragElastic={0.15}
+          dragSnapToOrigin
+          dragDirectionLock
           onDragEnd={isMobile ? handleDragEnd : undefined}
           onPointerDown={isMobile ? handlePointerDown : undefined}
           onPointerMove={isMobile ? handlePointerMove : undefined}
@@ -781,10 +789,12 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
   const handleDragEnd = (_: any, info: PanInfo) => {
-    if (info.offset.x < -100) {
+    // Commit on distance OR a quick flick — half the old travel, and the
+    // card now visibly rides along the whole way.
+    if (info.offset.x < -60 || (info.offset.x < -30 && info.velocity.x < -500)) {
       setShowDeleteConfirm(true);
     }
-    // Let framer-motion spring handle snap-back (no manual x.set)
+    // dragSnapToOrigin springs the card home on release
     isSwiping.current = false;
   };
 
@@ -837,8 +847,13 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
           // in a staggered ripple every time one card left.
           transition={{ delay: index * 0.03, type: "spring", stiffness: 400, damping: 30 }}
           drag={isMobile ? "x" : false}
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.2}
+          // The card follows the finger for real (constraints used to be
+          // 0..0, so a 100px swipe moved it ~20px of pure elastic while the
+          // commit threshold still wanted 100px — "needed several swipes").
+          dragConstraints={{ left: -140, right: 0 }}
+          dragElastic={0.15}
+          dragSnapToOrigin
+          dragDirectionLock
           onDragEnd={isMobile ? handleDragEnd : undefined}
           onPointerDown={isMobile ? handlePointerDown : undefined}
           onPointerMove={isMobile ? handlePointerMove : undefined}

@@ -1878,6 +1878,7 @@ export const en: KaTranslations = {
     generatingQuestions: "Generating questions...",
     quizOutOfQuestionsDesc: "You've answered every question in this category! New questions are coming soon and we'll let you know.",
     quizExploreOtherCategories: "Explore other categories",
+    roomDeleteHostOnly: "Only the host can delete a room",
     // Migration-written welcome notification, re-translated at display
     welcomeNotifTitle: "Welcome to MyTrivia! 🎉",
     welcomeNotifMsg: "Hi! Welcome to the game — good luck and have fun!",

@@ -1879,6 +1879,7 @@ export const ka = {
     generatingQuestions: "კითხვების გენერირება...",
     quizOutOfQuestionsDesc: "ამ კატეგორიის ყველა კითხვას უპასუხე! მალე ახალი კითხვები დაემატება და შეგატყობინებთ.",
     quizExploreOtherCategories: "სხვა კატეგორიების ნახვა",
+    roomDeleteHostOnly: "ოთახის წაშლა მხოლოდ ჰოსტს შეუძლია",
     // Migration-written welcome notification, re-translated at display
     welcomeNotifTitle: "მოგესალმებით MyTrivia-ში! 🎉",
     welcomeNotifMsg: "გამარჯობა! კეთილი იყოს შენი მობრძანება ჩვენს თამაშში. გისურვებთ წარმატებებს!",
