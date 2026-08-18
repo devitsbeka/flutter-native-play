@@ -57,6 +57,20 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [iconSlug, setIconSlug] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
+
+  // The picker the party editor already has: tap an answer's circle to make
+  // that one correct. The texts swap between correct_answer and the slot, so
+  // the author never has to retype an answer into the "first" position.
+  const makeAnswerCorrect = (questionIndex: number, answerIndex: number) => {
+    setQuestions(prev => prev.map((q, i) => {
+      if (i !== questionIndex) return q;
+      const incorrect = [...q.incorrect_answers];
+      const promoted = incorrect[answerIndex];
+      if (!promoted?.trim()) return q;
+      incorrect[answerIndex] = q.correct_answer;
+      return { ...q, correct_answer: promoted, incorrect_answers: incorrect };
+    }));
+  };
   const [viewMode, setViewMode] = useState<ViewMode>("info");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
@@ -532,21 +546,28 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                               </span>
                             </button>
                             
-                            {/* Answers (READ-ONLY) - Game Style */}
-                            <button
-                              onClick={() => setEditingQuestionIndex(index)}
-                              className="space-y-2.5 w-full text-left rounded-xl p-1 hover:bg-white/5 transition-colors"
-                            >
+                            {/* Answers - tap the text to edit, tap a circle
+                                to make that answer the correct one. The circle
+                                is the same picker the party editor has; before
+                                it, the only way to change which answer was
+                                right was retyping it into the green row. */}
+                            <div className="space-y-2.5 w-full text-left rounded-xl p-1">
                               {/* Correct Answer - Green chunky button */}
                               <div className="relative">
                                 <div className="absolute inset-0 bg-emerald-700 rounded-xl translate-y-1" />
                                 <div className="relative p-3.5 rounded-xl bg-emerald-500 flex items-center gap-3">
-                                  <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                                  <div
+                                    className="w-7 h-7 rounded-full bg-white flex items-center justify-center flex-shrink-0"
+                                    title={t("extra.editorCorrectAnswerTitle")}
+                                  >
                                     <Check className="w-4 h-4 text-emerald-600" />
                                   </div>
-                                  <span className="text-white font-semibold">
+                                  <button
+                                    onClick={() => setEditingQuestionIndex(index)}
+                                    className="text-white font-semibold flex-1 text-left"
+                                  >
                                     {q.correct_answer}
-                                  </span>
+                                  </button>
                                 </div>
                               </div>
                               {/* Incorrect Answers - White chunky buttons */}
@@ -554,16 +575,32 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                                 <div key={i} className="relative">
                                   <div className="absolute inset-0 bg-gray-300 rounded-xl translate-y-1" />
                                   <div className="relative p-3.5 rounded-xl bg-white flex items-center gap-3">
-                                    <div className="w-7 h-7 rounded-full bg-sky-300 flex items-center justify-center flex-shrink-0">
-                                      <span className="text-slate-700 font-bold text-sm">
+                                    <button
+                                      onClick={() => makeAnswerCorrect(index, i)}
+                                      aria-label={t("extra.editorSetCorrectTitle")}
+                                      title={t("extra.editorSetCorrectTitle")}
+                                      className="w-7 h-7 rounded-full bg-sky-300 ring-2 ring-transparent hover:ring-emerald-400 hover:bg-emerald-100 active:scale-90 transition-all flex items-center justify-center flex-shrink-0 group/pick"
+                                    >
+                                      <span className="text-slate-700 font-bold text-sm group-hover/pick:hidden">
                                         {String.fromCharCode(66 + i)}
                                       </span>
-                                    </div>
-                                    <span className="text-slate-700 font-medium">{ans}</span>
+                                      <Check className="w-4 h-4 text-emerald-600 hidden group-hover/pick:block" />
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingQuestionIndex(index)}
+                                      className="text-slate-700 font-medium flex-1 text-left"
+                                    >
+                                      {ans}
+                                    </button>
                                   </div>
                                 </div>
                               ))}
-                            </button>
+                              {/* Phones have no hover to reveal the circles'
+                                  role, so the hint is written out. */}
+                              <p className="text-[11px] text-white/45 text-center pt-0.5">
+                                {t("extra.editorSetCorrectTitle")}
+                              </p>
+                            </div>
                             
                             {/* Delete Question Button */}
                             <AnimatePresence mode="wait">
