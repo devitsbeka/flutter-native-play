@@ -247,6 +247,8 @@ export const ka = {
   // Game / თამაში
   // ==========================================
   game: {
+    // After a score: "275 ქულა". ChallengeLanding reads it.
+    points: "ქულა",
     guest: "სტუმარი",
     playToEarn: "ითამაშე და მოაგროვე XP! ✨",
     levelProgress: "დონე {level} ({current} XP) / {next} XP",

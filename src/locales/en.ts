@@ -249,6 +249,8 @@ export const en: KaTranslations = {
   // Game
   // ==========================================
   game: {
+    // After a score: "275 points". ChallengeLanding reads it.
+    points: "points",
     guest: "Guest",
     playToEarn: "Play and earn XP! ✨",
     levelProgress: "Level {level} ({current} XP) / {next} XP",
