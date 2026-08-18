@@ -4,11 +4,6 @@ import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import piggyBank from "@/assets/icons/piggy-bank.png";
 
-interface ShopHeaderProps {
-  /** The piggy bank — the one action the wallet band carries. */
-  onPiggyClick?: () => void;
-}
-
 /**
  * Coins and gems, per Figma node 716:346.
  *
@@ -78,22 +73,20 @@ export function WalletPills({ className }: { className?: string }) {
  * bell, and a help button. PageHeader has search and notifications one row
  * above, so the shop was showing both pairs.
  */
-export function ShopHeader({ onPiggyClick }: ShopHeaderProps) {
+export function ShopHeader() {
   return (
     <div className="w-full border-t border-[#FAD8FF] bg-[#FAF1FC] md:hidden">
       <div className="mx-auto flex h-[56px] w-full max-w-[700px] items-center gap-4 px-5">
         <WalletPills />
 
-        {/* Piggy bank — buy more. Closes the row on the right, facing the
-            balances it feeds (the export already looks left). */}
-        <button
-          type="button"
-          onClick={onPiggyClick}
-          aria-label="Buy currency"
-          className="ml-auto shrink-0 transition-transform active:scale-95"
-        >
-          <img src={piggyBank} alt="" className="size-[46px] object-contain" />
-        </button>
+        {/* Piggy bank — decorative. It used to open a buy/exchange chooser,
+            but the shop page underneath already sells everything the chooser
+            led to, so the tap-through was cut. */}
+        <img
+          src={piggyBank}
+          alt=""
+          className="ml-auto size-[46px] shrink-0 object-contain"
+        />
       </div>
     </div>
   );

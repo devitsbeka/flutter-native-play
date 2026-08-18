@@ -49,9 +49,6 @@ const SHOP_SCENE_FADE: React.CSSProperties = {
 
 import { ShopStandardLayout } from "@/components/shop/ShopStandardLayout";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
-import { CurrencyExchangeModal } from "@/components/shop/CurrencyExchangeModal";
-import { CurrencyActionModal, CurrencyType } from "@/components/shop/CurrencyActionModal";
-import { BuyCurrencyModal } from "@/components/shop/BuyCurrencyModal";
 import { NotEnoughGemsModal } from "@/components/home/NotEnoughGemsModal";
 
 export default function PowerUps() {
@@ -84,28 +81,9 @@ export default function PowerUps() {
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
   const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showExchangeModal, setShowExchangeModal] = useState(false);
-  const [showActionModal, setShowActionModal] = useState(false);
-  const [showBuyModal, setShowBuyModal] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>("coins");
   const [successItem, setSuccessItem] = useState({ name: "", quantity: 1 });
   const [showNotEnoughGemsModal, setShowNotEnoughGemsModal] = useState(false);
   const [requiredGems, setRequiredGems] = useState(0);
-
-  const handleCurrencyPlusClick = (currencyType: CurrencyType) => {
-    setSelectedCurrency(currencyType);
-    setShowActionModal(true);
-  };
-
-  const handleBuyClick = () => {
-    setShowActionModal(false);
-    setShowBuyModal(true);
-  };
-
-  const handleExchangeClick = () => {
-    setShowActionModal(false);
-    setShowExchangeModal(true);
-  };
 
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -327,7 +305,7 @@ export default function PowerUps() {
          * fixed header stack. Same z as the header — anything meant to pass
          * beneath them must stay below 20. */}
         <div className="sticky top-[76px] z-20 md:hidden">
-          <ShopHeader onPiggyClick={() => handleCurrencyPlusClick("coins")} />
+          <ShopHeader />
         </div>
 
         <div className="flex flex-1 min-h-0">
@@ -408,25 +386,6 @@ export default function PowerUps() {
         }}
         itemName={successItem.name}
         quantity={successItem.quantity}
-      />
-
-      <CurrencyExchangeModal
-        isOpen={showExchangeModal}
-        onClose={() => setShowExchangeModal(false)}
-      />
-
-      <CurrencyActionModal
-        isOpen={showActionModal}
-        onClose={() => setShowActionModal(false)}
-        currencyType={selectedCurrency}
-        onBuyClick={handleBuyClick}
-        onExchangeClick={handleExchangeClick}
-      />
-
-      <BuyCurrencyModal
-        isOpen={showBuyModal}
-        onClose={() => setShowBuyModal(false)}
-        currencyType={selectedCurrency}
       />
 
       <NotEnoughGemsModal
