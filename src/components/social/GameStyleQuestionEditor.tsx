@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { ChevronLeft, ChevronRight, Copy, Trash2, Check, Plus, Edit3, ImageIcon, GripVertical, X, Lightbulb, Image, Globe, Lock, RefreshCw, Loader2, Sparkles, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 import { shuffleArray } from "@/utils/shuffle";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
@@ -1095,7 +1096,7 @@ export function GameStyleQuestionEditor({
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
-              {onPublicChange && (
+              {PUBLIC_SHARING_ENABLED && onPublicChange && (
                 <button
                   onClick={() => onPublicChange(!isPublic)}
                   className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"

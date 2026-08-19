@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
+import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -234,7 +235,7 @@ export function AddRoundToCollectionModal({
         icon_slug: iconSlug,
         collection_id: collectionId,
         round_number: roundNumber,
-        is_public: true,
+        is_public: PUBLIC_SHARING_ENABLED,
       }]);
 
       if (error) throw error;

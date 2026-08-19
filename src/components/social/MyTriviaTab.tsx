@@ -27,6 +27,7 @@ import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 
 // Localized time format helper
 function formatLocalTimeAgo(date: Date, t: (key: string, params?: Record<string, string | number>) => string): string {
@@ -325,7 +326,7 @@ function CollectionCard({
                   </div>
                   {/* Visibility badge */}
                   <div className="bg-muted rounded-full h-8 px-3 text-xs text-muted-foreground flex items-center gap-1.5">
-                    {collection.is_public ? (
+                    {PUBLIC_SHARING_ENABLED && collection.is_public ? (
                       <Globe className="w-3.5 h-3.5" aria-hidden />
                     ) : (
                       <Lock className="w-3.5 h-3.5" aria-hidden />
@@ -434,7 +435,7 @@ function CollectionCard({
 
           {/* Visibility + rounds count (single pill like trivia cards) */}
           <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
-            {collection.is_public ? (
+            {PUBLIC_SHARING_ENABLED && collection.is_public ? (
               <Globe className="w-3.5 h-3.5" aria-hidden />
             ) : (
               <Lock className="w-3.5 h-3.5" aria-hidden />
@@ -494,7 +495,9 @@ function CollectionCard({
             </div>
           </div>
           
-          {/* Buttons Row */}
+          {/* Buttons Row — the row only holds the publish toggle, so it
+              disappears entirely while public sharing is hidden. */}
+          {PUBLIC_SHARING_ENABLED && (
           <div className="flex items-center gap-3 mt-3">
             <button
               onClick={(e) => { e.stopPropagation(); onPost?.(collection); }}
@@ -520,6 +523,7 @@ function CollectionCard({
               )}
             </button>
           </div>
+          )}
         </div>
       </button>
 
@@ -691,7 +695,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           </h4>
         </div>
         <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
-          {post.is_public !== false ? (
+          {PUBLIC_SHARING_ENABLED && post.is_public !== false ? (
             <Globe className="w-3.5 h-3.5" aria-hidden />
           ) : (
             <Lock className="w-3.5 h-3.5" aria-hidden />
@@ -835,7 +839,7 @@ function StandaloneQuizCard({
           </h4>
         </div>
         <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
-          {post.is_public !== false ? (
+          {PUBLIC_SHARING_ENABLED && post.is_public !== false ? (
             <Globe className="w-3.5 h-3.5" aria-hidden />
           ) : (
             <Lock className="w-3.5 h-3.5" aria-hidden />
@@ -883,7 +887,9 @@ function StandaloneQuizCard({
         
         {/* Buttons Row */}
         <div className="flex items-center gap-3 mt-3" onClick={(e) => e.stopPropagation()}>
-          {/* Toggle visibility button */}
+          {/* Toggle visibility button — hidden while public sharing is off;
+              Play then stretches across the row on its own. */}
+          {PUBLIC_SHARING_ENABLED && (
           <button
             onClick={() => onPost?.(post)}
             disabled={isPosting}
@@ -907,7 +913,8 @@ function StandaloneQuizCard({
               </>
             )}
           </button>
-          <ChunkyButton 
+          )}
+          <ChunkyButton
             size="sm" 
             variant="outline" 
             className="flex-1 h-10 text-sm"

@@ -7,6 +7,7 @@ import { ChevronLeft, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageI
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
+import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -415,7 +416,9 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                     </div>
                   )}
 
-                  {/* Visibility Toggle */}
+                  {/* Visibility Toggle — hidden while public sharing is off;
+                      isPublic keeps the record's stored value untouched. */}
+                  {PUBLIC_SHARING_ENABLED && (
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">{t("extra.visibilityLabel")}</label>
                     <div className="flex gap-2">
@@ -443,6 +446,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                       </button>
                     </div>
                   </div>
+                  )}
 
                   {/* Delete Section */}
                   <div className="pt-4 border-t border-border">

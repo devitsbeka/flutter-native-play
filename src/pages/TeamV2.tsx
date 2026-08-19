@@ -25,6 +25,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { LiveBadge } from "@/components/social/LiveBadge";
 import { ExplorePortfolioFeed } from "@/components/social/ExplorePortfolioFeed";
+import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 import { MyTriviaTab } from "@/components/social/MyTriviaTab";
 import { CreateQuizModal } from "@/components/social/CreateQuizModal";
 import { CreateCollectionModal } from "@/components/social/CreateCollectionModal";
@@ -247,11 +248,13 @@ function TeamContentV2() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+  // "explore" is only a real tab while public sharing is on; a stale
+  // ?tab=explore link falls back to rooms instead of opening a hidden tab.
+  const isKnownTab = (tab: string | null): tab is string =>
+    tab === "my-content" || tab === "rooms" || (PUBLIC_SHARING_ENABLED && tab === "explore");
   const [activeTab, setActiveTab] = useState(() => {
     const tabFromUrl = searchParams.get("tab");
-    return tabFromUrl === "explore" || tabFromUrl === "my-content" || tabFromUrl === "rooms"
-      ? tabFromUrl
-      : "rooms";
+    return isKnownTab(tabFromUrl) ? tabFromUrl : "rooms";
   });
   
   // Scroll to top when changing tabs to prevent layout jump
@@ -272,7 +275,7 @@ function TeamContentV2() {
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab");
     if (tabFromUrl && tabFromUrl !== activeTab) {
-      if (tabFromUrl === "explore" || tabFromUrl === "my-content" || tabFromUrl === "rooms") {
+      if (isKnownTab(tabFromUrl)) {
         setActiveTab(tabFromUrl);
       }
     }
@@ -828,7 +831,7 @@ function TeamContentV2() {
                     }}
                   >
                     {[
-                      { id: "explore", label: t("extra.tabExplore") },
+                      ...(PUBLIC_SHARING_ENABLED ? [{ id: "explore", label: t("extra.tabExplore") }] : []),
                       { id: "rooms", label: t("extra.tabRooms") },
                       { id: "my-content", label: t("extra.tabMyTrivia") },
                     ].map((tab) => (

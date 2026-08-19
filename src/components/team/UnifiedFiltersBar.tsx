@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 
 export interface FilterOption<T extends string> {
   value: T;
@@ -201,8 +202,13 @@ export const roomFilterOptions: FilterOption<RoomFilter>[] = [
 // Pre-defined filter options for my trivia content
 export const myTriviaFilterOptions: FilterOption<MyTriviaFilter>[] = [
   { value: "all", labelKey: "extra.filterAll" },
-  { value: "private", labelKey: "extra.filterPrivate" },
-  { value: "published", labelKey: "extra.filterPublic" },
+  // Visibility chips only mean something while public sharing is on.
+  ...(PUBLIC_SHARING_ENABLED
+    ? ([
+        { value: "private", labelKey: "extra.filterPrivate" },
+        { value: "published", labelKey: "extra.filterPublic" },
+      ] as FilterOption<MyTriviaFilter>[])
+    : []),
   { value: "trivias", labelKey: "extra.filterTrivias" },
   { value: "collections", labelKey: "extra.filterCollections" },
   { value: "personal", labelKey: "extra.myTriviaPartyLabel" },
