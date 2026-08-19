@@ -52,9 +52,12 @@ Consider:
 Respond with a JSON object only, no other text:
 {
   "isValid": true/false,
+  "isAppropriate": true/false,
   "relevanceScore": 0-100,
   "reason": "Brief explanation"
-}`;
+}
+
+"isAppropriate" is strictly about content safety: false ONLY for sexual/nude content, graphic violence or gore, hate symbols, or depictions of illegal drug use. An irrelevant but harmless image is isAppropriate: true (and may still be isValid: false for relevance).`;
 
     console.log("Validating image for:", title, subject);
 
@@ -91,7 +94,7 @@ Respond with a JSON object only, no other text:
       console.error("AI API error:", errorText);
       // Default to valid if AI fails - don't block user uploads
       return new Response(
-        JSON.stringify({ isValid: true, relevanceScore: 50, reason: "Could not validate" }),
+        JSON.stringify({ isValid: true, isAppropriate: true, relevanceScore: 50, reason: "Could not validate" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -106,6 +109,8 @@ Respond with a JSON object only, no other text:
       const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const result = JSON.parse(jsonMatch[0]);
+        // Older model outputs may lack the field; missing means "not flagged".
+        if (typeof result.isAppropriate !== "boolean") result.isAppropriate = true;
         return new Response(
           JSON.stringify(result),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -117,14 +122,14 @@ Respond with a JSON object only, no other text:
 
     // Default response if parsing fails
     return new Response(
-      JSON.stringify({ isValid: true, relevanceScore: 50, reason: "Image accepted" }),
+      JSON.stringify({ isValid: true, isAppropriate: true, relevanceScore: 50, reason: "Image accepted" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Error:", error);
     // Default to valid on error - don't block user uploads
     return new Response(
-      JSON.stringify({ isValid: true, relevanceScore: 50, reason: "Validation skipped" }),
+      JSON.stringify({ isValid: true, isAppropriate: true, relevanceScore: 50, reason: "Validation skipped" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

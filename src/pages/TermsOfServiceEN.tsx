@@ -91,6 +91,12 @@ export default function TermsOfServiceEN() {
                   <span>Sell, trade, or transfer accounts or virtual items for real money</span>
                 </li>
               </ul>
+              <p className="text-sm text-muted-foreground mt-3">
+                We have zero tolerance for objectionable content and abusive
+                users. Content reported as offensive is reviewed and removed
+                within 24 hours, and users who post it are ejected. You can
+                report any content and block any user directly in the app.
+              </p>
             </section>
 
             {/* Virtual Items */}

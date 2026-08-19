@@ -87,6 +87,9 @@ export default function TermsOfService() {
                   <span>{t("legal.prohibited5")}</span>
                 </li>
               </ul>
+              <p className="text-sm text-muted-foreground mt-3">
+                {t("legal.zeroTolerance")}
+              </p>
             </section>
 
             {/* Virtual Items */}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { containsBlockedText } from "@/utils/contentFilter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, X, RefreshCw, Globe, Lock, Play, Users } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
@@ -358,6 +359,18 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
         description: t("extra.cqmPleaseLogin"),
         variant: "destructive",
       });
+      return;
+    }
+
+    // Everything published here lands on the public Explore feed (and quiz
+    // titles can be voted onto a shared TV screen) — screen the text first.
+    const textsToScreen = [
+      title,
+      subject,
+      ...editorQuestions.flatMap((q) => [q.question, ...q.answers.map((a) => a.text)]),
+    ];
+    if (textsToScreen.some((s) => containsBlockedText(s))) {
+      toast({ title: t("extra.textNotAllowed"), variant: "destructive" });
       return;
     }
 

@@ -121,6 +121,23 @@ export function CoverImagePicker({
         .from("quiz-covers")
         .getPublicUrl(fileName);
 
+      // Appropriateness screen before the image can become a public quiz
+      // cover (guideline 1.2). The function existed and nothing called it —
+      // any camera-roll photo went straight to the public feed. Relevance
+      // is advisory; only a content-safety flag blocks, and validator
+      // outages fail open so a model hiccup doesn't break uploads.
+      const { data: verdict } = await supabase.functions.invoke("validate-cover-image", {
+        body: { imageUrl: publicUrl, title },
+      });
+      if (verdict && verdict.isAppropriate === false) {
+        await supabase.storage.from("quiz-covers").remove([fileName]);
+        toast({
+          title: t("extra.textNotAllowed"),
+          variant: "destructive",
+        });
+        return;
+      }
+
       onImageChange(publicUrl);
       toast({
         title: "სურათი აიტვირთა! ✓",

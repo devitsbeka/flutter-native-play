@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import retroTvIcon from "@/assets/images/retro-tv.png";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { containsBlockedText } from "@/utils/contentFilter";
 import { Share2, ArrowLeft, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut, Plus, BellRing } from "lucide-react";
 import { createNotification } from "@/hooks/useNotifications";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
@@ -476,7 +477,13 @@ export function RoomLobbyV2() {
 
   const handleUpdateRoomIconAndName = async (iconUrl: string, newName: string) => {
     if (!currentRoom) return;
-    
+
+    // Room names are shown to every participant and ride push notifications.
+    if (containsBlockedText(newName)) {
+      toast.error(t("extra.textNotAllowed"));
+      return;
+    }
+
     try {
       await supabase
         .from("game_rooms")

@@ -97,6 +97,12 @@ export function ExplorePortfolioFeed({
     () => feedItems.filter((f) => !isBlocked(f.player?.user_id)),
     [feedItems, isBlocked],
   );
+  // Same rule for the tablet/desktop shape — this list rendered raw, so on
+  // iPad "block" toasted success while the blocked creator stayed on screen.
+  const visibleCreators = useMemo(
+    () => creators.filter((c) => !isBlocked(c.user_id)),
+    [creators, isBlocked],
+  );
 
   const { userLikes, userSaves, userPlays, toggleLike, toggleSave } = useSocialFeed();
 
@@ -119,7 +125,7 @@ export function ExplorePortfolioFeed({
     setVisibleCount(INITIAL_RENDER_COUNT);
   }, [searchQuery, filter, sort, isMobile]);
 
-  const totalCount = isMobile ? feedItems.length : creators.length;
+  const totalCount = isMobile ? visibleFeedItems.length : visibleCreators.length;
   const hasMore = visibleCount < totalCount;
 
   useEffect(() => {
@@ -235,7 +241,7 @@ export function ExplorePortfolioFeed({
       ) : (
         /* Desktop/Tablet: Grouped feed - player + horizontal carousel */
         <div className="space-y-3 overflow-hidden w-full max-w-full">
-          {creators.slice(0, visibleCount).map((creator) => (
+          {visibleCreators.slice(0, visibleCount).map((creator) => (
             <CreatorPortfolioCard
               key={creator.user_id}
               creator={creator}

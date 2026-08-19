@@ -9,6 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { translateErrorMessage } from "@/utils/errorTranslations";
+import { containsBlockedText } from "@/utils/contentFilter";
 
 export default function SettingsName() {
   const { user, profile, fetchProfile } = useAuth();
@@ -26,6 +27,13 @@ export default function SettingsName() {
 
   const handleSave = async () => {
     if (!user || !nickname.trim()) return;
+
+    // The display name is public (feed, leaderboards, rooms) — screen it.
+    // This path previously wrote nickname.trim() with no validation at all.
+    if (containsBlockedText(nickname)) {
+      notify.error(t("extra.textNotAllowed"));
+      return;
+    }
 
     setIsLoading(true);
     try {

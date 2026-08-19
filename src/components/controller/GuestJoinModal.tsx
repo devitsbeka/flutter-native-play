@@ -5,6 +5,7 @@ import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { containsBlockedText } from "@/utils/contentFilter";
 
 interface GuestJoinModalProps {
   isOpen: boolean;
@@ -31,6 +32,8 @@ export const GuestJoinModal = React.forwardRef<HTMLDivElement, GuestJoinModalPro
     if (!validPattern.test(trimmed)) { setNicknameError(t('guestJoin.lettersOnly')); return false; }
     const reserved = ['TV_DISPLAY', 'TV_MIRROR', 'SYSTEM', 'ADMIN', 'HOST'];
     if (reserved.includes(trimmed.toUpperCase())) { setNicknameError(t('guestJoin.reservedName')); return false; }
+    // This name renders on a shared TV screen in front of a room of people.
+    if (containsBlockedText(trimmed)) { setNicknameError(t('extra.textNotAllowed')); return false; }
     setNicknameError(null);
     return true;
   };

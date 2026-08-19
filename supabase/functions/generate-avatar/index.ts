@@ -145,8 +145,37 @@ serve(async (req) => {
     }
 
     if (promptOverride) {
-      prompt = promptOverride;
-      promptSource = "override";
+      // The app's own avatar flow sends the scene preset, which mirrors the
+      // ai_generation_settings row — that is always allowed. Any OTHER
+      // prompt is an arbitrary instruction from whoever holds a JWT, and
+      // the result becomes a public avatar: admins only. Non-admin
+      // overrides are ignored (falling back to the canonical prompt), not
+      // rejected, so older clients keep working.
+      let allowOverride = promptOverride.trim() === prompt.trim();
+      if (!allowOverride && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        try {
+          const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const { data: userData } = await supabase.auth.getUser(jwt);
+          if (userData?.user) {
+            const { data: adminRow } = await supabase
+              .from("user_roles")
+              .select("user_id")
+              .eq("user_id", userData.user.id)
+              .eq("role", "admin")
+              .maybeSingle();
+            allowOverride = !!adminRow;
+          }
+        } catch {
+          /* fail closed: no override */
+        }
+      }
+      if (allowOverride) {
+        prompt = promptOverride;
+        promptSource = "override";
+      } else {
+        console.log("Ignoring prompt override from non-admin caller");
+      }
     }
 
     // Portraits: a supplied prompt wins, otherwise the built-in one. This

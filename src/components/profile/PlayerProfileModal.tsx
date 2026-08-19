@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useState, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PlayerOverflowMenu } from "@/components/social/PlayerOverflowMenu";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 import { MASCOT_USER_IDS } from "@/lib/excludedUsers";
@@ -333,6 +334,12 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                ) : !data?.isCurrentUser && userId ? (
+                  /* Report/block for any profile that isn't yours (1.2):
+                     this modal is the whole of /profile/:userId and every
+                     avatar tap in the feed — it had no way to report an
+                     offensive nickname or avatar. */
+                  <PlayerOverflowMenu userId={userId} displayName={data?.profile?.nickname} />
                 ) : (
                   <div className="w-10" />
                 )}

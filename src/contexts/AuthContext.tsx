@@ -7,6 +7,8 @@ import { callRpc } from "@/integrations/supabase/rpc";
 import { oauth } from "@/integrations/oauth";
 import { APP_BUNDLE_ID } from "@/config/site";
 import { getCountryCodeFromIP } from "@/hooks/useGeoLocation";
+import { containsBlockedText } from "@/utils/contentFilter";
+import { t as tStandalone } from "@/utils/standaloneTranslation";
 
 export interface Profile {
   id: string;
@@ -265,8 +267,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, setProfileKeepingPrivate]);
 
   const signUp = async (email: string, password: string, nickname: string) => {
+    // The nickname is a public display name — screen it once here, which
+    // covers every signup surface (Auth page, AuthRequiredModal, onboarding,
+    // the auto-register dialog) instead of four separate checks.
+    if (containsBlockedText(nickname)) {
+      return { data: null, error: new Error(tStandalone("extra.textNotAllowed")) };
+    }
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -281,6 +289,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Username-only signup - creates pseudo-email internally
   const signUpWithUsername = async (username: string, password: string) => {
+    // Same screen as signUp — the username IS the public display name here.
+    if (containsBlockedText(username)) {
+      return { data: null, error: new Error(tStandalone("extra.textNotAllowed")) };
+    }
     const pseudoEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@mytrivia.local`;
     const redirectUrl = `${window.location.origin}/`;
     
