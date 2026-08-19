@@ -41,6 +41,7 @@ import { siteUrl } from "@/config/site";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Json } from "@/integrations/supabase/types";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { shareOrCopy } from "@/utils/shareLink";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 // Inspirational topics for trivia creation
@@ -473,11 +474,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     }
   };
 
-  // Copy to clipboard helper
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-  };
-
   // Share a link to the team page. The room doesn't exist yet at this
   // point, so there is no room code to embed — the previous version shared
   // a random made-up code that nothing could ever redeem. siteUrl keeps the
@@ -485,20 +481,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const handleShareInviteLink = async () => {
     const categoryName = selectedCategory?.name || "Trivia";
     const inviteLink = siteUrl("/team");
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: t("extra.joinTriviaShare"),
-          text: t("extra.joinTriviaShareText", { category: categoryName }),
-          url: inviteLink,
-        });
-      } catch (err) {
-        copyToClipboard(inviteLink);
-      }
-    } else {
-      copyToClipboard(inviteLink);
-    }
+
+    const outcome = await shareOrCopy({
+      title: t("extra.joinTriviaShare"),
+      text: t("extra.joinTriviaShareText", { category: categoryName }),
+      url: inviteLink,
+    });
+    if (outcome === "copied") toast({ description: t("team.linkCopied") });
+    if (outcome === "failed") toast({ description: t("team.shareFailed"), variant: "destructive" });
   };
 
   // State for custom trivia questions

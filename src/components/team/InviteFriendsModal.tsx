@@ -18,6 +18,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { copyToClipboard } from "@/utils/shareLink";
 import { useFriends } from "@/hooks/useFriends";
 import { useAuth } from "@/contexts/AuthContext";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
@@ -704,8 +705,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
           <div className="fixed bottom-0 left-0 right-0 safe-bottom z-[10000] border-t border-white/10 bg-primary">
             <div className="mx-auto w-full max-w-[520px] p-4">
               <motion.button
-                onClick={() => {
-                  navigator.clipboard.writeText(appLink);
+                onClick={async () => {
+                  if (await copyToClipboard(appLink) === "failed") {
+                    toast.error(t("team.shareFailed"));
+                    return;
+                  }
                   setCopied(true);
                   toast.success(t("extra.linkCopiedToast"));
                   setTimeout(() => setCopied(false), 2000);

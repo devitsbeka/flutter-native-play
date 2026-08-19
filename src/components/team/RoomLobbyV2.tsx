@@ -7,6 +7,7 @@ import { containsBlockedText } from "@/utils/contentFilter";
 import { Share2, ArrowLeft, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut, Plus, BellRing } from "lucide-react";
 import { createNotification } from "@/hooks/useNotifications";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { shareOrCopy } from "@/utils/shareLink";
 import { isRoomActive } from "@/hooks/useMyRooms";
 import { RoomIconPickerModal } from "./RoomIconPickerModal";
 import { useMultiplayerV2, getShareLink } from "@/contexts/MultiplayerContextV2";
@@ -255,24 +256,9 @@ export function RoomLobbyV2() {
       url: link,
     };
 
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(link);
-        toast.success(t("team.linkCopied"));
-      }
-    } catch (error) {
-      if ((error as Error).name !== "AbortError") {
-        // Fallback to copy
-        try {
-          await navigator.clipboard.writeText(link);
-          toast.success(t("team.linkCopied"));
-        } catch {
-          toast.error(t("team.shareFailed"));
-        }
-      }
-    }
+    const outcome = await shareOrCopy(shareData);
+    if (outcome === "copied") toast.success(t("team.linkCopied"));
+    if (outcome === "failed") toast.error(t("team.shareFailed"));
   };
 
   const handleTVModeToggle = (checked: boolean) => {

@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useClipboard } from "@/hooks/use-clipboard";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { shareOrCopy } from "@/utils/shareLink";
 import { toast } from "sonner";
 import { siteUrl } from "@/config/site";
 
@@ -35,7 +35,6 @@ export interface ChallengeShareInput {
  */
 export function useChallengeShare() {
   const { user, profile } = useAuth();
-  const { copy } = useClipboard({ timeout: 3000 });
   const { t } = useLanguage();
   const [sharing, setSharing] = useState(false);
 
@@ -82,19 +81,10 @@ export function useChallengeShare() {
           url,
         };
 
-        if (navigator.share && navigator.canShare?.(shareData)) {
-          try {
-            await navigator.share(shareData);
-          } catch (err) {
-            // Dismissing the sheet is not a failure and must not raise a toast.
-            if ((err as Error).name !== "AbortError") {
-              console.error("Share failed:", err);
-            }
-          }
-        } else {
-          await copy(url);
-          toast.success(t("extra.challengeLinkCopied"));
-        }
+        // Dismissing the sheet is not a failure and must not raise a toast.
+        const outcome = await shareOrCopy(shareData);
+        if (outcome === "copied") toast.success(t("extra.challengeLinkCopied"));
+        if (outcome === "failed") toast.error(t("team.shareFailed"));
       } catch (err) {
         console.error("Failed to create challenge link:", err);
         toast.error(t("extra.linkCreateFailed"));
@@ -102,7 +92,7 @@ export function useChallengeShare() {
         setSharing(false);
       }
     },
-    [user, profile, sharing, copy, t],
+    [user, profile, sharing, t],
   );
 
   return { share, sharing };

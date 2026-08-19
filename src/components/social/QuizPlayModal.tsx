@@ -13,6 +13,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Button } from "@/components/ui/button";
 import { SamplePost } from "@/data/samplePosts";
 import { toast } from "sonner";
+import { shareOrCopy } from "@/utils/shareLink";
 import confetti from "canvas-confetti";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -299,12 +300,9 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
       : questions.length;
     const displayScore = isCollection ? cumulativeScore : score;
     const text = `მივიღე ${displayScore}/${totalQuestions} "${post?.title}" Trivia-ში! 🎮`;
-    if (navigator.share) {
-      await navigator.share({ text });
-    } else {
-      await navigator.clipboard.writeText(text);
-      toast.success(t("extra.linkCopiedToast"));
-    }
+    const outcome = await shareOrCopy({ text });
+    if (outcome === "copied") toast.success(t("extra.linkCopiedToast"));
+    if (outcome === "failed") toast.error(t("team.shareFailed"));
   };
 
   const getAnswerState = (answer: string): QuizAnswerState => {
