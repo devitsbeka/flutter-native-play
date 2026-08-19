@@ -36,6 +36,15 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // only place guaranteed to be listening in time. Without this gate, an
 // already-signed-in user opening an EXPIRED reset link would be shown the
 // new-password form and silently change the signed-in account's password.
+//
+// The forward below also makes the flow independent of the dashboard's
+// redirect-URL allowlist (which nobody here can edit — Lovable holds the
+// Supabase connection): when the allowlist doesn't know /reset-password,
+// GoTrue clamps the email link to the Site URL and the recovery token lands
+// on the HOMEPAGE. The token still works — detectSessionInUrl consumes it
+// wherever it lands — so on PASSWORD_RECOVERY anywhere but the reset page,
+// forward there. If the allowlist does know the path, the link lands on
+// /reset-password directly and the forward is a no-op.
 if (!Capacitor.isNativePlatform()) {
   supabase.auth.onAuthStateChange((event) => {
     if (event === 'PASSWORD_RECOVERY') {
@@ -43,6 +52,9 @@ if (!Capacitor.isNativePlatform()) {
         sessionStorage.setItem('pw-recovery', '1');
       } catch {
         /* private mode: ResetPassword falls back to its live listener */
+      }
+      if (window.location.pathname !== '/reset-password') {
+        window.location.replace('/reset-password');
       }
     }
   });
