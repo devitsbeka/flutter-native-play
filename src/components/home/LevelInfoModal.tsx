@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { X } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LevelInfo } from "@/utils/levelCalculation";
 import { REWARDS } from "@/config/rewardConfig";
@@ -131,15 +131,21 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: Level
                 <div className="flex items-center gap-3">
                   <img src={iconGift} alt="" width={44} height={44} className="shrink-0" />
                   <div>
-                    <p className="font-display text-2xl font-bold leading-none text-[#1E1B2E]">
+                    {/* The arrow marks this as the NEXT level, not the
+                        current one two inches above it. */}
+                    <p className="flex items-center gap-1.5 font-display text-2xl font-bold leading-none text-[#1E1B2E]">
+                      <ArrowRight className="h-6 w-6 shrink-0 text-[#6D28D9]" />
                       {t("modals.levelLabel")} {levelInfo.level + 1}
                     </p>
                     <p className="mt-1 text-sm text-slate-600">{t("modals.nextLevelRewardsHint")}</p>
                   </div>
                 </div>
-                <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-3">
+                {/* One tight row, labels never breaking mid-phrase: the old
+                    50/50 grid squeezed "შემთხვევითი ძალა" onto two lines
+                    while the coins column sat half empty. */}
+                <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
                   {rewardItems.map((item) => (
-                    <div key={item.label} className="flex items-center gap-1.5">
+                    <div key={item.label} className="flex items-center gap-1 whitespace-nowrap">
                       <img src={item.icon} alt="" width={20} height={20} className="shrink-0" />
                       <span className="text-sm font-medium text-[#1E1B2E]">{item.label}</span>
                     </div>
