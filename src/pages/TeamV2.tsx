@@ -92,26 +92,12 @@ function TeamContentV2() {
   const { showProModal, setShowProModal, gatedFeature } = useProGating();
   const { gateWithRewardedAd } = useAds();
 
-  // The ad gate can spend seconds loading an ad before it either shows or
-  // fails open — during which a tapped button looked simply ignored, so
-  // players tapped again and again. One gate at a time, with a loading
-  // toast once it takes noticeably long.
-  const adGatePendingRef = useRef(false);
-  const gateWithFeedback = async (onProceed: () => void | Promise<void>) => {
-    if (adGatePendingRef.current) return;
-    adGatePendingRef.current = true;
-    let toastId: string | number | undefined;
-    const slow = setTimeout(() => {
-      toastId = toast.loading(t("common.loading"));
-    }, 300);
-    try {
-      await gateWithRewardedAd(onProceed);
-    } finally {
-      clearTimeout(slow);
-      if (toastId !== undefined) toast.dismiss(toastId);
-      adGatePendingRef.current = false;
-    }
-  };
+  // The "+ Trivia" entry points are deliberately NOT ad-gated: the gate
+  // could spend up to 12 seconds loading an ad before failing open, so the
+  // button felt dead and players tapped repeatedly. The ad plan (what gets
+  // an ad, and where) is still being decided — until it is, creating a
+  // trivia opens instantly. gateWithRewardedAd stays in use for the
+  // room-creation and TV flows below.
 
   // Auto-open PersonalTrivia from navigation state
   const [autoOpenPersonalTrivia, setAutoOpenPersonalTrivia] = useState(false);
@@ -921,7 +907,7 @@ function TeamContentV2() {
                     onClick={() =>
                       activeTab === "rooms"
                         ? setShowCreateModal(true)
-                        : gateWithFeedback(() => setShowCreateTypeModal(true))
+                        : setShowCreateTypeModal(true)
                     }
                     className="hidden md:flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-primary text-primary-foreground shadow-sm shrink-0 text-sm font-bold"
                   >
@@ -961,7 +947,7 @@ function TeamContentV2() {
                       sortOptions={exploreSortOptions}
                       searchQuery={exploreSearchQuery}
                       onSearchQueryChange={setExploreSearchQuery}
-                      onAddClick={() => gateWithFeedback(() => setShowCreateTypeModal(true))}
+                      onAddClick={() => setShowCreateTypeModal(true)}
                       addButtonText={t("extra.createTriviaBtn")}
                     />
                   )}
@@ -973,7 +959,7 @@ function TeamContentV2() {
                       filterOptions={myTriviaFilterOptions}
                       searchQuery={searchQuery}
                       onSearchQueryChange={setSearchQuery}
-                      onAddClick={() => gateWithFeedback(() => setShowCreateTypeModal(true))}
+                      onAddClick={() => setShowCreateTypeModal(true)}
                       addButtonText={t("extra.feedCreateTriviaBtn")}
                     />
                   )}
@@ -1019,7 +1005,7 @@ function TeamContentV2() {
               {/* My Trivia Tab */}
               {activeTab === "my-content" && (
                 <MyTriviaTab
-                  onCreateQuiz={() => gateWithFeedback(() => setShowCreateTypeModal(true))}
+                  onCreateQuiz={() => setShowCreateTypeModal(true)}
                   onPlay={(post, collectionPosts) => {
                     setPlayingQuiz({ post, collectionPosts });
                   }}
