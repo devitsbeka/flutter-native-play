@@ -147,7 +147,7 @@ export function EditQuestionDialog({
                         <div className="relative flex items-center">
                           <div className="absolute left-3 w-7 h-7 rounded-full bg-sky-300 flex items-center justify-center z-10">
                             <span className="text-slate-700 font-bold text-sm">
-                              {String.fromCharCode(66 + idx)}
+                              {[t("extra.answerLabelB"), t("extra.answerLabelC"), t("extra.answerLabelD")][idx]}
                             </span>
                           </div>
                           <Input

@@ -556,7 +556,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                                   <div className="relative p-3.5 rounded-xl bg-white flex items-center gap-3">
                                     <div className="w-7 h-7 rounded-full bg-sky-300 flex items-center justify-center flex-shrink-0">
                                       <span className="text-slate-700 font-bold text-sm">
-                                        {String.fromCharCode(66 + i)}
+                                        {[t("extra.answerLabelB"), t("extra.answerLabelC"), t("extra.answerLabelD")][i]}
                                       </span>
                                     </div>
                                     <span className="text-slate-700 font-medium">{ans}</span>

@@ -333,7 +333,12 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
     );
   }, [shuffledAnswers]);
 
-  const answerLabels = ['ა', 'ბ', 'გ', 'დ'];
+  const answerLabels = [
+    t("extra.answerLabelA"),
+    t("extra.answerLabelB"),
+    t("extra.answerLabelC"),
+    t("extra.answerLabelD"),
+  ];
 
   if (!post) return null;
 
