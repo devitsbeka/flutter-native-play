@@ -71,6 +71,8 @@ export default function PrivacyPolicyEN() {
                 { bold: "Google AdMob:", text: "Advertising (with ATT consent on iOS)" },
                 { bold: "RevenueCat:", text: "Subscription management and purchase analytics" },
                 { bold: "Apple:", text: "In-app purchases and Sign in with Apple" },
+                { bold: "PostHog:", text: "Product analytics and crash diagnostics" },
+                { bold: "ip-api.com:", text: "Country detection from your IP address (coarse location), used once to set your default region" },
               ]} />
             </section>
 

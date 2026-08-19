@@ -1184,6 +1184,8 @@ export const ka = {
     thirdPartyAdMob: "Google AdMob: რეკლამა (ATT თანხმობით iOS-ზე)",
     thirdPartyRevenueCat: "RevenueCat: გამოწერების მართვა და შესყიდვების ანალიტიკა",
     thirdPartyApple: "Apple: In-app შესყიდვები და Sign in with Apple",
+    thirdPartyPostHog: "PostHog: პროდუქტის ანალიტიკა და შეცდომების დიაგნოსტიკა",
+    thirdPartyIpApi: "ip-api.com: ქვეყნის დადგენა IP მისამართით (მიახლოებითი მდებარეობა), გამოიყენება ერთხელ ნაგულისხმევი რეგიონის დასაყენებლად",
 
     // რეკლამა და თვალყურის დევნება
     advertisingTracking: "რეკლამა და თვალყურის დევნება",

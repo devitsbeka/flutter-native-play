@@ -72,6 +72,8 @@ export default function PrivacyPolicy() {
                 <Bullet text={t("legal.thirdPartyAdMob")} />
                 <Bullet text={t("legal.thirdPartyRevenueCat")} />
                 <Bullet text={t("legal.thirdPartyApple")} />
+                <Bullet text={t("legal.thirdPartyPostHog")} />
+                <Bullet text={t("legal.thirdPartyIpApi")} />
               </ul>
             </section>
 

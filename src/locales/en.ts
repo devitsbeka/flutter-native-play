@@ -1185,6 +1185,8 @@ export const en: KaTranslations = {
     thirdPartyAdMob: "Google AdMob: Advertising (with ATT consent on iOS)",
     thirdPartyRevenueCat: "RevenueCat: Subscription management and purchase analytics",
     thirdPartyApple: "Apple: In-app purchases and Sign in with Apple",
+    thirdPartyPostHog: "PostHog: Product analytics and crash diagnostics",
+    thirdPartyIpApi: "ip-api.com: Country detection from your IP address (coarse location), used once to set your default region",
 
     // Advertising & Tracking
     advertisingTracking: "Advertising & Tracking",
