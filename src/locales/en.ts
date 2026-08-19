@@ -2291,6 +2291,10 @@ export const en: KaTranslations = {
     cancellationDesc: "You can manage and cancel your subscription in your App Store account settings. No refund for the current period.",
     privacyLink: "Privacy",
     termsLink: "Terms",
+    authAgreePrefix: "By continuing you agree to our",
+    authAgreeTerms: "Terms of Service",
+    authAgreeAnd: "and",
+    authAgreePrivacy: "Privacy Policy",
     // Controller / TV
     playersConnected: "{count} player(s) connected",
     chooseTrivia: "Choose Trivia",

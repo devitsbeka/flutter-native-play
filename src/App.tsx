@@ -198,7 +198,10 @@ const App = () => (
             <Suspense fallback={<PageSkeleton />}>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/dev/v2" element={<Index />} />
+                {/* Experimental world-map homepage — dev-only, like the other
+                    showcase routes. It shipped unflagged, reachable on device
+                    via mytrivia://dev/v2. */}
+                {INCLUDE_DEV_PAGES && <Route path="/dev/v2" element={<Index />} />}
                 <Route path="/loading" element={<Loading />} />
                 <Route path="/trivialoader" element={<TriviaLoader />} />
                 

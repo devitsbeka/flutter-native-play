@@ -49,20 +49,16 @@
 		<string>arm64</string>
 	</array>
 
-	<!-- Portrait only, on both idioms. The same lock is declared in
-	     capacitor.config.ts, but that block is not applied to this file by
-	     `cap add`/`cap sync` — the generated plist still carried the template's
-	     landscape entries. This file is the one iOS reads. -->
+	<!-- Portrait only. The same lock is declared in capacitor.config.ts, but
+	     that block is not applied to this file by `cap add`/`cap sync` — the
+	     generated plist still carried the template's landscape entries. This
+	     file is the one iOS reads. The app is iPhone-only
+	     (TARGETED_DEVICE_FAMILY = 1), so no ~ipad orientation block: the
+	     layouts were never designed for iPad and shipping a claimed-but-broken
+	     iPad experience is a standing App Review rejection. -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 
 	<key>UIViewControllerBasedStatusBarAppearance</key>

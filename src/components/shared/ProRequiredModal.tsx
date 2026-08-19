@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useProPurchase } from "@/hooks/useProPurchase";
+import { useStorePrice } from "@/hooks/useStorePrice";
+import { getPriceDisplay } from "@/utils/currency";
+import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Capacitor } from "@capacitor/core";
 import type { ProFeature } from "@/hooks/useProGating";
@@ -27,6 +30,13 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
   const navigate = useNavigate();
   const { initiateProCheckout, isProcessing } = useProPurchase();
   const { t } = useLanguage();
+  // The button below starts a real auto-renewing purchase on iOS, so the
+  // price and billing period must be on screen before the tap (3.1.2) —
+  // this modal used to show neither. StoreKit's localized figure, with the
+  // bundled USD price only as the not-yet-loaded fallback.
+  const storePrice = useStorePrice();
+  const proPrice = storePrice("pro", 3.99);
+  const monthLabel = getPriceDisplay(3.99).monthLabel;
 
   const handleUpgrade = async () => {
     if (Capacitor.isNativePlatform()) {
@@ -83,9 +93,20 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="text-muted-foreground text-center text-sm mb-6"
+            className="text-muted-foreground text-center text-sm mb-3"
           >
             {t(FEATURE_KEYS[feature])} {t("proModal.becomeProSuffix")}
+          </motion.p>
+
+          {/* The price of what the button below buys */}
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.18 }}
+            className="mb-4 text-center"
+          >
+            <span className="text-xl font-black text-foreground">{proPrice.display}</span>
+            <span className="ml-1 text-sm text-muted-foreground">{monthLabel}</span>
           </motion.p>
 
           {/* CTA Button */}
@@ -118,6 +139,11 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
           >
             {t("proModal.cancel")}
           </motion.button>
+
+          {/* Renewal terms + legal links, required beside the buy button.
+              onNavigate closes the modal so the legal page isn't opened
+              underneath it. */}
+          <SubscriptionTerms className="mt-4 text-center" onNavigate={onClose} />
         </div>
       </DialogContent>
     </Dialog>

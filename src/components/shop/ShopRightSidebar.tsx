@@ -9,6 +9,7 @@ import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import { getPriceDisplay } from "@/utils/currency";
 import { useStorePrice } from "@/hooks/useStorePrice";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
 
 // White particle component for sidebar
 function SidebarParticle({ delay, left }: { delay: number; left: number }) {
@@ -221,6 +222,10 @@ export function ShopRightSidebar() {
               );
             })}
           </div>
+
+          {/* Required beside any surface that can start a subscription
+              purchase (guideline 3.1.2). */}
+          <SubscriptionTerms className="mt-3" />
         </div>
       </div>
     </aside>

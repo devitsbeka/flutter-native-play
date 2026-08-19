@@ -11,6 +11,7 @@ import gamepadIcon from "@/assets/pro-banner/banner-gamepad.webp";
 import wheelIcon from "@/assets/pro-banner/banner-wheel.webp";
 import noAdsIcon from "@/assets/pro-banner/banner-no-ads.webp";
 import { dealToShopItem, useLiveDeals, DealBannerCard } from "./DailyDealsRow";
+import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
 import {
   ProTierBanner,
   HEADER_SOLO,
@@ -409,6 +410,10 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
           ))}
         </div>
       </div>
+
+      {/* Required beside any surface that can start a subscription purchase
+          (guideline 3.1.2) — this reel always carries the two PRO tiers. */}
+      <SubscriptionTerms className="relative z-10 mt-3 px-6 text-center" />
     </div>
   );
 }

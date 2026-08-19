@@ -1,7 +1,7 @@
 import { toastIcon, ICON_URLS } from "@/lib/toast-icons";
 import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,7 @@ import { ReturningUserPicker } from "@/components/auth/ReturningUserPicker";
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get('returnTo');
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -161,13 +161,16 @@ export default function Auth() {
       if (returnTo) {
         localStorage.setItem('authReturnTo', returnTo);
       }
-      const { error } = await oauth.auth.signInWithOAuth("apple", {
-        redirect_uri: window.location.origin,
-      });
-      if (error) {
+      // signInWithApple picks the right flow itself: the native
+      // ASAuthorization sheet on iOS (Apple expects its own dialog there,
+      // not a Safari redirect), the Supabase OAuth redirect on web. This
+      // used to call the web redirect directly, bouncing iOS users to a
+      // Safari sheet — the exact degraded Apple sign-in review flags.
+      const { error } = await signInWithApple();
+      if (error && !/cancel/i.test(error.message ?? "")) {
         notify.error(t("common.error"), { description: translateErrorMessage(error.message) });
       }
-      // OAuth will redirect, so no need to navigate manually
+      // On success the auth listener navigates; user-cancel is silent.
     } catch (err) {
       notify.error(t("common.error"), { description: t("errors.generic") });
     } finally {
@@ -412,6 +415,19 @@ export default function Auth() {
             </svg>
             {isSignUp ? t("auth.signUpWithApple") : t("auth.signInWithApple")}
           </button>}
+
+          {/* Terms must be visible where the account is created (1.2 /
+              5.1.1) — this screen had no legal reference at all. */}
+          <p className="mt-4 text-center text-[11px] leading-snug text-muted-foreground">
+            {t("extra.authAgreePrefix")}{" "}
+            <Link to={language === "ka" ? "/terms" : "/terms-en"} className="underline underline-offset-2">
+              {t("extra.authAgreeTerms")}
+            </Link>{" "}
+            {t("extra.authAgreeAnd")}{" "}
+            <Link to={language === "ka" ? "/privacy-policy" : "/privacy-policy-en"} className="underline underline-offset-2">
+              {t("extra.authAgreePrivacy")}
+            </Link>
+          </p>
         </motion.form>
 
 

@@ -585,13 +585,15 @@ export default function Index() {
   const handleGuestAppleSignIn = useCallback(async () => {
     setIsAuthLoading(true);
     try {
-      await oauth.auth.signInWithOAuth("apple", {
-        redirect_uri: window.location.origin,
-      });
+      // Native ASAuthorization sheet on iOS, OAuth redirect on web —
+      // signInWithApple branches itself. The direct web-OAuth call here
+      // sent iOS users through Safari for a credential Apple expects to
+      // be native.
+      await signInWithApple();
     } finally {
       setIsAuthLoading(false);
     }
-  }, []);
+  }, [signInWithApple]);
 
   // Handle direct animation from home button
   const handleAnimateFromHome = useCallback(async () => {

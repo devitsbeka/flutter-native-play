@@ -2292,6 +2292,10 @@ export const ka = {
     cancellationDesc: "გამოწერის გაუქმება შეგიძლიათ App Store-ის პარამეტრებში ნებისმიერ დროს. მიმდინარე პერიოდის თანხა არ დაბრუნდება.",
     privacyLink: "კონფიდენციალურობა",
     termsLink: "პირობები",
+    authAgreePrefix: "გაგრძელებით ეთანხმები ჩვენს",
+    authAgreeTerms: "წესებსა და პირობებს",
+    authAgreeAnd: "და",
+    authAgreePrivacy: "კონფიდენციალურობის პოლიტიკას",
     // Controller / TV
     playersConnected: "{count} მოთამაშე დაკავშირებულია",
     chooseTrivia: "აირჩიე ტრივია",

@@ -7,6 +7,7 @@ import { useAuth } from "./AuthContext";
 import { TriviaQuestion } from "@/hooks/useTrivia";
 import { toast } from "sonner";
 import { getRandomGradient } from "@/config/roomGradients";
+import { siteUrl } from "@/config/site";
 import { getQuestions } from "@/services/questionService";
 import { shuffleArray } from "@/utils/shuffle";
 import { getSeenQuestionIds, markQuestionsAsSeen } from "@/services/questionTracker";
@@ -350,7 +351,6 @@ const MultiplayerContext = createContext<MultiplayerContextType>({
 });
 
 // Production domain for share links
-const PRODUCTION_DOMAIN = "https://mytrivia.io";
 
 export function MultiplayerProviderV2({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuth();
@@ -2904,13 +2904,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     }));
   }, [state.currentRoom, state.hostIsObserver, state.myScore, state.observerBonusThisRound, user]);
 
-  // Get share link
+  // Get share link. siteUrl, never window.location: on device the webview
+  // origin is capacitor://localhost, and the hostname check built
+  // capacitor://localhost/room/CODE — a dead link for every recipient.
   const getShareLink = useCallback((roomCode: string) => {
-    // Use production domain or fallback to current origin
-    const domain = window.location.hostname === "localhost" 
-      ? window.location.origin 
-      : PRODUCTION_DOMAIN;
-    return `${domain}/room/${roomCode}`;
+    return siteUrl(`/room/${roomCode}`);
   }, []);
 
   const value = useMemo<MultiplayerContextType>(() => ({
@@ -2971,10 +2969,8 @@ export function useMultiplayerV2() {
   return useContext(MultiplayerContext);
 }
 
-// Helper to get share link
+// Helper to get share link — see the context method above for why this is
+// siteUrl and not window.location (capacitor://localhost on device).
 export function getShareLink(roomCode: string) {
-  const domain = window.location.hostname === "localhost" 
-    ? window.location.origin 
-    : PRODUCTION_DOMAIN;
-  return `${domain}/room/${roomCode}`;
+  return siteUrl(`/room/${roomCode}`);
 }

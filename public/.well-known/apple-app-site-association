@@ -9,6 +9,8 @@
           "/join",
           "/join/*",
           "/room/*",
+          "/team",
+          "/team?*",
           "/tv/*",
           "/controller/*",
           "/collection/*",
