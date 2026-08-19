@@ -149,6 +149,11 @@ export interface DailyRewardClaim {
   streak: number;
   newCoins: number;
   newGems: number;
+  /** Which surprise the server rolled: 'double_coins' | 'gems' | 'power'. */
+  bonus: string | null;
+  /** Set when the surprise was a power-up. */
+  powerUp: string | null;
+  powerUpCount: number;
 }
 
 // Hook to claim daily reward — invalidates the shared cache after claiming
@@ -177,8 +182,17 @@ export function useDailyRewardsClaim() {
 
       if (error) throw error;
 
-      const claim = Array.isArray(data) ? data[0] : data;
-      if (!claim) return null;
+      // The generated types predate 20260823120000's surprise columns, and
+      // regenerating them against a database without the migration deletes
+      // functions wholesale (CLAUDE.md rule 1) — so the three new fields are
+      // read through a widened view of the row instead.
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) return null;
+      const claim = row as typeof row & {
+        bonus?: string | null;
+        power_up?: string | null;
+        power_up_count?: number | null;
+      };
 
       // Optimistic update + background revalidation
       queryClient.setQueryData<RewardData>([QUERY_KEY, user.id], (old) => ({
@@ -186,12 +200,23 @@ export function useDailyRewardsClaim() {
         chestClaimedAt: old?.chestClaimedAt ?? null,
       }));
 
+      // The surprise columns arrived with 20260823120000; against an older
+      // database they are simply absent, and null-safe reads keep the claim
+      // working exactly as before.
+      if (claim.power_up) {
+        // The power was granted server-side; the counts on screen refresh.
+        queryClient.invalidateQueries({ queryKey: ["user-power-ups", user.id] });
+      }
+
       return {
         coins: claim.coins_awarded,
         gems: claim.gems_awarded,
         streak: claim.streak,
         newCoins: claim.new_coins,
         newGems: claim.new_gems,
+        bonus: claim.bonus ?? null,
+        powerUp: claim.power_up ?? null,
+        powerUpCount: claim.power_up_count ?? 0,
       };
     } catch (error) {
       console.error("Error claiming daily reward:", error);

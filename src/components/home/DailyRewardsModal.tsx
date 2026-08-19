@@ -15,6 +15,17 @@ import { useVipStatus } from "@/hooks/useVipStatus";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatWeekday } from "@/utils/localDate";
+import power5050 from "@/assets/powers/5050.png";
+import powerFreeze from "@/assets/powers/freeze.png";
+import powerReplace from "@/assets/powers/replace.png";
+import { TimeIcon } from "@/components/shared/TimeIcon";
+
+const POWER_ICONS: Record<string, string | null> = {
+  "5050": power5050,
+  freeze: powerFreeze,
+  replace: powerReplace,
+  "time-drain": null, // drawn by TimeIcon instead of an image
+};
 
 interface DailyRewardsModalProps {
   isOpen: boolean;
@@ -114,7 +125,7 @@ function DayRewardCard({
   state: DayState;
   /** The reveal runs only on today's card; every other card gets "idle". */
   phase: ClaimPhase;
-  awarded: { coins: number; gems: number } | null;
+  awarded: { coins: number; gems: number; powerUp: string | null; powerUpCount: number } | null;
   canClaim: boolean;
   onClaim: () => void;
   language: string;
@@ -158,6 +169,25 @@ function DayRewardCard({
           >
             <RewardPill icon={coinIcon} value={awarded.coins} />
             {awarded.gems > 0 && <RewardPill icon={gemIcon} value={awarded.gems} />}
+            {awarded.powerUp && (
+              <div
+                className="flex h-[46px] items-center gap-2 rounded-[16px] px-4"
+                style={{
+                  background: "linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.25) 100%)",
+                  boxShadow: "0 3px 10px rgba(0,0,0,0.15), inset 0 1.5px 0 rgba(255,255,255,0.6)",
+                  backdropFilter: "blur(4px)",
+                }}
+              >
+                {awarded.powerUp === "time-drain" ? (
+                  <TimeIcon size={28} />
+                ) : (
+                  <img src={POWER_ICONS[awarded.powerUp] || power5050} alt="" width={28} height={28} className="shrink-0" />
+                )}
+                <span className="font-display text-lg font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
+                  {awarded.powerUpCount}x
+                </span>
+              </div>
+            )}
           </motion.div>
         ) : (
           <motion.img
@@ -240,7 +270,7 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
   // What the server actually granted. The gift hides the amount until the
   // claim comes back; PRO Plus multipliers and the once-per-day guard are all
   // decided server-side, so what is revealed is what was actually paid.
-  const [awarded, setAwarded] = useState<{ coins: number; gems: number } | null>(null);
+  const [awarded, setAwarded] = useState<{ coins: number; gems: number; powerUp: string | null; powerUpCount: number } | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const week = weekOf(new Date());
@@ -370,7 +400,7 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
       return;
     }
 
-    setAwarded({ coins: claim.coins, gems: claim.gems });
+    setAwarded({ coins: claim.coins, gems: claim.gems, powerUp: claim.powerUp, powerUpCount: claim.powerUpCount });
     setPhase("revealed");
     playSound("reward");
     celebrateClaim();
