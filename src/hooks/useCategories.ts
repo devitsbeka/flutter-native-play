@@ -6,6 +6,21 @@ import { preloadIcons } from '@/hooks/useIconLibrary';
 const STORAGE_KEY = 'preferredLanguage';
 const DEFAULT_LANGUAGE = 'en';
 
+// Read the stored language directly. Used as the state INITIALIZER — the
+// state used to start at DEFAULT_LANGUAGE and get corrected by an effect one
+// render later, which fired a wrong-language fetch on every mount and set up
+// the stale-response race below.
+function readStoredLanguage(): string {
+  if (typeof window !== 'undefined') {
+    try {
+      return localStorage.getItem(STORAGE_KEY) || DEFAULT_LANGUAGE;
+    } catch {
+      return DEFAULT_LANGUAGE;
+    }
+  }
+  return DEFAULT_LANGUAGE;
+}
+
 export interface DatabaseCategory {
   id: string; // UUID
   category_id: string; // String slug like "movies"
@@ -58,16 +73,17 @@ export const useCategories = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [translations, setTranslations] = useState<Record<string, { name: string; description?: string }>>({});
-  const [currentLanguage, setCurrentLanguage] = useState<string>(DEFAULT_LANGUAGE);
+  const [currentLanguage, setCurrentLanguage] = useState<string>(readStoredLanguage);
   const lastFetchRef = useRef(0);
+  // The language of the most recent fetch. An async response that comes back
+  // for any other language is stale and must be dropped: switching en → ka
+  // clears the translation overlay synchronously, and without this guard the
+  // still-in-flight English fetch resolved afterwards and wrote the English
+  // names back — Georgian UI, English category cards, until a refetch.
+  const activeLangRef = useRef(currentLanguage);
 
   // Get current language from localStorage
-  const getCurrentLanguage = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(STORAGE_KEY) || DEFAULT_LANGUAGE;
-    }
-    return DEFAULT_LANGUAGE;
-  }, []);
+  const getCurrentLanguage = useCallback(() => readStoredLanguage(), []);
 
   // Update language on mount and when storage changes
   useEffect(() => {
@@ -82,8 +98,9 @@ export const useCategories = () => {
   }, [getCurrentLanguage]);
 
   const fetchTranslations = useCallback(async (lang: string) => {
+    activeLangRef.current = lang;
     if (lang === 'ka') {
-      // Georgian is the default, no translations needed
+      // Georgian is what categories.name holds; no overlay needed
       setTranslations({});
       return;
     }
@@ -95,6 +112,7 @@ export const useCategories = () => {
         .eq('language', lang);
 
       if (error) throw error;
+      if (activeLangRef.current !== lang) return; // stale response — see ref
 
       const transMap: Record<string, { name: string; description?: string }> = {};
       (data || []).forEach(t => {
@@ -108,6 +126,7 @@ export const useCategories = () => {
   }, []);
 
   const fetchCategories = useCallback(async (lang: string) => {
+    activeLangRef.current = lang;
     try {
       // Fetch categories logic:
       // 1. Universal categories (is_language_specific = false) - show for all languages
@@ -122,6 +141,7 @@ export const useCategories = () => {
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
+      if (activeLangRef.current !== lang) return; // stale response — see ref
 
       // Filter categories based on language rules
       const filtered = (data || []).filter(cat => {
