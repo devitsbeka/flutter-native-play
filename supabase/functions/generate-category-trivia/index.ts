@@ -129,14 +129,14 @@ const iconKeywordMappings = `
 - კითხვა: "რომელ ცხოველს ეწოდება ტყის მეფე?"
 - სწორი პასუხი: "ლომი"
 - ❌ არასწორი keyword: "lion" (ემთხვევა პასუხს!)
-- ✅ სწორი keyword: "animal" ან "forest" ან "crown"
+- ✅ სწორი keyword: "animal" ან "forest" ან "savanna"
 
 აიკონი უნდა იყოს კითხვის ᲙᲝᲜᲢᲔᲥᲡᲢᲘᲡ შესახებ, არა პასუხის!
 
 📚 კონტექსტების ტიპები და შესაბამისი keywords:
 
 ბრძოლა/ომი/შეტევა/გამარჯვება → battle, sword, attack, war, victory, shield, two-swords
-მეფე/ტახტი/სამეფო/გვირგვინი → king, crown, throne, scepter, royal, castle
+მეფე/ტახტი/სამეფო/გვირგვინი → king, throne, scepter, royal, castle
 ქალაქი/დედაქალაქი/ადგილი → city, building, map, location, skyline
 მათემატიკა/გამოთვლა/რიცხვი → calculator, math, percent, number, equation
 თარიღი/წელი/საუკუნე → calendar, date, history, clock, time

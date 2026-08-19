@@ -13,7 +13,7 @@ const TOPIC_TO_ICONS: Record<string, string[]> = {
   china: ['great-wall-of-china', 'chinese-dragon', 'pagoda', 'forbidden-city'],
   chinese: ['great-wall-of-china', 'chinese-dragon', 'pagoda'],
   viking: ['viking-shield', 'viking-long-boat', 'viking-helmet'],
-  medieval: ['castle', 'crown', 'sword', 'knight', 'shield'],
+  medieval: ['castle', 'sword', 'knight', 'shield'],
   war: ['world-war-ii-sherman-tank', 'world-war-ii-spitfire-fighter', 'pineapple-hand-grenade', 'helmet'],
   battle: ['sword', 'shield', 'helmet', 'cannon'],
   military: ['tank', 'rifle', 'helmet', 'medal'],

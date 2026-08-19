@@ -29,8 +29,8 @@ const CATEGORY_ICON_MAP: Record<string, string[]> = {
   
   // Classic/Educational
   'geography': ['globe', 'globe-earth', 'world-map', 'map', 'compass', 'earth', 'planet'],
-  'world_history': ['scroll', 'papyrus-scroll', 'magic-scroll', 'castle', 'crown', 'medieval'],
-  'georgian_history': ['scroll', 'castle', 'crown', 'church', 'wine', 'flag', 'medieval'],
+  'world_history': ['scroll', 'papyrus-scroll', 'magic-scroll', 'castle', 'medieval'],
+  'georgian_history': ['scroll', 'castle', 'church', 'wine', 'flag', 'medieval'],
   'science': ['microscope', 'electron-microscope', 'vintage-microscope', 'atom', 'laboratory', 'test-tube', 'flask'],
   'sports': ['trophy', 'champions-league-trophy', 'motorsport-trophy', 'soccer-ball', 'basketball', 'football', 'medal'],
   

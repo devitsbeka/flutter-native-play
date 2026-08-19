@@ -187,11 +187,11 @@ const CONTEXT_PATTERNS: Record<string, { keywords: string[], icons: string[] }> 
   },
   'king_royal': {
     keywords: ['მეფ', 'გამეფ', 'ტახტ', 'სამეფო', 'გვირგვინ'],
-    icons: ['king', 'crown', 'throne', 'scepter', 'royal', 'castle']
+    icons: ['king', 'throne', 'scepter', 'royal', 'castle']
   },
   'queen': {
     keywords: ['დედოფ', 'თამარ'],
-    icons: ['queen', 'crown', 'tiara', 'royal']
+    icons: ['queen', 'tiara', 'royal']
   },
   'city_place': {
     keywords: ['ქალაქ', 'დედაქალაქ', 'სოფელ', 'რეგიონ', 'ტერიტორი'],
@@ -264,7 +264,6 @@ const ANSWER_ICON_BLOCKLIST: Record<string, string[]> = {
   'tiger': ['ვეფხვ', 'ვეფხვი'],
   
   // Objects
-  'crown': ['გვირგვინ', 'გვირგვინი', 'crown'],
   'sword': ['ხმალ', 'ხმალი', 'sword'],
   'cross': ['ჯვარ', 'ჯვარი', 'cross'],
   'heart': ['გულ', 'გული', 'heart'],

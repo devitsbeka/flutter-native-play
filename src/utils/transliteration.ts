@@ -253,10 +253,10 @@ const GEORGIAN_TO_ENGLISH: Record<string, string[]> = {
   'მხატვარი': ['artist', 'painter', 'brush'],
   'მეცნიერ': ['scientist', 'research', 'lab'],
   'მეცნიერი': ['scientist', 'research', 'lab'],
-  'მეფ': ['king', 'crown', 'royal'],
-  'მეფე': ['king', 'crown', 'royal'],
-  'დედოფალ': ['queen', 'crown', 'royal'],
-  'დედოფალი': ['queen', 'crown', 'royal'],
+  'მეფ': ['king', 'castle', 'royal'],
+  'მეფე': ['king', 'castle', 'royal'],
+  'დედოფალ': ['queen', 'palace', 'royal'],
+  'დედოფალი': ['queen', 'palace', 'royal'],
   
   // Sports
   'ფეხბურთ': ['football', 'soccer', 'ball'],

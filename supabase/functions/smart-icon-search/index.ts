@@ -335,8 +335,8 @@ const LATIN_TRANSLITERATIONS: Record<string, string[]> = {
   'msakhiobi': ['actor', 'theater', 'stage', 'mask'],
   'momgherali': ['singer', 'music', 'microphone'],
   'musikosi': ['musician', 'music', 'instrument'],
-  'mefe': ['king', 'crown', 'royal', 'throne'],
-  'dedopali': ['queen', 'crown', 'royal', 'throne'],
+  'mefe': ['king', 'castle', 'royal', 'throne'],
+  'dedopali': ['queen', 'palace', 'royal', 'throne'],
   'eqimi': ['doctor', 'medical', 'health', 'hospital'],
   'maswavlebeli': ['teacher', 'school', 'education'],
   
@@ -537,8 +537,8 @@ const GEORGIAN_TO_ENGLISH: Record<string, string[]> = {
   'მომღერალი': ['singer', 'music', 'microphone', 'voice'],
   'მუსიკოსი': ['musician', 'music', 'instrument', 'note'],
   'პოლიტიკოსი': ['politician', 'politics', 'government', 'capitol'],
-  'მეფე': ['king', 'crown', 'royal', 'throne'],
-  'დედოფალი': ['queen', 'crown', 'royal', 'throne'],
+  'მეფე': ['king', 'castle', 'royal', 'throne'],
+  'დედოფალი': ['queen', 'palace', 'royal', 'throne'],
   
   // Sports
   'სპორტი': ['sport', 'athletics', 'game', 'ball'],

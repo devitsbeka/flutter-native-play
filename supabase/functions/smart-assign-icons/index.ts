@@ -29,7 +29,7 @@ const TOPIC_TO_ICONS: Record<string, string[]> = {
   china: ['great-wall-of-china', 'chinese-dragon', 'pagoda', 'forbidden-city'],
   chinese: ['great-wall-of-china', 'chinese-dragon', 'pagoda'],
   viking: ['viking-shield', 'viking-long-boat', 'viking-helmet'],
-  medieval: ['castle', 'crown', 'sword', 'knight', 'shield'],
+  medieval: ['castle', 'sword', 'knight', 'shield'],
   aztec: ['aztec-sun-stone', 'aztec-mask', 'mayan-pyramid'],
   maya: ['mayan-pyramid', 'mayan-calendar'],
   inca: ['machu-picchu'],
@@ -70,19 +70,19 @@ const TOPIC_TO_ICONS: Record<string, string[]> = {
   industrial: ['factory', 'gear', 'steam-engine'],
   
   // Specific historical figures/topics
-  cleopatra: ['nefertiti', 'egyptian-scarab', 'crown'],
+  cleopatra: ['nefertiti', 'egyptian-scarab'],
   alexander: ['macedonian', 'helmet', 'sword'],
   genghis: ['mongol', 'horse', 'bow'],
   ottoman: ['crescent', 'sword', 'sultan'],
-  king: ['crown', 'throne', 'scepter'],
-  queen: ['crown', 'tiara', 'throne'],
-  emperor: ['crown', 'scepter', 'throne'],
+  king: ['castle', 'throne', 'scepter'],
+  queen: ['queen', 'tiara', 'throne'],
+  emperor: ['palace', 'scepter', 'throne'],
   
   // Georgian specific
   georgia: ['cross', 'church', 'sword'],
-  bagrationi: ['crown', 'cross', 'lion'],
-  tamar: ['crown', 'cross', 'scepter'],
-  david: ['sword', 'crown', 'church'],
+  bagrationi: ['castle', 'cross', 'lion'],
+  tamar: ['castle', 'cross', 'scepter'],
+  david: ['sword', 'castle', 'church'],
   mongol: ['mongol', 'horse', 'bow'],
   wine: ['wine', 'grape', 'vineyard'],
   alphabet: ['letter', 'script', 'book'],
@@ -95,7 +95,7 @@ const ANSWER_ICON_BLOCKLIST: Record<string, string[]> = {
   'blood': ['სისხლ', 'სისხლი', 'სისხლით', 'blood'],
   'water': ['წყალ', 'წყალი', 'water'],
   'fire': ['ცეცხლ', 'ცეცხლი', 'fire', 'flame'],
-  'crown': ['გვირგვინ', 'გვირგვინი', 'crown'],
+  
   'sword': ['ხმალ', 'ხმალი', 'sword'],
   'cross': ['ჯვარ', 'ჯვარი', 'cross'],
   'heart': ['გულ', 'გული', 'heart'],
@@ -451,7 +451,7 @@ async function analyzeQuestionWithAI(questionText: string, apiKey: string): Prom
             content: `You are an icon keyword extractor. Given a trivia question (often in Georgian), extract keywords that would help find a relevant icon.
 
 Return JSON with:
-- keywords: 3-5 English words for visual concepts (e.g., "pyramid", "sword", "crown")
+- keywords: 3-5 English words for visual concepts (e.g., "pyramid", "sword", "castle")
 - topics: 1-3 topic categories (e.g., "egypt", "medieval", "war")
 - era: historical period if applicable (e.g., "ancient", "ww2", "renaissance")
 - region: geographic region if applicable (e.g., "rome", "china", "greece")
@@ -505,7 +505,7 @@ function extractKeywords(text: string): string[] {
     'ვიკინგ': 'viking', 'შუასაუკუნ': 'medieval',
     'ომ': 'war', 'ბრძოლა': 'battle', 'ჯარ': 'army',
     'რევოლუცია': 'revolution', 'დამოუკიდებლობ': 'independence',
-    'მეფე': 'king', 'დედოფალ': 'queen', 'გვირგვინ': 'crown',
+    'მეფე': 'king', 'დედოფალ': 'queen', 'გვირგვინ': 'castle',
     'ეკლესია': 'church', 'მონასტ': 'monastery',
     'აღმოჩენა': 'discovery', 'გეოგრაფ': 'geography',
     'გამოგონება': 'invention', 'მეცნიერ': 'science',

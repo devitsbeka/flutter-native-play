@@ -26,7 +26,7 @@ const THEMED_ROOM_NAMES: Record<string, { names: Record<LangCode, string[]>, ico
       it: ["Coppa d'Oro", "Sfida Stellare", "Club Medaglie", "Campioni", "Ring del Titolo", "Zona Vincenti", "Arena Trionfo", "Via del Podio"],
       pt: ["Taça Dourada", "Duelo Estelar", "Clube Medalhas", "Campeões", "Ring do Título", "Zona Vitória", "Arena Triunfo", "Via do Pódio"],
     },
-    iconKeywords: ['trophy', 'medal', 'crown', 'cup', 'winner', 'gold']
+    iconKeywords: ['trophy', 'medal', 'cup', 'winner', 'gold']
   },
   adventure: {
     names: {
