@@ -35,23 +35,47 @@ export default function ResetPassword() {
   useEffect(() => {
     let cancelled = false;
 
-    // The URL token exchange is asynchronous: poll briefly for the session
-    // instead of failing the instant the page mounts.
-    (async () => {
-      for (let i = 0; i < 10; i++) {
-        const { data } = await supabase.auth.getSession();
-        if (cancelled) return;
-        if (data.session) {
-          setPhase("form");
-          return;
-        }
-        await new Promise((r) => setTimeout(r, 300));
+    // A dead link comes back as #error=access_denied&error_code=otp_expired —
+    // no session is installed, and if the visitor happens to be signed in
+    // already, their ORDINARY session must not unlock this form (that would
+    // silently change the signed-in account's password). So the form needs
+    // both a session AND recovery evidence: the pw-recovery marker written by
+    // the client-init listener (see integrations/supabase/client.ts), or a
+    // live PASSWORD_RECOVERY event below.
+    const url = window.location.hash + window.location.search;
+    const hasUrlError = /[#&?]error(_code)?=/.test(url);
+    const hasRecoveryMarker = (() => {
+      try {
+        return sessionStorage.getItem("pw-recovery") === "1";
+      } catch {
+        return false;
       }
-      if (!cancelled) setPhase("invalid");
     })();
 
+    if (hasUrlError) {
+      setPhase("invalid");
+    } else {
+      // The URL token exchange is asynchronous: poll briefly for the session
+      // instead of failing the instant the page mounts.
+      (async () => {
+        for (let i = 0; i < 10; i++) {
+          if (hasRecoveryMarker) {
+            const { data } = await supabase.auth.getSession();
+            if (cancelled) return;
+            if (data.session) {
+              setPhase("form");
+              return;
+            }
+          }
+          await new Promise((r) => setTimeout(r, 300));
+          if (cancelled) return;
+        }
+        if (!cancelled) setPhase("invalid");
+      })();
+    }
+
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+      if (event === "PASSWORD_RECOVERY") {
         setPhase((p) => (p === "checking" || p === "invalid" ? "form" : p));
       }
     });
@@ -81,6 +105,11 @@ export default function ResetPassword() {
         return;
       }
       setPhase("done");
+      try {
+        sessionStorage.removeItem("pw-recovery");
+      } catch {
+        /* private mode */
+      }
       notify.success(t("forgotPassword.passwordChanged"));
     } finally {
       setLoading(false);

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { anyBlockedText } from "@/utils/contentFilter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, RefreshCw, Globe, Lock, CheckCircle, Plus } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
@@ -205,6 +206,12 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
 
     // Convert questions and save as private
     const questions = convertToGeneratedQuestions(editorQuestions);
+
+    // Played with a room full of people — screened like every publish path.
+    if (anyBlockedText([title, subject, ...questions.flatMap((q) => [q.question_text, q.correct_answer, ...(q.incorrect_answers || [])])])) {
+      toast.error(t("extra.textNotAllowed"));
+      return;
+    }
     isClosingRef.current = true;
 
     // Save to database as private (play mode)

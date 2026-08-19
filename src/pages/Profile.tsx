@@ -11,6 +11,7 @@ import { getRankFromPoints } from "@/data/opponents";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { containsBlockedText } from "@/utils/contentFilter";
 import { ProPlansSection, ProTier } from "@/components/profile/ProPlansSection";
 import { AvatarReel } from "@/components/profile/AvatarReel";
 import { ProBadge } from "@/components/shared/ProBadge";
@@ -56,6 +57,10 @@ export default function Profile() {
     if (!user || savingName) return;
     if (!trimmed || trimmed === profile?.nickname) {
       setEditingName(false);
+      return;
+    }
+    if (containsBlockedText(trimmed)) {
+      toast.error(t("extra.textNotAllowed"));
       return;
     }
     setSavingName(true);

@@ -126,9 +126,18 @@ export function CoverImagePicker({
       // any camera-roll photo went straight to the public feed. Relevance
       // is advisory; only a content-safety flag blocks, and validator
       // outages fail open so a model hiccup doesn't break uploads.
-      const { data: verdict } = await supabase.functions.invoke("validate-cover-image", {
-        body: { imageUrl: publicUrl, title },
-      });
+      let verdict: { isAppropriate?: boolean } | null = null;
+      try {
+        const { data } = await supabase.functions.invoke("validate-cover-image", {
+          body: { imageUrl: publicUrl, title },
+        });
+        verdict = data;
+      } catch {
+        // Validator unreachable — fail open, same as the function's own
+        // error paths. Landing in the outer catch would keep the uploaded
+        // file but never set it, orphaning it in a public bucket.
+        verdict = null;
+      }
       if (verdict && verdict.isAppropriate === false) {
         await supabase.storage.from("quiz-covers").remove([fileName]);
         toast({

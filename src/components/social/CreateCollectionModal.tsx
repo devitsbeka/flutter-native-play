@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { anyBlockedText } from "@/utils/contentFilter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, Loader2, ChevronLeft, Sparkles, Settings, ChevronRight, Check, Play, Users } from "lucide-react";
 import pencilIcon from "@/assets/classic-yellow-pencil.png";
@@ -425,6 +426,12 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     if (!user) return;
     if (!validateAllQuestions()) return;
 
+    // Collections publish to the shared feed — same screen as quiz publish.
+    if (anyBlockedText([title, ...rounds.map((r) => r.subject), ...roundQuestions.flat().flatMap((q) => [q.question, ...q.answers.map((a) => a.text)])])) {
+      toast({ title: t("extra.textNotAllowed"), variant: "destructive" });
+      return;
+    }
+
     setIsPosting(true);
 
     try {
@@ -504,6 +511,12 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   // Save for play mode
   const handleSaveAndStartGame = async () => {
     if (!user) return;
+
+    // Private at creation, but playable with friends and publishable later.
+    if (anyBlockedText([title, ...rounds.map((r) => r.subject), ...roundQuestions.flat().flatMap((q) => [q.question, ...q.answers.map((a) => a.text)])])) {
+      toast({ title: t("extra.textNotAllowed"), variant: "destructive" });
+      return;
+    }
 
     setIsPosting(true);
 

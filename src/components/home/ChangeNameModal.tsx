@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { containsBlockedText } from "@/utils/contentFilter";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { GameModal } from "@/components/ui/game-modal";
@@ -30,6 +31,11 @@ export function ChangeNameModal({ isOpen, onClose }: ChangeNameModalProps) {
 
   const handleSave = async () => {
     if (!user || !nickname.trim()) return;
+
+    if (containsBlockedText(nickname)) {
+      notify.error(t("extra.textNotAllowed"));
+      return;
+    }
 
     setIsLoading(true);
     try {

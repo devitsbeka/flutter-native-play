@@ -206,7 +206,7 @@ export default function ForgotPassword() {
       <motion.button
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        onClick={() => step === "success" ? navigate("/auth") : navigate(-1)}
+        onClick={() => (step === "success" || step === "emailSent" ? navigate("/auth") : navigate(-1))}
         className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors mb-8"
       >
         <ArrowLeft className="w-5 h-5" />

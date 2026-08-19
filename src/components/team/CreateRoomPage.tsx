@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { anyBlockedText, containsBlockedText } from "@/utils/contentFilter";
 import { Loader2, ArrowLeft, HelpCircle, UserPlus, X, Share2, RefreshCw, Play, Pencil, Gamepad2, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
@@ -527,6 +528,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // IMPORTANT: This now persists the trivia to user_quiz_posts so it appears in "My Trivia"
   const handleBlindTriviaReady = async (questions: GeneratedQuestion[], title: string, subject: string) => {
     if (!user) return;
+
+    // Played with (and shareable to) other people — same screen as every
+    // other publish path.
+    if (anyBlockedText([title, subject, ...questions.flatMap((q) => [q.question_text, q.correct_answer, ...(q.incorrect_answers || [])])])) {
+      toast({ title: t("extra.textNotAllowed"), variant: "destructive" });
+      return;
+    }
 
     // 1. Generate hashtags from subject
     const hashtags = subject
@@ -1600,6 +1608,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         currentIconUrl={roomIcon}
         roomName={roomName}
         onConfirm={(iconUrl, newName) => {
+          // Same screen the lobby rename has — renaming during creation was
+          // a free pass, and room names ride push notifications.
+          if (containsBlockedText(newName)) {
+            toast({ title: t("extra.textNotAllowed"), variant: "destructive" });
+            return;
+          }
           setRoomIcon(iconUrl);
           setRoomName(newName);
         }}

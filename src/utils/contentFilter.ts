@@ -51,6 +51,10 @@ const BLOCKED_SUBSTRINGS: string[] = [
 ];
 
 // Whole-word terms: too short or too common as substrings to match loosely.
+// Deliberately NOT here: historical names and terms (hitler, nazi) — this is
+// a trivia app and WWII quizzes are legitimate content; blocking them
+// punished English-language history quizzes while the Georgian spellings
+// passed. Same for place-name collisions (coon → Coon Rapids).
 const BLOCKED_WORDS: string[] = [
   // English
   "fuck",
@@ -63,8 +67,6 @@ const BLOCKED_WORDS: string[] = [
   "bitch",
   "retard",
   "rapist",
-  "nazi",
-  "hitler",
   // Georgian
   "ყლე",
   "ბოზ",
@@ -78,7 +80,26 @@ const BLOCKED_WORDS: string[] = [
   "boz",
   "dzukna",
   "nabozvar",
+  // Common English variants
+  "fuk",
+  "phuck",
+  "fck",
+  "tranny",
+  "kys",
+  "paki",
+  "chink",
+  "spic",
+  "kike",
+  // Russian (a realistic input language for this region)
+  "бля",
+  "сука",
+  "хуй",
+  "мудак",
 ];
+
+// Russian substrings — unambiguous roots.
+const RU_SUBSTRINGS = ["пизд", "хуе", "ебан", "ебат", "заеб", "шлюха", "долбо"];
+BLOCKED_SUBSTRINGS.push(...RU_SUBSTRINGS);
 
 const LEET: Record<string, string> = {
   "0": "o",
@@ -109,14 +130,42 @@ function normalize(text: string): string {
  * catching the dotted spellings.
  */
 function tokenize(text: string): string[] {
-  return text
+  const base = text
     .toLowerCase()
     .split("")
     .map((ch) => LEET[ch] ?? ch)
     .join("")
+    // Runs of 3+ of the same letter collapse to one: "fuuuck" → "fuck".
+    // Doubles stay — "bookkeeper" must survive.
+    .replace(/(\p{L})\1{2,}/gu, "$1")
     .split(/[\s\-_/\\|]+/)
     .map((tok) => tok.replace(/[^\p{L}\p{N}]+/gu, ""))
     .filter(Boolean);
+
+  // A run of 3+ single-character tokens is spelled-out obfuscation
+  // ("f u c k", "ყ ლ ე") — join each run into an extra candidate token.
+  const out = [...base];
+  let run: string[] = [];
+  const flush = () => {
+    if (run.length >= 3) out.push(run.join(""));
+    run = [];
+  };
+  for (const tok of base) {
+    if (tok.length === 1) run.push(tok);
+    else flush();
+  }
+  flush();
+  return out;
+}
+
+/** Suffix-stripped candidates so plurals and simple inflections match. */
+function wordCandidates(token: string): string[] {
+  const c = [token];
+  if (token.endsWith("es")) c.push(token.slice(0, -2));
+  if (token.endsWith("s")) c.push(token.slice(0, -1));
+  if (token.endsWith("ed")) c.push(token.slice(0, -2));
+  if (token.endsWith("ing")) c.push(token.slice(0, -3));
+  return c;
 }
 
 /**
@@ -131,11 +180,16 @@ export function containsBlockedText(text: string | null | undefined): boolean {
     if (squashed.includes(normalize(term))) return true;
   }
 
-  const words = tokenize(text);
+  const words = new Set(tokenize(text).flatMap(wordCandidates));
   for (const term of BLOCKED_WORDS) {
     const normTerm = tokenize(term).join("");
-    if (words.includes(normTerm)) return true;
+    if (words.has(normTerm)) return true;
   }
 
   return false;
+}
+
+/** Convenience for screening a batch (quiz title + every question/answer). */
+export function anyBlockedText(texts: Array<string | null | undefined>): boolean {
+  return texts.some((t) => containsBlockedText(t));
 }

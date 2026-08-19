@@ -301,8 +301,12 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   {t("extra.profileTitle")}
                 </h1>
                 
-                {/* Three-dots menu for friends */}
+                {/* Three-dots menu for friends — report/block rides beside
+                    it: harassment overwhelmingly comes from accepted
+                    friends, and 1.2 wants the affordance on ANY profile. */}
                 {data?.friendshipStatus === 'accepted' && !data?.isCurrentUser ? (
+                  <div className="flex items-center gap-1">
+                  {userId && <PlayerOverflowMenu userId={userId} displayName={data?.profile?.nickname} />}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
@@ -334,6 +338,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  </div>
                 ) : !data?.isCurrentUser && userId ? (
                   /* Report/block for any profile that isn't yours (1.2):
                      this modal is the whole of /profile/:userId and every

@@ -15,7 +15,6 @@ import { translateErrorMessage } from "@/utils/errorTranslations";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trackSignupCompleted, trackLoginCompleted, trackAuthFailed, trackOAuthInitiated } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
-import { oauth } from "@/integrations/oauth";
 import {
   AlertDialog,
   AlertDialogContent,

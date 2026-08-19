@@ -113,6 +113,10 @@ export function AuthRequiredModal({
         if (error) {
           if (error.message?.includes("already registered")) {
             toast.error(t("authModal.usernameTaken"));
+          } else if (error.message === t("extra.textNotAllowed")) {
+            // The blocked-name refusal — tell the user WHAT to change
+            // instead of "something went wrong".
+            toast.error(error.message);
           } else {
             const m = error.message || "";
             if (m.includes("Failed to lookup user") || m.includes("Invalid login credentials")) {
@@ -182,13 +186,20 @@ export function AuthRequiredModal({
   // OAuth inside it, but the button only renders on iOS).
   const handleAppleSignIn = async () => {
     try {
-      if (returnToPath) {
-        localStorage.setItem('authReturnTo', returnToPath);
-      }
+      // The native flow completes IN PLACE — no redirect, no /auth visit —
+      // so the modal has to dismiss itself and go where the wall was
+      // guarding. (No authReturnTo in localStorage: only /auth consumes
+      // that key, and this path never reaches /auth, so a stored value
+      // would hijack the next /auth visit instead.)
       const { error } = await signInWithApple();
-      if (error && !/cancel/i.test(error.message ?? "")) {
-        toast.error(t("authModal.genericError"));
+      if (error) {
+        if (!/cancel/i.test(error.message ?? "")) {
+          toast.error(t("authModal.genericError"));
+        }
+        return;
       }
+      onClose();
+      if (returnToPath) navigate(returnToPath);
     } catch {
       toast.error(t("authModal.genericError"));
     }

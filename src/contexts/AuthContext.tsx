@@ -354,6 +354,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (!error && data.user && (givenName || familyName)) {
             const nickname = givenName || familyName || 'Player';
+            if (containsBlockedText(nickname)) return { data, error };
             setTimeout(async () => {
               await supabase
                 .from('profiles')
@@ -433,6 +434,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: new Error("Not authenticated") };
+
+    // Chokepoint for the public display name — several settings surfaces
+    // funnel through here.
+    if (typeof updates.nickname === "string" && containsBlockedText(updates.nickname)) {
+      return { error: new Error(tStandalone("extra.textNotAllowed")) };
+    }
 
     // Mark as local update to prevent realtime from overwriting
     lastLocalUpdateRef.current = Date.now();

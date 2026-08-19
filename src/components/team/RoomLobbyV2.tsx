@@ -806,7 +806,7 @@ export function RoomLobbyV2() {
                       className="w-8 h-8 object-contain"
                     />
                   )}
-                  <h2 className="text-base font-bold text-white drop-shadow-lg">
+                  <h2 className="max-w-[55vw] truncate text-base font-bold text-white drop-shadow-lg">
                     {roomName}
                   </h2>
                 </motion.button>
@@ -819,7 +819,7 @@ export function RoomLobbyV2() {
                       className="w-8 h-8 object-contain"
                     />
                   )}
-                  <h2 className="text-base font-bold text-white drop-shadow-lg">
+                  <h2 className="max-w-[55vw] truncate text-base font-bold text-white drop-shadow-lg">
                     {roomName}
                   </h2>
                 </>

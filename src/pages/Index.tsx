@@ -1072,7 +1072,8 @@ export default function Index() {
           <MobileGuestHero
             onApple={async () => {
               const { error } = await signInWithApple();
-              if (error) {
+              // Dismissing Apple's sheet is a choice, not a failure — no toast.
+              if (error && !/cancel/i.test(error.message ?? "")) {
                 toast({
                   title: t("extra.appleSignInError"),
                   description: error.message,

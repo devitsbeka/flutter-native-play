@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { anyBlockedText } from "@/utils/contentFilter";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon, Pencil, Smile, Plus } from "lucide-react";
@@ -137,7 +138,15 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
 
   const handleSave = async () => {
     if (!quiz) return;
-    
+
+    // Same screen as creation — editing was a free pass around it: publish
+    // clean, then rename. Title always; question text only for quiz posts.
+    const editedTexts = [title, ...(!isCollection ? questions.flatMap((q) => [q.question_text, q.correct_answer, ...(q.incorrect_answers || [])]) : [])];
+    if (anyBlockedText(editedTexts)) {
+      toast({ title: t("extra.textNotAllowed"), variant: "destructive" });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const updateData: any = {

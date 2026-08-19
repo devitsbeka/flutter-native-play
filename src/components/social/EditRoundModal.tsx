@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { anyBlockedText } from "@/utils/contentFilter";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon, Plus, Smile, RefreshCw } from "lucide-react";
@@ -216,7 +217,13 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
 
   const handleSave = async () => {
     if (!round) return;
-    
+
+    // Same screen as creation — editing was a free pass around it.
+    if (anyBlockedText([title, ...questions.flatMap((q) => [q.question_text, q.correct_answer, ...(q.incorrect_answers || [])])])) {
+      toast({ title: t("extra.textNotAllowed"), variant: "destructive" });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const { error } = await supabase

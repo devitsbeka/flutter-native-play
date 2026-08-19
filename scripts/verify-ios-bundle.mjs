@@ -43,10 +43,26 @@ function listFiles(dir) {
   return out;
 }
 
+// When run as a Capacitor hook (capacitor:sync:before / copy:before) the CLI
+// exports CAPACITOR_PLATFORM_NAME. This policy is about what ships in the
+// iOS binary — enforcing it on `cap sync android` (or a docs-only sync)
+// would fail builds the policy doesn't apply to.
+const hookPlatform = process.env.CAPACITOR_PLATFORM_NAME;
+if (hookPlatform && hookPlatform !== "ios") {
+  console.log(`verify-ios-bundle: ${hookPlatform} sync, iOS bundle policy not applicable — skipping`);
+  process.exit(0);
+}
+
 let files;
 try {
   files = listFiles(DIST);
 } catch {
+  if (hookPlatform) {
+    // As a hook, a missing dist/ isn't this guard's failure to report —
+    // Capacitor's own copy step fails immediately after with the real error.
+    console.warn(`verify-ios-bundle: no build at ${DIST}; letting cap report it`);
+    process.exit(0);
+  }
   console.error(`verify-ios-bundle: no build found at ${DIST}`);
   process.exit(1);
 }

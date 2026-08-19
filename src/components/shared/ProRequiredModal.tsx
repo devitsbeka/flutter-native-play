@@ -52,7 +52,11 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-[320px] p-0 overflow-hidden bg-gradient-to-b from-purple-500/15 via-background to-background border-purple-500/30">
+      {/* overflow-y-auto, NOT overflow-hidden: tailwind-merge treats them as
+          conflicting, so `hidden` deleted the dialog's own scroll — and on a
+          320x568 device the clipped tail was exactly the subscription
+          disclosure this modal is required to show. */}
+      <DialogContent className="max-w-[320px] p-0 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-purple-500/15 via-background to-background border-purple-500/30">
         <DialogTitle className="sr-only">{t("proModal.dialogTitle")}</DialogTitle>
         
         <div className="flex flex-col items-center px-6 py-8">

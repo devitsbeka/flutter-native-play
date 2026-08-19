@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { anyBlockedText } from "@/utils/contentFilter";
 import confetti from "canvas-confetti";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -213,6 +214,14 @@ export function AddRoundToCollectionModal({
     try {
       const iconSlug = generatedQuestions[0]?.icon_slug || null;
       const finalTitle = suggestedTitle || t("extra.roundFallbackTitle", { n: roundNumber, subject });
+
+      // Rounds publish to the shared collection — screen like every other
+      // publish path.
+      if (anyBlockedText([finalTitle, subject, ...generatedQuestions.flatMap((q) => [q.question_text, q.correct_answer, ...(q.incorrect_answers || [])])])) {
+        toast({ title: t("extra.textNotAllowed"), variant: "destructive" });
+        setIsPosting(false);
+        return;
+      }
 
       const { error } = await supabase.from("user_quiz_posts").insert([{
         user_id: user.id,
