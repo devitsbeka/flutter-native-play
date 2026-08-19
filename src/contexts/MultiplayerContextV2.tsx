@@ -1059,7 +1059,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       if (!finalRoomName) {
         const createdRoomId = room.id;
         void supabase.functions
-          .invoke('generate-room-name')
+          // Same storage key LanguageContext writes; without it the server
+          // falls back to Georgian regardless of the user's language.
+          .invoke('generate-room-name', {
+            body: { language: localStorage.getItem('preferredLanguage') || 'en' },
+          })
           .then(({ data, error: nameError }) => {
             if (!nameError && data?.name) {
               return supabase

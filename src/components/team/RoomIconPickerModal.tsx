@@ -63,7 +63,7 @@ export function RoomIconPickerModal({
   roomName,
   onConfirm,
 }: RoomIconPickerModalProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const ICON_CATEGORIES = ICON_CATEGORIES_DATA.map(c => ({ ...c, label: t(`extra.${c.key}`) }));
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);
   const [searchResults, setSearchResults] = useState<IconItem[]>([]);
@@ -271,8 +271,10 @@ export function RoomIconPickerModal({
   const generateNameForIcon = async (iconSlug: string) => {
     setIsGeneratingName(true);
     try {
+      // Without the language the server defaults to Georgian — an English
+      // user tapping an icon got a Georgian room name out of nowhere.
       const { data, error } = await supabase.functions.invoke('generate-room-name', {
-        body: { iconSlug }
+        body: { iconSlug, language }
       });
 
       if (!error && data?.name) {
