@@ -4071,10 +4071,13 @@ export type Database = {
       claim_daily_reward: {
         Args: never
         Returns: {
+          bonus: string
           coins_awarded: number
           gems_awarded: number
           new_coins: number
           new_gems: number
+          power_up: string
+          power_up_count: number
           streak: number
         }[]
       }
