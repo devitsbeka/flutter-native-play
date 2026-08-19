@@ -294,8 +294,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { data: null, error: new Error(tStandalone("extra.textNotAllowed")) };
     }
     const pseudoEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@mytrivia.local`;
+
+    // Preferred path: the register-username function creates the account
+    // pre-confirmed through the admin API. A @mytrivia.local pseudo-email can
+    // never receive a confirmation link, so once "Confirm email" is enabled
+    // for the project (to keep real-email signups honest), the plain signUp
+    // below would create username accounts that can never activate.
+    try {
+      const { data: reg, error: regError } = await supabase.functions.invoke("register-username", {
+        body: { username, password },
+      });
+      if (!regError && reg?.ok) {
+        // Account exists and is confirmed — establish the session.
+        return await supabase.auth.signInWithPassword({ email: pseudoEmail, password });
+      }
+      if (!regError && reg?.error) {
+        return { data: null, error: new Error(reg.error) };
+      }
+      // regError (function not deployed yet / transport): fall through.
+    } catch {
+      /* fall through to the legacy path */
+    }
+
+    // Legacy path — correct for as long as email confirmations stay off.
     const redirectUrl = `${window.location.origin}/`;
-    
     const { data, error } = await supabase.auth.signUp({
       email: pseudoEmail,
       password,
@@ -304,7 +326,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { nickname: username },
       },
     });
-    
+
     return { data, error };
   };
 

@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useCamera } from "@/hooks/useCamera";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { passwordStrength } from "@/utils/passwordStrength";
+import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
 import { oauth } from "@/integrations/oauth";
 import { Capacitor } from "@capacitor/core";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -34,9 +36,12 @@ const validateUsername = (value: string, t: (key: string) => string): string | u
   return undefined;
 };
 
-const validatePassword = (value: string, t: (key: string) => string): string | undefined => {
+// Signup-strength policy applies only to NEW accounts — sign-in keeps the
+// lenient floor so accounts that predate the policy can still log in.
+const validatePassword = (value: string, t: (key: string) => string, isSignUp: boolean): string | undefined => {
   if (!value) return t("authModal.passwordRequired");
-  if (value.length < 6) return t("authModal.passwordMin");
+  if (isSignUp && !passwordStrength(value).meetsPolicy) return t("auth.pwTooWeak");
+  if (!isSignUp && value.length < 6) return t("authModal.passwordMin");
   return undefined;
 };
 
@@ -99,7 +104,7 @@ export function AuthRequiredModal({
     e.preventDefault();
     
     const uError = isSignUp ? validateUsername(username, t) : (!username.trim() ? t("authModal.usernameRequired") : undefined);
-    const pError = validatePassword(password, t);
+    const pError = validatePassword(password, t, isSignUp);
     
     setUsernameError(uError);
     setPasswordError(pError);
@@ -339,6 +344,7 @@ export function AuthRequiredModal({
                            disabled:opacity-50 transition-colors"
                 style={{ boxShadow: "0 2px 0 hsl(var(--border))" }}
               />
+              {isSignUp && <PasswordStrengthMeter password={password} />}
               {passwordError && (
                 <p className="text-xs text-destructive mt-0.5 ml-2">{passwordError}</p>
               )}

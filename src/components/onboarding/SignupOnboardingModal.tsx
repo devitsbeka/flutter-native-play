@@ -8,6 +8,8 @@ import type { AgeGroup } from "@/hooks/useAgeGroup";
 import { useAuth } from "@/hooks/useAuth";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { t } from "@/lib/i18n";
+import { passwordStrength } from "@/utils/passwordStrength";
+import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { GameModal } from "@/components/ui/game-modal";
@@ -193,7 +195,7 @@ export function SignupOnboardingModal() {
   
   const validatePassword = (value: string): string | undefined => {
     if (!value) return t("auth.passwordRequired");
-    if (value.length < 6) return t("auth.passwordTooShort");
+    if (!passwordStrength(value).meetsPolicy) return t("auth.pwTooWeak");
     return undefined;
   };
   
@@ -471,6 +473,7 @@ export function SignupOnboardingModal() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </motion.button>
                 </div>
+                <PasswordStrengthMeter password={password} />
                 <AnimatePresence>
                   {errors.password && (
                     <motion.p

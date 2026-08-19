@@ -187,6 +187,13 @@ verify_jwt = false
 [functions.push-test-loop]
 verify_jwt = false
 
+# Registration happens signed out, exactly like the auth signup endpoint
+# this replaces for username accounts. It creates pre-confirmed
+# @mytrivia.local accounts only — an @ in the input is refused, so it
+# cannot pre-confirm a real address.
+[functions.register-username]
+verify_jwt = false
+
 # --- PUBLIC/READ-ONLY (can remain public if needed) ---
 [functions.search-question-image]
 verify_jwt = true

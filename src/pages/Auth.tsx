@@ -9,6 +9,9 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { ArrowLeft, Mail, Lock, User, Apple } from "lucide-react";
+import { passwordStrength } from "@/utils/passwordStrength";
+import { isValidEmailFormat, isDisposableEmail } from "@/utils/emailValidation";
+import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
 import { Capacitor } from "@capacitor/core";
 import { z } from "zod";
 import { translateErrorMessage } from "@/utils/errorTranslations";
@@ -38,6 +41,10 @@ export default function Auth() {
   // Prefilled by the desktop landing's email-capture card (?email=)
   const [signupEmail, setSignupEmail] = useState(searchParams.get('email') || "");
   const [loading, setLoading] = useState(false);
+  // Set when signUp created the account but returned no session — i.e. the
+  // project requires email confirmation. Renders the check-your-inbox screen.
+  const [confirmPendingEmail, setConfirmPendingEmail] = useState<string | null>(null);
+  const [resendingConfirm, setResendingConfirm] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);
   const [autoRegistering, setAutoRegistering] = useState(false);
@@ -58,10 +65,17 @@ export default function Auth() {
   const { notify } = useNotificationModal();
   const navigate = useNavigate();
 
+  // Signup only — sign-IN must keep accepting whatever existing accounts
+  // have, so the strength policy never runs on the login path.
   const signUpSchema = z.object({
-    password: z.string().min(6, t("auth.passwordTooShort")),
+    password: z
+      .string()
+      .refine((v) => passwordStrength(v).meetsPolicy, t("auth.pwTooWeak")),
     nickname: z.string().min(2, t("auth.usernameTooShort")).max(20, t("auth.usernameTooShort")),
-    email: z.string().email(t("auth.invalidEmail") || "Invalid email address"),
+    email: z
+      .string()
+      .refine(isValidEmailFormat, t("auth.invalidEmail"))
+      .refine((v) => !isDisposableEmail(v), t("auth.emailDisposable")),
   });
 
   const signInSchema = z.object({
@@ -114,8 +128,17 @@ export default function Auth() {
           }
         } else {
           trackSignupCompleted('email', false);
-          notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: toastIcon(ICON_URLS.partyPopper) });
-          navigate(returnTo ? decodeURIComponent(returnTo) : "/");
+          // Adapts to the project's auth setting: with email confirmations
+          // ON, signUp creates the user but returns NO session until the
+          // link is clicked — navigating into the app would show a logged-
+          // out shell. With confirmations OFF a session comes back and the
+          // old flow runs unchanged.
+          if (!data?.session) {
+            setConfirmPendingEmail(signupEmail.trim().toLowerCase());
+          } else {
+            notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: toastIcon(ICON_URLS.partyPopper) });
+            navigate(returnTo ? decodeURIComponent(returnTo) : "/");
+          }
         }
       } else {
         const validation = signInSchema.safeParse({ email, password });
@@ -196,6 +219,50 @@ export default function Auth() {
       setLoading(false);
     }
   };
+
+  // Email-confirmation pending screen — only reachable when the project has
+  // confirmations enabled (signUp returned no session).
+  if (confirmPendingEmail) {
+    return (
+      <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto flex flex-col items-center justify-center p-6 bg-gradient-to-b from-background via-background to-primary/10 relative z-10">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+          <Mail className="w-8 h-8 text-primary" />
+        </div>
+        <h1 className="text-2xl font-bold text-foreground mb-2 text-center">
+          {t("auth.confirmEmailTitle")}
+        </h1>
+        <p className="text-foreground/70 text-sm text-center max-w-sm mb-6">
+          {t("auth.confirmEmailDesc", { email: confirmPendingEmail })}
+        </p>
+        <ChunkyButton
+          variant="primary"
+          size="lg"
+          className="w-full max-w-sm"
+          onClick={() => setConfirmPendingEmail(null)}
+        >
+          {t("auth.signIn")}
+        </ChunkyButton>
+        <button
+          type="button"
+          disabled={resendingConfirm}
+          onClick={async () => {
+            setResendingConfirm(true);
+            try {
+              await supabase.auth.resend({ type: "signup", email: confirmPendingEmail });
+              notify.success(t("auth.confirmEmailResent"));
+            } catch {
+              /* rate limited or transient — the button stays available */
+            } finally {
+              setResendingConfirm(false);
+            }
+          }}
+          className="mt-4 text-primary text-sm font-medium hover:underline disabled:opacity-50"
+        >
+          {t("auth.resendConfirm")}
+        </button>
+      </div>
+    );
+  }
 
   // Show Netflix-style returning user picker if we have saved user data
   if (showReturningUser && lastUserData && !user) {
@@ -329,6 +396,7 @@ export default function Auth() {
             {errors.password && (
               <p className="text-sm text-destructive">{errors.password}</p>
             )}
+            {isSignUp && <PasswordStrengthMeter password={password} />}
             {!isSignUp && (
               <button
                 type="button"
@@ -468,8 +536,14 @@ export default function Auth() {
                     }
                   } else {
                     trackSignupCompleted(isEmail ? 'email' : 'username', false);
-                    notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: toastIcon(ICON_URLS.partyPopper) });
-                    navigate(returnTo ? decodeURIComponent(returnTo) : "/");
+                    // With email confirmations on, an email signup returns no
+                    // session yet — same pending screen as the main form.
+                    if (isEmail && !result.data?.session) {
+                      setConfirmPendingEmail(email.trim().toLowerCase());
+                    } else {
+                      notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: toastIcon(ICON_URLS.partyPopper) });
+                      navigate(returnTo ? decodeURIComponent(returnTo) : "/");
+                    }
                   }
                 } catch (err) {
                   notify.error(t("common.error"), { description: t("errors.generic") });
