@@ -428,7 +428,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
 
     // Collections publish to the shared feed — same screen as quiz publish.
     if (anyBlockedText([title, ...rounds.map((r) => r.subject), ...roundQuestions.flat().flatMap((q) => [q.question, ...q.answers.map((a) => a.text)])])) {
-      toast({ title: t("extra.textNotAllowed"), variant: "destructive" });
+      toast.error(t("extra.textNotAllowed"));
       return;
     }
 
@@ -514,7 +514,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
 
     // Private at creation, but playable with friends and publishable later.
     if (anyBlockedText([title, ...rounds.map((r) => r.subject), ...roundQuestions.flat().flatMap((q) => [q.question, ...q.answers.map((a) => a.text)])])) {
-      toast({ title: t("extra.textNotAllowed"), variant: "destructive" });
+      toast.error(t("extra.textNotAllowed"));
       return;
     }
 
