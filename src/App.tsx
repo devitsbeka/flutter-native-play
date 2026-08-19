@@ -44,6 +44,7 @@ import Loading from "./pages/Loading";
 
 // Lazy loaded pages (reduces initial bundle)
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const PowerUps = lazy(() => import("./pages/PowerUps"));
 const Leaderboards = lazy(() => import("./pages/Leaderboards"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -210,6 +211,7 @@ const App = () => (
                 <Route path="/play/:categoryId/:levelId" element={<CategoryQuizPage />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/leaderboards" element={<Leaderboards />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/:userId" element={<PublicProfile />} />

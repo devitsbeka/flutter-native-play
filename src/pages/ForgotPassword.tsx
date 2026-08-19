@@ -9,6 +9,7 @@ import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { ArrowLeft, User, Lock, ShieldQuestion, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { siteUrl } from "@/config/site";
 import {
   Select,
   SelectContent,
@@ -26,7 +27,7 @@ const SECURITY_QUESTIONS = [
   { id: 5, ka: "შენი საყვარელი სპორტული გუნდი?", en: "Your favorite sports team?" },
 ];
 
-type Step = "username" | "question" | "password" | "success";
+type Step = "username" | "question" | "password" | "success" | "emailSent";
 
 export default function ForgotPassword() {
   const { t, language } = useLanguage();
@@ -44,10 +45,36 @@ export default function ForgotPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Step 1: Look up username and get security question
+  // Step 1: Look up the identifier. Two account kinds, two recovery paths:
+  //
+  // - A real email (the main Auth screen's signup) gets Supabase's standard
+  //   email reset. The security-question flow below cannot serve them — it
+  //   rewrites whatever is typed into a @mytrivia.local pseudo-email, so an
+  //   email account always came back "user not found" and had NO recovery
+  //   at all, which is an app-completeness rejection on its own.
+  // - A username account (onboarding signup) keeps the security-question
+  //   flow, since a pseudo-email can't receive mail.
   const handleUsernameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
+
+    if (username.includes("@")) {
+      setLoading(true);
+      try {
+        // The link lands on the website's /reset-password page (excluded
+        // from universal links, so it opens in the browser where the
+        // recovery token in the URL is picked up automatically).
+        await supabase.auth.resetPasswordForEmail(username.trim().toLowerCase(), {
+          redirectTo: siteUrl("/reset-password"),
+        });
+      } catch {
+        /* deliberate: the response must not reveal whether the email exists */
+      } finally {
+        setLoading(false);
+      }
+      setStep("emailSent");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -201,20 +228,23 @@ export default function ForgotPassword() {
             )}
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">
-            {step === "success" 
+            {step === "success"
               ? t("forgotPassword.success")
-              : t("forgotPassword.title")}
+              : step === "emailSent"
+                ? t("forgotPassword.emailSentTitle")
+                : t("forgotPassword.title")}
           </h1>
           <p className="text-foreground/70 text-sm">
-            {step === "username" && t("forgotPassword.enterUsername")}
+            {step === "username" && t("forgotPassword.enterIdentifier")}
             {step === "question" && t("forgotPassword.answerQuestion")}
             {step === "password" && t("forgotPassword.setNewPassword")}
             {step === "success" && t("forgotPassword.successMessage")}
+            {step === "emailSent" && t("forgotPassword.emailSentDesc")}
           </p>
         </motion.div>
 
-        {/* Step indicator */}
-        {step !== "success" && (
+        {/* Step indicator — only for the security-question track */}
+        {step !== "success" && step !== "emailSent" && (
           <div className="flex items-center gap-2 mb-6">
             {["username", "question", "password"].map((s, i) => (
               <div
@@ -242,7 +272,7 @@ export default function ForgotPassword() {
             >
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-foreground">
-                  {t("auth.username")}
+                  {t("forgotPassword.identifierLabel")}
                 </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -389,6 +419,25 @@ export default function ForgotPassword() {
             </motion.form>
           )}
 
+          {/* Email reset link sent */}
+          {step === "emailSent" && (
+            <motion.div
+              key="emailSent"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full text-center"
+            >
+              <ChunkyButton
+                variant="primary"
+                size="lg"
+                className="w-full"
+                onClick={() => navigate("/auth")}
+              >
+                {t("forgotPassword.backToLogin")}
+              </ChunkyButton>
+            </motion.div>
+          )}
+
           {/* Success */}
           {step === "success" && (
             <motion.div
@@ -410,7 +459,7 @@ export default function ForgotPassword() {
         </AnimatePresence>
 
         {/* Back to login link */}
-        {step !== "success" && (
+        {step !== "success" && step !== "emailSent" && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

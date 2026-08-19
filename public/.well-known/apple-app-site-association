@@ -10,7 +10,6 @@
           "/join/*",
           "/room/*",
           "/team",
-          "/team?*",
           "/tv/*",
           "/controller/*",
           "/collection/*",
@@ -23,7 +22,8 @@
           "NOT /privacy-policy*",
           "NOT /terms*",
           "NOT /support",
-          "NOT /delete-account"
+          "NOT /delete-account",
+          "NOT /reset-password*"
         ]
       }
     ]
