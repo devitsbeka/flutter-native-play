@@ -1,6 +1,7 @@
 import { siteUrl } from "@/config/site";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Capacitor } from "@capacitor/core";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { 
@@ -332,9 +333,17 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     }
     
     if (url) {
-      window.open(url, "_blank");
+      if (Capacitor.isNativePlatform() && !url.startsWith("http")) {
+        // Custom schemes (fb-messenger:, mailto:) — window.open is a silent
+        // no-op in WKWebView. A location navigation hands the URL to iOS,
+        // which opens the target app when installed and quietly does
+        // nothing otherwise.
+        window.location.href = url;
+      } else {
+        window.open(url, "_blank");
+      }
     }
-    
+
     setTimeout(() => setIsSharing(false), 500);
   };
   
