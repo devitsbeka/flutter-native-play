@@ -668,6 +668,8 @@ export const ka = {
 
   // ==========================================
   dailyRewards: {
+    // A weekday that passed unclaimed — the calendar view names it.
+    missed: "გაცდენილი",
     title: "ჯილდოები",
     subtitle: "მიიღე ჯილდო ყოველდღიურად",
     day: "დღე {day}",

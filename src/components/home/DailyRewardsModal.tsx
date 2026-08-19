@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check, Lock, Clock, Crown } from "lucide-react";
 import coinPurseIcon from "@/assets/icons/icon-coin-purse.png";
+import giftClosedIcon from "@/assets/icons/gift-box.png";
+import giftOpenIcon from "@/assets/icons/unboxing-gift.png";
 import { useSound } from "@/contexts/SoundContext";
 import { useRewardTimers, useDailyRewardsClaim } from "@/hooks/useRewardTimers";
 import confetti from "canvas-confetti";
@@ -10,6 +12,9 @@ import gemIcon from "@/assets/icons/icon-gem.png";
 import { FlyingCurrency } from "@/components/shared/FlyingCurrency";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useVipStatus } from "@/hooks/useVipStatus";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { formatWeekday } from "@/utils/localDate";
 
 interface DailyRewardsModalProps {
   isOpen: boolean;
@@ -18,26 +23,16 @@ interface DailyRewardsModalProps {
   onClaim?: () => void;
 }
 
-const dailyRewards = [
-  { day: 1, coins: 50, gems: 0 },
-  { day: 2, coins: 75, gems: 0 },
-  { day: 3, coins: 100, gems: 1 },
-  { day: 4, coins: 125, gems: 0 },
-  { day: 5, coins: 150, gems: 2 },
-  { day: 6, coins: 200, gems: 0 },
-  { day: 7, coins: 300, gems: 5 },
-];
-
 // Per-day card gradients: bright same-family color pairs — cross-family
 // blends (teal into rose etc.) muddy out in the middle and read dark
 const DAY_GRADIENTS: [string, string][] = [
-  ["#34D399", "#2563EB"], // 1 teal → blue
-  ["#A78BFA", "#D946EF"], // 2 violet → fuchsia
-  ["#FBBF24", "#F97316"], // 3 amber → orange
-  ["#FB7185", "#EC4899"], // 4 coral → pink
-  ["#22D3EE", "#3B82F6"], // 5 cyan → blue
-  ["#818CF8", "#A855F7"], // 6 indigo → violet
-  ["#FDE047", "#F59E0B"], // 7 gold
+  ["#34D399", "#2563EB"], // Mon teal → blue
+  ["#A78BFA", "#D946EF"], // Tue violet → fuchsia
+  ["#FBBF24", "#F97316"], // Wed amber → orange
+  ["#FB7185", "#EC4899"], // Thu coral → pink
+  ["#22D3EE", "#3B82F6"], // Fri cyan → blue
+  ["#818CF8", "#A855F7"], // Sat indigo → violet
+  ["#FDE047", "#F59E0B"], // Sun gold
 ];
 
 const cardGradient = (index: number) => {
@@ -47,11 +42,30 @@ const cardGradient = (index: number) => {
 
 const celebrateClaim = () => {
   confetti({
-    particleCount: 100,
-    spread: 70,
-    origin: { y: 0.6 },
+    particleCount: 120,
+    spread: 75,
+    origin: { y: 0.55 },
     colors: ["#FFD700", "#FFA500", "#FF6B6B", "#4ECDC4", "#45B7D1"],
     zIndex: 9999,
+  });
+};
+
+// A date as its LOCAL yyyy-mm-dd. toISOString would shift through UTC, and a
+// claim made on Tuesday evening must not render on Wednesday's card.
+export const localISO = (d: Date) => {
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+};
+
+/** Monday..Sunday of the week containing `today`. */
+export const weekOf = (today: Date): Date[] => {
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
   });
 };
 
@@ -81,52 +95,95 @@ function RewardPill({ icon, value }: { icon: string; value: number }) {
   );
 }
 
+type DayState = "claimed" | "missed" | "today" | "future";
+type ClaimPhase = "idle" | "opening" | "revealed";
+
 function DayRewardCard({
-  reward,
+  date,
   index,
-  currentDay,
-  claimedToday,
+  state,
+  phase,
+  awarded,
   canClaim,
   onClaim,
+  language,
   t,
 }: {
-  reward: (typeof dailyRewards)[0];
+  date: Date;
   index: number;
-  currentDay: number;
-  claimedToday: boolean;
+  state: DayState;
+  /** The reveal runs only on today's card; every other card gets "idle". */
+  phase: ClaimPhase;
+  awarded: { coins: number; gems: number } | null;
   canClaim: boolean;
   onClaim: () => void;
+  language: string;
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
-  const isToday = index === currentDay;
-  const isClaimed = index < currentDay || (index === currentDay && claimedToday);
-  const isLocked = index > currentDay;
-  const isAvailable = isToday && canClaim && !claimedToday;
+  const isMissed = state === "missed";
+  const showOpenGift = state === "claimed" || phase === "revealed";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04 }}
-      className="relative flex h-[260px] w-[272px] flex-shrink-0 snap-center flex-col items-center justify-between rounded-[24px] px-3 py-6"
+      className="relative flex h-[260px] w-[272px] flex-shrink-0 snap-center flex-col items-center justify-between overflow-hidden rounded-[24px] px-3 py-6"
       style={{
         background: cardGradient(index),
-        filter: isLocked ? "saturate(0.75) brightness(1.05)" : undefined,
+        filter: isMissed
+          ? "saturate(0.25) brightness(0.92)"
+          : state === "future"
+            ? "saturate(0.75) brightness(1.05)"
+            : undefined,
       }}
     >
-      {/* Day label */}
-      <span className="font-display text-2xl font-bold text-white drop-shadow-sm">
-        {t("dailyRewards.day", { day: reward.day })}
+      {/* Weekday label — the calendar, not a streak counter */}
+      <span className="font-display text-2xl font-bold capitalize text-white drop-shadow-sm">
+        {formatWeekday(date, language)}
       </span>
 
-      {/* Reward pills */}
-      <div className="flex items-center gap-2">
-        <RewardPill icon={coinIcon} value={reward.coins} />
-        {reward.gems > 0 && <RewardPill icon={gemIcon} value={reward.gems} />}
+      {/* The middle: a gift until it is opened. What is inside is the
+          server's decision, so nothing is promised here — the surprise IS
+          the feature. */}
+      <div className="relative flex h-[96px] items-center justify-center">
+        {phase === "revealed" && awarded ? (
+          // The prize: slides in, wiggles, and the whole modal closes shortly
+          // after — the disappearance the reveal ends on.
+          <motion.div
+            initial={{ opacity: 0, scale: 0.6, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0, x: [0, -7, 7, -5, 5, 0] }}
+            transition={{ duration: 0.9, times: [0, 0.2, 0.4, 0.6, 0.8, 1] }}
+            className="flex items-center gap-2"
+          >
+            <RewardPill icon={coinIcon} value={awarded.coins} />
+            {awarded.gems > 0 && <RewardPill icon={gemIcon} value={awarded.gems} />}
+          </motion.div>
+        ) : (
+          <motion.img
+            key={showOpenGift ? "open" : "closed"}
+            src={showOpenGift ? giftOpenIcon : giftClosedIcon}
+            alt=""
+            className="h-[88px] w-[88px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.2)]"
+            style={{ opacity: isMissed ? 0.55 : 1 }}
+            animate={
+              phase === "opening"
+                ? { rotate: [0, -10, 10, -8, 8, -5, 5, 0], scale: [1, 1.08, 1.08, 1.12, 1.12, 1.15, 1.15, 1.2] }
+                : state === "today" && canClaim
+                  ? { y: [0, -5, 0] }
+                  : undefined
+            }
+            transition={
+              phase === "opening"
+                ? { duration: 0.85 }
+                : { repeat: Infinity, duration: 1.8, ease: "easeInOut" }
+            }
+          />
+        )}
       </div>
 
-      {/* Claim button / state */}
-      {isClaimed ? (
+      {/* State row */}
+      {state === "claimed" || (state === "today" && phase === "revealed") ? (
         <div
           className="flex h-[50px] w-[144px] items-center justify-center gap-1.5 rounded-[18px]"
           style={{ background: "rgba(255,255,255,0.3)" }}
@@ -134,7 +191,14 @@ function DayRewardCard({
           <Check className="h-5 w-5 text-white" />
           <span className="text-base font-bold text-white">{t("dailyRewards.claimed")}</span>
         </div>
-      ) : isLocked ? (
+      ) : isMissed ? (
+        <div
+          className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
+          style={{ background: "rgba(255,255,255,0.22)" }}
+        >
+          <span className="text-base font-bold text-white/85">{t("dailyRewards.missed")}</span>
+        </div>
+      ) : state === "future" ? (
         <div
           className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
           style={{ background: "rgba(255,255,255,0.25)" }}
@@ -143,37 +207,69 @@ function DayRewardCard({
         </div>
       ) : (
         <motion.button
-          onClick={isAvailable ? onClaim : undefined}
-          disabled={!isAvailable}
-          whileTap={isAvailable ? { scale: 0.95 } : undefined}
-          animate={isAvailable ? { scale: [1, 1.04, 1] } : undefined}
-          transition={isAvailable ? { repeat: Infinity, duration: 1.6 } : undefined}
+          onClick={canClaim && phase === "idle" ? onClaim : undefined}
+          disabled={!canClaim || phase !== "idle"}
+          whileTap={canClaim ? { scale: 0.95 } : undefined}
+          animate={canClaim && phase === "idle" ? { scale: [1, 1.04, 1] } : undefined}
+          transition={canClaim && phase === "idle" ? { repeat: Infinity, duration: 1.6 } : undefined}
           className="h-[50px] w-[144px] rounded-[18px] text-lg font-bold text-black disabled:opacity-60"
           style={{
             background: "linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(254,254,254,0.6) 100%)",
           }}
         >
-          {t("dailyRewards.claim")}
+          {phase === "opening" ? "…" : t("dailyRewards.claim")}
         </motion.button>
       )}
     </motion.div>
   );
 }
 
-export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: DailyRewardsModalProps) {
-  const { t } = useLanguage();
+export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModalProps) {
+  const { t, language } = useLanguage();
   const { playSound, vibrate } = useSound();
+  const { user } = useAuth();
   const { canClaimDaily, dailyTimeLeft, refreshTimers } = useRewardTimers();
   const { claimDailyReward } = useDailyRewardsClaim();
   const { isProPlus } = useVipStatus();
   const [claimedToday, setClaimedToday] = useState(false);
   const [showFlyingCoins, setShowFlyingCoins] = useState(false);
   const [showFlyingGems, setShowFlyingGems] = useState(false);
-  // What the server actually granted. The cards advertise the base amounts;
-  // a PRO Plus claim is worth 1.5x those, so the numbers that fly to the
-  // wallet come from the claim rather than from the card.
+  const [phase, setPhase] = useState<ClaimPhase>("idle");
+  // Which days of this week have a claim recorded, as local yyyy-mm-dd.
+  const [claimedDates, setClaimedDates] = useState<Set<string>>(new Set());
+  // What the server actually granted. The gift hides the amount until the
+  // claim comes back; PRO Plus multipliers and the once-per-day guard are all
+  // decided server-side, so what is revealed is what was actually paid.
   const [awarded, setAwarded] = useState<{ coins: number; gems: number } | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const week = weekOf(new Date());
+  const todayISO = localISO(new Date());
+  const todayIndex = (new Date().getDay() + 6) % 7;
+
+  // This week's claims, so the row can say which days were taken and which
+  // slipped past. RLS scopes the select to the signed-in player's own rows.
+  useEffect(() => {
+    if (!isOpen || !user) return;
+    let cancelled = false;
+    void supabase
+      .from("user_daily_rewards")
+      .select("reward_date, daily_claimed")
+      .gte("reward_date", localISO(week[0]))
+      .lte("reward_date", localISO(week[6]))
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setClaimedDates(
+          new Set(data.filter((r) => r.daily_claimed).map((r) => String(r.reward_date))),
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+    // week is derived from "now" and stable within a day — the open flag is
+    // what should re-run this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, user]);
 
   // Mouse-drag scrolling with momentum for the day-cards row. Touch keeps
   // native scrolling; snap is lifted while dragging (assigning scrollLeft
@@ -230,8 +326,6 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
     }
   };
 
-  const currentDay = Math.min((currentStreak - 1) % 7, 6);
-
   // Sync claimed state with timer hook
   useEffect(() => {
     setClaimedToday(!canClaimDaily);
@@ -247,7 +341,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen, onClose]);
 
-  // Scroll to center the current day when modal opens
+  // Scroll to center today's card when the modal opens
   useEffect(() => {
     if (isOpen && scrollContainerRef.current) {
       const container = scrollContainerRef.current;
@@ -255,42 +349,55 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
       // + half a card; subtracting half the viewport centers it exactly, so
       // both peeking neighbors show through with equal gaps.
       const cardWidth = 272 + 16; // w-[272px] + gap-4 (16px)
-      const scrollPosition = 24 + currentDay * cardWidth + 136 - container.offsetWidth / 2;
+      const scrollPosition = 24 + todayIndex * cardWidth + 136 - container.offsetWidth / 2;
       setTimeout(() => {
         container.scrollTo({ left: Math.max(0, scrollPosition), behavior: "smooth" });
       }, 100);
     }
-  }, [isOpen, currentDay]);
+  }, [isOpen, todayIndex]);
 
   const handleClaim = async () => {
-    if (claimedToday || !canClaimDaily) return;
+    if (claimedToday || !canClaimDaily || phase !== "idle") return;
 
-    playSound("reward");
+    // The gift wobbles while the server decides what is inside — never less
+    // than the wobble's own length, or a fast answer cuts the animation dead.
+    setPhase("opening");
     vibrate([50, 30, 50]);
-    celebrateClaim();
-
-    // One call claims the day and credits it. The amount, the VIP bonus and
-    // the once-per-day guard are all decided server-side, so what comes back
-    // is what was actually granted rather than what this screen expected.
-    const claim = await claimDailyReward();
-    if (!claim) return;
-
-    setAwarded({ coins: claim.coins, gems: claim.gems });
-
-    setShowFlyingCoins(true);
-    if (claim.gems > 0) {
-      setTimeout(() => setShowFlyingGems(true), 300);
+    const minWobble = new Promise((r) => setTimeout(r, 900));
+    const [claim] = await Promise.all([claimDailyReward(), minWobble]);
+    if (!claim) {
+      setPhase("idle");
+      return;
     }
 
-    setClaimedToday(true);
+    setAwarded({ coins: claim.coins, gems: claim.gems });
+    setPhase("revealed");
+    playSound("reward");
+    celebrateClaim();
+    setClaimedDates((prev) => new Set([...prev, todayISO]));
     refreshTimers();
 
+    // Let the prize wiggle, then fly it to the wallet and close.
     setTimeout(() => {
-      setShowFlyingCoins(false);
-      setShowFlyingGems(false);
-      onClaim?.();
-      onClose();
-    }, 1500);
+      setClaimedToday(true);
+      setShowFlyingCoins(true);
+      if (claim.gems > 0) setTimeout(() => setShowFlyingGems(true), 300);
+      setTimeout(() => {
+        setShowFlyingCoins(false);
+        setShowFlyingGems(false);
+        setPhase("idle");
+        onClaim?.();
+        onClose();
+      }, 1400);
+    }, 2400);
+  };
+
+  const stateOf = (date: Date, index: number): DayState => {
+    const iso = localISO(date);
+    if (claimedDates.has(iso) || (index === todayIndex && claimedToday && phase === "idle"))
+      return index === todayIndex && phase !== "idle" ? "today" : "claimed";
+    if (index === todayIndex) return "today";
+    return iso < todayISO ? "missed" : "future";
   };
 
   return (
@@ -335,7 +442,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
                 </div>
               </div>
 
-              {/* Day cards — next card peeks in from the right */}
+              {/* Weekday cards — next card peeks in from the right */}
               <div
                 ref={scrollContainerRef}
                 className="scrollbar-hide mt-6 flex cursor-grab select-none gap-4 overflow-x-auto px-6 pb-2 active:cursor-grabbing"
@@ -345,15 +452,17 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
                 onPointerUp={dragPointerUp}
                 onPointerLeave={dragPointerUp}
               >
-                {dailyRewards.map((reward, index) => (
+                {week.map((date, index) => (
                   <DayRewardCard
-                    key={reward.day}
-                    reward={reward}
+                    key={localISO(date)}
+                    date={date}
                     index={index}
-                    currentDay={currentDay}
-                    claimedToday={claimedToday}
-                    canClaim={canClaimDaily}
+                    state={stateOf(date, index)}
+                    phase={index === todayIndex ? phase : "idle"}
+                    awarded={index === todayIndex ? awarded : null}
+                    canClaim={canClaimDaily && !claimedToday}
                     onClaim={handleClaim}
+                    language={language}
                     t={t}
                   />
                 ))}

@@ -76,6 +76,13 @@ const parts = (date: Date, utc: boolean) =>
  * "კვირა, 16 აგვისტო" — weekday, then day before month, as Georgian writes it.
  * Every other language goes through Intl, which handles them correctly.
  */
+/** Just the weekday name — "ორშაბათი" / "Monday" — in the app language. */
+export function formatWeekday(date: Date, language: string): string {
+  if (Number.isNaN(date.getTime())) return "";
+  if (isGeorgian(language)) return KA_WEEKDAYS_LONG[date.getDay()];
+  return date.toLocaleDateString(language, { weekday: "long" });
+}
+
 export function formatDayWithWeekday(
   date: Date,
   language: string,
