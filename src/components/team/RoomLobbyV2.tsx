@@ -657,15 +657,29 @@ export function RoomLobbyV2() {
        card and player strip pushed content below the fold. A fixed-height
        box that scrolls itself is the recipe every standalone page uses. */
     <div
-      className="h-[100dvh] overflow-y-auto relative flex flex-col safe-bleed"
-      style={{ background: roomGradient?.gradient || 'var(--background)' }}
+      className="h-[100dvh] relative flex flex-col overflow-hidden"
+      style={{
+        background: roomGradient?.gradient || 'var(--background)',
+        /* Not .safe-bleed: that re-adds the top inset as padding, and the
+           sticky header would then need a negative margin to reach the true
+           top — which iOS WebKit answers by clamping the sticky box to the
+           content edge, shifting the whole header DOWN by one extra
+           safe-top (the giant gap above the lobby header on device;
+           Chromium does not clamp, which is why it looked right in the
+           browser). So the root cancels #root's padding without re-adding
+           it, content starts at the true screen edge, and the header
+           carries the inset itself. */
+        marginTop: "calc(-1 * var(--safe-top))",
+        marginBottom: "calc(-1 * var(--safe-bottom))",
+        paddingBottom: "var(--safe-bottom)",
+      }}
     >
-      {/* Sticky Header. Pins at the scroller's very top — the true screen
-          edge — so it swallows the root's safe-top padding with a negative
-          margin and carries the inset itself: at rest nothing moves, and
-          once pinned the blur extends under the status bar instead of the
-          header sliding beneath the clock. */}
-      <div className="sticky top-0 z-30 w-full" style={{ marginTop: "calc(-1 * var(--safe-top))" }}>
+      {/* Header. A plain flex row at the top — the content area below is
+          the scroller, so nothing sticky is needed and no negative margins
+          are in play (iOS WebKit clamps sticky boxes with negative margins,
+          which is what shoved this header down a full safe-top). The blur's
+          own padding keeps the row clear of the status bar. */}
+      <div className="relative z-30 w-full shrink-0">
         {/* Header content with subtle background blur */}
         <div
           className="px-4 sm:px-6 pb-4 backdrop-blur-md bg-black/10"
@@ -727,6 +741,21 @@ export function RoomLobbyV2() {
                   </motion.button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+                  {/* Rename/customize live here now — the header already
+                      shows the name, so the old in-content pencil row was
+                      the same name a second time. */}
+                  {isHost && (
+                    <>
+                      <DropdownMenuItem onClick={() => setShowIconPicker(true)} className="cursor-pointer">
+                        <Edit2 className="w-4 h-4 mr-2" />
+                        {t("team.editRoom")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setShowGradientPicker(true)} className="cursor-pointer">
+                        <Palette className="w-4 h-4 mr-2" />
+                        {t("team.changeBackground")}
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuItem onClick={() => setShowHowItWorks(true)} className="cursor-pointer">
                     <Info className="w-4 h-4 mr-2" />
                     {t("extra.rlHowItWorks")}
@@ -760,82 +789,13 @@ export function RoomLobbyV2() {
         />
       </div>
 
-      {/* Scrollable content area */}
-      <div className="flex-1 overflow-y-auto relative z-10 px-4 sm:px-6 pb-32 sm:max-w-[520px] mx-auto w-full will-change-transform">
+      {/* Scrollable content area. min-h-0: a flex child's implicit
+          min-height is its content, so without this the box grows past the
+          viewport instead of scrolling — the frozen lobby on device. */}
+      <div className="flex-1 min-h-0 overflow-y-auto relative z-10 px-4 sm:px-6 pb-32 sm:max-w-[520px] mx-auto w-full will-change-transform">
 
-        {/* Room Name Section — host only: the sticky header now carries the
-            room's name for everyone, so for guests this row was the same
-            name a second time. For the host it is the rename/customize
-            control cluster and stays. */}
-        {isHost && (
-        <div className="text-center mb-4 space-y-3">
-
-          {/* Room Name */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="flex items-center justify-center gap-3">
-              {/* Room Icon + Name - clickable for host */}
-              {isHost ? (
-                <motion.button
-                  onClick={() => setShowIconPicker(true)}
-                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  title={t("team.editRoom")}
-                >
-                  {currentRoom.room_icon && (
-                    <img 
-                      src={currentRoom.room_icon} 
-                      alt="Room icon" 
-                      className="w-8 h-8 object-contain"
-                    />
-                  )}
-                  <h2 className="text-base font-bold text-white drop-shadow-lg">
-                    {roomName}
-                  </h2>
-                </motion.button>
-              ) : (
-                <>
-                  {currentRoom.room_icon && (
-                    <img 
-                      src={currentRoom.room_icon} 
-                      alt="Room icon" 
-                      className="w-8 h-8 object-contain"
-                    />
-                  )}
-                  <h2 className="text-base font-bold text-white drop-shadow-lg">
-                    {roomName}
-                  </h2>
-                </>
-              )}
-              {isHost && (
-                <div className="flex items-center gap-1">
-                  <motion.button
-                    onClick={() => setShowIconPicker(true)}
-                    className="w-8 h-8 text-white/70 hover:text-white transition-colors flex items-center justify-center"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    title={t("team.editRoom")}
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </motion.button>
-                  <motion.button
-                    onClick={() => setShowGradientPicker(true)}
-                    className="w-8 h-8 text-white/70 hover:text-white transition-colors flex items-center justify-center"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    title={t("team.changeBackground")}
-                  >
-                    <Palette className="w-4 h-4" />
-                  </motion.button>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
-        )}
+        {/* The room's name lives in the header for everyone; the host's
+            rename and background controls moved into the three-dot menu. */}
 
         {/* Category Picker Section */}
         <CategoryPickerSection
