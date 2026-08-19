@@ -70,17 +70,6 @@ export function EditQuestionDialog({
     setIncorrectAnswers(updated);
   };
 
-  // Swap a wrong answer into the correct slot. Writing the right answer into
-  // the green field first was the only way before; now either order works.
-  const makeAnswerCorrect = (index: number) => {
-    const promoted = incorrectAnswers[index];
-    if (!promoted?.trim()) return;
-    const updated = [...incorrectAnswers];
-    updated[index] = correctAnswer;
-    setIncorrectAnswers(updated);
-    setCorrectAnswer(promoted);
-  };
-
   if (!open) return null;
 
   return (
@@ -165,21 +154,8 @@ export function EditQuestionDialog({
                             value={answer}
                             onChange={(e) => updateIncorrectAnswer(idx, e.target.value)}
                             placeholder={t("extra.incorrectAnswerPlaceholder", { n: idx + 1 })}
-                            className="h-12 bg-white border-0 text-slate-700 placeholder:text-slate-400 pl-14 pr-12 font-medium"
+                            className="h-12 bg-white border-0 text-slate-700 placeholder:text-slate-400 pl-14 font-medium"
                           />
-                          {/* Make this the correct answer — swaps with the
-                              green field, so nothing needs retyping */}
-                          {answer.trim() && (
-                            <button
-                              type="button"
-                              onClick={() => makeAnswerCorrect(idx)}
-                              aria-label={t("extra.editorSetCorrectTitle")}
-                              title={t("extra.editorSetCorrectTitle")}
-                              className="absolute right-3 w-7 h-7 rounded-full border-2 border-emerald-300 bg-white hover:bg-emerald-500 text-emerald-500 hover:text-white active:scale-90 transition-all flex items-center justify-center z-10"
-                            >
-                              <Check className="w-4 h-4" />
-                            </button>
-                          )}
                         </div>
                       </div>
                     ))}

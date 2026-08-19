@@ -47,19 +47,6 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
   const [isDeleting, setIsDeleting] = useState(false);
   const [iconSlug, setIconSlug] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
-
-  // Tap an answer's circle to make that one correct — texts swap between
-  // correct_answer and the tapped slot, so nothing has to be retyped.
-  const makeAnswerCorrect = (questionIndex: number, answerIndex: number) => {
-    setQuestions(prev => prev.map((q, i) => {
-      if (i !== questionIndex) return q;
-      const incorrect = [...q.incorrect_answers];
-      const promoted = incorrect[answerIndex];
-      if (!promoted?.trim()) return q;
-      incorrect[answerIndex] = q.correct_answer;
-      return { ...q, correct_answer: promoted, incorrect_answers: incorrect };
-    }));
-  };
   const [viewMode, setViewMode] = useState<ViewMode>("info");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
@@ -642,38 +629,27 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                                   </span>
                                 </div>
                               </button>
-                              {/* Incorrect Answers - tap the text to edit it,
-                                  tap the circle to make that answer correct */}
+                              {/* Incorrect Answers - White chunky buttons */}
                               {q.incorrect_answers.map((ans, i) => (
-                                <div key={i} className="relative w-full group text-left">
+                                <button
+                                  key={i}
+                                  onClick={() => {
+                                    setEditingField({ type: 'incorrect', questionIndex: index, answerIndex: i });
+                                    setEditValue(ans);
+                                  }}
+                                  className="relative w-full group cursor-pointer text-left"
+                                >
                                   <div className="absolute inset-0 bg-gray-300 rounded-xl translate-y-1" />
                                   <div className="relative p-3 rounded-xl bg-white flex items-center gap-3 group-hover:bg-gray-100 transition-colors">
-                                    <button
-                                      onClick={() => makeAnswerCorrect(index, i)}
-                                      aria-label={t("extra.editorSetCorrectTitle")}
-                                      title={t("extra.editorSetCorrectTitle")}
-                                      className="w-7 h-7 rounded-full bg-sky-300 ring-2 ring-transparent hover:ring-emerald-400 hover:bg-emerald-100 active:scale-90 transition-all flex items-center justify-center flex-shrink-0 group/pick"
-                                    >
-                                      <span className="text-slate-700 font-bold text-sm group-hover/pick:hidden">
+                                    <div className="w-7 h-7 rounded-full bg-sky-300 flex items-center justify-center flex-shrink-0">
+                                      <span className="text-slate-700 font-bold text-sm">
                                         {['B', 'C', 'D'][i]}
                                       </span>
-                                      <Check className="w-4 h-4 text-emerald-600 hidden group-hover/pick:block" />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setEditingField({ type: 'incorrect', questionIndex: index, answerIndex: i });
-                                        setEditValue(ans);
-                                      }}
-                                      className="text-slate-700 font-medium flex-1 cursor-pointer text-left"
-                                    >
-                                      {ans}
-                                    </button>
+                                    </div>
+                                    <span className="text-slate-700 font-medium flex-1">{ans}</span>
                                   </div>
-                                </div>
+                                </button>
                               ))}
-                              <p className="text-[11px] text-white/45 text-center pt-0.5">
-                                {t("extra.editorSetCorrectTitle")}
-                              </p>
                             </div>
                             
                             {/* Delete Question Button */}
