@@ -414,7 +414,7 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
   const isSwiping = useRef(false);
   
   // Display name: only room_name, no fallback to code
-  const displayName = room.room_name || "თამაშის ოთახი";
+  const displayName = room.room_name || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);
@@ -749,7 +749,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
   const touchStartY = useRef(0);
   const isSwiping = useRef(false);
   
-  const displayName = room.room_name || "თამაშის ოთახი";
+  const displayName = room.room_name || t("extra.gameRoomLabel");
   // How long ago the room was made — the thing that tells two similar rooms
   // apart in a list of them.
   const createdAgo = useRoomAge(room.created_at);

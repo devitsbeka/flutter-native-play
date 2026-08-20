@@ -541,7 +541,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                                 {q.question_text}
                               </p>
                               <span className="text-xs text-white/50 mt-1 flex items-center justify-center gap-1">
-                                <Pencil className="w-3 h-3" /> შეცვლა
+                                <Pencil className="w-3 h-3" /> {t("extra.editBtnLabel")}
                               </span>
                             </button>
                             

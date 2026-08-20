@@ -105,6 +105,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return translateWithFallback(language, key, params);
   }, [language]);
 
+  // The landscape-lock overlay is pure CSS (body::after in index.css), so it
+  // cannot call t() — its text is handed over through a custom property. The
+  // stylesheet keeps a Georgian fallback for the moment before this runs.
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--rotate-to-portrait-message",
+      JSON.stringify(translateWithFallback(language, "extra.rotateToPortrait")),
+    );
+  }, [language]);
+
   // Persist language choice and dispatch storage event for other hooks
   const setLanguage = useCallback((lang: string) => {
     if (!translations[lang]) return;

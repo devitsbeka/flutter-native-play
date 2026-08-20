@@ -22,11 +22,12 @@ interface MultiplayerObserverScreenProps {
 }
 
 const TIME_PER_QUESTION = 15;
-const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
+
 
 export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenProps) {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const ANSWER_LABELS = language === "ka" ? ["ა", "ბ", "გ", "დ"] : ["A", "B", "C", "D"];
   const { playSound } = useSound();
   const {
     questions,
@@ -398,7 +399,7 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
               <div className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
                 <span className="text-white/80 text-sm">
-                  შენი ტრივიაა — აკვირდები ({answeredCount}/{players.length})
+                  {t("extra.observerYourTrivia", { n: answeredCount, m: players.length })}
                 </span>
               </div>
               <div className="flex items-center gap-3">

@@ -6,6 +6,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
 import bookmarkIcon from "@/assets/icons/bookmark-3d.png";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
@@ -30,6 +31,7 @@ export function TriviaPreviewModal({
   onToggleLike,
   onToggleSave,
 }: TriviaPreviewModalProps) {
+  const { t } = useLanguage();
   if (!post) return null;
 
   const liked = userLikes.includes(post.id);
@@ -160,28 +162,28 @@ export function TriviaPreviewModal({
                       <HelpCircle className="w-4 h-4" />
                       <span className="font-bold text-lg">{post.questionCount}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">კითხვა</p>
+                    <p className="text-xs text-muted-foreground">{t("extra.questionWordLabel")}</p>
                   </div>
                   <div className="bg-muted/50 rounded-xl p-3 text-center">
                     <div className="flex items-center justify-center gap-1.5 text-primary mb-1">
                       <Clock className="w-4 h-4" />
                       <span className="font-bold text-lg">{post.answerFormat === '4_answers' ? '4' : '2'}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">პასუხი</p>
+                    <p className="text-xs text-muted-foreground">{t("extra.answersCount")}</p>
                   </div>
                   <div className="bg-muted/50 rounded-xl p-3 text-center">
                     <div className="flex items-center justify-center gap-1.5 text-primary mb-1">
                       <Users className="w-4 h-4" />
                       <span className="font-bold text-lg">{post.playsCount}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">ნათამაშები</p>
+                    <p className="text-xs text-muted-foreground">{t("extra.playsLabel")}</p>
                   </div>
                 </div>
 
                 {/* Question Icons Preview */}
                 {questionIcons.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="font-semibold text-foreground mb-3">თემატიკა</h3>
+                    <h3 className="font-semibold text-foreground mb-3">{t("extra.topicsLabel")}</h3>
                     <div className="flex items-center gap-3">
                       {questionIcons.map((slug) => (
                         <div 
@@ -250,7 +252,7 @@ export function TriviaPreviewModal({
                     className="flex-1"
                   >
                     <Play className="w-5 h-5 mr-2" />
-                    ითამაშე
+                    {t("common.play")}
                   </ChunkyButton>
                 </div>
               </div>

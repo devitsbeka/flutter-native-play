@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import type { Friend } from "@/hooks/useFriends";
 import type { MyRoom } from "@/hooks/useMyRooms";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Friend Mini Card
 interface FriendMiniCardProps {
@@ -98,6 +99,7 @@ interface TriviaMiniCardProps {
 }
 
 export function TriviaMiniCard({ trivia, onClick }: TriviaMiniCardProps) {
+  const { t } = useLanguage();
   return (
     <motion.button
       onClick={onClick}
@@ -125,7 +127,7 @@ export function TriviaMiniCard({ trivia, onClick }: TriviaMiniCardProps) {
           {trivia.title}
         </span>
         <span className="text-[10px] text-muted-foreground">
-          {trivia.question_count} კითხვა
+          {t("extra.questionsLabel", { count: trivia.question_count })}
         </span>
       </div>
     </motion.button>
@@ -145,6 +147,7 @@ interface CollectionMiniCardProps {
 }
 
 export function CollectionMiniCard({ collection, onClick }: CollectionMiniCardProps) {
+  const { t } = useLanguage();
   const roundCount = collection.rounds?.[0]?.count || 0;
   
   return (
@@ -174,7 +177,7 @@ export function CollectionMiniCard({ collection, onClick }: CollectionMiniCardPr
           {collection.title}
         </span>
         <span className="text-[10px] text-muted-foreground">
-          {roundCount} რაუნდი
+          {t("extra.roundsBadge", { count: roundCount })}
         </span>
       </div>
     </motion.button>

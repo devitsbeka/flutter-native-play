@@ -299,7 +299,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
       ? collectionPosts.reduce((sum, p) => sum + p.questions.length, 0)
       : questions.length;
     const displayScore = isCollection ? cumulativeScore : score;
-    const text = `მივიღე ${displayScore}/${totalQuestions} "${post?.title}" Trivia-ში! 🎮`;
+    const text = t("extra.quizShareScore", { score: displayScore, total: totalQuestions, title: post?.title ?? "" });
     const outcome = await shareOrCopy({ text });
     if (outcome === "copied") toast.success(t("extra.linkCopiedToast"));
     if (outcome === "failed") toast.error(t("team.shareFailed"));
@@ -384,7 +384,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                   @{currentRoundPost?.username || post.username}
                   {isCollection && (
                     <span className="ml-2 bg-white/20 px-2 py-0.5 rounded-full text-[10px]">
-                      რაუნდი {currentRoundIndex + 1}/{totalRounds}
+                      {t("extra.tvRoundNofM", { n: currentRoundIndex + 1, m: totalRounds })}
                     </span>
                   )}
                 </p>

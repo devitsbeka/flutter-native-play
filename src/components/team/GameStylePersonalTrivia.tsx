@@ -634,7 +634,7 @@ export function GameStylePersonalTrivia({
 
       const { data, error } = await supabase.functions.invoke('generate-single-question', {
         body: { 
-          subject: title || 'ოჯახი და მეგობრები',
+          subject: title || t("extra.familyFriendsSubject"),
           answerFormat: '4_answers',
           difficulty: 'medium',
           existingQuestions,

@@ -230,8 +230,8 @@ export function CreateTriviaTypeModal({
                 
                 {/* Text */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-white text-[17.6px]">სათამაშო ოთახი</h3>
-                  <p className="text-white/60 text-[13.8px]">ითამაშე მეგობრებთან ერთად</p>
+                  <h3 className="font-bold text-white text-[17.6px]">{t("extra.gameRoomLabel")}</h3>
+                  <p className="text-white/60 text-[13.8px]">{t("extra.playWithFriends")}</p>
                 </div>
               </motion.button>
             )}

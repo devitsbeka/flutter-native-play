@@ -920,7 +920,7 @@ export function useMissions() {
         return {
           completed: isCompleted,
           xpEarned: isCompleted ? mission.reward_xp : 0,
-          missionTitle: mission.mission_title,
+          missionTitle: missionTitle(mission.mission_id, mission.mission_title),
           rewardCoins: mission.reward_coins,
           rewardGems: mission.reward_gems,
           rewardXp: mission.reward_xp,

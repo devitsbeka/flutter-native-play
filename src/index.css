@@ -525,7 +525,7 @@
     }
 
     body::after {
-      content: "გთხოვთ, მოატრიალოთ მოწყობილობა პორტრეტის რეჟიმში";
+      content: var(--rotate-to-portrait-message, "გთხოვთ, მოატრიალოთ მოწყობილობა პორტრეტის რეჟიმში");
       position: fixed;
       top: 50%;
       left: 50%;

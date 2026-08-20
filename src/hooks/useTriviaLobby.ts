@@ -11,6 +11,7 @@ import mascotAvatar5 from "@/assets/avatars/mascot-avatar-5.png";
 import mascotAvatar6 from "@/assets/avatars/mascot-avatar-6.png";
 import mascotAvatar7 from "@/assets/avatars/mascot-avatar-7.png";
 import mascotAvatar8 from "@/assets/avatars/mascot-avatar-8.png";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const FAKE_AVATARS = [
   mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4,
@@ -101,6 +102,7 @@ const CACHE_OPTIONS = {
 };
 
 export function useTriviaLobby(triviaId: string | undefined) {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -182,7 +184,7 @@ export function useTriviaLobby(triviaId: string | undefined) {
 
       const entries: TriviaLeaderboardEntry[] = plays.map((entry, index) => ({
         user_id: entry.user_id,
-        nickname: profileMap.get(entry.user_id)?.nickname || "მოთამაშე",
+        nickname: profileMap.get(entry.user_id)?.nickname || t("extra.defaultPlayerName"),
         avatar_url: profileMap.get(entry.user_id)?.avatar_url || null,
         score: entry.score || 0,
         played_at: entry.played_at,

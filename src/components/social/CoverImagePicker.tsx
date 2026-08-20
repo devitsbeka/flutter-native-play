@@ -88,8 +88,8 @@ export function CoverImagePicker({
     // Validate file type
     if (!file.type.startsWith("image/")) {
       toast({
-        title: "არასწორი ფაილი",
-        description: "გთხოვთ აირჩიოთ სურათი",
+        title: t("extra.invalidFileTitle"),
+        description: t("extra.selectImageDesc"),
         variant: "destructive",
       });
       return;
@@ -98,8 +98,8 @@ export function CoverImagePicker({
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: "ფაილი ძალიან დიდია",
-        description: "მაქსიმალური ზომა 5MB",
+        title: t("extra.fileTooLargeTitle"),
+        description: t("extra.maxSizeMBDesc"),
         variant: "destructive",
       });
       return;
@@ -149,13 +149,13 @@ export function CoverImagePicker({
 
       onImageChange(publicUrl);
       toast({
-        title: "სურათი აიტვირთა! ✓",
+        title: t("extra.imageUploadedToast"),
       });
     } catch (error) {
       console.error("Error uploading:", error);
       toast({
-        title: "შეცდომა",
-        description: "სურათის ატვირთვა ვერ მოხერხდა",
+        title: t("extra.errorTitle"),
+        description: t("extra.uploadErrorDesc"),
         variant: "destructive",
       });
     } finally {
@@ -171,8 +171,8 @@ export function CoverImagePicker({
 
     if (remainingGenerations <= 0) {
       toast({
-        title: "ლიმიტი ამოიწურა",
-        description: "თქვენ უკვე დაგენერირეთ 3 სურათი",
+        title: t("extra.limitReachedTitle"),
+        description: t("extra.alreadyGenerated3"),
         variant: "destructive",
       });
       return;
@@ -201,14 +201,14 @@ export function CoverImagePicker({
       const errorMessage = error instanceof Error ? error.message : "";
       if (errorMessage.includes("limit")) {
         toast({
-          title: "ლიმიტი ამოიწურა",
-          description: "თქვენ უკვე დაგენერირეთ 3 სურათი",
+          title: t("extra.limitReachedTitle"),
+          description: t("extra.alreadyGenerated3"),
           variant: "destructive",
         });
       } else {
         toast({
-          title: "შეცდომა",
-          description: "სურათის გენერაცია ვერ მოხერხდა",
+          title: t("extra.errorTitle"),
+          description: t("extra.genErrorDesc"),
           variant: "destructive",
         });
       }

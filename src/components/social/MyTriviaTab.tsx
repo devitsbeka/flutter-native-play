@@ -385,7 +385,7 @@ function CollectionCard({
                 disabled={!quizzes || quizzes.length === 0}
               >
                 <Play className="w-5 h-5 fill-current" />
-                ითამაშე
+                {t("common.play")}
               </ChunkyButton>
             </div>
           </motion.div>
@@ -471,7 +471,7 @@ function CollectionCard({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-foreground truncate text-sm">
-                  {profile?.nickname || 'შენ'}
+                  {profile?.nickname || t("extra.youLabel")}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {formatLocalTimeAgo(new Date(collection.created_at), t)}
@@ -583,7 +583,7 @@ function CollectionCard({
                 disabled={!quizzes || quizzes.length === 0}
               >
                 <Play className="w-5 h-5 fill-current" />
-                ითამაშე
+                {t("common.play")}
               </ChunkyButton>
             </div>
           </motion.div>
@@ -616,13 +616,13 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           .single();
 
         if (error || !data?.questions) {
-          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          toast.error(t("extra.triviaQuestionsNotFound"));
           return;
         }
 
         const customQuestions = (data.questions as any[]) || [];
         if (!customQuestions.length) {
-          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          toast.error(t("extra.triviaQuestionsNotFound"));
           return;
         }
 
@@ -647,7 +647,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         }
       } catch (e) {
         console.error("Play on TV error:", e);
-        toast.error("ვერ მოხერხდა TV-ზე დაწყება");
+        toast.error(t("extra.tvModeStartError"));
       } finally {
         setIsStartingTV(false);
       }
@@ -715,7 +715,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
-              {profile?.nickname || 'შენ'}
+              {profile?.nickname || t("extra.youLabel")}
             </p>
             <p className="text-xs text-muted-foreground">
               {formatLocalTimeAgo(new Date(post.created_at), t)}
@@ -860,7 +860,7 @@ function StandaloneQuizCard({
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
-              {profile?.nickname || 'შენ'}
+              {profile?.nickname || t("extra.youLabel")}
             </p>
             <p className="text-xs text-muted-foreground">
               {formatLocalTimeAgo(new Date(post.created_at), t)}
@@ -1011,15 +1011,15 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
       queryClient.invalidateQueries({ queryKey: ['quiz-posts-with-profiles'] });
       
       if (variables.newPublicState) {
-        toast.success('კონტენტი გამოქვეყნდა!');
+        toast.success(t("extra.visibilityPublicToast"));
       } else {
-        toast.success('კონტენტი პირადი გახდა');
+        toast.success(t("extra.visibilityPrivateToast"));
       }
       setPostingItemId(null);
     },
     onError: (error) => {
       console.error('Error toggling visibility:', error);
-      toast.error('ხილვადობის შეცვლა ვერ მოხერხდა');
+      toast.error(t("extra.visibilityChangeFailed"));
       setPostingItemId(null);
     }
   });
@@ -1055,13 +1055,13 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
           .single();
 
         if (error || !data?.questions) {
-          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          toast.error(t("extra.triviaQuestionsNotFound"));
           return;
         }
 
         const customQuestions = (data.questions as any[]) || [];
         if (!customQuestions.length) {
-          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          toast.error(t("extra.triviaQuestionsNotFound"));
           return;
         }
 
@@ -1083,7 +1083,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         }
       } catch (e) {
         console.error("Create room error:", e);
-        toast.error("ოთახის შექმნა ვერ მოხერხდა");
+        toast.error(t("extra.roomCreateFailed"));
       } finally {
         setIsStartingRoom(false);
         setPlayModeTrivia(null);
@@ -1105,13 +1105,13 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
           .single();
 
         if (error || !data?.questions) {
-          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          toast.error(t("extra.triviaQuestionsNotFound"));
           return;
         }
 
         const customQuestions = (data.questions as any[]) || [];
         if (!customQuestions.length) {
-          toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+          toast.error(t("extra.triviaQuestionsNotFound"));
           return;
         }
 

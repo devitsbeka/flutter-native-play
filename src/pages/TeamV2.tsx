@@ -590,7 +590,7 @@ function TeamContentV2() {
           const post: SamplePost = {
             id: trivia.id,
             username: (trivia.profiles as any)?.nickname || "user",
-            displayName: (trivia.profiles as any)?.nickname || "მომხმარებელი",
+            displayName: (trivia.profiles as any)?.nickname || t("extra.guestUser"),
             avatarUrl: (trivia.profiles as any)?.avatar_url || "",
             verified: false,
             createdAt: trivia.created_at || new Date().toISOString(),
@@ -649,7 +649,7 @@ function TeamContentV2() {
           const posts: SamplePost[] = rounds.map(r => ({
             id: r.id,
             username: (collection.profiles as any)?.nickname || "user",
-            displayName: (collection.profiles as any)?.nickname || "მომხმარებელი",
+            displayName: (collection.profiles as any)?.nickname || t("extra.guestUser"),
             avatarUrl: (collection.profiles as any)?.avatar_url || "",
             verified: false,
             createdAt: r.created_at || new Date().toISOString(),

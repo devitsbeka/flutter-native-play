@@ -151,7 +151,7 @@ export function ExplorePortfolioFeed({
   // nickname search still finds people even when no posts match.
   const playersSection = matchedPlayers.length > 0 && (
     <div className="mb-4">
-      <h3 className="text-sm font-semibold text-muted-foreground mb-2 px-1">მოთამაშეები</h3>
+      <h3 className="text-sm font-semibold text-muted-foreground mb-2 px-1">{t("extra.playersHeader")}</h3>
       <div className="flex gap-3 overflow-x-auto pb-2 px-1">
         {matchedPlayers.map((player) => (
           <button
@@ -197,10 +197,10 @@ export function ExplorePortfolioFeed({
           )}
           <div className="text-center">
             <h3 className="font-semibold text-foreground mb-1">
-              {searchQuery ? t("extra.searchTriviaNotFound") : "პოსტები ვერ მოიძებნა"}
+              {searchQuery ? t("extra.searchTriviaNotFound") : t("extra.noPostsFound")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {searchQuery ? t("extra.searchTryDifferent") : "ჯერ არავის არ აქვს გამოქვეყნებული ტრივია"}
+              {searchQuery ? t("extra.searchTryDifferent") : t("extra.noPublishedTriviaYet")}
             </p>
           </div>
         </div>

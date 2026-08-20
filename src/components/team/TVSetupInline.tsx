@@ -123,7 +123,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
             console.error('[TVSetupInline] Claim refused:', claim?.reason, claimError);
             toast.error(
               claim?.reason === 'not_authenticated'
-                ? 'ტელევიზორის დასაკავშირებლად გაიარე ავტორიზაცია'
+                ? t('extra.tecAuthRequired')
                 : t('extra.tvCodeNotFound')
             );
             setIsConnecting(false);

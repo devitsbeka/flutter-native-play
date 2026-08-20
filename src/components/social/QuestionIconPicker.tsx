@@ -465,7 +465,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                                   ? "border-primary bg-primary/10"
                                   : "border-border bg-muted/30 hover:border-primary/50 hover:scale-105"
                             }`}
-                            title={isSafe ? icon.title : `${icon.title} - მინიშნება პასუხზე!`}
+                            title={isSafe ? icon.title : `${icon.title} - ${t("extra.iconHintsAnswer")}`}
                           >
                             <img
                               src={getIconUrl(icon)}

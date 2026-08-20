@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { t } from "@/lib/i18n";
 import { generateAndRecordPortrait } from "@/utils/portraitAvatar";
 import { SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export type GenerationType = "avatar" | "cover";
 
@@ -38,6 +39,7 @@ interface BackgroundGenerationContextType {
 const BackgroundGenerationContext = createContext<BackgroundGenerationContextType | undefined>(undefined);
 
 export function BackgroundGenerationProvider({ children }: { children: ReactNode }) {
+  const { t } = useLanguage();
   const [activeJobs, setActiveJobs] = useState<GenerationJob[]>([]);
   const { user, updateProfile } = useAuth();
   const { showNotification } = useNotificationModalContext();
@@ -88,7 +90,7 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
       .eq("user_id", user.id);
     
     if ((count || 0) >= 5) {
-      toast.error("მაქსიმუმ 5 ავატარის გენერაცია შეგიძლიათ");
+      toast.error(t("avatar.maxGenReached", { max: 5 }));
       throw new Error("Avatar generation limit reached");
     }
 
@@ -264,8 +266,8 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
     setActiveJobs(prev => [...prev, job]);
 
     // Show toast with estimated time
-    toast.info("სურათი გენერირდება...", {
-      description: "⏱ დაახლოებით 20-30 წამი. შეგიძლიათ გააგრძელოთ მუშაობა.",
+    toast.info(t("extra.imageGeneratingToast"), {
+      description: t("extra.imageGeneratingDesc"),
       duration: 5000,
     });
 
@@ -287,7 +289,7 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
 
           // Always auto-apply cover without blocking popup
           onComplete?.(data.imageUrl);
-          toast.success("გარეკანი შეიქმნა!");
+          toast.success(t("extra.coverCreatedToast"));
           
           // Invalidate cache so My Trivia shows latest cover image if user saved
           queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
@@ -299,7 +301,7 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
       } catch (error) {
         console.error("Background cover generation failed:", error);
         updateJob(jobId, { status: "failed" });
-        toast.error("სურათის გენერაცია ვერ მოხერხდა");
+        toast.error(t("extra.genErrorDesc"));
         scheduleJobCleanup(jobId, 60000);
       }
     })();

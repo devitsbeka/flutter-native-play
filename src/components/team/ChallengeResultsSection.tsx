@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Crown } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ChallengeAttempt {
   id: string;
@@ -17,6 +18,7 @@ interface ChallengeResultsSectionProps {
 }
 
 export function ChallengeResultsSection({ roomId }: ChallengeResultsSectionProps) {
+  const { t } = useLanguage();
   const [attempts, setAttempts] = useState<ChallengeAttempt[]>([]);
 
   useEffect(() => {
@@ -63,7 +65,7 @@ export function ChallengeResultsSection({ roomId }: ChallengeResultsSectionProps
     <div className="w-full mt-4">
       <div className="flex items-center gap-2 mb-3">
         <Trophy className="w-4 h-4 text-amber-400" />
-        <h3 className="text-white font-bold text-sm">ჩელენჯის შედეგები</h3>
+        <h3 className="text-white font-bold text-sm">{t("extra.challengeResults")}</h3>
       </div>
       <div className="space-y-2">
         {attempts.map((attempt) => {

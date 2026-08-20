@@ -134,7 +134,7 @@ function DraggableAnswerItem({
   letter: string;
   hasError: boolean;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const dragControls = useDragControls();
 
   if (isEditing) {
@@ -289,7 +289,7 @@ export function GameStyleQuestionEditor({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isUploading, setIsUploading] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
@@ -330,7 +330,7 @@ export function GameStyleQuestionEditor({
 
   const QUESTION_MAX = 65;
   const ANSWER_MAX = 25;
-  const letters = ["ა", "ბ", "გ", "დ"];
+  const letters = language === "ka" ? ["ა", "ბ", "გ", "დ"] : ["A", "B", "C", "D"];
 
   // Show cover footer section only if cover props are provided
   const showCoverFooter = coverImageUrl !== undefined || selectedGradient !== undefined;
@@ -385,7 +385,7 @@ export function GameStyleQuestionEditor({
     }, 100);
 
     toast({
-      title: "➕ ახალი კითხვა დაემატა",
+      title: t("extra.ptQuestionAdded"),
       duration: 2000,
     });
   };
@@ -408,7 +408,7 @@ export function GameStyleQuestionEditor({
     }, 100);
 
     toast({
-      title: "📋 კითხვა დუბლირდა",
+      title: t("extra.ptQuestionDuplicated"),
       duration: 2000,
     });
   };
@@ -416,8 +416,8 @@ export function GameStyleQuestionEditor({
   const handleDelete = () => {
     if (questions.length <= 1) {
       toast({
-        title: "არ შეიძლება",
-        description: "მინიმუმ 1 კითხვა უნდა იყოს",
+        title: t("extra.ptCannotDelete"),
+        description: t("extra.ptMinOneQuestion"),
         variant: "destructive",
       });
       return;
@@ -433,7 +433,7 @@ export function GameStyleQuestionEditor({
 
     setShowDeleteConfirm(false);
     toast({
-      title: "🗑️ კითხვა წაიშალა",
+      title: t("extra.ptQuestionDeleted"),
       duration: 2000,
     });
   };
@@ -504,8 +504,8 @@ export function GameStyleQuestionEditor({
 
     if (!file.type.startsWith('image/')) {
       toast({
-        title: "შეცდომა",
-        description: "მხოლოდ სურათის ატვირთვაა შესაძლებელი",
+        title: t("extra.errorTitle"),
+        description: t("extra.ptImageOnlyError"),
         variant: "destructive",
       });
       return;
@@ -513,8 +513,8 @@ export function GameStyleQuestionEditor({
 
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: "შეცდომა",
-        description: "სურათი ძალიან დიდია (მაქს. 5MB)",
+        title: t("extra.errorTitle"),
+        description: t("extra.ptImageTooBig"),
         variant: "destructive",
       });
       return;
@@ -531,14 +531,14 @@ export function GameStyleQuestionEditor({
       onQuestionsChange(newQuestions);
       
       toast({
-        title: "📷 სურათი დაემატა",
+        title: t("extra.ptImageAddedLocal"),
         duration: 2000,
       });
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: "შეცდომა",
-        description: "სურათის ატვირთვა ვერ მოხერხდა",
+        title: t("extra.errorTitle"),
+        description: t("extra.ptUploadFailed"),
         variant: "destructive",
       });
     } finally {
@@ -569,7 +569,7 @@ export function GameStyleQuestionEditor({
 
       const { data, error } = await supabase.functions.invoke('generate-single-question', {
         body: { 
-          subject: subject || title || 'საინტერესო ფაქტები',
+          subject: subject || title || t("extra.defaultAiSubject"),
           answerFormat,
           difficulty: 'medium',
           existingQuestions,
@@ -599,7 +599,7 @@ export function GameStyleQuestionEditor({
         onQuestionsChange(newQuestions);
         
         toast({
-          title: "✨ კითხვა შეივსო!",
+          title: t("extra.ptAIFilled"),
           duration: 2000,
         });
       } else {
@@ -608,8 +608,8 @@ export function GameStyleQuestionEditor({
     } catch (error) {
       console.error('AI generation error:', error);
       toast({
-        title: "შეცდომა",
-        description: "AI გენერაცია ვერ მოხერხდა. სცადეთ თავიდან.",
+        title: t("extra.errorTitle"),
+        description: t("extra.ptAIFailed"),
         variant: "destructive",
       });
     } finally {
@@ -625,8 +625,8 @@ export function GameStyleQuestionEditor({
         emblaApi?.scrollTo(idx);
         setErrorField({ questionIndex: idx, field: "question" });
         toast({
-          title: "⚠️ შეცდომა",
-          description: `კითხვა ${idx + 1}: კითხვა არ არის შევსებული`,
+          title: t("extra.ptValidationError"),
+          description: `${t("extra.questionWordLabel")} ${idx + 1}: ${t("extra.ptQuestionEmpty")}`,
           variant: "destructive",
         });
         return false;
@@ -638,8 +638,8 @@ export function GameStyleQuestionEditor({
           emblaApi?.scrollTo(idx);
           setErrorField({ questionIndex: idx, field: "answer", answerId: answer.id });
           toast({
-            title: "⚠️ შეცდომა",
-            description: `კითხვა ${idx + 1}: პასუხი არ არის შევსებული`,
+            title: t("extra.ptValidationError"),
+            description: `${t("extra.questionWordLabel")} ${idx + 1}: ${t("extra.ptAnswerEmpty")}`,
             variant: "destructive",
           });
           return false;
@@ -846,11 +846,11 @@ export function GameStyleQuestionEditor({
                     onClick={() => handleGenerateAI(index)}
                     disabled={isGeneratingAI}
                     className="mb-2 inline-flex items-center justify-center rounded-full active:scale-95 disabled:opacity-60"
-                    aria-label="იდეა"
+                    aria-label={t("extra.ideaBtn")}
                   >
                     <Lightbulb className="w-10 h-10 text-white/40" />
                   </button>
-                  <p className="text-white/60 text-sm mb-3">დააჭირე AI იდეას</p>
+                  <p className="text-white/60 text-sm mb-3">{t("extra.tapAiIdea")}</p>
                   <button
                     onClick={() => handleGenerateAI(index)}
                     disabled={isGeneratingAI}
@@ -864,13 +864,13 @@ export function GameStyleQuestionEditor({
                     ) : (
                       <Sparkles className="w-4 h-4" />
                     )}
-                    იდეა
+                    {t("extra.ideaBtn")}
                   </button>
                   <button
                     onClick={() => startEditing("question", "")}
                     className="mt-2 text-xs text-white/50 hover:text-white/70 transition-colors"
                   >
-                    ან დაწერე ხელით
+                    {t("extra.orWriteManually")}
                   </button>
                 </div>
               ) : (
@@ -917,7 +917,7 @@ export function GameStyleQuestionEditor({
                         onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && saveEdit()}
                         className="min-h-[60px] text-center text-base font-bold bg-white/20 border-white/30 text-white placeholder:text-white/50 resize-none"
                         maxLength={QUESTION_MAX}
-                        placeholder="შეიყვანე კითხვა..."
+                        placeholder={t("extra.enterQuestion")}
                       />
                       <div className="text-xs text-white/60 text-center">
                         {editValue.length}/{QUESTION_MAX}
@@ -988,7 +988,7 @@ export function GameStyleQuestionEditor({
                           {answer.text}
                         </span>
                         {answer.isCorrect && (
-                          <span className="text-white/80 text-xs font-medium">სწორი პასუხი</span>
+                          <span className="text-white/80 text-xs font-medium">{t("extra.editorCorrectAnswerTitle")}</span>
                         )}
                       </button>
                     );
@@ -1080,7 +1080,7 @@ export function GameStyleQuestionEditor({
                   onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
                   autoFocus
                   className="bg-white/20 border-white/30 text-white placeholder:text-white/70 text-sm font-bold h-8 rounded-lg"
-                  placeholder="Trivia-ს სახელი"
+                  placeholder={t("extra.triviaNamePlaceholder")}
                 />
               ) : (
                 <button 
@@ -1088,7 +1088,7 @@ export function GameStyleQuestionEditor({
                   className="flex items-center gap-2 group"
                 >
                   <span className="text-sm font-bold text-white truncate">
-                    {title || "Trivia-ს სახელი"}
+                    {title || t("extra.triviaNamePlaceholder")}
                   </span>
                   <Edit3 className="w-3 h-3 text-white/70 group-hover:text-white transition-colors flex-shrink-0" />
                 </button>
@@ -1154,22 +1154,22 @@ export function GameStyleQuestionEditor({
               onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl"
             >
-              <h3 className="text-lg font-bold text-center mb-2">წავშალო კითხვა?</h3>
+              <h3 className="text-lg font-bold text-center mb-2">{t("extra.ptDeleteQuestionTitle")}</h3>
               <p className="text-muted-foreground text-center text-sm mb-6">
-                კითხვა უკან ვერ დაბრუნდება
+                {t("extra.ptDeleteIrreversible")}
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
                   className="flex-1 py-3 rounded-xl bg-muted font-medium"
                 >
-                  გაუქმება
+                  {t("common.cancel")}
                 </button>
                 <button
                   onClick={handleDelete}
                   className="flex-1 py-3 rounded-xl bg-red-500 text-white font-medium"
                 >
-                  წაშლა
+                  {t("extra.deleteAction")}
                 </button>
               </div>
             </motion.div>
@@ -1194,16 +1194,16 @@ export function GameStyleQuestionEditor({
               onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl"
             >
-              <h3 className="text-lg font-bold text-center mb-2">გსურთ გასვლა?</h3>
+              <h3 className="text-lg font-bold text-center mb-2">{t("extra.ptExitTitle")}</h3>
               <p className="text-muted-foreground text-center text-sm mb-6">
-                თქვენი პროგრესი დაიკარგება და ვერ აღდგება
+                {t("extra.ptProgressLost")}
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowBackConfirm(false)}
                   className="flex-1 py-3 rounded-xl bg-muted font-medium"
                 >
-                  დარჩენა
+                  {t("extra.ptStay")}
                 </button>
                 <button
                   onClick={() => {
@@ -1212,7 +1212,7 @@ export function GameStyleQuestionEditor({
                   }}
                   className="flex-1 py-3 rounded-xl bg-red-500 text-white font-medium"
                 >
-                  გასვლა
+                  {t("extra.ptExit")}
                 </button>
               </div>
             </motion.div>

@@ -21,6 +21,12 @@ export function ClaimRewardsModal({
   categoryNames = {}
 }: ClaimRewardsModalProps) {
   const { t } = useLanguage();
+  // EXCLUSIVE_FRAMES carries the Georgian base names; show the viewer's own.
+  const frameName = (f: { id: string; name: string }) =>
+    f.id === "champion_gold" ? t("leaderboard.championGold")
+    : f.id === "champion_silver" ? t("leaderboard.championSilver")
+    : f.id === "champion_bronze" ? t("leaderboard.championBronze")
+    : f.name;
   const { unclaimedRewards, claimReward, loading } = useLeaderboardRewards();
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [claimedIds, setClaimedIds] = useState<Set<string>>(new Set());
@@ -202,7 +208,7 @@ export function ClaimRewardsModal({
                           {/* Frame reward */}
                           {frame && (
                             <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${frame.gradient} text-white mb-3`}>
-                              + {frame.name}
+                              + {frameName(frame)}
                             </div>
                           )}
 

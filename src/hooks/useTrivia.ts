@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { getQuestions, FormattedQuestion } from "@/services/questionService";
 import { clearGlobalAskedQuestions } from "@/services/questionTracker";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const STORAGE_KEY = 'preferredLanguage';
 const DEFAULT_LANGUAGE = 'en';
@@ -32,6 +33,7 @@ export interface ExhaustionInfo {
 }
 
 export function useTrivia() {
+  const { t } = useLanguage();
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -123,14 +125,14 @@ export function useTrivia() {
       
       return formattedQuestions;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "შეცდომა მოხდა";
+      const message = err instanceof Error ? err.message : t("extra.errorOccurred");
       setError(message);
       console.error("Trivia fetch error:", err);
       return [];
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const resetAskedQuestions = useCallback(() => {
     clearGlobalAskedQuestions();

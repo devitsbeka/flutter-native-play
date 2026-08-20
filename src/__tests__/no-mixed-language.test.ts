@@ -58,6 +58,30 @@ const SWEPT = [
   "src/hooks/useLeaderboardRewards.ts",
   "src/hooks/useAvatarFrames.ts",
   "src/utils/countryName.ts",
+  "src/components/social/CreateCollectionModal.tsx",
+  "src/components/social/GameStyleQuestionEditor.tsx",
+  "src/components/social/CoverImagePicker.tsx",
+  "src/components/social/MyTriviaTab.tsx",
+  "src/components/social/QuizPlayModal.tsx",
+  "src/components/social/TriviaPreviewModal.tsx",
+  "src/components/social/ExplorePortfolioFeed.tsx",
+  "src/components/social/CreateTriviaTypeModal.tsx",
+  "src/components/social/EditQuizModal.tsx",
+  "src/components/social/QuestionIconPicker.tsx",
+  "src/components/team/MyRoomsSection.tsx",
+  "src/components/team/ChallengeResultsSection.tsx",
+  "src/components/team/MultiplayerObserverScreen.tsx",
+  "src/components/team/TVSetupInline.tsx",
+  "src/components/team/GameStylePersonalTrivia.tsx",
+  "src/components/team/QuickPlayModal.tsx",
+  "src/components/search/SearchMiniCards.tsx",
+  "src/components/leaderboard/ClaimRewardsModal.tsx",
+  "src/contexts/BackgroundGenerationContext.tsx",
+  "src/hooks/useDrafts.ts",
+  "src/hooks/useGemPurchase.ts",
+  "src/hooks/useTrivia.ts",
+  "src/hooks/useTriviaLobby.ts",
+  "src/pages/TeamV2.tsx",
   "src/utils/missionText.ts",
   "src/utils/notificationTranslations.ts",
 ];
@@ -66,7 +90,18 @@ const SWEPT = [
  * Georgian that is matched against stored data rather than shown to anyone.
  * Translating one of these would break the query it belongs to.
  */
-const DATA_SENTINELS = ['"[წაშლილი]"'];
+const DATA_SENTINELS = [
+  '"[წაშლილი]"',
+  // Stored true/false answer values, compared against — never rendered; the
+  // UI maps them to t("extra.trueLabel") / t("extra.falseLabel").
+  '"მართალია"',
+  '"მცდარი"',
+  // A line branching on the Georgian language IS language-keyed data.
+  '=== "ka" ?',
+  "=== 'ka' ?",
+  // Hashtag/character-class regexes that include the Georgian alphabet range.
+  "a-zA-Zა-ჰ",
+];
 
 const GEORGIAN = /[\u10A0-\u10FF]/;
 

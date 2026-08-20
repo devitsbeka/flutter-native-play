@@ -46,30 +46,30 @@ const COLLECTION_TOPIC_POOL = [
   
   // Trending & Pop Culture
   { label: "Taylor Swift", icon_slug: "music" },
-  { label: "Marvel ფილმები", icon_slug: "superhero" },
+  { labelKey: "extra.topicMarvelMovies", icon_slug: "superhero" },
   { label: "K-Pop", icon_slug: "star" },
-  { label: "TikTok ტრენდები", icon_slug: "phone" },
+  { labelKey: "extra.arcTopicTikTokTrends", icon_slug: "phone" },
   
   // Facts & Knowledge
-  { label: "უცნაური ფაქტები", icon_slug: "lightbulb" },
-  { label: "კოსმოსის საიდუმლოებები", icon_slug: "rocket" },
-  { label: "ცხოველთა სამყარო", icon_slug: "paw" },
-  { label: "ადამიანის სხეული", icon_slug: "heart" },
+  { labelKey: "extra.topicWeirdFacts", icon_slug: "lightbulb" },
+  { labelKey: "extra.topicSpaceSecrets", icon_slug: "rocket" },
+  { labelKey: "extra.topicAnimalWorld", icon_slug: "paw" },
+  { labelKey: "extra.topicHumanBody", icon_slug: "heart" },
   
   // Georgian Topics  
-  { label: "ქართული კინო", icon_slug: "film" },
-  { label: "თბილისის ისტორია", icon_slug: "castle" },
-  { label: "ქართული სამზარეულო", icon_slug: "food" },
-  { label: "საქართველოს ბუნება", icon_slug: "mountain" },
+  { labelKey: "extra.topicGeorgianCinema", icon_slug: "film" },
+  { labelKey: "extra.topicTbilisiHistory", icon_slug: "castle" },
+  { labelKey: "extra.topicGeorgianCuisine", icon_slug: "food" },
+  { labelKey: "extra.topicGeorgianNature", icon_slug: "mountain" },
   
   // Sports Specific
   { label: "Champions League", icon_slug: "trophy" },
-  { label: "NBA ვარსკვლავები", icon_slug: "basketball" },
-  { label: "ფორმულა 1", icon_slug: "car" },
-  { label: "ოლიმპიური თამაშები", icon_slug: "medal" },
+  { labelKey: "extra.topicNbaStars", icon_slug: "basketball" },
+  { labelKey: "extra.topicFormula1", icon_slug: "car" },
+  { labelKey: "extra.topicOlympicGames", icon_slug: "medal" },
   
   // Science & Tech
-  { label: "AI და რობოტები", icon_slug: "robot" },
+  { labelKey: "extra.topicAiRobots", icon_slug: "robot" },
   { label: "iPhone vs Android", icon_slug: "phone" },
   { label: "Video Games", icon_slug: "gamepad" },
   { label: "Social Media", icon_slug: "share" },
@@ -160,7 +160,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   useEffect(() => {
     if (open) {
       const shuffled = shuffleArray(COLLECTION_TOPIC_POOL);
-      setTopicSuggestions(shuffled.map(t => t.label));
+      setTopicSuggestions(shuffled.map((item) => ("labelKey" in item ? t(item.labelKey) : item.label)));
       setSuggestionIndex(0);
       
       const interval = setInterval(() => {
@@ -169,7 +169,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       
       return () => clearInterval(interval);
     }
-  }, [open]);
+  }, [open, t]);
 
   const loadDraft = async (id: string) => {
     if (!user) return;
@@ -182,7 +182,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       .single();
     
     if (error || !data) {
-      toast.error("დრაფტის ჩატვირთვა ვერ მოხერხდა");
+      toast.error(t("extra.draftLoadFailed"));
       return;
     }
     
@@ -203,7 +203,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       setStep(4); // Go directly to editor
     }
     
-    toast.success("დრაფტი ჩაიტვირთა");
+    toast.success(t("extra.ptDraftLoaded"));
   };
 
   const resetForm = () => {
@@ -251,7 +251,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         }
         
         queryClient.invalidateQueries({ queryKey: ["collection-drafts"] });
-        toast.success("დრაფტი ავტომატურად შეინახა");
+        toast.success(t("extra.draftAutosaved"));
       } catch (error) {
         console.error("Auto-save failed:", error);
       }
@@ -318,18 +318,18 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         // showed when the AI provider ran out of credits.
         if (error) {
           throw new Error(
-            await edgeFunctionMessage(error, `რაუნდი "${roundName}" ვერ დაგენერირდა`),
+            await edgeFunctionMessage(error, t("extra.roundGenFailed", { name: roundName })),
           );
         }
 
         // Also check for error in the data itself (edge function error response)
         if (data?.error) {
-          throw new Error(`რაუნდი "${roundName}": ${data.error}`);
+          throw new Error(`${t("extra.roundWordLabel")} "${roundName}": ${data.error}`);
         }
 
         const generatedQuestions = data?.questions || [];
         if (!generatedQuestions.length) {
-          throw new Error(`კითხვები ვერ დაგენერირდა: ${roundName}`);
+          throw new Error(`${t("extra.editorGenerationFailed")}: ${roundName}`);
         }
 
         generatedRounds.push({
@@ -350,12 +350,12 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
 
       setRounds(generatedRounds);
       setRoundQuestions(allQuestions);
-      setTitle(validRounds.length > 1 ? `${validRounds[0]} & ${validRounds.length - 1} სხვა` : validRounds[0]);
+      setTitle(validRounds.length > 1 ? t("extra.collectionAutoTitle", { first: validRounds[0], count: validRounds.length - 1 }) : validRounds[0]);
       
       setTimeout(() => setStep(4), 300);
     } catch (error) {
       console.error("Error generating quiz:", error);
-      toast.error(error instanceof Error ? error.message : "კითხვების გენერაცია ვერ მოხერხდა");
+      toast.error(error instanceof Error ? error.message : t("extra.editorGenerationFailed"));
       setStep(2);
     } finally {
       setIsGenerating(false);
@@ -367,14 +367,14 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     if (rounds.length < 5) {
       const newRoundNum = rounds.length + 1;
       setRounds([...rounds, { 
-        subject: `რაუნდი ${newRoundNum}`, 
+        subject: `${t("extra.roundWordLabel")} ${newRoundNum}`, 
         questionCount: 5, 
         answerFormat: "4_answers", 
         difficulty: "mixed" 
       }]);
       setRoundQuestions([...roundQuestions, [createEmptyQuestion("4_answers")]]);
       setCurrentRoundIndex(rounds.length);
-      toast.success(`რაუნდი ${newRoundNum} დაემატა`);
+      toast.success(t("extra.roundAddedDesc", { n: newRoundNum }));
     }
   };
 
@@ -385,7 +385,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       if (currentRoundIndex >= rounds.length - 1) {
         setCurrentRoundIndex(Math.max(0, currentRoundIndex - 1));
       }
-      toast.success("რაუნდი წაიშალა");
+      toast.success(t("extra.roundDeletedToast"));
     }
   };
 
@@ -406,13 +406,13 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       for (let qIdx = 0; qIdx < questions.length; qIdx++) {
         const q = questions[qIdx];
         if (!q.question.trim()) {
-          toast.error(`რაუნდი ${roundIdx + 1}, კითხვა ${qIdx + 1}: კითხვა არ არის შევსებული`);
+          toast.error(`${t("extra.roundWordLabel")} ${roundIdx + 1}, ${t("extra.questionWordLabel")} ${qIdx + 1}: ${t("extra.ptQuestionEmpty")}`);
           setCurrentRoundIndex(roundIdx);
           return false;
         }
         for (const answer of q.answers) {
           if (!answer.text.trim()) {
-            toast.error(`რაუნდი ${roundIdx + 1}, კითხვა ${qIdx + 1}: პასუხი არ არის შევსებული`);
+            toast.error(`${t("extra.roundWordLabel")} ${roundIdx + 1}, ${t("extra.questionWordLabel")} ${qIdx + 1}: ${t("extra.ptAnswerEmpty")}`);
             setCurrentRoundIndex(roundIdx);
             return false;
           }
@@ -439,7 +439,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         .from("quiz_collections")
         .insert({
           user_id: user.id,
-          title: title || `კოლექცია: ${rounds.map(r => r.subject).join(", ")}`,
+          title: title || `${t("extra.collectionWord")}: ${rounds.map(r => r.subject).join(", ")}`,
           description: null,
           cover_gradient: coverGradient,
           cover_image: null,
@@ -493,7 +493,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
           .eq("id", currentDraftId);
       }
 
-      toast.success("კოლექცია წარმატებით გამოქვეყნდა!");
+      toast.success(t("extra.collectionPublishedToast"));
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
       queryClient.invalidateQueries({ queryKey: ["my-collections"] });
       queryClient.invalidateQueries({ queryKey: ["quiz-posts-with-profiles"] });
@@ -502,7 +502,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       handleClose();
     } catch (error: any) {
       console.error("Error publishing collection:", error);
-      toast.error(error.message || "გამოქვეყნება ვერ მოხერხდა");
+      toast.error(error.message || t("extra.editorPublishFailed"));
     } finally {
       setIsPosting(false);
     }
@@ -525,7 +525,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         .from("quiz_collections")
         .insert({
           user_id: user.id,
-          title: title || `კოლექცია: ${rounds.map(r => r.subject).join(", ")}`,
+          title: title || `${t("extra.collectionWord")}: ${rounds.map(r => r.subject).join(", ")}`,
           description: null,
           cover_gradient: coverGradient,
           cover_image: null,
@@ -585,7 +585,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         origin: { y: 0.5 }
       });
 
-      toast.success("მზადაა! კოლექცია შენახულია თამაშისთვის");
+      toast.success(t("extra.collectionSavedToast"));
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
       queryClient.invalidateQueries({ queryKey: ["my-collections"] });
       queryClient.invalidateQueries({ queryKey: ["my-trivias-for-room"] });
@@ -594,7 +594,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       handleClose();
     } catch (error: any) {
       console.error("Error saving collection:", error);
-      toast.error(error.message || "შენახვა ვერ მოხერხდა");
+      toast.error(error.message || t("extra.editorSaveFailed"));
     } finally {
       setIsPosting(false);
     }
@@ -666,10 +666,10 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
             onClick={(e) => e.stopPropagation()}
             className="bg-[#5B21B6] rounded-2xl p-5 w-full max-w-sm space-y-4"
           >
-            <h3 className="text-lg font-bold text-white text-center">რაუნდის პარამეტრები</h3>
+            <h3 className="text-lg font-bold text-white text-center">{t("extra.roundSettingsTitle")}</h3>
             
             <div>
-              <label className="text-sm text-white/80 mb-2 block">სახელი</label>
+              <label className="text-sm text-white/80 mb-2 block">{t("extra.nameLabel")}</label>
               <Input
                 value={currentRound?.subject || ""}
                 onChange={(e) => {
@@ -677,13 +677,13 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                   updated[currentRoundIndex] = { ...updated[currentRoundIndex], subject: e.target.value };
                   setRounds(updated);
                 }}
-                placeholder="რაუნდის სახელი"
+                placeholder={t("extra.roundTitlePlaceholder")}
                 className="bg-white/95 border-0 text-slate-800"
               />
             </div>
 
             <div>
-              <label className="text-sm text-white/80 mb-2 block">სირთულე</label>
+              <label className="text-sm text-white/80 mb-2 block">{t("extra.difficultyTitle")}</label>
               <div className="flex gap-2">
                 {[
                   { value: "mixed" as const, emoji: "🎲" },
@@ -719,7 +719,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                 className="w-full py-3 rounded-xl bg-red-500/20 text-red-300 font-medium flex items-center justify-center gap-2 hover:bg-red-500/30 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
-                რაუნდის წაშლა
+                {t("extra.deleteRoundBtn")}
               </button>
             )}
 
@@ -727,7 +727,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
               onClick={() => setShowRoundSettings(false)}
               className="w-full py-3 rounded-xl bg-white text-[#6B5B95] font-bold"
             >
-              დახურვა
+              {t("common.close")}
             </button>
           </motion.div>
         </motion.div>
@@ -769,7 +769,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
               
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 rounded-full">
                 <Users className="w-4 h-4 text-white" />
-                <span className="text-xs font-semibold text-white">თამაში</span>
+                <span className="text-xs font-semibold text-white">{t("common.play")}</span>
               </div>
             </div>
           </div>
@@ -792,25 +792,25 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                   >
                     <Check className="w-10 h-10 text-emerald-400" />
                   </motion.div>
-                  <h3 className="text-2xl font-bold text-white mb-2">კოლექცია მზადაა!</h3>
-                  <p className="text-white/70">პასუხები დამალულია - ითამაშე მეგობრებთან</p>
+                  <h3 className="text-2xl font-bold text-white mb-2">{t("extra.collectionReadyTitle")}</h3>
+                  <p className="text-white/70">{t("extra.editorAnswersHiddenPlay")}</p>
                 </div>
 
                 {/* Summary */}
                 <div className="p-4 rounded-xl bg-white/10 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-white/70">რაუნდები</span>
+                    <span className="text-white/70">{t("extra.roundsLabel")}</span>
                     <span className="text-white font-bold">{rounds.length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-white/70">სულ კითხვები</span>
+                    <span className="text-white/70">{t("extra.totalQuestionsLabel")}</span>
                     <span className="text-white font-bold">{totalQuestions}</span>
                   </div>
                   <div className="border-t border-white/20 pt-3 space-y-1.5">
                     {rounds.map((round, i) => (
                       <div key={i} className="flex items-center justify-between text-sm">
                         <span className="text-white/80">{round.subject}</span>
-                        <span className="text-white/60">{roundQuestions[i]?.length || 0} კითხვა</span>
+                        <span className="text-white/60">{t("extra.questionsLabel", { count: roundQuestions[i]?.length || 0 })}</span>
                       </div>
                     ))}
                   </div>
@@ -818,11 +818,11 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
 
                 {/* Title input */}
                 <div className="space-y-2">
-                  <label className="text-sm text-white/80 block text-center">სათაური</label>
+                  <label className="text-sm text-white/80 block text-center">{t("extra.titleLabel")}</label>
                   <Input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="კოლექციის სათაური..."
+                    placeholder={t("extra.collectionTitlePlaceholder")}
                     className="text-center text-lg h-14 rounded-xl bg-white/95 text-slate-800 placeholder:text-slate-400 border-0"
                   />
                 </div>
@@ -837,12 +837,12 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                   {isPosting ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      ინახება...
+                      {t("extra.editorSavingBtn")}
                     </>
                   ) : (
                     <>
                       <Play className="w-5 h-5 mr-2" />
-                      შეინახე
+                      {t("common.save")}
                     </>
                   )}
                 </ChunkyButton>
@@ -859,13 +859,13 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         <GameStyleQuestionEditor
           questions={currentQuestions}
           onQuestionsChange={handleQuestionsChange}
-          title={title || "კოლექცია"}
+          title={title || t("extra.collectionWord")}
           onTitleChange={setTitle}
           onSave={handlePublish}
           onBack={handleClose}
-          saveButtonText={isPosting ? "ინახება..." : "შენახვა"}
+          saveButtonText={isPosting ? t("extra.editorSavingBtn") : t("common.save")}
           showTitleEditor={true}
-          subject={currentRound?.subject || "კოლექცია"}
+          subject={currentRound?.subject || t("extra.collectionWord")}
           answerFormat={currentRound?.answerFormat || "4_answers"}
           headerContent={roundTabsHeader}
           isSaving={isPosting}
@@ -1116,7 +1116,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                     >
                       <Sparkles className="w-12 h-12 text-white" />
                     </motion.div>
-                    <h3 className="text-2xl font-bold text-white mb-2">იქმნება კითხვები...</h3>
+                    <h3 className="text-2xl font-bold text-white mb-2">{t("extra.aiCreatingQuestions")}</h3>
                     <p className="text-white/70">{generationProgress.currentRound}</p>
                   </div>
 
@@ -1164,7 +1164,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                               {name}
                             </p>
                             <p className={`text-sm ${isComplete ? "text-emerald-300" : isCurrent ? "text-white/70" : "text-white/40"}`}>
-                              {isComplete ? "მზადაა ✨" : isCurrent ? "გენერირება..." : "იცდის..."}
+                              {isComplete ? `${t("extra.readyStatus")} ✨` : isCurrent ? `${t("extra.generatingStatus")}...` : `${t("extra.waitingLabel")}...`}
                             </p>
                           </div>
                           {isCurrent && (
@@ -1188,7 +1188,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                       />
                     </div>
                     <p className="text-center text-sm text-white/60">
-                      {generationProgress.current}/{generationProgress.total} რაუნდი
+                      {generationProgress.current}/{generationProgress.total} {t("extra.roundWordLabel")}
                     </p>
                   </div>
                 </motion.div>

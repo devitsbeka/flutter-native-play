@@ -2,8 +2,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function useDrafts() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -33,10 +35,10 @@ export function useDrafts() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collection-drafts"] });
-      toast.success("დრაფტი წაიშალა");
+      toast.success(t("extra.draftDeleted"));
     },
     onError: () => {
-      toast.error("დრაფტის წაშლა ვერ მოხერხდა");
+      toast.error(t("extra.draftDeleteFailed"));
     },
   });
 

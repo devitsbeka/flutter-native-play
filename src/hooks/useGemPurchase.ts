@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { GEM_PACK_PRODUCTS } from "@/config/gemPacks";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface GemProduct {
   id: string;
@@ -15,13 +16,14 @@ interface GemProduct {
 }
 
 export function useGemPurchase() {
+  const { t } = useLanguage();
   const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
   const { purchase: nativePurchase, purchasing: nativePurchasing } = useInAppPurchases();
 
   const initiateCheckout = async (product: GemProduct) => {
     if (!user) {
-      toast.error("გთხოვთ გაიაროთ ავტორიზაცია");
+      toast.error(t("extra.signInForPurchase"));
       return;
     }
 
@@ -39,7 +41,7 @@ export function useGemPurchase() {
         // A pack with no store SKU cannot be sold here, and falling through to
         // the web path would be the exact violation. Fail loudly instead.
         console.error(`No store product configured for pack ${product.id}`);
-        toast.error("ეს პაკეტი ამჟამად მიუწვდომელია");
+        toast.error(t("extra.iapItemUnavailable"));
         return;
       }
 
@@ -81,7 +83,7 @@ export function useGemPurchase() {
 
       if (data.error) {
         if (data.error === "STRIPE_NOT_CONFIGURED") {
-          toast.error("გადახდის სისტემა არ არის კონფიგურირებული. გთხოვთ დაუკავშირდეთ ადმინისტრატორს.");
+          toast.error(t("extra.ppPaymentNotConfigured"));
           return;
         }
         throw new Error(data.error);
@@ -93,7 +95,7 @@ export function useGemPurchase() {
       }
     } catch (error) {
       console.error("Checkout error:", error);
-      toast.error("გადახდის დაწყება ვერ მოხერხდა. გთხოვთ სცადოთ მოგვიანებით.");
+      toast.error(t("extra.ppPaymentStartFailed"));
     } finally {
       setIsProcessing(false);
     }
