@@ -22,6 +22,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
 import confetti from "canvas-confetti";
 import { calculateLevel } from "@/utils/levelCalculation";
+import { answerStateFor, type QuizAnswerRecord } from "@/utils/quizAnswerState";
 import { getQuestions, QuestionResult } from "@/services/questionService";
 import { ExhaustionIndicator } from "@/components/ui/exhaustion-indicator";
 import {
@@ -132,8 +133,29 @@ export default function CategoryQuizPage() {
   
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [isAnswered, setIsAnswered] = useState(false);
+  /**
+   * The answer given, and the question it was given to.
+   *
+   * These used to be two independent pieces of state — an `isAnswered`
+   * boolean and a `selectedAnswer` string — which every path that moves to
+   * another question had to remember to clear. resetQuiz, the Try again and
+   * Replay buttons, forgot: it clears eighteen other things and not these
+   * two, and because a replay keeps the same levelId, the effect that does
+   * reset them never runs. So the first question of a replay opened already
+   * answered, the previous question's choice still green, before the player
+   * had read it.
+   *
+   * Storing the question index alongside the answer makes that unrepresentable
+   * rather than merely fixed. An answer to question 3 is not an answer to
+   * question 4, so moving on un-answers by construction, no reset needed and
+   * none to forget — and a late write from a timer or a network call that
+   * names an older question simply does not apply.
+   */
+  const [answerRecord, setAnswerRecord] = useState<QuizAnswerRecord | null>(null);
+
+  // Derived, never stored: an answer counts only for the question it was
+  // given to. This is what makes a stale record harmless.
+  const { isAnswered, selectedAnswer } = answerStateFor(answerRecord, currentQuestionIndex);
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -201,8 +223,7 @@ export default function CategoryQuizPage() {
       hasSaved.current = false;
       setQuestions([]);
       setCurrentQuestionIndex(0);
-      setSelectedAnswer(null);
-      setIsAnswered(false);
+      setAnswerRecord(null);
       setScore(0);
       setLoading(true);
       setError(null);
@@ -587,8 +608,7 @@ export default function CategoryQuizPage() {
 
   const handleTimeUp = useCallback(() => {
     if (!isAnswered) {
-      setIsAnswered(true);
-      setSelectedAnswer(null);
+      setAnswerRecord({ questionIndex: currentQuestionIndex, choice: null });
 
       trackQuizQuestionAnswered({
         categoryId: categoryId!,
@@ -615,8 +635,7 @@ export default function CategoryQuizPage() {
   const handleAnswerSelect = (answer: string) => {
     if (isAnswered) return;
 
-    setSelectedAnswer(answer);
-    setIsAnswered(true);
+    setAnswerRecord({ questionIndex: currentQuestionIndex, choice: answer });
 
     const currentQuestion = questions[currentQuestionIndex];
     const isCorrect = answer === currentQuestion?.correct_answer;
@@ -638,9 +657,8 @@ export default function CategoryQuizPage() {
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
+      // No answer reset here: moving the index is the reset.
       setCurrentQuestionIndex((prev) => prev + 1);
-      setSelectedAnswer(null);
-      setIsAnswered(false);
       setTimeRemaining(15 + timerBonus);
       // Reset power-up states for new question
       setHiddenAnswers([]);
@@ -730,8 +748,6 @@ export default function CategoryQuizPage() {
         // Skip to a different question - move to next question immediately
         if (currentQuestionIndex < questions.length - 1) {
           setCurrentQuestionIndex((prev) => prev + 1);
-          setSelectedAnswer(null);
-          setIsAnswered(false);
           setTimeRemaining(15 + timerBonus);
           setHiddenAnswers([]);
           setUsedPowerUpsThisQuestion(new Set());
@@ -888,6 +904,8 @@ export default function CategoryQuizPage() {
     hasSaved.current = false;
     setQuestions([]);
     setCurrentQuestionIndex(0);
+    setAnswerRecord(null);
+    setTimeRemaining(15);
     setScore(0);
     setShowResults(false);
     setLoading(true);
