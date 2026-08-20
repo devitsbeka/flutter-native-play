@@ -756,7 +756,7 @@ export const fr: KaTranslations = {
     waitingForHostRound: "En attente de l'hôte...",
     votingResultsTitle: "Résultats du Vote", voteLabel: "vote",
     waitingHostStart: "En attente que l'hôte lance le jeu...",
-    roundLabel2: "Manche", roundsCount: "Nombre de manches :",
+    roundLabel2: "Manche", roundsCount: "Nombre de manches :", roundsBadge: "{count} manches",
     startingEllipsis: "Démarrage...", startRoundsBtn: "Démarrer ({count} manches)",
     letsPlay: "Jouons !", gameStarted: "Lancé !",
     getReadyController: "Préparez-vous !", getReadyForAnswers: "Préparez-vous pour les réponses !",

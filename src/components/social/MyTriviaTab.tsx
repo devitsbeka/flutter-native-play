@@ -331,7 +331,7 @@ function CollectionCard({
                     {PUBLIC_SHARING_ENABLED && collection.is_public && (
                       <Globe className="w-3.5 h-3.5" aria-hidden />
                     )}
-                    <span>{t("extra.roundsCount", { count: roundsCount })}</span>
+                    <span>{t("extra.roundsBadge", { count: roundsCount })}</span>
                   </div>
                 </div>
               </div>
@@ -441,7 +441,7 @@ function CollectionCard({
             {PUBLIC_SHARING_ENABLED && collection.is_public && (
               <Globe className="w-3.5 h-3.5" aria-hidden />
             )}
-            <span>{t("extra.roundsCount", { count: roundsCount })}</span>
+            <span>{t("extra.roundsBadge", { count: roundsCount })}</span>
           </div>
 
           {/* Title */}

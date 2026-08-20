@@ -702,7 +702,7 @@ export const de: KaTranslations = {
     waitingForHostRound: "Warte auf den Host...",
     votingResultsTitle: "Abstimmungsergebnisse", voteLabel: "Stimme",
     waitingHostStart: "Warte, dass der Host das Spiel startet...",
-    roundLabel2: "Runde", roundsCount: "Anzahl Runden:",
+    roundLabel2: "Runde", roundsCount: "Anzahl Runden:", roundsBadge: "{count} Runden",
     startingEllipsis: "Startet...", startRoundsBtn: "Starten ({count} Runden)",
     letsPlay: "Los geht's!", gameStarted: "Gestartet!",
     getReadyController: "Mach dich bereit!", getReadyForAnswers: "Bereit für die Antworten!",

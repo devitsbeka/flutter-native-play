@@ -1970,7 +1970,7 @@ export const en: KaTranslations = {
     questionsSkippedRoundOver: "{count} questions skipped — round over",
     questionsSkipped: "{count} questions skipped",
     collectionLabel: "Collection",
-    roundsCount: "{count} rounds",
+    roundsBadge: "{count} rounds",
     addRoundLabel: "Add round",
     triviaLabel: "Trivia",
     questionsCount: "{count} questions",

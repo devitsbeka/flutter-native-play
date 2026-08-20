@@ -1096,7 +1096,7 @@ export const es: KaTranslations = {
     voteLabel: "voto",
     waitingHostStart: "Esperando que el host inicie el juego...",
     roundLabel2: "Ronda",
-    roundsCount: "Número de rondas:",
+    roundsCount: "Número de rondas:", roundsBadge: "{count} rondas",
     startingEllipsis: "Iniciando...",
     startRoundsBtn: "Iniciar ({count} rondas)",
     letsPlay: "¡Juguemos!",
