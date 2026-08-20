@@ -371,7 +371,16 @@ export function MobileProfileCard({
       // Close to the nav with a clear gap — not touching it, not floating
       // high above it. The +81px this used to carry was compensation for
       // the oversized-shell bug; see the scene note above.
-      style={{ bottom: `calc(${NAV_H} + 14px)` }}
+      //
+      // Anchored off the nav's REAL height — 80px of chrome plus the same
+      // max(0.25rem, inset/2) padding the nav itself takes — not off the full
+      // inset. The old `nav + var(--safe-bottom) + 14px` only cleared the
+      // play button (which pokes 42px above the nav) thanks to the unspent
+      // half of the home-indicator inset; in a mobile browser the inset is 0
+      // and the strip slid down behind the nav and the button. The constant
+      // reproduces the on-device geometry exactly: 80 + 17 + 31 = the same
+      // 128px an iPhone got before.
+      style={{ bottom: "calc(var(--bottom-nav-height) + max(0.25rem, var(--safe-bottom) / 2) + 31px)" }}
     >
       <WeekMissionsStrip
         className="h-[94px]"
