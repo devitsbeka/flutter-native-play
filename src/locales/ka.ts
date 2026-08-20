@@ -2246,11 +2246,11 @@ export const ka = {
     selectFromGallery: "აირჩიე გალერიიდან",
     splashLoading: "იტვირთება...",
     splashTvMode: "TV რეჟიმი მეგობრებთან ერთად სათამაშოდ",
-    splashCategories: "50+ კატეგორია ტრივიას კითხვებით",
+    splashCategories: "45+ კატეგორია ტრივიას კითხვებით",
     splashFriends: "შეჯიბრი მეგობრებთან რეალურ დროში",
     splashLeaderboards: "ყოველკვირეული ლიდერბორდები და ჯილდოები",
     splashMissions: "დღიური მისიები და პრემიუმ ბონუსები",
-    splashPlayers: "მოთამაშეები მთელი საქართველოდან",
+    splashPlayers: "მოთამაშეები მთელი მსოფლიოდან",
     videosCount: "{loaded}/{total} ვიდეო",
     // Friends context
     friendRequestReceived: "{name} გთხოვს მეგობრობას!",

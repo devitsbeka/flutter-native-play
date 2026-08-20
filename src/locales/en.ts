@@ -2245,11 +2245,11 @@ export const en: KaTranslations = {
     selectFromGallery: "Choose from gallery",
     splashLoading: "Loading...",
     splashTvMode: "TV mode - play with friends together",
-    splashCategories: "50+ trivia question categories",
+    splashCategories: "45+ trivia question categories",
     splashFriends: "Compete with friends in real time",
     splashLeaderboards: "Weekly leaderboards and rewards",
     splashMissions: "Daily missions and premium bonuses",
-    splashPlayers: "Players from all over Georgia",
+    splashPlayers: "Players from all over the world",
     videosCount: "{loaded}/{total} videos",
     // Friends context
     friendRequestReceived: "{name} wants to be your friend! 🤝",
