@@ -218,7 +218,7 @@ export const fr: KaTranslations = {
     // Feature cards
     featureExploreTitle: "Explorer", featureExploreDesc: "Jouez à des trivias créés par d'autres joueurs", featureExploreAction: "Explorer",
     featureRoomsTitle: "Salles", featureRoomsDesc: "Créez une salle, choisissez à quoi jouer et invitez des amis", featureRoomsAction: "+ Salle",
-    featureTriviaTitle: "Mon Trivia", featureTriviaDesc: "Créez votre Trivia et jouez avec des amis",
+    featureTriviaTitle: "Mon Trivia", featureTriviaDesc: "Créez votre Trivia et jouez avec des amis", featureTriviaDescPrivate: "Créez votre Trivia ou une My Trivia Party et jouez avec vos amis et votre famille",
     tabExploreTooltip: "Explorer", tabMyTriviaTooltip: "Mon Trivia", createBtnShort: "Créer",
     questionsShort: "{count} questions restantes", watchAnswers: "Voir les réponses", searching: "Recherche...",
     // Notification actions

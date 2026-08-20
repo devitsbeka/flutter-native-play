@@ -2034,7 +2034,7 @@ export const ka = {
     featureRoomsDesc: "შექმენი სათამაშო ოთახი, აირჩიე რას ითამაშებთ, და მოიწვიე მეგობრები სათამაშოდ. თამაში TV-ზეც შესაძლებელია",
     featureRoomsAction: "+ ოთახი",
     featureTriviaTitle: "ჩემი ტრივია",
-    featureTriviaDesc: "შექმენი შენი Trivia, გამოაქვეყნე ან შექმენი My Trivia Party მეგობრებთან ერთად სათამაშოდ, შენი კითხვებით / შენი პასუხებით",
+    featureTriviaDesc: "შექმენი შენი Trivia, გამოაქვეყნე ან შექმენი My Trivia Party მეგობრებთან ერთად სათამაშოდ, შენი კითხვებით / შენი პასუხებით", featureTriviaDescPrivate: "შექმენი შენი Trivia ან My Trivia Party და ითამაშე მეგობრებთან და ოჯახთან ერთად",
     // Tab onboarding
     tabExploreTooltip: "აღმოაჩინე",
     tabMyTriviaTooltip: "ჩემი ტრივია",

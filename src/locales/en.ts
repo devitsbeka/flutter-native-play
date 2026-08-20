@@ -2033,7 +2033,7 @@ export const en: KaTranslations = {
     featureRoomsDesc: "Create a game room, choose what to play, and invite friends. TV mode is also available",
     featureRoomsAction: "+ Room",
     featureTriviaTitle: "My Trivia",
-    featureTriviaDesc: "Create your own Trivia, publish it or create a My Trivia Party to play with friends",
+    featureTriviaDesc: "Create your own Trivia, publish it or create a My Trivia Party to play with friends", featureTriviaDescPrivate: "Create your own Trivia or My Trivia Party and play with your friends and family",
     // Tab onboarding
     tabExploreTooltip: "Explore",
     tabMyTriviaTooltip: "My Trivia",

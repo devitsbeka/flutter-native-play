@@ -33,7 +33,10 @@ const ALL_TOOLTIP_DEFS: FeatureTooltip[] = [
     id: "my-trivia",
     iconSrc: triviaIcon,
     titleKey: "extra.featureTriviaTitle",
-    descKey: "extra.featureTriviaDesc",
+    // The original copy invites the user to publish; while public sharing is
+    // hidden the slide sells private play instead. The old key stays for the
+    // flag flip.
+    descKey: PUBLIC_SHARING_ENABLED ? "extra.featureTriviaDesc" : "extra.featureTriviaDescPrivate",
     targetTab: "my-content",
     actionKey: "extra.featureTriviaAction",
   },
@@ -50,6 +53,27 @@ const ALL_TOOLTIP_DEFS: FeatureTooltip[] = [
 const FEATURE_TOOLTIP_DEFS = ALL_TOOLTIP_DEFS.filter(
   (def) => PUBLIC_SHARING_ENABLED || def.id !== "explore",
 );
+
+// "My Trivia Party" is a brand name, untranslated in every locale, and the
+// design wants it in the pink/purple product gradient wherever slide copy
+// mentions it.
+function renderWithBrandGradient(text: string) {
+  const BRAND = "My Trivia Party";
+  if (!text.includes(BRAND)) return text;
+  return text.split(BRAND).flatMap((part, i) =>
+    i === 0
+      ? [part]
+      : [
+          <span
+            key={`brand-${i}`}
+            className="font-semibold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent"
+          >
+            {BRAND}
+          </span>,
+          part,
+        ],
+  );
+}
 
 interface FeatureOnboardingCarouselProps {
   onNavigateToTab?: (tab: string) => void;
@@ -230,7 +254,7 @@ function FeatureCard({ tooltip, onClick, onAction, index, t }: FeatureCardProps)
             </h3>
             
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {description}
+              {renderWithBrandGradient(description)}
             </p>
 
             {actionLabel && (
