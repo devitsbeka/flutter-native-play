@@ -47,7 +47,6 @@ import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-butt
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { adService } from "@/services/adService";
-import { PowerUpEffectOverlay } from "@/components/game/PowerUpEffectOverlay";
 import { PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
 import { useAIIconSlug } from "@/hooks/useAIIconSlug";
@@ -121,6 +120,23 @@ interface TriviaQuestion {
   video_url?: string | null;
   audio_url?: string | null;
 }
+
+// Which cube in the bar a power belongs to, and what it calls itself there.
+// Kept beside the page rather than inside it: they are constants, and the
+// badge builder below reads them on every render.
+const POWER_UP_UI_KEY: Record<PowerUpType, UIPowerUpType> = {
+  "5050": "5050",
+  freeze: "freeze",
+  replace: "replace",
+  "time-drain": "hint",
+};
+
+const POWER_UP_SHORT_NAME: Record<PowerUpType, (t: (k: string) => string) => string> = {
+  "5050": () => "50/50",
+  freeze: (t) => t("extra.powerUpFreezeShort"),
+  replace: (t) => t("extra.powerUpReplaceShort"),
+  "time-drain": (t) => t("extra.powerUpTimeDrainLabel"),
+};
 
 export default function CategoryQuizPage() {
   const { categoryId, levelId } = useParams();
@@ -797,10 +813,26 @@ export default function CategoryQuizPage() {
     }));
   }, [powerUps, usedPowerUpsThisQuestion, questions, currentQuestionIndex]);
 
+  // The badge clears itself. This timer lived inside PowerUpEffectOverlay,
+  // which is no longer rendered; without it activePowerUpEffect would stay
+  // set and the name would sit over the cube for the rest of the question.
+  useEffect(() => {
+    if (!activePowerUpEffect) return;
+    const timer = setTimeout(() => setActivePowerUpEffect(null), 1400);
+    return () => clearTimeout(timer);
+  }, [activePowerUpEffect]);
+
   // Status pills shown above their own power buttons (see QuizPowerUpBar):
   // the frozen-timer countdown lives over the freeze cube, the "+5წ"
-  // confirmation over the time cube. Nothing power-related renders at the
-  // top of the screen, where it used to cover the difficulty pill.
+  // confirmation over the time cube, and the name of whatever was just used
+  // over the cube it came from.
+  //
+  // Nothing power-related renders at the top of the screen. Using a power
+  // put its icon and name at top-24, over the question card — 50/50 and
+  // Ersetzen landed across the question the player was in the middle of
+  // reading, at the moment the answers changed under them. The bar is where
+  // the player just tapped and where the cube they tapped lives, so a
+  // confirmation belongs there, next to the count that just went down.
   const powerBarBadges = useMemo(() => {
     const badges: Partial<Record<UIPowerUpType, string>> = {};
     if (timerFrozen) {
@@ -812,8 +844,17 @@ export default function CategoryQuizPage() {
     if (showTimeDrainBadge) {
       badges.hint = `+${t("extra.secondsShort", { time: 5 })}`;
     }
+    // The just-used power names itself over its own cube. Freeze and
+    // time-drain already say something more useful there — a countdown and
+    // the seconds gained — so they keep it rather than being overwritten.
+    if (activePowerUpEffect) {
+      const uiKey = POWER_UP_UI_KEY[activePowerUpEffect];
+      if (!badges[uiKey]) {
+        badges[uiKey] = POWER_UP_SHORT_NAME[activePowerUpEffect](t);
+      }
+    }
     return badges;
-  }, [timerFrozen, freezeTimeRemaining, showTimeDrainBadge, t]);
+  }, [timerFrozen, freezeTimeRemaining, showTimeDrainBadge, activePowerUpEffect, t]);
 
   const currentQuestion = questions[currentQuestionIndex];
   const starPercentage = (score / Math.max(questions.length, 1)) * 100;
@@ -1447,11 +1488,10 @@ export default function CategoryQuizPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Power-up effect overlay */}
-      <PowerUpEffectOverlay
-        activeEffect={activePowerUpEffect}
-        onComplete={() => setActivePowerUpEffect(null)}
-      />
+      {/* No power-up overlay here any more. What was used is named above the
+          cube it was used from, in QuizPowerUpBar, so the question card stays
+          readable at the moment the answers change. The clearing timer that
+          the overlay used to own now runs below. */}
 
       {/* Screen-wide power-up effects */}
       <PowerUpScreenEffect type={activeScreenEffect} isActive={activeScreenEffect !== null || timerFrozen} />
