@@ -90,6 +90,13 @@
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3462589915085372~1525220642</string>
 
+	<!-- Hold Google Mobile Ads app measurement until AdMob.initialize() runs
+	     in JS. Between process launch and that call sits the ATT pre-prompt
+	     flow; without this key the SDK starts measuring at launch, before any
+	     consent decision exists. -->
+	<key>GADDelayAppMeasurementInit</key>
+	<true/>
+
 	<!-- SKAdNetwork: how ad networks get install attribution without the
 	     advertising identifier, and therefore how anything sold against this
 	     app measures. A network missing from this list cannot attribute, so
