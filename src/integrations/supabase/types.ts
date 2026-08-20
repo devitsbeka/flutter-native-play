@@ -1775,6 +1775,33 @@ export type Database = {
           },
         ]
       }
+      push_log: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          kind: string
+          sent_on: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          kind: string
+          sent_on?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          kind?: string
+          sent_on?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       push_tokens: {
         Row: {
           created_at: string
