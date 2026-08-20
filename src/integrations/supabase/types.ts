@@ -1833,6 +1833,7 @@ export type Database = {
           quality_status: string | null
           question_text: string
           shorten_status: string | null
+          translated_from: string | null
           updated_at: string | null
           video_url: string | null
         }
@@ -1866,6 +1867,7 @@ export type Database = {
           quality_status?: string | null
           question_text: string
           shorten_status?: string | null
+          translated_from?: string | null
           updated_at?: string | null
           video_url?: string | null
         }
@@ -1899,6 +1901,7 @@ export type Database = {
           quality_status?: string | null
           question_text?: string
           shorten_status?: string | null
+          translated_from?: string | null
           updated_at?: string | null
           video_url?: string | null
         }
@@ -1908,6 +1911,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_translated_from_fkey"
+            columns: ["translated_from"]
+            isOneToOne: false
+            referencedRelation: "questions"
             referencedColumns: ["id"]
           },
         ]
@@ -4184,6 +4194,49 @@ export type Database = {
           unread_count: number
         }[]
       }
+      get_untranslated_questions: {
+        Args: { p_language: string; p_limit: number }
+        Returns: {
+          ai_review_data: Json | null
+          ai_review_grade: string | null
+          ai_review_score: number | null
+          answer_shorten_status: string | null
+          audio_url: string | null
+          category_id: string
+          correct_answer: string
+          created_at: string | null
+          difficulty: string
+          icon_slug: string | null
+          id: string
+          image_url: string | null
+          in_production: boolean | null
+          incorrect_answers: Json
+          is_active: boolean | null
+          language: string
+          last_ai_review: string | null
+          last_quality_check: string | null
+          level_number: number | null
+          original_correct_answer: string | null
+          original_incorrect_answers: Json | null
+          original_question_text: string | null
+          pending_correct_answer: string | null
+          pending_incorrect_answers: Json | null
+          pending_question_text: string | null
+          quality_issues: Json | null
+          quality_status: string | null
+          question_text: string
+          shorten_status: string | null
+          translated_from: string | null
+          updated_at: string | null
+          video_url: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "questions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       grant_pro_seat: { Args: { p_holder_id: string }; Returns: Json }
       grant_vip_days: {
         Args: { p_duration: string }
@@ -4225,6 +4278,14 @@ export type Database = {
       pro_seat_holder_has_pro: {
         Args: { p_expires_at: string; p_platform: string; p_tier: string }
         Returns: boolean
+      }
+      question_translation_progress: {
+        Args: never
+        Returns: {
+          language: string
+          source_total: number
+          translated: number
+        }[]
       }
       reset_room_participants: {
         Args: { p_room_id: string; p_status?: string }
