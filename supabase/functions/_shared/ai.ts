@@ -39,6 +39,24 @@ function stripVendorPrefix(model: string): string {
   return model.replace(/^google\//, "");
 }
 
+/**
+ * Models Google has retired for newly created API keys, with the successor
+ * their own 404 names. The Lovable gateway still serves the old ids, so this
+ * remap applies only when talking to Google directly — call sites keep the
+ * canonical names and this table absorbs the churn in one place.
+ *
+ * If another feature starts failing with "no longer available to new users",
+ * the error message names the replacement: add one line here.
+ */
+const GOOGLE_MODEL_SUCCESSORS: Record<string, string> = {
+  "gemini-2.5-flash": "gemini-3.6-flash",
+};
+
+function mapGoogleModel(model: string): string {
+  const bare = stripVendorPrefix(model);
+  return GOOGLE_MODEL_SUCCESSORS[bare] ?? bare;
+}
+
 function resolveProvider(): AiProvider {
   const gatewayUrl = Deno.env.get("AI_GATEWAY_URL");
   const gatewayKey = Deno.env.get("AI_GATEWAY_API_KEY");
@@ -59,7 +77,7 @@ function resolveProvider(): AiProvider {
       name: "google",
       chatUrl: GOOGLE_OPENAI_CHAT_URL,
       apiKey: geminiKey,
-      mapModel: stripVendorPrefix,
+      mapModel: mapGoogleModel,
     };
   }
 
