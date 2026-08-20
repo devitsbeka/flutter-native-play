@@ -15,6 +15,7 @@ import { Notification } from '@/hooks/useNotifications';
 import { NotificationIcon } from '@/components/notifications/NotificationIcon';
 import { shouldDismissSwipe, SWIPE_THRESHOLD, SWIPE_LIMIT } from '@/utils/swipeToDismiss';
 import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 
 interface CompactNotificationCardProps {
   notification: Notification;
@@ -44,6 +45,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   timeAgo,
 }: CompactNotificationCardProps) {
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const [isDismissing, setIsDismissing] = useState(false);
   const touchedRef = useRef(false);
   const x = useMotionValue(0);
@@ -105,7 +107,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   });
   const roomIcon = liveRoom?.room_icon || storedRoomIcon || undefined;
   const roomName = liveRoom?.room_name || storedRoomName || undefined;
-  const categoryName = liveRoom ? liveRoom.category_name ?? undefined : storedCategoryName;
+  const categoryName = localizeCategory(liveRoom ? liveRoom.category_name ?? undefined : storedCategoryName);
   const triviaCover = notification.data?.trivia_cover as string | undefined;
   const triviaIconSlug = notification.data?.trivia_icon_slug as string | undefined;
   

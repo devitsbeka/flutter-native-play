@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Library, Shuffle, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 
 export type PreRoomQueuePreviewItem = {
   tmpId: string;
@@ -17,6 +18,7 @@ interface PreRoomQueuePreviewProps {
 
 export function PreRoomQueuePreview({ items, onRemove, onClear }: PreRoomQueuePreviewProps) {
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   if (!items.length) return null;
 
   return (
@@ -62,7 +64,7 @@ export function PreRoomQueuePreview({ items, onRemove, onClear }: PreRoomQueuePr
             )}
 
             <span className="text-foreground text-xs font-medium">
-              {item.source_type === "random" ? t("extra.randomOption") : item.category_name || t("extra.trivia")}
+              {item.source_type === "random" ? t("extra.randomOption") : localizeCategory(item.category_name) || t("extra.trivia")}
             </span>
 
             <button

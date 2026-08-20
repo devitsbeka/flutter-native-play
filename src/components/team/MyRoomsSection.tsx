@@ -38,6 +38,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 
 interface MyRoomsSectionProps {
   hideTV?: boolean;
@@ -397,6 +398,7 @@ interface RoomCardProps {
 
 function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining = false }: RoomCardProps) {
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const isMobile = useIsMobile();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
@@ -666,7 +668,7 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
                   </h3>
                   {room.category_name && (
                     <p className="text-sm text-white/70 truncate font-medium drop-shadow-sm">
-                      {room.category_name}
+                      {localizeCategory(room.category_name)}
                     </p>
                   )}
                 </div>
@@ -732,6 +734,7 @@ interface RoomCardGridProps {
 function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: RoomCardGridProps) {
   const { openProfile } = usePlayerProfile();
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const isMobile = useIsMobile();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
@@ -941,7 +944,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                     {displayName}
                   </h3>
                   {room.category_name && (
-                    <p className="text-white/70 text-sm truncate mt-0.5">{room.category_name}</p>
+                    <p className="text-white/70 text-sm truncate mt-0.5">{localizeCategory(room.category_name)}</p>
                   )}
                 </div>
               </div>

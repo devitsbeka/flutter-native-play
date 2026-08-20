@@ -5,6 +5,7 @@ import { useGameInvitations, GameInvitation } from "@/hooks/useGameInvitations";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 
 interface GameInvitationsSectionProps {
   onAcceptInvitation: (invitationId: string) => Promise<string | null>;
@@ -74,6 +75,7 @@ interface InvitationCardProps {
 
 function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps) {
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const [isDeclining, setIsDeclining] = useState(false);
   const [timeLeft, setTimeLeft] = useState<string>("");
 
@@ -226,7 +228,7 @@ function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps
           <div className="flex items-center gap-3 text-sm text-slate-600">
             <span className="flex items-center gap-1">
               <Gamepad2 className="w-3.5 h-3.5" />
-              {invitation.room?.category_name || t("extra.generalLabel")}
+              {localizeCategory(invitation.room?.category_name) || t("extra.generalLabel")}
             </span>
             <span className="flex items-center gap-1 text-xs text-slate-500">
               <Clock className="w-3 h-3" />

@@ -9,6 +9,7 @@ import swordLine from "@/assets/figma-home/sword-line.svg";
 import arrowRight from "@/assets/figma-home/arrow-right-s.svg";
 import inviteAccept from "@/assets/figma-home/invite-accept.png";
 import inviteDecline from "@/assets/figma-home/invite-decline.png";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 
 // Figma: Hom / node 601:1104 — right sidebar column (page x 1260, w 298):
 // invite card, "continue playing" card, quick-play button. All three are
@@ -27,6 +28,7 @@ interface SceneSidebarProps {
 
 export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const navigate = useNavigate();
   const { pendingInvitations, acceptInvitation, declineInvitation } = useGameInvitations();
   const { progress } = useCategoryProgress();
@@ -132,7 +134,7 @@ export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
             </p>
             {invitation.room?.category_name && (
               <p className="absolute left-[76px] top-[81px] w-[124px] truncate font-['Nunito'] text-[12px] leading-[19.73px] tracking-[-0.16px] text-[#402666] opacity-70">
-                {invitation.room.category_name}
+                {localizeCategory(invitation.room.category_name)}
               </p>
             )}
 

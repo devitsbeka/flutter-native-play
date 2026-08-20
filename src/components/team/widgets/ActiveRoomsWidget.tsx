@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LiveBadge } from "@/components/social/LiveBadge";
 import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 
 interface ActiveRoomsWidgetProps {
   onViewAll: () => void;
@@ -16,6 +17,7 @@ interface ActiveRoomsWidgetProps {
 export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetProps) {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const { rooms, loading } = useMyRooms();
   
   // Filter for active rooms or rooms with unread activity or others online, prioritize TV sessions first, limit to 3
@@ -117,7 +119,7 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
                 {/* Room Info */}
                 <div className="flex-1 min-w-0">
                   <p className="font-display text-foreground text-sm truncate">
-                    {room.room_name || room.category_name || t("extra.gameRoom")}
+                    {room.room_name || localizeCategory(room.category_name) || t("extra.gameRoom")}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
                     <span>{displayPlayerCount} {t("extra.players")}</span>

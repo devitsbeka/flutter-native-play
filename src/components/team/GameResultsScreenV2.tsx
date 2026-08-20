@@ -27,6 +27,7 @@ import { CategoryPickerModal } from "./CategoryPickerModal";
 import { calculateMultiplayerPayout } from "@/utils/multiplayerPayout";
 import { isGuestAccount } from "@/utils/guestAccount";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 
 // Games whose results were already counted on this device. Module-level (not a
 // ref) because the results screen can remount for the SAME game (results ->
@@ -49,6 +50,7 @@ export function GameResultsScreenV2() {
   const { user, profile, setProfileLocal } = useAuth();
   const { playSound, vibrate } = useSound();
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const { addCoins } = useCurrency();
   const { maybeShowInterstitial } = useAds();
   const { trackMissionEvent } = useMissions();
@@ -530,7 +532,7 @@ export function GameResultsScreenV2() {
             transition={{ delay: 0.2 }}
             className="px-6 py-2.5 rounded-full bg-white/15 backdrop-blur-sm"
           >
-            <span className="text-white font-medium">{currentRoom.category_name}</span>
+            <span className="text-white font-medium">{localizeCategory(currentRoom.category_name)}</span>
           </motion.div>
         )}
 
@@ -619,7 +621,7 @@ export function GameResultsScreenV2() {
               <span className="flex-1 text-white font-medium truncate">
                 {nextQueueItem.source_type === "random"
                   ? t("extra.randomOption")
-                  : nextQueueItem.category_name || t("extra.categoryType")}
+                  : localizeCategory(nextQueueItem.category_name) || t("extra.categoryType")}
               </span>
               {queue.length > 1 && (
                 <span className="text-white/40 text-sm flex items-center gap-1">

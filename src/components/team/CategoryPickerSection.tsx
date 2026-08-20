@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 
 interface CategoryPickerSectionProps {
   categoryName: string | null;
@@ -32,6 +33,7 @@ function DraggableQueueItem({
 }) {
   const dragControls = useDragControls();
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
 
   return (
     <Reorder.Item
@@ -66,7 +68,7 @@ function DraggableQueueItem({
       <span className="text-white/80 text-xs font-medium">
         {item.source_type === "random" 
           ? t("extra.cpRandomTitle")
-          : item.category_name || "Trivia"}
+          : localizeCategory(item.category_name) || "Trivia"}
       </span>
       {onRemoveQueueItem && (
         <button
@@ -98,6 +100,7 @@ export function CategoryPickerSection({
   willBeObserver,
 }: CategoryPickerSectionProps) {
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const hasCategory = !!categoryName;
   const showQueuePreview = queue.length > 0;
   const currentPillType: "random" | "category" | "user_trivia" | null = !hasCategory
@@ -137,7 +140,7 @@ export function CategoryPickerSection({
                 "text-white font-semibold leading-tight truncate",
                 hasCategory ? "text-[19.8px]" : "text-[15.4px]"
               )}>
-                {hasCategory ? categoryName : (isHost ? t("extra.cpsWhatToPlay") : t("extra.cpsCurrentCategory"))}
+                {hasCategory ? localizeCategory(categoryName) : (isHost ? t("extra.cpsWhatToPlay") : t("extra.cpsCurrentCategory"))}
               </p>
               {isAlreadyPlayed && hasCategory && (
                 <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 text-xs font-medium">
@@ -220,7 +223,7 @@ export function CategoryPickerSection({
                   <span className="text-white/80 text-xs font-medium">
                     {item.source_type === "random" 
                       ? t("extra.cpRandomTitle")
-                      : item.category_name || "Trivia"}
+                      : localizeCategory(item.category_name) || "Trivia"}
                   </span>
                 </motion.div>
               ))

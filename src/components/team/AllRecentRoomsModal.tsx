@@ -5,6 +5,7 @@ import { useRecentRooms, RecentRoom } from "@/hooks/useRecentRooms";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
 
 interface AllRecentRoomsModalProps {
   isOpen: boolean;
@@ -87,6 +88,7 @@ export function AllRecentRoomsModal({ isOpen, onClose }: AllRecentRoomsModalProp
 
 function RoomListItem({ room, index, formatTimeAgo }: { room: RecentRoom; index: number; formatTimeAgo: (date: string | null) => string }) {
   const { t } = useLanguage();
+  const localizeCategory = useLocalizedCategoryName();
   const squadName = `SQUAD ${room.room_code?.slice(-4).toUpperCase() || index + 1}`;
 
   return (
@@ -145,7 +147,7 @@ function RoomListItem({ room, index, formatTimeAgo }: { room: RecentRoom; index:
               </div>
             )}
           </div>
-          <p className="text-gray-500 text-xs truncate">{room.category_name || t("extra.generalCategory")}</p>
+          <p className="text-gray-500 text-xs truncate">{localizeCategory(room.category_name) || t("extra.generalCategory")}</p>
         </div>
 
         {/* Score & Time */}

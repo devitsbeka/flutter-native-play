@@ -70,6 +70,12 @@ export const useCategories = () => {
   const [error, setError] = useState<Error | null>(null);
   const [translations, setTranslations] = useState<Record<string, { name: string; description?: string }>>({});
   const [currentLanguage, setCurrentLanguage] = useState<string>(readStoredLanguage);
+  // Whether the translation overlay for the current language has settled.
+  // Until it has, the hook returns no categories at all: consumers that
+  // snapshot the first non-empty list (the VS screen's slot-machine pool)
+  // otherwise freeze the raw Georgian names before the overlay arrives and
+  // show them under a French/German/... UI for the rest of the match.
+  const [translationsReady, setTranslationsReady] = useState(() => readStoredLanguage() === 'ka');
   const lastFetchRef = useRef(0);
   // The language of the most recent fetch. An async response that comes back
   // for any other language is stale and must be dropped: switching en → ka
@@ -98,9 +104,11 @@ export const useCategories = () => {
     if (lang === 'ka') {
       // Georgian is what categories.name holds; no overlay needed
       setTranslations({});
+      setTranslationsReady(true);
       return;
     }
 
+    setTranslationsReady(false);
     try {
       const { data, error } = await supabase
         .from('category_translations')
@@ -117,7 +125,11 @@ export const useCategories = () => {
       });
       setTranslations(transMap);
     } catch (err) {
+      // A failed lookup falls through to the raw names below — worse than
+      // translated, better than an empty screen.
       console.error('Error fetching category translations:', err);
+    } finally {
+      if (activeLangRef.current === lang) setTranslationsReady(true);
     }
   }, []);
 
@@ -233,10 +245,10 @@ export const useCategories = () => {
     fetchCategories(currentLanguage);
   }, [fetchCategories, currentLanguage]);
 
-  return { 
-    categories: translatedCategories, 
-    loading, 
-    error, 
+  return {
+    categories: translationsReady ? translatedCategories : [],
+    loading: loading || !translationsReady,
+    error,
     refetch,
     language: currentLanguage,
   };
