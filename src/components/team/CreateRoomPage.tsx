@@ -29,7 +29,6 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { useAds } from "@/hooks/useAds";
 import { useIconLibrary } from "@/hooks/useIconLibrary";
 import iconCollections from "@/assets/icon-collections.png";
 import storyDice from "@/assets/story-dice.png";
@@ -121,7 +120,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const { createRoom, loading } = useMultiplayerV2();
   const { friends } = useFriends();
   const { sendInvitation, addInvitedParticipant } = useGameInvitations();
-  const { gateWithRewardedAd } = useAds();
   const { getIconForCategory } = useIconLibrary();
   
   const [categories, setCategories] = useState<Category[]>([]);
@@ -603,20 +601,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // default name if generation hasn't finished. The name is cosmetic and
     // must never delay the game.
 
-    // Lock BEFORE the ad gate - a double-tap during the ad would otherwise
-    // show two ads and create two rooms (performCreate re-sets and clears it)
+    // Lock before creating - a double-tap would otherwise create two rooms
+    // (performCreate re-sets and clears it)
     setIsCreating(true);
     try {
-      // Run the rewarded ad (native, non-PRO) and the room creation
-      // CONCURRENTLY: the room gets built behind the ad, so the user lands in
-      // the lobby the moment the ad closes instead of paying ad time PLUS
-      // creation time. On web/VIP the gate resolves instantly.
-      await Promise.all([
-        gateWithRewardedAd(async () => {}),
-        performCreate(),
-      ]);
+      await performCreate();
     } catch (error) {
-      console.error("Ad gate error:", error);
+      console.error("Room create error:", error);
       setIsCreating(false);
     }
   };

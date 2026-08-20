@@ -50,7 +50,6 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { useProGating } from "@/hooks/useProGating";
-import { useAds } from "@/hooks/useAds";
 import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
 import {
   UnifiedFiltersBar,
@@ -91,14 +90,9 @@ function TeamContentV2() {
   const { createRoom } = useMultiplayerV2();
   const queryClient = useQueryClient();
   const { showProModal, setShowProModal, gatedFeature } = useProGating();
-  const { gateWithRewardedAd } = useAds();
-
-  // The "+ Trivia" entry points are deliberately NOT ad-gated: the gate
-  // could spend up to 12 seconds loading an ad before failing open, so the
-  // button felt dead and players tapped repeatedly. The ad plan (what gets
-  // an ad, and where) is still being decided — until it is, creating a
-  // trivia opens instantly. gateWithRewardedAd stays in use for the
-  // room-creation and TV flows below.
+  // Ads are strictly opt-in: a player sees one only by pressing a button
+  // that says so (extra plays, spins, power-ups). Room creation, challenges
+  // and TV flows run without any ad gate.
 
   // Auto-open PersonalTrivia from navigation state
   const [autoOpenPersonalTrivia, setAutoOpenPersonalTrivia] = useState(false);
@@ -117,10 +111,10 @@ function TeamContentV2() {
       // Mission CTA for "play on TV": create the room and land in the lobby
       // with TV mode already toggled on (same flow as the sidebar TV button)
       navigate(location.pathname, { replace: true, state: {} });
-      void gateWithRewardedAd(async () => {
+      void (async () => {
         const room = await createRoom();
         if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
-      });
+      })();
     }
     if (location.state?.openTrivia) {
       setShowCreateQuizModal(true);
@@ -151,10 +145,10 @@ function TeamContentV2() {
     setSearchParams(next, { replace: true });
 
     if (action === "tv") {
-      void gateWithRewardedAd(async () => {
+      void (async () => {
         const room = await createRoom();
         if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
-      });
+      })();
     } else {
       setShowCreateQuizModal(true);
     }
@@ -192,8 +186,7 @@ function TeamContentV2() {
   const handleStartChallenge = async (categoryId: string, categoryName: string) => {
     if (!quickPlayFriend) return;
 
-    // Room creation is gated behind a rewarded ad for non-PRO users (fail-open)
-    await gateWithRewardedAd(async () => {
+    await (async () => {
       if (!quickPlayFriend) return;
       setIsStartingChallenge(true);
       try {
@@ -217,16 +210,14 @@ function TeamContentV2() {
       } finally {
         setIsStartingChallenge(false);
       }
-    });
+    })();
   };
 
-  // Shared by CreateRoomScreen callbacks: rewarded gate -> create room -> lobby
+  // Shared by CreateRoomScreen callbacks: create room -> lobby
   const gatedCreateRoomAndNavigate = async () => {
     setShowCreateRoomScreen(false);
-    await gateWithRewardedAd(async () => {
-      const room = await createRoom();
-      if (room) navigate(`/team?room=${room.room_code}`);
-    });
+    const room = await createRoom();
+    if (room) navigate(`/team?room=${room.room_code}`);
   };
 
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
@@ -1035,10 +1026,10 @@ function TeamContentV2() {
                 // resets and an immediate retry usually succeeds on a
                 // fresh connection.
                 await Promise.race([
-                  gateWithRewardedAd(async () => {
+                  (async () => {
                     const room = await createRoom();
                     if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
-                  }),
+                  })(),
                   new Promise<never>((_, reject) =>
                     setTimeout(() => reject(new Error("tv-connect-timeout")), 12000)
                   ),

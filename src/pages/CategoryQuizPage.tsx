@@ -46,7 +46,6 @@ import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
-import { useAds } from "@/hooks/useAds";
 import { adService } from "@/services/adService";
 import { PowerUpEffectOverlay } from "@/components/game/PowerUpEffectOverlay";
 import { PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
@@ -192,7 +191,6 @@ export default function CategoryQuizPage() {
   
   // Power-up state
   const { powerUps, usePowerUp: consumePowerUp, addPowerUp } = useUserPowerUps();
-  const { maybeShowInterstitial } = useAds();
   const [earnPowerUpType, setEarnPowerUpType] = useState<PowerUpType | null>(null);
   const [hiddenAnswers, setHiddenAnswers] = useState<string[]>([]);
   const [usedPowerUpsThisQuestion, setUsedPowerUpsThisQuestion] = useState<Set<PowerUpType>>(new Set());
@@ -401,10 +399,7 @@ export default function CategoryQuizPage() {
   useEffect(() => {
     if (showResults && !hasSaved.current && questions.length > 0) {
       hasSaved.current = true;
-      saveResults().then(() => {
-        // Interstitial cadence check now that this game counts as completed
-        void maybeShowInterstitial((profile?.games_played || 0) + 1);
-      });
+      saveResults();
     }
   }, [showResults]);
 

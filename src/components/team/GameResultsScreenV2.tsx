@@ -9,7 +9,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/hooks/useCurrency";
-import { useAds } from "@/hooks/useAds";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { supabase } from "@/integrations/supabase/client";
 import { useChallengeShare } from "@/hooks/useChallengeShare";
@@ -52,7 +51,6 @@ export function GameResultsScreenV2() {
   const { t } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
   const { addCoins } = useCurrency();
-  const { maybeShowInterstitial } = useAds();
   const { trackMissionEvent } = useMissions();
   const { openProfile } = usePlayerProfile();
   const [coinsEarned, setCoinsEarned] = useState(0);
@@ -219,9 +217,6 @@ export function GameResultsScreenV2() {
           setProfileLocal(statsData as Record<string, number>);
         }
 
-        // Interstitial cadence check now that this game counts as completed
-        void maybeShowInterstitial((profile.games_played || 0) + 1);
-
         // room_games completion, room_match_history, and the cumulative
         // participant totals are all written by complete_room_round above —
         // server-side, from live scores, once per round. The client-side
@@ -251,7 +246,7 @@ export function GameResultsScreenV2() {
         if (statsKey) processedResultsGames.delete(statsKey);
       });
     }
-  }, [user, profile, myScore, myRank, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, participants, maybeShowInterstitial]);
+  }, [user, profile, myScore, myRank, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, participants]);
 
   // Prefetch the questions a challenge link carries, so sharing is one tap
   // and not a wait.

@@ -15,7 +15,6 @@ import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
-import { useAds } from "@/hooks/useAds";
 
 import { EditQuizModal } from "./EditQuizModal";
 import { EditRoundModal } from "./EditRoundModal";
@@ -598,15 +597,13 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { createRoom } = useMultiplayerV2();
-  const { gateWithRewardedAd } = useAds();
   const [isStartingTV, setIsStartingTV] = useState(false);
   const gradientProps = getGradientProps(post.cover_gradient);
   const tiltDirection = post.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
 
   const handlePlayOnTV = async () => {
     if (isStartingTV) return;
-    // Room creation is gated behind a rewarded ad for non-PRO users (fail-open)
-    await gateWithRewardedAd(async () => {
+    await (async () => {
       setIsStartingTV(true);
       try {
         const { data, error } = await supabase
@@ -651,7 +648,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       } finally {
         setIsStartingTV(false);
       }
-    });
+    })();
   };
 
   return (
@@ -951,7 +948,6 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { createRoom } = useMultiplayerV2();
-  const { gateWithRewardedAd } = useAds();
   const [editingQuiz, setEditingQuiz] = useState<any>(null);
   const [editingRound, setEditingRound] = useState<any>(null);
   const [expandedCollectionId, setExpandedCollectionId] = useState<string | null>(null);
@@ -1043,8 +1039,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
 
   const handleCreateRoom = async () => {
     if (!playModeTrivia || isStartingRoom) return;
-    // Room creation is gated behind a rewarded ad for non-PRO users (fail-open)
-    await gateWithRewardedAd(async () => {
+    await (async () => {
       if (!playModeTrivia) return;
       setIsStartingRoom(true);
       try {
@@ -1088,13 +1083,12 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         setIsStartingRoom(false);
         setPlayModeTrivia(null);
       }
-    });
+    })();
   };
 
   const handlePlayTV = async () => {
     if (!playModeTrivia || isStartingRoom) return;
-    // Room creation is gated behind a rewarded ad for non-PRO users (fail-open)
-    await gateWithRewardedAd(async () => {
+    await (async () => {
       if (!playModeTrivia) return;
       setIsStartingRoom(true);
       try {
@@ -1138,7 +1132,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         setIsStartingRoom(false);
         setPlayModeTrivia(null);
       }
-    });
+    })();
   };
 
   // Track known item IDs to detect new items for tilt animation

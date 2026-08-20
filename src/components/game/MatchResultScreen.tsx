@@ -24,7 +24,6 @@ import { ExhaustionIndicator } from "@/components/ui/exhaustion-indicator";
 import { useToast } from "@/hooks/use-toast";
 import { showMissionCompleteToast } from "@/components/mission/MissionCompleteToast";
 import { usePlayLimit, MAX_FREE_PLAYS } from "@/hooks/usePlayLimit";
-import { useAds } from "@/hooks/useAds";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -244,7 +243,6 @@ export function MatchResultScreen() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { canPlay, isVip, loading: vipLoading, playsRemaining, windowMode, regenPlayAvailable, timeUntilNextPlay, useRegenPlay, consumePlay } = usePlayLimit();
-  const { maybeShowInterstitial } = useAds();
   
   // State for showing PRO upgrade modal when limit reached
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
@@ -408,9 +406,6 @@ export function MatchResultScreen() {
         if (statsError) throw statsError;
         const stats = (statsData ?? {}) as Record<string, number>;
         setProfileLocal(stats);
-
-        // Interstitial cadence check now that this game counts as completed
-        void maybeShowInterstitial(stats.games_played ?? (currentProfile.games_played || 0) + 1);
 
         // === Correct-answer milestone level-up (every 20 correct answers) ===
         // Computed from the RPC's returned totals — the actual before/after —
