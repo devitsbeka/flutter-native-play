@@ -165,7 +165,8 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
           <span aria-hidden className="w-9" />
         </div>
 
-        {/* 3) likes/saves/plays */}
+        {/* 3) likes/saves/plays — social counters, hidden with public sharing */}
+        {PUBLIC_SHARING_ENABLED && (
         <div className="flex items-center gap-6 text-[17px] text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <img src={purpleHeart3d} alt="Likes" className="w-[26px] h-[26px] object-contain" />
@@ -180,6 +181,7 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
             <span>{quiz.plays_count || 0}</span>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
@@ -724,7 +726,8 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           </div>
         </div>
 
-        {/* Stats Row */}
+        {/* Stats Row — social counters, hidden with public sharing */}
+        {PUBLIC_SHARING_ENABLED && (
         <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border">
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <img src={purpleHeart3d} alt="Likes" className="w-5 h-5 object-contain" />
@@ -739,6 +742,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             <span>{post.plays_count || 0}</span>
           </div>
         </div>
+        )}
         
         {/* Buttons Row */}
         <div className="flex items-center gap-3 mt-3" onClick={(e) => e.stopPropagation()}>
@@ -867,9 +871,25 @@ function StandaloneQuizCard({
               {formatLocalTimeAgo(new Date(post.created_at), t)}
             </p>
           </div>
+          {/* With the social row gone the card is just author + Play, so the
+              button rides the author row instead of a row of its own. */}
+          {!PUBLIC_SHARING_ENABLED && (
+            <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+              <ChunkyButton
+                size="sm"
+                variant="outline"
+                className="h-10 text-sm"
+                onClick={handlePlayClick}
+              >
+                <Play className="w-4 h-4" />
+                <span>{t("extra.playBtn")}</span>
+              </ChunkyButton>
+            </div>
+          )}
         </div>
 
-        {/* Stats Row */}
+        {/* Stats Row — social counters, hidden with public sharing */}
+        {PUBLIC_SHARING_ENABLED && (
         <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border">
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <img src={purpleHeart3d} alt="Likes" className="w-5 h-5 object-contain" />
@@ -884,12 +904,11 @@ function StandaloneQuizCard({
             <span>{post.plays_count || 0}</span>
           </div>
         </div>
-        
-        {/* Buttons Row */}
+        )}
+
+        {/* Buttons Row — publish + play, only while public sharing is on */}
+        {PUBLIC_SHARING_ENABLED && (
         <div className="flex items-center gap-3 mt-3" onClick={(e) => e.stopPropagation()}>
-          {/* Toggle visibility button — hidden while public sharing is off;
-              Play then stretches across the row on its own. */}
-          {PUBLIC_SHARING_ENABLED && (
           <button
             onClick={() => onPost?.(post)}
             disabled={isPosting}
@@ -913,10 +932,9 @@ function StandaloneQuizCard({
               </>
             )}
           </button>
-          )}
           <ChunkyButton
-            size="sm" 
-            variant="outline" 
+            size="sm"
+            variant="outline"
             className="flex-1 h-10 text-sm"
             onClick={handlePlayClick}
           >
@@ -924,6 +942,7 @@ function StandaloneQuizCard({
             <span>{t("extra.playBtn")}</span>
           </ChunkyButton>
         </div>
+        )}
       </div>
     </motion.div>
   );

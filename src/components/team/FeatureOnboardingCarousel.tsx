@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 
 // Import feature icons
 import roomsIcon from "@/assets/icons/rooms-icon.png";
@@ -18,7 +19,8 @@ interface FeatureTooltip {
   actionKey?: string;
 }
 
-const FEATURE_TOOLTIP_DEFS: FeatureTooltip[] = [
+// The explore slide sells the public feed; it disappears with the feature.
+const ALL_TOOLTIP_DEFS: FeatureTooltip[] = [
   {
     id: "rooms",
     iconSrc: roomsIcon,
@@ -44,6 +46,10 @@ const FEATURE_TOOLTIP_DEFS: FeatureTooltip[] = [
     actionKey: "extra.featureExploreAction",
   },
 ];
+
+const FEATURE_TOOLTIP_DEFS = ALL_TOOLTIP_DEFS.filter(
+  (def) => PUBLIC_SHARING_ENABLED || def.id !== "explore",
+);
 
 interface FeatureOnboardingCarouselProps {
   onNavigateToTab?: (tab: string) => void;
