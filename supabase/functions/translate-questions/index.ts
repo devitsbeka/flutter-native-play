@@ -112,6 +112,11 @@ async function translateBatch(
     },
     body: JSON.stringify({
       model: aiModel("google/gemini-2.5-flash"),
+      // Gemini 3.x are reasoning models that generate hidden "thinking"
+      // tokens by default and bill them as output — for straight translation
+      // that reasoning is pure spend with no quality gain (it roughly
+      // doubled the per-question cost on the de/es run). Keep it minimal.
+      reasoning_effort: "low",
       messages: [
         {
           role: "system",
