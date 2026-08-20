@@ -2,7 +2,7 @@ import * as React from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
 
 export type QuizPlayerAvatarState = "default" | "active" | "correct" | "wrong" | "loading";
 export type QuizPlayerAvatarSize = "default" | "large" | "xlarge";
@@ -115,7 +115,11 @@ const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>
 
     const hasAnimatedAvatar = animatedAvatarUrl && !videoError;
     const resolvedAvatar = resolveAvatarUrl(avatarUrl);
-    const displayUrl = resolvedAvatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=player";
+    // Seeded on position rather than the player: this component is given an
+    // avatar and a side, never an id. It is a weak seed, but it beats what was
+    // here — one hardcoded dicebear seed, so both players in a match with no
+    // avatars set were rendered as the same stranger, twice on one screen.
+    const displayUrl = resolvedAvatar || fallbackAvatarFor(position);
 
     return (
       <motion.div
