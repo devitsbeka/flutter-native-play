@@ -181,10 +181,19 @@ verify_jwt = false
 [functions.revenuecat-webhook]
 verify_jwt = false
 
-# TEMPORARY: the push test loop, fired by pg_cron — no session to verify.
-# Authenticated by PUSH_TEST_SECRET in x-cron-secret instead, and it only
-# ever sends to admin accounts. Remove with the function when testing ends.
-[functions.push-test-loop]
+# The real scheduled pushes, fired by pg_cron every 30 minutes — no session
+# to verify. Authenticated by the shared cron secret in x-cron-secret
+# (PUSH_CRON_SECRET, falling back to the PUSH_TEST_SECRET already set for
+# the retired test loop).
+[functions.scheduled-pushes]
+verify_jwt = false
+
+# Friend request/accept and challenge-beaten pushes. verify_jwt is off
+# because challenge links are played signed out and the challenger must
+# still hear about a beaten score; the friend paths require and validate a
+# JWT inside the function, and every event can fire at most once via
+# push_log's unique (kind, detail) index.
+[functions.send-social-push]
 verify_jwt = false
 
 # Registration happens signed out, exactly like the auth signup endpoint

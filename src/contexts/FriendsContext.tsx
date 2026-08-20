@@ -270,6 +270,17 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
+  // Tell the other player their lock screen's worth of news. Fire-and-forget
+  // like the game-invite push: the friendship row is already written, and a
+  // push that fails to send must not fail the action it announces. The
+  // server re-reads the row and composes the text itself — the id is all it
+  // will accept.
+  const announceFriendPush = (kind: "friend_request" | "friend_accept", friendshipId: string) => {
+    supabase.functions
+      .invoke("send-social-push", { body: { kind, friendshipId } })
+      .catch(() => {});
+  };
+
   const sendFriendRequest = useCallback(async (friendId: string) => {
     if (!user) return false;
     try {
@@ -297,6 +308,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
               toast.error(t("extra.requestAcceptFailed"));
               return false;
             }
+            announceFriendPush("friend_accept", existing.id);
             toast.success(t("extra.friendAdded"));
             await fetchFriends();
             return true;
@@ -307,12 +319,17 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
-      const { error } = await supabase.from("friendships").insert({
-        user_id: user.id,
-        friend_id: friendId,
-        status: "pending",
-      });
+      const { data: created, error } = await supabase
+        .from("friendships")
+        .insert({
+          user_id: user.id,
+          friend_id: friendId,
+          status: "pending",
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+      if (created) announceFriendPush("friend_request", created.id);
       toast.success(t("extra.requestSent"));
       return true;
     } catch (error) {
@@ -333,6 +350,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         })
         .eq("id", friendshipId);
       if (error) throw error;
+      announceFriendPush("friend_accept", friendshipId);
       await fetchFriends();
       return true;
     } catch (error) {

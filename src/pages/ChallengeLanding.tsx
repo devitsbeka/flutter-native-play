@@ -229,6 +229,14 @@ export default function ChallengeLanding() {
             playerScore,
             roomCode,
           }));
+          if (won) {
+            // Tell the challenger their score fell. Fire-and-forget — the
+            // server re-reads the attempt, checks the score really beats
+            // theirs, and refuses duplicates and more than 3 per day.
+            supabase.functions
+              .invoke("send-social-push", { body: { kind: "challenge_beaten", attemptId: attemptData.id } })
+              .catch(() => {});
+          }
         }
       });
   }, [phase, attemptSaved, challenge, playerName, playerScore]);
