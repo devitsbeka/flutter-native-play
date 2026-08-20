@@ -42,7 +42,7 @@ import { getRandomGradient } from "@/config/roomGradients";
 import { siteUrl } from "@/config/site";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Json } from "@/integrations/supabase/types";
-import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
 import { shareOrCopy } from "@/utils/shareLink";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
@@ -1014,7 +1014,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       >
                         <div className="relative">
                           <img 
-                            src={resolveAvatarUrl(friend.avatarUrl) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend.friendId}`} 
+                            src={resolveAvatarUrl(friend.avatarUrl) || fallbackAvatarFor(friend.friendId)} 
                             alt={friend.nickname}
                             className="w-[52px] h-[52px] rounded-full object-cover"
                           />

@@ -148,6 +148,33 @@ export function resolveAvatarUrl(avatarUrl: string | null | undefined): string |
   return avatarUrl;
 }
 
+const MASCOT_AVATARS: string[] = [
+  mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4,
+  mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8,
+];
+
+/**
+ * The avatar to show for someone who has not set one.
+ *
+ * This used to be api.dicebear.com, seeded by user id — a third-party
+ * request, on every render, for a flat cartoon face that looks nothing like
+ * anything else in the app. 84 of 656 accounts have no avatar_url, so it was
+ * not a rare edge: it was one player in eight wearing a stranger's art style.
+ *
+ * One of the eight mascots instead, picked from the id so the same person
+ * keeps the same face everywhere — the property that made the seeded URL
+ * worth using in the first place. Bundled, so it also works offline and
+ * costs no network round trip.
+ */
+export function fallbackAvatarFor(seed: string | null | undefined): string {
+  const key = seed || '';
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash * 31 + key.charCodeAt(i)) | 0;
+  }
+  return MASCOT_AVATARS[Math.abs(hash) % MASCOT_AVATARS.length];
+}
+
 /**
  * Checks if an avatar URL is likely valid
  */
