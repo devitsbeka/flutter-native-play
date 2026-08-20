@@ -236,3 +236,6 @@ verify_jwt = false
 # --- FACE DETECTION (requires auth) ---
 [functions.detect-face]
 verify_jwt = true
+
+[functions.translate-questions]
+verify_jwt = false
