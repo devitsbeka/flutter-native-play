@@ -324,16 +324,14 @@ function CollectionCard({
                     style={{ background: "linear-gradient(135deg, #F97316 0%, #8B5CF6 50%, #3B82F6 100%)" }}
                   >
                     <Layers className="w-4 h-4" />
-                    <span className="text-sm font-medium">კოლექცია</span>
+                    <span className="text-sm font-medium">{t("extra.collectionLabel")}</span>
                   </div>
                   {/* Visibility badge */}
                   <div className="bg-muted rounded-full h-8 px-3 text-xs text-muted-foreground flex items-center gap-1.5">
-                    {PUBLIC_SHARING_ENABLED && collection.is_public ? (
+                    {PUBLIC_SHARING_ENABLED && collection.is_public && (
                       <Globe className="w-3.5 h-3.5" aria-hidden />
-                    ) : (
-                      <Lock className="w-3.5 h-3.5" aria-hidden />
                     )}
-                    <span>{roundsCount} რაუნდი</span>
+                    <span>{t("extra.roundsCount", { count: roundsCount })}</span>
                   </div>
                 </div>
               </div>
@@ -352,7 +350,7 @@ function CollectionCard({
                              flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
                 >
                   <Plus className="w-4 h-4" />
-                  <span className="text-sm font-medium">რაუნდის დამატება</span>
+                  <span className="text-sm font-medium">{t("extra.addRoundLabel")}</span>
                 </button>
                 
                 {isLoading ? (
@@ -371,7 +369,7 @@ function CollectionCard({
                   ))
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    ამ კოლექციაში ჯერ არ არის ქვიზები
+                    {t("extra.noQuizzesInCollection")}
                   </p>
                 )}
               </div>
@@ -404,7 +402,10 @@ function CollectionCard({
       transition={isNew ? { type: "spring", stiffness: 300, damping: 20 } : undefined}
       className={cn(
         "bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-lg",
-        isExpanded && "relative z-50"
+        // z-10, not z-50: lifts the expanded card above its sibling cards
+        // (z-auto) but keeps it UNDER the page's sticky header stack (z-20),
+        // so scrolling slides it beneath the tabs instead of over them.
+        isExpanded && "relative z-10"
       )}
     >
       {/* Collection Header - Clickable */}
@@ -437,12 +438,10 @@ function CollectionCard({
 
           {/* Visibility + rounds count (single pill like trivia cards) */}
           <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
-            {PUBLIC_SHARING_ENABLED && collection.is_public ? (
+            {PUBLIC_SHARING_ENABLED && collection.is_public && (
               <Globe className="w-3.5 h-3.5" aria-hidden />
-            ) : (
-              <Lock className="w-3.5 h-3.5" aria-hidden />
             )}
-            <span>{roundsCount} რაუნდი</span>
+            <span>{t("extra.roundsCount", { count: roundsCount })}</span>
           </div>
 
           {/* Title */}
@@ -486,7 +485,7 @@ function CollectionCard({
               style={{ background: "linear-gradient(135deg, #F97316 0%, #8B5CF6 50%, #3B82F6 100%)" }}
             >
               <Layers className="w-4 h-4" />
-              <span className="text-sm font-medium">კოლექცია</span>
+              <span className="text-sm font-medium">{t("extra.collectionLabel")}</span>
               <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center ml-1">
                 {isExpanded ? (
                   <ChevronUp className="w-4 h-4 text-white" />
@@ -552,7 +551,7 @@ function CollectionCard({
                            flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
               >
                 <Plus className="w-4 h-4" />
-                <span className="text-sm font-medium">რაუნდის დამატება</span>
+                <span className="text-sm font-medium">{t("extra.addRoundLabel")}</span>
               </button>
               
               {isLoading ? (
@@ -571,7 +570,7 @@ function CollectionCard({
                 ))
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  ამ კოლექციაში ჯერ არ არის ქვიზები
+                  {t("extra.noQuizzesInCollection")}
                 </p>
               )}
               
@@ -697,10 +696,8 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           </h4>
         </div>
         <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
-          {PUBLIC_SHARING_ENABLED && post.is_public !== false ? (
+          {PUBLIC_SHARING_ENABLED && post.is_public !== false && (
             <Globe className="w-3.5 h-3.5" aria-hidden />
-          ) : (
-            <Lock className="w-3.5 h-3.5" aria-hidden />
           )}
           <span>{t("extra.questionsCount", { count: (Array.isArray(post.questions) ? post.questions.length : post.question_count) || 0 })}</span>
         </div>
@@ -843,10 +840,8 @@ function StandaloneQuizCard({
           </h4>
         </div>
         <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
-          {PUBLIC_SHARING_ENABLED && post.is_public !== false ? (
+          {PUBLIC_SHARING_ENABLED && post.is_public !== false && (
             <Globe className="w-3.5 h-3.5" aria-hidden />
-          ) : (
-            <Lock className="w-3.5 h-3.5" aria-hidden />
           )}
           <span>{t("extra.questionsCount", { count: (Array.isArray(post.questions) ? post.questions.length : post.question_count) || 0 })}</span>
         </div>

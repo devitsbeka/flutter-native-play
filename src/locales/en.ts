@@ -1970,8 +1970,10 @@ export const en: KaTranslations = {
     questionsSkippedRoundOver: "{count} questions skipped — round over",
     questionsSkipped: "{count} questions skipped",
     collectionLabel: "Collection",
+    roundsCount: "{count} rounds",
+    addRoundLabel: "Add round",
     triviaLabel: "Trivia",
-    questionsCount: "{count} question",
+    questionsCount: "{count} questions",
     editHint: "✏️ Tap to edit",
     answersHidden: "🔒 Answers are hidden",
     // Play button on lobby

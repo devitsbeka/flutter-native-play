@@ -1971,6 +1971,8 @@ export const ka = {
     questionsSkippedRoundOver: "{count} კითხვა გამოტოვე — რაუნდი დასრულდა",
     questionsSkipped: "{count} კითხვა გამოტოვე",
     collectionLabel: "კოლექცია",
+    roundsCount: "{count} რაუნდი",
+    addRoundLabel: "რაუნდის დამატება",
     triviaLabel: "ტრივია",
     questionsCount: "{count} კითხვა",
     editHint: "✏️ დააჭირე რედაქტირებისთვის",
