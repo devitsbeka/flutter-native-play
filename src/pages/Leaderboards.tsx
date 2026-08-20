@@ -369,9 +369,25 @@ export default function Leaderboards() {
                   <div key={i} className="h-[60px] rounded-full bg-white/50 animate-pulse" />
                 ))
               ) : entries.length === 0 ? (
-                <div className="py-12 text-center">
-                  <p className="text-slate-600 font-bold">{t("extra.nobodyYet")}</p>
-                  <p className="text-slate-500 text-sm mt-1">{t("leaderboard.beTheFirst")}</p>
+                // On its own the text sat straight on the illustrated map —
+                // slate on pyramids, towers and water, at whatever contrast
+                // that stretch of the picture happened to give it. The rows
+                // that normally fill this space are white cards; with no rows
+                // to show, the message takes the same card so it is read
+                // against a surface rather than against scenery.
+                <div className="py-10 flex justify-center">
+                  <div
+                    className="rounded-[20px] px-7 py-5 text-center"
+                    style={{
+                      background: "linear-gradient(to bottom, rgba(255,255,255,0.96), rgba(254,254,254,0.96))",
+                      border: "1.5px solid #e8e0f5",
+                      boxShadow:
+                        "0px 3.6px 0px 0px #d8d0e8, 0px 5.4px 14.5px 0px rgba(0,0,0,0.1), inset 0px 1.8px 0px 0px #ffffff",
+                    }}
+                  >
+                    <p className="text-slate-700 font-bold">{t("extra.nobodyYet")}</p>
+                    <p className="text-slate-500 text-sm mt-1">{t("leaderboard.beTheFirst")}</p>
+                  </div>
                 </div>
               ) : (
                 <AnimatePresence mode="popLayout" initial={false}>
