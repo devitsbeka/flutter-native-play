@@ -154,9 +154,12 @@ SELECT pg_temp.must_fail(
 
 -- ── daily reward: amount and frequency both decided here ───────────────────
 
+-- Day one pays 50, or 100 when the surprise rolls double coins. Asserting a
+-- flat 50 was correct until the surprise landed (20260823120000) and has been
+-- failing roughly a third of CI runs since, on a roll rather than on a change.
 SELECT pg_temp.must_equal(
-  (SELECT coins_awarded FROM public.claim_daily_reward()),
-  50, 'day one of the daily reward');
+  (SELECT coins_awarded IN (50, 100) FROM public.claim_daily_reward()),
+  true, 'day one of the daily reward is 50, or 100 doubled');
 
 SELECT pg_temp.must_fail(
   $$SELECT public.claim_daily_reward()$$,
