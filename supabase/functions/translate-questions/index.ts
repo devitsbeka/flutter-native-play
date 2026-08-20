@@ -32,9 +32,15 @@ const LANGUAGE_NAMES: Record<string, string> = {
   pt: "Portuguese (Português)",
 };
 
+// A wave = PARALLEL_BATCHES simultaneous AI calls of BATCH_SIZE questions
+// each, fetched with a single RPC call and chunked. Waves repeat until the
+// time budget runs out. The budget is set so a run always finishes inside
+// the 1-minute cron interval — overlapping runs would grab the same rows
+// and burn tokens translating them twice (the unique index still dedupes,
+// but the money is spent).
 const BATCH_SIZE = 14;
-const MAX_BATCHES_PER_RUN = 10;
-const TIME_BUDGET_MS = 45_000;
+const PARALLEL_BATCHES = 10;
+const TIME_BUDGET_MS = 50_000;
 
 interface SourceQuestion {
   id: string;
@@ -160,85 +166,98 @@ serve(async (req) => {
   let language: string | null = null;
   let translated = 0;
   let skipped = 0;
-  let batches = 0;
+  let failedBatches = 0;
+  let waves = 0;
 
-  while (batches < MAX_BATCHES_PER_RUN && Date.now() - started < TIME_BUDGET_MS) {
-    // One language at a time: the first target that still has gaps. Re-checked
-    // per batch only when the previous language just finished.
-    let batch: SourceQuestion[] = [];
-    if (language) {
+  while (Date.now() - started < TIME_BUDGET_MS) {
+    // One language at a time: the first target that still has gaps. One RPC
+    // call fetches a whole wave's worth of rows, chunked into parallel
+    // batches below.
+    let pool: SourceQuestion[] = [];
+    for (const target of language ? [language] : TARGETS) {
       const { data, error } = await supabase.rpc("get_untranslated_questions", {
-        p_language: language,
-        p_limit: BATCH_SIZE,
+        p_language: target,
+        p_limit: BATCH_SIZE * PARALLEL_BATCHES,
       });
       if (error) throw error;
-      batch = (data ?? []) as SourceQuestion[];
-    }
-    if (batch.length === 0) {
+      if (data && data.length > 0) {
+        language = target;
+        pool = data as SourceQuestion[];
+        break;
+      }
       language = null;
-      for (const target of TARGETS) {
-        const { data, error } = await supabase.rpc("get_untranslated_questions", {
-          p_language: target,
-          p_limit: BATCH_SIZE,
-        });
-        if (error) throw error;
-        if (data && data.length > 0) {
-          language = target;
-          batch = data as SourceQuestion[];
-          break;
+    }
+    if (!language || pool.length === 0) break; // everything translated
+
+    waves++;
+    const lang = language;
+    const chunks: SourceQuestion[][] = [];
+    for (let i = 0; i < pool.length; i += BATCH_SIZE) {
+      chunks.push(pool.slice(i, i + BATCH_SIZE));
+    }
+
+    // All batches of the wave fly at once; each one lands its own rows, so a
+    // single failed AI call costs that batch only — the rest of the wave is
+    // unaffected and the failed rows are re-picked by a later run.
+    const results = await Promise.allSettled(
+      chunks.map(async (batch) => {
+        const bySourceId = new Map(batch.map((q) => [q.id, q]));
+        const items = await translateBatch(lang, batch);
+
+        const rows = [];
+        let batchSkipped = 0;
+        for (const item of items) {
+          const source = bySourceId.get(item.id);
+          if (!source || !validItem(item, source)) {
+            batchSkipped++;
+            continue;
+          }
+          rows.push({
+            category_id: source.category_id,
+            language: lang,
+            question_text: item.question.trim(),
+            correct_answer: item.correct.trim(),
+            incorrect_answers: item.incorrect.map((a) => a.trim()),
+            difficulty: source.difficulty,
+            level_number: source.level_number,
+            icon_slug: source.icon_slug,
+            image_url: source.image_url,
+            video_url: source.video_url,
+            audio_url: source.audio_url,
+            is_active: true,
+            in_production: true,
+            translated_from: source.id,
+          });
         }
+
+        if (rows.length > 0) {
+          const { error } = await supabase
+            .from("questions")
+            .upsert(rows, { onConflict: "translated_from,language", ignoreDuplicates: true });
+          if (error) throw error;
+        }
+        return { landed: rows.length, batchSkipped };
+      }),
+    );
+
+    for (const r of results) {
+      if (r.status === "fulfilled") {
+        translated += r.value.landed;
+        skipped += r.value.batchSkipped;
+      } else {
+        failedBatches++;
+        console.error(`translate-questions: batch failed (${lang}):`, r.reason);
       }
-      if (!language) break; // everything translated
     }
 
-    batches++;
-    const bySourceId = new Map(batch.map((q) => [q.id, q]));
+    // Every batch failing means the provider is down or throttling hard;
+    // stop burning the budget and let the next cron tick try again.
+    if (results.every((r) => r.status === "rejected")) break;
 
-    let items: TranslatedItem[];
-    try {
-      items = await translateBatch(language, batch);
-    } catch (e) {
-      // One failed AI call ends the run, not the pipeline — cron retries the
-      // same batch in a few minutes.
-      console.error(`translate-questions: batch failed (${language}):`, e);
-      break;
-    }
-
-    const rows = [];
-    for (const item of items) {
-      const source = bySourceId.get(item.id);
-      if (!source || !validItem(item, source)) {
-        skipped++;
-        continue;
-      }
-      rows.push({
-        category_id: source.category_id,
-        language,
-        question_text: item.question.trim(),
-        correct_answer: item.correct.trim(),
-        incorrect_answers: item.incorrect.map((a) => a.trim()),
-        difficulty: source.difficulty,
-        level_number: source.level_number,
-        icon_slug: source.icon_slug,
-        image_url: source.image_url,
-        video_url: source.video_url,
-        audio_url: source.audio_url,
-        is_active: true,
-        in_production: true,
-        translated_from: source.id,
-      });
-    }
-
-    if (rows.length > 0) {
-      const { error } = await supabase
-        .from("questions")
-        .upsert(rows, { onConflict: "translated_from,language", ignoreDuplicates: true });
-      if (error) throw error;
-      translated += rows.length;
-    }
+    // A short wave means this language is nearly done; loop to re-pick.
   }
 
-  const summary = { language, batches, translated, skipped, ms: Date.now() - started };
+  const summary = { language, waves, translated, skipped, failedBatches, ms: Date.now() - started };
   console.log("translate-questions:", JSON.stringify(summary));
   return new Response(JSON.stringify(summary), {
     headers: { "Content-Type": "application/json" },
