@@ -2,11 +2,12 @@ import { useEffect, useRef } from 'react';
 import { useBackgroundGenerationSafe, GenerationJob } from '@/contexts/BackgroundGenerationContext';
 import { en } from '@/locales/en';
 import { ka } from '@/locales/ka';
+import { readAppLanguage } from '@/utils/appLanguage';
 
 const locales: Record<string, any> = { en, ka };
 
 function getT() {
-  const lang = localStorage.getItem('preferredLanguage') || 'en';
+  const lang = readAppLanguage();
   const loc = locales[lang] || ka;
   return (key: string) => {
     const parts = key.split('.');

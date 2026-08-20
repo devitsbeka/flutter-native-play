@@ -1,6 +1,7 @@
 // Helper to translate notification content based on type and language
 import { translations, DEFAULT_LANGUAGE, CONTENT_LANGUAGE } from '@/locales';
 import { missionTitle } from '@/utils/missionText';
+import { readAppLanguage } from '@/utils/appLanguage';
 
 interface NotificationData {
   sender_nickname?: string;
@@ -9,11 +10,7 @@ interface NotificationData {
 }
 
 function getCurrentLanguage(): string {
-  try {
-    return localStorage.getItem('preferredLanguage') || DEFAULT_LANGUAGE;
-  } catch {
-    return DEFAULT_LANGUAGE;
-  }
+  return readAppLanguage(DEFAULT_LANGUAGE);
 }
 
 // The stored Georgian text of a key, for recognizing rows the database wrote

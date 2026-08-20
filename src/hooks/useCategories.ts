@@ -2,21 +2,17 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Category } from '@/data/categories';
 import { preloadIcons } from '@/hooks/useIconLibrary';
+import { readAppLanguage } from '@/utils/appLanguage';
 
-const STORAGE_KEY = 'preferredLanguage';
 const DEFAULT_LANGUAGE = 'en';
 
-// Read the stored language directly. Used as the state INITIALIZER — the
+// Read the tab's language directly. Used as the state INITIALIZER — the
 // state used to start at DEFAULT_LANGUAGE and get corrected by an effect one
 // render later, which fired a wrong-language fetch on every mount and set up
 // the stale-response race below.
 function readStoredLanguage(): string {
   if (typeof window !== 'undefined') {
-    try {
-      return localStorage.getItem(STORAGE_KEY) || DEFAULT_LANGUAGE;
-    } catch {
-      return DEFAULT_LANGUAGE;
-    }
+    return readAppLanguage(DEFAULT_LANGUAGE);
   }
   return DEFAULT_LANGUAGE;
 }

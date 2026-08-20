@@ -5,6 +5,7 @@ import { FIRST_ANSWER_BONUS } from "@/utils/scoring";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
 import { missionTracker } from "@/services/missionTracker";
 import posthog from "posthog-js";
+import { readAppLanguage } from "@/utils/appLanguage";
 
 export type GamePhase = "home" | "matchmaking" | "preparing" | "vs-screen" | "playing" | "question-result" | "match-result";
 export type PowerUpType = "fifty-fifty" | "freeze" | "replace" | "time-drain";
@@ -304,7 +305,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         console.error("No questions available at all");
         // Show toast with localized message and return to home
         const { toast } = await import("sonner");
-        const stored = localStorage.getItem('preferredLanguage') || 'en';
+        const stored = readAppLanguage();
         const msg = stored === 'ka' ? 'კითხვები ვერ მოიძებნა ამ ენაზე' : 'No questions available in this language yet';
         toast.error(msg);
         setState(prev => ({ ...prev, phase: "home" }));

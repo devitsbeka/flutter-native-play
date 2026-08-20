@@ -6,6 +6,7 @@ import { anyBlockedText, containsBlockedText } from "@/utils/contentFilter";
 import { Loader2, ArrowLeft, HelpCircle, UserPlus, X, Share2, RefreshCw, Play, Pencil, Gamepad2, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
+import { readAppLanguage } from "@/utils/appLanguage";
 import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useAuth } from "@/contexts/AuthContext";
@@ -199,7 +200,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   }, [acceptedFriends, pinnedFriendIds]);
 
   // Get current language for room name generation
-  const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+  const currentLanguage = readAppLanguage();
   const defaultFallback = currentLanguage === 'ka' ? 'სახალისო გუნდი' : 'Fun Squad';
 
   // Generate room name via edge function

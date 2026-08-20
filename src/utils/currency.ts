@@ -1,14 +1,15 @@
 // Currency formatting utility
 // All prices are stored in USD. For Georgian users, prices are shown in GEL.
 
+import { readAppLanguage } from '@/utils/appLanguage';
+
 const USD_TO_GEL_RATE = 2.75;
 
 /**
  * Check if the user should see GEL pricing
  */
 export function shouldShowGel(): boolean {
-  const lang = localStorage.getItem('preferredLanguage') || 'en';
-  return lang === 'ka';
+  return readAppLanguage() === 'ka';
 }
 
 /**

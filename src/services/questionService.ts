@@ -34,6 +34,7 @@ import {
   clearMediaSeen,
 } from "@/services/questionTracker";
 import type { Json } from "@/integrations/supabase/types";
+import { readAppLanguage } from "@/utils/appLanguage";
 
 // ============================================================================
 // TYPES
@@ -106,7 +107,7 @@ const CONTENT_LANGUAGE = 'ka';
  */
 export function getPreferredLanguage(): string {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem(STORAGE_KEY) || DEFAULT_LANGUAGE;
+    return readAppLanguage(DEFAULT_LANGUAGE);
   }
   return DEFAULT_LANGUAGE;
 }

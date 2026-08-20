@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { readAppLanguage } from "@/utils/appLanguage";
 
 const STORAGE_KEY = "preferredLanguage";
 // What a user with no stored choice reads in — see locales/index.ts.
@@ -37,12 +38,7 @@ export function useCategoryDisplayName(
   useEffect(() => {
     if (!categoryUuid) return;
 
-    let lang = DEFAULT_LANGUAGE;
-    try {
-      lang = localStorage.getItem(STORAGE_KEY) || DEFAULT_LANGUAGE;
-    } catch {
-      /* private mode — the base name stands */
-    }
+    const lang = readAppLanguage(DEFAULT_LANGUAGE);
     if (lang === CONTENT_LANGUAGE) return;
 
     let cancelled = false;

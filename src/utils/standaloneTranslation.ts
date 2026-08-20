@@ -2,13 +2,10 @@
 // Reads language preference from localStorage and resolves keys from the locale files.
 
 import { translations, DEFAULT_LANGUAGE } from '@/locales';
+import { readAppLanguage } from '@/utils/appLanguage';
 
 function getCurrentLanguage(): string {
-  try {
-    return localStorage.getItem('preferredLanguage') || DEFAULT_LANGUAGE;
-  } catch {
-    return DEFAULT_LANGUAGE;
-  }
+  return readAppLanguage(DEFAULT_LANGUAGE);
 }
 
 /**

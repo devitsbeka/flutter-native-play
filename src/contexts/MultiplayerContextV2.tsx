@@ -10,6 +10,7 @@ import { getRandomGradient } from "@/config/roomGradients";
 import { siteUrl } from "@/config/site";
 import { getQuestions } from "@/services/questionService";
 import { shuffleArray } from "@/utils/shuffle";
+import { readAppLanguage } from "@/utils/appLanguage";
 import { getSeenQuestionIds, markQuestionsAsSeen } from "@/services/questionTracker";
 import { useUserPresence } from "@/hooks/useUserPresence";
 import { createNotification } from "@/hooks/useNotifications";
@@ -1062,7 +1063,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           // Same storage key LanguageContext writes; without it the server
           // falls back to Georgian regardless of the user's language.
           .invoke('generate-room-name', {
-            body: { language: localStorage.getItem('preferredLanguage') || 'en' },
+            body: { language: readAppLanguage() },
           })
           .then(({ data, error: nameError }) => {
             if (!nameError && data?.name) {

@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { generateRoomName, getDefaultRoomName } from "@/utils/roomNameGenerator";
 import { getRandomGradient } from "@/config/roomGradients";
+import { readAppLanguage } from "@/utils/appLanguage";
 export type RoomStatus = "waiting" | "ready" | "playing" | "completed" | "cancelled";
 export type ParticipantStatus = "joined" | "ready" | "playing" | "finished" | "disconnected";
 
@@ -88,7 +89,7 @@ export function useGameRoom() {
       }
 
       // Generate AI-powered funny room name based on random icon
-      const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+      const currentLanguage = readAppLanguage();
       let roomName = generateRoomName(currentLanguage); // fallback
       let roomIcon: string | null = null;
       

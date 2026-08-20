@@ -19,13 +19,14 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const STORAGE_KEY = 'preferredLanguage';
 
 function getStoredLanguage(): string {
+  // ?lang= outranks everything for this tab. It is tab-scoped on purpose and
+  // must never be written to localStorage: persisting it here made an open
+  // override tab rewrite the device language on every read, while another
+  // tab's country sync wrote it back — the two fired storage events at each
+  // other and every open page flickered between the languages.
+  const override = languageOverride();
+  if (override) return override;
   try {
-    // ?lang= outranks everything for this tab — see utils/languageOverride.
-    const override = languageOverride();
-    if (override) {
-      localStorage.setItem(STORAGE_KEY, override);
-      return override;
-    }
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored && translations[stored]) return stored;
   } catch {}
@@ -35,6 +36,9 @@ function getStoredLanguage(): string {
 // Best-effort write of the player's language to their profile. Quiet on
 // every failure — language switching must never depend on the network.
 async function syncPreferredLanguage(lang: string): Promise<void> {
+  // An override tab is "look, don't touch": it must not stamp its ?lang=
+  // onto the account (pushes are composed in preferred_language).
+  if (languageOverride()) return;
   try {
     const { data } = await supabase.auth.getSession();
     const userId = data.session?.user?.id;
@@ -134,6 +138,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // Listen for external storage changes (e.g. another tab)
   useEffect(() => {
     const handler = (e: StorageEvent) => {
+      // This tab's ?lang= override outranks whatever another tab stored.
+      if (languageOverride()) return;
       if (e.key === STORAGE_KEY && e.newValue && translations[e.newValue]) {
         setLanguageState(e.newValue);
       }

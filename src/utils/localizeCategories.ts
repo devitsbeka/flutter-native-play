@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { readAppLanguage } from "@/utils/appLanguage";
 
 /**
  * Overlay per-language names onto raw `categories` rows.
@@ -15,12 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 export async function localizeCategoryNames<T extends { id: string; name: string }>(
   rows: T[],
 ): Promise<T[]> {
-  let lang = "en";
-  try {
-    lang = localStorage.getItem("preferredLanguage") || "en";
-  } catch {
-    /* private mode — fall through with the default */
-  }
+  const lang = readAppLanguage();
   if (lang === "ka" || rows.length === 0) return rows;
 
   try {
