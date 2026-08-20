@@ -32,6 +32,14 @@ import { useAuth } from "@/hooks/useAuth";
  * whose `token` field wants an **FCM registration token**. FCM answers an
  * APNs token with INVALID_ARGUMENT.
  *
+ * `@capacitor/push-notifications` is now GONE from the project for a second
+ * reason: never imported, its native pod still loaded, and its `load()`
+ * runs after this plugin's — overwriting Capacitor's single
+ * `pushNotificationHandler` slot. Every notification tap was then emitted
+ * on a plugin nobody listened to, so `notificationActionPerformed` below
+ * never fired and a tap "just opened the app". Do not reinstall it
+ * alongside this plugin.
+ *
  * So the shape of the original bug survived being fixed: registration
  * succeeded, `push_tokens` filled up, the sender reported success per call,
  * and nothing was ever delivered. One FCM sender now serves iOS and Android

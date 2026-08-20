@@ -121,6 +121,11 @@ export async function sendToToken(
             notification: { title, body, ...(imageUrl ? { image: imageUrl } : {}) },
             ...(data ? { data } : {}),
             apns: {
+              // Priority 10 = deliver immediately. It is FCM's default for
+              // alert pushes, but stated explicitly so a future payload
+              // change (e.g. data-only) cannot silently drop deliveries to
+              // the batched priority-5 path.
+              headers: { "apns-priority": "10" },
               // mutable-content lets the iOS Notification Service Extension
               // fetch and attach the image. Without the extension in the app,
               // iOS simply shows the text — the field is inert, not harmful.
