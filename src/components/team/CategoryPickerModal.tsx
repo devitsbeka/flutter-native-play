@@ -4,6 +4,7 @@ import { X, Shuffle, Library, Sparkles, ArrowLeft, Search, Plus, Check, AlertTri
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { localizeCategoryNames } from "@/utils/localizeCategories";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -60,7 +61,7 @@ export function CategoryPickerModal({
   excludeTriviaId,
 }: CategoryPickerModalProps) {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [view, setView] = useState<ViewState>("main");
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<{
@@ -72,7 +73,7 @@ export function CategoryPickerModal({
 
   // Fetch categories
   const { data: categories = [], isLoading: loadingCategories } = useQuery<Category[]>({
-    queryKey: ["categories-picker"],
+    queryKey: ["categories-picker", language],
     queryFn: async (): Promise<Category[]> => {
       const result = await supabase
         .from("categories")
@@ -81,14 +82,17 @@ export function CategoryPickerModal({
         .order("sort_order", { ascending: true });
 
       if (result.error) throw result.error;
-      return (result.data || []).map(d => ({
-        id: d.id,
-        name: d.name,
-        icon: d.icon,
-        color: d.color,
-        icon_slug: d.icon_slug,
-        total_levels: d.total_levels,
-      }));
+      // categories.name is Georgian; overlay the reader's language.
+      return localizeCategoryNames(
+        (result.data || []).map(d => ({
+          id: d.id,
+          name: d.name,
+          icon: d.icon,
+          color: d.color,
+          icon_slug: d.icon_slug,
+          total_levels: d.total_levels,
+        })),
+      );
     },
     enabled: isOpen && view === "library",
   });
@@ -166,7 +170,7 @@ export function CategoryPickerModal({
     if (!selectedItem || !onAddToQueue) return;
 
     if (selectedItem.type === "random") {
-      onAddToQueue({ source_type: "random", category_name: "შემთხვევითი" });
+      onAddToQueue({ source_type: "random", category_name: t("extra.randomCategoryName") });
     } else if (selectedItem.type === "category") {
       onAddToQueue({
         source_type: "category",
