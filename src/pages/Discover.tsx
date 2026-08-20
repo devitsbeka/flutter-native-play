@@ -17,6 +17,7 @@ import { CategoryGrid } from "@/components/discover/CategoryGrid";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 import { matchesQuery } from "@/utils/searchMatch";
+import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
 
 // ─── Lazy Section: only mounts children when scrolled near viewport ─────
 
@@ -154,22 +155,21 @@ export default function Discover() {
   // search and play the most (cinema, TV, music, sports...), in that order.
   // Replaces the old daily shuffle that surfaced niche picks like geology.
   const popularCategories = useMemo(() => {
-    const POPULAR_IDS = [
-      "movies",
-      "tv_series",
-      "music",
-      "sports",
-      "world_history",
-      "geography",
-      "science",
-      "pop_culture",
-      "video_games",
-      "celebrities",
-      "animals",
-      "fun_facts",
+    // The six picture-guess categories front the row (launch decision:
+    // they replace the old curated topic list — see popularImageCategories).
+    // Until their migration has run in a given environment they don't exist
+    // in `categories`, so fall back to the old curated list rather than
+    // rendering an empty Popular row.
+    const FALLBACK_IDS = [
+      "movies", "tv_series", "music", "sports", "world_history", "geography",
+      "science", "pop_culture", "video_games", "celebrities", "animals", "fun_facts",
     ];
     const byId = new Map(categories.map((c) => [c.id, c]));
-    return POPULAR_IDS.map((id) => byId.get(id)).filter(
+    const pictureGuess = POPULAR_IMAGE_CATEGORY_IDS
+      .map((id) => byId.get(id))
+      .filter((c): c is NonNullable<typeof c> => Boolean(c));
+    if (pictureGuess.length > 0) return pictureGuess;
+    return FALLBACK_IDS.map((id) => byId.get(id)).filter(
       (c): c is NonNullable<typeof c> => Boolean(c)
     );
   }, [categories]);

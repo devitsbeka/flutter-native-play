@@ -4,6 +4,7 @@ import { Heart } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { CATEGORY_VIDEOS, getResponsiveVideoSrc } from "@/config/videoConfig";
+import { POPULAR_CATEGORY_ICONS, POPULAR_CATEGORY_PALETTES } from "@/config/popularImageCategories";
 
 
 interface AirbnbCategoryCardProps {
@@ -45,6 +46,10 @@ const PASTEL_PALETTES = [
 ];
 
 const getPastelColors = (id: string): { base: string; accent: string; depth: string } => {
+  // The picture-guess categories ship a designed palette; everything else
+  // keeps the stable id-hash pick.
+  const pinned = POPULAR_CATEGORY_PALETTES[id as keyof typeof POPULAR_CATEGORY_PALETTES];
+  if (pinned) return pinned;
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     hash = id.charCodeAt(i) + ((hash << 5) - hash);
@@ -215,12 +220,22 @@ function AirbnbCategoryCardComponent({
               </>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <DynamicIcon
-                  slug={iconSlug || undefined}
-                  categoryId={categoryId}
-                  size={iconSize}
-                  className="drop-shadow-lg filter brightness-110"
-                />
+                {POPULAR_CATEGORY_ICONS[(categoryId ?? id) as keyof typeof POPULAR_CATEGORY_ICONS] ? (
+                  <img
+                    src={POPULAR_CATEGORY_ICONS[(categoryId ?? id) as keyof typeof POPULAR_CATEGORY_ICONS]}
+                    alt=""
+                    draggable={false}
+                    className="w-[62%] max-h-[74%] object-contain drop-shadow-lg"
+                    loading="lazy"
+                  />
+                ) : (
+                  <DynamicIcon
+                    slug={iconSlug || undefined}
+                    categoryId={categoryId}
+                    size={iconSize}
+                    className="drop-shadow-lg filter brightness-110"
+                  />
+                )}
               </div>
             )}
             </div>
