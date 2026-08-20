@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { typeInTab, type NotificationTab } from '@/config/notificationTabs';
+import { PUBLIC_SHARING_ENABLED } from '@/config/features';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell, BellOff, Gamepad2, Users, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -74,9 +75,10 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
       typeInTab(n.type, 'games') && !n.read_at
     ).length;
     
-    // Prioritize tabs with unread items
+    // Prioritize tabs with unread items. The trivia tab is hidden while
+    // public sharing is off, so it must never be the landing tab.
     if (socialUnread > 0) return 'social';
-    if (triviaUnread > 0) return 'trivia';
+    if (PUBLIC_SHARING_ENABLED && triviaUnread > 0) return 'trivia';
     if (gamesUnread > 0) return 'games';
     return 'games';
   };
@@ -382,7 +384,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
             {/* Tabs */}
             <div className="px-4 pt-3 pb-2">
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'games' | 'social' | 'trivia')} className="w-full">
-                <TabsList className="grid grid-cols-3 w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto">
+                <TabsList className={`grid ${PUBLIC_SHARING_ENABLED ? "grid-cols-3" : "grid-cols-2"} w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto`}>
                   <TabsTrigger value="games" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
                     <Gamepad2 className="w-3.5 h-3.5" />
                     <span>{t("notificationsPanel.gamesTab")}</span>
@@ -401,6 +403,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
                       </span>
                     )}
                   </TabsTrigger>
+                  {PUBLIC_SHARING_ENABLED && (
                   <TabsTrigger value="trivia" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>{t("notificationsPanel.triviaTab")}</span>
@@ -410,6 +413,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
                       </span>
                     )}
                   </TabsTrigger>
+                  )}
                 </TabsList>
               </Tabs>
             </div>

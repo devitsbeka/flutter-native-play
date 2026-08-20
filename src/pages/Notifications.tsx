@@ -22,6 +22,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PingPongVideo } from '@/components/shared/PingPongVideo';
 import { MAP_VIDEOS } from '@/config/videoConfig';
 import { supabase } from '@/integrations/supabase/client';
+import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -316,7 +317,7 @@ export default function Notifications() {
           device (and never on web, where --safe-top is 0). */}
       <div className="sticky top-[76px] z-10 bg-background/95 backdrop-blur-md px-4 pt-3 pb-3 max-w-[700px] md:max-w-[600px] mx-auto">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as NotificationTab)} className="w-full">
-          <TabsList className="grid grid-cols-3 w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto">
+          <TabsList className={`grid ${PUBLIC_SHARING_ENABLED ? "grid-cols-3" : "grid-cols-2"} w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto`}>
             <TabsTrigger value="games" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
               <Gamepad2 className="w-3.5 h-3.5" />
               <span>{t("extra.notifGamesTab")}</span>
@@ -335,6 +336,9 @@ export default function Notifications() {
                 </span>
               )}
             </TabsTrigger>
+            {/* Likes/saves/plays on published trivias — nothing can produce
+                these while public sharing is hidden, so the tab goes too. */}
+            {PUBLIC_SHARING_ENABLED && (
             <TabsTrigger value="trivia" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
               <Sparkles className="w-3.5 h-3.5" />
               <span>{t("extra.notifTriviaTab")}</span>
@@ -344,6 +348,7 @@ export default function Notifications() {
                 </span>
               )}
             </TabsTrigger>
+            )}
           </TabsList>
         </Tabs>
       </div>
