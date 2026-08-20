@@ -162,6 +162,11 @@ export default function Notifications() {
       await markAsRead(notificationId);
       if (roomCode) {
         navigate(`/team?join=${roomCode}`);
+      } else {
+        // Accepted, but the room can no longer be joined (deleted or
+        // codeless). Saying nothing left the player staring at the list
+        // wondering whether the tap worked.
+        toast.error(t("extra.mpRoomNotFound"));
       }
     } catch (error) {
       toast.error(t("extra.errorOccurred"));
@@ -219,6 +224,9 @@ export default function Notifications() {
             if (roomCode) {
               navigate(`/team?join=${roomCode}`);
             } else {
+              // No room to go to — say so instead of quietly landing the
+              // player on the games tab as if the tap meant nothing.
+              toast.error(t("extra.mpRoomNotFound"));
               navigate('/team');
             }
           } catch {
@@ -228,9 +236,17 @@ export default function Notifications() {
         })();
         break;
       case 'friend_request':
-      case 'friend_accepted':
-        navigate('/team');
+      case 'friend_accepted': {
+        // The notification is about a person — open that person, not the
+        // games tab.
+        const senderId = data?.sender_id as string | undefined;
+        if (senderId) {
+          navigate(`/profile/${senderId}`);
+        } else {
+          setDetailNotification(notification);
+        }
         break;
+      }
       case 'challenge':
       case 'room_ping':
         if (data?.room_code) {
@@ -246,6 +262,17 @@ export default function Notifications() {
           navigate('/profile');
         }
         break;
+      case 'new_levels': {
+        // The push deep-links to the category; the in-app row should too.
+        const cats = data?.categories as { categoryId?: string }[] | undefined;
+        const catId = cats?.[0]?.categoryId;
+        if (catId) {
+          navigate(`/category/${catId}`);
+        } else {
+          setDetailNotification(notification);
+        }
+        break;
+      }
       case 'trivia_liked':
       case 'trivia_saved':
       case 'trivia_played':

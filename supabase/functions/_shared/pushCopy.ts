@@ -36,7 +36,8 @@ export type PushKind =
   | "creator_digest"
   | "friend_request"
   | "friend_accept"
-  | "challenge_beaten";
+  | "challenge_beaten"
+  | "room_ping";
 
 export const PUSH_LANGUAGES = ["ka", "en", "de", "es", "fr", "it", "pt"] as const;
 
@@ -60,6 +61,8 @@ export const PUSH_META: Record<PushKind, { icon: string; route: string }> = {
   friend_accept: { icon: `${SITE}/push/handshake.png`, route: "/notifications" },
   // route is built by the caller: /challenge/{code}
   challenge_beaten: { icon: `${SITE}/push/sword.png`, route: "/" },
+  // route is built by the caller: /team?join={room_code}
+  room_ping: { icon: `${SITE}/push/bell.png`, route: "/team" },
 };
 
 export const PUSH_COPY: Record<PushKind, Record<string, PushMessage>> = {
@@ -188,6 +191,15 @@ export const PUSH_COPY: Record<PushKind, Record<string, PushMessage>> = {
     fr: { title: "Demande acceptée", body: "{name} a accepté ta demande — défie-le." },
     it: { title: "Richiesta accettata", body: "{name} ha accettato la tua richiesta — sfidalo." },
     pt: { title: "Pedido aceito", body: "{name} aceitou seu pedido — desafie-o." },
+  },
+  room_ping: {
+    ka: { title: "{name} გეძახის", body: "მოთამაშეები ოთახში „{room}“ გელოდებიან — დაბრუნდი და დაიწყე თამაში." },
+    en: { title: "{name} is calling you", body: "Players are waiting in {room} — come back and start the game." },
+    de: { title: "{name} ruft dich", body: "Die Spieler warten in {room} — komm zurück und starte das Spiel." },
+    es: { title: "{name} te está llamando", body: "Los jugadores esperan en {room} — vuelve y empieza la partida." },
+    fr: { title: "{name} t'appelle", body: "Les joueurs attendent dans {room} — reviens et lance la partie." },
+    it: { title: "{name} ti sta chiamando", body: "I giocatori aspettano in {room} — torna e avvia la partita." },
+    pt: { title: "{name} está chamando você", body: "Os jogadores esperam em {room} — volte e comece o jogo." },
   },
   challenge_beaten: {
     ka: { title: "შენი რეკორდი მოხსნეს", body: "{name} შენს ქულას აჯობა — დაიბრუნე პირველობა." },

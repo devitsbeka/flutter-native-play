@@ -80,6 +80,7 @@ function TeamContentV2() {
     showJoinModal, 
     setShowJoinModal,
     enterRoom,
+    leaveRoomPermanently,
   } = useMultiplayerV2();
   const { playSound } = useSound();
   const { 
@@ -414,26 +415,42 @@ function TeamContentV2() {
 
   // Track room membership so a lingering ?room= code can't auto-rejoin the
   // user right after they leave; also strip the code from the URL on leave.
+  //
+  // Which room was left matters: this used to strip ANY join/room param on
+  // the way back to idle, and block the join effect while armed — so a
+  // notification tap for a DIFFERENT room ("come play", host ping) that
+  // arrived while the player had room state this session was eaten, and the
+  // tap "opened the games tab" doing nothing. Only the code of the room
+  // actually left is lingering state; any other code is a fresh invite.
   const wasInRoomRef = useRef(false);
+  const lastRoomCodeRef = useRef<string | null>(null);
   useEffect(() => {
     if (phase !== "idle") {
       wasInRoomRef.current = true;
+      if (currentRoom?.room_code) lastRoomCodeRef.current = currentRoom.room_code.toUpperCase();
       return;
     }
     if (!wasInRoomRef.current) return;
-    if (searchParams.has("room") || searchParams.has("join")) {
-      const next = new URLSearchParams(searchParams);
-      next.delete("room");
-      next.delete("join");
-      setSearchParams(next, { replace: true });
-      // Keep the ref set until the params are actually gone, so the join
-      // effect (which sees the same pre-strip params this render) stays
-      // blocked from re-joining the room that was just left.
+    const lingering = searchParams.get("join") || searchParams.get("room");
+    if (lingering) {
+      if (lingering.toUpperCase() === lastRoomCodeRef.current) {
+        const next = new URLSearchParams(searchParams);
+        next.delete("room");
+        next.delete("join");
+        setSearchParams(next, { replace: true });
+        // Keep the ref set until the params are actually gone, so the join
+        // effect (which sees the same pre-strip params this render) stays
+        // blocked from re-joining the room that was just left.
+        return;
+      }
+      // A different room's code is not lingering state — it is a fresh
+      // invite. Disarm so the join effect takes it.
+      wasInRoomRef.current = false;
       return;
     }
     // Back at idle with a clean URL: re-arm so a future invite link works.
     wasInRoomRef.current = false;
-  }, [phase, searchParams, setSearchParams]);
+  }, [phase, searchParams, setSearchParams, currentRoom]);
 
   // Handle join code from URL. ?join= is the invite flow (consumed after
   // joining); ?room= stays in the URL so a refresh mid-lobby rejoins the room.
@@ -442,7 +459,33 @@ function TeamContentV2() {
   const attemptedJoinCodeRef = useRef<string | null>(null);
   useEffect(() => {
     const joinCode = searchParams.get("join") || searchParams.get("room");
-    if (!joinCode || phase !== "idle" || wasInRoomRef.current) return;
+    if (!joinCode) return;
+
+    // Already in a room. If the code IS that room, the lobby on screen is
+    // the destination and the cleanup effect above strips the param. If it
+    // is a different room's code — an invite or host-ping tap — honour the
+    // tap: leave the current room and join the one the notification is
+    // about. Never mid-game: a code cannot yank someone out of live play.
+    if (phase !== "idle") {
+      if (!user) return;
+      const here = currentRoom?.room_code?.toUpperCase();
+      if (!here || joinCode.toUpperCase() === here) return;
+      if (phase === "playing") return;
+      if (attemptedJoinCodeRef.current === joinCode) return;
+      attemptedJoinCodeRef.current = joinCode;
+      (async () => {
+        await leaveRoomPermanently();
+        await enterRoom(joinCode);
+        const next = new URLSearchParams(searchParams);
+        next.delete("join");
+        next.delete("room");
+        next.delete("tv");
+        setSearchParams(next, { replace: true });
+      })();
+      return;
+    }
+
+    if (wasInRoomRef.current) return;
 
     // A push-notification tap cold-starts the app straight onto
     // /team?join=CODE, and for the first moments the stored session is still
@@ -493,7 +536,7 @@ function TeamContentV2() {
         // The useEffect will re-trigger with the new user and auto-join
       })();
     }
-  }, [searchParams, user, authLoading, phase, enterRoom, setSearchParams, showGuestJoinModal, pendingGuestJoinCode, guestSignInBlocked]);
+  }, [searchParams, user, authLoading, phase, currentRoom, enterRoom, leaveRoomPermanently, setSearchParams, showGuestJoinModal, pendingGuestJoinCode, guestSignInBlocked]);
 
   // Handle guest joining a room via invite link
   const handleGuestJoinRoom = async (nickname: string) => {

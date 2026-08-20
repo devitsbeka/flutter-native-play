@@ -39,7 +39,7 @@ Deno.serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    const { kind, friendshipId, attemptId } = await req.json().catch(() => ({}));
+    const { kind, friendshipId, attemptId, roomId } = await req.json().catch(() => ({}));
 
     // ---- Who is asking (required for the friend events) -------------------
     const readCaller = async (): Promise<string | null> => {
@@ -134,15 +134,72 @@ Deno.serve(async (req: Request) => {
       params = { name: attempt.player_name?.trim() || "Someone" };
       route = `/challenge/${challenge.code}`;
       detail = `challenge_beaten:${attempt.id}`;
+    } else if (kind === "room_ping") {
+      // A player in a lobby asking the host to come start the game. This
+      // used to go through send-push-notification, which requires the admin
+      // role — so every ping from a real player 403'd silently, and the ones
+      // that did send carried no route. Caller must be a participant of the
+      // room; the recipient is always the host, and the route is the room.
+      if (!roomId || typeof roomId !== "string") {
+        return json({ error: "roomId is required" }, 400);
+      }
+      const callerId = await readCaller();
+      if (!callerId) return json({ error: "Authorization required" }, 401);
+
+      const { data: room } = await supabase
+        .from("game_rooms")
+        .select("id, room_code, room_name, host_user_id, status")
+        .eq("id", roomId)
+        .maybeSingle();
+      if (!room) return json({ error: "Room not found" }, 404);
+      if (room.host_user_id === callerId) return json({ sent: 0, skipped: "own_room" });
+
+      const { data: membership } = await supabase
+        .from("room_participants")
+        .select("id")
+        .eq("room_id", room.id)
+        .eq("user_id", callerId)
+        .maybeSingle();
+      if (!membership) return json({ error: "Not in this room" }, 403);
+
+      // The client has a 30s cooldown, but a cooldown enforced only by the
+      // party doing the spamming is a suggestion: one ping per host per
+      // minute, whoever asks.
+      const { data: recentPing } = await supabase
+        .from("push_log")
+        .select("id")
+        .eq("user_id", room.host_user_id)
+        .eq("kind", "room_ping")
+        .gt("created_at", new Date(Date.now() - 60_000).toISOString())
+        .limit(1)
+        .maybeSingle();
+      if (recentPing) return json({ sent: 0, skipped: "throttled" });
+
+      const { data: caller } = await supabase
+        .from("profiles")
+        .select("nickname")
+        .eq("user_id", callerId)
+        .maybeSingle();
+
+      recipientId = room.host_user_id;
+      pushKind = "room_ping";
+      params = {
+        name: caller?.nickname?.trim() || "Someone",
+        room: room.room_name?.trim() || room.room_code,
+      };
+      route = `/team?join=${encodeURIComponent(room.room_code)}`;
+      detail = "";
     } else {
       return json({ error: "Unknown kind" }, 400);
     }
 
     // The unique (kind, detail) index is the idempotency: claim the event
     // BEFORE sending, and a duplicate claim means someone else already sent.
+    // room_ping has no event identity (the same host may be pinged again
+    // after the throttle window) — null detail opts out of the unique index.
     const { error: logError } = await supabase
       .from("push_log")
-      .insert({ user_id: recipientId, kind: pushKind, detail });
+      .insert({ user_id: recipientId, kind: pushKind, detail: detail || null });
     if (logError) {
       if (logError.code === "23505") return json({ sent: 0, skipped: "already_sent" });
       return json({ error: logError.message }, 500);

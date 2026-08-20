@@ -288,17 +288,15 @@ export function RoomLobbyV2() {
         sender_nickname: senderName,
       }
     );
-    // Push for hosts away from the app; fails quietly if push isn't configured
+    // Push for hosts away from the app; fails quietly if push isn't
+    // configured. send-social-push, NOT send-push-notification: that one
+    // requires the admin role (it is the admin broadcast), so a regular
+    // player's ping 403'd silently — and it carried no route, so even a
+    // delivered tap could only open the app. The server re-reads the room,
+    // checks this caller is a participant, composes the text in the HOST's
+    // language and routes the tap to /team?join=<code>.
     supabase.functions
-      .invoke("send-push-notification", {
-        body: {
-          user_ids: [currentRoom.host_user_id],
-          title,
-          body: currentRoom.room_name || "",
-          data: { room_code: currentRoom.room_code },
-          notification_type: "custom",
-        },
-      })
+      .invoke("send-social-push", { body: { kind: "room_ping", roomId: currentRoom.id } })
       .catch(() => {});
     toast.success(t("extra.pingHostSent"));
   };
