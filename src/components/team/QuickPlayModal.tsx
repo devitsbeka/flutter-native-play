@@ -5,7 +5,8 @@ import { Gamepad2, Clock, Zap } from "lucide-react";
 import { Friend } from "@/hooks/useFriends";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
-import { categories, Category } from "@/data/categories";
+import { Category } from "@/data/categories";
+import { useCategories } from "@/hooks/useCategories";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface QuickPlayModalProps {
@@ -26,6 +27,9 @@ export function QuickPlayModal({
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [categoryType, setCategoryType] = useState<"classic" | "fun" | "educational">("classic");
   const { t } = useLanguage();
+  // The live category list, name already in the viewer's language — the
+  // static src/data list carries the Georgian base names only.
+  const { categories } = useCategories();
 
   if (!friend) return null;
 
