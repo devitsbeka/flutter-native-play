@@ -1126,7 +1126,6 @@ export function useDailyMissionsFor(dateISO: string | null): DayMissions {
   const { data, isLoading } = useQuery({
     queryKey: ["missions-day", user?.id, date],
     queryFn: async (): Promise<Mission[]> => {
-      const ids = new Set(dailyPoolForDate(date).map((d) => d.mission_id));
       const { data: rows, error } = await supabase
         .from("user_missions")
         .select("*")
@@ -1134,7 +1133,15 @@ export function useDailyMissionsFor(dateISO: string | null): DayMissions {
         .eq("mission_date", date)
         .eq("mission_type", "daily");
       if (error) throw error;
-      return (rows || []).filter((r) => ids.has(r.mission_id)) as Mission[];
+      // Deliberately NOT filtered against dailyPoolForDate(date): the rows
+      // are the history, whatever pool minted them. An older build (the
+      // TestFlight app, a cached web bundle) hands out that day's dailies
+      // from the pool it shipped with, and after a pool rework those ids are
+      // no longer in the current rotation — the old filter then hid the whole
+      // day as "no missions available" even though the player did them.
+      // Unknown ids render fine: missionTitle falls back to the stored title
+      // and getMissionIcon to the default.
+      return (rows || []) as Mission[];
     },
     enabled: !!user && kind === "past",
     staleTime: 5 * 60 * 1000,
