@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Build the symbol-only logo bank migration (v2 of guess_logo).
+"""Build a v2 rebank migration for a picture-guess category (logo/movie).
 
-Run:  python3 scripts/popular-image-categories/build-logo-v2-migration.py
+Run:  python3 scripts/popular-image-categories/build-rebank-migration.py <slug>
 
 The first logo bank was wordmarks — the image spelled the answer, so the
 player read instead of guessed. This migration retires it and ships the
@@ -24,26 +24,30 @@ import sys
 import uuid
 
 HERE = pathlib.Path(__file__).parent
-OUT = HERE.parent.parent / "supabase" / "migrations" / "20260822120000_guess_logo_symbols.sql"
+OUT_NAMES = {
+    "guess_logo": "20260822120000_guess_logo_symbols.sql",
+    "guess_movie": "20260822130000_guess_movie_modern.sql",
+}
 
 spec = importlib.util.spec_from_file_location("bm", HERE / "build-migration.py")
 bm = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bm)
 
-SLUG = "guess_logo"
+SLUG = sys.argv[1] if len(sys.argv) > 1 else "guess_logo"
+PREFIX = {"guess_logo": "s-", "guess_movie": "m2-"}.get(SLUG, "v2-")
 CFG = bm.CATEGORIES[SLUG]
 CAT_ID = uuid.uuid5(bm.NS, f"category/{SLUG}")
 
 
 def main() -> None:
-    entries = json.loads((HERE / "spec" / "guess_logo_v2.json").read_text())
+    entries = json.loads((HERE / "spec" / f"{SLUG}_v2.json").read_text())
     errs = []
     if len(entries) != 70:
         errs.append(f"expected 70 entries, got {len(entries)}")
     seen_keys, seen_answers = set(), set()
     for e in entries:
-        if not str(e.get("key", "")).startswith("s-"):
-            errs.append(f"{e.get('key')}: v2 keys must be prefixed 's-'")
+        if not str(e.get("key", "")).startswith(PREFIX):
+            errs.append(f"{e.get('key')}: v2 keys must be prefixed {PREFIX!r}")
         if e["key"] in seen_keys:
             errs.append(f"duplicate key {e['key']}")
         seen_keys.add(e["key"])
@@ -110,8 +114,9 @@ def main() -> None:
     lines.append("")
     lines.append("COMMIT;")
     lines.append("")
-    OUT.write_text("\n".join(lines))
-    print(f"Wrote {OUT} ({OUT.stat().st_size} bytes)")
+    out = HERE.parent.parent / "supabase" / "migrations" / OUT_NAMES[SLUG]
+    out.write_text("\n".join(lines))
+    print(f"Wrote {out} ({out.stat().st_size} bytes)")
 
 
 if __name__ == "__main__":
