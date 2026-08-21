@@ -173,6 +173,11 @@ export default function CategoryQuizPage() {
   // given to. This is what makes a stale record harmless.
   const { isAnswered, selectedAnswer } = answerStateFor(answerRecord, currentQuestionIndex);
   const [score, setScore] = useState(0);
+  // Per-question outcome, indexed by question position — what the progress
+  // dots render. The dots used to be derived from the score alone
+  // ("first `score` dots green, rest red"), so a wrong answer on question 3
+  // painted dot 1 red instead of dot 3.
+  const [answerResults, setAnswerResults] = useState<("correct" | "wrong" | null)[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [outOfQuestions, setOutOfQuestions] = useState(false);
@@ -239,6 +244,7 @@ export default function CategoryQuizPage() {
       setQuestions([]);
       setCurrentQuestionIndex(0);
       setAnswerRecord(null);
+      setAnswerResults([]);
       setScore(0);
       setLoading(true);
       setError(null);
@@ -623,6 +629,12 @@ export default function CategoryQuizPage() {
   const handleTimeUp = useCallback(() => {
     if (!isAnswered) {
       setAnswerRecord({ questionIndex: currentQuestionIndex, choice: null });
+      // Running out of time is a miss: the dot goes red like a wrong answer.
+      setAnswerResults((prev) => {
+        const next = [...prev];
+        next[currentQuestionIndex] = "wrong";
+        return next;
+      });
 
       trackQuizQuestionAnswered({
         categoryId: categoryId!,
@@ -656,6 +668,11 @@ export default function CategoryQuizPage() {
     if (isCorrect) {
       setScore((prev) => prev + 1);
     }
+    setAnswerResults((prev) => {
+      const next = [...prev];
+      next[currentQuestionIndex] = isCorrect ? "correct" : "wrong";
+      return next;
+    });
 
     trackQuizQuestionAnswered({
       categoryId: categoryId!,
@@ -922,20 +939,13 @@ export default function CategoryQuizPage() {
     [isAnswered, currentQuestion, selectedAnswer, hiddenAnswers]
   );
 
-  // Build progress results for dots (same as QuizGameScreenProd) - MUST be before early returns
-  const progressResults = useMemo(() => {
-    const results: ("correct" | "wrong" | null)[] = [];
-    for (let i = 0; i < questions.length; i++) {
-      if (i < currentQuestionIndex) {
-        results.push(i < score ? "correct" : "wrong");
-      } else if (i === currentQuestionIndex && isAnswered) {
-        results.push(selectedAnswer === currentQuestion?.correct_answer ? "correct" : "wrong");
-      } else {
-        results.push(null);
-      }
-    }
-    return results;
-  }, [questions.length, currentQuestionIndex, isAnswered, selectedAnswer, currentQuestion, score]);
+  // Build progress results for dots (same as QuizGameScreenProd) - MUST be
+  // before early returns. Straight from the per-question record: dot N shows
+  // what happened on question N, not a score-count approximation.
+  const progressResults = useMemo(
+    () => questions.map((_, i) => answerResults[i] ?? null),
+    [questions, answerResults],
+  );
   // Shared reset function for replay
   const resetQuiz = useCallback(() => {
     setFetchNonce((n) => n + 1);
@@ -944,6 +954,7 @@ export default function CategoryQuizPage() {
     setQuestions([]);
     setCurrentQuestionIndex(0);
     setAnswerRecord(null);
+    setAnswerResults([]);
     setTimeRemaining(15);
     setScore(0);
     setShowResults(false);
