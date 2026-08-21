@@ -1314,6 +1314,9 @@ export default function CategoryQuizPage() {
             />
           </div>
         )}
+        {/* Media questions carry no difficulty pill — it sat on the very
+            picture being guessed. Logo marks also get breathing room via
+            imageInset: full-bleed bars touched the band's edges. */}
         <QuizQuestionCard
           questionText={currentQuestion?.question || ""}
           imageUrl={currentQuestion?.image_url}
@@ -1321,7 +1324,12 @@ export default function CategoryQuizPage() {
           audioUrl={currentQuestion?.audio_url}
           progressPercent={(timeRemaining / (15 + timerBonus)) * 100}
           state={timerFrozen ? "frozen" : "default"}
-          difficultyLabel={DIFFICULTY_LABELS[difficultyKey]}
+          difficultyLabel={
+            currentQuestion?.image_url || currentQuestion?.video_url || currentQuestion?.audio_url
+              ? undefined
+              : DIFFICULTY_LABELS[difficultyKey]
+          }
+          imageInset={categoryId === "guess_logo"}
           difficultyColor={DIFFICULTY_COLORS[difficultyKey]}
           freezeTimeLeft={freezeTimeRemaining}
           reserveTopSpace={!currentQuestion?.image_url && !currentQuestion?.video_url && !currentQuestion?.audio_url}

@@ -24,6 +24,12 @@ interface QuizQuestionCardProps {
    */
   imageUrl?: string | null;
   /**
+   * Draw the image at 85% of the band (7.5% padding each side). For logo
+   * marks: full-bleed bars touched the band's top and bottom edges, and a
+   * brand mark needs clear space the way a photograph does not.
+   */
+  imageInset?: boolean;
+  /**
    * Optional video URL for video-based trivia questions
    */
   videoUrl?: string | null;
@@ -71,6 +77,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       timerMaxSeconds = 20,
       freezeTimeLeft = 0,
       imageUrl,
+      imageInset = false,
       videoUrl,
       audioUrl,
       reserveTopSpace = false,
@@ -147,6 +154,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
               alt="Question"
               className={cn(
                 "w-full h-full object-contain relative",
+                imageInset && "p-[7.5%]",
                 imageStatus !== "loaded" && "opacity-0"
               )}
               loading="eager"
