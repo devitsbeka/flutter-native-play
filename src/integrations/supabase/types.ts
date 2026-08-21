@@ -3265,10 +3265,14 @@ export type Database = {
         Row: {
           chest_claimed: boolean | null
           chest_claimed_at: string | null
+          coins_awarded: number | null
           created_at: string | null
           daily_claimed: boolean | null
           daily_claimed_at: string | null
+          gems_awarded: number | null
           id: string
+          power_up: string | null
+          power_up_count: number | null
           reward_date: string
           streak_count: number | null
           updated_at: string | null
@@ -3277,10 +3281,14 @@ export type Database = {
         Insert: {
           chest_claimed?: boolean | null
           chest_claimed_at?: string | null
+          coins_awarded?: number | null
           created_at?: string | null
           daily_claimed?: boolean | null
           daily_claimed_at?: string | null
+          gems_awarded?: number | null
           id?: string
+          power_up?: string | null
+          power_up_count?: number | null
           reward_date?: string
           streak_count?: number | null
           updated_at?: string | null
@@ -3289,10 +3297,14 @@ export type Database = {
         Update: {
           chest_claimed?: boolean | null
           chest_claimed_at?: string | null
+          coins_awarded?: number | null
           created_at?: string | null
           daily_claimed?: boolean | null
           daily_claimed_at?: string | null
+          gems_awarded?: number | null
           id?: string
+          power_up?: string | null
+          power_up_count?: number | null
           reward_date?: string
           streak_count?: number | null
           updated_at?: string | null
