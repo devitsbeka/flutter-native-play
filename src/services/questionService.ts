@@ -32,6 +32,8 @@ import {
   getMediaSeenIds,
   markMediaQuestionsSeen,
   clearMediaSeen,
+  getMediaSeenUrls,
+  markMediaSeenUrls,
 } from "@/services/questionTracker";
 import type { Json } from "@/integrations/supabase/types";
 import { readAppLanguage } from "@/utils/appLanguage";
@@ -183,6 +185,38 @@ function dedupeByQuestionText<
     out.push(q);
   }
   return out;
+}
+
+/**
+ * Put media the player has never SEEN first, whatever mode showed it.
+ *
+ * The id trackers cannot express this: each play mode keeps its own list
+ * and every picture exists as one row per language, so a level, a quick
+ * game and a TV round could each serve the same image while every id list
+ * swore it was fresh. Ordering by unseen-URL-first (instead of filtering)
+ * means a small pool still fills its round — repeats return only when
+ * everything genuinely has been shown.
+ */
+function preferUnseenMedia<T extends { imageUrl?: string | null; videoUrl?: string | null; audioUrl?: string | null }>(
+  pool: T[]
+): T[] {
+  const seen = getMediaSeenUrls();
+  const mediaUrl = (q: T) => q.imageUrl || q.videoUrl || q.audioUrl || null;
+  const fresh: T[] = [];
+  const repeats: T[] = [];
+  for (const q of pool) {
+    const url = mediaUrl(q);
+    (url && seen.has(url) ? repeats : fresh).push(q);
+  }
+  return [...fresh, ...repeats];
+}
+
+/** Record the media URLs of a served round. */
+function markServedMediaUrls(selected: Array<{ imageUrl?: string | null; videoUrl?: string | null; audioUrl?: string | null }>): void {
+  const urls = selected
+    .map(q => q.imageUrl || q.videoUrl || q.audioUrl)
+    .filter((u): u is string => !!u);
+  markMediaSeenUrls(urls);
 }
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -555,12 +589,13 @@ async function getCategoryQuestions(
   }
   
   // Shuffle and select
-  const selected = await selectWithValidImages(dedupeByQuestionText(shuffleArray(validQuestions)), count);
+  const selected = await selectWithValidImages(preferUnseenMedia(dedupeByQuestionText(shuffleArray(validQuestions))), count);
   
   // FIX: Mark as seen for CATEGORY (not level-specific)
   // This ensures questions won't repeat across any level
   if (selected.length > 0) {
     markCategorySeen(categoryUuid, selected.map(q => q.id));
+    markServedMediaUrls(selected);
   }
   
   return {
@@ -708,11 +743,12 @@ async function getTVQuestions(
   }
   
   // Shuffle and select
-  const selected = await selectWithValidImages(dedupeByQuestionText(shuffleArray(validQuestions)), count);
+  const selected = await selectWithValidImages(preferUnseenMedia(dedupeByQuestionText(shuffleArray(validQuestions))), count);
   
   // Mark as asked
   if (selected.length > 0) {
     markQuestionsAsAsked(trackerKey, selected.map(q => q.id));
+    markServedMediaUrls(selected);
   }
   
   return {
@@ -853,11 +889,12 @@ async function getSingleCategoryVSQuestions(
     };
   }
   
-  const selected = await selectWithValidImages(dedupeByQuestionText(shuffleArray(validQuestions)), count);
+  const selected = await selectWithValidImages(preferUnseenMedia(dedupeByQuestionText(shuffleArray(validQuestions))), count);
   
   // Mark as seen
   if (selected.length > 0) {
     markQuestionsAsAskedGlobally(selected.map(q => q.id));
+    markServedMediaUrls(selected);
   }
   
   return {

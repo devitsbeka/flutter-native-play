@@ -12,6 +12,7 @@ const MAX_TRACKED_PER_CATEGORY = 500; // Remember last 500 questions per categor
 const GLOBAL_MAX_TRACKED = 1000; // Global limit across all categories
 const SEEN_MAX_TRACKED = 5000; // Track up to 5000 seen questions across all modes
 const MEDIA_SEEN_MAX_TRACKED = 500; // Track up to 500 media (image/video/audio) questions
+const MEDIA_SEEN_URL_MAX_TRACKED = 1200; // Media URLs seen, across every mode and language
 const RESET_THRESHOLD = 1.0; // Only reset when 100% of available questions have been asked
 const CATEGORY_SEEN_KEY_PREFIX = 'cat_'; // Prefix for category-wide tracking
 
@@ -21,6 +22,12 @@ interface TrackerData {
   global: string[]; // All asked question IDs (for VS mode)
   seen: string[]; // All questions ever shown to user (across all modes)
   mediaSeen: string[]; // Media questions (image/video/audio) seen - separate tracking
+  // Media URLs the player has been shown, across every mode and language.
+  // Ids cannot carry this invariant: the same picture exists as seven rows
+  // (one per language) and each play mode keeps its own id tracker, so a
+  // level, a quick game and a TV round could all serve the same image while
+  // every id-based list swore it was fresh.
+  mediaSeenUrls: string[];
   lastUpdated: number;
 }
 
@@ -39,12 +46,15 @@ function getTrackerData(): TrackerData {
       if (!parsed.mediaSeen) {
         parsed.mediaSeen = [];
       }
+      if (!parsed.mediaSeenUrls) {
+        parsed.mediaSeenUrls = [];
+      }
       return parsed;
     }
   } catch (e) {
     console.warn('Failed to parse question tracker data:', e);
   }
-  return { categories: {}, categoryLevels: {}, global: [], seen: [], mediaSeen: [], lastUpdated: Date.now() };
+  return { categories: {}, categoryLevels: {}, global: [], seen: [], mediaSeen: [], mediaSeenUrls: [], lastUpdated: Date.now() };
 }
 
 function saveTrackerData(data: TrackerData): void {
@@ -384,5 +394,20 @@ export function shouldResetMediaPool(totalMediaAvailable: number): boolean {
 export function clearMediaSeen(): void {
   const data = getTrackerData();
   data.mediaSeen = [];
+  saveTrackerData(data);
+}
+
+/** Media URLs the player has already been shown, whatever mode served them. */
+export function getMediaSeenUrls(): Set<string> {
+  const data = getTrackerData();
+  return new Set(data.mediaSeenUrls || []);
+}
+
+/** Record media URLs as shown. Oldest fall off past the cap. */
+export function markMediaSeenUrls(urls: string[]): void {
+  if (urls.length === 0) return;
+  const data = getTrackerData();
+  const merged = [...new Set([...(data.mediaSeenUrls || []), ...urls])];
+  data.mediaSeenUrls = merged.slice(-MEDIA_SEEN_URL_MAX_TRACKED);
   saveTrackerData(data);
 }
