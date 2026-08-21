@@ -29,9 +29,17 @@ UA = "flutter-native-play question tooling (https://github.com/devitsbeka/flutte
 def fetch(url: str, dest: pathlib.Path) -> None:
     if dest.exists():
         return
-    req = urllib.request.Request(url.replace("/1280px-", "/320px-"), headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        dest.write_bytes(r.read())
+    # Some files only offer the thumb sizes Commons pre-lists; fall back to
+    # the verified 1280px URL when the 320px rewrite is refused.
+    for candidate in (url.replace("/1280px-", "/320px-"), url):
+        req = urllib.request.Request(candidate, headers={"User-Agent": UA})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                dest.write_bytes(r.read())
+            return
+        except urllib.error.HTTPError as exc:
+            if exc.code != 400 or candidate == url:
+                raise
 
 
 def main() -> None:

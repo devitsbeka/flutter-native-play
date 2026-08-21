@@ -184,7 +184,9 @@ def lang_value(entry_map, lang, fallback_en):
 def validate_entry(slug, e):
     errs = []
     key = e.get("key", "?")
-    img = e.get("image", "")
+    # Authoring tools sometimes copy thumb URLs with UTM junk attached.
+    e["image"] = (e.get("image") or "").split("?")[0]
+    img = e["image"]
     if not img.startswith("https://upload.wikimedia.org/"):
         errs.append(f"{slug}/{key}: image not on upload.wikimedia.org: {img[:60]}")
     lic = (e.get("license") or "").strip()

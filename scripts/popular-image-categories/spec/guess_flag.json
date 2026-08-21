@@ -1,0 +1,3507 @@
+[
+ {
+  "key": "flag-japan",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Flag_of_Japan.svg/1280px-Flag_of_Japan.svg.png",
+  "file": "File:Flag of Japan.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Japan",
+   "ka": "იაპონია",
+   "es": "Japón",
+   "fr": "Japon",
+   "it": "Giappone",
+   "pt": "Japão"
+  },
+  "wrong": {
+   "en": [
+    "Bangladesh",
+    "Palau",
+    "South Korea"
+   ],
+   "ka": [
+    "ბანგლადეში",
+    "პალაუ",
+    "სამხრეთ კორეა"
+   ],
+   "de": [
+    "Bangladesh",
+    "Palau",
+    "Südkorea"
+   ],
+   "es": [
+    "Bangladés",
+    "Palaos",
+    "Corea del Sur"
+   ],
+   "fr": [
+    "Bangladesh",
+    "Palaos",
+    "Corée du Sud"
+   ],
+   "it": [
+    "Bangladesh",
+    "Palau",
+    "Corea del Sud"
+   ],
+   "pt": [
+    "Bangladesh",
+    "Palau",
+    "Coreia do Sul"
+   ]
+  }
+ },
+ {
+  "key": "flag-united-states",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Flag_of_the_United_States.svg/1280px-Flag_of_the_United_States.svg.png",
+  "file": "File:Flag of the United States.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "United States",
+   "ka": "შეერთებული შტატები",
+   "de": "Vereinigte Staaten",
+   "es": "Estados Unidos",
+   "fr": "États-Unis",
+   "it": "Stati Uniti",
+   "pt": "Estados Unidos"
+  },
+  "wrong": {
+   "en": [
+    "Liberia",
+    "Malaysia",
+    "Chile"
+   ],
+   "ka": [
+    "ლიბერია",
+    "მალაიზია",
+    "ჩილე"
+   ],
+   "es": [
+    "Liberia",
+    "Malasia",
+    "Chile"
+   ],
+   "fr": [
+    "Liberia",
+    "Malaisie",
+    "Chili"
+   ],
+   "pt": [
+    "Libéria",
+    "Malásia",
+    "Chile"
+   ]
+  }
+ },
+ {
+  "key": "flag-france",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Flag_of_France.svg/1280px-Flag_of_France.svg.png",
+  "file": "File:Flag of France.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "France",
+   "ka": "საფრანგეთი",
+   "de": "Frankreich",
+   "es": "Francia",
+   "it": "Francia",
+   "pt": "França"
+  },
+  "wrong": {
+   "en": [
+    "Netherlands",
+    "Luxembourg",
+    "Russia"
+   ],
+   "ka": [
+    "ნიდერლანდები",
+    "ლუქსემბურგი",
+    "რუსეთი"
+   ],
+   "de": [
+    "Niederlande",
+    "Luxemburg",
+    "Russland"
+   ],
+   "es": [
+    "Países Bajos",
+    "Luxemburgo",
+    "Rusia"
+   ],
+   "fr": [
+    "Pays-Bas",
+    "Luxembourg",
+    "Russie"
+   ],
+   "it": [
+    "Paesi Bassi",
+    "Lussemburgo",
+    "Russia"
+   ],
+   "pt": [
+    "Países Baixos",
+    "Luxemburgo",
+    "Rússia"
+   ]
+  }
+ },
+ {
+  "key": "flag-germany",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Flag_of_Germany.svg/1280px-Flag_of_Germany.svg.png",
+  "file": "File:Flag of Germany.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Germany",
+   "ka": "გერმანია",
+   "de": "Deutschland",
+   "es": "Alemania",
+   "fr": "Allemagne",
+   "it": "Germania",
+   "pt": "Alemanha"
+  },
+  "wrong": {
+   "en": [
+    "Belgium",
+    "Uganda",
+    "Spain"
+   ],
+   "ka": [
+    "ბელგია",
+    "უგანდა",
+    "ესპანეთი"
+   ],
+   "de": [
+    "Belgien",
+    "Uganda",
+    "Spanien"
+   ],
+   "es": [
+    "Bélgica",
+    "Uganda",
+    "España"
+   ],
+   "fr": [
+    "Belgique",
+    "Ouganda",
+    "Espagne"
+   ],
+   "it": [
+    "Belgio",
+    "Uganda",
+    "Spagna"
+   ],
+   "pt": [
+    "Bélgica",
+    "Uganda",
+    "Espanha"
+   ]
+  }
+ },
+ {
+  "key": "flag-italy",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Flag_of_Italy.svg/1280px-Flag_of_Italy.svg.png",
+  "file": "File:Flag of Italy.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Italy",
+   "ka": "იტალია",
+   "de": "Italien",
+   "es": "Italia",
+   "fr": "Italie",
+   "it": "Italia",
+   "pt": "Itália"
+  },
+  "wrong": {
+   "en": [
+    "Mexico",
+    "Ireland",
+    "Hungary"
+   ],
+   "ka": [
+    "მექსიკა",
+    "ირლანდია",
+    "უნგრეთი"
+   ],
+   "de": [
+    "Mexiko",
+    "Irland",
+    "Ungarn"
+   ],
+   "es": [
+    "México",
+    "Irlanda",
+    "Hungría"
+   ],
+   "fr": [
+    "Mexique",
+    "Irlande",
+    "Hongrie"
+   ],
+   "it": [
+    "Messico",
+    "Irlanda",
+    "Ungheria"
+   ],
+   "pt": [
+    "México",
+    "Irlanda",
+    "Hungria"
+   ]
+  }
+ },
+ {
+  "key": "flag-spain",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Flag_of_Spain.svg/1280px-Flag_of_Spain.svg.png",
+  "file": "File:Flag of Spain.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Spain",
+   "ka": "ესპანეთი",
+   "de": "Spanien",
+   "es": "España",
+   "fr": "Espagne",
+   "it": "Spagna",
+   "pt": "Espanha"
+  },
+  "wrong": {
+   "en": [
+    "Portugal",
+    "Colombia",
+    "Andorra"
+   ],
+   "ka": [
+    "პორტუგალია",
+    "კოლუმბია",
+    "ანდორა"
+   ],
+   "de": [
+    "Portugal",
+    "Kolumbien",
+    "Andorra"
+   ],
+   "fr": [
+    "Portugal",
+    "Colombie",
+    "Andorre"
+   ],
+   "pt": [
+    "Portugal",
+    "Colômbia",
+    "Andorra"
+   ]
+  }
+ },
+ {
+  "key": "flag-united-kingdom",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Flag_of_the_United_Kingdom_%283-5%29.svg/1280px-Flag_of_the_United_Kingdom_%283-5%29.svg.png",
+  "file": "File:Flag of the United Kingdom (3-5).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "United Kingdom",
+   "ka": "გაერთიანებული სამეფო",
+   "de": "Großbritannien",
+   "es": "Reino Unido",
+   "fr": "Royaume-Uni",
+   "it": "Regno Unito",
+   "pt": "Reino Unido"
+  },
+  "wrong": {
+   "en": [
+    "Australia",
+    "New Zealand",
+    "Fiji"
+   ],
+   "ka": [
+    "ავსტრალია",
+    "ახალი ზელანდია",
+    "ფიჯი"
+   ],
+   "de": [
+    "Australien",
+    "Neuseeland",
+    "Fidschi"
+   ],
+   "es": [
+    "Australia",
+    "Nueva Zelanda",
+    "Fiyi"
+   ],
+   "fr": [
+    "Australie",
+    "Nouvelle-Zélande",
+    "Fidji"
+   ],
+   "it": [
+    "Australia",
+    "Nuova Zelanda",
+    "Figi"
+   ],
+   "pt": [
+    "Austrália",
+    "Nova Zelândia",
+    "Fiji"
+   ]
+  }
+ },
+ {
+  "key": "flag-canada",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Flag_of_Canada_%28Pantone%29.svg/1280px-Flag_of_Canada_%28Pantone%29.svg.png",
+  "file": "File:Flag of Canada (Pantone).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Canada",
+   "ka": "კანადა",
+   "de": "Kanada",
+   "es": "Canadá",
+   "pt": "Canadá"
+  },
+  "wrong": {
+   "en": [
+    "Peru",
+    "Austria",
+    "Denmark"
+   ],
+   "ka": [
+    "პერუ",
+    "ავსტრია",
+    "დანია"
+   ],
+   "de": [
+    "Peru",
+    "Österreich",
+    "Dänemark"
+   ],
+   "es": [
+    "Perú",
+    "Austria",
+    "Dinamarca"
+   ],
+   "fr": [
+    "Pérou",
+    "Autriche",
+    "Danemark"
+   ],
+   "it": [
+    "Perù",
+    "Austria",
+    "Danimarca"
+   ],
+   "pt": [
+    "Peru",
+    "Áustria",
+    "Dinamarca"
+   ]
+  }
+ },
+ {
+  "key": "flag-brazil",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Flag_of_Brazil.svg/1280px-Flag_of_Brazil.svg.png",
+  "file": "File:Flag of Brazil.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Brazil",
+   "ka": "ბრაზილია",
+   "de": "Brasilien",
+   "es": "Brasil",
+   "fr": "Brésil",
+   "it": "Brasile",
+   "pt": "Brasil"
+  },
+  "wrong": {
+   "en": [
+    "Portugal",
+    "Bolivia",
+    "Cameroon"
+   ],
+   "ka": [
+    "პორტუგალია",
+    "ბოლივია",
+    "კამერუნი"
+   ],
+   "de": [
+    "Portugal",
+    "Bolivia",
+    "Kamerun"
+   ],
+   "es": [
+    "Portugal",
+    "Bolivia",
+    "Camerún"
+   ],
+   "fr": [
+    "Portugal",
+    "Bolivie",
+    "Cameroun"
+   ],
+   "it": [
+    "Portugal",
+    "Bolivia",
+    "Camerun"
+   ],
+   "pt": [
+    "Portugal",
+    "Bolívia",
+    "Camarões"
+   ]
+  }
+ },
+ {
+  "key": "flag-china",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/1280px-Flag_of_the_People%27s_Republic_of_China.svg.png",
+  "file": "File:Flag of the People's Republic of China.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "China",
+   "ka": "ჩინეთი",
+   "fr": "Chine",
+   "it": "Cina"
+  },
+  "wrong": {
+   "en": [
+    "Vietnam",
+    "North Korea",
+    "Turkey"
+   ],
+   "ka": [
+    "ვიეტნამი",
+    "ჩრდილოეთ კორეა",
+    "თურქეთი"
+   ],
+   "de": [
+    "Vietnam",
+    "Nordkorea",
+    "Türkei"
+   ],
+   "es": [
+    "Vietnam",
+    "Corea del Norte",
+    "Turquía"
+   ],
+   "fr": [
+    "Vietnam",
+    "Corée du Nord",
+    "Turquie"
+   ],
+   "it": [
+    "Vietnam",
+    "Corea del Nord",
+    "Turchia"
+   ],
+   "pt": [
+    "Vietnã",
+    "Coreia do Norte",
+    "Turquia"
+   ]
+  }
+ },
+ {
+  "key": "flag-russia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Flag_of_Russia.svg/1280px-Flag_of_Russia.svg.png",
+  "file": "File:Flag of Russia.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Russia",
+   "ka": "რუსეთი",
+   "de": "Russland",
+   "es": "Rusia",
+   "fr": "Russie",
+   "pt": "Rússia"
+  },
+  "wrong": {
+   "en": [
+    "Netherlands",
+    "Slovakia",
+    "Slovenia"
+   ],
+   "ka": [
+    "ნიდერლანდები",
+    "სლოვაკეთი",
+    "სლოვენია"
+   ],
+   "de": [
+    "Niederlande",
+    "Slowakei",
+    "Slowenien"
+   ],
+   "es": [
+    "Países Bajos",
+    "Eslovaquia",
+    "Eslovenia"
+   ],
+   "fr": [
+    "Pays-Bas",
+    "Slovaquie",
+    "Slovénie"
+   ],
+   "it": [
+    "Paesi Bassi",
+    "Slovacchia",
+    "Slovenia"
+   ],
+   "pt": [
+    "Países Baixos",
+    "Eslováquia",
+    "Eslovênia"
+   ]
+  }
+ },
+ {
+  "key": "flag-india",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Flag_of_India.svg/1280px-Flag_of_India.svg.png",
+  "file": "File:Flag of India.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "India",
+   "ka": "ინდოეთი",
+   "de": "Indien",
+   "fr": "Inde",
+   "pt": "Índia"
+  },
+  "wrong": {
+   "en": [
+    "Ireland",
+    "Niger",
+    "Ivory Coast"
+   ],
+   "ka": [
+    "ირლანდია",
+    "ნიგერი",
+    "კოტ-დივუარი"
+   ],
+   "de": [
+    "Irland",
+    "Niger",
+    "Elfenbeinküste"
+   ],
+   "es": [
+    "Irlanda",
+    "Níger",
+    "Costa de Marfil"
+   ],
+   "fr": [
+    "Irlande",
+    "Niger",
+    "Côte d'Ivoire"
+   ],
+   "it": [
+    "Irlanda",
+    "Niger",
+    "Costa d'Avorio"
+   ],
+   "pt": [
+    "Irlanda",
+    "Níger",
+    "Costa do Marfim"
+   ]
+  }
+ },
+ {
+  "key": "flag-mexico",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Flag_of_Mexico.svg/1280px-Flag_of_Mexico.svg.png",
+  "file": "File:Flag of Mexico.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Mexico",
+   "ka": "მექსიკა",
+   "de": "Mexiko",
+   "es": "México",
+   "fr": "Mexique",
+   "it": "Messico",
+   "pt": "México"
+  },
+  "wrong": {
+   "en": [
+    "Italy",
+    "Hungary",
+    "Iran"
+   ],
+   "ka": [
+    "იტალია",
+    "უნგრეთი",
+    "ირანი"
+   ],
+   "de": [
+    "Italien",
+    "Ungarn",
+    "Iran"
+   ],
+   "es": [
+    "Italia",
+    "Hungría",
+    "Irán"
+   ],
+   "fr": [
+    "Italie",
+    "Hongrie",
+    "Iran"
+   ],
+   "it": [
+    "Italia",
+    "Ungheria",
+    "Iran"
+   ],
+   "pt": [
+    "Itália",
+    "Hungria",
+    "Irã"
+   ]
+  }
+ },
+ {
+  "key": "flag-turkey",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Flag_of_Turkey.svg/1280px-Flag_of_Turkey.svg.png",
+  "file": "File:Flag of Turkey.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Turkey",
+   "ka": "თურქეთი",
+   "de": "Türkei",
+   "es": "Turquía",
+   "fr": "Turquie",
+   "it": "Turchia",
+   "pt": "Turquia"
+  },
+  "wrong": {
+   "en": [
+    "Tunisia",
+    "Azerbaijan",
+    "Algeria"
+   ],
+   "ka": [
+    "ტუნისი",
+    "აზერბაიჯანი",
+    "ალჟირი"
+   ],
+   "de": [
+    "Tunesien",
+    "Aserbaidschan",
+    "Algerien"
+   ],
+   "es": [
+    "Túnez",
+    "Azerbaiyán",
+    "Argelia"
+   ],
+   "fr": [
+    "Tunisie",
+    "Azerbaïdjan",
+    "Algérie"
+   ],
+   "it": [
+    "Tunisia",
+    "Azerbaigian",
+    "Algeria"
+   ],
+   "pt": [
+    "Tunísia",
+    "Azerbaijão",
+    "Argélia"
+   ]
+  }
+ },
+ {
+  "key": "flag-greece",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Flag_of_Greece.svg/1280px-Flag_of_Greece.svg.png",
+  "file": "File:Flag of Greece.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Greece",
+   "ka": "საბერძნეთი",
+   "de": "Griechenland",
+   "es": "Grecia",
+   "fr": "Grèce",
+   "it": "Grecia",
+   "pt": "Grécia"
+  },
+  "wrong": {
+   "en": [
+    "Uruguay",
+    "Israel",
+    "Finland"
+   ],
+   "ka": [
+    "ურუგვაი",
+    "ისრაელი",
+    "ფინეთი"
+   ],
+   "de": [
+    "Uruguay",
+    "Israel",
+    "Finnland"
+   ],
+   "es": [
+    "Uruguay",
+    "Israel",
+    "Finlandia"
+   ],
+   "fr": [
+    "Uruguay",
+    "Israël",
+    "Finlande"
+   ],
+   "it": [
+    "Uruguay",
+    "Israele",
+    "Finlandia"
+   ],
+   "pt": [
+    "Uruguai",
+    "Israel",
+    "Finlândia"
+   ]
+  }
+ },
+ {
+  "key": "flag-switzerland",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Flag_of_Switzerland.svg/1280px-Flag_of_Switzerland.svg.png",
+  "file": "File:Flag of Switzerland.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Switzerland",
+   "ka": "შვეიცარია",
+   "de": "Schweiz",
+   "es": "Suiza",
+   "fr": "Suisse",
+   "it": "Svizzera",
+   "pt": "Suíça"
+  },
+  "wrong": {
+   "en": [
+    "Denmark",
+    "Georgia",
+    "Austria"
+   ],
+   "ka": [
+    "დანია",
+    "საქართველო",
+    "ავსტრია"
+   ],
+   "de": [
+    "Dänemark",
+    "Georgien",
+    "Österreich"
+   ],
+   "es": [
+    "Dinamarca",
+    "Georgia",
+    "Austria"
+   ],
+   "fr": [
+    "Danemark",
+    "Géorgie",
+    "Autriche"
+   ],
+   "it": [
+    "Danimarca",
+    "Georgia",
+    "Austria"
+   ],
+   "pt": [
+    "Dinamarca",
+    "Geórgia",
+    "Áustria"
+   ]
+  }
+ },
+ {
+  "key": "flag-sweden",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Flag_of_Sweden.svg/1280px-Flag_of_Sweden.svg.png",
+  "file": "File:Flag of Sweden.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Sweden",
+   "ka": "შვედეთი",
+   "de": "Schweden",
+   "es": "Suecia",
+   "fr": "Suède",
+   "it": "Svezia",
+   "pt": "Suécia"
+  },
+  "wrong": {
+   "en": [
+    "Norway",
+    "Denmark",
+    "Finland"
+   ],
+   "ka": [
+    "ნორვეგია",
+    "დანია",
+    "ფინეთი"
+   ],
+   "de": [
+    "Norwegen",
+    "Dänemark",
+    "Finnland"
+   ],
+   "es": [
+    "Noruega",
+    "Dinamarca",
+    "Finlandia"
+   ],
+   "fr": [
+    "Norvège",
+    "Danemark",
+    "Finlande"
+   ],
+   "it": [
+    "Norvegia",
+    "Danimarca",
+    "Finlandia"
+   ],
+   "pt": [
+    "Noruega",
+    "Dinamarca",
+    "Finlândia"
+   ]
+  }
+ },
+ {
+  "key": "flag-norway",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Flag_of_Norway.svg/1280px-Flag_of_Norway.svg.png",
+  "file": "File:Flag of Norway.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Norway",
+   "ka": "ნორვეგია",
+   "de": "Norwegen",
+   "es": "Noruega",
+   "fr": "Norvège",
+   "it": "Norvegia",
+   "pt": "Noruega"
+  },
+  "wrong": {
+   "en": [
+    "Iceland",
+    "Denmark",
+    "Sweden"
+   ],
+   "ka": [
+    "ისლანდია",
+    "დანია",
+    "შვედეთი"
+   ],
+   "de": [
+    "Island",
+    "Dänemark",
+    "Schweden"
+   ],
+   "es": [
+    "Islandia",
+    "Dinamarca",
+    "Suecia"
+   ],
+   "fr": [
+    "Islande",
+    "Danemark",
+    "Suède"
+   ],
+   "it": [
+    "Islanda",
+    "Danimarca",
+    "Svezia"
+   ],
+   "pt": [
+    "Islândia",
+    "Dinamarca",
+    "Suécia"
+   ]
+  }
+ },
+ {
+  "key": "flag-denmark",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Flag_of_Denmark.svg/1280px-Flag_of_Denmark.svg.png",
+  "file": "File:Flag of Denmark.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Denmark",
+   "ka": "დანია",
+   "de": "Dänemark",
+   "es": "Dinamarca",
+   "fr": "Danemark",
+   "it": "Danimarca",
+   "pt": "Dinamarca"
+  },
+  "wrong": {
+   "en": [
+    "Norway",
+    "Sweden",
+    "Switzerland"
+   ],
+   "ka": [
+    "ნორვეგია",
+    "შვედეთი",
+    "შვეიცარია"
+   ],
+   "de": [
+    "Norwegen",
+    "Schweden",
+    "Schweiz"
+   ],
+   "es": [
+    "Noruega",
+    "Suecia",
+    "Suiza"
+   ],
+   "fr": [
+    "Norvège",
+    "Suède",
+    "Suisse"
+   ],
+   "it": [
+    "Norvegia",
+    "Svezia",
+    "Svizzera"
+   ],
+   "pt": [
+    "Noruega",
+    "Suécia",
+    "Suíça"
+   ]
+  }
+ },
+ {
+  "key": "flag-finland",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Flag_of_Finland.svg/1280px-Flag_of_Finland.svg.png",
+  "file": "File:Flag of Finland.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Finland",
+   "ka": "ფინეთი",
+   "de": "Finnland",
+   "es": "Finlandia",
+   "fr": "Finlande",
+   "it": "Finlandia",
+   "pt": "Finlândia"
+  },
+  "wrong": {
+   "en": [
+    "Sweden",
+    "Norway",
+    "Iceland"
+   ],
+   "ka": [
+    "შვედეთი",
+    "ნორვეგია",
+    "ისლანდია"
+   ],
+   "de": [
+    "Schweden",
+    "Norwegen",
+    "Island"
+   ],
+   "es": [
+    "Suecia",
+    "Noruega",
+    "Islandia"
+   ],
+   "fr": [
+    "Suède",
+    "Norvège",
+    "Islande"
+   ],
+   "it": [
+    "Svezia",
+    "Norvegia",
+    "Islanda"
+   ],
+   "pt": [
+    "Suécia",
+    "Noruega",
+    "Islândia"
+   ]
+  }
+ },
+ {
+  "key": "flag-netherlands",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Flag_of_the_Netherlands.svg/1280px-Flag_of_the_Netherlands.svg.png",
+  "file": "File:Flag of the Netherlands.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Netherlands",
+   "ka": "ნიდერლანდები",
+   "de": "Niederlande",
+   "es": "Países Bajos",
+   "fr": "Pays-Bas",
+   "it": "Paesi Bassi",
+   "pt": "Países Baixos"
+  },
+  "wrong": {
+   "en": [
+    "Luxembourg",
+    "Russia",
+    "France"
+   ],
+   "ka": [
+    "ლუქსემბურგი",
+    "რუსეთი",
+    "საფრანგეთი"
+   ],
+   "de": [
+    "Luxemburg",
+    "Russland",
+    "Frankreich"
+   ],
+   "es": [
+    "Luxemburgo",
+    "Rusia",
+    "Francia"
+   ],
+   "fr": [
+    "Luxembourg",
+    "Russie",
+    "France"
+   ],
+   "it": [
+    "Lussemburgo",
+    "Russia",
+    "Francia"
+   ],
+   "pt": [
+    "Luxemburgo",
+    "Rússia",
+    "França"
+   ]
+  }
+ },
+ {
+  "key": "flag-belgium",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Flag_of_Belgium.svg/1280px-Flag_of_Belgium.svg.png",
+  "file": "File:Flag of Belgium.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Belgium",
+   "ka": "ბელგია",
+   "de": "Belgien",
+   "es": "Bélgica",
+   "fr": "Belgique",
+   "it": "Belgio",
+   "pt": "Bélgica"
+  },
+  "wrong": {
+   "en": [
+    "Germany",
+    "Romania",
+    "Chad"
+   ],
+   "ka": [
+    "გერმანია",
+    "რუმინეთი",
+    "ჩადი"
+   ],
+   "de": [
+    "Deutschland",
+    "Rumänien",
+    "Tschad"
+   ],
+   "es": [
+    "Alemania",
+    "Rumania",
+    "Chad"
+   ],
+   "fr": [
+    "Allemagne",
+    "Roumanie",
+    "Tchad"
+   ],
+   "it": [
+    "Germania",
+    "Romania",
+    "Ciad"
+   ],
+   "pt": [
+    "Alemanha",
+    "Romênia",
+    "Chade"
+   ]
+  }
+ },
+ {
+  "key": "flag-portugal",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Flag_of_Portugal.svg/1280px-Flag_of_Portugal.svg.png",
+  "file": "File:Flag of Portugal.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Portugal",
+   "ka": "პორტუგალია"
+  },
+  "wrong": {
+   "en": [
+    "Spain",
+    "Andorra",
+    "Italy"
+   ],
+   "ka": [
+    "ესპანეთი",
+    "ანდორა",
+    "იტალია"
+   ],
+   "de": [
+    "Spanien",
+    "Andorra",
+    "Italien"
+   ],
+   "es": [
+    "España",
+    "Andorra",
+    "Italia"
+   ],
+   "fr": [
+    "Espagne",
+    "Andorre",
+    "Italie"
+   ],
+   "it": [
+    "Spagna",
+    "Andorra",
+    "Italia"
+   ],
+   "pt": [
+    "Espanha",
+    "Andorra",
+    "Itália"
+   ]
+  }
+ },
+ {
+  "key": "flag-ireland",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Flag_of_Ireland.svg/1280px-Flag_of_Ireland.svg.png",
+  "file": "File:Flag of Ireland.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Ireland",
+   "ka": "ირლანდია",
+   "de": "Irland",
+   "es": "Irlanda",
+   "fr": "Irlande",
+   "it": "Irlanda",
+   "pt": "Irlanda"
+  },
+  "wrong": {
+   "en": [
+    "Ivory Coast",
+    "Italy",
+    "India"
+   ],
+   "ka": [
+    "კოტ-დივუარი",
+    "იტალია",
+    "ინდოეთი"
+   ],
+   "de": [
+    "Elfenbeinküste",
+    "Italien",
+    "Indien"
+   ],
+   "es": [
+    "Costa de Marfil",
+    "Italia",
+    "India"
+   ],
+   "fr": [
+    "Côte d'Ivoire",
+    "Italie",
+    "Inde"
+   ],
+   "it": [
+    "Costa d'Avorio",
+    "Italia",
+    "India"
+   ],
+   "pt": [
+    "Costa do Marfim",
+    "Itália",
+    "Índia"
+   ]
+  }
+ },
+ {
+  "key": "flag-austria",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Flag_of_Austria.svg/1280px-Flag_of_Austria.svg.png",
+  "file": "File:Flag of Austria.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Austria",
+   "ka": "ავსტრია",
+   "de": "Österreich",
+   "fr": "Autriche",
+   "pt": "Áustria"
+  },
+  "wrong": {
+   "en": [
+    "Latvia",
+    "Peru",
+    "Lebanon"
+   ],
+   "ka": [
+    "ლატვია",
+    "პერუ",
+    "ლიბანი"
+   ],
+   "de": [
+    "Lettland",
+    "Peru",
+    "Libanon"
+   ],
+   "es": [
+    "Letonia",
+    "Perú",
+    "Líbano"
+   ],
+   "fr": [
+    "Lettonie",
+    "Pérou",
+    "Liban"
+   ],
+   "it": [
+    "Lettonia",
+    "Perù",
+    "Libano"
+   ],
+   "pt": [
+    "Letônia",
+    "Peru",
+    "Líbano"
+   ]
+  }
+ },
+ {
+  "key": "flag-poland",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Flag_of_Poland.svg/1280px-Flag_of_Poland.svg.png",
+  "file": "File:Flag of Poland.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Poland",
+   "ka": "პოლონეთი",
+   "de": "Polen",
+   "es": "Polonia",
+   "fr": "Pologne",
+   "it": "Polonia",
+   "pt": "Polônia"
+  },
+  "wrong": {
+   "en": [
+    "Indonesia",
+    "Monaco",
+    "Czechia"
+   ],
+   "ka": [
+    "ინდონეზია",
+    "მონაკო",
+    "ჩეხეთი"
+   ],
+   "de": [
+    "Indonesien",
+    "Monaco",
+    "Tschechien"
+   ],
+   "es": [
+    "Indonesia",
+    "Mónaco",
+    "Chequia"
+   ],
+   "fr": [
+    "Indonésie",
+    "Monaco",
+    "Tchéquie"
+   ],
+   "it": [
+    "Indonesia",
+    "Monaco",
+    "Cechia"
+   ],
+   "pt": [
+    "Indonésia",
+    "Mônaco",
+    "Chéquia"
+   ]
+  }
+ },
+ {
+  "key": "flag-ukraine",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Flag_of_Ukraine.svg/1280px-Flag_of_Ukraine.svg.png",
+  "file": "File:Flag of Ukraine.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Ukraine",
+   "ka": "უკრაინა",
+   "es": "Ucrania",
+   "it": "Ucraina",
+   "pt": "Ucrânia"
+  },
+  "wrong": {
+   "en": [
+    "Sweden",
+    "Kazakhstan",
+    "Palau"
+   ],
+   "ka": [
+    "შვედეთი",
+    "ყაზახეთი",
+    "პალაუ"
+   ],
+   "de": [
+    "Schweden",
+    "Kasachstan",
+    "Palau"
+   ],
+   "es": [
+    "Suecia",
+    "Kazajistán",
+    "Palaos"
+   ],
+   "fr": [
+    "Suède",
+    "Kazakhstan",
+    "Palaos"
+   ],
+   "it": [
+    "Svezia",
+    "Kazakistan",
+    "Palau"
+   ],
+   "pt": [
+    "Suécia",
+    "Cazaquistão",
+    "Palau"
+   ]
+  }
+ },
+ {
+  "key": "flag-georgia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Flag_of_Georgia.svg/1280px-Flag_of_Georgia.svg.png",
+  "file": "File:Flag of Georgia.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Georgia",
+   "ka": "საქართველო",
+   "de": "Georgien",
+   "fr": "Géorgie",
+   "pt": "Geórgia"
+  },
+  "wrong": {
+   "en": [
+    "Switzerland",
+    "Denmark",
+    "Malta"
+   ],
+   "ka": [
+    "შვეიცარია",
+    "დანია",
+    "მალტა"
+   ],
+   "de": [
+    "Schweiz",
+    "Dänemark",
+    "Malta"
+   ],
+   "es": [
+    "Suiza",
+    "Dinamarca",
+    "Malta"
+   ],
+   "fr": [
+    "Suisse",
+    "Danemark",
+    "Malte"
+   ],
+   "it": [
+    "Svizzera",
+    "Danimarca",
+    "Malta"
+   ],
+   "pt": [
+    "Suíça",
+    "Dinamarca",
+    "Malta"
+   ]
+  }
+ },
+ {
+  "key": "flag-israel",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Flag_of_Israel.svg/1280px-Flag_of_Israel.svg.png",
+  "file": "File:Flag of Israel.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Israel",
+   "ka": "ისრაელი",
+   "fr": "Israël",
+   "it": "Israele"
+  },
+  "wrong": {
+   "en": [
+    "Greece",
+    "Argentina",
+    "Uruguay"
+   ],
+   "ka": [
+    "საბერძნეთი",
+    "არგენტინა",
+    "ურუგვაი"
+   ],
+   "de": [
+    "Griechenland",
+    "Argentinien",
+    "Uruguay"
+   ],
+   "es": [
+    "Grecia",
+    "Argentina",
+    "Uruguay"
+   ],
+   "fr": [
+    "Grèce",
+    "Argentine",
+    "Uruguay"
+   ],
+   "it": [
+    "Grecia",
+    "Argentina",
+    "Uruguay"
+   ],
+   "pt": [
+    "Grécia",
+    "Argentina",
+    "Uruguai"
+   ]
+  }
+ },
+ {
+  "key": "flag-argentina",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Flag_of_Argentina.svg/1280px-Flag_of_Argentina.svg.png",
+  "file": "File:Flag of Argentina.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Argentina",
+   "ka": "არგენტინა",
+   "de": "Argentinien",
+   "fr": "Argentine"
+  },
+  "wrong": {
+   "en": [
+    "Uruguay",
+    "Guatemala",
+    "Nicaragua"
+   ],
+   "ka": [
+    "ურუგვაი",
+    "გვატემალა",
+    "ნიკარაგუა"
+   ],
+   "pt": [
+    "Uruguai",
+    "Guatemala",
+    "Nicaragua"
+   ]
+  }
+ },
+ {
+  "key": "flag-south-korea",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Flag_of_South_Korea.svg/1280px-Flag_of_South_Korea.svg.png",
+  "file": "File:Flag of South Korea.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "South Korea",
+   "ka": "სამხრეთ კორეა",
+   "de": "Südkorea",
+   "es": "Corea del Sur",
+   "fr": "Corée du Sud",
+   "it": "Corea del Sud",
+   "pt": "Coreia do Sul"
+  },
+  "wrong": {
+   "en": [
+    "Japan",
+    "North Korea",
+    "Taiwan"
+   ],
+   "ka": [
+    "იაპონია",
+    "ჩრდილოეთ კორეა",
+    "ტაივანი"
+   ],
+   "de": [
+    "Japan",
+    "Nordkorea",
+    "Taiwan"
+   ],
+   "es": [
+    "Japón",
+    "Corea del Norte",
+    "Taiwán"
+   ],
+   "fr": [
+    "Japon",
+    "Corée du Nord",
+    "Taïwan"
+   ],
+   "it": [
+    "Giappone",
+    "Corea del Nord",
+    "Taiwan"
+   ],
+   "pt": [
+    "Japão",
+    "Coreia do Norte",
+    "Taiwan"
+   ]
+  }
+ },
+ {
+  "key": "flag-australia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Flag_of_Australia_%28converted%29.svg/1280px-Flag_of_Australia_%28converted%29.svg.png",
+  "file": "File:Flag of Australia (converted).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Australia",
+   "ka": "ავსტრალია",
+   "de": "Australien",
+   "fr": "Australie",
+   "pt": "Austrália"
+  },
+  "wrong": {
+   "en": [
+    "New Zealand",
+    "United Kingdom",
+    "Fiji"
+   ],
+   "ka": [
+    "ახალი ზელანდია",
+    "გაერთიანებული სამეფო",
+    "ფიჯი"
+   ],
+   "de": [
+    "Neuseeland",
+    "Großbritannien",
+    "Fidschi"
+   ],
+   "es": [
+    "Nueva Zelanda",
+    "Reino Unido",
+    "Fiyi"
+   ],
+   "fr": [
+    "Nouvelle-Zélande",
+    "Royaume-Uni",
+    "Fidji"
+   ],
+   "it": [
+    "Nuova Zelanda",
+    "Regno Unito",
+    "Figi"
+   ],
+   "pt": [
+    "Nova Zelândia",
+    "Reino Unido",
+    "Fiji"
+   ]
+  }
+ },
+ {
+  "key": "flag-south-africa",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Flag_of_South_Africa.svg/1280px-Flag_of_South_Africa.svg.png",
+  "file": "File:Flag of South Africa.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "South Africa",
+   "ka": "სამხრეთ აფრიკა",
+   "de": "Südafrika",
+   "es": "Sudáfrica",
+   "fr": "Afrique du Sud",
+   "it": "Sudafrica",
+   "pt": "África do Sul"
+  },
+  "wrong": {
+   "en": [
+    "Kenya",
+    "Zimbabwe",
+    "Mozambique"
+   ],
+   "ka": [
+    "კენია",
+    "ზიმბაბვე",
+    "მოზამბიკი"
+   ],
+   "de": [
+    "Kenia",
+    "Simbabwe",
+    "Mosambik"
+   ],
+   "es": [
+    "Kenia",
+    "Zimbabue",
+    "Mozambique"
+   ],
+   "it": [
+    "Kenya",
+    "Zimbabwe",
+    "Mozambico"
+   ],
+   "pt": [
+    "Quênia",
+    "Zimbábue",
+    "Moçambique"
+   ]
+  }
+ },
+ {
+  "key": "flag-egypt",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Flag_of_Egypt.svg/1280px-Flag_of_Egypt.svg.png",
+  "file": "File:Flag of Egypt.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Egypt",
+   "ka": "ეგვიპტე",
+   "de": "Ägypten",
+   "es": "Egipto",
+   "fr": "Égypte",
+   "it": "Egitto",
+   "pt": "Egito"
+  },
+  "wrong": {
+   "en": [
+    "Iraq",
+    "Syria",
+    "Yemen"
+   ],
+   "ka": [
+    "ერაყი",
+    "სირია",
+    "იემენი"
+   ],
+   "de": [
+    "Irak",
+    "Syrien",
+    "Jemen"
+   ],
+   "es": [
+    "Irak",
+    "Siria",
+    "Yemen"
+   ],
+   "fr": [
+    "Irak",
+    "Syrie",
+    "Yémen"
+   ],
+   "it": [
+    "Iraq",
+    "Siria",
+    "Yemen"
+   ],
+   "pt": [
+    "Iraque",
+    "Síria",
+    "Iêmen"
+   ]
+  }
+ },
+ {
+  "key": "flag-saudi-arabia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Flag_of_Saudi_Arabia.svg/1280px-Flag_of_Saudi_Arabia.svg.png",
+  "file": "File:Flag of Saudi Arabia.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Saudi Arabia",
+   "ka": "საუდის არაბეთი",
+   "de": "Saudi-Arabien",
+   "es": "Arabia Saudita",
+   "fr": "Arabie saoudite",
+   "it": "Arabia Saudita",
+   "pt": "Arábia Saudita"
+  },
+  "wrong": {
+   "en": [
+    "Pakistan",
+    "Iran",
+    "Nigeria"
+   ],
+   "ka": [
+    "პაკისტანი",
+    "ირანი",
+    "ნიგერია"
+   ],
+   "es": [
+    "Pakistán",
+    "Irán",
+    "Nigeria"
+   ],
+   "pt": [
+    "Paquistão",
+    "Irã",
+    "Nigéria"
+   ]
+  }
+ },
+ {
+  "key": "flag-hungary",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Flag_of_Hungary.svg/1280px-Flag_of_Hungary.svg.png",
+  "file": "File:Flag of Hungary.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Hungary",
+   "ka": "უნგრეთი",
+   "de": "Ungarn",
+   "es": "Hungría",
+   "fr": "Hongrie",
+   "it": "Ungheria",
+   "pt": "Hungria"
+  },
+  "wrong": {
+   "en": [
+    "Italy",
+    "Bulgaria",
+    "Iran"
+   ],
+   "ka": [
+    "იტალია",
+    "ბულგარეთი",
+    "ირანი"
+   ],
+   "de": [
+    "Italien",
+    "Bulgarien",
+    "Iran"
+   ],
+   "es": [
+    "Italia",
+    "Bulgaria",
+    "Irán"
+   ],
+   "fr": [
+    "Italie",
+    "Bulgarie",
+    "Iran"
+   ],
+   "it": [
+    "Italia",
+    "Bulgaria",
+    "Iran"
+   ],
+   "pt": [
+    "Itália",
+    "Bulgária",
+    "Irã"
+   ]
+  }
+ },
+ {
+  "key": "flag-czechia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Flag_of_the_Czech_Republic.svg/1280px-Flag_of_the_Czech_Republic.svg.png",
+  "file": "File:Flag of the Czech Republic.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Czechia",
+   "ka": "ჩეხეთი",
+   "de": "Tschechien",
+   "es": "Chequia",
+   "fr": "Tchéquie",
+   "it": "Cechia",
+   "pt": "Chéquia"
+  },
+  "wrong": {
+   "en": [
+    "Slovakia",
+    "Russia",
+    "Slovenia"
+   ],
+   "ka": [
+    "სლოვაკეთი",
+    "რუსეთი",
+    "სლოვენია"
+   ],
+   "de": [
+    "Slowakei",
+    "Russland",
+    "Slowenien"
+   ],
+   "es": [
+    "Eslovaquia",
+    "Rusia",
+    "Eslovenia"
+   ],
+   "fr": [
+    "Slovaquie",
+    "Russie",
+    "Slovénie"
+   ],
+   "it": [
+    "Slovacchia",
+    "Russia",
+    "Slovenia"
+   ],
+   "pt": [
+    "Eslováquia",
+    "Rússia",
+    "Eslovênia"
+   ]
+  }
+ },
+ {
+  "key": "flag-croatia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Flag_of_Croatia.svg/1280px-Flag_of_Croatia.svg.png",
+  "file": "File:Flag of Croatia.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Croatia",
+   "ka": "ხორვატია",
+   "de": "Kroatien",
+   "es": "Croacia",
+   "fr": "Croatie",
+   "it": "Croazia",
+   "pt": "Croácia"
+  },
+  "wrong": {
+   "en": [
+    "Slovakia",
+    "Slovenia",
+    "Serbia"
+   ],
+   "ka": [
+    "სლოვაკეთი",
+    "სლოვენია",
+    "სერბეთი"
+   ],
+   "de": [
+    "Slowakei",
+    "Slowenien",
+    "Serbien"
+   ],
+   "es": [
+    "Eslovaquia",
+    "Eslovenia",
+    "Serbia"
+   ],
+   "fr": [
+    "Slovaquie",
+    "Slovénie",
+    "Serbie"
+   ],
+   "it": [
+    "Slovacchia",
+    "Slovenia",
+    "Serbia"
+   ],
+   "pt": [
+    "Eslováquia",
+    "Eslovênia",
+    "Sérvia"
+   ]
+  }
+ },
+ {
+  "key": "flag-colombia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Flag_of_Colombia.svg/1280px-Flag_of_Colombia.svg.png",
+  "file": "File:Flag of Colombia.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Colombia",
+   "ka": "კოლუმბია",
+   "de": "Kolumbien",
+   "fr": "Colombie",
+   "pt": "Colômbia"
+  },
+  "wrong": {
+   "en": [
+    "Ecuador",
+    "Venezuela",
+    "Bolivia"
+   ],
+   "ka": [
+    "ეკვადორი",
+    "ვენესუელა",
+    "ბოლივია"
+   ],
+   "fr": [
+    "Équateur",
+    "Venezuela",
+    "Bolivie"
+   ],
+   "pt": [
+    "Equador",
+    "Venezuela",
+    "Bolívia"
+   ]
+  }
+ },
+ {
+  "key": "flag-cuba",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Flag_of_Cuba.svg/1280px-Flag_of_Cuba.svg.png",
+  "file": "File:Flag of Cuba.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Cuba",
+   "ka": "კუბა",
+   "de": "Kuba"
+  },
+  "wrong": {
+   "en": [
+    "Chile",
+    "North Korea",
+    "Panama"
+   ],
+   "ka": [
+    "ჩილე",
+    "ჩრდილოეთ კორეა",
+    "პანამა"
+   ],
+   "de": [
+    "Chile",
+    "Nordkorea",
+    "Panama"
+   ],
+   "es": [
+    "Chile",
+    "Corea del Norte",
+    "Panamá"
+   ],
+   "fr": [
+    "Chili",
+    "Corée du Nord",
+    "Panama"
+   ],
+   "it": [
+    "Chile",
+    "Corea del Nord",
+    "Panama"
+   ],
+   "pt": [
+    "Chile",
+    "Coreia do Norte",
+    "Panamá"
+   ]
+  }
+ },
+ {
+  "key": "flag-new-zealand",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Flag_of_New_Zealand.svg/1280px-Flag_of_New_Zealand.svg.png",
+  "file": "File:Flag of New Zealand.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "New Zealand",
+   "ka": "ახალი ზელანდია",
+   "de": "Neuseeland",
+   "es": "Nueva Zelanda",
+   "fr": "Nouvelle-Zélande",
+   "it": "Nuova Zelanda",
+   "pt": "Nova Zelândia"
+  },
+  "wrong": {
+   "en": [
+    "Australia",
+    "Fiji",
+    "United Kingdom"
+   ],
+   "ka": [
+    "ავსტრალია",
+    "ფიჯი",
+    "გაერთიანებული სამეფო"
+   ],
+   "de": [
+    "Australien",
+    "Fidschi",
+    "Großbritannien"
+   ],
+   "es": [
+    "Australia",
+    "Fiyi",
+    "Reino Unido"
+   ],
+   "fr": [
+    "Australie",
+    "Fidji",
+    "Royaume-Uni"
+   ],
+   "it": [
+    "Australia",
+    "Figi",
+    "Regno Unito"
+   ],
+   "pt": [
+    "Austrália",
+    "Fiji",
+    "Reino Unido"
+   ]
+  }
+ },
+ {
+  "key": "flag-iceland",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Flag_of_Iceland.svg/1280px-Flag_of_Iceland.svg.png",
+  "file": "File:Flag of Iceland.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Iceland",
+   "ka": "ისლანდია",
+   "de": "Island",
+   "es": "Islandia",
+   "fr": "Islande",
+   "it": "Islanda",
+   "pt": "Islândia"
+  },
+  "wrong": {
+   "en": [
+    "Norway",
+    "Finland",
+    "Denmark"
+   ],
+   "ka": [
+    "ნორვეგია",
+    "ფინეთი",
+    "დანია"
+   ],
+   "de": [
+    "Norwegen",
+    "Finnland",
+    "Dänemark"
+   ],
+   "es": [
+    "Noruega",
+    "Finlandia",
+    "Dinamarca"
+   ],
+   "fr": [
+    "Norvège",
+    "Finlande",
+    "Danemark"
+   ],
+   "it": [
+    "Norvegia",
+    "Finlandia",
+    "Danimarca"
+   ],
+   "pt": [
+    "Noruega",
+    "Finlândia",
+    "Dinamarca"
+   ]
+  }
+ },
+ {
+  "key": "flag-serbia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Flag_of_Serbia.svg/1280px-Flag_of_Serbia.svg.png",
+  "file": "File:Flag of Serbia.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Serbia",
+   "ka": "სერბეთი",
+   "de": "Serbien",
+   "fr": "Serbie",
+   "pt": "Sérvia"
+  },
+  "wrong": {
+   "en": [
+    "Russia",
+    "Slovakia",
+    "Croatia"
+   ],
+   "ka": [
+    "რუსეთი",
+    "სლოვაკეთი",
+    "ხორვატია"
+   ],
+   "de": [
+    "Russland",
+    "Slowakei",
+    "Kroatien"
+   ],
+   "es": [
+    "Rusia",
+    "Eslovaquia",
+    "Croacia"
+   ],
+   "fr": [
+    "Russie",
+    "Slovaquie",
+    "Croatie"
+   ],
+   "it": [
+    "Russia",
+    "Slovacchia",
+    "Croazia"
+   ],
+   "pt": [
+    "Rússia",
+    "Eslováquia",
+    "Croácia"
+   ]
+  }
+ },
+ {
+  "key": "flag-bulgaria",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Flag_of_Bulgaria.svg/1280px-Flag_of_Bulgaria.svg.png",
+  "file": "File:Flag of Bulgaria.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Bulgaria",
+   "ka": "ბულგარეთი",
+   "de": "Bulgarien",
+   "fr": "Bulgarie",
+   "pt": "Bulgária"
+  },
+  "wrong": {
+   "en": [
+    "Hungary",
+    "Iran",
+    "Italy"
+   ],
+   "ka": [
+    "უნგრეთი",
+    "ირანი",
+    "იტალია"
+   ],
+   "de": [
+    "Ungarn",
+    "Iran",
+    "Italien"
+   ],
+   "es": [
+    "Hungría",
+    "Irán",
+    "Italia"
+   ],
+   "fr": [
+    "Hongrie",
+    "Iran",
+    "Italie"
+   ],
+   "it": [
+    "Ungheria",
+    "Iran",
+    "Italia"
+   ],
+   "pt": [
+    "Hungria",
+    "Irã",
+    "Itália"
+   ]
+  }
+ },
+ {
+  "key": "flag-romania",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Flag_of_Romania.svg/1280px-Flag_of_Romania.svg.png",
+  "file": "File:Flag of Romania.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Romania",
+   "ka": "რუმინეთი",
+   "de": "Rumänien",
+   "es": "Rumania",
+   "fr": "Roumanie",
+   "pt": "Romênia"
+  },
+  "wrong": {
+   "en": [
+    "Chad",
+    "Moldova",
+    "Andorra"
+   ],
+   "ka": [
+    "ჩადი",
+    "მოლდოვა",
+    "ანდორა"
+   ],
+   "de": [
+    "Tschad",
+    "Moldawien",
+    "Andorra"
+   ],
+   "es": [
+    "Chad",
+    "Moldavia",
+    "Andorra"
+   ],
+   "fr": [
+    "Tchad",
+    "Moldavie",
+    "Andorre"
+   ],
+   "it": [
+    "Ciad",
+    "Moldavia",
+    "Andorra"
+   ],
+   "pt": [
+    "Chade",
+    "Moldávia",
+    "Andorra"
+   ]
+  }
+ },
+ {
+  "key": "flag-chile",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Flag_of_Chile.svg/1280px-Flag_of_Chile.svg.png",
+  "file": "File:Flag of Chile.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Chile",
+   "ka": "ჩილე",
+   "fr": "Chili"
+  },
+  "wrong": {
+   "en": [
+    "Cuba",
+    "Panama",
+    "Liberia"
+   ],
+   "ka": [
+    "კუბა",
+    "პანამა",
+    "ლიბერია"
+   ],
+   "de": [
+    "Kuba",
+    "Panama",
+    "Liberia"
+   ],
+   "es": [
+    "Cuba",
+    "Panamá",
+    "Liberia"
+   ],
+   "pt": [
+    "Cuba",
+    "Panamá",
+    "Libéria"
+   ]
+  }
+ },
+ {
+  "key": "flag-peru",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Flag_of_Peru.svg/1280px-Flag_of_Peru.svg.png",
+  "file": "File:Flag of Peru.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Peru",
+   "ka": "პერუ",
+   "es": "Perú",
+   "fr": "Pérou",
+   "it": "Perù"
+  },
+  "wrong": {
+   "en": [
+    "Canada",
+    "Austria",
+    "Chile"
+   ],
+   "ka": [
+    "კანადა",
+    "ავსტრია",
+    "ჩილე"
+   ],
+   "de": [
+    "Kanada",
+    "Österreich",
+    "Chile"
+   ],
+   "es": [
+    "Canadá",
+    "Austria",
+    "Chile"
+   ],
+   "fr": [
+    "Canada",
+    "Autriche",
+    "Chili"
+   ],
+   "pt": [
+    "Canadá",
+    "Áustria",
+    "Chile"
+   ]
+  }
+ },
+ {
+  "key": "flag-venezuela",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Flag_of_Venezuela.svg/1280px-Flag_of_Venezuela.svg.png",
+  "file": "File:Flag of Venezuela.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Venezuela",
+   "ka": "ვენესუელა"
+  },
+  "wrong": {
+   "en": [
+    "Colombia",
+    "Ecuador",
+    "Bolivia"
+   ],
+   "ka": [
+    "კოლუმბია",
+    "ეკვადორი",
+    "ბოლივია"
+   ],
+   "de": [
+    "Kolumbien",
+    "Ecuador",
+    "Bolivia"
+   ],
+   "fr": [
+    "Colombie",
+    "Équateur",
+    "Bolivie"
+   ],
+   "pt": [
+    "Colômbia",
+    "Equador",
+    "Bolívia"
+   ]
+  }
+ },
+ {
+  "key": "flag-uruguay",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Flag_of_Uruguay.svg/1280px-Flag_of_Uruguay.svg.png",
+  "file": "File:Flag of Uruguay.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Uruguay",
+   "ka": "ურუგვაი",
+   "pt": "Uruguai"
+  },
+  "wrong": {
+   "en": [
+    "Argentina",
+    "Greece",
+    "Nicaragua"
+   ],
+   "ka": [
+    "არგენტინა",
+    "საბერძნეთი",
+    "ნიკარაგუა"
+   ],
+   "de": [
+    "Argentinien",
+    "Griechenland",
+    "Nicaragua"
+   ],
+   "es": [
+    "Argentina",
+    "Grecia",
+    "Nicaragua"
+   ],
+   "fr": [
+    "Argentine",
+    "Grèce",
+    "Nicaragua"
+   ],
+   "it": [
+    "Argentina",
+    "Grecia",
+    "Nicaragua"
+   ],
+   "pt": [
+    "Argentina",
+    "Grécia",
+    "Nicaragua"
+   ]
+  }
+ },
+ {
+  "key": "flag-thailand",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Flag_of_Thailand.svg/1280px-Flag_of_Thailand.svg.png",
+  "file": "File:Flag of Thailand.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Thailand",
+   "ka": "ტაილანდი",
+   "es": "Tailandia",
+   "fr": "Thaïlande",
+   "it": "Thailandia",
+   "pt": "Tailândia"
+  },
+  "wrong": {
+   "en": [
+    "Costa Rica",
+    "Cuba",
+    "North Korea"
+   ],
+   "ka": [
+    "კოსტა-რიკა",
+    "კუბა",
+    "ჩრდილოეთ კორეა"
+   ],
+   "de": [
+    "Costa Rica",
+    "Kuba",
+    "Nordkorea"
+   ],
+   "es": [
+    "Costa Rica",
+    "Cuba",
+    "Corea del Norte"
+   ],
+   "fr": [
+    "Costa Rica",
+    "Cuba",
+    "Corée du Nord"
+   ],
+   "it": [
+    "Costa Rica",
+    "Cuba",
+    "Corea del Nord"
+   ],
+   "pt": [
+    "Costa Rica",
+    "Cuba",
+    "Coreia do Norte"
+   ]
+  }
+ },
+ {
+  "key": "flag-vietnam",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Flag_of_Vietnam.svg/1280px-Flag_of_Vietnam.svg.png",
+  "file": "File:Flag of Vietnam.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Vietnam",
+   "ka": "ვიეტნამი",
+   "pt": "Vietnã"
+  },
+  "wrong": {
+   "en": [
+    "China",
+    "Morocco",
+    "North Korea"
+   ],
+   "ka": [
+    "ჩინეთი",
+    "მაროკო",
+    "ჩრდილოეთ კორეა"
+   ],
+   "de": [
+    "China",
+    "Marokko",
+    "Nordkorea"
+   ],
+   "es": [
+    "China",
+    "Marruecos",
+    "Corea del Norte"
+   ],
+   "fr": [
+    "Chine",
+    "Maroc",
+    "Corée du Nord"
+   ],
+   "it": [
+    "Cina",
+    "Marocco",
+    "Corea del Nord"
+   ],
+   "pt": [
+    "China",
+    "Marrocos",
+    "Coreia do Norte"
+   ]
+  }
+ },
+ {
+  "key": "flag-indonesia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Flag_of_Indonesia.svg/1280px-Flag_of_Indonesia.svg.png",
+  "file": "File:Flag of Indonesia.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Indonesia",
+   "ka": "ინდონეზია",
+   "de": "Indonesien",
+   "fr": "Indonésie",
+   "pt": "Indonésia"
+  },
+  "wrong": {
+   "en": [
+    "Monaco",
+    "Poland",
+    "Singapore"
+   ],
+   "ka": [
+    "მონაკო",
+    "პოლონეთი",
+    "სინგაპური"
+   ],
+   "de": [
+    "Monaco",
+    "Polen",
+    "Singapur"
+   ],
+   "es": [
+    "Mónaco",
+    "Polonia",
+    "Singapur"
+   ],
+   "fr": [
+    "Monaco",
+    "Pologne",
+    "Singapour"
+   ],
+   "it": [
+    "Monaco",
+    "Polonia",
+    "Singapore"
+   ],
+   "pt": [
+    "Mônaco",
+    "Polônia",
+    "Singapura"
+   ]
+  }
+ },
+ {
+  "key": "flag-singapore",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Flag_of_Singapore.svg/1280px-Flag_of_Singapore.svg.png",
+  "file": "File:Flag of Singapore.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Singapore",
+   "ka": "სინგაპური",
+   "de": "Singapur",
+   "es": "Singapur",
+   "fr": "Singapour",
+   "pt": "Singapura"
+  },
+  "wrong": {
+   "en": [
+    "Indonesia",
+    "Monaco",
+    "Poland"
+   ],
+   "ka": [
+    "ინდონეზია",
+    "მონაკო",
+    "პოლონეთი"
+   ],
+   "de": [
+    "Indonesien",
+    "Monaco",
+    "Polen"
+   ],
+   "es": [
+    "Indonesia",
+    "Mónaco",
+    "Polonia"
+   ],
+   "fr": [
+    "Indonésie",
+    "Monaco",
+    "Pologne"
+   ],
+   "it": [
+    "Indonesia",
+    "Monaco",
+    "Polonia"
+   ],
+   "pt": [
+    "Indonésia",
+    "Mônaco",
+    "Polônia"
+   ]
+  }
+ },
+ {
+  "key": "flag-malaysia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Flag_of_Malaysia.svg/1280px-Flag_of_Malaysia.svg.png",
+  "file": "File:Flag of Malaysia.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Malaysia",
+   "ka": "მალაიზია",
+   "es": "Malasia",
+   "fr": "Malaisie",
+   "pt": "Malásia"
+  },
+  "wrong": {
+   "en": [
+    "United States",
+    "Liberia",
+    "Thailand"
+   ],
+   "ka": [
+    "შეერთებული შტატები",
+    "ლიბერია",
+    "ტაილანდი"
+   ],
+   "de": [
+    "Vereinigte Staaten",
+    "Liberia",
+    "Thailand"
+   ],
+   "es": [
+    "Estados Unidos",
+    "Liberia",
+    "Tailandia"
+   ],
+   "fr": [
+    "États-Unis",
+    "Liberia",
+    "Thaïlande"
+   ],
+   "it": [
+    "Stati Uniti",
+    "Liberia",
+    "Thailandia"
+   ],
+   "pt": [
+    "Estados Unidos",
+    "Libéria",
+    "Tailândia"
+   ]
+  }
+ },
+ {
+  "key": "flag-philippines",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Flag_of_the_Philippines.svg/1280px-Flag_of_the_Philippines.svg.png",
+  "file": "File:Flag of the Philippines.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Philippines",
+   "ka": "ფილიპინები",
+   "de": "Philippinen",
+   "es": "Filipinas",
+   "it": "Filippine",
+   "pt": "Filipinas"
+  },
+  "wrong": {
+   "en": [
+    "Cuba",
+    "Czechia",
+    "Jordan"
+   ],
+   "ka": [
+    "კუბა",
+    "ჩეხეთი",
+    "იორდანია"
+   ],
+   "de": [
+    "Kuba",
+    "Tschechien",
+    "Jordanien"
+   ],
+   "es": [
+    "Cuba",
+    "Chequia",
+    "Jordania"
+   ],
+   "fr": [
+    "Cuba",
+    "Tchéquie",
+    "Jordanie"
+   ],
+   "it": [
+    "Cuba",
+    "Cechia",
+    "Giordania"
+   ],
+   "pt": [
+    "Cuba",
+    "Chéquia",
+    "Jordânia"
+   ]
+  }
+ },
+ {
+  "key": "flag-morocco",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Flag_of_Morocco.svg/1280px-Flag_of_Morocco.svg.png",
+  "file": "File:Flag of Morocco.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Morocco",
+   "ka": "მაროკო",
+   "de": "Marokko",
+   "es": "Marruecos",
+   "fr": "Maroc",
+   "it": "Marocco",
+   "pt": "Marrocos"
+  },
+  "wrong": {
+   "en": [
+    "Vietnam",
+    "Turkey",
+    "China"
+   ],
+   "ka": [
+    "ვიეტნამი",
+    "თურქეთი",
+    "ჩინეთი"
+   ],
+   "de": [
+    "Vietnam",
+    "Türkei",
+    "China"
+   ],
+   "es": [
+    "Vietnam",
+    "Turquía",
+    "China"
+   ],
+   "fr": [
+    "Vietnam",
+    "Turquie",
+    "Chine"
+   ],
+   "it": [
+    "Vietnam",
+    "Turchia",
+    "Cina"
+   ],
+   "pt": [
+    "Vietnã",
+    "Turquia",
+    "China"
+   ]
+  }
+ },
+ {
+  "key": "flag-kenya",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Flag_of_Kenya.svg/1280px-Flag_of_Kenya.svg.png",
+  "file": "File:Flag of Kenya.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Kenya",
+   "ka": "კენია",
+   "de": "Kenia",
+   "es": "Kenia",
+   "pt": "Quênia"
+  },
+  "wrong": {
+   "en": [
+    "Malawi",
+    "South Africa",
+    "Zimbabwe"
+   ],
+   "ka": [
+    "მალავი",
+    "სამხრეთ აფრიკა",
+    "ზიმბაბვე"
+   ],
+   "de": [
+    "Malawi",
+    "Südafrika",
+    "Simbabwe"
+   ],
+   "es": [
+    "Malawi",
+    "Sudáfrica",
+    "Zimbabue"
+   ],
+   "fr": [
+    "Malawi",
+    "Afrique du Sud",
+    "Zimbabwe"
+   ],
+   "it": [
+    "Malawi",
+    "Sudafrica",
+    "Zimbabwe"
+   ],
+   "pt": [
+    "Malawi",
+    "África do Sul",
+    "Zimbábue"
+   ]
+  }
+ },
+ {
+  "key": "flag-nigeria",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Flag_of_Nigeria.svg/1280px-Flag_of_Nigeria.svg.png",
+  "file": "File:Flag of Nigeria.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Nigeria",
+   "ka": "ნიგერია",
+   "pt": "Nigéria"
+  },
+  "wrong": {
+   "en": [
+    "Ireland",
+    "Pakistan",
+    "Saudi Arabia"
+   ],
+   "ka": [
+    "ირლანდია",
+    "პაკისტანი",
+    "საუდის არაბეთი"
+   ],
+   "de": [
+    "Irland",
+    "Pakistan",
+    "Saudi-Arabien"
+   ],
+   "es": [
+    "Irlanda",
+    "Pakistán",
+    "Arabia Saudita"
+   ],
+   "fr": [
+    "Irlande",
+    "Pakistan",
+    "Arabie saoudite"
+   ],
+   "it": [
+    "Irlanda",
+    "Pakistan",
+    "Arabia Saudita"
+   ],
+   "pt": [
+    "Irlanda",
+    "Paquistão",
+    "Arábia Saudita"
+   ]
+  }
+ },
+ {
+  "key": "flag-ghana",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Flag_of_Ghana.svg/1280px-Flag_of_Ghana.svg.png",
+  "file": "File:Flag of Ghana.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Ghana",
+   "ka": "განა",
+   "pt": "Gana"
+  },
+  "wrong": {
+   "en": [
+    "Ethiopia",
+    "Senegal",
+    "Cameroon"
+   ],
+   "ka": [
+    "ეთიოპია",
+    "სენეგალი",
+    "კამერუნი"
+   ],
+   "de": [
+    "Äthiopien",
+    "Senegal",
+    "Kamerun"
+   ],
+   "es": [
+    "Etiopía",
+    "Senegal",
+    "Camerún"
+   ],
+   "fr": [
+    "Éthiopie",
+    "Sénégal",
+    "Cameroun"
+   ],
+   "it": [
+    "Etiopia",
+    "Senegal",
+    "Camerun"
+   ],
+   "pt": [
+    "Etiópia",
+    "Senegal",
+    "Camarões"
+   ]
+  }
+ },
+ {
+  "key": "flag-estonia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Flag_of_Estonia.svg/1280px-Flag_of_Estonia.svg.png",
+  "file": "File:Flag of Estonia.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Estonia",
+   "ka": "ესტონეთი",
+   "de": "Estland",
+   "fr": "Estonie",
+   "pt": "Estônia"
+  },
+  "wrong": {
+   "en": [
+    "Latvia",
+    "Lithuania",
+    "Finland"
+   ],
+   "ka": [
+    "ლატვია",
+    "ლიტვა",
+    "ფინეთი"
+   ],
+   "de": [
+    "Lettland",
+    "Litauen",
+    "Finnland"
+   ],
+   "es": [
+    "Letonia",
+    "Lituania",
+    "Finlandia"
+   ],
+   "fr": [
+    "Lettonie",
+    "Lituanie",
+    "Finlande"
+   ],
+   "it": [
+    "Lettonia",
+    "Lituania",
+    "Finlandia"
+   ],
+   "pt": [
+    "Letônia",
+    "Lituânia",
+    "Finlândia"
+   ]
+  }
+ },
+ {
+  "key": "flag-slovakia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Flag_of_Slovakia.svg/1280px-Flag_of_Slovakia.svg.png",
+  "file": "File:Flag of Slovakia.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Slovakia",
+   "ka": "სლოვაკეთი",
+   "de": "Slowakei",
+   "es": "Eslovaquia",
+   "fr": "Slovaquie",
+   "it": "Slovacchia",
+   "pt": "Eslováquia"
+  },
+  "wrong": {
+   "en": [
+    "Slovenia",
+    "Russia",
+    "Croatia"
+   ],
+   "ka": [
+    "სლოვენია",
+    "რუსეთი",
+    "ხორვატია"
+   ],
+   "de": [
+    "Slowenien",
+    "Russland",
+    "Kroatien"
+   ],
+   "es": [
+    "Eslovenia",
+    "Rusia",
+    "Croacia"
+   ],
+   "fr": [
+    "Slovénie",
+    "Russie",
+    "Croatie"
+   ],
+   "it": [
+    "Slovenia",
+    "Russia",
+    "Croazia"
+   ],
+   "pt": [
+    "Eslovênia",
+    "Rússia",
+    "Croácia"
+   ]
+  }
+ },
+ {
+  "key": "flag-slovenia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Flag_of_Slovenia.svg/1280px-Flag_of_Slovenia.svg.png",
+  "file": "File:Flag of Slovenia.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Slovenia",
+   "ka": "სლოვენია",
+   "de": "Slowenien",
+   "es": "Eslovenia",
+   "fr": "Slovénie",
+   "pt": "Eslovênia"
+  },
+  "wrong": {
+   "en": [
+    "Slovakia",
+    "Russia",
+    "Croatia"
+   ],
+   "ka": [
+    "სლოვაკეთი",
+    "რუსეთი",
+    "ხორვატია"
+   ],
+   "de": [
+    "Slowakei",
+    "Russland",
+    "Kroatien"
+   ],
+   "es": [
+    "Eslovaquia",
+    "Rusia",
+    "Croacia"
+   ],
+   "fr": [
+    "Slovaquie",
+    "Russie",
+    "Croatie"
+   ],
+   "it": [
+    "Slovacchia",
+    "Russia",
+    "Croazia"
+   ],
+   "pt": [
+    "Eslováquia",
+    "Rússia",
+    "Croácia"
+   ]
+  }
+ },
+ {
+  "key": "flag-chad",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Flag_of_Chad.svg/1280px-Flag_of_Chad.svg.png",
+  "file": "File:Flag of Chad.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Chad",
+   "ka": "ჩადი",
+   "de": "Tschad",
+   "fr": "Tchad",
+   "it": "Ciad",
+   "pt": "Chade"
+  },
+  "wrong": {
+   "en": [
+    "Romania",
+    "Andorra",
+    "Moldova"
+   ],
+   "ka": [
+    "რუმინეთი",
+    "ანდორა",
+    "მოლდოვა"
+   ],
+   "de": [
+    "Rumänien",
+    "Andorra",
+    "Moldawien"
+   ],
+   "es": [
+    "Rumania",
+    "Andorra",
+    "Moldavia"
+   ],
+   "fr": [
+    "Roumanie",
+    "Andorre",
+    "Moldavie"
+   ],
+   "it": [
+    "Romania",
+    "Andorra",
+    "Moldavia"
+   ],
+   "pt": [
+    "Romênia",
+    "Andorra",
+    "Moldávia"
+   ]
+  }
+ },
+ {
+  "key": "flag-moldova",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Flag_of_Moldova.svg/1280px-Flag_of_Moldova.svg.png",
+  "file": "File:Flag of Moldova.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Moldova",
+   "ka": "მოლდოვა",
+   "de": "Moldawien",
+   "es": "Moldavia",
+   "fr": "Moldavie",
+   "it": "Moldavia",
+   "pt": "Moldávia"
+  },
+  "wrong": {
+   "en": [
+    "Romania",
+    "Andorra",
+    "Chad"
+   ],
+   "ka": [
+    "რუმინეთი",
+    "ანდორა",
+    "ჩადი"
+   ],
+   "de": [
+    "Rumänien",
+    "Andorra",
+    "Tschad"
+   ],
+   "es": [
+    "Rumania",
+    "Andorra",
+    "Chad"
+   ],
+   "fr": [
+    "Roumanie",
+    "Andorre",
+    "Tchad"
+   ],
+   "it": [
+    "Romania",
+    "Andorra",
+    "Ciad"
+   ],
+   "pt": [
+    "Romênia",
+    "Andorra",
+    "Chade"
+   ]
+  }
+ },
+ {
+  "key": "flag-monaco",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Flag_of_Monaco.svg/1280px-Flag_of_Monaco.svg.png",
+  "file": "File:Flag of Monaco.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Monaco",
+   "ka": "მონაკო",
+   "es": "Mónaco",
+   "pt": "Mônaco"
+  },
+  "wrong": {
+   "en": [
+    "Indonesia",
+    "Poland",
+    "Singapore"
+   ],
+   "ka": [
+    "ინდონეზია",
+    "პოლონეთი",
+    "სინგაპური"
+   ],
+   "de": [
+    "Indonesien",
+    "Polen",
+    "Singapur"
+   ],
+   "es": [
+    "Indonesia",
+    "Polonia",
+    "Singapur"
+   ],
+   "fr": [
+    "Indonésie",
+    "Pologne",
+    "Singapour"
+   ],
+   "it": [
+    "Indonesia",
+    "Polonia",
+    "Singapore"
+   ],
+   "pt": [
+    "Indonésia",
+    "Polônia",
+    "Singapura"
+   ]
+  }
+ },
+ {
+  "key": "flag-luxembourg",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Flag_of_Luxembourg.svg/1280px-Flag_of_Luxembourg.svg.png",
+  "file": "File:Flag of Luxembourg.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Luxembourg",
+   "ka": "ლუქსემბურგი",
+   "de": "Luxemburg",
+   "es": "Luxemburgo",
+   "it": "Lussemburgo",
+   "pt": "Luxemburgo"
+  },
+  "wrong": {
+   "en": [
+    "Netherlands",
+    "Russia",
+    "France"
+   ],
+   "ka": [
+    "ნიდერლანდები",
+    "რუსეთი",
+    "საფრანგეთი"
+   ],
+   "de": [
+    "Niederlande",
+    "Russland",
+    "Frankreich"
+   ],
+   "es": [
+    "Países Bajos",
+    "Rusia",
+    "Francia"
+   ],
+   "fr": [
+    "Pays-Bas",
+    "Russie",
+    "France"
+   ],
+   "it": [
+    "Paesi Bassi",
+    "Russia",
+    "Francia"
+   ],
+   "pt": [
+    "Países Baixos",
+    "Rússia",
+    "França"
+   ]
+  }
+ },
+ {
+  "key": "flag-ivory-coast",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Flag_of_C%C3%B4te_d%27Ivoire.svg/1280px-Flag_of_C%C3%B4te_d%27Ivoire.svg.png",
+  "file": "File:Flag of Côte d'Ivoire.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Ivory Coast",
+   "ka": "კოტ-დივუარი",
+   "de": "Elfenbeinküste",
+   "es": "Costa de Marfil",
+   "fr": "Côte d'Ivoire",
+   "it": "Costa d'Avorio",
+   "pt": "Costa do Marfim"
+  },
+  "wrong": {
+   "en": [
+    "Ireland",
+    "India",
+    "Niger"
+   ],
+   "ka": [
+    "ირლანდია",
+    "ინდოეთი",
+    "ნიგერი"
+   ],
+   "de": [
+    "Irland",
+    "Indien",
+    "Niger"
+   ],
+   "es": [
+    "Irlanda",
+    "India",
+    "Níger"
+   ],
+   "fr": [
+    "Irlande",
+    "Inde",
+    "Niger"
+   ],
+   "it": [
+    "Irlanda",
+    "India",
+    "Niger"
+   ],
+   "pt": [
+    "Irlanda",
+    "Índia",
+    "Níger"
+   ]
+  }
+ },
+ {
+  "key": "flag-niger",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Flag_of_Niger.svg/1280px-Flag_of_Niger.svg.png",
+  "file": "File:Flag of Niger.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Niger",
+   "ka": "ნიგერი",
+   "es": "Níger",
+   "pt": "Níger"
+  },
+  "wrong": {
+   "en": [
+    "India",
+    "Ireland",
+    "Ivory Coast"
+   ],
+   "ka": [
+    "ინდოეთი",
+    "ირლანდია",
+    "კოტ-დივუარი"
+   ],
+   "de": [
+    "Indien",
+    "Irland",
+    "Elfenbeinküste"
+   ],
+   "es": [
+    "India",
+    "Irlanda",
+    "Costa de Marfil"
+   ],
+   "fr": [
+    "Inde",
+    "Irlande",
+    "Côte d'Ivoire"
+   ],
+   "it": [
+    "India",
+    "Irlanda",
+    "Costa d'Avorio"
+   ],
+   "pt": [
+    "Índia",
+    "Irlanda",
+    "Costa do Marfim"
+   ]
+  }
+ },
+ {
+  "key": "flag-mali",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Flag_of_Mali.svg/1280px-Flag_of_Mali.svg.png",
+  "file": "File:Flag of Mali.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Mali",
+   "ka": "მალი"
+  },
+  "wrong": {
+   "en": [
+    "Senegal",
+    "Guinea",
+    "Cameroon"
+   ],
+   "ka": [
+    "სენეგალი",
+    "გვინეა",
+    "კამერუნი"
+   ],
+   "de": [
+    "Senegal",
+    "Guinea",
+    "Kamerun"
+   ],
+   "es": [
+    "Senegal",
+    "Guinea",
+    "Camerún"
+   ],
+   "fr": [
+    "Sénégal",
+    "Guinée",
+    "Cameroun"
+   ],
+   "it": [
+    "Senegal",
+    "Guinea",
+    "Camerun"
+   ],
+   "pt": [
+    "Senegal",
+    "Guiné",
+    "Camarões"
+   ]
+  }
+ },
+ {
+  "key": "flag-ecuador",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Flag_of_Ecuador.svg/1280px-Flag_of_Ecuador.svg.png",
+  "file": "File:Flag of Ecuador.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Ecuador",
+   "ka": "ეკვადორი",
+   "fr": "Équateur",
+   "pt": "Equador"
+  },
+  "wrong": {
+   "en": [
+    "Colombia",
+    "Venezuela",
+    "Bolivia"
+   ],
+   "ka": [
+    "კოლუმბია",
+    "ვენესუელა",
+    "ბოლივია"
+   ],
+   "de": [
+    "Kolumbien",
+    "Venezuela",
+    "Bolivia"
+   ],
+   "fr": [
+    "Colombie",
+    "Venezuela",
+    "Bolivie"
+   ],
+   "pt": [
+    "Colômbia",
+    "Venezuela",
+    "Bolívia"
+   ]
+  }
+ }
+]
