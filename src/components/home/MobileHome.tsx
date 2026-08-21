@@ -347,7 +347,7 @@ export function MobileProfileCard({
           </span>
         </span>
         <span
-          className="absolute left-[46.02px] top-[2.77px] block -translate-x-1/2 whitespace-nowrap text-[35px] font-bold leading-[52.5px] tracking-[-1.75px] text-white"
+          className="absolute left-[44px] top-[2.77px] block -translate-x-1/2 whitespace-nowrap text-[35px] font-bold leading-[52.5px] tracking-[-1.75px] text-white"
           style={{
             fontFamily: "'Intel One Mono', 'Nunito', monospace",
             textShadow: "0px 2.19px 2.19px rgba(0,0,0,0.3), 0px 4.38px 6.57px rgba(0,0,0,0.15)",
@@ -355,7 +355,7 @@ export function MobileProfileCard({
         >
           {level}
         </span>
-        <span className="absolute left-[45.8px] top-[46.66px] block -translate-x-1/2 whitespace-nowrap text-[9.85px] font-bold leading-[14.78px] text-[rgba(255,255,255,0.7)]">
+        <span className="absolute left-[44.9px] top-[46.66px] block -translate-x-1/2 whitespace-nowrap text-[9.85px] font-bold leading-[14.78px] text-[rgba(255,255,255,0.7)]">
           {t("modals.levelLabel")}
         </span>
       </button>
