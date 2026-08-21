@@ -19,6 +19,7 @@ export type NotificationType =
   | 'daily_reward'
   | 'streak'
   | 'level_up'
+  | 'new_levels'
   | 'achievement'
   | 'trivia_liked'
   | 'trivia_saved'
