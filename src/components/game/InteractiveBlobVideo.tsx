@@ -50,11 +50,15 @@ export function InteractiveBlobVideo({ iconUrl, iconSlug, videoSrc, isLocked, sh
     [categories]
   );
 
-  // Resolve the locked icon: iconUrl > iconSlug > nothing
+  // Resolve the locked icon: iconUrl > iconSlug > question mark. The last
+  // step matters: the "Guess the ..." media categories shipped with no
+  // icon_slug at all, and an empty src rendered the blob as a blank beige
+  // square on the quick-game screen. A category with no icon still gets a
+  // face.
   const lockedIconUrl = useMemo(() => {
     if (iconUrl) return iconUrl;
     if (iconSlug) return getIconUrl(iconSlug);
-    return "";
+    return getIconUrl("question-mark");
   }, [iconUrl, iconSlug]);
 
   // Both sources go through videoUrl().

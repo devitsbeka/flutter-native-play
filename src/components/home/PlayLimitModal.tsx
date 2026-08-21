@@ -11,6 +11,7 @@ import { getGuestProgress } from "@/hooks/useGuestProgress";
 import { ExtraPlaysOffer } from "@/components/home/ExtraPlaysOffer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
+import { useProPurchase } from "@/hooks/useProPurchase";
 
 interface PlayLimitModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
   function PlayLimitModal({ isOpen, onClose, onRegister, isGuest = false, inline, regenPlayAvailable, timeUntilNextPlay, onPlayWithRegen, onPurchased }, ref) {
     const { t } = useLanguage();
     const navigate = useNavigate();
+    const { initiateProCheckout, isProcessing } = useProPurchase();
     const guestProgress = getGuestProgress();
     
     // Calculate stats for guests
@@ -46,9 +48,18 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
       totalStars += cat.completedLevels.reduce((sum, l) => sum + l.stars_earned, 0);
     });
 
-    const handleUpgradeToPro = () => {
-      onClose();
-      navigate("/profile?tab=PRO");
+    // Straight into the purchase, not a tour of the PRO tab: on web this
+    // starts Stripe checkout, on the app the native purchase sheet. The
+    // profile page stays the fallback only when the checkout cannot start.
+    const handleUpgradeToPro = async () => {
+      if (isProcessing) return;
+      const { success } = await initiateProCheckout("pro");
+      if (success) {
+        onClose();
+      } else {
+        onClose();
+        navigate("/profile?tab=PRO");
+      }
     };
 
     // The buyer owns what happens next — starting the game they were stopped
@@ -187,8 +198,9 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
 
         <motion.button
           onClick={handleUpgradeToPro}
+          disabled={isProcessing}
           whileTap={{ scale: 0.97, y: 2 }}
-          className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl font-display text-base font-bold text-white"
+          className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl font-display text-base font-bold text-white disabled:opacity-60"
           style={{
             background: "linear-gradient(90deg, #29B36B 0%, #7CC94A 60%, #B7E356 100%)",
             border: "2px solid #34D399",
