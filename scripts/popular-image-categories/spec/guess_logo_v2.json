@@ -1,0 +1,1642 @@
+[
+ {
+  "key": "s-apple",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1280px-Apple_logo_black.svg.png",
+  "file": "File:Apple logo black.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Apple",
+   "ka": "ეფლი"
+  },
+  "wrong": {
+   "en": [
+    "Samsung",
+    "Microsoft",
+    "Sony"
+   ],
+   "ka": [
+    "სამსუნგი",
+    "მაიკროსოფტი",
+    "სონი"
+   ]
+  }
+ },
+ {
+  "key": "s-nike",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Logo_NIKE.svg/1280px-Logo_NIKE.svg.png",
+  "file": "File:Logo NIKE.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Nike",
+   "ka": "ნაიკი"
+  },
+  "wrong": {
+   "en": [
+    "Adidas",
+    "Puma",
+    "Reebok"
+   ],
+   "ka": [
+    "ადიდასი",
+    "პუმა",
+    "რიბოკი"
+   ]
+  }
+ },
+ {
+  "key": "s-mcdonalds",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/McDonald%27s_Golden_Arches.svg/1280px-McDonald%27s_Golden_Arches.svg.png",
+  "file": "File:McDonald's Golden Arches.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "McDonald's",
+   "ka": "მაკდონალდსი"
+  },
+  "wrong": {
+   "en": [
+    "Burger King",
+    "KFC",
+    "Wendy's"
+   ],
+   "ka": [
+    "ბურგერ კინგი",
+    "KFC",
+    "ვენდისი"
+   ]
+  }
+ },
+ {
+  "key": "s-mercedes",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Mercedes-Logo.svg/1280px-Mercedes-Logo.svg.png",
+  "file": "File:Mercedes-Logo.svg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Mercedes-Benz",
+   "ka": "მერსედეს-ბენცი"
+  },
+  "wrong": {
+   "en": [
+    "BMW",
+    "Audi",
+    "Lexus"
+   ],
+   "ka": [
+    "BMW",
+    "აუდი",
+    "ლექსუსი"
+   ]
+  }
+ },
+ {
+  "key": "s-audi",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Audi-Logo_2016.svg/1280px-Audi-Logo_2016.svg.png",
+  "file": "File:Audi-Logo 2016.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Audi",
+   "ka": "აუდი"
+  },
+  "wrong": {
+   "en": [
+    "BMW",
+    "Volkswagen",
+    "Mercedes-Benz"
+   ],
+   "ka": [
+    "BMW",
+    "ფოლკსვაგენი",
+    "მერსედეს-ბენცი"
+   ]
+  }
+ },
+ {
+  "key": "s-volkswagen",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Volkswagen_logo_2019.svg/1280px-Volkswagen_logo_2019.svg.png",
+  "file": "File:Volkswagen logo 2019.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Volkswagen",
+   "ka": "ფოლკსვაგენი"
+  },
+  "wrong": {
+   "en": [
+    "Volvo",
+    "Skoda",
+    "Audi"
+   ],
+   "ka": [
+    "ვოლვო",
+    "შკოდა",
+    "აუდი"
+   ]
+  }
+ },
+ {
+  "key": "s-renault",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Renault_2021.svg/1280px-Renault_2021.svg.png",
+  "file": "File:Renault 2021.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Renault",
+   "ka": "რენო"
+  },
+  "wrong": {
+   "en": [
+    "Peugeot",
+    "Citroen",
+    "Fiat"
+   ],
+   "ka": [
+    "პეჟო",
+    "სიტროენი",
+    "ფიატი"
+   ]
+  }
+ },
+ {
+  "key": "s-mitsubishi",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Mitsubishi_logo.svg/1280px-Mitsubishi_logo.svg.png",
+  "file": "File:Mitsubishi logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Mitsubishi",
+   "ka": "მიცუბიში"
+  },
+  "wrong": {
+   "en": [
+    "Toyota",
+    "Mazda",
+    "Nissan"
+   ],
+   "ka": [
+    "ტოიოტა",
+    "მაზდა",
+    "ნისანი"
+   ]
+  }
+ },
+ {
+  "key": "s-hyundai",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Hyundai_symbol.svg/1280px-Hyundai_symbol.svg.png",
+  "file": "File:Hyundai symbol.svg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Hyundai",
+   "ka": "ჰიუნდაი"
+  },
+  "wrong": {
+   "en": [
+    "Honda",
+    "Kia",
+    "Toyota"
+   ],
+   "ka": [
+    "ჰონდა",
+    "კია",
+    "ტოიოტა"
+   ]
+  }
+ },
+ {
+  "key": "s-tesla",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Tesla_T_symbol.svg/1280px-Tesla_T_symbol.svg.png",
+  "file": "File:Tesla T symbol.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Tesla",
+   "ka": "ტესლა"
+  },
+  "wrong": {
+   "en": [
+    "Toyota",
+    "Lexus",
+    "Infiniti"
+   ],
+   "ka": [
+    "ტოიოტა",
+    "ლექსუსი",
+    "ინფინიტი"
+   ]
+  }
+ },
+ {
+  "key": "s-android",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Android_robot.svg/1280px-Android_robot.svg.png",
+  "file": "File:Android robot.svg",
+  "license": "CC BY 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Android",
+   "ka": "ანდროიდი"
+  },
+  "wrong": {
+   "en": [
+    "iOS",
+    "Windows",
+    "Linux"
+   ],
+   "ka": [
+    "iOS",
+    "ვინდოუსი",
+    "ლინუქსი"
+   ]
+  }
+ },
+ {
+  "key": "s-chrome",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Google_Chrome_icon_%28February_2022%29.svg/1280px-Google_Chrome_icon_%28February_2022%29.svg.png",
+  "file": "File:Google Chrome icon (February 2022).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Google Chrome",
+   "ka": "გუგლ ქრომი"
+  },
+  "wrong": {
+   "en": [
+    "Firefox",
+    "Opera",
+    "Microsoft Edge"
+   ],
+   "ka": [
+    "ფაიერფოქსი",
+    "ოპერა",
+    "მაიკროსოფტ ეჯი"
+   ]
+  }
+ },
+ {
+  "key": "s-gmail",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Gmail_icon_%282020%29.svg/1280px-Gmail_icon_%282020%29.svg.png",
+  "file": "File:Gmail icon (2020).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Gmail",
+   "ka": "ჯიმეილი"
+  },
+  "wrong": {
+   "en": [
+    "Outlook",
+    "Yahoo Mail",
+    "Hotmail"
+   ],
+   "ka": [
+    "აუთლუქი",
+    "იაჰუ მეილი",
+    "ჰოთმეილი"
+   ]
+  }
+ },
+ {
+  "key": "s-google",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1280px-Google_%22G%22_logo.svg.png",
+  "file": "File:Google \"G\" logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Google",
+   "ka": "გუგლი"
+  },
+  "wrong": {
+   "en": [
+    "Bing",
+    "Yahoo",
+    "Yandex"
+   ],
+   "ka": [
+    "ბინგი",
+    "იაჰუ",
+    "იანდექსი"
+   ]
+  }
+ },
+ {
+  "key": "s-instagram",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/1280px-Instagram_logo_2016.svg.png",
+  "file": "File:Instagram logo 2016.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Instagram",
+   "ka": "ინსტაგრამი"
+  },
+  "wrong": {
+   "en": [
+    "Snapchat",
+    "TikTok",
+    "Pinterest"
+   ],
+   "ka": [
+    "სნეპჩატი",
+    "ტიკტოკი",
+    "პინტერესტი"
+   ]
+  }
+ },
+ {
+  "key": "s-whatsapp",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1280px-WhatsApp.svg.png",
+  "file": "File:WhatsApp.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "WhatsApp",
+   "ka": "ვოტსაპი"
+  },
+  "wrong": {
+   "en": [
+    "Viber",
+    "Telegram",
+    "Signal"
+   ],
+   "ka": [
+    "ვაიბერი",
+    "ტელეგრამი",
+    "სიგნალი"
+   ]
+  }
+ },
+ {
+  "key": "s-telegram",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Telegram_logo.svg/1280px-Telegram_logo.svg.png",
+  "file": "File:Telegram logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Telegram",
+   "ka": "ტელეგრამი"
+  },
+  "wrong": {
+   "en": [
+    "WhatsApp",
+    "Signal",
+    "Messenger"
+   ],
+   "ka": [
+    "ვოტსაპი",
+    "სიგნალი",
+    "მესენჯერი"
+   ]
+  }
+ },
+ {
+  "key": "s-facebook",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Facebook_f_logo_%282019%29.svg/1280px-Facebook_f_logo_%282019%29.svg.png",
+  "file": "File:Facebook f logo (2019).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Facebook",
+   "ka": "ფეისბუქი"
+  },
+  "wrong": {
+   "en": [
+    "Twitter",
+    "LinkedIn",
+    "Instagram"
+   ],
+   "ka": [
+    "ტვიტერი",
+    "ლინკდინი",
+    "ინსტაგრამი"
+   ]
+  }
+ },
+ {
+  "key": "s-messenger",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Facebook_Messenger_logo_2020.svg/1280px-Facebook_Messenger_logo_2020.svg.png",
+  "file": "File:Facebook Messenger logo 2020.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Messenger",
+   "ka": "მესენჯერი"
+  },
+  "wrong": {
+   "en": [
+    "WhatsApp",
+    "Viber",
+    "Telegram"
+   ],
+   "ka": [
+    "ვოტსაპი",
+    "ვაიბერი",
+    "ტელეგრამი"
+   ]
+  }
+ },
+ {
+  "key": "s-youtube",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/1280px-YouTube_full-color_icon_%282017%29.svg.png",
+  "file": "File:YouTube full-color icon (2017).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "YouTube",
+   "ka": "იუთუბი"
+  },
+  "wrong": {
+   "en": [
+    "Vimeo",
+    "Netflix",
+    "Twitch"
+   ],
+   "ka": [
+    "ვიმეო",
+    "ნეტფლიქსი",
+    "ტვიჩი"
+   ]
+  }
+ },
+ {
+  "key": "s-spotify",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/1280px-Spotify_logo_without_text.svg.png",
+  "file": "File:Spotify logo without text.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Spotify",
+   "ka": "სპოტიფაი"
+  },
+  "wrong": {
+   "en": [
+    "Deezer",
+    "SoundCloud",
+    "Tidal"
+   ],
+   "ka": [
+    "დიზერი",
+    "საუნდქლაუდი",
+    "ტაიდალი"
+   ]
+  }
+ },
+ {
+  "key": "s-pinterest",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/0/08/Pinterest-logo.png",
+  "file": "File:Pinterest-logo.png",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Pinterest",
+   "ka": "პინტერესტი"
+  },
+  "wrong": {
+   "en": [
+    "Tumblr",
+    "Reddit",
+    "Instagram"
+   ],
+   "ka": [
+    "ტამბლერი",
+    "რედიტი",
+    "ინსტაგრამი"
+   ]
+  }
+ },
+ {
+  "key": "s-windows",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Windows_logo_-_2012.svg/1280px-Windows_logo_-_2012.svg.png",
+  "file": "File:Windows logo - 2012.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Windows",
+   "ka": "ვინდოუსი"
+  },
+  "wrong": {
+   "en": [
+    "macOS",
+    "Linux",
+    "Android"
+   ],
+   "ka": [
+    "macOS",
+    "ლინუქსი",
+    "ანდროიდი"
+   ]
+  }
+ },
+ {
+  "key": "s-microsoft",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Microsoft_icon.svg/1280px-Microsoft_icon.svg.png",
+  "file": "File:Microsoft icon.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Microsoft",
+   "ka": "მაიკროსოფტი"
+  },
+  "wrong": {
+   "en": [
+    "Apple",
+    "Google",
+    "IBM"
+   ],
+   "ka": [
+    "ეფლი",
+    "გუგლი",
+    "IBM"
+   ]
+  }
+ },
+ {
+  "key": "s-playstation",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/PlayStation_logo.svg/1280px-PlayStation_logo.svg.png",
+  "file": "File:PlayStation logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "PlayStation",
+   "ka": "პლეისტეიშენი"
+  },
+  "wrong": {
+   "en": [
+    "Xbox",
+    "Nintendo",
+    "Sega"
+   ],
+   "ka": [
+    "ექსბოქსი",
+    "ნინტენდო",
+    "სეგა"
+   ]
+  }
+ },
+ {
+  "key": "s-xbox",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Xbox_logo_2012_cropped.svg/1280px-Xbox_logo_2012_cropped.svg.png",
+  "file": "File:Xbox logo 2012 cropped.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Xbox",
+   "ka": "ექსბოქსი"
+  },
+  "wrong": {
+   "en": [
+    "PlayStation",
+    "Nintendo",
+    "Steam"
+   ],
+   "ka": [
+    "პლეისტეიშენი",
+    "ნინტენდო",
+    "სტიმი"
+   ]
+  }
+ },
+ {
+  "key": "s-snapchat",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Snapchat-logo-svgrepo-com.svg/1280px-Snapchat-logo-svgrepo-com.svg.png",
+  "file": "File:Snapchat-logo-svgrepo-com.svg",
+  "license": "CC BY 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Snapchat",
+   "ka": "სნეპჩატი"
+  },
+  "wrong": {
+   "en": [
+    "Instagram",
+    "TikTok",
+    "WhatsApp"
+   ],
+   "ka": [
+    "ინსტაგრამი",
+    "ტიკტოკი",
+    "ვოტსაპი"
+   ]
+  }
+ },
+ {
+  "key": "s-tiktok",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Tiktok_icon.svg/1280px-Tiktok_icon.svg.png",
+  "file": "File:Tiktok icon.svg",
+  "license": "CC0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "TikTok",
+   "ka": "ტიკტოკი"
+  },
+  "wrong": {
+   "en": [
+    "Instagram",
+    "Snapchat",
+    "YouTube"
+   ],
+   "ka": [
+    "ინსტაგრამი",
+    "სნეპჩატი",
+    "იუთუბი"
+   ]
+  }
+ },
+ {
+  "key": "s-netflix",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Netflix_2016_N_logo.svg/1280px-Netflix_2016_N_logo.svg.png",
+  "file": "File:Netflix 2015 N logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Netflix",
+   "ka": "ნეტფლიქსი"
+  },
+  "wrong": {
+   "en": [
+    "Hulu",
+    "HBO Max",
+    "Disney+"
+   ],
+   "ka": [
+    "ჰულუ",
+    "HBO Max",
+    "დისნეი+"
+   ]
+  }
+ },
+ {
+  "key": "s-appstore",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/App_Store_%28iOS%29.svg/1280px-App_Store_%28iOS%29.svg.png",
+  "file": "File:App Store (iOS).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "App Store",
+   "ka": "აპსთორი"
+  },
+  "wrong": {
+   "en": [
+    "Google Play",
+    "Galaxy Store",
+    "Microsoft Store"
+   ],
+   "ka": [
+    "გუგლ ფლეი",
+    "გალაქსი სთორი",
+    "მაიკროსოფტ სთორი"
+   ]
+  }
+ },
+ {
+  "key": "s-mastercard",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Mastercard_2019_logo.svg/1280px-Mastercard_2019_logo.svg.png",
+  "file": "File:Mastercard 2019 logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Mastercard",
+   "ka": "მასტერქარდი"
+  },
+  "wrong": {
+   "en": [
+    "Visa",
+    "Maestro",
+    "American Express"
+   ],
+   "ka": [
+    "ვიზა",
+    "მაესტრო",
+    "ამერიკან ექსპრესი"
+   ]
+  }
+ },
+ {
+  "key": "s-target",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Target_Corporation_logo_%28vector%29.svg/1280px-Target_Corporation_logo_%28vector%29.svg.png",
+  "file": "File:Target Corporation logo (vector).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Target",
+   "ka": "ტარგეტი"
+  },
+  "wrong": {
+   "en": [
+    "Walmart",
+    "Costco",
+    "Kmart"
+   ],
+   "ka": [
+    "უოლმარტი",
+    "კოსტკო",
+    "კმარტი"
+   ]
+  }
+ },
+ {
+  "key": "s-adidas",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Adidas_2022_logo.svg/1280px-Adidas_2022_logo.svg.png",
+  "file": "File:Adidas 2022 logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Adidas",
+   "ka": "ადიდასი"
+  },
+  "wrong": {
+   "en": [
+    "Nike",
+    "Puma",
+    "Under Armour"
+   ],
+   "ka": [
+    "ნაიკი",
+    "პუმა",
+    "ანდერ არმორი"
+   ]
+  }
+ },
+ {
+  "key": "s-dominos",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Domino%27s_pizza_logo.svg/1280px-Domino%27s_pizza_logo.svg.png",
+  "file": "File:Domino's pizza logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Domino's",
+   "ka": "დომინოსი"
+  },
+  "wrong": {
+   "en": [
+    "Pizza Hut",
+    "Papa John's",
+    "Little Caesars"
+   ],
+   "ka": [
+    "პიცა ჰათი",
+    "პაპა ჯონსი",
+    "ლითლ სიზარსი"
+   ]
+  }
+ },
+ {
+  "key": "s-gmaps",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Google_Maps_icon_%282020%29.svg/1280px-Google_Maps_icon_%282020%29.svg.png",
+  "file": "File:Google Maps icon (2020).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Google Maps",
+   "ka": "გუგლ მეპსი"
+  },
+  "wrong": {
+   "en": [
+    "Waze",
+    "Apple Maps",
+    "Yandex Maps"
+   ],
+   "ka": [
+    "ვეიზი",
+    "ეფლ მეპსი",
+    "იანდექს მეპსი"
+   ]
+  }
+ },
+ {
+  "key": "s-gplay",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_Play_2022_icon.svg/1280px-Google_Play_2022_icon.svg.png",
+  "file": "File:Google Play 2022 icon.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Google Play",
+   "ka": "გუგლ ფლეი"
+  },
+  "wrong": {
+   "en": [
+    "App Store",
+    "Steam",
+    "Microsoft Store"
+   ],
+   "ka": [
+    "აპსთორი",
+    "სტიმი",
+    "მაიკროსოფტ სთორი"
+   ]
+  }
+ },
+ {
+  "key": "s-gdrive",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/1280px-Google_Drive_icon_%282020%29.svg.png",
+  "file": "File:Google Drive icon (2020).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Google Drive",
+   "ka": "გუგლ დრაივი"
+  },
+  "wrong": {
+   "en": [
+    "Dropbox",
+    "OneDrive",
+    "iCloud"
+   ],
+   "ka": [
+    "დროპბოქსი",
+    "უანდრაივი",
+    "აიქლაუდი"
+   ]
+  }
+ },
+ {
+  "key": "s-skype",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Skype_logo_%282019%E2%80%93present%29.svg/1280px-Skype_logo_%282019%E2%80%93present%29.svg.png",
+  "file": "File:Skype logo (2019–present).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Skype",
+   "ka": "სკაიპი"
+  },
+  "wrong": {
+   "en": [
+    "Zoom",
+    "Viber",
+    "FaceTime"
+   ],
+   "ka": [
+    "ზუმი",
+    "ვაიბერი",
+    "ფეისთაიმი"
+   ]
+  }
+ },
+ {
+  "key": "s-shazam",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Shazam_icon.svg/1280px-Shazam_icon.svg.png",
+  "file": "File:Shazam icon.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Shazam",
+   "ka": "შაზამი"
+  },
+  "wrong": {
+   "en": [
+    "Spotify",
+    "SoundHound",
+    "Deezer"
+   ],
+   "ka": [
+    "სპოტიფაი",
+    "საუნდჰაუნდი",
+    "დიზერი"
+   ]
+  }
+ },
+ {
+  "key": "s-olympics",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Olympic_rings_without_rims.svg/1280px-Olympic_rings_without_rims.svg.png",
+  "file": "File:Olympic rings without rims.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Olympics",
+   "ka": "ოლიმპიადა",
+   "de": "Olympia",
+   "es": "Juegos Olímpicos",
+   "fr": "Jeux olympiques",
+   "it": "Olimpiadi",
+   "pt": "Olimpíadas"
+  },
+  "wrong": {
+   "en": [
+    "FIFA",
+    "UEFA",
+    "Paralympics"
+   ],
+   "ka": [
+    "FIFA",
+    "UEFA",
+    "პარალიმპიადა"
+   ],
+   "de": [
+    "FIFA",
+    "UEFA",
+    "Paralympics"
+   ],
+   "es": [
+    "FIFA",
+    "UEFA",
+    "Paralimpiadas"
+   ],
+   "fr": [
+    "FIFA",
+    "UEFA",
+    "Paralympiques"
+   ],
+   "it": [
+    "FIFA",
+    "UEFA",
+    "Paralimpiadi"
+   ],
+   "pt": [
+    "FIFA",
+    "UEFA",
+    "Paralimpíadas"
+   ]
+  }
+ },
+ {
+  "key": "s-slack",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Slack_icon_2019.svg/1280px-Slack_icon_2019.svg.png",
+  "file": "File:Slack icon 2019.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Slack",
+   "ka": "სლექი"
+  },
+  "wrong": {
+   "en": [
+    "Discord",
+    "Microsoft Teams",
+    "Zoom"
+   ],
+   "ka": [
+    "დისკორდი",
+    "მაიკროსოფტ თიმსი",
+    "ზუმი"
+   ]
+  }
+ },
+ {
+  "key": "s-dropbox",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Dropbox_Icon.svg/1280px-Dropbox_Icon.svg.png",
+  "file": "File:Dropbox Icon.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Dropbox",
+   "ka": "დროპბოქსი"
+  },
+  "wrong": {
+   "en": [
+    "Google Drive",
+    "OneDrive",
+    "iCloud"
+   ],
+   "ka": [
+    "გუგლ დრაივი",
+    "უანდრაივი",
+    "აიქლაუდი"
+   ]
+  }
+ },
+ {
+  "key": "s-twitch",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Twitch_Glitch_Logo_Purple.svg/1280px-Twitch_Glitch_Logo_Purple.svg.png",
+  "file": "File:Twitch Glitch Logo Purple.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Twitch",
+   "ka": "ტვიჩი"
+  },
+  "wrong": {
+   "en": [
+    "YouTube",
+    "Kick",
+    "Discord"
+   ],
+   "ka": [
+    "იუთუბი",
+    "კიკი",
+    "დისკორდი"
+   ]
+  }
+ },
+ {
+  "key": "s-steam",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Steam_icon_logo.svg/1280px-Steam_icon_logo.svg.png",
+  "file": "File:Steam icon logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Steam",
+   "ka": "სტიმი"
+  },
+  "wrong": {
+   "en": [
+    "Epic Games",
+    "Origin",
+    "GOG"
+   ],
+   "ka": [
+    "ეპიკ გეიმსი",
+    "ორიჯინი",
+    "GOG"
+   ]
+  }
+ },
+ {
+  "key": "s-paypal",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/PayPal_Logo_Icon_2014.svg/1280px-PayPal_Logo_Icon_2014.svg.png",
+  "file": "File:PayPal Logo Icon 2014.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "PayPal",
+   "ka": "პეიპალი"
+  },
+  "wrong": {
+   "en": [
+    "Venmo",
+    "Stripe",
+    "Skrill"
+   ],
+   "ka": [
+    "ვენმო",
+    "სტრაიპი",
+    "სკრილი"
+   ]
+  }
+ },
+ {
+  "key": "s-amazon",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Amazon_icon.svg/1280px-Amazon_icon.svg.png",
+  "file": "File:Amazon icon.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Amazon",
+   "ka": "ამაზონი"
+  },
+  "wrong": {
+   "en": [
+    "eBay",
+    "AliExpress",
+    "Etsy"
+   ],
+   "ka": [
+    "იბეი",
+    "ალიექსპრესი",
+    "ეტსი"
+   ]
+  }
+ },
+ {
+  "key": "s-motorola",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Motorola_M_symbol_black.svg/1280px-Motorola_M_symbol_black.svg.png",
+  "file": "File:Motorola M symbol black.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Motorola",
+   "ka": "მოტოროლა"
+  },
+  "wrong": {
+   "en": [
+    "Nokia",
+    "Ericsson",
+    "Siemens"
+   ],
+   "ka": [
+    "ნოკია",
+    "ერიკსონი",
+    "სიმენსი"
+   ]
+  }
+ },
+ {
+  "key": "s-lg",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/LG_symbol.svg/1280px-LG_symbol.svg.png",
+  "file": "File:LG symbol.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "LG",
+   "ka": "LG"
+  },
+  "wrong": {
+   "en": [
+    "Samsung",
+    "Philips",
+    "Panasonic"
+   ],
+   "ka": [
+    "სამსუნგი",
+    "ფილიპსი",
+    "პანასონიკი"
+   ]
+  }
+ },
+ {
+  "key": "s-xiaomi",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Xiaomi_logo.svg/1280px-Xiaomi_logo.svg.png",
+  "file": "File:Xiaomi logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Xiaomi",
+   "ka": "ქსიაომი"
+  },
+  "wrong": {
+   "en": [
+    "Huawei",
+    "Oppo",
+    "OnePlus"
+   ],
+   "ka": [
+    "ჰუავეი",
+    "ოპო",
+    "უანფლასი"
+   ]
+  }
+ },
+ {
+  "key": "s-explorer",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Internet_Explorer_10%2B11_logo.svg/1280px-Internet_Explorer_10%2B11_logo.svg.png",
+  "file": "File:Internet Explorer 10+11 logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Internet Explorer",
+   "ka": "ინტერნეტ ექსპლორერი"
+  },
+  "wrong": {
+   "en": [
+    "Firefox",
+    "Opera",
+    "Netscape"
+   ],
+   "ka": [
+    "ფაიერფოქსი",
+    "ოპერა",
+    "ნეტსკეიპი"
+   ]
+  }
+ },
+ {
+  "key": "s-twitter",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Twitter_icon.svg/1280px-Twitter_icon.svg.png",
+  "file": "File:Twitter icon.svg",
+  "license": "CC0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Twitter",
+   "ka": "ტვიტერი"
+  },
+  "wrong": {
+   "en": [
+    "Tumblr",
+    "Facebook",
+    "Threads"
+   ],
+   "ka": [
+    "ტამბლერი",
+    "ფეისბუქი",
+    "თრედსი"
+   ]
+  }
+ },
+ {
+  "key": "s-opera",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Opera_2015_icon.svg/1280px-Opera_2015_icon.svg.png",
+  "file": "File:Opera 2015 icon.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Opera",
+   "ka": "ოპერა"
+  },
+  "wrong": {
+   "en": [
+    "Firefox",
+    "Google Chrome",
+    "Safari"
+   ],
+   "ka": [
+    "ფაიერფოქსი",
+    "გუგლ ქრომი",
+    "საფარი"
+   ]
+  }
+ },
+ {
+  "key": "s-signal",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Signal-Logo.svg/1280px-Signal-Logo.svg.png",
+  "file": "File:Signal-Logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Signal",
+   "ka": "სიგნალი"
+  },
+  "wrong": {
+   "en": [
+    "Telegram",
+    "WhatsApp",
+    "Viber"
+   ],
+   "ka": [
+    "ტელეგრამი",
+    "ვოტსაპი",
+    "ვაიბერი"
+   ]
+  }
+ },
+ {
+  "key": "s-ea",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Electronic-Arts-Logo.svg/1280px-Electronic-Arts-Logo.svg.png",
+  "file": "File:Electronic-Arts-Logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "EA",
+   "ka": "EA"
+  },
+  "wrong": {
+   "en": [
+    "Ubisoft",
+    "Activision",
+    "Rockstar"
+   ],
+   "ka": [
+    "უბისოფტი",
+    "აქტივიჟენი",
+    "როკსტარი"
+   ]
+  }
+ },
+ {
+  "key": "s-switch",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Nintendo_Switch_Logo_%28without_text%29.svg/1280px-Nintendo_Switch_Logo_%28without_text%29.svg.png",
+  "file": "File:Nintendo Switch Logo (without text).svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Nintendo Switch",
+   "ka": "ნინტენდო სვიჩი"
+  },
+  "wrong": {
+   "en": [
+    "PlayStation",
+    "Xbox",
+    "Sega"
+   ],
+   "ka": [
+    "პლეისტეიშენი",
+    "ექსბოქსი",
+    "სეგა"
+   ]
+  }
+ },
+ {
+  "key": "s-cbs",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/CBS_Eyemark.svg/1280px-CBS_Eyemark.svg.png",
+  "file": "File:CBS Eyemark.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "CBS",
+   "ka": "CBS"
+  },
+  "wrong": {
+   "en": [
+    "NBC",
+    "ABC",
+    "CNN"
+   ],
+   "ka": [
+    "NBC",
+    "ABC",
+    "CNN"
+   ]
+  }
+ },
+ {
+  "key": "s-nbc",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/NBC_Peacock_1986.svg/1280px-NBC_Peacock_1986.svg.png",
+  "file": "File:NBC Peacock 1986.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "NBC",
+   "ka": "NBC"
+  },
+  "wrong": {
+   "en": [
+    "CBS",
+    "ABC",
+    "Fox"
+   ],
+   "ka": [
+    "CBS",
+    "ABC",
+    "ფოქსი"
+   ]
+  }
+ },
+ {
+  "key": "s-warnerbros",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Warner_Bros_logo.svg/1280px-Warner_Bros_logo.svg.png",
+  "file": "File:Warner Bros logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Warner Bros.",
+   "ka": "უორნერ ბრაზერსი"
+  },
+  "wrong": {
+   "en": [
+    "Paramount",
+    "Universal",
+    "Disney"
+   ],
+   "ka": [
+    "პარამაუნტი",
+    "უნივერსალი",
+    "დისნეი"
+   ]
+  }
+ },
+ {
+  "key": "s-opel",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Opel-Logo_2017.svg/1280px-Opel-Logo_2017.svg.png",
+  "file": "File:Opel-Logo 2017.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Opel",
+   "ka": "ოპელი"
+  },
+  "wrong": {
+   "en": [
+    "Volkswagen",
+    "Renault",
+    "Skoda"
+   ],
+   "ka": [
+    "ფოლკსვაგენი",
+    "რენო",
+    "შკოდა"
+   ]
+  }
+ },
+ {
+  "key": "s-chevrolet",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Chevrolet_bowtie_2023.svg/1280px-Chevrolet_bowtie_2023.svg.png",
+  "file": "File:Chevrolet bowtie 2023.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Chevrolet",
+   "ka": "შევროლე"
+  },
+  "wrong": {
+   "en": [
+    "Ford",
+    "Dodge",
+    "Buick"
+   ],
+   "ka": [
+    "ფორდი",
+    "დოჯი",
+    "ბიუიკი"
+   ]
+  }
+ },
+ {
+  "key": "s-vimeo",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Vimeo_icon_block.svg/1280px-Vimeo_icon_block.svg.png",
+  "file": "File:Vimeo icon block.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Vimeo",
+   "ka": "ვიმეო"
+  },
+  "wrong": {
+   "en": [
+    "YouTube",
+    "Dailymotion",
+    "Twitch"
+   ],
+   "ka": [
+    "იუთუბი",
+    "დეილიმოუშენი",
+    "ტვიჩი"
+   ]
+  }
+ },
+ {
+  "key": "s-threads",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Threads_%28app%29_logo.svg/1280px-Threads_%28app%29_logo.svg.png",
+  "file": "File:Threads (app) logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Threads",
+   "ka": "თრედსი"
+  },
+  "wrong": {
+   "en": [
+    "Twitter",
+    "Bluesky",
+    "Mastodon"
+   ],
+   "ka": [
+    "ტვიტერი",
+    "ბლუსკაი",
+    "მასტოდონი"
+   ]
+  }
+ },
+ {
+  "key": "s-gitlab",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/GitLab_icon.svg/1280px-GitLab_icon.svg.png",
+  "file": "File:GitLab icon.svg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "GitLab",
+   "ka": "გითლაბი"
+  },
+  "wrong": {
+   "en": [
+    "GitHub",
+    "Bitbucket",
+    "SourceForge"
+   ],
+   "ka": [
+    "გითჰაბი",
+    "ბითბაკეტი",
+    "სორსფორჯი"
+   ]
+  }
+ },
+ {
+  "key": "s-dccomics",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/DC_Comics_logo.svg/1280px-DC_Comics_logo.svg.png",
+  "file": "File:DC Comics logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "DC Comics",
+   "ka": "DC კომიქსი"
+  },
+  "wrong": {
+   "en": [
+    "Marvel",
+    "Dark Horse",
+    "Image Comics"
+   ],
+   "ka": [
+    "მარველი",
+    "დარკ ჰორსი",
+    "იმიჯ კომიქსი"
+   ]
+  }
+ },
+ {
+  "key": "s-wikipedia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Wikipedia-logo-v2.svg/1280px-Wikipedia-logo-v2.svg.png",
+  "file": "File:Wikipedia-logo-v2.svg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Wikipedia",
+   "ka": "ვიკიპედია"
+  },
+  "wrong": {
+   "en": [
+    "Britannica",
+    "Quora",
+    "Fandom"
+   ],
+   "ka": [
+    "ბრიტანიკა",
+    "კვორა",
+    "ფენდომი"
+   ]
+  }
+ },
+ {
+  "key": "s-beats",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Beats_Electronics_logo.svg/1280px-Beats_Electronics_logo.svg.png",
+  "file": "File:Beats Electronics logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Beats",
+   "ka": "ბითსი"
+  },
+  "wrong": {
+   "en": [
+    "Bose",
+    "JBL",
+    "Sony"
+   ],
+   "ka": [
+    "ბოუზი",
+    "JBL",
+    "სონი"
+   ]
+  }
+ },
+ {
+  "key": "s-bluetooth",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Bluetooth.svg/1280px-Bluetooth.svg.png",
+  "file": "File:Bluetooth.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Bluetooth",
+   "ka": "ბლუთუსი"
+  },
+  "wrong": {
+   "en": [
+    "Wi-Fi",
+    "NFC",
+    "USB"
+   ],
+   "ka": [
+    "ვაი-ფაი",
+    "NFC",
+    "USB"
+   ]
+  }
+ },
+ {
+  "key": "s-louisvuitton",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/LV_Monogram.svg/1280px-LV_Monogram.svg.png",
+  "file": "File:LV Monogram.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Louis Vuitton",
+   "ka": "ლუი ვიტონი"
+  },
+  "wrong": {
+   "en": [
+    "Gucci",
+    "Chanel",
+    "Hermes"
+   ],
+   "ka": [
+    "გუჩი",
+    "შანელი",
+    "ჰერმესი"
+   ]
+  }
+ },
+ {
+  "key": "s-deutschebank",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Deutsche_Bank_logo_without_wordmark.svg/1280px-Deutsche_Bank_logo_without_wordmark.svg.png",
+  "file": "File:Deutsche Bank logo without wordmark.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Deutsche Bank",
+   "ka": "დოიჩე ბანკი"
+  },
+  "wrong": {
+   "en": [
+    "Commerzbank",
+    "UBS",
+    "Barclays"
+   ],
+   "ka": [
+    "კომერცბანკი",
+    "UBS",
+    "ბარკლისი"
+   ]
+  }
+ },
+ {
+  "key": "s-rollsroyce",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Rolls-Royce_Motor_Cars_logo.svg/1280px-Rolls-Royce_Motor_Cars_logo.svg.png",
+  "file": "File:Rolls-Royce Motor Cars logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Rolls-Royce",
+   "ka": "როლს-როისი"
+  },
+  "wrong": {
+   "en": [
+    "Bentley",
+    "Bugatti",
+    "Maybach"
+   ],
+   "ka": [
+    "ბენტლი",
+    "ბუგატი",
+    "მაიბახი"
+   ]
+  }
+ }
+]

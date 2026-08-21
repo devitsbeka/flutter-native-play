@@ -25,8 +25,8 @@ import uuid
 
 HERE = pathlib.Path(__file__).parent
 OUT_NAMES = {
-    "guess_logo": "20260822120000_guess_logo_symbols.sql",
-    "guess_movie": "20260822130000_guess_movie_modern.sql",
+    "guess_logo": "20260823120000_guess_logo_symbols.sql",
+    "guess_movie": "20260823130000_guess_movie_modern.sql",
 }
 
 spec = importlib.util.spec_from_file_location("bm", HERE / "build-migration.py")

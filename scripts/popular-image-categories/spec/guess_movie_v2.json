@@ -1,0 +1,3200 @@
+[
+ {
+  "key": "m2-casablanca",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/8/87/Casablanca%2C_Trailer_Screenshot.JPG",
+  "file": "File:Casablanca, Trailer Screenshot.JPG",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Casablanca",
+   "ka": "კასაბლანკა",
+   "de": "Casablanca",
+   "es": "Casablanca",
+   "fr": "Casablanca",
+   "it": "Casablanca",
+   "pt": "Casablanca"
+  },
+  "wrong": {
+   "en": [
+    "The Third Man",
+    "Citizen Kane",
+    "Laura"
+   ],
+   "ka": [
+    "მესამე კაცი",
+    "მოქალაქე კეინი",
+    "ლორა"
+   ],
+   "de": [
+    "Der dritte Mann",
+    "Citizen Kane",
+    "Laura"
+   ],
+   "es": [
+    "El tercer hombre",
+    "Ciudadano Kane",
+    "Laura"
+   ],
+   "fr": [
+    "Le Troisième Homme",
+    "Citizen Kane",
+    "Laura"
+   ],
+   "it": [
+    "Il terzo uomo",
+    "Quarto potere",
+    "Laura"
+   ],
+   "pt": [
+    "O Terceiro Homem",
+    "Cidadão Kane",
+    "Laura"
+   ]
+  }
+ },
+ {
+  "key": "m2-wizard-of-oz",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/2/26/Judy_Garland_in_The_Wizard_of_Oz_trailer_2.jpg",
+  "file": "File:Judy Garland in The Wizard of Oz trailer 2.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "The Wizard of Oz",
+   "ka": "ოზის ჯადოქარი",
+   "de": "Der Zauberer von Oz",
+   "es": "El mago de Oz",
+   "fr": "Le Magicien d'Oz",
+   "it": "Il mago di Oz",
+   "pt": "O Mágico de Oz"
+  },
+  "wrong": {
+   "en": [
+    "Mary Poppins",
+    "Cinderella",
+    "Fantasia"
+   ],
+   "ka": [
+    "მერი პოპინსი",
+    "კონკია",
+    "ფანტაზია"
+   ],
+   "de": [
+    "Mary Poppins",
+    "Cinderella",
+    "Fantasia"
+   ],
+   "es": [
+    "Mary Poppins",
+    "La Cenicienta",
+    "Fantasia"
+   ],
+   "fr": [
+    "Mary Poppins",
+    "Cendrillon",
+    "Fantasia"
+   ],
+   "it": [
+    "Mary Poppins",
+    "Cenerentola",
+    "Fantasia"
+   ],
+   "pt": [
+    "Mary Poppins",
+    "Cinderela",
+    "Fantasia"
+   ]
+  }
+ },
+ {
+  "key": "m2-psycho",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/6/66/Alfred_Hitchcock%27s_Psycho_trailer.png",
+  "file": "File:Alfred Hitchcock's Psycho trailer.png",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Psycho",
+   "ka": "ფსიქო",
+   "de": "Psycho",
+   "es": "Psicosis",
+   "fr": "Psychose",
+   "it": "Psyco",
+   "pt": "Psicose"
+  },
+  "wrong": {
+   "en": [
+    "The Birds",
+    "The Exorcist",
+    "Rebecca"
+   ],
+   "ka": [
+    "ფრინველები",
+    "ეგზორცისტი",
+    "რებეკა"
+   ],
+   "de": [
+    "Die Vögel",
+    "Der Exorzist",
+    "Rebecca"
+   ],
+   "es": [
+    "Los pájaros",
+    "El exorcista",
+    "Rebecca"
+   ],
+   "fr": [
+    "Les Oiseaux",
+    "L'Exorciste",
+    "Rebecca"
+   ],
+   "it": [
+    "Gli uccelli",
+    "L'esorcista",
+    "Rebecca"
+   ],
+   "pt": [
+    "Os Pássaros",
+    "O Exorcista",
+    "Rebecca"
+   ]
+  }
+ },
+ {
+  "key": "m2-ben-hur",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Cuadrigas_de_Ben_Hur_%281959%29.jpg/1280px-Cuadrigas_de_Ben_Hur_%281959%29.jpg",
+  "file": "File:Cuadrigas de Ben Hur (1959).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Ben-Hur",
+   "ka": "ბენ-ჰური",
+   "de": "Ben-Hur",
+   "es": "Ben-Hur",
+   "fr": "Ben-Hur",
+   "it": "Ben-Hur",
+   "pt": "Ben-Hur"
+  },
+  "wrong": {
+   "en": [
+    "Quo Vadis",
+    "Spartacus",
+    "The Robe"
+   ],
+   "ka": [
+    "კვო ვადის",
+    "სპარტაკი",
+    "სამოსელი"
+   ],
+   "de": [
+    "Quo Vadis",
+    "Spartacus",
+    "Das Gewand"
+   ],
+   "es": [
+    "Quo Vadis",
+    "Espartaco",
+    "La túnica sagrada"
+   ],
+   "fr": [
+    "Quo Vadis",
+    "Spartacus",
+    "La Tunique"
+   ],
+   "it": [
+    "Quo Vadis",
+    "Spartacus",
+    "La tunica"
+   ],
+   "pt": [
+    "Quo Vadis",
+    "Spartacus",
+    "O Manto Sagrado"
+   ]
+  }
+ },
+ {
+  "key": "m2-cleopatra",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/b/bf/Elizabeth_Taylor_in_Cleopatra_publicity_still.jpg",
+  "file": "File:Elizabeth Taylor in Cleopatra publicity still.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Cleopatra",
+   "ka": "კლეოპატრა",
+   "de": "Cleopatra",
+   "es": "Cleopatra",
+   "fr": "Cléopâtre",
+   "it": "Cleopatra",
+   "pt": "Cleópatra"
+  },
+  "wrong": {
+   "en": [
+    "Julius Caesar",
+    "Samson and Delilah",
+    "Quo Vadis"
+   ],
+   "ka": [
+    "იულიუს კეისარი",
+    "სამსონი და დალილა",
+    "კვო ვადის"
+   ],
+   "de": [
+    "Julius Cäsar",
+    "Samson und Delilah",
+    "Quo Vadis"
+   ],
+   "es": [
+    "Julio César",
+    "Sansón y Dalila",
+    "Quo Vadis"
+   ],
+   "fr": [
+    "Jules César",
+    "Samson et Dalila",
+    "Quo Vadis"
+   ],
+   "it": [
+    "Giulio Cesare",
+    "Sansone e Dalila",
+    "Quo Vadis"
+   ],
+   "pt": [
+    "Júlio César",
+    "Sansão e Dalila",
+    "Quo Vadis"
+   ]
+  }
+ },
+ {
+  "key": "m2-dracula",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/0/08/Bela_Lugosi_as_Dracula.jpg",
+  "file": "File:Bela Lugosi as Dracula.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Dracula",
+   "ka": "დრაკულა",
+   "de": "Dracula",
+   "es": "Drácula",
+   "fr": "Dracula",
+   "it": "Dracula",
+   "pt": "Drácula"
+  },
+  "wrong": {
+   "en": [
+    "Frankenstein",
+    "The Mummy",
+    "The Wolf Man"
+   ],
+   "ka": [
+    "ფრანკენშტაინი",
+    "მუმია",
+    "მგელი-კაცი"
+   ],
+   "de": [
+    "Frankenstein",
+    "Die Mumie",
+    "Der Wolfsmensch"
+   ],
+   "es": [
+    "Frankenstein",
+    "La momia",
+    "El hombre lobo"
+   ],
+   "fr": [
+    "Frankenstein",
+    "La Momie",
+    "Le Loup-garou"
+   ],
+   "it": [
+    "Frankenstein",
+    "La mummia",
+    "L'uomo lupo"
+   ],
+   "pt": [
+    "Frankenstein",
+    "A Múmia",
+    "O Lobisomem"
+   ]
+  }
+ },
+ {
+  "key": "m2-frankenstein",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Frankenstein%27s_monster_%28Boris_Karloff%29.jpg",
+  "file": "File:Frankenstein's monster (Boris Karloff).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Frankenstein",
+   "ka": "ფრანკენშტაინი",
+   "de": "Frankenstein",
+   "es": "Frankenstein",
+   "fr": "Frankenstein",
+   "it": "Frankenstein",
+   "pt": "Frankenstein"
+  },
+  "wrong": {
+   "en": [
+    "Dracula",
+    "The Mummy",
+    "The Wolf Man"
+   ],
+   "ka": [
+    "დრაკულა",
+    "მუმია",
+    "მგელი-კაცი"
+   ],
+   "de": [
+    "Dracula",
+    "Die Mumie",
+    "Der Wolfsmensch"
+   ],
+   "es": [
+    "Drácula",
+    "La momia",
+    "El hombre lobo"
+   ],
+   "fr": [
+    "Dracula",
+    "La Momie",
+    "Le Loup-garou"
+   ],
+   "it": [
+    "Dracula",
+    "La mummia",
+    "L'uomo lupo"
+   ],
+   "pt": [
+    "Drácula",
+    "A Múmia",
+    "O Lobisomem"
+   ]
+  }
+ },
+ {
+  "key": "m2-king-kong",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/3/30/King_Kong_1933_Promotional_Image.png",
+  "file": "File:King Kong 1933 Promotional Image.png",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "King Kong",
+   "ka": "კინგ-კონგი",
+   "de": "King Kong",
+   "es": "King Kong",
+   "fr": "King Kong",
+   "it": "King Kong",
+   "pt": "King Kong"
+  },
+  "wrong": {
+   "en": [
+    "Godzilla",
+    "The Lost World",
+    "Gorgo"
+   ],
+   "ka": [
+    "გოძილა",
+    "დაკარგული სამყარო",
+    "გორგო"
+   ],
+   "de": [
+    "Godzilla",
+    "Die verlorene Welt",
+    "Gorgo"
+   ],
+   "es": [
+    "Godzilla",
+    "El mundo perdido",
+    "Gorgo"
+   ],
+   "fr": [
+    "Godzilla",
+    "Le Monde perdu",
+    "Gorgo"
+   ],
+   "it": [
+    "Godzilla",
+    "Il mondo perduto",
+    "Gorgo"
+   ],
+   "pt": [
+    "Godzilla",
+    "O Mundo Perdido",
+    "Gorgo"
+   ]
+  }
+ },
+ {
+  "key": "m2-godzilla",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Godzilla_%281954%29.jpg/1280px-Godzilla_%281954%29.jpg",
+  "file": "File:Godzilla (1954).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Godzilla",
+   "ka": "გოძილა"
+  },
+  "wrong": {
+   "en": [
+    "King Kong",
+    "Mothra",
+    "Gamera"
+   ],
+   "ka": [
+    "კინგ-კონგი",
+    "მოთრა",
+    "გამერა"
+   ]
+  }
+ },
+ {
+  "key": "m2-nosferatu",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/9/95/Max_Schreck_as_Count_Orlok_in_Nosferatu_%E2%80%93_Eine_Symphonie_des_Grauens_%281922%29.jpg",
+  "file": "File:Max Schreck as Count Orlok in Nosferatu – Eine Symphonie des Grauens (1922).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Nosferatu",
+   "ka": "ნოსფერატუ",
+   "de": "Nosferatu",
+   "es": "Nosferatu",
+   "fr": "Nosferatu",
+   "it": "Nosferatu",
+   "pt": "Nosferatu"
+  },
+  "wrong": {
+   "en": [
+    "Dracula",
+    "Faust",
+    "The Golem"
+   ],
+   "ka": [
+    "დრაკულა",
+    "ფაუსტი",
+    "გოლემი"
+   ],
+   "de": [
+    "Dracula",
+    "Faust",
+    "Der Golem"
+   ],
+   "es": [
+    "Drácula",
+    "Faust",
+    "El Golem"
+   ],
+   "fr": [
+    "Dracula",
+    "Faust",
+    "Le Golem"
+   ],
+   "it": [
+    "Dracula",
+    "Faust",
+    "Il Golem"
+   ],
+   "pt": [
+    "Drácula",
+    "Faust",
+    "O Golem"
+   ]
+  }
+ },
+ {
+  "key": "m2-metropolis",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/2/22/Horst_von_Harbou_-_Metropolis_Maschinenmensch.jpg",
+  "file": "File:Horst von Harbou - Metropolis Maschinenmensch.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Metropolis",
+   "ka": "მეტროპოლისი",
+   "de": "Metropolis",
+   "es": "Metropolis",
+   "fr": "Metropolis",
+   "it": "Metropolis",
+   "pt": "Metropolis"
+  },
+  "wrong": {
+   "en": [
+    "Forbidden Planet",
+    "M",
+    "The Golem"
+   ],
+   "ka": [
+    "აკრძალული პლანეტა",
+    "მ",
+    "გოლემი"
+   ],
+   "de": [
+    "Alarm im Weltall",
+    "M",
+    "Der Golem"
+   ],
+   "es": [
+    "Planeta prohibido",
+    "M",
+    "El Golem"
+   ],
+   "fr": [
+    "Planète interdite",
+    "M",
+    "Le Golem"
+   ],
+   "it": [
+    "Il pianeta proibito",
+    "M",
+    "Il Golem"
+   ],
+   "pt": [
+    "Planeta Proibido",
+    "M",
+    "O Golem"
+   ]
+  }
+ },
+ {
+  "key": "m2-gold-rush",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Chaplin_the_gold_rush_boot.jpg/1280px-Chaplin_the_gold_rush_boot.jpg",
+  "file": "File:Chaplin the gold rush boot.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "The Gold Rush",
+   "ka": "ოქროს ციებ-ცხელება",
+   "de": "Goldrausch",
+   "es": "La quimera del oro",
+   "fr": "La Ruée vers l'or",
+   "it": "La febbre dell'oro",
+   "pt": "Em Busca do Ouro"
+  },
+  "wrong": {
+   "en": [
+    "Modern Times",
+    "The Circus",
+    "The Great Dictator"
+   ],
+   "ka": [
+    "ახალი დროება",
+    "ცირკი",
+    "დიდი დიქტატორი"
+   ],
+   "de": [
+    "Moderne Zeiten",
+    "Der Zirkus",
+    "Der große Diktator"
+   ],
+   "es": [
+    "Tiempos modernos",
+    "El circo",
+    "El gran dictador"
+   ],
+   "fr": [
+    "Les Temps modernes",
+    "Le Cirque",
+    "Le Dictateur"
+   ],
+   "it": [
+    "Tempi moderni",
+    "Il circo",
+    "Il grande dittatore"
+   ],
+   "pt": [
+    "Tempos Modernos",
+    "O Circo",
+    "O Grande Ditador"
+   ]
+  }
+ },
+ {
+  "key": "m2-modern-times",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Chaplin_-_Modern_Times.jpg/1280px-Chaplin_-_Modern_Times.jpg",
+  "file": "File:Chaplin - Modern Times.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Modern Times",
+   "ka": "ახალი დროება",
+   "de": "Moderne Zeiten",
+   "es": "Tiempos modernos",
+   "fr": "Les Temps modernes",
+   "it": "Tempi moderni",
+   "pt": "Tempos Modernos"
+  },
+  "wrong": {
+   "en": [
+    "The Gold Rush",
+    "The Circus",
+    "Limelight"
+   ],
+   "ka": [
+    "ოქროს ციებ-ცხელება",
+    "ცირკი",
+    "რამპის შუქი"
+   ],
+   "de": [
+    "Goldrausch",
+    "Der Zirkus",
+    "Rampenlicht"
+   ],
+   "es": [
+    "La quimera del oro",
+    "El circo",
+    "Candilejas"
+   ],
+   "fr": [
+    "La Ruée vers l'or",
+    "Le Cirque",
+    "Les Feux de la rampe"
+   ],
+   "it": [
+    "La febbre dell'oro",
+    "Il circo",
+    "Luci della ribalta"
+   ],
+   "pt": [
+    "Em Busca do Ouro",
+    "O Circo",
+    "Luzes da Ribalta"
+   ]
+  }
+ },
+ {
+  "key": "m2-great-dictator",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/2/2a/Great_Dictator_Charlie_Chaplin2.jpg",
+  "file": "File:Great Dictator Charlie Chaplin2.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "The Great Dictator",
+   "ka": "დიდი დიქტატორი",
+   "de": "Der große Diktator",
+   "es": "El gran dictador",
+   "fr": "Le Dictateur",
+   "it": "Il grande dittatore",
+   "pt": "O Grande Ditador"
+  },
+  "wrong": {
+   "en": [
+    "Modern Times",
+    "The Gold Rush",
+    "Limelight"
+   ],
+   "ka": [
+    "ახალი დროება",
+    "ოქროს ციებ-ცხელება",
+    "რამპის შუქი"
+   ],
+   "de": [
+    "Moderne Zeiten",
+    "Goldrausch",
+    "Rampenlicht"
+   ],
+   "es": [
+    "Tiempos modernos",
+    "La quimera del oro",
+    "Candilejas"
+   ],
+   "fr": [
+    "Les Temps modernes",
+    "La Ruée vers l'or",
+    "Les Feux de la rampe"
+   ],
+   "it": [
+    "Tempi moderni",
+    "La febbre dell'oro",
+    "Luci della ribalta"
+   ],
+   "pt": [
+    "Tempos Modernos",
+    "Em Busca do Ouro",
+    "Luzes da Ribalta"
+   ]
+  }
+ },
+ {
+  "key": "m2-steamboat-willie",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/5/50/Mickey_Mouse_-_Steamboat_Willie_%281928%29.jpg",
+  "file": "File:Mickey Mouse - Steamboat Willie (1928).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Steamboat Willie",
+   "ka": "სტიმბოტ ვილი",
+   "de": "Steamboat Willie",
+   "es": "Steamboat Willie",
+   "fr": "Steamboat Willie",
+   "pt": "Steamboat Willie"
+  },
+  "wrong": {
+   "en": [
+    "Fantasia",
+    "Plane Crazy",
+    "Felix the Cat"
+   ],
+   "ka": [
+    "ფანტაზია",
+    "პლეინ ქრეიზი",
+    "კატა ფელიქსი"
+   ],
+   "de": [
+    "Fantasia",
+    "Plane Crazy",
+    "Felix der Kater"
+   ],
+   "es": [
+    "Fantasia",
+    "Plane Crazy",
+    "El gato Félix"
+   ],
+   "fr": [
+    "Fantasia",
+    "Plane Crazy",
+    "Félix le Chat"
+   ],
+   "pt": [
+    "Fantasia",
+    "Plane Crazy",
+    "O Gato Félix"
+   ]
+  }
+ },
+ {
+  "key": "m2-mary-poppins",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Mary_Poppins_screen_2.jpg/1280px-Mary_Poppins_screen_2.jpg",
+  "file": "File:Mary Poppins screen 2.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Mary Poppins",
+   "ka": "მერი პოპინსი"
+  },
+  "wrong": {
+   "en": [
+    "My Fair Lady",
+    "Funny Girl",
+    "Hello, Dolly!"
+   ],
+   "ka": [
+    "ჩემი მშვენიერი ლედი",
+    "ფანი გერლი",
+    "ჰელოუ, დოლი!"
+   ]
+  }
+ },
+ {
+  "key": "m2-my-fair-lady",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Audrey-Hepburn-My-Fair-Lady-1.jpg/1280px-Audrey-Hepburn-My-Fair-Lady-1.jpg",
+  "file": "File:Audrey-Hepburn-My-Fair-Lady-1.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "My Fair Lady",
+   "ka": "ჩემი მშვენიერი ლედი"
+  },
+  "wrong": {
+   "en": [
+    "Gigi",
+    "Funny Girl",
+    "Hello, Dolly!"
+   ],
+   "ka": [
+    "ჯიჯი",
+    "ფანი გერლი",
+    "ჰელოუ, დოლი!"
+   ]
+  }
+ },
+ {
+  "key": "m2-west-side-story",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/0/0a/West_Side_Story_%281961%29_still_3.jpg",
+  "file": "File:West Side Story (1961) still 3.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "West Side Story",
+   "ka": "ვესტსაიდური ამბავი",
+   "de": "West Side Story",
+   "es": "Amor sin barreras",
+   "fr": "West Side Story",
+   "it": "West Side Story",
+   "pt": "Amor, Sublime Amor"
+  },
+  "wrong": {
+   "en": [
+    "Grease",
+    "Oklahoma!",
+    "Carousel"
+   ],
+   "ka": [
+    "გრიზი",
+    "ოკლაჰომა!",
+    "კარუსელი"
+   ],
+   "de": [
+    "Grease",
+    "Oklahoma!",
+    "Karussell"
+   ],
+   "es": [
+    "Grease",
+    "Oklahoma!",
+    "Carrusel"
+   ],
+   "fr": [
+    "Grease",
+    "Oklahoma!",
+    "Carrousel"
+   ],
+   "it": [
+    "Grease",
+    "Oklahoma!",
+    "Carosello"
+   ],
+   "pt": [
+    "Grease",
+    "Oklahoma!",
+    "Carrossel"
+   ]
+  }
+ },
+ {
+  "key": "m2-doctor-zhivago",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Trailer-Doctor_Zhivago-Yuri_Zhivago_and_Lara.JPG/1280px-Trailer-Doctor_Zhivago-Yuri_Zhivago_and_Lara.JPG",
+  "file": "File:Trailer-Doctor Zhivago-Yuri Zhivago and Lara.JPG",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Doctor Zhivago",
+   "ka": "ექიმი ჟივაგო",
+   "de": "Doktor Schiwago",
+   "es": "Doctor Zhivago",
+   "fr": "Le Docteur Jivago",
+   "it": "Il dottor Živago",
+   "pt": "Doutor Jivago"
+  },
+  "wrong": {
+   "en": [
+    "War and Peace",
+    "Anna Karenina",
+    "Ninotchka"
+   ],
+   "ka": [
+    "ომი და მშვიდობა",
+    "ანა კარენინა",
+    "ნინოჩკა"
+   ],
+   "de": [
+    "Krieg und Frieden",
+    "Anna Karenina",
+    "Ninotchka"
+   ],
+   "es": [
+    "Guerra y paz",
+    "Ana Karenina",
+    "Ninotchka"
+   ],
+   "fr": [
+    "Guerre et Paix",
+    "Anna Karénine",
+    "Ninotchka"
+   ],
+   "it": [
+    "Guerra e pace",
+    "Anna Karenina",
+    "Ninotchka"
+   ],
+   "pt": [
+    "Guerra e Paz",
+    "Ana Karenina",
+    "Ninotchka"
+   ]
+  }
+ },
+ {
+  "key": "m2-lawrence-arabia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Peter_O%27Toole_in_Lawrence_of_Arabia.png",
+  "file": "File:Peter O'Toole in Lawrence of Arabia.png",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Lawrence of Arabia",
+   "ka": "არაბეთის ლოურენსი",
+   "de": "Lawrence von Arabien",
+   "es": "Lawrence de Arabia",
+   "fr": "Lawrence d'Arabie",
+   "it": "Lawrence d'Arabia",
+   "pt": "Lawrence da Arábia"
+  },
+  "wrong": {
+   "en": [
+    "El Cid",
+    "Khartoum",
+    "Cleopatra"
+   ],
+   "ka": [
+    "ელ სიდი",
+    "ხარტუმი",
+    "კლეოპატრა"
+   ],
+   "de": [
+    "El Cid",
+    "Khartoum",
+    "Cleopatra"
+   ],
+   "es": [
+    "El Cid",
+    "Jartum",
+    "Cleopatra"
+   ],
+   "fr": [
+    "El Cid",
+    "Khartoum",
+    "Cléopâtre"
+   ],
+   "it": [
+    "El Cid",
+    "Khartoum",
+    "Cleopatra"
+   ],
+   "pt": [
+    "El Cid",
+    "Khartoum",
+    "Cleópatra"
+   ]
+  }
+ },
+ {
+  "key": "m2-dr-strangelove",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Dr._Strangelove_-_Riding_the_Bomb.png",
+  "file": "File:Dr. Strangelove - Riding the Bomb.png",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Dr. Strangelove",
+   "ka": "დოქტორ სტრეინჯლავი",
+   "de": "Dr. Seltsam",
+   "es": "Dr. Insólito",
+   "fr": "Docteur Folamour",
+   "it": "Il dottor Stranamore",
+   "pt": "Dr. Fantástico"
+  },
+  "wrong": {
+   "en": [
+    "Fail Safe",
+    "On the Beach",
+    "Catch-22"
+   ],
+   "ka": [
+    "ფეილ-სეიფი",
+    "უკანასკნელი ნაპირი",
+    "ქეთჩ-22"
+   ],
+   "de": [
+    "Angriffsziel Moskau",
+    "Das letzte Ufer",
+    "Catch-22"
+   ],
+   "es": [
+    "Punto límite",
+    "La hora final",
+    "Catch-22"
+   ],
+   "fr": [
+    "Point limite",
+    "Le Dernier Rivage",
+    "Catch-22"
+   ],
+   "it": [
+    "A prova di errore",
+    "L'ultima spiaggia",
+    "Catch-22"
+   ],
+   "pt": [
+    "Limite de Segurança",
+    "A Hora Final",
+    "Catch-22"
+   ]
+  }
+ },
+ {
+  "key": "m2-the-birds",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/The_Birds_%281963%29_Trailer_-_Seagulls_attack.png/1280px-The_Birds_%281963%29_Trailer_-_Seagulls_attack.png",
+  "file": "File:The Birds (1963) Trailer - Seagulls attack.png",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "The Birds",
+   "ka": "ფრინველები",
+   "de": "Die Vögel",
+   "es": "Los pájaros",
+   "fr": "Les Oiseaux",
+   "it": "Gli uccelli",
+   "pt": "Os Pássaros"
+  },
+  "wrong": {
+   "en": [
+    "Psycho",
+    "Rebecca",
+    "Marnie"
+   ],
+   "ka": [
+    "ფსიქო",
+    "რებეკა",
+    "მარნი"
+   ],
+   "de": [
+    "Psycho",
+    "Rebecca",
+    "Marnie"
+   ],
+   "es": [
+    "Psicosis",
+    "Rebecca",
+    "Marnie"
+   ],
+   "fr": [
+    "Psychose",
+    "Rebecca",
+    "Marnie"
+   ],
+   "it": [
+    "Psyco",
+    "Rebecca",
+    "Marnie"
+   ],
+   "pt": [
+    "Psicose",
+    "Rebecca",
+    "Marnie"
+   ]
+  }
+ },
+ {
+  "key": "m2-spartacus",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/b/bf/Gladiator_Kirk_Douglas.png",
+  "file": "File:Gladiator Kirk Douglas.png",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Spartacus",
+   "ka": "სპარტაკი",
+   "de": "Spartacus",
+   "es": "Espartaco",
+   "fr": "Spartacus",
+   "it": "Spartacus",
+   "pt": "Spartacus"
+  },
+  "wrong": {
+   "en": [
+    "Ben-Hur",
+    "Quo Vadis",
+    "Julius Caesar"
+   ],
+   "ka": [
+    "ბენ-ჰური",
+    "კვო ვადის",
+    "იულიუს კეისარი"
+   ],
+   "de": [
+    "Ben-Hur",
+    "Quo Vadis",
+    "Julius Cäsar"
+   ],
+   "es": [
+    "Ben-Hur",
+    "Quo Vadis",
+    "Julio César"
+   ],
+   "fr": [
+    "Ben-Hur",
+    "Quo Vadis",
+    "Jules César"
+   ],
+   "it": [
+    "Ben-Hur",
+    "Quo Vadis",
+    "Giulio Cesare"
+   ],
+   "pt": [
+    "Ben-Hur",
+    "Quo Vadis",
+    "Júlio César"
+   ]
+  }
+ },
+ {
+  "key": "m2-goldfinger",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Aston_Martin_DB5_%28Goldfinger%29_front-right-4_National_Motor_Museum%2C_Beaulieu.jpg/1280px-Aston_Martin_DB5_%28Goldfinger%29_front-right-4_National_Motor_Museum%2C_Beaulieu.jpg",
+  "file": "File:Aston Martin DB5 (Goldfinger) front-right-4 National Motor Museum, Beaulieu.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Goldfinger",
+   "ka": "გოლდფინგერი"
+  },
+  "wrong": {
+   "en": [
+    "Bullitt",
+    "Le Mans",
+    "Grand Prix"
+   ],
+   "ka": [
+    "ბულიტი",
+    "ლე-მანი",
+    "გრან-პრი"
+   ]
+  }
+ },
+ {
+  "key": "m2-batman",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/1989_Batmobile_Petersen_Automotive_Museum.jpg/1280px-1989_Batmobile_Petersen_Automotive_Museum.jpg",
+  "file": "File:1989 Batmobile Petersen Automotive Museum.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Batman",
+   "ka": "ბეტმენი",
+   "pt": "Batman"
+  },
+  "wrong": {
+   "en": [
+    "Superman",
+    "RoboCop",
+    "Iron Man"
+   ],
+   "ka": [
+    "სუპერმენი",
+    "რობოკოპი",
+    "რკინის კაცი"
+   ],
+   "pt": [
+    "Superman",
+    "RoboCop",
+    "Homem de Ferro"
+   ]
+  }
+ },
+ {
+  "key": "m2-rocky",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Rocky_Statue%2C_Philadelphia.jpg/1280px-Rocky_Statue%2C_Philadelphia.jpg",
+  "file": "File:Rocky Statue, Philadelphia.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Rocky",
+   "ka": "როკი",
+   "de": "Rocky",
+   "es": "Rocky",
+   "it": "Rocky",
+   "pt": "Rocky"
+  },
+  "wrong": {
+   "en": [
+    "Rambo",
+    "Raging Bull",
+    "Ali"
+   ],
+   "ka": [
+    "რემბო",
+    "მძვინვარე ხარი",
+    "ალი"
+   ],
+   "de": [
+    "Rambo",
+    "Wie ein wilder Stier",
+    "Ali"
+   ],
+   "es": [
+    "Rambo",
+    "Toro salvaje",
+    "Ali"
+   ],
+   "it": [
+    "Rambo",
+    "Toro scatenato",
+    "Ali"
+   ],
+   "pt": [
+    "Rambo",
+    "Touro Indomável",
+    "Ali"
+   ]
+  }
+ },
+ {
+  "key": "m2-jaws",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/f/f7/UniversalStudiosJawsShark.jpg",
+  "file": "File:UniversalStudiosJawsShark.jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Jaws",
+   "ka": "ყბები",
+   "de": "Der weiße Hai",
+   "es": "Tiburón",
+   "fr": "Les Dents de la mer",
+   "it": "Lo squalo",
+   "pt": "Tubarão"
+  },
+  "wrong": {
+   "en": [
+    "Moby Dick",
+    "Piranha",
+    "Anaconda"
+   ],
+   "ka": [
+    "მობი დიკი",
+    "პირანია",
+    "ანაკონდა"
+   ],
+   "de": [
+    "Moby Dick",
+    "Piranha",
+    "Anaconda"
+   ],
+   "es": [
+    "Moby Dick",
+    "Piraña",
+    "Anaconda"
+   ],
+   "fr": [
+    "Moby Dick",
+    "Piranhas",
+    "Anaconda"
+   ],
+   "it": [
+    "Moby Dick",
+    "Piranha",
+    "Anaconda"
+   ],
+   "pt": [
+    "Moby Dick",
+    "Piranha",
+    "Anaconda"
+   ]
+  }
+ },
+ {
+  "key": "m2-bonnie-and-clyde",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Bonnie_and_Clyde_%281967_promo_photo_-_Dunaway_%26_Beatty%29.jpg/1280px-Bonnie_and_Clyde_%281967_promo_photo_-_Dunaway_%26_Beatty%29.jpg",
+  "file": "File:Bonnie and Clyde (1967 promo photo - Dunaway & Beatty).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Bonnie and Clyde",
+   "ka": "ბონი და კლაიდი",
+   "de": "Bonnie und Clyde",
+   "es": "Bonnie y Clyde",
+   "fr": "Bonnie et Clyde",
+   "it": "Gangster Story",
+   "pt": "Bonnie e Clyde"
+  },
+  "wrong": {
+   "en": [
+    "The Godfather",
+    "Scarface",
+    "Dillinger"
+   ],
+   "ka": [
+    "ნათლია",
+    "სკარფეისი",
+    "დილინჯერი"
+   ],
+   "de": [
+    "Der Pate",
+    "Scarface",
+    "Dillinger"
+   ],
+   "es": [
+    "El padrino",
+    "El precio del poder",
+    "Dillinger"
+   ],
+   "fr": [
+    "Le Parrain",
+    "Scarface",
+    "Dillinger"
+   ],
+   "it": [
+    "Il padrino",
+    "Scarface",
+    "Dillinger"
+   ],
+   "pt": [
+    "O Poderoso Chefão",
+    "Scarface",
+    "Dillinger"
+   ]
+  }
+ },
+ {
+  "key": "m2-citizen-kane",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Orson_Welles-Citizen_Kane1.jpg",
+  "file": "File:Orson Welles-Citizen Kane1.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Citizen Kane",
+   "ka": "მოქალაქე კეინი",
+   "de": "Citizen Kane",
+   "es": "Ciudadano Kane",
+   "fr": "Citizen Kane",
+   "it": "Quarto potere",
+   "pt": "Cidadão Kane"
+  },
+  "wrong": {
+   "en": [
+    "Casablanca",
+    "The Maltese Falcon",
+    "All About Eve"
+   ],
+   "ka": [
+    "კასაბლანკა",
+    "მალტის შევარდენი",
+    "ყველაფერი ევაზე"
+   ],
+   "de": [
+    "Casablanca",
+    "Die Spur des Falken",
+    "Alles über Eva"
+   ],
+   "es": [
+    "Casablanca",
+    "El halcón maltés",
+    "Eva al desnudo"
+   ],
+   "fr": [
+    "Casablanca",
+    "Le Faucon maltais",
+    "Ève"
+   ],
+   "it": [
+    "Casablanca",
+    "Il mistero del falco",
+    "Eva contro Eva"
+   ],
+   "pt": [
+    "Casablanca",
+    "Relíquia Macabra",
+    "A Malvada"
+   ]
+  }
+ },
+ {
+  "key": "m2-niagara",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/b/be/Marilyn_Monroe_Niagara.png",
+  "file": "File:Marilyn Monroe Niagara.png",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Niagara",
+   "ka": "ნიაგარა"
+  },
+  "wrong": {
+   "en": [
+    "Gilda",
+    "Laura",
+    "Rebecca"
+   ],
+   "ka": [
+    "გილდა",
+    "ლორა",
+    "რებეკა"
+   ]
+  }
+ },
+ {
+  "key": "m2-sabrina",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/6/67/Sabrina4.jpg",
+  "file": "File:Sabrina4.jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Sabrina",
+   "ka": "საბრინა"
+  },
+  "wrong": {
+   "en": [
+    "Gilda",
+    "Niagara",
+    "Laura"
+   ],
+   "ka": [
+    "გილდა",
+    "ნიაგარა",
+    "ლორა"
+   ]
+  }
+ },
+ {
+  "key": "m2-charade",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/8/86/Cary_Grant_and_Audrey_Hepburn_in_Charade.jpg",
+  "file": "File:Cary Grant and Audrey Hepburn in Charade.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Charade",
+   "ka": "შარადა",
+   "de": "Charade",
+   "es": "Charada",
+   "fr": "Charade",
+   "it": "Sciarada",
+   "pt": "Charada"
+  },
+  "wrong": {
+   "en": [
+    "Arabesque",
+    "Topkapi",
+    "The Third Man"
+   ],
+   "ka": [
+    "არაბესკა",
+    "ტოპკაპი",
+    "მესამე კაცი"
+   ],
+   "de": [
+    "Arabesque",
+    "Topkapi",
+    "Der dritte Mann"
+   ],
+   "es": [
+    "Arabesque",
+    "Topkapi",
+    "El tercer hombre"
+   ],
+   "fr": [
+    "Arabesque",
+    "Topkapi",
+    "Le Troisième Homme"
+   ],
+   "it": [
+    "Arabesque",
+    "Topkapi",
+    "Il terzo uomo"
+   ],
+   "pt": [
+    "Arabesque",
+    "Topkapi",
+    "O Terceiro Homem"
+   ]
+  }
+ },
+ {
+  "key": "m2-east-of-eden",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/a/a4/James_Dean_in_East_of_Eden_trailer_2.jpg",
+  "file": "File:James Dean in East of Eden trailer 2.jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "East of Eden",
+   "ka": "ედემს აღმოსავლეთით",
+   "de": "Jenseits von Eden",
+   "es": "Al este del Edén",
+   "fr": "À l'est d'Éden",
+   "it": "La valle dell'Eden",
+   "pt": "Vidas Amargas"
+  },
+  "wrong": {
+   "en": [
+    "On the Waterfront",
+    "The Wild One",
+    "Picnic"
+   ],
+   "ka": [
+    "ნავსადგურში",
+    "ველური",
+    "პიკნიკი"
+   ],
+   "de": [
+    "Die Faust im Nacken",
+    "Der Wilde",
+    "Picnic"
+   ],
+   "es": [
+    "La ley del silencio",
+    "El salvaje",
+    "Picnic"
+   ],
+   "fr": [
+    "Sur les quais",
+    "L'Équipée sauvage",
+    "Picnic"
+   ],
+   "it": [
+    "Fronte del porto",
+    "Il selvaggio",
+    "Picnic"
+   ],
+   "pt": [
+    "Sindicato de Ladrões",
+    "O Selvagem",
+    "Picnic"
+   ]
+  }
+ },
+ {
+  "key": "m2-on-the-waterfront",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Eva_marie_saint_marlon_brando_waterfront_1.jpg/1280px-Eva_marie_saint_marlon_brando_waterfront_1.jpg",
+  "file": "File:Eva marie saint marlon brando waterfront 1.jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "On the Waterfront",
+   "ka": "ნავსადგურში",
+   "de": "Die Faust im Nacken",
+   "es": "La ley del silencio",
+   "fr": "Sur les quais",
+   "it": "Fronte del porto",
+   "pt": "Sindicato de Ladrões"
+  },
+  "wrong": {
+   "en": [
+    "East of Eden",
+    "Marty",
+    "The Hustler"
+   ],
+   "ka": [
+    "ედემს აღმოსავლეთით",
+    "მარტი",
+    "ჰასლერი"
+   ],
+   "de": [
+    "Jenseits von Eden",
+    "Marty",
+    "Haie der Großstadt"
+   ],
+   "es": [
+    "Al este del Edén",
+    "Marty",
+    "El buscavidas"
+   ],
+   "fr": [
+    "À l'est d'Éden",
+    "Marty",
+    "L'Arnaqueur"
+   ],
+   "it": [
+    "La valle dell'Eden",
+    "Marty",
+    "Lo spericolato"
+   ],
+   "pt": [
+    "Vidas Amargas",
+    "Marty",
+    "Desafio à Corrupção"
+   ]
+  }
+ },
+ {
+  "key": "m2-the-mummy",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/6/62/The_Mummy_%28Boris_Karloff%29.jpg",
+  "file": "File:The Mummy (Boris Karloff).jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "The Mummy",
+   "ka": "მუმია",
+   "de": "Die Mumie",
+   "es": "La momia",
+   "fr": "La Momie",
+   "it": "La mummia",
+   "pt": "A Múmia"
+  },
+  "wrong": {
+   "en": [
+    "Dracula",
+    "Frankenstein",
+    "The Wolf Man"
+   ],
+   "ka": [
+    "დრაკულა",
+    "ფრანკენშტაინი",
+    "მგელი-კაცი"
+   ],
+   "de": [
+    "Dracula",
+    "Frankenstein",
+    "Der Wolfsmensch"
+   ],
+   "es": [
+    "Drácula",
+    "Frankenstein",
+    "El hombre lobo"
+   ],
+   "fr": [
+    "Dracula",
+    "Frankenstein",
+    "Le Loup-garou"
+   ],
+   "it": [
+    "Dracula",
+    "Frankenstein",
+    "L'uomo lupo"
+   ],
+   "pt": [
+    "Drácula",
+    "Frankenstein",
+    "O Lobisomem"
+   ]
+  }
+ },
+ {
+  "key": "m2-invisible-man",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Claude_Rains_and_Gloria_Stuart_in_The_Invisible_Man_%281933%29.jpg/1280px-Claude_Rains_and_Gloria_Stuart_in_The_Invisible_Man_%281933%29.jpg",
+  "file": "File:Claude Rains and Gloria Stuart in The Invisible Man (1933).jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "The Invisible Man",
+   "ka": "უხილავი ადამიანი",
+   "de": "Der Unsichtbare",
+   "es": "El hombre invisible",
+   "fr": "L'Homme invisible",
+   "it": "L'uomo invisibile",
+   "pt": "O Homem Invisível"
+  },
+  "wrong": {
+   "en": [
+    "The Mummy",
+    "Dracula",
+    "The Wolf Man"
+   ],
+   "ka": [
+    "მუმია",
+    "დრაკულა",
+    "მგელი-კაცი"
+   ],
+   "de": [
+    "Die Mumie",
+    "Dracula",
+    "Der Wolfsmensch"
+   ],
+   "es": [
+    "La momia",
+    "Drácula",
+    "El hombre lobo"
+   ],
+   "fr": [
+    "La Momie",
+    "Dracula",
+    "Le Loup-garou"
+   ],
+   "it": [
+    "La mummia",
+    "Dracula",
+    "L'uomo lupo"
+   ],
+   "pt": [
+    "A Múmia",
+    "Drácula",
+    "O Lobisomem"
+   ]
+  }
+ },
+ {
+  "key": "m2-samson-delilah",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Hedy_Lamarr_and_Victor_Mature_in_Samson_and_Delilah_trailer.jpg/1280px-Hedy_Lamarr_and_Victor_Mature_in_Samson_and_Delilah_trailer.jpg",
+  "file": "File:Hedy Lamarr and Victor Mature in Samson and Delilah trailer.jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Samson and Delilah",
+   "ka": "სამსონი და დალილა",
+   "de": "Samson und Delilah",
+   "es": "Sansón y Dalila",
+   "fr": "Samson et Dalila",
+   "it": "Sansone e Dalila",
+   "pt": "Sansão e Dalila"
+  },
+  "wrong": {
+   "en": [
+    "The Robe",
+    "Quo Vadis",
+    "David and Bathsheba"
+   ],
+   "ka": [
+    "სამოსელი",
+    "კვო ვადის",
+    "დავითი და ბერსაბე"
+   ],
+   "de": [
+    "Das Gewand",
+    "Quo Vadis",
+    "David und Bathseba"
+   ],
+   "es": [
+    "La túnica sagrada",
+    "Quo Vadis",
+    "David y Betsabé"
+   ],
+   "fr": [
+    "La Tunique",
+    "Quo Vadis",
+    "David et Bethsabée"
+   ],
+   "it": [
+    "La tunica",
+    "Quo Vadis",
+    "Davide e Betsabea"
+   ],
+   "pt": [
+    "O Manto Sagrado",
+    "Quo Vadis",
+    "David e Betsabá"
+   ]
+  }
+ },
+ {
+  "key": "m2-forbidden-planet",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Robby_the_Robot.JPG/1280px-Robby_the_Robot.JPG",
+  "file": "File:Robby the Robot.JPG",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Forbidden Planet",
+   "ka": "აკრძალული პლანეტა",
+   "de": "Alarm im Weltall",
+   "es": "Planeta prohibido",
+   "fr": "Planète interdite",
+   "it": "Il pianeta proibito",
+   "pt": "Planeta Proibido"
+  },
+  "wrong": {
+   "en": [
+    "Metropolis",
+    "The Lost World",
+    "On the Beach"
+   ],
+   "ka": [
+    "მეტროპოლისი",
+    "დაკარგული სამყარო",
+    "უკანასკნელი ნაპირი"
+   ],
+   "de": [
+    "Metropolis",
+    "Die verlorene Welt",
+    "Das letzte Ufer"
+   ],
+   "es": [
+    "Metropolis",
+    "El mundo perdido",
+    "La hora final"
+   ],
+   "fr": [
+    "Metropolis",
+    "Le Monde perdu",
+    "Le Dernier Rivage"
+   ],
+   "it": [
+    "Metropolis",
+    "Il mondo perduto",
+    "L'ultima spiaggia"
+   ],
+   "pt": [
+    "Metropolis",
+    "O Mundo Perdido",
+    "A Hora Final"
+   ]
+  }
+ },
+ {
+  "key": "m2-star-is-born",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Garland_Star_Born_recrop.jpg",
+  "file": "File:Garland Star Born recrop.jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "A Star Is Born",
+   "ka": "ვარსკვლავი იბადება",
+   "de": "Ein Stern geht auf",
+   "es": "Nace una estrella",
+   "fr": "Une étoile est née",
+   "it": "È nata una stella",
+   "pt": "Nasce uma Estrela"
+  },
+  "wrong": {
+   "en": [
+    "All About Eve",
+    "Funny Girl",
+    "Cabaret"
+   ],
+   "ka": [
+    "ყველაფერი ევაზე",
+    "ფანი გერლი",
+    "კაბარე"
+   ],
+   "de": [
+    "Alles über Eva",
+    "Funny Girl",
+    "Cabaret"
+   ],
+   "es": [
+    "Eva al desnudo",
+    "Funny Girl",
+    "Cabaret"
+   ],
+   "fr": [
+    "Ève",
+    "Funny Girl",
+    "Cabaret"
+   ],
+   "it": [
+    "Eva contro Eva",
+    "Funny Girl",
+    "Cabaret"
+   ],
+   "pt": [
+    "A Malvada",
+    "Funny Girl",
+    "Cabaret"
+   ]
+  }
+ },
+ {
+  "key": "m2-maltese-falcon",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/4/4e/SamSpadeMaltFalc1941Trailer.jpg",
+  "file": "File:SamSpadeMaltFalc1941Trailer.jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "The Maltese Falcon",
+   "ka": "მალტის შევარდენი",
+   "de": "Die Spur des Falken",
+   "es": "El halcón maltés",
+   "fr": "Le Faucon maltais",
+   "it": "Il mistero del falco",
+   "pt": "Relíquia Macabra"
+  },
+  "wrong": {
+   "en": [
+    "The Third Man",
+    "Laura",
+    "Touch of Evil"
+   ],
+   "ka": [
+    "მესამე კაცი",
+    "ლორა",
+    "ბოროტების შეხება"
+   ],
+   "de": [
+    "Der dritte Mann",
+    "Laura",
+    "Im Zeichen des Bösen"
+   ],
+   "es": [
+    "El tercer hombre",
+    "Laura",
+    "Sed de mal"
+   ],
+   "fr": [
+    "Le Troisième Homme",
+    "Laura",
+    "La Soif du mal"
+   ],
+   "it": [
+    "Il terzo uomo",
+    "Laura",
+    "L'infernale Quinlan"
+   ],
+   "pt": [
+    "O Terceiro Homem",
+    "Laura",
+    "A Marca da Maldade"
+   ]
+  }
+ },
+ {
+  "key": "m2-big-sleep",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Bogart_and_Bacall_The_Big_Sleep.jpg/1280px-Bogart_and_Bacall_The_Big_Sleep.jpg",
+  "file": "File:Bogart and Bacall The Big Sleep.jpg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "The Big Sleep",
+   "ka": "დიდი ძილი",
+   "de": "Tote schlafen fest",
+   "es": "El sueño eterno",
+   "fr": "Le Grand Sommeil",
+   "it": "Il grande sonno",
+   "pt": "À Beira do Abismo"
+  },
+  "wrong": {
+   "en": [
+    "Laura",
+    "Gilda",
+    "Touch of Evil"
+   ],
+   "ka": [
+    "ლორა",
+    "გილდა",
+    "ბოროტების შეხება"
+   ],
+   "de": [
+    "Laura",
+    "Gilda",
+    "Im Zeichen des Bösen"
+   ],
+   "es": [
+    "Laura",
+    "Gilda",
+    "Sed de mal"
+   ],
+   "fr": [
+    "Laura",
+    "Gilda",
+    "La Soif du mal"
+   ],
+   "it": [
+    "Laura",
+    "Gilda",
+    "L'infernale Quinlan"
+   ],
+   "pt": [
+    "Laura",
+    "Gilda",
+    "A Marca da Maldade"
+   ]
+  }
+ },
+ {
+  "key": "m2-rebecca",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/3/3b/Lord_%26_Lady_de_Winter.jpg",
+  "file": "File:Lord & Lady de Winter.jpg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Rebecca",
+   "ka": "რებეკა",
+   "de": "Rebecca",
+   "es": "Rebecca",
+   "fr": "Rebecca",
+   "it": "Rebecca",
+   "pt": "Rebecca"
+  },
+  "wrong": {
+   "en": [
+    "Jane Eyre",
+    "Suspicion",
+    "Marnie"
+   ],
+   "ka": [
+    "ჯეინ ეარი",
+    "ეჭვი",
+    "მარნი"
+   ],
+   "de": [
+    "Jane Eyre",
+    "Verdacht",
+    "Marnie"
+   ],
+   "es": [
+    "Jane Eyre",
+    "Sospecha",
+    "Marnie"
+   ],
+   "fr": [
+    "Jane Eyre",
+    "Soupçons",
+    "Marnie"
+   ],
+   "it": [
+    "Jane Eyre",
+    "Il sospetto",
+    "Marnie"
+   ],
+   "pt": [
+    "Jane Eyre",
+    "Suspeita",
+    "Marnie"
+   ]
+  }
+ },
+ {
+  "key": "m2-wild-one",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/2/27/Marlon_Brando_-_The_Wild_One_%28Madame_Tussaud%29.JPG",
+  "file": "File:Marlon Brando - The Wild One (Madame Tussaud).JPG",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "The Wild One",
+   "ka": "ველური",
+   "de": "Der Wilde",
+   "es": "El salvaje",
+   "fr": "L'Équipée sauvage",
+   "it": "Il selvaggio",
+   "pt": "O Selvagem"
+  },
+  "wrong": {
+   "en": [
+    "Easy Rider",
+    "Mad Max",
+    "Bullitt"
+   ],
+   "ka": [
+    "იზი რაიდერი",
+    "შეშლილი მაქსი",
+    "ბულიტი"
+   ],
+   "de": [
+    "Easy Rider",
+    "Mad Max",
+    "Bullitt"
+   ],
+   "es": [
+    "Easy Rider",
+    "Mad Max",
+    "Bullitt"
+   ],
+   "fr": [
+    "Easy Rider",
+    "Mad Max",
+    "Bullitt"
+   ],
+   "it": [
+    "Easy Rider",
+    "Mad Max",
+    "Bullitt"
+   ],
+   "pt": [
+    "Easy Rider",
+    "Mad Max",
+    "Bullitt"
+   ]
+  }
+ },
+ {
+  "key": "m2-the-apartment",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/The_apartment_trailer_spaghetti.JPG/1280px-The_apartment_trailer_spaghetti.JPG",
+  "file": "File:The apartment trailer spaghetti.JPG",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "The Apartment",
+   "ka": "აპარტამენტი",
+   "de": "Das Appartement",
+   "es": "El apartamento",
+   "fr": "La Garçonnière",
+   "it": "L'appartamento",
+   "pt": "O Apartamento"
+  },
+  "wrong": {
+   "en": [
+    "Marty",
+    "The Hustler",
+    "Picnic"
+   ],
+   "ka": [
+    "მარტი",
+    "ჰასლერი",
+    "პიკნიკი"
+   ],
+   "de": [
+    "Marty",
+    "Haie der Großstadt",
+    "Picnic"
+   ],
+   "es": [
+    "Marty",
+    "El buscavidas",
+    "Picnic"
+   ],
+   "fr": [
+    "Marty",
+    "L'Arnaqueur",
+    "Picnic"
+   ],
+   "it": [
+    "Marty",
+    "Lo spericolato",
+    "Picnic"
+   ],
+   "pt": [
+    "Marty",
+    "Desafio à Corrupção",
+    "Picnic"
+   ]
+  }
+ },
+ {
+  "key": "m2-third-man",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Orson_Welles_as_Harry_Lime.jpg/1280px-Orson_Welles_as_Harry_Lime.jpg",
+  "file": "File:Orson Welles as Harry Lime.jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "The Third Man",
+   "ka": "მესამე კაცი",
+   "de": "Der dritte Mann",
+   "es": "El tercer hombre",
+   "fr": "Le Troisième Homme",
+   "it": "Il terzo uomo",
+   "pt": "O Terceiro Homem"
+  },
+  "wrong": {
+   "en": [
+    "The Maltese Falcon",
+    "Casablanca",
+    "Laura"
+   ],
+   "ka": [
+    "მალტის შევარდენი",
+    "კასაბლანკა",
+    "ლორა"
+   ],
+   "de": [
+    "Die Spur des Falken",
+    "Casablanca",
+    "Laura"
+   ],
+   "es": [
+    "El halcón maltés",
+    "Casablanca",
+    "Laura"
+   ],
+   "fr": [
+    "Le Faucon maltais",
+    "Casablanca",
+    "Laura"
+   ],
+   "it": [
+    "Il mistero del falco",
+    "Casablanca",
+    "Laura"
+   ],
+   "pt": [
+    "Relíquia Macabra",
+    "Casablanca",
+    "Laura"
+   ]
+  }
+ },
+ {
+  "key": "m2-mamma-mia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/1008_Chapel_of_Agios_Ioannis_in_Skopelos_Photo_by_Giles_Laurent.jpg/1280px-1008_Chapel_of_Agios_Ioannis_in_Skopelos_Photo_by_Giles_Laurent.jpg",
+  "file": "File:1008 Chapel of Agios Ioannis in Skopelos Photo by Giles Laurent.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Mamma Mia!",
+   "ka": "მამა მია!"
+  },
+  "wrong": {
+   "en": [
+    "Grease",
+    "La La Land",
+    "Rocketman"
+   ],
+   "ka": [
+    "გრიზი",
+    "ლა-ლა-ლენდი",
+    "როკეტმენი"
+   ]
+  }
+ },
+ {
+  "key": "m2-war-and-peace",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Audrey_Hepburn_War%26Peace.jpg",
+  "file": "File:Audrey Hepburn War&Peace.jpg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "War and Peace",
+   "ka": "ომი და მშვიდობა",
+   "de": "Krieg und Frieden",
+   "es": "Guerra y paz",
+   "fr": "Guerre et Paix",
+   "it": "Guerra e pace",
+   "pt": "Guerra e Paz"
+  },
+  "wrong": {
+   "en": [
+    "Anna Karenina",
+    "Doctor Zhivago",
+    "Marie Antoinette"
+   ],
+   "ka": [
+    "ანა კარენინა",
+    "ექიმი ჟივაგო",
+    "მარია ანტუანეტა"
+   ],
+   "de": [
+    "Anna Karenina",
+    "Doktor Schiwago",
+    "Marie Antoinette"
+   ],
+   "es": [
+    "Ana Karenina",
+    "Doctor Zhivago",
+    "María Antonieta"
+   ],
+   "fr": [
+    "Anna Karénine",
+    "Le Docteur Jivago",
+    "Marie-Antoinette"
+   ],
+   "it": [
+    "Anna Karenina",
+    "Il dottor Živago",
+    "Maria Antonietta"
+   ],
+   "pt": [
+    "Ana Karenina",
+    "Doutor Jivago",
+    "Maria Antonieta"
+   ]
+  }
+ },
+ {
+  "key": "m2-funny-face",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/7/72/Audrey_Hepburn_in_Funny_Face_trailer.jpg",
+  "file": "File:Audrey Hepburn in Funny Face trailer.jpg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Funny Face",
+   "ka": "სასაცილო სახე",
+   "de": "Ein süßer Fratz",
+   "es": "Una cara con ángel",
+   "fr": "Drôle de frimousse",
+   "it": "Cenerentola a Parigi",
+   "pt": "Cinderela em Paris"
+  },
+  "wrong": {
+   "en": [
+    "Gigi",
+    "Oklahoma!",
+    "Carousel"
+   ],
+   "ka": [
+    "ჯიჯი",
+    "ოკლაჰომა!",
+    "კარუსელი"
+   ],
+   "de": [
+    "Gigi",
+    "Oklahoma!",
+    "Karussell"
+   ],
+   "es": [
+    "Gigi",
+    "Oklahoma!",
+    "Carrusel"
+   ],
+   "fr": [
+    "Gigi",
+    "Oklahoma!",
+    "Carrousel"
+   ],
+   "it": [
+    "Gigi",
+    "Oklahoma!",
+    "Carosello"
+   ],
+   "pt": [
+    "Gigi",
+    "Oklahoma!",
+    "Carrossel"
+   ]
+  }
+ },
+ {
+  "key": "m2-dolce-vita",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/La_dolce_vita_Trevi.jpg/1280px-La_dolce_vita_Trevi.jpg",
+  "file": "File:La dolce vita Trevi.jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "La Dolce Vita",
+   "ka": "ტკბილი ცხოვრება",
+   "de": "Das süße Leben",
+   "es": "La dolce vita",
+   "fr": "La Dolce Vita",
+   "it": "La dolce vita",
+   "pt": "A Doce Vida"
+  },
+  "wrong": {
+   "en": [
+    "8½",
+    "La Strada",
+    "La Notte"
+   ],
+   "ka": [
+    "8½",
+    "ლა სტრადა",
+    "ღამე"
+   ],
+   "de": [
+    "8½",
+    "La Strada",
+    "La Notte"
+   ],
+   "es": [
+    "8½",
+    "La Strada",
+    "La noche"
+   ],
+   "fr": [
+    "8½",
+    "La Strada",
+    "La Nuit"
+   ],
+   "it": [
+    "8½",
+    "La Strada",
+    "La Notte"
+   ],
+   "pt": [
+    "8½",
+    "La Strada",
+    "La Notte"
+   ]
+  }
+ },
+ {
+  "key": "m2-easy-rider",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/9/9e/1969_Harley-Davidson_Easy_Rider_chopper_%281993_replica%29_%281%29_-_The_Art_of_the_Motorcycle_-_Memphis.jpg",
+  "file": "File:1969 Harley-Davidson Easy Rider chopper (1993 replica) (1) - The Art of the Motorcycle - Memphis.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Easy Rider",
+   "ka": "იზი რაიდერი",
+   "de": "Easy Rider",
+   "es": "Easy Rider",
+   "fr": "Easy Rider",
+   "it": "Easy Rider",
+   "pt": "Easy Rider"
+  },
+  "wrong": {
+   "en": [
+    "The Wild One",
+    "Bullitt",
+    "Mad Max"
+   ],
+   "ka": [
+    "ველური",
+    "ბულიტი",
+    "შეშლილი მაქსი"
+   ],
+   "de": [
+    "Der Wilde",
+    "Bullitt",
+    "Mad Max"
+   ],
+   "es": [
+    "El salvaje",
+    "Bullitt",
+    "Mad Max"
+   ],
+   "fr": [
+    "L'Équipée sauvage",
+    "Bullitt",
+    "Mad Max"
+   ],
+   "it": [
+    "Il selvaggio",
+    "Bullitt",
+    "Mad Max"
+   ],
+   "pt": [
+    "O Selvagem",
+    "Bullitt",
+    "Mad Max"
+   ]
+  }
+ },
+ {
+  "key": "m2-the-shining",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Timberline_Lodge%2C_Oregon_%282013%29_-_04.JPG/1280px-Timberline_Lodge%2C_Oregon_%282013%29_-_04.JPG",
+  "file": "File:Timberline Lodge, Oregon (2013) - 04.JPG",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "The Shining",
+   "ka": "ნათება",
+   "de": "Shining",
+   "es": "El resplandor",
+   "fr": "Shining",
+   "it": "Shining",
+   "pt": "O Iluminado"
+  },
+  "wrong": {
+   "en": [
+    "Psycho",
+    "The Exorcist",
+    "Misery"
+   ],
+   "ka": [
+    "ფსიქო",
+    "ეგზორცისტი",
+    "მიზერი"
+   ],
+   "de": [
+    "Psycho",
+    "Der Exorzist",
+    "Misery"
+   ],
+   "es": [
+    "Psicosis",
+    "El exorcista",
+    "Misery"
+   ],
+   "fr": [
+    "Psychose",
+    "L'Exorciste",
+    "Misery"
+   ],
+   "it": [
+    "Psyco",
+    "L'esorcista",
+    "Misery"
+   ],
+   "pt": [
+    "Psicose",
+    "O Exorcista",
+    "Misery"
+   ]
+  }
+ },
+ {
+  "key": "m2-laura",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Dana_Andrews-Gene_Tierney_in_Laura_trailer.jpg",
+  "file": "File:Dana Andrews-Gene Tierney in Laura trailer.jpg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Laura",
+   "ka": "ლორა",
+   "de": "Laura",
+   "es": "Laura",
+   "fr": "Laura",
+   "it": "Laura",
+   "pt": "Laura"
+  },
+  "wrong": {
+   "en": [
+    "Gilda",
+    "Rebecca",
+    "All About Eve"
+   ],
+   "ka": [
+    "გილდა",
+    "რებეკა",
+    "ყველაფერი ევაზე"
+   ],
+   "de": [
+    "Gilda",
+    "Rebecca",
+    "Alles über Eva"
+   ],
+   "es": [
+    "Gilda",
+    "Rebecca",
+    "Eva al desnudo"
+   ],
+   "fr": [
+    "Gilda",
+    "Rebecca",
+    "Ève"
+   ],
+   "it": [
+    "Gilda",
+    "Rebecca",
+    "Eva contro Eva"
+   ],
+   "pt": [
+    "Gilda",
+    "Rebecca",
+    "A Malvada"
+   ]
+  }
+ },
+ {
+  "key": "m2-touch-of-evil",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Touch_of_Evil-Janet_Leigh%26Charlton_Heston2.JPG",
+  "file": "File:Touch of Evil-Janet Leigh&Charlton Heston2.JPG",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Touch of Evil",
+   "ka": "ბოროტების შეხება",
+   "de": "Im Zeichen des Bösen",
+   "es": "Sed de mal",
+   "fr": "La Soif du mal",
+   "it": "L'infernale Quinlan",
+   "pt": "A Marca da Maldade"
+  },
+  "wrong": {
+   "en": [
+    "The Big Sleep",
+    "The Third Man",
+    "The Maltese Falcon"
+   ],
+   "ka": [
+    "დიდი ძილი",
+    "მესამე კაცი",
+    "მალტის შევარდენი"
+   ],
+   "de": [
+    "Tote schlafen fest",
+    "Der dritte Mann",
+    "Die Spur des Falken"
+   ],
+   "es": [
+    "El sueño eterno",
+    "El tercer hombre",
+    "El halcón maltés"
+   ],
+   "fr": [
+    "Le Grand Sommeil",
+    "Le Troisième Homme",
+    "Le Faucon maltais"
+   ],
+   "it": [
+    "Il grande sonno",
+    "Il terzo uomo",
+    "Il mistero del falco"
+   ],
+   "pt": [
+    "À Beira do Abismo",
+    "O Terceiro Homem",
+    "Relíquia Macabra"
+   ]
+  }
+ },
+ {
+  "key": "m2-titanic",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/RMS_Titanic_3.jpg/1280px-RMS_Titanic_3.jpg",
+  "file": "File:RMS Titanic 3.jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Titanic",
+   "ka": "ტიტანიკი"
+  },
+  "wrong": {
+   "en": [
+    "Poseidon",
+    "Pearl Harbor",
+    "Dunkirk"
+   ],
+   "ka": [
+    "პოსეიდონი",
+    "პერლ-ჰარბორი",
+    "დიუნკერკი"
+   ],
+   "es": [
+    "Poseidón",
+    "Pearl Harbor",
+    "Dunkerque"
+   ],
+   "fr": [
+    "Poséidon",
+    "Pearl Harbor",
+    "Dunkerque"
+   ]
+  }
+ },
+ {
+  "key": "m2-rashomon",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Rashomon_%281950%29_Press_Photo_of_Toshiro_Mifune_and_Machiko_Ky%C5%8D.jpg/1280px-Rashomon_%281950%29_Press_Photo_of_Toshiro_Mifune_and_Machiko_Ky%C5%8D.jpg",
+  "file": "File:Rashomon (1950) Press Photo of Toshiro Mifune and Machiko Kyō.jpg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Rashomon",
+   "ka": "რაშომონი",
+   "de": "Rashomon",
+   "es": "Rashomon",
+   "fr": "Rashomon",
+   "it": "Rashomon",
+   "pt": "Rashomon"
+  },
+  "wrong": {
+   "en": [
+    "Seven Samurai",
+    "Yojimbo",
+    "Ikiru"
+   ],
+   "ka": [
+    "შვიდი სამურაი",
+    "იოჯიმბო",
+    "იკირუ"
+   ],
+   "de": [
+    "Die sieben Samurai",
+    "Yojimbo",
+    "Ikiru"
+   ],
+   "es": [
+    "Los siete samuráis",
+    "Yojimbo",
+    "Vivir"
+   ],
+   "fr": [
+    "Les Sept Samouraïs",
+    "Yojimbo",
+    "Vivre"
+   ],
+   "it": [
+    "I sette samurai",
+    "Yojimbo",
+    "Vivere"
+   ],
+   "pt": [
+    "Os Sete Samurais",
+    "Yojimbo",
+    "Viver"
+   ]
+  }
+ },
+ {
+  "key": "m2-joker",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Jokerstairstourists.jpg/1280px-Jokerstairstourists.jpg",
+  "file": "File:Jokerstairstourists.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Joker",
+   "ka": "ჯოკერი",
+   "es": "Joker",
+   "pt": "Joker"
+  },
+  "wrong": {
+   "en": [
+    "Batman",
+    "Suicide Squad",
+    "Birdman"
+   ],
+   "ka": [
+    "ბეტმენი",
+    "თვითმკვლელთა რაზმი",
+    "ბერდმენი"
+   ],
+   "es": [
+    "Batman",
+    "Escuadrón suicida",
+    "Birdman"
+   ],
+   "pt": [
+    "Batman",
+    "Esquadrão Suicida",
+    "Birdman"
+   ]
+  }
+ },
+ {
+  "key": "m2-star-wars",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Star_Wars_in_Tunisia_-_Lars_Homestead_in_Chott_el_Djerid.jpg/1280px-Star_Wars_in_Tunisia_-_Lars_Homestead_in_Chott_el_Djerid.jpg",
+  "file": "File:Star Wars in Tunisia - Lars Homestead in Chott el Djerid.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Star Wars",
+   "ka": "ვარსკვლავური ომები",
+   "pt": "Star Wars"
+  },
+  "wrong": {
+   "en": [
+    "Dune",
+    "Star Trek",
+    "Mad Max"
+   ],
+   "ka": [
+    "დიუნი",
+    "ვარსკვლავური გზა",
+    "შეშლილი მაქსი"
+   ],
+   "pt": [
+    "Duna",
+    "Star Trek",
+    "Mad Max"
+   ]
+  }
+ },
+ {
+  "key": "m2-avatar",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Floating_Mountain_in_the_Valley_of_Mo%27ara_%2833907205843%29.jpg/1280px-Floating_Mountain_in_the_Valley_of_Mo%27ara_%2833907205843%29.jpg",
+  "file": "File:Floating Mountain in the Valley of Mo'ara (33907205843).jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Avatar",
+   "ka": "ავატარი"
+  },
+  "wrong": {
+   "en": [
+    "Star Wars",
+    "Jumanji",
+    "Star Trek"
+   ],
+   "ka": [
+    "ვარსკვლავური ომები",
+    "ჯუმანჯი",
+    "ვარსკვლავური გზა"
+   ]
+  }
+ },
+ {
+  "key": "m2-harry-potter",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Glenfinnan_Viaduct_-_Jacobite_Express.jpg/1280px-Glenfinnan_Viaduct_-_Jacobite_Express.jpg",
+  "file": "File:Glenfinnan Viaduct - Jacobite Express.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Harry Potter",
+   "ka": "ჰარი პოტერი",
+   "es": "Harry Potter",
+   "pt": "Harry Potter"
+  },
+  "wrong": {
+   "en": [
+    "Narnia",
+    "Percy Jackson",
+    "Twilight"
+   ],
+   "ka": [
+    "ნარნია",
+    "პერსი ჯექსონი",
+    "ბინდი"
+   ],
+   "es": [
+    "Narnia",
+    "Percy Jackson",
+    "Crepúsculo"
+   ],
+   "pt": [
+    "Narnia",
+    "Percy Jackson",
+    "Crepúsculo"
+   ]
+  }
+ },
+ {
+  "key": "m2-transformers",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/2007_Chevrolet_Camaro_Concept_Prop_Car_Bumblebee_Transformers_Petersen_Automotive_Museum.jpg/1280px-2007_Chevrolet_Camaro_Concept_Prop_Car_Bumblebee_Transformers_Petersen_Automotive_Museum.jpg",
+  "file": "File:2007 Chevrolet Camaro Concept Prop Car Bumblebee Transformers Petersen Automotive Museum.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Transformers",
+   "ka": "ტრანსფორმერები",
+   "es": "Transformers",
+   "fr": "Transformers",
+   "it": "Transformers",
+   "pt": "Transformers"
+  },
+  "wrong": {
+   "en": [
+    "Fast & Furious",
+    "Cars",
+    "RoboCop"
+   ],
+   "ka": [
+    "ფორსაჟი",
+    "მანქანები",
+    "რობოკოპი"
+   ],
+   "es": [
+    "A todo gas",
+    "Cars",
+    "RoboCop"
+   ],
+   "fr": [
+    "Fast and Furious",
+    "Cars",
+    "RoboCop"
+   ],
+   "it": [
+    "Fast and Furious",
+    "Cars",
+    "RoboCop"
+   ],
+   "pt": [
+    "Velozes e Furiosos",
+    "Cars",
+    "RoboCop"
+   ]
+  }
+ },
+ {
+  "key": "m2-minions",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Minion_sculpture_in_Brisbane%2C_2024.jpg/1280px-Minion_sculpture_in_Brisbane%2C_2024.jpg",
+  "file": "File:Minion sculpture in Brisbane, 2024.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Minions",
+   "ka": "მინიონები",
+   "es": "Los Minions",
+   "fr": "Les Minions",
+   "it": "Minions",
+   "pt": "Minions"
+  },
+  "wrong": {
+   "en": [
+    "Shrek",
+    "Toy Story",
+    "Ice Age"
+   ],
+   "ka": [
+    "შრეკი",
+    "სათამაშოების ამბავი",
+    "გამყინვარების ხანა"
+   ],
+   "es": [
+    "Shrek",
+    "Toy Story",
+    "Ice Age"
+   ],
+   "fr": [
+    "Shrek",
+    "Toy Story",
+    "L'Âge de glace"
+   ],
+   "it": [
+    "Shrek",
+    "Toy Story",
+    "L'era glaciale"
+   ],
+   "pt": [
+    "Shrek",
+    "Toy Story",
+    "A Era do Gelo"
+   ]
+  }
+ },
+ {
+  "key": "m2-iron-man",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Cosplay_of_Iron_Man_at_GEMA_2022.jpg/1280px-Cosplay_of_Iron_Man_at_GEMA_2022.jpg",
+  "file": "File:Cosplay of Iron Man at GEMA 2022.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Iron Man",
+   "ka": "რკინის კაცი",
+   "pt": "Homem de Ferro"
+  },
+  "wrong": {
+   "en": [
+    "RoboCop",
+    "Batman",
+    "Transformers"
+   ],
+   "ka": [
+    "რობოკოპი",
+    "ბეტმენი",
+    "ტრანსფორმერები"
+   ],
+   "pt": [
+    "RoboCop",
+    "Batman",
+    "Transformers"
+   ]
+  }
+ },
+ {
+  "key": "m2-spider-man",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Madame_Tussauds_London_-_Spider-Man_statue.jpg/1280px-Madame_Tussauds_London_-_Spider-Man_statue.jpg",
+  "file": "File:Madame Tussauds London - Spider-Man statue.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Spider-Man",
+   "ka": "ადამიანი-ობობა",
+   "pt": "Homem-Aranha"
+  },
+  "wrong": {
+   "en": [
+    "Batman",
+    "Superman",
+    "Deadpool"
+   ],
+   "ka": [
+    "ბეტმენი",
+    "სუპერმენი",
+    "დედპული"
+   ],
+   "pt": [
+    "Batman",
+    "Superman",
+    "Deadpool"
+   ]
+  }
+ },
+ {
+  "key": "m2-amelie",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Paris_-_Caf%C3%A9_des_2_Moulins_-_2004.jpg/1280px-Paris_-_Caf%C3%A9_des_2_Moulins_-_2004.jpg",
+  "file": "File:Paris - Café des 2 Moulins - 2004.jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Amélie",
+   "ka": "ამელი",
+   "es": "Amélie",
+   "fr": "Amélie Poulain",
+   "pt": "Amélie Poulain"
+  },
+  "wrong": {
+   "en": [
+    "Ratatouille",
+    "Midnight in Paris",
+    "Moulin Rouge!"
+   ],
+   "ka": [
+    "რატატუი",
+    "შუაღამე პარიზში",
+    "მულენ რუჟი"
+   ],
+   "es": [
+    "Ratatouille",
+    "Medianoche en París",
+    "Moulin Rouge!"
+   ],
+   "fr": [
+    "Ratatouille",
+    "Minuit à Paris",
+    "Moulin Rouge!"
+   ],
+   "pt": [
+    "Ratatouille",
+    "Meia-Noite em Paris",
+    "Moulin Rouge!"
+   ]
+  }
+ },
+ {
+  "key": "m2-mad-max",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Mad_Max_Fury_Road_Black_on_Black_%2840925738233%29.jpg/1280px-Mad_Max_Fury_Road_Black_on_Black_%2840925738233%29.jpg",
+  "file": "File:Mad Max Fury Road Black on Black (40925738233).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Mad Max",
+   "ka": "შეშლილი მაქსი",
+   "es": "Mad Max",
+   "fr": "Mad Max",
+   "it": "Mad Max",
+   "pt": "Mad Max"
+  },
+  "wrong": {
+   "en": [
+    "Fast & Furious",
+    "Waterworld",
+    "Dune"
+   ],
+   "ka": [
+    "ფორსაჟი",
+    "წყლის სამყარო",
+    "დიუნი"
+   ],
+   "es": [
+    "A todo gas",
+    "Waterworld",
+    "Dune"
+   ],
+   "fr": [
+    "Fast and Furious",
+    "Waterworld",
+    "Dune"
+   ],
+   "it": [
+    "Fast and Furious",
+    "Waterworld",
+    "Dune"
+   ],
+   "pt": [
+    "Velozes e Furiosos",
+    "Waterworld",
+    "Duna"
+   ]
+  }
+ },
+ {
+  "key": "m2-cars",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lightning_McQueen_at_Disney%27s_Hollywood_Studios_%286746004967%29.jpg/1280px-Lightning_McQueen_at_Disney%27s_Hollywood_Studios_%286746004967%29.jpg",
+  "file": "File:Lightning McQueen at Disney's Hollywood Studios (6746004967).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Cars",
+   "ka": "მანქანები",
+   "es": "Cars",
+   "fr": "Cars",
+   "it": "Cars",
+   "pt": "Cars"
+  },
+  "wrong": {
+   "en": [
+    "Toy Story",
+    "Fast & Furious",
+    "Transformers"
+   ],
+   "ka": [
+    "სათამაშოების ამბავი",
+    "ფორსაჟი",
+    "ტრანსფორმერები"
+   ],
+   "es": [
+    "Toy Story",
+    "A todo gas",
+    "Transformers"
+   ],
+   "fr": [
+    "Toy Story",
+    "Fast and Furious",
+    "Transformers"
+   ],
+   "it": [
+    "Toy Story",
+    "Fast and Furious",
+    "Transformers"
+   ],
+   "pt": [
+    "Toy Story",
+    "Velozes e Furiosos",
+    "Transformers"
+   ]
+  }
+ },
+ {
+  "key": "m2-et",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/E.T._figure_at_Madame_Tussauds_London.jpg/1280px-E.T._figure_at_Madame_Tussauds_London.jpg",
+  "file": "File:E.T. figure at Madame Tussauds London.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "E.T.",
+   "ka": "ი-ტი"
+  },
+  "wrong": {
+   "en": [
+    "Alien",
+    "Star Trek",
+    "Avatar"
+   ],
+   "ka": [
+    "უცხო",
+    "ვარსკვლავური გზა",
+    "ავატარი"
+   ]
+  }
+ },
+ {
+  "key": "m2-shrek",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Shrek_Madame_Tussauds_London.jpg/1280px-Shrek_Madame_Tussauds_London.jpg",
+  "file": "File:Shrek Madame Tussauds London.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Shrek",
+   "ka": "შრეკი",
+   "fr": "Shrek",
+   "it": "Shrek",
+   "pt": "Shrek"
+  },
+  "wrong": {
+   "en": [
+    "Madagascar",
+    "Ice Age",
+    "Toy Story"
+   ],
+   "ka": [
+    "მადაგასკარი",
+    "გამყინვარების ხანა",
+    "სათამაშოების ამბავი"
+   ],
+   "fr": [
+    "Madagascar",
+    "L'Âge de glace",
+    "Toy Story"
+   ],
+   "it": [
+    "Madagascar",
+    "L'era glaciale",
+    "Toy Story"
+   ],
+   "pt": [
+    "Madagascar",
+    "A Era do Gelo",
+    "Toy Story"
+   ]
+  }
+ },
+ {
+  "key": "m2-wall-e",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Day_63_-_WALL-E_%2819729638255%29.jpg/1280px-Day_63_-_WALL-E_%2819729638255%29.jpg",
+  "file": "File:Day 63 - WALL-E (19729638255).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "WALL·E",
+   "ka": "ვოლ-ი"
+  },
+  "wrong": {
+   "en": [
+    "Cars",
+    "Toy Story",
+    "Transformers"
+   ],
+   "ka": [
+    "მანქანები",
+    "სათამაშოების ამბავი",
+    "ტრანსფორმერები"
+   ]
+  }
+ },
+ {
+  "key": "m2-frozen",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Elsa_-_La_Reine_des_neiges_-_20150803_16h44_%2810810%29.jpg/1280px-Elsa_-_La_Reine_des_neiges_-_20150803_16h44_%2810810%29.jpg",
+  "file": "File:Elsa - La Reine des neiges - 20150803 16h44 (10810).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Frozen",
+   "ka": "გაყინული",
+   "de": "Die Eiskönigin",
+   "es": "Frozen",
+   "fr": "La Reine des neiges",
+   "it": "Frozen",
+   "pt": "Frozen"
+  },
+  "wrong": {
+   "en": [
+    "Moana",
+    "Cinderella",
+    "Ice Age"
+   ],
+   "ka": [
+    "მოანა",
+    "კონკია",
+    "გამყინვარების ხანა"
+   ],
+   "de": [
+    "Vaiana",
+    "Cinderella",
+    "Ice Age"
+   ],
+   "es": [
+    "Vaiana",
+    "La Cenicienta",
+    "Ice Age"
+   ],
+   "fr": [
+    "Vaiana",
+    "Cendrillon",
+    "L'Âge de glace"
+   ],
+   "it": [
+    "Oceania",
+    "Cenerentola",
+    "L'era glaciale"
+   ],
+   "pt": [
+    "Moana",
+    "Cinderela",
+    "A Era do Gelo"
+   ]
+  }
+ }
+]
