@@ -9,6 +9,13 @@
  * id-hash palette picker lands on.
  */
 
+import iconCelebrity from "@/assets/popular/guess_celebrity.png";
+import iconMovie from "@/assets/popular/guess_movie.png";
+import iconCity from "@/assets/popular/guess_city.png";
+import iconSportsman from "@/assets/popular/guess_sportsman.png";
+import iconLogo from "@/assets/popular/guess_logo.png";
+import iconFlag from "@/assets/popular/guess_flag.png";
+
 export const POPULAR_IMAGE_CATEGORY_IDS = [
   "guess_celebrity",
   "guess_movie",
@@ -20,14 +27,20 @@ export const POPULAR_IMAGE_CATEGORY_IDS = [
 
 export type PopularImageCategoryId = (typeof POPULAR_IMAGE_CATEGORY_IDS)[number];
 
-/** Card art: 3D icon rendered centered on the card's gradient. */
+/** Card art: 3D icon rendered centered on the card's gradient.
+ *
+ * Imported through Vite rather than served from public/: these files get
+ * replaced (icon quality passes), and a fixed /images/... URL kept serving
+ * the browser's cached old art after a swap. A content-hashed filename
+ * changes with the file, so a replacement is visible on the next deploy,
+ * every time. */
 export const POPULAR_CATEGORY_ICONS: Record<PopularImageCategoryId, string> = {
-  guess_celebrity: "/images/categories/popular/guess_celebrity.png",
-  guess_movie: "/images/categories/popular/guess_movie.png",
-  guess_city: "/images/categories/popular/guess_city.png",
-  guess_sportsman: "/images/categories/popular/guess_sportsman.png",
-  guess_logo: "/images/categories/popular/guess_logo.png",
-  guess_flag: "/images/categories/popular/guess_flag.png",
+  guess_celebrity: iconCelebrity,
+  guess_movie: iconMovie,
+  guess_city: iconCity,
+  guess_sportsman: iconSportsman,
+  guess_logo: iconLogo,
+  guess_flag: iconFlag,
 };
 
 /** Same shape as AirbnbCategoryCard's PASTEL_PALETTES entries. */
