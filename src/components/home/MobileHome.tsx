@@ -437,30 +437,6 @@ function MailGlyph() {
   );
 }
 
-// Square provider button — node 633:578 / 633:583 / 633:587
-function AuthIconButton({
-  onClick,
-  label,
-  children,
-}: {
-  onClick: () => void;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className="relative size-[54px] shrink-0 rounded-[18.498px] border-[1.542px] border-solid border-[#e8e0f5]"
-      style={{ boxShadow: AUTH_SHADOW }}
-    >
-      <span aria-hidden className="absolute inset-0 rounded-[inherit]" style={{ background: AUTH_GRADIENT }} />
-      <span className="absolute inset-0 flex items-center justify-center">{children}</span>
-      <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_1.86px_0px_0px_white]" />
-    </button>
-  );
-}
 
 interface MobileGuestHeroProps {
   onApple: () => void;
@@ -544,36 +520,51 @@ export function MobileGuestHero({
         transition={{ delay: 0.2, duration: 0.5, type: "spring" }}
         className="pointer-events-auto shrink-0 px-4 min-[420px]:px-6"
       >
-        {/* Provider row (node 633:604) — 392px wide in the frame. The Apple
-            button takes the slack, putting its glyph at 18px and its label at
-            46px exactly as designed; on phones too narrow for the full label
-            it ellipsizes rather than running under the Facebook button. */}
-        <div className="mx-auto flex w-full max-w-[392px] items-center gap-[10px]">
+        {/* Provider stack. Apple leads as the HIG black button — guideline
+            4.8 wants it at least as prominent as any other login, and the
+            HIG's own buttons (black fill, centered logo+label) are what
+            reviewers expect to see. Google follows in its official white
+            style, then email. (The old row — Apple in a lilac pill next to
+            bare G and mail icons — read as custom chrome, not the sanctioned
+            buttons.) */}
+        <div className="mx-auto flex w-full max-w-[392px] flex-col gap-[10px]">
           <button
             type="button"
             onClick={onApple}
-            className="relative flex h-[54px] min-w-0 flex-1 items-center gap-[11px] overflow-hidden rounded-[18.498px] border-[1.542px] border-solid border-[#e8e0f5] pl-[18px] pr-[10px]"
-            style={{ boxShadow: AUTH_SHADOW }}
+            className="flex h-[50px] w-full items-center justify-center gap-[10px] rounded-[14px] bg-black text-white active:opacity-80"
           >
-            <span aria-hidden className="absolute inset-0 rounded-[inherit]" style={{ background: AUTH_GRADIENT }} />
-            <span className="relative shrink-0 text-black">
-              <AppleGlyph />
-            </span>
-            <span className="relative min-w-0 truncate text-[13px] font-bold leading-[18.498px] tracking-[-0.1644px] text-black">
+            <AppleGlyph />
+            <span className="text-[16px] font-semibold tracking-[-0.2px]">
               {t("extra.appleSignInBtn")}
             </span>
-            <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_1.86px_0px_0px_white]" />
+          </button>
+          <button
+            type="button"
+            onClick={onGoogle}
+            className="flex h-[50px] w-full items-center justify-center gap-[10px] rounded-[14px] border border-[#dadce0] bg-white text-[#1f1f1f] active:opacity-80"
+          >
+            <GoogleGlyph />
+            <span className="text-[16px] font-medium tracking-[-0.2px]">
+              {t("extra.landingGoogleSignIn")}
+            </span>
           </button>
           {/* No Facebook button: no Facebook provider is configured, and
               the placeholder that opened the signup form instead read as
               broken sign-in — which is exactly how it was reported. Restore
               it only once a real Meta app is wired into Supabase Auth. */}
-          <AuthIconButton onClick={onGoogle} label="Google">
-            <GoogleGlyph />
-          </AuthIconButton>
-          <AuthIconButton onClick={onEmail} label={t("auth.email")}>
-            <MailGlyph />
-          </AuthIconButton>
+          <button
+            type="button"
+            onClick={onEmail}
+            className="relative flex h-[50px] w-full items-center justify-center gap-[10px] overflow-hidden rounded-[14px] border-[1.542px] border-solid border-[#e8e0f5] text-[#002b63]"
+            style={{ boxShadow: AUTH_SHADOW }}
+          >
+            <span aria-hidden className="absolute inset-0 rounded-[inherit]" style={{ background: AUTH_GRADIENT }} />
+            <span className="relative flex items-center gap-[10px]">
+              <MailGlyph />
+              <span className="text-[15px] font-bold tracking-[-0.16px]">{t("extra.landingOrEmail")}</span>
+            </span>
+            <span aria-hidden className="absolute inset-0 rounded-[inherit] shadow-[inset_0px_1.86px_0px_0px_white]" />
+          </button>
         </div>
 
         {/* Terms note (node 633:469) */}
