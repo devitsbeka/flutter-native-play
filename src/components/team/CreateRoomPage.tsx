@@ -7,6 +7,7 @@ import { anyBlockedText, containsBlockedText } from "@/utils/contentFilter";
 import { Loader2, ArrowLeft, HelpCircle, UserPlus, X, Share2, RefreshCw, Play, Pencil, Gamepad2, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
+import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
@@ -244,7 +245,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       setLoadingCategories(true);
       const { data, error } = await supabase
         .from("categories")
-        .select("id, category_id, name, icon_slug, color, image_url, total_levels")
+        .select("id, category_id, name, icon_slug, color, image_url, total_levels, is_language_specific, language")
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
 
@@ -254,7 +255,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         // categories.name is Georgian; overlay the reader's language so the
         // random pick and its slot animation aren't Georgian under an
         // English UI.
-        setCategories(await localizeCategoryNames(data));
+        setCategories(await localizeCategoryNames(filterCategoriesForLanguage(data)));
       }
       setLoadingCategories(false);
     };

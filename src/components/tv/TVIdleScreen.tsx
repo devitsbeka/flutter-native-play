@@ -5,6 +5,7 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { Play, Settings, Trophy, Users, RefreshCw, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
 import glitchIcon from "@/assets/glitch.png";
 import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
 
@@ -40,11 +41,11 @@ export const TVIdleScreen: React.FC = () => {
     const fetchCategories = async () => {
       const { data } = await supabase
         .from('categories')
-        .select('id, name, icon_slug')
+        .select('id, name, icon_slug, is_language_specific, language')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
-      
-      if (data) setCategories(data);
+
+      if (data) setCategories(filterCategoriesForLanguage(data));
     };
     fetchCategories();
   }, []);

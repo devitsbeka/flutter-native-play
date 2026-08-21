@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Search, Check } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
@@ -59,10 +60,7 @@ export function CategorySelectorModal({
       if (error) throw error;
 
       // Filter language-specific categories
-      const filtered = (data || []).filter((cat: any) => {
-        if (!cat.is_language_specific) return true;
-        return cat.language === language;
-      });
+      const filtered = filterCategoriesForLanguage(data || [], language);
 
       // Fetch translations for non-Georgian languages
       if (language !== "ka") {

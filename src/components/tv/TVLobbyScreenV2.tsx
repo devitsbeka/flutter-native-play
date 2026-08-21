@@ -6,6 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Crown, Users, Play, Shuffle, Check, X, UserPlus } from 'lucide-react';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { supabase } from '@/integrations/supabase/client';
+import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
@@ -104,15 +105,16 @@ export const TVLobbyScreenV2: React.FC = () => {
     const fetchCategories = async () => {
       const { data } = await supabase
         .from('categories')
-        .select('id, category_id, name, icon')
+        .select('id, category_id, name, icon, is_language_specific, language')
         .eq('is_active', true)
         .order('sort_order');
-      
+
       if (data) {
-        setCategories(data);
+        const visible = filterCategoriesForLanguage(data);
+        setCategories(visible);
         // Set initial category if exists
         if (categoryName) {
-          const found = data.find(c => c.name === categoryName);
+          const found = visible.find(c => c.name === categoryName);
           if (found) setSelectedCategory(found);
         }
       }

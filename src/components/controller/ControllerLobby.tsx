@@ -6,6 +6,7 @@ import { Users, Crown, Play, ChevronDown, Loader2 } from 'lucide-react';
 import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { supabase } from '@/integrations/supabase/client';
+import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -34,12 +35,12 @@ export const ControllerLobby: React.FC = () => {
     setLoadingCategories(true);
     const { data, error } = await supabase
       .from('categories')
-      .select('id, category_id, name, icon_slug')
+      .select('id, category_id, name, icon_slug, is_language_specific, language')
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
 
     if (!error && data) {
-      setCategories(data);
+      setCategories(filterCategoriesForLanguage(data));
     }
     setLoadingCategories(false);
   };

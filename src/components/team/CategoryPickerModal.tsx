@@ -5,6 +5,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
+import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -84,7 +85,7 @@ export function CategoryPickerModal({
       if (result.error) throw result.error;
       // categories.name is Georgian; overlay the reader's language.
       return localizeCategoryNames(
-        (result.data || []).map(d => ({
+        filterCategoriesForLanguage(result.data || [], language).map(d => ({
           id: d.id,
           name: d.name,
           icon: d.icon,

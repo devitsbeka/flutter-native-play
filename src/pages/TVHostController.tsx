@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
+import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle, Plus, RefreshCw, GripVertical, Clock, Edit2 } from 'lucide-react';
 import { CategoryPickerModal } from '@/components/team/CategoryPickerModal';
@@ -296,12 +297,12 @@ const TVHostController: React.FC = () => {
       // Load categories
       const { data: categoriesData } = await supabase
         .from('categories')
-        .select('id, category_id, name, icon, color')
+        .select('id, category_id, name, icon, color, is_language_specific, language')
         .eq('is_active', true)
         .order('sort_order');
 
       if (categoriesData) {
-        setCategories(categoriesData);
+        setCategories(filterCategoriesForLanguage(categoriesData));
       }
 
       // Join session via context (handles presence channel)

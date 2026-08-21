@@ -15,6 +15,7 @@ import {
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { supabase } from '@/integrations/supabase/client';
+import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
 import { toast } from 'sonner';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 
@@ -69,11 +70,11 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
     if (showCategoryPicker && categories.length === 0) {
       supabase
         .from('categories')
-        .select('id, category_id, name, icon, color, icon_slug')
+        .select('id, category_id, name, icon, color, icon_slug, is_language_specific, language')
         .eq('is_active', true)
         .order('sort_order')
         .then(({ data }) => {
-          if (data) setCategories(data);
+          if (data) setCategories(filterCategoriesForLanguage(data));
         });
     }
   }, [showCategoryPicker, categories.length]);

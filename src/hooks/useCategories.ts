@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Category } from '@/data/categories';
 import { preloadIcons } from '@/hooks/useIconLibrary';
 import { readAppLanguage } from '@/utils/appLanguage';
+import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
 
 const DEFAULT_LANGUAGE = 'en';
 
@@ -152,14 +153,7 @@ export const useCategories = () => {
       if (activeLangRef.current !== lang) return; // stale response — see ref
 
       // Filter categories based on language rules
-      const filtered = (data || []).filter(cat => {
-        // Universal categories are shown to everyone
-        if (!cat.is_language_specific) {
-          return true;
-        }
-        // Language-specific categories only shown if language matches
-        return cat.language === lang;
-      });
+      const filtered = filterCategoriesForLanguage(data || [], lang);
 
       const transformed = filtered.map(transformCategory);
       setCategories(transformed);

@@ -22,6 +22,7 @@ import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
 
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { supabase } from '@/integrations/supabase/client';
+import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -218,11 +219,11 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     if (showCategoryPicker && categories.length === 0) {
       supabase
         .from('categories')
-        .select('id, category_id, name, icon, color, icon_slug')
+        .select('id, category_id, name, icon, color, icon_slug, is_language_specific, language')
         .eq('is_active', true)
         .order('sort_order')
         .then(({ data }) => {
-          if (data) setCategories(data);
+          if (data) setCategories(filterCategoriesForLanguage(data));
         });
     }
   }, [showCategoryPicker, categories.length]);

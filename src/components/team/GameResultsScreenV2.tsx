@@ -11,6 +11,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { supabase } from "@/integrations/supabase/client";
+import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { useChallengeShare } from "@/hooks/useChallengeShare";
 import { ArrowLeft, Star, Crown, Shuffle, Library, ChevronRight, Loader2, Gift, Share2 } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -326,11 +327,12 @@ export function GameResultsScreenV2() {
       // Fetch a random category
       const { data: categories } = await supabase
         .from("categories")
-        .select("id, name, icon_slug")
+        .select("id, name, icon_slug, is_language_specific, language")
         .eq("is_active", true);
-      
-      if (categories && categories.length > 0) {
-        const randomCat = categories[Math.floor(Math.random() * categories.length)];
+
+      const pool = filterCategoriesForLanguage(categories || []);
+      if (pool.length > 0) {
+        const randomCat = pool[Math.floor(Math.random() * pool.length)];
         // Update room with random category
         await supabase
           .from("game_rooms")
