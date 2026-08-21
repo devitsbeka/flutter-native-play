@@ -1,3 +1,4 @@
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, User, Play, Compass, Store, Trophy, Headphones, Settings, ChevronRight, LogOut, Pencil } from "lucide-react";
@@ -144,17 +145,15 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
           >
             {/* Video background */}
             <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+              <BackgroundVideo
+                sources={[
+                  { src: "/videos/floating-blob.webm", type: "video/webm" },
+                  { src: "/videos/floating-blob.mp4", type: "video/mp4" },
+                ]}
+                still="/videos/floating-blob-still.jpg"
+                className="absolute inset-0 pointer-events-none"
                 style={{ filter: "blur(8px)" }}
-              >
-                <source src="/videos/floating-blob.webm" type="video/webm" />
-                <source src="/videos/floating-blob.mp4" type="video/mp4" />
-              </video>
+              />
               {/* White radial overlay */}
               <div 
                 className="absolute inset-0 pointer-events-none"

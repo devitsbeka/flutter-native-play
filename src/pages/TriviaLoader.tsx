@@ -1,3 +1,4 @@
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
@@ -29,15 +30,10 @@ export default function TriviaLoader() {
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-between overflow-hidden pt-[calc(2.5rem_+_var(--safe-top))] pb-[calc(4rem_+_var(--safe-bottom))]">
       {/* Video Background */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover"
-      >
-        <source src="/videos/loading.mp4" type="video/mp4" />
-      </video>
+      <BackgroundVideo
+        src="/videos/loading.mp4"
+        className="absolute inset-0 bg-[#1a1030]"
+      />
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
       {/* Logo - Top */}

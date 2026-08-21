@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import heroScene from "@/assets/figma-landing/hero-scene.png";
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import avatar1 from "@/assets/figma-landing/avatar-1.png";
 import avatar2 from "@/assets/figma-landing/avatar-2.png";
 import avatar3 from "@/assets/figma-landing/avatar-3.png";
@@ -40,14 +41,14 @@ export function DesktopGuestSceneBackground({ videoSrc }: { videoSrc: string }) 
       transition={{ duration: 0.6 }}
       className="hidden md:block absolute inset-0 z-0 bg-[#f9dbff] select-none"
     >
-      <video
+      {/* BackgroundVideo, not <video autoplay>: Low Power Mode paints a play
+          glyph over suspended autoplay videos; the still holds the frame
+          until playback truly starts. */}
+      <BackgroundVideo
         src={videoSrc}
-        poster={heroScene}
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+        still={heroScene}
+        className="absolute inset-0 pointer-events-none"
+        videoClassName="object-center"
       />
       <div
         aria-hidden

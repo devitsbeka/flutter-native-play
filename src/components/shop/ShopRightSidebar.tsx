@@ -1,3 +1,4 @@
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Users, ChevronRight, Check, Loader2, Crown } from "lucide-react";
 import { useVipStatus } from "@/hooks/useVipStatus";
@@ -100,10 +101,14 @@ export function ShopRightSidebar() {
       className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen fixed top-0 right-0 border-l border-white/10 z-20 overflow-hidden"
     >
       {/* Background Video */}
-      <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
-        <source src={shopBgVideoWebm} type="video/webm" />
-        <source src={shopBgVideo} type="video/mp4" />
-      </video>
+      <BackgroundVideo
+        sources={[
+          { src: shopBgVideoWebm, type: "video/webm" },
+          { src: shopBgVideo, type: "video/mp4" },
+        ]}
+        still="/videos/shop-scene-still.jpg"
+        className="absolute inset-0"
+      />
       
       <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)" }} />
 

@@ -19,6 +19,8 @@ import { LevelInfoModal } from "@/components/home/LevelInfoModal";
 import { NotEnoughStakeModal } from "@/components/home/NotEnoughStakeModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
+import heroScene from "@/assets/figma-landing/hero-scene.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { calculateLevel } from "@/utils/levelCalculation";
@@ -954,17 +956,22 @@ export default function Index() {
             </div>
           </motion.div>
         ) : showDefaultScene && user ? (
-          <motion.video
-            src={DEFAULT_SCENE_VIDEO}
-            autoPlay
-            loop
-            muted
-            playsInline
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="hidden md:block absolute inset-0 w-full h-full object-cover object-center z-0 select-none"
-          />
+            className="hidden md:block absolute inset-0 z-0 select-none"
+          >
+            {/* No <video autoplay>: Low Power Mode overlays a play glyph on
+                suspended autoplay videos. The exported still holds the frame
+                until playback truly starts. */}
+            <BackgroundVideo
+              src={DEFAULT_SCENE_VIDEO}
+              still={heroScene}
+              className="absolute inset-0"
+              videoClassName="object-center"
+            />
+          </motion.div>
         ) : showDefaultScene ? (
           /* Figma 612:1888 — guests get the animated Trivia King loop under
              the white edge vignette (exported still as the poster) */

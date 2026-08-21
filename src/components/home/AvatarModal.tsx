@@ -1,3 +1,5 @@
+import heroScene from "@/assets/figma-landing/hero-scene.png";
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1424,13 +1426,10 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
-                <video
+                <BackgroundVideo
                   src="/videos/trivia-king-scene.mp4"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover pointer-events-none"
+                  still={heroScene}
+                  className="absolute inset-0 pointer-events-none"
                 />
                 <span className="absolute bottom-1 left-1 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-bold text-white">
                   MyTrivia

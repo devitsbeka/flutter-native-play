@@ -1,3 +1,4 @@
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
@@ -348,16 +349,15 @@ export default function PowerUps() {
                 opened with a hard step. Fading the column's own alpha instead
                 lets the real background show through, whatever it is doing. */}
             <div className="absolute inset-0 overflow-hidden" style={SHOP_SCENE_FADE}>
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="absolute inset-0 w-full h-full object-cover object-[76%_center]"
-              >
-                <source src={SHOP_SCENE_VIDEO_WEBM} type="video/webm" />
-                <source src={SHOP_SCENE_VIDEO} type="video/mp4" />
-              </video>
+              <BackgroundVideo
+                sources={[
+                  { src: SHOP_SCENE_VIDEO_WEBM, type: "video/webm" },
+                  { src: SHOP_SCENE_VIDEO, type: "video/mp4" },
+                ]}
+                still="/videos/shop-scene-still.jpg"
+                className="absolute inset-0"
+                videoClassName="object-[76%_center]"
+              />
             </div>
           </div>
         </div>

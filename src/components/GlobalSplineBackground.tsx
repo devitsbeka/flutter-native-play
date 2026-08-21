@@ -1,3 +1,4 @@
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { memo, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -121,16 +122,17 @@ export const GlobalSplineBackground = memo(function GlobalSplineBackground() {
         className="fixed inset-0 pointer-events-none"
         style={{ zIndex: 0, backgroundColor: '#F9DBFF' }}
       >
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source src={blobVideo.webm} type="video/webm" />
-          <source src={blobVideo.mp4} type="video/mp4" />
-        </video>
+        {/* BackgroundVideo, not <video autoplay>: Low Power Mode paints a
+            play glyph over suspended autoplay videos, and this one sits
+            under every page. The extracted first frame stands in. */}
+        <BackgroundVideo
+          sources={[
+            { src: blobVideo.webm, type: "video/webm" },
+            { src: blobVideo.mp4, type: "video/mp4" },
+          ]}
+          still="/videos/floating-blob-still.jpg"
+          className="absolute inset-0"
+        />
         {/* Soft wash overlay — replaces the removed blur(8px) so the video stays subtle */}
         <div
           className="absolute inset-0"

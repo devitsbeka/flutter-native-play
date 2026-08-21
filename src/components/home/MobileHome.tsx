@@ -15,6 +15,8 @@ import shieldOuter from "@/assets/figma-home/shield-outer.png";
 import shieldInner from "@/assets/figma-home/shield-inner.png";
 import { getCountryFlag } from "@/data/opponents";
 import { WeekMissionsStrip } from "@/components/home/WeekMissionsStrip";
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
+import heroScene from "@/assets/figma-landing/hero-scene.png";
 
 // Figma: Hom — the three mobile home states, all drawn on a 500x946 frame:
 //   632:296  Logged out / guest
@@ -116,13 +118,13 @@ export function MobileSceneBackground({
         className={`md:hidden absolute inset-0 ${SCENE_Z} select-none pointer-events-none overflow-hidden`}
       >
         {sceneVideoUrl ? (
-          <video
+          // BackgroundVideo, not <video autoplay>: Low Power Mode paints a
+          // play glyph over a suspended autoplay video and CSS cannot hide
+          // it. The still renders until playback truly starts.
+          <BackgroundVideo
             src={sceneVideoUrl}
-            poster={sceneUrl}
-            autoPlay
-            loop
-            muted
-            playsInline
+            still={sceneUrl}
+            layout="intrinsic"
             className={box}
             style={style}
           />
@@ -149,13 +151,10 @@ export function MobileSceneBackground({
         className="absolute left-[-47.8vw] w-[227.2vw] aspect-video [mask-image:linear-gradient(to_bottom,transparent_0,black_140px)]"
         style={{ bottom: "calc(13px + var(--safe-bottom))" }}
       >
-        <video
+        <BackgroundVideo
           src={defaultVideoSrc}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 size-full object-cover"
+          still={heroScene}
+          className="absolute inset-0 size-full"
         />
         <div
           aria-hidden

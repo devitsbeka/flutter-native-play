@@ -1,3 +1,4 @@
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, UserPlus, Swords, Gamepad2, Check, Clock, Heart, Play, Send, ArrowRight, Users, MoreVertical, UserMinus, Loader2, Camera, Plus, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -269,10 +270,14 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
           >
             {/* Bubble background video + soft wash, same as the room page */}
             <div className="absolute inset-0 -z-10 pointer-events-none" aria-hidden>
-              <video autoPlay muted loop playsInline className="h-full w-full object-cover">
-                <source src={bubbleVideo.webm} type="video/webm" />
-                <source src={bubbleVideo.mp4} type="video/mp4" />
-              </video>
+              <BackgroundVideo
+                sources={[
+                  { src: bubbleVideo.webm, type: "video/webm" },
+                  { src: bubbleVideo.mp4, type: "video/mp4" },
+                ]}
+                still="/videos/floating-blob-still.jpg"
+                className="absolute inset-0"
+              />
               <div
                 className="absolute inset-0"
                 style={{

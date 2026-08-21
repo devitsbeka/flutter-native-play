@@ -1,3 +1,4 @@
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
@@ -846,16 +847,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       {/* Bubble background video behind the whole page, washed light so the
           form stays readable (negative z paints it under the content) */}
       <div className="absolute inset-0 -z-10 pointer-events-none" aria-hidden>
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="h-full w-full object-cover"
-        >
-          <source src={bubbleVideo.webm} type="video/webm" />
-          <source src={bubbleVideo.mp4} type="video/mp4" />
-        </video>
+        <BackgroundVideo
+          sources={[
+            { src: bubbleVideo.webm, type: "video/webm" },
+            { src: bubbleVideo.mp4, type: "video/mp4" },
+          ]}
+          still="/videos/floating-blob-still.jpg"
+          className="absolute inset-0"
+        />
         {/* Same soft wash the global background uses, so the blobs stay subtle */}
         <div
           className="absolute inset-0"

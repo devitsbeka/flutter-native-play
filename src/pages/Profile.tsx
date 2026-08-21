@@ -17,6 +17,7 @@ import { AvatarReel } from "@/components/profile/AvatarReel";
 import { ProBadge } from "@/components/shared/ProBadge";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 
 // Stat icons
@@ -108,17 +109,18 @@ export default function Profile() {
   return (
     <MainLayout showPlayButton={false}>
       <div className="min-h-full relative flex flex-col">
-          {/* Full-page Video Background */}
-          <video 
-            autoPlay 
-            loop 
-            muted 
-            playsInline
-            className="fixed inset-0 w-full h-full object-cover -z-10 bg-secondary"
-          >
-            <source src="/videos/floating-blob.webm" type="video/webm" />
-            <source src="/videos/floating-blob.mp4" type="video/mp4" />
-          </video>
+          {/* Full-page Video Background. BackgroundVideo, not <video
+              autoplay>: Low Power Mode paints a play glyph over suspended
+              autoplay videos; the extracted first frame holds the scene
+              until playback truly starts. */}
+          <BackgroundVideo
+            sources={[
+              { src: "/videos/floating-blob.webm", type: "video/webm" },
+              { src: "/videos/floating-blob.mp4", type: "video/mp4" },
+            ]}
+            still="/videos/floating-blob-still.jpg"
+            className="fixed inset-0 -z-10 bg-secondary"
+          />
           {/* Gradient Overlay */}
           <div className="fixed inset-0 bg-gradient-to-b from-background/10 via-transparent to-background/20 -z-10" />
 
