@@ -90,9 +90,6 @@ verify_jwt = true
 [functions.shorten-answers]
 verify_jwt = true
 
-[functions.translate-questions]
-verify_jwt = true
-
 [functions.bulk-import-assign-icons]
 verify_jwt = true
 
@@ -247,4 +244,7 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.translate-questions]
+verify_jwt = false
+
+[functions.generate-national-questions]
 verify_jwt = false
