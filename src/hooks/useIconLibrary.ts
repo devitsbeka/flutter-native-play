@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { GEORGIAN_CATEGORY_SLUGS } from '@/data/categoryIconMap';
 import { supabase } from '@/integrations/supabase/client';
 
-interface IconItem {
+export interface IconItem {
   title: string;
   file_name: string;
   slug: string;
@@ -197,8 +197,15 @@ function getIconUrl(fileName: string): string {
 // bytes of the full admin metadata file, which admin pages still fetch.
 const ICON_LIBRARY_LOCAL_PATH = '/data/icon-index-slim.json';
 
-// Load icons from local JSON file
-async function loadIconIndex(): Promise<IconItem[]> {
+/**
+ * Load icons from the local JSON file.
+ *
+ * Exported because useCategoryIconResolver wanted the same 1.3 MB file and
+ * had its own copy of this function, with its own module-level cache. Two
+ * caches meant two fetches: the discover page pulled the icon index twice
+ * on every load, 2.7 MB for one catalogue.
+ */
+export async function loadIconIndex(): Promise<IconItem[]> {
   if (iconCache) return iconCache;
   if (cachePromise) return cachePromise;
 

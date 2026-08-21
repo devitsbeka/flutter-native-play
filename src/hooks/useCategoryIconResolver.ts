@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getCategoryKeywords } from '@/data/categoryIconKeywords';
+import { loadIconIndex as loadSharedIconIndex } from '@/hooks/useIconLibrary';
 
 const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
 const CACHE_KEY = 'category_icons_cache_v2';
@@ -9,23 +10,21 @@ let memoryCache: Record<string, string> = {};
 let iconIndex: Array<{ slug: string; tags: string[]; title: string }> = [];
 let indexLoaded = false;
 
-// Load icon index from JSON (slim variant — slug/tags/title only, half the
-// size of the full admin metadata file)
+// The icon index comes from useIconLibrary, which already loads and caches
+// this file. This module used to fetch it itself, with its own module-level
+// cache, so the same 1.3 MB catalogue was downloaded twice on a page that
+// touched both — 2.7 MB to answer one question about icon slugs.
 async function loadIconIndex(): Promise<void> {
   if (indexLoaded) return;
 
   try {
-    const response = await fetch('/data/icon-index-slim.json');
-    if (response.ok) {
-      const data = await response.json();
-      // JSON uses "items" not "icons"
-      iconIndex = (data.items || []).map((item: any) => ({
-        slug: item.slug,
-        tags: item.tags || [],
-        title: item.title || ''
-      }));
-      indexLoaded = true;
-    }
+    const items = await loadSharedIconIndex();
+    iconIndex = items.map((item) => ({
+      slug: item.slug,
+      tags: item.tags || [],
+      title: item.title || '',
+    }));
+    indexLoaded = true;
   } catch (error) {
     console.error('[IconResolver] Failed to load icon index:', error);
   }
