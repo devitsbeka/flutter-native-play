@@ -162,12 +162,22 @@ async function selectWithValidImages<T extends { id: string; imageUrl?: string |
  * punctuation and whitespace do not make two questions different. Applied
  * to every mode: TV rounds, category levels and VS matches all drew from
  * the same duplicate-bearing pools.
+ *
+ * Media questions are the exception: an image/video/audio question asks
+ * through its media while the stem is a shared template ("Which celebrity
+ * is pictured?" x70), so for those the media URL is the identity. Keying
+ * them by text collapsed every picture-guess level to a single question.
  */
-function dedupeByQuestionText<T extends { question: string }>(pool: T[]): T[] {
+function dedupeByQuestionText<
+  T extends { question: string; imageUrl?: string | null; videoUrl?: string | null; audioUrl?: string | null }
+>(pool: T[]): T[] {
   const seen = new Set<string>();
   const out: T[] = [];
   for (const q of pool) {
-    const key = q.question.toLowerCase().replace(/[?.!,;:'"()]/g, "").replace(/\s+/g, " ").trim();
+    const media = q.imageUrl || q.videoUrl || q.audioUrl;
+    const key = media
+      ? `media:${media}`
+      : q.question.toLowerCase().replace(/[?.!,;:'"()]/g, "").replace(/\s+/g, " ").trim();
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(q);

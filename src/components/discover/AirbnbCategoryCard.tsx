@@ -225,7 +225,7 @@ function AirbnbCategoryCardComponent({
                     src={POPULAR_CATEGORY_ICONS[(categoryId ?? id) as keyof typeof POPULAR_CATEGORY_ICONS]}
                     alt=""
                     draggable={false}
-                    className="w-[62%] max-h-[74%] object-contain drop-shadow-lg"
+                    className="w-[53%] max-h-[63%] object-contain drop-shadow-lg"
                     loading="lazy"
                   />
                 ) : (

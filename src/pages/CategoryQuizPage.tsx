@@ -75,6 +75,7 @@ import axeTargetIcon from "@/assets/celebration/axe-throwing-target.png";
 import awardIcon from "@/assets/celebration/award.png";
 import balloonArchIcon from "@/assets/celebration/balloon-arch.png";
 import windSpinnerIcon from "@/assets/celebration/wind-spinner.png";
+import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
 
 const WORKOUT_ICONS = [
   acroyogaIcon,
@@ -321,7 +322,9 @@ export default function CategoryQuizPage() {
           categoryUuid: categoryData?.id,
           categoryName: categoryData?.name,
           levelNumber,
-          count: 5,
+          // Picture-guess levels are authored ten-to-a-level; classic
+          // categories keep the shorter five-question session.
+          count: (POPULAR_IMAGE_CATEGORY_IDS as readonly string[]).includes(categoryId || "") ? 10 : 5,
           excludeIds: questionIds,
         });
         
