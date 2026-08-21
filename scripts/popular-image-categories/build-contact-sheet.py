@@ -55,7 +55,18 @@ def main() -> None:
             dest = CACHE / f"{slug}-{e['key']}"
             try:
                 fetch(e["image"], dest)
-                im = Image.open(dest).convert("RGB")
+                raw = Image.open(dest)
+                if raw.mode in ("RGBA", "LA", "P"):
+                    # Composite transparency over white — the same light
+                    # ground the quiz card gives images — so the sheet shows
+                    # what the player will see (and a white-on-transparent
+                    # mark shows up here as a blank tile, which is the bug
+                    # we are looking for).
+                    rgba = raw.convert("RGBA")
+                    im = Image.new("RGB", rgba.size, "white")
+                    im.paste(rgba, mask=rgba.split()[3])
+                else:
+                    im = raw.convert("RGB")
                 im.thumbnail((TILE_W - 8, TILE_H - 8))
             except Exception as exc:  # noqa: BLE001 — a broken thumb must be visible
                 im = Image.new("RGB", (TILE_W - 8, TILE_H - 8), "#ffcccc")

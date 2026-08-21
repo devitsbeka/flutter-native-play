@@ -1,0 +1,1612 @@
+[
+ {
+  "key": "brad-pitt",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Brad_Pitt-69858.jpg/1280px-Brad_Pitt-69858.jpg",
+  "file": "File:Brad Pitt-69858.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Brad Pitt",
+   "ka": "ბრედ პიტი"
+  },
+  "wrong": {
+   "en": [
+    "George Clooney",
+    "Matt Damon",
+    "Ben Affleck"
+   ],
+   "ka": [
+    "ჯორჯ კლუნი",
+    "მეტ დეიმონი",
+    "ბენ აფლეკი"
+   ]
+  }
+ },
+ {
+  "key": "leonardo-dicaprio",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/LeoPTABFI191125-28_%28cropped%29.jpg/960px-LeoPTABFI191125-28_%28cropped%29.jpg",
+  "file": "File:LeoPTABFI191125-28 (cropped).jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Leonardo DiCaprio",
+   "ka": "ლეონარდო დიკაპრიო"
+  },
+  "wrong": {
+   "en": [
+    "Matt Damon",
+    "Jake Gyllenhaal",
+    "Christian Bale"
+   ],
+   "ka": [
+    "მეტ დეიმონი",
+    "ჯეიკ ჯილენჰოლი",
+    "კრისტიან ბეილი"
+   ]
+  }
+ },
+ {
+  "key": "tom-cruise",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Tom_Cruise_at_53rd_Saturn_Awards_2026-01.jpg/1280px-Tom_Cruise_at_53rd_Saturn_Awards_2026-01.jpg",
+  "file": "File:Tom Cruise at 53rd Saturn Awards 2026-01.jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Tom Cruise",
+   "ka": "ტომ კრუზი"
+  },
+  "wrong": {
+   "en": [
+    "Brad Pitt",
+    "Johnny Depp",
+    "Keanu Reeves"
+   ],
+   "ka": [
+    "ბრედ პიტი",
+    "ჯონი დეპი",
+    "კიანუ რივზი"
+   ]
+  }
+ },
+ {
+  "key": "johnny-depp",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Johnny_Depp-2757.jpg/1280px-Johnny_Depp-2757.jpg",
+  "file": "File:Johnny Depp-2757.jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Johnny Depp",
+   "ka": "ჯონი დეპი"
+  },
+  "wrong": {
+   "en": [
+    "Orlando Bloom",
+    "Jared Leto",
+    "Colin Farrell"
+   ],
+   "ka": [
+    "ორლანდო ბლუმი",
+    "ჯარედ ლეტო",
+    "კოლინ ფარელი"
+   ]
+  }
+ },
+ {
+  "key": "angelina-jolie",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Angelina_Jolie-643531_%28cropped%29.jpg/1280px-Angelina_Jolie-643531_%28cropped%29.jpg",
+  "file": "File:Angelina Jolie-643531 (cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Angelina Jolie",
+   "ka": "ანჯელინა ჯოლი"
+  },
+  "wrong": {
+   "en": [
+    "Megan Fox",
+    "Monica Bellucci",
+    "Eva Green"
+   ],
+   "ka": [
+    "მეგან ფოქსი",
+    "მონიკა ბელუჩი",
+    "ევა გრინი"
+   ]
+  }
+ },
+ {
+  "key": "will-smith",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/TechCrunch_Disrupt_San_Francisco_2019_-_Day_1_%2848834070763%29_%28cropped%29.jpg/1280px-TechCrunch_Disrupt_San_Francisco_2019_-_Day_1_%2848834070763%29_%28cropped%29.jpg",
+  "file": "File:TechCrunch Disrupt San Francisco 2019 - Day 1 (48834070763) (cropped).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Will Smith",
+   "ka": "უილ სმითი"
+  },
+  "wrong": {
+   "en": [
+    "Denzel Washington",
+    "Jamie Foxx",
+    "Martin Lawrence"
+   ],
+   "ka": [
+    "დენზელ ვაშინგტონი",
+    "ჯეიმი ფოქსი",
+    "მარტინ ლოურენსი"
+   ]
+  }
+ },
+ {
+  "key": "dwayne-johnson",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Dwayne_Johnson-1764_%284x5_cropped_with_moderate_headroom%29.jpg/1280px-Dwayne_Johnson-1764_%284x5_cropped_with_moderate_headroom%29.jpg",
+  "file": "File:Dwayne Johnson-1764 (4x5 cropped with moderate headroom).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Dwayne Johnson",
+   "ka": "დუეინ ჯონსონი"
+  },
+  "wrong": {
+   "en": [
+    "Vin Diesel",
+    "Jason Statham",
+    "John Cena"
+   ],
+   "ka": [
+    "ვინ დიზელი",
+    "ჯეისონ სტეთემი",
+    "ჯონ სინა"
+   ]
+  }
+ },
+ {
+  "key": "keanu-reeves",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Keanu_Reeves_at_TIFF_2025_02_%28Cropped%29.jpg/1280px-Keanu_Reeves_at_TIFF_2025_02_%28Cropped%29.jpg",
+  "file": "File:Keanu Reeves at TIFF 2025 02 (Cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Keanu Reeves",
+   "ka": "კიანუ რივზი"
+  },
+  "wrong": {
+   "en": [
+    "Hugh Jackman",
+    "Christian Bale",
+    "Jared Leto"
+   ],
+   "ka": [
+    "ჰიუ ჯეკმანი",
+    "კრისტიან ბეილი",
+    "ჯარედ ლეტო"
+   ]
+  }
+ },
+ {
+  "key": "tom-hanks",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/TomHanksPrincEdw031223_%2811_of_41%29_%28cropped%29.jpg/960px-TomHanksPrincEdw031223_%2811_of_41%29_%28cropped%29.jpg",
+  "file": "File:TomHanksPrincEdw031223 (11 of 41) (cropped).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Tom Hanks",
+   "ka": "ტომ ჰენქსი"
+  },
+  "wrong": {
+   "en": [
+    "Kevin Costner",
+    "Robin Williams",
+    "Harrison Ford"
+   ],
+   "ka": [
+    "კევინ კოსტნერი",
+    "რობინ უილიამსი",
+    "ჰარისონ ფორდი"
+   ]
+  }
+ },
+ {
+  "key": "morgan-freeman",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Morgan_Freeman_at_The_Pentagon_on_2_August_2023_-_230802-D-PM193-3363_%28cropped%29.jpg/1280px-Morgan_Freeman_at_The_Pentagon_on_2_August_2023_-_230802-D-PM193-3363_%28cropped%29.jpg",
+  "file": "File:Morgan Freeman at The Pentagon on 2 August 2023 - 230802-D-PM193-3363 (cropped).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Morgan Freeman",
+   "ka": "მორგან ფრიმენი"
+  },
+  "wrong": {
+   "en": [
+    "Samuel L. Jackson",
+    "Denzel Washington",
+    "James Earl Jones"
+   ],
+   "ka": [
+    "სემიუელ ჯექსონი",
+    "დენზელ ვაშინგტონი",
+    "ჯეიმს ერლ ჯონსი"
+   ]
+  }
+ },
+ {
+  "key": "emma-watson",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Emma_Watson_2013.jpg/960px-Emma_Watson_2013.jpg",
+  "file": "File:Emma Watson 2013.jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Emma Watson",
+   "ka": "ემა უოტსონი"
+  },
+  "wrong": {
+   "en": [
+    "Emma Stone",
+    "Keira Knightley",
+    "Natalie Portman"
+   ],
+   "ka": [
+    "ემა სტოუნი",
+    "კირა ნაითლი",
+    "ნატალი პორტმანი"
+   ]
+  }
+ },
+ {
+  "key": "scarlett-johansson",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Scarlett_Johansson-8588.jpg/1280px-Scarlett_Johansson-8588.jpg",
+  "file": "File:Scarlett Johansson-8588.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Scarlett Johansson",
+   "ka": "სკარლეტ იოჰანსონი"
+  },
+  "wrong": {
+   "en": [
+    "Margot Robbie",
+    "Blake Lively",
+    "Amy Adams"
+   ],
+   "ka": [
+    "მარგო რობი",
+    "ბლეიკ ლაივლი",
+    "ემი ადამსი"
+   ]
+  }
+ },
+ {
+  "key": "jennifer-lawrence",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Jennifer_Lawrence_in_2018.png/960px-Jennifer_Lawrence_in_2018.png",
+  "file": "File:Jennifer Lawrence in 2018.png",
+  "license": "CC BY 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Jennifer Lawrence",
+   "ka": "ჯენიფერ ლოურენსი"
+  },
+  "wrong": {
+   "en": [
+    "Emma Stone",
+    "Shailene Woodley",
+    "Brie Larson"
+   ],
+   "ka": [
+    "ემა სტოუნი",
+    "შეილინ ვუდლი",
+    "ბრი ლარსონი"
+   ]
+  }
+ },
+ {
+  "key": "julia-roberts",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Julia_Roberts_2025.jpg/1280px-Julia_Roberts_2025.jpg",
+  "file": "File:Julia Roberts 2025.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Julia Roberts",
+   "ka": "ჯულია რობერტსი"
+  },
+  "wrong": {
+   "en": [
+    "Sandra Bullock",
+    "Meg Ryan",
+    "Demi Moore"
+   ],
+   "ka": [
+    "სანდრა ბულოკი",
+    "მეგ რაიანი",
+    "დემი მური"
+   ]
+  }
+ },
+ {
+  "key": "george-clooney",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/George_Clooney_Jay_Kelly-19_%28cropped%29.jpg/1280px-George_Clooney_Jay_Kelly-19_%28cropped%29.jpg",
+  "file": "File:George Clooney Jay Kelly-19 (cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "George Clooney",
+   "ka": "ჯორჯ კლუნი"
+  },
+  "wrong": {
+   "en": [
+    "Richard Gere",
+    "Pierce Brosnan",
+    "Hugh Grant"
+   ],
+   "ka": [
+    "რიჩარდ გირი",
+    "პირს ბროსნანი",
+    "ჰიუ გრანტი"
+   ]
+  }
+ },
+ {
+  "key": "jackie-chan",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Jackie_Chan.jpg/960px-Jackie_Chan.jpg",
+  "file": "File:Jackie Chan.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Jackie Chan",
+   "ka": "ჯეკი ჩანი"
+  },
+  "wrong": {
+   "en": [
+    "Jet Li",
+    "Chow Yun-fat",
+    "Donnie Yen"
+   ],
+   "ka": [
+    "ჯეტ ლი",
+    "ჩოუ იუნ-ფატი",
+    "დონი იენი"
+   ]
+  }
+ },
+ {
+  "key": "schwarzenegger",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Arnold_Schwarzenegger_-_Austrian_World_Summit_2026_BHO-2906.jpg/1280px-Arnold_Schwarzenegger_-_Austrian_World_Summit_2026_BHO-2906.jpg",
+  "file": "File:Arnold Schwarzenegger - Austrian World Summit 2026 BHO-2906.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Schwarzenegger",
+   "ka": "შვარცენეგერი"
+  },
+  "wrong": {
+   "en": [
+    "Sylvester Stallone",
+    "Dolph Lundgren",
+    "Steven Seagal"
+   ],
+   "ka": [
+    "სილვესტერ სტალონე",
+    "დოლფ ლუნდგრენი",
+    "სტივენ სიგალი"
+   ]
+  }
+ },
+ {
+  "key": "sylvester-stallone",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/P20251206DT-0472_%283x4_cropped_on_Stallone_with_moderate_headroom%29.jpg/960px-P20251206DT-0472_%283x4_cropped_on_Stallone_with_moderate_headroom%29.jpg",
+  "file": "File:P20251206DT-0472 (3x4 cropped on Stallone with moderate headroom).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Sylvester Stallone",
+   "ka": "სილვესტერ სტალონე"
+  },
+  "wrong": {
+   "en": [
+    "Bruce Willis",
+    "Chuck Norris",
+    "Mel Gibson"
+   ],
+   "ka": [
+    "ბრიუს უილისი",
+    "ჩაკ ნორისი",
+    "მელ გიბსონი"
+   ]
+  }
+ },
+ {
+  "key": "jim-carrey",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Jim_Carrey_2020_%28cropped2%29.jpg/960px-Jim_Carrey_2020_%28cropped2%29.jpg",
+  "file": "File:Jim Carrey 2020 (cropped2).jpg",
+  "license": "CC BY 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Jim Carrey",
+   "ka": "ჯიმ კერი"
+  },
+  "wrong": {
+   "en": [
+    "Adam Sandler",
+    "Ben Stiller",
+    "Mike Myers"
+   ],
+   "ka": [
+    "ადამ სენდლერი",
+    "ბენ სტილერი",
+    "მაიკ მაიერსი"
+   ]
+  }
+ },
+ {
+  "key": "rowan-atkinson",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Rowan_Atkinson%2C_2011.jpg/960px-Rowan_Atkinson%2C_2011.jpg",
+  "file": "File:Rowan Atkinson, 2011.jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Rowan Atkinson",
+   "ka": "როუან ატკინსონი"
+  },
+  "wrong": {
+   "en": [
+    "Hugh Laurie",
+    "Ricky Gervais",
+    "John Cleese"
+   ],
+   "ka": [
+    "ჰიუ ლორი",
+    "რიკი ჯერვეისი",
+    "ჯონ კლიზი"
+   ]
+  }
+ },
+ {
+  "key": "taylor-swift",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png/1280px-Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png",
+  "file": "File:Taylor Swift at the 2023 MTV Video Music Awards (3).png",
+  "license": "CC BY 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Taylor Swift",
+   "ka": "ტეილორ სვიფტი"
+  },
+  "wrong": {
+   "en": [
+    "Katy Perry",
+    "Ariana Grande",
+    "Selena Gomez"
+   ],
+   "ka": [
+    "ქეთი პერი",
+    "არიანა გრანდე",
+    "სელენა გომესი"
+   ]
+  }
+ },
+ {
+  "key": "beyonce",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Beyonc%C3%A9_-_Tottenham_Hotspur_Stadium_-_1st_June_2023_%2810_of_118%29_%2852946364598%29_%28best_crop%29.jpg/960px-Beyonc%C3%A9_-_Tottenham_Hotspur_Stadium_-_1st_June_2023_%2810_of_118%29_%2852946364598%29_%28best_crop%29.jpg",
+  "file": "File:Beyoncé - Tottenham Hotspur Stadium - 1st June 2023 (10 of 118) (52946364598) (best crop).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Beyoncé",
+   "ka": "ბიონსე"
+  },
+  "wrong": {
+   "en": [
+    "Rihanna",
+    "Alicia Keys",
+    "Kelly Rowland"
+   ],
+   "ka": [
+    "რიანა",
+    "ალიშა კისი",
+    "კელი როულანდი"
+   ]
+  }
+ },
+ {
+  "key": "rihanna",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Rihanna_Fenty_2018.png/960px-Rihanna_Fenty_2018.png",
+  "file": "File:Rihanna Fenty 2018.png",
+  "license": "CC BY 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Rihanna",
+   "ka": "რიანა"
+  },
+  "wrong": {
+   "en": [
+    "Beyoncé",
+    "Nicki Minaj",
+    "Cardi B"
+   ],
+   "ka": [
+    "ბიონსე",
+    "ნიკი მინაჟი",
+    "კარდი ბი"
+   ]
+  }
+ },
+ {
+  "key": "lady-gaga",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Lady_Gaga_at_Joe_Biden%27s_inauguration_%28cropped_5%29.jpg/1280px-Lady_Gaga_at_Joe_Biden%27s_inauguration_%28cropped_5%29.jpg",
+  "file": "File:Lady Gaga at Joe Biden's inauguration (cropped 5).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Lady Gaga",
+   "ka": "ლედი გაგა"
+  },
+  "wrong": {
+   "en": [
+    "Katy Perry",
+    "Madonna",
+    "Miley Cyrus"
+   ],
+   "ka": [
+    "ქეთი პერი",
+    "მადონა",
+    "მაილი საირუსი"
+   ]
+  }
+ },
+ {
+  "key": "adele",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Adele_2016.jpg/1280px-Adele_2016.jpg",
+  "file": "File:Adele 2016.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Adele",
+   "ka": "ადელი"
+  },
+  "wrong": {
+   "en": [
+    "Amy Winehouse",
+    "Jessie J",
+    "Ellie Goulding"
+   ],
+   "ka": [
+    "ემი უაინჰაუსი",
+    "ჯესი ჯეი",
+    "ელი გოლდინგი"
+   ]
+  }
+ },
+ {
+  "key": "ed-sheeran",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Ed_Sheeran-6886_%28cropped_2%29.jpg/1280px-Ed_Sheeran-6886_%28cropped_2%29.jpg",
+  "file": "File:Ed Sheeran-6886 (cropped 2).jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Ed Sheeran",
+   "ka": "ედ შირანი"
+  },
+  "wrong": {
+   "en": [
+    "Sam Smith",
+    "Lewis Capaldi",
+    "James Arthur"
+   ],
+   "ka": [
+    "სემ სმითი",
+    "ლუის კაპალდი",
+    "ჯეიმს არტური"
+   ]
+  }
+ },
+ {
+  "key": "justin-bieber",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Justin_Bieber_in_2015.jpg/960px-Justin_Bieber_in_2015.jpg",
+  "file": "File:Justin Bieber in 2015.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Justin Bieber",
+   "ka": "ჯასტინ ბიბერი"
+  },
+  "wrong": {
+   "en": [
+    "Shawn Mendes",
+    "Zayn Malik",
+    "Harry Styles"
+   ],
+   "ka": [
+    "შონ მენდესი",
+    "ზეინ მალიკი",
+    "ჰარი სტაილსი"
+   ]
+  }
+ },
+ {
+  "key": "ariana-grande",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Ariana_Grande_promoting_Wicked_%282024%29.jpg/960px-Ariana_Grande_promoting_Wicked_%282024%29.jpg",
+  "file": "File:Ariana Grande promoting Wicked (2024).jpg",
+  "license": "CC BY 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Ariana Grande",
+   "ka": "არიანა გრანდე"
+  },
+  "wrong": {
+   "en": [
+    "Selena Gomez",
+    "Camila Cabello",
+    "Dua Lipa"
+   ],
+   "ka": [
+    "სელენა გომესი",
+    "კამილა კაბეიო",
+    "დუა ლიპა"
+   ]
+  }
+ },
+ {
+  "key": "billie-eilish",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/BillieEilishO2140725-39_-_54665577407_%28cropped%29.jpg/960px-BillieEilishO2140725-39_-_54665577407_%28cropped%29.jpg",
+  "file": "File:BillieEilishO2140725-39 - 54665577407 (cropped).jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Billie Eilish",
+   "ka": "ბილი აილიში"
+  },
+  "wrong": {
+   "en": [
+    "Olivia Rodrigo",
+    "Lorde",
+    "Halsey"
+   ],
+   "ka": [
+    "ოლივია როდრიგო",
+    "ლორდი",
+    "ჰოლზი"
+   ]
+  }
+ },
+ {
+  "key": "eminem",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Eminem_2021_Color_Corrected.jpg/960px-Eminem_2021_Color_Corrected.jpg",
+  "file": "File:Eminem 2021 Color Corrected.jpg",
+  "license": "CC0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Eminem",
+   "ka": "ემინემი"
+  },
+  "wrong": {
+   "en": [
+    "50 Cent",
+    "Vanilla Ice",
+    "Macklemore"
+   ],
+   "ka": [
+    "50 ცენტი",
+    "ვანილა აისი",
+    "მაკლემორი"
+   ]
+  }
+ },
+ {
+  "key": "shakira",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/2023-11-16_Gala_de_los_Latin_Grammy%2C_03_%28cropped%2902.jpg/1280px-2023-11-16_Gala_de_los_Latin_Grammy%2C_03_%28cropped%2902.jpg",
+  "file": "File:2023-11-16 Gala de los Latin Grammy, 03 (cropped)02.jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Shakira",
+   "ka": "შაკირა"
+  },
+  "wrong": {
+   "en": [
+    "Jennifer Lopez",
+    "Camila Cabello",
+    "Karol G"
+   ],
+   "ka": [
+    "ჯენიფერ ლოპესი",
+    "კამილა კაბეიო",
+    "კაროლ ჯი"
+   ]
+  }
+ },
+ {
+  "key": "michael-jackson",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Michael_Jackson_1983_%283x4_cropped%29_%28contrast%29.jpg/1280px-Michael_Jackson_1983_%283x4_cropped%29_%28contrast%29.jpg",
+  "file": "File:Michael Jackson 1983 (3x4 cropped) (contrast).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Michael Jackson",
+   "ka": "მაიკლ ჯექსონი"
+  },
+  "wrong": {
+   "en": [
+    "Prince",
+    "Stevie Wonder",
+    "Lionel Richie"
+   ],
+   "ka": [
+    "პრინსი",
+    "სტივი უანდერი",
+    "ლაიონელ რიჩი"
+   ]
+  }
+ },
+ {
+  "key": "elvis-presley",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Elvis_Presley_promoting_Jailhouse_Rock.jpg/1280px-Elvis_Presley_promoting_Jailhouse_Rock.jpg",
+  "file": "File:Elvis Presley promoting Jailhouse Rock.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Elvis Presley",
+   "ka": "ელვის პრესლი"
+  },
+  "wrong": {
+   "en": [
+    "Johnny Cash",
+    "Buddy Holly",
+    "Roy Orbison"
+   ],
+   "ka": [
+    "ჯონი კეში",
+    "ბადი ჰოლი",
+    "როი ორბისონი"
+   ]
+  }
+ },
+ {
+  "key": "madonna",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/MadonnaO2171023_%2897_of_133%29_%2853269593787%29_%28cropped%29.jpg/1280px-MadonnaO2171023_%2897_of_133%29_%2853269593787%29_%28cropped%29.jpg",
+  "file": "File:MadonnaO2171023 (97 of 133) (53269593787) (cropped).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Madonna",
+   "ka": "მადონა"
+  },
+  "wrong": {
+   "en": [
+    "Cher",
+    "Cyndi Lauper",
+    "Janet Jackson"
+   ],
+   "ka": [
+    "შერი",
+    "სინდი ლოპერი",
+    "ჯანეტ ჯექსონი"
+   ]
+  }
+ },
+ {
+  "key": "jennifer-lopez",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Jennifer_Lopez_at_the_2025_Sundance_Film_Festival_%28cropped_3%29.jpg/960px-Jennifer_Lopez_at_the_2025_Sundance_Film_Festival_%28cropped_3%29.jpg",
+  "file": "File:Jennifer Lopez at the 2025 Sundance Film Festival (cropped 3).jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Jennifer Lopez",
+   "ka": "ჯენიფერ ლოპესი"
+  },
+  "wrong": {
+   "en": [
+    "Shakira",
+    "Mariah Carey",
+    "Christina Aguilera"
+   ],
+   "ka": [
+    "შაკირა",
+    "მერაია კერი",
+    "ქრისტინა აგილერა"
+   ]
+  }
+ },
+ {
+  "key": "marilyn-monroe",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Monroecirca1953.jpg/1280px-Monroecirca1953.jpg",
+  "file": "File:Monroecirca1953.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Marilyn Monroe",
+   "ka": "მერილინ მონრო"
+  },
+  "wrong": {
+   "en": [
+    "Grace Kelly",
+    "Audrey Hepburn",
+    "Brigitte Bardot"
+   ],
+   "ka": [
+    "გრეის კელი",
+    "ოდრი ჰეპბერნი",
+    "ბრიჟიტ ბარდო"
+   ]
+  }
+ },
+ {
+  "key": "charlie-chaplin",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Chaplin_The_Kid.jpg/960px-Chaplin_The_Kid.jpg",
+  "file": "File:Chaplin The Kid.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Charlie Chaplin",
+   "ka": "ჩარლი ჩაპლინი"
+  },
+  "wrong": {
+   "en": [
+    "Buster Keaton",
+    "Harold Lloyd",
+    "Groucho Marx"
+   ],
+   "ka": [
+    "ბასტერ კიტონი",
+    "ჰაროლდ ლოიდი",
+    "გრუჩო მარქსი"
+   ]
+  }
+ },
+ {
+  "key": "oprah-winfrey",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Oprah_Winfrey_2016.jpg/960px-Oprah_Winfrey_2016.jpg",
+  "file": "File:Oprah Winfrey 2016.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Oprah Winfrey",
+   "ka": "ოპრა უინფრი"
+  },
+  "wrong": {
+   "en": [
+    "Ellen DeGeneres",
+    "Whoopi Goldberg",
+    "Tyra Banks"
+   ],
+   "ka": [
+    "ელენ დეჯენერესი",
+    "ვუპი გოლდბერგი",
+    "ტაირა ბენქსი"
+   ]
+  }
+ },
+ {
+  "key": "kim-kardashian",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Kim_Kardashian_West_2014.jpg/1280px-Kim_Kardashian_West_2014.jpg",
+  "file": "File:Kim Kardashian West 2014.jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Kim Kardashian",
+   "ka": "კიმ კარდაშიანი"
+  },
+  "wrong": {
+   "en": [
+    "Kylie Jenner",
+    "Paris Hilton",
+    "Kendall Jenner"
+   ],
+   "ka": [
+    "კაილი ჯენერი",
+    "პერის ჰილტონი",
+    "კენდალ ჯენერი"
+   ]
+  }
+ },
+ {
+  "key": "elon-musk",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Elon_Musk_-_54820081119_%28cropped%29.jpg/1280px-Elon_Musk_-_54820081119_%28cropped%29.jpg",
+  "file": "File:Elon Musk - 54820081119 (cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Elon Musk",
+   "ka": "ილონ მასკი"
+  },
+  "wrong": {
+   "en": [
+    "Jeff Bezos",
+    "Mark Zuckerberg",
+    "Bill Gates"
+   ],
+   "ka": [
+    "ჯეფ ბეზოსი",
+    "მარკ ცუკერბერგი",
+    "ბილ გეიტსი"
+   ]
+  }
+ },
+ {
+  "key": "meryl-streep",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Meryl_Streep-_Press_conference_for_the_film_%22The_Devil_Wears_Prada_2%22_-_55194765350_%28cropped1%29.jpg/1280px-Meryl_Streep-_Press_conference_for_the_film_%22The_Devil_Wears_Prada_2%22_-_55194765350_%28cropped1%29.jpg",
+  "file": "File:Meryl Streep- Press conference for the film \"The Devil Wears Prada 2\" - 55194765350 (cropped1).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Meryl Streep",
+   "ka": "მერილ სტრიპი"
+  },
+  "wrong": {
+   "en": [
+    "Glenn Close",
+    "Diane Keaton",
+    "Susan Sarandon"
+   ],
+   "ka": [
+    "გლენ კლოუზი",
+    "დაიან კიტონი",
+    "სიუზან სარანდონი"
+   ]
+  }
+ },
+ {
+  "key": "nicole-kidman",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/MKr384262_Nicole_Kidman_%28Women_In_Motion%2C_Cannes_2025%29.jpg/1280px-MKr384262_Nicole_Kidman_%28Women_In_Motion%2C_Cannes_2025%29.jpg",
+  "file": "File:MKr384262 Nicole Kidman (Women In Motion, Cannes 2025).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Nicole Kidman",
+   "ka": "ნიკოლ კიდმანი"
+  },
+  "wrong": {
+   "en": [
+    "Naomi Watts",
+    "Cate Blanchett",
+    "Charlize Theron"
+   ],
+   "ka": [
+    "ნაომი უოტსი",
+    "კეიტ ბლანშეტი",
+    "შარლიზ თერონი"
+   ]
+  }
+ },
+ {
+  "key": "charlize-theron",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/CharlizeTheron-byPhilipRomano2.jpg/1280px-CharlizeTheron-byPhilipRomano2.jpg",
+  "file": "File:CharlizeTheron-byPhilipRomano2.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Charlize Theron",
+   "ka": "შარლიზ თერონი"
+  },
+  "wrong": {
+   "en": [
+    "Cameron Diaz",
+    "Uma Thurman",
+    "Nicole Kidman"
+   ],
+   "ka": [
+    "კამერონ დიაზი",
+    "უმა თურმანი",
+    "ნიკოლ კიდმანი"
+   ]
+  }
+ },
+ {
+  "key": "ryan-gosling",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/GoslingBFI081223_%2822_of_30%29_%2853388157347%29_%28cropped%29.jpg/960px-GoslingBFI081223_%2822_of_30%29_%2853388157347%29_%28cropped%29.jpg",
+  "file": "File:GoslingBFI081223 (22 of 30) (53388157347) (cropped).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Ryan Gosling",
+   "ka": "რაიან გოსლინგი"
+  },
+  "wrong": {
+   "en": [
+    "Ryan Reynolds",
+    "Bradley Cooper",
+    "Jake Gyllenhaal"
+   ],
+   "ka": [
+    "რაიან რეინოლდსი",
+    "ბრედლი კუპერი",
+    "ჯეიკ ჯილენჰოლი"
+   ]
+  }
+ },
+ {
+  "key": "ryan-reynolds",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Deadpool_2_Japan_Premiere_Red_Carpet_Ryan_Reynolds_%28cropped%29.jpg/1280px-Deadpool_2_Japan_Premiere_Red_Carpet_Ryan_Reynolds_%28cropped%29.jpg",
+  "file": "File:Deadpool 2 Japan Premiere Red Carpet Ryan Reynolds (cropped).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Ryan Reynolds",
+   "ka": "რაიან რეინოლდსი"
+  },
+  "wrong": {
+   "en": [
+    "Ryan Gosling",
+    "Chris Pratt",
+    "Bradley Cooper"
+   ],
+   "ka": [
+    "რაიან გოსლინგი",
+    "კრის პრეტი",
+    "ბრედლი კუპერი"
+   ]
+  }
+ },
+ {
+  "key": "hugh-jackman",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Hugh_Jackman_by_Gage_Skidmore_3.jpg/1280px-Hugh_Jackman_by_Gage_Skidmore_3.jpg",
+  "file": "File:Hugh Jackman by Gage Skidmore 3.jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Hugh Jackman",
+   "ka": "ჰიუ ჯეკმანი"
+  },
+  "wrong": {
+   "en": [
+    "Gerard Butler",
+    "Russell Crowe",
+    "Chris Hemsworth"
+   ],
+   "ka": [
+    "ჯერარდ ბატლერი",
+    "რასელ კროუ",
+    "კრის ჰემსვორთი"
+   ]
+  }
+ },
+ {
+  "key": "robert-downey-jr",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/RobertDowneyJr-byPhilipRomano7_%28cropped%29.jpg/1280px-RobertDowneyJr-byPhilipRomano7_%28cropped%29.jpg",
+  "file": "File:RobertDowneyJr-byPhilipRomano7 (cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Robert Downey Jr.",
+   "ka": "რობერტ დაუნი უმცროსი"
+  },
+  "wrong": {
+   "en": [
+    "Jude Law",
+    "Colin Farrell",
+    "Mark Ruffalo"
+   ],
+   "ka": [
+    "ჯუდ ლოუ",
+    "კოლინ ფარელი",
+    "მარკ რუფალო"
+   ]
+  }
+ },
+ {
+  "key": "denzel-washington",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Denzel_Washington_at_the_2025_Cannes_Film_Festival.jpg/1280px-Denzel_Washington_at_the_2025_Cannes_Film_Festival.jpg",
+  "file": "File:Denzel Washington at the 2025 Cannes Film Festival.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Denzel Washington",
+   "ka": "დენზელ ვაშინგტონი"
+  },
+  "wrong": {
+   "en": [
+    "Jamie Foxx",
+    "Forest Whitaker",
+    "Idris Elba"
+   ],
+   "ka": [
+    "ჯეიმი ფოქსი",
+    "ფორესტ უიტაკერი",
+    "იდრის ელბა"
+   ]
+  }
+ },
+ {
+  "key": "anne-hathaway",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Anne_Hathaway-_Press_conference_for_the_film_%22The_Devil_Wears_Prada_2%22_-_55194764955_%28cropped%29.jpg/1280px-Anne_Hathaway-_Press_conference_for_the_film_%22The_Devil_Wears_Prada_2%22_-_55194764955_%28cropped%29.jpg",
+  "file": "File:Anne Hathaway- Press conference for the film \"The Devil Wears Prada 2\" - 55194764955 (cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Anne Hathaway",
+   "ka": "ენ ჰეთევეი"
+  },
+  "wrong": {
+   "en": [
+    "Natalie Portman",
+    "Winona Ryder",
+    "Rachel Weisz"
+   ],
+   "ka": [
+    "ნატალი პორტმანი",
+    "ვინონა რაიდერი",
+    "რეიჩელ ვაისი"
+   ]
+  }
+ },
+ {
+  "key": "kate-winslet",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/KateWinslet_%28cropped%29.jpg/960px-KateWinslet_%28cropped%29.jpg",
+  "file": "File:KateWinslet (cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Kate Winslet",
+   "ka": "ქეით უინსლეტი"
+  },
+  "wrong": {
+   "en": [
+    "Cate Blanchett",
+    "Naomi Watts",
+    "Rachel Weisz"
+   ],
+   "ka": [
+    "კეიტ ბლანშეტი",
+    "ნაომი უოტსი",
+    "რეიჩელ ვაისი"
+   ]
+  }
+ },
+ {
+  "key": "freddie-mercury",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Freddie_Mercury_performing_in_New_Haven%2C_CT%2C_November_1977.jpg/1280px-Freddie_Mercury_performing_in_New_Haven%2C_CT%2C_November_1977.jpg",
+  "file": "File:Freddie Mercury performing in New Haven, CT, November 1977.jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Freddie Mercury",
+   "ka": "ფრედი მერკური"
+  },
+  "wrong": {
+   "en": [
+    "David Bowie",
+    "Mick Jagger",
+    "Elton John"
+   ],
+   "ka": [
+    "დევიდ ბოუი",
+    "მიკ ჯაგერი",
+    "ელტონ ჯონი"
+   ]
+  }
+ },
+ {
+  "key": "john-lennon",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/John_Lennon_%22Walls_and_Bridges%22_1974_press_photo_2_%28color%29_%28cropped%29.jpg/1280px-John_Lennon_%22Walls_and_Bridges%22_1974_press_photo_2_%28color%29_%28cropped%29.jpg",
+  "file": "File:John Lennon \"Walls and Bridges\" 1974 press photo 2 (color) (cropped).jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "John Lennon",
+   "ka": "ჯონ ლენონი"
+  },
+  "wrong": {
+   "en": [
+    "Paul McCartney",
+    "George Harrison",
+    "Mick Jagger"
+   ],
+   "ka": [
+    "პოლ მაკარტნი",
+    "ჯორჯ ჰარისონი",
+    "მიკ ჯაგერი"
+   ]
+  }
+ },
+ {
+  "key": "bob-marley",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Bob-Marley_3.jpg/960px-Bob-Marley_3.jpg",
+  "file": "File:Bob-Marley 3.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Bob Marley",
+   "ka": "ბობ მარლი"
+  },
+  "wrong": {
+   "en": [
+    "Peter Tosh",
+    "Jimmy Cliff",
+    "Jimi Hendrix"
+   ],
+   "ka": [
+    "პიტერ ტოში",
+    "ჯიმი კლიფი",
+    "ჯიმი ჰენდრიქსი"
+   ]
+  }
+ },
+ {
+  "key": "snoop-dogg",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Snoop_Dogg%2C_WrestleMania_XL_%28cropped%29_%28cropped%29.jpg/960px-Snoop_Dogg%2C_WrestleMania_XL_%28cropped%29_%28cropped%29.jpg",
+  "file": "File:Snoop Dogg, WrestleMania XL (cropped) (cropped).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Snoop Dogg",
+   "ka": "სნუპ დოგი"
+  },
+  "wrong": {
+   "en": [
+    "Ice Cube",
+    "Dr. Dre",
+    "Tupac Shakur"
+   ],
+   "ka": [
+    "აის ქიუბი",
+    "დოქტორ დრე",
+    "ტუპაკ შაკური"
+   ]
+  }
+ },
+ {
+  "key": "bruno-mars",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/BrunoMars24KMagicWorldTourLive_%28cropped%29.jpg/960px-BrunoMars24KMagicWorldTourLive_%28cropped%29.jpg",
+  "file": "File:BrunoMars24KMagicWorldTourLive (cropped).jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Bruno Mars",
+   "ka": "ბრუნო მარსი"
+  },
+  "wrong": {
+   "en": [
+    "Usher",
+    "Jason Derulo",
+    "Chris Brown"
+   ],
+   "ka": [
+    "აშერი",
+    "ჯეისონ დერულო",
+    "კრის ბრაუნი"
+   ]
+  }
+ },
+ {
+  "key": "katy-perry",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/KatyPerryWestminst111224_%2881_of_95%29_%2854206733094%29_%28cropped_2%29.jpg/1280px-KatyPerryWestminst111224_%2881_of_95%29_%2854206733094%29_%28cropped_2%29.jpg",
+  "file": "File:KatyPerryWestminst111224 (81 of 95) (54206733094) (cropped 2).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Katy Perry",
+   "ka": "ქეთი პერი"
+  },
+  "wrong": {
+   "en": [
+    "Miley Cyrus",
+    "Demi Lovato",
+    "Kesha"
+   ],
+   "ka": [
+    "მაილი საირუსი",
+    "დემი ლოვატო",
+    "კეშა"
+   ]
+  }
+ },
+ {
+  "key": "selena-gomez",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Selena_Gomez_at_the_2024_Toronto_International_Film_Festival_10_%28cropped%29.jpg/1280px-Selena_Gomez_at_the_2024_Toronto_International_Film_Festival_10_%28cropped%29.jpg",
+  "file": "File:Selena Gomez at the 2024 Toronto International Film Festival 10 (cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Selena Gomez",
+   "ka": "სელენა გომესი"
+  },
+  "wrong": {
+   "en": [
+    "Demi Lovato",
+    "Camila Cabello",
+    "Hailee Steinfeld"
+   ],
+   "ka": [
+    "დემი ლოვატო",
+    "კამილა კაბეიო",
+    "ჰეილი სტაინფელდი"
+   ]
+  }
+ },
+ {
+  "key": "dua-lipa",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Dua_Lipa-69798_%28cropped%29.jpg/1280px-Dua_Lipa-69798_%28cropped%29.jpg",
+  "file": "File:Dua Lipa-69798 (cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Dua Lipa",
+   "ka": "დუა ლიპა"
+  },
+  "wrong": {
+   "en": [
+    "Rita Ora",
+    "Zara Larsson",
+    "Bebe Rexha"
+   ],
+   "ka": [
+    "რიტა ორა",
+    "ზარა ლარსონი",
+    "ბიბი რექსა"
+   ]
+  }
+ },
+ {
+  "key": "audrey-hepburn",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/AudreyKHepburn.jpg/960px-AudreyKHepburn.jpg",
+  "file": "File:AudreyKHepburn.jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Audrey Hepburn",
+   "ka": "ოდრი ჰეპბერნი"
+  },
+  "wrong": {
+   "en": [
+    "Grace Kelly",
+    "Vivien Leigh",
+    "Ingrid Bergman"
+   ],
+   "ka": [
+    "გრეის კელი",
+    "ვივიენ ლი",
+    "ინგრიდ ბერგმანი"
+   ]
+  }
+ },
+ {
+  "key": "bruce-lee",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Bruce_Lee_as_Chen_Zhen_%284x5_cropped%29.jpg/1280px-Bruce_Lee_as_Chen_Zhen_%284x5_cropped%29.jpg",
+  "file": "File:Bruce Lee as Chen Zhen (4x5 cropped).jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Bruce Lee",
+   "ka": "ბრიუს ლი"
+  },
+  "wrong": {
+   "en": [
+    "Jet Li",
+    "Jackie Chan",
+    "Donnie Yen"
+   ],
+   "ka": [
+    "ჯეტ ლი",
+    "ჯეკი ჩანი",
+    "დონი იენი"
+   ]
+  }
+ },
+ {
+  "key": "anthony-hopkins",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Anthony_Hopkins_Red_Sea_Festival_2025_Portrait_%28cropped%29.jpg/1280px-Anthony_Hopkins_Red_Sea_Festival_2025_Portrait_%28cropped%29.jpg",
+  "file": "File:Anthony Hopkins Red Sea Festival 2025 Portrait (cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Anthony Hopkins",
+   "ka": "ენტონი ჰოპკინსი"
+  },
+  "wrong": {
+   "en": [
+    "Michael Caine",
+    "Ian McKellen",
+    "Patrick Stewart"
+   ],
+   "ka": [
+    "მაიკლ კეინი",
+    "იან მაკკელენი",
+    "პატრიკ სტიუარტი"
+   ]
+  }
+ },
+ {
+  "key": "al-pacino",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Al_Pacino_-_Killing_Castro_-_Q%26A_-_Tribeca_2026_-_by_%40JJxFile-23_%28cropped%29.jpg/1280px-Al_Pacino_-_Killing_Castro_-_Q%26A_-_Tribeca_2026_-_by_%40JJxFile-23_%28cropped%29.jpg",
+  "file": "File:Al Pacino - Killing Castro - Q&A - Tribeca 2026 - by @JJxFile-23 (cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Al Pacino",
+   "ka": "ალ პაჩინო"
+  },
+  "wrong": {
+   "en": [
+    "Robert De Niro",
+    "Dustin Hoffman",
+    "Joe Pesci"
+   ],
+   "ka": [
+    "რობერტ დე ნირო",
+    "დასტინ ჰოფმანი",
+    "ჯო პეში"
+   ]
+  }
+ },
+ {
+  "key": "robert-de-niro",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Robert_de_Niro_Cannes_Film_Festival_%283x4_cropped%29.jpg/1280px-Robert_de_Niro_Cannes_Film_Festival_%283x4_cropped%29.jpg",
+  "file": "File:Robert de Niro Cannes Film Festival (3x4 cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Robert De Niro",
+   "ka": "რობერტ დე ნირო"
+  },
+  "wrong": {
+   "en": [
+    "Al Pacino",
+    "Jack Nicholson",
+    "Dustin Hoffman"
+   ],
+   "ka": [
+    "ალ პაჩინო",
+    "ჯეკ ნიკოლსონი",
+    "დასტინ ჰოფმანი"
+   ]
+  }
+ },
+ {
+  "key": "cate-blanchett",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Cate_Blanchett-63298_%28cropped_2%29.jpg/1280px-Cate_Blanchett-63298_%28cropped_2%29.jpg",
+  "file": "File:Cate Blanchett-63298 (cropped 2).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Cate Blanchett",
+   "ka": "კეიტ ბლანშეტი"
+  },
+  "wrong": {
+   "en": [
+    "Tilda Swinton",
+    "Nicole Kidman",
+    "Naomi Watts"
+   ],
+   "ka": [
+    "ტილდა სუინტონი",
+    "ნიკოლ კიდმანი",
+    "ნაომი უოტსი"
+   ]
+  }
+ },
+ {
+  "key": "clint-eastwood",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Clint_Eastwood_visits_MCB_Camp_Pendleton_%281%29_%28cropped%29.jpg/960px-Clint_Eastwood_visits_MCB_Camp_Pendleton_%281%29_%28cropped%29.jpg",
+  "file": "File:Clint Eastwood visits MCB Camp Pendleton (1) (cropped).jpg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Clint Eastwood",
+   "ka": "კლინტ ისტვუდი"
+  },
+  "wrong": {
+   "en": [
+    "Charles Bronson",
+    "Paul Newman",
+    "Robert Redford"
+   ],
+   "ka": [
+    "ჩარლზ ბრონსონი",
+    "პოლ ნიუმენი",
+    "რობერტ რედფორდი"
+   ]
+  }
+ },
+ {
+  "key": "marlon-brando",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Marlon_Brando_publicity_for_One-Eyed_Jacks.png/960px-Marlon_Brando_publicity_for_One-Eyed_Jacks.png",
+  "file": "File:Marlon Brando publicity for One-Eyed Jacks.png",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Marlon Brando",
+   "ka": "მარლონ ბრანდო"
+  },
+  "wrong": {
+   "en": [
+    "James Dean",
+    "Paul Newman",
+    "Gregory Peck"
+   ],
+   "ka": [
+    "ჯეიმს დინი",
+    "პოლ ნიუმენი",
+    "გრეგორი პეკი"
+   ]
+  }
+ },
+ {
+  "key": "alfred-hitchcock",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Hitchcock%2C_Alfred_02.jpg/960px-Hitchcock%2C_Alfred_02.jpg",
+  "file": "File:Hitchcock, Alfred 02.jpg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Alfred Hitchcock",
+   "ka": "ალფრედ ჰიჩკოკი"
+  },
+  "wrong": {
+   "en": [
+    "Orson Welles",
+    "Stanley Kubrick",
+    "Billy Wilder"
+   ],
+   "ka": [
+    "ორსონ უელსი",
+    "სტენლი კუბრიკი",
+    "ბილი უაილდერი"
+   ]
+  }
+ },
+ {
+  "key": "whitney-houston",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Whitney_Houston_%28cropped3%29.JPEG/960px-Whitney_Houston_%28cropped3%29.JPEG",
+  "file": "File:Whitney Houston (cropped3).JPEG",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Whitney Houston",
+   "ka": "უიტნი ჰიუსტონი"
+  },
+  "wrong": {
+   "en": [
+    "Mariah Carey",
+    "Diana Ross",
+    "Tina Turner"
+   ],
+   "ka": [
+    "მერაია კერი",
+    "დაიანა როსი",
+    "ტინა ტერნერი"
+   ]
+  }
+ },
+ {
+  "key": "david-bowie",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/David_Bowie_%281987%29.jpg/960px-David_Bowie_%281987%29.jpg",
+  "file": "File:David Bowie (1987).jpg",
+  "license": "CC BY-SA 2.0 de",
+  "difficulty": "hard",
+  "answers": {
+   "en": "David Bowie",
+   "ka": "დევიდ ბოუი"
+  },
+  "wrong": {
+   "en": [
+    "Mick Jagger",
+    "Freddie Mercury",
+    "Iggy Pop"
+   ],
+   "ka": [
+    "მიკ ჯაგერი",
+    "ფრედი მერკური",
+    "იგი პოპი"
+   ]
+  }
+ },
+ {
+  "key": "celine-dion",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/C%C3%A9line_Dion_2012.jpg/960px-C%C3%A9line_Dion_2012.jpg",
+  "file": "File:Céline Dion 2012.jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Céline Dion",
+   "ka": "სელინ დიონი"
+  },
+  "wrong": {
+   "en": [
+    "Mariah Carey",
+    "Barbra Streisand",
+    "Toni Braxton"
+   ],
+   "ka": [
+    "მერაია კერი",
+    "ბარბრა სტრეიზანდი",
+    "ტონი ბრექსტონი"
+   ]
+  }
+ }
+]

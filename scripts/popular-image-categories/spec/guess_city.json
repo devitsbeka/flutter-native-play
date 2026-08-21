@@ -1,0 +1,3135 @@
+[
+ {
+  "key": "paris",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/1280px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg",
+  "file": "File:Tour Eiffel Wikimedia Commons (cropped).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Paris",
+   "ka": "პარიზი",
+   "es": "París",
+   "it": "Parigi"
+  },
+  "wrong": {
+   "en": [
+    "London",
+    "Rome",
+    "Madrid"
+   ],
+   "ka": [
+    "ლონდონი",
+    "რომი",
+    "მადრიდი"
+   ],
+   "de": [
+    "London",
+    "Rom",
+    "Madrid"
+   ],
+   "es": [
+    "Londres",
+    "Roma",
+    "Madrid"
+   ],
+   "fr": [
+    "Londres",
+    "Rome",
+    "Madrid"
+   ],
+   "it": [
+    "Londra",
+    "Roma",
+    "Madrid"
+   ],
+   "pt": [
+    "Londres",
+    "Roma",
+    "Madrid"
+   ]
+  }
+ },
+ {
+  "key": "rome",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Colosseo_2020.jpg/1280px-Colosseo_2020.jpg",
+  "file": "File:Colosseo 2020.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Rome",
+   "ka": "რომი",
+   "de": "Rom",
+   "es": "Roma",
+   "it": "Roma",
+   "pt": "Roma"
+  },
+  "wrong": {
+   "en": [
+    "Athens",
+    "Milan",
+    "Naples"
+   ],
+   "ka": [
+    "ათენი",
+    "მილანი",
+    "ნეაპოლი"
+   ],
+   "de": [
+    "Athen",
+    "Mailand",
+    "Neapel"
+   ],
+   "es": [
+    "Atenas",
+    "Milán",
+    "Nápoles"
+   ],
+   "fr": [
+    "Athènes",
+    "Milan",
+    "Naples"
+   ],
+   "it": [
+    "Atene",
+    "Milano",
+    "Napoli"
+   ],
+   "pt": [
+    "Atenas",
+    "Milão",
+    "Nápoles"
+   ]
+  }
+ },
+ {
+  "key": "london",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Elizabeth_Tower_and_the_north_front_of_the_Palace_of_Westminster%2C_London.jpg/1280px-Elizabeth_Tower_and_the_north_front_of_the_Palace_of_Westminster%2C_London.jpg",
+  "file": "File:Elizabeth Tower and the north front of the Palace of Westminster, London.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "London",
+   "ka": "ლონდონი",
+   "es": "Londres",
+   "fr": "Londres",
+   "it": "Londra",
+   "pt": "Londres"
+  },
+  "wrong": {
+   "en": [
+    "Paris",
+    "Dublin",
+    "Edinburgh"
+   ],
+   "ka": [
+    "პარიზი",
+    "დუბლინი",
+    "ედინბურგი"
+   ],
+   "es": [
+    "París",
+    "Dublín",
+    "Edimburgo"
+   ],
+   "fr": [
+    "Paris",
+    "Dublin",
+    "Édimbourg"
+   ],
+   "it": [
+    "Parigi",
+    "Dublino",
+    "Edimburgo"
+   ],
+   "pt": [
+    "Paris",
+    "Dublin",
+    "Edimburgo"
+   ]
+  }
+ },
+ {
+  "key": "new-york",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Front_view_of_Statue_of_Liberty_%28cropped%29.jpg/1280px-Front_view_of_Statue_of_Liberty_%28cropped%29.jpg",
+  "file": "File:Front view of Statue of Liberty (cropped).jpg",
+  "license": "CC0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "New York",
+   "ka": "ნიუ-იორკი",
+   "es": "Nueva York",
+   "pt": "Nova Iorque"
+  },
+  "wrong": {
+   "en": [
+    "Boston",
+    "Chicago",
+    "Philadelphia"
+   ],
+   "ka": [
+    "ბოსტონი",
+    "ჩიკაგო",
+    "ფილადელფია"
+   ],
+   "es": [
+    "Boston",
+    "Chicago",
+    "Filadelfia"
+   ],
+   "fr": [
+    "Boston",
+    "Chicago",
+    "Philadelphie"
+   ],
+   "it": [
+    "Boston",
+    "Chicago",
+    "Filadelfia"
+   ],
+   "pt": [
+    "Boston",
+    "Chicago",
+    "Filadélfia"
+   ]
+  }
+ },
+ {
+  "key": "san-francisco",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Golden_Gate_Bridge_as_seen_from_Battery_East.jpg/1280px-Golden_Gate_Bridge_as_seen_from_Battery_East.jpg",
+  "file": "File:Golden Gate Bridge as seen from Battery East.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "San Francisco",
+   "ka": "სან-ფრანცისკო",
+   "pt": "São Francisco"
+  },
+  "wrong": {
+   "en": [
+    "Los Angeles",
+    "Seattle",
+    "Vancouver"
+   ],
+   "ka": [
+    "ლოს-ანჯელესი",
+    "სიეტლი",
+    "ვანკუვერი"
+   ],
+   "es": [
+    "Los Ángeles",
+    "Seattle",
+    "Vancouver"
+   ]
+  }
+ },
+ {
+  "key": "sydney",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Sydney_Australia._%2821339175489%29.jpg/1280px-Sydney_Australia._%2821339175489%29.jpg",
+  "file": "File:Sydney Australia. (21339175489).jpg",
+  "license": "CC0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Sydney",
+   "ka": "სიდნეი",
+   "es": "Sídney"
+  },
+  "wrong": {
+   "en": [
+    "Melbourne",
+    "Auckland",
+    "Brisbane"
+   ],
+   "ka": [
+    "მელბურნი",
+    "ოკლენდი",
+    "ბრისბენი"
+   ]
+  }
+ },
+ {
+  "key": "rio",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Christ_the_Redeemer_-_Cristo_Redentor.jpg/1280px-Christ_the_Redeemer_-_Cristo_Redentor.jpg",
+  "file": "File:Christ the Redeemer - Cristo Redentor.jpg",
+  "license": "CC BY-SA 3.0 de",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Rio de Janeiro",
+   "ka": "რიო-დე-ჟანეირო",
+   "es": "Río de Janeiro"
+  },
+  "wrong": {
+   "en": [
+    "São Paulo",
+    "Buenos Aires",
+    "Lima"
+   ],
+   "ka": [
+    "სან-პაულუ",
+    "ბუენოს-აირესი",
+    "ლიმა"
+   ]
+  }
+ },
+ {
+  "key": "athens",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/d/da/The_Parthenon_in_Athens.jpg",
+  "file": "File:The Parthenon in Athens.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Athens",
+   "ka": "ათენი",
+   "de": "Athen",
+   "es": "Atenas",
+   "fr": "Athènes",
+   "it": "Atene",
+   "pt": "Atenas"
+  },
+  "wrong": {
+   "en": [
+    "Rome",
+    "Istanbul",
+    "Jerusalem"
+   ],
+   "ka": [
+    "რომი",
+    "სტამბოლი",
+    "იერუსალიმი"
+   ],
+   "de": [
+    "Rom",
+    "Istanbul",
+    "Jerusalem"
+   ],
+   "es": [
+    "Roma",
+    "Estambul",
+    "Jerusalén"
+   ],
+   "fr": [
+    "Rome",
+    "Istanbul",
+    "Jérusalem"
+   ],
+   "it": [
+    "Roma",
+    "Istanbul",
+    "Gerusalemme"
+   ],
+   "pt": [
+    "Roma",
+    "Istambul",
+    "Jerusalém"
+   ]
+  }
+ },
+ {
+  "key": "pisa",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Italy_-_Pisa_-_Leaning_Tower.jpg/1280px-Italy_-_Pisa_-_Leaning_Tower.jpg",
+  "file": "File:Italy - Pisa - Leaning Tower.jpg",
+  "license": "CC BY-SA 3.0 de",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Pisa",
+   "ka": "პიზა",
+   "fr": "Pise"
+  },
+  "wrong": {
+   "en": [
+    "Florence",
+    "Rome",
+    "Venice"
+   ],
+   "ka": [
+    "ფლორენცია",
+    "რომი",
+    "ვენეცია"
+   ],
+   "de": [
+    "Florenz",
+    "Rom",
+    "Venedig"
+   ],
+   "es": [
+    "Florencia",
+    "Roma",
+    "Venecia"
+   ],
+   "fr": [
+    "Florence",
+    "Rome",
+    "Venise"
+   ],
+   "it": [
+    "Firenze",
+    "Roma",
+    "Venezia"
+   ],
+   "pt": [
+    "Florença",
+    "Roma",
+    "Veneza"
+   ]
+  }
+ },
+ {
+  "key": "moscow",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Saint_Basil%27s_Cathedral_in_Moscow.jpg/1280px-Saint_Basil%27s_Cathedral_in_Moscow.jpg",
+  "file": "File:Saint Basil's Cathedral in Moscow.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Moscow",
+   "ka": "მოსკოვი",
+   "de": "Moskau",
+   "es": "Moscú",
+   "fr": "Moscou",
+   "it": "Mosca",
+   "pt": "Moscou"
+  },
+  "wrong": {
+   "en": [
+    "Saint Petersburg",
+    "Kyiv",
+    "Warsaw"
+   ],
+   "ka": [
+    "სანქტ-პეტერბურგი",
+    "კიევი",
+    "ვარშავა"
+   ],
+   "de": [
+    "Sankt Petersburg",
+    "Kiew",
+    "Warschau"
+   ],
+   "es": [
+    "San Petersburgo",
+    "Kiev",
+    "Varsovia"
+   ],
+   "fr": [
+    "Saint-Pétersbourg",
+    "Kiev",
+    "Varsovie"
+   ],
+   "it": [
+    "San Pietroburgo",
+    "Kiev",
+    "Varsavia"
+   ],
+   "pt": [
+    "São Petersburgo",
+    "Kiev",
+    "Varsóvia"
+   ]
+  }
+ },
+ {
+  "key": "barcelona",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Sagrada_Familia_01.jpg/1280px-Sagrada_Familia_01.jpg",
+  "file": "File:Sagrada Familia 01.jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Barcelona",
+   "ka": "ბარსელონა",
+   "fr": "Barcelone",
+   "it": "Barcellona"
+  },
+  "wrong": {
+   "en": [
+    "Madrid",
+    "Valencia",
+    "Seville"
+   ],
+   "ka": [
+    "მადრიდი",
+    "ვალენსია",
+    "სევილია"
+   ],
+   "de": [
+    "Madrid",
+    "Valencia",
+    "Sevilla"
+   ],
+   "es": [
+    "Madrid",
+    "Valencia",
+    "Sevilla"
+   ],
+   "fr": [
+    "Madrid",
+    "Valence",
+    "Séville"
+   ],
+   "it": [
+    "Madrid",
+    "Valencia",
+    "Siviglia"
+   ],
+   "pt": [
+    "Madrid",
+    "Valência",
+    "Sevilha"
+   ]
+  }
+ },
+ {
+  "key": "dubai",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Burj_Khalifa_%28worlds_tallest_building%29_and_the_Dubai_skyline_%2825781049892%29.jpg/1280px-Burj_Khalifa_%28worlds_tallest_building%29_and_the_Dubai_skyline_%2825781049892%29.jpg",
+  "file": "File:Burj Khalifa (worlds tallest building) and the Dubai skyline (25781049892).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Dubai",
+   "ka": "დუბაი",
+   "es": "Dubái",
+   "fr": "Dubaï"
+  },
+  "wrong": {
+   "en": [
+    "Abu Dhabi",
+    "Doha",
+    "Riyadh"
+   ],
+   "ka": [
+    "აბუ-დაბი",
+    "დოჰა",
+    "ერ-რიადი"
+   ],
+   "de": [
+    "Abu Dhabi",
+    "Doha",
+    "Riad"
+   ],
+   "es": [
+    "Abu Dabi",
+    "Doha",
+    "Riad"
+   ],
+   "fr": [
+    "Abou Dabi",
+    "Doha",
+    "Riyad"
+   ],
+   "it": [
+    "Abu Dhabi",
+    "Doha",
+    "Riad"
+   ],
+   "pt": [
+    "Abu Dhabi",
+    "Doha",
+    "Riade"
+   ]
+  }
+ },
+ {
+  "key": "istanbul",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Hagia_Sophia_%28228968325%29.jpeg/1280px-Hagia_Sophia_%28228968325%29.jpeg",
+  "file": "File:Hagia Sophia (228968325).jpeg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Istanbul",
+   "ka": "სტამბოლი",
+   "es": "Estambul",
+   "pt": "Istambul"
+  },
+  "wrong": {
+   "en": [
+    "Athens",
+    "Cairo",
+    "Jerusalem"
+   ],
+   "ka": [
+    "ათენი",
+    "კაირო",
+    "იერუსალიმი"
+   ],
+   "de": [
+    "Athen",
+    "Kairo",
+    "Jerusalem"
+   ],
+   "es": [
+    "Atenas",
+    "El Cairo",
+    "Jerusalén"
+   ],
+   "fr": [
+    "Athènes",
+    "Le Caire",
+    "Jérusalem"
+   ],
+   "it": [
+    "Atene",
+    "Il Cairo",
+    "Gerusalemme"
+   ],
+   "pt": [
+    "Atenas",
+    "Cairo",
+    "Jerusalém"
+   ]
+  }
+ },
+ {
+  "key": "berlin",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Brandenburger_Tor_abends.jpg/1280px-Brandenburger_Tor_abends.jpg",
+  "file": "File:Brandenburger Tor abends.jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Berlin",
+   "ka": "ბერლინი",
+   "es": "Berlín",
+   "it": "Berlino",
+   "pt": "Berlim"
+  },
+  "wrong": {
+   "en": [
+    "Munich",
+    "Hamburg",
+    "Vienna"
+   ],
+   "ka": [
+    "მიუნხენი",
+    "ჰამბურგი",
+    "ვენა"
+   ],
+   "de": [
+    "München",
+    "Hamburg",
+    "Wien"
+   ],
+   "es": [
+    "Múnich",
+    "Hamburgo",
+    "Viena"
+   ],
+   "fr": [
+    "Munich",
+    "Hambourg",
+    "Vienne"
+   ],
+   "it": [
+    "Monaco di Baviera",
+    "Amburgo",
+    "Vienna"
+   ],
+   "pt": [
+    "Munique",
+    "Hamburgo",
+    "Viena"
+   ]
+  }
+ },
+ {
+  "key": "venice",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Rialto_2025_4.jpg/1280px-Rialto_2025_4.jpg",
+  "file": "File:Rialto 2025 4.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Venice",
+   "ka": "ვენეცია",
+   "de": "Venedig",
+   "es": "Venecia",
+   "fr": "Venise",
+   "it": "Venezia",
+   "pt": "Veneza"
+  },
+  "wrong": {
+   "en": [
+    "Amsterdam",
+    "Florence",
+    "Naples"
+   ],
+   "ka": [
+    "ამსტერდამი",
+    "ფლორენცია",
+    "ნეაპოლი"
+   ],
+   "de": [
+    "Amsterdam",
+    "Florenz",
+    "Neapel"
+   ],
+   "es": [
+    "Ámsterdam",
+    "Florencia",
+    "Nápoles"
+   ],
+   "it": [
+    "Amsterdam",
+    "Firenze",
+    "Napoli"
+   ],
+   "pt": [
+    "Amsterdã",
+    "Florença",
+    "Nápoles"
+   ]
+  }
+ },
+ {
+  "key": "agra",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Taj_Mahal_%28Edited%29.jpeg/1280px-Taj_Mahal_%28Edited%29.jpeg",
+  "file": "File:Taj Mahal (Edited).jpeg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Agra",
+   "ka": "აგრა"
+  },
+  "wrong": {
+   "en": [
+    "Delhi",
+    "Jaipur",
+    "Mumbai"
+   ],
+   "ka": [
+    "დელი",
+    "ჯაიპური",
+    "მუმბაი"
+   ],
+   "es": [
+    "Delhi",
+    "Jaipur",
+    "Bombay"
+   ],
+   "fr": [
+    "Delhi",
+    "Jaipur",
+    "Bombay"
+   ],
+   "pt": [
+    "Delhi",
+    "Jaipur",
+    "Bombaim"
+   ]
+  }
+ },
+ {
+  "key": "beijing",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Temple_of_Heaven_20160323_01.jpg/1280px-Temple_of_Heaven_20160323_01.jpg",
+  "file": "File:Temple of Heaven 20160323 01.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Beijing",
+   "ka": "პეკინი",
+   "de": "Peking",
+   "es": "Pekín",
+   "fr": "Pékin",
+   "it": "Pechino",
+   "pt": "Pequim"
+  },
+  "wrong": {
+   "en": [
+    "Shanghai",
+    "Seoul",
+    "Xi'an"
+   ],
+   "ka": [
+    "შანხაი",
+    "სეული",
+    "სიანი"
+   ],
+   "es": [
+    "Shanghái",
+    "Seúl",
+    "Xi'an"
+   ],
+   "fr": [
+    "Shanghai",
+    "Séoul",
+    "Xi'an"
+   ],
+   "it": [
+    "Shanghai",
+    "Seul",
+    "Xi'an"
+   ],
+   "pt": [
+    "Xangai",
+    "Seul",
+    "Xi'an"
+   ]
+  }
+ },
+ {
+  "key": "tokyo",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Tokyo_Tower_2023.jpg/1280px-Tokyo_Tower_2023.jpg",
+  "file": "File:Tokyo Tower 2023.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Tokyo",
+   "ka": "ტოკიო",
+   "de": "Tokio",
+   "es": "Tokio",
+   "pt": "Tóquio"
+  },
+  "wrong": {
+   "en": [
+    "Osaka",
+    "Kyoto",
+    "Seoul"
+   ],
+   "ka": [
+    "ოსაკა",
+    "კიოტო",
+    "სეული"
+   ],
+   "es": [
+    "Osaka",
+    "Kioto",
+    "Seúl"
+   ],
+   "fr": [
+    "Osaka",
+    "Kyoto",
+    "Séoul"
+   ],
+   "it": [
+    "Osaka",
+    "Kyoto",
+    "Seul"
+   ],
+   "pt": [
+    "Osaka",
+    "Quioto",
+    "Seul"
+   ]
+  }
+ },
+ {
+  "key": "seattle",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Space_Needle_2011-07-04.jpg/1280px-Space_Needle_2011-07-04.jpg",
+  "file": "File:Space Needle 2011-07-04.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Seattle",
+   "ka": "სიეტლი"
+  },
+  "wrong": {
+   "en": [
+    "San Francisco",
+    "Portland",
+    "Vancouver"
+   ],
+   "ka": [
+    "სან-ფრანცისკო",
+    "პორტლენდი",
+    "ვანკუვერი"
+   ],
+   "pt": [
+    "São Francisco",
+    "Portland",
+    "Vancouver"
+   ]
+  }
+ },
+ {
+  "key": "toronto",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Toronto_-_ON_-_CN_Tower_bei_Nacht2.jpg/1280px-Toronto_-_ON_-_CN_Tower_bei_Nacht2.jpg",
+  "file": "File:Toronto - ON - CN Tower bei Nacht2.jpg",
+  "license": "CC BY 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Toronto",
+   "ka": "ტორონტო"
+  },
+  "wrong": {
+   "en": [
+    "Montreal",
+    "Vancouver",
+    "Chicago"
+   ],
+   "ka": [
+    "მონრეალი",
+    "ვანკუვერი",
+    "ჩიკაგო"
+   ],
+   "fr": [
+    "Montréal",
+    "Vancouver",
+    "Chicago"
+   ]
+  }
+ },
+ {
+  "key": "cairo",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Great_Pyramid_of_Giza_-_Pyramid_of_Khufu.jpg/1280px-Great_Pyramid_of_Giza_-_Pyramid_of_Khufu.jpg",
+  "file": "File:Great Pyramid of Giza - Pyramid of Khufu.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Cairo",
+   "ka": "კაირო",
+   "de": "Kairo",
+   "es": "El Cairo",
+   "fr": "Le Caire",
+   "it": "Il Cairo"
+  },
+  "wrong": {
+   "en": [
+    "Luxor",
+    "Marrakesh",
+    "Amman"
+   ],
+   "ka": [
+    "ლუქსორი",
+    "მარაკეში",
+    "ამანი"
+   ],
+   "de": [
+    "Luxor",
+    "Marrakesch",
+    "Amman"
+   ],
+   "es": [
+    "Luxor",
+    "Marrakech",
+    "Ammán"
+   ],
+   "fr": [
+    "Louxor",
+    "Marrakech",
+    "Amman"
+   ],
+   "it": [
+    "Luxor",
+    "Marrakech",
+    "Amman"
+   ],
+   "pt": [
+    "Luxor",
+    "Marraquexe",
+    "Amã"
+   ]
+  }
+ },
+ {
+  "key": "amsterdam",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Prinsengracht_Amsterdam.jpg/1280px-Prinsengracht_Amsterdam.jpg",
+  "file": "File:Prinsengracht Amsterdam.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Amsterdam",
+   "ka": "ამსტერდამი",
+   "es": "Ámsterdam",
+   "pt": "Amsterdã"
+  },
+  "wrong": {
+   "en": [
+    "Venice",
+    "Copenhagen",
+    "Bruges"
+   ],
+   "ka": [
+    "ვენეცია",
+    "კოპენჰაგენი",
+    "ბრიუგე"
+   ],
+   "de": [
+    "Venedig",
+    "Kopenhagen",
+    "Brügge"
+   ],
+   "es": [
+    "Venecia",
+    "Copenhague",
+    "Brujas"
+   ],
+   "fr": [
+    "Venise",
+    "Copenhague",
+    "Bruges"
+   ],
+   "it": [
+    "Venezia",
+    "Copenaghen",
+    "Bruges"
+   ],
+   "pt": [
+    "Veneza",
+    "Copenhague",
+    "Bruges"
+   ]
+  }
+ },
+ {
+  "key": "prague",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/North_view_of_Charles_Bridge_from_M%C3%A1nes%C5%AFv_most%2C_Prague_20160808_1.jpg/1280px-North_view_of_Charles_Bridge_from_M%C3%A1nes%C5%AFv_most%2C_Prague_20160808_1.jpg",
+  "file": "File:North view of Charles Bridge from Mánesův most, Prague 20160808 1.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Prague",
+   "ka": "პრაღა",
+   "de": "Prag",
+   "es": "Praga",
+   "it": "Praga",
+   "pt": "Praga"
+  },
+  "wrong": {
+   "en": [
+    "Vienna",
+    "Budapest",
+    "Krakow"
+   ],
+   "ka": [
+    "ვენა",
+    "ბუდაპეშტი",
+    "კრაკოვი"
+   ],
+   "de": [
+    "Wien",
+    "Budapest",
+    "Krakau"
+   ],
+   "es": [
+    "Viena",
+    "Budapest",
+    "Cracovia"
+   ],
+   "fr": [
+    "Vienne",
+    "Budapest",
+    "Cracovie"
+   ],
+   "it": [
+    "Vienna",
+    "Budapest",
+    "Cracovia"
+   ],
+   "pt": [
+    "Viena",
+    "Budapeste",
+    "Cracóvia"
+   ]
+  }
+ },
+ {
+  "key": "vienna",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Wien_-_Schloss_Sch%C3%B6nbrunn.JPG/1280px-Wien_-_Schloss_Sch%C3%B6nbrunn.JPG",
+  "file": "File:Wien - Schloss Schönbrunn.JPG",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Vienna",
+   "ka": "ვენა",
+   "de": "Wien",
+   "es": "Viena",
+   "fr": "Vienne",
+   "pt": "Viena"
+  },
+  "wrong": {
+   "en": [
+    "Prague",
+    "Budapest",
+    "Munich"
+   ],
+   "ka": [
+    "პრაღა",
+    "ბუდაპეშტი",
+    "მიუნხენი"
+   ],
+   "de": [
+    "Prag",
+    "Budapest",
+    "München"
+   ],
+   "es": [
+    "Praga",
+    "Budapest",
+    "Múnich"
+   ],
+   "it": [
+    "Praga",
+    "Budapest",
+    "Monaco di Baviera"
+   ],
+   "pt": [
+    "Praga",
+    "Budapeste",
+    "Munique"
+   ]
+  }
+ },
+ {
+  "key": "budapest",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Hungarian_Parliament_Building_from_across_the_Danube%2C_2025-01-11.jpg/1280px-Hungarian_Parliament_Building_from_across_the_Danube%2C_2025-01-11.jpg",
+  "file": "File:Hungarian Parliament Building from across the Danube, 2025-01-11.jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Budapest",
+   "ka": "ბუდაპეშტი",
+   "pt": "Budapeste"
+  },
+  "wrong": {
+   "en": [
+    "Prague",
+    "Vienna",
+    "Bucharest"
+   ],
+   "ka": [
+    "პრაღა",
+    "ვენა",
+    "ბუქარესტი"
+   ],
+   "de": [
+    "Prag",
+    "Wien",
+    "Bukarest"
+   ],
+   "es": [
+    "Praga",
+    "Viena",
+    "Bucarest"
+   ],
+   "fr": [
+    "Prague",
+    "Vienne",
+    "Bucarest"
+   ],
+   "it": [
+    "Praga",
+    "Vienna",
+    "Bucarest"
+   ],
+   "pt": [
+    "Praga",
+    "Viena",
+    "Bucareste"
+   ]
+  }
+ },
+ {
+  "key": "lisbon",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Bel%C3%A9m_Tower_in_Lisbon%2C_Portugal.jpg/1280px-Bel%C3%A9m_Tower_in_Lisbon%2C_Portugal.jpg",
+  "file": "File:Belém Tower in Lisbon, Portugal.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Lisbon",
+   "ka": "ლისაბონი",
+   "de": "Lissabon",
+   "es": "Lisboa",
+   "fr": "Lisbonne",
+   "it": "Lisbona",
+   "pt": "Lisboa"
+  },
+  "wrong": {
+   "en": [
+    "Porto",
+    "Madrid",
+    "Seville"
+   ],
+   "ka": [
+    "პორტო",
+    "მადრიდი",
+    "სევილია"
+   ],
+   "de": [
+    "Porto",
+    "Madrid",
+    "Sevilla"
+   ],
+   "es": [
+    "Oporto",
+    "Madrid",
+    "Sevilla"
+   ],
+   "fr": [
+    "Porto",
+    "Madrid",
+    "Séville"
+   ],
+   "it": [
+    "Porto",
+    "Madrid",
+    "Siviglia"
+   ],
+   "pt": [
+    "Porto",
+    "Madrid",
+    "Sevilha"
+   ]
+  }
+ },
+ {
+  "key": "madrid",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Palacio_Real_de_Madrid_Julio_2016_%28cropped%29.jpg/1280px-Palacio_Real_de_Madrid_Julio_2016_%28cropped%29.jpg",
+  "file": "File:Palacio Real de Madrid Julio 2016 (cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Madrid",
+   "ka": "მადრიდი"
+  },
+  "wrong": {
+   "en": [
+    "Barcelona",
+    "Seville",
+    "Lisbon"
+   ],
+   "ka": [
+    "ბარსელონა",
+    "სევილია",
+    "ლისაბონი"
+   ],
+   "de": [
+    "Barcelona",
+    "Sevilla",
+    "Lissabon"
+   ],
+   "es": [
+    "Barcelona",
+    "Sevilla",
+    "Lisboa"
+   ],
+   "fr": [
+    "Barcelone",
+    "Séville",
+    "Lisbonne"
+   ],
+   "it": [
+    "Barcellona",
+    "Siviglia",
+    "Lisbona"
+   ],
+   "pt": [
+    "Barcelona",
+    "Sevilha",
+    "Lisboa"
+   ]
+  }
+ },
+ {
+  "key": "munich",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Neues_Rathaus_M%C3%BCnchen_2018.jpg/1280px-Neues_Rathaus_M%C3%BCnchen_2018.jpg",
+  "file": "File:Neues Rathaus München 2018.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Munich",
+   "ka": "მიუნხენი",
+   "de": "München",
+   "es": "Múnich",
+   "it": "Monaco di Baviera",
+   "pt": "Munique"
+  },
+  "wrong": {
+   "en": [
+    "Berlin",
+    "Vienna",
+    "Frankfurt"
+   ],
+   "ka": [
+    "ბერლინი",
+    "ვენა",
+    "ფრანკფურტი"
+   ],
+   "de": [
+    "Berlin",
+    "Wien",
+    "Frankfurt"
+   ],
+   "es": [
+    "Berlín",
+    "Viena",
+    "Fráncfort"
+   ],
+   "fr": [
+    "Berlin",
+    "Vienne",
+    "Francfort"
+   ],
+   "it": [
+    "Berlino",
+    "Vienna",
+    "Francoforte"
+   ],
+   "pt": [
+    "Berlim",
+    "Viena",
+    "Frankfurt"
+   ]
+  }
+ },
+ {
+  "key": "copenhagen",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/The_Nyhavn_Canal_3.jpg/1280px-The_Nyhavn_Canal_3.jpg",
+  "file": "File:The Nyhavn Canal 3.jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Copenhagen",
+   "ka": "კოპენჰაგენი",
+   "de": "Kopenhagen",
+   "es": "Copenhague",
+   "fr": "Copenhague",
+   "it": "Copenaghen",
+   "pt": "Copenhague"
+  },
+  "wrong": {
+   "en": [
+    "Stockholm",
+    "Oslo",
+    "Amsterdam"
+   ],
+   "ka": [
+    "სტოკჰოლმი",
+    "ოსლო",
+    "ამსტერდამი"
+   ],
+   "es": [
+    "Estocolmo",
+    "Oslo",
+    "Ámsterdam"
+   ],
+   "it": [
+    "Stoccolma",
+    "Oslo",
+    "Amsterdam"
+   ],
+   "pt": [
+    "Estocolmo",
+    "Oslo",
+    "Amsterdã"
+   ]
+  }
+ },
+ {
+  "key": "singapore",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Marina_Bay_Sands_%28I%29.jpg/1280px-Marina_Bay_Sands_%28I%29.jpg",
+  "file": "File:Marina Bay Sands (I).jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Singapore",
+   "ka": "სინგაპური",
+   "de": "Singapur",
+   "es": "Singapur",
+   "fr": "Singapour",
+   "pt": "Singapura"
+  },
+  "wrong": {
+   "en": [
+    "Hong Kong",
+    "Shanghai",
+    "Kuala Lumpur"
+   ],
+   "ka": [
+    "ჰონკონგი",
+    "შანხაი",
+    "კუალა-ლუმპური"
+   ],
+   "de": [
+    "Hongkong",
+    "Shanghai",
+    "Kuala Lumpur"
+   ],
+   "es": [
+    "Hong Kong",
+    "Shanghái",
+    "Kuala Lumpur"
+   ],
+   "pt": [
+    "Hong Kong",
+    "Xangai",
+    "Kuala Lumpur"
+   ]
+  }
+ },
+ {
+  "key": "kuala-lumpur",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Kuala_Lumpur%2C_Malaysia%2C_Petronas_Towers_at_night.jpg/1280px-Kuala_Lumpur%2C_Malaysia%2C_Petronas_Towers_at_night.jpg",
+  "file": "File:Kuala Lumpur, Malaysia, Petronas Towers at night.jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Kuala Lumpur",
+   "ka": "კუალა-ლუმპური"
+  },
+  "wrong": {
+   "en": [
+    "Singapore",
+    "Jakarta",
+    "Bangkok"
+   ],
+   "ka": [
+    "სინგაპური",
+    "ჯაკარტა",
+    "ბანგკოკი"
+   ],
+   "de": [
+    "Singapur",
+    "Jakarta",
+    "Bangkok"
+   ],
+   "es": [
+    "Singapur",
+    "Yakarta",
+    "Bangkok"
+   ],
+   "fr": [
+    "Singapour",
+    "Jakarta",
+    "Bangkok"
+   ],
+   "it": [
+    "Singapore",
+    "Giacarta",
+    "Bangkok"
+   ],
+   "pt": [
+    "Singapura",
+    "Jacarta",
+    "Bangkok"
+   ]
+  }
+ },
+ {
+  "key": "shanghai",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Oriental_Pearl_Tower_20251126.jpg/1280px-Oriental_Pearl_Tower_20251126.jpg",
+  "file": "File:Oriental Pearl Tower 20251126.jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Shanghai",
+   "ka": "შანხაი",
+   "es": "Shanghái",
+   "pt": "Xangai"
+  },
+  "wrong": {
+   "en": [
+    "Hong Kong",
+    "Shenzhen",
+    "Guangzhou"
+   ],
+   "ka": [
+    "ჰონკონგი",
+    "შენჟენი",
+    "გუანჯოუ"
+   ],
+   "de": [
+    "Hongkong",
+    "Shenzhen",
+    "Guangzhou"
+   ]
+  }
+ },
+ {
+  "key": "hong-kong",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Hong_Kong_Harbour_Night_2019-06-11.jpg/1280px-Hong_Kong_Harbour_Night_2019-06-11.jpg",
+  "file": "File:Hong Kong Harbour Night 2019-06-11.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Hong Kong",
+   "ka": "ჰონკონგი",
+   "de": "Hongkong"
+  },
+  "wrong": {
+   "en": [
+    "Shanghai",
+    "Singapore",
+    "Shenzhen"
+   ],
+   "ka": [
+    "შანხაი",
+    "სინგაპური",
+    "შენჟენი"
+   ],
+   "de": [
+    "Shanghai",
+    "Singapur",
+    "Shenzhen"
+   ],
+   "es": [
+    "Shanghái",
+    "Singapur",
+    "Shenzhen"
+   ],
+   "fr": [
+    "Shanghai",
+    "Singapour",
+    "Shenzhen"
+   ],
+   "pt": [
+    "Xangai",
+    "Singapura",
+    "Shenzhen"
+   ]
+  }
+ },
+ {
+  "key": "los-angeles",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Hollywood_sign_%288485145044%29.jpg/1280px-Hollywood_sign_%288485145044%29.jpg",
+  "file": "File:Hollywood sign (8485145044).jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Los Angeles",
+   "ka": "ლოს-ანჯელესი",
+   "es": "Los Ángeles"
+  },
+  "wrong": {
+   "en": [
+    "San Francisco",
+    "Las Vegas",
+    "Miami"
+   ],
+   "ka": [
+    "სან-ფრანცისკო",
+    "ლას-ვეგასი",
+    "მაიამი"
+   ],
+   "pt": [
+    "São Francisco",
+    "Las Vegas",
+    "Miami"
+   ]
+  }
+ },
+ {
+  "key": "las-vegas",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Las_Vegas_Strip_09_2017_4897.jpg/1280px-Las_Vegas_Strip_09_2017_4897.jpg",
+  "file": "File:Las Vegas Strip 09 2017 4897.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Las Vegas",
+   "ka": "ლას-ვეგასი"
+  },
+  "wrong": {
+   "en": [
+    "Los Angeles",
+    "Miami",
+    "Dubai"
+   ],
+   "ka": [
+    "ლოს-ანჯელესი",
+    "მაიამი",
+    "დუბაი"
+   ],
+   "es": [
+    "Los Ángeles",
+    "Miami",
+    "Dubái"
+   ],
+   "fr": [
+    "Los Angeles",
+    "Miami",
+    "Dubaï"
+   ]
+  }
+ },
+ {
+  "key": "chicago",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Sears_Tower%2C_Wacker_Drive_and_Jackson_Boulevard%2C_Chicago%2C_IL_-_54189600901.jpg/1280px-Sears_Tower%2C_Wacker_Drive_and_Jackson_Boulevard%2C_Chicago%2C_IL_-_54189600901.jpg",
+  "file": "File:Sears Tower, Wacker Drive and Jackson Boulevard, Chicago, IL - 54189600901.jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Chicago",
+   "ka": "ჩიკაგო"
+  },
+  "wrong": {
+   "en": [
+    "New York",
+    "Toronto",
+    "Boston"
+   ],
+   "ka": [
+    "ნიუ-იორკი",
+    "ტორონტო",
+    "ბოსტონი"
+   ],
+   "es": [
+    "Nueva York",
+    "Toronto",
+    "Boston"
+   ],
+   "pt": [
+    "Nova Iorque",
+    "Toronto",
+    "Boston"
+   ]
+  }
+ },
+ {
+  "key": "washington",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Capitol_Building_Full_View.jpg/1280px-Capitol_Building_Full_View.jpg",
+  "file": "File:Capitol Building Full View.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Washington",
+   "ka": "ვაშინგტონი"
+  },
+  "wrong": {
+   "en": [
+    "Philadelphia",
+    "Boston",
+    "New York"
+   ],
+   "ka": [
+    "ფილადელფია",
+    "ბოსტონი",
+    "ნიუ-იორკი"
+   ],
+   "es": [
+    "Filadelfia",
+    "Boston",
+    "Nueva York"
+   ],
+   "fr": [
+    "Philadelphie",
+    "Boston",
+    "New York"
+   ],
+   "it": [
+    "Filadelfia",
+    "Boston",
+    "New York"
+   ],
+   "pt": [
+    "Filadélfia",
+    "Boston",
+    "Nova Iorque"
+   ]
+  }
+ },
+ {
+  "key": "mexico-city",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Angel_de_la_independencia170409.jpg/1280px-Angel_de_la_independencia170409.jpg",
+  "file": "File:Angel de la independencia170409.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Mexico City",
+   "ka": "მეხიკო",
+   "de": "Mexiko-Stadt",
+   "es": "Ciudad de México",
+   "fr": "Mexico",
+   "it": "Città del Messico",
+   "pt": "Cidade do México"
+  },
+  "wrong": {
+   "en": [
+    "Guadalajara",
+    "Bogotá",
+    "Lima"
+   ],
+   "ka": [
+    "გვადალახარა",
+    "ბოგოტა",
+    "ლიმა"
+   ]
+  }
+ },
+ {
+  "key": "st-petersburg",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Auferstehungskirche_%28Sankt_Petersburg%29.JPG/1280px-Auferstehungskirche_%28Sankt_Petersburg%29.JPG",
+  "file": "File:Auferstehungskirche (Sankt Petersburg).JPG",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Saint Petersburg",
+   "ka": "სანქტ-პეტერბურგი",
+   "de": "Sankt Petersburg",
+   "es": "San Petersburgo",
+   "fr": "Saint-Pétersbourg",
+   "it": "San Pietroburgo",
+   "pt": "São Petersburgo"
+  },
+  "wrong": {
+   "en": [
+    "Moscow",
+    "Kyiv",
+    "Riga"
+   ],
+   "ka": [
+    "მოსკოვი",
+    "კიევი",
+    "რიგა"
+   ],
+   "de": [
+    "Moskau",
+    "Kiew",
+    "Riga"
+   ],
+   "es": [
+    "Moscú",
+    "Kiev",
+    "Riga"
+   ],
+   "fr": [
+    "Moscou",
+    "Kiev",
+    "Riga"
+   ],
+   "it": [
+    "Mosca",
+    "Kiev",
+    "Riga"
+   ],
+   "pt": [
+    "Moscou",
+    "Kiev",
+    "Riga"
+   ]
+  }
+ },
+ {
+  "key": "jerusalem",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Jerusalem_DomeoftheRock_J65_%28cropped%29.JPG/1280px-Jerusalem_DomeoftheRock_J65_%28cropped%29.JPG",
+  "file": "File:Jerusalem DomeoftheRock J65 (cropped).JPG",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Jerusalem",
+   "ka": "იერუსალიმი",
+   "es": "Jerusalén",
+   "fr": "Jérusalem",
+   "it": "Gerusalemme",
+   "pt": "Jerusalém"
+  },
+  "wrong": {
+   "en": [
+    "Tel Aviv",
+    "Amman",
+    "Cairo"
+   ],
+   "ka": [
+    "თელ-ავივი",
+    "ამანი",
+    "კაირო"
+   ],
+   "de": [
+    "Tel Aviv",
+    "Amman",
+    "Kairo"
+   ],
+   "es": [
+    "Tel Aviv",
+    "Ammán",
+    "El Cairo"
+   ],
+   "fr": [
+    "Tel Aviv",
+    "Amman",
+    "Le Caire"
+   ],
+   "it": [
+    "Tel Aviv",
+    "Amman",
+    "Il Cairo"
+   ],
+   "pt": [
+    "Tel Aviv",
+    "Amã",
+    "Cairo"
+   ]
+  }
+ },
+ {
+  "key": "seoul",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Front_view_of_the_Imperial_Throne_Hall_Geunjeongjeon_at_Gyeongbokgung_Palace_with_blue_sky_in_Seoul.jpg/1280px-Front_view_of_the_Imperial_Throne_Hall_Geunjeongjeon_at_Gyeongbokgung_Palace_with_blue_sky_in_Seoul.jpg",
+  "file": "File:Front view of the Imperial Throne Hall Geunjeongjeon at Gyeongbokgung Palace with blue sky in Seoul.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Seoul",
+   "ka": "სეული",
+   "es": "Seúl",
+   "fr": "Séoul",
+   "it": "Seul",
+   "pt": "Seul"
+  },
+  "wrong": {
+   "en": [
+    "Busan",
+    "Tokyo",
+    "Beijing"
+   ],
+   "ka": [
+    "ბუსანი",
+    "ტოკიო",
+    "პეკინი"
+   ],
+   "de": [
+    "Busan",
+    "Tokio",
+    "Peking"
+   ],
+   "es": [
+    "Busan",
+    "Tokio",
+    "Pekín"
+   ],
+   "fr": [
+    "Busan",
+    "Tokyo",
+    "Pékin"
+   ],
+   "it": [
+    "Busan",
+    "Tokyo",
+    "Pechino"
+   ],
+   "pt": [
+    "Busan",
+    "Tóquio",
+    "Pequim"
+   ]
+  }
+ },
+ {
+  "key": "bangkok",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/%E0%B9%80%E0%B8%88%E0%B8%94%E0%B8%B5%E0%B8%A2%E0%B9%8C%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%98%E0%B8%B2%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%87%E0%B8%9B%E0%B8%A3%E0%B8%B2%E0%B8%87%E0%B8%84%E0%B9%8C%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%AD%E0%B8%A3%E0%B8%B8%E0%B8%932.jpg/1280px-%E0%B9%80%E0%B8%88%E0%B8%94%E0%B8%B5%E0%B8%A2%E0%B9%8C%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%98%E0%B8%B2%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%87%E0%B8%9B%E0%B8%A3%E0%B8%B2%E0%B8%87%E0%B8%84%E0%B9%8C%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B8%AD%E0%B8%A3%E0%B8%B8%E0%B8%932.jpg",
+  "file": "File:เจดีย์ประธานทรงปรางค์วัดอรุณ2.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Bangkok",
+   "ka": "ბანგკოკი"
+  },
+  "wrong": {
+   "en": [
+    "Hanoi",
+    "Phnom Penh",
+    "Manila"
+   ],
+   "ka": [
+    "ჰანოი",
+    "პნომპენი",
+    "მანილა"
+   ],
+   "es": [
+    "Hanói",
+    "Nom Pen",
+    "Manila"
+   ],
+   "fr": [
+    "Hanoï",
+    "Phnom Penh",
+    "Manille"
+   ],
+   "pt": [
+    "Hanói",
+    "Phnom Penh",
+    "Manila"
+   ]
+  }
+ },
+ {
+  "key": "kyoto",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Golden_Pavilion_Kinkaku-ji_water_mirror_2024.jpg/1280px-Golden_Pavilion_Kinkaku-ji_water_mirror_2024.jpg",
+  "file": "File:Golden Pavilion Kinkaku-ji water mirror 2024.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Kyoto",
+   "ka": "კიოტო",
+   "es": "Kioto",
+   "pt": "Quioto"
+  },
+  "wrong": {
+   "en": [
+    "Tokyo",
+    "Osaka",
+    "Nara"
+   ],
+   "ka": [
+    "ტოკიო",
+    "ოსაკა",
+    "ნარა"
+   ],
+   "de": [
+    "Tokio",
+    "Osaka",
+    "Nara"
+   ],
+   "es": [
+    "Tokio",
+    "Osaka",
+    "Nara"
+   ],
+   "pt": [
+    "Tóquio",
+    "Osaka",
+    "Nara"
+   ]
+  }
+ },
+ {
+  "key": "edinburgh",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/City_of_Edinburgh_-_Edinburgh_Castle_-_20140421004403.jpg/1280px-City_of_Edinburgh_-_Edinburgh_Castle_-_20140421004403.jpg",
+  "file": "File:City of Edinburgh - Edinburgh Castle - 20140421004403.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Edinburgh",
+   "ka": "ედინბურგი",
+   "es": "Edimburgo",
+   "fr": "Édimbourg",
+   "it": "Edimburgo",
+   "pt": "Edimburgo"
+  },
+  "wrong": {
+   "en": [
+    "Glasgow",
+    "Dublin",
+    "London"
+   ],
+   "ka": [
+    "გლაზგო",
+    "დუბლინი",
+    "ლონდონი"
+   ],
+   "es": [
+    "Glasgow",
+    "Dublín",
+    "Londres"
+   ],
+   "fr": [
+    "Glasgow",
+    "Dublin",
+    "Londres"
+   ],
+   "it": [
+    "Glasgow",
+    "Dublino",
+    "Londra"
+   ],
+   "pt": [
+    "Glasgow",
+    "Dublin",
+    "Londres"
+   ]
+  }
+ },
+ {
+  "key": "florence",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Cattedrale_di_Santa_Maria_del_Fiore_%E2%80%93_Il_Duomo_di_Firenze.jpg/1280px-Cattedrale_di_Santa_Maria_del_Fiore_%E2%80%93_Il_Duomo_di_Firenze.jpg",
+  "file": "File:Cattedrale di Santa Maria del Fiore – Il Duomo di Firenze.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Florence",
+   "ka": "ფლორენცია",
+   "de": "Florenz",
+   "es": "Florencia",
+   "it": "Firenze",
+   "pt": "Florença"
+  },
+  "wrong": {
+   "en": [
+    "Rome",
+    "Siena",
+    "Bologna"
+   ],
+   "ka": [
+    "რომი",
+    "სიენა",
+    "ბოლონია"
+   ],
+   "de": [
+    "Rom",
+    "Siena",
+    "Bologna"
+   ],
+   "es": [
+    "Roma",
+    "Siena",
+    "Bolonia"
+   ],
+   "fr": [
+    "Rome",
+    "Sienne",
+    "Bologne"
+   ],
+   "it": [
+    "Roma",
+    "Siena",
+    "Bologna"
+   ],
+   "pt": [
+    "Roma",
+    "Siena",
+    "Bolonha"
+   ]
+  }
+ },
+ {
+  "key": "milan",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Milan_Cathedral_from_Piazza_del_Duomo.jpg/1280px-Milan_Cathedral_from_Piazza_del_Duomo.jpg",
+  "file": "File:Milan Cathedral from Piazza del Duomo.jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Milan",
+   "ka": "მილანი",
+   "de": "Mailand",
+   "es": "Milán",
+   "it": "Milano",
+   "pt": "Milão"
+  },
+  "wrong": {
+   "en": [
+    "Turin",
+    "Rome",
+    "Florence"
+   ],
+   "ka": [
+    "ტურინი",
+    "რომი",
+    "ფლორენცია"
+   ],
+   "de": [
+    "Turin",
+    "Rom",
+    "Florenz"
+   ],
+   "es": [
+    "Turín",
+    "Roma",
+    "Florencia"
+   ],
+   "it": [
+    "Torino",
+    "Roma",
+    "Firenze"
+   ],
+   "pt": [
+    "Turim",
+    "Roma",
+    "Florença"
+   ]
+  }
+ },
+ {
+  "key": "cologne",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/K%C3%B6lner_Dom_-_Westfassade_2022_ohne_Ger%C3%BCst-0968_b.jpg/1280px-K%C3%B6lner_Dom_-_Westfassade_2022_ohne_Ger%C3%BCst-0968_b.jpg",
+  "file": "File:Kölner Dom - Westfassade 2022 ohne Gerüst-0968 b.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Cologne",
+   "ka": "კელნი",
+   "de": "Köln",
+   "es": "Colonia",
+   "it": "Colonia",
+   "pt": "Colônia"
+  },
+  "wrong": {
+   "en": [
+    "Frankfurt",
+    "Hamburg",
+    "Munich"
+   ],
+   "ka": [
+    "ფრანკფურტი",
+    "ჰამბურგი",
+    "მიუნხენი"
+   ],
+   "de": [
+    "Frankfurt",
+    "Hamburg",
+    "München"
+   ],
+   "es": [
+    "Fráncfort",
+    "Hamburgo",
+    "Múnich"
+   ],
+   "fr": [
+    "Francfort",
+    "Hambourg",
+    "Munich"
+   ],
+   "it": [
+    "Francoforte",
+    "Amburgo",
+    "Monaco di Baviera"
+   ],
+   "pt": [
+    "Frankfurt",
+    "Hamburgo",
+    "Munique"
+   ]
+  }
+ },
+ {
+  "key": "buenos-aires",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Obelisco_Buenos_Aires.jpg/1280px-Obelisco_Buenos_Aires.jpg",
+  "file": "File:Obelisco Buenos Aires.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Buenos Aires",
+   "ka": "ბუენოს-აირესი"
+  },
+  "wrong": {
+   "en": [
+    "Montevideo",
+    "Santiago",
+    "São Paulo"
+   ],
+   "ka": [
+    "მონტევიდეო",
+    "სანტიაგო",
+    "სან-პაულუ"
+   ]
+  }
+ },
+ {
+  "key": "havana",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/El_Capitolio_Havana_Cuba.jpg/1280px-El_Capitolio_Havana_Cuba.jpg",
+  "file": "File:El Capitolio Havana Cuba.jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Havana",
+   "ka": "ჰავანა",
+   "de": "Havanna",
+   "es": "La Habana",
+   "fr": "La Havane",
+   "it": "L'Avana"
+  },
+  "wrong": {
+   "en": [
+    "Santo Domingo",
+    "Mexico City",
+    "Santiago"
+   ],
+   "ka": [
+    "სანტო-დომინგო",
+    "მეხიკო",
+    "სანტიაგო"
+   ],
+   "de": [
+    "Santo Domingo",
+    "Mexiko-Stadt",
+    "Santiago"
+   ],
+   "es": [
+    "Santo Domingo",
+    "Ciudad de México",
+    "Santiago"
+   ],
+   "fr": [
+    "Santo Domingo",
+    "Mexico",
+    "Santiago"
+   ],
+   "it": [
+    "Santo Domingo",
+    "Città del Messico",
+    "Santiago"
+   ],
+   "pt": [
+    "Santo Domingo",
+    "Cidade do México",
+    "Santiago"
+   ]
+  }
+ },
+ {
+  "key": "marrakesh",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Marokko0112_%28retouched%29.jpg/1280px-Marokko0112_%28retouched%29.jpg",
+  "file": "File:Marokko0112 (retouched).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Marrakesh",
+   "ka": "მარაკეში",
+   "de": "Marrakesch",
+   "es": "Marrakech",
+   "fr": "Marrakech",
+   "it": "Marrakech",
+   "pt": "Marraquexe"
+  },
+  "wrong": {
+   "en": [
+    "Fez",
+    "Casablanca",
+    "Rabat"
+   ],
+   "ka": [
+    "ფესი",
+    "კასაბლანკა",
+    "რაბატი"
+   ],
+   "de": [
+    "Fès",
+    "Casablanca",
+    "Rabat"
+   ],
+   "fr": [
+    "Fès",
+    "Casablanca",
+    "Rabat"
+   ]
+  }
+ },
+ {
+  "key": "tbilisi",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Tbilisi_IMG_8846_1920.jpg/1280px-Tbilisi_IMG_8846_1920.jpg",
+  "file": "File:Tbilisi IMG 8846 1920.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Tbilisi",
+   "ka": "თბილისი",
+   "de": "Tiflis",
+   "es": "Tiflis",
+   "fr": "Tbilissi"
+  },
+  "wrong": {
+   "en": [
+    "Yerevan",
+    "Baku",
+    "Batumi"
+   ],
+   "ka": [
+    "ერევანი",
+    "ბაქო",
+    "ბათუმი"
+   ],
+   "de": [
+    "Eriwan",
+    "Baku",
+    "Batumi"
+   ],
+   "es": [
+    "Ereván",
+    "Bakú",
+    "Batumi"
+   ],
+   "fr": [
+    "Erevan",
+    "Bakou",
+    "Batumi"
+   ],
+   "it": [
+    "Erevan",
+    "Baku",
+    "Batumi"
+   ],
+   "pt": [
+    "Erevan",
+    "Baku",
+    "Batumi"
+   ]
+  }
+ },
+ {
+  "key": "kyiv",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/80-391-0151_Kyiv_St.Sophia%27s_Cathedral_RB_18_2_%28cropped%29.jpg/1280px-80-391-0151_Kyiv_St.Sophia%27s_Cathedral_RB_18_2_%28cropped%29.jpg",
+  "file": "File:80-391-0151 Kyiv St.Sophia's Cathedral RB 18 2 (cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Kyiv",
+   "ka": "კიევი",
+   "de": "Kiew",
+   "es": "Kiev",
+   "fr": "Kiev",
+   "it": "Kiev",
+   "pt": "Kiev"
+  },
+  "wrong": {
+   "en": [
+    "Moscow",
+    "Minsk",
+    "Warsaw"
+   ],
+   "ka": [
+    "მოსკოვი",
+    "მინსკი",
+    "ვარშავა"
+   ],
+   "de": [
+    "Moskau",
+    "Minsk",
+    "Warschau"
+   ],
+   "es": [
+    "Moscú",
+    "Minsk",
+    "Varsovia"
+   ],
+   "fr": [
+    "Moscou",
+    "Minsk",
+    "Varsovie"
+   ],
+   "it": [
+    "Mosca",
+    "Minsk",
+    "Varsavia"
+   ],
+   "pt": [
+    "Moscou",
+    "Minsk",
+    "Varsóvia"
+   ]
+  }
+ },
+ {
+  "key": "warsaw",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Pa%C5%82ac_Kultury_i_Nauki_2019.jpg/1280px-Pa%C5%82ac_Kultury_i_Nauki_2019.jpg",
+  "file": "File:Pałac Kultury i Nauki 2019.jpg",
+  "license": "CC BY-SA 3.0 pl",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Warsaw",
+   "ka": "ვარშავა",
+   "de": "Warschau",
+   "es": "Varsovia",
+   "fr": "Varsovie",
+   "it": "Varsavia",
+   "pt": "Varsóvia"
+  },
+  "wrong": {
+   "en": [
+    "Moscow",
+    "Krakow",
+    "Prague"
+   ],
+   "ka": [
+    "მოსკოვი",
+    "კრაკოვი",
+    "პრაღა"
+   ],
+   "de": [
+    "Moskau",
+    "Krakau",
+    "Prag"
+   ],
+   "es": [
+    "Moscú",
+    "Cracovia",
+    "Praga"
+   ],
+   "fr": [
+    "Moscou",
+    "Cracovie",
+    "Prague"
+   ],
+   "it": [
+    "Mosca",
+    "Cracovia",
+    "Praga"
+   ],
+   "pt": [
+    "Moscou",
+    "Cracóvia",
+    "Praga"
+   ]
+  }
+ },
+ {
+  "key": "oslo",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Oslo_Opera_House_-_2025.jpg/1280px-Oslo_Opera_House_-_2025.jpg",
+  "file": "File:Oslo Opera House - 2025.jpg",
+  "license": "CC0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Oslo",
+   "ka": "ოსლო"
+  },
+  "wrong": {
+   "en": [
+    "Copenhagen",
+    "Stockholm",
+    "Helsinki"
+   ],
+   "ka": [
+    "კოპენჰაგენი",
+    "სტოკჰოლმი",
+    "ჰელსინკი"
+   ],
+   "de": [
+    "Kopenhagen",
+    "Stockholm",
+    "Helsinki"
+   ],
+   "es": [
+    "Copenhague",
+    "Estocolmo",
+    "Helsinki"
+   ],
+   "fr": [
+    "Copenhague",
+    "Stockholm",
+    "Helsinki"
+   ],
+   "it": [
+    "Copenaghen",
+    "Stoccolma",
+    "Helsinki"
+   ],
+   "pt": [
+    "Copenhague",
+    "Estocolmo",
+    "Helsinque"
+   ]
+  }
+ },
+ {
+  "key": "stockholm",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Stockholms_Stadshuset_City_Hall_Stockholm_2016_01.jpg/1280px-Stockholms_Stadshuset_City_Hall_Stockholm_2016_01.jpg",
+  "file": "File:Stockholms Stadshuset City Hall Stockholm 2016 01.jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Stockholm",
+   "ka": "სტოკჰოლმი",
+   "es": "Estocolmo",
+   "it": "Stoccolma",
+   "pt": "Estocolmo"
+  },
+  "wrong": {
+   "en": [
+    "Copenhagen",
+    "Oslo",
+    "Helsinki"
+   ],
+   "ka": [
+    "კოპენჰაგენი",
+    "ოსლო",
+    "ჰელსინკი"
+   ],
+   "de": [
+    "Kopenhagen",
+    "Oslo",
+    "Helsinki"
+   ],
+   "es": [
+    "Copenhague",
+    "Oslo",
+    "Helsinki"
+   ],
+   "fr": [
+    "Copenhague",
+    "Oslo",
+    "Helsinki"
+   ],
+   "it": [
+    "Copenaghen",
+    "Oslo",
+    "Helsinki"
+   ],
+   "pt": [
+    "Copenhague",
+    "Oslo",
+    "Helsinque"
+   ]
+  }
+ },
+ {
+  "key": "helsinki",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Kirkko3.png/1280px-Kirkko3.png",
+  "file": "File:Kirkko3.png",
+  "license": "CC0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Helsinki",
+   "ka": "ჰელსინკი",
+   "pt": "Helsinque"
+  },
+  "wrong": {
+   "en": [
+    "Stockholm",
+    "Tallinn",
+    "Saint Petersburg"
+   ],
+   "ka": [
+    "სტოკჰოლმი",
+    "ტალინი",
+    "სანქტ-პეტერბურგი"
+   ],
+   "de": [
+    "Stockholm",
+    "Tallinn",
+    "Sankt Petersburg"
+   ],
+   "es": [
+    "Estocolmo",
+    "Tallin",
+    "San Petersburgo"
+   ],
+   "fr": [
+    "Stockholm",
+    "Tallinn",
+    "Saint-Pétersbourg"
+   ],
+   "it": [
+    "Stoccolma",
+    "Tallinn",
+    "San Pietroburgo"
+   ],
+   "pt": [
+    "Estocolmo",
+    "Tallinn",
+    "São Petersburgo"
+   ]
+  }
+ },
+ {
+  "key": "reykjavik",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Hallgrimskirkja_mai_2026.jpg/1280px-Hallgrimskirkja_mai_2026.jpg",
+  "file": "File:Hallgrimskirkja mai 2026.jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Reykjavik",
+   "ka": "რეიკიავიკი",
+   "de": "Reykjavík",
+   "es": "Reikiavik",
+   "it": "Reykjavík",
+   "pt": "Reiquiavique"
+  },
+  "wrong": {
+   "en": [
+    "Bergen",
+    "Oslo",
+    "Helsinki"
+   ],
+   "ka": [
+    "ბერგენი",
+    "ოსლო",
+    "ჰელსინკი"
+   ],
+   "pt": [
+    "Bergen",
+    "Oslo",
+    "Helsinque"
+   ]
+  }
+ },
+ {
+  "key": "cape-town",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Table_Mountain_DanieVDM.jpg/1280px-Table_Mountain_DanieVDM.jpg",
+  "file": "File:Table Mountain DanieVDM.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Cape Town",
+   "ka": "კეიპტაუნი",
+   "de": "Kapstadt",
+   "es": "Ciudad del Cabo",
+   "fr": "Le Cap",
+   "it": "Città del Capo",
+   "pt": "Cidade do Cabo"
+  },
+  "wrong": {
+   "en": [
+    "Johannesburg",
+    "Durban",
+    "Nairobi"
+   ],
+   "ka": [
+    "იოჰანესბურგი",
+    "დურბანი",
+    "ნაირობი"
+   ],
+   "es": [
+    "Johannesburgo",
+    "Durban",
+    "Nairobi"
+   ],
+   "fr": [
+    "Johannesbourg",
+    "Durban",
+    "Nairobi"
+   ],
+   "pt": [
+    "Joanesburgo",
+    "Durban",
+    "Nairobi"
+   ]
+  }
+ },
+ {
+  "key": "casablanca",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Sunshine_on_mosque_Hassan_II_in_Casablanca%2C_Morocco_-_Flickr_-_Milamber%27s_portfolio.jpg/1280px-Sunshine_on_mosque_Hassan_II_in_Casablanca%2C_Morocco_-_Flickr_-_Milamber%27s_portfolio.jpg",
+  "file": "File:Sunshine on mosque Hassan II in Casablanca, Morocco - Flickr - Milamber's portfolio.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Casablanca",
+   "ka": "კასაბლანკა"
+  },
+  "wrong": {
+   "en": [
+    "Rabat",
+    "Marrakesh",
+    "Fez"
+   ],
+   "ka": [
+    "რაბატი",
+    "მარაკეში",
+    "ფესი"
+   ],
+   "de": [
+    "Rabat",
+    "Marrakesch",
+    "Fès"
+   ],
+   "es": [
+    "Rabat",
+    "Marrakech",
+    "Fez"
+   ],
+   "fr": [
+    "Rabat",
+    "Marrakech",
+    "Fès"
+   ],
+   "it": [
+    "Rabat",
+    "Marrakech",
+    "Fez"
+   ],
+   "pt": [
+    "Rabat",
+    "Marraquexe",
+    "Fez"
+   ]
+  }
+ },
+ {
+  "key": "dubrovnik",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Casco_viejo_de_Dubrovnik%2C_Croacia%2C_2014-04-14%2C_DD_09.JPG/1280px-Casco_viejo_de_Dubrovnik%2C_Croacia%2C_2014-04-14%2C_DD_09.JPG",
+  "file": "File:Casco viejo de Dubrovnik, Croacia, 2014-04-14, DD 09.JPG",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Dubrovnik",
+   "ka": "დუბროვნიკი"
+  },
+  "wrong": {
+   "en": [
+    "Split",
+    "Kotor",
+    "Valletta"
+   ],
+   "ka": [
+    "სპლიტი",
+    "კოტორი",
+    "ვალეტა"
+   ],
+   "es": [
+    "Split",
+    "Kotor",
+    "La Valeta"
+   ],
+   "fr": [
+    "Split",
+    "Kotor",
+    "La Valette"
+   ],
+   "it": [
+    "Spalato",
+    "Cattaro",
+    "La Valletta"
+   ],
+   "pt": [
+    "Split",
+    "Kotor",
+    "Valeta"
+   ]
+  }
+ },
+ {
+  "key": "mumbai",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Gateway_of_India_in_the_evening%2C_Mumbai%2C_India.jpg/1280px-Gateway_of_India_in_the_evening%2C_Mumbai%2C_India.jpg",
+  "file": "File:Gateway of India in the evening, Mumbai, India.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Mumbai",
+   "ka": "მუმბაი",
+   "es": "Bombay",
+   "fr": "Bombay",
+   "pt": "Bombaim"
+  },
+  "wrong": {
+   "en": [
+    "Delhi",
+    "Kolkata",
+    "Chennai"
+   ],
+   "ka": [
+    "დელი",
+    "კალკუტა",
+    "ჩენაი"
+   ],
+   "es": [
+    "Delhi",
+    "Calcuta",
+    "Chennai"
+   ],
+   "fr": [
+    "Delhi",
+    "Calcutta",
+    "Chennai"
+   ],
+   "it": [
+    "Delhi",
+    "Calcutta",
+    "Chennai"
+   ],
+   "pt": [
+    "Delhi",
+    "Calcutá",
+    "Chennai"
+   ]
+  }
+ },
+ {
+  "key": "taipei",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Taipei_101_2009_amk.jpg/1280px-Taipei_101_2009_amk.jpg",
+  "file": "File:Taipei 101 2009 amk.jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Taipei",
+   "ka": "ტაიპეი",
+   "es": "Taipéi",
+   "pt": "Taipé"
+  },
+  "wrong": {
+   "en": [
+    "Shanghai",
+    "Hong Kong",
+    "Seoul"
+   ],
+   "ka": [
+    "შანხაი",
+    "ჰონკონგი",
+    "სეული"
+   ],
+   "de": [
+    "Shanghai",
+    "Hongkong",
+    "Seoul"
+   ],
+   "es": [
+    "Shanghái",
+    "Hong Kong",
+    "Seúl"
+   ],
+   "fr": [
+    "Shanghai",
+    "Hong Kong",
+    "Séoul"
+   ],
+   "it": [
+    "Shanghai",
+    "Hong Kong",
+    "Seul"
+   ],
+   "pt": [
+    "Xangai",
+    "Hong Kong",
+    "Seul"
+   ]
+  }
+ },
+ {
+  "key": "porto",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Dom_Lu%C3%ADs_I_Bridge_%2836961760686%29.jpg/1280px-Dom_Lu%C3%ADs_I_Bridge_%2836961760686%29.jpg",
+  "file": "File:Dom Luís I Bridge (36961760686).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Porto",
+   "ka": "პორტო",
+   "es": "Oporto"
+  },
+  "wrong": {
+   "en": [
+    "Lisbon",
+    "Bilbao",
+    "Seville"
+   ],
+   "ka": [
+    "ლისაბონი",
+    "ბილბაო",
+    "სევილია"
+   ],
+   "de": [
+    "Lissabon",
+    "Bilbao",
+    "Sevilla"
+   ],
+   "es": [
+    "Lisboa",
+    "Bilbao",
+    "Sevilla"
+   ],
+   "fr": [
+    "Lisbonne",
+    "Bilbao",
+    "Séville"
+   ],
+   "it": [
+    "Lisbona",
+    "Bilbao",
+    "Siviglia"
+   ],
+   "pt": [
+    "Lisboa",
+    "Bilbao",
+    "Sevilha"
+   ]
+  }
+ },
+ {
+  "key": "seville",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Plaza_de_Espa%C3%B1a_%28Sevilla%29_-_01.jpg/1280px-Plaza_de_Espa%C3%B1a_%28Sevilla%29_-_01.jpg",
+  "file": "File:Plaza de España (Sevilla) - 01.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Seville",
+   "ka": "სევილია",
+   "de": "Sevilla",
+   "es": "Sevilla",
+   "fr": "Séville",
+   "it": "Siviglia",
+   "pt": "Sevilha"
+  },
+  "wrong": {
+   "en": [
+    "Madrid",
+    "Granada",
+    "Córdoba"
+   ],
+   "ka": [
+    "მადრიდი",
+    "გრანადა",
+    "კორდობა"
+   ],
+   "fr": [
+    "Madrid",
+    "Grenade",
+    "Cordoue"
+   ],
+   "it": [
+    "Madrid",
+    "Granada",
+    "Cordova"
+   ],
+   "pt": [
+    "Madrid",
+    "Granada",
+    "Córdova"
+   ]
+  }
+ },
+ {
+  "key": "granada",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Dawn_Charles_V_Palace_Alhambra_Granada_Andalusia_Spain.jpg/1280px-Dawn_Charles_V_Palace_Alhambra_Granada_Andalusia_Spain.jpg",
+  "file": "File:Dawn Charles V Palace Alhambra Granada Andalusia Spain.jpg",
+  "license": "CC0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Granada",
+   "ka": "გრანადა",
+   "fr": "Grenade"
+  },
+  "wrong": {
+   "en": [
+    "Seville",
+    "Córdoba",
+    "Toledo"
+   ],
+   "ka": [
+    "სევილია",
+    "კორდობა",
+    "ტოლედო"
+   ],
+   "de": [
+    "Sevilla",
+    "Córdoba",
+    "Toledo"
+   ],
+   "es": [
+    "Sevilla",
+    "Córdoba",
+    "Toledo"
+   ],
+   "fr": [
+    "Séville",
+    "Cordoue",
+    "Tolède"
+   ],
+   "it": [
+    "Siviglia",
+    "Cordova",
+    "Toledo"
+   ],
+   "pt": [
+    "Sevilha",
+    "Córdova",
+    "Toledo"
+   ]
+  }
+ },
+ {
+  "key": "hamburg",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Elbphilharmonie_2025.jpg/1280px-Elbphilharmonie_2025.jpg",
+  "file": "File:Elbphilharmonie 2025.jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Hamburg",
+   "ka": "ჰამბურგი",
+   "es": "Hamburgo",
+   "fr": "Hambourg",
+   "it": "Amburgo",
+   "pt": "Hamburgo"
+  },
+  "wrong": {
+   "en": [
+    "Berlin",
+    "Oslo",
+    "Rotterdam"
+   ],
+   "ka": [
+    "ბერლინი",
+    "ოსლო",
+    "როტერდამი"
+   ],
+   "es": [
+    "Berlín",
+    "Oslo",
+    "Róterdam"
+   ],
+   "it": [
+    "Berlino",
+    "Oslo",
+    "Rotterdam"
+   ],
+   "pt": [
+    "Berlim",
+    "Oslo",
+    "Roterdã"
+   ]
+  }
+ },
+ {
+  "key": "geneva",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Jet_d%27eau_de_Gen%C3%A8ve_%28swiss%29.jpg/1280px-Jet_d%27eau_de_Gen%C3%A8ve_%28swiss%29.jpg",
+  "file": "File:Jet d'eau de Genève (swiss).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Geneva",
+   "ka": "ჟენევა",
+   "de": "Genf",
+   "es": "Ginebra",
+   "fr": "Genève",
+   "it": "Ginevra",
+   "pt": "Genebra"
+  },
+  "wrong": {
+   "en": [
+    "Zurich",
+    "Bern",
+    "Lausanne"
+   ],
+   "ka": [
+    "ციურიხი",
+    "ბერნი",
+    "ლოზანა"
+   ],
+   "de": [
+    "Zürich",
+    "Bern",
+    "Lausanne"
+   ],
+   "es": [
+    "Zúrich",
+    "Berna",
+    "Lausana"
+   ],
+   "fr": [
+    "Zurich",
+    "Berne",
+    "Lausanne"
+   ],
+   "it": [
+    "Zurigo",
+    "Berna",
+    "Losanna"
+   ],
+   "pt": [
+    "Zurique",
+    "Berna",
+    "Lausana"
+   ]
+  }
+ },
+ {
+  "key": "samarkand",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/RegistanSquare_Samarkand.jpg/1280px-RegistanSquare_Samarkand.jpg",
+  "file": "File:RegistanSquare Samarkand.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Samarkand",
+   "ka": "სამარყანდი",
+   "es": "Samarcanda",
+   "fr": "Samarcande",
+   "it": "Samarcanda",
+   "pt": "Samarcanda"
+  },
+  "wrong": {
+   "en": [
+    "Bukhara",
+    "Tashkent",
+    "Baku"
+   ],
+   "ka": [
+    "ბუხარა",
+    "ტაშკენტი",
+    "ბაქო"
+   ],
+   "de": [
+    "Bukhara",
+    "Taschkent",
+    "Baku"
+   ],
+   "es": [
+    "Bujará",
+    "Taskent",
+    "Bakú"
+   ],
+   "fr": [
+    "Boukhara",
+    "Tachkent",
+    "Bakou"
+   ],
+   "pt": [
+    "Bucara",
+    "Tasquente",
+    "Baku"
+   ]
+  }
+ },
+ {
+  "key": "baku",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flame_towers_from_Baku_boulevard.JPG/1280px-Flame_towers_from_Baku_boulevard.JPG",
+  "file": "File:Flame towers from Baku boulevard.JPG",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Baku",
+   "ka": "ბაქო",
+   "es": "Bakú",
+   "fr": "Bakou"
+  },
+  "wrong": {
+   "en": [
+    "Tbilisi",
+    "Yerevan",
+    "Astana"
+   ],
+   "ka": [
+    "თბილისი",
+    "ერევანი",
+    "ასტანა"
+   ],
+   "de": [
+    "Tiflis",
+    "Eriwan",
+    "Astana"
+   ],
+   "es": [
+    "Tiflis",
+    "Ereván",
+    "Astana"
+   ],
+   "fr": [
+    "Tbilissi",
+    "Erevan",
+    "Astana"
+   ],
+   "it": [
+    "Tbilisi",
+    "Erevan",
+    "Astana"
+   ],
+   "pt": [
+    "Tbilisi",
+    "Erevan",
+    "Astana"
+   ]
+  }
+ },
+ {
+  "key": "bucharest",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Palace_of_the_Parliament_in_Bucharest_%2851878975552%29.jpg/1280px-Palace_of_the_Parliament_in_Bucharest_%2851878975552%29.jpg",
+  "file": "File:Palace of the Parliament in Bucharest (51878975552).jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Bucharest",
+   "ka": "ბუქარესტი",
+   "de": "Bukarest",
+   "es": "Bucarest",
+   "fr": "Bucarest",
+   "it": "Bucarest",
+   "pt": "Bucareste"
+  },
+  "wrong": {
+   "en": [
+    "Budapest",
+    "Sofia",
+    "Belgrade"
+   ],
+   "ka": [
+    "ბუდაპეშტი",
+    "სოფია",
+    "ბელგრადი"
+   ],
+   "de": [
+    "Budapest",
+    "Sofia",
+    "Belgrad"
+   ],
+   "es": [
+    "Budapest",
+    "Sofía",
+    "Belgrado"
+   ],
+   "it": [
+    "Budapest",
+    "Sofia",
+    "Belgrado"
+   ],
+   "pt": [
+    "Budapeste",
+    "Sófia",
+    "Belgrado"
+   ]
+  }
+ }
+]

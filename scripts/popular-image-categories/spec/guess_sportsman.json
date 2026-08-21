@@ -1,0 +1,1612 @@
+[
+ {
+  "key": "messi",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg/1280px-Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg",
+  "file": "File:Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Lionel Messi",
+   "ka": "ლიონელ მესი"
+  },
+  "wrong": {
+   "en": [
+    "Cristiano Ronaldo",
+    "Neymar",
+    "Kylian Mbappé"
+   ],
+   "ka": [
+    "კრიშტიანუ რონალდუ",
+    "ნეიმარი",
+    "კილიან მბაპე"
+   ]
+  }
+ },
+ {
+  "key": "cristiano-ronaldo",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Cristiano_Ronaldo_Croatia_v_Portugal_2_July_2026-075_%28cropped%29.jpg/1280px-Cristiano_Ronaldo_Croatia_v_Portugal_2_July_2026-075_%28cropped%29.jpg",
+  "file": "File:Cristiano_Ronaldo_Croatia_v_Portugal_2_July_2026-075_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Cristiano Ronaldo",
+   "ka": "კრიშტიანუ რონალდუ"
+  },
+  "wrong": {
+   "en": [
+    "Lionel Messi",
+    "Karim Benzema",
+    "Gareth Bale"
+   ],
+   "ka": [
+    "ლიონელ მესი",
+    "ქარიმ ბენზემა",
+    "გარეთ ბეილი"
+   ]
+  }
+ },
+ {
+  "key": "mbappe",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Kylian_Mbappe_France_v_Senegal_16_June_2026-391_%28cropped%29.jpg/1280px-Kylian_Mbappe_France_v_Senegal_16_June_2026-391_%28cropped%29.jpg",
+  "file": "File:Kylian_Mbappe_France_v_Senegal_16_June_2026-391_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Kylian Mbappé",
+   "ka": "კილიან მბაპე"
+  },
+  "wrong": {
+   "en": [
+    "Antoine Griezmann",
+    "Ousmane Dembélé",
+    "Karim Benzema"
+   ],
+   "ka": [
+    "ანტუან გრიზმანი",
+    "უსმან დემბელე",
+    "ქარიმ ბენზემა"
+   ]
+  }
+ },
+ {
+  "key": "neymar",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Neymar_Junior_Brazil_V_Morocco_13_June_2026-40.jpg/1280px-Neymar_Junior_Brazil_V_Morocco_13_June_2026-40.jpg",
+  "file": "File:Neymar_Junior_Brazil_V_Morocco_13_June_2026-40.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Neymar",
+   "ka": "ნეიმარი"
+  },
+  "wrong": {
+   "en": [
+    "Ronaldinho",
+    "Vinícius Júnior",
+    "Kaká"
+   ],
+   "ka": [
+    "რონალდინიო",
+    "ვინისიუს ჟუნიორი",
+    "კაკა"
+   ]
+  }
+ },
+ {
+  "key": "zidane",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg",
+  "file": "File:Zinedine_Zidane_by_Tasnim_03.jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Zinedine Zidane",
+   "ka": "ზინედინ ზიდანი"
+  },
+  "wrong": {
+   "en": [
+    "Thierry Henry",
+    "Michel Platini",
+    "Karim Benzema"
+   ],
+   "ka": [
+    "ტიერი ანრი",
+    "მიშელ პლატინი",
+    "ქარიმ ბენზემა"
+   ]
+  }
+ },
+ {
+  "key": "ronaldinho",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Sports_Festival_2025_-_4_%28cropped%29.jpg",
+  "file": "File:Sports_Festival_2025_-_4_(cropped).jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Ronaldinho",
+   "ka": "რონალდინიო"
+  },
+  "wrong": {
+   "en": [
+    "Rivaldo",
+    "Kaká",
+    "Roberto Carlos"
+   ],
+   "ka": [
+    "რივალდო",
+    "კაკა",
+    "რობერტო კარლოსი"
+   ]
+  }
+ },
+ {
+  "key": "haaland",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Erling_Haaland_Morocco_v_Norway_7_June_2026-51.jpg/1280px-Erling_Haaland_Morocco_v_Norway_7_June_2026-51.jpg",
+  "file": "File:Erling_Haaland_Morocco_v_Norway_7_June_2026-51.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Erling Haaland",
+   "ka": "ერლინგ ჰოლანი"
+  },
+  "wrong": {
+   "en": [
+    "Harry Kane",
+    "Robert Lewandowski",
+    "Victor Osimhen"
+   ],
+   "ka": [
+    "ჰარი კეინი",
+    "რობერტ ლევანდოვსკი",
+    "ვიქტორ ოსიმენი"
+   ]
+  }
+ },
+ {
+  "key": "salah",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Mohamed_Salah_Argentina_v_Egypt_7_July_2026-163_%28cropped%29.jpg/1280px-Mohamed_Salah_Argentina_v_Egypt_7_July_2026-163_%28cropped%29.jpg",
+  "file": "File:Mohamed_Salah_Argentina_v_Egypt_7_July_2026-163_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Mohamed Salah",
+   "ka": "მოჰამედ სალაჰი"
+  },
+  "wrong": {
+   "en": [
+    "Sadio Mané",
+    "Riyad Mahrez",
+    "Achraf Hakimi"
+   ],
+   "ka": [
+    "სადიო მანე",
+    "რიად მარეზი",
+    "აშრაფ ჰაკიმი"
+   ]
+  }
+ },
+ {
+  "key": "lewandowski",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/2019147183134_2019-05-27_Fussball_1.FC_Kaiserslautern_vs_FC_Bayern_M%C3%BCnchen_-_Sven_-_1D_X_MK_II_-_0228_-_B70I8527_%28cropped%29.jpg/1280px-2019147183134_2019-05-27_Fussball_1.FC_Kaiserslautern_vs_FC_Bayern_M%C3%BCnchen_-_Sven_-_1D_X_MK_II_-_0228_-_B70I8527_%28cropped%29.jpg",
+  "file": "File:2019147183134_2019-05-27_Fussball_1.FC_Kaiserslautern_vs_FC_Bayern_München_-_Sven_-_1D_X_MK_II_-_0228_-_B70I8527_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Robert Lewandowski",
+   "ka": "რობერტ ლევანდოვსკი"
+  },
+  "wrong": {
+   "en": [
+    "Thomas Müller",
+    "Harry Kane",
+    "Karim Benzema"
+   ],
+   "ka": [
+    "თომას მიულერი",
+    "ჰარი კეინი",
+    "ქარიმ ბენზემა"
+   ]
+  }
+ },
+ {
+  "key": "benzema",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Karim_Benzema_Pick.jpg",
+  "file": "File:Karim_Benzema_Pick.jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Karim Benzema",
+   "ka": "ქარიმ ბენზემა"
+  },
+  "wrong": {
+   "en": [
+    "Antoine Griezmann",
+    "Olivier Giroud",
+    "N'Golo Kanté"
+   ],
+   "ka": [
+    "ანტუან გრიზმანი",
+    "ოლივიე ჟირუ",
+    "ნგოლო კანტე"
+   ]
+  }
+ },
+ {
+  "key": "modric",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Luka_Modric_Croatia_v_Portugal_2_July_2026-055.jpg/1280px-Luka_Modric_Croatia_v_Portugal_2_July_2026-055.jpg",
+  "file": "File:Luka_Modric_Croatia_v_Portugal_2_July_2026-055.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Luka Modrić",
+   "ka": "ლუკა მოდრიჩი"
+  },
+  "wrong": {
+   "en": [
+    "Ivan Rakitić",
+    "Toni Kroos",
+    "Andrés Iniesta"
+   ],
+   "ka": [
+    "ივან რაკიტიჩი",
+    "ტონი კროსი",
+    "ანდრეს ინიესტა"
+   ]
+  }
+ },
+ {
+  "key": "pele",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Pele_con_brasil_%28cropped%29.jpg",
+  "file": "File:Pele_con_brasil_(cropped).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Pelé",
+   "ka": "პელე"
+  },
+  "wrong": {
+   "en": [
+    "Garrincha",
+    "Zico",
+    "Romário"
+   ],
+   "ka": [
+    "გარინჩა",
+    "ზიკო",
+    "რომარიო"
+   ]
+  }
+ },
+ {
+  "key": "maradona",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/8/88/Maradona_1986_vs_italy.jpg",
+  "file": "File:Maradona 1986 vs italy.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Diego Maradona",
+   "ka": "დიეგო მარადონა"
+  },
+  "wrong": {
+   "en": [
+    "Lionel Messi",
+    "Mario Kempes",
+    "Gabriel Batistuta"
+   ],
+   "ka": [
+    "ლიონელ მესი",
+    "მარიო კემპესი",
+    "გაბრიელ ბატისტუტა"
+   ]
+  }
+ },
+ {
+  "key": "beckham",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/7/73/David_Beckham_UNICEF_%28cropped2%29.jpg",
+  "file": "File:David_Beckham_UNICEF_(cropped2).jpg",
+  "license": "CC BY 3.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "David Beckham",
+   "ka": "დეივიდ ბეკჰემი"
+  },
+  "wrong": {
+   "en": [
+    "Wayne Rooney",
+    "Steven Gerrard",
+    "Frank Lampard"
+   ],
+   "ka": [
+    "უეინ რუნი",
+    "სტივენ ჯერარდი",
+    "ფრენკ ლემპარდი"
+   ]
+  }
+ },
+ {
+  "key": "ibrahimovic",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Zlatan_Ibrahimovi%C4%87_nyc.jpg/1280px-Zlatan_Ibrahimovi%C4%87_nyc.jpg",
+  "file": "File:Zlatan_Ibrahimović_nyc.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Zlatan Ibrahimović",
+   "ka": "ზლატან იბრაჰიმოვიჩი"
+  },
+  "wrong": {
+   "en": [
+    "Thierry Henry",
+    "Didier Drogba",
+    "Samuel Eto'o"
+   ],
+   "ka": [
+    "ტიერი ანრი",
+    "დიდიე დროგბა",
+    "სამუელ ეტო'ო"
+   ]
+  }
+ },
+ {
+  "key": "kvaratskhelia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Kvaratskhelia_asse_psg_2425.png",
+  "file": "File:Kvaratskhelia_asse_psg_2425.png",
+  "license": "CC0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Kvaratskhelia",
+   "ka": "ხვიჩა კვარაცხელია"
+  },
+  "wrong": {
+   "en": [
+    "Georges Mikautadze",
+    "Otar Kiteishvili",
+    "Budu Zivzivadze"
+   ],
+   "ka": [
+    "ჟორჟ მიქაუტაძე",
+    "ოთარ კიტეიშვილი",
+    "ბუდუ ზივზივაძე"
+   ]
+  }
+ },
+ {
+  "key": "bellingham",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Jude_Bellingham_England_v_Ghana_23_June_2026-061_%28cropped%29.jpg/1280px-Jude_Bellingham_England_v_Ghana_23_June_2026-061_%28cropped%29.jpg",
+  "file": "File:Jude_Bellingham_England_v_Ghana_23_June_2026-061_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Jude Bellingham",
+   "ka": "ჯუდ ბელინგემი"
+  },
+  "wrong": {
+   "en": [
+    "Phil Foden",
+    "Declan Rice",
+    "Bukayo Saka"
+   ],
+   "ka": [
+    "ფილ ფოდენი",
+    "დეკლან რაისი",
+    "ბუკაიო საკა"
+   ]
+  }
+ },
+ {
+  "key": "vinicius",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Vin%C3%ADcius_J%C3%BAnior_Brazil_V_Morocco_13_June_2026-207_%28cropped%29.jpg/1280px-Vin%C3%ADcius_J%C3%BAnior_Brazil_V_Morocco_13_June_2026-207_%28cropped%29.jpg",
+  "file": "File:Vinícius_Júnior_Brazil_V_Morocco_13_June_2026-207_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Vinícius Júnior",
+   "ka": "ვინისიუს ჟუნიორი"
+  },
+  "wrong": {
+   "en": [
+    "Rodrygo",
+    "Raphinha",
+    "Gabriel Jesus"
+   ],
+   "ka": [
+    "როდრიგო",
+    "რაფინია",
+    "გაბრიელ ჟესუსი"
+   ]
+  }
+ },
+ {
+  "key": "kane",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Harry_Kane_England_v_Ghana_23_June_2026-219_%28cropped%29.jpg/1280px-Harry_Kane_England_v_Ghana_23_June_2026-219_%28cropped%29.jpg",
+  "file": "File:Harry_Kane_England_v_Ghana_23_June_2026-219_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Harry Kane",
+   "ka": "ჰარი კეინი"
+  },
+  "wrong": {
+   "en": [
+    "Marcus Rashford",
+    "Jamie Vardy",
+    "Raheem Sterling"
+   ],
+   "ka": [
+    "მარკუს რაშფორდი",
+    "ჯეიმი ვარდი",
+    "რაჰიმ სტერლინგი"
+   ]
+  }
+ },
+ {
+  "key": "de-bruyne",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Kevin_De_Bruyne_USMNT_v_Belgium_Mar_28_2026-64_%28cropped%29.jpg/1280px-Kevin_De_Bruyne_USMNT_v_Belgium_Mar_28_2026-64_%28cropped%29.jpg",
+  "file": "File:Kevin_De_Bruyne_USMNT_v_Belgium_Mar_28_2026-64_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Kevin De Bruyne",
+   "ka": "კევინ დე ბრეინე"
+  },
+  "wrong": {
+   "en": [
+    "Eden Hazard",
+    "Bernardo Silva",
+    "İlkay Gündoğan"
+   ],
+   "ka": [
+    "ედენ აზარი",
+    "ბერნარდო სილვა",
+    "ილკაი გიუნდოგანი"
+   ]
+  }
+ },
+ {
+  "key": "suarez",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Luis_Su%C3%A1rez_2026_%28cropped%29.jpg",
+  "file": "File:Luis_Suárez_2026_(cropped).jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Luis Suárez",
+   "ka": "ლუის სუარესი"
+  },
+  "wrong": {
+   "en": [
+    "Edinson Cavani",
+    "Diego Forlán",
+    "Sergio Agüero"
+   ],
+   "ka": [
+    "ედინსონ კავანი",
+    "დიეგო ფორლანი",
+    "სერხიო აგუერო"
+   ]
+  }
+ },
+ {
+  "key": "griezmann",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/6/6e/FRA-ARG_%2810%29_%28cropped%29.jpg",
+  "file": "File:FRA-ARG_(10)_(cropped).jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Antoine Griezmann",
+   "ka": "ანტუან გრიზმანი"
+  },
+  "wrong": {
+   "en": [
+    "Paul Pogba",
+    "Olivier Giroud",
+    "Ousmane Dembélé"
+   ],
+   "ka": [
+    "პოლ პოგბა",
+    "ოლივიე ჟირუ",
+    "უსმან დემბელე"
+   ]
+  }
+ },
+ {
+  "key": "neuer",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Manuel_Neuer_Ecuador_v_Germany_25_June_2026-148.jpg/1280px-Manuel_Neuer_Ecuador_v_Germany_25_June_2026-148.jpg",
+  "file": "File:Manuel_Neuer_Ecuador_v_Germany_25_June_2026-148.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Manuel Neuer",
+   "ka": "მანუელ ნოიერი"
+  },
+  "wrong": {
+   "en": [
+    "Oliver Kahn",
+    "Ter Stegen",
+    "Thibaut Courtois"
+   ],
+   "ka": [
+    "ოლივერ კანი",
+    "ტერ შტეგენი",
+    "ტიბო კურტუა"
+   ]
+  }
+ },
+ {
+  "key": "iniesta",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Andr%C3%A9s_Iniesta_Argentina_v_Spain_19_July_2026-034_%28cropped%29.jpg/1280px-Andr%C3%A9s_Iniesta_Argentina_v_Spain_19_July_2026-034_%28cropped%29.jpg",
+  "file": "File:Andrés_Iniesta_Argentina_v_Spain_19_July_2026-034_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Andrés Iniesta",
+   "ka": "ანდრეს ინიესტა"
+  },
+  "wrong": {
+   "en": [
+    "Xavi",
+    "David Villa",
+    "Cesc Fàbregas"
+   ],
+   "ka": [
+    "ხავი",
+    "დავიდ ვილია",
+    "სესკ ფაბრეგასი"
+   ]
+  }
+ },
+ {
+  "key": "lebron",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/7/7a/LeBron_James_%2851959977144%29_%28cropped2%29.jpg",
+  "file": "File:LeBron_James_(51959977144)_(cropped2).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "LeBron James",
+   "ka": "ლებრონ ჯეიმზი"
+  },
+  "wrong": {
+   "en": [
+    "Kevin Durant",
+    "Kobe Bryant",
+    "James Harden"
+   ],
+   "ka": [
+    "კევინ დურანტი",
+    "კობი ბრაიანტი",
+    "ჯეიმზ ჰარდენი"
+   ]
+  }
+ },
+ {
+  "key": "jordan",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Michael_Jordan_in_2014.jpg",
+  "file": "File:Michael_Jordan_in_2014.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Michael Jordan",
+   "ka": "მაიკლ ჯორდანი"
+  },
+  "wrong": {
+   "en": [
+    "Scottie Pippen",
+    "Magic Johnson",
+    "Charles Barkley"
+   ],
+   "ka": [
+    "სკოტი პიპენი",
+    "მეჯიკ ჯონსონი",
+    "ჩარლზ ბარკლი"
+   ]
+  }
+ },
+ {
+  "key": "curry",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/5/52/Stephen_Curry%2C_Olympic_Games_2024_%28cropped%29.jpg",
+  "file": "File:Stephen_Curry,_Olympic_Games_2024_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Stephen Curry",
+   "ka": "სტეფან კარი"
+  },
+  "wrong": {
+   "en": [
+    "Klay Thompson",
+    "Kyrie Irving",
+    "Damian Lillard"
+   ],
+   "ka": [
+    "კლეი ტომპსონი",
+    "კაირი ირვინგი",
+    "დემიან ლილარდი"
+   ]
+  }
+ },
+ {
+  "key": "kobe",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Kobe_Bryant_Dec_2014.jpg/1280px-Kobe_Bryant_Dec_2014.jpg",
+  "file": "File:Kobe_Bryant_Dec_2014.jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Kobe Bryant",
+   "ka": "კობი ბრაიანტი"
+  },
+  "wrong": {
+   "en": [
+    "Michael Jordan",
+    "LeBron James",
+    "Dwyane Wade"
+   ],
+   "ka": [
+    "მაიკლ ჯორდანი",
+    "ლებრონ ჯეიმზი",
+    "დუეინ უეიდი"
+   ]
+  }
+ },
+ {
+  "key": "shaq",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/e/e5/TechCrunch_Disrupt_2023_-_Day_1_%28cropped%29.jpg",
+  "file": "File:TechCrunch_Disrupt_2023_-_Day_1_(cropped).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Shaquille O'Neal",
+   "ka": "შაკილ ო'ნილი"
+  },
+  "wrong": {
+   "en": [
+    "Tim Duncan",
+    "Hakeem Olajuwon",
+    "Patrick Ewing"
+   ],
+   "ka": [
+    "ტიმ დანკანი",
+    "ჰაკიმ ოლაჯუვონი",
+    "პატრიკ იუინგი"
+   ]
+  }
+ },
+ {
+  "key": "durant",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Kevin_Durant%2C_Paris_2024_%28cropped%29.jpg",
+  "file": "File:Kevin_Durant,_Paris_2024_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Kevin Durant",
+   "ka": "კევინ დურანტი"
+  },
+  "wrong": {
+   "en": [
+    "Russell Westbrook",
+    "James Harden",
+    "Kawhi Leonard"
+   ],
+   "ka": [
+    "რასელ უესტბრუკი",
+    "ჯეიმზ ჰარდენი",
+    "კავაი ლენარდი"
+   ]
+  }
+ },
+ {
+  "key": "giannis",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Giannis_Antetokounmpo_%2851915153421%29_%28cropped%29.jpg/1280px-Giannis_Antetokounmpo_%2851915153421%29_%28cropped%29.jpg",
+  "file": "File:Giannis_Antetokounmpo_(51915153421)_(cropped).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Antetokounmpo",
+   "ka": "ანტეტოკუნმპო"
+  },
+  "wrong": {
+   "en": [
+    "Nikola Jokić",
+    "Joel Embiid",
+    "Luka Dončić"
+   ],
+   "ka": [
+    "ნიკოლა იოკიჩი",
+    "ჯოელ ემბიდი",
+    "ლუკა დონჩიჩი"
+   ]
+  }
+ },
+ {
+  "key": "jokic",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Nikola_Jokic_free_throw_%28cropped%29.jpg",
+  "file": "File:Nikola_Jokic_free_throw_(cropped).jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Nikola Jokić",
+   "ka": "ნიკოლა იოკიჩი"
+  },
+  "wrong": {
+   "en": [
+    "Antetokounmpo",
+    "Joel Embiid",
+    "Luka Dončić"
+   ],
+   "ka": [
+    "ანტეტოკუნმპო",
+    "ჯოელ ემბიდი",
+    "ლუკა დონჩიჩი"
+   ]
+  }
+ },
+ {
+  "key": "doncic",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Luka_Doncic_%2851914951721%29_%28cropped1%29.jpg/1280px-Luka_Doncic_%2851914951721%29_%28cropped1%29.jpg",
+  "file": "File:Luka_Doncic_(51914951721)_(cropped1).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Luka Dončić",
+   "ka": "ლუკა დონჩიჩი"
+  },
+  "wrong": {
+   "en": [
+    "Nikola Jokić",
+    "Jayson Tatum",
+    "Trae Young"
+   ],
+   "ka": [
+    "ნიკოლა იოკიჩი",
+    "ჯეისონ ტეიტუმი",
+    "ტრეი იანგი"
+   ]
+  }
+ },
+ {
+  "key": "nowitzki",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Dirk_Nowitzki_2_%28cropped%29.jpg/1280px-Dirk_Nowitzki_2_%28cropped%29.jpg",
+  "file": "File:Dirk_Nowitzki_2_(cropped).jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Dirk Nowitzki",
+   "ka": "დირკ ნოვიცკი"
+  },
+  "wrong": {
+   "en": [
+    "Pau Gasol",
+    "Tim Duncan",
+    "Steve Nash"
+   ],
+   "ka": [
+    "პაუ გასოლი",
+    "ტიმ დანკანი",
+    "სტივ ნეში"
+   ]
+  }
+ },
+ {
+  "key": "pachulia",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Zaza_Pachulia_driving_to_basket_%28cropped%29_%28cropped%29.jpg/1280px-Zaza_Pachulia_driving_to_basket_%28cropped%29_%28cropped%29.jpg",
+  "file": "File:Zaza_Pachulia_driving_to_basket_(cropped)_(cropped).jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Zaza Pachulia",
+   "ka": "ზაზა ფაჩულია"
+  },
+  "wrong": {
+   "en": [
+    "Tornike Shengelia",
+    "Goga Bitadze",
+    "Duda Sanadze"
+   ],
+   "ka": [
+    "თორნიკე შენგელია",
+    "გოგა ბითაძე",
+    "დუდა სანაძე"
+   ]
+  }
+ },
+ {
+  "key": "federer",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Roger_Federer_2015_%28cropped%29.jpg/1280px-Roger_Federer_2015_%28cropped%29.jpg",
+  "file": "File:Roger_Federer_2015_(cropped).jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Roger Federer",
+   "ka": "როჯერ ფედერერი"
+  },
+  "wrong": {
+   "en": [
+    "Rafael Nadal",
+    "Novak Djokovic",
+    "Andy Murray"
+   ],
+   "ka": [
+    "რაფაელ ნადალი",
+    "ნოვაკ ჯოკოვიჩი",
+    "ენდი მარი"
+   ]
+  }
+ },
+ {
+  "key": "nadal",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/7/71/Rafael_Nadal_en_2024_%28cropped%29.jpg",
+  "file": "File:Rafael_Nadal_en_2024_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Rafael Nadal",
+   "ka": "რაფაელ ნადალი"
+  },
+  "wrong": {
+   "en": [
+    "Roger Federer",
+    "Carlos Alcaraz",
+    "David Ferrer"
+   ],
+   "ka": [
+    "როჯერ ფედერერი",
+    "კარლოს ალკარასი",
+    "დავიდ ფერერი"
+   ]
+  }
+ },
+ {
+  "key": "djokovic",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg/1280px-Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg",
+  "file": "File:Novak_Djokovic_Paris_2024_Olympic_Games_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Novak Djokovic",
+   "ka": "ნოვაკ ჯოკოვიჩი"
+  },
+  "wrong": {
+   "en": [
+    "Andy Murray",
+    "Roger Federer",
+    "Stan Wawrinka"
+   ],
+   "ka": [
+    "ენდი მარი",
+    "როჯერ ფედერერი",
+    "სტენ ვავრინკა"
+   ]
+  }
+ },
+ {
+  "key": "serena",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Guests_at_the_2026_Met_Gala_209_%28cropped%29.jpg",
+  "file": "File:Guests_at_the_2026_Met_Gala_209_(cropped).jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Serena Williams",
+   "ka": "სერენა უილიამსი"
+  },
+  "wrong": {
+   "en": [
+    "Venus Williams",
+    "Naomi Osaka",
+    "Victoria Azarenka"
+   ],
+   "ka": [
+    "ვინუს უილიამსი",
+    "ნაომი ოსაკა",
+    "ვიქტორია აზარენკა"
+   ]
+  }
+ },
+ {
+  "key": "sharapova",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Collision_2024_-_VR7_1035_%2853801820852%29_%28cropped%29.jpg/1280px-Collision_2024_-_VR7_1035_%2853801820852%29_%28cropped%29.jpg",
+  "file": "File:Collision_2024_-_VR7_1035_(53801820852)_(cropped).jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Maria Sharapova",
+   "ka": "მარია შარაპოვა"
+  },
+  "wrong": {
+   "en": [
+    "Ana Ivanovic",
+    "Caroline Wozniacki",
+    "Victoria Azarenka"
+   ],
+   "ka": [
+    "ანა ივანოვიჩი",
+    "კაროლინ ვოზნიაცკი",
+    "ვიქტორია აზარენკა"
+   ]
+  }
+ },
+ {
+  "key": "alcaraz",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/d/d4/25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Carlos_Alcaraz_-_240422_192324_%28cropped%29.jpg",
+  "file": "File:25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Carlos_Alcaraz_-_240422_192324_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Carlos Alcaraz",
+   "ka": "კარლოს ალკარასი"
+  },
+  "wrong": {
+   "en": [
+    "Jannik Sinner",
+    "Daniil Medvedev",
+    "Alexander Zverev"
+   ],
+   "ka": [
+    "იანიკ სინერი",
+    "დანიილ მედვედევი",
+    "ალექსანდრ ზვერევი"
+   ]
+  }
+ },
+ {
+  "key": "sinner",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/6/64/Jannik_Sinner_2025_US_Open.jpg",
+  "file": "File:Jannik_Sinner_2025_US_Open.jpg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Jannik Sinner",
+   "ka": "იანიკ სინერი"
+  },
+  "wrong": {
+   "en": [
+    "Carlos Alcaraz",
+    "Daniil Medvedev",
+    "Stefanos Tsitsipas"
+   ],
+   "ka": [
+    "კარლოს ალკარასი",
+    "დანიილ მედვედევი",
+    "სტეფანოს ციციპასი"
+   ]
+  }
+ },
+ {
+  "key": "hamilton",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/1/18/Lewis_Hamilton_2016_Malaysia_2.jpg",
+  "file": "File:Lewis Hamilton 2016 Malaysia 2.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Lewis Hamilton",
+   "ka": "ლუის ჰემილტონი"
+  },
+  "wrong": {
+   "en": [
+    "Nico Rosberg",
+    "Jenson Button",
+    "George Russell"
+   ],
+   "ka": [
+    "ნიკო როსბერგი",
+    "ჯენსონ ბატონი",
+    "ჯორჯ რასელი"
+   ]
+  }
+ },
+ {
+  "key": "verstappen",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3973_by_Stepro_%28medium_crop%29.jpg/1280px-2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3973_by_Stepro_%28medium_crop%29.jpg",
+  "file": "File:2024-08-25_Motorsport,_Formel_1,_Großer_Preis_der_Niederlande_2024_STP_3973_by_Stepro_(medium_crop).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Max Verstappen",
+   "ka": "მაქს ვერსტაპენი"
+  },
+  "wrong": {
+   "en": [
+    "Charles Leclerc",
+    "Lando Norris",
+    "Sergio Pérez"
+   ],
+   "ka": [
+    "შარლ ლეკლერი",
+    "ლანდო ნორისი",
+    "სერხიო პერესი"
+   ]
+  }
+ },
+ {
+  "key": "schumacher",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/c/c2/Michael_Schumacher%2C_September_2005.jpg",
+  "file": "File:Michael_Schumacher,_September_2005.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Michael Schumacher",
+   "ka": "მიხაელ შუმახერი"
+  },
+  "wrong": {
+   "en": [
+    "Mika Häkkinen",
+    "Rubens Barrichello",
+    "Damon Hill"
+   ],
+   "ka": [
+    "მიკა ჰაკინენი",
+    "რუბენს ბარიკელო",
+    "დეიმონ ჰილი"
+   ]
+  }
+ },
+ {
+  "key": "alonso",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Alonso-68_%2824710447098%29.jpg/1280px-Alonso-68_%2824710447098%29.jpg",
+  "file": "File:Alonso-68_(24710447098).jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Fernando Alonso",
+   "ka": "ფერნანდო ალონსო"
+  },
+  "wrong": {
+   "en": [
+    "Felipe Massa",
+    "Kimi Räikkönen",
+    "Sebastian Vettel"
+   ],
+   "ka": [
+    "ფელიპე მასა",
+    "კიმი რაიკონენი",
+    "სებასტიან ფეტელი"
+   ]
+  }
+ },
+ {
+  "key": "vettel",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Sebastian_Vettel_2011_Sebastian_Vettel_in_Yokohama.jpg",
+  "file": "File:Sebastian_Vettel_2011_Sebastian_Vettel_in_Yokohama.jpg",
+  "license": "CC BY-SA 3.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Sebastian Vettel",
+   "ka": "სებასტიან ფეტელი"
+  },
+  "wrong": {
+   "en": [
+    "Mark Webber",
+    "Kimi Räikkönen",
+    "Daniel Ricciardo"
+   ],
+   "ka": [
+    "მარკ უებერი",
+    "კიმი რაიკონენი",
+    "დანიელ რიკიარდო"
+   ]
+  }
+ },
+ {
+  "key": "leclerc",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3978_by_Stepro_%28cropped2%29.jpg/1280px-2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3978_by_Stepro_%28cropped2%29.jpg",
+  "file": "File:2024-08-25_Motorsport,_Formel_1,_Großer_Preis_der_Niederlande_2024_STP_3978_by_Stepro_(cropped2).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Charles Leclerc",
+   "ka": "შარლ ლეკლერი"
+  },
+  "wrong": {
+   "en": [
+    "Carlos Sainz",
+    "Lando Norris",
+    "Oscar Piastri"
+   ],
+   "ka": [
+    "კარლოს საინსი",
+    "ლანდო ნორისი",
+    "ოსკარ პიასტრი"
+   ]
+  }
+ },
+ {
+  "key": "ali",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Muhammad_Ali_NYWTS.jpg/1280px-Muhammad_Ali_NYWTS.jpg",
+  "file": "File:Muhammad_Ali_NYWTS.jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Muhammad Ali",
+   "ka": "მუჰამედ ალი"
+  },
+  "wrong": {
+   "en": [
+    "Joe Frazier",
+    "George Foreman",
+    "Sonny Liston"
+   ],
+   "ka": [
+    "ჯო ფრეიზერი",
+    "ჯორჯ ფორმანი",
+    "სონი ლისტონი"
+   ]
+  }
+ },
+ {
+  "key": "mike-tyson",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Mike_Tyson_Photo_Op_GalaxyCon_Austin_2023.jpg",
+  "file": "File:Mike_Tyson_Photo_Op_GalaxyCon_Austin_2023.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Mike Tyson",
+   "ka": "მაიკ ტაისონი"
+  },
+  "wrong": {
+   "en": [
+    "Evander Holyfield",
+    "Lennox Lewis",
+    "Riddick Bowe"
+   ],
+   "ka": [
+    "ევანდერ ჰოლიფილდი",
+    "ლენოქს ლუისი",
+    "რიდიკ ბოუი"
+   ]
+  }
+ },
+ {
+  "key": "mcgregor",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Conor_McGregor_2025.jpeg/1280px-Conor_McGregor_2025.jpeg",
+  "file": "File:Conor_McGregor_2025.jpeg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Conor McGregor",
+   "ka": "კონორ მაკგრეგორი"
+  },
+  "wrong": {
+   "en": [
+    "Dustin Poirier",
+    "Nate Diaz",
+    "Justin Gaethje"
+   ],
+   "ka": [
+    "დასტინ პორიე",
+    "ნეით დიასი",
+    "ჯასტინ გეიჯი"
+   ]
+  }
+ },
+ {
+  "key": "khabib",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/3/34/Khabib_nurmagomedov.jpg",
+  "file": "File:Khabib_nurmagomedov.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Khabib Nurmagomedov",
+   "ka": "ხაბიბ ნურმაგომედოვი"
+  },
+  "wrong": {
+   "en": [
+    "Islam Makhachev",
+    "Tony Ferguson",
+    "Charles Oliveira"
+   ],
+   "ka": [
+    "ისლამ მახაჩევი",
+    "ტონი ფერგიუსონი",
+    "ჩარლზ ოლივეირა"
+   ]
+  }
+ },
+ {
+  "key": "mayweather",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/d/d9/Floyd_Mayweather_Jr_2011.jpg",
+  "file": "File:Floyd_Mayweather_Jr_2011.jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Floyd Mayweather",
+   "ka": "ფლოიდ მეივეზერი"
+  },
+  "wrong": {
+   "en": [
+    "Manny Pacquiao",
+    "Oscar De La Hoya",
+    "Ricky Hatton"
+   ],
+   "ka": [
+    "მენი პაკიაო",
+    "ოსკარ დე ლა ჰოია",
+    "რიკი ჰეტონი"
+   ]
+  }
+ },
+ {
+  "key": "fury",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Tyson_Fury_at_Place_Bell%2C_Laval_Quebec%2C_Canada_-_Dec_16_2017_%28cropped%29.jpg",
+  "file": "File:Tyson_Fury_at_Place_Bell,_Laval_Quebec,_Canada_-_Dec_16_2017_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Tyson Fury",
+   "ka": "ტაისონ ფიური"
+  },
+  "wrong": {
+   "en": [
+    "Anthony Joshua",
+    "Deontay Wilder",
+    "Oleksandr Usyk"
+   ],
+   "ka": [
+    "ენტონი ჯოშუა",
+    "დეონტეი უაილდერი",
+    "ოლექსანდრ უსიკი"
+   ]
+  }
+ },
+ {
+  "key": "joshua",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Anthony_Joshua_Press_Conference_%28cropped%29.jpg/1280px-Anthony_Joshua_Press_Conference_%28cropped%29.jpg",
+  "file": "File:Anthony_Joshua_Press_Conference_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Anthony Joshua",
+   "ka": "ენტონი ჯოშუა"
+  },
+  "wrong": {
+   "en": [
+    "Tyson Fury",
+    "Deontay Wilder",
+    "Daniel Dubois"
+   ],
+   "ka": [
+    "ტაისონ ფიური",
+    "დეონტეი უაილდერი",
+    "დანიელ დუბუა"
+   ]
+  }
+ },
+ {
+  "key": "canelo",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/8/82/Sa%C3%BAl_%C3%81lvarez.png",
+  "file": "File:Saúl_Álvarez.png",
+  "license": "CC BY 3.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Canelo Álvarez",
+   "ka": "კანელო ალვარესი"
+  },
+  "wrong": {
+   "en": [
+    "Gennady Golovkin",
+    "Errol Spence Jr.",
+    "David Benavidez"
+   ],
+   "ka": [
+    "გენადი გოლოვკინი",
+    "ეროლ სპენსი",
+    "დავიდ ბენავიდესი"
+   ]
+  }
+ },
+ {
+  "key": "dvalishvili",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/6/66/Merab_Dvalishvili_at_UFC_316_%28cropped%29.jpg",
+  "file": "File:Merab_Dvalishvili_at_UFC_316_(cropped).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Merab Dvalishvili",
+   "ka": "მერაბ დვალიშვილი"
+  },
+  "wrong": {
+   "en": [
+    "Petr Yan",
+    "Sean O'Malley",
+    "Aljamain Sterling"
+   ],
+   "ka": [
+    "პეტრ იანი",
+    "შონ ო'მალი",
+    "ალჯამეინ სტერლინგი"
+   ]
+  }
+ },
+ {
+  "key": "topuria",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/7/79/Ilia_Topuria_in_the_Oval_Office_%28while_President_Donald_J._Trump_is_holding_a_meeting_with_UFC_fighters%29.jpg",
+  "file": "File:Ilia_Topuria_in_the_Oval_Office_(while_President_Donald_J._Trump_is_holding_a_meeting_with_UFC_fighters).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Ilia Topuria",
+   "ka": "ილია თოფურია"
+  },
+  "wrong": {
+   "en": [
+    "Alex Volkanovski",
+    "Max Holloway",
+    "Islam Makhachev"
+   ],
+   "ka": [
+    "ალექს ვოლკანოვსკი",
+    "მაქს ჰოლოუეი",
+    "ისლამ მახაჩევი"
+   ]
+  }
+ },
+ {
+  "key": "bolt",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Usain_Bolt_Olympics_Celebration.jpg/1280px-Usain_Bolt_Olympics_Celebration.jpg",
+  "file": "File:Usain Bolt Olympics Celebration.jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Usain Bolt",
+   "ka": "უსეინ ბოლტი"
+  },
+  "wrong": {
+   "en": [
+    "Yohan Blake",
+    "Justin Gatlin",
+    "Asafa Powell"
+   ],
+   "ka": [
+    "იოჰან ბლეიკი",
+    "ჯასტინ გატლინი",
+    "ასაფა პაუელი"
+   ]
+  }
+ },
+ {
+  "key": "kipchoge",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Eliud_Kipchoge_in_Berlin_-_2015_%28cropped%29.jpg",
+  "file": "File:Eliud_Kipchoge_in_Berlin_-_2015_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Eliud Kipchoge",
+   "ka": "ელიუდ კიპჩოგე"
+  },
+  "wrong": {
+   "en": [
+    "Kenenisa Bekele",
+    "Mo Farah",
+    "Haile Gebrselassie"
+   ],
+   "ka": [
+    "კენენისა ბეკელე",
+    "მო ფარა",
+    "ჰაილე გებრესელასიე"
+   ]
+  }
+ },
+ {
+  "key": "duplantis",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Armand_Duplantis_on_3rd_of_August_2024.jpg/1280px-Armand_Duplantis_on_3rd_of_August_2024.jpg",
+  "file": "File:Armand Duplantis on 3rd of August 2024.jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Armand Duplantis",
+   "ka": "არმანდ დუპლანტისი"
+  },
+  "wrong": {
+   "en": [
+    "Sergey Bubka",
+    "Renaud Lavillenie",
+    "Sam Kendricks"
+   ],
+   "ka": [
+    "სერგეი ბუბკა",
+    "რენო ლავილენი",
+    "სემ კენდრიქსი"
+   ]
+  }
+ },
+ {
+  "key": "phelps",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Michael_Phelps_Rio_Olympics_2016.jpg",
+  "file": "File:Michael_Phelps_Rio_Olympics_2016.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Michael Phelps",
+   "ka": "მაიკლ ფელპსი"
+  },
+  "wrong": {
+   "en": [
+    "Ryan Lochte",
+    "Ian Thorpe",
+    "Caeleb Dressel"
+   ],
+   "ka": [
+    "რაიან ლოხტე",
+    "იან თორპი",
+    "კეილებ დრესელი"
+   ]
+  }
+ },
+ {
+  "key": "carlsen",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Magnus_Carlsen_at_Rapid_Blitz_2025_%28v2%29.jpg",
+  "file": "File:Magnus_Carlsen_at_Rapid_Blitz_2025_(v2).jpg",
+  "license": "CC BY 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Magnus Carlsen",
+   "ka": "მაგნუს კარლსენი"
+  },
+  "wrong": {
+   "en": [
+    "Hikaru Nakamura",
+    "Fabiano Caruana",
+    "Ian Nepomniachtchi"
+   ],
+   "ka": [
+    "ჰიკარუ ნაკამურა",
+    "ფაბიანო კარუანა",
+    "იან ნეპომნიაშჩი"
+   ]
+  }
+ },
+ {
+  "key": "kasparov",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Garri_Kasparow_%2818776605665%29_%28cropped%29_2.jpg/1280px-Garri_Kasparow_%2818776605665%29_%28cropped%29_2.jpg",
+  "file": "File:Garri_Kasparow_(18776605665)_(cropped)_2.jpg",
+  "license": "CC BY-SA 2.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Garry Kasparov",
+   "ka": "გარი კასპაროვი"
+  },
+  "wrong": {
+   "en": [
+    "Anatoly Karpov",
+    "Bobby Fischer",
+    "Vladimir Kramnik"
+   ],
+   "ka": [
+    "ანატოლი კარპოვი",
+    "ბობი ფიშერი",
+    "ვლადიმერ კრამნიკი"
+   ]
+  }
+ },
+ {
+  "key": "tiger-woods",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/a/a7/President_Donald_Trump_hosts_a_reception_honoring_Black_History_Month_%2854341713089%29_%28cropped%29.jpg",
+  "file": "File:President_Donald_Trump_hosts_a_reception_honoring_Black_History_Month_(54341713089)_(cropped).jpg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Tiger Woods",
+   "ka": "ტაიგერ ვუდსი"
+  },
+  "wrong": {
+   "en": [
+    "Rory McIlroy",
+    "Phil Mickelson",
+    "Jack Nicklaus"
+   ],
+   "ka": [
+    "რორი მაკილროი",
+    "ფილ მიკელსონი",
+    "ჯეკ ნიკლაუსი"
+   ]
+  }
+ },
+ {
+  "key": "biles",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Simone_Biles_National_Team_2024.jpg/1280px-Simone_Biles_National_Team_2024.jpg",
+  "file": "File:Simone_Biles_National_Team_2024.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Simone Biles",
+   "ka": "სიმონ ბაილზი"
+  },
+  "wrong": {
+   "en": [
+    "Aly Raisman",
+    "Gabby Douglas",
+    "Suni Lee"
+   ],
+   "ka": [
+    "ალი რეისმანი",
+    "გები დაგლასი",
+    "სუნი ლი"
+   ]
+  }
+ },
+ {
+  "key": "kohli",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Virat_Kohli_portrait.jpg/1280px-Virat_Kohli_portrait.jpg",
+  "file": "File:Virat Kohli portrait.jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Virat Kohli",
+   "ka": "ვირატ კოლი"
+  },
+  "wrong": {
+   "en": [
+    "Sachin Tendulkar",
+    "Rohit Sharma",
+    "MS Dhoni"
+   ],
+   "ka": [
+    "საჩინ ტენდულკარი",
+    "როჰიტ შარმა",
+    "მაჰენდრა სინგ დონი"
+   ]
+  }
+ },
+ {
+  "key": "brady",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/7/73/25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Tom_Brady_-_240422_191334_%28cropped%29_%28cropped%29.jpg",
+  "file": "File:25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Tom_Brady_-_240422_191334_(cropped)_(cropped).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Tom Brady",
+   "ka": "ტომ ბრეიდი"
+  },
+  "wrong": {
+   "en": [
+    "Peyton Manning",
+    "Aaron Rodgers",
+    "Patrick Mahomes"
+   ],
+   "ka": [
+    "პეიტონ მენინგი",
+    "აარონ როჯერსი",
+    "პატრიკ მაჰომსი"
+   ]
+  }
+ },
+ {
+  "key": "pogacar",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/2022_Tour_of_Slovenia_%28Stage_3%2C_Tadej_Poga%C4%8Dar_celebrating_victory_on_Celje_Castle_v2%29.jpg/1280px-2022_Tour_of_Slovenia_%28Stage_3%2C_Tadej_Poga%C4%8Dar_celebrating_victory_on_Celje_Castle_v2%29.jpg",
+  "file": "File:2022_Tour_of_Slovenia_(Stage_3,_Tadej_Pogačar_celebrating_victory_on_Celje_Castle_v2).jpg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Tadej Pogačar",
+   "ka": "ტადეი პოგაჩარი"
+  },
+  "wrong": {
+   "en": [
+    "Jonas Vingegaard",
+    "Chris Froome",
+    "Remco Evenepoel"
+   ],
+   "ka": [
+    "იონას ვინგეგორი",
+    "კრის ფრუმი",
+    "რემკო ევენეპული"
+   ]
+  }
+ },
+ {
+  "key": "talakhadze",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/6/67/Lasha_Talakhadze_Rio_2016c.jpg",
+  "file": "File:Lasha Talakhadze Rio 2016c.jpg",
+  "license": "CC BY 2.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Lasha Talakhadze",
+   "ka": "ლაშა ტალახაძე"
+  },
+  "wrong": {
+   "en": [
+    "Levan Saginashvili",
+    "Geno Petriashvili",
+    "Lasha Bekauri"
+   ],
+   "ka": [
+    "ლევან საგინაშვილი",
+    "გენო პეტრიაშვილი",
+    "ლაშა ბექაური"
+   ]
+  }
+ }
+]
