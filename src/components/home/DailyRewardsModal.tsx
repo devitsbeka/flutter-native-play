@@ -109,12 +109,32 @@ function RewardPill({ icon, value }: { icon: string; value: number }) {
 type DayState = "claimed" | "missed" | "today" | "future";
 type ClaimPhase = "idle" | "opening" | "revealed";
 
+/** What a claim paid — the receipt the claimed pill shows. */
+interface ClaimedReward {
+  coins: number;
+  gems: number;
+  powerUp: string | null;
+  powerUpCount: number;
+}
+
+// One compact icon+amount pair for the claimed pill. Everything shrink-0 and
+// nowrap: the pill's contract is a single centered line, whatever the day paid.
+function ClaimedAmount({ icon, value }: { icon: string; value: string }) {
+  return (
+    <span className="flex shrink-0 items-center gap-0.5 text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
+      <img src={icon} alt="" width={18} height={18} className="shrink-0" />
+      {value}
+    </span>
+  );
+}
+
 function DayRewardCard({
   date,
   index,
   state,
   phase,
   awarded,
+  claimedReward,
   canClaim,
   onClaim,
   language,
@@ -125,7 +145,9 @@ function DayRewardCard({
   state: DayState;
   /** The reveal runs only on today's card; every other card gets "idle". */
   phase: ClaimPhase;
-  awarded: { coins: number; gems: number; powerUp: string | null; powerUpCount: number } | null;
+  awarded: ClaimedReward | null;
+  /** The receipt for an already-claimed day; null for pre-receipt claims. */
+  claimedReward: ClaimedReward | null;
   canClaim: boolean;
   onClaim: () => void;
   language: string;
@@ -214,13 +236,39 @@ function DayRewardCard({
 
       {/* State row */}
       {state === "claimed" || (state === "today" && phase === "revealed") ? (
-        <div
-          className="flex h-[50px] w-[144px] items-center justify-center gap-1.5 rounded-[18px]"
-          style={{ background: "rgba(255,255,255,0.3)" }}
-        >
-          <Check className="h-5 w-5 text-white" />
-          <span className="text-base font-bold text-white">{t("dailyRewards.claimed")}</span>
-        </div>
+        claimedReward ? (
+          // The receipt: check + label + what the day actually paid, one
+          // centered line always (nowrap, everything shrink-0). Coins are
+          // constant; the bonus is at most one more kind — see
+          // claim_daily_reward's "never a third pill" rule.
+          <div
+            className="flex h-[50px] min-w-[144px] max-w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-[18px] px-3"
+            style={{ background: "rgba(255,255,255,0.3)" }}
+          >
+            <Check className="h-4 w-4 shrink-0 text-white" />
+            <span className="shrink-0 text-sm font-bold text-white">{t("dailyRewards.claimed")}</span>
+            <ClaimedAmount icon={coinIcon} value={String(claimedReward.coins)} />
+            {claimedReward.gems > 0 && <ClaimedAmount icon={gemIcon} value={String(claimedReward.gems)} />}
+            {claimedReward.powerUp && (
+              <span className="flex shrink-0 items-center gap-0.5 text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
+                {claimedReward.powerUp === "time-drain" ? (
+                  <TimeIcon size={18} />
+                ) : (
+                  <img src={POWER_ICONS[claimedReward.powerUp] || power5050} alt="" width={18} height={18} className="shrink-0" />
+                )}
+                {claimedReward.powerUpCount}x
+              </span>
+            )}
+          </div>
+        ) : (
+          <div
+            className="flex h-[50px] w-[144px] items-center justify-center gap-1.5 rounded-[18px]"
+            style={{ background: "rgba(255,255,255,0.3)" }}
+          >
+            <Check className="h-5 w-5 text-white" />
+            <span className="text-base font-bold text-white">{t("dailyRewards.claimed")}</span>
+          </div>
+        )
       ) : isMissed ? (
         <div
           className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
@@ -267,6 +315,9 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
   const [phase, setPhase] = useState<ClaimPhase>("idle");
   // Which days of this week have a claim recorded, as local yyyy-mm-dd.
   const [claimedDates, setClaimedDates] = useState<Set<string>>(new Set());
+  // Per-day receipts (what each claim paid), keyed the same way. Days claimed
+  // before the receipt columns existed have none and show a plain "Claimed".
+  const [claimedRewards, setClaimedRewards] = useState<Record<string, ClaimedReward>>({});
   // What the server actually granted. The gift hides the amount until the
   // claim comes back; PRO Plus multipliers and the once-per-day guard are all
   // decided server-side, so what is revealed is what was actually paid.
@@ -284,14 +335,34 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
     let cancelled = false;
     void supabase
       .from("user_daily_rewards")
-      .select("reward_date, daily_claimed")
+      // The receipt columns postdate the generated types — the cast keeps
+      // the client from narrowing the row to the stale shape.
+      .select("reward_date, daily_claimed, coins_awarded, gems_awarded, power_up, power_up_count" as "*")
       .gte("reward_date", localISO(week[0]))
       .lte("reward_date", localISO(week[6]))
       .then(({ data }) => {
         if (cancelled || !data) return;
-        setClaimedDates(
-          new Set(data.filter((r) => r.daily_claimed).map((r) => String(r.reward_date))),
-        );
+        const rows = (data as unknown) as {
+          reward_date: string;
+          daily_claimed: boolean | null;
+          coins_awarded?: number | null;
+          gems_awarded?: number | null;
+          power_up?: string | null;
+          power_up_count?: number | null;
+        }[];
+        const claimed = rows.filter((r) => r.daily_claimed);
+        setClaimedDates(new Set(claimed.map((r) => String(r.reward_date))));
+        const receipts: Record<string, ClaimedReward> = {};
+        for (const r of claimed) {
+          if (r.coins_awarded == null) continue; // claimed before receipts existed
+          receipts[String(r.reward_date)] = {
+            coins: r.coins_awarded,
+            gems: r.gems_awarded ?? 0,
+            powerUp: r.power_up ?? null,
+            powerUpCount: r.power_up_count ?? 0,
+          };
+        }
+        setClaimedRewards(receipts);
       });
     return () => {
       cancelled = true;
@@ -400,11 +471,13 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
       return;
     }
 
-    setAwarded({ coins: claim.coins, gems: claim.gems, powerUp: claim.powerUp, powerUpCount: claim.powerUpCount });
+    const receipt = { coins: claim.coins, gems: claim.gems, powerUp: claim.powerUp, powerUpCount: claim.powerUpCount };
+    setAwarded(receipt);
     setPhase("revealed");
     playSound("reward");
     celebrateClaim();
     setClaimedDates((prev) => new Set([...prev, todayISO]));
+    setClaimedRewards((prev) => ({ ...prev, [todayISO]: receipt }));
     refreshTimers();
 
     // Let the prize wiggle, then fly it to the wallet and close.
@@ -490,6 +563,7 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
                     state={stateOf(date, index)}
                     phase={index === todayIndex ? phase : "idle"}
                     awarded={index === todayIndex ? awarded : null}
+                    claimedReward={claimedRewards[localISO(date)] ?? null}
                     canClaim={canClaimDaily && !claimedToday}
                     onClaim={handleClaim}
                     language={language}
