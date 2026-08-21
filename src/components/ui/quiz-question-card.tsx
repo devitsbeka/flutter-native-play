@@ -125,7 +125,12 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       >
         {/* Image for Image Trivia questions */}
         {hasImage && !hasVideo && !hasAudio && (
-          <div className="w-full h-36 overflow-hidden bg-gray-100 relative flex items-center justify-center">
+          <div
+            className={cn(
+              "w-full h-36 overflow-hidden relative flex items-center justify-center",
+              imageInset ? "bg-white" : "bg-gray-100",
+            )}
+          >
             {/* Skeleton while the image downloads - a silently empty card
                 looks broken on slow connections */}
             {imageStatus === "loading" && (
@@ -137,24 +142,32 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
                 photograph must not be cropped when the answer might be in the
                 cropped part — but anything not 2:1 then left flat grey down
                 both sides. scale-110 because a blur samples past its own
-                edges and would otherwise show a soft grey frame. */}
-            <img
-              src={imageUrl!}
-              alt=""
-              aria-hidden
-              className={cn(
-                "absolute inset-0 w-full h-full object-cover scale-110 blur-2xl",
-                imageStatus === "loaded" ? "opacity-95" : "opacity-0"
-              )}
-              decoding="async"
-            />
+                edges and would otherwise show a soft grey frame.
+
+                Not for inset (logo) images: a brand mark reads best on plain
+                white, and its own blur behind it read as a smudge. */}
+            {!imageInset && (
+              <img
+                src={imageUrl!}
+                alt=""
+                aria-hidden
+                className={cn(
+                  "absolute inset-0 w-full h-full object-cover scale-110 blur-2xl",
+                  imageStatus === "loaded" ? "opacity-95" : "opacity-0"
+                )}
+                decoding="async"
+              />
+            )}
 
             <img
               src={imageUrl!}
               alt="Question"
               className={cn(
-                "w-full h-full object-contain relative",
-                imageInset && "p-[7.5%]",
+                "relative object-contain",
+                // Inset caps the mark at 72% of the band's height, so the
+                // top/bottom gap survives any card width (percentage padding
+                // resolves against width and could not promise that).
+                imageInset ? "max-h-[72%] max-w-[80%] w-auto h-auto" : "w-full h-full",
                 imageStatus !== "loaded" && "opacity-0"
               )}
               loading="eager"
