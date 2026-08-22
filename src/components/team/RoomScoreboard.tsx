@@ -356,7 +356,10 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                     />
                   </div>
                   
-                  {/* Name + Crown - flex grow */}
+                  {/* Name + Crown - flex grow. The add-friend button belongs
+                      to the person, so it sits with their name rather than
+                      out in the score column, where it read as part of the
+                      score. */}
                   <div className="flex-1 min-w-0 flex items-center gap-1.5">
                     <p className={`font-medium text-sm truncate ${isInvited ? "text-white/50" : "text-white"}`}>
                       {p.user_id === currentUserId ? t("extra.youLabel") : p.nickname}
@@ -367,18 +370,16 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                     {showHostCrown && p.is_host && !isInvited && (
                       <Crown className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
                     )}
+                    {!isInvited && <AddFriendButton userId={p.user_id} />}
                   </div>
-                  
+
                   {/* Score + Rounds - fixed width, right aligned */}
                   {!isInvited ? (
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <div className="flex items-center gap-1">
-                        <span className="font-bold text-white">{(p as any).total_score || 0}</span>
-                        <span className="text-xs text-white/60">
-                          ({t("extra.roundsShort", { count: p.total_rounds_played || 0 })})
-                        </span>
-                      </div>
-                      <AddFriendButton userId={p.user_id} />
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <span className="font-bold text-white">{(p as any).total_score || 0}</span>
+                      <span className="text-xs text-white/60">
+                        ({t("extra.roundsShort", { count: p.total_rounds_played || 0 })})
+                      </span>
                     </div>
                   ) : isHost && (
                     <div className="flex items-center gap-1.5 flex-shrink-0">

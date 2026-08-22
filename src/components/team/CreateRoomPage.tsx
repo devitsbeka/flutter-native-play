@@ -14,6 +14,8 @@ import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
+import { categoryGradient } from "@/utils/categoryGradient";
 import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 import { createNotification } from "@/hooks/useNotifications";
 // Room names are AI-generated via edge function during room creation
@@ -1096,7 +1098,15 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                       </>
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-purple-500 to-violet-600" />
+                      // Random landed on a category with no video: show which
+                      // one, rather than an anonymous purple panel.
+                      <div className="w-full h-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+                        <CategoryArtwork
+                          categoryId={selectedCategory.category_id}
+                          iconSlug={selectedCategory.icon_slug}
+                          size={96}
+                        />
+                      </div>
                     )}
                     
                     {/* Overlaid Info Bar at Bottom */}
@@ -1133,7 +1143,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         {/* Re-roll button */}
                         <button 
                           onClick={selectRandomCategory}
-                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
                           title={t("extra.anotherCategory")}
                         >
                           <RefreshCw className="w-5 h-5 text-white" />
@@ -1141,7 +1151,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         {/* Add to queue */}
                         <button
                           onClick={() => setShowQueuePicker(true)}
-                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
                            title={t("extra.addToQueue")}
                         >
                           <Plus className="w-5 h-5 text-white" />
@@ -1149,7 +1159,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         {/* Clear button */}
                         <button 
                           onClick={clearSelection}
-                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
                         >
                           <X className="w-5 h-5 text-white" />
                         </button>
@@ -1236,20 +1246,40 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                       </>
                     ) : (
-                      <div 
-                        className="w-full h-full"
-                        style={{ background: `linear-gradient(135deg, ${selectedCategory.color || 'hsl(var(--primary))'}, ${selectedCategory.color || 'hsl(var(--primary))'}dd)` }}
-                      />
+                      // No video for this category (the picture-guess set has
+                      // none): its own icon on its own gradient, under the same
+                      // scrim the video branch uses — the info bar below is
+                      // white text and white glyphs and has to stay readable.
+                      <>
+                        <div
+                          className="w-full h-full flex items-center justify-center"
+                          style={{ background: categoryGradient(selectedCategory.color) }}
+                        >
+                          <CategoryArtwork
+                            categoryId={selectedCategory.category_id}
+                            iconSlug={selectedCategory.icon_slug}
+                            size={96}
+                          />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      </>
                     )}
                     
                     {/* Overlaid Info Bar at Bottom */}
                     <div className="absolute bottom-0 left-0 right-0 p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 overflow-hidden">
                           {selectedCategory.category_id === "__mixed__" ? (
                             <DynamicIcon slug="mystery-box" size={24} />
                           ) : (
-                            <img src={secretBookcase} alt="" className="w-6 h-6 object-contain" />
+                            // The category's own icon. This was a stock
+                            // bookcase for every category alike, which said
+                            // "library" rather than which one was picked.
+                            <CategoryArtwork
+                              categoryId={selectedCategory.category_id}
+                              iconSlug={selectedCategory.icon_slug}
+                              size={26}
+                            />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1280,7 +1310,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         {/* Add to queue */}
                         <button
                           onClick={() => setShowQueuePicker(true)}
-                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
                            title={t("extra.addToQueue")}
                         >
                           <Plus className="w-5 h-5 text-white" />
@@ -1288,7 +1318,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         {/* Clear button */}
                         <button 
                           onClick={clearSelection}
-                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
                         >
                           <X className="w-5 h-5 text-white" />
                         </button>
@@ -1368,13 +1398,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         </div>
                         <button 
                           onClick={() => setShowMyTriviasModal(true)}
-                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
                         >
                           <RefreshCw className="w-5 h-5 text-white" />
                         </button>
                         <button
                           onClick={() => setShowQueuePicker(true)}
-                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
                           title={t("extra.addToQueue")}
                         >
                           <Plus className="w-5 h-5 text-white" />
@@ -1386,7 +1416,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                             setRoomName("");
                             setQueuedRounds([]);
                           }}
-                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                          className="p-2 shrink-0 bg-black/45 border border-white/30 backdrop-blur-sm hover:bg-black/60 rounded-lg transition-colors"
                         >
                           <X className="w-5 h-5 text-white" />
                         </button>

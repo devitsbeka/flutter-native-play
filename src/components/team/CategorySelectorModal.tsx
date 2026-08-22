@@ -5,6 +5,8 @@ import { Search, Check } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
+import { categoryGradient } from "@/utils/categoryGradient";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
@@ -27,6 +29,7 @@ interface Category {
   category_id: string;
   name: string;
   icon: string;
+  icon_slug?: string | null;
   color: string;
   image_url?: string | null;
   total_levels: number;
@@ -53,7 +56,7 @@ export function CategorySelectorModal({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
-        .select("id, category_id, name, icon, color, image_url, total_levels, is_language_specific, language")
+        .select("id, category_id, name, icon, icon_slug, color, image_url, total_levels, is_language_specific, language")
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
 
@@ -250,12 +253,19 @@ export function CategorySelectorModal({
                     ) : (
                       <>
                         <div
-                          className="absolute inset-0"
-                          style={{
-                            background: `linear-gradient(135deg, ${bgColor}, ${bgColor}dd)`,
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                          className="absolute inset-0 flex items-center justify-center"
+                          style={{ background: categoryGradient(bgColor) }}
+                        >
+                          <CategoryArtwork
+                            categoryId={category.category_id}
+                            iconSlug={category.icon_slug}
+                            size={56}
+                          />
+                        </div>
+                        {/* Deeper than the video branch's scrim on purpose:
+                            these gradients include pale yellows the label has
+                            to sit on top of. */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
                       </>
                     )}
                   </div>
