@@ -64,6 +64,7 @@ import {
 } from "@/components/team/UnifiedFiltersBar";
 import { QRScannerModal } from "@/components/team/QRScannerModal";
 import { supabase } from "@/integrations/supabase/client";
+import { instantTouchProps } from "@/utils/instantTouch";
 import { toast } from "sonner";
 
 function TeamContentV2() {
@@ -941,11 +942,11 @@ function TeamContentV2() {
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={() =>
+                    {...instantTouchProps(() =>
                       activeTab === "rooms"
                         ? setShowCreateModal(true)
-                        : setShowCreateTypeModal(true)
-                    }
+                        : setShowCreateTypeModal(true),
+                    )}
                     className="hidden md:flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-primary text-primary-foreground shadow-sm shrink-0 text-sm font-bold"
                   >
                     {activeTab === "rooms"

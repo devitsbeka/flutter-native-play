@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { instantTouchProps } from "@/utils/instantTouch";
 import { PUBLIC_SHARING_ENABLED } from "@/config/features";
 
 export interface FilterOption<T extends string> {
@@ -109,7 +110,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
               <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                onClick={() => { setIsSearchOpen(true); scrollToTop(); }}
+                {...instantTouchProps(() => { setIsSearchOpen(true); scrollToTop(); })}
                 className="h-9 w-9 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 flex items-center justify-center"
               >
                 <Search className="h-4 w-4 text-muted-foreground" />
@@ -175,7 +176,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
               <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                onClick={onAddClick}
+                {...instantTouchProps(onAddClick)}
                 className="flex md:hidden items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0"
               >
                 <span className="text-[13px] font-bold">{defaultAddText}</span>
