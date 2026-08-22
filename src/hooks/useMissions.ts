@@ -611,7 +611,7 @@ const EMPTY_MISSIONS: MissionsData = { daily: [], weekly: [] };
 
 export function useMissions() {
   const { user, profile, updateProfile, setProfileLocal } = useAuth();
-  const { recordDailyCompletion } = useMissionStreak();
+  const { recordDailyCompletion, claimStreakBonus } = useMissionStreak();
   const queryClient = useQueryClient();
   const queryKey = ["missions", user?.id];
   const gamesPlayed = profile?.games_played || 0;
@@ -786,7 +786,16 @@ export function useMissions() {
 
       // The streak first: the strip reads it, and it should be right even if
       // the payout below throws.
-      await recordDailyCompletion();
+      const streakResult = await recordDailyCompletion();
+
+      // And the tier that streak has reached. claimStreakBonus existed from
+      // the beginning and nothing ever called it, so the whole ladder — 25
+      // coins at one day up to 300 and 15 gems at thirty — has never paid
+      // anybody. The count comes from the call above rather than from hook
+      // state, which has not re-rendered yet and still holds yesterday's.
+      if (streakResult?.newStreak) {
+        await claimStreakBonus(streakResult.newStreak);
+      }
 
       const { data: currency } = await supabase.rpc("credit_gameplay_reward", {
         p_kind: "mission",
@@ -818,7 +827,7 @@ export function useMissions() {
         description: createElement(RewardChipsRow, { coins: DAY_BONUS.coins, xp: DAY_BONUS.xp }),
       });
     },
-    [user, profile, recordDailyCompletion, setProfileLocal, updateProfile]
+    [user, profile, recordDailyCompletion, claimStreakBonus, setProfileLocal, updateProfile]
   );
 
   const updateMissionProgress = useCallback(
