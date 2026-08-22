@@ -1,6 +1,6 @@
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, UserPlus, Swords, Gamepad2, Check, Clock, Heart, Play, Send, ArrowRight, Users, MoreVertical, UserMinus, Loader2, Camera, Plus, Pencil } from "lucide-react";
+import { ChevronLeft, UserPlus, Swords, Gamepad2, Check, Clock, Heart, Play, Send, ArrowRight, Users, Loader2, Camera, Plus, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import iconTrophy from "@/assets/icon-trophy.png";
 import iconTrivia from "@/assets/trivia-buzzer.png";
@@ -24,12 +24,6 @@ import { CreateQuizModal } from "@/components/social/CreateQuizModal";
 import { AdminProfileEditor } from "@/components/profile/AdminProfileEditor";
 import { SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -306,50 +300,21 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   {t("extra.profileTitle")}
                 </h1>
                 
-                {/* Three-dots menu for friends — report/block rides beside
-                    it: harassment overwhelmingly comes from accepted
-                    friends, and 1.2 wants the affordance on ANY profile. */}
-                {data?.friendshipStatus === 'accepted' && !data?.isCurrentUser ? (
-                  <div className="flex items-center gap-1">
-                  {userId && <PlayerOverflowMenu userId={userId} displayName={data?.profile?.nickname} />}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="w-10 h-10 rounded-full bg-muted flex items-center justify-center active:scale-95 transition-transform"
-                        style={{ touchAction: 'manipulation' }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreVertical className="w-5 h-5 text-foreground" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent 
-                      align="end" 
-                      className="min-w-[160px] z-[200] bg-popover border border-border shadow-lg"
-                      sideOffset={5}
-                    >
-                      <DropdownMenuItem 
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          // Delay to allow dropdown to close before opening AlertDialog
-                          setTimeout(() => {
-                            setShowDeleteConfirm(true);
-                          }, 100);
-                        }}
-                        className="text-destructive focus:text-destructive focus:bg-destructive/10 gap-2 cursor-pointer"
-                      >
-                        <UserMinus className="w-4 h-4" />
-                        {t("extra.removeMenuItem")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  </div>
-                ) : !data?.isCurrentUser && userId ? (
-                  /* Report/block for any profile that isn't yours (1.2):
-                     this modal is the whole of /profile/:userId and every
-                     avatar tap in the feed — it had no way to report an
-                     offensive nickname or avatar. */
-                  <PlayerOverflowMenu userId={userId} displayName={data?.profile?.nickname} />
+                {/* One three-dots menu for any profile that isn't yours (1.2):
+                    report + block always, and — on an accepted friend —
+                    remove-friend in the same dropdown. Two dot buttons side
+                    by side read as a rendering bug, not two menus. */}
+                {!data?.isCurrentUser && userId ? (
+                  <PlayerOverflowMenu
+                    userId={userId}
+                    displayName={data?.profile?.nickname}
+                    triggerClassName="w-10 h-10 p-0 flex items-center justify-center bg-muted text-foreground [&_svg]:w-5 [&_svg]:h-5"
+                    onRemoveFriend={
+                      data?.friendshipStatus === 'accepted'
+                        ? () => setShowDeleteConfirm(true)
+                        : undefined
+                    }
+                  />
                 ) : (
                   <div className="w-10" />
                 )}

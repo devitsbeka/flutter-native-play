@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { MoreVertical, Flag, Ban } from "lucide-react";
+import { MoreVertical, Flag, Ban, UserMinus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ReportBlockSheet } from "@/components/social/ReportBlockSheet";
@@ -10,6 +10,11 @@ interface PlayerOverflowMenuProps {
   userId: string;
   displayName?: string;
   className?: string;
+  /** Restyle the dots button (e.g. the profile header's 40px round chip). */
+  triggerClassName?: string;
+  /** When set, the menu also offers "remove friend" — one dropdown instead
+   *  of two dot buttons side by side on a friend's profile. */
+  onRemoveFriend?: () => void;
 }
 
 /**
@@ -22,7 +27,13 @@ interface PlayerOverflowMenuProps {
  * Renders nothing on your own content, and nothing for a signed-out reader,
  * who has no account to report from.
  */
-export function PlayerOverflowMenu({ userId, displayName, className }: PlayerOverflowMenuProps) {
+export function PlayerOverflowMenu({
+  userId,
+  displayName,
+  className,
+  triggerClassName,
+  onRemoveFriend,
+}: PlayerOverflowMenuProps) {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -60,7 +71,10 @@ export function PlayerOverflowMenu({ userId, displayName, className }: PlayerOve
           e.stopPropagation();
           setOpen((v) => !v);
         }}
-        className="p-1.5 rounded-full text-muted-foreground hover:bg-muted active:scale-95 transition"
+        className={cn(
+          "p-1.5 rounded-full text-muted-foreground hover:bg-muted active:scale-95 transition",
+          triggerClassName,
+        )}
       >
         <MoreVertical className="w-4 h-4" />
       </button>
@@ -92,6 +106,19 @@ export function PlayerOverflowMenu({ userId, displayName, className }: PlayerOve
             <Ban className="h-4 w-4 shrink-0" />
             {t("moderation.block")}
           </button>
+          {onRemoveFriend && (
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onRemoveFriend();
+              }}
+              className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-medium text-destructive hover:bg-destructive/10"
+            >
+              <UserMinus className="h-4 w-4 shrink-0" />
+              {t("extra.removeMenuItem")}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setOpen(false)}
