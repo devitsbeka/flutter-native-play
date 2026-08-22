@@ -12,6 +12,9 @@
  */
 
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildFcmMessage, type PushPerson } from "./pushPayload.ts";
+
+export type { PushPerson };
 
 const base64Url = (bytes: string) =>
   btoa(bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -97,21 +100,6 @@ export async function getFCMAccessToken(account: ServiceAccount): Promise<string
   return data.access_token;
 }
 
-/**
- * Who a push is from, when it is from a person rather than from the app.
- *
- * Passing this turns the notification into an iOS communication
- * notification — the sender's avatar in the circle with the app icon badged
- * onto it, their name as the title — instead of a bare app icon. A
- * non-https avatar (the bundled mascot art is a local asset path, not a URL)
- * is dropped: iOS then draws the sender's monogram, which is still the
- * person treatment.
- */
-export interface PushPerson {
-  name: string;
-  avatarUrl?: string | null;
-}
-
 export async function sendToToken(
   accessToken: string,
   projectId: string,
@@ -123,20 +111,9 @@ export async function sendToToken(
   person?: PushPerson,
 ): Promise<{ success: boolean; error?: string; unregistered?: boolean }> {
   try {
-    // A push FROM SOMEONE is drawn by iOS with their avatar and the app icon
-    // badged onto it (a communication notification) — but only if the service
-    // extension can rebuild it, which needs the sender in the payload and
-    // mutable-content set. See NotificationService.swift.
-    const senderFields = person?.name?.trim()
-      ? {
-          sender_name: person.name.trim(),
-          ...(person.avatarUrl?.startsWith("https://")
-            ? { sender_avatar: person.avatarUrl }
-            : {}),
-        }
-      : undefined;
-    const payloadData = senderFields ? { ...(data ?? {}), ...senderFields } : data;
-    const needsExtension = !!imageUrl || !!senderFields;
+    // The payload itself is built in _shared/pushPayload.ts, where the tests
+    // in src/__tests__/pushPerson.test.ts can reach it — this module cannot be
+    // imported from there, see that file's header.
     const res = await fetch(
       `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
       {
@@ -146,38 +123,7 @@ export async function sendToToken(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: {
-            token,
-            notification: { title, body, ...(imageUrl ? { image: imageUrl } : {}) },
-            ...(payloadData ? { data: payloadData } : {}),
-            apns: {
-              // Priority 10 = deliver immediately. It is FCM's default for
-              // alert pushes, but stated explicitly so a future payload
-              // change (e.g. data-only) cannot silently drop deliveries to
-              // the batched priority-5 path.
-              headers: { "apns-priority": "10" },
-              // mutable-content lets the iOS Notification Service Extension
-              // fetch and attach the image. Without the extension in the app,
-              // iOS simply shows the text — the field is inert, not harmful.
-              payload: {
-                aps: {
-                  alert: { title, body },
-                  sound: "default",
-                  badge: 1,
-                  ...(needsExtension ? { "mutable-content": 1 } : {}),
-                },
-              },
-              ...(imageUrl ? { fcm_options: { image: imageUrl } } : {}),
-            },
-            android: {
-              priority: "high",
-              notification: {
-                sound: "default",
-                channelId: "game_notifications",
-                ...(imageUrl ? { image: imageUrl } : {}),
-              },
-            },
-          },
+          message: buildFcmMessage({ token, title, body, data, imageUrl, person }),
         }),
       },
     );
