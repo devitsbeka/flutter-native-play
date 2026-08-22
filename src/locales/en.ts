@@ -3122,6 +3122,8 @@ export const en: KaTranslations = {
     cpObserverLabel: "Observer",
     cpNoTriviaFound: "No trivia found",
     cpSelectBtn: "Select",
+    queueSheetTitle: "Coming up",
+    queueSheetEmpty: "Nothing queued yet",
     cpAddBtn: "Add",
     cpAddToQueue: "Add to queue",
     // Category Picker Section

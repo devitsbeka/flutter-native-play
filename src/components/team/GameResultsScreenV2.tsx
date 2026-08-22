@@ -24,6 +24,7 @@ import xpIcon from "@/assets/level/xp-spark.png";
 import { toast } from "sonner";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { CategoryPickerModal } from "./CategoryPickerModal";
+import { RoomQueueSheet } from "./RoomQueueSheet";
 import { calculateMultiplayerPayout } from "@/utils/multiplayerPayout";
 import { isGuestAccount } from "@/utils/guestAccount";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
@@ -56,6 +57,7 @@ export function GameResultsScreenV2() {
   const { openProfile } = usePlayerProfile();
   const [coinsEarned, setCoinsEarned] = useState(0);
   const [showGuestSignUp, setShowGuestSignUp] = useState(false);
+  const [showQueueSheet, setShowQueueSheet] = useState(false);
 
   // Let the result land before asking for anything — the score is the reason
   // they played, and the ask reads as a reward rather than a toll gate.
@@ -621,11 +623,17 @@ export function GameResultsScreenV2() {
       >
         {/* Next Round Preview - show if queue has items */}
         {nextQueueItem && (
-          <motion.div
+          // Tappable: it already showed "+3 >" beside the next item, which
+          // reads as something you can open. A player waiting on the host
+          // could see more rounds existed and had no way to see what they
+          // were.
+          <motion.button
+            type="button"
+            onClick={() => setShowQueueSheet(true)}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5 }}
-            className="p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
+            className="w-full text-left p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 transition-colors hover:bg-white/15 active:scale-[0.99]"
           >
             <p className="text-white/50 text-xs mb-2">{t("extra.nextRoundLabel")}</p>
             <div className="flex items-center gap-3">
@@ -645,14 +653,12 @@ export function GameResultsScreenV2() {
                   ? t("extra.randomOption")
                   : localizeCategory(nextQueueItem.category_name) || t("extra.categoryType")}
               </span>
-              {queue.length > 1 && (
-                <span className="text-white/40 text-sm flex items-center gap-1">
-                  +{queue.length - 1} {t("extra.moreCount")}
-                  <ChevronRight className="w-4 h-4" />
-                </span>
-              )}
+              <span className="text-white/40 text-sm flex items-center gap-1 flex-shrink-0">
+                {queue.length > 1 && <>+{queue.length - 1} {t("extra.moreCount")}</>}
+                <ChevronRight className="w-4 h-4" />
+              </span>
             </div>
-          </motion.div>
+          </motion.button>
         )}
 
         {/* Strict host check: ensure user.id is defined and matches host_user_id */}
@@ -725,6 +731,12 @@ export function GameResultsScreenV2() {
       </motion.div>
 
       {/* Category Picker Modal */}
+      <RoomQueueSheet
+        isOpen={showQueueSheet}
+        onClose={() => setShowQueueSheet(false)}
+        queue={queue}
+      />
+
       <CategoryPickerModal
         isOpen={showCategoryPicker}
         onClose={() => setShowCategoryPicker(false)}
