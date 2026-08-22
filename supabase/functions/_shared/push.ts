@@ -97,6 +97,21 @@ export async function getFCMAccessToken(account: ServiceAccount): Promise<string
   return data.access_token;
 }
 
+/**
+ * Who a push is from, when it is from a person rather than from the app.
+ *
+ * Passing this turns the notification into an iOS communication
+ * notification — the sender's avatar in the circle with the app icon badged
+ * onto it, their name as the title — instead of a bare app icon. A
+ * non-https avatar (the bundled mascot art is a local asset path, not a URL)
+ * is dropped: iOS then draws the sender's monogram, which is still the
+ * person treatment.
+ */
+export interface PushPerson {
+  name: string;
+  avatarUrl?: string | null;
+}
+
 export async function sendToToken(
   accessToken: string,
   projectId: string,
@@ -105,8 +120,23 @@ export async function sendToToken(
   body: string,
   data?: Record<string, string>,
   imageUrl?: string,
+  person?: PushPerson,
 ): Promise<{ success: boolean; error?: string; unregistered?: boolean }> {
   try {
+    // A push FROM SOMEONE is drawn by iOS with their avatar and the app icon
+    // badged onto it (a communication notification) — but only if the service
+    // extension can rebuild it, which needs the sender in the payload and
+    // mutable-content set. See NotificationService.swift.
+    const senderFields = person?.name?.trim()
+      ? {
+          sender_name: person.name.trim(),
+          ...(person.avatarUrl?.startsWith("https://")
+            ? { sender_avatar: person.avatarUrl }
+            : {}),
+        }
+      : undefined;
+    const payloadData = senderFields ? { ...(data ?? {}), ...senderFields } : data;
+    const needsExtension = !!imageUrl || !!senderFields;
     const res = await fetch(
       `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
       {
@@ -119,7 +149,7 @@ export async function sendToToken(
           message: {
             token,
             notification: { title, body, ...(imageUrl ? { image: imageUrl } : {}) },
-            ...(data ? { data } : {}),
+            ...(payloadData ? { data: payloadData } : {}),
             apns: {
               // Priority 10 = deliver immediately. It is FCM's default for
               // alert pushes, but stated explicitly so a future payload
@@ -134,7 +164,7 @@ export async function sendToToken(
                   alert: { title, body },
                   sound: "default",
                   badge: 1,
-                  ...(imageUrl ? { "mutable-content": 1 } : {}),
+                  ...(needsExtension ? { "mutable-content": 1 } : {}),
                 },
               },
               ...(imageUrl ? { fcm_options: { image: imageUrl } } : {}),
@@ -183,6 +213,7 @@ export async function sendToUsers(
   body: string,
   data?: Record<string, string>,
   imageUrl?: string,
+  person?: PushPerson,
 ): Promise<{ sent: number; failed: number }> {
   if (userIds.length === 0) return { sent: 0, failed: 0 };
 
@@ -199,7 +230,7 @@ export async function sendToUsers(
 
   const results = await Promise.all(
     rows.map(({ token }: { token: string }) =>
-      sendToToken(accessToken, account.project_id, token, title, body, data, imageUrl).then((r) => ({
+      sendToToken(accessToken, account.project_id, token, title, body, data, imageUrl, person).then((r) => ({
         token,
         ...r,
       })),

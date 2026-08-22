@@ -75,7 +75,9 @@ Deno.serve(async (req: Request) => {
     }
 
     const [{ data: sender }, { data: room }, { data: receiver }] = await Promise.all([
-      supabase.from("profiles").select("nickname").eq("user_id", user.id).maybeSingle(),
+      // avatar_url too: the invite is FROM this player, so iOS draws their
+      // face on the notification rather than the app icon.
+      supabase.from("profiles").select("nickname, avatar_url").eq("user_id", user.id).maybeSingle(),
       supabase.from("game_rooms").select("room_name, room_code").eq("id", invite.room_id).maybeSingle(),
       // The push is composed in the RECIPIENT's language — the one they
       // picked in the app, synced to profiles.preferred_language. The
@@ -158,6 +160,8 @@ Deno.serve(async (req: Request) => {
         room_id: String(invite.room_id),
         invitation_id: String(invite.id),
       },
+      undefined,
+      { name: who, avatarUrl: sender?.avatar_url },
     );
 
     console.log(

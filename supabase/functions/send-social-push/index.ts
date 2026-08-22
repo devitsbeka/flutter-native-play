@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
-import { sendToUsers } from "../_shared/push.ts";
+import { sendToUsers, type PushPerson } from "../_shared/push.ts";
 import { PUSH_META, pushMessage, type PushKind } from "../_shared/pushCopy.ts";
 
 /**
@@ -57,6 +57,10 @@ Deno.serve(async (req: Request) => {
     let params: Record<string, string | number>;
     let route: string;
     let detail: string;
+    // Who the push is FROM, when it is from a player. iOS then draws
+    // their avatar with the app icon badged onto it instead of a bare
+    // app icon. Left undefined for anything the app itself says.
+    let person: PushPerson | undefined;
 
     if (kind === "friend_request" || kind === "friend_accept") {
       if (!friendshipId || typeof friendshipId !== "string") {
@@ -86,11 +90,12 @@ Deno.serve(async (req: Request) => {
 
       const { data: caller } = await supabase
         .from("profiles")
-        .select("nickname")
+        .select("nickname, avatar_url")
         .eq("user_id", callerId)
         .maybeSingle();
       pushKind = kind;
       params = { name: caller?.nickname?.trim() || "Someone" };
+      person = { name: String(params.name), avatarUrl: caller?.avatar_url };
       route = PUSH_META[kind].route;
       detail = `${kind}:${friendship.id}`;
     } else if (kind === "challenge_beaten") {
@@ -132,6 +137,9 @@ Deno.serve(async (req: Request) => {
       recipientId = challenge.challenger_id;
       pushKind = "challenge_beaten";
       params = { name: attempt.player_name?.trim() || "Someone" };
+      // A challenge can be played by someone with no account at all, so
+      // there is a name but no avatar — iOS draws their monogram.
+      person = { name: String(params.name) };
       route = `/challenge/${challenge.code}`;
       detail = `challenge_beaten:${attempt.id}`;
     } else if (kind === "room_ping") {
@@ -177,7 +185,7 @@ Deno.serve(async (req: Request) => {
 
       const { data: caller } = await supabase
         .from("profiles")
-        .select("nickname")
+        .select("nickname, avatar_url")
         .eq("user_id", callerId)
         .maybeSingle();
 
@@ -187,6 +195,7 @@ Deno.serve(async (req: Request) => {
         name: caller?.nickname?.trim() || "Someone",
         room: room.room_name?.trim() || room.room_code,
       };
+      person = { name: String(params.name), avatarUrl: caller?.avatar_url };
       route = `/team?join=${encodeURIComponent(room.room_code)}`;
       detail = "";
     } else {
@@ -219,6 +228,7 @@ Deno.serve(async (req: Request) => {
       msg.body,
       { route, notification_type: pushKind },
       PUSH_META[pushKind].icon,
+      person,
     );
 
     return json({ sent: result.sent, failed: result.failed });

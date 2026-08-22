@@ -31,5 +31,22 @@
 		<string>applinks:mytrivia.io</string>
 		<string>applinks:www.mytrivia.io</string>
 	</array>
+
+	<!--
+	  Communication Notifications. A push that comes FROM A PERSON — a game
+	  invite, a friend request, a host calling you back to a room — is drawn
+	  by iOS with that person's avatar and the app icon badged onto it, the
+	  way Messages and Snapchat look, instead of a bare app icon.
+
+	  The notification service extension asks for that treatment by rebuilding
+	  the content from an INSendMessageIntent; iOS refuses the rebuild without
+	  this entitlement, and the extension then delivers the plain notification
+	  — so a missing capability costs the styling, never the notification.
+
+	  Needs "Communication Notifications" enabled on the App ID; Xcode adds it
+	  under automatic signing when the capability is ticked.
+	-->
+	<key>com.apple.developer.usernotifications.communication</key>
+	<true/>
 </dict>
 </plist>
