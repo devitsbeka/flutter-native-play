@@ -20,21 +20,47 @@ interface AvatarRequest {
   prompt?: string;
 }
 
-// The public circle avatar: same character language as the scene, but a
-// centered square head-and-shoulders portrait.
-const PORTRAIT_PROMPT = `Create a square stylized 3D game avatar portrait using the uploaded face photo as the identity reference.
+// The public circle avatar. This text is kept BYTE-IDENTICAL to the
+// frontend's PORTRAIT_AVATAR_PROMPT (src/config/portraitAvatarPrompt.ts
+// with CHARACTER_RENDER_STYLE inlined): the override allowlist below
+// compares by equality, so the app's own portrait request is recognized
+// as canonical rather than treated as an arbitrary non-admin prompt.
+const PORTRAIT_PROMPT = `Create a square stylized 3D character portrait using the supplied image as the identity reference. The reference shows the character in their scene — reproduce that same character's face, hair and outfit exactly, framed as a portrait.
 
-Head and shoulders, centered, facing the viewer with a warm confident smile.
+FRAMING
+Head and shoulders, centered, facing the viewer with a warm, natural, closed-lip smile. The head fills a comfortable portion of the frame with a little headroom — a normal portrait crop, never an extreme close-up.
 
-Preserve the person's recognizable facial identity: face shape, skin tone, hairstyle, hair color, facial hair, eyebrows, eyes, nose, lips and proportions. The result should clearly resemble the same person as a polished stylized 3D game character, not a photorealistic human and not a generic replacement.
+CHARACTER RENDER STYLE — the MyTrivia house style
+Render the person as a premium stylized 3D character: a high-end animated-feature or AAA game cinematic interpretation of this exact person. The style sits deliberately halfway between photography and cartoon — neither extreme is acceptable.
 
-Use the premium casual-game character language of the MyTrivia avatar scenes: soft rounded forms, subtly larger head, expressive eyes, detailed stylized hair, soft skin shading, polished 3D rendering. Not childish, not plastic, not uncanny.
+Keep from reality (do NOT stylize away):
+- True human facial geometry and proportions FOR THIS PERSON'S ACTUAL AGE: normal-sized eyes, real nose and lip shapes, natural jaw and cheekbones, correct eye spacing. A child keeps a child's softer jaw, rounder cheeks and higher forehead; an adult keeps an adult's defined jaw and cheekbones. Never age the person up or down.
+- The likeness itself: face shape, hairstyle, hair color, facial hair silhouette, eyebrows, skin tone, distinctive features. The person must be unmistakably recognizable.
+- Natural head-to-body scale for their age.
 
-Dress the character in a premium purple hoodie with a small gold crown accent.
+Stylize (surface treatment only):
+- Smooth idealized CG skin with soft subsurface shading instead of photographic pores, blemishes and skin texture.
+- Cleanly groomed, sculpted hair with defined strand shapes instead of photographic hair detail.
+- Soft, even, flattering studio light instead of camera-real lighting; gentle rim light and clean specular highlights.
+- Slightly softened, rounded forms in clothing and silhouette.
 
+Explicitly forbidden in BOTH directions:
+- No photorealism: not a photograph, not a retouched photo, no photographic skin texture, no camera grain or lens artifacts.
+- No cartoon exaggeration: no oversized or glossy anime eyes, no shrunken nose, no doll or caricature look, no chibi, no bobblehead, no plastic or toy appearance, no uncanny waxy skin. The head must never be enlarged BEYOND the person's real proportions for their age — a child's head is genuinely larger relative to their body than an adult's, and rendering that correctly is accuracy, not exaggeration.
+
+CONSISTENCY WITH THE SCENE — CRITICAL
+This portrait and the reference scene must read as the same character rendered by the same artist in the same production. Match the reference's face, skin tone, hairstyle and hair color, any headwear, and the level of realism exactly. Do not make the portrait more cartoonish, smoother or more idealized than the reference, and do not make it more photographic. If the reference wears a hat or beret, keep it.
+
+AGE — MATCH THE REFERENCE EXACTLY
+The character is the age the reference shows. If the reference is a child, the portrait is a child: rounder cheeks, softer jaw, higher forehead, smaller features, a head that reads large for the shoulders as a real child's does. If the reference is an adult, keep the adult jaw and cheekbones. Never age the character up or down in either direction — a child rendered as a small adult, or an adult smoothed into a youth, is a failed portrait even if the likeness is otherwise good.
+
+WARDROBE
+The character wears their purple hoodie with the small gold crown accent, as in the reference.
+
+BACKGROUND
 Soft pastel lavender radial background (#E9CCFF) with a gentle vignette, nothing else in frame.
 
-No text, no UI, no logos, no frame, no watermark.`;
+No text, no UI, no logos, no frame, no watermark, no border.`;
 
 // GPT Image 2 on fal: reference-image edit. Scenes render 16:9 close to
 // 1920x1080 (fal requires multiple-of-16 dimensions, so 1088); portraits
@@ -151,7 +177,9 @@ serve(async (req) => {
       // the result becomes a public avatar: admins only. Non-admin
       // overrides are ignored (falling back to the canonical prompt), not
       // rejected, so older clients keep working.
-      let allowOverride = promptOverride.trim() === prompt.trim();
+      let allowOverride =
+        promptOverride.trim() === prompt.trim() ||
+        promptOverride.trim() === PORTRAIT_PROMPT.trim();
       if (!allowOverride && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
         try {
           const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
@@ -178,11 +206,13 @@ serve(async (req) => {
       }
     }
 
-    // Portraits: a supplied prompt wins, otherwise the built-in one. This
-    // used to force PORTRAIT_PROMPT unconditionally, so the avatar's art
-    // style could not be changed without redeploying this function — and it
-    // drifted away from the scene's style.
-    if (mode === "portrait" && !promptOverride) {
+    // Portraits: an ACCEPTED override wins, otherwise the built-in portrait
+    // prompt. This used to key on "was an override supplied" — but the
+    // guardrails above IGNORE a non-admin override, so every regular user's
+    // portrait fell through to the scene settings prompt and the circle
+    // avatar came back as a full square scene (beanbag, carpet, trophies).
+    // What matters is whether an override was accepted, not supplied.
+    if (mode === "portrait" && promptSource !== "override") {
       prompt = PORTRAIT_PROMPT;
       promptSource = "portrait";
     }

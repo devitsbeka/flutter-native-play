@@ -5,8 +5,13 @@ import { CHARACTER_RENDER_STYLE } from "./characterStyle";
 // CHARACTER_RENDER_STYLE with the scene prompt so the two can never drift
 // into different art styles.
 //
-// The edge function carries its own copy as a fallback; this one is sent with
-// the request so prompt edits ship with the frontend.
+// The edge function carries a BYTE-IDENTICAL copy (generate-avatar's
+// PORTRAIT_PROMPT, with CHARACTER_RENDER_STYLE inlined): its override
+// allowlist recognizes this exact text as canonical, so a non-admin's
+// portrait request is honored instead of demoted to the scene prompt.
+// Edit here → mirror there → redeploy the function, or the equality gate
+// silently ignores the new text for regular users.
+// src/__tests__/portraitPromptSync.test.ts pins the two copies together.
 export const PORTRAIT_AVATAR_PROMPT = `Create a square stylized 3D character portrait using the supplied image as the identity reference. The reference shows the character in their scene — reproduce that same character's face, hair and outfit exactly, framed as a portrait.
 
 FRAMING
