@@ -98,6 +98,24 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
     const [imageStatus, setImageStatus] = React.useState<"loading" | "loaded" | "error">("loading");
     React.useEffect(() => {
       setImageStatus("loading");
+      if (!imageUrl) return;
+
+      // onError is not enough. A request that is refused fires it; a request
+      // that is never answered fires nothing at all, and the card sits blank
+      // for the whole question with no text to fall back to — the answers are
+      // on screen and there is nothing to answer.
+      //
+      // That is not hypothetical: every image question points at
+      // upload.wikimedia.org, which rate-limits. Some of those come back 429,
+      // which onError catches; others simply stall.
+      //
+      // So the wait is bounded. Five seconds is long enough for a slow phone
+      // connection to finish and short enough to leave most of a 15-second
+      // question to read the text and answer it.
+      const timeout = setTimeout(() => {
+        setImageStatus((current) => (current === "loading" ? "error" : current));
+      }, 5000);
+      return () => clearTimeout(timeout);
     }, [imageUrl]);
 
     const imageFailed = !!imageUrl && imageStatus === "error";
