@@ -15,6 +15,7 @@ import { getSeenQuestionIds, markQuestionsAsSeen } from "@/services/questionTrac
 import { useUserPresence } from "@/hooks/useUserPresence";
 import { createNotification } from "@/hooks/useNotifications";
 import { calculatePoints, FIRST_ANSWER_BONUS } from "@/utils/scoring";
+import { activeRoundPlayers } from "@/utils/roundPlayers";
 
 // Helper to notify trivia creator when their trivia is played in multiplayer
 const notifyTriviaCreator = async (userTriviaId: string, playerId: string) => {
@@ -821,12 +822,15 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
 
               // Only proceed if the room is still "playing" the game WE finished
               if (roomCheck && roomCheck.status === "playing" && !finishedStaleGame) {
-                const activePlayers = allParticipants.filter(p => {
-                  // Skip observer host
-                  if (roomCheck.host_is_observer && p.user_id === roomCheck.host_user_id) return false;
-                  // Skip players who left mid-round - waiting on them blocks completion forever
-                  if (p.status === "disconnected") return false;
-                  return true;
+                // Same rule the observer screen uses, so the two cannot drift.
+                // This filter already skipped the observer host and anyone who
+                // had left; it did not skip an *invited* seat, which is a row
+                // for a player who never arrived and whose current_question
+                // therefore never leaves 0. One unanswered invitation could
+                // hold a finished round open indefinitely.
+                const activePlayers = activeRoundPlayers(allParticipants, {
+                  hostIsObserver: roomCheck.host_is_observer,
+                  hostUserId: roomCheck.host_user_id,
                 });
 
                 // CRITICAL: RLS only lets each user update their OWN participant row,
