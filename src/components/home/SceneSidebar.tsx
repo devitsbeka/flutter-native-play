@@ -10,6 +10,7 @@ import arrowRight from "@/assets/figma-home/arrow-right-s.svg";
 import inviteAccept from "@/assets/figma-home/invite-accept.png";
 import inviteDecline from "@/assets/figma-home/invite-decline.png";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { popularCategoryIcon } from "@/config/popularImageCategories";
 
 // Figma: Hom / node 601:1104 — right sidebar column (page x 1260, w 298):
 // invite card, "continue playing" card, quick-play button. All three are
@@ -77,10 +78,13 @@ export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
     setInviteBusy(false);
   };
 
-  const categoryImage = (cat: { icon_slug?: string | null; image_url?: string | null }) =>
-    cat.icon_slug
+  const categoryImage = (cat: { id: string; icon_slug?: string | null; image_url?: string | null }) =>
+    // The guess-categories carry generic icon-library slugs; their real art
+    // is bundled (cat.id is the category slug here, e.g. "guess_flag").
+    popularCategoryIcon(cat.id) ??
+    (cat.icon_slug
       ? `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${cat.icon_slug}.png`
-      : cat.image_url || null;
+      : cat.image_url || null);
 
   return (
     <div className="flex w-[298px] flex-col gap-[15px]">

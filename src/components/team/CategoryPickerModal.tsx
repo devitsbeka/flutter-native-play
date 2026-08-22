@@ -5,6 +5,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
+import { popularCategoryIcon } from "@/config/popularImageCategories";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -12,6 +13,8 @@ import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 interface Category {
   id: string;
+  /** Slug like "guess_flag" — keys the bundled art override. */
+  categoryId?: string | null;
   name: string;
   icon: string;
   color: string;
@@ -87,6 +90,7 @@ export function CategoryPickerModal({
       return localizeCategoryNames(
         filterCategoriesForLanguage(result.data || [], language).map(d => ({
           id: d.id,
+          categoryId: d.category_id,
           name: d.name,
           icon: d.icon,
           color: d.color,
@@ -389,7 +393,9 @@ export function CategoryPickerModal({
                             className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
                             style={{ backgroundColor: `${cat.color}40` }}
                           >
-                            {cat.icon_slug ? (
+                            {popularCategoryIcon(cat.categoryId) ? (
+                              <img src={popularCategoryIcon(cat.categoryId)!} alt="" className="w-[26px] h-[26px] object-contain" />
+                            ) : cat.icon_slug ? (
                               <DynamicIcon slug={cat.icon_slug} size={22} />
                             ) : (
                               <span className="text-xl">{cat.icon}</span>

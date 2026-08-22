@@ -43,6 +43,17 @@ export const POPULAR_CATEGORY_ICONS: Record<PopularImageCategoryId, string> = {
   guess_flag: iconFlag,
 };
 
+/** The bundled art for a category, or null for everything else.
+ *
+ * The icon-library glyphs these categories carry in `icon_slug` are generic
+ * stand-ins (globe, magnifier, running man); every surface that shows a
+ * category icon should prefer this art so the guess-categories look the same
+ * in the Popular row, the pickers and the continue-playing card. */
+export function popularCategoryIcon(categoryId: string | null | undefined): string | null {
+  if (!categoryId) return null;
+  return (POPULAR_CATEGORY_ICONS as Record<string, string>)[categoryId] ?? null;
+}
+
 /** Same shape as AirbnbCategoryCard's PASTEL_PALETTES entries. */
 export const POPULAR_CATEGORY_PALETTES: Record<
   PopularImageCategoryId,
