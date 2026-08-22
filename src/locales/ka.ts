@@ -3123,6 +3123,8 @@ export const ka = {
     cpObserverLabel: "დამკვირვებელი",
     cpNoTriviaFound: "ტრივია ვერ მოიძებნა",
     cpSelectBtn: "არჩევა",
+    queueSheetTitle: "რიგში",
+    queueSheetEmpty: "რიგში ჯერ არაფერია",
     cpAddBtn: "დამატება",
     cpAddToQueue: "რიგში დამატება",
     // Category Picker Section
