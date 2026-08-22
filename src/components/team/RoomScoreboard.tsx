@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, Swords, Users, Send, X, Plus } from "lucide-react";
+import { Crown, Swords, Users, Send, X, Plus, UserPlus, Check } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
 import { MatchHistoryEntry } from "@/hooks/useRoomMatchHistory";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useFriends } from "@/contexts/FriendsContext";
+import { useAuth } from "@/hooks/useAuth";
+import { shouldOfferFriendRequest } from "@/utils/friendOffer";
 import medalGold from "@/assets/icons/medal-gold.png";
 import medalSilver from "@/assets/icons/medal-silver.png";
 import medalBronze from "@/assets/icons/medal-bronze.png";
@@ -34,6 +37,53 @@ const getRankIcon = (rank: number) => {
       return <span className="text-sm font-bold text-muted-foreground">#{rank}</span>;
   }
 };
+
+/**
+ * Add the player beside you in the lobby.
+ *
+ * The room is where players actually meet — seven of them on a scoreboard,
+ * having just played fifteen rounds together — and there was no way to add
+ * any of them from here. Adding a friend meant knowing their name and going
+ * to find them.
+ *
+ * Hidden for yourself, for an invited placeholder who has not arrived, and
+ * for someone already on the friends list. sendFriendRequest handles the
+ * rest: it accepts a request they had already sent you rather than opening a
+ * second one, and says so if you are already friends.
+ */
+function AddFriendButton({ userId }: { userId: string }) {
+  const { user } = useAuth();
+  const { friends, sendFriendRequest } = useFriends();
+  const { t } = useLanguage();
+  const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  if (!shouldOfferFriendRequest(user?.id, userId, friends.map((f) => f.friendId))) {
+    return null;
+  }
+
+  return (
+    <motion.button
+      type="button"
+      whileTap={{ scale: 0.9 }}
+      disabled={sending || sent}
+      aria-label={t("extra.addFriendLabel")}
+      onClick={async (e) => {
+        // The row itself may open a profile; adding a friend is its own action.
+        e.stopPropagation();
+        setSending(true);
+        const ok = await sendFriendRequest(userId);
+        setSending(false);
+        if (ok) setSent(true);
+      }}
+      className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full transition-colors ${
+        sent ? "bg-emerald-500/25 text-emerald-300" : "bg-white/15 text-white hover:bg-white/25"
+      }`}
+    >
+      {sent ? <Check className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
+    </motion.button>
+  );
+}
 
 export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true, maxPlayers, isHost = false, isRoomActive = true, onInviteFriends, onResendInvitation, onRemoveParticipant }: RoomScoreboardProps) {
   const { t } = useLanguage();
@@ -166,6 +216,9 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                         <p className="text-xs text-white/60">
                           {t("extra.scoreboardRoundStats", { rounds: player.total_rounds_played || 0, wins: player.total_wins || 0 })}
                         </p>
+                        <div className="mt-1.5">
+                          <AddFriendButton userId={player.user_id} />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -259,6 +312,9 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                         <p className="text-xs text-white/60">
                           {t("extra.scoreboardRoundStats", { rounds: player.total_rounds_played || 0, wins: player.total_wins || 0 })}
                         </p>
+                        <div className="mt-1.5">
+                          <AddFriendButton userId={player.user_id} />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -315,11 +371,14 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                   
                   {/* Score + Rounds - fixed width, right aligned */}
                   {!isInvited ? (
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <span className="font-bold text-white">{(p as any).total_score || 0}</span>
-                      <span className="text-xs text-white/60">
-                        ({t("extra.roundsShort", { count: p.total_rounds_played || 0 })})
-                      </span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-1">
+                        <span className="font-bold text-white">{(p as any).total_score || 0}</span>
+                        <span className="text-xs text-white/60">
+                          ({t("extra.roundsShort", { count: p.total_rounds_played || 0 })})
+                        </span>
+                      </div>
+                      <AddFriendButton userId={p.user_id} />
                     </div>
                   ) : isHost && (
                     <div className="flex items-center gap-1.5 flex-shrink-0">
