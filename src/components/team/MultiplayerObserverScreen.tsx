@@ -4,6 +4,7 @@ import { Star, ChevronUp, ChevronDown, ArrowLeft } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
+import { activeRoundPlayers, allActivePlayersPast } from "@/utils/roundPlayers";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -48,8 +49,14 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
   // Get current question for display
   const currentQuestion = questions[currentQuestionIndex];
 
-  // Get all other players (non-host)
-  const players = participants.filter(p => p.user_id !== user?.id);
+  // The players this round is actually waiting on. An invited seat nobody
+  // took, and anyone who has left, cannot answer — counting them meant the
+  // observer waited on a player who was never going to move.
+  const players = activeRoundPlayers(participants, {
+    excludeUserId: user?.id,
+    hostIsObserver: currentRoom?.host_is_observer,
+    hostUserId: currentRoom?.host_user_id,
+  });
   
   // Sort participants by score for leaderboard (include host)
   const sortedParticipants = [...participants].sort((a, b) => (b.score || 0) - (a.score || 0));
@@ -140,13 +147,18 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
 
   // Auto-advance observer when ALL players have moved to next question
   useEffect(() => {
-    const otherPlayers = participants.filter(p => p.user_id !== user?.id);
+    const otherPlayers = activeRoundPlayers(participants, {
+      excludeUserId: user?.id,
+      hostIsObserver: currentRoom?.host_is_observer,
+      hostUserId: currentRoom?.host_user_id,
+    });
     if (otherPlayers.length === 0) return;
-    
-    // Check if all players have advanced past current question
-    const allPlayersAdvanced = otherPlayers.every(
-      p => (p.current_question || 0) > currentQuestionIndex
-    );
+
+    const allPlayersAdvanced = allActivePlayersPast(participants, currentQuestionIndex, {
+      excludeUserId: user?.id,
+      hostIsObserver: currentRoom?.host_is_observer,
+      hostUserId: currentRoom?.host_user_id,
+    });
     
     if (allPlayersAdvanced) {
       console.log(`[Observer] All players advanced, processing final bonus before advancing from ${currentQuestionIndex}`);
@@ -211,7 +223,7 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
       
       processFinalBonus();
     }
-  }, [participants, currentQuestionIndex, user?.id, nextQuestion, playSound, currentRoom?.id, awardObserverBonus]);
+  }, [participants, currentQuestionIndex, user?.id, nextQuestion, playSound, currentRoom?.id, currentRoom?.host_is_observer, currentRoom?.host_user_id, awardObserverBonus]);
 
   // Helper to find players who picked a specific answer
   const getPlayersWhoChoseAnswer = (answer: string) => {
