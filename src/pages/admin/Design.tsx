@@ -68,6 +68,7 @@ const AvatarModal = lazy(() => import("@/components/home/AvatarModal").then(m =>
 const LevelUpModal = lazy(() => import("@/components/home/LevelUpModal").then(m => ({ default: m.LevelUpModal })));
 const DailyRewardsModal = lazy(() => import("@/components/home/DailyRewardsModal").then(m => ({ default: m.DailyRewardsModal })));
 const ChestRewardModal = lazy(() => import("@/components/home/ChestRewardModal").then(m => ({ default: m.ChestRewardModal })));
+const MissionInfoModal = lazy(() => import("@/components/home/MissionInfoModal").then(m => ({ default: m.MissionInfoModal })));
 const StreakModal = lazy(() => import("@/components/home/StreakModal").then(m => ({ default: m.StreakModal })));
 const MissionsModal = lazy(() => import("@/components/home/MissionsModal").then(m => ({ default: m.MissionsModal })));
 const MyPowersModal = lazy(() => import("@/components/home/MyPowersModal").then(m => ({ default: m.MyPowersModal })));
@@ -257,6 +258,8 @@ const modalCategories: CategoryDefinition[] = [
       { id: "daily-rewards-modal", label: "Daily Rewards", labelGe: "დღიური ჯილდო", Component: DailyRewardsModal, isModal: true, modalProps: {} },
       { id: "chest-reward-modal", label: "Chest Reward", labelGe: "სკივრის ჯილდო", Component: ChestRewardModal, isModal: true, modalProps: { chestType: "gold" } },
       { id: "streak-modal", label: "Streak", labelGe: "სტრიკი", Component: StreakModal, isModal: true, modalProps: { currentStreak: 7, bestStreak: 14 } },
+      { id: "mission-info-week", label: "Week pack info", labelGe: "კვირის პაკეტი", Component: MissionInfoModal, isModal: true, modalProps: { topic: "weekPack", daysComplete: 3 } },
+      { id: "mission-info-streak", label: "Streak info", labelGe: "სტრიქის ინფო", Component: MissionInfoModal, isModal: true, modalProps: { topic: "streak", currentStreak: 5 } },
       { id: "missions-modal", label: "Missions", labelGe: "მისიები", Component: MissionsModal, isModal: true, modalProps: {} },
       { id: "my-powers-modal", label: "My Powers", labelGe: "ჩემი ძალები", Component: MyPowersModal, isModal: true, modalProps: {} },
       { id: "level-info-modal", label: "Level Info", labelGe: "ლეველის ინფო", Component: LevelInfoModal, isModal: true, modalProps: { levelInfo: { level: 5, currentXp: 450, nextLevelXp: 1000, totalXp: 4500 } } },

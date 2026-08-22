@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { MissionInfoModal, type MissionInfoTopic } from "./MissionInfoModal";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import { missionTitle, missionDescription } from "@/utils/missionText";
@@ -246,6 +247,7 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
   // progress and realtime behave exactly as before.
   const weekBonus = useWeekBonus();
   const [claimingBonus, setClaimingBonus] = useState(false);
+  const [infoTopic, setInfoTopic] = useState<MissionInfoTopic | null>(null);
   const day = useDailyMissionsFor(date);
   const dailyMissions = day.missions;
   const loading = day.loading;
@@ -321,6 +323,7 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
   }, [isOpen, missions.length]);
 
   return (
+    <>
     <AnimatePresence mode="wait">
       {isOpen && (
         <motion.div
@@ -370,8 +373,20 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
                   days. Shown as progress while the week is still running so
                   it is something to aim at, not a surprise at the end. */}
               {!weekBonus.claimed && (
+                // Tappable: the banner showed 0/7 and nothing else, and what
+                // moves it (a full day of DAILY missions, seven times) is not
+                // guessable from a number sitting above a list of weekly ones.
                 <div
-                  className="mt-3.5 rounded-2xl px-3 py-2.5"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setInfoTopic("weekPack")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setInfoTopic("weekPack");
+                    }
+                  }}
+                  className="mt-3.5 cursor-pointer rounded-2xl px-3 py-2.5 transition-transform active:scale-[0.99]"
                   style={{
                     background: weekBonus.claimable
                       ? "linear-gradient(90deg, #F59E0B 0%, #D97706 100%)"
@@ -456,7 +471,16 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
 
               {/* Streak banner */}
               <div
-                className="mt-3.5 flex items-center justify-between rounded-2xl px-3 py-2.5"
+                role="button"
+                tabIndex={0}
+                onClick={() => setInfoTopic("streak")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setInfoTopic("streak");
+                  }
+                }}
+                className="mt-3.5 flex cursor-pointer items-center justify-between rounded-2xl px-3 py-2.5 transition-transform active:scale-[0.99]"
                 style={{
                   background: "linear-gradient(90deg, #2DD4A0 0%, #10B981 100%)",
                   boxShadow: "0 3px 0 0 #0EA97C, inset 0 1.5px 0 0 rgba(255,255,255,0.35)",
@@ -589,6 +613,18 @@ export function MissionsModal({ isOpen, onClose, date = null }: MissionsModalPro
         </motion.div>
       )}
     </AnimatePresence>
+
+      {/* Sibling of the sheet, not a child: the AnimatePresence above runs in
+          "wait" mode on the sheet's own open state, and a second permanent
+          child in there confuses that. */}
+      <MissionInfoModal
+        isOpen={infoTopic !== null}
+        onClose={() => setInfoTopic(null)}
+        topic={infoTopic ?? "weekPack"}
+        daysComplete={weekBonus.daysComplete}
+        currentStreak={currentStreak}
+      />
+    </>
   );
 }
 

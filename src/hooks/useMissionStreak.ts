@@ -152,19 +152,37 @@ export function useMissionStreak() {
     }
   };
 
-  const claimStreakBonus = async (): Promise<{ success: boolean; coins: number; gems: number; xp: number }> => {
-    if (!user || !profile || !streak || streak.streak_bonus_claimed) {
+  /**
+   * Pay the tier the current streak has reached, once per day.
+   *
+   * `forStreak` is for the caller that has just recorded the day: React has
+   * not re-rendered yet, so the `streak` in this closure still holds
+   * yesterday's count and yesterday's claimed flag. The fresh number is
+   * passed in rather than read from stale state.
+   *
+   * Which is also why the claim is a conditional UPDATE rather than a read
+   * then a write. Only the caller whose update actually flips the flag gets
+   * a row back, and only that caller pays — so a stale local flag cannot
+   * cause a double credit, and two callers in the same moment cannot both
+   * bank the day. Same guard the week and day bonuses use.
+   */
+  const claimStreakBonus = async (forStreak?: number): Promise<{ success: boolean; coins: number; gems: number; xp: number }> => {
+    if (!user || !profile || !streak) {
       return { success: false, coins: 0, gems: 0, xp: 0 };
     }
 
     try {
-      const bonus = getStreakBonus(streak.current_streak);
+      const bonus = getStreakBonus(forStreak ?? streak.current_streak);
 
-      // Mark as claimed
-      await supabase
+      const { data: won } = await supabase
         .from("user_mission_streaks")
         .update({ streak_bonus_claimed: true })
-        .eq("id", streak.id);
+        .eq("id", streak.id)
+        .eq("streak_bonus_claimed", false)
+        .select("id");
+      if (!won || won.length === 0) {
+        return { success: false, coins: 0, gems: 0, xp: 0 };
+      }
 
       // Award coins/gems atomically via the delta RPC — an absolute write
       // off the in-memory profile overwrites gems granted by other claims
