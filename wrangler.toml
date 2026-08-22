@@ -1,8 +1,11 @@
 # Cloudflare Workers (static assets) deployment for the MyTrivia web app.
 #
-# This is an assets-only Worker: there is no server code, so no `main` entry.
 # Cloudflare serves ./dist straight from the edge, with unmetered bandwidth —
 # which is why this host was chosen, given the build ships ~280 MB of video.
+#
+# It was assets-only until image questions needed a proxy. worker/index.ts
+# handles exactly one route, /img, and hands everything else to the assets
+# binding, which is what happened implicitly before it had any code.
 #
 # Local commands:
 #   npx wrangler dev        # serve ./dist locally through the Workers runtime
@@ -12,6 +15,7 @@
 # CLOUDFLARE_ACCOUNT_ID repository secrets.
 
 name = "mytrivia"
+main = "worker/index.ts"
 compatibility_date = "2026-08-04"
 
 # Keep the workers.dev URL alive as a fallback and staging target. Declaring
@@ -34,6 +38,9 @@ routes = [
 
 [assets]
 directory = "./dist"
+# Named so worker/index.ts can hand unmatched requests straight back to the
+# static build. Without a binding the Worker code would shadow the site.
+binding = "ASSETS"
 
 # Client-side routing: unmatched paths return index.html with a 200 rather
 # than a 404, so deep links like /dev/v2, /profile and /challenge/:code load

@@ -2,6 +2,7 @@ import { memo } from "react";
 import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { questionImageSrc } from "@/utils/questionImage";
 import { Snowflake } from "lucide-react";
 import { AudioPlayer } from "./audio-player";
 
@@ -118,6 +119,9 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       return () => clearTimeout(timeout);
     }, [imageUrl]);
 
+    // Wikimedia rate-limits, so its images are fetched through our own edge
+    // cache rather than once per player. See questionImageSrc.
+    const imageSrc = questionImageSrc(imageUrl);
     const imageFailed = !!imageUrl && imageStatus === "error";
     const hasImage = !!imageUrl && !imageFailed;
     const hasVideo = !!videoUrl;
@@ -166,7 +170,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
                 white, and its own blur behind it read as a smudge. */}
             {!imageInset && (
               <img
-                src={imageUrl!}
+                src={imageSrc!}
                 alt=""
                 aria-hidden
                 className={cn(
@@ -178,7 +182,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             )}
 
             <img
-              src={imageUrl!}
+              src={imageSrc!}
               alt="Question"
               className={cn(
                 "relative object-contain",
