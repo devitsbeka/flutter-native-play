@@ -3122,6 +3122,7 @@ export const en: KaTranslations = {
     cpObserverLabel: "Observer",
     cpNoTriviaFound: "No trivia found",
     cpSelectBtn: "Select",
+    cpAddBtn: "Add",
     cpAddToQueue: "Add to queue",
     // Category Picker Section
     cpsWhatToPlay: "What do you want to play?",

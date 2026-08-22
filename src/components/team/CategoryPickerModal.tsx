@@ -53,6 +53,39 @@ interface CategoryPickerModalProps {
   excludeTriviaId?: string | null; // Trivia that was just played - should be hidden
 }
 
+export interface SelectedItem {
+  type: "category" | "random" | "trivia";
+  id?: string;
+  name?: string;
+  iconSlug?: string | null;
+}
+
+/**
+ * Identity for a pick. A category and a user trivia can share an id, and
+ * "random" has none at all, so the type has to be part of the key.
+ */
+export const selectionKey = (item: SelectedItem) => `${item.type}:${item.id ?? "-"}`;
+
+/**
+ * Tapping a card adds it; tapping it again takes it back off.
+ *
+ * Order is the order things were picked, because that is the order they are
+ * added to the queue — the host builds the run they want to play.
+ */
+export function togglePicked(list: SelectedItem[], item: SelectedItem): SelectedItem[] {
+  return list.some((s) => selectionKey(s) === selectionKey(item))
+    ? list.filter((s) => selectionKey(s) !== selectionKey(item))
+    : [...list, item];
+}
+
+/** The "mixed" pseudo-category, so its identity is written in one place. */
+const MIXED_ITEM = (t: (k: string) => string): SelectedItem => ({
+  type: "category",
+  id: "__mixed__",
+  name: t("extra.cpMixedCategory"),
+  iconSlug: "mystery-box",
+});
+
 export function CategoryPickerModal({
   isOpen,
   onClose,
@@ -68,12 +101,23 @@ export function CategoryPickerModal({
   const { t, language } = useLanguage();
   const [view, setView] = useState<ViewState>("main");
   const [search, setSearch] = useState("");
-  const [selectedItem, setSelectedItem] = useState<{
-    type: "category" | "random" | "trivia";
-    id?: string;
-    name?: string;
-    iconSlug?: string | null;
-  } | null>(null);
+  /**
+   * Everything picked so far, in the order it was picked.
+   *
+   * This used to hold one item, and the footer offered two buttons for it:
+   * "select now", which set the round's category, and "add to queue". Two of
+   * the four callers already routed select-now straight into the queue, and
+   * picking several categories to line up is the thing a host actually wants
+   * to do — so there is one action now, adding, and it takes as many as were
+   * picked.
+   */
+  const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
+
+  const isPicked = (item: SelectedItem) =>
+    selectedItems.some((s) => selectionKey(s) === selectionKey(item));
+
+  const togglePick = (item: SelectedItem) =>
+    setSelectedItems((prev) => togglePicked(prev, item));
 
   // Fetch categories
   const { data: categories = [], isLoading: loadingCategories } = useQuery<Category[]>({
@@ -148,52 +192,56 @@ export function CategoryPickerModal({
   const handleBack = () => {
     setView("main");
     setSearch("");
-    setSelectedItem(null);
+    setSelectedItems([]);
   };
 
-  const handleSelectNow = () => {
-    if (!selectedItem) return;
+  /**
+   * Add everything picked.
+   *
+   * One action instead of the old select-now / add-to-queue pair. Every
+   * caller supplies onAddToQueue, and adding is the only thing that makes
+   * sense for more than one pick — you cannot play three categories at once.
+   *
+   * onSelectCategory and the rest stay in the props: a single pick with no
+   * queue handler still goes through them, which keeps any future caller
+   * that does not want a queue working rather than silently doing nothing.
+   */
+  const handleAddPicked = () => {
+    if (selectedItems.length === 0) return;
 
-    if (selectedItem.type === "random") {
-      onSelectRandom();
-    } else if (selectedItem.type === "category" && selectedItem.id && selectedItem.name) {
-      onSelectCategory({ 
-        id: selectedItem.id, 
-        name: selectedItem.name,
-        iconSlug: selectedItem.iconSlug 
-      });
-    } else if (selectedItem.type === "trivia" && selectedItem.id && selectedItem.name) {
-      onSelectTrivia({ id: selectedItem.id, title: selectedItem.name });
+    if (!onAddToQueue) {
+      const only = selectedItems[0];
+      if (only.type === "random") onSelectRandom();
+      else if (only.type === "category" && only.id && only.name) {
+        onSelectCategory({ id: only.id, name: only.name, iconSlug: only.iconSlug });
+      } else if (only.type === "trivia" && only.id && only.name) {
+        onSelectTrivia({ id: only.id, title: only.name });
+      }
+    } else {
+      // In the order they were picked, so the queue reads the way the host
+      // built it.
+      for (const item of selectedItems) {
+        if (item.type === "random") {
+          onAddToQueue({ source_type: "random", category_name: t("extra.randomCategoryName") });
+        } else if (item.type === "category") {
+          onAddToQueue({
+            source_type: "category",
+            category_id: item.id,
+            category_name: item.name,
+            icon_slug: item.iconSlug,
+          });
+        } else if (item.type === "trivia") {
+          onAddToQueue({
+            source_type: "user_trivia",
+            user_trivia_id: item.id,
+            category_name: item.name,
+          });
+        }
+      }
     }
-    
+
     onClose();
-    setSelectedItem(null);
-    setView("main");
-  };
-
-  const handleAddToQueue = () => {
-    if (!selectedItem || !onAddToQueue) return;
-
-    if (selectedItem.type === "random") {
-      onAddToQueue({ source_type: "random", category_name: t("extra.randomCategoryName") });
-    } else if (selectedItem.type === "category") {
-      onAddToQueue({
-        source_type: "category",
-        category_id: selectedItem.id,
-        category_name: selectedItem.name,
-        icon_slug: selectedItem.iconSlug,
-      });
-    } else if (selectedItem.type === "trivia") {
-      onAddToQueue({
-        source_type: "user_trivia",
-        user_trivia_id: selectedItem.id,
-        category_name: selectedItem.name,
-      });
-    }
-
-    // Close modal and reset state
-    onClose();
-    setSelectedItem(null);
+    setSelectedItems([]);
     setView("main");
   };
 
@@ -246,17 +294,17 @@ export function CategoryPickerModal({
         </div>
 
         {/* Content */}
-        <div className={`flex-1 overflow-y-auto p-4 pb-8 ${selectedItem ? 'pb-40' : ''}`}>
+        <div className={`flex-1 overflow-y-auto p-4 pb-8 ${selectedItems.length > 0 ? 'pb-40' : ''}`}>
           {view === "main" && (
             <div className="space-y-3 max-w-md mx-auto">
               {/* Random option */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setSelectedItem({ type: "random" })}
+                onClick={() => togglePick({ type: "random" })}
                 className={`w-full p-4 rounded-2xl backdrop-blur-sm transition-all text-left ${
-                  selectedItem?.type === "random"
-                    ? "bg-white/20 border-2 border-white/50"
+                  isPicked({ type: "random" })
+                    ? "bg-white/20 border-2 border-emerald-400"
                     : "bg-white/10 border border-white/20 hover:bg-white/15"
                 }`}
               >
@@ -268,8 +316,8 @@ export function CategoryPickerModal({
                     <p className="font-semibold text-white text-lg">{t("extra.cpRandomTitle")}</p>
                     <p className="text-white/60 text-sm">{t("extra.cpRandomDesc")}</p>
                   </div>
-                  {selectedItem?.type === "random" && (
-                    <Check className="w-5 h-5 text-white" />
+                  {isPicked({ type: "random" }) && (
+                    <Check className="w-5 h-5 text-emerald-300" />
                   )}
                 </div>
               </motion.button>
@@ -339,34 +387,27 @@ export function CategoryPickerModal({
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0 }}
-                        onClick={() => setSelectedItem({
-                          type: "category",
-                          id: "__mixed__",
-                          name: t("extra.cpMixedCategory"),
-                          iconSlug: "mystery-box",
-                        })}
-                        className={`p-4 rounded-xl backdrop-blur-sm transition-all text-left ${
-                          selectedItem?.id === "__mixed__"
-                            ? "bg-white/20 border-2 border-white/50"
+                        onClick={() => togglePick(MIXED_ITEM(t))}
+                        className={`relative p-3 rounded-xl backdrop-blur-sm transition-all text-left ${
+                          isPicked(MIXED_ITEM(t))
+                            ? "bg-white/20 border-2 border-emerald-400"
                             : "bg-white/10 border border-white/20 hover:bg-white/15"
                         }`}
                         style={{ background: "linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(236, 72, 153, 0.3))" }}
                       >
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
-                            style={{ background: "linear-gradient(135deg, #9333ea, #ec4899)" }}
-                          >
-                            <DynamicIcon slug="mystery-box" size={22} />
-                          </div>
-                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white text-sm truncate">{t("extra.cpMixedCategory")}</p>
-                            <p className="text-white/50 text-xs">{t("extra.cpMixedDesc")}</p>
-                          </div>
-                          {selectedItem?.id === "__mixed__" && (
-                            <Check className="w-4 h-4 text-white flex-shrink-0" />
-                          )}
+                        {isPicked(MIXED_ITEM(t)) && (
+                          <Check className="absolute right-2 top-2 w-4 h-4 text-emerald-300" />
+                        )}
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
+                          style={{ background: "linear-gradient(135deg, #9333ea, #ec4899)" }}
+                        >
+                          <DynamicIcon slug="mystery-box" size={22} />
                         </div>
+                        <p className="mt-2 font-medium text-white text-sm leading-snug break-words">
+                          {t("extra.cpMixedCategory")}
+                        </p>
+                        <p className="text-white/50 text-xs">{t("extra.cpMixedDesc")}</p>
                       </motion.button>
                     )}
 
@@ -376,39 +417,42 @@ export function CategoryPickerModal({
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: (index + 1) * 0.02 }}
-                        onClick={() => setSelectedItem({
+                        onClick={() => togglePick({
                           type: "category",
                           id: cat.id,
                           name: cat.name,
                           iconSlug: cat.icon_slug,
                         })}
-                        className={`p-4 rounded-xl backdrop-blur-sm transition-all text-left ${
-                          selectedItem?.type === "category" && selectedItem.id === cat.id
-                            ? "bg-white/20 border-2 border-white/50"
+                        className={`relative p-3 rounded-xl backdrop-blur-sm transition-all text-left ${
+                          isPicked({ type: "category", id: cat.id })
+                            ? "bg-white/20 border-2 border-emerald-400"
                             : "bg-white/10 border border-white/20 hover:bg-white/15"
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
-                            style={{ backgroundColor: `${cat.color}40` }}
-                          >
-                            {popularCategoryIcon(cat.categoryId) ? (
-                              <img src={popularCategoryIcon(cat.categoryId)!} alt="" className="w-[26px] h-[26px] object-contain" />
-                            ) : cat.icon_slug ? (
-                              <DynamicIcon slug={cat.icon_slug} size={22} />
-                            ) : (
-                              <span className="text-xl">{cat.icon}</span>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white text-sm truncate">{cat.name}</p>
-                            <p className="text-white/50 text-xs">{t("extra.cpLevels", { count: cat.total_levels })}</p>
-                          </div>
-                          {selectedItem?.type === "category" && selectedItem.id === cat.id && (
-                            <Check className="w-4 h-4 text-white flex-shrink-0" />
+                        {isPicked({ type: "category", id: cat.id }) && (
+                          <Check className="absolute right-2 top-2 w-4 h-4 text-emerald-300" />
+                        )}
+                        {/* Icon on its own line, name underneath. The two used
+                            to sit side by side, which left the name a sliver
+                            of a half-width card and most of them ended in an
+                            ellipsis — a category you cannot read is one you
+                            cannot choose. */}
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
+                          style={{ backgroundColor: `${cat.color}40` }}
+                        >
+                          {popularCategoryIcon(cat.categoryId) ? (
+                            <img src={popularCategoryIcon(cat.categoryId)!} alt="" className="w-[26px] h-[26px] object-contain" />
+                          ) : cat.icon_slug ? (
+                            <DynamicIcon slug={cat.icon_slug} size={22} />
+                          ) : (
+                            <span className="text-xl">{cat.icon}</span>
                           )}
                         </div>
+                        <p className="mt-2 font-medium text-white text-sm leading-snug break-words">
+                          {cat.name}
+                        </p>
+                        <p className="text-white/50 text-xs">{t("extra.cpLevels", { count: cat.total_levels })}</p>
                       </motion.button>
                     ))}
                   </div>
@@ -458,14 +502,14 @@ export function CategoryPickerModal({
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        onClick={() => setSelectedItem({
+                        onClick={() => togglePick({
                           type: "trivia",
                           id: trivia.id,
                           name: trivia.title,
                         })}
                         className={`w-full p-3 rounded-xl backdrop-blur-sm transition-all text-left relative ${
-                          selectedItem?.type === "trivia" && selectedItem.id === trivia.id
-                            ? "bg-white/20 border-2 border-white/50"
+                          isPicked({ type: "trivia", id: trivia.id })
+                            ? "bg-white/20 border-2 border-emerald-400"
                             : "bg-white/10 border border-white/20 hover:bg-white/15"
                         }`}
                       >
@@ -508,8 +552,8 @@ export function CategoryPickerModal({
                               </span>
                             )}
                           </div>
-                          {selectedItem?.type === "trivia" && selectedItem.id === trivia.id && (
-                            <Check className="w-5 h-5 text-white flex-shrink-0" />
+                          {isPicked({ type: "trivia", id: trivia.id }) && (
+                            <Check className="w-5 h-5 text-emerald-300 flex-shrink-0" />
                           )}
                         </div>
                       </motion.button>
@@ -521,36 +565,22 @@ export function CategoryPickerModal({
           )}
         </div>
 
-        {/* Footer buttons - show when item selected */}
-        {selectedItem && (
+        {/* One action, and it says how much it is about to add. */}
+        {selectedItems.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="p-4 bg-white/5 backdrop-blur-sm border-t border-white/10"
           >
-            <div className="max-w-md mx-auto space-y-3">
-              {/* Primary action - Select now */}
+            <div className="max-w-md mx-auto">
               <ChunkyButton
                 variant="white"
                 size="lg"
                 className="w-full"
-                onClick={handleSelectNow}
+                onClick={handleAddPicked}
               >
-                {t("extra.cpSelectBtn")}
+                {t("extra.cpAddBtn")} ({selectedItems.length})
               </ChunkyButton>
-              
-              {/* Secondary action - Add to queue - Dashed outline style */}
-              {showQueueOption && onAddToQueue && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleAddToQueue}
-                  className="w-full flex items-center justify-center gap-2 px-8 py-4 text-lg font-semibold rounded-2xl bg-transparent border-2 border-dashed border-white/60 text-white hover:border-white hover:bg-white/5 transition-all"
-                >
-                   <Plus className="w-5 h-5" />
-                   {t("extra.cpAddToQueue")}
-                </motion.button>
-              )}
             </div>
           </motion.div>
         )}
