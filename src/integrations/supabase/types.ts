@@ -4310,6 +4310,15 @@ export type Database = {
         Args: { p_player_identifier: string; p_session_id: string }
         Returns: boolean
       }
+      national_question_progress: {
+        Args: never
+        Returns: {
+          category_slug: string
+          lang: string
+          live: number
+          total: number
+        }[]
+      }
       pro_seat_allowance: {
         Args: { p_expires_at: string; p_platform: string; p_tier: string }
         Returns: number
