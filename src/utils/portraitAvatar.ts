@@ -12,15 +12,27 @@ export async function generatePublicPortrait(
   userId: string,
   photoUrl: string,
   // `avatar_` marks a portrait the app derived on its own; `portrait_` marks
-  // one the person asked for and spent a generation on. The budget is read
-  // straight off these names — see avatarStudio.ts.
-  prefix: "avatar" | "portrait" = "avatar"
+  // one the person asked for and spent a generation on; `heal_` marks a
+  // repair of a scene that got stored as someone's circle avatar. The budget
+  // is read straight off these names — see avatarStudio.ts (heal_ counts as
+  // derived: displayed, never charged).
+  prefix: "avatar" | "portrait" | "heal" = "avatar"
 ): Promise<string | null> {
   try {
     const { data, error } = await supabase.functions.invoke("generate-avatar", {
       body: { imageUrl: photoUrl, mode: "portrait", prompt: PORTRAIT_AVATAR_PROMPT },
     });
     if (error || !data?.success || !data.avatarUrl) return null;
+
+    // The function reports which prompt actually rendered. Anything other
+    // than the portrait prompt or an accepted override means the scene
+    // settings prompt ran (a stale deployment, or a guardrail demotion) and
+    // the result is a square SCENE — storing that as a face is the exact
+    // bug this gate exists to make impossible.
+    if (data.promptSource !== "portrait" && data.promptSource !== "override") {
+      console.warn("Portrait generation ran a non-portrait prompt; discarding:", data.promptSource);
+      return null;
+    }
 
     const blob = await (await fetch(data.avatarUrl)).blob();
     const bitmap = await createImageBitmap(blob);

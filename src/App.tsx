@@ -27,6 +27,7 @@ import { AutoplayRescue } from "@/components/system/AutoplayRescue";
 import { PushRegistrar } from "@/native/PushRegistrar";
 import { AdminAIPromptSync } from "@/components/system/AdminAIPromptSync";
 import { StaleAnimationCleanup } from "@/components/system/StaleAnimationCleanup";
+import { ScenePortraitHealer } from "@/components/system/ScenePortraitHealer";
 import { FakeFriendRequestAutoAccept } from "@/components/system/FakeFriendRequestAutoAccept";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { Navigate } from "react-router-dom";
@@ -196,6 +197,7 @@ const App = () => (
             <PushRegistrar />
             <AdminAIPromptSync />
             <StaleAnimationCleanup />
+            <ScenePortraitHealer />
             <FakeFriendRequestAutoAccept />
             <FreshBuildGuard />
             <Suspense fallback={<PageSkeleton />}>
