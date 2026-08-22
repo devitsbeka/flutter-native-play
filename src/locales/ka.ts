@@ -3123,6 +3123,7 @@ export const ka = {
     cpObserverLabel: "დამკვირვებელი",
     cpNoTriviaFound: "ტრივია ვერ მოიძებნა",
     cpSelectBtn: "არჩევა",
+    cpAddBtn: "დამატება",
     cpAddToQueue: "რიგში დამატება",
     // Category Picker Section
     cpsWhatToPlay: "რისი თამაში გინდა?",
