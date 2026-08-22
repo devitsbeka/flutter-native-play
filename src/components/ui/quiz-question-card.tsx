@@ -97,8 +97,31 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
     // fall back to showing the text - otherwise the card is completely blank
     // and the question is unanswerable. Track the load lifecycle per URL.
     const [imageStatus, setImageStatus] = React.useState<"loading" | "loaded" | "error">("loading");
+    // A refusal is retried before the card surrenders to text: a cold edge
+    // can eat a 429 for the first player at that location, and a second ask
+    // a moment later usually finds the image (the rate window rolled, or a
+    // teammate's request already warmed the cache). Keyed into the <img> so
+    // each bump issues a fresh request for the same URL.
+    const [imageAttempt, setImageAttempt] = React.useState(0);
+    // The count lives in a ref, not in the state updater: scheduling a timer
+    // (or setting another state) from inside an updater is a side effect, and
+    // StrictMode runs updaters twice — which would double every retry.
+    const attemptRef = React.useRef(0);
+    const retryTimer = React.useRef<number | undefined>(undefined);
+    const handleImageError = () => {
+      if (attemptRef.current >= 2) {
+        setImageStatus("error");
+        return;
+      }
+      attemptRef.current += 1;
+      const next = attemptRef.current;
+      window.clearTimeout(retryTimer.current);
+      retryTimer.current = window.setTimeout(() => setImageAttempt(next), next === 1 ? 700 : 1400);
+    };
     React.useEffect(() => {
       setImageStatus("loading");
+      setImageAttempt(0);
+      attemptRef.current = 0;
       if (!imageUrl) return;
 
       // onError is not enough. A request that is refused fires it; a request
@@ -116,7 +139,10 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       const timeout = setTimeout(() => {
         setImageStatus((current) => (current === "loading" ? "error" : current));
       }, 5000);
-      return () => clearTimeout(timeout);
+      return () => {
+        clearTimeout(timeout);
+        window.clearTimeout(retryTimer.current);
+      };
     }, [imageUrl]);
 
     // Wikimedia rate-limits, so its images are fetched through our own edge
@@ -182,6 +208,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             )}
 
             <img
+              key={imageAttempt}
               src={imageSrc!}
               alt="Question"
               className={cn(
@@ -195,7 +222,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
               loading="eager"
               decoding="async"
               onLoad={() => setImageStatus("loaded")}
-              onError={() => setImageStatus("error")}
+              onError={handleImageError}
             />
           </div>
         )}

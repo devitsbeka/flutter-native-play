@@ -72,14 +72,32 @@ async function proxyImage(request: Request, url: URL, ctx: ExecutionContext): Pr
     return withHeader;
   }
 
-  let response: Response;
-  try {
-    response = await fetch(upstream.toString(), {
-      headers: { "user-agent": UPSTREAM_UA, accept: "image/*" },
-      // Ask Cloudflare to hold it too, so a miss here is still cheap next time.
-      cf: { cacheEverything: true, cacheTtl: CACHE_SECONDS },
-    });
-  } catch {
+  // A cold edge still has to ask Wikimedia once per image, and a round's
+  // burst of cold images can get this colo's IP throttled just like a
+  // player's used to be — the first player through a fresh location then
+  // lost some pictures while everyone behind a warm cache saw them all.
+  // Throttles and transient upstream failures are retried with a short
+  // backoff before the failure is passed to the card; a definitive answer
+  // (404 and friends) is not retried.
+  let response: Response | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) {
+      await new Promise((resolve) => setTimeout(resolve, attempt === 1 ? 400 : 900));
+    }
+    try {
+      response = await fetch(upstream.toString(), {
+        headers: { "user-agent": UPSTREAM_UA, accept: "image/*" },
+        // Ask Cloudflare to hold it too, so a miss here is still cheap next time.
+        cf: { cacheEverything: true, cacheTtl: CACHE_SECONDS },
+      });
+    } catch {
+      response = null;
+      continue;
+    }
+    if (response.ok || (response.status !== 429 && response.status < 500)) break;
+  }
+
+  if (!response) {
     return new Response("upstream unreachable", {
       status: 502,
       headers: { "cache-control": "no-store" },

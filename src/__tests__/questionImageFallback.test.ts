@@ -46,7 +46,22 @@ describe("a question image cannot leave the card blank", () => {
   });
 
   it("still reacts to an image that fails outright", () => {
-    expect(source).toMatch(/onError=\{\(\)\s*=>\s*setImageStatus\("error"\)\}/);
+    // A refusal goes through the retry handler now (a cold edge can 429 the
+    // first player at that location, and a second ask usually succeeds), but
+    // the chain must still bottom out in the error status so the text can
+    // take over when the retries are spent.
+    expect(source).toMatch(/onError=\{handleImageError\}/);
+    const handler = source.match(
+      /const handleImageError = [\s\S]*?\n    \};/
+    );
+    expect(handler, "expected the retry-then-fail image error handler").not.toBeNull();
+    expect(
+      handler![0],
+      "exhausted retries must end in the error status, or the card stays blank"
+    ).toMatch(/setImageStatus\("error"\)/);
+    expect(handler![0], "the handler must actually retry before giving up").toMatch(
+      /setImageAttempt/
+    );
   });
 
   it("shows the question text whenever the image did not arrive", () => {
