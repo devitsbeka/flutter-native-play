@@ -237,16 +237,15 @@ function DayRewardCard({
       {/* State row */}
       {state === "claimed" || (state === "today" && phase === "revealed") ? (
         claimedReward ? (
-          // The receipt: check + label + what the day actually paid, one
-          // centered line always (nowrap, everything shrink-0). Coins are
-          // constant; the bonus is at most one more kind — see
-          // claim_daily_reward's "never a third pill" rule.
+          // The receipt: check + what the day actually paid, one centered
+          // line always (nowrap, everything shrink-0) — no "Claimed" label,
+          // the check says it. Coins are constant; the bonus is at most one
+          // more kind — see claim_daily_reward's "never a third pill" rule.
           <div
             className="flex h-[50px] min-w-[144px] max-w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-[18px] px-3"
             style={{ background: "rgba(255,255,255,0.3)" }}
           >
-            <Check className="h-4 w-4 shrink-0 text-white" />
-            <span className="shrink-0 text-sm font-bold text-white">{t("dailyRewards.claimed")}</span>
+            <Check className="h-5 w-5 shrink-0 text-white" />
             <ClaimedAmount icon={coinIcon} value={String(claimedReward.coins)} />
             {claimedReward.gems > 0 && <ClaimedAmount icon={gemIcon} value={String(claimedReward.gems)} />}
             {claimedReward.powerUp && (
@@ -261,12 +260,13 @@ function DayRewardCard({
             )}
           </div>
         ) : (
+          // Claimed before receipts existed — nothing to itemize, the check
+          // alone marks the day taken.
           <div
-            className="flex h-[50px] w-[144px] items-center justify-center gap-1.5 rounded-[18px]"
+            className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
             style={{ background: "rgba(255,255,255,0.3)" }}
           >
-            <Check className="h-5 w-5 text-white" />
-            <span className="text-base font-bold text-white">{t("dailyRewards.claimed")}</span>
+            <Check className="h-6 w-6 text-white" />
           </div>
         )
       ) : isMissed ? (
@@ -495,9 +495,15 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
     }, 2400);
   };
 
+  // A day is "claimed" only when the ledger has a claim on that date. The
+  // cooldown flag must not paint today claimed: the server's day flips at UTC
+  // midnight, so a claim late on Saturday kept blocking through the small
+  // hours of local Sunday — and Sunday then showed "Claimed" with nothing
+  // claimed (and no receipt). Today with the cooldown still running renders
+  // as "today" with the claim button disabled and the countdown below.
   const stateOf = (date: Date, index: number): DayState => {
     const iso = localISO(date);
-    if (claimedDates.has(iso) || (index === todayIndex && claimedToday && phase === "idle"))
+    if (claimedDates.has(iso))
       return index === todayIndex && phase !== "idle" ? "today" : "claimed";
     if (index === todayIndex) return "today";
     return iso < todayISO ? "missed" : "future";

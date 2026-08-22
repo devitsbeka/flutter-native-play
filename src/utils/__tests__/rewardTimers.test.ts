@@ -39,19 +39,22 @@ describe("formatTimeDiff", () => {
 });
 
 describe("dailyResetCountdown", () => {
-  it("counts down to local midnight", () => {
-    const now = new Date(2026, 7, 10, 23, 30, 0);
+  // claim_daily_reward gates on the server's CURRENT_DATE (UTC), so the
+  // countdown targets UTC midnight — the moment a new claim actually works —
+  // whatever timezone the player (or this test runner) sits in.
+  it("counts down to UTC midnight", () => {
+    const now = new Date(Date.UTC(2026, 7, 10, 23, 30, 0));
     expect(dailyResetCountdown(now).timeLeft).toBe("00:30:00");
   });
 
-  it("shows nearly a full day just after midnight", () => {
-    const now = new Date(2026, 7, 10, 0, 0, 1);
+  it("shows nearly a full day just after UTC midnight", () => {
+    const now = new Date(Date.UTC(2026, 7, 10, 0, 0, 1));
     expect(dailyResetCountdown(now).timeLeft).toBe("23:59:59");
   });
 
   it("never exceeds 24 hours", () => {
     for (const hour of [0, 6, 12, 18, 23]) {
-      const parts = dailyResetCountdown(new Date(2026, 7, 10, hour, 0, 0));
+      const parts = dailyResetCountdown(new Date(Date.UTC(2026, 7, 10, hour, 0, 0)));
       expect(parts.secondsLeft, `hour ${hour}`).toBeLessThanOrEqual(24 * 3600);
       expect(parts.secondsLeft, `hour ${hour}`).toBeGreaterThan(0);
     }

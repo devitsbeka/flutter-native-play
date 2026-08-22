@@ -29,10 +29,15 @@ export function formatTimeDiff(diffMs: number): CountdownParts {
   };
 }
 
-/** Time until the daily reward resets at the next local midnight. */
+/** Time until the daily reward resets — the next UTC midnight.
+ *
+ * claim_daily_reward gates on the server's CURRENT_DATE, which flips at UTC
+ * midnight, not the player's. Counting to local midnight told a Georgian
+ * player at 1am that the next claim was 23 hours away when the server would
+ * accept one at 4am local — the countdown must promise what the server keeps. */
 export function dailyResetCountdown(now: Date): CountdownParts {
   const midnight = new Date(now);
-  midnight.setHours(24, 0, 0, 0);
+  midnight.setUTCHours(24, 0, 0, 0);
   return formatTimeDiff(midnight.getTime() - now.getTime());
 }
 
