@@ -209,9 +209,20 @@ export function MultiplayerGameScreenV2() {
     submitAnswer(answer, timeRemaining);
   }, [answerRevealed, selectedAnswer, submitAnswer, timeRemaining, playSound, vibrate, currentQuestion]);
 
+  // One advance per question, however many times the button is tapped.
+  //
+  // handleNext used to call straight through. The button stays mounted through
+  // its exit animation, so a quick double-tap applied the "index + 1" update
+  // twice and skipped a question outright; on the last question it started a
+  // second finish. Recording the index we advanced from is enough — it stays
+  // true no matter how long nextQuestion's writes take.
+  const advancedFromRef = useRef<number | null>(null);
+
   const handleNext = useCallback(() => {
-    nextQuestion();
-  }, [nextQuestion]);
+    if (advancedFromRef.current === currentQuestionIndex) return;
+    advancedFromRef.current = currentQuestionIndex;
+    void nextQuestion();
+  }, [nextQuestion, currentQuestionIndex]);
 
   const handleExit = () => {
     exitRoom();

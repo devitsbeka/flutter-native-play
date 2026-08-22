@@ -1841,47 +1841,52 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const isLastQuestion = state.currentQuestionIndex >= state.questions.length - 1;
     
     if (isLastQuestion) {
-      // Mark THIS player as finished (not the whole room)
-      if (state.currentRoom && user) {
-        await supabase
+      // Show the results screen on this tap, before any network call.
+      //
+      // This used to poll room_participants until every answering player read
+      // "finished", to keep the score ranking honest. For whoever finishes
+      // FIRST that condition is unreachable by definition — the others are
+      // still answering — so the loop always ran its full course: six
+      // sequential round-trips plus six 250ms sleeps, five-odd seconds of a
+      // dead button, and then the same partial ranking it would have shown
+      // immediately. The button had no pending state either, so the wait read
+      // as a broken tap and got tapped again.
+      //
+      // Nothing on the results screen needs that wait: submitAnswer already
+      // awaited this player's final score write before revealing the answer,
+      // and the participants subscription re-ranks the board as the others
+      // finish.
+      setState(prev => ({ ...prev, phase: "results" }));
+
+      const room = state.currentRoom;
+
+      // Mark THIS player as finished (not the whole room). Fire-and-forget:
+      // the room-completion check keys off the realtime event this produces,
+      // and no rendered value reads the status.
+      if (room && user) {
+        void supabase
           .from("room_participants")
           .update({ status: "finished" })
-          .eq("room_id", state.currentRoom.id)
-          .eq("user_id", user.id);
+          .eq("room_id", room.id)
+          .eq("user_id", user.id)
+          .then(() => {
+            // Belt and braces for a dozing realtime channel: one refresh once
+            // our own write has landed, so a last finisher sees the final
+            // ranking even if no participants event arrives.
+            void fetchParticipants(room.id);
+          });
       }
 
       // Custom-trivia rounds bump plays_count at start but never wrote the
       // quiz_post_plays row the trivia leaderboard reads — record this
       // player's result now (observer hosts didn't answer, so skip them).
-      if (state.currentRoom?.user_trivia_id && user && !(isHost && state.hostIsObserver)) {
+      if (room?.user_trivia_id && user && !(isHost && state.hostIsObserver)) {
         void supabase.from("quiz_post_plays").insert({
           user_id: user.id,
-          post_id: state.currentRoom.user_trivia_id,
+          post_id: room.user_trivia_id,
           score: correctAnswersRef.current,
         });
       }
-
-      // The results screen ranks by room_participants.score, so wait until
-      // every answering player's row reads "finished" — each player writes
-      // that AFTER their final score lands — instead of sleeping a fixed
-      // 500ms and hoping the writes propagated. Bounded: if someone is slow
-      // the wait expires and results show with live realtime updates, which
-      // is exactly what the old sleep degenerated to every time.
-      if (state.currentRoom) {
-        for (let i = 0; i < 6; i++) {
-          const { data: rows } = await supabase
-            .from("room_participants")
-            .select("status")
-            .eq("room_id", state.currentRoom.id);
-          if (rows && rows.length > 0) {
-            const finished = rows.filter(r => r.status === "finished").length;
-            const answerers = rows.length - (state.hostIsObserver ? 1 : 0);
-            if (finished >= answerers) break;
-          }
-          await new Promise(resolve => setTimeout(resolve, 250));
-        }
-      }
-      setState(prev => ({ ...prev, phase: "results" }));
     } else {
       // Keep opponentAnswers - it's keyed per question_index, wiping it here
       // would drop answers already received for upcoming questions
@@ -1891,7 +1896,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         lastQuestionResult: null,
       }));
     }
-  }, [state.currentQuestionIndex, state.questions.length, state.currentRoom, state.hostIsObserver, isHost, user]);
+  }, [state.currentQuestionIndex, state.questions.length, state.currentRoom, state.hostIsObserver, isHost, user, fetchParticipants]);
 
   // A locked/backgrounded phone must not pause the match for everyone else.
   // Called when the app returns to the foreground mid-round: every full
