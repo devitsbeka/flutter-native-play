@@ -85,15 +85,40 @@ export function GameResultsScreenV2() {
   const [challengeQuestions, setChallengeQuestions] = useState<any[]>([]);
   const hasFetchedChallengeQuestions = useRef(false);
 
+  /**
+   * The best score seen for each player while this screen has been up.
+   *
+   * room_participants.score is live round state, not a record of what
+   * happened. When the host starts the next round — or the realtime
+   * subscription reconnects and finds the room still playing — every client
+   * resets its OWN row to score 0, and it does that whether or not the
+   * player is still reading the last round's result. So the scoreboard a
+   * player was looking at rewrote itself to 0/0 while they waited for the
+   * host, with the header still showing the XP the round had paid.
+   *
+   * Scores only ever climb during a round, so keeping the highest value seen
+   * ignores the reset without needing to detect it, and still lets a score
+   * that propagates late arrive. The header already did exactly this for the
+   * player's own total (Math.max with localMyScore); the rows did not, which
+   * is why the two disagreed.
+   */
+  const bestSeenScores = useRef<Map<string, number>>(new Map());
+  for (const p of participants) {
+    const seen = bestSeenScores.current.get(p.user_id) ?? 0;
+    bestSeenScores.current.set(p.user_id, Math.max(seen, p.score || 0));
+  }
+  const roundScoreOf = (p: { user_id: string; score?: number | null }) =>
+    Math.max(bestSeenScores.current.get(p.user_id) ?? 0, p.score || 0);
+
   // Sort participants by score and assign ranks
   const rankedParticipants: RankedParticipant[] = [...participants]
-    .sort((a, b) => (b.score || 0) - (a.score || 0))
+    .sort((a, b) => roundScoreOf(b) - roundScoreOf(a))
     .map((p, index) => ({
       user_id: p.user_id,
       nickname: p.nickname,
       avatar_url: p.avatar_url,
       country_code: p.country_code,
-      score: p.score || 0,
+      score: roundScoreOf(p),
       rank: index + 1,
       isMe: p.user_id === user?.id,
     }));

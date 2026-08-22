@@ -61,7 +61,12 @@ function updaterBodies(source: string): string[] {
 }
 
 /** Calls that change something outside the value being computed. */
-const FORBIDDEN = /\b(handleTimeUp|setIsAnswered|setSelectedAnswer|setAnswerRevealed|setShowResults)\s*\(/;
+// handleAnswer belongs here as much as handleTimeUp does, and its absence
+// was not theoretical: the multiplayer clock called handleAnswer("") from
+// inside its updater for as long as this test had been "covering" that file.
+// It submits an answer and reveals it, so a repeated updater could submit
+// twice — and the guard it opens with reads a captured selectedAnswer.
+const FORBIDDEN = /\b(handleTimeUp|handleAnswer|submitAnswer|setIsAnswered|setSelectedAnswer|setAnswerRevealed|setShowResults)\s*\(/;
 
 describe("quiz countdown updaters stay pure", () => {
   it("finds updaters to check", () => {
@@ -85,4 +90,38 @@ describe("quiz countdown updaters stay pure", () => {
       ).toEqual([]);
     });
   }
+});
+
+/**
+ * The clock has to measure seconds, not ticks.
+ *
+ * points = 100 + round(timeRemaining) x 10, so timeRemaining decides the
+ * score. The multiplayer clock used to be a setInterval subtracting a flat
+ * 0.1 every 100ms — but setInterval is not a clock: browsers fire it late
+ * under load and throttle it on phones, and every late tick still took only
+ * 0.1 off. A slower device therefore held a HIGHER timeRemaining for the
+ * same real-world speed and scored MORE, which is backwards.
+ *
+ * Both screens read real elapsed time from a timestamp now.
+ */
+describe("the question clock measures real time", () => {
+  it("MultiplayerGameScreenV2 ticks off a timestamp, not a fixed decrement", () => {
+    const source = readFileSync(
+      join(process.cwd(), "src/components/team/MultiplayerGameScreenV2.tsx"),
+      "utf8"
+    );
+
+    // An anchor taken when the question opens, and a tick that reads it.
+    expect(source, "expected a per-question start timestamp").toMatch(/questionStartedAt/);
+    expect(
+      source,
+      "the interval must compute remaining time from Date.now(), not subtract a constant"
+    ).toMatch(/setInterval\([\s\S]{0,400}?Date\.now\(\)\s*-\s*questionStartedAt/);
+
+    // The shape that caused the drift.
+    expect(
+      source,
+      "no fixed-decrement clock: it pays whoever has the slower phone"
+    ).not.toMatch(/setTimeRemaining\(\s*\(prev\)\s*=>\s*prev\s*-\s*0\.1/);
+  });
 });
