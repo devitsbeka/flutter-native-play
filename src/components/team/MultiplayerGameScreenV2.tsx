@@ -18,6 +18,7 @@ import { QuizTrueFalseButton, QuizTrueFalseState } from "@/components/ui/quiz-tr
 import { cn } from "@/lib/utils";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { MultiplayerObserverScreen } from "./MultiplayerObserverScreen";
+import { questionImageSrc } from "@/utils/questionImage";
 import { AnswerChoiceAvatars, type AnswerChooser } from "@/components/game/AnswerChoiceAvatars";
 
 export function MultiplayerGameScreenV2() {
@@ -63,7 +64,9 @@ export function MultiplayerGameScreenV2() {
     questions.forEach(q => {
       if (q.imageUrl) {
         const img = new Image();
-        img.src = q.imageUrl;
+        // Same rewritten URL the card will render, so this warms the right
+        // cache (our edge) instead of burning a Wikimedia request per player.
+        img.src = questionImageSrc(q.imageUrl)!;
       }
     });
   }, [questions]);

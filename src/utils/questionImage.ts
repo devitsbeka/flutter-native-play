@@ -17,7 +17,22 @@
  */
 const PROXIED_HOST = "upload.wikimedia.org";
 
-export function questionImageSrc(imageUrl: string | null | undefined): string | null {
+/**
+ * The /img route lives on the web origin (the Cloudflare Worker in front of
+ * mytrivia.io). On the web a relative URL reaches it. Inside the native app
+ * the page is served from capacitor://localhost, where a relative /img has
+ * nobody behind it — the request dies in the webview and every image
+ * question falls back to text. Any non-http(s) origin gets the production
+ * host spelled out.
+ */
+function imgRouteOrigin(protocol: string): string {
+  return protocol === "http:" || protocol === "https:" ? "" : "https://mytrivia.io";
+}
+
+export function questionImageSrc(
+  imageUrl: string | null | undefined,
+  pageProtocol: string = typeof window !== "undefined" ? window.location.protocol : "https:",
+): string | null {
   if (!imageUrl) return null;
 
   let parsed: URL;
@@ -30,5 +45,5 @@ export function questionImageSrc(imageUrl: string | null | undefined): string | 
 
   if (parsed.hostname !== PROXIED_HOST) return imageUrl;
 
-  return `/img?u=${encodeURIComponent(parsed.toString())}`;
+  return `${imgRouteOrigin(pageProtocol)}/img?u=${encodeURIComponent(parsed.toString())}`;
 }

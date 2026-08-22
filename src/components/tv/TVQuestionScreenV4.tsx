@@ -12,6 +12,7 @@ import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { TVDebugOverlay } from './TVDebugOverlay';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
+import { questionImageSrc } from "@/utils/questionImage";
 
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -398,7 +399,7 @@ export const TVQuestionScreenV4: React.FC = () => {
             ) : (
               <div className="flex-1 min-h-0 rounded-2xl overflow-hidden shadow-lg">
                 <img
-                  src={currentQuestion.image_url!}
+                  src={questionImageSrc(currentQuestion.image_url)!}
                   alt="Question"
                   className="w-full h-full object-cover object-top"
                   onError={() => setTvImageFailed(true)}

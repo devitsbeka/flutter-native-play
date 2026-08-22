@@ -37,6 +37,7 @@ import {
 } from "@/services/questionTracker";
 import type { Json } from "@/integrations/supabase/types";
 import { readAppLanguage } from "@/utils/appLanguage";
+import { questionImageSrc } from "@/utils/questionImage";
 
 // ============================================================================
 // TYPES
@@ -131,7 +132,10 @@ async function selectWithValidImages<T extends { id: string; imageUrl?: string |
       const timer = setTimeout(() => resolve(false), 2500);
       img.onload = () => { clearTimeout(timer); resolve(true); };
       img.onerror = () => { clearTimeout(timer); resolve(false); };
-      img.src = url;
+      // Validate the URL the card will actually render — the edge route, not
+      // Wikimedia directly. Direct validation was itself getting 429-throttled,
+      // dropping perfectly good questions, and the fetch was wasted anyway.
+      img.src = questionImageSrc(url) ?? url;
     });
 
   const selected: T[] = [];

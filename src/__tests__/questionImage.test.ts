@@ -30,6 +30,20 @@ describe("question images are fetched through our own edge", () => {
     expect(src).toContain(encodeURIComponent("?x=1&y=2"));
   });
 
+  it("spells out the web origin inside the native app", () => {
+    // The Capacitor webview's page lives at capacitor://localhost — a
+    // relative /img has nobody behind it there, and every image question
+    // would silently fall back to text on device.
+    expect(questionImageSrc(FLAG, "capacitor:")).toBe(
+      `https://mytrivia.io/img?u=${encodeURIComponent(FLAG)}`,
+    );
+  });
+
+  it("stays relative on any http(s) origin so previews keep their own worker", () => {
+    expect(questionImageSrc(FLAG, "https:")).toBe(`/img?u=${encodeURIComponent(FLAG)}`);
+    expect(questionImageSrc(FLAG, "http:")).toBe(`/img?u=${encodeURIComponent(FLAG)}`);
+  });
+
   it("leaves images we already serve ourselves alone", () => {
     const own = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/robot.png";
     expect(questionImageSrc(own)).toBe(own);
