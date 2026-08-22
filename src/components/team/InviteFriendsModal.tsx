@@ -14,7 +14,8 @@ import {
   Loader2,
   Check,
   ChevronLeft,
-  Clock
+  Clock,
+  X
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -120,7 +121,21 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   const [copied, setCopied] = useState(false);
   const touchedRef = useRef(false);
   
-  const { searchUsers, sendFriendRequest, friends } = useFriends();
+  const { searchUsers, sendFriendRequest, friends, pendingRequests, acceptFriendRequest, declineFriendRequest } = useFriends();
+  // The friendship id being answered, so exactly that row shows a spinner
+  // and can't be double-tapped while the answer is in flight.
+  const [answeringRequest, setAnsweringRequest] = useState<{ id: string; action: "accept" | "decline" } | null>(null);
+
+  const answerRequest = async (id: string, action: "accept" | "decline") => {
+    if (answeringRequest) return;
+    setAnsweringRequest({ id, action });
+    try {
+      if (action === "accept") await acceptFriendRequest(id);
+      else await declineFriendRequest(id);
+    } finally {
+      setAnsweringRequest(null);
+    }
+  };
   const { user } = useAuth();
   const { trackMissionEvent } = useMissions();
 
@@ -593,6 +608,69 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                   </AnimatePresence>
                 </div>
 
+                {/* Incoming friend requests lead the screen: someone waiting
+                    on an answer outranks the grid of people already secured,
+                    and both answers are one tap right here. */}
+                {pendingRequests.length > 0 && !searchQuery && (
+                  <div className={`space-y-2 ${narrow}`}>
+                    <p className="text-sm font-medium text-white/80 px-1">
+                      {t("extra.requestsHeader")} ({pendingRequests.length})
+                    </p>
+                    <div className="max-h-[168px] space-y-1.5 overflow-y-auto">
+                      <AnimatePresence initial={false}>
+                        {pendingRequests.map((request) => {
+                          const busy = answeringRequest?.id === request.id;
+                          return (
+                            <motion.div
+                              key={request.id}
+                              initial={{ opacity: 0, y: -6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, x: -60 }}
+                              className={`flex items-center gap-3 p-2.5 ${lobbyGlassRow}`}
+                            >
+                              <SafeAvatar
+                                avatarUrl={request.avatarUrl}
+                                fallback={request.nickname}
+                                className="w-10 h-10 border border-white/20"
+                                fallbackClassName="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold"
+                              />
+                              <p className="flex-1 min-w-0 truncate text-sm font-medium text-white">
+                                {request.nickname}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => answerRequest(request.id, "accept")}
+                                disabled={busy}
+                                aria-label={t("extra.acceptRequestBtn")}
+                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white transition-colors hover:bg-emerald-600 disabled:opacity-60 active:scale-95"
+                              >
+                                {busy && answeringRequest?.action === "accept" ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Check className="h-5 w-5" />
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => answerRequest(request.id, "decline")}
+                                disabled={busy}
+                                aria-label={t("notifications.decline")}
+                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-white/85 transition-colors hover:bg-white/25 disabled:opacity-60 active:scale-95"
+                              >
+                                {busy && answeringRequest?.action === "decline" ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <X className="h-5 w-5" />
+                                )}
+                              </button>
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                )}
+
                 {/* Friends grid — shown both when picking friends before a
                     room and when inviting into an existing one. Inviting from
                     a room used to hide it, leaving only search and share
@@ -600,10 +678,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                 {acceptedFriends.length > 0 && !searchQuery && (
                   <div className={`space-y-3 ${narrow}`}>
                     <p className="text-sm font-medium text-white/80 px-1">{t("extra.yourFriends")}</p>
-                    {/* Taller than it was: the screen had a third of itself
-                        empty below the share row while the grid clipped at
-                        two and a half rows. */}
-                    <div className="grid grid-cols-4 gap-2 max-h-[min(48vh,440px)] overflow-y-auto">
+                    {/* Capped so the share row never disappears under the
+                        footer: with many friends the grid at 48vh pushed the
+                        social section off-screen. Two-and-a-bit rows show;
+                        the rest scroll inside the grid. */}
+                    <div className="grid grid-cols-4 gap-2 max-h-[min(30vh,264px)] overflow-y-auto">
                       {orderedFriends.map((friend) => {
                         const isSelected = selectedFriends?.has(friend.friendId) || false;
                         const isInvited = !isBrowseMode && sentRequests.has(friend.friendId);
