@@ -78,11 +78,12 @@ export function useMissionStreak() {
 
   const recordDailyCompletion = async (): Promise<{
     newStreak: number;
+    newTotal: number;
     streakBroken: boolean;
     bonusAvailable: boolean;
   }> => {
     if (!user || !streak) {
-      return { newStreak: 0, streakBroken: false, bonusAvailable: false };
+      return { newStreak: 0, newTotal: 0, streakBroken: false, bonusAvailable: false };
     }
 
     try {
@@ -103,6 +104,7 @@ export function useMissionStreak() {
           // Already completed today
           return { 
             newStreak: streak.current_streak, 
+            newTotal: streak.total_completions,
             streakBroken: false, 
             bonusAvailable: !streak.streak_bonus_claimed 
           };
@@ -143,12 +145,13 @@ export function useMissionStreak() {
 
       return { 
         newStreak: newCurrentStreak, 
+        newTotal: streak.total_completions + 1,
         streakBroken, 
         bonusAvailable: true 
       };
     } catch (error) {
       console.error("Error recording daily completion:", error);
-      return { newStreak: 0, streakBroken: false, bonusAvailable: false };
+      return { newStreak: 0, newTotal: 0, streakBroken: false, bonusAvailable: false };
     }
   };
 

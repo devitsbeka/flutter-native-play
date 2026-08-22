@@ -135,7 +135,7 @@ export const RARITY_COLORS = {
 };
 
 export function useMissionAchievements() {
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, setProfileLocal } = useAuth();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -187,11 +187,33 @@ export function useMissionAchievements() {
 
       if (error) throw error;
 
-      // Award rewards
-      await updateProfile({
-        coins: (profile.coins || 0) + definition.reward_coins,
-        gems: (profile.gems || 0) + definition.reward_gems,
-      });
+      // Award rewards.
+      //
+      // Not an absolute write off the in-memory profile, which is what stood
+      // here. update_user_currency refuses a positive delta from a signed-in
+      // caller, so it paid nothing on a database with the entitlement
+      // migrations applied — and it read profile.gems, a column the client
+      // is not granted once the wallet lockdown lands, so the write would
+      // have set the player's gems to the reward alone and destroyed the
+      // rest. It never fired only because nothing called this.
+      if (definition.reward_coins > 0 || definition.reward_gems > 0) {
+        const { data: currencyData, error: currencyError } = await supabase.rpc(
+          "credit_gameplay_reward",
+          {
+            p_kind: "achievement",
+            p_coins: definition.reward_coins || 0,
+            p_gems: definition.reward_gems || 0,
+            p_reference: achievementId,
+          }
+        );
+        if (currencyError) throw currencyError;
+        if (currencyData && currencyData.length > 0) {
+          setProfileLocal({
+            coins: currencyData[0].new_coins,
+            gems: currencyData[0].new_gems,
+          });
+        }
+      }
 
       // Update local state
       setAchievements((prev) => [

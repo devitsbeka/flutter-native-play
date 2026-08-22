@@ -9,6 +9,7 @@ import { t } from "@/lib/i18n";
 import { missionTitle } from "@/utils/missionText";
 import { useAuth } from "./useAuth";
 import { useMissionStreak } from "./useMissionStreak";
+import { useMissionAchievements } from "./useMissionAchievements";
 import {
   dayKindOf,
   rotationForDate,
@@ -612,6 +613,7 @@ const EMPTY_MISSIONS: MissionsData = { daily: [], weekly: [] };
 export function useMissions() {
   const { user, profile, updateProfile, setProfileLocal } = useAuth();
   const { recordDailyCompletion, claimStreakBonus } = useMissionStreak();
+  const { checkAndUnlockAchievements } = useMissionAchievements();
   const queryClient = useQueryClient();
   const queryKey = ["missions", user?.id];
   const gamesPlayed = profile?.games_played || 0;
@@ -797,6 +799,32 @@ export function useMissions() {
         await claimStreakBonus(streakResult.newStreak);
       }
 
+      // And the achievements those two numbers unlock. The catalogue —
+      // eight of them, titles and descriptions written and translated, coins
+      // and gems attached — has existed since user_achievements was created,
+      // and checkAndUnlockAchievements was never called from anywhere. The
+      // profile's Rewards tab reads that table, so it has shown "no rewards
+      // yet" to every player who ever opened it, including players thirty
+      // days into a streak.
+      try {
+        const unlocked = await checkAndUnlockAchievements(
+          streakResult?.newStreak ?? 0,
+          streakResult?.newTotal ?? 0
+        );
+        for (const achievement of unlocked) {
+          toast.success(achievement.title, { description: achievement.description });
+          void createNotification(
+            user.id,
+            "reward",
+            achievement.title,
+            achievement.description,
+            { achievement_id: achievement.id, coins: achievement.reward_coins, gems: achievement.reward_gems, xp: 0 }
+          );
+        }
+      } catch (error) {
+        console.error("Achievement check failed:", error);
+      }
+
       const { data: currency } = await supabase.rpc("credit_gameplay_reward", {
         p_kind: "mission",
         p_coins: DAY_BONUS.coins,
@@ -827,7 +855,7 @@ export function useMissions() {
         description: createElement(RewardChipsRow, { coins: DAY_BONUS.coins, xp: DAY_BONUS.xp }),
       });
     },
-    [user, profile, recordDailyCompletion, claimStreakBonus, setProfileLocal, updateProfile]
+    [user, profile, recordDailyCompletion, claimStreakBonus, checkAndUnlockAchievements, setProfileLocal, updateProfile]
   );
 
   const updateMissionProgress = useCallback(
