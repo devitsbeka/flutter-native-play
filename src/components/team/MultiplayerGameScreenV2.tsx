@@ -104,11 +104,11 @@ export function MultiplayerGameScreenV2() {
             );
           }
         });
-      } else if (awaySeconds > 1 && !answerRevealed && selectedAnswer === null) {
-        // Short absence: the missed seconds come off the current question's
-        // clock (hitting zero auto-submits an empty answer via the timer)
-        setTimeRemaining(prev => Math.max(0, prev - awaySeconds));
       }
+      // A short absence needs no correction any more. The clock is measured
+      // from questionStartedAt, so time spent with the tab hidden is already
+      // gone when it comes back; subtracting it again here would charge the
+      // player twice for the same seconds.
     };
 
     document.addEventListener("visibilitychange", onVisibilityChange);
@@ -133,10 +133,28 @@ export function MultiplayerGameScreenV2() {
     return results;
   }, [questions.length]);
 
+  /**
+   * When the question opened on this device.
+   *
+   * The clock used to be counted in ticks — one setInterval every 100ms
+   * subtracting a flat 0.1 — and setInterval is not a clock. Browsers fire it
+   * late under load and throttle it hard on phones, and every late tick still
+   * took only 0.1 off. A device whose ticks slipped therefore kept a HIGHER
+   * timeRemaining for the same real-world speed, and points are
+   * 100 + round(timeRemaining) x 10, so each second of drift was ten points
+   * to whoever had the slower phone. That is backwards: the player who
+   * answers sooner is supposed to score more.
+   *
+   * Real elapsed time is read from this instead, so the clock measures the
+   * same seconds on every device.
+   */
+  const questionStartedAt = useRef<number>(Date.now());
+
   // Reset on question change
   useEffect(() => {
     setAnswerRevealed(false);
     setSelectedAnswer(null);
+    questionStartedAt.current = Date.now();
     setTimeRemaining(timePerQuestion);
   }, [currentQuestionIndex, timePerQuestion]);
 
@@ -205,18 +223,26 @@ export function MultiplayerGameScreenV2() {
   useEffect(() => {
     if (answerRevealed || selectedAnswer !== null || (isHost && hostIsObserver)) return;
 
+    // Reads the clock; decides nothing. Running out of time is handled by the
+    // effect below, off the state this one writes — an updater must be pure,
+    // and this one used to call handleAnswer(""), which submits an answer and
+    // reveals it. React may run an updater more than once, and that guard
+    // reads a captured selectedAnswer, so a repeat could submit twice.
     const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 0.1) {
-          handleAnswer("");
-          return 0;
-        }
-        return prev - 0.1;
-      });
+      const elapsed = (Date.now() - questionStartedAt.current) / 1000;
+      setTimeRemaining(Math.max(0, timePerQuestion - elapsed));
     }, 100);
 
     return () => clearInterval(timer);
-  }, [answerRevealed, selectedAnswer, handleAnswer, isHost, hostIsObserver]);
+  }, [answerRevealed, selectedAnswer, isHost, hostIsObserver, timePerQuestion]);
+
+  // Out of time. Reads live state, so it can only fire for the question on
+  // screen: moving on resets the clock and this stops being true.
+  useEffect(() => {
+    if (answerRevealed || selectedAnswer !== null || (isHost && hostIsObserver)) return;
+    if (timeRemaining > 0) return;
+    handleAnswer("");
+  }, [timeRemaining, answerRevealed, selectedAnswer, handleAnswer, isHost, hostIsObserver]);
 
   // Get answer button state
   const getAnswerState = useCallback(
