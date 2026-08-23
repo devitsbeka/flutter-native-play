@@ -17,6 +17,7 @@ import { toast } from "@/lib/toast";
 import { useState, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PlayerOverflowMenu } from "@/components/social/PlayerOverflowMenu";
+import { VersusPanel } from "@/components/profile/VersusPanel";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 import { MASCOT_USER_IDS } from "@/lib/excludedUsers";
@@ -72,7 +73,7 @@ const ACHIEVEMENT_ICONS: Record<string, string> = {
 };
 
 export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileModalProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
   const { isAdmin } = useAdminRole();
   const navigate = useNavigate();
@@ -390,7 +391,22 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                       shown to friends and to yourself. Removed from the public
                       profile: a visitor is here to see who someone is and what
                       they have made, not to be handed a scoreboard on them.
-                      Your own stats still live on your own profile page. */}
+                      Your own stats still live on your own profile page.
+
+                      What replaced it is about the two of you rather than a
+                      dump of their numbers: the record between you, and the
+                      one thing they are best at. */}
+                  {!data.isCurrentUser && (
+                    <VersusPanel
+                      headToHead={data.headToHead}
+                      specialty={data.specialty}
+                      me={{ nickname: profile?.nickname, avatarUrl: profile?.avatar_url }}
+                      them={{
+                        nickname: data.profile.nickname,
+                        avatarUrl: data.profile.avatar_url,
+                      }}
+                    />
+                  )}
 
                   {/* Action Buttons */}
                   {!data.isCurrentUser && (

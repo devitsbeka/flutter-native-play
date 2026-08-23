@@ -25,6 +25,16 @@ done
 psql -h /tmp -p 55432 -U postgres -f supabase/tests/01-entitlements.sql
 ```
 
+The other suites run the same way — each is independent, and
+`05-head-to-head.sql` seeds its own matches before switching role (RLS
+rightly refuses an ordinary signed-in role writing `categories`, so seeding
+after `SET ROLE` silently writes nothing and the assertions then read
+whatever was already there).
+
+```bash
+psql -h /tmp -p 55432 -U postgres -f supabase/tests/05-head-to-head.sql
+```
+
 Read the output. Each case says whether it must succeed or must fail; a
 line that does the opposite of its label is a real regression.
 

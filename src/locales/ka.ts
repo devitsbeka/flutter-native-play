@@ -1651,6 +1651,12 @@ export const ka = {
 
 
   extra: {
+    playedTogetherCount: "ერთად ითამაშეთ {count} მატჩი",
+    victoriesLabel: "გამარჯვება",
+    versusShort: "VS",
+    drawsCount: "{count} ფრე",
+    theirSpecialty: "მისი ძლიერი მხარე",
+    percentSuccess: "{percent}% წარმატება",
     topicMarvelMovies: "Marvel ფილმები",
     topicWeirdFacts: "უცნაური ფაქტები",
     topicSpaceSecrets: "კოსმოსის საიდუმლოებები",

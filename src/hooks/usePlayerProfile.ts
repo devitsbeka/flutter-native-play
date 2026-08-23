@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PROFILE_SELECT_COLUMNS } from "@/integrations/supabase/profileColumns";
+import { localizeCategoryNames } from "@/utils/localizeCategories";
 import { useAuth } from "@/contexts/AuthContext";
 
 export interface InteractionLogItem {
@@ -12,6 +13,25 @@ export interface InteractionLogItem {
   timestamp: string;
   roomId?: string;
   categoryName?: string;
+}
+
+export interface HeadToHead {
+  matchesTogether: number;
+  myWins: number;
+  theirWins: number;
+  draws: number;
+}
+
+export interface Specialty {
+  categoryId: string;
+  slug: string;
+  /** Already in the reader's language. */
+  name: string;
+  iconSlug: string | null;
+  totalAnswers: number;
+  correctAnswers: number;
+  /** 0–1. */
+  accuracy: number;
 }
 
 export interface PlayerProfileData {
@@ -55,6 +75,17 @@ export interface PlayerProfileData {
     likes_count: number | null;
   }>;
   interactions: InteractionLogItem[];
+  /**
+   * The record between the viewer and this player.
+   *
+   * A win is the higher score in a match you both played — the same rule for
+   * a duel and for a room of eight, because placing above someone is beating
+   * them. Null while it loads, and on your own profile, where there is no
+   * "against".
+   */
+  headToHead: HeadToHead | null;
+  /** What this player is best at, over enough answers to mean something. */
+  specialty: Specialty | null;
   stats: {
     totalPoints: number;
     gamesPlayed: number;
@@ -112,6 +143,87 @@ async function fetchCore(userId: string): Promise<CoreProfile> {
       bestStreak: profileTyped?.best_streak || 0,
     },
   };
+}
+
+/**
+ * The two functions behind the "against each other" panel.
+ *
+ * Called through a cast because neither is in the generated types — those are
+ * regenerated from a database, and doing that here is how six other functions
+ * once vanished (see CLAUDE.md rule 1). Both are SECURITY DEFINER and read
+ * rows that are not the caller's own; head_to_head_record takes only the
+ * other player, never both sides, so the "me" half is always auth.uid().
+ */
+const rpc = supabase.rpc as unknown as (
+  fn: string,
+  args: Record<string, unknown>,
+) => Promise<{ data: unknown; error: unknown }>;
+
+interface HeadToHeadRow {
+  matches_together: number | string;
+  my_wins: number | string;
+  their_wins: number | string;
+  draws: number | string;
+}
+
+interface BestCategoryRow {
+  category_id: string;
+  category_slug: string;
+  category_name: string;
+  icon_slug: string | null;
+  total_answers: number;
+  correct_answers: number;
+  accuracy: number | string;
+}
+
+/** Postgres bigint and numeric arrive as strings over PostgREST. */
+const num = (v: number | string | null | undefined): number => Number(v ?? 0) || 0;
+
+async function fetchVersus(
+  userId: string,
+  viewerId: string | undefined,
+): Promise<{ headToHead: HeadToHead | null; specialty: Specialty | null }> {
+  const isOther = !!viewerId && viewerId !== userId;
+
+  const [h2h, best] = await Promise.all([
+    isOther
+      ? rpc("head_to_head_record", { p_other_user_id: userId }).catch(() => ({ data: null, error: null }))
+      : Promise.resolve({ data: null, error: null }),
+    rpc("best_category_for_user", { p_user_id: userId }).catch(() => ({ data: null, error: null })),
+  ]);
+
+  // Both return SETOF, so a row array — empty when there is nothing to say.
+  const h2hRow = (h2h.data as HeadToHeadRow[] | null)?.[0];
+  const bestRow = (best.data as BestCategoryRow[] | null)?.[0];
+
+  const headToHead: HeadToHead | null = h2hRow
+    ? {
+        matchesTogether: num(h2hRow.matches_together),
+        myWins: num(h2hRow.my_wins),
+        theirWins: num(h2hRow.their_wins),
+        draws: num(h2hRow.draws),
+      }
+    : null;
+
+  let specialty: Specialty | null = null;
+  if (bestRow) {
+    // categories.name is Georgian for every row; the reader's language lives
+    // in category_translations, keyed by the category UUID.
+    const [localized] = await localizeCategoryNames([
+      { id: bestRow.category_id, name: bestRow.category_name },
+    ]);
+    specialty = {
+      categoryId: bestRow.category_id,
+      slug: bestRow.category_slug,
+      name: localized?.name ?? bestRow.category_name,
+      iconSlug: bestRow.icon_slug,
+      totalAnswers: num(bestRow.total_answers),
+      correctAnswers: num(bestRow.correct_answers),
+      accuracy: num(bestRow.accuracy),
+    };
+  }
+
+  return { headToHead, specialty };
 }
 
 // ---- Phase 2: content, friendship and shared history, all concurrent ----
@@ -271,11 +383,24 @@ export function usePlayerProfile(userId: string | null) {
     gcTime: 30 * 60_000,
   });
 
+  // The record between the two of you, and what they are best at. Its own
+  // query so the header and content never wait on it — it is the slowest of
+  // the three (two functions, one of which scans the shared match history).
+  const versusQuery = useQuery({
+    queryKey: ["player-profile-versus", userId, viewerId ?? null],
+    queryFn: () => fetchVersus(userId!, viewerId),
+    enabled: !!userId,
+    staleTime: 60_000,
+    gcTime: 30 * 60_000,
+  });
+
   const core = coreQuery.data;
   const data: PlayerProfileData | null = core
     ? {
         ...core,
         ...(extrasQuery.data ?? EMPTY_EXTRAS),
+        headToHead: versusQuery.data?.headToHead ?? null,
+        specialty: versusQuery.data?.specialty ?? null,
         isCurrentUser: !!viewerId && viewerId === userId,
       }
     : null;
@@ -283,6 +408,7 @@ export function usePlayerProfile(userId: string | null) {
   const refetch = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["player-profile-core", userId] });
     queryClient.invalidateQueries({ queryKey: ["player-profile-extras", userId] });
+    queryClient.invalidateQueries({ queryKey: ["player-profile-versus", userId] });
   }, [queryClient, userId]);
 
   return {

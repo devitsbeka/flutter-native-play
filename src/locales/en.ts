@@ -1650,6 +1650,12 @@ export const en: KaTranslations = {
 
 
   extra: {
+    playedTogetherCount: "You have played {count} matches together",
+    victoriesLabel: "Victories",
+    versusShort: "VS",
+    drawsCount: "{count} drawn",
+    theirSpecialty: "Their specialty",
+    percentSuccess: "{percent}% success",
     topicMarvelMovies: "Marvel movies",
     topicWeirdFacts: "Weird facts",
     topicSpaceSecrets: "Secrets of space",

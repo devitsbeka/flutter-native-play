@@ -1380,6 +1380,12 @@ export const es: KaTranslations = {
     weekly_play_gamesDesc: "Juega {n} partidas esta semana",
   },
   extra: {
+    playedTogetherCount: "Habéis jugado {count} partidas juntos",
+    victoriesLabel: "Victorias",
+    versusShort: "VS",
+    drawsCount: "{count} empatadas",
+    theirSpecialty: "Su especialidad",
+    percentSuccess: "{percent}% de acierto",
     ...en.extra,
     topicMarvelMovies: "Películas de Marvel",
     topicWeirdFacts: "Datos curiosos",
