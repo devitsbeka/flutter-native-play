@@ -1,5 +1,6 @@
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Friend, useFriends } from "@/hooks/useFriends";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -73,10 +74,96 @@ interface FriendsStoriesBarProps {
   onShowAllFriends?: () => void;
 }
 
+/** One screenful less a peek, so an arrow press keeps a landmark in view. */
+const PAGE_FRACTION = 0.8;
+
+/**
+ * Which way this strip can still be scrolled.
+ *
+ * The strip has always been `overflow-x-auto`, and on a phone that is the
+ * whole story — you swipe it. On a desktop it left the row unreachable: a
+ * mouse wheel scrolls a page vertically, never an overflowing row sideways,
+ * and `scrollbar-hide` means there is no bar to drag either. So a long friends
+ * list simply stopped at the edge of the window with no way to reach the rest.
+ *
+ * The arrows this drives appear only on the side that has something left to
+ * show, so a short list gets none.
+ */
+function useScrollEdges(ref: React.RefObject<HTMLDivElement>) {
+  const [edges, setEdges] = useState({ left: false, right: false });
+
+  const measure = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    // A pixel of slack: fractional widths (zoom, devicePixelRatio) leave
+    // scrollLeft a hair short of the end and an arrow stuck on forever.
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setEdges({
+      left: el.scrollLeft > 1,
+      right: el.scrollLeft < maxScroll - 1,
+    });
+  }, [ref]);
+
+  useLayoutEffect(measure, [measure]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.addEventListener("scroll", measure, { passive: true });
+    // Friends arrive after the first paint and the window resizes, both of
+    // which change what is reachable without a scroll event.
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    for (const child of Array.from(el.children)) observer.observe(child);
+    return () => {
+      el.removeEventListener("scroll", measure);
+      observer.disconnect();
+    };
+  }, [ref, measure]);
+
+  return edges;
+}
+
+function ScrollArrow({
+  side,
+  onClick,
+}: {
+  side: "left" | "right";
+  onClick: () => void;
+}) {
+  const Icon = side === "left" ? ChevronLeft : ChevronRight;
+  // md+ only: a touch screen swipes the strip and wants no chrome over it.
+  // Centred on the avatar circles (8px of top padding + half of 64) rather
+  // than on the row, so the name labels do not drag the arrows off-centre.
+  // aria-hidden and out of the tab order on purpose — the avatars themselves
+  // are focusable, and focusing one already scrolls it into view.
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-hidden
+      tabIndex={-1}
+      className={`hidden md:flex absolute ${side === "left" ? "left-1" : "right-1"} top-[40px] -translate-y-1/2 z-10
+        h-8 w-8 items-center justify-center rounded-full border border-border bg-background/95 text-foreground
+        shadow-md backdrop-blur transition hover:bg-background active:scale-95`}
+    >
+      <Icon className="h-4 w-4" />
+    </button>
+  );
+}
+
 export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFriends }: FriendsStoriesBarProps) {
   const { friends, loading } = useFriends();
   const { t } = useLanguage();
   const { openProfile } = usePlayerProfile();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const edges = useScrollEdges(scrollRef);
+
+  const page = useCallback((direction: -1 | 1) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: direction * el.clientWidth * PAGE_FRACTION, behavior: "smooth" });
+  }, []);
 
   // Sort online friends first
   const sortedFriends = [...friends].sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0));
@@ -100,7 +187,10 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
   }
 
   return (
-    <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
+    <div className="relative">
+      {edges.left && <ScrollArrow side="left" onClick={() => page(-1)} />}
+      {edges.right && <ScrollArrow side="right" onClick={() => page(1)} />}
+      <div ref={scrollRef} className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
       <div className="flex gap-4 pt-2 pb-3 pr-4">
         {/* Add Friend Button */}
         <button
@@ -152,6 +242,7 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
           Array.from({ length: skeletonCount }).map((_, index) => (
             <FriendSlotPlaceholder key={`skeleton-${index}`} index={index} />
           ))}
+      </div>
       </div>
     </div>
   );
