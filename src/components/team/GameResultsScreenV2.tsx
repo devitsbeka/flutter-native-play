@@ -593,8 +593,12 @@ export function GameResultsScreenV2() {
                   )}
                 </div>
                 
-                {/* Medal */}
-                <span className="text-2xl">
+                {/* Medal, or the place number from fourth down.
+                    The colour is not optional: the top three are emoji and
+                    paint themselves, but "#4" is text, and with nothing set
+                    it inherited the default dark foreground and came out
+                    black on a dark row. */}
+                <span className="text-2xl font-display font-bold text-white min-w-[2ch] text-center">
                   {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${p.rank}`}
                 </span>
                 

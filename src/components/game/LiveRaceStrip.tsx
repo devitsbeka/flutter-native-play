@@ -22,6 +22,9 @@ interface LiveRaceStripProps {
   className?: string;
 }
 
+/** How many avatars the strip will carry before deferring to the results screen. */
+export const MAX_SHOWN = 10;
+
 /** Ring, medal and glow per place. Fourth onward gets none of it. */
 const PODIUM = [
   { ring: "#F5B921", glow: "rgba(245,185,33,0.55)", medal: medalGold },
@@ -65,7 +68,10 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
 
   if (players.length < 2) return null;
 
-  const ranked = rankPlayers(players);
+  // Ten is the ceiling. Past that the row is scrolling further than anyone
+  // will scroll mid-question, and the full field is on the results screen,
+  // which is a vertical list and has room for it.
+  const ranked = rankPlayers(players).slice(0, MAX_SHOWN);
 
   return (
     <div
@@ -123,10 +129,13 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
               )}
             </div>
 
+            {/* White throughout, and only the weight separates you from the
+                rest. The chasing pack was the faintest thing on a strip whose
+                whole job is being read at a glance mid-question. */}
             <span
               className={cn(
-                "max-w-full truncate text-[10px] leading-none",
-                isMe ? "font-bold text-white" : "text-white/70",
+                "max-w-full truncate text-[10px] font-semibold leading-none text-white",
+                isMe ? "font-extrabold" : "text-white/90",
               )}
             >
               {isMe ? t("game.you") : player.nickname}
@@ -140,8 +149,8 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.25 }}
               className={cn(
-                "font-display font-bold leading-none text-white",
-                podium ? "text-sm" : "text-xs",
+                "font-display font-extrabold leading-none text-white drop-shadow-sm",
+                podium ? "text-sm" : "text-[13px]",
               )}
             >
               {score}

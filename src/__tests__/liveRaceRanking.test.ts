@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rankPlayers, type RacePlayer } from "@/components/game/LiveRaceStrip";
+import { rankPlayers, MAX_SHOWN, type RacePlayer } from "@/components/game/LiveRaceStrip";
 
 /**
  * The strip's order is the feature — an overtake is meant to be a thing you
@@ -79,5 +79,22 @@ describe("live race ranking", () => {
     const snapshot = input.map((p) => p.id);
     rankPlayers(input);
     expect(input.map((p) => p.id)).toEqual(snapshot);
+  });
+
+  it("keeps the leaders when the room is bigger than the strip", () => {
+    // A room can hold more players than fit across a phone. Whoever is cut
+    // must be cut from the back — losing the leader off a leaderboard would
+    // be the one unacceptable outcome. The rest are on the results screen,
+    // which scrolls vertically.
+    const many = Array.from({ length: MAX_SHOWN + 6 }, (_, i) =>
+      player(`p${i}`, i * 10, `2026-01-01T00:00:${String(i).padStart(2, "0")}Z`),
+    );
+    const shown = rankPlayers(many).slice(0, MAX_SHOWN);
+
+    expect(shown).toHaveLength(MAX_SHOWN);
+    // Highest score first, and the top scorer is never the one dropped.
+    expect(shown[0].id).toBe(`p${many.length - 1}`);
+    const scores = shown.map((p) => p.score as number);
+    expect([...scores].sort((a, b) => b - a)).toEqual(scores);
   });
 });
