@@ -30,6 +30,7 @@ import { MotionConfig } from "framer-motion";
 import { StaleAnimationCleanup } from "@/components/system/StaleAnimationCleanup";
 import { ScenePortraitHealer } from "@/components/system/ScenePortraitHealer";
 import { ReducedMotionGuard } from "@/components/system/ReducedMotionGuard";
+import { RoundStartWatcher } from "@/components/system/RoundStartWatcher";
 import { HiddenWorkGuard } from "@/components/system/HiddenWorkGuard";
 import { FakeFriendRequestAutoAccept } from "@/components/system/FakeFriendRequestAutoAccept";
 import { PageSkeleton } from "@/components/PageSkeleton";
@@ -213,6 +214,11 @@ const App = () => (
             <HiddenWorkGuard />
             <FakeFriendRequestAutoAccept />
             <FreshBuildGuard />
+            {/* Outside <Routes> on purpose: MultiplayerProviderV2 is mounted
+                inside the /team route, so nothing followed a player who
+                wandered off while waiting for the host to start. Inside
+                BrowserRouter (main.tsx), so it can navigate. */}
+            <RoundStartWatcher />
             <Suspense fallback={<PageSkeleton />}>
               <Routes>
                 <Route path="/" element={<Index />} />

@@ -12,6 +12,8 @@ import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal
 import { GameStylePersonalTrivia } from "@/components/team/GameStylePersonalTrivia";
 import { JoinRoomModal } from "@/components/team/JoinRoomModal";
 import { RoomLobbyV2 } from "@/components/team/RoomLobbyV2";
+import { RoundCountdown } from "@/components/team/RoundCountdown";
+import { useRoundCountdown } from "@/hooks/useRoundCountdown";
 import { MultiplayerGameScreenV2 } from "@/components/team/MultiplayerGameScreenV2";
 import { GameResultsScreenV2 } from "@/components/team/GameResultsScreenV2";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
@@ -83,6 +85,9 @@ function TeamContentV2() {
     enterRoom,
     leaveRoomPermanently,
   } = useMultiplayerV2();
+  // Before any early return below: the 3-2-1 is read from the room's start
+  // time, and the game screen is withheld while it runs.
+  const countdownNumber = useRoundCountdown(currentRoom?.started_at);
   const { playSound } = useSound();
   const { 
     sendInvitation,
@@ -728,9 +733,26 @@ function TeamContentV2() {
     setPlayingQuiz({ post });
   };
 
-  // Show game screen if playing (with guard for currentRoom)
+  // Show game screen if playing (with guard for currentRoom).
+  //
+  // The countdown goes in front of it rather than inside: mounting the game
+  // screen starts the question clock, so anything that delays the first
+  // question has to delay the mount too. It returns null once the room's
+  // start time is more than the count old, which is also what makes a
+  // mid-round rejoin go straight to the question.
   if (phase === "playing" && currentRoom) {
-    return <MultiplayerGameScreenV2 />;
+    return (
+      <>
+        {countdownNumber !== null && (
+          <RoundCountdown
+            number={countdownNumber}
+            categoryId={currentRoom.category_id}
+            categoryName={currentRoom.category_name}
+          />
+        )}
+        {countdownNumber === null && <MultiplayerGameScreenV2 />}
+      </>
+    );
   }
 
   // Show result screen (with guard for currentRoom)
