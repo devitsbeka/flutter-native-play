@@ -2662,6 +2662,7 @@ export const ka = {
     inviteThisIsYours: "ეს შენი საკუთარი მოსაწვევი ბმულია",
     inviteHaveAccount: "უკვე მაქვს ანგარიში",
     inviteNowFriends: "{name} ახლა შენი მეგობარია",
+    questionImageFailed: "სურათი ვერ ჩაიტვირთა",
     inviteLinkCreating: "იქმნება...",
     createLinkBtn: "ლინკის შექმნა",
     createLinkDesc: "შექმენი უნიკალური ლინკი, რომელიც შეგიძლია გაუზიარო მეგობრებს",

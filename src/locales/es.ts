@@ -2290,6 +2290,7 @@ export const es: KaTranslations = {
     inviteThisIsYours: "Este es tu propio enlace de invitación",
     inviteHaveAccount: "Ya tengo una cuenta",
     inviteNowFriends: "Tú y {name} ya sois amigos",
+    questionImageFailed: "La imagen no se cargó",
     inviteLinkCreating: "Creando...",
     createLinkBtn: "Crear enlace",
     createLinkDesc: "Crea un enlace único para compartir con amigos",

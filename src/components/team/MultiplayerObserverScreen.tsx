@@ -330,13 +330,24 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
 
           {/* Question Card */}
           <div className="flex-shrink-0 mt-8">
+            {/* The observer watches what the players are looking at. This
+                card was passing only the text, so a host observing a
+                guess-the-logo round saw "Which brand's logo is this?" with no
+                picture under it — the whole round, not just on a failure. */}
             <QuizQuestionCard
               questionText={currentQuestion?.question || ""}
+              imageUrl={currentQuestion?.imageUrl}
+              imageInset={currentRoom?.category_id === "guess_logo"}
+              imageFramed={currentRoom?.category_id === "guess_flag"}
+              imageReveal={currentRoom?.category_id === "guess_logo"}
+              videoUrl={currentQuestion?.videoUrl}
+              audioUrl={currentQuestion?.audioUrl}
               progressPercent={(localTimeRemaining / TIME_PER_QUESTION) * 100}
               state="default"
               timerSeconds={Math.ceil(localTimeRemaining)}
               timerMaxSeconds={TIME_PER_QUESTION}
-              reserveTopSpace
+              reserveTopSpace={!currentQuestion?.imageUrl}
+              hideQuestionText={!!currentQuestion?.imageUrl}
             />
           </div>
 

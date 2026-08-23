@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { questionImageSrc } from "@/utils/questionImage";
 import { ImageRevealMask } from "./image-reveal-mask";
-import { Snowflake } from "lucide-react";
+import { ImageOff, Snowflake } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { AudioPlayer } from "./audio-player";
 
 export type QuizQuestionCardState = "default" | "loading" | "frozen";
@@ -133,6 +134,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
     // a moment later usually finds the image (the rate window rolled, or a
     // teammate's request already warmed the cache). Keyed into the <img> so
     // each bump issues a fresh request for the same URL.
+    const { t } = useLanguage();
     const [imageAttempt, setImageAttempt] = React.useState(0);
     // The count lives in a ref, not in the state updater: scheduling a timer
     // (or setting another state) from inside an updater is a side effect, and
@@ -180,12 +182,23 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
     // cache rather than once per player. See questionImageSrc.
     const imageSrc = questionImageSrc(imageUrl);
     const imageFailed = !!imageUrl && imageStatus === "error";
-    const hasImage = !!imageUrl && !imageFailed;
+    // The band stays even when the picture will not load, so the card is not
+    // an empty white box with four options under it.
+    const hasImage = !!imageUrl;
     const hasVideo = !!videoUrl;
     const hasAudio = !!audioUrl;
     const hasMedia = hasImage || hasVideo || hasAudio;
-    // Show the text whenever the image can't (or might never) speak for itself
-    const effectiveHideText = hideQuestionText && !imageFailed;
+    /**
+     * hideQuestionText means hidden. It used to mean "hidden unless the image
+     * failed", on the reasoning that the text was the only usable fallback.
+     * It is not: every stem on an image question in this bank is generic --
+     * "Which animal is shown?", "Which bridge is shown?", "Which brand's logo
+     * is this?" -- so on a failed image it told the player nothing they could
+     * answer from, and simply put a question on a picture card that is
+     * supposed to have none. What the band shows instead is that the picture
+     * did not load, which is at least true.
+     */
+    const effectiveHideText = hideQuestionText;
 
     return (
       <motion.div
@@ -217,6 +230,20 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
               <div className="absolute inset-0 bg-gray-200 animate-pulse" />
             )}
 
+            {/* Two retries and a five-second deadline have passed. Saying so
+                is the honest thing to put here: the question's own text is
+                "Which brand's logo is this?", which answers nothing without
+                the picture and would make a text question out of one that is
+                deliberately wordless. */}
+            {imageFailed && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gray-100 px-6">
+                <ImageOff className="w-6 h-6 text-gray-400" />
+                <p className="text-gray-500 text-sm font-medium text-center">
+                  {t("extra.questionImageFailed")}
+                </p>
+              </div>
+            )}
+
             {/* The same picture, blurred, filling the band behind itself.
                 object-contain fits the whole image, which is the point — a
                 photograph must not be cropped when the answer might be in the
@@ -226,7 +253,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
 
                 Not for inset (logo) images: a brand mark reads best on plain
                 white, and its own blur behind it read as a smudge. */}
-            {!imageInset && !imageFramed && (
+            {!imageInset && !imageFramed && !imageFailed && (
               <img
                 src={imageSrc!}
                 alt=""

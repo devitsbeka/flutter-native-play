@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { supabase } from '@/integrations/supabase/client';
 import { SafeAvatar } from '@/components/shared/SafeAvatar';
-import { Check, X, Clock } from 'lucide-react';
+import { Check, X, Clock, ImageOff } from 'lucide-react';
 import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
 import { TimerBadge } from '@/components/game/TimerBadge';
 import { QuizQuestionCard } from '@/components/ui/quiz-question-card';
@@ -391,9 +391,15 @@ export const TVQuestionScreenV4: React.FC = () => {
               with no question to answer from) */}
           <div className="w-1/2 pr-4 flex flex-col justify-center">
             {tvImageFailed ? (
-              <div className="flex-1 min-h-0 rounded-2xl bg-white/95 shadow-lg flex items-center justify-center p-8">
-                <p className="text-[#2A2550] font-bold text-3xl text-center leading-snug">
-                  {currentQuestion.question_text}
+              /* Not the question's own text. Every stem on a picture question
+                 is generic -- "Which brand's logo is this?" -- so on a failed
+                 image it fills half the screen with something nobody can
+                 answer from, and turns a deliberately wordless card into a
+                 text one. */
+              <div className="flex-1 min-h-0 rounded-2xl bg-white/95 shadow-lg flex flex-col items-center justify-center gap-4 p-8">
+                <ImageOff className="w-12 h-12 text-gray-400" />
+                <p className="text-gray-500 font-semibold text-2xl text-center leading-snug">
+                  {t("extra.questionImageFailed")}
                 </p>
               </div>
             ) : (
