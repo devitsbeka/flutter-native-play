@@ -33,6 +33,131 @@ const UPSTREAM_UA = "MyTrivia/1.0 (https://mytrivia.io) image-proxy";
 
 interface Env {
   ASSETS: { fetch: (request: Request) => Promise<Response> };
+  /** Both public by design — the project ref and the publishable (anon) key. */
+  SUPABASE_URL?: string;
+  SUPABASE_ANON_KEY?: string;
+}
+
+/** `/room/ABC123`, the link the lobby's share button hands out. */
+const ROOM_PATH = /^\/room\/([A-Za-z0-9-]{4,16})\/?$/;
+
+/** A link preview is scraped once and then cached by the chat app for a long
+ *  time, so this only needs to be short enough that a renamed room catches up. */
+const PREVIEW_CACHE_SECONDS = 300;
+
+interface RoomPreview {
+  roomName: string | null;
+  hostNickname: string | null;
+  hostAvatar: string | null;
+}
+
+/**
+ * Who is inviting, and to what.
+ *
+ * Read with the publishable key over PostgREST: both rows are already
+ * world-readable (joining a room by its code depends on it), so this asks for
+ * nothing a signed-out visitor could not ask for itself.
+ */
+async function fetchRoomPreview(env: Env, code: string): Promise<RoomPreview | null> {
+  const base = env.SUPABASE_URL;
+  const key = env.SUPABASE_ANON_KEY;
+  if (!base || !key) return null;
+
+  const headers = { apikey: key, authorization: `Bearer ${key}` };
+  const get = async (path: string) => {
+    const res = await fetch(`${base}/rest/v1/${path}`, { headers });
+    if (!res.ok) return null;
+    return (await res.json()) as Record<string, unknown>[];
+  };
+
+  const rooms = await get(
+    `game_rooms?select=room_name,host_user_id&room_code=eq.${encodeURIComponent(code)}&limit=1`,
+  );
+  const room = rooms?.[0];
+  if (!room) return null;
+
+  let hostNickname: string | null = null;
+  let hostAvatar: string | null = null;
+  if (typeof room.host_user_id === "string") {
+    const profiles = await get(
+      `profiles?select=nickname,avatar_url&user_id=eq.${room.host_user_id}&limit=1`,
+    );
+    const profile = profiles?.[0];
+    hostNickname = (profile?.nickname as string) ?? null;
+    // Avatars carry a cache-busting query string; keep it, it is part of the
+    // URL that actually resolves.
+    hostAvatar = (profile?.avatar_url as string) ?? null;
+  }
+
+  return {
+    roomName: (room.room_name as string) ?? null,
+    hostNickname,
+    hostAvatar,
+  };
+}
+
+/** Replace the content of one meta tag, wherever it appears in <head>. */
+class MetaContent {
+  constructor(private readonly value: string) {}
+  element(el: { setAttribute: (n: string, v: string) => void }) {
+    el.setAttribute("content", this.value);
+  }
+}
+
+/**
+ * The share preview for a room invite.
+ *
+ * index.html is one static file for every route, so a shared invite scraped
+ * as-is showed the site-wide card: a crown, and the app's tagline. Nothing in
+ * it said who was inviting you or where. The Worker already stands in front
+ * of every request, so the invite's own details are written into the tags on
+ * the way out, per request, without the app needing to be server-rendered.
+ *
+ * Everything here degrades to the untouched page: no code, no room, no
+ * Supabase binding, a failed lookup — all fall through to the plain asset.
+ */
+async function roomPreview(request: Request, env: Env, code: string): Promise<Response> {
+  const assetResponse = await env.ASSETS.fetch(request);
+  const contentType = assetResponse.headers.get("content-type") ?? "";
+  if (!contentType.includes("text/html")) return assetResponse;
+
+  let preview: RoomPreview | null = null;
+  try {
+    preview = await fetchRoomPreview(env, code);
+  } catch {
+    return assetResponse; // A preview is never worth failing the page for.
+  }
+  if (!preview) return assetResponse;
+
+  const who = preview.hostNickname?.trim();
+  const where = preview.roomName?.trim();
+  const title = who && where ? `${who} · ${where}` : who || where || "MyTrivia";
+
+  // Canonicalise the scheme: behind the edge the inbound URL can be http,
+  // and an http og:url on an https page is the sort of mismatch a scraper is
+  // entitled to distrust.
+  const canonical = new URL(request.url);
+  canonical.protocol = "https:";
+
+  const rewriter = new HTMLRewriter()
+    .on('meta[property="og:title"]', new MetaContent(title))
+    .on('meta[property="og:url"]', new MetaContent(canonical.toString()))
+    .on('meta[property="og:type"]', new MetaContent("website"));
+
+  // The inviter's face, in place of the app's crown. Left alone when they
+  // have no avatar, so the card stays branded rather than blank.
+  if (preview.hostAvatar) {
+    rewriter
+      .on('meta[property="og:image"]', new MetaContent(preview.hostAvatar))
+      .on('meta[name="twitter:image"]', new MetaContent(preview.hostAvatar))
+      // A portrait is square; asking for a wide card letterboxes it.
+      .on('meta[name="twitter:card"]', new MetaContent("summary"));
+  }
+
+  const out = rewriter.transform(assetResponse);
+  const response = new Response(out.body, out);
+  response.headers.set("cache-control", `public, max-age=${PREVIEW_CACHE_SECONDS}`);
+  return response;
 }
 
 function badRequest(reason: string): Response {
@@ -133,6 +258,11 @@ export default {
         return new Response("method not allowed", { status: 405 });
       }
       return proxyImage(request, url, ctx);
+    }
+
+    const room = ROOM_PATH.exec(url.pathname);
+    if (room && (request.method === "GET" || request.method === "HEAD")) {
+      return roomPreview(request, env, room[1]);
     }
 
     return env.ASSETS.fetch(request);

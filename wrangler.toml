@@ -46,3 +46,16 @@ binding = "ASSETS"
 # than a 404, so deep links like /dev/v2, /profile and /challenge/:code load
 # the app instead of an error page.
 not_found_handling = "single-page-application"
+
+# ---------------------------------------------------------------------------
+# Read by worker/index.ts to build the link preview for a room invite. Both
+# are public by design — the project ref and the *publishable* (anon) key, the
+# same pair the client ships and .env tracks (CLAUDE.md rule 5). No secret
+# belongs in this file: it is committed.
+#
+# Last in the file on purpose: keys after a section header join that section,
+# so a [vars] block placed higher would be swallowed by whatever precedes it.
+# ---------------------------------------------------------------------------
+[vars]
+SUPABASE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxd3B6ZXpraHBxa2R5bHR2c2ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMzY5MTQsImV4cCI6MjA4MTkxMjkxNH0.tNtgf8sbZakCP6HAUtoxVSrcshZ1Lvn_1OqS7K7VhTc"
