@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PostgrestClient } from "@supabase/postgrest-js";
+import { createClient } from "@supabase/supabase-js";
 
 /**
  * A Supabase query builder is a PromiseLike, not a Promise.
@@ -32,6 +33,26 @@ describe("supabase query builders", () => {
 
   it("has no catch, so .catch() on one is a crash and not a fallback", () => {
     expect(typeof (builder as { catch?: unknown }).catch).not.toBe("function");
+  });
+
+  /**
+   * SupabaseClient.rpc runs `this.rest.rpc(...)`, so it cannot be lifted off
+   * the client. usePlayerProfile did exactly that to hang a cast on it, and
+   * every call threw before touching the network — invisible, because the
+   * caller wrapped it in try/catch and treated a failure as "no data".
+   */
+  describe("supabase.rpc needs its receiver", () => {
+    const client = createClient("https://example.supabase.co", "fake-key");
+
+    it("throws when lifted off the client", () => {
+      const detached = client.rpc;
+      expect(() => detached("f", {})).toThrow(/rest/);
+    });
+
+    it("works bound, and works parenthesised (the pattern used elsewhere)", () => {
+      expect(() => client.rpc.bind(client)("f", {})).not.toThrow();
+      expect(() => (client.rpc)("f", {})).not.toThrow();
+    });
   });
 
   it("reports a dead request through `error`, not by rejecting", async () => {

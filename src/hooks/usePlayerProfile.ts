@@ -155,14 +155,24 @@ async function fetchCore(userId: string): Promise<CoreProfile> {
  * other player, never both sides, so the "me" half is always auth.uid().
  */
 /**
- * PromiseLike, not Promise, and the difference is load-bearing: a
- * PostgrestBuilder defines `then` and nothing else. Typing this as a Promise
- * — which the first version did — made `.catch()` on the result compile and
- * then throw "is not a function" the moment it ran, which is not a failed
- * request but a failed render: the panel went quiet on a profile with 170
- * shared matches behind it. Await it inside try/catch instead.
+ * Two things here are easy to get wrong, and both fail silently.
+ *
+ * `.bind(supabase)`: SupabaseClient.rpc runs `this.rest.rpc(...)`, so a bare
+ * `const rpc = supabase.rpc` loses its receiver and throws "Cannot read
+ * properties of undefined (reading 'rest')" on every call. The inline
+ * `(supabase.rpc as ...)(args)` used elsewhere in this codebase keeps the
+ * receiver — parenthesising a member expression does not detach it — which is
+ * why only this copy was broken.
+ *
+ * `PromiseLike`, not `Promise`: a PostgrestBuilder defines `then` and nothing
+ * else, so `.catch()` on the result is "not a function" rather than a
+ * fallback. Typing it as a Promise made that compile.
+ *
+ * Between them the panel rendered nothing on a profile with 170 shared
+ * matches behind it — and because both throw before any await, it looked
+ * exactly like having no record rather than like an error.
  */
-const rpc = supabase.rpc as unknown as (
+const rpc = supabase.rpc.bind(supabase) as unknown as (
   fn: string,
   args: Record<string, unknown>,
 ) => PromiseLike<{ data: unknown; error: unknown }>;
