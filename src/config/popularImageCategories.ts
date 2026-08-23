@@ -9,12 +9,19 @@
  * id-hash palette picker lands on.
  */
 
-import iconCelebrity from "@/assets/popular/guess_celebrity.webp";
-import iconMovie from "@/assets/popular/guess_movie.webp";
-import iconCity from "@/assets/popular/guess_city.webp";
-import iconSportsman from "@/assets/popular/guess_sportsman.webp";
-import iconLogo from "@/assets/popular/guess_logo.webp";
-import iconFlag from "@/assets/popular/guess_flag.webp";
+import heroCelebrity from "@/assets/popular/guess_celebrity.webp";
+import heroMovie from "@/assets/popular/guess_movie.webp";
+import heroCity from "@/assets/popular/guess_city.webp";
+import heroSportsman from "@/assets/popular/guess_sportsman.webp";
+import heroLogo from "@/assets/popular/guess_logo.webp";
+import heroFlag from "@/assets/popular/guess_flag.webp";
+
+import iconCelebrity from "@/assets/popular/guess_celebrity_card.webp";
+import iconMovie from "@/assets/popular/guess_movie_card.webp";
+import iconCity from "@/assets/popular/guess_city_card.webp";
+import iconSportsman from "@/assets/popular/guess_sportsman_card.webp";
+import iconLogo from "@/assets/popular/guess_logo_card.webp";
+import iconFlag from "@/assets/popular/guess_flag_card.webp";
 
 export const POPULAR_IMAGE_CATEGORY_IDS = [
   "guess_celebrity",
@@ -27,22 +34,30 @@ export const POPULAR_IMAGE_CATEGORY_IDS = [
 
 export type PopularImageCategoryId = (typeof POPULAR_IMAGE_CATEGORY_IDS)[number];
 
-/** Card art: 3D icon rendered centered on the card's gradient.
+/**
+ * Card art: the 3D icon rendered centred on the card's gradient.
+ *
+ * Two sizes, because two surfaces draw the same picture very differently and
+ * one file cannot serve both honestly:
+ *
+ *   CategoryPage hero   w-[40%] max-w-[230px]  = up to 690 device px at 3x
+ *   Discover card       141 CSS px measured    =        423 device px
+ *   Room category picker 26 CSS px             =         78 device px
+ *
+ * Shipping the hero's 1000px art everywhere cost Discover 737 KB to draw six
+ * icons at 141 CSS px — measured, and the largest single item on that page.
+ * Shipping the card's art to the hero is how guess_logo came to be 102px and
+ * visibly mushy. So: 512px is the default below, and the hero opts in to the
+ * full-size map. Six card icons are 269 KB rather than 643.
  *
  * Imported through Vite rather than served from public/: these files get
  * replaced (icon quality passes), and a fixed /images/... URL kept serving
  * the browser's cached old art after a swap. A content-hashed filename
- * changes with the file, so a replacement is visible on the next deploy,
- * every time.
+ * changes with the file, so a replacement is visible on the next deploy.
  *
- * WebP, at 1000x1000. Two surfaces draw these at very different sizes — the
- * discover card at roughly 90 CSS px, CategoryPage's hero at up to 230 — and
- * the hero is what sets the requirement: 230 CSS px is 690 real pixels at 3x.
- * Art sized against the card looks fine there and mushy on the hero, which is
- * how guess_logo shipped at 102px. WebP is what makes shipping the large
- * source affordable; it is supported from iOS 14 and this app deploys to 15.
- * Do not use AVIF here — that is iOS 16, and the icon would simply not
- * render on an iPhone still on 15. */
+ * WebP, not AVIF — AVIF needs iOS 16 and this app deploys to 15, where the
+ * icon would simply not render.
+ */
 export const POPULAR_CATEGORY_ICONS: Record<PopularImageCategoryId, string> = {
   guess_celebrity: iconCelebrity,
   guess_movie: iconMovie,
@@ -50,6 +65,22 @@ export const POPULAR_CATEGORY_ICONS: Record<PopularImageCategoryId, string> = {
   guess_sportsman: iconSportsman,
   guess_logo: iconLogo,
   guess_flag: iconFlag,
+};
+
+/**
+ * The 1000px originals, for the one surface that draws them large.
+ *
+ * Only CategoryPage's hero should reach for these. Anything card-sized or
+ * smaller wants POPULAR_CATEGORY_ICONS above — at 141 CSS px the difference
+ * is invisible and costs 374 KB across the six.
+ */
+export const POPULAR_CATEGORY_HERO_ICONS: Record<PopularImageCategoryId, string> = {
+  guess_celebrity: heroCelebrity,
+  guess_movie: heroMovie,
+  guess_city: heroCity,
+  guess_sportsman: heroSportsman,
+  guess_logo: heroLogo,
+  guess_flag: heroFlag,
 };
 
 /** The bundled art for a category, or null for everything else.
