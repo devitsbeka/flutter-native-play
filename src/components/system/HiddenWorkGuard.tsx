@@ -72,8 +72,16 @@ export function HiddenWorkGuard() {
       if (document.hidden) return;
 
       for (const animation of document.getAnimations()) {
-        const target = animation.effect?.target as Element | null | undefined;
-        if (!target || !target.isConnected) continue;
+        // effect is an AnimationEffect, which carries no target — only its
+        // KeyframeEffect subclass does, and that is what a CSS or Web
+        // Animations animation actually is. The cast this replaces was
+        // written after the property access, so it asserted the type of a
+        // read that does not compile.
+        const effect = animation.effect;
+        const target = effect instanceof KeyframeEffect ? effect.target : null;
+        // Narrowed rather than asserted: KeyframeEffect#target is also
+        // allowed to be a pseudo-element, which has no isConnected.
+        if (!(target instanceof Element) || !target.isConnected) continue;
         if (animation.effect?.getTiming().iterations !== Infinity) continue;
 
         const hidden = isDisplayNone(target);
