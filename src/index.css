@@ -601,3 +601,27 @@
   --info-border: #CBD9F7;
   --info-text: #1E40AF;
 }
+
+/* ── Reduce Motion ─────────────────────────────────────────────────────────
+   The app draws a lot of permanent motion: ~130 Framer Motion loops and
+   ~300 CSS ones, several of which sit in chrome that is on screen on every
+   route, plus full-screen looping video. None of it ever stops, so a phone
+   held on any screen keeps compositing at 60fps indefinitely — which is how
+   a trivia app ends up warm enough for iOS to tell someone to put it down.
+
+   Reduce Motion (iOS: Settings > Accessibility > Motion) is the lever a
+   player already has, and until now it did nothing here. Framer Motion is
+   handled by <MotionConfig reducedMotion="user"> in App.tsx and the looping
+   videos by BackgroundVideo; this covers the CSS half.
+
+   Only the ENDLESS animations are neutralised — a decorative loop is what
+   costs power. One-shot animations and transitions are what makes the UI
+   legible (a modal that appears without its entrance reads as a glitch), so
+   they are left alone and simply finish. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-iteration-count: 1 !important;
+  }
+}

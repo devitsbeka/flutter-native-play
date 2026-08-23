@@ -55,6 +55,25 @@ export function BackgroundVideo({
     if (!v) return;
     let alive = true;
 
+    // Reduce Motion: don't run a decoder for the life of the app.
+    //
+    // These loops are full-screen and several are mounted at once, so they
+    // are a steady power draw for as long as the app is open — and the
+    // still frame underneath is the same artwork, so switching it off costs
+    // the motion and nothing else. Players whose phones get hot now have a
+    // lever that actually does something.
+    const reduceMotion =
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      v.pause();
+      v.removeAttribute("src");
+      return () => {
+        alive = false;
+      };
+    }
+
     const tryPlay = () => {
       // muted re-asserted in JS: Safari ignores the attribute alone in some
       // restore paths, and an unmuted play() is always refused.
@@ -72,7 +91,10 @@ export function BackgroundVideo({
 
     const opts: AddEventListenerOptions = { passive: true };
     const onVisible = () => {
+      // Leaving the app must stop the decoder, not just stop being watched.
+      // iOS suspends the webview anyway; Android and the web browser do not.
       if (document.visibilityState === "visible") tryPlay();
+      else v.pause();
     };
     document.addEventListener("touchend", tryPlay, opts);
     document.addEventListener("pointerup", tryPlay, opts);

@@ -71,10 +71,31 @@ const FloatingConfetti = () => {
       });
     };
 
-    const interval = setInterval(frame, 30);
-    
+    // A burst, not a weather system.
+    //
+    // This used to emit eight particles every 30ms with nothing to stop it:
+    // ~260 new particles a second, each living 400 frames, settling at
+    // roughly 1,700 particles redrawn every frame for as long as the player
+    // sat on their result — and this screen appears after EVERY match. A
+    // player who plays a few rounds and reads each score leaves the phone
+    // rendering that continuously, which is what players reported as the
+    // phone getting hot enough for iOS to ask them to stop.
+    //
+    // Emitting for a couple of seconds looks the same at the moment of
+    // victory (the screen fills), and then the canvas empties and costs
+    // nothing.
+    const EMIT_MS = 2200;
+    const startedAt = Date.now();
+    const interval = window.setInterval(() => {
+      if (Date.now() - startedAt >= EMIT_MS) {
+        window.clearInterval(interval);
+        return;
+      }
+      frame();
+    }, 30);
+
     return () => {
-      clearInterval(interval);
+      window.clearInterval(interval);
       myConfetti.reset();
     };
   }, []);

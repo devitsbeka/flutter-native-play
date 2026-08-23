@@ -26,8 +26,10 @@ import { ScrollLockGuard } from "@/components/ScrollLockGuard";
 import { AutoplayRescue } from "@/components/system/AutoplayRescue";
 import { PushRegistrar } from "@/native/PushRegistrar";
 import { AdminAIPromptSync } from "@/components/system/AdminAIPromptSync";
+import { MotionConfig } from "framer-motion";
 import { StaleAnimationCleanup } from "@/components/system/StaleAnimationCleanup";
 import { ScenePortraitHealer } from "@/components/system/ScenePortraitHealer";
+import { ReducedMotionGuard } from "@/components/system/ReducedMotionGuard";
 import { FakeFriendRequestAutoAccept } from "@/components/system/FakeFriendRequestAutoAccept";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { Navigate } from "react-router-dom";
@@ -159,6 +161,14 @@ const App = () => (
               <PlayerProfileProvider>
                 <AvatarModalProvider>
                   <SplashScreen>
+                    {/* Reduce Motion is the one lever a player has when
+                        an app's animation makes their phone hot, and it
+                        did nothing here: the app runs hundreds of
+                        infinite decorative animations and none of them
+                        asked. "user" makes Framer Motion follow the OS
+                        setting, and index.css does the same for the CSS
+                        ones and for the looping background video. */}
+                    <MotionConfig reducedMotion="user">
                     <TooltipProvider>
             {/* The app calls toast() in ~580 places — every failure, every
                 limit, every confirmation — and none of it had ever reached a
@@ -198,6 +208,7 @@ const App = () => (
             <AdminAIPromptSync />
             <StaleAnimationCleanup />
             <ScenePortraitHealer />
+            <ReducedMotionGuard />
             <FakeFriendRequestAutoAccept />
             <FreshBuildGuard />
             <Suspense fallback={<PageSkeleton />}>
@@ -290,6 +301,7 @@ const App = () => (
               </Routes>
               </Suspense>
                     </TooltipProvider>
+                    </MotionConfig>
                   </SplashScreen>
                 </AvatarModalProvider>
               </PlayerProfileProvider>
