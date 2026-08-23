@@ -31,6 +31,22 @@ interface QuizQuestionCardProps {
    */
   imageInset?: boolean;
   /**
+   * Draw the image at its own aspect on a light ground, with a hairline edge.
+   * For flags, which the other two treatments both erase.
+   *
+   * The default treatment fills the band with a blurred copy of the picture,
+   * so a photograph that is not 2:1 gets a ground instead of flat grey. A
+   * flag whose field is white makes that ground white — and the card is
+   * white — so Japan renders as a red disc floating in nothing and Malta,
+   * Panama and Cyprus lose their outer edges entirely. The inset treatment
+   * has the same problem for the same reason: it is deliberately plain white,
+   * which is right for a brand mark and wrong for a flag.
+   *
+   * A border is what a flag needs, and only a flag: it is a rectangle, and
+   * where that rectangle ends is part of the picture.
+   */
+  imageFramed?: boolean;
+  /**
    * Optional video URL for video-based trivia questions
    */
   videoUrl?: string | null;
@@ -79,6 +95,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       freezeTimeLeft = 0,
       imageUrl,
       imageInset = false,
+      imageFramed = false,
       videoUrl,
       audioUrl,
       reserveTopSpace = false,
@@ -177,6 +194,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             className={cn(
               "w-full h-36 overflow-hidden relative flex items-center justify-center",
               imageInset ? "bg-white" : "bg-gray-100",
+              imageFramed && "px-3",
             )}
           >
             {/* Skeleton while the image downloads - a silently empty card
@@ -194,7 +212,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
 
                 Not for inset (logo) images: a brand mark reads best on plain
                 white, and its own blur behind it read as a smudge. */}
-            {!imageInset && (
+            {!imageInset && !imageFramed && (
               <img
                 src={imageSrc!}
                 alt=""
@@ -217,6 +235,11 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
                 // top/bottom gap survives any card width (percentage padding
                 // resolves against width and could not promise that).
                 imageInset ? "max-h-[72%] max-w-[80%] w-auto h-auto" : "w-full h-full",
+                // w-auto/h-auto so the element box is the flag itself and the
+                // ring hugs it. At w-full the box is the whole band and the
+                // ring would draw a rectangle around the grey.
+                imageFramed &&
+                  "max-h-[80%] max-w-full w-auto h-auto ring-1 ring-black/20 rounded-[2px]",
                 imageStatus !== "loaded" && "opacity-0"
               )}
               loading="eager"

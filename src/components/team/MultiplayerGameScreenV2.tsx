@@ -465,6 +465,11 @@ export function MultiplayerGameScreenV2() {
         <QuizQuestionCard
           questionText={currentQuestion.question}
           imageUrl={currentQuestion.imageUrl}
+          // The room's category, which is every question's category here.
+          // Solo play already treated logos and flags specially; a room ran
+          // the same picture banks through the default treatment.
+          imageInset={currentRoom?.category_id === "guess_logo"}
+          imageFramed={currentRoom?.category_id === "guess_flag"}
           videoUrl={currentQuestion.videoUrl}
           audioUrl={currentQuestion.audioUrl}
           progressPercent={progressPercent}

@@ -1330,6 +1330,7 @@ export default function CategoryQuizPage() {
               : DIFFICULTY_LABELS[difficultyKey]
           }
           imageInset={categoryId === "guess_logo"}
+          imageFramed={categoryId === "guess_flag"}
           difficultyColor={DIFFICULTY_COLORS[difficultyKey]}
           freezeTimeLeft={freezeTimeRemaining}
           reserveTopSpace={!currentQuestion?.image_url && !currentQuestion?.video_url && !currentQuestion?.audio_url}

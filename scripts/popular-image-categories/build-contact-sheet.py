@@ -13,6 +13,7 @@ occasional file that is not what its name says.
 import json
 import pathlib
 import sys
+import time
 import urllib.request
 
 from PIL import Image, ImageDraw
@@ -33,13 +34,23 @@ def fetch(url: str, dest: pathlib.Path) -> None:
     # the verified 1280px URL when the 320px rewrite is refused.
     for candidate in (url.replace("/1280px-", "/320px-"), url):
         req = urllib.request.Request(candidate, headers={"User-Agent": UA})
-        try:
-            with urllib.request.urlopen(req, timeout=30) as r:
-                dest.write_bytes(r.read())
-            return
-        except urllib.error.HTTPError as exc:
-            if exc.code != 400 or candidate == url:
-                raise
+        # A hundred requests as fast as the loop can issue them earns a 429,
+        # and a 429 here is indistinguishable from a dead file: the tile comes
+        # out pink and the reviewer is told an image is broken when it is
+        # fine. Back off and ask again instead.
+        for attempt in range(5):
+            try:
+                with urllib.request.urlopen(req, timeout=30) as r:
+                    dest.write_bytes(r.read())
+                time.sleep(0.4)
+                return
+            except urllib.error.HTTPError as exc:
+                if exc.code == 429:
+                    time.sleep(3 * (attempt + 1))
+                    continue
+                if exc.code != 400 or candidate == url:
+                    raise
+                break
 
 
 def main() -> None:
