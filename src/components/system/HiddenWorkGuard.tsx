@@ -1,0 +1,126 @@
+import { useEffect } from "react";
+
+/**
+ * Stops animation and video playback that nothing can see.
+ *
+ * Measured on the built app, idle, with nobody touching the screen: the home
+ * screen ran 59 looping animations and 51 of them were inside `display:none`
+ * subtrees — the desktop-only chrome that mobile never shows, still animating
+ * at 60fps behind the scenes. A CSS animation stops when its element is
+ * display:none; a Web Animations one, which is what Framer Motion drives,
+ * does not. Nobody wrote that bug: it is what "render both layouts and let
+ * CSS pick" costs once the hidden half has motion in it.
+ *
+ * Two rules, both of which mean the work provably cannot be perceived:
+ *
+ *  - An infinite animation inside a `display:none` subtree is paused. The
+ *    element is not in the layout at all, so there is no frame in which it
+ *    could appear. Finite animations are left alone — they are entrances and
+ *    exits, they end on their own, and pausing one mid-flight is how a modal
+ *    gets stuck half-open.
+ *  - A <video> whose rectangle is off-screen, or which is completely covered
+ *    by something else, is paused. Video decode is a steady power draw and
+ *    the shop scene was still decoding while scrolled out of view.
+ *
+ * Everything is resumed the moment it becomes visible again, and the guard
+ * only ever touches what it paused itself — a video the player or the app
+ * paused on purpose stays paused.
+ */
+
+const SWEEP_MS = 2000;
+
+function isDisplayNone(el: Element): boolean {
+  // checkVisibility is exact but recent (Safari 17.4+), so it is used when
+  // present and approximated otherwise. offsetParent is null for display:none
+  // — and also for position:fixed, which is why that case is excluded.
+  const anyEl = el as Element & { checkVisibility?: (o?: unknown) => boolean };
+  if (typeof anyEl.checkVisibility === "function") {
+    return !anyEl.checkVisibility({ checkOpacity: false, checkVisibilityCSS: true });
+  }
+  const html = el as HTMLElement;
+  if (html.offsetParent !== null) return false;
+  return getComputedStyle(el).position !== "fixed";
+}
+
+function isHiddenVideo(video: HTMLVideoElement): boolean {
+  const rect = video.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return true;
+  const offscreen =
+    rect.bottom <= 0 || rect.top >= window.innerHeight ||
+    rect.right <= 0 || rect.left >= window.innerWidth;
+  if (offscreen) return true;
+
+  // Covered: whatever is painted at the visible centre of the video is
+  // neither the video nor inside it. elementFromPoint answers that directly,
+  // and only for videos still on screen, so it stays cheap.
+  const x = Math.min(Math.max(rect.left + rect.width / 2, 1), window.innerWidth - 1);
+  const y = Math.min(Math.max(rect.top + rect.height / 2, 1), window.innerHeight - 1);
+  const hit = document.elementFromPoint(x, y);
+  if (!hit) return false;
+  return hit !== video && !video.contains(hit) && !hit.contains(video);
+}
+
+export function HiddenWorkGuard() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Only ever resumed if we were the ones who stopped it.
+    const pausedAnimations = new WeakSet<Animation>();
+    const pausedVideos = new WeakSet<HTMLVideoElement>();
+
+    const sweep = () => {
+      if (document.hidden) return;
+
+      for (const animation of document.getAnimations()) {
+        const target = animation.effect?.target as Element | null | undefined;
+        if (!target || !target.isConnected) continue;
+        if (animation.effect?.getTiming().iterations !== Infinity) continue;
+
+        const hidden = isDisplayNone(target);
+        if (hidden && animation.playState === "running") {
+          try {
+            animation.pause();
+            pausedAnimations.add(animation);
+          } catch {
+            /* gone mid-sweep */
+          }
+        } else if (!hidden && animation.playState === "paused" && pausedAnimations.has(animation)) {
+          try {
+            animation.play();
+            pausedAnimations.delete(animation);
+          } catch {
+            /* gone mid-sweep */
+          }
+        }
+      }
+
+      for (const video of Array.from(document.querySelectorAll("video"))) {
+        const hidden = isHiddenVideo(video);
+        if (hidden && !video.paused) {
+          video.pause();
+          pausedVideos.add(video);
+        } else if (!hidden && video.paused && pausedVideos.has(video)) {
+          pausedVideos.delete(video);
+          void video.play().catch(() => {});
+        }
+      }
+    };
+
+    const timer = window.setInterval(sweep, SWEEP_MS);
+    // A route change swaps most of this out at once; catch up sooner than the
+    // next tick would.
+    const onVisible = () => {
+      if (!document.hidden) sweep();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    const firstSweep = window.setTimeout(sweep, 1200);
+
+    return () => {
+      window.clearInterval(timer);
+      window.clearTimeout(firstSweep);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+
+  return null;
+}

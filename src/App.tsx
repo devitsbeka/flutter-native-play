@@ -30,6 +30,7 @@ import { MotionConfig } from "framer-motion";
 import { StaleAnimationCleanup } from "@/components/system/StaleAnimationCleanup";
 import { ScenePortraitHealer } from "@/components/system/ScenePortraitHealer";
 import { ReducedMotionGuard } from "@/components/system/ReducedMotionGuard";
+import { HiddenWorkGuard } from "@/components/system/HiddenWorkGuard";
 import { FakeFriendRequestAutoAccept } from "@/components/system/FakeFriendRequestAutoAccept";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { Navigate } from "react-router-dom";
@@ -209,6 +210,7 @@ const App = () => (
             <StaleAnimationCleanup />
             <ScenePortraitHealer />
             <ReducedMotionGuard />
+            <HiddenWorkGuard />
             <FakeFriendRequestAutoAccept />
             <FreshBuildGuard />
             <Suspense fallback={<PageSkeleton />}>
