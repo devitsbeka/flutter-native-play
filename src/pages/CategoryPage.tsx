@@ -24,7 +24,10 @@ import { trackCategoryViewed, trackLevelSelected } from "@/lib/analytics";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import crystalHourglass from "@/assets/crystal-hourglass.png";
 import crownIcon from "@/assets/icons/crown-2.png";
-import { POPULAR_CATEGORY_ICONS, POPULAR_CATEGORY_PALETTES } from "@/config/popularImageCategories";
+import {
+  POPULAR_CATEGORY_HERO_ICONS,
+  POPULAR_CATEGORY_PALETTES,
+} from "@/config/popularImageCategories";
 
 // Pastel color palettes for consistent styling with Discover page
 /**
@@ -263,7 +266,7 @@ export default function CategoryPage() {
         {/* Category Video Header Section - fixed height for clean tab positioning */}
         <div className="relative h-[48vh] min-h-[340px] overflow-hidden">
           <div className="absolute inset-0">
-            {POPULAR_CATEGORY_ICONS[((category as any).category_id || categoryId || "") as keyof typeof POPULAR_CATEGORY_ICONS] ? (
+            {POPULAR_CATEGORY_HERO_ICONS[((category as any).category_id || categoryId || "") as keyof typeof POPULAR_CATEGORY_HERO_ICONS] ? (
               /* Picture-guess categories have no hero video — falling back to
                  the animals reel put baby giraffes over "Guess the Celebrity".
                  Their designed icon on their card palette is the hero. */
@@ -276,7 +279,7 @@ export default function CategoryPage() {
                     style={{ background: `linear-gradient(150deg, ${pal.base} 0%, ${pal.accent} 55%, ${pal.depth} 100%)` }}
                   >
                     <img
-                      src={POPULAR_CATEGORY_ICONS[key]}
+                      src={POPULAR_CATEGORY_HERO_ICONS[key]}
                       alt=""
                       draggable={false}
                       className="w-[40%] max-w-[230px] object-contain drop-shadow-2xl"
