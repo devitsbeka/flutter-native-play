@@ -50,14 +50,24 @@ function isHiddenVideo(video: HTMLVideoElement): boolean {
     rect.right <= 0 || rect.left >= window.innerWidth;
   if (offscreen) return true;
 
-  // Covered: whatever is painted at the visible centre of the video is
-  // neither the video nor inside it. elementFromPoint answers that directly,
-  // and only for videos still on screen, so it stays cheap.
-  const x = Math.min(Math.max(rect.left + rect.width / 2, 1), window.innerWidth - 1);
-  const y = Math.min(Math.max(rect.top + rect.height / 2, 1), window.innerHeight - 1);
-  const hit = document.elementFromPoint(x, y);
-  if (!hit) return false;
-  return hit !== video && !video.contains(hit) && !hit.contains(video);
+  // Off-screen is the whole rule, deliberately.
+  //
+  // There was a "covered by something on top" rule here too, decided with
+  // elementFromPoint, and it was wrong in the most damaging direction: every
+  // background loop in the app sits beneath a translucent wash, so
+  // elementFromPoint reports the wash at every sample point and the video
+  // reads as covered while the player can see it perfectly well through the
+  // tint. It paused every background video in the app. Sampling more points
+  // did not help — the wash covers all of them.
+  //
+  // Telling "visible through a tint" from "buried under a modal" means
+  // walking every layer above the video and deciding whether it is truly
+  // opaque, which is a pile of guesses about backgrounds, images and blend
+  // modes — and each wrong guess is a background that silently stops. The
+  // honest version of this check is the one that cannot be wrong: a video
+  // whose rectangle is off-screen is not being watched by anyone. That was
+  // the real find anyway (the shop scene decoding while scrolled away).
+  return false;
 }
 
 export function HiddenWorkGuard() {

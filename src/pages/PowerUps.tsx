@@ -22,7 +22,6 @@ import {
 
 import { trackPowerUpPurchased, trackShopItemPurchased } from "@/lib/analytics";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
@@ -315,7 +314,12 @@ export default function PowerUps() {
               than stretching a video — which is what squeezed the product
               grid whenever the left menu was expanded. */}
           <div className="flex-1 min-w-0 relative pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:pb-0 bg-transparent scroll-smooth scrollbar-hide overflow-y-auto">
-            <GlobalSplineBackground />
+            {/* GlobalSplineBackground is already mounted app-wide in App.tsx
+                and /power-ups is one of the routes it paints, so this second
+                instance drew the same four fixed inset-0 layers over the top
+                of the first — including a second full-screen copy of the
+                background video, decoding continuously behind the identical
+                one in front of it. */}
 
             {/* Standard Shop Layout - Hero carousel + product grids */}
             <div className="pt-4">

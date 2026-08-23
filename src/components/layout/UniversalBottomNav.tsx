@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Home, Play, Compass, Store, Trophy, Headphones, Plus, Hourglass, Crown, Lock } from "lucide-react";
+import { Home, Play, Compass, Store, Trophy, Headphones, Plus, Hourglass, Lock } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 import { useNewContentIndicators } from "@/hooks/useNewContentIndicators";
@@ -671,13 +671,11 @@ function Hex3DPlayButton({
                   strokeWidth={2.5}
                 />
               </motion.div>
-            ) : isVip ? (
-              <Crown 
-                className="w-7 h-7" 
-                color="#ffffff"
-                strokeWidth={2.5}
-              />
             ) : isPlayButton ? (
+              /* PRO players get the play triangle too. The button's job is to
+                 start a game, and the crown answered a question nobody was
+                 asking at that moment — the ∞ badge above it already says the
+                 plays are unlimited. */
               <Play 
                 className="w-8 h-8 ml-1" 
                 fill="#ffffff"
