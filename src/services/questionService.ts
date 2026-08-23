@@ -385,6 +385,23 @@ async function getCategoryInfo(uuid: string): Promise<{ name: string; slug: stri
  * 
  * This is the GOLDEN STANDARD function - all modes should use this
  */
+/**
+ * The highest level this function can serve, and therefore the highest level
+ * that may exist.
+ *
+ * It is a real ceiling, not a preference. Selection asks for a window around
+ * the player's level and its fallback asks for BETWEEN 1 AND this; a level
+ * numbered above it matches neither, falls through to the "clear every
+ * exclusion and take anything" path, and hands back questions the player has
+ * already answered. That was the repetition players reported: the level count
+ * promised levels the selector could not fill.
+ *
+ * So this and the cap inside update_category_total_levels have to agree. If
+ * one is raised without the other, the mismatch is silent and comes back as
+ * repeats. See supabase/migrations/20260904100000_levels_to_38.sql.
+ */
+export const MAX_PLAYABLE_LEVEL = 38;
+
 export async function getQuestions(ctx: QuestionContext): Promise<QuestionResult> {
   const language = getPreferredLanguage();
   const count = ctx.count || (ctx.mode === 'category' ? 5 : 10);
@@ -441,7 +458,7 @@ async function getCategoryQuestions(
   
   // Expand level range for variety
   const minLevel = Math.max(1, levelNumber - 3);
-  const maxLevel = Math.min(20, levelNumber + 5);
+  const maxLevel = Math.min(MAX_PLAYABLE_LEVEL, levelNumber + 5);
   
   // Run category info + exhaustion count in PARALLEL
   // Skip category info lookup if name was pre-resolved
@@ -510,7 +527,7 @@ async function getCategoryQuestions(
       .eq('language', language)
       .eq('category_id', categoryUuid)
       .gte('level_number', 1)
-      .lte('level_number', 20);
+      .lte('level_number', MAX_PLAYABLE_LEVEL);
     
     const { data: fallbackQuestions } = await fallbackQuery.limit(50);
     // Apply client-side exclusion

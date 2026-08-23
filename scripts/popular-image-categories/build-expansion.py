@@ -20,8 +20,9 @@ Rules enforced here rather than trusted:
   * nothing whose PICTURE already exists in the category, under any name
   * every language needs a name, and no option may exceed MAX_ANSWER
   * the four options on a card must be distinct in every language
-  * level_number lands in 1..20, because getCategoryQuestions cannot serve
-    anything outside that
+  * level_number lands in 1..MAX_LEVEL, because getCategoryQuestions cannot
+    serve anything outside that -- see MAX_PLAYABLE_LEVEL in
+    src/services/questionService.ts, which this must agree with
 """
 import importlib.util
 import json
@@ -39,7 +40,7 @@ spec.loader.exec_module(bm)
 LANGS = bm.LANGS
 MAX_ANSWER = bm.MAX_ANSWER
 PER_LEVEL = bm.PER_LEVEL
-MAX_LEVEL = 20  # questionService clamps its window and its fallback here
+MAX_LEVEL = 38  # questionService.MAX_PLAYABLE_LEVEL
 KEY_PREFIX = "w-"  # "w" for wikidata; never collides with v1/v2 keys
 
 # A mark that is the company's name set in a typeface prints the answer on
