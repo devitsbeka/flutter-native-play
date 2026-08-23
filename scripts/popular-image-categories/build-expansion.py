@@ -27,6 +27,7 @@ import importlib.util
 import json
 import pathlib
 import random
+import re
 import sys
 import uuid
 
@@ -40,6 +41,15 @@ MAX_ANSWER = bm.MAX_ANSWER
 PER_LEVEL = bm.PER_LEVEL
 MAX_LEVEL = 20  # questionService clamps its window and its fallback here
 KEY_PREFIX = "w-"  # "w" for wikidata; never collides with v1/v2 keys
+
+# A mark that is the company's name set in a typeface prints the answer on
+# the card. The bank already made this call once -- the v2 logo migration is
+# titled "symbol-only marks replace the wordmark bank" -- and Wikidata's P154
+# hands back "Samsung wordmark.svg", "Ferrari wordmark.svg", "KFC 2026
+# (wordmark).svg" without distinguishing them, so the rule has to be applied
+# here. It costs some famous brands. A brand nobody has to guess costs more.
+WORDMARK_FILE = re.compile(
+    r"\b(wordmark|word[ -]mark|text[ -]logo|lettering|typeface|logotype)\b", re.I)
 
 
 def existing_bank(slug):
@@ -75,6 +85,8 @@ def build_spec(slug, harvested):
         # The same picture, whatever it is called. Sorted most-famous-first,
         # so when two Wikidata items share a file the better known name wins.
         if e["thumb"] in seen_images or e.get("file", "") in seen_images:
+            continue
+        if WORDMARK_FILE.search(e.get("file", "")):
             continue
         if any(not (labels.get(l) or "").strip() for l in LANGS):
             continue
