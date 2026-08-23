@@ -39,6 +39,13 @@ ALTER TABLE public.invite_links ENABLE ROW LEVEL SECURITY;
 -- Deliberately no client INSERT or UPDATE policy. Codes come from
 -- get_or_create_invite_code() and nowhere else, so a client cannot choose
 -- its own code -- and a chosen code is a guessable one.
+--
+-- Dropped first because CREATE POLICY has no IF NOT EXISTS. Everything else
+-- in this file is CREATE TABLE IF NOT EXISTS or CREATE OR REPLACE, so
+-- without this line one failed run leaves the file unable to be re-run:
+-- the second attempt stops here with "policy already exists" before
+-- reaching the functions it still has to create.
+DROP POLICY IF EXISTS "Owners can read their invite code" ON public.invite_links;
 CREATE POLICY "Owners can read their invite code" ON public.invite_links
   FOR SELECT USING (auth.uid() = host_user_id);
 
