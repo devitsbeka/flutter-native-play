@@ -154,10 +154,33 @@ async function fetchCore(userId: string): Promise<CoreProfile> {
  * rows that are not the caller's own; head_to_head_record takes only the
  * other player, never both sides, so the "me" half is always auth.uid().
  */
+/**
+ * PromiseLike, not Promise, and the difference is load-bearing: a
+ * PostgrestBuilder defines `then` and nothing else. Typing this as a Promise
+ * — which the first version did — made `.catch()` on the result compile and
+ * then throw "is not a function" the moment it ran, which is not a failed
+ * request but a failed render: the panel went quiet on a profile with 170
+ * shared matches behind it. Await it inside try/catch instead.
+ */
 const rpc = supabase.rpc as unknown as (
   fn: string,
   args: Record<string, unknown>,
-) => Promise<{ data: unknown; error: unknown }>;
+) => PromiseLike<{ data: unknown; error: unknown }>;
+
+/** One row set, or null if the call failed for any reason. */
+async function rpcRows<T>(fn: string, args: Record<string, unknown>): Promise<T[] | null> {
+  try {
+    const { data, error } = await rpc(fn, args);
+    if (error) {
+      console.warn(`[profile] ${fn} failed`, error);
+      return null;
+    }
+    return (data as T[] | null) ?? null;
+  } catch (err) {
+    console.warn(`[profile] ${fn} threw`, err);
+    return null;
+  }
+}
 
 interface HeadToHeadRow {
   matches_together: number | string;
@@ -185,16 +208,16 @@ async function fetchVersus(
 ): Promise<{ headToHead: HeadToHead | null; specialty: Specialty | null }> {
   const isOther = !!viewerId && viewerId !== userId;
 
-  const [h2h, best] = await Promise.all([
+  const [h2hRows, bestRows] = await Promise.all([
     isOther
-      ? rpc("head_to_head_record", { p_other_user_id: userId }).catch(() => ({ data: null, error: null }))
-      : Promise.resolve({ data: null, error: null }),
-    rpc("best_category_for_user", { p_user_id: userId }).catch(() => ({ data: null, error: null })),
+      ? rpcRows<HeadToHeadRow>("head_to_head_record", { p_other_user_id: userId })
+      : Promise.resolve(null),
+    rpcRows<BestCategoryRow>("best_category_for_user", { p_user_id: userId }),
   ]);
 
   // Both return SETOF, so a row array — empty when there is nothing to say.
-  const h2hRow = (h2h.data as HeadToHeadRow[] | null)?.[0];
-  const bestRow = (best.data as BestCategoryRow[] | null)?.[0];
+  const h2hRow = h2hRows?.[0];
+  const bestRow = bestRows?.[0];
 
   const headToHead: HeadToHead | null = h2hRow
     ? {
