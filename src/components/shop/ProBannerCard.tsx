@@ -92,10 +92,15 @@ const WAVE_SHORT =
 //
 // So each layer keeps the gap the frame leaves beneath it (396 minus its own
 // bottom edge) and is positioned by that instead.
+//
+// Opacities are 30% down from what they were drawn at (0.35 / 0.16 / 0.10).
+// The banners float over the animated scene background, and at full strength
+// the stack read as a grey wash creeping up the bottom of the card rather
+// than as part of the artwork.
 const WAVE_LAYERS = [
-  { path: WAVE_TALL, height: 228, bottom: 0.1, opacity: 0.35 },
-  { path: WAVE_SHORT, height: 240, bottom: 0, opacity: 0.16 },
-  { path: WAVE_SHORT, height: 240, bottom: 16, opacity: 0.1 },
+  { path: WAVE_TALL, height: 228, bottom: 0.1, opacity: 0.245 },
+  { path: WAVE_SHORT, height: 240, bottom: 0, opacity: 0.112 },
+  { path: WAVE_SHORT, height: 240, bottom: 16, opacity: 0.07 },
 ];
 
 function WaveStack({ fill }: { fill: string }) {
