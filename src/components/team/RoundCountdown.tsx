@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocalizedCategoryName } from "@/utils/categoryDisplayName";
+import { getCategoryIconSlug } from "@/data/categoryIconMap";
 
 interface RoundCountdownProps {
   /** The digit to show, from useRoundCountdown. */
@@ -36,7 +37,15 @@ export function RoundCountdown({ number, categoryId, categoryName }: RoundCountd
         transition={{ type: "spring", stiffness: 260, damping: 22 }}
         className="flex flex-col items-center gap-4"
       >
-        <CategoryArtwork categoryId={categoryId} size={120} />
+        {/* Resolve the icon-library slug explicitly rather than leaving
+            DynamicIcon to guess from the category id. Categories all have a
+            library icon; falling through to the emoji in categories.icon is
+            what put a flat emoji on the last screen before a round starts. */}
+        <CategoryArtwork
+          categoryId={categoryId}
+          iconSlug={categoryId ? getCategoryIconSlug(categoryId) : null}
+          size={120}
+        />
         <h2 className="max-w-[18rem] break-words font-display text-2xl font-bold leading-tight text-white">
           {title}
         </h2>

@@ -657,7 +657,10 @@ export function GameResultsScreenV2() {
                   ? t("extra.randomOption")
                   : localizeCategory(nextQueueItem.category_name) || t("extra.categoryType")}
               </span>
-              <span className="text-white/40 text-sm flex items-center gap-1 flex-shrink-0">
+              {/* This says how many more rounds are queued behind this one,
+                  which is the reason to tap the row. At white/40 it was the
+                  faintest thing on it. */}
+              <span className="text-white/85 text-sm font-semibold flex items-center gap-1 flex-shrink-0">
                 {queue.length > 1 && <>+{queue.length - 1} {t("extra.moreCount")}</>}
                 <ChevronRight className="w-4 h-4" />
               </span>
@@ -726,10 +729,17 @@ export function GameResultsScreenV2() {
           </>
         ) : (
           <>
-            {/* Non-host - show waiting or back */}
-            <div className="text-center py-4 px-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-              <p className="text-white/70 font-medium">{t("extra.waitingForHostResult")}</p>
-            </div>
+            {/* Non-host: nothing to do but wait, so say so like something is
+                still happening. A static line in the same slot the host's
+                button occupies reads as a button that has stopped working. */}
+            <motion.div
+              animate={{ opacity: [0.55, 1, 0.55] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+              className="flex items-center justify-center gap-2.5 py-4 px-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
+            >
+              <Loader2 className="w-4 h-4 text-white/80 animate-spin" />
+              <p className="text-white font-semibold">{t("extra.waitingForHostResult")}</p>
+            </motion.div>
           </>
         )}
       </motion.div>
