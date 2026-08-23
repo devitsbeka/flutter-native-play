@@ -170,7 +170,19 @@ def build_spec(slug, harvested, limit=None):
         seen_images.add(e["thumb"])
         if e.get("file"):
             seen_images.add(e["file"])
-        usable.append({**e, "labels": {l: labels[l].strip() for l in LANGS}})
+        # A brand is spelled the same way in every language. Wikidata's
+        # per-language labels are right for a country or a city and wrong for
+        # a company: they give "Universität Oslo", "Olimpíadas", and in
+        # Georgian a transliteration, so one card ends up offering three
+        # Latin names and one in another alphabet. What the mark says is the
+        # answer, and the mark says it once. See 20260902160000, which makes
+        # the same correction to what already shipped.
+        per_language = (
+            {l: en for l in LANGS}
+            if slug == "guess_logo"
+            else {l: labels[l].strip() for l in LANGS}
+        )
+        usable.append({**e, "labels": per_language})
 
     # The cut happens HERE, before distractors and difficulty are worked out,
     # so both are computed against the list that ships. Truncating afterwards
