@@ -1112,6 +1112,17 @@ export default function Index() {
             the full-bleed guest scene */}
         {!user && showDefaultScene && (
           <DesktopGuestLanding
+            onApple={async () => {
+              const { error } = await signInWithApple();
+              // Dismissing Apple's sheet is a choice, not a failure — no toast.
+              if (error && !/cancel/i.test(error.message ?? "")) {
+                toast({
+                  title: t("extra.appleSignInError"),
+                  description: error.message,
+                  variant: "destructive",
+                });
+              }
+            }}
             onGoogle={async () => {
               const { error } = await signInWithGoogle();
               // On success the browser redirects to Google; only failures land here.

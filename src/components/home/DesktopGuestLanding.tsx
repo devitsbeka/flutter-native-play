@@ -11,6 +11,7 @@ import featureCategories from "@/assets/figma-landing/feature-categories.png";
 import featureRanking from "@/assets/figma-landing/feature-ranking.png";
 import featureFriends from "@/assets/figma-landing/feature-friends.png";
 import iconMail from "@/assets/figma-landing/icon-mail.svg";
+import { AppleSignInButton } from "@/components/shared/AppleSignInButton";
 import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
 
 // Figma: Hom / node 612:1888 — desktop logged-out state. Full-bleed Trivia
@@ -102,6 +103,7 @@ function FeatureRow({
 }
 
 interface DesktopGuestLandingProps {
+  onApple: () => void;
   onGoogle: () => void;
   onEmailContinue: (email: string) => void;
 }
@@ -109,7 +111,7 @@ interface DesktopGuestLandingProps {
 // Floating card overlay for the logged-out desktop homepage. Mounted over
 // the full page (same origin as the Figma canvas minus the 72px nav rail),
 // so every coordinate below is design-exact.
-export function DesktopGuestLanding({ onGoogle, onEmailContinue }: DesktopGuestLandingProps) {
+export function DesktopGuestLanding({ onApple, onGoogle, onEmailContinue }: DesktopGuestLandingProps) {
   const { t } = useLanguage();
   const [email, setEmail] = useState("");
 
@@ -123,7 +125,7 @@ export function DesktopGuestLanding({ onGoogle, onEmailContinue }: DesktopGuestL
       {/* ===== Signup card (Figma 612:1974 + 612:2546 merged) — Google
           sign-in with the email capture folded in below it ===== */}
       <div
-        className="absolute left-[56px] top-[176px] w-[298px] h-[466px] rounded-[24px] bg-[rgba(252,247,255,0.8)] backdrop-blur-sm overflow-hidden pointer-events-auto"
+        className="absolute left-[56px] top-[176px] w-[298px] h-[532px] rounded-[24px] bg-[rgba(252,247,255,0.8)] backdrop-blur-sm overflow-hidden pointer-events-auto"
         style={{ boxShadow: CARD_SHADOW }}
       >
         {/* Social proof: overlapping avatars + player count (612:2480/2509) */}
@@ -148,17 +150,30 @@ export function DesktopGuestLanding({ onGoogle, onEmailContinue }: DesktopGuestL
         <p className="absolute left-[25px] top-[170px] w-[235px] font-['Nunito'] font-normal text-[13px] leading-[22px] tracking-[-0.16px] text-black opacity-70">
           {t("extra.landingJoinSubtitle")}
         </p>
+        {/* Apple first, then Google — guideline 4.8 wants Sign in with Apple
+            at least as prominent as any other third-party login, and this
+            card offered only Google while the sign-in modal offered both. */}
+        {/* Wrapped rather than positioned directly: both button components
+            set `relative` on themselves, and Tailwind emits .absolute before
+            .relative, so a passed-in `absolute` loses and the button stays in
+            flow. With one button that happened to land in the right place;
+            with two it compounds and the second drifts. */}
+        <div className="absolute left-[19px] top-[240px] w-[260px]">
+          <AppleSignInButton onClick={onApple} className="w-full" />
+        </div>
         {/* Google (612:1981) */}
-        <GoogleSignInButton onClick={onGoogle} className="absolute left-[19px] top-[240px] w-[260px]" />
+        <div className="absolute left-[19px] top-[306px] w-[260px]">
+          <GoogleSignInButton onClick={onGoogle} className="w-full" />
+        </div>
         {/* "or enter your email" separator (from 612:2546) */}
-        <p className="absolute left-[70px] top-[310px] font-['Nunito'] font-normal text-[12px] leading-[22px] tracking-[-0.16px] text-black opacity-60 whitespace-nowrap">
+        <p className="absolute left-[70px] top-[376px] font-['Nunito'] font-normal text-[12px] leading-[22px] tracking-[-0.16px] text-black opacity-60 whitespace-nowrap">
           {t("extra.landingOrEmail")}
         </p>
-        <div aria-hidden className="absolute left-[21px] top-[321px] w-[27px] h-px bg-black opacity-[0.22]" />
-        <div aria-hidden className="absolute left-[246px] top-[321px] w-[27px] h-px bg-black opacity-[0.22]" />
+        <div aria-hidden className="absolute left-[21px] top-[387px] w-[27px] h-px bg-black opacity-[0.22]" />
+        <div aria-hidden className="absolute left-[246px] top-[387px] w-[27px] h-px bg-black opacity-[0.22]" />
         {/* Email field (612:2555) — chunky look, top corners only */}
         <div
-          className="absolute left-[19px] top-[345px] w-[260px] h-[54.466px] rounded-t-[18.498px] border-[1.542px] border-solid border-[#e8e0f5]"
+          className="absolute left-[19px] top-[411px] w-[260px] h-[54.466px] rounded-t-[18.498px] border-[1.542px] border-solid border-[#e8e0f5]"
           style={{ boxShadow: CHUNKY_SHADOW }}
         >
           <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[inherit]" style={{ background: CHUNKY_GRADIENT }} />
@@ -177,7 +192,7 @@ export function DesktopGuestLanding({ onGoogle, onEmailContinue }: DesktopGuestL
         <button
           type="button"
           onClick={() => onEmailContinue(email)}
-          className="absolute left-[19px] top-[394px] w-[260px] h-[54px] rounded-b-[24px] border-[3px] border-solid border-[#34d399] flex items-center justify-center shadow-[0px_6px_0px_0px_#047857,0px_10px_24px_0px_rgba(16,185,129,0.5)]"
+          className="absolute left-[19px] top-[460px] w-[260px] h-[54px] rounded-b-[24px] border-[3px] border-solid border-[#34d399] flex items-center justify-center shadow-[0px_6px_0px_0px_#047857,0px_10px_24px_0px_rgba(16,185,129,0.5)]"
         >
           <div
             aria-hidden
