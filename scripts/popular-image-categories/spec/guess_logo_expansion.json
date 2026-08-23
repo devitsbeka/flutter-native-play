@@ -1,0 +1,6256 @@
+[
+ {
+  "key": "w-q7164",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/The_World_Bank_logo.svg/1280px-The_World_Bank_logo.svg.png",
+  "file": "File:The World Bank logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "World Bank",
+   "ka": "მსოფლიო ბანკი",
+   "de": "Weltbank",
+   "es": "Banco Mundial",
+   "fr": "Banque mondiale",
+   "it": "Banca Mondiale",
+   "pt": "Banco Mundial"
+  },
+  "wrong": {
+   "en": [
+    "Lenovo",
+    "Disneyland",
+    "Yale University"
+   ],
+   "ka": [
+    "ლენოვო",
+    "დისნეილენდი",
+    "იელის უნივერსიტეტი"
+   ],
+   "de": [
+    "Lenovo",
+    "Disneyland",
+    "Yale University"
+   ],
+   "es": [
+    "Lenovo",
+    "Disneyland",
+    "Universidad Yale"
+   ],
+   "fr": [
+    "Lenovo",
+    "Disneyland",
+    "Université Yale"
+   ],
+   "it": [
+    "Lenovo",
+    "Disneyland",
+    "Università di Yale"
+   ],
+   "pt": [
+    "Lenovo",
+    "Disneyland",
+    "Universidade Yale"
+   ]
+  }
+ },
+ {
+  "key": "w-q584601",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Baskin-Robbins_logo_2022.svg/1280px-Baskin-Robbins_logo_2022.svg.png",
+  "file": "File:Baskin-Robbins logo 2022.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Baskin-Robbins",
+   "ka": "ბასკინ რობინსი",
+   "de": "Baskin-Robbins",
+   "es": "Baskin Robbins",
+   "fr": "Baskin-Robbins",
+   "it": "Baskin-Robbins",
+   "pt": "Baskin-Robbins"
+  },
+  "wrong": {
+   "en": [
+    "Yandex",
+    "Toshiba",
+    "Fiat"
+   ],
+   "ka": [
+    "Yandex",
+    "Toshiba",
+    "Fiat"
+   ],
+   "de": [
+    "Yandex",
+    "Toshiba",
+    "Fiat"
+   ],
+   "es": [
+    "Yandex",
+    "Toshiba",
+    "Fiat"
+   ],
+   "fr": [
+    "Yandex",
+    "Toshiba",
+    "Fiat"
+   ],
+   "it": [
+    "Yandex",
+    "Toshiba",
+    "Fiat"
+   ],
+   "pt": [
+    "Yandex",
+    "Toshiba",
+    "Fiat"
+   ]
+  }
+ },
+ {
+  "key": "w-q193701",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/SpaceX_logo_black.svg/1280px-SpaceX_logo_black.svg.png",
+  "file": "File:SpaceX logo black.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "SpaceX",
+   "ka": "SpaceX",
+   "de": "SpaceX",
+   "es": "SpaceX",
+   "fr": "SpaceX",
+   "it": "SpaceX",
+   "pt": "SpaceX"
+  },
+  "wrong": {
+   "en": [
+    "Baskin-Robbins",
+    "Electronic Arts",
+    "Metro-Goldwyn-Mayer"
+   ],
+   "ka": [
+    "ბასკინ რობინსი",
+    "Electronic Arts",
+    "Metro-Goldwyn-Mayer"
+   ],
+   "de": [
+    "Baskin-Robbins",
+    "Electronic Arts",
+    "Metro-Goldwyn-Mayer"
+   ],
+   "es": [
+    "Baskin Robbins",
+    "Electronic Arts",
+    "Metro-Goldwyn-Mayer"
+   ],
+   "fr": [
+    "Baskin-Robbins",
+    "Electronic Arts",
+    "Metro-Goldwyn-Mayer"
+   ],
+   "it": [
+    "Baskin-Robbins",
+    "Electronic Arts",
+    "Metro-Goldwyn-Mayer"
+   ],
+   "pt": [
+    "Baskin-Robbins",
+    "Electronic Arts",
+    "Metro-Goldwyn-Mayer"
+   ]
+  }
+ },
+ {
+  "key": "w-q41187",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Sony_Group_logo.svg/1280px-Sony_Group_logo.svg.png",
+  "file": "File:Sony Group logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Sony Group",
+   "ka": "Sony",
+   "de": "Sony",
+   "es": "Sony",
+   "fr": "Sony",
+   "it": "Sony",
+   "pt": "Sony"
+  },
+  "wrong": {
+   "en": [
+    "Gazprom",
+    "World Bank",
+    "Duke University"
+   ],
+   "ka": [
+    "გაზპრომი",
+    "მსოფლიო ბანკი",
+    "დიუკის უნივერსიტეტი"
+   ],
+   "de": [
+    "Gazprom",
+    "Weltbank",
+    "Duke University"
+   ],
+   "es": [
+    "Gazprom",
+    "Banco Mundial",
+    "Universidad Duke"
+   ],
+   "fr": [
+    "Gazprom",
+    "Banque mondiale",
+    "Université Duke"
+   ],
+   "it": [
+    "Gazprom",
+    "Banca Mondiale",
+    "Università Duke"
+   ],
+   "pt": [
+    "Gazprom",
+    "Banco Mundial",
+    "Universidade Duke"
+   ]
+  }
+ },
+ {
+  "key": "w-q49112",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Yale_University_Shield_1.svg/1280px-Yale_University_Shield_1.svg.png",
+  "file": "File:Yale University Shield 1.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Yale University",
+   "ka": "იელის უნივერსიტეტი",
+   "de": "Yale University",
+   "es": "Universidad Yale",
+   "fr": "Université Yale",
+   "it": "Università di Yale",
+   "pt": "Universidade Yale"
+  },
+  "wrong": {
+   "en": [
+    "Studio Ghibli",
+    "SpaceX",
+    "Reuters"
+   ],
+   "ka": [
+    "სტუდია ღიბლი",
+    "SpaceX",
+    "Reuters"
+   ],
+   "de": [
+    "Studio Ghibli",
+    "SpaceX",
+    "Reuters"
+   ],
+   "es": [
+    "Studio Ghibli",
+    "SpaceX",
+    "Reuters"
+   ],
+   "fr": [
+    "Studio Ghibli",
+    "SpaceX",
+    "Reuters"
+   ],
+   "it": [
+    "Studio Ghibli",
+    "SpaceX",
+    "Reuters"
+   ],
+   "pt": [
+    "Studio Ghibli",
+    "SpaceX",
+    "Reuters"
+   ]
+  }
+ },
+ {
+  "key": "w-q191615",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Pizza_Hut_2025.svg/1280px-Pizza_Hut_2025.svg.png",
+  "file": "File:Pizza Hut 2025.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Pizza Hut",
+   "ka": "პიცა ჰატი",
+   "de": "Pizza Hut",
+   "es": "Pizza Hut",
+   "fr": "Pizza Hut",
+   "it": "Pizza Hut",
+   "pt": "Pizza Hut"
+  },
+  "wrong": {
+   "en": [
+    "Sony Group",
+    "General Electric",
+    "Marvel Comics"
+   ],
+   "ka": [
+    "Sony",
+    "General Electric",
+    "მარველის კომიქსები"
+   ],
+   "de": [
+    "Sony",
+    "General Electric",
+    "Marvel Comics"
+   ],
+   "es": [
+    "Sony",
+    "General Electric",
+    "Marvel Comics"
+   ],
+   "fr": [
+    "Sony",
+    "General Electric",
+    "Marvel Comics"
+   ],
+   "it": [
+    "Sony",
+    "General Electric",
+    "Marvel Comics"
+   ],
+   "pt": [
+    "Sony",
+    "General Electric",
+    "Marvel Comics"
+   ]
+  }
+ },
+ {
+  "key": "w-q158888",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Yamaha_Motor_2025.svg/1280px-Yamaha_Motor_2025.svg.png",
+  "file": "File:Yamaha Motor 2025.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Yamaha Motor Company",
+   "ka": "Yamaha Motor Company",
+   "de": "Yamaha Motor",
+   "es": "Yamaha Motor Company",
+   "fr": "Yamaha Motor Company",
+   "it": "Yamaha Motor",
+   "pt": "Yamaha Motor Company"
+  },
+  "wrong": {
+   "en": [
+    "Yandex",
+    "Metro-Goldwyn-Mayer",
+    "Gazprom"
+   ],
+   "ka": [
+    "Yandex",
+    "Metro-Goldwyn-Mayer",
+    "გაზპრომი"
+   ],
+   "de": [
+    "Yandex",
+    "Metro-Goldwyn-Mayer",
+    "Gazprom"
+   ],
+   "es": [
+    "Yandex",
+    "Metro-Goldwyn-Mayer",
+    "Gazprom"
+   ],
+   "fr": [
+    "Yandex",
+    "Metro-Goldwyn-Mayer",
+    "Gazprom"
+   ],
+   "it": [
+    "Yandex",
+    "Metro-Goldwyn-Mayer",
+    "Gazprom"
+   ],
+   "pt": [
+    "Yandex",
+    "Metro-Goldwyn-Mayer",
+    "Gazprom"
+   ]
+  }
+ },
+ {
+  "key": "w-q168383",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Universal_Pictures_2021_%28Blue%29.svg/1280px-Universal_Pictures_2021_%28Blue%29.svg.png",
+  "file": "File:Universal Pictures 2021 (Blue).svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Universal Pictures",
+   "ka": "Universal Pictures",
+   "de": "Universal Pictures",
+   "es": "Universal Pictures",
+   "fr": "Universal Pictures",
+   "it": "Universal Studios",
+   "pt": "Universal Pictures"
+  },
+  "wrong": {
+   "en": [
+    "Brown University",
+    "Baskin-Robbins",
+    "Disneyland"
+   ],
+   "ka": [
+    "ბრაუნის უნივერსიტეტი",
+    "ბასკინ რობინსი",
+    "დისნეილენდი"
+   ],
+   "de": [
+    "Brown University",
+    "Baskin-Robbins",
+    "Disneyland"
+   ],
+   "es": [
+    "Universidad Brown",
+    "Baskin Robbins",
+    "Disneyland"
+   ],
+   "fr": [
+    "Université Brown",
+    "Baskin-Robbins",
+    "Disneyland"
+   ],
+   "it": [
+    "Università Brown",
+    "Baskin-Robbins",
+    "Disneyland"
+   ],
+   "pt": [
+    "Universidade Brown",
+    "Baskin-Robbins",
+    "Disneyland"
+   ]
+  }
+ },
+ {
+  "key": "w-q173496",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Marvel_Comics_2024_logo.svg/1280px-Marvel_Comics_2024_logo.svg.png",
+  "file": "File:Marvel Comics 2024 logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Marvel Comics",
+   "ka": "მარველის კომიქსები",
+   "de": "Marvel Comics",
+   "es": "Marvel Comics",
+   "fr": "Marvel Comics",
+   "it": "Marvel Comics",
+   "pt": "Marvel Comics"
+  },
+  "wrong": {
+   "en": [
+    "Yandex",
+    "Studio Ghibli",
+    "Hewlett-Packard"
+   ],
+   "ka": [
+    "Yandex",
+    "სტუდია ღიბლი",
+    "ჰიულეტ-პაკარდი"
+   ],
+   "de": [
+    "Yandex",
+    "Studio Ghibli",
+    "Hewlett-Packard"
+   ],
+   "es": [
+    "Yandex",
+    "Studio Ghibli",
+    "Hewlett-Packard"
+   ],
+   "fr": [
+    "Yandex",
+    "Studio Ghibli",
+    "Hewlett-Packard"
+   ],
+   "it": [
+    "Yandex",
+    "Studio Ghibli",
+    "Hewlett-Packard"
+   ],
+   "pt": [
+    "Yandex",
+    "Studio Ghibli",
+    "Hewlett-Packard"
+   ]
+  }
+ },
+ {
+  "key": "w-q130879",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Reuters_logo_2024.svg/1280px-Reuters_logo_2024.svg.png",
+  "file": "File:Reuters logo 2024.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Reuters",
+   "ka": "Reuters",
+   "de": "Reuters",
+   "es": "Reuters",
+   "fr": "Reuters",
+   "it": "Reuters",
+   "pt": "Reuters"
+  },
+  "wrong": {
+   "en": [
+    "General Electric",
+    "Fiat",
+    "World Bank"
+   ],
+   "ka": [
+    "General Electric",
+    "Fiat",
+    "მსოფლიო ბანკი"
+   ],
+   "de": [
+    "General Electric",
+    "Fiat",
+    "Weltbank"
+   ],
+   "es": [
+    "General Electric",
+    "Fiat",
+    "Banco Mundial"
+   ],
+   "fr": [
+    "General Electric",
+    "Fiat",
+    "Banque mondiale"
+   ],
+   "it": [
+    "General Electric",
+    "Fiat",
+    "Banca Mondiale"
+   ],
+   "pt": [
+    "General Electric",
+    "Fiat",
+    "Banco Mundial"
+   ]
+  }
+ },
+ {
+  "key": "w-q4548",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Turkish_Airlines_logo_2019_compact.svg/1280px-Turkish_Airlines_logo_2019_compact.svg.png",
+  "file": "File:Turkish Airlines logo 2019 compact.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Turkish Airlines",
+   "ka": "თურქეთის ავიახაზები",
+   "de": "Turkish Airlines",
+   "es": "Turkish Airlines",
+   "fr": "Turkish Airlines",
+   "it": "Turkish Airlines",
+   "pt": "Turkish Airlines"
+  },
+  "wrong": {
+   "en": [
+    "Fiat",
+    "Yandex",
+    "Lenovo"
+   ],
+   "ka": [
+    "Fiat",
+    "Yandex",
+    "ლენოვო"
+   ],
+   "de": [
+    "Fiat",
+    "Yandex",
+    "Lenovo"
+   ],
+   "es": [
+    "Fiat",
+    "Yandex",
+    "Lenovo"
+   ],
+   "fr": [
+    "Fiat",
+    "Yandex",
+    "Lenovo"
+   ],
+   "it": [
+    "Fiat",
+    "Yandex",
+    "Lenovo"
+   ],
+   "pt": [
+    "Fiat",
+    "Yandex",
+    "Lenovo"
+   ]
+  }
+ },
+ {
+  "key": "w-q27597",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/FIAT_logo_coloured.svg/1280px-FIAT_logo_coloured.svg.png",
+  "file": "File:FIAT logo coloured.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Fiat",
+   "ka": "Fiat",
+   "de": "Fiat",
+   "es": "Fiat",
+   "fr": "Fiat",
+   "it": "Fiat",
+   "pt": "Fiat"
+  },
+  "wrong": {
+   "en": [
+    "Lenovo",
+    "20th Century Studios",
+    "University of Oslo"
+   ],
+   "ka": [
+    "ლენოვო",
+    "20th Century Fox",
+    "ოსლოს უნივერსიტეტი"
+   ],
+   "de": [
+    "Lenovo",
+    "20th Century Studios",
+    "Universität Oslo"
+   ],
+   "es": [
+    "Lenovo",
+    "20th Century Studios",
+    "Universidad de Oslo"
+   ],
+   "fr": [
+    "Lenovo",
+    "20th Century Studios",
+    "Université d'Oslo"
+   ],
+   "it": [
+    "Lenovo",
+    "20th Century Studios",
+    "Università di Oslo"
+   ],
+   "pt": [
+    "Lenovo",
+    "20th Century Studios",
+    "Universidade de Oslo"
+   ]
+  }
+ },
+ {
+  "key": "w-q434841",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/20th_Century_Studios.svg/1280px-20th_Century_Studios.svg.png",
+  "file": "File:20th Century Studios.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "20th Century Studios",
+   "ka": "20th Century Fox",
+   "de": "20th Century Studios",
+   "es": "20th Century Studios",
+   "fr": "20th Century Studios",
+   "it": "20th Century Studios",
+   "pt": "20th Century Studios"
+  },
+  "wrong": {
+   "en": [
+    "Mercedes-Benz Group",
+    "Tata Motors Ltd",
+    "Alexa Internet"
+   ],
+   "ka": [
+    "Daimler AG",
+    "Tata Motors",
+    "Alexa Internet"
+   ],
+   "de": [
+    "Mercedes-Benz Group",
+    "Tata Motors",
+    "Alexa Internet"
+   ],
+   "es": [
+    "Mercedes-Benz Group",
+    "Tata Motors",
+    "Alexa Internet"
+   ],
+   "fr": [
+    "Mercedes-Benz Group",
+    "Tata",
+    "Alexa Internet"
+   ],
+   "it": [
+    "Daimler AG",
+    "Tata Motors",
+    "Alexa Internet"
+   ],
+   "pt": [
+    "Mercedes-Benz Group",
+    "Tata Motors",
+    "Alexa Internet"
+   ]
+  }
+ },
+ {
+  "key": "w-q131005",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Air_France_Logo.svg/1280px-Air_France_Logo.svg.png",
+  "file": "File:Air France Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Air France",
+   "ka": "Air France",
+   "de": "Air France",
+   "es": "Air France",
+   "fr": "Air France",
+   "it": "Air France",
+   "pt": "Air France"
+  },
+  "wrong": {
+   "en": [
+    "Land Rover",
+    "Tata Motors Ltd",
+    "Puma"
+   ],
+   "ka": [
+    "lend rover",
+    "Tata Motors",
+    "Puma SE"
+   ],
+   "de": [
+    "Land Rover",
+    "Tata Motors",
+    "Puma SE"
+   ],
+   "es": [
+    "Land Rover",
+    "Tata Motors",
+    "Puma"
+   ],
+   "fr": [
+    "Land Rover",
+    "Tata",
+    "Puma"
+   ],
+   "it": [
+    "Land Rover",
+    "Tata Motors",
+    "Puma"
+   ],
+   "pt": [
+    "Land Rover",
+    "Tata Motors",
+    "Puma SE"
+   ]
+  }
+ },
+ {
+  "key": "w-q80978",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/HP_logo_2025.svg/1280px-HP_logo_2025.svg.png",
+  "file": "File:HP logo 2025.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Hewlett-Packard",
+   "ka": "ჰიულეტ-პაკარდი",
+   "de": "Hewlett-Packard",
+   "es": "Hewlett-Packard",
+   "fr": "Hewlett-Packard",
+   "it": "Hewlett-Packard",
+   "pt": "Hewlett-Packard"
+  },
+  "wrong": {
+   "en": [
+    "University of Oslo",
+    "Baskin-Robbins",
+    "20th Century Studios"
+   ],
+   "ka": [
+    "ოსლოს უნივერსიტეტი",
+    "ბასკინ რობინსი",
+    "20th Century Fox"
+   ],
+   "de": [
+    "Universität Oslo",
+    "Baskin-Robbins",
+    "20th Century Studios"
+   ],
+   "es": [
+    "Universidad de Oslo",
+    "Baskin Robbins",
+    "20th Century Studios"
+   ],
+   "fr": [
+    "Université d'Oslo",
+    "Baskin-Robbins",
+    "20th Century Studios"
+   ],
+   "it": [
+    "Università di Oslo",
+    "Baskin-Robbins",
+    "20th Century Studios"
+   ],
+   "pt": [
+    "Universidade de Oslo",
+    "Baskin-Robbins",
+    "20th Century Studios"
+   ]
+  }
+ },
+ {
+  "key": "w-q14799",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Lenovo_logo_%282015_onwards%29_2.svg/1280px-Lenovo_logo_%282015_onwards%29_2.svg.png",
+  "file": "File:Lenovo logo (2015 onwards) 2.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Lenovo",
+   "ka": "ლენოვო",
+   "de": "Lenovo",
+   "es": "Lenovo",
+   "fr": "Lenovo",
+   "it": "Lenovo",
+   "pt": "Lenovo"
+  },
+  "wrong": {
+   "en": [
+    "Mercedes-Benz Group",
+    "Associated Press",
+    "Reuters"
+   ],
+   "ka": [
+    "Daimler AG",
+    "Associated Press",
+    "Reuters"
+   ],
+   "de": [
+    "Mercedes-Benz Group",
+    "Associated Press",
+    "Reuters"
+   ],
+   "es": [
+    "Mercedes-Benz Group",
+    "Associated Press",
+    "Reuters"
+   ],
+   "fr": [
+    "Mercedes-Benz Group",
+    "Associated Press",
+    "Reuters"
+   ],
+   "it": [
+    "Daimler AG",
+    "Associated Press",
+    "Reuters"
+   ],
+   "pt": [
+    "Mercedes-Benz Group",
+    "Associated Press",
+    "Reuters"
+   ]
+  }
+ },
+ {
+  "key": "w-q40469",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Associated_Press_logo_2012.svg/1280px-Associated_Press_logo_2012.svg.png",
+  "file": "File:Associated Press logo 2012.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Associated Press",
+   "ka": "Associated Press",
+   "de": "Associated Press",
+   "es": "Associated Press",
+   "fr": "Associated Press",
+   "it": "Associated Press",
+   "pt": "Associated Press"
+  },
+  "wrong": {
+   "en": [
+    "SpaceX",
+    "Nikon",
+    "Lund University"
+   ],
+   "ka": [
+    "SpaceX",
+    "Nikon",
+    "ლუნდის უნივერსიტეტი"
+   ],
+   "de": [
+    "SpaceX",
+    "Nikon",
+    "Universität Lund"
+   ],
+   "es": [
+    "SpaceX",
+    "Nikon",
+    "Universidad de Lund"
+   ],
+   "fr": [
+    "SpaceX",
+    "Nikon",
+    "université de Lund"
+   ],
+   "it": [
+    "SpaceX",
+    "Nikon Corporation",
+    "Università di Lund"
+   ],
+   "pt": [
+    "SpaceX",
+    "Nikon",
+    "Universidade de Lund"
+   ]
+  }
+ },
+ {
+  "key": "w-q182950",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Studio_Ghibli.svg/1280px-Studio_Ghibli.svg.png",
+  "file": "File:Studio Ghibli.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Studio Ghibli",
+   "ka": "სტუდია ღიბლი",
+   "de": "Studio Ghibli",
+   "es": "Studio Ghibli",
+   "fr": "Studio Ghibli",
+   "it": "Studio Ghibli",
+   "pt": "Studio Ghibli"
+  },
+  "wrong": {
+   "en": [
+    "Electronic Arts",
+    "Gazprom",
+    "Robert Bosch"
+   ],
+   "ka": [
+    "Electronic Arts",
+    "გაზპრომი",
+    "ბოში"
+   ],
+   "de": [
+    "Electronic Arts",
+    "Gazprom",
+    "Robert Bosch"
+   ],
+   "es": [
+    "Electronic Arts",
+    "Gazprom",
+    "Robert Bosch GmbH"
+   ],
+   "fr": [
+    "Electronic Arts",
+    "Gazprom",
+    "Robert Bosch"
+   ],
+   "it": [
+    "Electronic Arts",
+    "Gazprom",
+    "Robert Bosch"
+   ],
+   "pt": [
+    "Electronic Arts",
+    "Gazprom",
+    "Robert Bosch GmbH"
+   ]
+  }
+ },
+ {
+  "key": "w-q35996",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Mazda_logo_2024_%28vertical%29.svg/1280px-Mazda_logo_2024_%28vertical%29.svg.png",
+  "file": "File:Mazda logo 2024 (vertical).svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Mazda",
+   "ka": "Mazda",
+   "de": "Mazda",
+   "es": "Mazda",
+   "fr": "Mazda",
+   "it": "Mazda",
+   "pt": "Mazda"
+  },
+  "wrong": {
+   "en": [
+    "SpaceX",
+    "Pizza Hut",
+    "Mercedes-Benz Group"
+   ],
+   "ka": [
+    "SpaceX",
+    "პიცა ჰატი",
+    "Daimler AG"
+   ],
+   "de": [
+    "SpaceX",
+    "Pizza Hut",
+    "Mercedes-Benz Group"
+   ],
+   "es": [
+    "SpaceX",
+    "Pizza Hut",
+    "Mercedes-Benz Group"
+   ],
+   "fr": [
+    "SpaceX",
+    "Pizza Hut",
+    "Mercedes-Benz Group"
+   ],
+   "it": [
+    "SpaceX",
+    "Pizza Hut",
+    "Daimler AG"
+   ],
+   "pt": [
+    "SpaceX",
+    "Pizza Hut",
+    "Mercedes-Benz Group"
+   ]
+  }
+ },
+ {
+  "key": "w-q181185",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Disneyland_Park_Logo.svg/1280px-Disneyland_Park_Logo.svg.png",
+  "file": "File:Disneyland Park Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Disneyland",
+   "ka": "დისნეილენდი",
+   "de": "Disneyland",
+   "es": "Disneyland",
+   "fr": "Disneyland",
+   "it": "Disneyland",
+   "pt": "Disneyland"
+  },
+  "wrong": {
+   "en": [
+    "World Bank",
+    "Reuters",
+    "Chanel"
+   ],
+   "ka": [
+    "მსოფლიო ბანკი",
+    "Reuters",
+    "შანელი"
+   ],
+   "de": [
+    "Weltbank",
+    "Reuters",
+    "Chanel"
+   ],
+   "es": [
+    "Banco Mundial",
+    "Reuters",
+    "Chanel"
+   ],
+   "fr": [
+    "Banque mondiale",
+    "Reuters",
+    "Chanel"
+   ],
+   "it": [
+    "Banca Mondiale",
+    "Reuters",
+    "Chanel"
+   ],
+   "pt": [
+    "Banco Mundial",
+    "Reuters",
+    "Chanel S.A"
+   ]
+  }
+ },
+ {
+  "key": "w-q102673",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Gazprom_logo.svg/1280px-Gazprom_logo.svg.png",
+  "file": "File:Gazprom logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Gazprom",
+   "ka": "გაზპრომი",
+   "de": "Gazprom",
+   "es": "Gazprom",
+   "fr": "Gazprom",
+   "it": "Gazprom",
+   "pt": "Gazprom"
+  },
+  "wrong": {
+   "en": [
+    "General Electric",
+    "University of Oslo",
+    "Prada"
+   ],
+   "ka": [
+    "General Electric",
+    "ოსლოს უნივერსიტეტი",
+    "Prada"
+   ],
+   "de": [
+    "General Electric",
+    "Universität Oslo",
+    "Prada"
+   ],
+   "es": [
+    "General Electric",
+    "Universidad de Oslo",
+    "Prada"
+   ],
+   "fr": [
+    "General Electric",
+    "Université d'Oslo",
+    "Prada"
+   ],
+   "it": [
+    "General Electric",
+    "Università di Oslo",
+    "Prada"
+   ],
+   "pt": [
+    "General Electric",
+    "Universidade de Oslo",
+    "Prada"
+   ]
+  }
+ },
+ {
+  "key": "w-q179200",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Metro-Goldwyn-Mayer_logo.svg/1280px-Metro-Goldwyn-Mayer_logo.svg.png",
+  "file": "File:Metro-Goldwyn-Mayer logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Metro-Goldwyn-Mayer",
+   "ka": "Metro-Goldwyn-Mayer",
+   "de": "Metro-Goldwyn-Mayer",
+   "es": "Metro-Goldwyn-Mayer",
+   "fr": "Metro-Goldwyn-Mayer",
+   "it": "Metro-Goldwyn-Mayer",
+   "pt": "Metro-Goldwyn-Mayer"
+  },
+  "wrong": {
+   "en": [
+    "Air France",
+    "Hewlett-Packard",
+    "Reuters"
+   ],
+   "ka": [
+    "Air France",
+    "ჰიულეტ-პაკარდი",
+    "Reuters"
+   ],
+   "de": [
+    "Air France",
+    "Hewlett-Packard",
+    "Reuters"
+   ],
+   "es": [
+    "Air France",
+    "Hewlett-Packard",
+    "Reuters"
+   ],
+   "fr": [
+    "Air France",
+    "Hewlett-Packard",
+    "Reuters"
+   ],
+   "it": [
+    "Air France",
+    "Hewlett-Packard",
+    "Reuters"
+   ],
+   "pt": [
+    "Air France",
+    "Hewlett-Packard",
+    "Reuters"
+   ]
+  }
+ },
+ {
+  "key": "w-q105584",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Rotten_Tomatoes_logo.svg/1280px-Rotten_Tomatoes_logo.svg.png",
+  "file": "File:Rotten Tomatoes logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Rotten Tomatoes",
+   "ka": "Rotten Tomatoes",
+   "de": "Rotten Tomatoes",
+   "es": "Rotten Tomatoes",
+   "fr": "Rotten Tomatoes",
+   "it": "Rotten Tomatoes",
+   "pt": "Rotten Tomatoes"
+  },
+  "wrong": {
+   "en": [
+    "Baskin-Robbins",
+    "Yamaha Motor Company",
+    "General Electric"
+   ],
+   "ka": [
+    "ბასკინ რობინსი",
+    "Yamaha Motor Company",
+    "General Electric"
+   ],
+   "de": [
+    "Baskin-Robbins",
+    "Yamaha Motor",
+    "General Electric"
+   ],
+   "es": [
+    "Baskin Robbins",
+    "Yamaha Motor Company",
+    "General Electric"
+   ],
+   "fr": [
+    "Baskin-Robbins",
+    "Yamaha Motor Company",
+    "General Electric"
+   ],
+   "it": [
+    "Baskin-Robbins",
+    "Yamaha Motor",
+    "General Electric"
+   ],
+   "pt": [
+    "Baskin-Robbins",
+    "Yamaha Motor Company",
+    "General Electric"
+   ]
+  }
+ },
+ {
+  "key": "w-q58707",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Aeroflot_Russian_Airlines_logo_%28en%29.svg/1280px-Aeroflot_Russian_Airlines_logo_%28en%29.svg.png",
+  "file": "File:Aeroflot Russian Airlines logo (en).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Aeroflot",
+   "ka": "აეროფლოტი",
+   "de": "Aeroflot",
+   "es": "Aeroflot",
+   "fr": "Aeroflot",
+   "it": "Aeroflot",
+   "pt": "Aeroflot"
+  },
+  "wrong": {
+   "en": [
+    "Lancia",
+    "Reuters",
+    "General Electric"
+   ],
+   "ka": [
+    "Lancia",
+    "Reuters",
+    "General Electric"
+   ],
+   "de": [
+    "Lancia",
+    "Reuters",
+    "General Electric"
+   ],
+   "es": [
+    "Lancia",
+    "Reuters",
+    "General Electric"
+   ],
+   "fr": [
+    "Lancia",
+    "Reuters",
+    "General Electric"
+   ],
+   "it": [
+    "Lancia",
+    "Reuters",
+    "General Electric"
+   ],
+   "pt": [
+    "Lancia",
+    "Reuters",
+    "General Electric"
+   ]
+  }
+ },
+ {
+  "key": "w-q49125",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Toshiba_logo.svg/1280px-Toshiba_logo.svg.png",
+  "file": "File:Toshiba logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Toshiba",
+   "ka": "Toshiba",
+   "de": "Toshiba",
+   "es": "Toshiba",
+   "fr": "Toshiba",
+   "it": "Toshiba",
+   "pt": "Toshiba"
+  },
+  "wrong": {
+   "en": [
+    "Volkswagen Group",
+    "Austrian Airlines",
+    "Tata Motors Ltd"
+   ],
+   "ka": [
+    "Volkswagen AG",
+    "Austrian Airlines",
+    "Tata Motors"
+   ],
+   "de": [
+    "Volkswagen AG",
+    "Austrian Airlines",
+    "Tata Motors"
+   ],
+   "es": [
+    "Grupo Volkswagen",
+    "Austrian Airlines",
+    "Tata Motors"
+   ],
+   "fr": [
+    "Volkswagen",
+    "Austrian Airlines",
+    "Tata"
+   ],
+   "it": [
+    "Gruppo Volkswagen",
+    "Austrian Airlines",
+    "Tata Motors"
+   ],
+   "pt": [
+    "Grupo Volkswagen",
+    "Austrian Airlines",
+    "Tata Motors"
+   ]
+  }
+ },
+ {
+  "key": "w-q168751",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Duke_University_logo.svg/1280px-Duke_University_logo.svg.png",
+  "file": "File:Duke University logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Duke University",
+   "ka": "დიუკის უნივერსიტეტი",
+   "de": "Duke University",
+   "es": "Universidad Duke",
+   "fr": "Université Duke",
+   "it": "Università Duke",
+   "pt": "Universidade Duke"
+  },
+  "wrong": {
+   "en": [
+    "Austrian Airlines",
+    "Studio Ghibli",
+    "Brown University"
+   ],
+   "ka": [
+    "Austrian Airlines",
+    "სტუდია ღიბლი",
+    "ბრაუნის უნივერსიტეტი"
+   ],
+   "de": [
+    "Austrian Airlines",
+    "Studio Ghibli",
+    "Brown University"
+   ],
+   "es": [
+    "Austrian Airlines",
+    "Studio Ghibli",
+    "Universidad Brown"
+   ],
+   "fr": [
+    "Austrian Airlines",
+    "Studio Ghibli",
+    "Université Brown"
+   ],
+   "it": [
+    "Austrian Airlines",
+    "Studio Ghibli",
+    "Università Brown"
+   ],
+   "pt": [
+    "Austrian Airlines",
+    "Studio Ghibli",
+    "Universidade Brown"
+   ]
+  }
+ },
+ {
+  "key": "w-q49114",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Brown_University_logo.svg/1280px-Brown_University_logo.svg.png",
+  "file": "File:Brown University logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Brown University",
+   "ka": "ბრაუნის უნივერსიტეტი",
+   "de": "Brown University",
+   "es": "Universidad Brown",
+   "fr": "Université Brown",
+   "it": "Università Brown",
+   "pt": "Universidade Brown"
+  },
+  "wrong": {
+   "en": [
+    "20th Century Studios",
+    "Lucasfilm",
+    "Metro-Goldwyn-Mayer"
+   ],
+   "ka": [
+    "20th Century Fox",
+    "Lucasfilm",
+    "Metro-Goldwyn-Mayer"
+   ],
+   "de": [
+    "20th Century Studios",
+    "Lucasfilm",
+    "Metro-Goldwyn-Mayer"
+   ],
+   "es": [
+    "20th Century Studios",
+    "Lucasfilm",
+    "Metro-Goldwyn-Mayer"
+   ],
+   "fr": [
+    "20th Century Studios",
+    "Lucasfilm",
+    "Metro-Goldwyn-Mayer"
+   ],
+   "it": [
+    "20th Century Studios",
+    "LucasFilm",
+    "Metro-Goldwyn-Mayer"
+   ],
+   "pt": [
+    "20th Century Studios",
+    "Lucasfilm",
+    "Metro-Goldwyn-Mayer"
+   ]
+  }
+ },
+ {
+  "key": "w-q27530",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Mercedes-Benz_Group_black.svg/1280px-Mercedes-Benz_Group_black.svg.png",
+  "file": "File:Mercedes-Benz Group black.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Mercedes-Benz Group",
+   "ka": "Daimler AG",
+   "de": "Mercedes-Benz Group",
+   "es": "Mercedes-Benz Group",
+   "fr": "Mercedes-Benz Group",
+   "it": "Daimler AG",
+   "pt": "Mercedes-Benz Group"
+  },
+  "wrong": {
+   "en": [
+    "Aeroflot",
+    "Qatar Airways",
+    "Studio Ghibli"
+   ],
+   "ka": [
+    "აეროფლოტი",
+    "Qatar Airways",
+    "სტუდია ღიბლი"
+   ],
+   "de": [
+    "Aeroflot",
+    "Qatar Airways",
+    "Studio Ghibli"
+   ],
+   "es": [
+    "Aeroflot",
+    "Qatar Airways",
+    "Studio Ghibli"
+   ],
+   "fr": [
+    "Aeroflot",
+    "Qatar Airways",
+    "Studio Ghibli"
+   ],
+   "it": [
+    "Aeroflot",
+    "Qatar Airways",
+    "Studio Ghibli"
+   ],
+   "pt": [
+    "Aeroflot",
+    "Qatar Airways",
+    "Studio Ghibli"
+   ]
+  }
+ },
+ {
+  "key": "w-q230051",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Alexa_Internet_logo.svg/1280px-Alexa_Internet_logo.svg.png",
+  "file": "File:Alexa Internet logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Alexa Internet",
+   "ka": "Alexa Internet",
+   "de": "Alexa Internet",
+   "es": "Alexa Internet",
+   "fr": "Alexa Internet",
+   "it": "Alexa Internet",
+   "pt": "Alexa Internet"
+  },
+  "wrong": {
+   "en": [
+    "Baskin-Robbins",
+    "Box Office Mojo",
+    "Aeroflot"
+   ],
+   "ka": [
+    "ბასკინ რობინსი",
+    "Box Office Mojo",
+    "აეროფლოტი"
+   ],
+   "de": [
+    "Baskin-Robbins",
+    "Box Office Mojo",
+    "Aeroflot"
+   ],
+   "es": [
+    "Baskin Robbins",
+    "Box Office Mojo",
+    "Aeroflot"
+   ],
+   "fr": [
+    "Baskin-Robbins",
+    "Box Office Mojo",
+    "Aeroflot"
+   ],
+   "it": [
+    "Baskin-Robbins",
+    "Box Office Mojo",
+    "Aeroflot"
+   ],
+   "pt": [
+    "Baskin-Robbins",
+    "Box Office Mojo",
+    "Aeroflot"
+   ]
+  }
+ },
+ {
+  "key": "w-q5281",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Yandex_logo.svg/1280px-Yandex_logo.svg.png",
+  "file": "File:Yandex logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Yandex",
+   "ka": "Yandex",
+   "de": "Yandex",
+   "es": "Yandex",
+   "fr": "Yandex",
+   "it": "Yandex",
+   "pt": "Yandex"
+  },
+  "wrong": {
+   "en": [
+    "Qatar Airways",
+    "Volkswagen Group",
+    "Hewlett-Packard"
+   ],
+   "ka": [
+    "Qatar Airways",
+    "Volkswagen AG",
+    "ჰიულეტ-პაკარდი"
+   ],
+   "de": [
+    "Qatar Airways",
+    "Volkswagen AG",
+    "Hewlett-Packard"
+   ],
+   "es": [
+    "Qatar Airways",
+    "Grupo Volkswagen",
+    "Hewlett-Packard"
+   ],
+   "fr": [
+    "Qatar Airways",
+    "Volkswagen",
+    "Hewlett-Packard"
+   ],
+   "it": [
+    "Qatar Airways",
+    "Gruppo Volkswagen",
+    "Hewlett-Packard"
+   ],
+   "pt": [
+    "Qatar Airways",
+    "Grupo Volkswagen",
+    "Hewlett-Packard"
+   ]
+  }
+ },
+ {
+  "key": "w-q6039733",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/TOGG_logo.svg/1280px-TOGG_logo.svg.png",
+  "file": "File:TOGG logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Togg",
+   "ka": "TOGG",
+   "de": "Togg",
+   "es": "Togg",
+   "fr": "Togg",
+   "it": "Togg",
+   "pt": "Togg"
+  },
+  "wrong": {
+   "en": [
+    "Disneyland",
+    "Chanel",
+    "Qatar Airways"
+   ],
+   "ka": [
+    "დისნეილენდი",
+    "შანელი",
+    "Qatar Airways"
+   ],
+   "de": [
+    "Disneyland",
+    "Chanel",
+    "Qatar Airways"
+   ],
+   "es": [
+    "Disneyland",
+    "Chanel",
+    "Qatar Airways"
+   ],
+   "fr": [
+    "Disneyland",
+    "Chanel",
+    "Qatar Airways"
+   ],
+   "it": [
+    "Disneyland",
+    "Chanel",
+    "Qatar Airways"
+   ],
+   "pt": [
+    "Disneyland",
+    "Chanel S.A",
+    "Qatar Airways"
+   ]
+  }
+ },
+ {
+  "key": "w-q173941",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Electronic_Arts_2020.svg/1280px-Electronic_Arts_2020.svg.png",
+  "file": "File:Electronic Arts 2020.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Electronic Arts",
+   "ka": "Electronic Arts",
+   "de": "Electronic Arts",
+   "es": "Electronic Arts",
+   "fr": "Electronic Arts",
+   "it": "Electronic Arts",
+   "pt": "Electronic Arts"
+  },
+  "wrong": {
+   "en": [
+    "Associated Press",
+    "Mercedes-Benz Group",
+    "Universal Pictures"
+   ],
+   "ka": [
+    "Associated Press",
+    "Daimler AG",
+    "Universal Pictures"
+   ],
+   "de": [
+    "Associated Press",
+    "Mercedes-Benz Group",
+    "Universal Pictures"
+   ],
+   "es": [
+    "Associated Press",
+    "Mercedes-Benz Group",
+    "Universal Pictures"
+   ],
+   "fr": [
+    "Associated Press",
+    "Mercedes-Benz Group",
+    "Universal Pictures"
+   ],
+   "it": [
+    "Associated Press",
+    "Daimler AG",
+    "Universal Studios"
+   ],
+   "pt": [
+    "Associated Press",
+    "Mercedes-Benz Group",
+    "Universal Pictures"
+   ]
+  }
+ },
+ {
+  "key": "w-q54173",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/General_Electric_logo.svg/1280px-General_Electric_logo.svg.png",
+  "file": "File:General Electric logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "General Electric",
+   "ka": "General Electric",
+   "de": "General Electric",
+   "es": "General Electric",
+   "fr": "General Electric",
+   "it": "General Electric",
+   "pt": "General Electric"
+  },
+  "wrong": {
+   "en": [
+    "Electronic Arts",
+    "Tata Motors Ltd",
+    "Gazprom"
+   ],
+   "ka": [
+    "Electronic Arts",
+    "Tata Motors",
+    "გაზპრომი"
+   ],
+   "de": [
+    "Electronic Arts",
+    "Tata Motors",
+    "Gazprom"
+   ],
+   "es": [
+    "Electronic Arts",
+    "Tata Motors",
+    "Gazprom"
+   ],
+   "fr": [
+    "Electronic Arts",
+    "Tata",
+    "Gazprom"
+   ],
+   "it": [
+    "Electronic Arts",
+    "Tata Motors",
+    "Gazprom"
+   ],
+   "pt": [
+    "Electronic Arts",
+    "Tata Motors",
+    "Gazprom"
+   ]
+  }
+ },
+ {
+  "key": "w-q188514",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Tata_Motors_Logo.svg/1280px-Tata_Motors_Logo.svg.png",
+  "file": "File:Tata Motors Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Tata Motors Ltd",
+   "ka": "Tata Motors",
+   "de": "Tata Motors",
+   "es": "Tata Motors",
+   "fr": "Tata",
+   "it": "Tata Motors",
+   "pt": "Tata Motors"
+  },
+  "wrong": {
+   "en": [
+    "Togg",
+    "Agence France-Presse",
+    "DreamWorks"
+   ],
+   "ka": [
+    "TOGG",
+    "ფრანს-პრესი",
+    "DreamWorks"
+   ],
+   "de": [
+    "Togg",
+    "Agence France-Presse",
+    "DreamWorks SKG"
+   ],
+   "es": [
+    "Togg",
+    "Agence France-Presse",
+    "DreamWorks Pictures"
+   ],
+   "fr": [
+    "Togg",
+    "Agence France-Presse",
+    "DreamWorks SKG"
+   ],
+   "it": [
+    "Togg",
+    "Agence France-Presse",
+    "DreamWorks"
+   ],
+   "pt": [
+    "Togg",
+    "Agence France-Presse",
+    "DreamWorks SKG"
+   ]
+  }
+ },
+ {
+  "key": "w-q190804",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Logo_Rijksmuseum.svg/1280px-Logo_Rijksmuseum.svg.png",
+  "file": "File:Logo Rijksmuseum.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Rijksmuseum",
+   "ka": "რეიკსმუზეუმი",
+   "de": "Rijksmuseum",
+   "es": "Rijksmuseum",
+   "fr": "Rijksmuseum",
+   "it": "Rijksmuseum",
+   "pt": "Rijksmuseum"
+  },
+  "wrong": {
+   "en": [
+    "Hewlett-Packard",
+    "20th Century Studios",
+    "Robert Bosch"
+   ],
+   "ka": [
+    "ჰიულეტ-პაკარდი",
+    "20th Century Fox",
+    "ბოში"
+   ],
+   "de": [
+    "Hewlett-Packard",
+    "20th Century Studios",
+    "Robert Bosch"
+   ],
+   "es": [
+    "Hewlett-Packard",
+    "20th Century Studios",
+    "Robert Bosch GmbH"
+   ],
+   "fr": [
+    "Hewlett-Packard",
+    "20th Century Studios",
+    "Robert Bosch"
+   ],
+   "it": [
+    "Hewlett-Packard",
+    "20th Century Studios",
+    "Robert Bosch"
+   ],
+   "pt": [
+    "Hewlett-Packard",
+    "20th Century Studios",
+    "Robert Bosch GmbH"
+   ]
+  }
+ },
+ {
+  "key": "w-q156578",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Volkswagen_Group_Logo_2023.svg/1280px-Volkswagen_Group_Logo_2023.svg.png",
+  "file": "File:Volkswagen Group Logo 2023.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Volkswagen Group",
+   "ka": "Volkswagen AG",
+   "de": "Volkswagen AG",
+   "es": "Grupo Volkswagen",
+   "fr": "Volkswagen",
+   "it": "Gruppo Volkswagen",
+   "pt": "Grupo Volkswagen"
+  },
+  "wrong": {
+   "en": [
+    "Hewlett-Packard",
+    "Versace",
+    "Brown University"
+   ],
+   "ka": [
+    "ჰიულეტ-პაკარდი",
+    "Versace",
+    "ბრაუნის უნივერსიტეტი"
+   ],
+   "de": [
+    "Hewlett-Packard",
+    "Versace",
+    "Brown University"
+   ],
+   "es": [
+    "Hewlett-Packard",
+    "Versace",
+    "Universidad Brown"
+   ],
+   "fr": [
+    "Hewlett-Packard",
+    "Versace",
+    "Université Brown"
+   ],
+   "it": [
+    "Hewlett-Packard",
+    "Gianni Versace",
+    "Università Brown"
+   ],
+   "pt": [
+    "Hewlett-Packard",
+    "Versace",
+    "Universidade Brown"
+   ]
+  }
+ },
+ {
+  "key": "w-q157064",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Puma-logo-%28text%29.svg/1280px-Puma-logo-%28text%29.svg.png",
+  "file": "File:Puma-logo-(text).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Puma",
+   "ka": "Puma SE",
+   "de": "Puma SE",
+   "es": "Puma",
+   "fr": "Puma",
+   "it": "Puma",
+   "pt": "Puma SE"
+  },
+  "wrong": {
+   "en": [
+    "Robert Bosch",
+    "Yandex",
+    "Land Rover"
+   ],
+   "ka": [
+    "ბოში",
+    "Yandex",
+    "lend rover"
+   ],
+   "de": [
+    "Robert Bosch",
+    "Yandex",
+    "Land Rover"
+   ],
+   "es": [
+    "Robert Bosch GmbH",
+    "Yandex",
+    "Land Rover"
+   ],
+   "fr": [
+    "Robert Bosch",
+    "Yandex",
+    "Land Rover"
+   ],
+   "it": [
+    "Robert Bosch",
+    "Yandex",
+    "Land Rover"
+   ],
+   "pt": [
+    "Robert Bosch GmbH",
+    "Yandex",
+    "Land Rover"
+   ]
+  }
+ },
+ {
+  "key": "w-q1218180",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Nikon_Logo.svg/1280px-Nikon_Logo.svg.png",
+  "file": "File:Nikon Logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Nikon",
+   "ka": "Nikon",
+   "de": "Nikon",
+   "es": "Nikon",
+   "fr": "Nikon",
+   "it": "Nikon Corporation",
+   "pt": "Nikon"
+  },
+  "wrong": {
+   "en": [
+    "Austrian Airlines",
+    "Reuters",
+    "Oppo"
+   ],
+   "ka": [
+    "Austrian Airlines",
+    "Reuters",
+    "სს ოპპა"
+   ],
+   "de": [
+    "Austrian Airlines",
+    "Reuters",
+    "Oppo Electronics"
+   ],
+   "es": [
+    "Austrian Airlines",
+    "Reuters",
+    "Oppo"
+   ],
+   "fr": [
+    "Austrian Airlines",
+    "Reuters",
+    "Oppo"
+   ],
+   "it": [
+    "Austrian Airlines",
+    "Reuters",
+    "Oppo Digital"
+   ],
+   "pt": [
+    "Austrian Airlines",
+    "Reuters",
+    "Oppo"
+   ]
+  }
+ },
+ {
+  "key": "w-q486156",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/f/f4/UiO_logo.png",
+  "file": "File:UiO logo.png",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "University of Oslo",
+   "ka": "ოსლოს უნივერსიტეტი",
+   "de": "Universität Oslo",
+   "es": "Universidad de Oslo",
+   "fr": "Université d'Oslo",
+   "it": "Università di Oslo",
+   "pt": "Universidade de Oslo"
+  },
+  "wrong": {
+   "en": [
+    "United Artists",
+    "Metro-Goldwyn-Mayer",
+    "Lancia"
+   ],
+   "ka": [
+    "United Artists",
+    "Metro-Goldwyn-Mayer",
+    "Lancia"
+   ],
+   "de": [
+    "United Artists",
+    "Metro-Goldwyn-Mayer",
+    "Lancia"
+   ],
+   "es": [
+    "United Artists",
+    "Metro-Goldwyn-Mayer",
+    "Lancia"
+   ],
+   "fr": [
+    "United Artists",
+    "Metro-Goldwyn-Mayer",
+    "Lancia"
+   ],
+   "it": [
+    "United Artists",
+    "Metro-Goldwyn-Mayer",
+    "Lancia"
+   ],
+   "pt": [
+    "United Artists",
+    "Metro-Goldwyn-Mayer",
+    "Lancia"
+   ]
+  }
+ },
+ {
+  "key": "w-q35907",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Land_Rover_2023.svg/1280px-Land_Rover_2023.svg.png",
+  "file": "File:Land Rover 2023.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Land Rover",
+   "ka": "lend rover",
+   "de": "Land Rover",
+   "es": "Land Rover",
+   "fr": "Land Rover",
+   "it": "Land Rover",
+   "pt": "Land Rover"
+  },
+  "wrong": {
+   "en": [
+    "Rotten Tomatoes",
+    "Rolex",
+    "Acer"
+   ],
+   "ka": [
+    "Rotten Tomatoes",
+    "Rolex",
+    "Acer"
+   ],
+   "de": [
+    "Rotten Tomatoes",
+    "Rolex",
+    "Acer"
+   ],
+   "es": [
+    "Rotten Tomatoes",
+    "Rolex",
+    "Acer"
+   ],
+   "fr": [
+    "Rotten Tomatoes",
+    "Rolex",
+    "Acer"
+   ],
+   "it": [
+    "Rotten Tomatoes",
+    "Rolex",
+    "Acer"
+   ],
+   "pt": [
+    "Rotten Tomatoes",
+    "Rolex",
+    "Acer"
+   ]
+  }
+ },
+ {
+  "key": "w-q208033",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Qatar_Airways_logo.svg/1280px-Qatar_Airways_logo.svg.png",
+  "file": "File:Qatar Airways logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Qatar Airways",
+   "ka": "Qatar Airways",
+   "de": "Qatar Airways",
+   "es": "Qatar Airways",
+   "fr": "Qatar Airways",
+   "it": "Qatar Airways",
+   "pt": "Qatar Airways"
+  },
+  "wrong": {
+   "en": [
+    "Aeroflot",
+    "Toshiba",
+    "Tata Motors Ltd"
+   ],
+   "ka": [
+    "აეროფლოტი",
+    "Toshiba",
+    "Tata Motors"
+   ],
+   "de": [
+    "Aeroflot",
+    "Toshiba",
+    "Tata Motors"
+   ],
+   "es": [
+    "Aeroflot",
+    "Toshiba",
+    "Tata Motors"
+   ],
+   "fr": [
+    "Aeroflot",
+    "Toshiba",
+    "Tata"
+   ],
+   "it": [
+    "Aeroflot",
+    "Toshiba",
+    "Tata Motors"
+   ],
+   "pt": [
+    "Aeroflot",
+    "Toshiba",
+    "Tata Motors"
+   ]
+  }
+ },
+ {
+  "key": "w-q781770",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Austrian_Airlines_Logo_2018.svg/1280px-Austrian_Airlines_Logo_2018.svg.png",
+  "file": "File:Austrian Airlines Logo 2018.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Austrian Airlines",
+   "ka": "Austrian Airlines",
+   "de": "Austrian Airlines",
+   "es": "Austrian Airlines",
+   "fr": "Austrian Airlines",
+   "it": "Austrian Airlines",
+   "pt": "Austrian Airlines"
+  },
+  "wrong": {
+   "en": [
+    "University of Oslo",
+    "Land Rover",
+    "Sharp Corporation"
+   ],
+   "ka": [
+    "ოსლოს უნივერსიტეტი",
+    "lend rover",
+    "Sharp"
+   ],
+   "de": [
+    "Universität Oslo",
+    "Land Rover",
+    "Sharp"
+   ],
+   "es": [
+    "Universidad de Oslo",
+    "Land Rover",
+    "Sharp Corporation"
+   ],
+   "fr": [
+    "Université d'Oslo",
+    "Land Rover",
+    "Sharp"
+   ],
+   "it": [
+    "Università di Oslo",
+    "Land Rover",
+    "Sharp Corporation"
+   ],
+   "pt": [
+    "Universidade de Oslo",
+    "Land Rover",
+    "Sharp Corporation"
+   ]
+  }
+ },
+ {
+  "key": "w-q234021",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Bosch-logo.svg/1280px-Bosch-logo.svg.png",
+  "file": "File:Bosch-logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Robert Bosch",
+   "ka": "ბოში",
+   "de": "Robert Bosch",
+   "es": "Robert Bosch GmbH",
+   "fr": "Robert Bosch",
+   "it": "Robert Bosch",
+   "pt": "Robert Bosch GmbH"
+  },
+  "wrong": {
+   "en": [
+    "Agence France-Presse",
+    "Tata Motors Ltd",
+    "Lancia"
+   ],
+   "ka": [
+    "ფრანს-პრესი",
+    "Tata Motors",
+    "Lancia"
+   ],
+   "de": [
+    "Agence France-Presse",
+    "Tata Motors",
+    "Lancia"
+   ],
+   "es": [
+    "Agence France-Presse",
+    "Tata Motors",
+    "Lancia"
+   ],
+   "fr": [
+    "Agence France-Presse",
+    "Tata",
+    "Lancia"
+   ],
+   "it": [
+    "Agence France-Presse",
+    "Tata Motors",
+    "Lancia"
+   ],
+   "pt": [
+    "Agence France-Presse",
+    "Tata Motors",
+    "Lancia"
+   ]
+  }
+ },
+ {
+  "key": "w-q193136",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Prada-Logo.svg/1280px-Prada-Logo.svg.png",
+  "file": "File:Prada-Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Prada",
+   "ka": "Prada",
+   "de": "Prada",
+   "es": "Prada",
+   "fr": "Prada",
+   "it": "Prada",
+   "pt": "Prada"
+  },
+  "wrong": {
+   "en": [
+    "Agence France-Presse",
+    "Tata Motors Ltd",
+    "United Artists"
+   ],
+   "ka": [
+    "ფრანს-პრესი",
+    "Tata Motors",
+    "United Artists"
+   ],
+   "de": [
+    "Agence France-Presse",
+    "Tata Motors",
+    "United Artists"
+   ],
+   "es": [
+    "Agence France-Presse",
+    "Tata Motors",
+    "United Artists"
+   ],
+   "fr": [
+    "Agence France-Presse",
+    "Tata",
+    "United Artists"
+   ],
+   "it": [
+    "Agence France-Presse",
+    "Tata Motors",
+    "United Artists"
+   ],
+   "pt": [
+    "Agence France-Presse",
+    "Tata Motors",
+    "United Artists"
+   ]
+  }
+ },
+ {
+  "key": "w-q218506",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Logotyp_Lunds_universitet_%28vit%29.png/1280px-Logotyp_Lunds_universitet_%28vit%29.png",
+  "file": "File:Logotyp Lunds universitet (vit).png",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Lund University",
+   "ka": "ლუნდის უნივერსიტეტი",
+   "de": "Universität Lund",
+   "es": "Universidad de Lund",
+   "fr": "université de Lund",
+   "it": "Università di Lund",
+   "pt": "Universidade de Lund"
+  },
+  "wrong": {
+   "en": [
+    "Bell Labs",
+    "Tata Motors Ltd",
+    "Disneyland"
+   ],
+   "ka": [
+    "Bell Labs",
+    "Tata Motors",
+    "დისნეილენდი"
+   ],
+   "de": [
+    "Bell Laboratories",
+    "Tata Motors",
+    "Disneyland"
+   ],
+   "es": [
+    "Bell Labs",
+    "Tata Motors",
+    "Disneyland"
+   ],
+   "fr": [
+    "Laboratoires Bell",
+    "Tata",
+    "Disneyland"
+   ],
+   "it": [
+    "Bell Labs",
+    "Tata Motors",
+    "Disneyland"
+   ],
+   "pt": [
+    "Bell Labs",
+    "Tata Motors",
+    "Disneyland"
+   ]
+  }
+ },
+ {
+  "key": "w-q192557",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/DreamWorks_Pictures.svg/1280px-DreamWorks_Pictures.svg.png",
+  "file": "File:DreamWorks Pictures.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "DreamWorks",
+   "ka": "DreamWorks",
+   "de": "DreamWorks SKG",
+   "es": "DreamWorks Pictures",
+   "fr": "DreamWorks SKG",
+   "it": "DreamWorks",
+   "pt": "DreamWorks SKG"
+  },
+  "wrong": {
+   "en": [
+    "Togg",
+    "Lund University",
+    "Brown University"
+   ],
+   "ka": [
+    "TOGG",
+    "ლუნდის უნივერსიტეტი",
+    "ბრაუნის უნივერსიტეტი"
+   ],
+   "de": [
+    "Togg",
+    "Universität Lund",
+    "Brown University"
+   ],
+   "es": [
+    "Togg",
+    "Universidad de Lund",
+    "Universidad Brown"
+   ],
+   "fr": [
+    "Togg",
+    "université de Lund",
+    "Université Brown"
+   ],
+   "it": [
+    "Togg",
+    "Università di Lund",
+    "Università Brown"
+   ],
+   "pt": [
+    "Togg",
+    "Universidade de Lund",
+    "Universidade Brown"
+   ]
+  }
+ },
+ {
+  "key": "w-q62288",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Logo_da_Rolex.png/1280px-Logo_da_Rolex.png",
+  "file": "File:Logo da Rolex.png",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Rolex",
+   "ka": "Rolex",
+   "de": "Rolex",
+   "es": "Rolex",
+   "fr": "Rolex",
+   "it": "Rolex",
+   "pt": "Rolex"
+  },
+  "wrong": {
+   "en": [
+    "Dunkin'",
+    "Tata Motors Ltd",
+    "Disneyland"
+   ],
+   "ka": [
+    "Dunkin' Donuts",
+    "Tata Motors",
+    "დისნეილენდი"
+   ],
+   "de": [
+    "Dunkin’ Donuts",
+    "Tata Motors",
+    "Disneyland"
+   ],
+   "es": [
+    "Dunkin'",
+    "Tata Motors",
+    "Disneyland"
+   ],
+   "fr": [
+    "Dunkin'",
+    "Tata",
+    "Disneyland"
+   ],
+   "it": [
+    "Dunkin' Donuts",
+    "Tata Motors",
+    "Disneyland"
+   ],
+   "pt": [
+    "Dunkin' Donuts",
+    "Tata Motors",
+    "Disneyland"
+   ]
+  }
+ },
+ {
+  "key": "w-q218115",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Chanel_logo.svg/1280px-Chanel_logo.svg.png",
+  "file": "File:Chanel logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Chanel",
+   "ka": "შანელი",
+   "de": "Chanel",
+   "es": "Chanel",
+   "fr": "Chanel",
+   "it": "Chanel",
+   "pt": "Chanel S.A"
+  },
+  "wrong": {
+   "en": [
+    "Lucasfilm",
+    "Yandex",
+    "Foxconn"
+   ],
+   "ka": [
+    "Lucasfilm",
+    "Yandex",
+    "Foxconn"
+   ],
+   "de": [
+    "Lucasfilm",
+    "Yandex",
+    "Foxconn"
+   ],
+   "es": [
+    "Lucasfilm",
+    "Yandex",
+    "Foxconn"
+   ],
+   "fr": [
+    "Lucasfilm",
+    "Yandex",
+    "Foxconn"
+   ],
+   "it": [
+    "LucasFilm",
+    "Yandex",
+    "Foxconn"
+   ],
+   "pt": [
+    "Lucasfilm",
+    "Yandex",
+    "Foxconn"
+   ]
+  }
+ },
+ {
+  "key": "w-q2084900",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/OPPO_LOGO_2019.svg/1280px-OPPO_LOGO_2019.svg.png",
+  "file": "File:OPPO LOGO 2019.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Oppo",
+   "ka": "სს ოპპა",
+   "de": "Oppo Electronics",
+   "es": "Oppo",
+   "fr": "Oppo",
+   "it": "Oppo Digital",
+   "pt": "Oppo"
+  },
+  "wrong": {
+   "en": [
+    "Prada",
+    "Wizz Air",
+    "Agence France-Presse"
+   ],
+   "ka": [
+    "Prada",
+    "Wizz Air",
+    "ფრანს-პრესი"
+   ],
+   "de": [
+    "Prada",
+    "Wizz Air",
+    "Agence France-Presse"
+   ],
+   "es": [
+    "Prada",
+    "Wizz Air",
+    "Agence France-Presse"
+   ],
+   "fr": [
+    "Prada",
+    "Wizz Air",
+    "Agence France-Presse"
+   ],
+   "it": [
+    "Prada",
+    "Wizz Air",
+    "Agence France-Presse"
+   ],
+   "pt": [
+    "Prada",
+    "Wizz Air",
+    "Agence France-Presse"
+   ]
+  }
+ },
+ {
+  "key": "w-q481778",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Acer_Group_2012.svg/1280px-Acer_Group_2012.svg.png",
+  "file": "File:Acer Group 2012.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Acer",
+   "ka": "Acer",
+   "de": "Acer",
+   "es": "Acer",
+   "fr": "Acer",
+   "it": "Acer",
+   "pt": "Acer"
+  },
+  "wrong": {
+   "en": [
+    "EMI",
+    "Prada",
+    "Duke University"
+   ],
+   "ka": [
+    "EMI",
+    "Prada",
+    "დიუკის უნივერსიტეტი"
+   ],
+   "de": [
+    "EMI",
+    "Prada",
+    "Duke University"
+   ],
+   "es": [
+    "EMI",
+    "Prada",
+    "Universidad Duke"
+   ],
+   "fr": [
+    "EMI",
+    "Prada",
+    "Université Duke"
+   ],
+   "it": [
+    "EMI",
+    "Prada",
+    "Università Duke"
+   ],
+   "pt": [
+    "EMI",
+    "Prada",
+    "Universidade Duke"
+   ]
+  }
+ },
+ {
+  "key": "w-q367466",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Marvel_Studios_2016_logo.svg/1280px-Marvel_Studios_2016_logo.svg.png",
+  "file": "File:Marvel Studios 2016 logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Marvel Studios",
+   "ka": "Marvel Studios",
+   "de": "Marvel Studios",
+   "es": "Marvel Studios",
+   "fr": "Marvel Studios",
+   "it": "Marvel Studios",
+   "pt": "Marvel Studios"
+  },
+  "wrong": {
+   "en": [
+    "General Electric",
+    "Acer",
+    "Box Office Mojo"
+   ],
+   "ka": [
+    "General Electric",
+    "Acer",
+    "Box Office Mojo"
+   ],
+   "de": [
+    "General Electric",
+    "Acer",
+    "Box Office Mojo"
+   ],
+   "es": [
+    "General Electric",
+    "Acer",
+    "Box Office Mojo"
+   ],
+   "fr": [
+    "General Electric",
+    "Acer",
+    "Box Office Mojo"
+   ],
+   "it": [
+    "General Electric",
+    "Acer",
+    "Box Office Mojo"
+   ],
+   "pt": [
+    "General Electric",
+    "Acer",
+    "Box Office Mojo"
+   ]
+  }
+ },
+ {
+  "key": "w-q35896",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Lancia_Logo_2023.svg/1280px-Lancia_Logo_2023.svg.png",
+  "file": "File:Lancia Logo 2023.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Lancia",
+   "ka": "Lancia",
+   "de": "Lancia",
+   "es": "Lancia",
+   "fr": "Lancia",
+   "it": "Lancia",
+   "pt": "Lancia"
+  },
+  "wrong": {
+   "en": [
+    "Rotten Tomatoes",
+    "Xerox",
+    "Volkswagen Group"
+   ],
+   "ka": [
+    "Rotten Tomatoes",
+    "Xerox",
+    "Volkswagen AG"
+   ],
+   "de": [
+    "Rotten Tomatoes",
+    "Xerox",
+    "Volkswagen AG"
+   ],
+   "es": [
+    "Rotten Tomatoes",
+    "Xerox",
+    "Grupo Volkswagen"
+   ],
+   "fr": [
+    "Rotten Tomatoes",
+    "Xerox",
+    "Volkswagen"
+   ],
+   "it": [
+    "Rotten Tomatoes",
+    "Xerox",
+    "Gruppo Volkswagen"
+   ],
+   "pt": [
+    "Rotten Tomatoes",
+    "Xerox",
+    "Grupo Volkswagen"
+   ]
+  }
+ },
+ {
+  "key": "w-q53238",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Hitachi_2025_logo.svg/1280px-Hitachi_2025_logo.svg.png",
+  "file": "File:Hitachi 2025 logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Hitachi",
+   "ka": "ჰიტაჩი",
+   "de": "Hitachi",
+   "es": "Hitachi, Ltd.",
+   "fr": "Hitachi",
+   "it": "Hitachi",
+   "pt": "Hitachi"
+  },
+  "wrong": {
+   "en": [
+    "Chanel",
+    "Oppo",
+    "Toshiba"
+   ],
+   "ka": [
+    "შანელი",
+    "სს ოპპა",
+    "Toshiba"
+   ],
+   "de": [
+    "Chanel",
+    "Oppo Electronics",
+    "Toshiba"
+   ],
+   "es": [
+    "Chanel",
+    "Oppo",
+    "Toshiba"
+   ],
+   "fr": [
+    "Chanel",
+    "Oppo",
+    "Toshiba"
+   ],
+   "it": [
+    "Chanel",
+    "Oppo Digital",
+    "Toshiba"
+   ],
+   "pt": [
+    "Chanel S.A",
+    "Oppo",
+    "Toshiba"
+   ]
+  }
+ },
+ {
+  "key": "w-q309031",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Logo_Lacoste_2026.svg/1280px-Logo_Lacoste_2026.svg.png",
+  "file": "File:Logo Lacoste 2026.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Lacoste",
+   "ka": "Lacoste",
+   "de": "Lacoste",
+   "es": "Lacoste",
+   "fr": "Lacoste",
+   "it": "Lacoste",
+   "pt": "Lacoste"
+  },
+  "wrong": {
+   "en": [
+    "Austrian Airlines",
+    "Robert Bosch",
+    "Lund University"
+   ],
+   "ka": [
+    "Austrian Airlines",
+    "ბოში",
+    "ლუნდის უნივერსიტეტი"
+   ],
+   "de": [
+    "Austrian Airlines",
+    "Robert Bosch",
+    "Universität Lund"
+   ],
+   "es": [
+    "Austrian Airlines",
+    "Robert Bosch GmbH",
+    "Universidad de Lund"
+   ],
+   "fr": [
+    "Austrian Airlines",
+    "Robert Bosch",
+    "université de Lund"
+   ],
+   "it": [
+    "Austrian Airlines",
+    "Robert Bosch",
+    "Università di Lund"
+   ],
+   "pt": [
+    "Austrian Airlines",
+    "Robert Bosch GmbH",
+    "Universidade de Lund"
+   ]
+  }
+ },
+ {
+  "key": "w-q219400",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/United_Artists_logo_2019.svg/1280px-United_Artists_logo_2019.svg.png",
+  "file": "File:United Artists logo 2019.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "United Artists",
+   "ka": "United Artists",
+   "de": "United Artists",
+   "es": "United Artists",
+   "fr": "United Artists",
+   "it": "United Artists",
+   "pt": "United Artists"
+  },
+  "wrong": {
+   "en": [
+    "Foxconn",
+    "General Electric",
+    "Toshiba"
+   ],
+   "ka": [
+    "Foxconn",
+    "General Electric",
+    "Toshiba"
+   ],
+   "de": [
+    "Foxconn",
+    "General Electric",
+    "Toshiba"
+   ],
+   "es": [
+    "Foxconn",
+    "General Electric",
+    "Toshiba"
+   ],
+   "fr": [
+    "Foxconn",
+    "General Electric",
+    "Toshiba"
+   ],
+   "it": [
+    "Foxconn",
+    "General Electric",
+    "Toshiba"
+   ],
+   "pt": [
+    "Foxconn",
+    "General Electric",
+    "Toshiba"
+   ]
+  }
+ },
+ {
+  "key": "w-q242446",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Lucasfilm_logo.svg/1280px-Lucasfilm_logo.svg.png",
+  "file": "File:Lucasfilm logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Lucasfilm",
+   "ka": "Lucasfilm",
+   "de": "Lucasfilm",
+   "es": "Lucasfilm",
+   "fr": "Lucasfilm",
+   "it": "LucasFilm",
+   "pt": "Lucasfilm"
+  },
+  "wrong": {
+   "en": [
+    "Hitachi",
+    "Togg",
+    "Rijksmuseum"
+   ],
+   "ka": [
+    "ჰიტაჩი",
+    "TOGG",
+    "რეიკსმუზეუმი"
+   ],
+   "de": [
+    "Hitachi",
+    "Togg",
+    "Rijksmuseum"
+   ],
+   "es": [
+    "Hitachi, Ltd.",
+    "Togg",
+    "Rijksmuseum"
+   ],
+   "fr": [
+    "Hitachi",
+    "Togg",
+    "Rijksmuseum"
+   ],
+   "it": [
+    "Hitachi",
+    "Togg",
+    "Rijksmuseum"
+   ],
+   "pt": [
+    "Hitachi",
+    "Togg",
+    "Rijksmuseum"
+   ]
+  }
+ },
+ {
+  "key": "w-q696376",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Versace_old_logo.svg/1280px-Versace_old_logo.svg.png",
+  "file": "File:Versace old logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Versace",
+   "ka": "Versace",
+   "de": "Versace",
+   "es": "Versace",
+   "fr": "Versace",
+   "it": "Gianni Versace",
+   "pt": "Versace"
+  },
+  "wrong": {
+   "en": [
+    "Volkswagen Group",
+    "Chanel",
+    "Puma"
+   ],
+   "ka": [
+    "Volkswagen AG",
+    "შანელი",
+    "Puma SE"
+   ],
+   "de": [
+    "Volkswagen AG",
+    "Chanel",
+    "Puma SE"
+   ],
+   "es": [
+    "Grupo Volkswagen",
+    "Chanel",
+    "Puma"
+   ],
+   "fr": [
+    "Volkswagen",
+    "Chanel",
+    "Puma"
+   ],
+   "it": [
+    "Gruppo Volkswagen",
+    "Chanel",
+    "Puma"
+   ],
+   "pt": [
+    "Grupo Volkswagen",
+    "Chanel S.A",
+    "Puma SE"
+   ]
+  }
+ },
+ {
+  "key": "w-q52618",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Ericsson_%282018%29.svg/1280px-Ericsson_%282018%29.svg.png",
+  "file": "File:Ericsson (2018).svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Ericsson",
+   "ka": "ერიქსონი",
+   "de": "Ericsson",
+   "es": "Ericsson",
+   "fr": "Ericsson",
+   "it": "Ericsson",
+   "pt": "Ericsson"
+  },
+  "wrong": {
+   "en": [
+    "JPMorgan Chase",
+    "EMI",
+    "AOL"
+   ],
+   "ka": [
+    "JPMorgan Chase",
+    "EMI",
+    "AOL"
+   ],
+   "de": [
+    "JPMorgan Chase",
+    "EMI",
+    "AOL"
+   ],
+   "es": [
+    "JP Morgan Chase",
+    "EMI",
+    "AOL"
+   ],
+   "fr": [
+    "JPMorgan Chase",
+    "EMI",
+    "AOL"
+   ],
+   "it": [
+    "JPMorgan Chase",
+    "EMI",
+    "AmericaOnLine"
+   ],
+   "pt": [
+    "JPMorgan Chase",
+    "EMI",
+    "AOL"
+   ]
+  }
+ },
+ {
+  "key": "w-q223142",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/0/01/Box_office_Mojo.png",
+  "file": "File:Box office Mojo.png",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Box Office Mojo",
+   "ka": "Box Office Mojo",
+   "de": "Box Office Mojo",
+   "es": "Box Office Mojo",
+   "fr": "Box Office Mojo",
+   "it": "Box Office Mojo",
+   "pt": "Box Office Mojo"
+  },
+  "wrong": {
+   "en": [
+    "Robert Bosch",
+    "AirBaltic",
+    "RCA Records"
+   ],
+   "ka": [
+    "ბოში",
+    "AirBaltic",
+    "RCA Records"
+   ],
+   "de": [
+    "Robert Bosch",
+    "AirBaltic",
+    "RCA Records"
+   ],
+   "es": [
+    "Robert Bosch GmbH",
+    "AirBaltic",
+    "RCA Records"
+   ],
+   "fr": [
+    "Robert Bosch",
+    "AirBaltic",
+    "RCA Records"
+   ],
+   "it": [
+    "Robert Bosch",
+    "AirBaltic",
+    "RCA Records"
+   ],
+   "pt": [
+    "Robert Bosch GmbH",
+    "AirBaltic",
+    "RCA Records"
+   ]
+  }
+ },
+ {
+  "key": "w-q40464",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Agence_France-Presse_Logo.svg/1280px-Agence_France-Presse_Logo.svg.png",
+  "file": "File:Agence France-Presse Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Agence France-Presse",
+   "ka": "ფრანს-პრესი",
+   "de": "Agence France-Presse",
+   "es": "Agence France-Presse",
+   "fr": "Agence France-Presse",
+   "it": "Agence France-Presse",
+   "pt": "Agence France-Presse"
+  },
+  "wrong": {
+   "en": [
+    "Marvel Studios",
+    "DreamWorks",
+    "Foxconn"
+   ],
+   "ka": [
+    "Marvel Studios",
+    "DreamWorks",
+    "Foxconn"
+   ],
+   "de": [
+    "Marvel Studios",
+    "DreamWorks SKG",
+    "Foxconn"
+   ],
+   "es": [
+    "Marvel Studios",
+    "DreamWorks Pictures",
+    "Foxconn"
+   ],
+   "fr": [
+    "Marvel Studios",
+    "DreamWorks SKG",
+    "Foxconn"
+   ],
+   "it": [
+    "Marvel Studios",
+    "DreamWorks",
+    "Foxconn"
+   ],
+   "pt": [
+    "Marvel Studios",
+    "DreamWorks SKG",
+    "Foxconn"
+   ]
+  }
+ },
+ {
+  "key": "w-q53227",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Logo_of_the_Sharp_Corporation.svg/1280px-Logo_of_the_Sharp_Corporation.svg.png",
+  "file": "File:Logo of the Sharp Corporation.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Sharp Corporation",
+   "ka": "Sharp",
+   "de": "Sharp",
+   "es": "Sharp Corporation",
+   "fr": "Sharp",
+   "it": "Sharp Corporation",
+   "pt": "Sharp Corporation"
+  },
+  "wrong": {
+   "en": [
+    "Acer",
+    "Box Office Mojo",
+    "Domino's Pizza"
+   ],
+   "ka": [
+    "Acer",
+    "Box Office Mojo",
+    "Domino's"
+   ],
+   "de": [
+    "Acer",
+    "Box Office Mojo",
+    "Domino’s Pizza"
+   ],
+   "es": [
+    "Acer",
+    "Box Office Mojo",
+    "Domino's Pizza"
+   ],
+   "fr": [
+    "Acer",
+    "Box Office Mojo",
+    "Domino's Pizza"
+   ],
+   "it": [
+    "Acer",
+    "Box Office Mojo",
+    "Domino's Pizza"
+   ],
+   "pt": [
+    "Acer",
+    "Box Office Mojo",
+    "Domino's Pizza"
+   ]
+  }
+ },
+ {
+  "key": "w-q45700",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Konami_4th_logo_1.svg/1280px-Konami_4th_logo_1.svg.png",
+  "file": "File:Konami 4th logo 1.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Konami",
+   "ka": "Konami",
+   "de": "Konami",
+   "es": "Konami",
+   "fr": "Konami",
+   "it": "Konami",
+   "pt": "Konami"
+  },
+  "wrong": {
+   "en": [
+    "Puma",
+    "Grameen Bank",
+    "Foxconn"
+   ],
+   "ka": [
+    "Puma SE",
+    "გრამინ ბანკი",
+    "Foxconn"
+   ],
+   "de": [
+    "Puma SE",
+    "Grameen Bank",
+    "Foxconn"
+   ],
+   "es": [
+    "Puma",
+    "Banco Grameen",
+    "Foxconn"
+   ],
+   "fr": [
+    "Puma",
+    "Grameen Bank",
+    "Foxconn"
+   ],
+   "it": [
+    "Puma",
+    "Grameen Bank",
+    "Foxconn"
+   ],
+   "pt": [
+    "Puma SE",
+    "Grameen Bank",
+    "Foxconn"
+   ]
+  }
+ },
+ {
+  "key": "w-q14428",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Capcom_logo.svg/1280px-Capcom_logo.svg.png",
+  "file": "File:Capcom logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Capcom",
+   "ka": "Capcom",
+   "de": "Capcom",
+   "es": "Capcom",
+   "fr": "Capcom",
+   "it": "Capcom",
+   "pt": "Capcom"
+  },
+  "wrong": {
+   "en": [
+    "United Artists",
+    "Puma",
+    "Aegean Airlines"
+   ],
+   "ka": [
+    "United Artists",
+    "Puma SE",
+    "Aegean Airlines"
+   ],
+   "de": [
+    "United Artists",
+    "Puma SE",
+    "Aegean Airlines"
+   ],
+   "es": [
+    "United Artists",
+    "Puma",
+    "Aegean Airlines"
+   ],
+   "fr": [
+    "United Artists",
+    "Puma",
+    "Aegean Airlines"
+   ],
+   "it": [
+    "United Artists",
+    "Puma",
+    "Aegean Airlines"
+   ],
+   "pt": [
+    "United Artists",
+    "Puma SE",
+    "Aegean Airlines"
+   ]
+  }
+ },
+ {
+  "key": "w-q192314",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Logo_of_JPMorganChase_2024.svg/1280px-Logo_of_JPMorganChase_2024.svg.png",
+  "file": "File:Logo of JPMorganChase 2024.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "JPMorgan Chase",
+   "ka": "JPMorgan Chase",
+   "de": "JPMorgan Chase",
+   "es": "JP Morgan Chase",
+   "fr": "JPMorgan Chase",
+   "it": "JPMorgan Chase",
+   "pt": "JPMorgan Chase"
+  },
+  "wrong": {
+   "en": [
+    "Air New Zealand",
+    "Lidl",
+    "University of Oslo"
+   ],
+   "ka": [
+    "Air New Zealand",
+    "Lidl",
+    "ოსლოს უნივერსიტეტი"
+   ],
+   "de": [
+    "Air New Zealand",
+    "Lidl",
+    "Universität Oslo"
+   ],
+   "es": [
+    "Air New Zealand",
+    "Lidl",
+    "Universidad de Oslo"
+   ],
+   "fr": [
+    "Air New Zealand",
+    "Lidl",
+    "Université d'Oslo"
+   ],
+   "it": [
+    "Air New Zealand",
+    "Lidl",
+    "Università di Oslo"
+   ],
+   "pt": [
+    "Air New Zealand",
+    "Lidl",
+    "Universidade de Oslo"
+   ]
+  }
+ },
+ {
+  "key": "w-q188567",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/%E0%A6%97%E0%A7%8D%E0%A6%B0%E0%A6%BE%E0%A6%AE%E0%A7%80%E0%A6%A3_%E0%A6%AC%E0%A7%8D%E0%A6%AF%E0%A6%BE%E0%A6%82%E0%A6%95%E0%A7%87%E0%A6%B0_%E0%A6%AA%E0%A7%8D%E0%A6%B0%E0%A6%A4%E0%A7%80%E0%A6%95.svg/1280px-%E0%A6%97%E0%A7%8D%E0%A6%B0%E0%A6%BE%E0%A6%AE%E0%A7%80%E0%A6%A3_%E0%A6%AC%E0%A7%8D%E0%A6%AF%E0%A6%BE%E0%A6%82%E0%A6%95%E0%A7%87%E0%A6%B0_%E0%A6%AA%E0%A7%8D%E0%A6%B0%E0%A6%A4%E0%A7%80%E0%A6%95.svg.png",
+  "file": "File:গ্রামীণ ব্যাংকের প্রতীক.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Grameen Bank",
+   "ka": "გრამინ ბანკი",
+   "de": "Grameen Bank",
+   "es": "Banco Grameen",
+   "fr": "Grameen Bank",
+   "it": "Grameen Bank",
+   "pt": "Grameen Bank"
+  },
+  "wrong": {
+   "en": [
+    "AirBaltic",
+    "Aegean Airlines",
+    "The New Yorker"
+   ],
+   "ka": [
+    "AirBaltic",
+    "Aegean Airlines",
+    "ნიუ-იორკერი"
+   ],
+   "de": [
+    "AirBaltic",
+    "Aegean Airlines",
+    "The New Yorker"
+   ],
+   "es": [
+    "AirBaltic",
+    "Aegean Airlines",
+    "The New Yorker"
+   ],
+   "fr": [
+    "AirBaltic",
+    "Aegean Airlines",
+    "The New Yorker"
+   ],
+   "it": [
+    "AirBaltic",
+    "Aegean Airlines",
+    "The New Yorker"
+   ],
+   "pt": [
+    "AirBaltic",
+    "Aegean Airlines",
+    "The New Yorker"
+   ]
+  }
+ },
+ {
+  "key": "w-q217365",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Nokia_Bell_Labs_2023.svg/1280px-Nokia_Bell_Labs_2023.svg.png",
+  "file": "File:Nokia Bell Labs 2023.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Bell Labs",
+   "ka": "Bell Labs",
+   "de": "Bell Laboratories",
+   "es": "Bell Labs",
+   "fr": "Laboratoires Bell",
+   "it": "Bell Labs",
+   "pt": "Bell Labs"
+  },
+  "wrong": {
+   "en": [
+    "Versace",
+    "Volkswagen Group",
+    "AOL"
+   ],
+   "ka": [
+    "Versace",
+    "Volkswagen AG",
+    "AOL"
+   ],
+   "de": [
+    "Versace",
+    "Volkswagen AG",
+    "AOL"
+   ],
+   "es": [
+    "Versace",
+    "Grupo Volkswagen",
+    "AOL"
+   ],
+   "fr": [
+    "Versace",
+    "Volkswagen",
+    "AOL"
+   ],
+   "it": [
+    "Gianni Versace",
+    "Gruppo Volkswagen",
+    "AmericaOnLine"
+   ],
+   "pt": [
+    "Versace",
+    "Grupo Volkswagen",
+    "AOL"
+   ]
+  }
+ },
+ {
+  "key": "w-q151954",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Lidl-Logo.svg/1280px-Lidl-Logo.svg.png",
+  "file": "File:Lidl-Logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Lidl",
+   "ka": "Lidl",
+   "de": "Lidl",
+   "es": "Lidl",
+   "fr": "Lidl",
+   "it": "Lidl",
+   "pt": "Lidl"
+  },
+  "wrong": {
+   "en": [
+    "Lancia",
+    "YG Entertainment",
+    "Bell Labs"
+   ],
+   "ka": [
+    "Lancia",
+    "YG Entertainment",
+    "Bell Labs"
+   ],
+   "de": [
+    "Lancia",
+    "YG Entertainment",
+    "Bell Laboratories"
+   ],
+   "es": [
+    "Lancia",
+    "YG Entertainment",
+    "Bell Labs"
+   ],
+   "fr": [
+    "Lancia",
+    "YG Entertainment",
+    "Laboratoires Bell"
+   ],
+   "it": [
+    "Lancia",
+    "YG Entertainment",
+    "Bell Labs"
+   ],
+   "pt": [
+    "Lancia",
+    "YG Entertainment",
+    "Bell Labs"
+   ]
+  }
+ },
+ {
+  "key": "w-q183412",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/EMI_logo.svg/1280px-EMI_logo.svg.png",
+  "file": "File:EMI logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "EMI",
+   "ka": "EMI",
+   "de": "EMI",
+   "es": "EMI",
+   "fr": "EMI",
+   "it": "EMI",
+   "pt": "EMI"
+  },
+  "wrong": {
+   "en": [
+    "Taco Bell",
+    "United Artists",
+    "Virgin Records"
+   ],
+   "ka": [
+    "Taco Bell",
+    "United Artists",
+    "Virgin Records"
+   ],
+   "de": [
+    "Taco Bell",
+    "United Artists",
+    "Virgin Records"
+   ],
+   "es": [
+    "Taco Bell",
+    "United Artists",
+    "Virgin Records"
+   ],
+   "fr": [
+    "Taco Bell",
+    "United Artists",
+    "Virgin Records"
+   ],
+   "it": [
+    "Taco Bell",
+    "United Artists",
+    "Virgin Records"
+   ],
+   "pt": [
+    "Taco Bell",
+    "United Artists",
+    "Virgin Records"
+   ]
+  }
+ },
+ {
+  "key": "w-q463094",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Foxconn_Logo.svg/1280px-Foxconn_Logo.svg.png",
+  "file": "File:Foxconn Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Foxconn",
+   "ka": "Foxconn",
+   "de": "Foxconn",
+   "es": "Foxconn",
+   "fr": "Foxconn",
+   "it": "Foxconn",
+   "pt": "Foxconn"
+  },
+  "wrong": {
+   "en": [
+    "Agence France-Presse",
+    "Versace",
+    "Prada"
+   ],
+   "ka": [
+    "ფრანს-პრესი",
+    "Versace",
+    "Prada"
+   ],
+   "de": [
+    "Agence France-Presse",
+    "Versace",
+    "Prada"
+   ],
+   "es": [
+    "Agence France-Presse",
+    "Versace",
+    "Prada"
+   ],
+   "fr": [
+    "Agence France-Presse",
+    "Versace",
+    "Prada"
+   ],
+   "it": [
+    "Agence France-Presse",
+    "Gianni Versace",
+    "Prada"
+   ],
+   "pt": [
+    "Agence France-Presse",
+    "Versace",
+    "Prada"
+   ]
+  }
+ },
+ {
+  "key": "w-q839466",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Domino%27s_2025.svg/1280px-Domino%27s_2025.svg.png",
+  "file": "File:Domino's 2025.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Domino's Pizza",
+   "ka": "Domino's",
+   "de": "Domino’s Pizza",
+   "es": "Domino's Pizza",
+   "fr": "Domino's Pizza",
+   "it": "Domino's Pizza",
+   "pt": "Domino's Pizza"
+  },
+  "wrong": {
+   "en": [
+    "Wendy's",
+    "Dunkin'",
+    "Air New Zealand"
+   ],
+   "ka": [
+    "ვენდისი",
+    "Dunkin' Donuts",
+    "Air New Zealand"
+   ],
+   "de": [
+    "Wendy’s",
+    "Dunkin’ Donuts",
+    "Air New Zealand"
+   ],
+   "es": [
+    "Wendy's",
+    "Dunkin'",
+    "Air New Zealand"
+   ],
+   "fr": [
+    "Wendy's",
+    "Dunkin'",
+    "Air New Zealand"
+   ],
+   "it": [
+    "Wendy's",
+    "Dunkin' Donuts",
+    "Air New Zealand"
+   ],
+   "pt": [
+    "Wendy's",
+    "Dunkin' Donuts",
+    "Air New Zealand"
+   ]
+  }
+ },
+ {
+  "key": "w-q217305",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/The_New_Yorker.svg/1280px-The_New_Yorker.svg.png",
+  "file": "File:The New Yorker.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "The New Yorker",
+   "ka": "ნიუ-იორკერი",
+   "de": "The New Yorker",
+   "es": "The New Yorker",
+   "fr": "The New Yorker",
+   "it": "The New Yorker",
+   "pt": "The New Yorker"
+  },
+  "wrong": {
+   "en": [
+    "Air New Zealand",
+    "AvtoVAZ",
+    "AirBaltic"
+   ],
+   "ka": [
+    "Air New Zealand",
+    "ავტოვაზი",
+    "AirBaltic"
+   ],
+   "de": [
+    "Air New Zealand",
+    "AwtoWAS",
+    "AirBaltic"
+   ],
+   "es": [
+    "Air New Zealand",
+    "AvtoVAZ",
+    "AirBaltic"
+   ],
+   "fr": [
+    "Air New Zealand",
+    "AvtoVAZ",
+    "AirBaltic"
+   ],
+   "it": [
+    "Air New Zealand",
+    "AvtoVAZ",
+    "AirBaltic"
+   ],
+   "pt": [
+    "Air New Zealand",
+    "AvtoVAZ",
+    "AirBaltic"
+   ]
+  }
+ },
+ {
+  "key": "w-q204296",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Air_New_Zealand_logo.svg/1280px-Air_New_Zealand_logo.svg.png",
+  "file": "File:Air New Zealand logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Air New Zealand",
+   "ka": "Air New Zealand",
+   "de": "Air New Zealand",
+   "es": "Air New Zealand",
+   "fr": "Air New Zealand",
+   "it": "Air New Zealand",
+   "pt": "Air New Zealand"
+  },
+  "wrong": {
+   "en": [
+    "Xerox",
+    "SM Entertainment",
+    "Bell Labs"
+   ],
+   "ka": [
+    "Xerox",
+    "S.M.Entertainment",
+    "Bell Labs"
+   ],
+   "de": [
+    "Xerox",
+    "S.M. Entertainment",
+    "Bell Laboratories"
+   ],
+   "es": [
+    "Xerox",
+    "SM Entertainment",
+    "Bell Labs"
+   ],
+   "fr": [
+    "Xerox",
+    "SM Entertainment",
+    "Laboratoires Bell"
+   ],
+   "it": [
+    "Xerox",
+    "S.M. Entertainment",
+    "Bell Labs"
+   ],
+   "pt": [
+    "Xerox",
+    "SM Entertainment",
+    "Bell Labs"
+   ]
+  }
+ },
+ {
+  "key": "w-q79202",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/New_Line_Cinema_2024.svg/1280px-New_Line_Cinema_2024.svg.png",
+  "file": "File:New Line Cinema 2024.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "New Line Cinema",
+   "ka": "New Line Cinema",
+   "de": "New Line Cinema",
+   "es": "New Line Cinema",
+   "fr": "New Line Cinema",
+   "it": "New Line Cinema",
+   "pt": "New Line Cinema"
+  },
+  "wrong": {
+   "en": [
+    "Marvel Studios",
+    "RCA Records",
+    "Miramax"
+   ],
+   "ka": [
+    "Marvel Studios",
+    "RCA Records",
+    "Miramax"
+   ],
+   "de": [
+    "Marvel Studios",
+    "RCA Records",
+    "Miramax Films"
+   ],
+   "es": [
+    "Marvel Studios",
+    "RCA Records",
+    "Miramax"
+   ],
+   "fr": [
+    "Marvel Studios",
+    "RCA Records",
+    "Miramax Films"
+   ],
+   "it": [
+    "Marvel Studios",
+    "RCA Records",
+    "Miramax Films"
+   ],
+   "pt": [
+    "Marvel Studios",
+    "RCA Records",
+    "Miramax Films"
+   ]
+  }
+ },
+ {
+  "key": "w-q847743",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Dunkin%27_2022.svg/1280px-Dunkin%27_2022.svg.png",
+  "file": "File:Dunkin' 2022.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Dunkin'",
+   "ka": "Dunkin' Donuts",
+   "de": "Dunkin’ Donuts",
+   "es": "Dunkin'",
+   "fr": "Dunkin'",
+   "it": "Dunkin' Donuts",
+   "pt": "Dunkin' Donuts"
+  },
+  "wrong": {
+   "en": [
+    "Casio",
+    "Air New Zealand",
+    "Hitachi"
+   ],
+   "ka": [
+    "Casio",
+    "Air New Zealand",
+    "ჰიტაჩი"
+   ],
+   "de": [
+    "Casio",
+    "Air New Zealand",
+    "Hitachi"
+   ],
+   "es": [
+    "Casio",
+    "Air New Zealand",
+    "Hitachi, Ltd."
+   ],
+   "fr": [
+    "Casio",
+    "Air New Zealand",
+    "Hitachi"
+   ],
+   "it": [
+    "Casio",
+    "Air New Zealand",
+    "Hitachi"
+   ],
+   "pt": [
+    "Casio",
+    "Air New Zealand",
+    "Hitachi"
+   ]
+  }
+ },
+ {
+  "key": "w-q217338",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Casio_logo.svg/1280px-Casio_logo.svg.png",
+  "file": "File:Casio logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Casio",
+   "ka": "Casio",
+   "de": "Casio",
+   "es": "Casio",
+   "fr": "Casio",
+   "it": "Casio",
+   "pt": "Casio"
+  },
+  "wrong": {
+   "en": [
+    "Xerox",
+    "Aegean Airlines",
+    "Hugo Boss"
+   ],
+   "ka": [
+    "Xerox",
+    "Aegean Airlines",
+    "Hugo Boss"
+   ],
+   "de": [
+    "Xerox",
+    "Aegean Airlines",
+    "Hugo Boss"
+   ],
+   "es": [
+    "Xerox",
+    "Aegean Airlines",
+    "Hugo Boss AG"
+   ],
+   "fr": [
+    "Xerox",
+    "Aegean Airlines",
+    "Hugo Boss"
+   ],
+   "it": [
+    "Xerox",
+    "Aegean Airlines",
+    "Hugo Boss"
+   ],
+   "pt": [
+    "Xerox",
+    "Aegean Airlines",
+    "Hugo Boss"
+   ]
+  }
+ },
+ {
+  "key": "w-q113215",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Carlsberg_Group.png/1280px-Carlsberg_Group.png",
+  "file": "File:Carlsberg Group.png",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Carlsberg Group",
+   "ka": "Carlsberg",
+   "de": "Carlsberg",
+   "es": "Grupo Carlsberg",
+   "fr": "Carlsberg",
+   "it": "Carlsberg",
+   "pt": "Carlsberg Group"
+  },
+  "wrong": {
+   "en": [
+    "EMI",
+    "New Line Cinema",
+    "Lukoil"
+   ],
+   "ka": [
+    "EMI",
+    "New Line Cinema",
+    "ლუკოილი"
+   ],
+   "de": [
+    "EMI",
+    "New Line Cinema",
+    "Lukoil"
+   ],
+   "es": [
+    "EMI",
+    "New Line Cinema",
+    "LUKoil"
+   ],
+   "fr": [
+    "EMI",
+    "New Line Cinema",
+    "Lukoil"
+   ],
+   "it": [
+    "EMI",
+    "New Line Cinema",
+    "LUKoil"
+   ],
+   "pt": [
+    "EMI",
+    "New Line Cinema",
+    "LUKoil"
+   ]
+  }
+ },
+ {
+  "key": "w-q152433",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Xerox_logo_2026.svg/1280px-Xerox_logo_2026.svg.png",
+  "file": "File:Xerox logo 2026.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Xerox",
+   "ka": "Xerox",
+   "de": "Xerox",
+   "es": "Xerox",
+   "fr": "Xerox",
+   "it": "Xerox",
+   "pt": "Xerox"
+  },
+  "wrong": {
+   "en": [
+    "Konami",
+    "Acer",
+    "The New Yorker"
+   ],
+   "ka": [
+    "Konami",
+    "Acer",
+    "ნიუ-იორკერი"
+   ],
+   "de": [
+    "Konami",
+    "Acer",
+    "The New Yorker"
+   ],
+   "es": [
+    "Konami",
+    "Acer",
+    "The New Yorker"
+   ],
+   "fr": [
+    "Konami",
+    "Acer",
+    "The New Yorker"
+   ],
+   "it": [
+    "Konami",
+    "Acer",
+    "The New Yorker"
+   ],
+   "pt": [
+    "Konami",
+    "Acer",
+    "The New Yorker"
+   ]
+  }
+ },
+ {
+  "key": "w-q335147",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Wizz_Air_logo_2015.svg/1280px-Wizz_Air_logo_2015.svg.png",
+  "file": "File:Wizz Air logo 2015.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Wizz Air",
+   "ka": "Wizz Air",
+   "de": "Wizz Air",
+   "es": "Wizz Air",
+   "fr": "Wizz Air",
+   "it": "Wizz Air",
+   "pt": "Wizz Air"
+  },
+  "wrong": {
+   "en": [
+    "University of Pisa",
+    "Aegean Airlines",
+    "Box Office Mojo"
+   ],
+   "ka": [
+    "პიზის უნივერსიტეტი",
+    "Aegean Airlines",
+    "Box Office Mojo"
+   ],
+   "de": [
+    "Universität Pisa",
+    "Aegean Airlines",
+    "Box Office Mojo"
+   ],
+   "es": [
+    "Universidad de Pisa",
+    "Aegean Airlines",
+    "Box Office Mojo"
+   ],
+   "fr": [
+    "Université de Pise",
+    "Aegean Airlines",
+    "Box Office Mojo"
+   ],
+   "it": [
+    "Università di Pisa",
+    "Aegean Airlines",
+    "Box Office Mojo"
+   ],
+   "pt": [
+    "Universidade de Pisa",
+    "Aegean Airlines",
+    "Box Office Mojo"
+   ]
+  }
+ },
+ {
+  "key": "w-q622683",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Universit%C3%A4t_Graz_logo.svg/1280px-Universit%C3%A4t_Graz_logo.svg.png",
+  "file": "File:Universität Graz logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "University of Graz",
+   "ka": "გრაცის უნივერსიტეტი",
+   "de": "Universität Graz",
+   "es": "Universidad de Graz",
+   "fr": "université de Graz",
+   "it": "Università di Graz",
+   "pt": "Universidade de Graz"
+  },
+  "wrong": {
+   "en": [
+    "Novartis",
+    "Binance",
+    "Lacoste"
+   ],
+   "ka": [
+    "ნოვარტისი",
+    "Binance",
+    "Lacoste"
+   ],
+   "de": [
+    "Novartis",
+    "Binance",
+    "Lacoste"
+   ],
+   "es": [
+    "Novartis",
+    "Binance",
+    "Lacoste"
+   ],
+   "fr": [
+    "Novartis",
+    "Binance",
+    "Lacoste"
+   ],
+   "it": [
+    "Novartis",
+    "Binance",
+    "Lacoste"
+   ],
+   "pt": [
+    "Novartis",
+    "Binance",
+    "Lacoste"
+   ]
+  }
+ },
+ {
+  "key": "w-q214480",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Dolce_%26_Gabbana_-_logo_%28Italy%2C_1985-%29.svg/1280px-Dolce_%26_Gabbana_-_logo_%28Italy%2C_1985-%29.svg.png",
+  "file": "File:Dolce & Gabbana - logo (Italy, 1985-).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Dolce & Gabbana",
+   "ka": "Dolce & Gabbana",
+   "de": "Dolce & Gabbana",
+   "es": "Dolce & Gabbana",
+   "fr": "Dolce & Gabbana",
+   "it": "Dolce & Gabbana",
+   "pt": "Dolce & Gabbana"
+  },
+  "wrong": {
+   "en": [
+    "Electrolux",
+    "Acer",
+    "RIA Novosti"
+   ],
+   "ka": [
+    "Electrolux",
+    "Acer",
+    "რია-ნოვოსტი"
+   ],
+   "de": [
+    "Electrolux",
+    "Acer",
+    "RIA Novosti"
+   ],
+   "es": [
+    "Electrolux",
+    "Acer",
+    "RIA Novosti"
+   ],
+   "fr": [
+    "Electrolux",
+    "Acer",
+    "RIA Novosti"
+   ],
+   "it": [
+    "Electrolux",
+    "Acer",
+    "RIA Novosti"
+   ],
+   "pt": [
+    "Electrolux",
+    "Acer",
+    "RIA Novosti"
+   ]
+  }
+ },
+ {
+  "key": "w-q27585",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/AOL_logo_%282024%29.svg/1280px-AOL_logo_%282024%29.svg.png",
+  "file": "File:AOL logo (2024).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "AOL",
+   "ka": "AOL",
+   "de": "AOL",
+   "es": "AOL",
+   "fr": "AOL",
+   "it": "AmericaOnLine",
+   "pt": "AOL"
+  },
+  "wrong": {
+   "en": [
+    "Lukoil",
+    "RCA Records",
+    "Virgin Records"
+   ],
+   "ka": [
+    "ლუკოილი",
+    "RCA Records",
+    "Virgin Records"
+   ],
+   "de": [
+    "Lukoil",
+    "RCA Records",
+    "Virgin Records"
+   ],
+   "es": [
+    "LUKoil",
+    "RCA Records",
+    "Virgin Records"
+   ],
+   "fr": [
+    "Lukoil",
+    "RCA Records",
+    "Virgin Records"
+   ],
+   "it": [
+    "LUKoil",
+    "RCA Records",
+    "Virgin Records"
+   ],
+   "pt": [
+    "LUKoil",
+    "RCA Records",
+    "Virgin Records"
+   ]
+  }
+ },
+ {
+  "key": "w-q219203",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/NEC_logo.svg/1280px-NEC_logo.svg.png",
+  "file": "File:NEC logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "NEC",
+   "ka": "NEC",
+   "de": "NEC Corporation",
+   "es": "NEC Corporation",
+   "fr": "NEC",
+   "it": "NEC Corporation",
+   "pt": "NEC Corporation"
+  },
+  "wrong": {
+   "en": [
+    "United Artists",
+    "Binance",
+    "Hitachi"
+   ],
+   "ka": [
+    "United Artists",
+    "Binance",
+    "ჰიტაჩი"
+   ],
+   "de": [
+    "United Artists",
+    "Binance",
+    "Hitachi"
+   ],
+   "es": [
+    "United Artists",
+    "Binance",
+    "Hitachi, Ltd."
+   ],
+   "fr": [
+    "United Artists",
+    "Binance",
+    "Hitachi"
+   ],
+   "it": [
+    "United Artists",
+    "Binance",
+    "Hitachi"
+   ],
+   "pt": [
+    "United Artists",
+    "Binance",
+    "Hitachi"
+   ]
+  }
+ },
+ {
+  "key": "w-q329347",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Lukoil_company_logo.svg/1280px-Lukoil_company_logo.svg.png",
+  "file": "File:Lukoil company logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Lukoil",
+   "ka": "ლუკოილი",
+   "de": "Lukoil",
+   "es": "LUKoil",
+   "fr": "Lukoil",
+   "it": "LUKoil",
+   "pt": "LUKoil"
+  },
+  "wrong": {
+   "en": [
+    "AirBaltic",
+    "Electrolux",
+    "RIA Novosti"
+   ],
+   "ka": [
+    "AirBaltic",
+    "Electrolux",
+    "რია-ნოვოსტი"
+   ],
+   "de": [
+    "AirBaltic",
+    "Electrolux",
+    "RIA Novosti"
+   ],
+   "es": [
+    "AirBaltic",
+    "Electrolux",
+    "RIA Novosti"
+   ],
+   "fr": [
+    "AirBaltic",
+    "Electrolux",
+    "RIA Novosti"
+   ],
+   "it": [
+    "AirBaltic",
+    "Electrolux",
+    "RIA Novosti"
+   ],
+   "pt": [
+    "AirBaltic",
+    "Electrolux",
+    "RIA Novosti"
+   ]
+  }
+ },
+ {
+  "key": "w-q300924",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/AirBaltic_logo.svg/1280px-AirBaltic_logo.svg.png",
+  "file": "File:AirBaltic logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "AirBaltic",
+   "ka": "AirBaltic",
+   "de": "AirBaltic",
+   "es": "AirBaltic",
+   "fr": "AirBaltic",
+   "it": "AirBaltic",
+   "pt": "AirBaltic"
+  },
+  "wrong": {
+   "en": [
+    "Maybach",
+    "EMI",
+    "Domino's Pizza"
+   ],
+   "ka": [
+    "Maybach",
+    "EMI",
+    "Domino's"
+   ],
+   "de": [
+    "Maybach",
+    "EMI",
+    "Domino’s Pizza"
+   ],
+   "es": [
+    "Maybach",
+    "EMI",
+    "Domino's Pizza"
+   ],
+   "fr": [
+    "Maybach",
+    "EMI",
+    "Domino's Pizza"
+   ],
+   "it": [
+    "Maybach-Motorenbau",
+    "EMI",
+    "Domino's Pizza"
+   ],
+   "pt": [
+    "Maybach",
+    "EMI",
+    "Domino's Pizza"
+   ]
+  }
+ },
+ {
+  "key": "w-q1129295",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Mojang_Studios_Logo_%282020%2C_wide%29.svg/1280px-Mojang_Studios_Logo_%282020%2C_wide%29.svg.png",
+  "file": "File:Mojang Studios Logo (2020, wide).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Mojang Studios",
+   "ka": "Mojang Studios",
+   "de": "Mojang Studios",
+   "es": "Mojang Studios",
+   "fr": "Mojang Studios",
+   "it": "Mojang",
+   "pt": "Mojang Studios"
+  },
+  "wrong": {
+   "en": [
+    "NEC",
+    "Deutsche Telekom",
+    "Box Office Mojo"
+   ],
+   "ka": [
+    "NEC",
+    "გერმანიის ტელეკომი",
+    "Box Office Mojo"
+   ],
+   "de": [
+    "NEC Corporation",
+    "Deutsche Telekom",
+    "Box Office Mojo"
+   ],
+   "es": [
+    "NEC Corporation",
+    "Deutsche Telekom",
+    "Box Office Mojo"
+   ],
+   "fr": [
+    "NEC",
+    "Deutsche Telekom",
+    "Box Office Mojo"
+   ],
+   "it": [
+    "NEC Corporation",
+    "Deutsche Telekom",
+    "Box Office Mojo"
+   ],
+   "pt": [
+    "NEC Corporation",
+    "Deutsche Telekom",
+    "Box Office Mojo"
+   ]
+  }
+ },
+ {
+  "key": "w-q390107",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Logo_Burberry_01.svg/1280px-Logo_Burberry_01.svg.png",
+  "file": "File:Logo Burberry 01.svg",
+  "license": "CC0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Burberry",
+   "ka": "ბარბერი",
+   "de": "Burberry",
+   "es": "Burberry",
+   "fr": "Burberry",
+   "it": "Burberry",
+   "pt": "Burberry"
+  },
+  "wrong": {
+   "en": [
+    "Carlsberg Group",
+    "Foxconn",
+    "Keio University"
+   ],
+   "ka": [
+    "Carlsberg",
+    "Foxconn",
+    "კეიოს უნივერსიტეტი"
+   ],
+   "de": [
+    "Carlsberg",
+    "Foxconn",
+    "Keiō-Universität"
+   ],
+   "es": [
+    "Grupo Carlsberg",
+    "Foxconn",
+    "Universidad de Keiō"
+   ],
+   "fr": [
+    "Carlsberg",
+    "Foxconn",
+    "université Keiō"
+   ],
+   "it": [
+    "Carlsberg",
+    "Foxconn",
+    "Università Keio"
+   ],
+   "pt": [
+    "Carlsberg Group",
+    "Foxconn",
+    "Universidade Keio"
+   ]
+  }
+ },
+ {
+  "key": "w-q380580",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Aegean_Airlines_Logo_2020.svg/1280px-Aegean_Airlines_Logo_2020.svg.png",
+  "file": "File:Aegean Airlines Logo 2020.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Aegean Airlines",
+   "ka": "Aegean Airlines",
+   "de": "Aegean Airlines",
+   "es": "Aegean Airlines",
+   "fr": "Aegean Airlines",
+   "it": "Aegean Airlines",
+   "pt": "Aegean Airlines"
+  },
+  "wrong": {
+   "en": [
+    "Taco Bell",
+    "Casio",
+    "JPMorgan Chase"
+   ],
+   "ka": [
+    "Taco Bell",
+    "Casio",
+    "JPMorgan Chase"
+   ],
+   "de": [
+    "Taco Bell",
+    "Casio",
+    "JPMorgan Chase"
+   ],
+   "es": [
+    "Taco Bell",
+    "Casio",
+    "JP Morgan Chase"
+   ],
+   "fr": [
+    "Taco Bell",
+    "Casio",
+    "JPMorgan Chase"
+   ],
+   "it": [
+    "Taco Bell",
+    "Casio",
+    "JPMorgan Chase"
+   ],
+   "pt": [
+    "Taco Bell",
+    "Casio",
+    "JPMorgan Chase"
+   ]
+  }
+ },
+ {
+  "key": "w-q9396",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Deutsche_Telekom_2022.svg/1280px-Deutsche_Telekom_2022.svg.png",
+  "file": "File:Deutsche Telekom 2022.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Deutsche Telekom",
+   "ka": "გერმანიის ტელეკომი",
+   "de": "Deutsche Telekom",
+   "es": "Deutsche Telekom",
+   "fr": "Deutsche Telekom",
+   "it": "Deutsche Telekom",
+   "pt": "Deutsche Telekom"
+  },
+  "wrong": {
+   "en": [
+    "Xerox",
+    "Konami",
+    "Daihatsu"
+   ],
+   "ka": [
+    "Xerox",
+    "Konami",
+    "Daihatsu"
+   ],
+   "de": [
+    "Xerox",
+    "Konami",
+    "Daihatsu"
+   ],
+   "es": [
+    "Xerox",
+    "Konami",
+    "Daihatsu"
+   ],
+   "fr": [
+    "Xerox",
+    "Konami",
+    "Daihatsu"
+   ],
+   "it": [
+    "Xerox",
+    "Konami",
+    "Daihatsu"
+   ],
+   "pt": [
+    "Xerox",
+    "Konami",
+    "Daihatsu"
+   ]
+  }
+ },
+ {
+  "key": "w-q202585",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/RCA_Records_%28logo%29.svg/1280px-RCA_Records_%28logo%29.svg.png",
+  "file": "File:RCA Records (logo).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "RCA Records",
+   "ka": "RCA Records",
+   "de": "RCA Records",
+   "es": "RCA Records",
+   "fr": "RCA Records",
+   "it": "RCA Records",
+   "pt": "RCA Records"
+  },
+  "wrong": {
+   "en": [
+    "Virgin Records",
+    "Mojang Studios",
+    "AirBaltic"
+   ],
+   "ka": [
+    "Virgin Records",
+    "Mojang Studios",
+    "AirBaltic"
+   ],
+   "de": [
+    "Virgin Records",
+    "Mojang Studios",
+    "AirBaltic"
+   ],
+   "es": [
+    "Virgin Records",
+    "Mojang Studios",
+    "AirBaltic"
+   ],
+   "fr": [
+    "Virgin Records",
+    "Mojang Studios",
+    "AirBaltic"
+   ],
+   "it": [
+    "Virgin Records",
+    "Mojang",
+    "AirBaltic"
+   ],
+   "pt": [
+    "Virgin Records",
+    "Mojang Studios",
+    "AirBaltic"
+   ]
+  }
+ },
+ {
+  "key": "w-q29913",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Iveco_Logo_2023.svg/1280px-Iveco_Logo_2023.svg.png",
+  "file": "File:Iveco Logo 2023.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Iveco",
+   "ka": "Iveco",
+   "de": "Iveco",
+   "es": "Iveco",
+   "fr": "Iveco",
+   "it": "Iveco",
+   "pt": "Iveco"
+  },
+  "wrong": {
+   "en": [
+    "Aegean Airlines",
+    "Mattel",
+    "Electrolux"
+   ],
+   "ka": [
+    "Aegean Airlines",
+    "Mattel",
+    "Electrolux"
+   ],
+   "de": [
+    "Aegean Airlines",
+    "Mattel",
+    "Electrolux"
+   ],
+   "es": [
+    "Aegean Airlines",
+    "Mattel",
+    "Electrolux"
+   ],
+   "fr": [
+    "Aegean Airlines",
+    "Mattel",
+    "Electrolux"
+   ],
+   "it": [
+    "Aegean Airlines",
+    "Mattel",
+    "Electrolux"
+   ],
+   "pt": [
+    "Aegean Airlines",
+    "Mattel",
+    "Electrolux"
+   ]
+  }
+ },
+ {
+  "key": "w-q21077",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Warner_Music_Group_logo_%282021%29.svg/1280px-Warner_Music_Group_logo_%282021%29.svg.png",
+  "file": "File:Warner Music Group logo (2021).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Warner Music Group",
+   "ka": "Warner Music Group",
+   "de": "Warner Music Group",
+   "es": "Warner Music Group",
+   "fr": "Warner Music Group",
+   "it": "Warner Music Group",
+   "pt": "Warner Music Group"
+  },
+  "wrong": {
+   "en": [
+    "Foxconn",
+    "The New Yorker",
+    "AirBaltic"
+   ],
+   "ka": [
+    "Foxconn",
+    "ნიუ-იორკერი",
+    "AirBaltic"
+   ],
+   "de": [
+    "Foxconn",
+    "The New Yorker",
+    "AirBaltic"
+   ],
+   "es": [
+    "Foxconn",
+    "The New Yorker",
+    "AirBaltic"
+   ],
+   "fr": [
+    "Foxconn",
+    "The New Yorker",
+    "AirBaltic"
+   ],
+   "it": [
+    "Foxconn",
+    "The New Yorker",
+    "AirBaltic"
+   ],
+   "pt": [
+    "Foxconn",
+    "The New Yorker",
+    "AirBaltic"
+   ]
+  }
+ },
+ {
+  "key": "w-q2309",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/d/d9/Lada_company_logo_image.png",
+  "file": "File:Lada company logo image.png",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "AvtoVAZ",
+   "ka": "ავტოვაზი",
+   "de": "AwtoWAS",
+   "es": "AvtoVAZ",
+   "fr": "AvtoVAZ",
+   "it": "AvtoVAZ",
+   "pt": "AvtoVAZ"
+  },
+  "wrong": {
+   "en": [
+    "Grameen Bank",
+    "Mattel",
+    "AirBaltic"
+   ],
+   "ka": [
+    "გრამინ ბანკი",
+    "Mattel",
+    "AirBaltic"
+   ],
+   "de": [
+    "Grameen Bank",
+    "Mattel",
+    "AirBaltic"
+   ],
+   "es": [
+    "Banco Grameen",
+    "Mattel",
+    "AirBaltic"
+   ],
+   "fr": [
+    "Grameen Bank",
+    "Mattel",
+    "AirBaltic"
+   ],
+   "it": [
+    "Grameen Bank",
+    "Mattel",
+    "AirBaltic"
+   ],
+   "pt": [
+    "Grameen Bank",
+    "Mattel",
+    "AirBaltic"
+   ]
+  }
+ },
+ {
+  "key": "w-q752941",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/1984TacoBellSign.svg/1280px-1984TacoBellSign.svg.png",
+  "file": "File:1984TacoBellSign.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Taco Bell",
+   "ka": "Taco Bell",
+   "de": "Taco Bell",
+   "es": "Taco Bell",
+   "fr": "Taco Bell",
+   "it": "Taco Bell",
+   "pt": "Taco Bell"
+  },
+  "wrong": {
+   "en": [
+    "The New Yorker",
+    "Virgin Records",
+    "Dunkin'"
+   ],
+   "ka": [
+    "ნიუ-იორკერი",
+    "Virgin Records",
+    "Dunkin' Donuts"
+   ],
+   "de": [
+    "The New Yorker",
+    "Virgin Records",
+    "Dunkin’ Donuts"
+   ],
+   "es": [
+    "The New Yorker",
+    "Virgin Records",
+    "Dunkin'"
+   ],
+   "fr": [
+    "The New Yorker",
+    "Virgin Records",
+    "Dunkin'"
+   ],
+   "it": [
+    "The New Yorker",
+    "Virgin Records",
+    "Dunkin' Donuts"
+   ],
+   "pt": [
+    "The New Yorker",
+    "Virgin Records",
+    "Dunkin' Donuts"
+   ]
+  }
+ },
+ {
+  "key": "w-q50595",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/YG_Entertainment_Logo.svg/1280px-YG_Entertainment_Logo.svg.png",
+  "file": "File:YG Entertainment Logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "YG Entertainment",
+   "ka": "YG Entertainment",
+   "de": "YG Entertainment",
+   "es": "YG Entertainment",
+   "fr": "YG Entertainment",
+   "it": "YG Entertainment",
+   "pt": "YG Entertainment"
+  },
+  "wrong": {
+   "en": [
+    "Dolce & Gabbana",
+    "Electrolux",
+    "Lukoil"
+   ],
+   "ka": [
+    "Dolce & Gabbana",
+    "Electrolux",
+    "ლუკოილი"
+   ],
+   "de": [
+    "Dolce & Gabbana",
+    "Electrolux",
+    "Lukoil"
+   ],
+   "es": [
+    "Dolce & Gabbana",
+    "Electrolux",
+    "LUKoil"
+   ],
+   "fr": [
+    "Dolce & Gabbana",
+    "Electrolux",
+    "Lukoil"
+   ],
+   "it": [
+    "Dolce & Gabbana",
+    "Electrolux",
+    "LUKoil"
+   ],
+   "pt": [
+    "Dolce & Gabbana",
+    "Electrolux",
+    "LUKoil"
+   ]
+  }
+ },
+ {
+  "key": "w-q203059",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Virgin-logo.svg/1280px-Virgin-logo.svg.png",
+  "file": "File:Virgin-logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Virgin Records",
+   "ka": "Virgin Records",
+   "de": "Virgin Records",
+   "es": "Virgin Records",
+   "fr": "Virgin Records",
+   "it": "Virgin Records",
+   "pt": "Virgin Records"
+  },
+  "wrong": {
+   "en": [
+    "RCA Records",
+    "Hugo Boss",
+    "SM Entertainment"
+   ],
+   "ka": [
+    "RCA Records",
+    "Hugo Boss",
+    "S.M.Entertainment"
+   ],
+   "de": [
+    "RCA Records",
+    "Hugo Boss",
+    "S.M. Entertainment"
+   ],
+   "es": [
+    "RCA Records",
+    "Hugo Boss AG",
+    "SM Entertainment"
+   ],
+   "fr": [
+    "RCA Records",
+    "Hugo Boss",
+    "SM Entertainment"
+   ],
+   "it": [
+    "RCA Records",
+    "Hugo Boss",
+    "S.M. Entertainment"
+   ],
+   "pt": [
+    "RCA Records",
+    "Hugo Boss",
+    "SM Entertainment"
+   ]
+  }
+ },
+ {
+  "key": "w-q465449",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Miramax.svg/1280px-Miramax.svg.png",
+  "file": "File:Miramax.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Miramax",
+   "ka": "Miramax",
+   "de": "Miramax Films",
+   "es": "Miramax",
+   "fr": "Miramax Films",
+   "it": "Miramax Films",
+   "pt": "Miramax Films"
+  },
+  "wrong": {
+   "en": [
+    "RIA Novosti",
+    "Binance",
+    "Lukoil"
+   ],
+   "ka": [
+    "რია-ნოვოსტი",
+    "Binance",
+    "ლუკოილი"
+   ],
+   "de": [
+    "RIA Novosti",
+    "Binance",
+    "Lukoil"
+   ],
+   "es": [
+    "RIA Novosti",
+    "Binance",
+    "LUKoil"
+   ],
+   "fr": [
+    "RIA Novosti",
+    "Binance",
+    "Lukoil"
+   ],
+   "it": [
+    "RIA Novosti",
+    "Binance",
+    "LUKoil"
+   ],
+   "pt": [
+    "RIA Novosti",
+    "Binance",
+    "LUKoil"
+   ]
+  }
+ },
+ {
+  "key": "w-q491627",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Hugo_Boss_logo_2021.svg/1280px-Hugo_Boss_logo_2021.svg.png",
+  "file": "File:Hugo Boss logo 2021.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Hugo Boss",
+   "ka": "Hugo Boss",
+   "de": "Hugo Boss",
+   "es": "Hugo Boss AG",
+   "fr": "Hugo Boss",
+   "it": "Hugo Boss",
+   "pt": "Hugo Boss"
+  },
+  "wrong": {
+   "en": [
+    "Virgin Records",
+    "SM Entertainment",
+    "Dolce & Gabbana"
+   ],
+   "ka": [
+    "Virgin Records",
+    "S.M.Entertainment",
+    "Dolce & Gabbana"
+   ],
+   "de": [
+    "Virgin Records",
+    "S.M. Entertainment",
+    "Dolce & Gabbana"
+   ],
+   "es": [
+    "Virgin Records",
+    "SM Entertainment",
+    "Dolce & Gabbana"
+   ],
+   "fr": [
+    "Virgin Records",
+    "SM Entertainment",
+    "Dolce & Gabbana"
+   ],
+   "it": [
+    "Virgin Records",
+    "S.M. Entertainment",
+    "Dolce & Gabbana"
+   ],
+   "pt": [
+    "Virgin Records",
+    "SM Entertainment",
+    "Dolce & Gabbana"
+   ]
+  }
+ },
+ {
+  "key": "w-q550258",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Wendy%27s_logo_2012.svg/1280px-Wendy%27s_logo_2012.svg.png",
+  "file": "File:Wendy's logo 2012.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Wendy's",
+   "ka": "ვენდისი",
+   "de": "Wendy’s",
+   "es": "Wendy's",
+   "fr": "Wendy's",
+   "it": "Wendy's",
+   "pt": "Wendy's"
+  },
+  "wrong": {
+   "en": [
+    "Foxconn",
+    "Lukoil",
+    "Dolce & Gabbana"
+   ],
+   "ka": [
+    "Foxconn",
+    "ლუკოილი",
+    "Dolce & Gabbana"
+   ],
+   "de": [
+    "Foxconn",
+    "Lukoil",
+    "Dolce & Gabbana"
+   ],
+   "es": [
+    "Foxconn",
+    "LUKoil",
+    "Dolce & Gabbana"
+   ],
+   "fr": [
+    "Foxconn",
+    "Lukoil",
+    "Dolce & Gabbana"
+   ],
+   "it": [
+    "Foxconn",
+    "LUKoil",
+    "Dolce & Gabbana"
+   ],
+   "pt": [
+    "Foxconn",
+    "LUKoil",
+    "Dolce & Gabbana"
+   ]
+  }
+ },
+ {
+  "key": "w-q483938",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/SM_Entertainment_Logo.svg/1280px-SM_Entertainment_Logo.svg.png",
+  "file": "File:SM Entertainment Logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "SM Entertainment",
+   "ka": "S.M.Entertainment",
+   "de": "S.M. Entertainment",
+   "es": "SM Entertainment",
+   "fr": "SM Entertainment",
+   "it": "S.M. Entertainment",
+   "pt": "SM Entertainment"
+  },
+  "wrong": {
+   "en": [
+    "Blue Sky Studios",
+    "Mattel",
+    "RCA Records"
+   ],
+   "ka": [
+    "Blue Sky Studios",
+    "Mattel",
+    "RCA Records"
+   ],
+   "de": [
+    "Blue Sky Studios",
+    "Mattel",
+    "RCA Records"
+   ],
+   "es": [
+    "Blue Sky Studios",
+    "Mattel",
+    "RCA Records"
+   ],
+   "fr": [
+    "Blue Sky Studios",
+    "Mattel",
+    "RCA Records"
+   ],
+   "it": [
+    "Blue Sky Studios",
+    "Mattel",
+    "RCA Records"
+   ],
+   "pt": [
+    "Blue Sky Studios",
+    "Mattel",
+    "RCA Records"
+   ]
+  }
+ },
+ {
+  "key": "w-q821172",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Rian_logo.gif",
+  "file": "File:Rian logo.gif",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "RIA Novosti",
+   "ka": "რია-ნოვოსტი",
+   "de": "RIA Novosti",
+   "es": "RIA Novosti",
+   "fr": "RIA Novosti",
+   "it": "RIA Novosti",
+   "pt": "RIA Novosti"
+  },
+  "wrong": {
+   "en": [
+    "University of Pisa",
+    "Swarovski",
+    "Carlsberg Group"
+   ],
+   "ka": [
+    "პიზის უნივერსიტეტი",
+    "SWAROVSKI",
+    "Carlsberg"
+   ],
+   "de": [
+    "Universität Pisa",
+    "D. Swarovski",
+    "Carlsberg"
+   ],
+   "es": [
+    "Universidad de Pisa",
+    "Swarovski",
+    "Grupo Carlsberg"
+   ],
+   "fr": [
+    "Université de Pise",
+    "Swarovski",
+    "Carlsberg"
+   ],
+   "it": [
+    "Università di Pisa",
+    "Swarovski",
+    "Carlsberg"
+   ],
+   "pt": [
+    "Universidade de Pisa",
+    "Swarovski",
+    "Carlsberg Group"
+   ]
+  }
+ },
+ {
+  "key": "w-q27511",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Daihatsu_logo_1998.svg/1280px-Daihatsu_logo_1998.svg.png",
+  "file": "File:Daihatsu logo 1998.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Daihatsu",
+   "ka": "Daihatsu",
+   "de": "Daihatsu",
+   "es": "Daihatsu",
+   "fr": "Daihatsu",
+   "it": "Daihatsu",
+   "pt": "Daihatsu"
+  },
+  "wrong": {
+   "en": [
+    "AOL",
+    "The New Yorker",
+    "Lukoil"
+   ],
+   "ka": [
+    "AOL",
+    "ნიუ-იორკერი",
+    "ლუკოილი"
+   ],
+   "de": [
+    "AOL",
+    "The New Yorker",
+    "Lukoil"
+   ],
+   "es": [
+    "AOL",
+    "The New Yorker",
+    "LUKoil"
+   ],
+   "fr": [
+    "AOL",
+    "The New Yorker",
+    "Lukoil"
+   ],
+   "it": [
+    "AmericaOnLine",
+    "The New Yorker",
+    "LUKoil"
+   ],
+   "pt": [
+    "AOL",
+    "The New Yorker",
+    "LUKoil"
+   ]
+  }
+ },
+ {
+  "key": "w-q1068628",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Calvin_klein_logo_web23.svg/1280px-Calvin_klein_logo_web23.svg.png",
+  "file": "File:Calvin klein logo web23.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Calvin Klein",
+   "ka": "Calvin Klein",
+   "de": "Calvin Klein",
+   "es": "Calvin Klein",
+   "fr": "Calvin Klein",
+   "it": "Calvin Klein",
+   "pt": "Calvin Klein"
+  },
+  "wrong": {
+   "en": [
+    "Virgin Records",
+    "Lukoil",
+    "Keio University"
+   ],
+   "ka": [
+    "Virgin Records",
+    "ლუკოილი",
+    "კეიოს უნივერსიტეტი"
+   ],
+   "de": [
+    "Virgin Records",
+    "Lukoil",
+    "Keiō-Universität"
+   ],
+   "es": [
+    "Virgin Records",
+    "LUKoil",
+    "Universidad de Keiō"
+   ],
+   "fr": [
+    "Virgin Records",
+    "Lukoil",
+    "université Keiō"
+   ],
+   "it": [
+    "Virgin Records",
+    "LUKoil",
+    "Università Keio"
+   ],
+   "pt": [
+    "Virgin Records",
+    "LUKoil",
+    "Universidade Keio"
+   ]
+  }
+ },
+ {
+  "key": "w-q507154",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Novartis-Logo-2023.svg/1280px-Novartis-Logo-2023.svg.png",
+  "file": "File:Novartis-Logo-2023.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Novartis",
+   "ka": "ნოვარტისი",
+   "de": "Novartis",
+   "es": "Novartis",
+   "fr": "Novartis",
+   "it": "Novartis",
+   "pt": "Novartis"
+  },
+  "wrong": {
+   "en": [
+    "AvtoVAZ",
+    "Iveco",
+    "Deutsche Telekom"
+   ],
+   "ka": [
+    "ავტოვაზი",
+    "Iveco",
+    "გერმანიის ტელეკომი"
+   ],
+   "de": [
+    "AwtoWAS",
+    "Iveco",
+    "Deutsche Telekom"
+   ],
+   "es": [
+    "AvtoVAZ",
+    "Iveco",
+    "Deutsche Telekom"
+   ],
+   "fr": [
+    "AvtoVAZ",
+    "Iveco",
+    "Deutsche Telekom"
+   ],
+   "it": [
+    "AvtoVAZ",
+    "Iveco",
+    "Deutsche Telekom"
+   ],
+   "pt": [
+    "AvtoVAZ",
+    "Iveco",
+    "Deutsche Telekom"
+   ]
+  }
+ },
+ {
+  "key": "w-q505922",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Electrolux_2015.svg/1280px-Electrolux_2015.svg.png",
+  "file": "File:Electrolux 2015.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Electrolux",
+   "ka": "Electrolux",
+   "de": "Electrolux",
+   "es": "Electrolux",
+   "fr": "Electrolux",
+   "it": "Electrolux",
+   "pt": "Electrolux"
+  },
+  "wrong": {
+   "en": [
+    "University of Graz",
+    "Mattel",
+    "AvtoVAZ"
+   ],
+   "ka": [
+    "გრაცის უნივერსიტეტი",
+    "Mattel",
+    "ავტოვაზი"
+   ],
+   "de": [
+    "Universität Graz",
+    "Mattel",
+    "AwtoWAS"
+   ],
+   "es": [
+    "Universidad de Graz",
+    "Mattel",
+    "AvtoVAZ"
+   ],
+   "fr": [
+    "université de Graz",
+    "Mattel",
+    "AvtoVAZ"
+   ],
+   "it": [
+    "Università di Graz",
+    "Mattel",
+    "AvtoVAZ"
+   ],
+   "pt": [
+    "Universidade de Graz",
+    "Mattel",
+    "AvtoVAZ"
+   ]
+  }
+ },
+ {
+  "key": "w-q35989",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Maybach_logo.png",
+  "file": "File:Maybach logo.png",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Maybach",
+   "ka": "Maybach",
+   "de": "Maybach",
+   "es": "Maybach",
+   "fr": "Maybach",
+   "it": "Maybach-Motorenbau",
+   "pt": "Maybach"
+  },
+  "wrong": {
+   "en": [
+    "Bethesda Softworks",
+    "YG Entertainment",
+    "AOL"
+   ],
+   "ka": [
+    "Bethesda Softworks",
+    "YG Entertainment",
+    "AOL"
+   ],
+   "de": [
+    "Bethesda Softworks",
+    "YG Entertainment",
+    "AOL"
+   ],
+   "es": [
+    "Bethesda Softworks",
+    "YG Entertainment",
+    "AOL"
+   ],
+   "fr": [
+    "Bethesda Softworks",
+    "YG Entertainment",
+    "AOL"
+   ],
+   "it": [
+    "Bethesda Softworks",
+    "YG Entertainment",
+    "AmericaOnLine"
+   ],
+   "pt": [
+    "Bethesda Softworks",
+    "YG Entertainment",
+    "AOL"
+   ]
+  }
+ },
+ {
+  "key": "w-q645663",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Emblem_of_University_of_Pisa.svg/1280px-Emblem_of_University_of_Pisa.svg.png",
+  "file": "File:Emblem of University of Pisa.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "University of Pisa",
+   "ka": "პიზის უნივერსიტეტი",
+   "de": "Universität Pisa",
+   "es": "Universidad de Pisa",
+   "fr": "Université de Pise",
+   "it": "Università di Pisa",
+   "pt": "Universidade de Pisa"
+  },
+  "wrong": {
+   "en": [
+    "Calvin Klein",
+    "SM Entertainment",
+    "Wizz Air"
+   ],
+   "ka": [
+    "Calvin Klein",
+    "S.M.Entertainment",
+    "Wizz Air"
+   ],
+   "de": [
+    "Calvin Klein",
+    "S.M. Entertainment",
+    "Wizz Air"
+   ],
+   "es": [
+    "Calvin Klein",
+    "SM Entertainment",
+    "Wizz Air"
+   ],
+   "fr": [
+    "Calvin Klein",
+    "SM Entertainment",
+    "Wizz Air"
+   ],
+   "it": [
+    "Calvin Klein",
+    "S.M. Entertainment",
+    "Wizz Air"
+   ],
+   "pt": [
+    "Calvin Klein",
+    "SM Entertainment",
+    "Wizz Air"
+   ]
+  }
+ },
+ {
+  "key": "w-q815432",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Keio_University_logo%2C_ja_and_en_3.svg/1280px-Keio_University_logo%2C_ja_and_en_3.svg.png",
+  "file": "File:Keio University logo, ja and en 3.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Keio University",
+   "ka": "კეიოს უნივერსიტეტი",
+   "de": "Keiō-Universität",
+   "es": "Universidad de Keiō",
+   "fr": "université Keiō",
+   "it": "Università Keio",
+   "pt": "Universidade Keio"
+  },
+  "wrong": {
+   "en": [
+    "The Jerusalem Post",
+    "Fendi",
+    "Calvin Klein"
+   ],
+   "ka": [
+    "იერუსალემ პოსტი",
+    "Fendi",
+    "Calvin Klein"
+   ],
+   "de": [
+    "The Jerusalem Post",
+    "Fendi",
+    "Calvin Klein"
+   ],
+   "es": [
+    "Jerusalem Post",
+    "Fendi",
+    "Calvin Klein"
+   ],
+   "fr": [
+    "The Jerusalem Post",
+    "Fendi",
+    "Calvin Klein"
+   ],
+   "it": [
+    "The Jerusalem Post",
+    "Fendi",
+    "Calvin Klein"
+   ],
+   "pt": [
+    "The Jerusalem Post",
+    "Fendi",
+    "Calvin Klein"
+   ]
+  }
+ },
+ {
+  "key": "w-q51403327",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Binance_Logo.svg/1280px-Binance_Logo.svg.png",
+  "file": "File:Binance Logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Binance",
+   "ka": "Binance",
+   "de": "Binance",
+   "es": "Binance",
+   "fr": "Binance",
+   "it": "Binance",
+   "pt": "Binance"
+  },
+  "wrong": {
+   "en": [
+    "Dolce & Gabbana",
+    "Keio University",
+    "AvtoVAZ"
+   ],
+   "ka": [
+    "Dolce & Gabbana",
+    "კეიოს უნივერსიტეტი",
+    "ავტოვაზი"
+   ],
+   "de": [
+    "Dolce & Gabbana",
+    "Keiō-Universität",
+    "AwtoWAS"
+   ],
+   "es": [
+    "Dolce & Gabbana",
+    "Universidad de Keiō",
+    "AvtoVAZ"
+   ],
+   "fr": [
+    "Dolce & Gabbana",
+    "université Keiō",
+    "AvtoVAZ"
+   ],
+   "it": [
+    "Dolce & Gabbana",
+    "Università Keio",
+    "AvtoVAZ"
+   ],
+   "pt": [
+    "Dolce & Gabbana",
+    "Universidade Keio",
+    "AvtoVAZ"
+   ]
+  }
+ },
+ {
+  "key": "w-q596139",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Mattel_%282019%29.svg/1280px-Mattel_%282019%29.svg.png",
+  "file": "File:Mattel (2019).svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Mattel",
+   "ka": "Mattel",
+   "de": "Mattel",
+   "es": "Mattel",
+   "fr": "Mattel",
+   "it": "Mattel",
+   "pt": "Mattel"
+  },
+  "wrong": {
+   "en": [
+    "Maybach",
+    "NEC",
+    "Taco Bell"
+   ],
+   "ka": [
+    "Maybach",
+    "NEC",
+    "Taco Bell"
+   ],
+   "de": [
+    "Maybach",
+    "NEC Corporation",
+    "Taco Bell"
+   ],
+   "es": [
+    "Maybach",
+    "NEC Corporation",
+    "Taco Bell"
+   ],
+   "fr": [
+    "Maybach",
+    "NEC",
+    "Taco Bell"
+   ],
+   "it": [
+    "Maybach-Motorenbau",
+    "NEC Corporation",
+    "Taco Bell"
+   ],
+   "pt": [
+    "Maybach",
+    "NEC Corporation",
+    "Taco Bell"
+   ]
+  }
+ },
+ {
+  "key": "w-q611115",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Swarovski_new_logo.svg/1280px-Swarovski_new_logo.svg.png",
+  "file": "File:Swarovski new logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Swarovski",
+   "ka": "SWAROVSKI",
+   "de": "D. Swarovski",
+   "es": "Swarovski",
+   "fr": "Swarovski",
+   "it": "Swarovski",
+   "pt": "Swarovski"
+  },
+  "wrong": {
+   "en": [
+    "Novartis",
+    "NEC",
+    "Virgin Records"
+   ],
+   "ka": [
+    "ნოვარტისი",
+    "NEC",
+    "Virgin Records"
+   ],
+   "de": [
+    "Novartis",
+    "NEC Corporation",
+    "Virgin Records"
+   ],
+   "es": [
+    "Novartis",
+    "NEC Corporation",
+    "Virgin Records"
+   ],
+   "fr": [
+    "Novartis",
+    "NEC",
+    "Virgin Records"
+   ],
+   "it": [
+    "Novartis",
+    "NEC Corporation",
+    "Virgin Records"
+   ],
+   "pt": [
+    "Novartis",
+    "NEC Corporation",
+    "Virgin Records"
+   ]
+  }
+ },
+ {
+  "key": "w-q406828",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/7/7b/AirAstanaNewLogo.png",
+  "file": "File:AirAstanaNewLogo.png",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Air Astana",
+   "ka": "Air Astana",
+   "de": "Air Astana",
+   "es": "Air Astana",
+   "fr": "Air Astana",
+   "it": "Air Astana",
+   "pt": "Air Astana"
+  },
+  "wrong": {
+   "en": [
+    "Mojang Studios",
+    "Aegean Airlines",
+    "Toei Animation"
+   ],
+   "ka": [
+    "Mojang Studios",
+    "Aegean Airlines",
+    "Toei Animation"
+   ],
+   "de": [
+    "Mojang Studios",
+    "Aegean Airlines",
+    "Tōei Animation"
+   ],
+   "es": [
+    "Mojang Studios",
+    "Aegean Airlines",
+    "Toei Animation"
+   ],
+   "fr": [
+    "Mojang Studios",
+    "Aegean Airlines",
+    "Toei Animation"
+   ],
+   "it": [
+    "Mojang",
+    "Aegean Airlines",
+    "Toei Animation"
+   ],
+   "pt": [
+    "Mojang Studios",
+    "Aegean Airlines",
+    "Toei Animation"
+   ]
+  }
+ },
+ {
+  "key": "w-q54718",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Ylen_logo.svg/1280px-Ylen_logo.svg.png",
+  "file": "File:Ylen logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Yle",
+   "ka": "YLE",
+   "de": "Yle",
+   "es": "Yleisradio",
+   "fr": "Yle",
+   "it": "Yleisradio",
+   "pt": "YLE"
+  },
+  "wrong": {
+   "en": [
+    "Aegean Airlines",
+    "NEC",
+    "Novartis"
+   ],
+   "ka": [
+    "Aegean Airlines",
+    "NEC",
+    "ნოვარტისი"
+   ],
+   "de": [
+    "Aegean Airlines",
+    "NEC Corporation",
+    "Novartis"
+   ],
+   "es": [
+    "Aegean Airlines",
+    "NEC Corporation",
+    "Novartis"
+   ],
+   "fr": [
+    "Aegean Airlines",
+    "NEC",
+    "Novartis"
+   ],
+   "it": [
+    "Aegean Airlines",
+    "NEC Corporation",
+    "Novartis"
+   ],
+   "pt": [
+    "Aegean Airlines",
+    "NEC Corporation",
+    "Novartis"
+   ]
+  }
+ },
+ {
+  "key": "w-q1205312",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/InNOut_2021_logo.svg/1280px-InNOut_2021_logo.svg.png",
+  "file": "File:InNOut 2021 logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "In-N-Out Burger",
+   "ka": "In-N-Out Burger",
+   "de": "In-N-Out",
+   "es": "In-N-Out Burger",
+   "fr": "In-N-Out Burger",
+   "it": "In-N-Out Burger",
+   "pt": "In-N-Out Burger"
+  },
+  "wrong": {
+   "en": [
+    "Miramax",
+    "Mattel",
+    "Calvin Klein"
+   ],
+   "ka": [
+    "Miramax",
+    "Mattel",
+    "Calvin Klein"
+   ],
+   "de": [
+    "Miramax Films",
+    "Mattel",
+    "Calvin Klein"
+   ],
+   "es": [
+    "Miramax",
+    "Mattel",
+    "Calvin Klein"
+   ],
+   "fr": [
+    "Miramax Films",
+    "Mattel",
+    "Calvin Klein"
+   ],
+   "it": [
+    "Miramax Films",
+    "Mattel",
+    "Calvin Klein"
+   ],
+   "pt": [
+    "Miramax Films",
+    "Mattel",
+    "Calvin Klein"
+   ]
+  }
+ },
+ {
+  "key": "w-q35438",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Jerusalem_Post_Logo.svg/1280px-Jerusalem_Post_Logo.svg.png",
+  "file": "File:Jerusalem Post Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "The Jerusalem Post",
+   "ka": "იერუსალემ პოსტი",
+   "de": "The Jerusalem Post",
+   "es": "Jerusalem Post",
+   "fr": "The Jerusalem Post",
+   "it": "The Jerusalem Post",
+   "pt": "The Jerusalem Post"
+  },
+  "wrong": {
+   "en": [
+    "Electrolux",
+    "Mojang Studios",
+    "Iveco"
+   ],
+   "ka": [
+    "Electrolux",
+    "Mojang Studios",
+    "Iveco"
+   ],
+   "de": [
+    "Electrolux",
+    "Mojang Studios",
+    "Iveco"
+   ],
+   "es": [
+    "Electrolux",
+    "Mojang Studios",
+    "Iveco"
+   ],
+   "fr": [
+    "Electrolux",
+    "Mojang Studios",
+    "Iveco"
+   ],
+   "it": [
+    "Electrolux",
+    "Mojang",
+    "Iveco"
+   ],
+   "pt": [
+    "Electrolux",
+    "Mojang Studios",
+    "Iveco"
+   ]
+  }
+ },
+ {
+  "key": "w-q926575",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Fendi_logo.svg/1280px-Fendi_logo.svg.png",
+  "file": "File:Fendi logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Fendi",
+   "ka": "Fendi",
+   "de": "Fendi",
+   "es": "Fendi",
+   "fr": "Fendi",
+   "it": "Fendi",
+   "pt": "Fendi"
+  },
+  "wrong": {
+   "en": [
+    "Hugo Boss",
+    "YG Entertainment",
+    "Electrolux"
+   ],
+   "ka": [
+    "Hugo Boss",
+    "YG Entertainment",
+    "Electrolux"
+   ],
+   "de": [
+    "Hugo Boss",
+    "YG Entertainment",
+    "Electrolux"
+   ],
+   "es": [
+    "Hugo Boss AG",
+    "YG Entertainment",
+    "Electrolux"
+   ],
+   "fr": [
+    "Hugo Boss",
+    "YG Entertainment",
+    "Electrolux"
+   ],
+   "it": [
+    "Hugo Boss",
+    "YG Entertainment",
+    "Electrolux"
+   ],
+   "pt": [
+    "Hugo Boss",
+    "YG Entertainment",
+    "Electrolux"
+   ]
+  }
+ },
+ {
+  "key": "w-q684425",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Bethesda_Softworks_Logo.svg/1280px-Bethesda_Softworks_Logo.svg.png",
+  "file": "File:Bethesda Softworks Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Bethesda Softworks",
+   "ka": "Bethesda Softworks",
+   "de": "Bethesda Softworks",
+   "es": "Bethesda Softworks",
+   "fr": "Bethesda Softworks",
+   "it": "Bethesda Softworks",
+   "pt": "Bethesda Softworks"
+  },
+  "wrong": {
+   "en": [
+    "Miramax",
+    "Aegean Airlines",
+    "RCA Records"
+   ],
+   "ka": [
+    "Miramax",
+    "Aegean Airlines",
+    "RCA Records"
+   ],
+   "de": [
+    "Miramax Films",
+    "Aegean Airlines",
+    "RCA Records"
+   ],
+   "es": [
+    "Miramax",
+    "Aegean Airlines",
+    "RCA Records"
+   ],
+   "fr": [
+    "Miramax Films",
+    "Aegean Airlines",
+    "RCA Records"
+   ],
+   "it": [
+    "Miramax Films",
+    "Aegean Airlines",
+    "RCA Records"
+   ],
+   "pt": [
+    "Miramax Films",
+    "Aegean Airlines",
+    "RCA Records"
+   ]
+  }
+ },
+ {
+  "key": "w-q730179",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/0/09/Toei_Animation_Logo.png",
+  "file": "File:Toei Animation Logo.png",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Toei Animation",
+   "ka": "Toei Animation",
+   "de": "Tōei Animation",
+   "es": "Toei Animation",
+   "fr": "Toei Animation",
+   "it": "Toei Animation",
+   "pt": "Toei Animation"
+  },
+  "wrong": {
+   "en": [
+    "Daihatsu",
+    "The Jerusalem Post",
+    "Calvin Klein"
+   ],
+   "ka": [
+    "Daihatsu",
+    "იერუსალემ პოსტი",
+    "Calvin Klein"
+   ],
+   "de": [
+    "Daihatsu",
+    "The Jerusalem Post",
+    "Calvin Klein"
+   ],
+   "es": [
+    "Daihatsu",
+    "Jerusalem Post",
+    "Calvin Klein"
+   ],
+   "fr": [
+    "Daihatsu",
+    "The Jerusalem Post",
+    "Calvin Klein"
+   ],
+   "it": [
+    "Daihatsu",
+    "The Jerusalem Post",
+    "Calvin Klein"
+   ],
+   "pt": [
+    "Daihatsu",
+    "The Jerusalem Post",
+    "Calvin Klein"
+   ]
+  }
+ },
+ {
+  "key": "w-q885885",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Blue_Sky_Studios_2013_logo.svg/1280px-Blue_Sky_Studios_2013_logo.svg.png",
+  "file": "File:Blue Sky Studios 2013 logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Blue Sky Studios",
+   "ka": "Blue Sky Studios",
+   "de": "Blue Sky Studios",
+   "es": "Blue Sky Studios",
+   "fr": "Blue Sky Studios",
+   "it": "Blue Sky Studios",
+   "pt": "Blue Sky Studios"
+  },
+  "wrong": {
+   "en": [
+    "Binance",
+    "In-N-Out Burger",
+    "RIA Novosti"
+   ],
+   "ka": [
+    "Binance",
+    "In-N-Out Burger",
+    "რია-ნოვოსტი"
+   ],
+   "de": [
+    "Binance",
+    "In-N-Out",
+    "RIA Novosti"
+   ],
+   "es": [
+    "Binance",
+    "In-N-Out Burger",
+    "RIA Novosti"
+   ],
+   "fr": [
+    "Binance",
+    "In-N-Out Burger",
+    "RIA Novosti"
+   ],
+   "it": [
+    "Binance",
+    "In-N-Out Burger",
+    "RIA Novosti"
+   ],
+   "pt": [
+    "Binance",
+    "In-N-Out Burger",
+    "RIA Novosti"
+   ]
+  }
+ }
+]

@@ -49,7 +49,15 @@ KEY_PREFIX = "w-"  # "w" for wikidata; never collides with v1/v2 keys
 # (wordmark).svg" without distinguishing them, so the rule has to be applied
 # here. It costs some famous brands. A brand nobody has to guess costs more.
 WORDMARK_FILE = re.compile(
-    r"\b(wordmark|word[ -]mark|text[ -]logo|lettering|typeface|logotype)\b", re.I)
+    r"\b(wordmark|word[ -]?mark|text[ -]?logo|lettering|typeface|logotype)\b", re.I)
+
+# A brand mark on Commons is drawn: SVG, or PNG with transparency. A JPEG
+# under P154 is almost always a photograph of the mark in the world rather
+# than the mark -- a Guinness pub sign in Gorlitz, a Vauxhall neon, a
+# Cadillac grille, a postage stamp of the Mosfilm statue, an Alfa Romeo badge
+# on the nose of a car. Fourteen of 314 harvested logos were exactly that,
+# and every one of them is a worse card than the flat mark would be.
+PHOTOGRAPH = re.compile(r"\.(jpe?g|tiff?)$", re.I)
 
 
 def existing_bank(slug):
@@ -71,8 +79,51 @@ def existing_bank(slug):
     return answers, images
 
 
-def build_spec(slug, harvested):
+def rejected(slug):
+    """English answers a person looked at and turned down.
+
+    The contact sheet is the review step, and a review that cannot be
+    recorded has to be repeated by hand on every regeneration. So it is
+    recorded: spec/<slug>_reject.json is a list of English answers, each with
+    the reason it was rejected, and the generator drops them.
+
+    The queries cannot catch these. guess_logo asks Wikidata for business
+    enterprises and gets the city of Pardubice, Jefferson's Monticello and
+    Istanbul's Maiden's Tower, because each has a P154 and a loose enough
+    type claim. Every one is a genuine logo; none is a brand anybody is going
+    to name.
+    """
+    p = HERE / "spec" / f"{slug}_reject.json"
+    if not p.exists():
+        return set()
+    return {e["answer"].strip().lower() for e in json.loads(p.read_text())}
+
+
+def difficulty_for(slug, e, i, n):
+    """How hard this card is.
+
+    Everywhere else, fame is the answer: the best-known subject is the
+    easiest, so position in the sitelink ranking is the difficulty.
+
+    Logos are not like that, because what makes a logo hard is not how
+    obscure the company is -- it is whether the mark says the name. Mazda's
+    ellipse, Alfa Romeo's serpent and Rolex's crown are hard for a household
+    brand; "TOSHIBA" set in a typeface is not hard for anyone who reads
+    Latin script, however the ranking places it. Commons will not tell us
+    which is which, but the shape does: a mark that spells something out is
+    wide, and a symbol is roughly square. That is the difference the levels
+    should carry, and it is what "more difficult ones" asked for.
+    """
+    if slug == "guess_logo" and e.get("h"):
+        ratio = e["w"] / e["h"]
+        return "hard" if ratio < 1.5 else ("medium" if ratio < 2.4 else "easy")
+    third = max(1, n // 3)
+    return "easy" if i < third else ("medium" if i < 2 * third else "hard")
+
+
+def build_spec(slug, harvested, limit=None):
     taken, seen_images = existing_bank(slug)
+    taken |= rejected(slug)
     # Most-linked first: that ordering is the difficulty curve.
     entries = sorted(harvested, key=lambda e: -e.get("sitelinks", 0))
 
@@ -88,6 +139,8 @@ def build_spec(slug, harvested):
             continue
         if WORDMARK_FILE.search(e.get("file", "")):
             continue
+        if slug == "guess_logo" and PHOTOGRAPH.search(e.get("file", "")):
+            continue
         if any(not (labels.get(l) or "").strip() for l in LANGS):
             continue
         if any(len(labels[l].strip()) > MAX_ANSWER for l in LANGS):
@@ -97,6 +150,16 @@ def build_spec(slug, harvested):
         if e.get("file"):
             seen_images.add(e["file"])
         usable.append({**e, "labels": {l: labels[l].strip() for l in LANGS}})
+
+    # The cut happens HERE, before distractors and difficulty are worked out,
+    # so both are computed against the list that ships. Truncating afterwards
+    # left every entry labelled against the full harvest -- and, worse, an
+    # earlier version re-derived difficulty from position after the fact and
+    # silently overwrote the shape rule that makes a symbol harder than a
+    # wordmark, calling Burberry's nameplate "hard" and Mazda's ellipse
+    # "easy".
+    if limit is not None:
+        usable = usable[:limit]
 
     # Distractors come from neighbours in the same ranking: things of similar
     # fame in the same category, which is what makes a card hard rather than
@@ -132,8 +195,7 @@ def build_spec(slug, harvested):
         if len(picks) < 3:
             continue
 
-        third = max(1, len(usable) // 3)
-        difficulty = "easy" if i < third else ("medium" if i < 2 * third else "hard")
+        difficulty = difficulty_for(slug, e, i, len(usable))
         key = f"{KEY_PREFIX}{e['qid'].lower()}"
         out.append({
             "key": key,
@@ -216,16 +278,7 @@ def main():
     # because where it falls is a judgement about the game.
     limit = int(sys.argv[4]) if len(sys.argv) > 4 else None
     harvested = json.loads(pathlib.Path(harvested_path).read_text())
-    entries = build_spec(slug, harvested)
-    if limit is not None:
-        entries = entries[:limit]
-        # Difficulty is thirds of the list, so it has to be redrawn against
-        # the list that ships. Otherwise a truncated run is labelled "easy"
-        # all the way down, because every survivor was in the top third of
-        # the harvest.
-        third = max(1, len(entries) // 3)
-        for i, e in enumerate(entries):
-            e["difficulty"] = "easy" if i < third else ("medium" if i < 2 * third else "hard")
+    entries = build_spec(slug, harvested, limit)
 
     errs = []
     seen_keys = set()
