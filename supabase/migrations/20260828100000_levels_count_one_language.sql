@@ -15,6 +15,13 @@
 -- player is offered. A category whose rows are all one language is
 -- unaffected — the minimum over one group is that group.
 --
+--
+-- Capped at 20 because that is where question selection stops: getCategoryQuestions
+-- clamps its window with LEAST(20, level + 5) and its fallback queries
+-- level_number BETWEEN 1 AND 20, so a level numbered 21 or higher can never be
+-- served its own questions -- it falls through to the "clear everything and
+-- retry" path, which is the repeat. A level the game cannot fill is not a level.
+--
 -- Only the count changes. Progress rows key on level_number and are
 -- untouched; a category that shrinks simply stops offering levels beyond
 -- what it can fill, and grows again as questions are added.
@@ -39,7 +46,7 @@ BEGIN
   SELECT total_levels INTO old_total_levels FROM categories WHERE id = affected_category_id;
 
   -- The language with the fewest questions decides how many levels exist.
-  SELECT GREATEST(1, FLOOR(MIN(per_language)::decimal / 10)::integer)
+  SELECT LEAST(20, GREATEST(1, FLOOR(MIN(per_language)::decimal / 10)::integer))
     INTO new_total_levels
   FROM (
     SELECT COUNT(*) AS per_language
@@ -69,7 +76,7 @@ $$;
 -- rather than waiting for the next question to be touched.
 UPDATE public.categories c
 SET total_levels = COALESCE((
-  SELECT GREATEST(1, FLOOR(MIN(per_language)::decimal / 10)::integer)
+  SELECT LEAST(20, GREATEST(1, FLOOR(MIN(per_language)::decimal / 10)::integer))
   FROM (
     SELECT COUNT(*) AS per_language
     FROM public.questions q
