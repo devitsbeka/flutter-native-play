@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { GEM_PACK_PRODUCTS } from "@/config/gemPacks";

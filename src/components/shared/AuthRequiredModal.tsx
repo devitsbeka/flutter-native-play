@@ -15,7 +15,7 @@ import { GoogleSignInButton } from "@/components/shared/GoogleSignInButton";
 import { SinglePlayVideo } from "@/components/shared/SinglePlayVideo";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import guestWelcomeVideo from "@/assets/guest-welcome-avatar.mp4";
 
 interface AuthRequiredModalProps {

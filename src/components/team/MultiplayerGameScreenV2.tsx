@@ -9,7 +9,7 @@ import { ArrowLeft, ChevronUp, ChevronDown } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";

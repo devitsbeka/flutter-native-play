@@ -13,7 +13,7 @@ import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Loader2, Play, ArrowRight, ArrowLeft } from "lucide-react";
 import angryBoyIcon from "@/assets/icons/angry-boy.png";
 import confettiPopperIcon from "@/assets/icons/confetti-popper.png";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import confetti from "canvas-confetti";
 import { calculatePoints } from "@/utils/scoring";
 import { useLanguage } from "@/contexts/LanguageContext";

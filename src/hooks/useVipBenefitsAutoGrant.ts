@@ -9,7 +9,7 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useDailyVipRewards } from "@/hooks/useDailyVipRewards";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { t as tStandalone } from "@/contexts/LanguageContext";
 
 export function useVipBenefitsAutoGrant() {

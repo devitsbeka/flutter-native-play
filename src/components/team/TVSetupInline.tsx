@@ -5,7 +5,7 @@ import { ChunkyButton } from '@/components/ui/chunky-button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { useNavigate } from 'react-router-dom';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 

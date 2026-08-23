@@ -8,7 +8,7 @@ import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatCompactNumber } from "@/lib/utils";
 import { REWARDS } from "@/config/rewardConfig";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import confetti from "canvas-confetti";
 
 import coinIcon from "@/assets/icons/icon-coin.png";

@@ -8,7 +8,7 @@ import {
   getCurrentWeekBounds,
   getDaysRemainingInWeek 
 } from "@/config/leaderboardRewards";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 export interface WeeklyReward {
   id: string;

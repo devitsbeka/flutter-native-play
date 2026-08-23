@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useMemo, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { isAfter } from "date-fns";
 import { t } from "@/utils/standaloneTranslation";
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { t } from '@/utils/standaloneTranslation';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';

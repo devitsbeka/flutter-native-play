@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { t as tStandalone } from "@/contexts/LanguageContext";
 
 export interface TriviaDraftData {

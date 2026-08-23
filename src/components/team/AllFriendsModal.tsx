@@ -3,7 +3,7 @@ import { ChevronLeft, Plus, UserPlus, Check, X as CloseIcon, MoreVertical, Gamep
 import { useFriends, Friend } from "@/hooks/useFriends";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useState } from "react";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import {

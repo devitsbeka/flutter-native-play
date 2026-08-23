@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Camera, Check, Maximize2, Plus, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";

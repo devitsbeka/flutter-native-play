@@ -9,7 +9,7 @@ import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 import { GameModal } from "@/components/ui/game-modal";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import confetti from "canvas-confetti";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import { formatCompactNumber } from "@/lib/utils";

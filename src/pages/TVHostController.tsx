@@ -8,7 +8,7 @@ import { Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, Arro
 import { CategoryPickerModal } from '@/components/team/CategoryPickerModal';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { QRCodeSVG } from 'qrcode.react';
 import { Avatar } from '@/components/shared/Avatar';

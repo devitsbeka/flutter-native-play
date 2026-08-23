@@ -20,7 +20,7 @@ import retroTv3d from "@/assets/retro-tv-3d.png";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { useRoomAge } from "@/hooks/useRoomAge";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/components/team/FeatureOnboardingCarousel";
 import {
   AlertDialog,

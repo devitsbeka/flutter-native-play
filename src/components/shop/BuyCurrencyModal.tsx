@@ -8,7 +8,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import confetti from "canvas-confetti";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";

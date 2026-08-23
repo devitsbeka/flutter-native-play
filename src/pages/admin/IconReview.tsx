@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { IconReviewCard } from '@/components/admin/IconReviewCard';
 import { IconReviewFilters } from '@/components/admin/IconReviewFilters';
 import { useIconReviewQueue } from '@/hooks/useIconReviewQueue';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 
 const SWIPE_THRESHOLD = 80;
 

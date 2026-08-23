@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Upload, Camera, Sparkles, Check, RefreshCw, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { t } from "@/lib/i18n";
 import { useBackgroundGeneration } from "@/contexts/BackgroundGenerationContext";
 import { preparePhoto } from "@/utils/imageInput";

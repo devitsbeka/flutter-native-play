@@ -8,7 +8,7 @@ import { TimerBadge } from "@/components/game/TimerBadge";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import newQuestionsPaper from "@/assets/new-questions-paper.png";
 import { useCategoryPlayLimit } from "@/hooks/useCategoryPlayLimit";
 import { useToast } from "@/hooks/use-toast";

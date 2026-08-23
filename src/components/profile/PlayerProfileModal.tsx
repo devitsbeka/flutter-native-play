@@ -13,7 +13,7 @@ import { usePlayerProfile as usePlayerProfileData, InteractionLogItem } from "@/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useState, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PlayerOverflowMenu } from "@/components/social/PlayerOverflowMenu";

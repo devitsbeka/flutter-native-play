@@ -7,7 +7,7 @@ import { KnowledgeSourcesList, KnowledgeSource } from '@/components/admin/flow/K
 import { LanguageQuestionBrowser } from '@/components/admin/flow/LanguageQuestionBrowser';
 import { AutoGenerationPanel, JobQuestionReview } from '@/components/admin/auto-generation';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { calculateSimilarity, removeDuplicatesFromBatch } from '@/utils/duplicateDetection';
 import { QUALITY_CONSTANTS } from '@/constants/questionQuality';
 import { usePersistedState } from '@/hooks/usePersistedState';

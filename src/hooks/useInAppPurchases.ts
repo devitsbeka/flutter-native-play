@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { t as tStandalone } from "@/contexts/LanguageContext";
 
 // Product IDs configured in App Store Connect and mirrored in RevenueCat.

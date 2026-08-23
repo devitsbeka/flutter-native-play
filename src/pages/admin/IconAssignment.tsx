@@ -24,7 +24,7 @@ import { IconSuggestionsPanel } from '@/components/admin/IconSuggestionsPanel';
 import { BulkIconReassignment } from '@/components/admin/BulkIconReassignment';
 import { IconUsageStats } from '@/components/admin/IconUsageStats';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { useAdminIconAssignment, QuestionForAssignment } from '@/hooks/useAdminIconAssignment';
 import { useIconLibrary } from '@/hooks/useIconLibrary';
 import { useIconVerification } from '@/hooks/useIconVerification';

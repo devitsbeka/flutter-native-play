@@ -11,7 +11,7 @@ import { useFriends } from '@/hooks/useFriends';
 import { useGameInvitations } from '@/hooks/useGameInvitations';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { CompactNotificationCard } from '@/components/notifications/CompactNotificationCard';
 import { NotificationDetailModal } from '@/components/notifications/NotificationDetailModal';
 import { CompactGenerationCard } from '@/components/notifications/CompactGenerationCard';

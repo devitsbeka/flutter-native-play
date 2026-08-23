@@ -16,7 +16,7 @@ import {
   Trash2 
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { cn } from '@/lib/utils';
 
 export interface KnowledgeSource {

@@ -22,7 +22,7 @@ import { useTVDiscovery } from '@/hooks/useTVDiscovery';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast, connectivityToast } from "@/lib/toast";
 import { Capacitor } from '@capacitor/core';
 
 interface TVMirrorModalProps {
@@ -126,7 +126,7 @@ export function TVMirrorModal({ open, onOpenChange }: TVMirrorModalProps) {
     const result = await connectWithCode(manualCode);
     
     if (!result) {
-      toast.error(t('tv.connectionFailed'));
+      connectivityToast.error(t('tv.connectionFailed'));
       setStep('manual-code');
     }
   };

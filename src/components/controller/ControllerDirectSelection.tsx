@@ -16,7 +16,7 @@ import { ChunkyButton } from '@/components/ui/chunky-button';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { supabase } from '@/integrations/supabase/client';
 import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 
 interface Category {

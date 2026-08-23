@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Settings, HelpCircle, Shield, FileText, LogOut, ChevronRight, Pencil, Check, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { translateErrorMessage } from "@/utils/errorTranslations";
 

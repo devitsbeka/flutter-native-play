@@ -12,7 +12,7 @@ import { useGameInvitations } from '@/hooks/useGameInvitations';
 import { cn } from '@/lib/utils';
 import { ka } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { shortTimeAgo } from '@/utils/shortTimeAgo';
 import { typeInTab, type NotificationTab } from '@/config/notificationTabs';
 import { CompactNotificationCard } from '@/components/notifications/CompactNotificationCard';

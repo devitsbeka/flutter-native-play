@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH, isQuestionComplete } from '@/utils/questionValidation';
 import { detectQuestionLanguage } from '@/utils/languageDetection';
 

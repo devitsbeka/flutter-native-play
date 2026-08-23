@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Save, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useLevelPositions, saveLevelPositions, LevelPosition } from "@/hooks/useLevelPositions";
 import SVGClouds from "@/components/map/SVGClouds";
 

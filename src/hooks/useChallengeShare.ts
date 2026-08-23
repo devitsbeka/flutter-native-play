@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { shareOrCopy } from "@/utils/shareLink";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { siteUrl } from "@/config/site";
 
 export interface ChallengeQuestion {

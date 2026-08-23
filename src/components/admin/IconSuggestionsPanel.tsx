@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { useIconSuggestions, KeywordSource, IconSuggestion } from '@/hooks/useIconSuggestions';
 import { useSimilarQuestions, SimilarQuestion } from '@/hooks/useSimilarQuestions';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 
 interface QuestionData {
   id: string;

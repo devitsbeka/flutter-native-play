@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, RefreshCw, Plus, Trash2, Save } from "lucide-react";
 import { useShopProductsAdmin, ShopProduct } from "@/hooks/useShopProducts";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import {
   Table,
   TableBody,

@@ -4,7 +4,7 @@ import { ArrowLeft, Play, Home, LogOut, Check, Users, Copy, Share2, HelpCircle, 
 import { useNavigate } from "react-router-dom";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 
 // Button catalog with unique IDs

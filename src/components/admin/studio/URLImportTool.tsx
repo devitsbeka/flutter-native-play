@@ -20,7 +20,7 @@ import { QuestionTypeSelector } from './QuestionTypeSelector';
 import { MediaPreview } from './MediaPreview';
 import { QuestionType, CategoryWithCounts } from '@/hooks/useQuestionStudio';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 

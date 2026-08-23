@@ -6,7 +6,7 @@ import { t } from "@/lib/i18n";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 import { useNewContentIndicators } from "@/hooks/useNewContentIndicators";
 import { useNavigationPrefetch } from "@/hooks/useNavigationPrefetch";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
 
 // Eager preload main route chunks for instant navigation

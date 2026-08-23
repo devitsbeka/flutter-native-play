@@ -12,7 +12,7 @@ import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Button } from "@/components/ui/button";
 import { SamplePost } from "@/data/samplePosts";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { shareOrCopy } from "@/utils/shareLink";
 import confetti from "canvas-confetti";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";

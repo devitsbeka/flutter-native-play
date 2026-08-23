@@ -4,7 +4,7 @@ import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion
 import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Sparkles, RefreshCw, Lightbulb, Save, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { toast as sonnerToast } from "sonner";
+import { toast as sonnerToast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";

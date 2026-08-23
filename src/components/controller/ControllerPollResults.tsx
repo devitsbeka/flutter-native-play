@@ -5,7 +5,7 @@ import { ChunkyButton } from '@/components/ui/chunky-button';
 import { useTVPoll } from '@/hooks/useTVPoll';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 
 interface ControllerPollResultsProps {
   sessionId: string;

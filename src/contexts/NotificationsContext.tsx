@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSound } from '@/contexts/SoundContext';

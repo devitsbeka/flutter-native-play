@@ -5,7 +5,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import { joinCodeFromQr } from "@/utils/joinCodeFromQr";
 import { ChevronLeft, ScanLine, AlertCircle, Flashlight, ZoomIn, ZoomOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 

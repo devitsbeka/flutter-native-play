@@ -19,7 +19,7 @@ import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
 import { CATEGORY_VIDEOS, CATEGORY_IMAGES, MAP_VIDEOS } from "@/config/videoConfig";
 import { videoLoadQueue } from "@/utils/videoLoadQueue";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { trackCategoryViewed, trackLevelSelected } from "@/lib/analytics";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import crystalHourglass from "@/assets/crystal-hourglass.png";

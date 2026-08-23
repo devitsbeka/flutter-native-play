@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { MissionInfoModal, type MissionInfoTopic } from "./MissionInfoModal";
 import confetti from "canvas-confetti";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { missionTitle, missionDescription } from "@/utils/missionText";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";

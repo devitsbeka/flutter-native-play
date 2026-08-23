@@ -5,7 +5,7 @@ import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { toast, connectivityToast } from "@/lib/toast";
 import { useNavigate } from 'react-router-dom';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { getQuestions, resolveCategoryUuid } from '@/services/questionService';
@@ -163,7 +163,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
 
     } catch (error) {
       console.error('Error connecting to TV:', error);
-      toast.error(t("tv.connectionFailed"));
+      connectivityToast.error(t("tv.connectionFailed"));
     } finally {
       setIsConnecting(false);
     }

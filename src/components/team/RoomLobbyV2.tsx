@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";

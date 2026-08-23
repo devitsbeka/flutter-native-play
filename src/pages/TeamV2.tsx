@@ -65,7 +65,7 @@ import {
 import { QRScannerModal } from "@/components/team/QRScannerModal";
 import { supabase } from "@/integrations/supabase/client";
 import { instantTouchProps } from "@/utils/instantTouch";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 function TeamContentV2() {
   const navigate = useNavigate();

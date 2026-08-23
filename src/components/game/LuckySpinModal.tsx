@@ -4,7 +4,7 @@ import { Volume2, VolumeX, ChevronLeft, Tv } from "lucide-react";
 import { useRewards } from "@/hooks/useRewards";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import confetti from "canvas-confetti";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import coinIcon from "@/assets/icons/icon-coin.png";

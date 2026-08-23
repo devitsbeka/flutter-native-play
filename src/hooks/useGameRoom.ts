@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { t } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { generateRoomName, getDefaultRoomName } from "@/utils/roomNameGenerator";
 import { getRandomGradient } from "@/config/roomGradients";
 import { readAppLanguage } from "@/utils/appLanguage";

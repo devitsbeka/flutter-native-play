@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useNotificationModalContext } from "@/contexts/NotificationModalContext";
 
 interface NotifyOptions {

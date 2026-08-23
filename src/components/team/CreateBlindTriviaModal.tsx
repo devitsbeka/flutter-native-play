@@ -17,7 +17,7 @@ import { GameStyleQuestionEditor, convertToEditorQuestions, EditorQuestion, conv
 import { useTriviaDrafts } from "@/hooks/useTriviaDrafts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { edgeFunctionMessage } from "@/utils/edgeFunctionError";
 
 interface GeneratedQuestion {

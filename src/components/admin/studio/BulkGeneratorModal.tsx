@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { CategoryWithCounts } from '@/hooks/useQuestionStudio';
 import { StepCategorySelect } from './bulk/StepCategorySelect';
 import { StepProcessing, GeneratedQuestion } from './bulk/StepProcessing';

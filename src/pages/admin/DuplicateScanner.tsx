@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useDuplicateDetection } from '@/hooks/useDuplicateDetection';
 import { useAdminCategories } from '@/hooks/useAdminCategories';
 import { useAdminQuestions } from '@/hooks/useAdminQuestions';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 
 export default function DuplicateScanner() {
   const [categoryId, setCategoryId] = useState<string>('all');

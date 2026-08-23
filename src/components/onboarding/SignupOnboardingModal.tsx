@@ -10,7 +10,7 @@ import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { t } from "@/lib/i18n";
 import { passwordStrength } from "@/utils/passwordStrength";
 import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import confetti from "canvas-confetti";
 import { GameModal } from "@/components/ui/game-modal";
 import { supabase } from "@/integrations/supabase/client";

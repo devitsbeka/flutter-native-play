@@ -8,7 +8,7 @@ import lockIcon from "@/assets/lock-icon.png";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { GameStyleQuestionEditor, convertToEditorQuestions, convertToGeneratedQuestions, EditorQuestion, createEmptyQuestion } from "./GameStyleQuestionEditor";

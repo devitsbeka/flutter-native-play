@@ -2,7 +2,7 @@ import { FeatureOnboardingCarousel, resetFeatureOnboarding } from "@/components/
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 export default function OnboardingPreview() {
   const navigate = useNavigate();

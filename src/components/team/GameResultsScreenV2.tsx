@@ -21,7 +21,7 @@ import confetti from "canvas-confetti";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import xpIcon from "@/assets/level/xp-spark.png";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { CategoryPickerModal } from "./CategoryPickerModal";
 import { RoomQueueSheet } from "./RoomQueueSheet";

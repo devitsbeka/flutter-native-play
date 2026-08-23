@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
 import { TriviaQuestion } from "@/hooks/useTrivia";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { getRandomGradient } from "@/config/roomGradients";
 import { siteUrl } from "@/config/site";
 import { getQuestions } from "@/services/questionService";

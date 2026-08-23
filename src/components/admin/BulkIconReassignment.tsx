@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { supabase } from '@/integrations/supabase/client';
 
 interface IconItem {

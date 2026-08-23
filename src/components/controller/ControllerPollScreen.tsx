@@ -23,7 +23,7 @@ import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { supabase } from '@/integrations/supabase/client';
 import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
-import { toast } from 'sonner';
+import { toast } from "@/lib/toast";
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Category {

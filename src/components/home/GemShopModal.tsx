@@ -9,7 +9,7 @@ import { REWARDS } from "@/config/rewardConfig";
 import { useUserPowerUps } from "@/hooks/useUserPowerUps";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AvatarFrameShop } from "@/components/home/AvatarFrameShop";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import confetti from "canvas-confetti";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";

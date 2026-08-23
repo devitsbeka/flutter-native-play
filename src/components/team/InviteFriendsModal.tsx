@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { copyToClipboard } from "@/utils/shareLink";
 import { useFriends } from "@/hooks/useFriends";
 import { useAuth } from "@/contexts/AuthContext";

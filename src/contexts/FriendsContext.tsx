@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback, us
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { t } from "@/contexts/LanguageContext";
 
 export interface Friend {

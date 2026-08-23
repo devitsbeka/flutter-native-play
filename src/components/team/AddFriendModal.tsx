@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { useMissions } from "@/hooks/useMissions";
 
 interface AddFriendModalProps {

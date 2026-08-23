@@ -2,7 +2,7 @@ import { createElement } from "react";
 import { useCallback, useEffect, useMemo } from "react";
 import { RewardChipsRow } from "@/components/mission/MissionCompleteToast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { createNotification } from "./useNotifications";
 import { t } from "@/lib/i18n";

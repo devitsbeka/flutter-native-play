@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { callRpc, selectRows, type RpcError } from "@/integrations/supabase/rpc";
 import { useAuth } from "@/hooks/useAuth";
 import { t } from "@/lib/i18n";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 /**
  * PRO seats: giving your subscription's PRO to a friend.

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotificationModalContext } from "@/contexts/NotificationModalContext";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { t } from "@/lib/i18n";
 import { generateAndRecordPortrait } from "@/utils/portraitAvatar";
 import { SCENE_AVATAR_PROMPT } from "@/config/sceneAvatarPrompt";

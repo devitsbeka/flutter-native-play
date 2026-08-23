@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo, u
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { t as tStandalone } from "@/contexts/LanguageContext";
 
 export interface PendingChallenge {

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Save, RefreshCw } from "lucide-react";
 import { useEconomyConfigAdmin, EconomyConfigItem } from "@/hooks/useEconomyConfig";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 const CATEGORY_LABELS: Record<string, string> = {
   game_stakes: "🎮 Game Stakes",
