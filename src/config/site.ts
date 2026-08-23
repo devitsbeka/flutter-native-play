@@ -23,3 +23,18 @@ export function siteUrl(path: string): string {
  */
 export const APP_BUNDLE_ID: string =
   import.meta.env.VITE_APP_BUNDLE_ID || "io.mytrivia.app";
+
+/**
+ * Facebook app id, for the Messenger Send Dialog on the web.
+ *
+ * `fb-messenger://share` is an app scheme: it works on a phone that has
+ * Messenger installed and does nothing at all in a desktop browser, which is
+ * why the Messenger button did nothing there. The web equivalent is
+ * facebook.com/dialog/send, and that one refuses to open without an app id.
+ *
+ * Empty is handled — the share falls back to the plain Facebook share dialog,
+ * which needs no id and still carries the link and its preview image. Set
+ * VITE_FACEBOOK_APP_ID (a Meta *app* id, not the Pixel id in index.html) to
+ * get the real Messenger dialog instead.
+ */
+export const FACEBOOK_APP_ID: string = import.meta.env.VITE_FACEBOOK_APP_ID || "";

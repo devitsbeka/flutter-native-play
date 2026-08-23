@@ -1,4 +1,4 @@
-import { siteUrl } from "@/config/site";
+import { siteUrl, FACEBOOK_APP_ID } from "@/config/site";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Capacitor } from "@capacitor/core";
@@ -334,7 +334,20 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     
     switch (platform) {
       case "messenger":
-        url = `fb-messenger://share?link=${encodedLink}`;
+        // fb-messenger:// is an app scheme. On a phone with Messenger
+        // installed the OS opens it; in a desktop browser window.open on a
+        // scheme it does not know is a no-op, which is why this button did
+        // nothing on the web. Web gets an https URL, the way WhatsApp always
+        // has through wa.me.
+        url = Capacitor.isNativePlatform()
+          ? `fb-messenger://share?link=${encodedLink}`
+          : FACEBOOK_APP_ID
+            // The real Messenger composer, with the link attached.
+            ? `https://www.facebook.com/dialog/send?app_id=${FACEBOOK_APP_ID}` +
+              `&link=${encodedLink}&redirect_uri=${encodedLink}`
+            // No app id configured: the share dialog still opens with the
+            // link and its preview card, and can be sent on to Messenger.
+            : `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`;
         break;
       case "whatsapp":
         url = `https://wa.me/?text=${encodedMessage} ${encodedLink}`;
