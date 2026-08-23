@@ -183,7 +183,7 @@ export function CategoryPickerSection({
           <p className="text-white/50 text-xs mb-2 font-medium">{t("extra.cpsQueueLabel")}</p>
 
           {/* Queue pills - draggable for host, static for others */}
-          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
           {isHost && onReorderQueue ? (
               <Reorder.Group 
                 axis="x" 
