@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/toast";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PlayerOverflowMenu } from "@/components/social/PlayerOverflowMenu";
 import { VersusPanel, hasVersusContent } from "@/components/profile/VersusPanel";
@@ -98,6 +98,26 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   // an established specialty.
   const showInfoTab =
     !!data && !data.isCurrentUser && hasVersusContent(data.headToHead, data.facts);
+
+  /**
+   * Which tab is open, once the reader has picked one.
+   *
+   * The tabs cannot be left uncontrolled. `defaultValue` is read once, at
+   * mount, and at that moment the record and the facts are still in flight —
+   * so it always resolved to "trivias", and Info then appeared beside it
+   * already unselected. Null means "nobody has chosen", which is what lets
+   * the default below land late without overriding a real choice.
+   */
+  const [chosenTab, setChosenTab] = useState<string | null>(null);
+
+  // Opening a different player must not inherit the last one's tab. The modal
+  // renders null while closed rather than unmounting, so this state outlives
+  // both a close and a change of profile.
+  useEffect(() => {
+    setChosenTab(null);
+  }, [userId]);
+
+  const activeTab = chosenTab ?? (showInfoTab ? "info" : "trivias");
 
   // Navigate to trivia/collection lobby pages
   const handlePlayTrivia = (triviaId: string) => {
@@ -501,7 +521,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                     came for. It is dropped entirely rather than opened onto
                     an empty panel: on your own profile there is no "against",
                     and on a stranger's there may be nothing yet. */}
-                <Tabs defaultValue={showInfoTab ? "info" : "trivias"} className="px-4 pb-4">
+                <Tabs value={activeTab} onValueChange={setChosenTab} className="px-4 pb-4">
                   <TabsList
                     className={`grid w-full mb-4 h-auto py-2 ${showInfoTab ? "grid-cols-3" : "grid-cols-2"}`}
                   >
