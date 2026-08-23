@@ -34,7 +34,11 @@ const getRankIcon = (rank: number) => {
     case 3:
       return <img src={medalBronze} alt="3rd" className="w-6 h-6 object-contain" />;
     default:
-      return <span className="text-sm font-bold text-muted-foreground">#{rank}</span>;
+      // White, like every other word in this panel. muted-foreground is a
+      // dark grey meant for light surfaces, and this sits on the lobby's dark
+      // glass — so first three showed their medals and everyone after them
+      // got a number that read as black.
+      return <span className="text-sm font-extrabold text-white">#{rank}</span>;
   }
 };
 
