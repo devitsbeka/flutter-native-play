@@ -132,3 +132,18 @@ jobs:
         run: |
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/04-room-rounds.sql
+
+      # Invite links. The code in a shared link is what proves the host asked
+      # for the introduction: friendships lets a signed-in user insert any row
+      # naming themselves, status included, so a client-side "we are friends
+      # now" would be "I am in your friends list now" for anyone whose user id
+      # you can learn — and every room participant can read those. These
+      # assert the code cannot be chosen by a client, that an unminted code
+      # buys nothing, and that accepting twice makes one friendship and not
+      # two.
+      - name: Assert invite link rules
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/05-invite-links.sql

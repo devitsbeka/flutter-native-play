@@ -204,7 +204,34 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     fetchPendingOutgoing();
   }, [user?.id, isOpen]);
   
-  const appLink = inviteLink || siteUrl("/team");
+  /**
+   * The link the share row actually sends.
+   *
+   * It used to be the room link from a lobby and a bare /team from the other
+   * four screens this opens on, so an invite sent from home carried nothing
+   * at all: whoever opened it landed on the games tab as a stranger.
+   *
+   * Now it is always the sender's own invite link, which names them and is
+   * the same on every screen. Where it leads is decided when it is OPENED,
+   * not when it is sent: in a room it offers that room, out of one it offers
+   * the friendship, and a link pasted into a chat last week still works
+   * today. The room is looked up from what the SENDER is in, so a player
+   * inviting someone to a lobby they do not host still brings them there.
+   */
+  const [myInviteLink, setMyInviteLink] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isOpen || !user) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.rpc("get_or_create_invite_code");
+      if (!cancelled && !error && data) setMyInviteLink(siteUrl(`/i/${data}`));
+    })();
+    return () => { cancelled = true; };
+  }, [isOpen, user]);
+
+  // Until the code arrives, fall back to whatever the caller gave us rather
+  // than to a dead share button.
+  const appLink = myInviteLink || inviteLink || siteUrl("/team");
   const shareMessage = t("extra.shareMessage");
   const encodedMessage = encodeURIComponent(shareMessage);
   const encodedLink = encodeURIComponent(appLink);

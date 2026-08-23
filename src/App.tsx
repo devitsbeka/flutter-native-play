@@ -64,6 +64,7 @@ const TriviaLobby = lazy(() => import("./pages/TriviaLobby"));
 const CollectionLobby = lazy(() => import("./pages/CollectionLobby"));
 const TriviaLoader = lazy(() => import("./pages/TriviaLoader"));
 const RoomRedirect = lazy(() => import("./pages/RoomRedirect"));
+const InvitePage = lazy(() => import("./pages/InvitePage"));
 const TVDisplay = lazy(() => import("./pages/TVDisplay"));
 const TVHostController = lazy(() => import("./pages/TVHostController"));
 const TVLobby = lazy(() => import("./pages/TVLobby"));
@@ -243,6 +244,9 @@ const App = () => (
                 <Route path="/trivia/:triviaId" element={<TriviaLobby />} />
                 <Route path="/collection/:collectionId" element={<CollectionLobby />} />
                 <Route path="/room/:code" element={<RoomRedirect />} />
+                {/* A shared invite link. Shows who is inviting you before it
+                    joins anything — see InvitePage. */}
+                <Route path="/i/:code" element={<InvitePage />} />
                 <Route path="/tv" element={<TVLobby />} />
                 <Route path="/tv/host/:sessionId" element={<TVGameProvider><TVHostController /></TVGameProvider>} />
                 <Route path="/tv/:code" element={<TVDisplay />} />
