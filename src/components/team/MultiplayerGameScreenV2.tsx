@@ -5,9 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { ArrowLeft, ChevronUp, ChevronDown } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/lib/toast";
 
@@ -20,6 +18,7 @@ import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { MultiplayerObserverScreen } from "./MultiplayerObserverScreen";
 import { questionImageSrc } from "@/utils/questionImage";
 import { AnswerChoiceAvatars, type AnswerChooser } from "@/components/game/AnswerChoiceAvatars";
+import { LiveRaceStrip } from "@/components/game/LiveRaceStrip";
 
 export function MultiplayerGameScreenV2() {
   const navigate = useNavigate();
@@ -74,7 +73,6 @@ export function MultiplayerGameScreenV2() {
   const [timeRemaining, setTimeRemaining] = useState(timePerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerRevealed, setAnswerRevealed] = useState(false);
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   // Locked/backgrounded phone: the match keeps moving without the player.
   // JS timers freeze while the app is hidden, so on return we settle the
@@ -121,8 +119,6 @@ export function MultiplayerGameScreenV2() {
   // Get all other players (opponents)
   const opponents = participants.filter(p => p.user_id !== user?.id);
   
-  // Sort participants by score for leaderboard
-  const sortedParticipants = [...participants].sort((a, b) => (b.score || 0) - (a.score || 0));
 
   // Build progress results for dots
   const progressResults = useMemo(() => {
@@ -355,72 +351,18 @@ export function MultiplayerGameScreenV2() {
           <span className="text-white/60 font-bold text-lg">{questions.length}</span>
         </div>
 
-        {/* Leaderboard toggle */}
-        <motion.button
-          onClick={() => setShowLeaderboard(!showLeaderboard)}
-          className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/10"
-          whileTap={{ scale: 0.95 }}
-        >
-          <div className="flex -space-x-2">
-            {opponents.slice(0, 3).map((opp, i) => (
-              <Avatar key={opp.id} className="w-6 h-6 border border-white/30" style={{ zIndex: 3 - i }}>
-                <ResolvedAvatarImage src={opp.avatar_url || undefined} />
-                <AvatarFallback className="bg-purple-500 text-white text-[10px]">
-                  {opp.nickname?.charAt(0) || "?"}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-            {opponents.length > 3 && (
-              <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-[10px] text-white border border-white/30">
-                +{opponents.length - 3}
-              </div>
-            )}
-          </div>
-          {showLeaderboard ? (
-            <ChevronUp className="w-4 h-4 text-white/60" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-white/60" />
-          )}
-        </motion.button>
+        {/* Balances the back button so the counter stays centred. The
+            standings used to live here as a collapsed avatar cluster; they
+            are their own row now, always open. */}
+        <div className="w-10" />
       </div>
 
-      {/* Leaderboard dropdown */}
-      <AnimatePresence>
-        {showLeaderboard && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="px-4 overflow-hidden"
-          >
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 mb-2 space-y-1.5">
-              {sortedParticipants.map((p, index) => (
-                <div
-                  key={p.id}
-                  className={cn(
-                    "flex items-center gap-2 p-2 rounded-lg",
-                    p.user_id === user?.id ? "bg-white/10" : ""
-                  )}
-                >
-                  <span className="w-5 text-center text-white/60 text-sm font-bold">
-                    {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
-                  </span>
-                  <Avatar className="w-6 h-6">
-                    <ResolvedAvatarImage src={p.avatar_url || undefined} />
-                    <AvatarFallback className="bg-purple-500 text-white text-[10px]">
-                      {p.nickname?.charAt(0) || "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="flex-1 text-white text-sm truncate">
-                    {p.user_id === user?.id ? t("game.you") : p.nickname}
-                  </span>
-                  <span className="text-white font-bold text-sm">{Math.round(p.score || 0)}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* The race, while it is still being run. */}
+      <LiveRaceStrip
+        players={participants}
+        currentUserId={user?.id}
+        className="flex-shrink-0 mb-1"
+      />
 
       {/* Answered indicator - fixed height container to prevent layout shift */}
       <div className="px-4 h-8 flex items-center justify-center">
