@@ -451,6 +451,8 @@ export function QuizGameScreenProd() {
               imageUrl={currentQuestion.imageUrl}
               imageInset={currentQuestion.categoryId === "guess_logo"}
               imageFramed={currentQuestion.categoryId === "guess_flag"}
+              imageReveal={currentQuestion.categoryId === "guess_logo"}
+              imageRevealAll={selectedAnswer !== null}
               videoUrl={currentQuestion.videoUrl}
               audioUrl={currentQuestion.audioUrl}
               progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}

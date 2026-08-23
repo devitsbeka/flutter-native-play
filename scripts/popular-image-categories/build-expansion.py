@@ -59,6 +59,25 @@ WORDMARK_FILE = re.compile(
 # and every one of them is a worse card than the flat mark would be.
 PHOTOGRAPH = re.compile(r"\.(jpe?g|tiff?)$", re.I)
 
+# "Volkswagen Group" is not a second company to "Volkswagen", and Wikidata
+# carries both -- with different logo files, so neither the answer check nor
+# the picture check caught it. The bank shipped the VW roundel and the group
+# mark as two questions, and Wikidata's Georgian label for Mercedes-Benz
+# Group is "Daimler AG", a name that is on neither picture.
+CORPORATE_SUFFIX = re.compile(
+    r"\s+(group|holding|holdings|ag|nv|se|plc|inc\.?|ltd\.?|llc|corp\.?|corporation|"
+    r"company|co\.|s\.?a\.?|gmbh|kk|oyj|ab)$", re.I)
+
+
+def company_key(name):
+    """A name stripped to the thing a player would actually say."""
+    previous = None
+    key = name.strip().lower()
+    while key != previous:  # "Sony Group Corporation" needs two passes
+        previous = key
+        key = CORPORATE_SUFFIX.sub("", key).strip()
+    return key
+
 
 def existing_bank(slug):
     """What the category already holds: English answers AND picture URLs.
@@ -75,6 +94,7 @@ def existing_bank(slug):
             continue
         for e in json.loads(p.read_text()):
             answers.add(e["answers"]["en"].strip().lower())
+            answers.add(company_key(e["answers"]["en"]))
             images.add(e["image"])
     return answers, images
 
@@ -131,7 +151,7 @@ def build_spec(slug, harvested, limit=None):
     for e in entries:
         labels = e.get("labels", {})
         en = (labels.get("en") or "").strip()
-        if not en or en.lower() in taken:
+        if not en or en.lower() in taken or company_key(en) in taken:
             continue
         # The same picture, whatever it is called. Sorted most-famous-first,
         # so when two Wikidata items share a file the better known name wins.
@@ -146,6 +166,7 @@ def build_spec(slug, harvested, limit=None):
         if any(len(labels[l].strip()) > MAX_ANSWER for l in LANGS):
             continue
         taken.add(en.lower())
+        taken.add(company_key(en))
         seen_images.add(e["thumb"])
         if e.get("file"):
             seen_images.add(e["file"])

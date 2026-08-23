@@ -1331,6 +1331,8 @@ export default function CategoryQuizPage() {
           }
           imageInset={categoryId === "guess_logo"}
           imageFramed={categoryId === "guess_flag"}
+          imageReveal={categoryId === "guess_logo"}
+          imageRevealAll={isAnswered}
           difficultyColor={DIFFICULTY_COLORS[difficultyKey]}
           freezeTimeLeft={freezeTimeRemaining}
           reserveTopSpace={!currentQuestion?.image_url && !currentQuestion?.video_url && !currentQuestion?.audio_url}

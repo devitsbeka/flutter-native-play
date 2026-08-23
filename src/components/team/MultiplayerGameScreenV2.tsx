@@ -470,6 +470,10 @@ export function MultiplayerGameScreenV2() {
           // the same picture banks through the default treatment.
           imageInset={currentRoom?.category_id === "guess_logo"}
           imageFramed={currentRoom?.category_id === "guess_flag"}
+          imageReveal={currentRoom?.category_id === "guess_logo"}
+          // Both players uncover the same tiles at the same moment -- the
+          // mask seeds off the picture's URL, not off anything local.
+          imageRevealAll={answerRevealed || selectedAnswer !== null}
           videoUrl={currentQuestion.videoUrl}
           audioUrl={currentQuestion.audioUrl}
           progressPercent={progressPercent}

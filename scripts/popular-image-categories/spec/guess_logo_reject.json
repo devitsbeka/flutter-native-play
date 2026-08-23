@@ -1,8 +1,22 @@
 [
- {"answer": "Pardubice",
-  "reason": "the coat of arms of a Czech city, not a brand"},
- {"answer": "Monticello",
-  "reason": "the site logo of Jefferson's house museum, not a brand"},
- {"answer": "Maiden's Tower",
-  "reason": "the site logo of a monument in Istanbul, not a brand"}
+ {
+  "answer": "Pardubice",
+  "reason": "the coat of arms of a Czech city, not a brand"
+ },
+ {
+  "answer": "Monticello",
+  "reason": "the site logo of Jefferson's house museum, not a brand"
+ },
+ {
+  "answer": "Maiden's Tower",
+  "reason": "the site logo of a monument in Istanbul, not a brand"
+ },
+ {
+  "answer": "Volkswagen Group",
+  "reason": "the holding company for Volkswagen, which is already in the bank; different string and different file, so neither the answer check nor the picture check caught it. Retired live by 20260902150000"
+ },
+ {
+  "answer": "Mercedes-Benz Group",
+  "reason": "the holding company for Mercedes-Benz, already in the bank; Wikidata's Georgian label for it is “Daimler AG”, a name on neither picture. Retired live by 20260902150000"
+ }
 ]

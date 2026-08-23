@@ -3,6 +3,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { questionImageSrc } from "@/utils/questionImage";
+import { ImageRevealMask } from "./image-reveal-mask";
 import { Snowflake } from "lucide-react";
 import { AudioPlayer } from "./audio-player";
 
@@ -46,6 +47,17 @@ interface QuizQuestionCardProps {
    * where that rectangle ends is part of the picture.
    */
   imageFramed?: boolean;
+  /**
+   * Cover the picture and uncover it a tile at a time while the timer runs.
+   * For logos: a great many brand marks are the company's name in a
+   * typeface, so the answer is printed on the card. See ImageRevealMask.
+   */
+  imageReveal?: boolean;
+  /**
+   * Lift the cover. Set once the answer is locked in, so the player sees
+   * the whole mark alongside whether they got it.
+   */
+  imageRevealAll?: boolean;
   /**
    * Optional video URL for video-based trivia questions
    */
@@ -96,6 +108,8 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       imageUrl,
       imageInset = false,
       imageFramed = false,
+      imageReveal = false,
+      imageRevealAll = false,
       videoUrl,
       audioUrl,
       reserveTopSpace = false,
@@ -225,28 +239,57 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
               />
             )}
 
-            <img
-              key={imageAttempt}
-              src={imageSrc!}
-              alt="Question"
-              className={cn(
-                "relative object-contain",
-                // Inset caps the mark at 72% of the band's height, so the
-                // top/bottom gap survives any card width (percentage padding
-                // resolves against width and could not promise that).
-                imageInset ? "max-h-[72%] max-w-[80%] w-auto h-auto" : "w-full h-full",
-                // w-auto/h-auto so the element box is the flag itself and the
-                // ring hugs it. At w-full the box is the whole band and the
-                // ring would draw a rectangle around the grey.
-                imageFramed &&
-                  "max-h-[80%] max-w-full w-auto h-auto ring-1 ring-black/20 rounded-[2px]",
-                imageStatus !== "loaded" && "opacity-0"
-              )}
-              loading="eager"
-              decoding="async"
-              onLoad={() => setImageStatus("loaded")}
-              onError={handleImageError}
-            />
+            {/* The cover sits in a wrapper that shrinks to the picture, not
+                over the whole band. Over the band, most tiles would be blank
+                white either side of the mark, and the three that open first
+                would usually show nothing at all. */}
+            {imageReveal ? (
+              <span className="relative inline-flex max-h-[72%] max-w-[80%]">
+                <img
+                  key={imageAttempt}
+                  src={imageSrc!}
+                  alt="Question"
+                  className={cn(
+                    "block max-h-full max-w-full w-auto h-auto object-contain",
+                    imageStatus !== "loaded" && "opacity-0"
+                  )}
+                  loading="eager"
+                  decoding="async"
+                  onLoad={() => setImageStatus("loaded")}
+                  onError={handleImageError}
+                />
+                {imageStatus === "loaded" && (
+                  <ImageRevealMask
+                    seed={imageUrl!}
+                    progressPercent={progressPercent}
+                    revealAll={imageRevealAll}
+                  />
+                )}
+              </span>
+            ) : (
+              <img
+                key={imageAttempt}
+                src={imageSrc!}
+                alt="Question"
+                className={cn(
+                  "relative object-contain",
+                  // Inset caps the mark at 72% of the band's height, so the
+                  // top/bottom gap survives any card width (percentage padding
+                  // resolves against width and could not promise that).
+                  imageInset ? "max-h-[72%] max-w-[80%] w-auto h-auto" : "w-full h-full",
+                  // w-auto/h-auto so the element box is the flag itself and the
+                  // ring hugs it. At w-full the box is the whole band and the
+                  // ring would draw a rectangle around the grey.
+                  imageFramed &&
+                    "max-h-[80%] max-w-full w-auto h-auto ring-1 ring-black/20 rounded-[2px]",
+                  imageStatus !== "loaded" && "opacity-0"
+                )}
+                loading="eager"
+                decoding="async"
+                onLoad={() => setImageStatus("loaded")}
+                onError={handleImageError}
+              />
+            )}
           </div>
         )}
         
