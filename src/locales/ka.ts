@@ -2388,6 +2388,7 @@ export const ka = {
     chooseCategories: "აირჩიე კატეგორიები",
     selectedRounds: "არჩეული რაუნდები: {count}/8",
     categoryType: "კატეგორია",
+    roundStartingSoon: "მოემზადე…",
     yourTriviaType: "შენი ტრივია",
     // Achievements
     achieveStreak3: "სტაბილური მოთამაშე",

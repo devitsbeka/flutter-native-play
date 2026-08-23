@@ -2387,6 +2387,7 @@ export const en: KaTranslations = {
     chooseCategories: "Choose Categories",
     selectedRounds: "Selected rounds: {count}/8",
     categoryType: "Category",
+    roundStartingSoon: "Get ready…",
     yourTriviaType: "Your Trivia",
     // Achievements
     achieveStreak3: "Steady Player",
