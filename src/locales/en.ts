@@ -3067,7 +3067,7 @@ export const en: KaTranslations = {
     withFriendsDesc: "With friends",
     tvModeLabel: "TV Mode",
     onBigScreenDesc: "On big screen",
-    howToPlayPrompt: "How do you want to play?",
+    howToPlayPrompt: "What do you want to play?",
     publishBtn: "Publish",
     publishedLabel: "Published",
     addRoundBtn: "Add round",
@@ -3567,6 +3567,9 @@ export const en: KaTranslations = {
     activityInvitedToGame: "Invited to game",
     activityYouInvited: "You invited to game",
     activityPlayedTogether: "Played together",
+    activityInvitedToGameNamed: "Invited you to {name}",
+    activityYouInvitedNamed: "You invited them to {name}",
+    activityPlayedTogetherNamed: "Played {name} together",
     // Gameplay translations
     missionCompleted: "Mission Complete! 🎉",
     challengeBeatMe: "Can you beat me?",

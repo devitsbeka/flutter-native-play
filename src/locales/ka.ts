@@ -3068,7 +3068,7 @@ export const ka = {
     withFriendsDesc: "მეგობრებთან ერთად",
     tvModeLabel: "TV რეჟიმი",
     onBigScreenDesc: "დიდ ეკრანზე",
-    howToPlayPrompt: "როგორ გინდა ითამაშო?",
+    howToPlayPrompt: "რა გინდა ითამაშო?",
     publishBtn: "გამოაქვეყნე",
     publishedLabel: "გამოქვეყნებულია",
     addRoundBtn: "რაუნდის დამატება",
@@ -3629,6 +3629,9 @@ export const ka = {
     activityInvitedToGame: "თამაშზე მოგიწვია",
     activityYouInvited: "თამაშზე მოიწვიე",
     activityPlayedTogether: "ერთად ითამაშეთ",
+    activityInvitedToGameNamed: "მოგიწვია: {name}",
+    activityYouInvitedNamed: "მოიწვიე: {name}",
+    activityPlayedTogetherNamed: "ერთად ითამაშეთ: {name}",
     // Gameplay translations
     missionCompleted: "მისია შესრულდა! 🎉",
     challengeBeatMe: "შეგიძლია დამამარცხო?",

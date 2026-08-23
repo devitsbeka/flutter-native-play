@@ -321,7 +321,7 @@ async function fetchExtras(userId: string, viewerId: string | undefined): Promis
     const [{ data: invitations }, { data: sharedRooms }] = await Promise.all([
       supabase
         .from("game_invitations")
-        .select("id, sender_id, receiver_id, status, created_at, room:game_rooms(category_name)")
+        .select("id, sender_id, receiver_id, status, created_at, room:game_rooms(category_name, room_name)")
         .or(`and(sender_id.eq.${viewerId},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${viewerId})`)
         .order("created_at", { ascending: false })
         .limit(10),
@@ -334,12 +334,15 @@ async function fetchExtras(userId: string, viewerId: string | undefined): Promis
     if (invitations) {
       for (const inv of invitations) {
         const isSender = inv.sender_id === viewerId;
-        const categoryName = (inv.room as any)?.category_name;
+        const room = inv.room as { category_name?: string; room_name?: string } | null;
+        const categoryName = room?.category_name;
         interactions.push({
           id: inv.id,
           type: isSender ? 'invitation_sent' : 'invitation_received',
           message: isSender ? 'activityYouInvited' : 'activityInvitedToGame',
-          details: categoryName || undefined,
+          // The room's own name first: an invitation is to a place, and
+          // "invited you to Techno Clan" says more than the category does.
+          details: room?.room_name || categoryName || undefined,
           timestamp: inv.created_at,
           categoryName,
         });

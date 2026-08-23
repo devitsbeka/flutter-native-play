@@ -682,8 +682,16 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                             {interaction.type === 'room_together' && <Users className="w-4 h-4" />}
                           </div>
                           <div className="flex-1 min-w-0">
+                            {/* Name the room or category. Every entry already
+                                carried it and none of them showed it, so the
+                                line stopped at "invited you to" and left the
+                                reader to guess what. The bare label is still
+                                the fallback for an invitation with no room
+                                left to name. */}
                             <p className="text-sm text-foreground truncate">
-                              {t(`extra.${interaction.message}`)}
+                              {interaction.details
+                                ? t(`extra.${interaction.message}Named`, { name: interaction.details })
+                                : t(`extra.${interaction.message}`)}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {formatProfileTimeAgo(new Date(interaction.timestamp), t)}
