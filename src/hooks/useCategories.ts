@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Category } from '@/data/categories';
-import { preloadIcons } from '@/hooks/useIconLibrary';
 import { readAppLanguage } from '@/utils/appLanguage';
 import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
 
@@ -40,11 +39,6 @@ export interface TransformedCategory extends Category {
   category_id: string; // String slug like "movies"  
   icon_slug?: string | null;
   image_url?: string | null;
-}
-
-// Build icon URL from slug
-function getIconUrl(slug: string): string {
-  return `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${slug}.png`;
 }
 
 // Transform database category to app Category format
@@ -159,14 +153,20 @@ export const useCategories = () => {
       setCategories(transformed);
       lastFetchRef.current = Date.now();
 
-      // Preload category icons for faster rendering
-      const iconUrls = transformed
-        .filter(cat => cat.icon_slug)
-        .map(cat => getIconUrl(cat.icon_slug!));
-      
-      if (iconUrls.length > 0) {
-        preloadIcons(iconUrls);
-      }
+      // No blanket icon preload here.
+      //
+      // This used to fire `new Image()` for every category that has an
+      // icon_slug — 51 of the 71 live rows — the moment the list arrived.
+      // It was meant to make icons appear sooner and did the opposite on
+      // Discover: the icon library is served from the same origin as the
+      // REST API, so those requests queue against the very queries the page
+      // is still waiting on (progress, favourites, ranks, new-category
+      // flags), and 51 of them land before a single card is on screen.
+      //
+      // Every card already requests its own icon when it renders, so this
+      // bought nothing that the render did not do anyway — it just moved the
+      // whole library to the front of the queue, including the categories
+      // sitting off the end of a carousel the player may never scroll.
     } catch (err) {
       console.error('Error fetching categories:', err);
       setError(err as Error);
