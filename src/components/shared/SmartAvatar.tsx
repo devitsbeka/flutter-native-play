@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type CSSProperties } from "react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,8 @@ interface SmartAvatarProps {
   autoPlay?: boolean;
   playOnHover?: boolean;
   ringColor?: string;
+  /** Applied to the box the avatar fills — for a ring colour Tailwind has no class for. */
+  style?: CSSProperties;
   onlineStatus?: boolean | null;
   onClick?: () => void;
   clickable?: boolean;
@@ -58,6 +60,7 @@ export function SmartAvatar({
   autoPlay = false,
   playOnHover = true,
   ringColor,
+  style,
   onlineStatus,
   onClick,
   clickable = false,
@@ -185,6 +188,7 @@ export function SmartAvatar({
         isClickable && "cursor-pointer hover:scale-105 transition-transform active:scale-95",
         className
       )}
+      style={style}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}

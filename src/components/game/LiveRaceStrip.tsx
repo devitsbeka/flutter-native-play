@@ -1,10 +1,11 @@
+import { Fragment } from "react";
 import { motion } from "framer-motion";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
-import medalGold from "@/assets/icons/medal-gold.png";
-import medalSilver from "@/assets/icons/medal-silver.png";
-import medalBronze from "@/assets/icons/medal-bronze.png";
+import trophyGold from "@/assets/trophy-gold.png";
+import trophySilver from "@/assets/trophy-silver.png";
+import trophyBronze from "@/assets/trophy-bronze.png";
 
 export interface RacePlayer {
   id: string;
@@ -22,15 +23,29 @@ interface LiveRaceStripProps {
   className?: string;
 }
 
-/** How many avatars the strip will carry before deferring to the results screen. */
-export const MAX_SHOWN = 10;
+/**
+ * Three on the podium, seven chasing. Past ten the row is scrolling further
+ * than anyone will scroll mid-question, and the full field is on the results
+ * screen, which is a vertical list and has room for it.
+ */
+const PODIUM_SHOWN = 3;
+const PACK_SHOWN = 7;
+export const MAX_SHOWN = PODIUM_SHOWN + PACK_SHOWN;
 
-/** Ring, medal and glow per place. Fourth onward gets none of it. */
+/** Ring and trophy per place. Fourth onward gets neither. */
 const PODIUM = [
-  { ring: "#F5B921", glow: "rgba(245,185,33,0.55)", medal: medalGold },
-  { ring: "#C3CEDA", glow: "rgba(195,206,218,0.5)", medal: medalSilver },
-  { ring: "#D08A4F", glow: "rgba(208,138,79,0.5)", medal: medalBronze },
+  { ring: "#F5B921", trophy: trophyGold },
+  { ring: "#C3CEDA", trophy: trophySilver },
+  { ring: "#D08A4F", trophy: trophyBronze },
 ] as const;
+
+/**
+ * Everyone off the podium wears the same plain ring — except you, who wear a
+ * bright one. Names do not survive a ten-player row (see below), so the ring
+ * is what answers "which one am I".
+ */
+const PACK_RING = "rgba(255,255,255,0.32)";
+const SELF_RING = "rgba(255,255,255,0.95)";
 
 /**
  * Standings, highest first.
@@ -68,9 +83,6 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
 
   if (players.length < 2) return null;
 
-  // Ten is the ceiling. Past that the row is scrolling further than anyone
-  // will scroll mid-question, and the full field is on the results screen,
-  // which is a vertical list and has room for it.
   const ranked = rankPlayers(players).slice(0, MAX_SHOWN);
 
   /**
@@ -85,16 +97,13 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
    * the screen, which is where the fourth answer was being clipped by the
    * next-question button.
    */
-  const sideways = ranked.length <= 3;
+  const sideways = ranked.length <= PODIUM_SHOWN;
 
   return (
     <div
       className={cn(
         "flex overflow-x-auto scrollbar-hide px-4 py-0.5 -mx-4",
-        sideways ? "items-center gap-5 justify-center" : "items-start gap-2",
-        // Centre a field small enough to fit; longer ones start at first place
-        // and scroll, so the leader is always the one you see first.
-        !sideways && (ranked.length <= 4 ? "justify-center" : "justify-start"),
+        sideways ? "items-center justify-center gap-5" : "items-start gap-[3px]",
         className,
       )}
     >
@@ -104,85 +113,115 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
         const score = Math.round(player.score || 0);
 
         return (
-          <motion.div
-            key={player.id}
-            // layout is what makes an overtake readable: the element keeps its
-            // identity and travels to its new place.
-            layout
-            transition={{ type: "spring", stiffness: 400, damping: 34 }}
-            className={cn(
-              "flex shrink-0",
-              sideways
-                ? "items-center gap-1.5"
-                : cn(
-                    "flex-col items-center gap-0.5",
-                    // The podium is drawn bigger than the rest. A full room is
-                    // ten players and they cannot all fit across a phone, so
-                    // the three that matter hold the left edge at full size
-                    // and the chasing pack is narrower behind them.
-                    podium ? "w-[64px]" : "w-[52px]",
-                  ),
+          <Fragment key={player.id}>
+            {/* The gap that splits the podium from the pack. A flex spacer
+                rather than two separate rows on purpose: every avatar has to
+                stay a sibling of every other one for `layout` below to animate
+                an overtake. Move fourth place into its own container and
+                React reparents it on the way to third, which unmounts and
+                remounts the element — the avatar would pop into the bronze
+                ring instead of sliding into it. */}
+            {!sideways && index === PODIUM_SHOWN && (
+              <div className="min-w-[10px] flex-1" aria-hidden />
             )}
-          >
-            <div className="relative">
-              <div
-                className="rounded-full p-[2.5px]"
-                style={{
-                  background: podium?.ring ?? "rgba(255,255,255,0.28)",
-                  boxShadow: podium ? `0 0 10px ${podium.glow}` : undefined,
-                }}
-              >
+
+            <motion.div
+              // layout is what makes an overtake readable: the element keeps
+              // its identity and travels to its new place.
+              layout
+              transition={{ type: "spring", stiffness: 400, damping: 34 }}
+              className={cn(
+                "flex shrink-0",
+                sideways
+                  ? "items-center gap-1.5"
+                  : cn(
+                      "flex-col items-center gap-0.5",
+                      // The podium is drawn bigger than the rest. A full room
+                      // is ten players and they cannot all fit across a phone
+                      // at one size, so the three that matter hold the left
+                      // edge and the chasing pack is compact on the right.
+                      podium ? "w-[46px]" : "w-[30px]",
+                    ),
+              )}
+            >
+              <div className="relative">
+                {/* A spread box-shadow, not a padded parent. The ring used to
+                    be a coloured div with 2.5px of padding, which rounds to
+                    whole pixels unevenly at this size and left the stroke
+                    visibly heavier along the bottom. A shadow of zero offset
+                    and zero blur is the same 2px the whole way round. */}
                 <SmartAvatar
                   avatarUrl={player.avatar_url ?? undefined}
                   fallback={player.nickname}
                   size={sideways || podium ? "sm" : "xs"}
+                  // 28px for the chasing pack, not the 32 xs gives. Three
+                  // podium entries and seven more have to cross a 390pt
+                  // phone without the tail of the field falling off the
+                  // right edge, and those four pixels are the difference.
+                  className={cn("rounded-full", !sideways && !podium && "h-7 w-7")}
+                  style={{
+                    boxShadow: `0 0 0 2px ${podium?.ring ?? (isMe ? SELF_RING : PACK_RING)}`,
+                  }}
                 />
+
+                {podium && (
+                  <img
+                    src={podium.trophy}
+                    alt=""
+                    // Sitting on the rim, not hanging below the box. A round
+                    // avatar leaves its bounding box empty at the corner, so
+                    // -2px puts the trophy over the ring and keeps it clear
+                    // of the score on the line underneath.
+                    className="absolute -bottom-0.5 -right-0.5 h-[19px] w-[19px] object-contain drop-shadow"
+                  />
+                )}
               </div>
 
-              {podium && (
-                <img
-                  src={podium.medal}
-                  alt=""
-                  className="absolute -bottom-1 -right-1 h-[15px] w-[15px] object-contain drop-shadow"
-                />
-              )}
-            </div>
-
-            {/* Name and score on ONE line. Stacked, under a 44px avatar,
-                this row stood 93px tall and every one of those pixels came
-                out of the question card and the four answers below it — the
-                fourth was being clipped by the next-question button. The
-                score still animates its own change, so an overtake is
-                readable without the row being a scoreboard. */}
-            <div
-              className={cn(
-                "flex min-w-0",
-                sideways ? "flex-col gap-0.5" : "max-w-full items-baseline gap-1",
-              )}
-            >
-              <span
+              {/* Name and score on ONE line. Stacked, under a 44px avatar,
+                  this row stood 93px tall and every one of those pixels came
+                  out of the question card and the four answers below it — the
+                  fourth was being clipped by the next-question button. The
+                  score still animates its own change, so an overtake is
+                  readable without the row being a scoreboard. */}
+              <div
                 className={cn(
-                  "min-w-0 truncate font-semibold leading-none text-white",
-                  sideways ? "text-[11px]" : "text-[10px]",
-                  isMe ? "font-extrabold" : "text-white/90",
+                  "flex min-w-0",
+                  sideways ? "flex-col gap-0.5" : "max-w-full items-baseline gap-1",
                 )}
               >
-                {isMe ? t("game.you") : player.nickname}
-              </span>
-              <motion.span
-                key={score}
-                initial={{ scale: 1.35, opacity: 0.6 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.25 }}
-                className={cn(
-                  "shrink-0 font-display font-extrabold leading-none text-white drop-shadow-sm",
-                  sideways ? "text-[13px]" : "text-[11px]",
+                {/* Stacked, nobody is named. A ten-player row gives each entry
+                    thirty-odd pixels beside its score, and a name in that
+                    space renders as "Sal…", which identifies nobody — the
+                    avatar does that job better, and the ring above says which
+                    one is you. Two or three players have the room, so they
+                    keep their names. */}
+                {sideways && (
+                  <span
+                    className={cn(
+                      "min-w-0 truncate font-semibold leading-none text-white",
+                      sideways ? "text-[11px]" : "text-[10px]",
+                      isMe ? "font-extrabold" : "text-white/90",
+                    )}
+                  >
+                    {isMe ? t("game.you") : player.nickname}
+                  </span>
                 )}
-              >
-                {score}
-              </motion.span>
-            </div>
-          </motion.div>
+                <motion.span
+                  key={score}
+                  initial={{ scale: 1.35, opacity: 0.6 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.25 }}
+                  className={cn(
+                    "shrink-0 font-display font-extrabold leading-none drop-shadow-sm",
+                    sideways ? "text-[13px]" : "text-[11px]",
+                    isMe ? "text-white" : "text-white/90",
+                  )}
+                >
+                  {score}
+                </motion.span>
+              </div>
+            </motion.div>
+          </Fragment>
         );
       })}
     </div>
