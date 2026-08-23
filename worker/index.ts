@@ -104,6 +104,13 @@ class MetaContent {
   }
 }
 
+/** Drop a meta tag whose value no longer describes the image beside it. */
+class RemoveElement {
+  element(el: { remove: () => void }) {
+    el.remove();
+  }
+}
+
 /**
  * The share preview for a room invite.
  *
@@ -144,14 +151,22 @@ async function roomPreview(request: Request, env: Env, code: string): Promise<Re
     .on('meta[property="og:url"]', new MetaContent(canonical.toString()))
     .on('meta[property="og:type"]', new MetaContent("website"));
 
-  // The inviter's face, in place of the app's crown. Left alone when they
-  // have no avatar, so the card stays branded rather than blank.
+  // The inviter's face. A host with no avatar keeps the page's own card,
+  // which is the Trivia King scene — the character the app opens on — so the
+  // fallback is still the game rather than a blank frame.
   if (preview.hostAvatar) {
     rewriter
       .on('meta[property="og:image"]', new MetaContent(preview.hostAvatar))
       .on('meta[name="twitter:image"]', new MetaContent(preview.hostAvatar))
       // A portrait is square; asking for a wide card letterboxes it.
-      .on('meta[name="twitter:card"]', new MetaContent("summary"));
+      .on('meta[name="twitter:card"]', new MetaContent("summary"))
+      // The page declares 1200x630 for its own card. Leaving that in place
+      // over a square avatar tells the scraper a shape the image does not
+      // have, which is what makes one get cropped to something odd — and
+      // guessing a size for someone else's upload would be the same mistake.
+      .on('meta[property="og:image:width"]', new RemoveElement())
+      .on('meta[property="og:image:height"]', new RemoveElement())
+      .on('meta[property="og:image:type"]', new RemoveElement());
   }
 
   const out = rewriter.transform(assetResponse);

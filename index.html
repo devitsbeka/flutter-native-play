@@ -22,14 +22,22 @@
     <meta property="og:type" content="website" />
     <!-- Rewritten per invite by worker/index.ts; the site URL otherwise. -->
     <meta property="og:url" content="https://mytrivia.io/" />
-    <meta property="og:image" content="https://mytrivia.io/og-image.png?v=2" />
+    <!-- The Trivia King scene, the same character the app opens on. It was
+         the wordmark card with a crown on it, and chat apps showed a bare
+         crown instead: with no dimensions declared, a scraper is free to
+         treat the image as an icon and crop it square. The size is stated
+         now, so it is rendered as the wide card it is. -->
+    <meta property="og:image" content="https://mytrivia.io/og-trivia-king.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@MyTrivia" />
-    <meta name="twitter:image" content="https://mytrivia.io/og-image.png?v=2" />
+    <meta name="twitter:image" content="https://mytrivia.io/og-trivia-king.jpg" />
 
     <!-- App Icon -->
-    <!-- The crown, matching the wordmark in og-image.png. app-icon.png is the
+    <!-- The crown, which is the app mark. app-icon.png is the
          old "LIVE" mascot badge and app-icon-1024/apple-touch-icon.png are an
          older orange question mark again — three different marks were being
          served as this app's icon, and the one next to a shared link was the
