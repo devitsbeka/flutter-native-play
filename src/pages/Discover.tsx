@@ -18,6 +18,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 import { matchesQuery } from "@/utils/searchMatch";
 import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
+import { funRowCategories } from "@/utils/discoverRows";
 
 // ─── Lazy Section: only mounts children when scrolled near viewport ─────
 
@@ -113,10 +114,8 @@ export default function Discover() {
     () => categories.filter((cat) => cat.type === "classic"),
     [categories]
   );
-  const funCategories = useMemo(
-    () => categories.filter((cat) => cat.type === "fun"),
-    [categories]
-  );
+  // Fun shows what Popular is not already showing — see funRowCategories.
+  const funCategories = useMemo(() => funRowCategories(categories), [categories]);
   const educationalCategories = useMemo(
     () => categories.filter((cat) => cat.type === "educational"),
     [categories]
