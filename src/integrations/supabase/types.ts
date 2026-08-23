@@ -4172,6 +4172,33 @@ export type Database = {
       format_display_name: { Args: { full_name: string }; Returns: string }
       accept_invite: { Args: { p_code: string }; Returns: string }
       get_or_create_invite_code: { Args: never; Returns: string }
+      room_preview: {
+        Args: { p_room_code: string }
+        Returns: {
+          host_user_id: string
+          host_nickname: string
+          host_avatar_url: string | null
+          host_animated_avatar_url: string | null
+          host_country_code: string | null
+          room_code: string | null
+          room_name: string | null
+          category_id: string | null
+          category_name: string | null
+          room_status: string | null
+          player_count: number | null
+        }[]
+      }
+      room_players: {
+        Args: { p_room_code: string }
+        Returns: {
+          user_id: string
+          nickname: string | null
+          avatar_url: string | null
+          animated_avatar_url: string | null
+          country_code: string | null
+          is_host: boolean
+        }[]
+      }
       invite_preview: {
         Args: { p_code: string }
         Returns: {

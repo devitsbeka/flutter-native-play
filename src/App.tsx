@@ -243,7 +243,10 @@ const App = () => (
                 <Route path="/team" element={<TeamV2 />} />
                 <Route path="/trivia/:triviaId" element={<TriviaLobby />} />
                 <Route path="/collection/:collectionId" element={<CollectionLobby />} />
-                <Route path="/room/:code" element={<RoomRedirect />} />
+                {/* Every invite shared before /i/ existed is this shape,
+                    and they are out in the world. Same welcome screen,
+                    resolved by room code — see InvitePage. */}
+                <Route path="/room/:code" element={<InvitePage by="room" />} />
                 {/* A shared invite link. Shows who is inviting you before it
                     joins anything — see InvitePage. */}
                 <Route path="/i/:code" element={<InvitePage />} />

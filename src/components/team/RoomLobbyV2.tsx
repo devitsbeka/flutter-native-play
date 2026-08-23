@@ -17,6 +17,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
+import { siteUrl } from "@/config/site";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { Input } from "@/components/ui/input";
@@ -248,8 +249,14 @@ export function RoomLobbyV2() {
 
   const handleShare = async () => {
     if (!currentRoom) return;
-    
-    const link = getShareLink(currentRoom.room_code);
+
+    // The sender's own invite link, so opening it makes the two of them
+    // friends. It resolves to whatever room the sender is in when it is
+    // OPENED, which is this one. Falls back to the room link if the code
+    // cannot be minted (signed out, or the invite migration not yet run) --
+    // that still lands on the welcome screen, it just does not befriend.
+    const { data: inviteCode } = await supabase.rpc("get_or_create_invite_code");
+    const link = inviteCode ? siteUrl(`/i/${inviteCode}`) : getShareLink(currentRoom.room_code);
     const shareData = {
       title: t("extra.shareTitle"),
       text: t("extra.shareText"),

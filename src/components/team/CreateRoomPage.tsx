@@ -487,7 +487,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   // link on the production domain even from the native app.
   const handleShareInviteLink = async () => {
     const categoryName = selectedCategory?.name || "Trivia";
-    const inviteLink = siteUrl("/team");
+    // Was a bare /team, which told whoever opened it nothing: not who sent
+    // it, not what they were playing. The sender's own invite link says both,
+    // and makes them friends when it is accepted.
+    const { data: inviteCode } = await supabase.rpc("get_or_create_invite_code");
+    const inviteLink = inviteCode ? siteUrl(`/i/${inviteCode}`) : siteUrl("/team");
 
     const outcome = await shareOrCopy({
       title: t("extra.joinTriviaShare"),

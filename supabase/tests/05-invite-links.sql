@@ -252,6 +252,36 @@ BEGIN
 END $$;
 
 
+-- ── 8b. a link that only knows a room code ───────────────────────────────
+--
+-- Every invite shared before /i/ existed is /room/<code>, and those links are
+-- out in the world. They land on the same welcome screen, resolved this way.
+SELECT set_config('test.uid', '', false);
+
+DO $$
+DECLARE p record;
+BEGIN
+  -- Case-insensitive: the code is printed uppercase in the lobby and typed
+  -- back in however the keyboard felt.
+  SELECT * INTO p FROM public.room_preview('abc123');
+  IF p.host_nickname <> 'Beka' OR p.room_code <> 'ABC123' THEN
+    RAISE EXCEPTION 'room_preview did not resolve a lowercased code';
+  END IF;
+  IF p.category_name <> 'Guess the Logo' OR p.player_count <> 2 THEN
+    RAISE EXCEPTION 'room_preview lost the room details';
+  END IF;
+  IF (SELECT count(*) FROM public.room_players('ABC123')) <> 2 THEN
+    RAISE EXCEPTION 'expected two players by room code';
+  END IF;
+  IF (SELECT nickname FROM public.room_players('ABC123') WHERE is_host) <> 'Beka' THEN
+    RAISE EXCEPTION 'the host flag is wrong on the room-code path';
+  END IF;
+  IF (SELECT count(*) FROM public.room_preview('nosuch')) <> 0 THEN
+    RAISE EXCEPTION 'an unknown room code previewed something';
+  END IF;
+END $$;
+
+
 -- ── 9. the functions are not granted to the world ─────────────────────────
 DO $$
 DECLARE bad text;

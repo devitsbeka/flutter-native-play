@@ -50,7 +50,20 @@ interface InvitePlayer {
   is_host: boolean;
 }
 
-export default function InvitePage() {
+/**
+ * Which kind of link brought them here.
+ *
+ * "invite" is /i/<personal code>: sixteen unguessable characters only its
+ * owner can mint, so holding one is proof its owner asked. Accepting makes
+ * the two of you friends.
+ *
+ * "room" is /room/<room code>: six characters, printed in the lobby and
+ * pasted into group chats. It is every link shared before the personal one
+ * existed, so it gets the same welcome screen -- but joining a room is all a
+ * room code should be able to do on its own, so the host is offered with a
+ * friend button rather than added automatically.
+ */
+export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }) {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -75,8 +88,12 @@ export default function InvitePage() {
       // link in a chat, and has to see who invited them before deciding
       // whether to make an account at all.
       const [{ data: previewRows }, { data: playerRows }] = await Promise.all([
-        supabase.rpc("invite_preview", { p_code: code }),
-        supabase.rpc("invite_room_players", { p_code: code }),
+        by === "room"
+          ? supabase.rpc("room_preview", { p_room_code: code })
+          : supabase.rpc("invite_preview", { p_code: code }),
+        by === "room"
+          ? supabase.rpc("room_players", { p_room_code: code })
+          : supabase.rpc("invite_room_players", { p_code: code }),
       ]);
       if (cancelled) return;
       setPreview((previewRows?.[0] as InvitePreview) ?? null);
@@ -86,10 +103,12 @@ export default function InvitePage() {
     return () => {
       cancelled = true;
     };
-  }, [code]);
+  }, [code, by]);
 
   const alreadyFriends = !!preview && friends.some(f => f.friendId === preview.host_user_id);
-  const isOwnLink = !!preview && preview.host_user_id === user?.id;
+  // Only a personal link can be "your own". A host opening their own room
+  // link is just rejoining, and should be offered the room like anyone else.
+  const isOwnLink = by === "invite" && !!preview && preview.host_user_id === user?.id;
   const hasRoom = !!preview?.room_code;
 
   const accept = useCallback(async () => {
@@ -119,13 +138,17 @@ export default function InvitePage() {
         await supabase.from("profiles").update({ nickname: chosen }).eq("user_id", data.user.id);
       }
 
-      const { error } = await supabase.rpc("accept_invite", { p_code: code });
-      if (error) {
-        toast.error(t("extra.inviteAcceptFailed"));
-        setJoining(false);
-        return;
+      // Only the personal link befriends. A room code is not evidence that
+      // its host wanted this particular person in their friends list.
+      if (by === "invite") {
+        const { error } = await supabase.rpc("accept_invite", { p_code: code });
+        if (error) {
+          toast.error(t("extra.inviteAcceptFailed"));
+          setJoining(false);
+          return;
+        }
+        await refreshFriends();
       }
-      await refreshFriends();
 
       // Straight into the room if there is one to join; otherwise the
       // friendship IS the outcome, so land them at home where the new friend
@@ -139,7 +162,7 @@ export default function InvitePage() {
     } finally {
       setJoining(false);
     }
-  }, [code, preview, user, nickname, navigate, refreshFriends, t]);
+  }, [by, code, preview, user, nickname, navigate, refreshFriends, t]);
 
   const addPlayer = useCallback(async (playerId: string) => {
     setRequested(prev => new Set(prev).add(playerId));
@@ -250,7 +273,7 @@ export default function InvitePage() {
                     {/* Nothing to offer a signed-out visitor: they cannot
                         send a friend request yet, and a row of greyed-out
                         buttons reads as broken rather than as not-yet. */}
-                    {user && !isSelf && !player.is_host && (
+                    {user && !isSelf && (by === "room" || !player.is_host) && (
                       isFriend || asked ? (
                         <Check className="w-5 h-5 text-emerald-300 shrink-0" />
                       ) : (
