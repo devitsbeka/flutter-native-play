@@ -192,8 +192,28 @@ def build_sql(slug, entries, existing_per_language):
 
 def main():
     slug, harvested_path, out_path = sys.argv[1], sys.argv[2], sys.argv[3]
+    # Optional fourth argument: stop after this many, most famous first.
+    #
+    # More is not better past a point. Twenty levels is the ceiling question
+    # selection can serve, so 200 per language fills the category; beyond
+    # that the only thing another hundred subjects buys is variety within a
+    # level, and it is bought by reaching further down the fame ranking. For
+    # cities the harvest runs 471 deep, and rank 300 is Wuppertal and
+    # Kropyvnytskyi -- real cities, and not a fair question for a player in
+    # Tbilisi or Madrid. The cut belongs here rather than in the query,
+    # because where it falls is a judgement about the game.
+    limit = int(sys.argv[4]) if len(sys.argv) > 4 else None
     harvested = json.loads(pathlib.Path(harvested_path).read_text())
     entries = build_spec(slug, harvested)
+    if limit is not None:
+        entries = entries[:limit]
+        # Difficulty is thirds of the list, so it has to be redrawn against
+        # the list that ships. Otherwise a truncated run is labelled "easy"
+        # all the way down, because every survivor was in the top third of
+        # the harvest.
+        third = max(1, len(entries) // 3)
+        for i, e in enumerate(entries):
+            e["difficulty"] = "easy" if i < third else ("medium" if i < 2 * third else "hard")
 
     errs = []
     seen_keys = set()
