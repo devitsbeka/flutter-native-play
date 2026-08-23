@@ -154,6 +154,17 @@
 		<dict><key>SKAdNetworkIdentifier</key><string>3qcr597p9d.skadnetwork</string></dict>
 	</array>
 
+	<!-- ═══ Communication Notifications ═══
+	     The service extension rebuilds a push from an INSendMessageIntent, so an
+	     invite or friend request is drawn with the sender's avatar. iOS requires
+	     the intent be declared here as well as entitled: without this key App
+	     Store Connect returns warning 90894 on every upload, and the rebuild has
+	     no declared activity type to match. -->
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>INSendMessageIntent</string>
+	</array>
+
 	<!-- ═══ Export compliance ═══
 	     HTTPS only, which is the standard exemption. Declaring it here stops
 	     App Store Connect asking on every single upload. -->
