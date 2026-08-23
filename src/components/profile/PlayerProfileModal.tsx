@@ -17,7 +17,7 @@ import { toast } from "@/lib/toast";
 import { useState, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PlayerOverflowMenu } from "@/components/social/PlayerOverflowMenu";
-import { VersusPanel } from "@/components/profile/VersusPanel";
+import { VersusPanel, hasVersusContent } from "@/components/profile/VersusPanel";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 import { MASCOT_USER_IDS } from "@/lib/excludedUsers";
@@ -92,6 +92,12 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
 
   // Non-friends can only see avatar, name, add friend button, and public content
   const canSeePrivateInfo = data?.isFriend || data?.isCurrentUser;
+
+  // The Info tab exists only when it has something in it: your own profile
+  // has no head-to-head, and a player you have never met has neither that nor
+  // an established specialty.
+  const showInfoTab =
+    !!data && !data.isCurrentUser && hasVersusContent(data.headToHead, data.facts);
 
   // Navigate to trivia/collection lobby pages
   const handlePlayTrivia = (triviaId: string) => {
@@ -394,19 +400,9 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                       Your own stats still live on your own profile page.
 
                       What replaced it is about the two of you rather than a
-                      dump of their numbers: the record between you, and the
-                      one thing they are best at. */}
-                  {!data.isCurrentUser && (
-                    <VersusPanel
-                      headToHead={data.headToHead}
-                      specialty={data.specialty}
-                      me={{ nickname: profile?.nickname, avatarUrl: profile?.avatar_url }}
-                      them={{
-                        nickname: data.profile.nickname,
-                        avatarUrl: data.profile.avatar_url,
-                      }}
-                    />
-                  )}
+                      dump of their numbers — and it lives in the Info tab
+                      below, not here, so the header stays the person and the
+                      panels stay the detail. */}
 
                   {/* Action Buttons */}
                   {!data.isCurrentUser && (
@@ -500,8 +496,21 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 </div>
 
                 {/* Tabs - Trivias and Trophies (both visible to everyone) */}
-                <Tabs defaultValue="trivias" className="px-4 pb-4">
-                  <TabsList className="grid w-full mb-4 h-auto py-2 grid-cols-2">
+                {/* Info leads when there is something in it — the record
+                    between you and what they are best at is what a visitor
+                    came for. It is dropped entirely rather than opened onto
+                    an empty panel: on your own profile there is no "against",
+                    and on a stranger's there may be nothing yet. */}
+                <Tabs defaultValue={showInfoTab ? "info" : "trivias"} className="px-4 pb-4">
+                  <TabsList
+                    className={`grid w-full mb-4 h-auto py-2 ${showInfoTab ? "grid-cols-3" : "grid-cols-2"}`}
+                  >
+                    {showInfoTab && (
+                      <TabsTrigger value="info" className="flex flex-col items-center gap-0.5">
+                        <Swords className="w-9 h-9 p-1.5 text-primary" />
+                        <span className="text-xs">{t("extra.infoTab")}</span>
+                      </TabsTrigger>
+                    )}
                     <TabsTrigger value="trivias" className="flex flex-col items-center gap-0.5">
                       <img src={iconTrivia} alt="" className="w-9 h-9" />
                       <span className="text-xs">{t("extra.triviasTab")}</span>
@@ -511,6 +520,20 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                       <span className="text-xs">{t("extra.trophiesTab")}</span>
                     </TabsTrigger>
                   </TabsList>
+
+                  {showInfoTab && (
+                    <TabsContent value="info">
+                      <VersusPanel
+                        headToHead={data.headToHead}
+                        facts={data.facts}
+                        me={{ nickname: profile?.nickname, avatarUrl: profile?.avatar_url }}
+                        them={{
+                          nickname: data.profile.nickname,
+                          avatarUrl: data.profile.avatar_url,
+                        }}
+                      />
+                    </TabsContent>
+                  )}
 
                   <TabsContent value="trophies">
                     {data.achievements.length === 0 ? (

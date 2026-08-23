@@ -1650,6 +1650,9 @@ export const en: KaTranslations = {
 
 
   extra: {
+    questionsAnsweredLabel: "Questions answered",
+    successRateLabel: "Success rate",
+    infoTab: "Info",
     playedTogetherCount: "You have played {count} matches together",
     victoriesLabel: "Victories",
     versusShort: "VS",

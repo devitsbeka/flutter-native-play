@@ -29,9 +29,19 @@ export interface Specialty {
   name: string;
   iconSlug: string | null;
   totalAnswers: number;
-  correctAnswers: number;
   /** 0–1. */
   accuracy: number;
+}
+
+/** The three things the Info tab says about a player. */
+export interface PlayerFacts {
+  /** Questions answered across every category. */
+  answered: number;
+  correct: number;
+  /** 0–1 across everything, or null for a player who has answered nothing. */
+  accuracy: number | null;
+  /** Their strongest category, over enough answers to mean something. */
+  specialty: Specialty | null;
 }
 
 export interface PlayerProfileData {
@@ -84,8 +94,8 @@ export interface PlayerProfileData {
    * "against".
    */
   headToHead: HeadToHead | null;
-  /** What this player is best at, over enough answers to mean something. */
-  specialty: Specialty | null;
+  /** Questions answered, success rate, and what they are best at. */
+  facts: PlayerFacts | null;
   stats: {
     totalPoints: number;
     gamesPlayed: number;
@@ -146,13 +156,12 @@ async function fetchCore(userId: string): Promise<CoreProfile> {
 }
 
 /**
- * The two functions behind the "against each other" panel.
- *
- * Called through a cast because neither is in the generated types — those are
- * regenerated from a database, and doing that here is how six other functions
- * once vanished (see CLAUDE.md rule 1). Both are SECURITY DEFINER and read
- * rows that are not the caller's own; head_to_head_record takes only the
- * other player, never both sides, so the "me" half is always auth.uid().
+ * The functions behind the Info tab. Called through a cast because they are
+ * not in the generated types — those are regenerated from a database, and
+ * doing that here is how six other functions once vanished (CLAUDE.md rule 1).
+ * Both are SECURITY DEFINER and read rows that are not the caller's own;
+ * head_to_head_record takes only the other player, never both sides, so the
+ * "me" half is always auth.uid().
  */
 /**
  * Two things here are easy to get wrong, and both fail silently.
@@ -199,14 +208,16 @@ interface HeadToHeadRow {
   draws: number | string;
 }
 
-interface BestCategoryRow {
-  category_id: string;
-  category_slug: string;
-  category_name: string;
-  icon_slug: string | null;
-  total_answers: number;
-  correct_answers: number;
-  accuracy: number | string;
+interface FactsRow {
+  answered: number | string;
+  correct: number | string;
+  accuracy: number | string | null;
+  best_category_id: string | null;
+  best_category_slug: string | null;
+  best_category_name: string | null;
+  best_icon_slug: string | null;
+  best_answered: number | null;
+  best_accuracy: number | string | null;
 }
 
 /** Postgres bigint and numeric arrive as strings over PostgREST. */
@@ -215,19 +226,19 @@ const num = (v: number | string | null | undefined): number => Number(v ?? 0) ||
 async function fetchVersus(
   userId: string,
   viewerId: string | undefined,
-): Promise<{ headToHead: HeadToHead | null; specialty: Specialty | null }> {
+): Promise<{ headToHead: HeadToHead | null; facts: PlayerFacts | null }> {
   const isOther = !!viewerId && viewerId !== userId;
 
-  const [h2hRows, bestRows] = await Promise.all([
+  const [h2hRows, factsRows] = await Promise.all([
     isOther
       ? rpcRows<HeadToHeadRow>("head_to_head_record", { p_other_user_id: userId })
       : Promise.resolve(null),
-    rpcRows<BestCategoryRow>("best_category_for_user", { p_user_id: userId }),
+    rpcRows<FactsRow>("player_profile_facts", { p_user_id: userId }),
   ]);
 
   // Both return SETOF, so a row array — empty when there is nothing to say.
   const h2hRow = h2hRows?.[0];
-  const bestRow = bestRows?.[0];
+  const factsRow = factsRows?.[0];
 
   const headToHead: HeadToHead | null = h2hRow
     ? {
@@ -238,25 +249,34 @@ async function fetchVersus(
       }
     : null;
 
-  let specialty: Specialty | null = null;
-  if (bestRow) {
-    // categories.name is Georgian for every row; the reader's language lives
-    // in category_translations, keyed by the category UUID.
-    const [localized] = await localizeCategoryNames([
-      { id: bestRow.category_id, name: bestRow.category_name },
-    ]);
-    specialty = {
-      categoryId: bestRow.category_id,
-      slug: bestRow.category_slug,
-      name: localized?.name ?? bestRow.category_name,
-      iconSlug: bestRow.icon_slug,
-      totalAnswers: num(bestRow.total_answers),
-      correctAnswers: num(bestRow.correct_answers),
-      accuracy: num(bestRow.accuracy),
+  let facts: PlayerFacts | null = null;
+  if (factsRow) {
+    let specialty: Specialty | null = null;
+    if (factsRow.best_category_id && factsRow.best_category_name) {
+      // categories.name is Georgian for every row; the reader's language
+      // lives in category_translations, keyed by the category UUID.
+      const [localized] = await localizeCategoryNames([
+        { id: factsRow.best_category_id, name: factsRow.best_category_name },
+      ]);
+      specialty = {
+        categoryId: factsRow.best_category_id,
+        slug: factsRow.best_category_slug ?? "",
+        name: localized?.name ?? factsRow.best_category_name,
+        iconSlug: factsRow.best_icon_slug,
+        totalAnswers: num(factsRow.best_answered),
+        accuracy: num(factsRow.best_accuracy),
+      };
+    }
+    facts = {
+      answered: num(factsRow.answered),
+      correct: num(factsRow.correct),
+      // null, not 0: "no rate yet" and "gets everything wrong" are different.
+      accuracy: factsRow.accuracy === null ? null : num(factsRow.accuracy),
+      specialty,
     };
   }
 
-  return { headToHead, specialty };
+  return { headToHead, facts };
 }
 
 // ---- Phase 2: content, friendship and shared history, all concurrent ----
@@ -433,7 +453,7 @@ export function usePlayerProfile(userId: string | null) {
         ...core,
         ...(extrasQuery.data ?? EMPTY_EXTRAS),
         headToHead: versusQuery.data?.headToHead ?? null,
-        specialty: versusQuery.data?.specialty ?? null,
+        facts: versusQuery.data?.facts ?? null,
         isCurrentUser: !!viewerId && viewerId === userId,
       }
     : null;

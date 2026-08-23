@@ -1651,6 +1651,9 @@ export const ka = {
 
 
   extra: {
+    questionsAnsweredLabel: "გაცემული პასუხი",
+    successRateLabel: "წარმატება",
+    infoTab: "ინფო",
     playedTogetherCount: "ერთად ითამაშეთ {count} მატჩი",
     victoriesLabel: "გამარჯვება",
     versusShort: "VS",

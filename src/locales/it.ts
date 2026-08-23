@@ -1373,6 +1373,9 @@ export const it: KaTranslations = {
     weekly_play_gamesDesc: "Gioca {n} partite questa settimana",
   },
   extra: {
+    questionsAnsweredLabel: "Domande risposte",
+    successRateLabel: "Percentuale di successo",
+    infoTab: "Info",
     playedTogetherCount: "Avete giocato {count} partite insieme",
     victoriesLabel: "Vittorie",
     versusShort: "VS",
