@@ -1043,7 +1043,7 @@ export function GameStylePersonalTrivia({
           </div>
 
           {/* Navigation Dots - with more spacing */}
-          <div className="flex justify-center gap-1.5 py-4 overflow-x-auto px-4">
+          <div className="flex justify-center gap-1.5 py-4 overflow-x-auto scrollbar-hide px-4">
             {questions.map((_, index) => (
               <button
                 key={index}

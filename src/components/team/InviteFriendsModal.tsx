@@ -762,7 +762,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                   <div className="mx-auto w-full max-w-[520px]">
                     {/* Roomier below than above: the labels are the last thing
                         on the screen before the footer's rule. */}
-                    <div className="flex items-center justify-center gap-8 flex-nowrap overflow-x-auto overflow-y-visible pt-2 pb-4">
+                    <div className="flex items-center justify-center gap-8 flex-nowrap overflow-x-auto scrollbar-hide overflow-y-visible pt-2 pb-4">
                       {shareOptions.map((option, index) => {
                         const IconComponent = option.icon;
                         return (
