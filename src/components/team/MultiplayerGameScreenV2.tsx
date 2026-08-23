@@ -351,10 +351,25 @@ export function MultiplayerGameScreenV2() {
           <span className="text-white/60 font-bold text-lg">{questions.length}</span>
         </div>
 
-        {/* Balances the back button so the counter stays centred. The
-            standings used to live here as a collapsed avatar cluster; they
-            are their own row now, always open. */}
-        <div className="w-10" />
+        {/* The answered count, in the slot that balances the back button so
+            the counter stays centred. It had a fixed-height row of its own
+            below the standings, which cost 32px of the question's space for
+            a pill that is blank most of the time. */}
+        <div className="w-10 flex items-center justify-end">
+          <motion.div
+            initial={false}
+            animate={{
+              opacity: answeredCount > 0 && !answerRevealed ? 1 : 0,
+              scale: answeredCount > 0 && !answerRevealed ? 1 : 0.9,
+            }}
+            transition={{ duration: 0.15 }}
+            className="rounded-full bg-white/10 px-2 py-1"
+          >
+            <span className="text-[11px] font-semibold text-white/80">
+              {answeredCount}/{opponents.length}
+            </span>
+          </motion.div>
+        </div>
       </div>
 
       {/* The race, while it is still being run. */}
@@ -363,23 +378,6 @@ export function MultiplayerGameScreenV2() {
         currentUserId={user?.id}
         className="flex-shrink-0 mb-1"
       />
-
-      {/* Answered indicator - fixed height container to prevent layout shift */}
-      <div className="px-4 h-8 flex items-center justify-center">
-        <motion.div
-          initial={false}
-          animate={{ 
-            opacity: answeredCount > 0 && !answerRevealed ? 1 : 0,
-            scale: answeredCount > 0 && !answerRevealed ? 1 : 0.9
-          }}
-          transition={{ duration: 0.15 }}
-          className="py-1.5 px-3 rounded-full bg-white/10"
-        >
-          <span className="text-white/80 text-xs">
-            {answeredCount}/{opponents.length} {t("game.answered")}
-          </span>
-        </motion.div>
-      </div>
 
       {/* Question Card */}
       <div className={cn(

@@ -173,6 +173,15 @@ export function SmartAvatar({
     <div
       className={cn(
         "relative inline-block",
+        // The box lives HERE, and the avatar fills it. It used to live only
+        // on the <Avatar> below while className sized this wrapper, so a
+        // caller passing both — size="md" and h-11 w-11, which reads as the
+        // obvious way to ask for 44px — got a 48px circle inside a 44px box.
+        // It overflowed the wrapper, and anything drawn around the wrapper
+        // (a ring, a medal) was covered on one side: the live race strip's
+        // gold rings showed as crescents. cn() lets className win, so an
+        // override now sizes the avatar itself.
+        sizeClasses[size],
         isClickable && "cursor-pointer hover:scale-105 transition-transform active:scale-95",
         className
       )}
@@ -185,7 +194,7 @@ export function SmartAvatar({
     >
       <Avatar
         className={cn(
-          sizeClasses[size],
+          "h-full w-full",
           ringColor && `ring-2 ${ringColor}`,
           "overflow-hidden"
         )}

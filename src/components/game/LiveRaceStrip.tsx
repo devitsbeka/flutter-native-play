@@ -73,13 +73,28 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
   // which is a vertical list and has room for it.
   const ranked = rankPlayers(players).slice(0, MAX_SHOWN);
 
+  /**
+   * Two or three players sit sideways -- avatar, then name over score beside
+   * it -- which is 46px tall against 63 for the stacked version, with a
+   * bigger name and a bigger score. Four or more would scroll sideways at
+   * that width, so they stack instead and stay visible at a glance.
+   *
+   * Height is the whole reason for the choice. This row is a header above the
+   * question card and the four answers, and it began life at 93px with a
+   * 32px answered-count row under it. That is 125px taken off the bottom of
+   * the screen, which is where the fourth answer was being clipped by the
+   * next-question button.
+   */
+  const sideways = ranked.length <= 3;
+
   return (
     <div
       className={cn(
-        "flex items-start gap-3 overflow-x-auto scrollbar-hide px-4 py-1 -mx-4",
+        "flex overflow-x-auto scrollbar-hide px-4 py-0.5 -mx-4",
+        sideways ? "items-center gap-5 justify-center" : "items-start gap-2",
         // Centre a field small enough to fit; longer ones start at first place
         // and scroll, so the leader is always the one you see first.
-        ranked.length <= 4 ? "justify-center" : "justify-start",
+        !sideways && (ranked.length <= 4 ? "justify-center" : "justify-start"),
         className,
       )}
     >
@@ -96,12 +111,17 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
             layout
             transition={{ type: "spring", stiffness: 400, damping: 34 }}
             className={cn(
-              "flex shrink-0 flex-col items-center gap-1",
-              // The podium is drawn bigger than the rest. A full room is ten
-              // players and they cannot all fit across a phone, so the three
-              // that matter hold the left edge at full size and the chasing
-              // pack is narrower behind them.
-              podium ? "w-[62px]" : "w-[46px]",
+              "flex shrink-0",
+              sideways
+                ? "items-center gap-1.5"
+                : cn(
+                    "flex-col items-center gap-0.5",
+                    // The podium is drawn bigger than the rest. A full room is
+                    // ten players and they cannot all fit across a phone, so
+                    // the three that matter hold the left edge at full size
+                    // and the chasing pack is narrower behind them.
+                    podium ? "w-[64px]" : "w-[52px]",
+                  ),
             )}
           >
             <div className="relative">
@@ -115,8 +135,7 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
                 <SmartAvatar
                   avatarUrl={player.avatar_url ?? undefined}
                   fallback={player.nickname}
-                  size="md"
-                  className={podium ? "h-11 w-11" : "h-8 w-8"}
+                  size={sideways || podium ? "sm" : "xs"}
                 />
               </div>
 
@@ -124,37 +143,45 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
                 <img
                   src={podium.medal}
                   alt=""
-                  className="absolute -bottom-1 -right-1 h-[18px] w-[18px] object-contain drop-shadow"
+                  className="absolute -bottom-1 -right-1 h-[15px] w-[15px] object-contain drop-shadow"
                 />
               )}
             </div>
 
-            {/* White throughout, and only the weight separates you from the
-                rest. The chasing pack was the faintest thing on a strip whose
-                whole job is being read at a glance mid-question. */}
-            <span
+            {/* Name and score on ONE line. Stacked, under a 44px avatar,
+                this row stood 93px tall and every one of those pixels came
+                out of the question card and the four answers below it — the
+                fourth was being clipped by the next-question button. The
+                score still animates its own change, so an overtake is
+                readable without the row being a scoreboard. */}
+            <div
               className={cn(
-                "max-w-full truncate text-[10px] font-semibold leading-none text-white",
-                isMe ? "font-extrabold" : "text-white/90",
+                "flex min-w-0",
+                sideways ? "flex-col gap-0.5" : "max-w-full items-baseline gap-1",
               )}
             >
-              {isMe ? t("game.you") : player.nickname}
-            </span>
-
-            {/* The score is the thing that moves, so it gets its own change
-                animation rather than only sliding with the avatar. */}
-            <motion.span
-              key={score}
-              initial={{ scale: 1.35, opacity: 0.6 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.25 }}
-              className={cn(
-                "font-display font-extrabold leading-none text-white drop-shadow-sm",
-                podium ? "text-sm" : "text-[13px]",
-              )}
-            >
-              {score}
-            </motion.span>
+              <span
+                className={cn(
+                  "min-w-0 truncate font-semibold leading-none text-white",
+                  sideways ? "text-[11px]" : "text-[10px]",
+                  isMe ? "font-extrabold" : "text-white/90",
+                )}
+              >
+                {isMe ? t("game.you") : player.nickname}
+              </span>
+              <motion.span
+                key={score}
+                initial={{ scale: 1.35, opacity: 0.6 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.25 }}
+                className={cn(
+                  "shrink-0 font-display font-extrabold leading-none text-white drop-shadow-sm",
+                  sideways ? "text-[13px]" : "text-[11px]",
+                )}
+              >
+                {score}
+              </motion.span>
+            </div>
           </motion.div>
         );
       })}
