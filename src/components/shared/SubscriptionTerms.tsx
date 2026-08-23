@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
@@ -12,6 +13,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * Render it directly under the buy button on every surface that can start a
  * subscription purchase: the PRO banner reel, the desktop shop sidebar, and
  * ProRequiredModal.
+ *
+ * **Native only.** The requirement is Apple's, and so is the copy — it names
+ * the iTunes/Apple ID account and the App Store's subscription settings,
+ * neither of which is where a web purchase goes. On the web the buy button
+ * opens Stripe Checkout, which states the renewal terms and the price on
+ * Stripe's own page before anything is charged. Showing App Store wording
+ * beside a Stripe button is not just noise, it is wrong.
+ *
+ * Do not "simplify" this back to always-on or always-off. Always-off is the
+ * rejection above; always-on tells web buyers to cancel somewhere they never
+ * subscribed.
  */
 export function SubscriptionTerms({
   className = "",
@@ -23,6 +35,11 @@ export function SubscriptionTerms({
 }) {
   const { t, language } = useLanguage();
   const suffix = language === "ka" ? "" : "-en";
+
+  // Read at render rather than module load: Capacitor resolves the platform
+  // synchronously, and a module-level constant would be captured before the
+  // native bridge is ready in some launch orders.
+  if (!Capacitor.isNativePlatform()) return null;
 
   return (
     <div className={`text-[11px] leading-snug text-muted-foreground ${className}`}>
