@@ -2145,6 +2145,7 @@ export const ka = {
     roomStatusNew: "ახალი",
     roomStatusCompleted: "დასრულდა",
     roomStatusWaiting: "მოლოდინი",
+    roomJoinLive: "შესვლა",
     roomStatusOnline: "ონლაინ",
     // How it works
     howItWorksTitle: "როგორ მუშაობს?",

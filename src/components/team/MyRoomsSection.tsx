@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { AnimatePresence, motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal, MonitorPlay } from "lucide-react";
-import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession } from "@/hooks/useMyRooms";
+import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession, isRoomLive } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -788,7 +788,19 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
         is_host: false
       }))
     : [...room.participants].sort((a, b) => Number(b.is_host) - Number(a.is_host));
-  
+
+  // A round is running in there right now — not merely someone sitting in the
+  // lobby. Every room on this page is one this user already has a seat in
+  // (the list is built from their own room_participants rows), so the way in
+  // is re-entry, which stays open mid-round.
+  const isLiveNow = isRoomLive(room);
+  // The button is the point of the row while a round is on, so the faces give
+  // it room. Two, and no "+N" bubble: the count pill sits right beside them
+  // and already says how many there are, so the bubble spends 24px repeating
+  // it. Without that trim, a full room on a TV at three-column width put the
+  // button on top of the bubble.
+  const avatarLimit = isLiveNow ? 2 : 4;
+
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
   const handleDragEnd = (_: any, info: PanInfo) => {
@@ -950,73 +962,116 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
               </div>
             </div>
             
-            {/* Bottom: Glass container with player count + avatars */}
+            {/* Bottom: Glass container — who is in the room on the left, the
+                way into it on the right. */}
             <div className="relative z-10">
-              <div className="bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2.5 flex items-center justify-between">
-                {/* Left: TV marker (played or live on TV, no container) + player count (TV active players if available) */}
-                <div className="flex items-center gap-2">
+              <div className="bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
+                {/* Left: TV marker (played or live on TV, no container) +
+                    player count (TV active players if available) + the faces
+                    of who is in there, which belong beside the number they
+                    are the count of. */}
+                <div className="flex items-center gap-2 min-w-0">
                   {playedOnTV && (
-                    <img src={retroTv3d} alt="TV" className="w-7 h-7 object-contain drop-shadow select-none" draggable={false} />
+                    <img src={retroTv3d} alt="TV" className="w-7 h-7 object-contain drop-shadow select-none flex-shrink-0" draggable={false} />
                   )}
-                  <div className="flex items-center gap-2 bg-white/20 rounded-lg px-2.5 py-1.5">
+                  <div className="flex items-center gap-2 bg-white/20 rounded-lg px-2.5 py-1.5 flex-shrink-0">
                     <Users className="w-4 h-4 text-white" />
                     <span className="text-white font-bold text-sm">
                       {displayPlayerCount}
                     </span>
                   </div>
-                </div>
-                
-                {/* Right: Avatars (use TV players if session is active) */}
-                <div className="flex -space-x-2">
-                  {displayPlayers.slice(0, 4).map((p, idx) => {
-                    // Check if this participant is online
-                    const isOnline = room.online_participants.some(op => op.user_id === p.user_id);
+
+                  {/* Avatars (use TV players if session is active). These are
+                      the only thing here allowed to give way: overflow-hidden
+                      so a card too narrow for all of it clips a face at the
+                      edge, rather than letting the row spill under the button
+                      — the avatars are flex-shrink-0, so without this they
+                      leave the group's box instead of shrinking it.
+
+                      p-1 -m-1 is what keeps that from clipping the green
+                      "online" ring, which paints 3px outside the avatar's box:
+                      overflow clips to the padding box, so the padding buys
+                      the ring room and the negative margin gives back the
+                      space it would have cost. */}
+                  <div className="flex -space-x-2 min-w-0 overflow-hidden p-1 -m-1">
+                    {displayPlayers.slice(0, avatarLimit).map((p, idx) => {
+                      // Check if this participant is online
+                      const isOnline = room.online_participants.some(op => op.user_id === p.user_id);
                     
-                    return (
-                      // Descending z-index so the first avatar sits on top of
-                      // the ones behind it — the negative margin alone would
-                      // put the last one in front.
-                      <div
-                        key={p.user_id || idx}
-                        className="relative flex-shrink-0"
-                        style={{ zIndex: displayPlayers.length - idx }}
-                      >
+                      return (
+                        // Descending z-index so the first avatar sits on top of
+                        // the ones behind it — the negative margin alone would
+                        // put the last one in front.
                         <div
-                          className={`w-8 h-8 rounded-full overflow-hidden bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md ${
-                            isOnline
-                              ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent"
-                              : "border-2 border-white/40"
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (p.user_id) openProfile(p.user_id);
-                          }}
+                          key={p.user_id || idx}
+                          className="relative flex-shrink-0"
+                          style={{ zIndex: displayPlayers.length - idx }}
                         >
-                          <SafeAvatarImage
-                            avatarUrl={p.avatar_url}
-                            fallback={p.nickname || "?"}
-                            className="w-full h-full object-cover"
-                            containerClassName="w-full h-full"
-                          />
+                          <div
+                            className={`w-8 h-8 rounded-full overflow-hidden bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md ${
+                              isOnline
+                                ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent"
+                                : "border-2 border-white/40"
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (p.user_id) openProfile(p.user_id);
+                            }}
+                          >
+                            <SafeAvatarImage
+                              avatarUrl={p.avatar_url}
+                              fallback={p.nickname || "?"}
+                              className="w-full h-full object-cover"
+                              containerClassName="w-full h-full"
+                            />
+                          </div>
+                          {p.is_host && (
+                            <img
+                              src={crownIcon}
+                              alt=""
+                              className="pointer-events-none absolute -top-2 -left-1 w-3.5 h-3.5 object-contain drop-shadow"
+                            />
+                          )}
                         </div>
-                        {p.is_host && (
-                          <img
-                            src={crownIcon}
-                            alt=""
-                            className="pointer-events-none absolute -top-2 -left-1 w-3.5 h-3.5 object-contain drop-shadow"
-                          />
-                        )}
+                      );
+                    })}
+                    {!isLiveNow && displayPlayers.length > avatarLimit && (
+                      <div className="w-8 h-8 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
+                        <span className="text-white text-[10px] font-bold">
+                          +{displayPlayers.length - avatarLimit}
+                        </span>
                       </div>
-                    );
-                  })}
-                  {displayPlayers.length > 4 && (
-                    <div className="w-8 h-8 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
-                      <span className="text-white text-[10px] font-bold">
-                        +{displayPlayers.length - 4}
-                      </span>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
+
+                {/* Right: the way in, but only while there is a round to be
+                    late for. A live round is the one state where tapping is
+                    urgent — every second before you are on the question is a
+                    second of scoring you have already lost — and the card's
+                    own tap target says nothing about that. Pulsing for the
+                    same reason: it has to read as a thing happening now.
+
+                    RoundStartWatcher does not cover this. It deliberately
+                    treats /team as "already there" and never navigates, so a
+                    player parked on this very list is the one person a
+                    starting round cannot reach. */}
+                {isLiveNow && (
+                  <motion.button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isJoining) onJoin();
+                    }}
+                    disabled={isJoining}
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                    className="flex items-center gap-1.5 flex-shrink-0 rounded-lg bg-white/70 backdrop-blur-md px-3 py-1.5 text-sm font-extrabold text-[#2E1065] shadow-md disabled:opacity-60"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    {t("extra.roomJoinLive")}
+                  </motion.button>
+                )}
               </div>
             </div>
           </GradientBackground>
@@ -1034,7 +1089,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row gap-3">
             <AlertDialogCancel className="flex-1 mt-0">{t("extra.rlCancel")}</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={confirmDelete}
               className="flex-1 bg-destructive hover:bg-destructive/90"
             >

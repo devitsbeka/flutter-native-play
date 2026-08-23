@@ -1832,6 +1832,7 @@ export const pt: KaTranslations = {
     roomStatusNew: "Novo",
     roomStatusCompleted: "Terminado",
     roomStatusWaiting: "Aguardando",
+    roomJoinLive: "Entrar",
     howItWorksTitle: "Como funciona?",
     howItWorksFunGuaranteed: "Diversão garantida! 🎉",
     howItWorksGotIt: "Entendi!",

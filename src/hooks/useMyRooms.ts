@@ -76,6 +76,21 @@ export function isLiveTVSession(tvStatus: string | null): boolean {
 }
 
 /**
+ * A round is being played in this room right now.
+ *
+ * `status` goes to "playing" when a round starts and back to "waiting" or
+ * "completed" when it ends, so it is the phone-game counterpart of
+ * isLiveTVSession — and a room can be live either way.
+ *
+ * Distinct from has_players_in_room, which only says someone is sitting on
+ * the room page: a lobby full of people waiting for the host is not a game
+ * anyone is late for.
+ */
+export function isRoomLive(room: { status: string; tv_status: string | null }): boolean {
+  return room.status === "playing" || isLiveTVSession(room.tv_status);
+}
+
+/**
  * Check if a room was created recently (within 5 minutes)
  * Used to prioritize newly created rooms in sorting and show "ახალი" badge
  */

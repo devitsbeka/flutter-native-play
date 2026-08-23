@@ -1833,6 +1833,7 @@ export const es: KaTranslations = {
     roomStatusNew: "Nuevo",
     roomStatusCompleted: "Terminado",
     roomStatusWaiting: "Esperando",
+    roomJoinLive: "Unirse",
     roomStatusOnline: "En línea",
     howItWorksTitle: "¿Cómo funciona?",
     howItWorksFunGuaranteed: "¡Diversión garantizada! 🎉",
