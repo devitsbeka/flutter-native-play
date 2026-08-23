@@ -1,0 +1,14 @@
+[
+ {"answer": "Manhattan",
+  "reason": "a borough of New York City, which is its own answer in this bank"},
+ {"answer": "Queens",
+  "reason": "a borough of New York City, which is its own answer in this bank"},
+ {"answer": "Vantaa",
+  "reason": "a suburb of Helsinki; the landmark is Helsinki's airport"},
+ {"answer": "Zapopan",
+  "reason": "part of the Guadalajara metropolitan area"},
+ {"answer": "Arlington",
+  "reason": "ambiguous - three US places share the name, and the landmark is in the Washington DC area"},
+ {"answer": "Newark",
+  "reason": "read as part of New York by anyone outside the United States"}
+]
