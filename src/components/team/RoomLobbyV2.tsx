@@ -716,20 +716,36 @@ export function RoomLobbyV2() {
           style={{ paddingTop: "calc(var(--safe-top) + 1rem)" }}
         >
           <div className="flex items-center justify-between gap-2">
-            <motion.button
-              onClick={handleExitRoom}
-              className="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-white/10 border border-white/[0.12]"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <ArrowLeft className="w-4 h-4 text-white" />
-            </motion.button>
+            {/* Wrapped so the share falls on the wrapper: stretching the
+                button itself would give the back arrow a 400px tinted
+                background to sit in the corner of. */}
+            <div className="flex shrink-0 items-center md:flex-1">
+              <motion.button
+                onClick={handleExitRoom}
+                className="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-white/10 border border-white/[0.12]"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <ArrowLeft className="w-4 h-4 text-white" />
+              </motion.button>
+            </div>
 
-            {/* The room's name, beside the back button rather than centred.
-                Centred, it was the one thing the three-dot menu opened on top
-                of — and it competed with the category card for the middle of
-                the screen. Left-aligned it is a title, and the header reads
-                back / name / actions.
+            {/* The room's name: beside the back button on a phone, centred
+                from md up.
+
+                On a phone the row is barely 200px between a back button and
+                two others, and a Georgian room name centred in that is an
+                ellipsis with space either side of it — so there it stays
+                left-aligned and takes the width it needs. A tablet or a
+                desktop has width to spare, and there a title belongs in the
+                middle.
+
+                Centring is exact rather than "centred in what is left over":
+                the back button and the actions each take an equal share of
+                the row on md+, so the middle share is genuinely the middle.
+                Sizing the name against the leftover space would put it a
+                couple of dozen pixels off, because the actions cluster is
+                wider than the back button.
 
                 For the host it is also the way in: tapping the name opens the
                 same rename-and-icon page the menu offers, which is what makes
@@ -738,7 +754,7 @@ export function RoomLobbyV2() {
             {isHost ? (
               <motion.button
                 onClick={() => setShowIconPicker(true)}
-                className="flex min-w-0 flex-1 items-center gap-2 rounded-xl px-1 py-1 text-left hover:bg-white/10"
+                className="flex min-w-0 flex-1 items-center gap-2 rounded-xl px-1 py-1 text-left hover:bg-white/10 md:flex-[2] md:justify-center md:text-center"
                 whileTap={{ scale: 0.98 }}
                 title={t("extra.rlRenameRoom")}
               >
@@ -748,7 +764,7 @@ export function RoomLobbyV2() {
                 <h2 className="truncate text-base font-bold text-white drop-shadow-lg">{roomName}</h2>
               </motion.button>
             ) : (
-              <div className="flex min-w-0 flex-1 items-center gap-2 px-1">
+              <div className="flex min-w-0 flex-1 items-center gap-2 px-1 md:flex-[2] md:justify-center">
                 {currentRoom.room_icon && (
                   <img src={currentRoom.room_icon} alt="" className="h-7 w-7 shrink-0 object-contain" />
                 )}
@@ -756,7 +772,7 @@ export function RoomLobbyV2() {
               </div>
             )}
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex shrink-0 items-center justify-end gap-2 md:flex-1">
               {/* TEMPORARILY HIDDEN - Chat toggle */}
               {/* <motion.button
                 onClick={() => setShowChat(!showChat)}

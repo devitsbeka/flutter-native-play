@@ -11,6 +11,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { GameModal } from "@/components/ui/game-modal";
 import { buildBilingualSearchTerms } from "@/utils/transliteration";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { IconTabBar } from "@/components/shared/IconTabBar";
+import { useFavorites } from "@/hooks/useFavorites";
+import {
+  CategoryTabId,
+  filterCategoriesByTab,
+  readRecentlyViewedIds,
+} from "@/utils/categoryTabs";
 
 // Mixed category constants (name is set dynamically via t())
 const MIXED_CATEGORY_BASE = {
@@ -31,6 +38,7 @@ interface Category {
   color: string;
   image_url?: string | null;
   total_levels: number;
+  type?: string | null;
 }
 
 interface CategorySelectorModalProps {
@@ -48,13 +56,36 @@ export function CategorySelectorModal({
 }: CategorySelectorModalProps) {
   const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<CategoryTabId>("all");
+  const { favorites } = useFavorites();
+
+  // The same tabs Discover has, in the same order and with the same icons —
+  // this is the same wall of categories reached from a different door, and it
+  // used to offer a search box and seventy tiles.
+  const tabs = useMemo(
+    () => [
+      { id: "all", label: t("discover.all") },
+      { id: "favorites", label: t("discover.favorites") },
+      { id: "recently_viewed", label: t("discover.recentlyViewedTab") },
+      { id: "popular", label: t("discover.popularTab") },
+      { id: "classic", label: t("discover.classic") },
+      { id: "fun", label: t("discover.fun") },
+      { id: "educational", label: t("discover.educational") },
+    ],
+    [t]
+  );
+
+  // Read once per open rather than on every render: localStorage is
+  // synchronous and this list is short, but it cannot change while the modal
+  // is up — nothing in here navigates to a category page.
+  const recentIds = useMemo(() => (open ? readRecentlyViewedIds() : []), [open]);
 
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ["categories-for-room", language],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
-        .select("id, category_id, name, icon, icon_slug, color, image_url, total_levels, is_language_specific, language")
+        .select("id, category_id, name, icon, icon_slug, color, image_url, total_levels, is_language_specific, language, type")
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
 
@@ -86,21 +117,25 @@ export function CategorySelectorModal({
   });
 
   const filteredCategories = useMemo(() => {
-    if (!searchQuery.trim()) return categories;
-    
+    // Tab first, then the query within it. A search that ignored the tab
+    // would answer a question nobody asked — you picked Favourites for a
+    // reason.
+    const inTab = filterCategoriesByTab(categories, activeTab, { favorites, recentIds });
+    if (!searchQuery.trim()) return inTab;
+
     // Build bilingual search terms for better matching
     const searchTerms = buildBilingualSearchTerms(searchQuery);
-    
-    return categories.filter((cat) => {
+
+    return inTab.filter((cat) => {
       const catName = cat.name.toLowerCase();
       const catId = cat.category_id.toLowerCase();
-      
+
       // Check if any search term matches category name or id
-      return searchTerms.some(term => 
+      return searchTerms.some(term =>
         catName.includes(term) || catId.includes(term)
       );
     });
-  }, [categories, searchQuery]);
+  }, [categories, searchQuery, activeTab, favorites, recentIds]);
 
   const handleSelect = (category: Category) => {
     onSelect(category);
@@ -111,11 +146,14 @@ export function CategorySelectorModal({
   const mixedCategoryName = t("extra.csmMixedLabel");
   
   const showMixedCategory = useMemo(() => {
+    // Mixed is not a category: it has no type, cannot be favourited and is
+    // never "recently viewed". It belongs to the unfiltered view only.
+    if (activeTab !== "all") return false;
     if (!searchQuery.trim()) return true;
     const searchTerms = buildBilingualSearchTerms(searchQuery);
     const mixedName = mixedCategoryName.toLowerCase();
     return searchTerms.some(term => mixedName.includes(term));
-  }, [searchQuery, mixedCategoryName]);
+  }, [searchQuery, mixedCategoryName, activeTab]);
 
   return (
     <GameModal
@@ -137,6 +175,16 @@ export function CategorySelectorModal({
             className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
           />
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="-mx-5 mb-2 max-w-[700px] md:max-w-[800px] lg:max-w-[900px] px-5 mx-auto w-full">
+        <IconTabBar
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={(id) => setActiveTab(id as CategoryTabId)}
+          compact
+        />
       </div>
 
       {/* Categories Grid - use flex-1 to fill remaining space */}

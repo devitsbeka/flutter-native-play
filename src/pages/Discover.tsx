@@ -20,7 +20,7 @@ import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { getResponsiveVideoSrc, videoUrl } from "@/config/videoConfig";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { matchesQuery } from "@/utils/searchMatch";
-import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
+import { orderByPopularity, readRecentlyViewedIds, RECENTLY_VIEWED_KEY } from "@/utils/categoryTabs";
 import { funRowCategories } from "@/utils/discoverRows";
 
 const HERO_VIDEO = "/videos/explore-bg.mp4";
@@ -199,46 +199,22 @@ export default function Discover() {
   // Popular categories — a curated dozen of the topics people actually
   // search and play the most (cinema, TV, music, sports...), in that order.
   // Replaces the old daily shuffle that surfaced niche picks like geology.
-  const popularCategories = useMemo(() => {
-    // The six picture-guess categories front the row (launch decision:
-    // they replace the old curated topic list — see popularImageCategories).
-    // Until their migration has run in a given environment they don't exist
-    // in `categories`, so fall back to the old curated list rather than
-    // rendering an empty Popular row.
-    const FALLBACK_IDS = [
-      "movies", "tv_series", "music", "sports", "world_history", "geography",
-      "science", "pop_culture", "video_games", "celebrities", "animals", "fun_facts",
-    ];
-    const byId = new Map(categories.map((c) => [c.id, c]));
-    const pictureGuess = POPULAR_IMAGE_CATEGORY_IDS
-      .map((id) => byId.get(id))
-      .filter((c): c is NonNullable<typeof c> => Boolean(c));
-    if (pictureGuess.length > 0) return pictureGuess;
-    return FALLBACK_IDS.map((id) => byId.get(id)).filter(
-      (c): c is NonNullable<typeof c> => Boolean(c)
-    );
-  }, [categories]);
+  const popularCategories = useMemo(() => orderByPopularity(categories), [categories]);
 
-  // Recently viewed from localStorage
+  // Recently viewed from localStorage, newest first.
   const recentlyViewed = useMemo(() => {
-    const stored = localStorage.getItem("recentlyViewedCategories");
-    if (!stored) return [];
-    try {
-      const ids = JSON.parse(stored) as string[];
-      return ids
-        .map((id) => categories.find((cat) => cat.id === id))
-        .filter(Boolean)
-        .slice(0, 6);
-    } catch {
-      return [];
-    }
+    const byId = new Map(categories.map((c) => [c.id, c]));
+    return readRecentlyViewedIds()
+      .map((id) => byId.get(id))
+      .filter(Boolean)
+      .slice(0, 6);
   }, [categories]);
 
   // Stable, so the memoised cards below actually skip a re-render. A new
   // function identity every keystroke would defeat memo() on all forty of
   // them, which is the same as not having it.
   const handleCategoryClick = useCallback((categoryId: string) => {
-    const stored = localStorage.getItem("recentlyViewedCategories");
+    const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
     let ids: string[] = [];
     try {
       ids = stored ? JSON.parse(stored) : [];
@@ -246,7 +222,7 @@ export default function Discover() {
       ids = [];
     }
     ids = [categoryId, ...ids.filter((id) => id !== categoryId)].slice(0, 10);
-    localStorage.setItem("recentlyViewedCategories", JSON.stringify(ids));
+    localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(ids));
 
     navigate(`/category/${categoryId}`);
   }, [navigate]);
