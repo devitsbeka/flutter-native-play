@@ -286,7 +286,7 @@ export const de: KaTranslations = {
     ...en.discover,
     title: "Entdecken",
     searchPlaceholder: "Kategorien suchen...",
-    promoTitle: "Hol dir vollen Zugriff!",
+    promoTitle: "Hol dir vollen Zugriff",
     promoSubtitle: "Alle Level + unbegrenztes Spielen",
     promoCta: "Kostenlos testen",
     promoNote: "1 Tag gratis, dann $10 / Monat",
