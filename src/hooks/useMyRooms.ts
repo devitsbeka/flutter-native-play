@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef } from "react";
 import { compareRooms } from "@/utils/roomOrder";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { presenceForUsers } from "@/utils/presence";
 import { useAuth } from "@/contexts/AuthContext";
 import { matchesQuery } from "@/utils/searchMatch";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -198,22 +199,19 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
   const recentlyActiveUserIds = new Set<string>();
 
   if (allParticipantUserIds.length > 0) {
-    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    // Through presence_for_users, not the table: user_presence is owner-only
+    // by policy, so reading it directly answered "you are online and nobody
+    // else is" for every room on this list.
+    const presence = await presenceForUsers(allParticipantUserIds);
 
-    const { data: presenceData } = await supabase
-      .from("user_presence")
-      .select("user_id, status, last_seen, current_page")
-      .in("user_id", allParticipantUserIds)
-      .gte("last_seen", tenMinutesAgo);
-
-    presenceData?.forEach(p => {
-      recentlyActiveUserIds.add(p.user_id);
-      if (p.status === 'online' && p.last_seen >= twoMinutesAgo) {
-        onlineUserIds.add(p.user_id);
-        if (p.current_page) {
-          presencePageMap.set(p.user_id, p.current_page);
-        }
+    presence.forEach(p => {
+      if (p.recentlyActive) recentlyActiveUserIds.add(p.userId);
+      if (p.isOnline) {
+        onlineUserIds.add(p.userId);
+        // The map is keyed on the page path the rest of this file compares
+        // against; the function hands back the room alone, which is the only
+        // part of that path anything here reads.
+        if (p.currentRoom) presencePageMap.set(p.userId, `/room/${p.currentRoom}`);
       }
     });
   }

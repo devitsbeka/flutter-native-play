@@ -338,8 +338,14 @@ function VsPlayer({
 }) {
   const { t } = useLanguage();
   const isInvited = (player.status as string) === "invited";
-  const isOnline = !isInvited && online.has(player.user_id);
-  const justArrived = !isInvited && arrived.has(player.user_id);
+  // Colour follows presence and nothing else. It used to be `!isInvited &&`,
+  // which meant a player who was in the app right now was still drawn in grey
+  // because their seat was booked with an invite they had not formally
+  // accepted — the app saying "not here" about somebody plainly here. The
+  // invited state has its own words and its own button; it does not get to
+  // overrule the heartbeat.
+  const isOnline = online.has(player.user_id);
+  const justArrived = arrived.has(player.user_id);
 
   return (
     <div
@@ -350,7 +356,7 @@ function VsPlayer({
       {/* Avatar. h-16 on the wrapper, so the crown and the ring — both of
           which paint outside the avatar's box — cannot change how far down
           the name starts. */}
-      <div className={`relative h-16 w-16 ${isInvited || !isOnline ? "grayscale" : ""}`}>
+      <div className={`relative h-16 w-16 ${!isOnline ? "grayscale" : ""}`}>
         {showHostCrown && player.is_host && !isInvited && (
           <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
         )}
@@ -631,9 +637,11 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                   <PresenceAvatar
                     avatarUrl={p.avatar_url}
                     nickname={p.nickname}
-                    isOnline={!isInvited && online.has(p.user_id)}
-                    justArrived={!isInvited && arrived.has(p.user_id)}
-                    dimmed={isInvited}
+                    isOnline={online.has(p.user_id)}
+                    justArrived={arrived.has(p.user_id)}
+                    // Dimmed is for a seat nobody has taken. Somebody with a
+                    // live heartbeat has taken it, whatever their row says.
+                    dimmed={isInvited && !online.has(p.user_id)}
                     crown={showHostCrown && p.is_host && !isInvited}
                   />
 

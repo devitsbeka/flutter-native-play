@@ -23,9 +23,12 @@ const hook = readFileSync(
   "utf8"
 );
 
+const presence = readFileSync(join(process.cwd(), "src/utils/presence.ts"), "utf8");
+const rooms = readFileSync(join(process.cwd(), "src/hooks/useMyRooms.ts"), "utf8");
+
 describe("the green ring", () => {
   it("follows presence, not membership", () => {
-    expect(scoreboard).toMatch(/isOnline=\{!isInvited && online\.has\(p\.user_id\)\}/);
+    expect(scoreboard).toMatch(/isOnline=\{online\.has\(p\.user_id\)\}/);
   });
 
   it("is drawn on both layouts", () => {
@@ -58,9 +61,16 @@ describe("the green ring", () => {
       .not.toMatch(/ring-(emerald|slate|green|white)-\d/);
   });
 
-  it("stays off for a placeholder who never arrived", () => {
-    // They have no presence to speak of, and a ring would say they are here.
-    expect(scoreboard).toMatch(/isOnline=\{!isInvited &&/);
+  it("is not overruled by an invite that was never accepted", () => {
+    // A seat booked by invite used to force grey even while its owner was in
+    // the app — the board saying "not here" about somebody plainly here. A
+    // placeholder who never arrived still ends up grey, because they have no
+    // heartbeat; that is presence deciding it, not status.
+    expect(scoreboard, "the ranked list").not.toMatch(/isOnline=\{!isInvited/);
+    expect(scoreboard, "the face-off")
+      .toMatch(/const isOnline = online\.has\(player\.user_id\);/);
+    expect(scoreboard, "and grey is presence alone")
+      .toMatch(/relative h-16 w-16 \$\{!isOnline \? "grayscale"/);
   });
 });
 
@@ -90,7 +100,7 @@ describe("the arrival flare", () => {
   });
 
   it("fires on arrival and not on every render", () => {
-    expect(scoreboard).toMatch(/justArrived=\{!isInvited && arrived\.has\(p\.user_id\)\}/);
+    expect(scoreboard).toMatch(/justArrived=\{arrived\.has\(p\.user_id\)\}/);
     const avatar = scoreboard.match(/function PresenceAvatar\([\s\S]*?\n\}\n\nexport function RoomScoreboard/)![0];
     expect(avatar, "the flare is a keyframed box-shadow, not a permanent glow")
       .toMatch(/boxShadow: arrivalShadows\(/);
@@ -157,7 +167,7 @@ describe("colour follows presence", () => {
     expect(scoreboard, "the ranked list")
       .toMatch(/dimmed \|\| !isOnline \? "grayscale" : ""/);
     expect(scoreboard, "the two-player face-off")
-      .toMatch(/isInvited \|\| !isOnline \? "grayscale" : ""/);
+      .toMatch(/\$\{!isOnline \? "grayscale" : ""\}/);
   });
 
   it("holds the glow while they are here, not only as they arrive", () => {
@@ -175,15 +185,28 @@ describe("how presence is fetched", () => {
   it("asks only about the people on this board", () => {
     // useOnlineUsers pulls every online account in the app and joins profiles
     // onto all of them. That is a lot of rows so a lobby can ring four faces.
-    expect(hook).toMatch(/\.in\("user_id", ids\)/);
+    expect(hook).toMatch(/onlineUserIds\(ids\)/);
     expect(scoreboard).toMatch(/useParticipantPresence\(participantIds\)/);
+  });
+
+  it("goes through the function, because the table is owner-only", () => {
+    // user_presence is readable only by its owner and an admin, so a direct
+    // select answers "you are online and nobody else in the world is" — which
+    // is indistinguishable from everyone having closed the app, and is what
+    // the lobby drew for as long as it has had a ring. Both readers go
+    // through presence_for_users now; only the fallback inside
+    // utils/presence.ts may touch the table.
+    expect(hook, "the lobby").not.toMatch(/from\("user_presence"\)/);
+    expect(rooms, "the rooms list").not.toMatch(/from\("user_presence"\)/);
+    expect(presence, "the one place that may").toMatch(/presence_for_users/);
   });
 
   it("uses the same online rule as the rooms list", () => {
     // Two minutes and status online — otherwise a player is green on one
-    // screen and grey on the other.
-    expect(hook).toMatch(/ONLINE_WINDOW_MS = 2 \* 60 \* 1000/);
-    expect(hook).toMatch(/\.eq\("status", "online"\)/);
+    // screen and grey on the other. The rule lives in the function now, and
+    // the client fallback mirrors it.
+    expect(presence).toMatch(/ONLINE_WINDOW_MS = 2 \* 60 \* 1000/);
+    expect(presence).toMatch(/status === "online"/);
   });
 
   it("re-checks on a timer as well as on realtime", () => {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { onlineUserIds } from "@/utils/presence";
 
 /**
  * Which of these people are in the app right now.
@@ -10,9 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
  *
  * "Online" is the same rule the rooms list uses — status online and a
  * heartbeat inside two minutes — so a player is not green on one screen and
- * grey on the other.
+ * grey on the other. The rule itself lives in `presence_for_users` now, for
+ * the same reason.
  */
-const ONLINE_WINDOW_MS = 2 * 60 * 1000;
 
 /** Re-check on a timer as well as on realtime: a heartbeat going stale is
  *  the absence of an event, so nothing would ever tell us they left. */
@@ -45,15 +46,11 @@ export function useParticipantPresence(userIds: string[]): ParticipantPresence {
       return;
     }
 
-    const since = new Date(Date.now() - ONLINE_WINDOW_MS).toISOString();
-    const { data } = await supabase
-      .from("user_presence")
-      .select("user_id, status, last_seen")
-      .in("user_id", ids)
-      .eq("status", "online")
-      .gte("last_seen", since);
-
-    const next = new Set((data ?? []).map((row) => row.user_id));
+    // Through the function, not the table. `user_presence` is owner-only by
+    // policy, so this query used to come back with your own row and nothing
+    // else no matter who was in the room — every other player drawn grey for
+    // as long as the lobby has existed.
+    const next = await onlineUserIds(ids);
 
     // Everyone who was not here and now is. Computed against a ref rather
     // than against `online` so this callback stays stable and the effect
