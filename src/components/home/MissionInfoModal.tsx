@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { WEEK_BONUS } from "@/hooks/useMissions";
 import { STREAK_BONUSES } from "@/hooks/useMissionStreak";
-import { SunsetButton } from "@/components/shared/SunsetButton";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import xpSparkIcon from "@/assets/level/xp-spark.png";
@@ -85,7 +84,10 @@ export function MissionInfoModal({
             style={{ boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0,0,0,0.18)" }}
           >
             {/* Zero-height sticky strip so the close button survives scrolling
-                on a short screen — same treatment as LevelInfoModal. */}
+                on a short screen — same treatment as LevelInfoModal. It is the
+                only close now: the full-width one at the bottom said the same
+                thing a second time and pushed the rewards it sat under off a
+                short screen. Escape and the backdrop still work. */}
             <div className="sticky top-0 z-10 h-0">
               <button
                 type="button"
@@ -113,7 +115,7 @@ export function MissionInfoModal({
                 below already shows, which pushed the rewards themselves off
                 a short screen. The rule is one sentence; it belongs with the
                 heading, not in a section of its own. */}
-            <p className="mt-2 px-4 text-center text-sm leading-relaxed text-slate-600">
+            <p className="mt-2 px-4 text-center text-sm leading-snug text-slate-600">
               {isWeek ? t("missions.infoWeekLead") : t("missions.infoStreakLead")}
             </p>
 
@@ -160,11 +162,6 @@ export function MissionInfoModal({
               )}
             </div>
 
-            <div className="mt-5">
-              <SunsetButton onClick={onClose} className="w-full">
-                {t("common.close")}
-              </SunsetButton>
-            </div>
           </motion.div>
         </motion.div>
       )}

@@ -714,8 +714,8 @@ export const ka = {
   missions: {
     completedTitle: "მისია შესრულებულია: {mission}",
     infoRewardTitle: "რას მიიღებ",
-    infoStreakLead: "შეასრულე დღის ყველა მისია და მიიღე ჯილდოები ყოველდღე",
-    infoWeekLead: "არ გამოტოვე ყოველდღიური მისიები, შეასრულე შვიდივე დღე და მიიღე კვირის სასაჩუქრე პაკეტი",
+    infoStreakLead: "შეასრულე დღის ყველა მისია და მიიღე ჯილდოები ყოველდღიურად",
+    infoWeekLead: "არ გამოტოვო და შეასრულე შვიდივე დღის მისია და მიიღე კვირის სასაჩუქრე პაკეტი",
     infoWeekProgress: "{done} - 7 შესრულებული",
     infoStreakProgress: "{count} დღე ზედიზედ",
     infoStreakDays: "{count}-ე დღე",
