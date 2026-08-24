@@ -23,11 +23,26 @@
 --                     Zero backlog. Nothing is missing and there is
 --                     nothing for an INSERT to do.
 --
---    the 153 gap      153 English questions sit at in_production=false,
---                     so the pipeline cannot see them and no language
---                     ever gets them. This IS a SQL fix — section 4 —
---                     and it yields 153 x 5 = 765 real translations,
---                     written by the pipeline, not by this script.
+--    the blocked      English questions sitting at in_production=false are
+--    English          invisible to the pipeline, so no language ever gets
+--                     them. This IS a SQL fix — section 4 — and each one
+--                     promoted yields five real translations, written by
+--                     the pipeline rather than by this script. Section 1b
+--                     counts them; run it before section 4.
+--
+--  A correction, and the reason section 1b exists. The first numbers I
+--  put on this were measured through the app's publishable key, and
+--  questions carries
+--
+--      CREATE POLICY "Anyone can view active questions" ... USING (
+--        is_active = true OR has_role(auth.uid(), 'admin') )
+--
+--  so every count I took silently excluded is_active = false, and I
+--  reported "inactive: 0" when what I had actually measured was "zero
+--  inactive rows are visible to me". Georgian video_games read 53 through
+--  that key and is 80 in the table. Anything this script prints from
+--  Lovable's privileged session is the real number; anything measured
+--  from outside is the active subset.
 --
 --    ka               No pipeline at all: Georgian is neither source nor
 --                     target. Its shared-category coverage is uneven in
@@ -56,6 +71,31 @@ SELECT
   FROM public.questions q
  GROUP BY q.language
  ORDER BY questions DESC;
+
+
+-- ---------------------------------------------------------------------
+--  1b. Active vs inactive, and what the pipeline can actually reach.
+--
+--      Only this privileged session can see is_active = false at all, so
+--      this is the section that says whether the bank is smaller than it
+--      looks and how much section 4 is really worth.
+--
+--      pipeline_sources is exactly what get_untranslated_questions
+--      selects from; blocked_by_production is what section 4 unblocks
+--      (multiply by 5 for the translations that follow).
+-- ---------------------------------------------------------------------
+SELECT
+    q.language,
+    count(*)                                                             AS total,
+    count(*) FILTER (WHERE q.is_active)                                  AS active,
+    count(*) FILTER (WHERE NOT q.is_active OR q.is_active IS NULL)       AS inactive,
+    count(*) FILTER (WHERE q.language = 'en' AND q.in_production
+                       AND q.is_active AND q.translated_from IS NULL)    AS pipeline_sources,
+    count(*) FILTER (WHERE q.language = 'en' AND NOT q.in_production
+                       AND q.is_active AND q.translated_from IS NULL)    AS blocked_by_production
+  FROM public.questions q
+ GROUP BY q.language
+ ORDER BY total DESC;
 
 
 -- ---------------------------------------------------------------------
