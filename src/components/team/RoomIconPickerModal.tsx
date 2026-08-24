@@ -56,6 +56,28 @@ interface RoomIconPickerModalProps {
   onConfirm: (iconUrl: string, newName: string) => void;
 }
 
+/**
+ * A pickable icon tile.
+ *
+ * White on the page's lilac with a light stroke, so the grid reads as a set of
+ * cards rather than icons scattered on a sheet. Both grids (recent and search
+ * results) share this: they were two copies of the same long class string, and
+ * a change to one silently left the other behind.
+ *
+ * border-2 in both states, not border-2 when selected and border when not —
+ * the ring would otherwise nudge every neighbouring tile by a pixel.
+ */
+function iconTileClass(selected: boolean): string {
+  return [
+    "relative aspect-square rounded-xl border-2 transition-colors",
+    "flex items-center justify-center overflow-hidden",
+    "disabled:opacity-50 disabled:cursor-not-allowed",
+    selected
+      ? "border-primary ring-2 ring-primary/30 bg-primary/10"
+      : "bg-white border-[#E7DBFA] hover:border-[#C9B2ED]",
+  ].join(" ");
+}
+
 export function RoomIconPickerModal({
   isOpen,
   onClose,
@@ -334,7 +356,13 @@ export function RoomIconPickerModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 safe-screen z-50 bg-gradient-to-b from-[#FDFAFF] to-[#F6E8FF] h-[100dvh] flex flex-col"
+          // The page was #FDFAFF→#F6E8FF, which is white with a rumour of
+          // lilac in it. The icon tiles sat on it at bg-muted/50 with a
+          // transparent border, so tile and page were within a few percent of
+          // each other and the grid read as loose icons floating on a sheet
+          // rather than as a set of things to pick from. Deeper page, white
+          // tiles, a light stroke on each — see the tile classes below.
+          className="fixed inset-0 safe-screen z-50 bg-gradient-to-b from-[#EFE4FF] to-[#DFCCF7] h-[100dvh] flex flex-col"
         >
           {/* Header */}
           <div className="flex-shrink-0 bg-background/95 backdrop-blur-md border-b border-border/30">
@@ -461,11 +489,7 @@ export function RoomIconPickerModal({
                         type="button"
                         onClick={() => handleIconClick(icon)}
                         disabled={isGeneratingName}
-                        className={`relative aspect-square rounded-xl bg-muted/50 hover:bg-muted border-2 transition-colors flex items-center justify-center overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed ${
-                          selectedIcon === icon.icon_url
-                            ? "border-primary ring-2 ring-primary/30 bg-primary/10"
-                            : "border-transparent hover:border-border"
-                        }`}
+                        className={iconTileClass(selectedIcon === icon.icon_url)}
                       >
                         <img
                           src={icon.icon_url}
@@ -552,11 +576,7 @@ export function RoomIconPickerModal({
                       type="button"
                       onClick={() => handleIconClick(icon)}
                       disabled={isGeneratingName}
-                      className={`relative aspect-square rounded-xl bg-muted/50 hover:bg-muted border-2 transition-colors flex items-center justify-center overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed ${
-                        selectedIcon === icon.icon_url
-                          ? "border-primary ring-2 ring-primary/30 bg-primary/10"
-                          : "border-transparent hover:border-border"
-                      }`}
+                      className={iconTileClass(selectedIcon === icon.icon_url)}
                     >
                       {/* Eager, and decoded off the main thread. These are
                           small icons in a grid that is mostly on screen the

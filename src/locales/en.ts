@@ -3174,6 +3174,8 @@ export const en: KaTranslations = {
     rlStartGame: "Start Game",
     // Room menu & dialogs
     rlHowItWorks: "How it works",
+    rlRenameRoom: "Rename room",
+    rlChangeBackground: "Change background",
     rlLeaveRoom: "Leave room",
     rlDeleteRoom: "Delete room",
     rlDeleteRoomConfirm: "Are you sure you want to delete this room? This action is irreversible.",

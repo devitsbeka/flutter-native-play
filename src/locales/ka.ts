@@ -3175,6 +3175,8 @@ export const ka = {
     rlStartGame: "თამაშის დაწყება",
     // Room menu & dialogs
     rlHowItWorks: "როგორ მუშაობს",
+    rlRenameRoom: "ოთახის სახელის შეცვლა",
+    rlChangeBackground: "ოთახის ფონის შეცვლა",
     rlLeaveRoom: "ოთახიდან გასვლა",
     rlDeleteRoom: "ოთახის წაშლა",
     rlDeleteRoomConfirm: "დარწმუნებული ხარ, რომ გინდა ამ ოთახის წაშლა? ეს მოქმედება შეუქცევადია.",

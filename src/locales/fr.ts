@@ -2704,6 +2704,8 @@ export const fr: KaTranslations = {
     rlChooseCategory: "Choisir une catégorie",
     rlStartGame: "Lancer la partie",
     rlHowItWorks: "Comment ça marche",
+    rlRenameRoom: "Renommer le salon",
+    rlChangeBackground: "Changer le fond",
     rlLeaveRoom: "Quitter le salon",
     rlDeleteRoom: "Supprimer le salon",
     rlDeleteRoomConfirm: "Tu es sûr de vouloir supprimer ce salon ? Cette action est irréversible.",

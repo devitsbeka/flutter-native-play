@@ -2747,6 +2747,8 @@ export const es: KaTranslations = {
     rlChooseCategory: "Elegir categoría",
     rlStartGame: "Iniciar juego",
     rlHowItWorks: "Cómo funciona",
+    rlRenameRoom: "Renombrar sala",
+    rlChangeBackground: "Cambiar fondo",
     rlLeaveRoom: "Salir de la sala",
     rlDeleteRoom: "Eliminar sala",
     rlDeleteRoomConfirm: "¿Seguro que quieres eliminar esta sala? Esta acción es irreversible.",
