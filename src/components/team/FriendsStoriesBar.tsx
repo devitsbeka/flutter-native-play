@@ -311,17 +311,6 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
       {edges.right && <ScrollArrow side="right" onClick={() => page(1)} />}
       <div ref={scrollRef} className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
       <div className="flex gap-4 pt-2 pb-3 pr-4">
-        {/* You, first */}
-        {user && (
-          <SelfStoryAvatar
-            nickname={profile?.nickname || t("game.you")}
-            avatarUrl={profile?.avatar_url}
-            animatedAvatarUrl={profile?.animated_avatar_url}
-            label={t("game.you")}
-            onOpen={() => openProfile(user.id)}
-          />
-        )}
-
         {/* Add Friend Button */}
         <button
           type="button"
@@ -345,6 +334,19 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
             {t('team.add')}
           </span>
         </button>
+
+        {/* You, ahead of the friends but behind the add button: adding
+            someone is the thing this strip is for, and it stays where the
+            thumb already expects it. */}
+        {user && (
+          <SelfStoryAvatar
+            nickname={profile?.nickname || t("game.you")}
+            avatarUrl={profile?.avatar_url}
+            animatedAvatarUrl={profile?.animated_avatar_url}
+            label={t("game.you")}
+            onOpen={() => openProfile(user.id)}
+          />
+        )}
 
         {/* Friends */}
         <AnimatePresence>

@@ -797,12 +797,13 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
   const action = roomCardAction(room);
 
   // The button is the point of the row while there is one, so the faces give
-  // it room. Two, and no "+N" bubble: the count pill says how many there are
-  // — it sits at the top of the card now rather than beside the faces, but it
-  // is still on the card, so the bubble would spend 24px repeating it.
-  // Without that trim, a full room on a TV at three-column width put the
-  // button on top of the bubble.
-  const avatarLimit = action ? 2 : 4;
+  // it room — but not so much room that they contradict the count pill above
+  // them. Two faces under a pill reading "3" is read as a missing player, not
+  // as a crop, and a three-player room is the common case. Three faces, and
+  // the "+N" bubble is back for anything past them: the row is the only thing
+  // in this group allowed to give way (overflow-hidden, above), so a card too
+  // narrow for all of it clips a face rather than sliding under the button.
+  const avatarLimit = action ? 3 : 4;
 
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
@@ -1045,7 +1046,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                         </div>
                       );
                     })}
-                    {!action && displayPlayers.length > avatarLimit && (
+                    {displayPlayers.length > avatarLimit && (
                       <div className="w-8 h-8 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
                         <span className="text-white text-[10px] font-bold">
                           +{displayPlayers.length - avatarLimit}
