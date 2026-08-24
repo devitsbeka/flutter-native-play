@@ -47,8 +47,10 @@ describe("the invite button beside a player", () => {
     // The row already carries a rank, an avatar, a name, an add-friend
     // button and a score. A word on top of that spends the name's width on
     // something the paper-plane already says.
+    // Two places, not three: the VS layout used to be two hand-copied
+    // columns and is now one component drawn twice.
     const uses = scoreboard.match(/<InvitePlayerButton[\s\S]{0,200}?\/>/g) ?? [];
-    expect(uses.length, "expected the list row and both halves of the VS layout").toBe(3);
+    expect(uses.length, "expected the ranked list row and VsPlayer").toBe(2);
     for (const use of uses) {
       expect(use, "every invite button must narrow itself on a phone")
         .toMatch(/iconOnly=\{isMobile\}/);
@@ -74,8 +76,8 @@ describe("the invite button beside a player", () => {
     const guards = scoreboard.match(/\{isHost && [^}]*onInvitePlayer[^}]*&& \(/g) ?? [];
     expect(
       guards.length,
-      "expected the guard on the list and on both halves of the VS layout"
-    ).toBe(3);
+      "expected the guard on the ranked list row and in VsPlayer"
+    ).toBe(2);
     for (const guard of guards) {
       expect(guard, "a player must not be offered a button to invite themselves")
         .toMatch(/user_id !== currentUserId/);

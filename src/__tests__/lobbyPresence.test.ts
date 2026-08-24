@@ -30,9 +30,13 @@ describe("the green ring", () => {
 
   it("is drawn on both layouts", () => {
     // The two-player VS layout and the ranked list are separate markup; a
-    // player must not be green on one and grey on the other.
+    // player must not be green on one and grey on the other. One ring each:
+    // PresenceAvatar for the list, VsPlayer for the face-off, and VsPlayer
+    // is now drawn twice rather than written out twice.
     const rings = scoreboard.match(/ring-2 ring-emerald-400/g) ?? [];
-    expect(rings.length, "expected the list's avatar and both halves of VS").toBe(3);
+    expect(rings.length, "expected PresenceAvatar and VsPlayer").toBe(2);
+    expect(scoreboard, "VsPlayer must carry it, not one of its two call sites")
+      .toMatch(/function VsPlayer\([\s\S]*?ring-2 ring-emerald-400/);
   });
 
   it("stays off for a placeholder who never arrived", () => {
@@ -124,5 +128,53 @@ describe("the room name in the lobby", () => {
     // header down a full safe-top the last time. Being outside the scroller
     // holds it in place for free.
     expect(header).not.toMatch(/className="[^"]*\bsticky\b/);
+  });
+});
+
+/**
+ * The two halves of the face-off used to drift apart.
+ *
+ * Each column was written out by hand, twice, and the row centred them
+ * against each other — so a single extra control on one side (an add-friend
+ * button the other player did not qualify for) slid that player's whole
+ * column relative to their opponent. Measured in a browser against the app's
+ * compiled CSS, with one side carrying the button and the other not:
+ *
+ *   old   avatar 14px apart   name 14px apart   score 14px apart
+ *   new   avatar 0            name 0            score 0
+ */
+describe("the two-player face-off", () => {
+  it("is one component drawn twice, not two copies", () => {
+    // The copies were the cause, not the symptom: two blocks of markup that
+    // nothing kept in step.
+    expect(scoreboard).toMatch(/function VsPlayer\(/);
+    const uses = scoreboard.match(/<VsPlayer\b/g) ?? [];
+    expect(uses.length, "one per side").toBe(2);
+    expect(scoreboard, "a second copy of the column would drift from the first")
+      .not.toMatch(/const player = sortedParticipants\[/);
+  });
+
+  it("aligns the columns to their tops, not their centres", () => {
+    // items-center is what let a taller column push its own contents up
+    // relative to the other.
+    expect(scoreboard).toMatch(/grid-cols-\[1fr_auto_1fr\] items-start/);
+  });
+
+  it("gives every row a height that does not depend on its contents", () => {
+    const vs = scoreboard.match(/function VsPlayer\([\s\S]*?\n\}\n\nexport function RoomScoreboard/)![0];
+    // The avatar's crown and ring both paint outside its box; a fixed
+    // wrapper stops them moving where the name starts.
+    expect(vs, "the avatar needs a fixed slot").toMatch(/relative h-16 w-16/);
+    expect(vs, "a two-line name must not push one score below the other")
+      .toMatch(/mt-2 h-5 w-full truncate/);
+    expect(vs, "the score needs a fixed slot").toMatch(/mt-2 h-8 text-2xl/);
+    expect(vs, "the action row shifted the columns whenever only one side had a button")
+      .toMatch(/flex min-h-\[28px\] items-center/);
+  });
+
+  it("centres the swords against the avatars", () => {
+    // Against the columns they drifted with whichever side was taller.
+    // mt-2 is half the 64px avatar less half the 48px badge.
+    expect(scoreboard).toMatch(/mt-2 flex flex-shrink-0 flex-col items-center/);
   });
 });
