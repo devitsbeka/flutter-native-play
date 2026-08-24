@@ -1,5 +1,5 @@
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
-import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { HeadToHead, PlayerFacts } from "@/hooks/usePlayerProfile";
 
@@ -119,7 +119,13 @@ export function VersusPanel({ headToHead, facts, me, them }: VersusPanelProps) {
         <div className="rounded-2xl border border-border/60 bg-card/60 px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-              <DynamicIcon slug={specialty.iconSlug ?? undefined} categoryId={specialty.slug} size={26} />
+              {/* CategoryArtwork, not DynamicIcon: the six picture-guess
+                  categories carry generic stand-ins in icon_slug — globe,
+                  magnifier, running man — so asking the icon library for
+                  "guess the logo" answers with a magnifying glass. The bundled
+                  art is the category's real picture, and CategoryArtwork falls
+                  back to the library for everything else. */}
+              <CategoryArtwork categoryId={specialty.slug} iconSlug={specialty.iconSlug} size={26} className="drop-shadow-none" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs text-muted-foreground">{t("extra.theirSpecialty")}</p>
