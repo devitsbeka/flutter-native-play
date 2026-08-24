@@ -289,6 +289,24 @@ describe("repo invariants", () => {
     ).toEqual([]);
   });
 
+  it("lists every shareable route in the universal-links file", () => {
+    // A path missing from apple-app-site-association fails silently and
+    // invisibly: iOS opens the link in Safari, on a phone that has the app
+    // installed, with nothing anywhere to say why. /i/* shipped that way —
+    // it is the personal invite link, the format every share button in the
+    // app emits, and it was the one route not in the list.
+    const aasa = JSON.parse(read("public/.well-known/apple-app-site-association"));
+    const paths: string[] = aasa.applinks.details[0].paths;
+
+    for (const route of ["/i/*", "/room/*", "/join/*", "/challenge/*"]) {
+      expect(
+        paths,
+        `${route} is missing from the universal-links file, so iOS will open ` +
+          "it in Safari instead of the app.",
+      ).toContain(route);
+    }
+  });
+
   it("keeps the entitlement migrations", () => {
     // Deleting one of these would rebuild a fresh database with the
     // free-subscription and currency-minting holes back in place.

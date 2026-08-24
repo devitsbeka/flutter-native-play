@@ -2659,6 +2659,7 @@ export const ka = {
     inviteAddFriend: "მეგობრად დამატება",
     inviteJoining: "შემოდიხარ...",
     inviteNotFound: "ეს მოსაწვევი ბმული აღარ მოქმედებს",
+    inviteLoadFailed: "მოსაწვევის ჩატვირთვა ვერ მოხერხდა. შეამოწმეთ კავშირი და სცადეთ თავიდან.",
     inviteGoHome: "აპლიკაციაში გადასვლა",
     inviteThisIsYours: "ეს შენი საკუთარი მოსაწვევი ბმულია",
     inviteHaveAccount: "უკვე მაქვს ანგარიში",

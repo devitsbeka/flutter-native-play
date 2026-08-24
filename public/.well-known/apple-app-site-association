@@ -6,6 +6,7 @@
         "appID": "T38XQSM4L3.io.mytrivia.app",
         "paths": [
           "/challenge/*",
+          "/i/*",
           "/join",
           "/join/*",
           "/room/*",

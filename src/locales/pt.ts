@@ -2284,6 +2284,7 @@ export const pt: KaTranslations = {
     inviteAddFriend: "Adicionar amigo",
     inviteJoining: "Entrando...",
     inviteNotFound: "Este link de convite não é mais válido",
+    inviteLoadFailed: "Não foi possível carregar o convite. Verifique a ligação e tente novamente.",
     inviteGoHome: "Ir para o app",
     inviteThisIsYours: "Este é o seu próprio link de convite",
     inviteHaveAccount: "Já tenho uma conta",

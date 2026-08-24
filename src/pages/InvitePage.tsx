@@ -73,6 +73,8 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
   const [preview, setPreview] = useState<InvitePreview | null>(null);
   const [players, setPlayers] = useState<InvitePlayer[]>([]);
   const [loading, setLoading] = useState(true);
+  // The lookup itself did not answer, as opposed to answering "no such code".
+  const [loadFailed, setLoadFailed] = useState(false);
   const [nickname, setNickname] = useState("");
   const [joining, setJoining] = useState(false);
   const [requested, setRequested] = useState<Set<string>>(new Set());
@@ -87,7 +89,7 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
       // Both readable signed out: someone who has never opened this app taps a
       // link in a chat, and has to see who invited them before deciding
       // whether to make an account at all.
-      const [{ data: previewRows }, { data: playerRows }] = await Promise.all([
+      const load = () => Promise.all([
         by === "room"
           ? supabase.rpc("room_preview", { p_room_code: code })
           : supabase.rpc("invite_preview", { p_code: code }),
@@ -95,7 +97,26 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
           ? supabase.rpc("room_players", { p_room_code: code })
           : supabase.rpc("invite_room_players", { p_code: code }),
       ]);
+
+      let [{ data: previewRows, error: previewError }, { data: playerRows }] = await load();
+
+      // A call that FAILED is not a link that is dead, and until now both
+      // rendered the same "this invite link no longer works" — the error was
+      // destructured away. A phone that has just been handed a link is often
+      // on the worst connection it will see all day (a chat app backgrounded,
+      // wifi handing over), so the first attempt is worth retrying before
+      // telling someone their invitation is void.
+      if (!cancelled && previewError) {
+        console.warn("[invite] preview failed, retrying", previewError);
+        await new Promise(resolve => setTimeout(resolve, 900));
+        if (cancelled) return;
+        [{ data: previewRows, error: previewError }, { data: playerRows }] = await load();
+      }
       if (cancelled) return;
+      if (previewError) {
+        console.error("[invite] preview failed", { code, by, previewError });
+        setLoadFailed(true);
+      }
       setPreview((previewRows?.[0] as InvitePreview) ?? null);
       setPlayers((playerRows as InvitePlayer[]) ?? []);
       setLoading(false);
@@ -186,13 +207,26 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
 
   // A code that resolves to nothing is a link that was mistyped, or an
   // account that is gone. Say so and offer the way in rather than spinning.
+  //
+  // A lookup that could not be made is a different thing and gets a different
+  // answer: "try again", not "your invitation is void". Telling someone their
+  // link is dead when the network hiccuped loses the invitation for good —
+  // they will not tap it twice.
   if (!preview) {
     return (
       <div className="h-[100dvh] flex flex-col items-center justify-center gap-6 px-8 bg-[#7B68D9] text-center">
-        <p className="text-white text-lg font-semibold">{t("extra.inviteNotFound")}</p>
-        <ChunkyButton variant="white" size="lg" onClick={() => navigate("/", { replace: true })}>
-          {t("extra.inviteGoHome")}
-        </ChunkyButton>
+        <p className="text-white text-lg font-semibold">
+          {t(loadFailed ? "extra.inviteLoadFailed" : "extra.inviteNotFound")}
+        </p>
+        {loadFailed ? (
+          <ChunkyButton variant="white" size="lg" onClick={() => window.location.reload()}>
+            {t("extra.tryAgain")}
+          </ChunkyButton>
+        ) : (
+          <ChunkyButton variant="white" size="lg" onClick={() => navigate("/", { replace: true })}>
+            {t("extra.inviteGoHome")}
+          </ChunkyButton>
+        )}
       </div>
     );
   }
