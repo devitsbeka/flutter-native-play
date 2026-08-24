@@ -100,8 +100,18 @@ export function PageHeader({
         }
       >
         {/* 76px tall like the home header, so the search/bell icons land at
-            the same vertical spot on every page */}
-        <div className="flex items-center justify-between px-4 h-[76px] w-full">
+            the same vertical spot on every page.
+
+            26px of side padding in the overlay variant, 16 everywhere else:
+            on artwork there is no surface edge to line the title up with, and
+            Explore's design sets the title and the icons in from the screen
+            by 26. On a page wash the header lines up with the content below
+            it instead, which is padded by 16. */}
+        <div
+          className={`flex items-center justify-between h-[76px] w-full ${
+            overlay ? "px-[26px]" : "px-4"
+          }`}
+        >
         {/* Left: Back button + Title */}
         <div className="flex items-center gap-3">
           {showBack && (

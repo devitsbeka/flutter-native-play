@@ -357,6 +357,12 @@ export const ka = {
   discover: {
     title: "აღმოაჩინე",
     searchPlaceholder: "მოძებნე კატეგორია...",
+    promoTitle: "მიიღე სრული წვდომა!",
+    promoSubtitle: "ყველა დონე + ულიმიტო თამაში",
+    promoCta: "სცადე უფასოდ",
+    promoNote: "1 დღე უფასოდ, შემდეგ $10 / თვე",
+    free: "უფასო",
+    premium: "პრემიუმ",
     all: "ყველა",
     favorites: "ფავორიტები",
     recentlyViewedTab: "ბოლოს ნანახი",

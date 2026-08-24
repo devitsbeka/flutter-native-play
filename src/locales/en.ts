@@ -359,6 +359,12 @@ export const en: KaTranslations = {
   discover: {
     title: "Discover",
     searchPlaceholder: "Search categories...",
+    promoTitle: "Get full access!",
+    promoSubtitle: "All levels + unlimited play",
+    promoCta: "Try for free",
+    promoNote: "1 day free, then $10 / month",
+    free: "Free",
+    premium: "Premium",
     all: "All",
     favorites: "Favorites",
     recentlyViewedTab: "Recently Viewed",
