@@ -191,3 +191,41 @@ SELECT
 --    AND in_production = false
 --    AND is_active     = true
 --    AND translated_from IS NULL;
+
+
+-- =====================================================================
+--  FOLLOW-UP — run this one ON ITS OWN (the editor shows only the last
+--  result set, which is why the script above is a single query).
+--
+--  Why 930 Georgian questions are switched off.
+--
+--  Georgian is deactivated at 9.5% against 3.2-4.5% for every other
+--  language — 930 rows, near three times the rate of German. That
+--  matters more than it looks, because the category deltas above count
+--  totals, and totals include rows no player can be served:
+--
+--      Georgian deficit on totals   780
+--      Georgian deficit on active  1218
+--
+--  So the gap players actually meet is about 440 questions worse than
+--  the matrix suggests, and two categories that read as healthy on
+--  totals are short in play: anime_manga (+17 -> -32) and
+--  myths_reality (+14 -> -15).
+--
+--  Whether that is 930 questions to write or 930 to switch back on
+--  depends on why they were switched off, which this answers.
+-- =====================================================================
+
+-- SELECT
+--     COALESCE(q.quality_status, '(none)')   AS quality_status,
+--     COALESCE(q.ai_review_grade, '(none)')  AS ai_grade,
+--     q.in_production,
+--     count(*)                               AS questions,
+--     round(avg(q.ai_review_score), 1)       AS avg_score,
+--     min(q.created_at)::date                AS oldest,
+--     max(q.created_at)::date                AS newest
+--   FROM public.questions q
+--  WHERE q.language = 'ka'
+--    AND COALESCE(q.is_active, false) = false
+--  GROUP BY 1, 2, 3
+--  ORDER BY questions DESC;
