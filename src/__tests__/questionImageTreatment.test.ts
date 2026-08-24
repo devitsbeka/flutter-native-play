@@ -57,3 +57,36 @@ describe("imageTreatmentFor", () => {
     expect(undecided).toEqual(["guess_city"]);
   });
 });
+
+describe("logo tile-reveal stays bound to the logo treatment", () => {
+  // The reveal is what makes the logo bank a game rather than a lookup: a
+  // great many marks are the company's name set in a typeface, so an
+  // uncovered logo prints the answer on the card. It used to be wired to its
+  // own `category_id === "guess_logo"` comparison at each call site; it is now
+  // bound to the same `inset` flag, and must stay that way.
+  const CALL_SITES = [
+    "src/components/team/MultiplayerGameScreenV2.tsx",
+    "src/components/team/MultiplayerObserverScreen.tsx",
+    "src/components/game/QuizGameScreenProd.tsx",
+    "src/pages/CategoryQuizPage.tsx",
+  ];
+
+  it("passes imageReveal from the inset flag at every call site", async () => {
+    const { readFileSync } = await import("node:fs");
+    for (const path of CALL_SITES) {
+      const src = readFileSync(path, "utf8");
+      const bindings = [...src.matchAll(/imageReveal=\{([^}]*)\}/g)].map((m) => m[1]);
+      expect(bindings.length, `${path} renders no imageReveal`).toBeGreaterThan(0);
+      for (const expr of bindings) {
+        expect(expr, `${path} decoupled imageReveal from the logo treatment`).toMatch(/\.inset\b/);
+      }
+    }
+  });
+
+  it("turns the reveal on for logos and off for everything else", () => {
+    expect(imageTreatmentFor("guess_logo").inset).toBe(true);
+    for (const other of ["guess_flag", "guess_celebrity", "guess_movie", "guess_sportsman", "guess_city", null]) {
+      expect(imageTreatmentFor(other).inset).toBe(false);
+    }
+  });
+});
