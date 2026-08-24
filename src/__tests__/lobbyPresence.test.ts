@@ -81,17 +81,30 @@ describe("the arrival flare", () => {
 });
 
 /**
- * The tick under an invited player means "asked, and waiting". Once they are
- * in the app the waiting is over, and their avatar says so far better than a
- * tick does — so the tick retires itself rather than sitting under somebody
- * who has plainly arrived.
+ * The tick under a player means "asked, and waiting".
+ *
+ * It used to retire itself once they arrived, on the reasoning that the
+ * waiting was over. The whole button retires now: a player who is in the app
+ * needs no invitation, so there is nothing to press and nothing to explain.
+ * The tick is only ever seen where it is still true — under somebody who was
+ * asked and has not come.
  */
 describe("the sent tick", () => {
-  it("retires when the player arrives", () => {
+  it("has no button left to sit under once the player arrives", () => {
+    const uses = scoreboard.match(/<InvitePlayerButton[\s\S]{0,400}?\/>/g) ?? [];
+    expect(uses.length).toBe(2);
+    // Both call sites are guarded on the player NOT being online.
+    for (const guard of [
+      /!isOnline && \(\s*<InvitePlayerButton/,
+      /!online\.has\(p\.user_id\) && \(\s*<InvitePlayerButton/,
+    ]) {
+      expect(scoreboard, "an online player must not be offered an invite").toMatch(guard);
+    }
+  });
+
+  it("still disables itself while sending and once sent", () => {
     const button = scoreboard.match(/function InvitePlayerButton\([\s\S]*?\n\}\n\n\/\*\*/)![0];
-    expect(button).toMatch(/const showSent = sent && !isOnline;/);
-    expect(button, "the tick, its colour and its disabled state all follow the same fact")
-      .toMatch(/disabled=\{sending \|\| showSent\}/);
+    expect(button).toMatch(/disabled=\{sending \|\| showSent\}/);
   });
 
   it("is derived, not cleared by an effect", () => {
@@ -108,10 +121,32 @@ describe("the sent tick", () => {
     expect(button).not.toMatch(/disabled=\{sending \|\| sent\}/);
   });
 
-  it("knows whether the player is online on both layouts", () => {
-    const uses = scoreboard.match(/<InvitePlayerButton[\s\S]{0,400}?\/>/g) ?? [];
-    expect(uses.length).toBe(2);
-    for (const use of uses) expect(use).toMatch(/isOnline=\{/);
+  it("does not need to be told about presence any more", () => {
+    // The guard is at the call site, so the button itself has one job.
+    const button = scoreboard.match(/function InvitePlayerButton\([\s\S]*?\n\}\n\n\/\*\*/)![0];
+    expect(button).not.toMatch(/isOnline/);
+  });
+});
+
+/**
+ * Colour is presence. A player who is not in the app is drawn in grey and a
+ * player who is carries a standing green glow — so the board answers "who
+ * could actually play right now" without anyone reading a word.
+ */
+describe("colour follows presence", () => {
+  it("greys out whoever is not in the app, on both layouts", () => {
+    expect(scoreboard, "the ranked list")
+      .toMatch(/dimmed \|\| !isOnline \? "grayscale" : ""/);
+    expect(scoreboard, "the two-player face-off")
+      .toMatch(/isInvited \|\| !isOnline \? "grayscale" : ""/);
+  });
+
+  it("holds the glow while they are here, not only as they arrive", () => {
+    // The flare is the arrival and fires once; the glow is the standing fact.
+    // Falling back to no shadow after the flare made a player who was plainly
+    // in the app look identical to one who had gone.
+    const steady = scoreboard.match(/isOnline\s*\n?\s*\? \{ boxShadow: "0 0 1[26]px [34]px rgba\(52,211,153,0\.55\)" \}/g) ?? [];
+    expect(steady.length, "both layouts hold a steady glow while online").toBe(2);
   });
 });
 

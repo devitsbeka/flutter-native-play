@@ -126,27 +126,20 @@ function InvitePlayerButton({
   userId,
   onInvite,
   iconOnly = false,
-  isOnline = false,
 }: {
   userId: string;
   onInvite: (userId: string) => void | Promise<void>;
   /** Phone widths: the paper-plane says it, so the word comes off. */
   iconOnly?: boolean;
-  /** They are in the app. The invite has been answered; stop claiming it. */
-  isOnline?: boolean;
 }) {
   const { t } = useLanguage();
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
 
-  // The tick means "asked, waiting". Once they are here the waiting is over
-  // and the ring on their avatar says so far better, so the tick retires
-  // itself rather than sitting under a player who has plainly arrived.
-  //
-  // Derived, not cleared in an effect: a host who invites somebody already
-  // online never sees a tick at all, which is right — there was nothing to
-  // wait for — and the button stays pressable to ask them again later.
-  const showSent = sent && !isOnline;
+  // The tick means "asked, waiting". It does not have to retire itself any
+  // more: the button is not rendered at all once they are online, so the
+  // whole control disappears the moment the invite is answered.
+  const showSent = sent;
 
   return (
     <motion.button
@@ -155,9 +148,16 @@ function InvitePlayerButton({
       disabled={sending || showSent}
       aria-label={t("extra.inviteFriendBtn")}
       title={t("extra.inviteFriendBtn")}
+      // touchAction: a parent that owns the gesture can otherwise take the
+      // tap before this button sees it, and the button reads as dead. That
+      // has happened twice in this app — "+ trivia" needed three taps, and
+      // the friend rows in InviteFriendsModal needed their own touch handler.
+      style={{ touchAction: "manipulation" }}
       onClick={async (e) => {
         // The row can open a profile; inviting is its own action.
         e.stopPropagation();
+        e.preventDefault();
+        if (sending || showSent) return;
         setSending(true);
         try {
           await onInvite(userId);
@@ -220,7 +220,11 @@ function PresenceAvatar({
   crown: boolean;
 }) {
   return (
-    <div className={`relative flex-shrink-0 ${dimmed ? "grayscale" : ""}`}>
+    // Colour is presence. Someone who is not in the app right now is drawn in
+    // grey, so a glance at the board separates who could play from who would
+    // have to be fetched — which is the question a host is asking when they
+    // look at it.
+    <div className={`relative flex-shrink-0 ${dimmed || !isOnline ? "grayscale" : ""}`}>
       <motion.div
         className={`rounded-full ${
           isOnline ? "ring-2 ring-emerald-400 ring-offset-1 ring-offset-transparent" : ""
@@ -228,6 +232,11 @@ function PresenceAvatar({
         // Keyed on the arrival so remounting is not needed to replay it; a
         // glow that cannot repeat would only ever be seen by whoever happened
         // to be looking the first time.
+        // Three states, not two. The flare is the arrival and fires once; the
+        // steady glow is the standing fact that they are here, and it stays
+        // until they leave; no glow at all means offline. The glow used to
+        // fall back to nothing the moment the flare finished, so a player who
+        // was plainly in the app looked identical to one who had gone.
         animate={
           justArrived
             ? {
@@ -235,10 +244,12 @@ function PresenceAvatar({
                   "0 0 0px 0px rgba(52,211,153,0)",
                   "0 0 20px 7px rgba(52,211,153,0.9)",
                   "0 0 20px 7px rgba(52,211,153,0.9)",
-                  "0 0 0px 0px rgba(52,211,153,0)",
+                  "0 0 12px 3px rgba(52,211,153,0.55)",
                 ],
               }
-            : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
+            : isOnline
+              ? { boxShadow: "0 0 12px 3px rgba(52,211,153,0.55)" }
+              : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
         }
         transition={justArrived ? ARRIVAL_GLOW : { duration: 0.2 }}
       >
@@ -308,7 +319,7 @@ function VsPlayer({
       {/* Avatar. h-16 on the wrapper, so the crown and the ring — both of
           which paint outside the avatar's box — cannot change how far down
           the name starts. */}
-      <div className={`relative h-16 w-16 ${isInvited ? "grayscale" : ""}`}>
+      <div className={`relative h-16 w-16 ${isInvited || !isOnline ? "grayscale" : ""}`}>
         {showHostCrown && player.is_host && !isInvited && (
           <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
         )}
@@ -325,10 +336,12 @@ function VsPlayer({
                     "0 0 0px 0px rgba(52,211,153,0)",
                     "0 0 24px 9px rgba(52,211,153,0.9)",
                     "0 0 24px 9px rgba(52,211,153,0.9)",
-                    "0 0 0px 0px rgba(52,211,153,0)",
+                    "0 0 16px 4px rgba(52,211,153,0.55)",
                   ],
                 }
-              : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
+              : isOnline
+                ? { boxShadow: "0 0 16px 4px rgba(52,211,153,0.55)" }
+                : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
           }
           transition={justArrived ? ARRIVAL_GLOW : { duration: 0.2 }}
         >
@@ -405,12 +418,14 @@ function VsPlayer({
               the other whenever only one player could be added as a friend. */}
           <div className="mt-1.5 flex min-h-[28px] items-center justify-center gap-1.5">
             <AddFriendButton userId={player.user_id} />
-            {isHost && onInvitePlayer && player.user_id !== currentUserId && (
+            {/* Nobody to invite: they are already in the app, and the glow
+                says so. The button used to stay for a second ask, which put
+                a call to action under a player who had plainly answered. */}
+            {isHost && onInvitePlayer && player.user_id !== currentUserId && !isOnline && (
               <InvitePlayerButton
                 userId={player.user_id}
                 onInvite={onInvitePlayer}
                 iconOnly={isMobile}
-                isOnline={isOnline}
               />
             )}
           </div>
@@ -606,12 +621,11 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       <span className="text-xs text-white/40 italic">{t("extra.invitedLabel")}</span>
                     )}
                     {!isInvited && <AddFriendButton userId={p.user_id} />}
-                    {isHost && !isInvited && onInvitePlayer && p.user_id !== currentUserId && (
+                    {isHost && !isInvited && onInvitePlayer && p.user_id !== currentUserId && !online.has(p.user_id) && (
                       <InvitePlayerButton
                         userId={p.user_id}
                         onInvite={onInvitePlayer}
                         iconOnly={isMobile}
-                        isOnline={online.has(p.user_id)}
                       />
                     )}
                   </div>
