@@ -24,6 +24,7 @@ import { toast } from "@/lib/toast";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { CategoryPickerModal } from "./CategoryPickerModal";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
+import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 import { RoomQueueSheet } from "./RoomQueueSheet";
 import { calculateMultiplayerPayout } from "@/utils/multiplayerPayout";
 import { isGuestAccount } from "@/utils/guestAccount";
@@ -80,6 +81,9 @@ export function GameResultsScreenV2() {
   } = useMultiplayerV2();
 
   const { queue, addToQueue } = useRoomCategoryQueue(currentRoom?.id || null);
+  // The category this game was played in, resolved to its own slug and
+  // icon_slug. See where it is drawn below for why both are needed.
+  const resultsCategory = useCategoryIdentity(currentRoom?.category_id);
   const { share, sharing } = useChallengeShare();
 
   const [isStartingRematch, setIsStartingRematch] = useState(false);
@@ -554,8 +558,22 @@ export function GameResultsScreenV2() {
           >
             {/* CategoryArtwork rather than DynamicIcon: the six picture-guess
                 categories carry generic stand-ins in icon_slug, so the library
-                answers "guess the city" with a globe. */}
-            <CategoryArtwork categoryId={currentRoom.category_id} size={24} className="drop-shadow-none" />
+                answers "guess the city" with a globe.
+
+                Both halves have to be passed. category_id on a room is a slug
+                for some rooms and a uuid for others; handed a uuid alone,
+                CategoryArtwork matches nothing in the popular set AND gives
+                DynamicIcon no slug to look up, and DynamicIcon's last resort
+                is getRandomIconForCategory — which is how world history came
+                out as a camera and guess-the-city as a banana. Resolving the
+                identity first turns the uuid into the category's own slug and
+                its icon_slug, and the random fallback is never reached. */}
+            <CategoryArtwork
+              categoryId={resultsCategory.categoryId ?? currentRoom.category_id}
+              iconSlug={resultsCategory.iconSlug}
+              size={24}
+              className="drop-shadow-none"
+            />
             <span className="text-white font-medium">{localizeCategory(currentRoom.category_name)}</span>
           </motion.div>
         )}
