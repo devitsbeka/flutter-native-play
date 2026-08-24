@@ -20,11 +20,17 @@
  * the neutral surface — the safe answer — instead of the wrong one.
  */
 
-/** The picture banks that are photographs. */
+/**
+ * The picture banks that are photographs.
+ *
+ * Four of the six. The other two are graphics — a logo and a flag — and each
+ * has its own treatment above.
+ */
 export const PHOTO_BAND_CATEGORY_IDS = [
   "guess_celebrity",
   "guess_movie",
   "guess_sportsman",
+  "guess_city",
 ] as const;
 
 export interface ImageTreatment {

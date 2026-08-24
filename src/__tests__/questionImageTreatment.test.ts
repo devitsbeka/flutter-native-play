@@ -34,7 +34,6 @@ describe("imageTreatmentFor", () => {
       "",
       "6fa574e2-c61e-5ac2-bf17-85f742804238",
       "geography",
-      "guess_city",
     ]) {
       expect(imageTreatmentFor(unknown)).toEqual({ inset: false, framed: false, band: false });
     }
@@ -54,7 +53,14 @@ describe("imageTreatmentFor", () => {
       const t = imageTreatmentFor(id);
       return !t.inset && !t.framed && !t.band;
     });
-    expect(undecided).toEqual(["guess_city"]);
+    expect(undecided).toEqual([]);
+  });
+
+  it("treats city as a photograph, like celebrity and movie", () => {
+    // A city shot is a photograph that happens to be landscape; the thing
+    // that decides the treatment is what the picture IS, not its shape.
+    expect(imageTreatmentFor("guess_city")).toEqual(imageTreatmentFor("guess_celebrity"));
+    expect(imageTreatmentFor("guess_city").band).toBe(true);
   });
 });
 
