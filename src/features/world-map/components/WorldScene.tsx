@@ -9,6 +9,7 @@ import { Shards } from "../regions/Shards";
 import { Vegetation } from "../regions/Vegetation";
 import { Landmarks } from "../regions/Landmarks";
 import { Clouds } from "../regions/Clouds";
+import { Orbs } from "../regions/Orbs";
 import { Paths } from "../paths/Paths";
 import { NodeMarkers } from "../nodes/NodeMarkers";
 import { NodePanel, NodePanelData } from "../nodes/NodePanel";
@@ -48,6 +49,13 @@ export function WorldScene({
   // only softens the true horizon.
   const fog = useMemo(() => new THREE.Fog(worldColors.fogPink, 260, 460), []);
 
+  // Route extent, so the orb field spans the whole journey rather than
+  // clustering around the origin.
+  const orbZRange = useMemo<[number, number]>(() => {
+    const zs = world.def.regions.map((r) => r.position[2]);
+    return [Math.max(...zs), Math.min(...zs)];
+  }, [world.def.regions]);
+
   // Low cloud puffs hugging cliff bases and drifting through the channels.
   const lowClouds = useMemo<ScatterInstance[]>(() => {
     const rng = createRng(childSeed(world.def.seed, "low-clouds"));
@@ -80,6 +88,7 @@ export function WorldScene({
         shadow-bias={-0.0004}
       />
       <CameraRig definition={world.def.camera} reducedMotion={reducedMotion} verticalScroll={verticalScroll} />
+      <Orbs seed={world.def.seed} count={profile.orbCount} zRange={orbZRange} animate={!reducedMotion} />
       {world.regions.map((region) => (
         <group key={region.def.id}>
           <Island region={region} />

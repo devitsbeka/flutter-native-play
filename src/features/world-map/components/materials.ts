@@ -27,7 +27,7 @@ export const worldColors = {
   pathCream: "#fff6dc",
   bronze: "#e0a13c",
   pitDark: "#7a5334",
-  fogPink: "#ecd9fb",
+  fogPink: "#e9dcf5",
   snow: "#ffffff",
   mountain: "#d5e4fa",
   water: "#4fd0e8",
@@ -76,11 +76,20 @@ export const worldMaterials = {
     emissive: worldColors.purpleMagic,
     emissiveIntensity: 0.35,
   }),
+  // Clouds read as grey-purple rather than white for two reasons: the
+  // hemisphere light's ground colour is purple, so it tints every underside,
+  // and at 0.92 opacity the purple backdrop shows straight through. The
+  // emissive term lifts the shadowed side back to white without flattening
+  // the form the way an unlit material would, and the higher opacity stops
+  // the sky bleeding through the body.
   cloud: new THREE.MeshStandardMaterial({
     color: worldColors.cloud,
     roughness: 1,
+    metalness: 0,
+    emissive: "#ffffff",
+    emissiveIntensity: 0.55,
     transparent: true,
-    opacity: 0.92,
+    opacity: 0.98,
   }),
   // Vertex-colored terrain: white base, colors baked per vertex.
   capBlend: new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.9, metalness: 0, vertexColors: true }),
