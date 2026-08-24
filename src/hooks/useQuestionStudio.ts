@@ -101,18 +101,32 @@ export const useQuestionStudio = () => {
       
       if (catsError) throw catsError;
 
-      // Fetch counts per category
-      let countsQuery = supabase
-        .from('questions')
-        .select('category_id, in_production');
-      
-      if (language !== 'all') {
-        countsQuery = countsQuery.eq('language', language);
+      // Fetch counts per category.
+      //
+      // Paged, because PostgREST caps a request at 1000 rows and says nothing
+      // about it. This query used to be a plain select of every question, so
+      // the whole sidebar was counted from an arbitrary first thousand of
+      // 64,977: the tabs read "Library 68 / Production 932" — which is 1000
+      // exactly — and მათემატიკა showed 5 where it has 132. The number was
+      // wrong in the direction that looks plausible, which is why it stood.
+      const PAGE = 1000;
+      const countsData: { category_id: string; in_production: boolean | null }[] = [];
+      for (let from = 0; ; from += PAGE) {
+        let countsQuery = supabase
+          .from('questions')
+          .select('category_id, in_production')
+          .range(from, from + PAGE - 1);
+
+        if (language !== 'all') {
+          countsQuery = countsQuery.eq('language', language);
+        }
+
+        const { data: page, error: countsError } = await countsQuery;
+        if (countsError) throw countsError;
+        if (!page || page.length === 0) break;
+        countsData.push(...page);
+        if (page.length < PAGE) break;
       }
-      
-      const { data: countsData, error: countsError } = await countsQuery;
-      
-      if (countsError) throw countsError;
 
       // Calculate counts
       const countMap: Record<string, { library: number; production: number }> = {};
