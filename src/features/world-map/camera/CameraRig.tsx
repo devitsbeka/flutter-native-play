@@ -10,7 +10,20 @@ const CAMERA_DIRECTION = new THREE.Vector3(0.1, 0.72, 0.69).normalize();
 interface CameraRigProps {
   definition: CameraDefinition;
   reducedMotion: boolean;
+  /**
+   * Vertical-scroll mode. Drag travels the route along Z with flick momentum
+   * and horizontal drift is locked, so the map reads as one long climb rather
+   * than a free-roam plane. Used on phones.
+   */
+  verticalScroll?: boolean;
 }
+
+/** Flick decay per second. Lower = the throw stops sooner. */
+const MOMENTUM_DECAY = 0.012;
+/** Below this speed (world units/sec) the glide is over. */
+const MOMENTUM_CUTOFF = 0.4;
+/** A drag slower than this on release is a stop, not a flick. */
+const FLICK_MIN_SPEED = 6;
 
 /**
  * Controlled cinematic camera. Users can pan (drag) and zoom (wheel/pinch)
@@ -18,7 +31,7 @@ interface CameraRigProps {
  * them with damping. Rotation under the map is impossible by construction —
  * the view axis is constant.
  */
-export function CameraRig({ definition, reducedMotion }: CameraRigProps) {
+export function CameraRig({ definition, reducedMotion, verticalScroll = false }: CameraRigProps) {
   const camera = useThree((s) => s.camera);
   const gl = useThree((s) => s.gl);
   const current = useRef({
@@ -26,6 +39,8 @@ export function CameraRig({ definition, reducedMotion }: CameraRigProps) {
     zoom: 1,
     parallax: new THREE.Vector2(0, 0),
   });
+  /** Residual Z velocity from a flick, decayed in the frame loop. */
+  const momentum = useRef(0);
 
   // Initialize goals once per world.
   useEffect(() => {
@@ -44,10 +59,18 @@ export function CameraRig({ definition, reducedMotion }: CameraRigProps) {
 
     const worldPerPixel = () => (definition.distance * current.current.zoom) / el.clientHeight / 9;
 
+    // Flick tracking: last sample position and time, so release velocity is
+    // measured from real movement rather than guessed from the final delta.
+    let lastMoveT = 0;
+    let lastVelZ = 0;
+
     const onPointerDown = (e: PointerEvent) => {
       dragging = true;
       lastX = e.clientX;
       lastY = e.clientY;
+      lastMoveT = e.timeStamp;
+      lastVelZ = 0;
+      momentum.current = 0;
     };
     const onPointerMove = (e: PointerEvent) => {
       if (!dragging) {
@@ -60,18 +83,41 @@ export function CameraRig({ definition, reducedMotion }: CameraRigProps) {
         return;
       }
       const scale = worldPerPixel() * 9;
-      const dx = -(e.clientX - lastX) * scale;
+      // Vertical mode locks x: dragging sideways must not drift off the route.
+      const dx = verticalScroll ? 0 : -(e.clientX - lastX) * scale;
       const dz = -(e.clientY - lastY) * scale * 1.4;
+
+      if (verticalScroll) {
+        const dt = Math.max(1, e.timeStamp - lastMoveT);
+        lastVelZ = (dz / dt) * 1000;
+        lastMoveT = e.timeStamp;
+      }
+
       lastX = e.clientX;
       lastY = e.clientY;
       useCameraStore.getState().panBy(dx, dz, definition.panLimits, definition.target);
     };
-    const endDrag = () => {
+    const endDrag = (e?: PointerEvent) => {
+      if (!dragging) return;
       dragging = false;
+      if (!verticalScroll || reducedMotion) return;
+      // Only a genuine flick glides. Releasing after a pause has a stale
+      // velocity sample, so ignore anything older than a frame or two.
+      const stale = e ? e.timeStamp - lastMoveT > 90 : true;
+      if (!stale && Math.abs(lastVelZ) > FLICK_MIN_SPEED) {
+        momentum.current = THREE.MathUtils.clamp(lastVelZ, -160, 160);
+      }
     };
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const store = useCameraStore.getState();
+      if (verticalScroll) {
+        // A wheel/trackpad is the natural way to travel a vertical route;
+        // zooming on scroll would fight the gesture.
+        momentum.current = 0;
+        store.panBy(0, e.deltaY * 0.08, definition.panLimits, definition.target);
+        return;
+      }
       const next = THREE.MathUtils.clamp(
         store.zoom * (1 + Math.sign(e.deltaY) * 0.08),
         definition.zoomRange[0],
@@ -105,6 +151,7 @@ export function CameraRig({ definition, reducedMotion }: CameraRigProps) {
     el.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", endDrag);
+    window.addEventListener("pointercancel", endDrag);
     el.addEventListener("wheel", onWheel, { passive: false });
     el.addEventListener("touchmove", onTouchMove, { passive: true });
     el.addEventListener("touchend", onTouchEnd);
@@ -112,15 +159,24 @@ export function CameraRig({ definition, reducedMotion }: CameraRigProps) {
       el.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", endDrag);
+      window.removeEventListener("pointercancel", endDrag);
       el.removeEventListener("wheel", onWheel);
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, [gl, definition]);
+  }, [gl, definition, verticalScroll, reducedMotion]);
 
   useFrame((_, delta) => {
     const goals = useCameraStore.getState();
     const c = current.current;
+
+    // Glide after a flick. Exponential decay keeps the deceleration curve
+    // frame-rate independent, and panBy re-clamps so the route ends stay hard.
+    if (momentum.current !== 0) {
+      goals.panBy(0, momentum.current * delta, definition.panLimits, definition.target);
+      momentum.current *= Math.pow(MOMENTUM_DECAY, delta);
+      if (Math.abs(momentum.current) < MOMENTUM_CUTOFF) momentum.current = 0;
+    }
     // Damped approach; reduced motion snaps instantly.
     const lambda = reducedMotion ? 1000 : 4;
     c.target.x = THREE.MathUtils.damp(c.target.x, goals.target[0], lambda, delta);
@@ -128,7 +184,9 @@ export function CameraRig({ definition, reducedMotion }: CameraRigProps) {
     c.target.z = THREE.MathUtils.damp(c.target.z, goals.target[2], lambda, delta);
     c.zoom = THREE.MathUtils.damp(c.zoom, goals.zoom, lambda, delta);
 
-    const parallaxStrength = reducedMotion ? 0 : 1.6;
+    // Pointer parallax is a desktop nicety; on a touch route it just makes
+    // the world wobble under the thumb while scrolling.
+    const parallaxStrength = reducedMotion || verticalScroll ? 0 : 1.6;
     const px = c.parallax.x * parallaxStrength;
     const pz = c.parallax.y * parallaxStrength * 0.8;
 

@@ -58,7 +58,10 @@ function buildCap(region: GeneratedRegion, rng: Rng): THREE.BufferGeometry {
   });
   geo.rotateX(Math.PI / 2);
 
-  const sandiness = def.biome === "shore" ? 0.8 : def.position[2] > 6 ? 0.32 : 0.12;
+  // Dry patches are an accent, not a wash. At the old strengths they lerped
+  // most of the cap toward sand, which is what turned the saturated grass
+  // olive and flattened every island into the same beige.
+  const sandiness = def.biome === "shore" ? 0.45 : def.position[2] > 6 ? 0.18 : 0.08;
   const patches = Array.from({ length: 3 }, () => ({
     x: range(rng, -def.radius * 0.6, def.radius * 0.6),
     z: range(rng, -def.radius * 0.6, def.radius * 0.6),
@@ -195,7 +198,7 @@ export function Island({ region }: { region: GeneratedRegion }) {
       <mesh geometry={cliff} material={worldMaterials.cliffFaceted} />
       {sinkholes.map((hole, i) => (
         <group key={i} position={[hole.x, def.elevation, hole.z]}>
-          <mesh material={worldMaterials.stoneCool} rotation={[Math.PI / 2, 0, 0]} position={[0, 0.12, 0]}>
+          <mesh material={worldMaterials.stoneWarm} rotation={[Math.PI / 2, 0, 0]} position={[0, 0.12, 0]}>
             <torusGeometry args={[hole.r, 0.28, 8, 20]} />
           </mesh>
           <mesh material={worldMaterials.pit} position={[0, -1.4, 0]}>

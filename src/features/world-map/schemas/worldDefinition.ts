@@ -33,6 +33,14 @@ export interface CameraDefinition {
   zoomRange: [number, number];
   /** Pan clamp around `target`, in world units on the ground plane. */
   panLimits: { x: number; z: number };
+  /**
+   * Vertical field of view. A long route wants a narrow one: at 32deg the
+   * near chapter fills the screen while distant chapters shrink to nothing,
+   * so the map reads as one island rather than a path. Pairing a small fov
+   * with a large `distance` keeps the subject size but flattens the depth
+   * falloff, which is what makes several chapters legible at once.
+   */
+  fov?: number;
 }
 
 export interface RewardDefinition {

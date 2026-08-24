@@ -22,15 +22,31 @@ interface WorldSceneProps {
   reducedMotion: boolean;
   onNodeClick: (node: MapNodeDefinition) => void;
   panel: NodePanelData | null;
+  /** Travel the route by vertical drag instead of free pan (phones). */
+  verticalScroll?: boolean;
+  currentNodeId?: string | null;
+  avatarUrl?: string | null;
 }
 
-export function WorldScene({ world, reducedMotion, onNodeClick, panel }: WorldSceneProps) {
+export function WorldScene({
+  world,
+  reducedMotion,
+  onNodeClick,
+  panel,
+  verticalScroll,
+  currentNodeId,
+  avatarUrl,
+}: WorldSceneProps) {
   const highCloudsRef = useRef<THREE.Object3D | null>(null);
   const lowCloudsRef = useRef<THREE.Object3D | null>(null);
   const tier = useQualityStore((s) => s.tier);
   const profile = qualityProfiles[tier];
 
-  const fog = useMemo(() => new THREE.Fog(worldColors.fogPink, 135, 260), []);
+  // Fog used to start at 135 units — inside the play area — which drained
+  // saturation from anything past the middle plateau and was a large part of
+  // why the world looked washed out. Pushed well beyond the far islands so it
+  // only softens the true horizon.
+  const fog = useMemo(() => new THREE.Fog(worldColors.fogPink, 260, 460), []);
 
   // Low cloud puffs hugging cliff bases and drifting through the channels.
   const lowClouds = useMemo<ScatterInstance[]>(() => {
@@ -46,20 +62,24 @@ export function WorldScene({ world, reducedMotion, onNodeClick, panel }: WorldSc
   return (
     <>
       <fog attach="fog" args={[fog.color, fog.near, fog.far]} />
-      <hemisphereLight args={["#fdf3ff", "#b39fd6", 0.95]} />
+      {/* Ambient fill dropped and the key light raised: the old 0.95 hemisphere
+          lit the shadow side almost as brightly as the lit side, which flattens
+          chunky stylised geometry. The wider gap is what gives the plateaus
+          their solid, readable form. */}
+      <hemisphereLight args={["#fff6ff", "#9a86c4", 0.52]} />
       <directionalLight
         position={[-30, 48, 22]}
-        intensity={1.25}
-        color="#fff4e0"
+        intensity={1.75}
+        color="#fff2d2"
         castShadow={profile.shadows}
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-left={-70}
-        shadow-camera-right={70}
-        shadow-camera-top={70}
-        shadow-camera-bottom={-70}
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-left={-120}
+        shadow-camera-right={120}
+        shadow-camera-top={120}
+        shadow-camera-bottom={-120}
         shadow-bias={-0.0004}
       />
-      <CameraRig definition={world.def.camera} reducedMotion={reducedMotion} />
+      <CameraRig definition={world.def.camera} reducedMotion={reducedMotion} verticalScroll={verticalScroll} />
       {world.regions.map((region) => (
         <group key={region.def.id}>
           <Island region={region} />
@@ -87,7 +107,14 @@ export function WorldScene({ world, reducedMotion, onNodeClick, panel }: WorldSc
           ))}
         </group>
       )}
-      <NodeMarkers world={world} animate={!reducedMotion} onNodeClick={onNodeClick} occluders={[highCloudsRef, lowCloudsRef]} />
+      <NodeMarkers
+        world={world}
+        animate={!reducedMotion}
+        onNodeClick={onNodeClick}
+        occluders={[highCloudsRef, lowCloudsRef]}
+        currentNodeId={currentNodeId}
+        avatarUrl={avatarUrl}
+      />
       {panel && <NodePanel data={panel} position={world.nodeWorldPositions[panel.node.id]} />}
     </>
   );
