@@ -585,6 +585,9 @@ export const pt: KaTranslations = {
   },
   missions: {
     ...en.missions,
+    infoStreakLead: "Completa todas as missões do dia e recebe recompensas todos os dias",
+    infoWeekProgress: "{done} - 7 concluídos",
+    infoWeekLead: "Não percas nenhuma missão diária: completa os sete dias e recebe o pacote semanal",
     completedTitle: "Missão concluída: {mission}",
     dayCompleteTitle: "Dia completo! Todas as missões",
     weekCompleteTitle: "Semana perfeita! Os 7 dias",

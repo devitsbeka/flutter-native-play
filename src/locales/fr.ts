@@ -577,6 +577,9 @@ export const fr: KaTranslations = {
   },
   missions: {
     ...en.missions,
+    infoStreakLead: "Termine toutes les missions du jour et reçois des récompenses chaque jour",
+    infoWeekProgress: "{done} - 7 terminés",
+    infoWeekLead: "Ne manque aucune mission quotidienne : termine les sept jours et obtiens le pack hebdomadaire",
     completedTitle: "Mission accomplie : {mission}",
     dayCompleteTitle: "Journée terminée ! Toutes les missions",
     weekCompleteTitle: "Semaine parfaite ! Les 7 jours",

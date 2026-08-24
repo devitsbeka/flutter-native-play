@@ -107,18 +107,15 @@ export function MissionInfoModal({
                 : t("missions.infoStreakProgress", { count: currentStreak })}
             </p>
 
-            {/* How you get it */}
-            <div className="mt-4 rounded-[24px] p-5" style={innerCardStyle}>
-              <h3 className="font-display text-lg font-bold text-[#1E1B2E]">
-                {t("missions.infoHowTitle")}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {isWeek ? t("missions.infoWeekHow") : t("missions.infoStreakHow")}
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {isWeek ? t("missions.infoWeekWhen") : t("missions.infoStreakReset")}
-              </p>
-            </div>
+            {/* One line saying what this is, under the count it describes.
+                It used to be a "how do I get it" card of two paragraphs above
+                the rewards — four sentences explaining a rule the ladder
+                below already shows, which pushed the rewards themselves off
+                a short screen. The rule is one sentence; it belongs with the
+                heading, not in a section of its own. */}
+            <p className="mt-2 px-4 text-center text-sm leading-relaxed text-slate-600">
+              {isWeek ? t("missions.infoWeekLead") : t("missions.infoStreakLead")}
+            </p>
 
             {/* What you get */}
             <div className="mt-4 rounded-[24px] p-5" style={innerCardStyle}>

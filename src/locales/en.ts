@@ -715,14 +715,11 @@ export const en: KaTranslations = {
   // ==========================================
   missions: {
     completedTitle: "Mission complete: {mission}",
-    infoHowTitle: "How to get it",
     infoRewardTitle: "What you get",
-    infoWeekProgress: "{done} of 7 days done this week",
-    infoWeekHow: "Finish every daily mission, on all seven days of the week. Weekly missions do not count towards it — only the daily ones.",
-    infoWeekWhen: "It unlocks once the week is over, and only if all seven days were complete. Missing a single day means no pack that week.",
+    infoStreakLead: "Complete all of the day's missions and collect rewards every day",
+    infoWeekLead: "Don't miss a daily mission — complete all seven days and get the weekly gift pack",
+    infoWeekProgress: "{done} - 7 completed",
     infoStreakProgress: "{count}-day streak",
-    infoStreakHow: "Finish every daily mission in a day and the streak goes up by one. It pays out the moment the day is complete.",
-    infoStreakReset: "Miss a day and it goes back to one. The longer it runs, the more each day pays.",
     infoStreakDays: "Day {count}",
     dayCompleteTitle: "Day complete! Every mission done",
     weekCompleteTitle: "Perfect week! All 7 days",
