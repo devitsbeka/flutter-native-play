@@ -19,6 +19,7 @@ import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useUserPowerUps, PowerUpType as DBPowerUpType } from "@/hooks/useUserPowerUps";
 import { PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
 import { AnswerChoiceAvatars, type AnswerChooser } from "@/components/game/AnswerChoiceAvatars";
+import { imageTreatmentFor } from "@/utils/questionImageTreatment";
 
 const DIFFICULTY_COLORS: Record<string, string> = {
   easy: "bg-success",
@@ -449,9 +450,10 @@ export function QuizGameScreenProd() {
             <QuizQuestionCard
               questionText={currentQuestion.question}
               imageUrl={currentQuestion.imageUrl}
-              imageInset={currentQuestion.categoryId === "guess_logo"}
-              imageFramed={currentQuestion.categoryId === "guess_flag"}
-              imageReveal={currentQuestion.categoryId === "guess_logo"}
+              imageInset={imageTreatmentFor(currentQuestion.categoryId).inset}
+              imageFramed={imageTreatmentFor(currentQuestion.categoryId).framed}
+              imageBand={imageTreatmentFor(currentQuestion.categoryId).band}
+              imageReveal={imageTreatmentFor(currentQuestion.categoryId).inset}
               imageRevealAll={selectedAnswer !== null}
               videoUrl={currentQuestion.videoUrl}
               audioUrl={currentQuestion.audioUrl}

@@ -16,6 +16,8 @@ import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { QuizAnswerButton } from "@/components/ui/quiz-answer-button";
 import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
+import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
+import { imageTreatmentFor } from "@/utils/questionImageTreatment";
 
 interface MultiplayerObserverScreenProps {
   timeRemaining: number;
@@ -40,6 +42,10 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
     currentRoom,
     currentOpponentAnswers,
   } = useMultiplayerV2();
+
+  // See MultiplayerGameScreenV2: category_id may be a slug or a uuid.
+  const roomCategorySlug = useCategoryIdentity(currentRoom?.category_id).categoryId;
+  const imageTreatment = imageTreatmentFor(roomCategorySlug);
 
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [bonusEarnedThisRound, setBonusEarnedThisRound] = useState(0);
@@ -337,9 +343,10 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
             <QuizQuestionCard
               questionText={currentQuestion?.question || ""}
               imageUrl={currentQuestion?.imageUrl}
-              imageInset={currentRoom?.category_id === "guess_logo"}
-              imageFramed={currentRoom?.category_id === "guess_flag"}
-              imageReveal={currentRoom?.category_id === "guess_logo"}
+              imageInset={imageTreatment.inset}
+              imageFramed={imageTreatment.framed}
+              imageBand={imageTreatment.band}
+              imageReveal={imageTreatment.inset}
               videoUrl={currentQuestion?.videoUrl}
               audioUrl={currentQuestion?.audioUrl}
               progressPercent={(localTimeRemaining / TIME_PER_QUESTION) * 100}

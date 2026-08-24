@@ -19,6 +19,8 @@ import { MultiplayerObserverScreen } from "./MultiplayerObserverScreen";
 import { questionImageSrc } from "@/utils/questionImage";
 import { AnswerChoiceAvatars, type AnswerChooser } from "@/components/game/AnswerChoiceAvatars";
 import { LiveRaceStrip } from "@/components/game/LiveRaceStrip";
+import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
+import { imageTreatmentFor } from "@/utils/questionImageTreatment";
 
 export function MultiplayerGameScreenV2() {
   const navigate = useNavigate();
@@ -49,6 +51,12 @@ export function MultiplayerGameScreenV2() {
     isHost,
     applyMissedTime,
   } = useMultiplayerV2();
+
+  // The room's category decides how its pictures are drawn, and category_id
+  // holds either the slug or a uuid depending on which path made the room —
+  // so it is resolved rather than compared to a slug directly.
+  const roomCategorySlug = useCategoryIdentity(currentRoom?.category_id).categoryId;
+  const imageTreatment = imageTreatmentFor(roomCategorySlug);
 
   // Start background music when game starts
   useEffect(() => {
@@ -408,9 +416,10 @@ export function MultiplayerGameScreenV2() {
           // The room's category, which is every question's category here.
           // Solo play already treated logos and flags specially; a room ran
           // the same picture banks through the default treatment.
-          imageInset={currentRoom?.category_id === "guess_logo"}
-          imageFramed={currentRoom?.category_id === "guess_flag"}
-          imageReveal={currentRoom?.category_id === "guess_logo"}
+          imageInset={imageTreatment.inset}
+          imageFramed={imageTreatment.framed}
+          imageBand={imageTreatment.band}
+          imageReveal={imageTreatment.inset}
           // Both players uncover the same tiles at the same moment -- the
           // mask seeds off the picture's URL, not off anything local.
           imageRevealAll={answerRevealed || selectedAnswer !== null}

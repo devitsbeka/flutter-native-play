@@ -50,6 +50,18 @@ interface QuizQuestionCardProps {
    */
   imageFramed?: boolean;
   /**
+   * Fill the space either side of the picture with a soft colour wash.
+   *
+   * Only for the photographic banks — celebrity, movie, sportsman — where
+   * object-contain leaves the band bare down both sides. Opt-in, and off by
+   * default, because the alternative was a negative rule ("not a logo, not a
+   * flag") that put a coloured wash behind the Land Rover mark whenever the
+   * category could not be recognised, and behind every logo on the surfaces
+   * that do not know their category at all. A caller that cannot say gets the
+   * neutral ground, which is never wrong, only plain.
+   */
+  imageBand?: boolean;
+  /**
    * Cover the picture and uncover it a tile at a time while the timer runs.
    * For logos: a great many brand marks are the company's name in a
    * typeface, so the answer is printed on the card. See ImageRevealMask.
@@ -110,6 +122,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       imageUrl,
       imageInset = false,
       imageFramed = false,
+      imageBand = false,
       imageReveal = false,
       imageRevealAll = false,
       videoUrl,
@@ -281,7 +294,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
 
                 Not for inset (logo) images: a brand mark reads best on plain
                 white. */}
-            {!imageInset && !imageFramed && !imageFailed && (
+            {imageBand && !imageFailed && (
               <div
                 aria-hidden
                 className="pointer-events-none absolute -inset-12 opacity-50 blur-2xl"

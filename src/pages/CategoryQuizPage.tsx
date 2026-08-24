@@ -76,6 +76,7 @@ import awardIcon from "@/assets/celebration/award.png";
 import balloonArchIcon from "@/assets/celebration/balloon-arch.png";
 import windSpinnerIcon from "@/assets/celebration/wind-spinner.png";
 import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
+import { imageTreatmentFor } from "@/utils/questionImageTreatment";
 
 const WORKOUT_ICONS = [
   acroyogaIcon,
@@ -1329,9 +1330,10 @@ export default function CategoryQuizPage() {
               ? undefined
               : DIFFICULTY_LABELS[difficultyKey]
           }
-          imageInset={categoryId === "guess_logo"}
-          imageFramed={categoryId === "guess_flag"}
-          imageReveal={categoryId === "guess_logo"}
+          imageInset={imageTreatmentFor(categoryId).inset}
+          imageFramed={imageTreatmentFor(categoryId).framed}
+          imageBand={imageTreatmentFor(categoryId).band}
+          imageReveal={imageTreatmentFor(categoryId).inset}
           imageRevealAll={isAnswered}
           difficultyColor={DIFFICULTY_COLORS[difficultyKey]}
           freezeTimeLeft={freezeTimeRemaining}
