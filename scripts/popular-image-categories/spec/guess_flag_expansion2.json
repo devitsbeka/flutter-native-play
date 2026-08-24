@@ -1,0 +1,2387 @@
+[
+ {
+  "key": "w-q37",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Flag_of_Lithuania.svg/1280px-Flag_of_Lithuania.svg.png",
+  "file": "File:Flag of Lithuania.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Lithuania",
+   "ka": "ლიეტუვა",
+   "de": "Litauen",
+   "es": "Lituania",
+   "fr": "Lituanie",
+   "it": "Lituania",
+   "pt": "Lituânia"
+  },
+  "wrong": {
+   "en": [
+    "Botswana",
+    "Gibraltar",
+    "Greenland"
+   ],
+   "ka": [
+    "ბოტსვანა",
+    "გიბრალტარი",
+    "გრენლანდია"
+   ],
+   "de": [
+    "Botswana",
+    "Gibraltar",
+    "Grönland"
+   ],
+   "es": [
+    "Botsuana",
+    "Gibraltar",
+    "Groenlandia"
+   ],
+   "fr": [
+    "Botswana",
+    "Gibraltar",
+    "Groenland"
+   ],
+   "it": [
+    "Botswana",
+    "Gibilterra",
+    "Groenlandia"
+   ],
+   "pt": [
+    "Botsuana",
+    "Gibraltar",
+    "Gronelândia"
+   ]
+  }
+ },
+ {
+  "key": "w-q399",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Flag_of_Armenia.svg/1280px-Flag_of_Armenia.svg.png",
+  "file": "File:Flag of Armenia.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Armenia",
+   "ka": "სომხეთი",
+   "de": "Armenien",
+   "es": "Armenia",
+   "fr": "Arménie",
+   "it": "Armenia",
+   "pt": "Arménia"
+  },
+  "wrong": {
+   "en": [
+    "Bolivia",
+    "New Caledonia",
+    "Falkland Islands"
+   ],
+   "ka": [
+    "ბოლივია",
+    "ახალი კალედონია",
+    "ფოლკლენდის კუნძულები"
+   ],
+   "de": [
+    "Bolivien",
+    "Neukaledonien",
+    "Falklandinseln"
+   ],
+   "es": [
+    "Bolivia",
+    "Nueva Caledonia",
+    "Islas Malvinas"
+   ],
+   "fr": [
+    "Bolivie",
+    "Nouvelle-Calédonie",
+    "îles Malouines"
+   ],
+   "it": [
+    "Bolivia",
+    "Nuova Caledonia",
+    "Isole Falkland"
+   ],
+   "pt": [
+    "Bolívia",
+    "Nova Caledónia",
+    "Ilhas Malvinas"
+   ]
+  }
+ },
+ {
+  "key": "w-q225",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Flag_of_Bosnia_and_Herzegovina.svg/1280px-Flag_of_Bosnia_and_Herzegovina.svg.png",
+  "file": "File:Flag of Bosnia and Herzegovina.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Bosnia",
+   "ka": "ბოსნია",
+   "de": "Bosnien",
+   "es": "Bosnia",
+   "fr": "Bosnie",
+   "it": "Bosnia",
+   "pt": "Bósnia"
+  },
+  "wrong": {
+   "en": [
+    "Cook Islands",
+    "Yemen",
+    "St Vincent"
+   ],
+   "ka": [
+    "კუკის კუნძულები",
+    "იემენი",
+    "სენტ-ვინსენტი"
+   ],
+   "de": [
+    "Cookinseln",
+    "Jemen",
+    "St. Vincent"
+   ],
+   "es": [
+    "Islas Cook",
+    "Yemen",
+    "San Vicente"
+   ],
+   "fr": [
+    "Îles Cook",
+    "Yémen",
+    "Saint-Vincent"
+   ],
+   "it": [
+    "Isole Cook",
+    "Yemen",
+    "Saint Vincent"
+   ],
+   "pt": [
+    "Ilhas Cook",
+    "Iémen",
+    "São Vicente"
+   ]
+  }
+ },
+ {
+  "key": "w-q211",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Flag_of_Latvia.svg/1280px-Flag_of_Latvia.svg.png",
+  "file": "File:Flag of Latvia.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Latvia",
+   "ka": "ლატვია",
+   "de": "Lettland",
+   "es": "Letonia",
+   "fr": "Lettonie",
+   "it": "Lettonia",
+   "pt": "Letónia"
+  },
+  "wrong": {
+   "en": [
+    "Congo",
+    "Macau",
+    "The Gambia"
+   ],
+   "ka": [
+    "კონგოს რესპუბლიკა",
+    "მაკაო",
+    "გამბია"
+   ],
+   "de": [
+    "Republik Kongo",
+    "Macau",
+    "Gambia"
+   ],
+   "es": [
+    "Congo",
+    "Macao",
+    "Gambia"
+   ],
+   "fr": [
+    "République du Congo",
+    "Macao",
+    "Gambie"
+   ],
+   "it": [
+    "Repubblica del Congo",
+    "Macao",
+    "Gambia"
+   ],
+   "pt": [
+    "República do Congo",
+    "Macau",
+    "Gâmbia"
+   ]
+  }
+ },
+ {
+  "key": "w-q974",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Flag_of_the_Democratic_Republic_of_the_Congo.svg/1280px-Flag_of_the_Democratic_Republic_of_the_Congo.svg.png",
+  "file": "File:Flag of the Democratic Republic of the Congo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "DR Congo",
+   "ka": "კონგოს დრ",
+   "de": "DR Kongo",
+   "es": "RD Congo",
+   "fr": "RD Congo",
+   "it": "RD Congo",
+   "pt": "RD Congo"
+  },
+  "wrong": {
+   "en": [
+    "São Tomé",
+    "New Caledonia",
+    "Lithuania"
+   ],
+   "ka": [
+    "სან-ტომე და პრინსიპი",
+    "ახალი კალედონია",
+    "ლიეტუვა"
+   ],
+   "de": [
+    "São Tomé",
+    "Neukaledonien",
+    "Litauen"
+   ],
+   "es": [
+    "Santo Tomé",
+    "Nueva Caledonia",
+    "Lituania"
+   ],
+   "fr": [
+    "Sao Tomé-et-Principe",
+    "Nouvelle-Calédonie",
+    "Lituanie"
+   ],
+   "it": [
+    "São Tomé e Príncipe",
+    "Nuova Caledonia",
+    "Lituania"
+   ],
+   "pt": [
+    "São Tomé e Príncipe",
+    "Nova Caledónia",
+    "Lituânia"
+   ]
+  }
+ },
+ {
+  "key": "w-q878",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Flag_of_the_United_Arab_Emirates.svg/1280px-Flag_of_the_United_Arab_Emirates.svg.png",
+  "file": "File:Flag of the United Arab Emirates.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "UAE",
+   "ka": "საამიროები",
+   "de": "VAE",
+   "es": "EAU",
+   "fr": "Émirats",
+   "it": "Emirati",
+   "pt": "Emirados"
+  },
+  "wrong": {
+   "en": [
+    "Botswana",
+    "Dominican Rep.",
+    "Bosnia"
+   ],
+   "ka": [
+    "ბოტსვანა",
+    "დომინიკელთა რესპ.",
+    "ბოსნია"
+   ],
+   "de": [
+    "Botswana",
+    "Dom. Republik",
+    "Bosnien"
+   ],
+   "es": [
+    "Botsuana",
+    "República Dominicana",
+    "Bosnia"
+   ],
+   "fr": [
+    "Botswana",
+    "Rép. dominicaine",
+    "Bosnie"
+   ],
+   "it": [
+    "Botswana",
+    "Rep. Dominicana",
+    "Bosnia"
+   ],
+   "pt": [
+    "Botsuana",
+    "Rep. Dominicana",
+    "Bósnia"
+   ]
+  }
+ },
+ {
+  "key": "w-q805",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Flag_of_Yemen.svg/1280px-Flag_of_Yemen.svg.png",
+  "file": "File:Flag of Yemen.svg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Yemen",
+   "ka": "იემენი",
+   "de": "Jemen",
+   "es": "Yemen",
+   "fr": "Yémen",
+   "it": "Yemen",
+   "pt": "Iémen"
+  },
+  "wrong": {
+   "en": [
+    "Mauritius",
+    "St Kitts & Nevis",
+    "Armenia"
+   ],
+   "ka": [
+    "მავრიკი",
+    "სენტ-კიტსი და ნევისი",
+    "სომხეთი"
+   ],
+   "de": [
+    "Mauritius",
+    "St. Kitts und Nevis",
+    "Armenien"
+   ],
+   "es": [
+    "Mauricio",
+    "San Cristóbal",
+    "Armenia"
+   ],
+   "fr": [
+    "Maurice",
+    "Saint-Kitts-et-Nevis",
+    "Arménie"
+   ],
+   "it": [
+    "Mauritius",
+    "Saint Kitts e Nevis",
+    "Armenia"
+   ],
+   "pt": [
+    "Maurícia",
+    "São Cristóvão",
+    "Arménia"
+   ]
+  }
+ },
+ {
+  "key": "w-q963",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_Botswana.svg/1280px-Flag_of_Botswana.svg.png",
+  "file": "File:Flag of Botswana.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Botswana",
+   "ka": "ბოტსვანა",
+   "de": "Botswana",
+   "es": "Botsuana",
+   "fr": "Botswana",
+   "it": "Botswana",
+   "pt": "Botsuana"
+  },
+  "wrong": {
+   "en": [
+    "Comoros",
+    "Papua New Guinea",
+    "Armenia"
+   ],
+   "ka": [
+    "კომორის კუნძულები",
+    "პაპუა-ახალი გვინეა",
+    "სომხეთი"
+   ],
+   "de": [
+    "Komoren",
+    "Papua-Neuguinea",
+    "Armenien"
+   ],
+   "es": [
+    "Comoras",
+    "Papúa Nueva Guinea",
+    "Armenia"
+   ],
+   "fr": [
+    "Comores",
+    "Papouasie-N.-Guinée",
+    "Arménie"
+   ],
+   "it": [
+    "Comore",
+    "Papua Nuova Guinea",
+    "Armenia"
+   ],
+   "pt": [
+    "Comores",
+    "Papua-Nova Guiné",
+    "Arménia"
+   ]
+  }
+ },
+ {
+  "key": "w-q750",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Flag_of_Bolivia.svg/1280px-Flag_of_Bolivia.svg.png",
+  "file": "File:Flag of Bolivia.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Bolivia",
+   "ka": "ბოლივია",
+   "de": "Bolivien",
+   "es": "Bolivia",
+   "fr": "Bolivie",
+   "it": "Bolivia",
+   "pt": "Bolívia"
+  },
+  "wrong": {
+   "en": [
+    "Costa Rica",
+    "Bermuda",
+    "Greenland"
+   ],
+   "ka": [
+    "კოსტა-რიკა",
+    "ბერმუდის კუნძულები",
+    "გრენლანდია"
+   ],
+   "de": [
+    "Costa Rica",
+    "Bermuda",
+    "Grönland"
+   ],
+   "es": [
+    "Costa Rica",
+    "Bermudas",
+    "Groenlandia"
+   ],
+   "fr": [
+    "Costa Rica",
+    "Bermudes",
+    "Groenland"
+   ],
+   "it": [
+    "Costa Rica",
+    "Bermuda",
+    "Groenlandia"
+   ],
+   "pt": [
+    "Costa Rica",
+    "Bermudas",
+    "Gronelândia"
+   ]
+  }
+ },
+ {
+  "key": "w-q800",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Flag_of_Costa_Rica.svg/1280px-Flag_of_Costa_Rica.svg.png",
+  "file": "File:Flag of Costa Rica.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Costa Rica",
+   "ka": "კოსტა-რიკა",
+   "de": "Costa Rica",
+   "es": "Costa Rica",
+   "fr": "Costa Rica",
+   "it": "Costa Rica",
+   "pt": "Costa Rica"
+  },
+  "wrong": {
+   "en": [
+    "Somaliland",
+    "Martinique",
+    "Tonga"
+   ],
+   "ka": [
+    "სომალილენდი",
+    "მარტინიკა",
+    "ტონგა"
+   ],
+   "de": [
+    "Somaliland",
+    "Martinique",
+    "Tonga"
+   ],
+   "es": [
+    "Somalilandia",
+    "Martinica",
+    "Tonga"
+   ],
+   "fr": [
+    "Somaliland",
+    "Martinique",
+    "Tonga"
+   ],
+   "it": [
+    "Somaliland",
+    "Martinica",
+    "Tonga"
+   ],
+   "pt": [
+    "Somalilândia",
+    "Martinica",
+    "Tonga"
+   ]
+  }
+ },
+ {
+  "key": "w-q971",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Flag_of_the_Republic_of_the_Congo.svg/1280px-Flag_of_the_Republic_of_the_Congo.svg.png",
+  "file": "File:Flag of the Republic of the Congo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Congo",
+   "ka": "კონგოს რესპუბლიკა",
+   "de": "Republik Kongo",
+   "es": "Congo",
+   "fr": "République du Congo",
+   "it": "Repubblica del Congo",
+   "pt": "República do Congo"
+  },
+  "wrong": {
+   "en": [
+    "DR Congo",
+    "Curaçao",
+    "Anguilla"
+   ],
+   "ka": [
+    "კონგოს დრ",
+    "კიურასაო",
+    "ანგილია"
+   ],
+   "de": [
+    "DR Kongo",
+    "Curaçao",
+    "Anguilla"
+   ],
+   "es": [
+    "RD Congo",
+    "Curazao",
+    "Anguila"
+   ],
+   "fr": [
+    "RD Congo",
+    "Curaçao",
+    "Anguilla"
+   ],
+   "it": [
+    "RD Congo",
+    "Curaçao",
+    "Anguilla"
+   ],
+   "pt": [
+    "RD Congo",
+    "Curaçau",
+    "Anguila"
+   ]
+  }
+ },
+ {
+  "key": "w-q1005",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Flag_of_The_Gambia.svg/1280px-Flag_of_The_Gambia.svg.png",
+  "file": "File:Flag of The Gambia.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "The Gambia",
+   "ka": "გამბია",
+   "de": "Gambia",
+   "es": "Gambia",
+   "fr": "Gambie",
+   "it": "Gambia",
+   "pt": "Gâmbia"
+  },
+  "wrong": {
+   "en": [
+    "Sierra Leone",
+    "Curaçao",
+    "Macau"
+   ],
+   "ka": [
+    "სიერა-ლეონე",
+    "კიურასაო",
+    "მაკაო"
+   ],
+   "de": [
+    "Sierra Leone",
+    "Curaçao",
+    "Macau"
+   ],
+   "es": [
+    "Sierra Leona",
+    "Curazao",
+    "Macao"
+   ],
+   "fr": [
+    "Sierra Leone",
+    "Curaçao",
+    "Macao"
+   ],
+   "it": [
+    "Sierra Leone",
+    "Curaçao",
+    "Macao"
+   ],
+   "pt": [
+    "Serra Leoa",
+    "Curaçau",
+    "Macau"
+   ]
+  }
+ },
+ {
+  "key": "w-q8646",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Flag_of_Hong_Kong.svg/1280px-Flag_of_Hong_Kong.svg.png",
+  "file": "File:Flag of Hong Kong.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Hong Kong",
+   "ka": "ჰონგ-კონგი",
+   "de": "Hongkong",
+   "es": "Hong Kong",
+   "fr": "Hong Kong",
+   "it": "Hong Kong",
+   "pt": "Hong Kong"
+  },
+  "wrong": {
+   "en": [
+    "Niue",
+    "Yemen",
+    "Sierra Leone"
+   ],
+   "ka": [
+    "ნიუე",
+    "იემენი",
+    "სიერა-ლეონე"
+   ],
+   "de": [
+    "Niue",
+    "Jemen",
+    "Sierra Leone"
+   ],
+   "es": [
+    "Niue",
+    "Yemen",
+    "Sierra Leona"
+   ],
+   "fr": [
+    "Niue",
+    "Yémen",
+    "Sierra Leone"
+   ],
+   "it": [
+    "Niue",
+    "Yemen",
+    "Sierra Leone"
+   ],
+   "pt": [
+    "Niue",
+    "Iémen",
+    "Serra Leoa"
+   ]
+  }
+ },
+ {
+  "key": "w-q1000",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Flag_of_Gabon.svg/1280px-Flag_of_Gabon.svg.png",
+  "file": "File:Flag of Gabon.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Gabon",
+   "ka": "გაბონი",
+   "de": "Gabun",
+   "es": "Gabón",
+   "fr": "Gabon",
+   "it": "Gabon",
+   "pt": "Gabão"
+  },
+  "wrong": {
+   "en": [
+    "Pitcairn Islands",
+    "Yemen",
+    "Gibraltar"
+   ],
+   "ka": [
+    "პიტკერნის კუნძულები",
+    "იემენი",
+    "გიბრალტარი"
+   ],
+   "de": [
+    "Pitcairninseln",
+    "Jemen",
+    "Gibraltar"
+   ],
+   "es": [
+    "Islas Pitcairn",
+    "Yemen",
+    "Gibraltar"
+   ],
+   "fr": [
+    "îles Pitcairn",
+    "Yémen",
+    "Gibraltar"
+   ],
+   "it": [
+    "Isole Pitcairn",
+    "Yemen",
+    "Gibilterra"
+   ],
+   "pt": [
+    "Ilhas Pitcairn",
+    "Iémen",
+    "Gibraltar"
+   ]
+  }
+ },
+ {
+  "key": "w-q1044",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Flag_of_Sierra_Leone.svg/1280px-Flag_of_Sierra_Leone.svg.png",
+  "file": "File:Flag of Sierra Leone.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Sierra Leone",
+   "ka": "სიერა-ლეონე",
+   "de": "Sierra Leone",
+   "es": "Sierra Leona",
+   "fr": "Sierra Leone",
+   "it": "Sierra Leone",
+   "pt": "Serra Leoa"
+  },
+  "wrong": {
+   "en": [
+    "Réunion",
+    "Latvia",
+    "UAE"
+   ],
+   "ka": [
+    "რეიუნიონი",
+    "ლატვია",
+    "საამიროები"
+   ],
+   "de": [
+    "Réunion",
+    "Lettland",
+    "VAE"
+   ],
+   "es": [
+    "Reunión",
+    "Letonia",
+    "EAU"
+   ],
+   "fr": [
+    "La Réunion",
+    "Lettonie",
+    "Émirats"
+   ],
+   "it": [
+    "Riunione",
+    "Lettonia",
+    "Emirati"
+   ],
+   "pt": [
+    "Reunião",
+    "Letónia",
+    "Emirados"
+   ]
+  }
+ },
+ {
+  "key": "w-q691",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Flag_of_Papua_New_Guinea.svg/1280px-Flag_of_Papua_New_Guinea.svg.png",
+  "file": "File:Flag of Papua New Guinea.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Papua New Guinea",
+   "ka": "პაპუა-ახალი გვინეა",
+   "de": "Papua-Neuguinea",
+   "es": "Papúa Nueva Guinea",
+   "fr": "Papouasie-N.-Guinée",
+   "it": "Papua Nuova Guinea",
+   "pt": "Papua-Nova Guiné"
+  },
+  "wrong": {
+   "en": [
+    "St Kitts & Nevis",
+    "Anguilla",
+    "Somaliland"
+   ],
+   "ka": [
+    "სენტ-კიტსი და ნევისი",
+    "ანგილია",
+    "სომალილენდი"
+   ],
+   "de": [
+    "St. Kitts und Nevis",
+    "Anguilla",
+    "Somaliland"
+   ],
+   "es": [
+    "San Cristóbal",
+    "Anguila",
+    "Somalilandia"
+   ],
+   "fr": [
+    "Saint-Kitts-et-Nevis",
+    "Anguilla",
+    "Somaliland"
+   ],
+   "it": [
+    "Saint Kitts e Nevis",
+    "Anguilla",
+    "Somaliland"
+   ],
+   "pt": [
+    "São Cristóvão",
+    "Anguila",
+    "Somalilândia"
+   ]
+  }
+ },
+ {
+  "key": "w-q970",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Flag_of_the_Comoros.svg/1280px-Flag_of_the_Comoros.svg.png",
+  "file": "File:Flag of the Comoros.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Comoros",
+   "ka": "კომორის კუნძულები",
+   "de": "Komoren",
+   "es": "Comoras",
+   "fr": "Comores",
+   "it": "Comore",
+   "pt": "Comores"
+  },
+  "wrong": {
+   "en": [
+    "Tonga",
+    "Palestine",
+    "Curaçao"
+   ],
+   "ka": [
+    "ტონგა",
+    "პალესტინა",
+    "კიურასაო"
+   ],
+   "de": [
+    "Tonga",
+    "Palästina",
+    "Curaçao"
+   ],
+   "es": [
+    "Tonga",
+    "Palestina",
+    "Curazao"
+   ],
+   "fr": [
+    "Tonga",
+    "État de Palestine",
+    "Curaçao"
+   ],
+   "it": [
+    "Tonga",
+    "Stato di Palestina",
+    "Curaçao"
+   ],
+   "pt": [
+    "Tonga",
+    "Estado da Palestina",
+    "Curaçau"
+   ]
+  }
+ },
+ {
+  "key": "w-q1027",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Flag_of_Mauritius.svg/1280px-Flag_of_Mauritius.svg.png",
+  "file": "File:Flag of Mauritius.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Mauritius",
+   "ka": "მავრიკი",
+   "de": "Mauritius",
+   "es": "Mauricio",
+   "fr": "Maurice",
+   "it": "Mauritius",
+   "pt": "Maurícia"
+  },
+  "wrong": {
+   "en": [
+    "Papua New Guinea",
+    "Sint Maarten",
+    "Somaliland"
+   ],
+   "ka": [
+    "პაპუა-ახალი გვინეა",
+    "სინტ-მარტენი",
+    "სომალილენდი"
+   ],
+   "de": [
+    "Papua-Neuguinea",
+    "Sint Maarten",
+    "Somaliland"
+   ],
+   "es": [
+    "Papúa Nueva Guinea",
+    "San Martín",
+    "Somalilandia"
+   ],
+   "fr": [
+    "Papouasie-N.-Guinée",
+    "Saint-Martin",
+    "Somaliland"
+   ],
+   "it": [
+    "Papua Nuova Guinea",
+    "Sint Maarten",
+    "Somaliland"
+   ],
+   "pt": [
+    "Papua-Nova Guiné",
+    "São Martinho",
+    "Somalilândia"
+   ]
+  }
+ },
+ {
+  "key": "w-q786",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Flag_of_the_Dominican_Republic.svg/1280px-Flag_of_the_Dominican_Republic.svg.png",
+  "file": "File:Flag of the Dominican Republic.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Dominican Rep.",
+   "ka": "დომინიკელთა რესპ.",
+   "de": "Dom. Republik",
+   "es": "República Dominicana",
+   "fr": "Rép. dominicaine",
+   "it": "Rep. Dominicana",
+   "pt": "Rep. Dominicana"
+  },
+  "wrong": {
+   "en": [
+    "Hong Kong",
+    "New Caledonia",
+    "Sint Maarten"
+   ],
+   "ka": [
+    "ჰონგ-კონგი",
+    "ახალი კალედონია",
+    "სინტ-მარტენი"
+   ],
+   "de": [
+    "Hongkong",
+    "Neukaledonien",
+    "Sint Maarten"
+   ],
+   "es": [
+    "Hong Kong",
+    "Nueva Caledonia",
+    "San Martín"
+   ],
+   "fr": [
+    "Hong Kong",
+    "Nouvelle-Calédonie",
+    "Saint-Martin"
+   ],
+   "it": [
+    "Hong Kong",
+    "Nuova Caledonia",
+    "Sint Maarten"
+   ],
+   "pt": [
+    "Hong Kong",
+    "Nova Caledónia",
+    "São Martinho"
+   ]
+  }
+ },
+ {
+  "key": "w-q1039",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Flag_of_S%C3%A3o_Tom%C3%A9_and_Pr%C3%ADncipe.svg/1280px-Flag_of_S%C3%A3o_Tom%C3%A9_and_Pr%C3%ADncipe.svg.png",
+  "file": "File:Flag of São Tomé and Príncipe.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "São Tomé",
+   "ka": "სან-ტომე და პრინსიპი",
+   "de": "São Tomé",
+   "es": "Santo Tomé",
+   "fr": "Sao Tomé-et-Principe",
+   "it": "São Tomé e Príncipe",
+   "pt": "São Tomé e Príncipe"
+  },
+  "wrong": {
+   "en": [
+    "Tonga",
+    "Yemen",
+    "Northern Cyprus"
+   ],
+   "ka": [
+    "ტონგა",
+    "იემენი",
+    "ჩრდილოეთი კვიპროსი"
+   ],
+   "de": [
+    "Tonga",
+    "Jemen",
+    "Nordzypern"
+   ],
+   "es": [
+    "Tonga",
+    "Yemen",
+    "Chipre del Norte"
+   ],
+   "fr": [
+    "Tonga",
+    "Yémen",
+    "Chypre du Nord"
+   ],
+   "it": [
+    "Tonga",
+    "Yemen",
+    "Cipro del Nord"
+   ],
+   "pt": [
+    "Tonga",
+    "Iémen",
+    "Chipre do Norte"
+   ]
+  }
+ },
+ {
+  "key": "w-q678",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Flag_of_Tonga.svg/1280px-Flag_of_Tonga.svg.png",
+  "file": "File:Flag of Tonga.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Tonga",
+   "ka": "ტონგა",
+   "de": "Tonga",
+   "es": "Tonga",
+   "fr": "Tonga",
+   "it": "Tonga",
+   "pt": "Tonga"
+  },
+  "wrong": {
+   "en": [
+    "Latvia",
+    "Comoros",
+    "Aruba"
+   ],
+   "ka": [
+    "ლატვია",
+    "კომორის კუნძულები",
+    "არუბა"
+   ],
+   "de": [
+    "Lettland",
+    "Komoren",
+    "Aruba"
+   ],
+   "es": [
+    "Letonia",
+    "Comoras",
+    "Aruba"
+   ],
+   "fr": [
+    "Lettonie",
+    "Comores",
+    "Aruba"
+   ],
+   "it": [
+    "Lettonia",
+    "Comore",
+    "Aruba"
+   ],
+   "pt": [
+    "Letónia",
+    "Comores",
+    "Aruba"
+   ]
+  }
+ },
+ {
+  "key": "w-q223",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Flag_of_Greenland.svg/1280px-Flag_of_Greenland.svg.png",
+  "file": "File:Flag of Greenland.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Greenland",
+   "ka": "გრენლანდია",
+   "de": "Grönland",
+   "es": "Groenlandia",
+   "fr": "Groenland",
+   "it": "Groenlandia",
+   "pt": "Gronelândia"
+  },
+  "wrong": {
+   "en": [
+    "Hong Kong",
+    "Lithuania",
+    "Congo"
+   ],
+   "ka": [
+    "ჰონგ-კონგი",
+    "ლიეტუვა",
+    "კონგოს რესპუბლიკა"
+   ],
+   "de": [
+    "Hongkong",
+    "Litauen",
+    "Republik Kongo"
+   ],
+   "es": [
+    "Hong Kong",
+    "Lituania",
+    "Congo"
+   ],
+   "fr": [
+    "Hong Kong",
+    "Lituanie",
+    "République du Congo"
+   ],
+   "it": [
+    "Hong Kong",
+    "Lituania",
+    "Repubblica del Congo"
+   ],
+   "pt": [
+    "Hong Kong",
+    "Lituânia",
+    "República do Congo"
+   ]
+  }
+ },
+ {
+  "key": "w-q763",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Flag_of_Saint_Kitts_and_Nevis.svg/1280px-Flag_of_Saint_Kitts_and_Nevis.svg.png",
+  "file": "File:Flag of Saint Kitts and Nevis.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "St Kitts & Nevis",
+   "ka": "სენტ-კიტსი და ნევისი",
+   "de": "St. Kitts und Nevis",
+   "es": "San Cristóbal",
+   "fr": "Saint-Kitts-et-Nevis",
+   "it": "Saint Kitts e Nevis",
+   "pt": "São Cristóvão"
+  },
+  "wrong": {
+   "en": [
+    "Latvia",
+    "Mauritius",
+    "Gibraltar"
+   ],
+   "ka": [
+    "ლატვია",
+    "მავრიკი",
+    "გიბრალტარი"
+   ],
+   "de": [
+    "Lettland",
+    "Mauritius",
+    "Gibraltar"
+   ],
+   "es": [
+    "Letonia",
+    "Mauricio",
+    "Gibraltar"
+   ],
+   "fr": [
+    "Lettonie",
+    "Maurice",
+    "Gibraltar"
+   ],
+   "it": [
+    "Lettonia",
+    "Mauritius",
+    "Gibilterra"
+   ],
+   "pt": [
+    "Letónia",
+    "Maurícia",
+    "Gibraltar"
+   ]
+  }
+ },
+ {
+  "key": "w-q757",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Flag_of_Saint_Vincent_and_the_Grenadines.svg/1280px-Flag_of_Saint_Vincent_and_the_Grenadines.svg.png",
+  "file": "File:Flag of Saint Vincent and the Grenadines.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "St Vincent",
+   "ka": "სენტ-ვინსენტი",
+   "de": "St. Vincent",
+   "es": "San Vicente",
+   "fr": "Saint-Vincent",
+   "it": "Saint Vincent",
+   "pt": "São Vicente"
+  },
+  "wrong": {
+   "en": [
+    "Greenland",
+    "Palestine",
+    "Curaçao"
+   ],
+   "ka": [
+    "გრენლანდია",
+    "პალესტინა",
+    "კიურასაო"
+   ],
+   "de": [
+    "Grönland",
+    "Palästina",
+    "Curaçao"
+   ],
+   "es": [
+    "Groenlandia",
+    "Palestina",
+    "Curazao"
+   ],
+   "fr": [
+    "Groenland",
+    "État de Palestine",
+    "Curaçao"
+   ],
+   "it": [
+    "Groenlandia",
+    "Stato di Palestina",
+    "Curaçao"
+   ],
+   "pt": [
+    "Gronelândia",
+    "Estado da Palestina",
+    "Curaçau"
+   ]
+  }
+ },
+ {
+  "key": "w-q219060",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Flag_of_Palestine.svg/1280px-Flag_of_Palestine.svg.png",
+  "file": "File:Flag of Palestine.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Palestine",
+   "ka": "პალესტინა",
+   "de": "Palästina",
+   "es": "Palestina",
+   "fr": "État de Palestine",
+   "it": "Stato di Palestina",
+   "pt": "Estado da Palestina"
+  },
+  "wrong": {
+   "en": [
+    "Mauritius",
+    "Cayman Islands",
+    "UAE"
+   ],
+   "ka": [
+    "მავრიკი",
+    "კაიმანის კუნძულები",
+    "საამიროები"
+   ],
+   "de": [
+    "Mauritius",
+    "Cayman Islands",
+    "VAE"
+   ],
+   "es": [
+    "Mauricio",
+    "Islas Caimán",
+    "EAU"
+   ],
+   "fr": [
+    "Maurice",
+    "îles Caïmans",
+    "Émirats"
+   ],
+   "it": [
+    "Mauritius",
+    "Isole Cayman",
+    "Emirati"
+   ],
+   "pt": [
+    "Maurícia",
+    "Ilhas Cayman",
+    "Emirados"
+   ]
+  }
+ },
+ {
+  "key": "w-q14773",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Flag_of_Macau.svg/1280px-Flag_of_Macau.svg.png",
+  "file": "File:Flag of Macau.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Macau",
+   "ka": "მაკაო",
+   "de": "Macau",
+   "es": "Macao",
+   "fr": "Macao",
+   "it": "Macao",
+   "pt": "Macau"
+  },
+  "wrong": {
+   "en": [
+    "Hong Kong",
+    "UAE",
+    "Martinique"
+   ],
+   "ka": [
+    "ჰონგ-კონგი",
+    "საამიროები",
+    "მარტინიკა"
+   ],
+   "de": [
+    "Hongkong",
+    "VAE",
+    "Martinique"
+   ],
+   "es": [
+    "Hong Kong",
+    "EAU",
+    "Martinica"
+   ],
+   "fr": [
+    "Hong Kong",
+    "Émirats",
+    "Martinique"
+   ],
+   "it": [
+    "Hong Kong",
+    "Emirati",
+    "Martinica"
+   ],
+   "pt": [
+    "Hong Kong",
+    "Emirados",
+    "Martinica"
+   ]
+  }
+ },
+ {
+  "key": "w-q702",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Flag_of_the_Federated_States_of_Micronesia.svg/1280px-Flag_of_the_Federated_States_of_Micronesia.svg.png",
+  "file": "File:Flag of the Federated States of Micronesia.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Micronesia",
+   "ka": "მიკრონეზია",
+   "de": "Mikronesien",
+   "es": "Micronesia",
+   "fr": "Micronésie",
+   "it": "Micronesia",
+   "pt": "Micronésia"
+  },
+  "wrong": {
+   "en": [
+    "Dominican Rep.",
+    "Hong Kong",
+    "Anguilla"
+   ],
+   "ka": [
+    "დომინიკელთა რესპ.",
+    "ჰონგ-კონგი",
+    "ანგილია"
+   ],
+   "de": [
+    "Dom. Republik",
+    "Hongkong",
+    "Anguilla"
+   ],
+   "es": [
+    "República Dominicana",
+    "Hong Kong",
+    "Anguila"
+   ],
+   "fr": [
+    "Rép. dominicaine",
+    "Hong Kong",
+    "Anguilla"
+   ],
+   "it": [
+    "Rep. Dominicana",
+    "Hong Kong",
+    "Anguilla"
+   ],
+   "pt": [
+    "Rep. Dominicana",
+    "Hong Kong",
+    "Anguila"
+   ]
+  }
+ },
+ {
+  "key": "w-q1410",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Flag_of_Gibraltar.svg/1280px-Flag_of_Gibraltar.svg.png",
+  "file": "File:Flag of Gibraltar.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Gibraltar",
+   "ka": "გიბრალტარი",
+   "de": "Gibraltar",
+   "es": "Gibraltar",
+   "fr": "Gibraltar",
+   "it": "Gibilterra",
+   "pt": "Gibraltar"
+  },
+  "wrong": {
+   "en": [
+    "Armenia",
+    "Tokelau",
+    "Costa Rica"
+   ],
+   "ka": [
+    "სომხეთი",
+    "ტოკელაუ",
+    "კოსტა-რიკა"
+   ],
+   "de": [
+    "Armenien",
+    "Tokelau",
+    "Costa Rica"
+   ],
+   "es": [
+    "Armenia",
+    "Tokelau",
+    "Costa Rica"
+   ],
+   "fr": [
+    "Arménie",
+    "Tokelau",
+    "Costa Rica"
+   ],
+   "it": [
+    "Armenia",
+    "Tokelau",
+    "Costa Rica"
+   ],
+   "pt": [
+    "Arménia",
+    "Tokelau",
+    "Costa Rica"
+   ]
+  }
+ },
+ {
+  "key": "w-q9648",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Flag_of_the_Falkland_Islands.svg/1280px-Flag_of_the_Falkland_Islands.svg.png",
+  "file": "File:Flag of the Falkland Islands.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Falkland Islands",
+   "ka": "ფოლკლენდის კუნძულები",
+   "de": "Falklandinseln",
+   "es": "Islas Malvinas",
+   "fr": "îles Malouines",
+   "it": "Isole Falkland",
+   "pt": "Ilhas Malvinas"
+  },
+  "wrong": {
+   "en": [
+    "Bosnia",
+    "Armenia",
+    "Gabon"
+   ],
+   "ka": [
+    "ბოსნია",
+    "სომხეთი",
+    "გაბონი"
+   ],
+   "de": [
+    "Bosnien",
+    "Armenien",
+    "Gabun"
+   ],
+   "es": [
+    "Bosnia",
+    "Armenia",
+    "Gabón"
+   ],
+   "fr": [
+    "Bosnie",
+    "Arménie",
+    "Gabon"
+   ],
+   "it": [
+    "Bosnia",
+    "Armenia",
+    "Gabon"
+   ],
+   "pt": [
+    "Bósnia",
+    "Arménia",
+    "Gabão"
+   ]
+  }
+ },
+ {
+  "key": "w-q21203",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Flag_of_Aruba.svg/1280px-Flag_of_Aruba.svg.png",
+  "file": "File:Flag of Aruba.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Aruba",
+   "ka": "არუბა",
+   "de": "Aruba",
+   "es": "Aruba",
+   "fr": "Aruba",
+   "it": "Aruba",
+   "pt": "Aruba"
+  },
+  "wrong": {
+   "en": [
+    "UAE",
+    "Somaliland",
+    "Anguilla"
+   ],
+   "ka": [
+    "საამიროები",
+    "სომალილენდი",
+    "ანგილია"
+   ],
+   "de": [
+    "VAE",
+    "Somaliland",
+    "Anguilla"
+   ],
+   "es": [
+    "EAU",
+    "Somalilandia",
+    "Anguila"
+   ],
+   "fr": [
+    "Émirats",
+    "Somaliland",
+    "Anguilla"
+   ],
+   "it": [
+    "Emirati",
+    "Somaliland",
+    "Anguilla"
+   ],
+   "pt": [
+    "Emirados",
+    "Somalilândia",
+    "Anguila"
+   ]
+  }
+ },
+ {
+  "key": "w-q23635",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Flag_of_Bermuda.svg/1280px-Flag_of_Bermuda.svg.png",
+  "file": "File:Flag of Bermuda.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Bermuda",
+   "ka": "ბერმუდის კუნძულები",
+   "de": "Bermuda",
+   "es": "Bermudas",
+   "fr": "Bermudes",
+   "it": "Bermuda",
+   "pt": "Bermudas"
+  },
+  "wrong": {
+   "en": [
+    "Falkland Islands",
+    "Dominican Rep.",
+    "Palestine"
+   ],
+   "ka": [
+    "ფოლკლენდის კუნძულები",
+    "დომინიკელთა რესპ.",
+    "პალესტინა"
+   ],
+   "de": [
+    "Falklandinseln",
+    "Dom. Republik",
+    "Palästina"
+   ],
+   "es": [
+    "Islas Malvinas",
+    "República Dominicana",
+    "Palestina"
+   ],
+   "fr": [
+    "îles Malouines",
+    "Rép. dominicaine",
+    "État de Palestine"
+   ],
+   "it": [
+    "Isole Falkland",
+    "Rep. Dominicana",
+    "Stato di Palestina"
+   ],
+   "pt": [
+    "Ilhas Malvinas",
+    "Rep. Dominicana",
+    "Estado da Palestina"
+   ]
+  }
+ },
+ {
+  "key": "w-q33788",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Flag_of_FLNKS.svg/1280px-Flag_of_FLNKS.svg.png",
+  "file": "File:Flag of FLNKS.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "New Caledonia",
+   "ka": "ახალი კალედონია",
+   "de": "Neukaledonien",
+   "es": "Nueva Caledonia",
+   "fr": "Nouvelle-Calédonie",
+   "it": "Nuova Caledonia",
+   "pt": "Nova Caledónia"
+  },
+  "wrong": {
+   "en": [
+    "DR Congo",
+    "Aruba",
+    "Tonga"
+   ],
+   "ka": [
+    "კონგოს დრ",
+    "არუბა",
+    "ტონგა"
+   ],
+   "de": [
+    "DR Kongo",
+    "Aruba",
+    "Tonga"
+   ],
+   "es": [
+    "RD Congo",
+    "Aruba",
+    "Tonga"
+   ],
+   "fr": [
+    "RD Congo",
+    "Aruba",
+    "Tonga"
+   ],
+   "it": [
+    "RD Congo",
+    "Aruba",
+    "Tonga"
+   ],
+   "pt": [
+    "RD Congo",
+    "Aruba",
+    "Tonga"
+   ]
+  }
+ },
+ {
+  "key": "w-q26988",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Flag_of_the_Cook_Islands.svg/1280px-Flag_of_the_Cook_Islands.svg.png",
+  "file": "File:Flag of the Cook Islands.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Cook Islands",
+   "ka": "კუკის კუნძულები",
+   "de": "Cookinseln",
+   "es": "Islas Cook",
+   "fr": "Îles Cook",
+   "it": "Isole Cook",
+   "pt": "Ilhas Cook"
+  },
+  "wrong": {
+   "en": [
+    "Mauritius",
+    "São Tomé",
+    "Papua New Guinea"
+   ],
+   "ka": [
+    "მავრიკი",
+    "სან-ტომე და პრინსიპი",
+    "პაპუა-ახალი გვინეა"
+   ],
+   "de": [
+    "Mauritius",
+    "São Tomé",
+    "Papua-Neuguinea"
+   ],
+   "es": [
+    "Mauricio",
+    "Santo Tomé",
+    "Papúa Nueva Guinea"
+   ],
+   "fr": [
+    "Maurice",
+    "Sao Tomé-et-Principe",
+    "Papouasie-N.-Guinée"
+   ],
+   "it": [
+    "Mauritius",
+    "São Tomé e Príncipe",
+    "Papua Nuova Guinea"
+   ],
+   "pt": [
+    "Maurícia",
+    "São Tomé e Príncipe",
+    "Papua-Nova Guiné"
+   ]
+  }
+ },
+ {
+  "key": "w-q17054",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Flag-of-Martinique.svg/1280px-Flag-of-Martinique.svg.png",
+  "file": "File:Flag-of-Martinique.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Martinique",
+   "ka": "მარტინიკა",
+   "de": "Martinique",
+   "es": "Martinica",
+   "fr": "Martinique",
+   "it": "Martinica",
+   "pt": "Martinica"
+  },
+  "wrong": {
+   "en": [
+    "Yemen",
+    "Greenland",
+    "Montserrat"
+   ],
+   "ka": [
+    "იემენი",
+    "გრენლანდია",
+    "მონსერატი"
+   ],
+   "de": [
+    "Jemen",
+    "Grönland",
+    "Montserrat"
+   ],
+   "es": [
+    "Yemen",
+    "Groenlandia",
+    "Montserrat"
+   ],
+   "fr": [
+    "Yémen",
+    "Groenland",
+    "Montserrat"
+   ],
+   "it": [
+    "Yemen",
+    "Groenlandia",
+    "Montserrat"
+   ],
+   "pt": [
+    "Iémen",
+    "Gronelândia",
+    "Monserrate"
+   ]
+  }
+ },
+ {
+  "key": "w-q23681",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Flag_of_the_Turkish_Republic_of_Northern_Cyprus.svg/1280px-Flag_of_the_Turkish_Republic_of_Northern_Cyprus.svg.png",
+  "file": "File:Flag of the Turkish Republic of Northern Cyprus.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Northern Cyprus",
+   "ka": "ჩრდილოეთი კვიპროსი",
+   "de": "Nordzypern",
+   "es": "Chipre del Norte",
+   "fr": "Chypre du Nord",
+   "it": "Cipro del Nord",
+   "pt": "Chipre do Norte"
+  },
+  "wrong": {
+   "en": [
+    "Hong Kong",
+    "Curaçao",
+    "Bermuda"
+   ],
+   "ka": [
+    "ჰონგ-კონგი",
+    "კიურასაო",
+    "ბერმუდის კუნძულები"
+   ],
+   "de": [
+    "Hongkong",
+    "Curaçao",
+    "Bermuda"
+   ],
+   "es": [
+    "Hong Kong",
+    "Curazao",
+    "Bermudas"
+   ],
+   "fr": [
+    "Hong Kong",
+    "Curaçao",
+    "Bermudes"
+   ],
+   "it": [
+    "Hong Kong",
+    "Curaçao",
+    "Bermuda"
+   ],
+   "pt": [
+    "Hong Kong",
+    "Curaçau",
+    "Bermudas"
+   ]
+  }
+ },
+ {
+  "key": "w-q17070",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Proposed_flag_of_R%C3%A9union_%28VAR%29.svg/1280px-Proposed_flag_of_R%C3%A9union_%28VAR%29.svg.png",
+  "file": "File:Proposed flag of Réunion (VAR).svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Réunion",
+   "ka": "რეიუნიონი",
+   "de": "Réunion",
+   "es": "Reunión",
+   "fr": "La Réunion",
+   "it": "Riunione",
+   "pt": "Reunião"
+  },
+  "wrong": {
+   "en": [
+    "Hong Kong",
+    "Falkland Islands",
+    "Gabon"
+   ],
+   "ka": [
+    "ჰონგ-კონგი",
+    "ფოლკლენდის კუნძულები",
+    "გაბონი"
+   ],
+   "de": [
+    "Hongkong",
+    "Falklandinseln",
+    "Gabun"
+   ],
+   "es": [
+    "Hong Kong",
+    "Islas Malvinas",
+    "Gabón"
+   ],
+   "fr": [
+    "Hong Kong",
+    "îles Malouines",
+    "Gabon"
+   ],
+   "it": [
+    "Hong Kong",
+    "Isole Falkland",
+    "Gabon"
+   ],
+   "pt": [
+    "Hong Kong",
+    "Ilhas Malvinas",
+    "Gabão"
+   ]
+  }
+ },
+ {
+  "key": "w-q34020",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Flag_of_Niue.svg/1280px-Flag_of_Niue.svg.png",
+  "file": "File:Flag of Niue.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Niue",
+   "ka": "ნიუე",
+   "de": "Niue",
+   "es": "Niue",
+   "fr": "Niue",
+   "it": "Niue",
+   "pt": "Niue"
+  },
+  "wrong": {
+   "en": [
+    "São Tomé",
+    "Congo",
+    "Anguilla"
+   ],
+   "ka": [
+    "სან-ტომე და პრინსიპი",
+    "კონგოს რესპუბლიკა",
+    "ანგილია"
+   ],
+   "de": [
+    "São Tomé",
+    "Republik Kongo",
+    "Anguilla"
+   ],
+   "es": [
+    "Santo Tomé",
+    "Congo",
+    "Anguila"
+   ],
+   "fr": [
+    "Sao Tomé-et-Principe",
+    "République du Congo",
+    "Anguilla"
+   ],
+   "it": [
+    "São Tomé e Príncipe",
+    "Repubblica del Congo",
+    "Anguilla"
+   ],
+   "pt": [
+    "São Tomé e Príncipe",
+    "República do Congo",
+    "Anguila"
+   ]
+  }
+ },
+ {
+  "key": "w-q5785",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Flag_of_the_Cayman_Islands.svg/1280px-Flag_of_the_Cayman_Islands.svg.png",
+  "file": "File:Flag of the Cayman Islands.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Cayman Islands",
+   "ka": "კაიმანის კუნძულები",
+   "de": "Cayman Islands",
+   "es": "Islas Caimán",
+   "fr": "îles Caïmans",
+   "it": "Isole Cayman",
+   "pt": "Ilhas Cayman"
+  },
+  "wrong": {
+   "en": [
+    "Somaliland",
+    "Montserrat",
+    "São Tomé"
+   ],
+   "ka": [
+    "სომალილენდი",
+    "მონსერატი",
+    "სან-ტომე და პრინსიპი"
+   ],
+   "de": [
+    "Somaliland",
+    "Montserrat",
+    "São Tomé"
+   ],
+   "es": [
+    "Somalilandia",
+    "Montserrat",
+    "Santo Tomé"
+   ],
+   "fr": [
+    "Somaliland",
+    "Montserrat",
+    "Sao Tomé-et-Principe"
+   ],
+   "it": [
+    "Somaliland",
+    "Montserrat",
+    "São Tomé e Príncipe"
+   ],
+   "pt": [
+    "Somalilândia",
+    "Monserrate",
+    "São Tomé e Príncipe"
+   ]
+  }
+ },
+ {
+  "key": "w-q25228",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Flag_of_Anguilla.svg/1280px-Flag_of_Anguilla.svg.png",
+  "file": "File:Flag of Anguilla.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Anguilla",
+   "ka": "ანგილია",
+   "de": "Anguilla",
+   "es": "Anguila",
+   "fr": "Anguilla",
+   "it": "Anguilla",
+   "pt": "Anguila"
+  },
+  "wrong": {
+   "en": [
+    "Papua New Guinea",
+    "Cayman Islands",
+    "Hong Kong"
+   ],
+   "ka": [
+    "პაპუა-ახალი გვინეა",
+    "კაიმანის კუნძულები",
+    "ჰონგ-კონგი"
+   ],
+   "de": [
+    "Papua-Neuguinea",
+    "Cayman Islands",
+    "Hongkong"
+   ],
+   "es": [
+    "Papúa Nueva Guinea",
+    "Islas Caimán",
+    "Hong Kong"
+   ],
+   "fr": [
+    "Papouasie-N.-Guinée",
+    "îles Caïmans",
+    "Hong Kong"
+   ],
+   "it": [
+    "Papua Nuova Guinea",
+    "Isole Cayman",
+    "Hong Kong"
+   ],
+   "pt": [
+    "Papua-Nova Guiné",
+    "Ilhas Cayman",
+    "Hong Kong"
+   ]
+  }
+ },
+ {
+  "key": "w-q34754",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Flag_of_Somaliland.svg/1280px-Flag_of_Somaliland.svg.png",
+  "file": "File:Flag of Somaliland.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Somaliland",
+   "ka": "სომალილენდი",
+   "de": "Somaliland",
+   "es": "Somalilandia",
+   "fr": "Somaliland",
+   "it": "Somaliland",
+   "pt": "Somalilândia"
+  },
+  "wrong": {
+   "en": [
+    "Papua New Guinea",
+    "Costa Rica",
+    "Sint Maarten"
+   ],
+   "ka": [
+    "პაპუა-ახალი გვინეა",
+    "კოსტა-რიკა",
+    "სინტ-მარტენი"
+   ],
+   "de": [
+    "Papua-Neuguinea",
+    "Costa Rica",
+    "Sint Maarten"
+   ],
+   "es": [
+    "Papúa Nueva Guinea",
+    "Costa Rica",
+    "San Martín"
+   ],
+   "fr": [
+    "Papouasie-N.-Guinée",
+    "Costa Rica",
+    "Saint-Martin"
+   ],
+   "it": [
+    "Papua Nuova Guinea",
+    "Costa Rica",
+    "Sint Maarten"
+   ],
+   "pt": [
+    "Papua-Nova Guiné",
+    "Costa Rica",
+    "São Martinho"
+   ]
+  }
+ },
+ {
+  "key": "w-q25279",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Flag_of_Cura%C3%A7ao.svg/1280px-Flag_of_Cura%C3%A7ao.svg.png",
+  "file": "File:Flag of Curaçao.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Curaçao",
+   "ka": "კიურასაო",
+   "de": "Curaçao",
+   "es": "Curazao",
+   "fr": "Curaçao",
+   "it": "Curaçao",
+   "pt": "Curaçau"
+  },
+  "wrong": {
+   "en": [
+    "Aruba",
+    "Mauritius",
+    "Bermuda"
+   ],
+   "ka": [
+    "არუბა",
+    "მავრიკი",
+    "ბერმუდის კუნძულები"
+   ],
+   "de": [
+    "Aruba",
+    "Mauritius",
+    "Bermuda"
+   ],
+   "es": [
+    "Aruba",
+    "Mauricio",
+    "Bermudas"
+   ],
+   "fr": [
+    "Aruba",
+    "Maurice",
+    "Bermudes"
+   ],
+   "it": [
+    "Aruba",
+    "Mauritius",
+    "Bermuda"
+   ],
+   "pt": [
+    "Aruba",
+    "Maurícia",
+    "Bermudas"
+   ]
+  }
+ },
+ {
+  "key": "w-q13353",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Flag_of_Montserrat.svg/1280px-Flag_of_Montserrat.svg.png",
+  "file": "File:Flag of Montserrat.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Montserrat",
+   "ka": "მონსერატი",
+   "de": "Montserrat",
+   "es": "Montserrat",
+   "fr": "Montserrat",
+   "it": "Montserrat",
+   "pt": "Monserrate"
+  },
+  "wrong": {
+   "en": [
+    "Curaçao",
+    "Tonga",
+    "Bermuda"
+   ],
+   "ka": [
+    "კიურასაო",
+    "ტონგა",
+    "ბერმუდის კუნძულები"
+   ],
+   "de": [
+    "Curaçao",
+    "Tonga",
+    "Bermuda"
+   ],
+   "es": [
+    "Curazao",
+    "Tonga",
+    "Bermudas"
+   ],
+   "fr": [
+    "Curaçao",
+    "Tonga",
+    "Bermudes"
+   ],
+   "it": [
+    "Curaçao",
+    "Tonga",
+    "Bermuda"
+   ],
+   "pt": [
+    "Curaçau",
+    "Tonga",
+    "Bermudas"
+   ]
+  }
+ },
+ {
+  "key": "w-q35672",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Flag_of_the_Pitcairn_Islands.svg/1280px-Flag_of_the_Pitcairn_Islands.svg.png",
+  "file": "File:Flag of the Pitcairn Islands.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Pitcairn Islands",
+   "ka": "პიტკერნის კუნძულები",
+   "de": "Pitcairninseln",
+   "es": "Islas Pitcairn",
+   "fr": "îles Pitcairn",
+   "it": "Isole Pitcairn",
+   "pt": "Ilhas Pitcairn"
+  },
+  "wrong": {
+   "en": [
+    "Gabon",
+    "Curaçao",
+    "Micronesia"
+   ],
+   "ka": [
+    "გაბონი",
+    "კიურასაო",
+    "მიკრონეზია"
+   ],
+   "de": [
+    "Gabun",
+    "Curaçao",
+    "Mikronesien"
+   ],
+   "es": [
+    "Gabón",
+    "Curazao",
+    "Micronesia"
+   ],
+   "fr": [
+    "Gabon",
+    "Curaçao",
+    "Micronésie"
+   ],
+   "it": [
+    "Gabon",
+    "Curaçao",
+    "Micronesia"
+   ],
+   "pt": [
+    "Gabão",
+    "Curaçau",
+    "Micronésia"
+   ]
+  }
+ },
+ {
+  "key": "w-q36823",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Flag_of_Tokelau.svg/1280px-Flag_of_Tokelau.svg.png",
+  "file": "File:Flag of Tokelau.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Tokelau",
+   "ka": "ტოკელაუ",
+   "de": "Tokelau",
+   "es": "Tokelau",
+   "fr": "Tokelau",
+   "it": "Tokelau",
+   "pt": "Tokelau"
+  },
+  "wrong": {
+   "en": [
+    "St Vincent",
+    "Cayman Islands",
+    "Curaçao"
+   ],
+   "ka": [
+    "სენტ-ვინსენტი",
+    "კაიმანის კუნძულები",
+    "კიურასაო"
+   ],
+   "de": [
+    "St. Vincent",
+    "Cayman Islands",
+    "Curaçao"
+   ],
+   "es": [
+    "San Vicente",
+    "Islas Caimán",
+    "Curazao"
+   ],
+   "fr": [
+    "Saint-Vincent",
+    "îles Caïmans",
+    "Curaçao"
+   ],
+   "it": [
+    "Saint Vincent",
+    "Isole Cayman",
+    "Curaçao"
+   ],
+   "pt": [
+    "São Vicente",
+    "Ilhas Cayman",
+    "Curaçau"
+   ]
+  }
+ },
+ {
+  "key": "w-q26273",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Flag_of_Sint_Maarten.svg/1280px-Flag_of_Sint_Maarten.svg.png",
+  "file": "File:Flag of Sint Maarten.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Sint Maarten",
+   "ka": "სინტ-მარტენი",
+   "de": "Sint Maarten",
+   "es": "San Martín",
+   "fr": "Saint-Martin",
+   "it": "Sint Maarten",
+   "pt": "São Martinho"
+  },
+  "wrong": {
+   "en": [
+    "Comoros",
+    "Dominican Rep.",
+    "St Vincent"
+   ],
+   "ka": [
+    "კომორის კუნძულები",
+    "დომინიკელთა რესპ.",
+    "სენტ-ვინსენტი"
+   ],
+   "de": [
+    "Komoren",
+    "Dom. Republik",
+    "St. Vincent"
+   ],
+   "es": [
+    "Comoras",
+    "República Dominicana",
+    "San Vicente"
+   ],
+   "fr": [
+    "Comores",
+    "Rép. dominicaine",
+    "Saint-Vincent"
+   ],
+   "it": [
+    "Comore",
+    "Rep. Dominicana",
+    "Saint Vincent"
+   ],
+   "pt": [
+    "Comores",
+    "Rep. Dominicana",
+    "São Vicente"
+   ]
+  }
+ }
+]

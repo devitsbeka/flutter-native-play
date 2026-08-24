@@ -1,0 +1,5832 @@
+[
+ {
+  "key": "w-q7817",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/World_Health_Organization_emblem_%28cropped%29.svg/1280px-World_Health_Organization_emblem_%28cropped%29.svg.png",
+  "file": "File:World Health Organization emblem (cropped).svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "WHO",
+   "ka": "WHO",
+   "de": "WHO",
+   "es": "WHO",
+   "fr": "WHO",
+   "it": "WHO",
+   "pt": "WHO"
+  },
+  "wrong": {
+   "en": [
+    "ABC",
+    "AC Sparta Prague",
+    "CCTV"
+   ],
+   "ka": [
+    "ABC",
+    "AC Sparta Prague",
+    "CCTV"
+   ],
+   "de": [
+    "ABC",
+    "AC Sparta Prague",
+    "CCTV"
+   ],
+   "es": [
+    "ABC",
+    "AC Sparta Prague",
+    "CCTV"
+   ],
+   "fr": [
+    "ABC",
+    "AC Sparta Prague",
+    "CCTV"
+   ],
+   "it": [
+    "ABC",
+    "AC Sparta Prague",
+    "CCTV"
+   ],
+   "pt": [
+    "ABC",
+    "AC Sparta Prague",
+    "CCTV"
+   ]
+  }
+ },
+ {
+  "key": "w-q7414",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/The_Walt_Disney_Company_Logo.svg/1280px-The_Walt_Disney_Company_Logo.svg.png",
+  "file": "File:The Walt Disney Company Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Disney",
+   "ka": "Disney",
+   "de": "Disney",
+   "es": "Disney",
+   "fr": "Disney",
+   "it": "Disney",
+   "pt": "Disney"
+  },
+  "wrong": {
+   "en": [
+    "National Geographic",
+    "Sony Music",
+    "AC Sparta Prague"
+   ],
+   "ka": [
+    "National Geographic",
+    "Sony Music",
+    "AC Sparta Prague"
+   ],
+   "de": [
+    "National Geographic",
+    "Sony Music",
+    "AC Sparta Prague"
+   ],
+   "es": [
+    "National Geographic",
+    "Sony Music",
+    "AC Sparta Prague"
+   ],
+   "fr": [
+    "National Geographic",
+    "Sony Music",
+    "AC Sparta Prague"
+   ],
+   "it": [
+    "National Geographic",
+    "Sony Music",
+    "AC Sparta Prague"
+   ],
+   "pt": [
+    "National Geographic",
+    "Sony Music",
+    "AC Sparta Prague"
+   ]
+  }
+ },
+ {
+  "key": "w-q1422",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Juventus_FC_-_logo_black_%28Italy%2C_2020%29.svg/1280px-Juventus_FC_-_logo_black_%28Italy%2C_2020%29.svg.png",
+  "file": "File:Juventus FC - logo black (Italy, 2020).svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Juventus FC",
+   "ka": "Juventus FC",
+   "de": "Juventus FC",
+   "es": "Juventus FC",
+   "fr": "Juventus FC",
+   "it": "Juventus FC",
+   "pt": "Juventus FC"
+  },
+  "wrong": {
+   "en": [
+    "Kyiv Metro",
+    "Pixar",
+    "SK Slavia Prague"
+   ],
+   "ka": [
+    "Kyiv Metro",
+    "Pixar",
+    "SK Slavia Prague"
+   ],
+   "de": [
+    "Kyiv Metro",
+    "Pixar",
+    "SK Slavia Prague"
+   ],
+   "es": [
+    "Kyiv Metro",
+    "Pixar",
+    "SK Slavia Prague"
+   ],
+   "fr": [
+    "Kyiv Metro",
+    "Pixar",
+    "SK Slavia Prague"
+   ],
+   "it": [
+    "Kyiv Metro",
+    "Pixar",
+    "SK Slavia Prague"
+   ],
+   "pt": [
+    "Kyiv Metro",
+    "Pixar",
+    "SK Slavia Prague"
+   ]
+  }
+ },
+ {
+  "key": "w-q155223",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/National_Basketball_Association_logo_2017-present.svg/1280px-National_Basketball_Association_logo_2017-present.svg.png",
+  "file": "File:National Basketball Association logo 2017-present.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "NBA",
+   "ka": "NBA",
+   "de": "NBA",
+   "es": "NBA",
+   "fr": "NBA",
+   "it": "NBA",
+   "pt": "NBA"
+  },
+  "wrong": {
+   "en": [
+    "SK Slavia Prague",
+    "Fox",
+    "Juventus FC"
+   ],
+   "ka": [
+    "SK Slavia Prague",
+    "Fox",
+    "Juventus FC"
+   ],
+   "de": [
+    "SK Slavia Prague",
+    "Fox",
+    "Juventus FC"
+   ],
+   "es": [
+    "SK Slavia Prague",
+    "Fox",
+    "Juventus FC"
+   ],
+   "fr": [
+    "SK Slavia Prague",
+    "Fox",
+    "Juventus FC"
+   ],
+   "it": [
+    "SK Slavia Prague",
+    "Fox",
+    "Juventus FC"
+   ],
+   "pt": [
+    "SK Slavia Prague",
+    "Fox",
+    "Juventus FC"
+   ]
+  }
+ },
+ {
+  "key": "w-q9448",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Pl-logo-light.svg/1280px-Pl-logo-light.svg.png",
+  "file": "File:Pl-logo-light.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Premier League",
+   "ka": "Premier League",
+   "de": "Premier League",
+   "es": "Premier League",
+   "fr": "Premier League",
+   "it": "Premier League",
+   "pt": "Premier League"
+  },
+  "wrong": {
+   "en": [
+    "TASS",
+    "Ligue 1",
+    "Philips"
+   ],
+   "ka": [
+    "TASS",
+    "Ligue 1",
+    "Philips"
+   ],
+   "de": [
+    "TASS",
+    "Ligue 1",
+    "Philips"
+   ],
+   "es": [
+    "TASS",
+    "Ligue 1",
+    "Philips"
+   ],
+   "fr": [
+    "TASS",
+    "Ligue 1",
+    "Philips"
+   ],
+   "it": [
+    "TASS",
+    "Ligue 1",
+    "Philips"
+   ],
+   "pt": [
+    "TASS",
+    "Ligue 1",
+    "Philips"
+   ]
+  }
+ },
+ {
+  "key": "w-q324867",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/LaLiga_EA_Sports_2023_Vertical_Logo.svg/1280px-LaLiga_EA_Sports_2023_Vertical_Logo.svg.png",
+  "file": "File:LaLiga EA Sports 2023 Vertical Logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "La Liga",
+   "ka": "La Liga",
+   "de": "La Liga",
+   "es": "La Liga",
+   "fr": "La Liga",
+   "it": "La Liga",
+   "pt": "La Liga"
+  },
+  "wrong": {
+   "en": [
+    "CCTV",
+    "VfL Wolfsburg",
+    "Pixar"
+   ],
+   "ka": [
+    "CCTV",
+    "VfL Wolfsburg",
+    "Pixar"
+   ],
+   "de": [
+    "CCTV",
+    "VfL Wolfsburg",
+    "Pixar"
+   ],
+   "es": [
+    "CCTV",
+    "VfL Wolfsburg",
+    "Pixar"
+   ],
+   "fr": [
+    "CCTV",
+    "VfL Wolfsburg",
+    "Pixar"
+   ],
+   "it": [
+    "CCTV",
+    "VfL Wolfsburg",
+    "Pixar"
+   ],
+   "pt": [
+    "CCTV",
+    "VfL Wolfsburg",
+    "Pixar"
+   ]
+  }
+ },
+ {
+  "key": "w-q43449",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/CC-logo.svg/1280px-CC-logo.svg.png",
+  "file": "File:CC-logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Creative Commons",
+   "ka": "Creative Commons",
+   "de": "Creative Commons",
+   "es": "Creative Commons",
+   "fr": "Creative Commons",
+   "it": "Creative Commons",
+   "pt": "Creative Commons"
+  },
+  "wrong": {
+   "en": [
+    "Azerbaijan Airlines",
+    "NBA",
+    "Fox"
+   ],
+   "ka": [
+    "Azerbaijan Airlines",
+    "NBA",
+    "Fox"
+   ],
+   "de": [
+    "Azerbaijan Airlines",
+    "NBA",
+    "Fox"
+   ],
+   "es": [
+    "Azerbaijan Airlines",
+    "NBA",
+    "Fox"
+   ],
+   "fr": [
+    "Azerbaijan Airlines",
+    "NBA",
+    "Fox"
+   ],
+   "it": [
+    "Azerbaijan Airlines",
+    "NBA",
+    "Fox"
+   ],
+   "pt": [
+    "Azerbaijan Airlines",
+    "NBA",
+    "Fox"
+   ]
+  }
+ },
+ {
+  "key": "w-q169889",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/ABC_2021_Red.svg/1280px-ABC_2021_Red.svg.png",
+  "file": "File:ABC 2021 Red.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "ABC",
+   "ka": "ABC",
+   "de": "ABC",
+   "es": "ABC",
+   "fr": "ABC",
+   "it": "ABC",
+   "pt": "ABC"
+  },
+  "wrong": {
+   "en": [
+    "AC Sparta Prague",
+    "Sony Pictures",
+    "Belavia"
+   ],
+   "ka": [
+    "AC Sparta Prague",
+    "Sony Pictures",
+    "Belavia"
+   ],
+   "de": [
+    "AC Sparta Prague",
+    "Sony Pictures",
+    "Belavia"
+   ],
+   "es": [
+    "AC Sparta Prague",
+    "Sony Pictures",
+    "Belavia"
+   ],
+   "fr": [
+    "AC Sparta Prague",
+    "Sony Pictures",
+    "Belavia"
+   ],
+   "it": [
+    "AC Sparta Prague",
+    "Sony Pictures",
+    "Belavia"
+   ],
+   "pt": [
+    "AC Sparta Prague",
+    "Sony Pictures",
+    "Belavia"
+   ]
+  }
+ },
+ {
+  "key": "w-q126399",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Warner_Bros._logo_2023.svg/1280px-Warner_Bros._logo_2023.svg.png",
+  "file": "File:Warner Bros. logo 2023.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Warner Bros.",
+   "ka": "Warner Bros.",
+   "de": "Warner Bros.",
+   "es": "Warner Bros.",
+   "fr": "Warner Bros.",
+   "it": "Warner Bros.",
+   "pt": "Warner Bros."
+  },
+  "wrong": {
+   "en": [
+    "AC Sparta Prague",
+    "Colgate-Palmolive",
+    "Iberia"
+   ],
+   "ka": [
+    "AC Sparta Prague",
+    "Colgate-Palmolive",
+    "Iberia"
+   ],
+   "de": [
+    "AC Sparta Prague",
+    "Colgate-Palmolive",
+    "Iberia"
+   ],
+   "es": [
+    "AC Sparta Prague",
+    "Colgate-Palmolive",
+    "Iberia"
+   ],
+   "fr": [
+    "AC Sparta Prague",
+    "Colgate-Palmolive",
+    "Iberia"
+   ],
+   "it": [
+    "AC Sparta Prague",
+    "Colgate-Palmolive",
+    "Iberia"
+   ],
+   "pt": [
+    "AC Sparta Prague",
+    "Colgate-Palmolive",
+    "Iberia"
+   ]
+  }
+ },
+ {
+  "key": "w-q127552",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Pixar_logo.svg/1280px-Pixar_logo.svg.png",
+  "file": "File:Pixar logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Pixar",
+   "ka": "Pixar",
+   "de": "Pixar",
+   "es": "Pixar",
+   "fr": "Pixar",
+   "it": "Pixar",
+   "pt": "Pixar"
+  },
+  "wrong": {
+   "en": [
+    "Juventus FC",
+    "Creative Commons",
+    "NBA"
+   ],
+   "ka": [
+    "Juventus FC",
+    "Creative Commons",
+    "NBA"
+   ],
+   "de": [
+    "Juventus FC",
+    "Creative Commons",
+    "NBA"
+   ],
+   "es": [
+    "Juventus FC",
+    "Creative Commons",
+    "NBA"
+   ],
+   "fr": [
+    "Juventus FC",
+    "Creative Commons",
+    "NBA"
+   ],
+   "it": [
+    "Juventus FC",
+    "Creative Commons",
+    "NBA"
+   ],
+   "pt": [
+    "Juventus FC",
+    "Creative Commons",
+    "NBA"
+   ]
+  }
+ },
+ {
+  "key": "w-q166419",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Fox_Broadcasting_Company_logo_%282019%29.svg/1280px-Fox_Broadcasting_Company_logo_%282019%29.svg.png",
+  "file": "File:Fox Broadcasting Company logo (2019).svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Fox",
+   "ka": "Fox",
+   "de": "Fox",
+   "es": "Fox",
+   "fr": "Fox",
+   "it": "Fox",
+   "pt": "Fox"
+  },
+  "wrong": {
+   "en": [
+    "VfL Wolfsburg",
+    "Dacia",
+    "MLB"
+   ],
+   "ka": [
+    "VfL Wolfsburg",
+    "Dacia",
+    "MLB"
+   ],
+   "de": [
+    "VfL Wolfsburg",
+    "Dacia",
+    "MLB"
+   ],
+   "es": [
+    "VfL Wolfsburg",
+    "Dacia",
+    "MLB"
+   ],
+   "fr": [
+    "VfL Wolfsburg",
+    "Dacia",
+    "MLB"
+   ],
+   "it": [
+    "VfL Wolfsburg",
+    "Dacia",
+    "MLB"
+   ],
+   "pt": [
+    "VfL Wolfsburg",
+    "Dacia",
+    "MLB"
+   ]
+  }
+ },
+ {
+  "key": "w-q13394",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Logo_Ligue_1_McDonald%27s_2024.svg/1280px-Logo_Ligue_1_McDonald%27s_2024.svg.png",
+  "file": "File:Logo Ligue 1 McDonald's 2024.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Ligue 1",
+   "ka": "Ligue 1",
+   "de": "Ligue 1",
+   "es": "Ligue 1",
+   "fr": "Ligue 1",
+   "it": "Ligue 1",
+   "pt": "Ligue 1"
+  },
+  "wrong": {
+   "en": [
+    "Philips",
+    "Premier League",
+    "Kyiv Metro"
+   ],
+   "ka": [
+    "Philips",
+    "Premier League",
+    "Kyiv Metro"
+   ],
+   "de": [
+    "Philips",
+    "Premier League",
+    "Kyiv Metro"
+   ],
+   "es": [
+    "Philips",
+    "Premier League",
+    "Kyiv Metro"
+   ],
+   "fr": [
+    "Philips",
+    "Premier League",
+    "Kyiv Metro"
+   ],
+   "it": [
+    "Philips",
+    "Premier League",
+    "Kyiv Metro"
+   ],
+   "pt": [
+    "Philips",
+    "Premier League",
+    "Kyiv Metro"
+   ]
+  }
+ },
+ {
+  "key": "w-q101859",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/VfL_Wolfsburg_logo_2026.svg/1280px-VfL_Wolfsburg_logo_2026.svg.png",
+  "file": "File:VfL Wolfsburg logo 2026.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "VfL Wolfsburg",
+   "ka": "VfL Wolfsburg",
+   "de": "VfL Wolfsburg",
+   "es": "VfL Wolfsburg",
+   "fr": "VfL Wolfsburg",
+   "it": "VfL Wolfsburg",
+   "pt": "VfL Wolfsburg"
+  },
+  "wrong": {
+   "en": [
+    "Ligue 2",
+    "Billboard",
+    "National Geographic"
+   ],
+   "ka": [
+    "Ligue 2",
+    "Billboard",
+    "National Geographic"
+   ],
+   "de": [
+    "Ligue 2",
+    "Billboard",
+    "National Geographic"
+   ],
+   "es": [
+    "Ligue 2",
+    "Billboard",
+    "National Geographic"
+   ],
+   "fr": [
+    "Ligue 2",
+    "Billboard",
+    "National Geographic"
+   ],
+   "it": [
+    "Ligue 2",
+    "Billboard",
+    "National Geographic"
+   ],
+   "pt": [
+    "Ligue 2",
+    "Billboard",
+    "National Geographic"
+   ]
+  }
+ },
+ {
+  "key": "w-q53247",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Panasonic_Group_logo.svg/1280px-Panasonic_Group_logo.svg.png",
+  "file": "File:Panasonic Group logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Panasonic",
+   "ka": "Panasonic",
+   "de": "Panasonic",
+   "es": "Panasonic",
+   "fr": "Panasonic",
+   "it": "Panasonic",
+   "pt": "Panasonic"
+  },
+  "wrong": {
+   "en": [
+    "VfL Wolfsburg",
+    "Netscape",
+    "Universal Music"
+   ],
+   "ka": [
+    "VfL Wolfsburg",
+    "Netscape",
+    "Universal Music"
+   ],
+   "de": [
+    "VfL Wolfsburg",
+    "Netscape",
+    "Universal Music"
+   ],
+   "es": [
+    "VfL Wolfsburg",
+    "Netscape",
+    "Universal Music"
+   ],
+   "fr": [
+    "VfL Wolfsburg",
+    "Netscape",
+    "Universal Music"
+   ],
+   "it": [
+    "VfL Wolfsburg",
+    "Netscape",
+    "Universal Music"
+   ],
+   "pt": [
+    "VfL Wolfsburg",
+    "Netscape",
+    "Universal Music"
+   ]
+  }
+ },
+ {
+  "key": "w-q485240",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Billboard_logo.svg/1280px-Billboard_logo.svg.png",
+  "file": "File:Billboard logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Billboard",
+   "ka": "Billboard",
+   "de": "Billboard",
+   "es": "Billboard",
+   "fr": "Billboard",
+   "it": "Billboard",
+   "pt": "Billboard"
+  },
+  "wrong": {
+   "en": [
+    "Netscape",
+    "La Liga",
+    "TASS"
+   ],
+   "ka": [
+    "Netscape",
+    "La Liga",
+    "TASS"
+   ],
+   "de": [
+    "Netscape",
+    "La Liga",
+    "TASS"
+   ],
+   "es": [
+    "Netscape",
+    "La Liga",
+    "TASS"
+   ],
+   "fr": [
+    "Netscape",
+    "La Liga",
+    "TASS"
+   ],
+   "it": [
+    "Netscape",
+    "La Liga",
+    "TASS"
+   ],
+   "pt": [
+    "Netscape",
+    "La Liga",
+    "TASS"
+   ]
+  }
+ },
+ {
+  "key": "w-q170416",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Philips_shield_%282013%29.svg/1280px-Philips_shield_%282013%29.svg.png",
+  "file": "File:Philips shield (2013).svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Philips",
+   "ka": "Philips",
+   "de": "Philips",
+   "es": "Philips",
+   "fr": "Philips",
+   "it": "Philips",
+   "pt": "Philips"
+  },
+  "wrong": {
+   "en": [
+    "Red Bull",
+    "Perplexity AI",
+    "Warner Bros."
+   ],
+   "ka": [
+    "Red Bull",
+    "Perplexity AI",
+    "Warner Bros."
+   ],
+   "de": [
+    "Red Bull",
+    "Perplexity AI",
+    "Warner Bros."
+   ],
+   "es": [
+    "Red Bull",
+    "Perplexity AI",
+    "Warner Bros."
+   ],
+   "fr": [
+    "Red Bull",
+    "Perplexity AI",
+    "Warner Bros."
+   ],
+   "it": [
+    "Red Bull",
+    "Perplexity AI",
+    "Warner Bros."
+   ],
+   "pt": [
+    "Red Bull",
+    "Perplexity AI",
+    "Warner Bros."
+   ]
+  }
+ },
+ {
+  "key": "w-q3295867",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/The_Coca-Cola_Company_%282020%29.svg/1280px-The_Coca-Cola_Company_%282020%29.svg.png",
+  "file": "File:The Coca-Cola Company (2020).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Coca-Cola",
+   "ka": "Coca-Cola",
+   "de": "Coca-Cola",
+   "es": "Coca-Cola",
+   "fr": "Coca-Cola",
+   "it": "Coca-Cola",
+   "pt": "Coca-Cola"
+  },
+  "wrong": {
+   "en": [
+    "VfL Wolfsburg",
+    "Ligue 2",
+    "Sukhoi"
+   ],
+   "ka": [
+    "VfL Wolfsburg",
+    "Ligue 2",
+    "Sukhoi"
+   ],
+   "de": [
+    "VfL Wolfsburg",
+    "Ligue 2",
+    "Sukhoi"
+   ],
+   "es": [
+    "VfL Wolfsburg",
+    "Ligue 2",
+    "Sukhoi"
+   ],
+   "fr": [
+    "VfL Wolfsburg",
+    "Ligue 2",
+    "Sukhoi"
+   ],
+   "it": [
+    "VfL Wolfsburg",
+    "Ligue 2",
+    "Sukhoi"
+   ],
+   "pt": [
+    "VfL Wolfsburg",
+    "Ligue 2",
+    "Sukhoi"
+   ]
+  }
+ },
+ {
+  "key": "w-q1163715",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Major_League_Baseball_logo.svg/1280px-Major_League_Baseball_logo.svg.png",
+  "file": "File:Major League Baseball logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "MLB",
+   "ka": "MLB",
+   "de": "MLB",
+   "es": "MLB",
+   "fr": "MLB",
+   "it": "MLB",
+   "pt": "MLB"
+  },
+  "wrong": {
+   "en": [
+    "Creative Commons",
+    "Philips",
+    "Colgate-Palmolive"
+   ],
+   "ka": [
+    "Creative Commons",
+    "Philips",
+    "Colgate-Palmolive"
+   ],
+   "de": [
+    "Creative Commons",
+    "Philips",
+    "Colgate-Palmolive"
+   ],
+   "es": [
+    "Creative Commons",
+    "Philips",
+    "Colgate-Palmolive"
+   ],
+   "fr": [
+    "Creative Commons",
+    "Philips",
+    "Colgate-Palmolive"
+   ],
+   "it": [
+    "Creative Commons",
+    "Philips",
+    "Colgate-Palmolive"
+   ],
+   "pt": [
+    "Creative Commons",
+    "Philips",
+    "Colgate-Palmolive"
+   ]
+  }
+ },
+ {
+  "key": "w-q167186",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/National_Geographic_Society_mark.svg/1280px-National_Geographic_Society_mark.svg.png",
+  "file": "File:National Geographic Society mark.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "National Geographic",
+   "ka": "National Geographic",
+   "de": "National Geographic",
+   "es": "National Geographic",
+   "fr": "National Geographic",
+   "it": "National Geographic",
+   "pt": "National Geographic"
+  },
+  "wrong": {
+   "en": [
+    "Ligue 2",
+    "Azerbaijan Airlines",
+    "Kyiv Metro"
+   ],
+   "ka": [
+    "Ligue 2",
+    "Azerbaijan Airlines",
+    "Kyiv Metro"
+   ],
+   "de": [
+    "Ligue 2",
+    "Azerbaijan Airlines",
+    "Kyiv Metro"
+   ],
+   "es": [
+    "Ligue 2",
+    "Azerbaijan Airlines",
+    "Kyiv Metro"
+   ],
+   "fr": [
+    "Ligue 2",
+    "Azerbaijan Airlines",
+    "Kyiv Metro"
+   ],
+   "it": [
+    "Ligue 2",
+    "Azerbaijan Airlines",
+    "Kyiv Metro"
+   ],
+   "pt": [
+    "Ligue 2",
+    "Azerbaijan Airlines",
+    "Kyiv Metro"
+   ]
+  }
+ },
+ {
+  "key": "w-q38903",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Universal_Music_Group_logo.svg/1280px-Universal_Music_Group_logo.svg.png",
+  "file": "File:Universal Music Group logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Universal Music",
+   "ka": "Universal Music",
+   "de": "Universal Music",
+   "es": "Universal Music",
+   "fr": "Universal Music",
+   "it": "Universal Music",
+   "pt": "Universal Music"
+  },
+  "wrong": {
+   "en": [
+    "La Liga",
+    "Perplexity AI",
+    "Juventus FC"
+   ],
+   "ka": [
+    "La Liga",
+    "Perplexity AI",
+    "Juventus FC"
+   ],
+   "de": [
+    "La Liga",
+    "Perplexity AI",
+    "Juventus FC"
+   ],
+   "es": [
+    "La Liga",
+    "Perplexity AI",
+    "Juventus FC"
+   ],
+   "fr": [
+    "La Liga",
+    "Perplexity AI",
+    "Juventus FC"
+   ],
+   "it": [
+    "La Liga",
+    "Perplexity AI",
+    "Juventus FC"
+   ],
+   "pt": [
+    "La Liga",
+    "Perplexity AI",
+    "Juventus FC"
+   ]
+  }
+ },
+ {
+  "key": "w-q187972",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Logotipo_de_Iberia.svg/1280px-Logotipo_de_Iberia.svg.png",
+  "file": "File:Logotipo de Iberia.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Iberia",
+   "ka": "Iberia",
+   "de": "Iberia",
+   "es": "Iberia",
+   "fr": "Iberia",
+   "it": "Iberia",
+   "pt": "Iberia"
+  },
+  "wrong": {
+   "en": [
+    "La Liga",
+    "Premier League",
+    "Gameloft"
+   ],
+   "ka": [
+    "La Liga",
+    "Premier League",
+    "Gameloft"
+   ],
+   "de": [
+    "La Liga",
+    "Premier League",
+    "Gameloft"
+   ],
+   "es": [
+    "La Liga",
+    "Premier League",
+    "Gameloft"
+   ],
+   "fr": [
+    "La Liga",
+    "Premier League",
+    "Gameloft"
+   ],
+   "it": [
+    "La Liga",
+    "Premier League",
+    "Gameloft"
+   ],
+   "pt": [
+    "La Liga",
+    "Premier League",
+    "Gameloft"
+   ]
+  }
+ },
+ {
+  "key": "w-q186471",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/UFC_Logo.svg/1280px-UFC_Logo.svg.png",
+  "file": "File:UFC Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "UFC",
+   "ka": "UFC",
+   "de": "UFC",
+   "es": "UFC",
+   "fr": "UFC",
+   "it": "UFC",
+   "pt": "UFC"
+  },
+  "wrong": {
+   "en": [
+    "Disney Studios",
+    "MLB",
+    "Dacia"
+   ],
+   "ka": [
+    "Disney Studios",
+    "MLB",
+    "Dacia"
+   ],
+   "de": [
+    "Disney Studios",
+    "MLB",
+    "Dacia"
+   ],
+   "es": [
+    "Disney Studios",
+    "MLB",
+    "Dacia"
+   ],
+   "fr": [
+    "Disney Studios",
+    "MLB",
+    "Dacia"
+   ],
+   "it": [
+    "Disney Studios",
+    "MLB",
+    "Dacia"
+   ],
+   "pt": [
+    "Disney Studios",
+    "MLB",
+    "Dacia"
+   ]
+  }
+ },
+ {
+  "key": "w-q56760250",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Sony_Music_Entertainment_Logo_2023.svg/1280px-Sony_Music_Entertainment_Logo_2023.svg.png",
+  "file": "File:Sony Music Entertainment Logo 2023.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Sony Music",
+   "ka": "Sony Music",
+   "de": "Sony Music",
+   "es": "Sony Music",
+   "fr": "Sony Music",
+   "it": "Sony Music",
+   "pt": "Sony Music"
+  },
+  "wrong": {
+   "en": [
+    "Ligue 1",
+    "Belavia",
+    "UFC"
+   ],
+   "ka": [
+    "Ligue 1",
+    "Belavia",
+    "UFC"
+   ],
+   "de": [
+    "Ligue 1",
+    "Belavia",
+    "UFC"
+   ],
+   "es": [
+    "Ligue 1",
+    "Belavia",
+    "UFC"
+   ],
+   "fr": [
+    "Ligue 1",
+    "Belavia",
+    "UFC"
+   ],
+   "it": [
+    "Ligue 1",
+    "Belavia",
+    "UFC"
+   ],
+   "pt": [
+    "Ligue 1",
+    "Belavia",
+    "UFC"
+   ]
+  }
+ },
+ {
+  "key": "w-q207936",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/CCTVNewLogo.svg/1280px-CCTVNewLogo.svg.png",
+  "file": "File:CCTVNewLogo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "CCTV",
+   "ka": "CCTV",
+   "de": "CCTV",
+   "es": "CCTV",
+   "fr": "CCTV",
+   "it": "CCTV",
+   "pt": "CCTV"
+  },
+  "wrong": {
+   "en": [
+    "Ray-Ban",
+    "TASS",
+    "Christie's"
+   ],
+   "ka": [
+    "Ray-Ban",
+    "TASS",
+    "Christie's"
+   ],
+   "de": [
+    "Ray-Ban",
+    "TASS",
+    "Christie's"
+   ],
+   "es": [
+    "Ray-Ban",
+    "TASS",
+    "Christie's"
+   ],
+   "fr": [
+    "Ray-Ban",
+    "TASS",
+    "Christie's"
+   ],
+   "it": [
+    "Ray-Ban",
+    "TASS",
+    "Christie's"
+   ],
+   "pt": [
+    "Ray-Ban",
+    "TASS",
+    "Christie's"
+   ]
+  }
+ },
+ {
+  "key": "w-q36033",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Mitsubishi_motors_new_logo.svg/1280px-Mitsubishi_motors_new_logo.svg.png",
+  "file": "File:Mitsubishi motors new logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Mitsubishi Motors",
+   "ka": "Mitsubishi Motors",
+   "de": "Mitsubishi Motors",
+   "es": "Mitsubishi Motors",
+   "fr": "Mitsubishi Motors",
+   "it": "Mitsubishi Motors",
+   "pt": "Mitsubishi Motors"
+  },
+  "wrong": {
+   "en": [
+    "Coca-Cola",
+    "Billboard",
+    "Dacia"
+   ],
+   "ka": [
+    "Coca-Cola",
+    "Billboard",
+    "Dacia"
+   ],
+   "de": [
+    "Coca-Cola",
+    "Billboard",
+    "Dacia"
+   ],
+   "es": [
+    "Coca-Cola",
+    "Billboard",
+    "Dacia"
+   ],
+   "fr": [
+    "Coca-Cola",
+    "Billboard",
+    "Dacia"
+   ],
+   "it": [
+    "Coca-Cola",
+    "Billboard",
+    "Dacia"
+   ],
+   "pt": [
+    "Coca-Cola",
+    "Billboard",
+    "Dacia"
+   ]
+  }
+ },
+ {
+  "key": "w-q215871",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Kyiv_Metro_logo_2015.svg/1280px-Kyiv_Metro_logo_2015.svg.png",
+  "file": "File:Kyiv Metro logo 2015.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Kyiv Metro",
+   "ka": "Kyiv Metro",
+   "de": "Kyiv Metro",
+   "es": "Kyiv Metro",
+   "fr": "Kyiv Metro",
+   "it": "Kyiv Metro",
+   "pt": "Kyiv Metro"
+  },
+  "wrong": {
+   "en": [
+    "National Geographic",
+    "VfL Wolfsburg",
+    "Colgate-Palmolive"
+   ],
+   "ka": [
+    "National Geographic",
+    "VfL Wolfsburg",
+    "Colgate-Palmolive"
+   ],
+   "de": [
+    "National Geographic",
+    "VfL Wolfsburg",
+    "Colgate-Palmolive"
+   ],
+   "es": [
+    "National Geographic",
+    "VfL Wolfsburg",
+    "Colgate-Palmolive"
+   ],
+   "fr": [
+    "National Geographic",
+    "VfL Wolfsburg",
+    "Colgate-Palmolive"
+   ],
+   "it": [
+    "National Geographic",
+    "VfL Wolfsburg",
+    "Colgate-Palmolive"
+   ],
+   "pt": [
+    "National Geographic",
+    "VfL Wolfsburg",
+    "Colgate-Palmolive"
+   ]
+  }
+ },
+ {
+  "key": "w-q822314",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Sony_Pictures_logo.svg/1280px-Sony_Pictures_logo.svg.png",
+  "file": "File:Sony Pictures logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Sony Pictures",
+   "ka": "Sony Pictures",
+   "de": "Sony Pictures",
+   "es": "Sony Pictures",
+   "fr": "Sony Pictures",
+   "it": "Sony Pictures",
+   "pt": "Sony Pictures"
+  },
+  "wrong": {
+   "en": [
+    "Perplexity AI",
+    "WHO",
+    "Kyiv Metro"
+   ],
+   "ka": [
+    "Perplexity AI",
+    "WHO",
+    "Kyiv Metro"
+   ],
+   "de": [
+    "Perplexity AI",
+    "WHO",
+    "Kyiv Metro"
+   ],
+   "es": [
+    "Perplexity AI",
+    "WHO",
+    "Kyiv Metro"
+   ],
+   "fr": [
+    "Perplexity AI",
+    "WHO",
+    "Kyiv Metro"
+   ],
+   "it": [
+    "Perplexity AI",
+    "WHO",
+    "Kyiv Metro"
+   ],
+   "pt": [
+    "Perplexity AI",
+    "WHO",
+    "Kyiv Metro"
+   ]
+  }
+ },
+ {
+  "key": "w-q193007",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/%D0%A1%D1%83%D1%85%D0%BE%D0%B9_logo.svg/1280px-%D0%A1%D1%83%D1%85%D0%BE%D0%B9_logo.svg.png",
+  "file": "File:Сухой logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Sukhoi",
+   "ka": "Sukhoi",
+   "de": "Sukhoi",
+   "es": "Sukhoi",
+   "fr": "Sukhoi",
+   "it": "Sukhoi",
+   "pt": "Sukhoi"
+  },
+  "wrong": {
+   "en": [
+    "Juventus FC",
+    "Disney",
+    "ABC"
+   ],
+   "ka": [
+    "Juventus FC",
+    "Disney",
+    "ABC"
+   ],
+   "de": [
+    "Juventus FC",
+    "Disney",
+    "ABC"
+   ],
+   "es": [
+    "Juventus FC",
+    "Disney",
+    "ABC"
+   ],
+   "fr": [
+    "Juventus FC",
+    "Disney",
+    "ABC"
+   ],
+   "it": [
+    "Juventus FC",
+    "Disney",
+    "ABC"
+   ],
+   "pt": [
+    "Juventus FC",
+    "Disney",
+    "ABC"
+   ]
+  }
+ },
+ {
+  "key": "w-q194393",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/9/90/Slavia-symbol-nowordmark-RGB.png",
+  "file": "File:Slavia-symbol-nowordmark-RGB.png",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "hard",
+  "answers": {
+   "en": "SK Slavia Prague",
+   "ka": "SK Slavia Prague",
+   "de": "SK Slavia Prague",
+   "es": "SK Slavia Prague",
+   "fr": "SK Slavia Prague",
+   "it": "SK Slavia Prague",
+   "pt": "SK Slavia Prague"
+  },
+  "wrong": {
+   "en": [
+    "Sony Pictures",
+    "DuPont",
+    "Air Arabia"
+   ],
+   "ka": [
+    "Sony Pictures",
+    "DuPont",
+    "Air Arabia"
+   ],
+   "de": [
+    "Sony Pictures",
+    "DuPont",
+    "Air Arabia"
+   ],
+   "es": [
+    "Sony Pictures",
+    "DuPont",
+    "Air Arabia"
+   ],
+   "fr": [
+    "Sony Pictures",
+    "DuPont",
+    "Air Arabia"
+   ],
+   "it": [
+    "Sony Pictures",
+    "DuPont",
+    "Air Arabia"
+   ],
+   "pt": [
+    "Sony Pictures",
+    "DuPont",
+    "Air Arabia"
+   ]
+  }
+ },
+ {
+  "key": "w-q194009",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/UAC_Tupolev_logo.svg/1280px-UAC_Tupolev_logo.svg.png",
+  "file": "File:UAC Tupolev logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Tupolev",
+   "ka": "Tupolev",
+   "de": "Tupolev",
+   "es": "Tupolev",
+   "fr": "Tupolev",
+   "it": "Tupolev",
+   "pt": "Tupolev"
+  },
+  "wrong": {
+   "en": [
+    "Warner Bros.",
+    "Fox",
+    "Belavia"
+   ],
+   "ka": [
+    "Warner Bros.",
+    "Fox",
+    "Belavia"
+   ],
+   "de": [
+    "Warner Bros.",
+    "Fox",
+    "Belavia"
+   ],
+   "es": [
+    "Warner Bros.",
+    "Fox",
+    "Belavia"
+   ],
+   "fr": [
+    "Warner Bros.",
+    "Fox",
+    "Belavia"
+   ],
+   "it": [
+    "Warner Bros.",
+    "Fox",
+    "Belavia"
+   ],
+   "pt": [
+    "Warner Bros.",
+    "Fox",
+    "Belavia"
+   ]
+  }
+ },
+ {
+  "key": "w-q193481",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/AC-Sparta-LOGO2021.svg/1280px-AC-Sparta-LOGO2021.svg.png",
+  "file": "File:AC-Sparta-LOGO2021.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "AC Sparta Prague",
+   "ka": "AC Sparta Prague",
+   "de": "AC Sparta Prague",
+   "es": "AC Sparta Prague",
+   "fr": "AC Sparta Prague",
+   "it": "AC Sparta Prague",
+   "pt": "AC Sparta Prague"
+  },
+  "wrong": {
+   "en": [
+    "CCTV",
+    "Fox",
+    "La Liga"
+   ],
+   "ka": [
+    "CCTV",
+    "Fox",
+    "La Liga"
+   ],
+   "de": [
+    "CCTV",
+    "Fox",
+    "La Liga"
+   ],
+   "es": [
+    "CCTV",
+    "Fox",
+    "La Liga"
+   ],
+   "fr": [
+    "CCTV",
+    "Fox",
+    "La Liga"
+   ],
+   "it": [
+    "CCTV",
+    "Fox",
+    "La Liga"
+   ],
+   "pt": [
+    "CCTV",
+    "Fox",
+    "La Liga"
+   ]
+  }
+ },
+ {
+  "key": "w-q223799",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/TASS_Logo_Cyrillic.svg/1280px-TASS_Logo_Cyrillic.svg.png",
+  "file": "File:TASS Logo Cyrillic.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "TASS",
+   "ka": "TASS",
+   "de": "TASS",
+   "es": "TASS",
+   "fr": "TASS",
+   "it": "TASS",
+   "pt": "TASS"
+  },
+  "wrong": {
+   "en": [
+    "Creative Commons",
+    "Sony Pictures",
+    "Ligue 1"
+   ],
+   "ka": [
+    "Creative Commons",
+    "Sony Pictures",
+    "Ligue 1"
+   ],
+   "de": [
+    "Creative Commons",
+    "Sony Pictures",
+    "Ligue 1"
+   ],
+   "es": [
+    "Creative Commons",
+    "Sony Pictures",
+    "Ligue 1"
+   ],
+   "fr": [
+    "Creative Commons",
+    "Sony Pictures",
+    "Ligue 1"
+   ],
+   "it": [
+    "Creative Commons",
+    "Sony Pictures",
+    "Ligue 1"
+   ],
+   "pt": [
+    "Creative Commons",
+    "Sony Pictures",
+    "Ligue 1"
+   ]
+  }
+ },
+ {
+  "key": "w-q27460",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Dacia_2021_logo_green.svg/1280px-Dacia_2021_logo_green.svg.png",
+  "file": "File:Dacia 2021 logo green.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Dacia",
+   "ka": "Dacia",
+   "de": "Dacia",
+   "es": "Dacia",
+   "fr": "Dacia",
+   "it": "Dacia",
+   "pt": "Dacia"
+  },
+  "wrong": {
+   "en": [
+    "Premier League",
+    "DuPont",
+    "Philips"
+   ],
+   "ka": [
+    "Premier League",
+    "DuPont",
+    "Philips"
+   ],
+   "de": [
+    "Premier League",
+    "DuPont",
+    "Philips"
+   ],
+   "es": [
+    "Premier League",
+    "DuPont",
+    "Philips"
+   ],
+   "fr": [
+    "Premier League",
+    "DuPont",
+    "Philips"
+   ],
+   "it": [
+    "Premier League",
+    "DuPont",
+    "Philips"
+   ],
+   "pt": [
+    "Premier League",
+    "DuPont",
+    "Philips"
+   ]
+  }
+ },
+ {
+  "key": "w-q1323594",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Walt_Disney_Studios_Motion_Pictures_logo.svg/1280px-Walt_Disney_Studios_Motion_Pictures_logo.svg.png",
+  "file": "File:Walt Disney Studios Motion Pictures logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Disney Studios",
+   "ka": "Disney Studios",
+   "de": "Disney Studios",
+   "es": "Disney Studios",
+   "fr": "Disney Studios",
+   "it": "Disney Studios",
+   "pt": "Disney Studios"
+  },
+  "wrong": {
+   "en": [
+    "Warner Bros.",
+    "Digital Equipment",
+    "Rhaetian Railway"
+   ],
+   "ka": [
+    "Warner Bros.",
+    "Digital Equipment",
+    "Rhaetian Railway"
+   ],
+   "de": [
+    "Warner Bros.",
+    "Digital Equipment",
+    "Rhaetian Railway"
+   ],
+   "es": [
+    "Warner Bros.",
+    "Digital Equipment",
+    "Rhaetian Railway"
+   ],
+   "fr": [
+    "Warner Bros.",
+    "Digital Equipment",
+    "Rhaetian Railway"
+   ],
+   "it": [
+    "Warner Bros.",
+    "Digital Equipment",
+    "Rhaetian Railway"
+   ],
+   "pt": [
+    "Warner Bros.",
+    "Digital Equipment",
+    "Rhaetian Railway"
+   ]
+  }
+ },
+ {
+  "key": "w-q333679",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Azerbaijan_Airlines_logo.svg/1280px-Azerbaijan_Airlines_logo.svg.png",
+  "file": "File:Azerbaijan Airlines logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Azerbaijan Airlines",
+   "ka": "Azerbaijan Airlines",
+   "de": "Azerbaijan Airlines",
+   "es": "Azerbaijan Airlines",
+   "fr": "Azerbaijan Airlines",
+   "it": "Azerbaijan Airlines",
+   "pt": "Azerbaijan Airlines"
+  },
+  "wrong": {
+   "en": [
+    "Warner Bros.",
+    "JYP Entertainment",
+    "Gibson"
+   ],
+   "ka": [
+    "Warner Bros.",
+    "JYP Entertainment",
+    "Gibson"
+   ],
+   "de": [
+    "Warner Bros.",
+    "JYP Entertainment",
+    "Gibson"
+   ],
+   "es": [
+    "Warner Bros.",
+    "JYP Entertainment",
+    "Gibson"
+   ],
+   "fr": [
+    "Warner Bros.",
+    "JYP Entertainment",
+    "Gibson"
+   ],
+   "it": [
+    "Warner Bros.",
+    "JYP Entertainment",
+    "Gibson"
+   ],
+   "pt": [
+    "Warner Bros.",
+    "JYP Entertainment",
+    "Gibson"
+   ]
+  }
+ },
+ {
+  "key": "w-q815314",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Belavia_logo.svg/1280px-Belavia_logo.svg.png",
+  "file": "File:Belavia logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Belavia",
+   "ka": "Belavia",
+   "de": "Belavia",
+   "es": "Belavia",
+   "fr": "Belavia",
+   "it": "Belavia",
+   "pt": "Belavia"
+  },
+  "wrong": {
+   "en": [
+    "Coca-Cola",
+    "Rhaetian Railway",
+    "JYP Entertainment"
+   ],
+   "ka": [
+    "Coca-Cola",
+    "Rhaetian Railway",
+    "JYP Entertainment"
+   ],
+   "de": [
+    "Coca-Cola",
+    "Rhaetian Railway",
+    "JYP Entertainment"
+   ],
+   "es": [
+    "Coca-Cola",
+    "Rhaetian Railway",
+    "JYP Entertainment"
+   ],
+   "fr": [
+    "Coca-Cola",
+    "Rhaetian Railway",
+    "JYP Entertainment"
+   ],
+   "it": [
+    "Coca-Cola",
+    "Rhaetian Railway",
+    "JYP Entertainment"
+   ],
+   "pt": [
+    "Coca-Cola",
+    "Rhaetian Railway",
+    "JYP Entertainment"
+   ]
+  }
+ },
+ {
+  "key": "w-q609466",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Colgate-Palmolive_%282025%29.svg/1280px-Colgate-Palmolive_%282025%29.svg.png",
+  "file": "File:Colgate-Palmolive (2025).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Colgate-Palmolive",
+   "ka": "Colgate-Palmolive",
+   "de": "Colgate-Palmolive",
+   "es": "Colgate-Palmolive",
+   "fr": "Colgate-Palmolive",
+   "it": "Colgate-Palmolive",
+   "pt": "Colgate-Palmolive"
+  },
+  "wrong": {
+   "en": [
+    "National Geographic",
+    "Tupolev",
+    "Universal Music"
+   ],
+   "ka": [
+    "National Geographic",
+    "Tupolev",
+    "Universal Music"
+   ],
+   "de": [
+    "National Geographic",
+    "Tupolev",
+    "Universal Music"
+   ],
+   "es": [
+    "National Geographic",
+    "Tupolev",
+    "Universal Music"
+   ],
+   "fr": [
+    "National Geographic",
+    "Tupolev",
+    "Universal Music"
+   ],
+   "it": [
+    "National Geographic",
+    "Tupolev",
+    "Universal Music"
+   ],
+   "pt": [
+    "National Geographic",
+    "Tupolev",
+    "Universal Music"
+   ]
+  }
+ },
+ {
+  "key": "w-q217374",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Logo_Ligue_2_BKT_2024.svg/1280px-Logo_Ligue_2_BKT_2024.svg.png",
+  "file": "File:Logo Ligue 2 BKT 2024.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Ligue 2",
+   "ka": "Ligue 2",
+   "de": "Ligue 2",
+   "es": "Ligue 2",
+   "fr": "Ligue 2",
+   "it": "Ligue 2",
+   "pt": "Ligue 2"
+  },
+  "wrong": {
+   "en": [
+    "Coca-Cola",
+    "Chupa Chups",
+    "Universal Music"
+   ],
+   "ka": [
+    "Coca-Cola",
+    "Chupa Chups",
+    "Universal Music"
+   ],
+   "de": [
+    "Coca-Cola",
+    "Chupa Chups",
+    "Universal Music"
+   ],
+   "es": [
+    "Coca-Cola",
+    "Chupa Chups",
+    "Universal Music"
+   ],
+   "fr": [
+    "Coca-Cola",
+    "Chupa Chups",
+    "Universal Music"
+   ],
+   "it": [
+    "Coca-Cola",
+    "Chupa Chups",
+    "Universal Music"
+   ],
+   "pt": [
+    "Coca-Cola",
+    "Chupa Chups",
+    "Universal Music"
+   ]
+  }
+ },
+ {
+  "key": "w-q35594",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Koenigsegg_logo.svg/1280px-Koenigsegg_logo.svg.png",
+  "file": "File:Koenigsegg logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Koenigsegg",
+   "ka": "Koenigsegg",
+   "de": "Koenigsegg",
+   "es": "Koenigsegg",
+   "fr": "Koenigsegg",
+   "it": "Koenigsegg",
+   "pt": "Koenigsegg"
+  },
+  "wrong": {
+   "en": [
+    "Fox",
+    "Mitsubishi Motors",
+    "Infinity Ward"
+   ],
+   "ka": [
+    "Fox",
+    "Mitsubishi Motors",
+    "Infinity Ward"
+   ],
+   "de": [
+    "Fox",
+    "Mitsubishi Motors",
+    "Infinity Ward"
+   ],
+   "es": [
+    "Fox",
+    "Mitsubishi Motors",
+    "Infinity Ward"
+   ],
+   "fr": [
+    "Fox",
+    "Mitsubishi Motors",
+    "Infinity Ward"
+   ],
+   "it": [
+    "Fox",
+    "Mitsubishi Motors",
+    "Infinity Ward"
+   ],
+   "pt": [
+    "Fox",
+    "Mitsubishi Motors",
+    "Infinity Ward"
+   ]
+  }
+ },
+ {
+  "key": "w-q124333951",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Perplexity_AI_logo.svg/1280px-Perplexity_AI_logo.svg.png",
+  "file": "File:Perplexity AI logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Perplexity AI",
+   "ka": "Perplexity AI",
+   "de": "Perplexity AI",
+   "es": "Perplexity AI",
+   "fr": "Perplexity AI",
+   "it": "Perplexity AI",
+   "pt": "Perplexity AI"
+  },
+  "wrong": {
+   "en": [
+    "Coca-Cola",
+    "Marvel Entertainment",
+    "National Geographic"
+   ],
+   "ka": [
+    "Coca-Cola",
+    "Marvel Entertainment",
+    "National Geographic"
+   ],
+   "de": [
+    "Coca-Cola",
+    "Marvel Entertainment",
+    "National Geographic"
+   ],
+   "es": [
+    "Coca-Cola",
+    "Marvel Entertainment",
+    "National Geographic"
+   ],
+   "fr": [
+    "Coca-Cola",
+    "Marvel Entertainment",
+    "National Geographic"
+   ],
+   "it": [
+    "Coca-Cola",
+    "Marvel Entertainment",
+    "National Geographic"
+   ],
+   "pt": [
+    "Coca-Cola",
+    "Marvel Entertainment",
+    "National Geographic"
+   ]
+  }
+ },
+ {
+  "key": "w-q210057",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Netscape_logo.svg/1280px-Netscape_logo.svg.png",
+  "file": "File:Netscape logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Netscape",
+   "ka": "Netscape",
+   "de": "Netscape",
+   "es": "Netscape",
+   "fr": "Netscape",
+   "it": "Netscape",
+   "pt": "Netscape"
+  },
+  "wrong": {
+   "en": [
+    "National Geographic",
+    "Colgate-Palmolive",
+    "Christie's"
+   ],
+   "ka": [
+    "National Geographic",
+    "Colgate-Palmolive",
+    "Christie's"
+   ],
+   "de": [
+    "National Geographic",
+    "Colgate-Palmolive",
+    "Christie's"
+   ],
+   "es": [
+    "National Geographic",
+    "Colgate-Palmolive",
+    "Christie's"
+   ],
+   "fr": [
+    "National Geographic",
+    "Colgate-Palmolive",
+    "Christie's"
+   ],
+   "it": [
+    "National Geographic",
+    "Colgate-Palmolive",
+    "Christie's"
+   ],
+   "pt": [
+    "National Geographic",
+    "Colgate-Palmolive",
+    "Christie's"
+   ]
+  }
+ },
+ {
+  "key": "w-q689093",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Gameloft_Logo.svg/1280px-Gameloft_Logo.svg.png",
+  "file": "File:Gameloft Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Gameloft",
+   "ka": "Gameloft",
+   "de": "Gameloft",
+   "es": "Gameloft",
+   "fr": "Gameloft",
+   "it": "Gameloft",
+   "pt": "Gameloft"
+  },
+  "wrong": {
+   "en": [
+    "Steinway & Sons",
+    "Dacia",
+    "Universal Music"
+   ],
+   "ka": [
+    "Steinway & Sons",
+    "Dacia",
+    "Universal Music"
+   ],
+   "de": [
+    "Steinway & Sons",
+    "Dacia",
+    "Universal Music"
+   ],
+   "es": [
+    "Steinway & Sons",
+    "Dacia",
+    "Universal Music"
+   ],
+   "fr": [
+    "Steinway & Sons",
+    "Dacia",
+    "Universal Music"
+   ],
+   "it": [
+    "Steinway & Sons",
+    "Dacia",
+    "Universal Music"
+   ],
+   "pt": [
+    "Steinway & Sons",
+    "Dacia",
+    "Universal Music"
+   ]
+  }
+ },
+ {
+  "key": "w-q503176",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Christie%27s_Logo.svg/1280px-Christie%27s_Logo.svg.png",
+  "file": "File:Christie's Logo.svg",
+  "license": "CC BY-SA 4.0",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Christie's",
+   "ka": "Christie's",
+   "de": "Christie's",
+   "es": "Christie's",
+   "fr": "Christie's",
+   "it": "Christie's",
+   "pt": "Christie's"
+  },
+  "wrong": {
+   "en": [
+    "Sony Pictures",
+    "DJI",
+    "Digital Equipment"
+   ],
+   "ka": [
+    "Sony Pictures",
+    "DJI",
+    "Digital Equipment"
+   ],
+   "de": [
+    "Sony Pictures",
+    "DJI",
+    "Digital Equipment"
+   ],
+   "es": [
+    "Sony Pictures",
+    "DJI",
+    "Digital Equipment"
+   ],
+   "fr": [
+    "Sony Pictures",
+    "DJI",
+    "Digital Equipment"
+   ],
+   "it": [
+    "Sony Pictures",
+    "DJI",
+    "Digital Equipment"
+   ],
+   "pt": [
+    "Sony Pictures",
+    "DJI",
+    "Digital Equipment"
+   ]
+  }
+ },
+ {
+  "key": "w-q698639",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Logo_of_Red_bull.svg/1280px-Logo_of_Red_bull.svg.png",
+  "file": "File:Logo of Red bull.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Red Bull",
+   "ka": "Red Bull",
+   "de": "Red Bull",
+   "es": "Red Bull",
+   "fr": "Red Bull",
+   "it": "Red Bull",
+   "pt": "Red Bull"
+  },
+  "wrong": {
+   "en": [
+    "Billboard",
+    "Ray-Ban",
+    "Panasonic"
+   ],
+   "ka": [
+    "Billboard",
+    "Ray-Ban",
+    "Panasonic"
+   ],
+   "de": [
+    "Billboard",
+    "Ray-Ban",
+    "Panasonic"
+   ],
+   "es": [
+    "Billboard",
+    "Ray-Ban",
+    "Panasonic"
+   ],
+   "fr": [
+    "Billboard",
+    "Ray-Ban",
+    "Panasonic"
+   ],
+   "it": [
+    "Billboard",
+    "Ray-Ban",
+    "Panasonic"
+   ],
+   "pt": [
+    "Billboard",
+    "Ray-Ban",
+    "Panasonic"
+   ]
+  }
+ },
+ {
+  "key": "w-q221062",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/DuPont_logo.svg/1280px-DuPont_logo.svg.png",
+  "file": "File:DuPont logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "DuPont",
+   "ka": "DuPont",
+   "de": "DuPont",
+   "es": "DuPont",
+   "fr": "DuPont",
+   "it": "DuPont",
+   "pt": "DuPont"
+  },
+  "wrong": {
+   "en": [
+    "Christie's",
+    "Gameloft",
+    "Perplexity AI"
+   ],
+   "ka": [
+    "Christie's",
+    "Gameloft",
+    "Perplexity AI"
+   ],
+   "de": [
+    "Christie's",
+    "Gameloft",
+    "Perplexity AI"
+   ],
+   "es": [
+    "Christie's",
+    "Gameloft",
+    "Perplexity AI"
+   ],
+   "fr": [
+    "Christie's",
+    "Gameloft",
+    "Perplexity AI"
+   ],
+   "it": [
+    "Christie's",
+    "Gameloft",
+    "Perplexity AI"
+   ],
+   "pt": [
+    "Christie's",
+    "Gameloft",
+    "Perplexity AI"
+   ]
+  }
+ },
+ {
+  "key": "w-q309996",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Namco_logo.svg/1280px-Namco_logo.svg.png",
+  "file": "File:Namco logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Namco",
+   "ka": "Namco",
+   "de": "Namco",
+   "es": "Namco",
+   "fr": "Namco",
+   "it": "Namco",
+   "pt": "Namco"
+  },
+  "wrong": {
+   "en": [
+    "Philips",
+    "Ukrainian Railways",
+    "Hard Rock Cafe"
+   ],
+   "ka": [
+    "Philips",
+    "Ukrainian Railways",
+    "Hard Rock Cafe"
+   ],
+   "de": [
+    "Philips",
+    "Ukrainian Railways",
+    "Hard Rock Cafe"
+   ],
+   "es": [
+    "Philips",
+    "Ukrainian Railways",
+    "Hard Rock Cafe"
+   ],
+   "fr": [
+    "Philips",
+    "Ukrainian Railways",
+    "Hard Rock Cafe"
+   ],
+   "it": [
+    "Philips",
+    "Ukrainian Railways",
+    "Hard Rock Cafe"
+   ],
+   "pt": [
+    "Philips",
+    "Ukrainian Railways",
+    "Hard Rock Cafe"
+   ]
+  }
+ },
+ {
+  "key": "w-q731482",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Infinity_Ward.svg/1280px-Infinity_Ward.svg.png",
+  "file": "File:Infinity Ward.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Infinity Ward",
+   "ka": "Infinity Ward",
+   "de": "Infinity Ward",
+   "es": "Infinity Ward",
+   "fr": "Infinity Ward",
+   "it": "Infinity Ward",
+   "pt": "Infinity Ward"
+  },
+  "wrong": {
+   "en": [
+    "DuPont",
+    "Disney Studios",
+    "SK Slavia Prague"
+   ],
+   "ka": [
+    "DuPont",
+    "Disney Studios",
+    "SK Slavia Prague"
+   ],
+   "de": [
+    "DuPont",
+    "Disney Studios",
+    "SK Slavia Prague"
+   ],
+   "es": [
+    "DuPont",
+    "Disney Studios",
+    "SK Slavia Prague"
+   ],
+   "fr": [
+    "DuPont",
+    "Disney Studios",
+    "SK Slavia Prague"
+   ],
+   "it": [
+    "DuPont",
+    "Disney Studios",
+    "SK Slavia Prague"
+   ],
+   "pt": [
+    "DuPont",
+    "Disney Studios",
+    "SK Slavia Prague"
+   ]
+  }
+ },
+ {
+  "key": "w-q301092",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Aardman_Animations_2022.svg/1280px-Aardman_Animations_2022.svg.png",
+  "file": "File:Aardman Animations 2022.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Aardman Animations",
+   "ka": "Aardman Animations",
+   "de": "Aardman Animations",
+   "es": "Aardman Animations",
+   "fr": "Aardman Animations",
+   "it": "Aardman Animations",
+   "pt": "Aardman Animations"
+  },
+  "wrong": {
+   "en": [
+    "Apple Records",
+    "Maxis",
+    "Ligue 2"
+   ],
+   "ka": [
+    "Apple Records",
+    "Maxis",
+    "Ligue 2"
+   ],
+   "de": [
+    "Apple Records",
+    "Maxis",
+    "Ligue 2"
+   ],
+   "es": [
+    "Apple Records",
+    "Maxis",
+    "Ligue 2"
+   ],
+   "fr": [
+    "Apple Records",
+    "Maxis",
+    "Ligue 2"
+   ],
+   "it": [
+    "Apple Records",
+    "Maxis",
+    "Ligue 2"
+   ],
+   "pt": [
+    "Apple Records",
+    "Maxis",
+    "Ligue 2"
+   ]
+  }
+ },
+ {
+  "key": "w-q161140",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Diageo_-_logo_%28United_Kingdom%2C_1997%29.svg/1280px-Diageo_-_logo_%28United_Kingdom%2C_1997%29.svg.png",
+  "file": "File:Diageo - logo (United Kingdom, 1997).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Diageo",
+   "ka": "Diageo",
+   "de": "Diageo",
+   "es": "Diageo",
+   "fr": "Diageo",
+   "it": "Diageo",
+   "pt": "Diageo"
+  },
+  "wrong": {
+   "en": [
+    "Belavia",
+    "Tupolev",
+    "Soyuzmultfilm"
+   ],
+   "ka": [
+    "Belavia",
+    "Tupolev",
+    "Soyuzmultfilm"
+   ],
+   "de": [
+    "Belavia",
+    "Tupolev",
+    "Soyuzmultfilm"
+   ],
+   "es": [
+    "Belavia",
+    "Tupolev",
+    "Soyuzmultfilm"
+   ],
+   "fr": [
+    "Belavia",
+    "Tupolev",
+    "Soyuzmultfilm"
+   ],
+   "it": [
+    "Belavia",
+    "Tupolev",
+    "Soyuzmultfilm"
+   ],
+   "pt": [
+    "Belavia",
+    "Tupolev",
+    "Soyuzmultfilm"
+   ]
+  }
+ },
+ {
+  "key": "w-q653941",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Ray-Ban_logo_2.svg/1280px-Ray-Ban_logo_2.svg.png",
+  "file": "File:Ray-Ban logo 2.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Ray-Ban",
+   "ka": "Ray-Ban",
+   "de": "Ray-Ban",
+   "es": "Ray-Ban",
+   "fr": "Ray-Ban",
+   "it": "Ray-Ban",
+   "pt": "Ray-Ban"
+  },
+  "wrong": {
+   "en": [
+    "Bandai",
+    "Rhaetian Railway",
+    "Texaco"
+   ],
+   "ka": [
+    "Bandai",
+    "Rhaetian Railway",
+    "Texaco"
+   ],
+   "de": [
+    "Bandai",
+    "Rhaetian Railway",
+    "Texaco"
+   ],
+   "es": [
+    "Bandai",
+    "Rhaetian Railway",
+    "Texaco"
+   ],
+   "fr": [
+    "Bandai",
+    "Rhaetian Railway",
+    "Texaco"
+   ],
+   "it": [
+    "Bandai",
+    "Rhaetian Railway",
+    "Texaco"
+   ],
+   "pt": [
+    "Bandai",
+    "Rhaetian Railway",
+    "Texaco"
+   ]
+  }
+ },
+ {
+  "key": "w-q1200552",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Marvel_Logo.svg/1280px-Marvel_Logo.svg.png",
+  "file": "File:Marvel Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Marvel Entertainment",
+   "ka": "Marvel Entertainment",
+   "de": "Marvel Entertainment",
+   "es": "Marvel Entertainment",
+   "fr": "Marvel Entertainment",
+   "it": "Marvel Entertainment",
+   "pt": "Marvel Entertainment"
+  },
+  "wrong": {
+   "en": [
+    "Gibson",
+    "Cinecittà",
+    "Air Arabia"
+   ],
+   "ka": [
+    "Gibson",
+    "Cinecittà",
+    "Air Arabia"
+   ],
+   "de": [
+    "Gibson",
+    "Cinecittà",
+    "Air Arabia"
+   ],
+   "es": [
+    "Gibson",
+    "Cinecittà",
+    "Air Arabia"
+   ],
+   "fr": [
+    "Gibson",
+    "Cinecittà",
+    "Air Arabia"
+   ],
+   "it": [
+    "Gibson",
+    "Cinecittà",
+    "Air Arabia"
+   ],
+   "pt": [
+    "Gibson",
+    "Cinecittà",
+    "Air Arabia"
+   ]
+  }
+ },
+ {
+  "key": "w-q728399",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Cinecitt%C3%A0_logo_rosso.png/1280px-Cinecitt%C3%A0_logo_rosso.png",
+  "file": "File:Cinecittà logo rosso.png",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Cinecittà",
+   "ka": "Cinecittà",
+   "de": "Cinecittà",
+   "es": "Cinecittà",
+   "fr": "Cinecittà",
+   "it": "Cinecittà",
+   "pt": "Cinecittà"
+  },
+  "wrong": {
+   "en": [
+    "Koenigsegg",
+    "Arkia",
+    "Digital Equipment"
+   ],
+   "ka": [
+    "Koenigsegg",
+    "Arkia",
+    "Digital Equipment"
+   ],
+   "de": [
+    "Koenigsegg",
+    "Arkia",
+    "Digital Equipment"
+   ],
+   "es": [
+    "Koenigsegg",
+    "Arkia",
+    "Digital Equipment"
+   ],
+   "fr": [
+    "Koenigsegg",
+    "Arkia",
+    "Digital Equipment"
+   ],
+   "it": [
+    "Koenigsegg",
+    "Arkia",
+    "Digital Equipment"
+   ],
+   "pt": [
+    "Koenigsegg",
+    "Arkia",
+    "Digital Equipment"
+   ]
+  }
+ },
+ {
+  "key": "w-q210278",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Gibson_Guitar_logo.svg/1280px-Gibson_Guitar_logo.svg.png",
+  "file": "File:Gibson Guitar logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Gibson",
+   "ka": "Gibson",
+   "de": "Gibson",
+   "es": "Gibson",
+   "fr": "Gibson",
+   "it": "Gibson",
+   "pt": "Gibson"
+  },
+  "wrong": {
+   "en": [
+    "DuPont",
+    "Christie's",
+    "Sony Music"
+   ],
+   "ka": [
+    "DuPont",
+    "Christie's",
+    "Sony Music"
+   ],
+   "de": [
+    "DuPont",
+    "Christie's",
+    "Sony Music"
+   ],
+   "es": [
+    "DuPont",
+    "Christie's",
+    "Sony Music"
+   ],
+   "fr": [
+    "DuPont",
+    "Christie's",
+    "Sony Music"
+   ],
+   "it": [
+    "DuPont",
+    "Christie's",
+    "Sony Music"
+   ],
+   "pt": [
+    "DuPont",
+    "Christie's",
+    "Sony Music"
+   ]
+  }
+ },
+ {
+  "key": "w-q7233",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/8/81/Lockheed-logo_Winnie-Mae.png",
+  "file": "File:Lockheed-logo Winnie-Mae.png",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Lockheed",
+   "ka": "Lockheed",
+   "de": "Lockheed",
+   "es": "Lockheed",
+   "fr": "Lockheed",
+   "it": "Lockheed",
+   "pt": "Lockheed"
+  },
+  "wrong": {
+   "en": [
+    "Diageo",
+    "Gameloft",
+    "Digital Equipment"
+   ],
+   "ka": [
+    "Diageo",
+    "Gameloft",
+    "Digital Equipment"
+   ],
+   "de": [
+    "Diageo",
+    "Gameloft",
+    "Digital Equipment"
+   ],
+   "es": [
+    "Diageo",
+    "Gameloft",
+    "Digital Equipment"
+   ],
+   "fr": [
+    "Diageo",
+    "Gameloft",
+    "Digital Equipment"
+   ],
+   "it": [
+    "Diageo",
+    "Gameloft",
+    "Digital Equipment"
+   ],
+   "pt": [
+    "Diageo",
+    "Gameloft",
+    "Digital Equipment"
+   ]
+  }
+ },
+ {
+  "key": "w-q483238",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/JYP_Entertainment_Logo.svg/1280px-JYP_Entertainment_Logo.svg.png",
+  "file": "File:JYP Entertainment Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "JYP Entertainment",
+   "ka": "JYP Entertainment",
+   "de": "JYP Entertainment",
+   "es": "JYP Entertainment",
+   "fr": "JYP Entertainment",
+   "it": "JYP Entertainment",
+   "pt": "JYP Entertainment"
+  },
+  "wrong": {
+   "en": [
+    "AEG",
+    "Arkia",
+    "SK Slavia Prague"
+   ],
+   "ka": [
+    "AEG",
+    "Arkia",
+    "SK Slavia Prague"
+   ],
+   "de": [
+    "AEG",
+    "Arkia",
+    "SK Slavia Prague"
+   ],
+   "es": [
+    "AEG",
+    "Arkia",
+    "SK Slavia Prague"
+   ],
+   "fr": [
+    "AEG",
+    "Arkia",
+    "SK Slavia Prague"
+   ],
+   "it": [
+    "AEG",
+    "Arkia",
+    "SK Slavia Prague"
+   ],
+   "pt": [
+    "AEG",
+    "Arkia",
+    "SK Slavia Prague"
+   ]
+  }
+ },
+ {
+  "key": "w-q938535",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Chupa_Chups_logo_%28NO_R%29.svg/1280px-Chupa_Chups_logo_%28NO_R%29.svg.png",
+  "file": "File:Chupa Chups logo (NO R).svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Chupa Chups",
+   "ka": "Chupa Chups",
+   "de": "Chupa Chups",
+   "es": "Chupa Chups",
+   "fr": "Chupa Chups",
+   "it": "Chupa Chups",
+   "pt": "Chupa Chups"
+  },
+  "wrong": {
+   "en": [
+    "Hard Rock Cafe",
+    "Bitdefender",
+    "Tate"
+   ],
+   "ka": [
+    "Hard Rock Cafe",
+    "Bitdefender",
+    "Tate"
+   ],
+   "de": [
+    "Hard Rock Cafe",
+    "Bitdefender",
+    "Tate"
+   ],
+   "es": [
+    "Hard Rock Cafe",
+    "Bitdefender",
+    "Tate"
+   ],
+   "fr": [
+    "Hard Rock Cafe",
+    "Bitdefender",
+    "Tate"
+   ],
+   "it": [
+    "Hard Rock Cafe",
+    "Bitdefender",
+    "Tate"
+   ],
+   "pt": [
+    "Hard Rock Cafe",
+    "Bitdefender",
+    "Tate"
+   ]
+  }
+ },
+ {
+  "key": "w-q406798",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Air_Arabia_Logo.svg/1280px-Air_Arabia_Logo.svg.png",
+  "file": "File:Air Arabia Logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Air Arabia",
+   "ka": "Air Arabia",
+   "de": "Air Arabia",
+   "es": "Air Arabia",
+   "fr": "Air Arabia",
+   "it": "Air Arabia",
+   "pt": "Air Arabia"
+  },
+  "wrong": {
+   "en": [
+    "Apple Records",
+    "Gameloft",
+    "Aérospatiale"
+   ],
+   "ka": [
+    "Apple Records",
+    "Gameloft",
+    "Aérospatiale"
+   ],
+   "de": [
+    "Apple Records",
+    "Gameloft",
+    "Aérospatiale"
+   ],
+   "es": [
+    "Apple Records",
+    "Gameloft",
+    "Aérospatiale"
+   ],
+   "fr": [
+    "Apple Records",
+    "Gameloft",
+    "Aérospatiale"
+   ],
+   "it": [
+    "Apple Records",
+    "Gameloft",
+    "Aérospatiale"
+   ],
+   "pt": [
+    "Apple Records",
+    "Gameloft",
+    "Aérospatiale"
+   ]
+  }
+ },
+ {
+  "key": "w-q1756332",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Simon_%26_Schuster.png",
+  "file": "File:Simon & Schuster.png",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Simon & Schuster",
+   "ka": "Simon & Schuster",
+   "de": "Simon & Schuster",
+   "es": "Simon & Schuster",
+   "fr": "Simon & Schuster",
+   "it": "Simon & Schuster",
+   "pt": "Simon & Schuster"
+  },
+  "wrong": {
+   "en": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "DuPont"
+   ],
+   "ka": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "DuPont"
+   ],
+   "de": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "DuPont"
+   ],
+   "es": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "DuPont"
+   ],
+   "fr": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "DuPont"
+   ],
+   "it": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "DuPont"
+   ],
+   "pt": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "DuPont"
+   ]
+  }
+ },
+ {
+  "key": "w-q169339",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Glencore_logo.svg/1280px-Glencore_logo.svg.png",
+  "file": "File:Glencore logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Glencore",
+   "ka": "Glencore",
+   "de": "Glencore",
+   "es": "Glencore",
+   "fr": "Glencore",
+   "it": "Glencore",
+   "pt": "Glencore"
+  },
+  "wrong": {
+   "en": [
+    "Rhaetian Railway",
+    "Bitdefender",
+    "Koenigsegg"
+   ],
+   "ka": [
+    "Rhaetian Railway",
+    "Bitdefender",
+    "Koenigsegg"
+   ],
+   "de": [
+    "Rhaetian Railway",
+    "Bitdefender",
+    "Koenigsegg"
+   ],
+   "es": [
+    "Rhaetian Railway",
+    "Bitdefender",
+    "Koenigsegg"
+   ],
+   "fr": [
+    "Rhaetian Railway",
+    "Bitdefender",
+    "Koenigsegg"
+   ],
+   "it": [
+    "Rhaetian Railway",
+    "Bitdefender",
+    "Koenigsegg"
+   ],
+   "pt": [
+    "Rhaetian Railway",
+    "Bitdefender",
+    "Koenigsegg"
+   ]
+  }
+ },
+ {
+  "key": "w-q679912",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Soyuzmultfilm_Logo.png/1280px-Soyuzmultfilm_Logo.png",
+  "file": "File:Soyuzmultfilm Logo.png",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Soyuzmultfilm",
+   "ka": "Soyuzmultfilm",
+   "de": "Soyuzmultfilm",
+   "es": "Soyuzmultfilm",
+   "fr": "Soyuzmultfilm",
+   "it": "Soyuzmultfilm",
+   "pt": "Soyuzmultfilm"
+  },
+  "wrong": {
+   "en": [
+    "Macromedia",
+    "Namco",
+    "Oricon"
+   ],
+   "ka": [
+    "Macromedia",
+    "Namco",
+    "Oricon"
+   ],
+   "de": [
+    "Macromedia",
+    "Namco",
+    "Oricon"
+   ],
+   "es": [
+    "Macromedia",
+    "Namco",
+    "Oricon"
+   ],
+   "fr": [
+    "Macromedia",
+    "Namco",
+    "Oricon"
+   ],
+   "it": [
+    "Macromedia",
+    "Namco",
+    "Oricon"
+   ],
+   "pt": [
+    "Macromedia",
+    "Namco",
+    "Oricon"
+   ]
+  }
+ },
+ {
+  "key": "w-q234946",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Macromedia_logo.svg/1280px-Macromedia_logo.svg.png",
+  "file": "File:Macromedia logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Macromedia",
+   "ka": "Macromedia",
+   "de": "Macromedia",
+   "es": "Macromedia",
+   "fr": "Macromedia",
+   "it": "Macromedia",
+   "pt": "Macromedia"
+  },
+  "wrong": {
+   "en": [
+    "Diageo",
+    "Red Bull",
+    "Belavia"
+   ],
+   "ka": [
+    "Diageo",
+    "Red Bull",
+    "Belavia"
+   ],
+   "de": [
+    "Diageo",
+    "Red Bull",
+    "Belavia"
+   ],
+   "es": [
+    "Diageo",
+    "Red Bull",
+    "Belavia"
+   ],
+   "fr": [
+    "Diageo",
+    "Red Bull",
+    "Belavia"
+   ],
+   "it": [
+    "Diageo",
+    "Red Bull",
+    "Belavia"
+   ],
+   "pt": [
+    "Diageo",
+    "Red Bull",
+    "Belavia"
+   ]
+  }
+ },
+ {
+  "key": "w-q690079",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Digital_Equipment_Corporation_1993_logo.svg/1280px-Digital_Equipment_Corporation_1993_logo.svg.png",
+  "file": "File:Digital Equipment Corporation 1993 logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Digital Equipment",
+   "ka": "Digital Equipment",
+   "de": "Digital Equipment",
+   "es": "Digital Equipment",
+   "fr": "Digital Equipment",
+   "it": "Digital Equipment",
+   "pt": "Digital Equipment"
+  },
+  "wrong": {
+   "en": [
+    "Ray-Ban",
+    "Chupa Chups",
+    "Gameloft"
+   ],
+   "ka": [
+    "Ray-Ban",
+    "Chupa Chups",
+    "Gameloft"
+   ],
+   "de": [
+    "Ray-Ban",
+    "Chupa Chups",
+    "Gameloft"
+   ],
+   "es": [
+    "Ray-Ban",
+    "Chupa Chups",
+    "Gameloft"
+   ],
+   "fr": [
+    "Ray-Ban",
+    "Chupa Chups",
+    "Gameloft"
+   ],
+   "it": [
+    "Ray-Ban",
+    "Chupa Chups",
+    "Gameloft"
+   ],
+   "pt": [
+    "Ray-Ban",
+    "Chupa Chups",
+    "Gameloft"
+   ]
+  }
+ },
+ {
+  "key": "w-q476215",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Oricon_Logo_2017.svg/1280px-Oricon_Logo_2017.svg.png",
+  "file": "File:Oricon Logo 2017.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Oricon",
+   "ka": "Oricon",
+   "de": "Oricon",
+   "es": "Oricon",
+   "fr": "Oricon",
+   "it": "Oricon",
+   "pt": "Oricon"
+  },
+  "wrong": {
+   "en": [
+    "Netscape",
+    "Aérospatiale",
+    "Belavia"
+   ],
+   "ka": [
+    "Netscape",
+    "Aérospatiale",
+    "Belavia"
+   ],
+   "de": [
+    "Netscape",
+    "Aérospatiale",
+    "Belavia"
+   ],
+   "es": [
+    "Netscape",
+    "Aérospatiale",
+    "Belavia"
+   ],
+   "fr": [
+    "Netscape",
+    "Aérospatiale",
+    "Belavia"
+   ],
+   "it": [
+    "Netscape",
+    "Aérospatiale",
+    "Belavia"
+   ],
+   "pt": [
+    "Netscape",
+    "Aérospatiale",
+    "Belavia"
+   ]
+  }
+ },
+ {
+  "key": "w-q177598",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/N_rhb_dreisprachig_logo_4c.svg/1280px-N_rhb_dreisprachig_logo_4c.svg.png",
+  "file": "File:N rhb dreisprachig logo 4c.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Rhaetian Railway",
+   "ka": "Rhaetian Railway",
+   "de": "Rhaetian Railway",
+   "es": "Rhaetian Railway",
+   "fr": "Rhaetian Railway",
+   "it": "Rhaetian Railway",
+   "pt": "Rhaetian Railway"
+  },
+  "wrong": {
+   "en": [
+    "Endemol",
+    "Victorinox",
+    "Red Bull"
+   ],
+   "ka": [
+    "Endemol",
+    "Victorinox",
+    "Red Bull"
+   ],
+   "de": [
+    "Endemol",
+    "Victorinox",
+    "Red Bull"
+   ],
+   "es": [
+    "Endemol",
+    "Victorinox",
+    "Red Bull"
+   ],
+   "fr": [
+    "Endemol",
+    "Victorinox",
+    "Red Bull"
+   ],
+   "it": [
+    "Endemol",
+    "Victorinox",
+    "Red Bull"
+   ],
+   "pt": [
+    "Endemol",
+    "Victorinox",
+    "Red Bull"
+   ]
+  }
+ },
+ {
+  "key": "w-q94933",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Take-Two_Interactive_Logo.svg/1280px-Take-Two_Interactive_Logo.svg.png",
+  "file": "File:Take-Two Interactive Logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Take-Two Interactive",
+   "ka": "Take-Two Interactive",
+   "de": "Take-Two Interactive",
+   "es": "Take-Two Interactive",
+   "fr": "Take-Two Interactive",
+   "it": "Take-Two Interactive",
+   "pt": "Take-Two Interactive"
+  },
+  "wrong": {
+   "en": [
+    "Soyuzmultfilm",
+    "Tate",
+    "Infinity Ward"
+   ],
+   "ka": [
+    "Soyuzmultfilm",
+    "Tate",
+    "Infinity Ward"
+   ],
+   "de": [
+    "Soyuzmultfilm",
+    "Tate",
+    "Infinity Ward"
+   ],
+   "es": [
+    "Soyuzmultfilm",
+    "Tate",
+    "Infinity Ward"
+   ],
+   "fr": [
+    "Soyuzmultfilm",
+    "Tate",
+    "Infinity Ward"
+   ],
+   "it": [
+    "Soyuzmultfilm",
+    "Tate",
+    "Infinity Ward"
+   ],
+   "pt": [
+    "Soyuzmultfilm",
+    "Tate",
+    "Infinity Ward"
+   ]
+  }
+ },
+ {
+  "key": "w-q220317",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Maxis_2012_logo.svg/1280px-Maxis_2012_logo.svg.png",
+  "file": "File:Maxis 2012 logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Maxis",
+   "ka": "Maxis",
+   "de": "Maxis",
+   "es": "Maxis",
+   "fr": "Maxis",
+   "it": "Maxis",
+   "pt": "Maxis"
+  },
+  "wrong": {
+   "en": [
+    "Steinway & Sons",
+    "Chupa Chups",
+    "Perplexity AI"
+   ],
+   "ka": [
+    "Steinway & Sons",
+    "Chupa Chups",
+    "Perplexity AI"
+   ],
+   "de": [
+    "Steinway & Sons",
+    "Chupa Chups",
+    "Perplexity AI"
+   ],
+   "es": [
+    "Steinway & Sons",
+    "Chupa Chups",
+    "Perplexity AI"
+   ],
+   "fr": [
+    "Steinway & Sons",
+    "Chupa Chups",
+    "Perplexity AI"
+   ],
+   "it": [
+    "Steinway & Sons",
+    "Chupa Chups",
+    "Perplexity AI"
+   ],
+   "pt": [
+    "Steinway & Sons",
+    "Chupa Chups",
+    "Perplexity AI"
+   ]
+  }
+ },
+ {
+  "key": "w-q16924332",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/DJI_Innovations_logo.svg/1280px-DJI_Innovations_logo.svg.png",
+  "file": "File:DJI Innovations logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "DJI",
+   "ka": "DJI",
+   "de": "DJI",
+   "es": "DJI",
+   "fr": "DJI",
+   "it": "DJI",
+   "pt": "DJI"
+  },
+  "wrong": {
+   "en": [
+    "Texaco",
+    "GoDaddy",
+    "Bata"
+   ],
+   "ka": [
+    "Texaco",
+    "GoDaddy",
+    "Bata"
+   ],
+   "de": [
+    "Texaco",
+    "GoDaddy",
+    "Bata"
+   ],
+   "es": [
+    "Texaco",
+    "GoDaddy",
+    "Bata"
+   ],
+   "fr": [
+    "Texaco",
+    "GoDaddy",
+    "Bata"
+   ],
+   "it": [
+    "Texaco",
+    "GoDaddy",
+    "Bata"
+   ],
+   "pt": [
+    "Texaco",
+    "GoDaddy",
+    "Bata"
+   ]
+  }
+ },
+ {
+  "key": "w-q372899",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Magnum_Photos_logo_%282024%29.svg/1280px-Magnum_Photos_logo_%282024%29.svg.png",
+  "file": "File:Magnum Photos logo (2024).svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Magnum Photos",
+   "ka": "Magnum Photos",
+   "de": "Magnum Photos",
+   "es": "Magnum Photos",
+   "fr": "Magnum Photos",
+   "it": "Magnum Photos",
+   "pt": "Magnum Photos"
+  },
+  "wrong": {
+   "en": [
+    "Infinity Ward",
+    "Lockheed",
+    "Diageo"
+   ],
+   "ka": [
+    "Infinity Ward",
+    "Lockheed",
+    "Diageo"
+   ],
+   "de": [
+    "Infinity Ward",
+    "Lockheed",
+    "Diageo"
+   ],
+   "es": [
+    "Infinity Ward",
+    "Lockheed",
+    "Diageo"
+   ],
+   "fr": [
+    "Infinity Ward",
+    "Lockheed",
+    "Diageo"
+   ],
+   "it": [
+    "Infinity Ward",
+    "Lockheed",
+    "Diageo"
+   ],
+   "pt": [
+    "Infinity Ward",
+    "Lockheed",
+    "Diageo"
+   ]
+  }
+ },
+ {
+  "key": "w-q918151",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Hard_Rock_Cafe_Logo.svg/1280px-Hard_Rock_Cafe_Logo.svg.png",
+  "file": "File:Hard Rock Cafe Logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Hard Rock Cafe",
+   "ka": "Hard Rock Cafe",
+   "de": "Hard Rock Cafe",
+   "es": "Hard Rock Cafe",
+   "fr": "Hard Rock Cafe",
+   "it": "Hard Rock Cafe",
+   "pt": "Hard Rock Cafe"
+  },
+  "wrong": {
+   "en": [
+    "Oldsmobile",
+    "Endemol",
+    "Take-Two Interactive"
+   ],
+   "ka": [
+    "Oldsmobile",
+    "Endemol",
+    "Take-Two Interactive"
+   ],
+   "de": [
+    "Oldsmobile",
+    "Endemol",
+    "Take-Two Interactive"
+   ],
+   "es": [
+    "Oldsmobile",
+    "Endemol",
+    "Take-Two Interactive"
+   ],
+   "fr": [
+    "Oldsmobile",
+    "Endemol",
+    "Take-Two Interactive"
+   ],
+   "it": [
+    "Oldsmobile",
+    "Endemol",
+    "Take-Two Interactive"
+   ],
+   "pt": [
+    "Oldsmobile",
+    "Endemol",
+    "Take-Two Interactive"
+   ]
+  }
+ },
+ {
+  "key": "w-q156391",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Steinway_and_Sons_logo.svg/1280px-Steinway_and_Sons_logo.svg.png",
+  "file": "File:Steinway and Sons logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Steinway & Sons",
+   "ka": "Steinway & Sons",
+   "de": "Steinway & Sons",
+   "es": "Steinway & Sons",
+   "fr": "Steinway & Sons",
+   "it": "Steinway & Sons",
+   "pt": "Steinway & Sons"
+  },
+  "wrong": {
+   "en": [
+    "Rhaetian Railway",
+    "Wiley",
+    "Aérospatiale"
+   ],
+   "ka": [
+    "Rhaetian Railway",
+    "Wiley",
+    "Aérospatiale"
+   ],
+   "de": [
+    "Rhaetian Railway",
+    "Wiley",
+    "Aérospatiale"
+   ],
+   "es": [
+    "Rhaetian Railway",
+    "Wiley",
+    "Aérospatiale"
+   ],
+   "fr": [
+    "Rhaetian Railway",
+    "Wiley",
+    "Aérospatiale"
+   ],
+   "it": [
+    "Rhaetian Railway",
+    "Wiley",
+    "Aérospatiale"
+   ],
+   "pt": [
+    "Rhaetian Railway",
+    "Wiley",
+    "Aérospatiale"
+   ]
+  }
+ },
+ {
+  "key": "w-q213710",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/a/a8/BEATLES_MANZANA.PNG",
+  "file": "File:BEATLES MANZANA.PNG",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Apple Records",
+   "ka": "Apple Records",
+   "de": "Apple Records",
+   "es": "Apple Records",
+   "fr": "Apple Records",
+   "it": "Apple Records",
+   "pt": "Apple Records"
+  },
+  "wrong": {
+   "en": [
+    "Air Arabia",
+    "Bandai",
+    "Namco"
+   ],
+   "ka": [
+    "Air Arabia",
+    "Bandai",
+    "Namco"
+   ],
+   "de": [
+    "Air Arabia",
+    "Bandai",
+    "Namco"
+   ],
+   "es": [
+    "Air Arabia",
+    "Bandai",
+    "Namco"
+   ],
+   "fr": [
+    "Air Arabia",
+    "Bandai",
+    "Namco"
+   ],
+   "it": [
+    "Air Arabia",
+    "Bandai",
+    "Namco"
+   ],
+   "pt": [
+    "Air Arabia",
+    "Bandai",
+    "Namco"
+   ]
+  }
+ },
+ {
+  "key": "w-q851184",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Endemol_2001.svg/1280px-Endemol_2001.svg.png",
+  "file": "File:Endemol 2001.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Endemol",
+   "ka": "Endemol",
+   "de": "Endemol",
+   "es": "Endemol",
+   "fr": "Endemol",
+   "it": "Endemol",
+   "pt": "Endemol"
+  },
+  "wrong": {
+   "en": [
+    "Ray-Ban",
+    "Hard Rock Cafe",
+    "Shopify"
+   ],
+   "ka": [
+    "Ray-Ban",
+    "Hard Rock Cafe",
+    "Shopify"
+   ],
+   "de": [
+    "Ray-Ban",
+    "Hard Rock Cafe",
+    "Shopify"
+   ],
+   "es": [
+    "Ray-Ban",
+    "Hard Rock Cafe",
+    "Shopify"
+   ],
+   "fr": [
+    "Ray-Ban",
+    "Hard Rock Cafe",
+    "Shopify"
+   ],
+   "it": [
+    "Ray-Ban",
+    "Hard Rock Cafe",
+    "Shopify"
+   ],
+   "pt": [
+    "Ray-Ban",
+    "Hard Rock Cafe",
+    "Shopify"
+   ]
+  }
+ },
+ {
+  "key": "w-q1141173",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Marriott_International.svg/1280px-Marriott_International.svg.png",
+  "file": "File:Marriott International.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Marriott",
+   "ka": "Marriott",
+   "de": "Marriott",
+   "es": "Marriott",
+   "fr": "Marriott",
+   "it": "Marriott",
+   "pt": "Marriott"
+  },
+  "wrong": {
+   "en": [
+    "Jysk",
+    "Azerbaijan Railways",
+    "Cinecittà"
+   ],
+   "ka": [
+    "Jysk",
+    "Azerbaijan Railways",
+    "Cinecittà"
+   ],
+   "de": [
+    "Jysk",
+    "Azerbaijan Railways",
+    "Cinecittà"
+   ],
+   "es": [
+    "Jysk",
+    "Azerbaijan Railways",
+    "Cinecittà"
+   ],
+   "fr": [
+    "Jysk",
+    "Azerbaijan Railways",
+    "Cinecittà"
+   ],
+   "it": [
+    "Jysk",
+    "Azerbaijan Railways",
+    "Cinecittà"
+   ],
+   "pt": [
+    "Jysk",
+    "Azerbaijan Railways",
+    "Cinecittà"
+   ]
+  }
+ },
+ {
+  "key": "w-q553915",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Arkia_Israeli_logo.svg/1280px-Arkia_Israeli_logo.svg.png",
+  "file": "File:Arkia Israeli logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Arkia",
+   "ka": "Arkia",
+   "de": "Arkia",
+   "es": "Arkia",
+   "fr": "Arkia",
+   "it": "Arkia",
+   "pt": "Arkia"
+  },
+  "wrong": {
+   "en": [
+    "Amway",
+    "Take-Two Interactive",
+    "DJI"
+   ],
+   "ka": [
+    "Amway",
+    "Take-Two Interactive",
+    "DJI"
+   ],
+   "de": [
+    "Amway",
+    "Take-Two Interactive",
+    "DJI"
+   ],
+   "es": [
+    "Amway",
+    "Take-Two Interactive",
+    "DJI"
+   ],
+   "fr": [
+    "Amway",
+    "Take-Two Interactive",
+    "DJI"
+   ],
+   "it": [
+    "Amway",
+    "Take-Two Interactive",
+    "DJI"
+   ],
+   "pt": [
+    "Amway",
+    "Take-Two Interactive",
+    "DJI"
+   ]
+  }
+ },
+ {
+  "key": "w-q923337",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Ukrzaliznytsya.svg/1280px-Ukrzaliznytsya.svg.png",
+  "file": "File:Ukrzaliznytsya.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Ukrainian Railways",
+   "ka": "Ukrainian Railways",
+   "de": "Ukrainian Railways",
+   "es": "Ukrainian Railways",
+   "fr": "Ukrainian Railways",
+   "it": "Ukrainian Railways",
+   "pt": "Ukrainian Railways"
+  },
+  "wrong": {
+   "en": [
+    "Cinecittà",
+    "Oldsmobile",
+    "DJI"
+   ],
+   "ka": [
+    "Cinecittà",
+    "Oldsmobile",
+    "DJI"
+   ],
+   "de": [
+    "Cinecittà",
+    "Oldsmobile",
+    "DJI"
+   ],
+   "es": [
+    "Cinecittà",
+    "Oldsmobile",
+    "DJI"
+   ],
+   "fr": [
+    "Cinecittà",
+    "Oldsmobile",
+    "DJI"
+   ],
+   "it": [
+    "Cinecittà",
+    "Oldsmobile",
+    "DJI"
+   ],
+   "pt": [
+    "Cinecittà",
+    "Oldsmobile",
+    "DJI"
+   ]
+  }
+ },
+ {
+  "key": "w-q610492",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Spar-logo.svg/1280px-Spar-logo.svg.png",
+  "file": "File:Spar-logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Spar",
+   "ka": "Spar",
+   "de": "Spar",
+   "es": "Spar",
+   "fr": "Spar",
+   "it": "Spar",
+   "pt": "Spar"
+  },
+  "wrong": {
+   "en": [
+    "Wiley",
+    "AEG",
+    "Mega.io"
+   ],
+   "ka": [
+    "Wiley",
+    "AEG",
+    "Mega.io"
+   ],
+   "de": [
+    "Wiley",
+    "AEG",
+    "Mega.io"
+   ],
+   "es": [
+    "Wiley",
+    "AEG",
+    "Mega.io"
+   ],
+   "fr": [
+    "Wiley",
+    "AEG",
+    "Mega.io"
+   ],
+   "it": [
+    "Wiley",
+    "AEG",
+    "Mega.io"
+   ],
+   "pt": [
+    "Wiley",
+    "AEG",
+    "Mega.io"
+   ]
+  }
+ },
+ {
+  "key": "w-q854605",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/BitdefenderLogoBlue.svg/1280px-BitdefenderLogoBlue.svg.png",
+  "file": "File:BitdefenderLogoBlue.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Bitdefender",
+   "ka": "Bitdefender",
+   "de": "Bitdefender",
+   "es": "Bitdefender",
+   "fr": "Bitdefender",
+   "it": "Bitdefender",
+   "pt": "Bitdefender"
+  },
+  "wrong": {
+   "en": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "Steinway & Sons"
+   ],
+   "ka": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "Steinway & Sons"
+   ],
+   "de": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "Steinway & Sons"
+   ],
+   "es": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "Steinway & Sons"
+   ],
+   "fr": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "Steinway & Sons"
+   ],
+   "it": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "Steinway & Sons"
+   ],
+   "pt": [
+    "Lockheed",
+    "Azerbaijan Railways",
+    "Steinway & Sons"
+   ]
+  }
+ },
+ {
+  "key": "w-q775060",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Texacologo.svg/1280px-Texacologo.svg.png",
+  "file": "File:Texacologo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Texaco",
+   "ka": "Texaco",
+   "de": "Texaco",
+   "es": "Texaco",
+   "fr": "Texaco",
+   "it": "Texaco",
+   "pt": "Texaco"
+  },
+  "wrong": {
+   "en": [
+    "Victorinox",
+    "Air Arabia",
+    "Maxis"
+   ],
+   "ka": [
+    "Victorinox",
+    "Air Arabia",
+    "Maxis"
+   ],
+   "de": [
+    "Victorinox",
+    "Air Arabia",
+    "Maxis"
+   ],
+   "es": [
+    "Victorinox",
+    "Air Arabia",
+    "Maxis"
+   ],
+   "fr": [
+    "Victorinox",
+    "Air Arabia",
+    "Maxis"
+   ],
+   "it": [
+    "Victorinox",
+    "Air Arabia",
+    "Maxis"
+   ],
+   "pt": [
+    "Victorinox",
+    "Air Arabia",
+    "Maxis"
+   ]
+  }
+ },
+ {
+  "key": "w-q320458",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Ibanez_logo.svg/1280px-Ibanez_logo.svg.png",
+  "file": "File:Ibanez logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Ibanez",
+   "ka": "Ibanez",
+   "de": "Ibanez",
+   "es": "Ibanez",
+   "fr": "Ibanez",
+   "it": "Ibanez",
+   "pt": "Ibanez"
+  },
+  "wrong": {
+   "en": [
+    "Simon & Schuster",
+    "Taito",
+    "Holiday Inn"
+   ],
+   "ka": [
+    "Simon & Schuster",
+    "Taito",
+    "Holiday Inn"
+   ],
+   "de": [
+    "Simon & Schuster",
+    "Taito",
+    "Holiday Inn"
+   ],
+   "es": [
+    "Simon & Schuster",
+    "Taito",
+    "Holiday Inn"
+   ],
+   "fr": [
+    "Simon & Schuster",
+    "Taito",
+    "Holiday Inn"
+   ],
+   "it": [
+    "Simon & Schuster",
+    "Taito",
+    "Holiday Inn"
+   ],
+   "pt": [
+    "Simon & Schuster",
+    "Taito",
+    "Holiday Inn"
+   ]
+  }
+ },
+ {
+  "key": "w-q507269",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Logo_Bandai.svg/1280px-Logo_Bandai.svg.png",
+  "file": "File:Logo Bandai.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Bandai",
+   "ka": "Bandai",
+   "de": "Bandai",
+   "es": "Bandai",
+   "fr": "Bandai",
+   "it": "Bandai",
+   "pt": "Bandai"
+  },
+  "wrong": {
+   "en": [
+    "Texaco",
+    "Rhaetian Railway",
+    "Aérospatiale"
+   ],
+   "ka": [
+    "Texaco",
+    "Rhaetian Railway",
+    "Aérospatiale"
+   ],
+   "de": [
+    "Texaco",
+    "Rhaetian Railway",
+    "Aérospatiale"
+   ],
+   "es": [
+    "Texaco",
+    "Rhaetian Railway",
+    "Aérospatiale"
+   ],
+   "fr": [
+    "Texaco",
+    "Rhaetian Railway",
+    "Aérospatiale"
+   ],
+   "it": [
+    "Texaco",
+    "Rhaetian Railway",
+    "Aérospatiale"
+   ],
+   "pt": [
+    "Texaco",
+    "Rhaetian Railway",
+    "Aérospatiale"
+   ]
+  }
+ },
+ {
+  "key": "w-q650639",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/0/03/AerospatialeLogo.png",
+  "file": "File:AerospatialeLogo.png",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Aérospatiale",
+   "ka": "Aérospatiale",
+   "de": "Aérospatiale",
+   "es": "Aérospatiale",
+   "fr": "Aérospatiale",
+   "it": "Aérospatiale",
+   "pt": "Aérospatiale"
+  },
+  "wrong": {
+   "en": [
+    "Maxis",
+    "Air Cairo",
+    "Arkia"
+   ],
+   "ka": [
+    "Maxis",
+    "Air Cairo",
+    "Arkia"
+   ],
+   "de": [
+    "Maxis",
+    "Air Cairo",
+    "Arkia"
+   ],
+   "es": [
+    "Maxis",
+    "Air Cairo",
+    "Arkia"
+   ],
+   "fr": [
+    "Maxis",
+    "Air Cairo",
+    "Arkia"
+   ],
+   "it": [
+    "Maxis",
+    "Air Cairo",
+    "Arkia"
+   ],
+   "pt": [
+    "Maxis",
+    "Air Cairo",
+    "Arkia"
+   ]
+  }
+ },
+ {
+  "key": "w-q204327",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Oldsmobile_logo_used_from_1981_until_1997.svg/1280px-Oldsmobile_logo_used_from_1981_until_1997.svg.png",
+  "file": "File:Oldsmobile logo used from 1981 until 1997.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Oldsmobile",
+   "ka": "Oldsmobile",
+   "de": "Oldsmobile",
+   "es": "Oldsmobile",
+   "fr": "Oldsmobile",
+   "it": "Oldsmobile",
+   "pt": "Oldsmobile"
+  },
+  "wrong": {
+   "en": [
+    "AEG",
+    "Avon Products",
+    "Grammarly"
+   ],
+   "ka": [
+    "AEG",
+    "Avon Products",
+    "Grammarly"
+   ],
+   "de": [
+    "AEG",
+    "Avon Products",
+    "Grammarly"
+   ],
+   "es": [
+    "AEG",
+    "Avon Products",
+    "Grammarly"
+   ],
+   "fr": [
+    "AEG",
+    "Avon Products",
+    "Grammarly"
+   ],
+   "it": [
+    "AEG",
+    "Avon Products",
+    "Grammarly"
+   ],
+   "pt": [
+    "AEG",
+    "Avon Products",
+    "Grammarly"
+   ]
+  }
+ },
+ {
+  "key": "w-q158276",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Allgemeine_Elektricit%C3%A4ts-Gesellschaft_%28logo%29.svg/1280px-Allgemeine_Elektricit%C3%A4ts-Gesellschaft_%28logo%29.svg.png",
+  "file": "File:Allgemeine Elektricitäts-Gesellschaft (logo).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "AEG",
+   "ka": "AEG",
+   "de": "AEG",
+   "es": "AEG",
+   "fr": "AEG",
+   "it": "AEG",
+   "pt": "AEG"
+  },
+  "wrong": {
+   "en": [
+    "Spar",
+    "Bandai",
+    "Legendary Pictures"
+   ],
+   "ka": [
+    "Spar",
+    "Bandai",
+    "Legendary Pictures"
+   ],
+   "de": [
+    "Spar",
+    "Bandai",
+    "Legendary Pictures"
+   ],
+   "es": [
+    "Spar",
+    "Bandai",
+    "Legendary Pictures"
+   ],
+   "fr": [
+    "Spar",
+    "Bandai",
+    "Legendary Pictures"
+   ],
+   "it": [
+    "Spar",
+    "Bandai",
+    "Legendary Pictures"
+   ],
+   "pt": [
+    "Spar",
+    "Bandai",
+    "Legendary Pictures"
+   ]
+  }
+ },
+ {
+  "key": "w-q617956",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Azerbaycan_Demir_Yollari_logo.svg/1280px-Azerbaycan_Demir_Yollari_logo.svg.png",
+  "file": "File:Azerbaycan Demir Yollari logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Azerbaijan Railways",
+   "ka": "Azerbaijan Railways",
+   "de": "Azerbaijan Railways",
+   "es": "Azerbaijan Railways",
+   "fr": "Azerbaijan Railways",
+   "it": "Azerbaijan Railways",
+   "pt": "Azerbaijan Railways"
+  },
+  "wrong": {
+   "en": [
+    "Magnum Photos",
+    "Grammarly",
+    "Bitdefender"
+   ],
+   "ka": [
+    "Magnum Photos",
+    "Grammarly",
+    "Bitdefender"
+   ],
+   "de": [
+    "Magnum Photos",
+    "Grammarly",
+    "Bitdefender"
+   ],
+   "es": [
+    "Magnum Photos",
+    "Grammarly",
+    "Bitdefender"
+   ],
+   "fr": [
+    "Magnum Photos",
+    "Grammarly",
+    "Bitdefender"
+   ],
+   "it": [
+    "Magnum Photos",
+    "Grammarly",
+    "Bitdefender"
+   ],
+   "pt": [
+    "Magnum Photos",
+    "Grammarly",
+    "Bitdefender"
+   ]
+  }
+ },
+ {
+  "key": "w-q430682",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Tate-logo.gif",
+  "file": "File:Tate-logo.gif",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Tate",
+   "ka": "Tate",
+   "de": "Tate",
+   "es": "Tate",
+   "fr": "Tate",
+   "it": "Tate",
+   "pt": "Tate"
+  },
+  "wrong": {
+   "en": [
+    "Steinway & Sons",
+    "Dr. Martens",
+    "2K"
+   ],
+   "ka": [
+    "Steinway & Sons",
+    "Dr. Martens",
+    "2K"
+   ],
+   "de": [
+    "Steinway & Sons",
+    "Dr. Martens",
+    "2K"
+   ],
+   "es": [
+    "Steinway & Sons",
+    "Dr. Martens",
+    "2K"
+   ],
+   "fr": [
+    "Steinway & Sons",
+    "Dr. Martens",
+    "2K"
+   ],
+   "it": [
+    "Steinway & Sons",
+    "Dr. Martens",
+    "2K"
+   ],
+   "pt": [
+    "Steinway & Sons",
+    "Dr. Martens",
+    "2K"
+   ]
+  }
+ },
+ {
+  "key": "w-q503405",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Victorinox_Logo.svg/1280px-Victorinox_Logo.svg.png",
+  "file": "File:Victorinox Logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Victorinox",
+   "ka": "Victorinox",
+   "de": "Victorinox",
+   "es": "Victorinox",
+   "fr": "Victorinox",
+   "it": "Victorinox",
+   "pt": "Victorinox"
+  },
+  "wrong": {
+   "en": [
+    "Glencore",
+    "Rhaetian Railway",
+    "Oldsmobile"
+   ],
+   "ka": [
+    "Glencore",
+    "Rhaetian Railway",
+    "Oldsmobile"
+   ],
+   "de": [
+    "Glencore",
+    "Rhaetian Railway",
+    "Oldsmobile"
+   ],
+   "es": [
+    "Glencore",
+    "Rhaetian Railway",
+    "Oldsmobile"
+   ],
+   "fr": [
+    "Glencore",
+    "Rhaetian Railway",
+    "Oldsmobile"
+   ],
+   "it": [
+    "Glencore",
+    "Rhaetian Railway",
+    "Oldsmobile"
+   ],
+   "pt": [
+    "Glencore",
+    "Rhaetian Railway",
+    "Oldsmobile"
+   ]
+  }
+ },
+ {
+  "key": "w-q94937",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/2K_2021_Logo.svg/1280px-2K_2021_Logo.svg.png",
+  "file": "File:2K 2021 Logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "2K",
+   "ka": "2K",
+   "de": "2K",
+   "es": "2K",
+   "fr": "2K",
+   "it": "2K",
+   "pt": "2K"
+  },
+  "wrong": {
+   "en": [
+    "Texaco",
+    "Tate",
+    "Olivetti"
+   ],
+   "ka": [
+    "Texaco",
+    "Tate",
+    "Olivetti"
+   ],
+   "de": [
+    "Texaco",
+    "Tate",
+    "Olivetti"
+   ],
+   "es": [
+    "Texaco",
+    "Tate",
+    "Olivetti"
+   ],
+   "fr": [
+    "Texaco",
+    "Tate",
+    "Olivetti"
+   ],
+   "it": [
+    "Texaco",
+    "Tate",
+    "Olivetti"
+   ],
+   "pt": [
+    "Texaco",
+    "Tate",
+    "Olivetti"
+   ]
+  }
+ },
+ {
+  "key": "w-q722027",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/DICE_logo.svg/1280px-DICE_logo.svg.png",
+  "file": "File:DICE logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "DICE",
+   "ka": "DICE",
+   "de": "DICE",
+   "es": "DICE",
+   "fr": "DICE",
+   "it": "DICE",
+   "pt": "DICE"
+  },
+  "wrong": {
+   "en": [
+    "Simon & Schuster",
+    "Oricon",
+    "Take-Two Interactive"
+   ],
+   "ka": [
+    "Simon & Schuster",
+    "Oricon",
+    "Take-Two Interactive"
+   ],
+   "de": [
+    "Simon & Schuster",
+    "Oricon",
+    "Take-Two Interactive"
+   ],
+   "es": [
+    "Simon & Schuster",
+    "Oricon",
+    "Take-Two Interactive"
+   ],
+   "fr": [
+    "Simon & Schuster",
+    "Oricon",
+    "Take-Two Interactive"
+   ],
+   "it": [
+    "Simon & Schuster",
+    "Oricon",
+    "Take-Two Interactive"
+   ],
+   "pt": [
+    "Simon & Schuster",
+    "Oricon",
+    "Take-Two Interactive"
+   ]
+  }
+ },
+ {
+  "key": "w-q1416215",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/GoDaddy_logo.svg/1280px-GoDaddy_logo.svg.png",
+  "file": "File:GoDaddy logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "GoDaddy",
+   "ka": "GoDaddy",
+   "de": "GoDaddy",
+   "es": "GoDaddy",
+   "fr": "GoDaddy",
+   "it": "GoDaddy",
+   "pt": "GoDaddy"
+  },
+  "wrong": {
+   "en": [
+    "Tate",
+    "Azerbaijan Railways",
+    "2K"
+   ],
+   "ka": [
+    "Tate",
+    "Azerbaijan Railways",
+    "2K"
+   ],
+   "de": [
+    "Tate",
+    "Azerbaijan Railways",
+    "2K"
+   ],
+   "es": [
+    "Tate",
+    "Azerbaijan Railways",
+    "2K"
+   ],
+   "fr": [
+    "Tate",
+    "Azerbaijan Railways",
+    "2K"
+   ],
+   "it": [
+    "Tate",
+    "Azerbaijan Railways",
+    "2K"
+   ],
+   "pt": [
+    "Tate",
+    "Azerbaijan Railways",
+    "2K"
+   ]
+  }
+ },
+ {
+  "key": "w-q481800",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Amway_%28logo%29.svg/1280px-Amway_%28logo%29.svg.png",
+  "file": "File:Amway (logo).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Amway",
+   "ka": "Amway",
+   "de": "Amway",
+   "es": "Amway",
+   "fr": "Amway",
+   "it": "Amway",
+   "pt": "Amway"
+  },
+  "wrong": {
+   "en": [
+    "Steinway & Sons",
+    "DJI",
+    "Texaco"
+   ],
+   "ka": [
+    "Steinway & Sons",
+    "DJI",
+    "Texaco"
+   ],
+   "de": [
+    "Steinway & Sons",
+    "DJI",
+    "Texaco"
+   ],
+   "es": [
+    "Steinway & Sons",
+    "DJI",
+    "Texaco"
+   ],
+   "fr": [
+    "Steinway & Sons",
+    "DJI",
+    "Texaco"
+   ],
+   "it": [
+    "Steinway & Sons",
+    "DJI",
+    "Texaco"
+   ],
+   "pt": [
+    "Steinway & Sons",
+    "DJI",
+    "Texaco"
+   ]
+  }
+ },
+ {
+  "key": "w-q138913",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Jysk_logo.svg/1280px-Jysk_logo.svg.png",
+  "file": "File:Jysk logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Jysk",
+   "ka": "Jysk",
+   "de": "Jysk",
+   "es": "Jysk",
+   "fr": "Jysk",
+   "it": "Jysk",
+   "pt": "Jysk"
+  },
+  "wrong": {
+   "en": [
+    "Magnum Photos",
+    "Endemol",
+    "Twinings"
+   ],
+   "ka": [
+    "Magnum Photos",
+    "Endemol",
+    "Twinings"
+   ],
+   "de": [
+    "Magnum Photos",
+    "Endemol",
+    "Twinings"
+   ],
+   "es": [
+    "Magnum Photos",
+    "Endemol",
+    "Twinings"
+   ],
+   "fr": [
+    "Magnum Photos",
+    "Endemol",
+    "Twinings"
+   ],
+   "it": [
+    "Magnum Photos",
+    "Endemol",
+    "Twinings"
+   ],
+   "pt": [
+    "Magnum Photos",
+    "Endemol",
+    "Twinings"
+   ]
+  }
+ },
+ {
+  "key": "w-q688082",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Bata.svg/1280px-Bata.svg.png",
+  "file": "File:Bata.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Bata",
+   "ka": "Bata",
+   "de": "Bata",
+   "es": "Bata",
+   "fr": "Bata",
+   "it": "Bata",
+   "pt": "Bata"
+  },
+  "wrong": {
+   "en": [
+    "Air Cairo",
+    "GoDaddy",
+    "Apple Records"
+   ],
+   "ka": [
+    "Air Cairo",
+    "GoDaddy",
+    "Apple Records"
+   ],
+   "de": [
+    "Air Cairo",
+    "GoDaddy",
+    "Apple Records"
+   ],
+   "es": [
+    "Air Cairo",
+    "GoDaddy",
+    "Apple Records"
+   ],
+   "fr": [
+    "Air Cairo",
+    "GoDaddy",
+    "Apple Records"
+   ],
+   "it": [
+    "Air Cairo",
+    "GoDaddy",
+    "Apple Records"
+   ],
+   "pt": [
+    "Air Cairo",
+    "GoDaddy",
+    "Apple Records"
+   ]
+  }
+ },
+ {
+  "key": "w-q673267",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Olivetti_logo_%282021-present%29.svg/1280px-Olivetti_logo_%282021-present%29.svg.png",
+  "file": "File:Olivetti logo (2021-present).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Olivetti",
+   "ka": "Olivetti",
+   "de": "Olivetti",
+   "es": "Olivetti",
+   "fr": "Olivetti",
+   "it": "Olivetti",
+   "pt": "Olivetti"
+  },
+  "wrong": {
+   "en": [
+    "Amway",
+    "Bandai",
+    "Taito"
+   ],
+   "ka": [
+    "Amway",
+    "Bandai",
+    "Taito"
+   ],
+   "de": [
+    "Amway",
+    "Bandai",
+    "Taito"
+   ],
+   "es": [
+    "Amway",
+    "Bandai",
+    "Taito"
+   ],
+   "fr": [
+    "Amway",
+    "Bandai",
+    "Taito"
+   ],
+   "it": [
+    "Amway",
+    "Bandai",
+    "Taito"
+   ],
+   "pt": [
+    "Amway",
+    "Bandai",
+    "Taito"
+   ]
+  }
+ },
+ {
+  "key": "w-q1126126",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Dr._Martens_Logo.svg/1280px-Dr._Martens_Logo.svg.png",
+  "file": "File:Dr. Martens Logo.svg",
+  "license": "Public domain",
+  "difficulty": "medium",
+  "answers": {
+   "en": "Dr. Martens",
+   "ka": "Dr. Martens",
+   "de": "Dr. Martens",
+   "es": "Dr. Martens",
+   "fr": "Dr. Martens",
+   "it": "Dr. Martens",
+   "pt": "Dr. Martens"
+  },
+  "wrong": {
+   "en": [
+    "2K",
+    "Hard Rock Cafe",
+    "Maxis"
+   ],
+   "ka": [
+    "2K",
+    "Hard Rock Cafe",
+    "Maxis"
+   ],
+   "de": [
+    "2K",
+    "Hard Rock Cafe",
+    "Maxis"
+   ],
+   "es": [
+    "2K",
+    "Hard Rock Cafe",
+    "Maxis"
+   ],
+   "fr": [
+    "2K",
+    "Hard Rock Cafe",
+    "Maxis"
+   ],
+   "it": [
+    "2K",
+    "Hard Rock Cafe",
+    "Maxis"
+   ],
+   "pt": [
+    "2K",
+    "Hard Rock Cafe",
+    "Maxis"
+   ]
+  }
+ },
+ {
+  "key": "w-q791285",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Avon_2026.svg/1280px-Avon_2026.svg.png",
+  "file": "File:Avon 2026.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Avon Products",
+   "ka": "Avon Products",
+   "de": "Avon Products",
+   "es": "Avon Products",
+   "fr": "Avon Products",
+   "it": "Avon Products",
+   "pt": "Avon Products"
+  },
+  "wrong": {
+   "en": [
+    "Azerbaijan Railways",
+    "Endemol",
+    "Steinway & Sons"
+   ],
+   "ka": [
+    "Azerbaijan Railways",
+    "Endemol",
+    "Steinway & Sons"
+   ],
+   "de": [
+    "Azerbaijan Railways",
+    "Endemol",
+    "Steinway & Sons"
+   ],
+   "es": [
+    "Azerbaijan Railways",
+    "Endemol",
+    "Steinway & Sons"
+   ],
+   "fr": [
+    "Azerbaijan Railways",
+    "Endemol",
+    "Steinway & Sons"
+   ],
+   "it": [
+    "Azerbaijan Railways",
+    "Endemol",
+    "Steinway & Sons"
+   ],
+   "pt": [
+    "Azerbaijan Railways",
+    "Endemol",
+    "Steinway & Sons"
+   ]
+  }
+ },
+ {
+  "key": "w-q7501150",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Shopify_logo_2018.svg/1280px-Shopify_logo_2018.svg.png",
+  "file": "File:Shopify logo 2018.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Shopify",
+   "ka": "Shopify",
+   "de": "Shopify",
+   "es": "Shopify",
+   "fr": "Shopify",
+   "it": "Shopify",
+   "pt": "Shopify"
+  },
+  "wrong": {
+   "en": [
+    "Bandai",
+    "Olivetti",
+    "Twinings"
+   ],
+   "ka": [
+    "Bandai",
+    "Olivetti",
+    "Twinings"
+   ],
+   "de": [
+    "Bandai",
+    "Olivetti",
+    "Twinings"
+   ],
+   "es": [
+    "Bandai",
+    "Olivetti",
+    "Twinings"
+   ],
+   "fr": [
+    "Bandai",
+    "Olivetti",
+    "Twinings"
+   ],
+   "it": [
+    "Bandai",
+    "Olivetti",
+    "Twinings"
+   ],
+   "pt": [
+    "Bandai",
+    "Olivetti",
+    "Twinings"
+   ]
+  }
+ },
+ {
+  "key": "w-q1479654",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Wiley_logo.svg/1280px-Wiley_logo.svg.png",
+  "file": "File:Wiley logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Wiley",
+   "ka": "Wiley",
+   "de": "Wiley",
+   "es": "Wiley",
+   "fr": "Wiley",
+   "it": "Wiley",
+   "pt": "Wiley"
+  },
+  "wrong": {
+   "en": [
+    "Mozilla",
+    "Azerbaijan Railways",
+    "Shopify"
+   ],
+   "ka": [
+    "Mozilla",
+    "Azerbaijan Railways",
+    "Shopify"
+   ],
+   "de": [
+    "Mozilla",
+    "Azerbaijan Railways",
+    "Shopify"
+   ],
+   "es": [
+    "Mozilla",
+    "Azerbaijan Railways",
+    "Shopify"
+   ],
+   "fr": [
+    "Mozilla",
+    "Azerbaijan Railways",
+    "Shopify"
+   ],
+   "it": [
+    "Mozilla",
+    "Azerbaijan Railways",
+    "Shopify"
+   ],
+   "pt": [
+    "Mozilla",
+    "Azerbaijan Railways",
+    "Shopify"
+   ]
+  }
+ },
+ {
+  "key": "w-q2580273",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/01_mega_logo.svg/1280px-01_mega_logo.svg.png",
+  "file": "File:01 mega logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Mega.io",
+   "ka": "Mega.io",
+   "de": "Mega.io",
+   "es": "Mega.io",
+   "fr": "Mega.io",
+   "it": "Mega.io",
+   "pt": "Mega.io"
+  },
+  "wrong": {
+   "en": [
+    "Bandai",
+    "Beko",
+    "Spar"
+   ],
+   "ka": [
+    "Bandai",
+    "Beko",
+    "Spar"
+   ],
+   "de": [
+    "Bandai",
+    "Beko",
+    "Spar"
+   ],
+   "es": [
+    "Bandai",
+    "Beko",
+    "Spar"
+   ],
+   "fr": [
+    "Bandai",
+    "Beko",
+    "Spar"
+   ],
+   "it": [
+    "Bandai",
+    "Beko",
+    "Spar"
+   ],
+   "pt": [
+    "Bandai",
+    "Beko",
+    "Spar"
+   ]
+  }
+ },
+ {
+  "key": "w-q680019",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Grundig_Intermedia_logo.svg/1280px-Grundig_Intermedia_logo.svg.png",
+  "file": "File:Grundig Intermedia logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Grundig",
+   "ka": "Grundig",
+   "de": "Grundig",
+   "es": "Grundig",
+   "fr": "Grundig",
+   "it": "Grundig",
+   "pt": "Grundig"
+  },
+  "wrong": {
+   "en": [
+    "Dr. Martens",
+    "Shopify",
+    "Avon Products"
+   ],
+   "ka": [
+    "Dr. Martens",
+    "Shopify",
+    "Avon Products"
+   ],
+   "de": [
+    "Dr. Martens",
+    "Shopify",
+    "Avon Products"
+   ],
+   "es": [
+    "Dr. Martens",
+    "Shopify",
+    "Avon Products"
+   ],
+   "fr": [
+    "Dr. Martens",
+    "Shopify",
+    "Avon Products"
+   ],
+   "it": [
+    "Dr. Martens",
+    "Shopify",
+    "Avon Products"
+   ],
+   "pt": [
+    "Dr. Martens",
+    "Shopify",
+    "Avon Products"
+   ]
+  }
+ },
+ {
+  "key": "w-q2072376",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Official_Charts_2023_logo.svg/1280px-Official_Charts_2023_logo.svg.png",
+  "file": "File:Official Charts 2023 logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Official Charts",
+   "ka": "Official Charts",
+   "de": "Official Charts",
+   "es": "Official Charts",
+   "fr": "Official Charts",
+   "it": "Official Charts",
+   "pt": "Official Charts"
+  },
+  "wrong": {
+   "en": [
+    "Steinway & Sons",
+    "Endemol",
+    "Holiday Inn"
+   ],
+   "ka": [
+    "Steinway & Sons",
+    "Endemol",
+    "Holiday Inn"
+   ],
+   "de": [
+    "Steinway & Sons",
+    "Endemol",
+    "Holiday Inn"
+   ],
+   "es": [
+    "Steinway & Sons",
+    "Endemol",
+    "Holiday Inn"
+   ],
+   "fr": [
+    "Steinway & Sons",
+    "Endemol",
+    "Holiday Inn"
+   ],
+   "it": [
+    "Steinway & Sons",
+    "Endemol",
+    "Holiday Inn"
+   ],
+   "pt": [
+    "Steinway & Sons",
+    "Endemol",
+    "Holiday Inn"
+   ]
+  }
+ },
+ {
+  "key": "w-q631792",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Beko_Germany_Logo_2023.svg/1280px-Beko_Germany_Logo_2023.svg.png",
+  "file": "File:Beko Germany Logo 2023.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Beko",
+   "ka": "Beko",
+   "de": "Beko",
+   "es": "Beko",
+   "fr": "Beko",
+   "it": "Beko",
+   "pt": "Beko"
+  },
+  "wrong": {
+   "en": [
+    "Spar",
+    "AEG",
+    "Grundig"
+   ],
+   "ka": [
+    "Spar",
+    "AEG",
+    "Grundig"
+   ],
+   "de": [
+    "Spar",
+    "AEG",
+    "Grundig"
+   ],
+   "es": [
+    "Spar",
+    "AEG",
+    "Grundig"
+   ],
+   "fr": [
+    "Spar",
+    "AEG",
+    "Grundig"
+   ],
+   "it": [
+    "Spar",
+    "AEG",
+    "Grundig"
+   ],
+   "pt": [
+    "Spar",
+    "AEG",
+    "Grundig"
+   ]
+  }
+ },
+ {
+  "key": "w-q621364",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Legendary_Entertainment_logo.svg/1280px-Legendary_Entertainment_logo.svg.png",
+  "file": "File:Legendary Entertainment logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Legendary Pictures",
+   "ka": "Legendary Pictures",
+   "de": "Legendary Pictures",
+   "es": "Legendary Pictures",
+   "fr": "Legendary Pictures",
+   "it": "Legendary Pictures",
+   "pt": "Legendary Pictures"
+  },
+  "wrong": {
+   "en": [
+    "Polygon",
+    "Grammarly",
+    "Endemol"
+   ],
+   "ka": [
+    "Polygon",
+    "Grammarly",
+    "Endemol"
+   ],
+   "de": [
+    "Polygon",
+    "Grammarly",
+    "Endemol"
+   ],
+   "es": [
+    "Polygon",
+    "Grammarly",
+    "Endemol"
+   ],
+   "fr": [
+    "Polygon",
+    "Grammarly",
+    "Endemol"
+   ],
+   "it": [
+    "Polygon",
+    "Grammarly",
+    "Endemol"
+   ],
+   "pt": [
+    "Polygon",
+    "Grammarly",
+    "Endemol"
+   ]
+  }
+ },
+ {
+  "key": "w-q1054844",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Taito_logo.svg/1280px-Taito_logo.svg.png",
+  "file": "File:Taito logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Taito",
+   "ka": "Taito",
+   "de": "Taito",
+   "es": "Taito",
+   "fr": "Taito",
+   "it": "Taito",
+   "pt": "Taito"
+  },
+  "wrong": {
+   "en": [
+    "Bitdefender",
+    "Arkia",
+    "Spar"
+   ],
+   "ka": [
+    "Bitdefender",
+    "Arkia",
+    "Spar"
+   ],
+   "de": [
+    "Bitdefender",
+    "Arkia",
+    "Spar"
+   ],
+   "es": [
+    "Bitdefender",
+    "Arkia",
+    "Spar"
+   ],
+   "fr": [
+    "Bitdefender",
+    "Arkia",
+    "Spar"
+   ],
+   "it": [
+    "Bitdefender",
+    "Arkia",
+    "Spar"
+   ],
+   "pt": [
+    "Bitdefender",
+    "Arkia",
+    "Spar"
+   ]
+  }
+ },
+ {
+  "key": "w-q7226423",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Polygon_logo_%282024%29.svg/1280px-Polygon_logo_%282024%29.svg.png",
+  "file": "File:Polygon logo (2024).svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Polygon",
+   "ka": "Polygon",
+   "de": "Polygon",
+   "es": "Polygon",
+   "fr": "Polygon",
+   "it": "Polygon",
+   "pt": "Polygon"
+  },
+  "wrong": {
+   "en": [
+    "Olivetti",
+    "Dr. Martens",
+    "Shopify"
+   ],
+   "ka": [
+    "Olivetti",
+    "Dr. Martens",
+    "Shopify"
+   ],
+   "de": [
+    "Olivetti",
+    "Dr. Martens",
+    "Shopify"
+   ],
+   "es": [
+    "Olivetti",
+    "Dr. Martens",
+    "Shopify"
+   ],
+   "fr": [
+    "Olivetti",
+    "Dr. Martens",
+    "Shopify"
+   ],
+   "it": [
+    "Olivetti",
+    "Dr. Martens",
+    "Shopify"
+   ],
+   "pt": [
+    "Olivetti",
+    "Dr. Martens",
+    "Shopify"
+   ]
+  }
+ },
+ {
+  "key": "w-q1147012",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Air_Cairo_logo.svg/1280px-Air_Cairo_logo.svg.png",
+  "file": "File:Air Cairo logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Air Cairo",
+   "ka": "Air Cairo",
+   "de": "Air Cairo",
+   "es": "Air Cairo",
+   "fr": "Air Cairo",
+   "it": "Air Cairo",
+   "pt": "Air Cairo"
+  },
+  "wrong": {
+   "en": [
+    "Spar",
+    "Mozilla",
+    "Grundig"
+   ],
+   "ka": [
+    "Spar",
+    "Mozilla",
+    "Grundig"
+   ],
+   "de": [
+    "Spar",
+    "Mozilla",
+    "Grundig"
+   ],
+   "es": [
+    "Spar",
+    "Mozilla",
+    "Grundig"
+   ],
+   "fr": [
+    "Spar",
+    "Mozilla",
+    "Grundig"
+   ],
+   "it": [
+    "Spar",
+    "Mozilla",
+    "Grundig"
+   ],
+   "pt": [
+    "Spar",
+    "Mozilla",
+    "Grundig"
+   ]
+  }
+ },
+ {
+  "key": "w-q16840770",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Grammarly_logo_2024.svg/1280px-Grammarly_logo_2024.svg.png",
+  "file": "File:Grammarly logo 2024.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Grammarly",
+   "ka": "Grammarly",
+   "de": "Grammarly",
+   "es": "Grammarly",
+   "fr": "Grammarly",
+   "it": "Grammarly",
+   "pt": "Grammarly"
+  },
+  "wrong": {
+   "en": [
+    "Wiley",
+    "Texaco",
+    "Bandai"
+   ],
+   "ka": [
+    "Wiley",
+    "Texaco",
+    "Bandai"
+   ],
+   "de": [
+    "Wiley",
+    "Texaco",
+    "Bandai"
+   ],
+   "es": [
+    "Wiley",
+    "Texaco",
+    "Bandai"
+   ],
+   "fr": [
+    "Wiley",
+    "Texaco",
+    "Bandai"
+   ],
+   "it": [
+    "Wiley",
+    "Texaco",
+    "Bandai"
+   ],
+   "pt": [
+    "Wiley",
+    "Texaco",
+    "Bandai"
+   ]
+  }
+ },
+ {
+  "key": "w-q2717882",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Holiday_Inn_by_IHG_logo.svg/1280px-Holiday_Inn_by_IHG_logo.svg.png",
+  "file": "File:Holiday Inn by IHG logo.svg",
+  "license": "Public domain",
+  "difficulty": "hard",
+  "answers": {
+   "en": "Holiday Inn",
+   "ka": "Holiday Inn",
+   "de": "Holiday Inn",
+   "es": "Holiday Inn",
+   "fr": "Holiday Inn",
+   "it": "Holiday Inn",
+   "pt": "Holiday Inn"
+  },
+  "wrong": {
+   "en": [
+    "Azerbaijan Railways",
+    "Official Charts",
+    "Beko"
+   ],
+   "ka": [
+    "Azerbaijan Railways",
+    "Official Charts",
+    "Beko"
+   ],
+   "de": [
+    "Azerbaijan Railways",
+    "Official Charts",
+    "Beko"
+   ],
+   "es": [
+    "Azerbaijan Railways",
+    "Official Charts",
+    "Beko"
+   ],
+   "fr": [
+    "Azerbaijan Railways",
+    "Official Charts",
+    "Beko"
+   ],
+   "it": [
+    "Azerbaijan Railways",
+    "Official Charts",
+    "Beko"
+   ],
+   "pt": [
+    "Azerbaijan Railways",
+    "Official Charts",
+    "Beko"
+   ]
+  }
+ },
+ {
+  "key": "w-q1054692",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Twinings_logo.svg/1280px-Twinings_logo.svg.png",
+  "file": "File:Twinings logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Twinings",
+   "ka": "Twinings",
+   "de": "Twinings",
+   "es": "Twinings",
+   "fr": "Twinings",
+   "it": "Twinings",
+   "pt": "Twinings"
+  },
+  "wrong": {
+   "en": [
+    "Ibanez",
+    "Polygon",
+    "Shopify"
+   ],
+   "ka": [
+    "Ibanez",
+    "Polygon",
+    "Shopify"
+   ],
+   "de": [
+    "Ibanez",
+    "Polygon",
+    "Shopify"
+   ],
+   "es": [
+    "Ibanez",
+    "Polygon",
+    "Shopify"
+   ],
+   "fr": [
+    "Ibanez",
+    "Polygon",
+    "Shopify"
+   ],
+   "it": [
+    "Ibanez",
+    "Polygon",
+    "Shopify"
+   ],
+   "pt": [
+    "Ibanez",
+    "Polygon",
+    "Shopify"
+   ]
+  }
+ },
+ {
+  "key": "w-q2081339",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/DisneyToon_Studios_logo.svg/1280px-DisneyToon_Studios_logo.svg.png",
+  "file": "File:DisneyToon Studios logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Disneytoon Studios",
+   "ka": "Disneytoon Studios",
+   "de": "Disneytoon Studios",
+   "es": "Disneytoon Studios",
+   "fr": "Disneytoon Studios",
+   "it": "Disneytoon Studios",
+   "pt": "Disneytoon Studios"
+  },
+  "wrong": {
+   "en": [
+    "GoDaddy",
+    "Taito",
+    "Twinings"
+   ],
+   "ka": [
+    "GoDaddy",
+    "Taito",
+    "Twinings"
+   ],
+   "de": [
+    "GoDaddy",
+    "Taito",
+    "Twinings"
+   ],
+   "es": [
+    "GoDaddy",
+    "Taito",
+    "Twinings"
+   ],
+   "fr": [
+    "GoDaddy",
+    "Taito",
+    "Twinings"
+   ],
+   "it": [
+    "GoDaddy",
+    "Taito",
+    "Twinings"
+   ],
+   "pt": [
+    "GoDaddy",
+    "Taito",
+    "Twinings"
+   ]
+  }
+ },
+ {
+  "key": "w-q169925",
+  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Mozilla_2024_logo.svg/1280px-Mozilla_2024_logo.svg.png",
+  "file": "File:Mozilla 2024 logo.svg",
+  "license": "Public domain",
+  "difficulty": "easy",
+  "answers": {
+   "en": "Mozilla",
+   "ka": "Mozilla",
+   "de": "Mozilla",
+   "es": "Mozilla",
+   "fr": "Mozilla",
+   "it": "Mozilla",
+   "pt": "Mozilla"
+  },
+  "wrong": {
+   "en": [
+    "Aérospatiale",
+    "Bandai",
+    "Tate"
+   ],
+   "ka": [
+    "Aérospatiale",
+    "Bandai",
+    "Tate"
+   ],
+   "de": [
+    "Aérospatiale",
+    "Bandai",
+    "Tate"
+   ],
+   "es": [
+    "Aérospatiale",
+    "Bandai",
+    "Tate"
+   ],
+   "fr": [
+    "Aérospatiale",
+    "Bandai",
+    "Tate"
+   ],
+   "it": [
+    "Aérospatiale",
+    "Bandai",
+    "Tate"
+   ],
+   "pt": [
+    "Aérospatiale",
+    "Bandai",
+    "Tate"
+   ]
+  }
+ }
+]

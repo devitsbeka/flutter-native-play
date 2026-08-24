@@ -26,6 +26,7 @@ Rules enforced here rather than trusted:
 """
 import importlib.util
 import json
+import os
 import pathlib
 import random
 import re
@@ -66,18 +67,122 @@ PHOTOGRAPH = re.compile(r"\.(jpe?g|tiff?)$", re.I)
 # mark as two questions, and Wikidata's Georgian label for Mercedes-Benz
 # Group is "Daimler AG", a name that is on neither picture.
 CORPORATE_SUFFIX = re.compile(
-    r"\s+(group|holding|holdings|ag|nv|se|plc|inc\.?|ltd\.?|llc|corp\.?|corporation|"
-    r"company|co\.|s\.?a\.?|gmbh|kk|oyj|ab)$", re.I)
+    r"\s+(group|holding|holdings|ag|nv|se|plc|inc\.?|ltd\.?|limited|llc|corp\.?|"
+    r"corporation|company|co\.|s\.?a\.?|gmbh|kk|oyj|ab)$", re.I)
+
+
+# Countries whose full name does not fit on an answer button.
+#
+# MAX_ANSWER is 20 characters and that is a real constraint -- four options
+# on a phone -- so "Saint Vincent and the Grenadines" cannot ship as written.
+# Dropping those entries instead costs the bank Bosnia, the UAE, the
+# Dominican Republic and the Congo, which is not a flag set anyone would
+# call complete.
+#
+# Wikidata has a short-name property and it was tried first. It returns
+# "B&H", "DRC", "FM", "BAT", "PNG" -- an abbreviation is not an answer a
+# quiz should print, and half the languages have none at all. So these are
+# written out by hand, and almost all of them are the same operation: delete
+# the scaffolding words and keep the name. "კომორის კუნძულების კავშირი"
+# loses "კავშირი" (Union). "არაბთა გაერთიანებული საამიროები" keeps
+# "საამიროები" (the Emirates). Nothing here is translated from scratch; each
+# one is Wikidata's own label for that language with words removed, which is
+# why there is no language in the table whose name had to be invented.
+#
+# A country that needs a short name and has no honest one is not in this
+# table -- it is in spec/guess_flag_reject.json. The Central African
+# Republic is the case: every language calls it the republic, and "Central
+# Africa" is a region, not a country.
+SHORT_NAMES = {
+    "Bosnia and Herzegovina": {
+        "en": "Bosnia", "ka": "ბოსნია", "de": "Bosnien", "es": "Bosnia",
+        "fr": "Bosnie", "it": "Bosnia", "pt": "Bósnia"},
+    "Democratic Republic of the Congo": {
+        "en": "DR Congo", "ka": "კონგოს დრ", "de": "DR Kongo", "es": "RD Congo",
+        "fr": "RD Congo", "it": "RD Congo", "pt": "RD Congo"},
+    "United Arab Emirates": {
+        "en": "UAE", "ka": "საამიროები", "de": "VAE", "es": "EAU",
+        "fr": "Émirats", "it": "Emirati", "pt": "Emirados"},
+    "Republic of the Congo": {"en": "Congo"},
+    "Dominican Republic": {
+        "en": "Dominican Rep.", "ka": "დომინიკელთა რესპ.", "de": "Dom. Republik",
+        "fr": "Rép. dominicaine", "it": "Rep. Dominicana", "pt": "Rep. Dominicana"},
+    "Papua New Guinea": {"fr": "Papouasie-N.-Guinée"},
+    "Comoros": {"ka": "კომორის კუნძულები"},
+    "Palestine": {"ka": "პალესტინა"},
+    "São Tomé and Príncipe": {
+        "en": "São Tomé", "de": "São Tomé", "es": "Santo Tomé"},
+    "Saint Kitts and Nevis": {
+        "en": "St Kitts & Nevis", "de": "St. Kitts und Nevis",
+        "es": "San Cristóbal", "fr": "Saint-Kitts-et-Nevis", "pt": "São Cristóvão"},
+    "Saint Vincent and the Grenadines": {
+        "en": "St Vincent", "ka": "სენტ-ვინსენტი", "de": "St. Vincent",
+        "es": "San Vicente", "fr": "Saint-Vincent", "it": "Saint Vincent",
+        "pt": "São Vicente"},
+    "Federated States of Micronesia": {
+        "en": "Micronesia", "ka": "მიკრონეზია", "de": "Mikronesien",
+        "es": "Micronesia", "fr": "Micronésie", "it": "Micronesia",
+        "pt": "Micronésia"},
+    "Northern Cyprus": {"de": "Nordzypern", "pt": "Chipre do Norte"},
+}
 
 
 def company_key(name):
     """A name stripped to the thing a player would actually say."""
+    return brand_name(name).lower()
+
+
+def brand_name(name):
+    """The same strip, with the capitals left alone, so it can be an answer.
+
+    Wikidata's label is the legal name: "Panasonic Holdings Corporation",
+    "Colgate-Palmolive Company", "Sony Group Corporation". None of those is
+    what the mark says or what a player would type, and at 20 characters for
+    an answer button most of them do not fit either.
+    """
     previous = None
-    key = name.strip().lower()
-    while key != previous:  # "Sony Group Corporation" needs two passes
-        previous = key
-        key = CORPORATE_SUFFIX.sub("", key).strip()
-    return key
+    out = name.strip()
+    while out != previous:  # "Sony Group Corporation" needs two passes
+        previous = out
+        out = CORPORATE_SUFFIX.sub("", out).strip()
+        # "OCLC, Inc." loses "Inc." and keeps the comma that introduced it,
+        # and "OCLC," shipped as an answer on a card.
+        out = out.rstrip(",;:-").strip()
+    return out
+
+
+# Brands whose Wikidata label is neither what the logo says nor short enough
+# to print, and where the strip above cannot get there on its own.
+#
+# The line is drawn at brands, not at long names. 108 subjects were dropped
+# for a label over 20 characters and all but a dozen were universities,
+# academies, museums and development banks -- the University of Poitiers is
+# a real logo and not a question anybody can answer. Those stay dropped. The
+# dozen below are household marks that happen to be registered under a
+# corporate mouthful.
+LOGO_ALIASES = {
+    "World Health Organization": "WHO",
+    "The Walt Disney Company": "Disney",
+    "Walt Disney Studios Motion Pictures": "Disney Studios",
+    "National Basketball Association": "NBA",
+    "Major League Baseball": "MLB",
+    "Massachusetts Institute of Technology": "MIT",
+    "American Broadcasting Company": "ABC",
+    "Fox Broadcasting Company": "Fox",
+    "Warner Bros. Entertainment": "Warner Bros.",
+    "Koninklijke Philips NV": "Philips",
+    "The Coca-Cola Company": "Coca-Cola",
+    "National Geographic Society": "National Geographic",
+    "Ultimate Fighting Championship": "UFC",
+    "Universal Music Group": "Universal Music",
+    "China Central Television": "CCTV",
+    "Marriott International": "Marriott",
+    # "Products" and "Brands" are not corporate suffixes in general -- taking
+    # them off by rule would turn "General Mills Brands" into something wrong
+    # somewhere -- but on these two the mark says the short name.
+    "Avon Products": "Avon",
+    "Gibson Brands": "Gibson",
+}
 
 
 def existing_bank(slug):
@@ -89,15 +194,45 @@ def existing_bank(slug):
     alone lets that through, and the result is the repeated picture the
     expansion exists to remove, wearing a different label."""
     answers, images = set(), set()
-    for name in (f"{slug}.json", f"{slug}_v2.json"):
-        p = HERE / "spec" / name
-        if not p.exists():
+    # Every spec that has ever shipped for this category, the earlier
+    # expansions included. Leaving those out is not a small miss: the first
+    # expansion put 230 celebrities and 118 brands in the bank, and a second
+    # round that cannot see them offers the same 230 faces again, which is
+    # the exact complaint this work exists to answer.
+    for p in sorted((HERE / "spec").glob(f"{slug}*.json")):
+        # Everything alongside the specs that is NOT a spec: the review's
+        # rejections and the type lookup, neither of which is a list of
+        # questions.
+        if p.name.endswith(("_reject.json", "_types.json")):
             continue
         for e in json.loads(p.read_text()):
             answers.add(e["answers"]["en"].strip().lower())
             answers.add(company_key(e["answers"]["en"]))
             images.add(e["image"])
     return answers, images
+
+
+def institutions(slug):
+    """Wikidata ids that are a university, museum, library, bank or memorial.
+
+    Built by scripts/popular-image-categories/spec/<slug>_types.json, which
+    is written by the type query in the harvest tooling: P31/P279* against a
+    short list of classes, so "public research university" is caught without
+    enumerating every variant.
+
+    This filter exists because removing the answer-length limit removed an
+    accident. Wikidata's business-enterprise query returns the University of
+    Poitiers, the Museum of Modern Art and the Bank of Albania, and they were
+    being dropped for having names longer than an answer button rather than
+    for being institutions. Once brands like Philips and Warner Bros. stopped
+    being dropped alongside them, thirty universities came in.
+
+    A logo is a fine logo. "Which university is this?" is a different game.
+    """
+    p = HERE / "spec" / f"{slug}_types.json"
+    if not p.exists():
+        return set()
+    return set(json.loads(p.read_text()))
 
 
 def rejected(slug):
@@ -145,6 +280,7 @@ def difficulty_for(slug, e, i, n):
 def build_spec(slug, harvested, limit=None):
     taken, seen_images = existing_bank(slug)
     taken |= rejected(slug)
+    not_a_brand = institutions(slug)
     # Most-linked first: that ordering is the difficulty curve.
     entries = sorted(harvested, key=lambda e: -e.get("sitelinks", 0))
 
@@ -154,6 +290,8 @@ def build_spec(slug, harvested, limit=None):
         en = (labels.get("en") or "").strip()
         if not en or en.lower() in taken or company_key(en) in taken:
             continue
+        if e["qid"] in not_a_brand:
+            continue
         # The same picture, whatever it is called. Sorted most-famous-first,
         # so when two Wikidata items share a file the better known name wins.
         if e["thumb"] in seen_images or e.get("file", "") in seen_images:
@@ -162,15 +300,13 @@ def build_spec(slug, harvested, limit=None):
             continue
         if slug == "guess_logo" and PHOTOGRAPH.search(e.get("file", "")):
             continue
-        if any(not (labels.get(l) or "").strip() for l in LANGS):
+        # Every language needs a label -- except for logos, where the answer
+        # is the English name in all seven and the others are never read.
+        # Nineteen brands were being dropped for the absence of a
+        # Portuguese label that would not have appeared on any card.
+        if slug != "guess_logo" and any(
+                not (labels.get(l) or "").strip() for l in LANGS):
             continue
-        if any(len(labels[l].strip()) > MAX_ANSWER for l in LANGS):
-            continue
-        taken.add(en.lower())
-        taken.add(company_key(en))
-        seen_images.add(e["thumb"])
-        if e.get("file"):
-            seen_images.add(e["file"])
         # A brand is spelled the same way in every language. Wikidata's
         # per-language labels are right for a country or a city and wrong for
         # a company: they give "Universität Oslo", "Olimpíadas", and in
@@ -178,11 +314,27 @@ def build_spec(slug, harvested, limit=None):
         # Latin names and one in another alphabet. What the mark says is the
         # answer, and the mark says it once. See 20260902160000, which makes
         # the same correction to what already shipped.
+        brand = LOGO_ALIASES.get(en) or brand_name(en)
         per_language = (
-            {l: en for l in LANGS}
+            {l: brand for l in LANGS}
             if slug == "guess_logo"
             else {l: labels[l].strip() for l in LANGS}
         )
+        per_language.update(
+            {l: v for l, v in SHORT_NAMES.get(en, {}).items() if l in per_language})
+        # Length is checked on what will be PRINTED ON THE BUTTON, which for
+        # a logo is the English name in all seven languages. Checking
+        # Wikidata's own per-language labels instead threw away 174 brands
+        # for the length of a German or Portuguese name that was never going
+        # to be shown -- "Bayerische Motoren Werke" losing BMW its card.
+        if any(len(per_language[l]) > MAX_ANSWER for l in LANGS):
+            continue
+        taken.add(en.lower())
+        taken.add(company_key(en))
+        taken.add(per_language["en"].lower())
+        seen_images.add(e["thumb"])
+        if e.get("file"):
+            seen_images.add(e["file"])
         usable.append({**e, "labels": per_language})
 
     # The cut happens HERE, before distractors and difficulty are worked out,
@@ -248,8 +400,17 @@ def build_sql(slug, entries, existing_per_language):
     cat_id = uuid.uuid5(bm.NS, f"category/{slug}")
     sq, jarr = bm.sq, bm.jarr
 
-    # Continue after the levels the current bank fills, and never past 20.
+    # Continue after the levels the current bank fills, and never past the
+    # ceiling. START_LEVEL overrides it, because "how many questions are in
+    # the bank" and "what is the highest level number in use" are not the
+    # same thing once a bank has been numbered under a lower ceiling: 300
+    # celebrities numbered fifteen to a level stop at 20, not at 30. New
+    # subjects have to land ABOVE the last number in use, or the repack that
+    # follows -- which orders by level, then picture -- shuffles them into
+    # the middle of the difficulty curve instead of the end of it.
     start_level = min(MAX_LEVEL, max(1, existing_per_language // PER_LEVEL + 1))
+    if os.environ.get("START_LEVEL"):
+        start_level = min(MAX_LEVEL, int(os.environ["START_LEVEL"]))
     span = max(1, MAX_LEVEL - start_level + 1)
     per_level = max(1, -(-len(entries) // span))  # ceil
 
@@ -312,6 +473,10 @@ def main():
     # because where it falls is a judgement about the game.
     limit = int(sys.argv[4]) if len(sys.argv) > 4 else None
     harvested = json.loads(pathlib.Path(harvested_path).read_text())
+    # Counted before the new spec is written, or existing_bank() reads the
+    # file this run is about to create and reports the bank as already
+    # holding what has not shipped yet.
+    existing = len(existing_bank(slug)[1])
     entries = build_spec(slug, harvested, limit)
 
     errs = []
@@ -324,14 +489,18 @@ def main():
     if errs:
         sys.exit(f"Validation failed for {slug}:\n" + "\n".join(f"  - {x}" for x in errs[:25]))
 
-    spec_path = HERE / "spec" / f"{slug}_expansion.json"
+    # A round number, so a second expansion cannot overwrite the spec the
+    # first one shipped from -- which existing_bank() now reads to know what
+    # is already in the bank.
+    tag = os.environ.get("EXPANSION_TAG", "expansion")
+    spec_path = HERE / "spec" / f"{slug}_{tag}.json"
     spec_path.write_text(json.dumps(entries, ensure_ascii=False, indent=1))
 
-    existing = len(existing_bank(slug)[0])
     pathlib.Path(out_path).write_text(build_sql(slug, entries, existing))
     total = existing + len(entries)
     print(f"{slug}: +{len(entries)} new (bank {existing} -> {total}, "
-          f"levels {min(20, existing // 10)} -> {min(20, total // 10)})")
+          f"levels {min(MAX_LEVEL, existing // PER_LEVEL)} -> "
+          f"{min(MAX_LEVEL, total // PER_LEVEL)})")
 
 
 if __name__ == "__main__":
