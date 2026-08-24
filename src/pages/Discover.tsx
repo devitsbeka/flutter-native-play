@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback, useDeferredValue } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X } from "lucide-react";
+import { ChevronUp, Search, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useCategories } from "@/hooks/useCategories";
@@ -16,9 +16,24 @@ import { CategoryGrid } from "@/components/discover/CategoryGrid";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 import { HeaderActions } from "@/components/shared/HeaderActions";
+import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
+import { getResponsiveVideoSrc, videoUrl } from "@/config/videoConfig";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { matchesQuery } from "@/utils/searchMatch";
 import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
 import { funRowCategories } from "@/utils/discoverRows";
+
+const HERO_VIDEO = "/videos/explore-bg.mp4";
+const HERO_STILL = "/videos/explore-bg-still.jpg";
+
+/* The video fills nine tenths of what the phone can actually show — the
+   viewport less the safe-area insets the root already pads for, less the
+   bottom nav that floats over the scroller. The remaining tenth is the top
+   of the category sheet, peeking, so it is obvious there is something to
+   pull up. Anything measured against a bare 100dvh puts that peek behind
+   the nav, where nobody sees it. */
+const HERO_HEIGHT =
+  "h-[calc((100dvh_-_var(--safe-top)_-_var(--safe-bottom)_-_var(--bottom-nav-height))_*_0.9)]";
 
 // ─── Lazy Section: only mounts children when scrolled near viewport ─────
 
@@ -64,6 +79,32 @@ export default function Discover() {
   const deferredQuery = useDeferredValue(searchQuery);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+
+  // Phones open on the video, with the category sheet resting at the bottom
+  // of it; the sheet is ordinary page content, so pulling it up is just
+  // scrolling. `isMobile` only gates mounting the <video> — the layout
+  // itself is CSS, so it is right on the first paint rather than the second.
+  const isMobile = useIsMobile();
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  const heroSources = useMemo(() => {
+    const { webm, mp4 } = getResponsiveVideoSrc(HERO_VIDEO);
+    return [
+      { src: webm, type: "video/webm" },
+      { src: mp4, type: "video/mp4" },
+    ];
+  }, []);
+
+  // Bring the sheet up to the top of the scroller. Tapping the grab handle
+  // does it, and so does opening search — a search box that scrolls itself
+  // into view beats one that opens off screen.
+  const expandSheet = useCallback(() => {
+    const scroller = document.getElementById("main-scroll-container");
+    const sheet = sheetRef.current;
+    if (!scroller || !sheet) return;
+    if (scroller.scrollTop >= sheet.offsetTop - 1) return;
+    scroller.scrollTo({ top: sheet.offsetTop, behavior: "smooth" });
+  }, []);
 
   const tabs = useMemo(() => [
     { id: "all", label: t("discover.all") },
@@ -223,7 +264,61 @@ export default function Discover() {
 
   return (
     <MainLayout showPlayButton={false}>
-      <div className="min-h-full pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] bg-[#F8F6FC]">
+      <div className="relative min-h-full bg-[#F8F6FC]">
+
+        {/* The video, on phones only.
+         *
+         * Sticky rather than fixed: `position: fixed` inside this scroller
+         * is measured from whichever ancestor happens to be carrying a
+         * transform, and framer-motion writes transforms on this page all
+         * the time. Sticky is measured from the scroller itself, so the
+         * video holds still while the sheet slides up over it. */}
+        <div
+          aria-hidden
+          className={`md:hidden pointer-events-none sticky top-0 z-0 w-full overflow-hidden bg-[#2E1065] ${HERO_HEIGHT}`}
+        >
+          {isMobile && (
+            <BackgroundVideo
+              sources={heroSources}
+              still={videoUrl(HERO_STILL)}
+              className="absolute inset-0"
+            />
+          )}
+          {/* Softens the seam where the sheet's rounded top meets the video */}
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-black/25" />
+        </div>
+
+        {/* The sheet: everything the page used to be, on a surface that
+         * starts one tenth from the bottom on phones and is the page itself
+         * from md up. min-h is a full scroller so there is always enough
+         * scroll left to bring its top to the top — with a short tab (an
+         * empty Favourites) there would otherwise be nothing to pull. */}
+        <div
+          ref={sheetRef}
+          className="relative z-10 rounded-t-[28px] bg-[#F8F6FC] shadow-[0_-12px_32px_rgba(41,17,84,0.35)] min-h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:rounded-none md:shadow-none md:min-h-full"
+        >
+
+        {/* The peek. Only ~58px of the sheet clears the bottom nav, so what
+         * sits here has to say "pull me up" on its own: the grab handle and
+         * a chevron that drifts, which is the whole of what is on screen
+         * before the first scroll. Tapping it lifts the sheet for anyone who
+         * does not think to drag. */}
+        <button
+          type="button"
+          onClick={expandSheet}
+          aria-label={t("discover.title")}
+          className="md:hidden w-full flex flex-col items-center gap-1 rounded-t-[28px] bg-[#F8F6FC] pt-2.5 pb-1"
+        >
+          <span className="h-1.5 w-12 rounded-full bg-slate-300" />
+          <motion.span
+            aria-hidden
+            animate={{ y: [0, -3, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+            className="text-slate-400"
+          >
+            <ChevronUp className="w-5 h-5" />
+          </motion.span>
+        </button>
 
         {/* Sticky header section */}
         <div className="sticky top-0 z-20 bg-[#F8F6FC]/95">
@@ -234,7 +329,10 @@ export default function Discover() {
               rightElements={
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={() => setIsSearchExpanded(!isSearchExpanded)}
+                    onClick={() => {
+                      if (!isSearchExpanded) expandSheet();
+                      setIsSearchExpanded(!isSearchExpanded);
+                    }}
                     className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors text-gray-600"
                   >
                     {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
@@ -498,6 +596,8 @@ export default function Discover() {
             </section>
           )}
           </div>
+
+        </div>
 
       </div>
     </MainLayout>
