@@ -2142,6 +2142,7 @@ export const en: KaTranslations = {
     roomStatusCompleted: "Completed",
     roomStatusWaiting: "Waiting",
     roomJoinLive: "Join",
+    roomCardStart: "Play",
     roomStatusOnline: "Online",
     // How it works
     howItWorksTitle: "How does it work?",

@@ -1815,6 +1815,7 @@ export const fr: KaTranslations = {
     roomStatusCompleted: "Terminé",
     roomStatusWaiting: "En attente",
     roomJoinLive: "Rejoindre",
+    roomCardStart: "Jouer",
     roomStatusOnline: "En ligne",
     howItWorksTitle: "Comment ça marche ?",
     howItWorksFunGuaranteed: "Le plaisir est garanti ! 🎉",

@@ -23,6 +23,20 @@ const lobby = readFileSync(
   "utf8"
 );
 
+/** The InvitePlayerButton component, on its own. */
+function inviteButtonSource(): string {
+  const m = scoreboard.match(/function InvitePlayerButton\([\s\S]*?\n\}\n\n\/\*\*/);
+  expect(m, "expected InvitePlayerButton").not.toBeNull();
+  return m![0];
+}
+
+/** The PresenceAvatar component, on its own. */
+function presenceAvatarSource(): string {
+  const m = scoreboard.match(/function PresenceAvatar\([\s\S]*?\n\}\n\nexport function RoomScoreboard/);
+  expect(m, "expected PresenceAvatar").not.toBeNull();
+  return m![0];
+}
+
 describe("the invite button beside a player", () => {
   it("sits with the name, not out in the score column", () => {
     // The score column is about the game; this is about the person.
@@ -44,15 +58,15 @@ describe("the invite button beside a player", () => {
   });
 
   it("drops the label rather than squeezing it into the circle", () => {
-    const button = scoreboard.match(/function InvitePlayerButton\([\s\S]*?\n\}\n\nexport function RoomScoreboard/)![0];
-    expect(button).toMatch(/\{!iconOnly && \(sent \?/);
+    const button = inviteButtonSource();
+    expect(button).toMatch(/\{!iconOnly && !sent && t\("extra\.inviteFriendBtn"\)\}/);
     expect(button, "a circle for the icon, a pill for the word")
       .toMatch(/iconOnly \? "h-7 w-7 rounded-full"/);
   });
 
   it("keeps the word for a screen reader either way", () => {
     // Dropping the label from the pixels must not drop it from the button.
-    const button = scoreboard.match(/function InvitePlayerButton\([\s\S]*?\n\}\n\nexport function RoomScoreboard/)![0];
+    const button = inviteButtonSource();
     expect(button).toMatch(/aria-label=\{t\("extra\.inviteFriendBtn"\)\}/);
   });
 
@@ -73,18 +87,22 @@ describe("the invite button beside a player", () => {
     expect(scoreboard).toMatch(/\{isHost && !isInvited && onInvitePlayer/);
   });
 
-  it("says მოწვევა, and says sent afterwards", () => {
-    const button = scoreboard.match(/function InvitePlayerButton\([\s\S]*?\n\}\n\nexport function RoomScoreboard/);
-    expect(button, "expected InvitePlayerButton").not.toBeNull();
-    expect(button![0]).toMatch(/t\("extra\.inviteFriendBtn"\)/);
-    expect(button![0]).toMatch(/t\("extra\.sentLabel"\)/);
+  it("says მოწვევა, and claims nothing afterwards", () => {
+    // The "sent" caption is gone on purpose. It announced the outcome the
+    // instant the notification row was written and then sat there unchanged
+    // whether the player ever turned up or not; the green ring on their
+    // avatar is the honest version of the same signal.
+    const button = inviteButtonSource();
+    expect(button).toMatch(/t\("extra\.inviteFriendBtn"\)/);
+    expect(button, "a sent caption outlives the fact it claims")
+      .not.toMatch(/t\("extra\.sentLabel"\)/);
   });
 
   it("stays pressable when the invite fails", () => {
     // Going green on a notification that was never written is worse than
     // doing nothing: the host would stop waiting for someone who was never
     // asked.
-    const button = scoreboard.match(/function InvitePlayerButton\([\s\S]*?\n\}\n\nexport function RoomScoreboard/)![0];
+    const button = inviteButtonSource();
     expect(button).toMatch(/catch \{/);
     expect(button, "setSent must not run on the failure path")
       .toMatch(/await onInvite\(userId\);\s*\n\s*setSent\(true\);/);
@@ -102,14 +120,11 @@ describe("the invite button beside a player", () => {
  */
 describe("the host's crown", () => {
   it("sits on the avatar", () => {
-    const avatar = scoreboard.match(
-      /\{\/\* Avatar[\s\S]*?<SmartAvatar[\s\S]*?\n {18}\)\}\n {16}<\/div>/
-    );
-    expect(avatar, "expected the list row's avatar block").not.toBeNull();
-    expect(avatar![0], "the crown must be positioned against the avatar")
+    const avatar = presenceAvatarSource();
+    expect(avatar, "the crown must be positioned against the avatar")
       .toMatch(/absolute -bottom-1 -left-1/);
-    expect(avatar![0]).toMatch(/src=\{crownIcon\}/);
-    expect(avatar![0], "an absolute child needs a positioned parent or it escapes to the row")
+    expect(avatar).toMatch(/src=\{crownIcon\}/);
+    expect(avatar, "an absolute child needs a positioned parent or it escapes to the row")
       .toMatch(/className=\{`relative flex-shrink-0/);
   });
 
@@ -131,10 +146,7 @@ describe("the host's crown", () => {
   });
 
   it("still stands down for a placeholder who never arrived", () => {
-    const avatar = scoreboard.match(
-      /\{\/\* Avatar[\s\S]*?<SmartAvatar[\s\S]*?\n {18}\)\}\n {16}<\/div>/
-    )![0];
-    expect(avatar).toMatch(/showHostCrown && p\.is_host && !isInvited/);
+    expect(scoreboard).toMatch(/crown=\{showHostCrown && p\.is_host && !isInvited\}/);
   });
 });
 

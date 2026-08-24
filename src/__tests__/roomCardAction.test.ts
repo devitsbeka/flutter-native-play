@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { roomCardAction } from "@/utils/roomCardAction";
+import { compareRooms } from "@/utils/roomOrder";
 
 /**
  * The button on a room card.
@@ -90,13 +91,96 @@ describe("the card that draws it", () => {
     expect(source).toMatch(/\{action && \(\s*<motion\.button/);
   });
 
-  it("says what the lobby says when the host starts a round", () => {
-    expect(source).toMatch(/action === "start" \?[\s\S]{0,200}extra\.rlStartGame/);
+  it("uses the short label, not the lobby's long one", () => {
+    // "თამაშის დაწყება" is four syllables in a pill that shares its row with
+    // a count and two faces, and it pushed the group off the card. The lobby
+    // keeps the long form; it has a screen width to say it in.
+    expect(source).toMatch(/action === "start" \?[\s\S]{0,900}extra\.roomCardStart/);
+    expect(source, "the long form does not fit on a card")
+      .not.toMatch(/action === "start" \?[\s\S]{0,900}extra\.rlStartGame/);
   });
 
   it("pulses only for the live round", () => {
     // The pulse means "happening now". On a lobby that is merely occupied it
     // would be crying wolf on every card in the list.
     expect(source).toMatch(/animate=\{action === "live" \? \{ scale: \[1, 1\.05, 1\] \} : undefined\}/);
+  });
+});
+
+/**
+ * An invitation is the one entry on this list another person put there on
+ * purpose, and it was worthless where it landed. Invites tend to arrive for
+ * old rooms, whose recency is months stale — so the room you had just been
+ * asked into sorted below every room you happened to open yesterday, and its
+ * card was as silent as all of them.
+ */
+describe("a room somebody invited you to", () => {
+  it("offers a way in even with nobody online", () => {
+    // The one case where "nobody is online" is the wrong answer: somebody
+    // wanted you there specifically.
+    expect(roomCardAction(room({ has_pending_invite: true }))).toBe("enter");
+  });
+
+  it("offers the host a way in too, not a start", () => {
+    // You cannot be invited into your own room in the normal course of
+    // things, but if it happens, answering the invite is the act — and there
+    // is still nobody there to start a round with.
+    expect(roomCardAction(room({ is_host: true, has_pending_invite: true }))).toBe("enter");
+  });
+
+  it("still yields to a round already running", () => {
+    expect(
+      roomCardAction(room({ status: "playing", has_pending_invite: true }))
+    ).toBe("live");
+  });
+});
+
+describe("where an invited room sorts", () => {
+  it("goes above everything else on the list", () => {
+    const old = { created_at: "2020-01-01T00:00:00Z", hasPendingInvite: true };
+    const fresh = { created_at: "2026-08-24T00:00:00Z" };
+    expect(
+      compareRooms(old, fresh),
+      "an invite to a stale room still beats a room you opened yesterday"
+    ).toBeLessThan(0);
+    expect(compareRooms(fresh, old)).toBeGreaterThan(0);
+  });
+
+  it("beats even a live TV session", () => {
+    expect(
+      compareRooms({ created_at: "2020-01-01T00:00:00Z", hasPendingInvite: true }, { created_at: "2026-08-24T00:00:00Z", hasLiveTV: true })
+    ).toBeLessThan(0);
+  });
+
+  it("leaves the order alone when neither is invited", () => {
+    const a = { created_at: "2026-08-24T00:00:00Z" };
+    const b = { created_at: "2020-01-01T00:00:00Z" };
+    expect(compareRooms(a, b)).toBeLessThan(0);
+  });
+});
+
+/**
+ * "Pending" is read off the notifications already in memory rather than
+ * queried, so opening the room — which marks the notification read — retires
+ * the invite with no second source of truth to keep in step.
+ */
+describe("where the invite flag comes from", () => {
+  const hook = readFileSync(join(process.cwd(), "src/hooks/useMyRooms.ts"), "utf8");
+
+  it("reads unread room_invite notifications", () => {
+    const fn = hook.match(/const invitedRoomIds = useMemo\([\s\S]*?\n {2}\}, \[notifications\]\);/);
+    expect(fn, "expected invitedRoomIds").not.toBeNull();
+    expect(fn![0]).toMatch(/n\.type !== "room_invite" \|\| n\.read_at/);
+  });
+
+  it("does not add a query for it", () => {
+    // The context already holds every notification and realtime keeps it
+    // current; a second fetch would only be a second thing to go stale.
+    expect(hook).not.toMatch(/from\("notifications"\)/);
+  });
+
+  it("feeds both the button and the sort", () => {
+    expect(hook).toMatch(/has_pending_invite: true/);
+    expect(hook).toMatch(/hasPendingInvite: a\.has_pending_invite/);
   });
 });

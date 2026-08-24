@@ -29,11 +29,21 @@ export function roomCardAction(room: {
   tv_status: string | null;
   is_host: boolean;
   has_others_online: boolean;
+  /** Somebody asked this player into this room and they have not been yet. */
+  has_pending_invite?: boolean;
 }): RoomCardAction {
   // A live round outranks everything: it is the one state where a second
   // costs scoring. It also outranks "start" for the host, who cannot start a
   // round that is already running.
   if (isRoomLive(room)) return "live";
+
+  // Being asked is its own reason to go in, whether or not the person who
+  // asked is still at their phone. Without this the invite arrives, the
+  // notification is tapped, and the card it leads to is the same silent card
+  // as every other — the one place where "nobody is online" is the wrong
+  // answer, because somebody wanted you there specifically.
+  if (room.has_pending_invite) return "enter";
+
   if (!room.has_others_online) return null;
   return room.is_host ? "start" : "enter";
 }
