@@ -252,9 +252,14 @@ export function RoomLobbyV2() {
 
     // The sender's own invite link, so opening it makes the two of them
     // friends. It resolves to whatever room the sender is in when it is
-    // OPENED, which is this one. Falls back to the room link if the code
-    // cannot be minted (signed out, or the invite migration not yet run) --
-    // that still lands on the welcome screen, it just does not befriend.
+    // OPENED, which is this one.
+    //
+    // The room link is the fallback and nothing more. A room is archived once
+    // it is finished with, and both room_preview and room_players skip
+    // archived rooms, so a /room/<code> link shared into a chat is dead by
+    // the time the game is over — "this invitation link no longer works",
+    // pointing at a room that existed when it was sent. The personal link
+    // has no expiry: no room, and the friendship is still the outcome.
     const { data: inviteCode } = await supabase.rpc("get_or_create_invite_code");
     const link = inviteCode ? siteUrl(`/i/${inviteCode}`) : getShareLink(currentRoom.room_code);
     const shareData = {

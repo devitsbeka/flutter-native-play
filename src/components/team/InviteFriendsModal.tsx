@@ -229,12 +229,43 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     return () => { cancelled = true; };
   }, [isOpen, user]);
 
-  // Until the code arrives, fall back to whatever the caller gave us rather
-  // than to a dead share button.
-  const appLink = myInviteLink || inviteLink || siteUrl("/team");
+  /**
+   * The link to send, resolved at the moment of sending.
+   *
+   * This used to be `myInviteLink || inviteLink || siteUrl("/team")`,
+   * evaluated at render. The code is fetched by the effect above, so for the
+   * first moments the modal is open `myInviteLink` is null and the fallback
+   * wins — and from a room lobby the fallback is a /room/<code> link.
+   *
+   * That is a link that dies. A room is archived when it is finished with,
+   * and room_preview and room_players both skip archived rooms, so whoever
+   * taps it afterwards gets "this invitation link no longer works". It is
+   * exactly what happens when someone opens the invite screen and goes
+   * straight for a share button, which is what the screen is for.
+   *
+   * A personal /i/<code> link never dies: it names its owner, resolves
+   * whatever room they are in when it is OPENED, and when they are in none
+   * the friendship is still the outcome. So wait for it rather than sending
+   * something worse. The effect above has usually already fetched it, in
+   * which case this returns without awaiting anything.
+   */
+  const resolveAppLink = useCallback(async (): Promise<string> => {
+    if (myInviteLink) return myInviteLink;
+    if (user) {
+      const { data, error } = await supabase.rpc("get_or_create_invite_code");
+      if (!error && data) {
+        const link = siteUrl(`/i/${data}`);
+        setMyInviteLink(link);
+        return link;
+      }
+    }
+    // Signed out, or the code could not be minted. /team is a worse invite
+    // than a personal link and a better one than a room that is gone.
+    return inviteLink || siteUrl("/team");
+  }, [myInviteLink, user, inviteLink]);
+
   const shareMessage = t("extra.shareMessage");
   const encodedMessage = encodeURIComponent(shareMessage);
-  const encodedLink = encodeURIComponent(appLink);
 
   // Ref to hold stable searchUsers function
   const searchUsersRef = useRef(searchUsers);
@@ -360,27 +391,55 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     onClose();
   };
   
-  const handleShare = (platform: string) => {
+  const handleShare = async (platform: string) => {
     setIsSharing(true);
-    
+
+    // On the web, a window.open that happens after an await has lost the
+    // click that authorised it and the browser blocks it. So claim the tab
+    // synchronously in the one case where the link is not ready yet, and
+    // point it at the destination once it is. Native does not need this —
+    // there it is a location assignment or a scheme handoff.
+    const needsAwait = !myInviteLink;
+    const pendingTab =
+      needsAwait && !Capacitor.isNativePlatform() ? window.open("", "_blank") : null;
+
+    const appLink = await resolveAppLink();
+    const encodedLink = encodeURIComponent(appLink);
+
     let url = "";
-    
+
     switch (platform) {
       case "messenger":
-        // fb-messenger:// is an app scheme. On a phone with Messenger
-        // installed the OS opens it; in a desktop browser window.open on a
-        // scheme it does not know is a no-op, which is why this button did
-        // nothing on the web. Web gets an https URL, the way WhatsApp always
-        // has through wa.me.
-        url = Capacitor.isNativePlatform()
-          ? `fb-messenger://share?link=${encodedLink}`
-          : FACEBOOK_APP_ID
-            // The real Messenger composer, with the link attached.
-            ? `https://www.facebook.com/dialog/send?app_id=${FACEBOOK_APP_ID}` +
-              `&link=${encodedLink}&redirect_uri=${encodedLink}`
-            // No app id configured: the share dialog still opens with the
-            // link and its preview card, and can be sent on to Messenger.
-            : `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`;
+        // Messenger means a conversation — a person or a group you chose.
+        // This is an invitation to a room, addressed to someone; it is not an
+        // announcement.
+        //
+        // The fallback used to be facebook.com/sharer, which is the TIMELINE
+        // composer: press Messenger with no app id configured and you were
+        // offered a post to your wall. A room invite on a public feed is
+        // wrong twice over — it is addressed to nobody, and it hands a link
+        // that joins a private room to everyone who scrolls past.
+        //
+        // fb-messenger:// is an app scheme: the OS opens it on a phone that
+        // has Messenger, and a desktop browser does nothing with it at all.
+        // So on the web without an app id there is no way to open a composer,
+        // and the honest answer is to hand over the link to paste — never a
+        // timeline post.
+        if (Capacitor.isNativePlatform()) {
+          url = `fb-messenger://share?link=${encodedLink}`;
+        } else if (FACEBOOK_APP_ID) {
+          // The Send Dialog: pick a conversation, link attached.
+          url = `https://www.facebook.com/dialog/send?app_id=${FACEBOOK_APP_ID}` +
+                `&link=${encodedLink}&redirect_uri=${encodedLink}`;
+        } else {
+          pendingTab?.close();
+          const outcome = await copyToClipboard(appLink);
+          toast[outcome === "failed" ? "error" : "success"](
+            outcome === "failed" ? t("team.shareFailed") : t("extra.linkCopiedToast"),
+          );
+          setTimeout(() => setIsSharing(false), 500);
+          return;
+        }
         break;
       case "whatsapp":
         url = `https://wa.me/?text=${encodedMessage} ${encodedLink}`;
@@ -400,9 +459,13 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
         // which opens the target app when installed and quietly does
         // nothing otherwise.
         window.location.href = url;
+      } else if (pendingTab && !pendingTab.closed) {
+        pendingTab.location.href = url;
       } else {
         window.open(url, "_blank");
       }
+    } else {
+      pendingTab?.close();
     }
 
     setTimeout(() => setIsSharing(false), 500);
@@ -879,7 +942,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
             <div className="mx-auto w-full max-w-[520px] p-4">
               <motion.button
                 onClick={async () => {
-                  if (await copyToClipboard(appLink) === "failed") {
+                  // Resolved here for the same reason the share row resolves
+                  // it: copied before the code arrived, this used to put a
+                  // /room/<code> link on the clipboard, and that link stops
+                  // working the moment the room is archived.
+                  if (await copyToClipboard(await resolveAppLink()) === "failed") {
                     toast.error(t("team.shareFailed"));
                     return;
                   }
