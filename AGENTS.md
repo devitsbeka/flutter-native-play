@@ -77,6 +77,21 @@ that is all. Stop proposing `npx supabase functions deploy` and stop asking for
 `SUPABASE_ACCESS_TOKEN`. It has been asked for more than once and the answer
 does not change.
 
+**A Supabase MCP server in your session is not this project.** One may be
+connected — with `apply_migration`, `execute_sql`, `list_migrations` and the
+rest — and it belongs to a different account. MyTrivia's database is the one
+Lovable owns: project ref `sqwpzezkhpqkdyltvsim`, in `.env`. Those tools do
+not reach it, and pointing them at whatever project they DO reach would be
+writing to someone else's database. Check the ref before believing you have
+access, and assume you do not.
+
+The way to run SQL here is unchanged: hand the user a link to the migration's
+raw file on `main`, which they paste into the Lovable SQL editor. To confirm
+something applied, give them a read-only SELECT to paste back rather than
+guessing — and some of it is checkable from here with the anon key in `.env`:
+PostgREST answers for tables and functions, and a realtime websocket will say
+whether a table is in the `supabase_realtime` publication.
+
 The path is: merge to `main`, then ask Lovable to deploy. Lovable holds the
 Supabase connection for this project.
 
