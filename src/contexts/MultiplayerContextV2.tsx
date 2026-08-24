@@ -358,6 +358,34 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   const { user, profile } = useAuth();
   const { setRoomPresence } = useUserPresence();
   const [state, setState] = useState<MultiplayerState>(initialState);
+
+  /**
+   * Mirror onto the local room the start the database was just told about.
+   *
+   * Every path that begins a round writes status/started_at/current_game_id to
+   * game_rooms and then flips local phase to "playing" — but left the local
+   * room row untouched, still carrying the previous round's timestamp. The
+   * round-start screen is driven by that row, so on the client that pressed
+   * start the gate saw a room that had not begun: it rendered question one,
+   * and the 3-2-1 appeared a beat later when realtime delivered the row back.
+   * Question first, countdown second, which is exactly backwards.
+   *
+   * Called immediately after the write and before the phase flip, so the room
+   * is already "playing" by the time anything reads it.
+   */
+  const stampRoomStarted = useCallback((startedAt: string, gameId: string | null | undefined) => {
+    setState(prev => prev.currentRoom
+      ? {
+          ...prev,
+          currentRoom: {
+            ...prev.currentRoom,
+            status: "playing" as const,
+            started_at: startedAt,
+            current_game_id: gameId ?? prev.currentRoom.current_game_id,
+          },
+        }
+      : prev);
+  }, []);
   const [participants, setParticipants] = useState<RoomParticipant[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -1511,17 +1539,19 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
         
         // Update room status (includes host_is_observer to prevent premature realtime trigger)
+        const roundStartedAt = new Date().toISOString();
         await supabase
           .from("game_rooms")
           .update({
             category_name: categoryName,
             total_questions: questions.length,
             status: "playing",
-            started_at: new Date().toISOString(),
+            started_at: roundStartedAt,
             current_game_id: game?.id,
             host_is_observer: shouldObserve,
           })
           .eq("id", roomId);
+        stampRoomStarted(roundStartedAt, game?.id);
 
         // Track expected game_id so isNewGameWhilePlaying detection works for the host too
         expectedGameIdRef.current = game?.id ?? null;
@@ -1628,7 +1658,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       console.error("Error starting game:", error);
       toast.error(tStandalone("extra.mpGameStartError"));
     }
-  }, [state.currentRoom, isHost, user]);
+  }, [state.currentRoom, isHost, user, stampRoomStarted]);
 
   // Helper to save questions and update room status.
   // pendingDelete: callers can start safeDeleteRoomQuestions BEFORE fetching
@@ -1716,17 +1746,19 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     // Update room status (includes host_is_observer to prevent premature realtime trigger)
     // Also sync total_questions - a stale count from a previous custom-trivia round
     // breaks the "finished" detection when players re-enter the room
+    const roundStartedAt = new Date().toISOString();
     await supabase
       .from("game_rooms")
       .update({
         status: "playing",
-        started_at: new Date().toISOString(),
+        started_at: roundStartedAt,
         current_game_id: game?.id,
         host_is_observer: hostShouldObserve,
         total_questions: questions.length,
         ...extraRoomFields,
       })
       .eq("id", roomId);
+    stampRoomStarted(roundStartedAt, game?.id);
 
     // Track expected game_id so isNewGameWhilePlaying detection works for the host too
     expectedGameIdRef.current = game?.id ?? null;
@@ -1751,7 +1783,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       } : null,
       phase: "playing",
     }));
-  }, []);
+  }, [stampRoomStarted]);
 
   // Correct answers in the current round, tracked client-side (resets on the
   // round's first question). Used to record the player's result on the trivia
@@ -2216,16 +2248,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }
 
         // Update room status (after questions are committed, includes host_is_observer)
+        const roundStartedAt = new Date().toISOString();
         await supabase
           .from("game_rooms")
           .update({
             status: "playing",
-            started_at: new Date().toISOString(),
+            started_at: roundStartedAt,
             current_game_id: game?.id,
             host_is_observer: hostShouldObserve,
             total_questions: questions.length,
           })
           .eq("id", roomId);
+        stampRoomStarted(roundStartedAt, game?.id);
 
         // Track expected game_id so isNewGameWhilePlaying detection works for the caller too
         expectedGameIdRef.current = game?.id ?? null;
@@ -2366,17 +2400,19 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       }
 
       // Update room status (after questions are committed, includes host_is_observer)
+      const roundStartedAt = new Date().toISOString();
       await supabase
         .from("game_rooms")
         .update({
           status: "playing",
-          started_at: new Date().toISOString(),
+          started_at: roundStartedAt,
           current_game_id: game?.id,
           host_is_observer: hostShouldObserve,
           total_questions: questions.length,
           used_question_ids: newUsedIds,
         })
         .eq("id", roomId);
+      stampRoomStarted(roundStartedAt, game?.id);
 
       // Track expected game_id so isNewGameWhilePlaying detection works for the caller too
       expectedGameIdRef.current = game?.id ?? null;
@@ -2405,7 +2441,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       console.error("Error starting new round:", error);
       toast.error(tStandalone("extra.mpGameStartError"));
     }
-  }, [state.currentRoom, user]);
+  }, [state.currentRoom, user, stampRoomStarted]);
 
   // Start next round from queue - pop queue item and start with that category
   // This function DIRECTLY fetches questions with the new category to avoid race conditions
@@ -2582,6 +2618,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           await queueMaintenance;
 
           // Update room (after questions are committed)
+          const roundStartedAt = new Date().toISOString();
           await supabase
             .from("game_rooms")
             .update({
@@ -2589,11 +2626,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               category_name: categoryName,
               total_questions: questions.length,
               status: "playing",
-              started_at: new Date().toISOString(),
+              started_at: roundStartedAt,
               current_game_id: game?.id,
               host_is_observer: hostShouldObserve,
             })
             .eq("id", roomId);
+          stampRoomStarted(roundStartedAt, game?.id);
 
           // Track expected game_id so isNewGameWhilePlaying detection works for the caller too
           expectedGameIdRef.current = game?.id ?? null;
@@ -2769,6 +2807,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       await queueMaintenance;
 
       // Update room with new category and game info (after questions are committed)
+      const roundStartedAt = new Date().toISOString();
       await supabase
         .from("game_rooms")
         .update({
@@ -2777,11 +2816,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           used_question_ids: newUsedIds,
           total_questions: questions.length,
           status: "playing",
-          started_at: new Date().toISOString(),
+          started_at: roundStartedAt,
           current_game_id: game?.id,
           host_is_observer: hostShouldObserve,
         })
         .eq("id", roomId);
+      stampRoomStarted(roundStartedAt, game?.id);
 
       // Track expected game_id so isNewGameWhilePlaying detection works for the caller too
       expectedGameIdRef.current = game?.id ?? null;
@@ -2818,7 +2858,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       console.error("Error starting next from queue:", error);
       toast.error(tStandalone("extra.mpGameStartError"));
     }
-  }, [state.currentRoom, user, startNewRound]);
+  }, [state.currentRoom, user, startNewRound, stampRoomStarted]);
 
   // Leave room permanently
   const leaveRoomPermanently = useCallback(async () => {
