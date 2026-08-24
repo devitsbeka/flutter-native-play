@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { countdownNumberAt, msUntilNextTick, COUNTDOWN_MS } from "@/utils/roundCountdown";
+import {
+  countdownNumberAt,
+  msUntilNextTick,
+  COUNTDOWN_MS,
+  ROUND_START_GRACE_MS,
+  isWithinRoundStart,
+} from "@/utils/roundCountdown";
 
 /**
  * Everyone counts to the same clock.
@@ -64,5 +70,29 @@ describe("scheduling the next repaint", () => {
   it("stops scheduling once the count is over", () => {
     expect(msUntilNextTick(START, at(COUNTDOWN_MS))).toBeNull();
     expect(msUntilNextTick(null, at(0))).toBeNull();
+  });
+});
+
+describe("isWithinRoundStart", () => {
+  // The bound on how long the round-start screen may stay up for a client
+  // that has not reached the round. enterRoom can park someone in the lobby
+  // of a "playing" room forever; without a deadline this screen has no exit.
+  it("covers the count and the grace, then ends", () => {
+    expect(isWithinRoundStart(START, at(0))).toBe(true);
+    expect(isWithinRoundStart(START, at(COUNTDOWN_MS))).toBe(true);
+    expect(isWithinRoundStart(START, at(COUNTDOWN_MS + ROUND_START_GRACE_MS - 1))).toBe(true);
+    expect(isWithinRoundStart(START, at(COUNTDOWN_MS + ROUND_START_GRACE_MS))).toBe(false);
+    expect(isWithinRoundStart(START, at(60_000))).toBe(false);
+  });
+
+  it("never holds on an unknown or unparseable start", () => {
+    // An unknown start must not be able to pin a player on this screen.
+    for (const bad of [null, undefined, "", "not-a-date"]) {
+      expect(isWithinRoundStart(bad, at(0))).toBe(false);
+    }
+  });
+
+  it("holds for a clock that is behind the server's", () => {
+    expect(isWithinRoundStart(START, at(-2000))).toBe(true);
   });
 });

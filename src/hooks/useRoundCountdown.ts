@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { countdownNumberAt, msUntilNextTick } from "@/utils/roundCountdown";
+import {
+  COUNTDOWN_MS,
+  ROUND_START_GRACE_MS,
+  countdownNumberAt,
+  isWithinRoundStart,
+  msUntilNextTick,
+} from "@/utils/roundCountdown";
 
 /**
  * The digit currently on screen for a room's 3-2-1, or null when there is
@@ -27,4 +33,32 @@ export function useRoundCountdown(startedAt: string | null | undefined): number 
   }, [startedAt]);
 
   return countdownNumberAt(startedAt, now);
+}
+
+/**
+ * Whether the round-start screen should still be held up for a client that
+ * has not reached the round yet, including the grace after the digits end.
+ *
+ * Its own timer, because useRoundCountdown deliberately stops scheduling once
+ * the count is spent — there would be nothing left to trigger the re-render
+ * that takes this screen back down.
+ */
+export function useRoundStartHold(startedAt: string | null | undefined): boolean {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    setNow(Date.now());
+  }, [startedAt]);
+
+  useEffect(() => {
+    if (!startedAt) return;
+    const start = Date.parse(startedAt);
+    if (Number.isNaN(start)) return;
+    const endsIn = start + COUNTDOWN_MS + ROUND_START_GRACE_MS - Date.now();
+    if (endsIn <= 0) return;
+    const timer = setTimeout(() => setNow(Date.now()), endsIn);
+    return () => clearTimeout(timer);
+  }, [startedAt, now]);
+
+  return isWithinRoundStart(startedAt, now);
 }

@@ -44,6 +44,32 @@ export function countdownNumberAt(
   return Math.ceil((COUNTDOWN_MS - elapsed) / 1000);
 }
 
+/**
+ * How long the round-start screen may stay up after the digits run out, for a
+ * player whose questions have not arrived yet.
+ *
+ * It is a bound, not a target. `enterRoom` has a branch that parks a client in
+ * the lobby when a "playing" room yields no questions, and a room can sit in
+ * that state indefinitely — so a hold with no deadline is a screen with no way
+ * out. Five seconds covers a slow fetch and its retries; past that the player
+ * gets the room back, even if the room is wrong.
+ */
+export const ROUND_START_GRACE_MS = 5000;
+
+/**
+ * Whether the round-start screen should still be shown, counting the grace.
+ * Null `startedAt` is false: an unknown start can never justify a hold.
+ */
+export function isWithinRoundStart(
+  startedAt: string | null | undefined,
+  now: number,
+): boolean {
+  if (!startedAt) return false;
+  const start = Date.parse(startedAt);
+  if (Number.isNaN(start)) return false;
+  return now - start < COUNTDOWN_MS + ROUND_START_GRACE_MS;
+}
+
 /** Milliseconds until the number would change, for scheduling a re-render. */
 export function msUntilNextTick(
   startedAt: string | null | undefined,

@@ -1,0 +1,286 @@
+[
+  {
+    "category_id": "animals",
+    "icon_slug": "aardwolf"
+  },
+  {
+    "category_id": "anime_manga",
+    "icon_slug": "anime"
+  },
+  {
+    "category_id": "archaeology",
+    "icon_slug": "archeo"
+  },
+  {
+    "category_id": "architecture",
+    "icon_slug": "architect"
+  },
+  {
+    "category_id": "art",
+    "icon_slug": "art-conservator"
+  },
+  {
+    "category_id": "astronomy",
+    "icon_slug": "astronaut"
+  },
+  {
+    "category_id": "biology",
+    "icon_slug": "biology-class"
+  },
+  {
+    "category_id": "celebrities",
+    "icon_slug": "pop-star"
+  },
+  {
+    "category_id": "chemistry",
+    "icon_slug": "atom"
+  },
+  {
+    "category_id": "ecology",
+    "icon_slug": "ecology"
+  },
+  {
+    "category_id": "economics",
+    "icon_slug": "economics-icon"
+  },
+  {
+    "category_id": "fashion",
+    "icon_slug": "fashion-designer"
+  },
+  {
+    "category_id": "french_cuisine",
+    "icon_slug": null
+  },
+  {
+    "category_id": "french_culture",
+    "icon_slug": null
+  },
+  {
+    "category_id": "french_history",
+    "icon_slug": null
+  },
+  {
+    "category_id": "french_literature",
+    "icon_slug": null
+  },
+  {
+    "category_id": "fun_facts",
+    "icon_slug": "trivia-quiz"
+  },
+  {
+    "category_id": "geography",
+    "icon_slug": "globe-earth-centered-on-asia"
+  },
+  {
+    "category_id": "geology",
+    "icon_slug": "earth"
+  },
+  {
+    "category_id": "georgian_cuisine",
+    "icon_slug": "khachapuri"
+  },
+  {
+    "category_id": "georgian_culture",
+    "icon_slug": "grape"
+  },
+  {
+    "category_id": "georgian_history",
+    "icon_slug": "book-stand"
+  },
+  {
+    "category_id": "georgian_literature",
+    "icon_slug": "literature-class"
+  },
+  {
+    "category_id": "german_cuisine",
+    "icon_slug": null
+  },
+  {
+    "category_id": "german_culture",
+    "icon_slug": null
+  },
+  {
+    "category_id": "german_history",
+    "icon_slug": null
+  },
+  {
+    "category_id": "german_literature",
+    "icon_slug": null
+  },
+  {
+    "category_id": "guess_celebrity",
+    "icon_slug": "star"
+  },
+  {
+    "category_id": "guess_city",
+    "icon_slug": "city"
+  },
+  {
+    "category_id": "guess_flag",
+    "icon_slug": "globe"
+  },
+  {
+    "category_id": "guess_logo",
+    "icon_slug": "search-magnifier"
+  },
+  {
+    "category_id": "guess_movie",
+    "icon_slug": "movie-clapperboard"
+  },
+  {
+    "category_id": "guess_sportsman",
+    "icon_slug": "runner"
+  },
+  {
+    "category_id": "italian_cuisine",
+    "icon_slug": null
+  },
+  {
+    "category_id": "italian_culture",
+    "icon_slug": null
+  },
+  {
+    "category_id": "italian_history",
+    "icon_slug": null
+  },
+  {
+    "category_id": "italian_literature",
+    "icon_slug": null
+  },
+  {
+    "category_id": "languages",
+    "icon_slug": "cartoon-speech-bubble-sign"
+  },
+  {
+    "category_id": "math",
+    "icon_slug": "math"
+  },
+  {
+    "category_id": "medicine",
+    "icon_slug": "bone-density-scanner"
+  },
+  {
+    "category_id": "memes_internet",
+    "icon_slug": "retro-web-browser-interface"
+  },
+  {
+    "category_id": "military_history",
+    "icon_slug": "sword"
+  },
+  {
+    "category_id": "movies",
+    "icon_slug": "movie-clapperboard"
+  },
+  {
+    "category_id": "music",
+    "icon_slug": "music-concert"
+  },
+  {
+    "category_id": "myths_reality",
+    "icon_slug": "statue-of-zeus-at-olympia"
+  },
+  {
+    "category_id": "nature",
+    "icon_slug": "archipelago"
+  },
+  {
+    "category_id": "philosophy",
+    "icon_slug": "philosophy"
+  },
+  {
+    "category_id": "physics",
+    "icon_slug": "physics"
+  },
+  {
+    "category_id": "politics",
+    "icon_slug": "parliament-building"
+  },
+  {
+    "category_id": "pop_culture",
+    "icon_slug": "rock-music"
+  },
+  {
+    "category_id": "portuguese_cuisine",
+    "icon_slug": null
+  },
+  {
+    "category_id": "portuguese_culture",
+    "icon_slug": null
+  },
+  {
+    "category_id": "portuguese_history",
+    "icon_slug": null
+  },
+  {
+    "category_id": "portuguese_literature",
+    "icon_slug": null
+  },
+  {
+    "category_id": "programming",
+    "icon_slug": "app-developer"
+  },
+  {
+    "category_id": "psychology",
+    "icon_slug": "psychology"
+  },
+  {
+    "category_id": "religion_mythology",
+    "icon_slug": "church"
+  },
+  {
+    "category_id": "robotics_ai",
+    "icon_slug": "robot-building"
+  },
+  {
+    "category_id": "science",
+    "icon_slug": "gene-sequencer"
+  },
+  {
+    "category_id": "social_media",
+    "icon_slug": "social-media-app"
+  },
+  {
+    "category_id": "space",
+    "icon_slug": "rocket"
+  },
+  {
+    "category_id": "spanish_cuisine",
+    "icon_slug": null
+  },
+  {
+    "category_id": "spanish_culture",
+    "icon_slug": null
+  },
+  {
+    "category_id": "spanish_history",
+    "icon_slug": null
+  },
+  {
+    "category_id": "spanish_literature",
+    "icon_slug": null
+  },
+  {
+    "category_id": "sports",
+    "icon_slug": "basic-soccer-ball"
+  },
+  {
+    "category_id": "technology",
+    "icon_slug": "desktop-computer-monitor"
+  },
+  {
+    "category_id": "tv_series",
+    "icon_slug": "television"
+  },
+  {
+    "category_id": "video_games",
+    "icon_slug": "game-controller"
+  },
+  {
+    "category_id": "world_cuisine",
+    "icon_slug": "pan-roasted-hpuku-with-pua-risotto"
+  },
+  {
+    "category_id": "world_history",
+    "icon_slug": "world-map"
+  }
+]

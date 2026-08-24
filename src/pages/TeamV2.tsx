@@ -13,7 +13,8 @@ import { GameStylePersonalTrivia } from "@/components/team/GameStylePersonalTriv
 import { JoinRoomModal } from "@/components/team/JoinRoomModal";
 import { RoomLobbyV2 } from "@/components/team/RoomLobbyV2";
 import { RoundCountdown } from "@/components/team/RoundCountdown";
-import { useRoundCountdown } from "@/hooks/useRoundCountdown";
+import { useRoundCountdown, useRoundStartHold } from "@/hooks/useRoundCountdown";
+import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 import { MultiplayerGameScreenV2 } from "@/components/team/MultiplayerGameScreenV2";
 import { GameResultsScreenV2 } from "@/components/team/GameResultsScreenV2";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
@@ -88,6 +89,12 @@ function TeamContentV2() {
   // Before any early return below: the 3-2-1 is read from the room's start
   // time, and the game screen is withheld while it runs.
   const countdownNumber = useRoundCountdown(currentRoom?.started_at);
+  const withinRoundStart = useRoundStartHold(currentRoom?.started_at);
+  // Resolved here rather than inside the countdown so the category list is
+  // already loaded by the time a round starts — the count is only three
+  // seconds long, and players sit on this page for far longer than that
+  // beforehand.
+  const roundCategory = useCategoryIdentity(currentRoom?.category_id);
   const { playSound } = useSound();
   const { 
     sendInvitation,
@@ -733,26 +740,46 @@ function TeamContentV2() {
     setPlayingQuiz({ post });
   };
 
-  // Show game screen if playing (with guard for currentRoom).
+  // The countdown goes in front of the game screen rather than inside it:
+  // mounting the game screen starts the question clock, so anything that
+  // delays the first question has to delay the mount too. The count runs out
+  // on its own, which is what sends a mid-round rejoin straight to the
+  // question instead of making them watch a 3-2-1 for a round already in
+  // progress.
   //
-  // The countdown goes in front of it rather than inside: mounting the game
-  // screen starts the question clock, so anything that delays the first
-  // question has to delay the mount too. It returns null once the room's
-  // start time is more than the count old, which is also what makes a
-  // mid-round rejoin go straight to the question.
-  if (phase === "playing" && currentRoom) {
+  // The count belongs to the ROOM, not to this client's progress through it.
+  //
+  // An invited player learns the round started from a realtime update, then
+  // has to fetch the round's questions before their own phase becomes
+  // "playing". Gating the countdown on that phase meant they sat in the lobby
+  // through their own 3-2-1 and arrived at whatever was left of it — often
+  // nothing, since the count is measured from the host's start time and the
+  // fetch can outlast it. The host, who stamps that time only after their
+  // questions are ready, saw all three digits every time.
+  //
+  // Driving it from room status + started_at instead means everyone sees the
+  // same count at the same moment, which was the point of deriving it from a
+  // shared timestamp in the first place. A player who is still loading when
+  // the digits run out keeps this screen rather than dropping to the lobby.
+  // The hold is bounded. enterRoom parks a client in the lobby when a
+  // "playing" room yields no questions, and a room can stay that way, so an
+  // unbounded hold would be a screen with no exit. After the grace they get
+  // the room back whether or not the round ever reached them.
+  const roundIsStarting = currentRoom?.status === "playing";
+  const holdForQuestions = roundIsStarting && phase !== "playing" && withinRoundStart;
+  if (currentRoom && roundIsStarting && (countdownNumber !== null || holdForQuestions)) {
     return (
-      <>
-        {countdownNumber !== null && (
-          <RoundCountdown
-            number={countdownNumber}
-            categoryId={currentRoom.category_id}
-            categoryName={currentRoom.category_name}
-          />
-        )}
-        {countdownNumber === null && <MultiplayerGameScreenV2 />}
-      </>
+      <RoundCountdown
+        number={countdownNumber}
+        categoryId={roundCategory.categoryId ?? currentRoom.category_id}
+        categoryName={currentRoom.category_name}
+        iconSlug={roundCategory.iconSlug}
+      />
     );
+  }
+
+  if (phase === "playing" && currentRoom) {
+    return <MultiplayerGameScreenV2 />;
   }
 
   // Show result screen (with guard for currentRoom)

@@ -178,19 +178,47 @@ export const GEORGIAN_CATEGORY_SLUGS: Record<string, string> = {
   'ცხოველები': 'animals',
 };
 
+/**
+ * The national categories are <language>_<subject> — french_history,
+ * german_cuisine, portuguese_literature. Twenty of them, none with an
+ * `icon_slug` in the database and none named above, and the count grows every
+ * time a language is added.
+ *
+ * The subject is what the picture should show; which language is asking is
+ * carried by the question, not by the icon. Without this they reach
+ * DynamicIcon as an id it cannot place, and its last resort is an icon chosen
+ * by hashing that id — stable, and unrelated to the subject.
+ *
+ * Only consulted after the exact lookups above, so a category that names its
+ * own icon keeps it: military_history stays a sword rather than becoming a
+ * scroll.
+ */
+const SUBJECT_ICON_SLUGS: Record<string, string> = {
+  history: 'scroll',
+  literature: 'book',
+  cuisine: 'chef',
+  culture: 'theater',
+};
+
 // Get the preferred icon slug for a category - supports both English slugs and Georgian names
 export function getCategoryIconSlug(categoryIdOrName: string): string | null {
   // First try direct slug lookup
   if (CATEGORY_ICON_SLUGS[categoryIdOrName]) {
     return CATEGORY_ICON_SLUGS[categoryIdOrName];
   }
-  
+
   // Then try Georgian name mapping
   const englishSlug = GEORGIAN_CATEGORY_SLUGS[categoryIdOrName];
   if (englishSlug && CATEGORY_ICON_SLUGS[englishSlug]) {
     return CATEGORY_ICON_SLUGS[englishSlug];
   }
-  
+
+  // Finally, <language>_<subject> — see SUBJECT_ICON_SLUGS.
+  const subject = categoryIdOrName.split('_').pop();
+  if (subject && SUBJECT_ICON_SLUGS[subject]) {
+    return SUBJECT_ICON_SLUGS[subject];
+  }
+
   return null;
 }
 
