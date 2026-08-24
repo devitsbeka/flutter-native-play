@@ -223,10 +223,18 @@ const App = () => (
             <Suspense fallback={<PageSkeleton />}>
               <Routes>
                 <Route path="/" element={<Index />} />
-                {/* Experimental world-map homepage — dev-only, like the other
-                    showcase routes. It shipped unflagged, reachable on device
-                    via mytrivia://dev/v2. */}
-                {INCLUDE_DEV_PAGES && <Route path="/dev/v2" element={<Index />} />}
+                {/* Experimental world-map homepage. Not gated with the
+                    showcase routes above: those are excluded from a production
+                    build because each one pulls in a chunk that would otherwise
+                    ship (/docs in particular renders the internal schema map).
+                    This route renders Index, which every visitor already
+                    downloads, so shipping it costs nothing and exposes nothing.
+
+                    It is a preview, not a secret — Index.tsx only swaps in
+                    LoggedInHomeV2 for a signed-in user, and an unguessed URL is
+                    not a security boundary. Also reachable on device via
+                    mytrivia://dev/v2. */}
+                <Route path="/dev/v2" element={<Index />} />
                 <Route path="/loading" element={<Loading />} />
                 <Route path="/trivialoader" element={<TriviaLoader />} />
                 
