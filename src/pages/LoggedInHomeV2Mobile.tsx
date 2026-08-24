@@ -20,11 +20,6 @@ import power4 from "@/assets/figma-home/power-4.png";
 import coinNew from "@/assets/figma-home/coin-new.png";
 import gemNew from "@/assets/figma-home/gem-new.png";
 import playIcon from "@/assets/figma-home/play-icon.svg";
-import navHome from "@/assets/figma-home/nav-home.svg";
-import navDiscover from "@/assets/figma-home/nav-discover.svg";
-import navShop from "@/assets/figma-home/nav-shop.svg";
-import navRating from "@/assets/figma-home/nav-rating.svg";
-import navOnline from "@/assets/figma-home/nav-online.svg";
 import gridIcon from "@/assets/figma-home/grid-icon.svg";
 import bellIcon from "@/assets/figma-home/bell-icon.svg";
 import batteryCharge from "@/assets/figma-home/battery-charge.svg";
@@ -38,8 +33,16 @@ import friendTiko from "@/assets/figma-home/friend-tiko.png";
 // Quest card heights. Collapsed is the reference's bottom card; expanded
 // turns the same card into the full panel. The safe-area inset is added on
 // top of both so the handle clears the home indicator.
-const COLLAPSED_H = "calc(max(15dvh, 132px) + var(--safe-bottom))";
-const EXPANDED_H = "calc(84dvh + var(--safe-bottom))";
+// Height reserved for the app's real bottom nav (UniversalBottomNav, mounted
+// by Index). The quest card is pinned above it rather than sharing the edge:
+// the nav is `fixed bottom-0 z-50` and would otherwise sit on top of the card.
+// Measured: the nav's content is 88px and it adds its own bottom padding of
+// max(0.25rem, safe-area-inset-bottom / 2) — mirrored here so the card clears
+// it on a notched phone too. Guessing 64px left the card overlapping it by 28.
+const NAV_H = "calc(88px + max(0.25rem, var(--safe-bottom) / 2))";
+
+const COLLAPSED_H = "max(14dvh, 118px)";
+const EXPANDED_H = "78dvh";
 
 // Vertical drag past this many px commits the gesture. Below it the card
 // snaps back, so a scroll that starts on the handle does not toggle state.
@@ -195,14 +198,6 @@ export function LoggedInHomeV2Mobile({
     else onPlay();
   }, [quest, onMissions, onPlay, navigate, vibrate]);
 
-  const navItems = [
-    { icon: navHome, path: "/", label: "მთავარი" },
-    { icon: navDiscover, path: "/discover", label: "აღმოჩენა" },
-    { icon: navShop, path: "/power-ups", label: "მაღაზია" },
-    { icon: navRating, path: "/leaderboards", label: "რეიტინგი" },
-    { icon: navOnline, path: "/team", label: "ონლაინ თამაში" },
-  ];
-
   const friends = [
     { img: friendGloria, name: "Gloria" },
     { img: friendTrivia, name: "TriviaMaste" },
@@ -255,9 +250,6 @@ export function LoggedInHomeV2Mobile({
               className="size-[46px] rounded-full border-[3px] border-[#ffb020] object-cover"
               src={avatar}
             />
-            <span className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 rounded-full border-2 border-white bg-[#ffb020] px-[6px] font-['Nunito'] text-[9px] font-extrabold leading-[13px] text-white">
-              Lv {level}
-            </span>
           </button>
 
           <button type="button" onClick={onLevel} className="min-w-0 flex-1 text-left">
@@ -312,9 +304,17 @@ export function LoggedInHomeV2Mobile({
         </span>
         <button
           type="button"
+          aria-label="მენიუ"
+          onClick={onMenu}
+          className={`pointer-events-auto ml-auto flex size-[34px] items-center justify-center rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.16)] ${PRESSABLE}`}
+        >
+          <img alt="" className="size-[17px]" src={gridIcon} />
+        </button>
+        <button
+          type="button"
           aria-label="ცნობები"
           onClick={() => navigate("/notifications")}
-          className={`pointer-events-auto relative ml-auto flex size-[34px] items-center justify-center rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.16)] ${PRESSABLE}`}
+          className={`pointer-events-auto relative flex size-[34px] items-center justify-center rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.16)] ${PRESSABLE}`}
         >
           <img alt="" className="size-[18px]" src={bellIcon} />
           {unreadCount > 0 && (
@@ -341,8 +341,9 @@ export function LoggedInHomeV2Mobile({
       {/* ---------------------------------------------------------------- */}
       <section
         aria-label="მიმდინარე ქვესტი"
-        className="absolute inset-x-0 bottom-0 z-40 flex flex-col rounded-t-[28px] bg-[#f6efff] shadow-[0_-6px_24px_rgba(60,30,90,0.26)]"
+        className="absolute inset-x-0 z-40 flex flex-col rounded-t-[28px] bg-[#f6efff] shadow-[0_-6px_24px_rgba(60,30,90,0.26)]"
         style={{
+          bottom: NAV_H,
           // Dragging adjusts height rather than translating: the card is
           // anchored to the bottom edge, so a transform would lift it clear
           // and show the map through the gap underneath.
@@ -352,7 +353,6 @@ export function LoggedInHomeV2Mobile({
               ? EXPANDED_H
               : COLLAPSED_H,
           transition: dragY === null ? `height 380ms ${SPRING}` : "none",
-          paddingBottom: "var(--safe-bottom)",
         }}
       >
         <button
@@ -409,6 +409,41 @@ export function LoggedInHomeV2Mobile({
           }`}
           aria-hidden={!expanded}
         >
+          <div className="-mx-[16px] mb-[12px] flex gap-[14px] overflow-x-auto px-[16px] pb-[4px]">
+            <button
+              type="button"
+              onClick={onAddFriend}
+              className={`flex w-[60px] shrink-0 flex-col items-center gap-[6px] ${PRESSABLE}`}
+            >
+              <span
+                className="flex size-[56px] items-center justify-center rounded-full border-2 border-dashed border-[#c084fc]"
+                style={{ backgroundImage: "linear-gradient(135deg, rgb(243,232,255) 0%, rgb(233,213,255) 100%)" }}
+              >
+                <img alt="" className="size-[20px]" src={plusIcon} />
+              </span>
+              <span className="truncate font-['Nunito'] text-[11px] font-medium text-[#475569]">
+                დამატება
+              </span>
+            </button>
+            {friends.map((f) => (
+              <button
+                key={f.name}
+                type="button"
+                onClick={() => navigate("/team")}
+                className={`flex w-[60px] shrink-0 flex-col items-center gap-[6px] ${PRESSABLE}`}
+              >
+                <img
+                  alt=""
+                  className="size-[56px] rounded-full border-[3px] border-white object-cover"
+                  src={f.img}
+                />
+                <span className="w-full truncate text-center font-['Nunito'] text-[11px] font-medium text-[#334155]">
+                  {f.name}
+                </span>
+              </button>
+            ))}
+          </div>
+
           <button
             type="button"
             onClick={onPlay}
@@ -454,63 +489,6 @@ export function LoggedInHomeV2Mobile({
               <CountChip value={34} />
             </span>
           </button>
-
-          <div className="-mx-[16px] mb-[12px] flex gap-[14px] overflow-x-auto px-[16px] pb-[4px]">
-            <button
-              type="button"
-              onClick={onAddFriend}
-              className={`flex w-[60px] shrink-0 flex-col items-center gap-[6px] ${PRESSABLE}`}
-            >
-              <span
-                className="flex size-[56px] items-center justify-center rounded-full border-2 border-dashed border-[#c084fc]"
-                style={{ backgroundImage: "linear-gradient(135deg, rgb(243,232,255) 0%, rgb(233,213,255) 100%)" }}
-              >
-                <img alt="" className="size-[20px]" src={plusIcon} />
-              </span>
-              <span className="truncate font-['Nunito'] text-[11px] font-medium text-[#475569]">
-                დამატება
-              </span>
-            </button>
-            {friends.map((f) => (
-              <button
-                key={f.name}
-                type="button"
-                onClick={() => navigate("/team")}
-                className={`flex w-[60px] shrink-0 flex-col items-center gap-[6px] ${PRESSABLE}`}
-              >
-                <img
-                  alt=""
-                  className="size-[56px] rounded-full border-[3px] border-white object-cover"
-                  src={f.img}
-                />
-                <span className="w-full truncate text-center font-['Nunito'] text-[11px] font-medium text-[#334155]">
-                  {f.name}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <div className={`mb-[12px] flex items-center justify-between px-[8px] py-[12px] ${CARD}`}>
-            {navItems.map((item) => (
-              <button
-                key={item.path}
-                type="button"
-                aria-label={item.label}
-                onClick={() => navigate(item.path)}
-                className={`flex size-[48px] items-center justify-center rounded-full active:bg-black/5 ${PRESSABLE}`}
-              >
-                <img alt="" className="size-[24px]" src={item.icon} />
-              </button>
-            ))}
-            <button
-              type="button"
-              aria-label="მენიუ"
-              onClick={onMenu}
-              className={`flex size-[48px] items-center justify-center rounded-full active:bg-black/5 ${PRESSABLE}`}
-            >
-              <img alt="" className="size-[20px]" src={gridIcon} />
-            </button>
-          </div>
 
           <div className="flex items-center justify-center gap-[8px] opacity-70">
             <img alt="" className="size-[16px]" src={batteryCharge} />

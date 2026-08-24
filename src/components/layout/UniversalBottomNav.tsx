@@ -29,6 +29,14 @@ interface UniversalBottomNavProps {
   isGuest?: boolean;
   hidden?: boolean;
   vipExpiresAt?: string;
+  /**
+   * Treat this screen as the home route even though the path is not "/".
+   * The /dev/v2 homepage preview lives at its own path, so without this the
+   * centre button turns into "go home" and the play action disappears from
+   * the one screen that is supposed to own it. Defaults to path-based
+   * detection, so every existing caller is unaffected.
+   */
+  treatAsHome?: boolean;
 }
 
 export function UniversalBottomNav({ 
@@ -44,6 +52,7 @@ export function UniversalBottomNav({
   isGuest = false,
   hidden = false,
   vipExpiresAt,
+  treatAsHome = false,
 }: UniversalBottomNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,7 +60,7 @@ export function UniversalBottomNav({
   const { indicators } = useNewContentIndicators();
   const { prefetchRoute } = useNavigationPrefetch();
   
-  const isHome = location.pathname === "/";
+  const isHome = treatAsHome || location.pathname === "/";
   const isTeam = location.pathname === "/team";
   const isActive = (path: string) => location.pathname === path;
 

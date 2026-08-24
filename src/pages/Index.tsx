@@ -765,6 +765,23 @@ export default function Index() {
           onAddFriend={() => setShowAddFriendModal(true)}
           onMenu={() => setIsSideMenuOpen(true)}
         />
+        {/* The app's real bottom nav, same props MainLayout gives it on every
+            other mobile screen. Mounted here rather than inside the V2 layout
+            so it stays one component with one source of truth for plays, VIP
+            and guest state. */}
+        <div className="md:hidden">
+          <UniversalBottomNav
+            onPlayClick={handlePlayClick}
+            playsRemaining={user ? playsRemaining : guestPlaysRemaining}
+            maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
+            canPlay={user ? canPlay : guestPlaysRemaining > 0}
+            isVip={isVip}
+            isGuest={!user}
+            vipExpiresAt={subscription?.expires_at}
+            hidden={isSideMenuOpen}
+            treatAsHome
+          />
+        </div>
         {/* Modals reachable from the homepage */}
         <SignupOnboardingModal />
         <SideMenuDrawer isOpen={isSideMenuOpen} onClose={() => setIsSideMenuOpen(false)} />
