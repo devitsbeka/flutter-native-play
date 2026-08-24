@@ -311,8 +311,15 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
             {/* Frosted popup panel wrapping header + profile content */}
             <div className="relative m-auto flex max-h-full w-full max-w-[740px] md:max-w-[640px] flex-col overflow-hidden rounded-[24px] border border-white/70 bg-white/60 backdrop-blur-xl shadow-[0_12px_40px_rgba(104,71,204,0.18)]">
 
-            {/* Fixed Header */}
-            <div className="flex-shrink-0 sticky top-0 z-10 border-b border-border/40">
+            {/* Fixed Header.
+                z-30, and the scrolling content below is `isolate`. The
+                overflow menu hangs out of this header, and the avatar's
+                animated layer carries z-10 of its own (SmartAvatar) — with
+                the header also at z-10 the avatar won on document order and
+                covered the menu. Reproduced in a browser: either change fixes
+                it, and `isolate` is what stops the next z-index added inside
+                the scroll area from doing it again. */}
+            <div className="flex-shrink-0 sticky top-0 z-30 border-b border-border/40">
               <div className="flex items-center h-14 px-4 max-w-[700px] md:max-w-[600px] mx-auto w-full">
                 <motion.button
                   onClick={onClose}
@@ -383,7 +390,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 <p className="text-sm text-muted-foreground/70">{t("extra.accountDeleted")}</p>
               </div>
             ) : (
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto isolate">
                 <div className="max-w-[700px] md:max-w-[600px] mx-auto">
                 {/* Profile Header */}
                 <div className="p-4 flex flex-col items-center">
@@ -424,7 +431,15 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                       below, not here, so the header stays the person and the
                       panels stay the detail. */}
 
-                  {/* Action Buttons */}
+                  {/* The primary-action slot: exactly one of these renders,
+                      chosen by friendship status. 52px rather than the
+                      size="sm" default of 40 — measured, not guessed. All four
+                      carry it so the panel does not change height when a
+                      request is sent or accepted.
+
+                      min-h rather than a padding override: py-2.5 and py-4 are
+                      the same property, and Tailwind's emission order decides
+                      which wins, not the order in the class string. */}
                   {!data.isCurrentUser && (
                     <div className="flex items-center justify-center gap-3 mt-4 w-full max-w-xs">
                       {data.friendshipStatus === 'none' && (
@@ -433,7 +448,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           disabled={addingFriend}
                           variant="secondary"
                           size="sm"
-                          className="flex-1"
+                          className="flex-1 min-h-[52px]"
                         >
                           {addingFriend ? (
                             <>
@@ -449,19 +464,19 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                         </ChunkyButton>
                       )}
                       {data.friendshipStatus === 'sent' && (
-                         <ChunkyButton disabled variant="secondary" size="sm" className="flex-1">
+                         <ChunkyButton disabled variant="secondary" size="sm" className="flex-1 min-h-[52px]">
                           <Clock className="w-4 h-4 mr-1" />
                           {t("extra.sentStatusLabel")}
                         </ChunkyButton>
                       )}
                       {data.friendshipStatus === 'pending' && (
-                        <ChunkyButton variant="primary" size="sm" className="flex-1">
+                        <ChunkyButton variant="primary" size="sm" className="flex-1 min-h-[52px]">
                           <Check className="w-4 h-4 mr-1" />
                           {t("extra.acceptBtn")}
                         </ChunkyButton>
                       )}
                       {data.friendshipStatus === 'accepted' && (
-                        <ChunkyButton onClick={handleChallenge} variant="primary" size="sm" className="flex-1">
+                        <ChunkyButton onClick={handleChallenge} variant="primary" size="sm" className="flex-1 min-h-[52px]">
                           <Swords className="w-4 h-4 mr-1" />
                           {t("extra.challengeBtn")}
                         </ChunkyButton>
