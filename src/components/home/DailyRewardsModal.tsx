@@ -241,8 +241,16 @@ function DayRewardCard({
           // line always (nowrap, everything shrink-0) — no "Claimed" label,
           // the check says it. Coins are constant; the bonus is at most one
           // more kind — see claim_daily_reward's "never a third pill" rule.
+          //
+          // The gap here is what separates one reward from the next, and it
+          // has to beat the gap INSIDE a reward by enough to group them: at
+          // 6px against the icon's own 2px, the coin's amount and the next
+          // reward's icon sat closer than a pair of digits and "125❄" read as
+          // one run. Widened to 12px and the inner gaps left alone, so each
+          // icon still reads as belonging to its own number. There is room —
+          // the card is 272px and the widest receipt is about 100px of it.
           <div
-            className="flex h-[50px] min-w-[144px] max-w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-[18px] px-3"
+            className="flex h-[50px] min-w-[144px] max-w-full items-center justify-center gap-3 whitespace-nowrap rounded-[18px] px-3"
             style={{ background: "rgba(255,255,255,0.3)" }}
           >
             <Check className="h-5 w-5 shrink-0 text-white" />
