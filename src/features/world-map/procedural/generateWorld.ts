@@ -8,6 +8,7 @@ import {
   WorldDefinition,
 } from "../schemas/worldDefinition";
 import { childSeed, createRng, range, Rng } from "./seededRandom";
+import { terrainHeight } from "./terrain";
 
 const OUTLINE_SEGMENTS = 22;
 
@@ -119,15 +120,21 @@ function generateRegion(region: RegionDefinition, seed: number): GeneratedRegion
 
   const treeRng = createRng(childSeed(seed, `${region.id}:trees`));
   const rockRng = createRng(childSeed(seed, `${region.id}:rocks`));
-  const treeCount = Math.round(26 * (region.density?.trees ?? 1));
-  const rockCount = Math.round(10 * (region.density?.rocks ?? 1));
+  // Denser than the island days: an area's scatter now has to cover open
+  // country rather than a small plateau, and sparse dressing leaves obvious
+  // bald patches between areas.
+  const treeCount = Math.round(52 * (region.density?.trees ?? 1));
+  const rockCount = Math.round(18 * (region.density?.rocks ?? 1));
 
   return {
     def: region,
     outline,
     trees: scatter(treeRng, outline, region.radius, treeCount, obstacles, [0.75, 1.35]),
     rocks: scatter(rockRng, outline, region.radius, rockCount, obstacles, [0.5, 1.2]),
-    surfaceY: region.position[1] + region.elevation,
+    // Kept for callers that want the area's nominal ground level; anything
+    // actually placed on the map samples terrainHeight per position instead,
+    // because the land is continuous and no longer flat per region.
+    surfaceY: terrainHeight(region.position[0], region.position[2]),
   };
 }
 
@@ -135,17 +142,41 @@ function generatePaths(def: WorldDefinition, nodeWorld: Record<string, Vec3>): G
   const paths: GeneratedPath[] = [];
   for (const region of def.regions) {
     for (const path of region.paths) {
-      const points = path.through.map((id) => nodeWorld[id]).filter(Boolean);
-      if (points.length >= 2) paths.push({ id: path.id, state: path.state, points });
+      const through = path.through.map((id) => nodeWorld[id]).filter(Boolean);
+      if (through.length < 2) continue;
+      // Resample between nodes so the ribbon follows the terrain instead of
+      // cutting a straight chord through it.
+      const points: Vec3[] = [];
+      for (let i = 0; i < through.length - 1; i++) {
+        const a = through[i];
+        const b = through[i + 1];
+        const steps = Math.max(3, Math.ceil(Math.hypot(b[0] - a[0], b[2] - a[2]) / 2.5));
+        for (let s = i === 0 ? 0 : 1; s <= steps; s++) {
+          const t = s / steps;
+          const x = a[0] + (b[0] - a[0]) * t;
+          const z = a[2] + (b[2] - a[2]) * t;
+          points.push([x, terrainHeight(x, z), z]);
+        }
+      }
+      paths.push({ id: path.id, state: path.state, points });
     }
   }
+  // "Bridges" used to sag across the void between two islands. The land is
+  // continuous now, so they are ordinary road segments that follow the ground
+  // — sampled along their length so a link never tunnels through a rise.
   for (const bridge of def.bridges) {
     const a = nodeWorld[bridge.from];
     const b = nodeWorld[bridge.to];
     if (!a || !b) continue;
-    // Sag the bridge midpoint slightly below the endpoints for a rope-bridge feel.
-    const mid: Vec3 = [(a[0] + b[0]) / 2, Math.min(a[1], b[1]) - 1.2, (a[2] + b[2]) / 2];
-    paths.push({ id: `bridge-${bridge.from}-${bridge.to}`, state: "main", points: [a, mid, b] });
+    const steps = 8;
+    const points: Vec3[] = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = a[0] + (b[0] - a[0]) * t;
+      const z = a[2] + (b[2] - a[2]) * t;
+      points.push([x, terrainHeight(x, z), z]);
+    }
+    paths.push({ id: `link-${bridge.from}-${bridge.to}`, state: "main", points });
   }
   return paths;
 }
@@ -153,10 +184,15 @@ function generatePaths(def: WorldDefinition, nodeWorld: Record<string, Vec3>): G
 function generateClouds(def: WorldDefinition): ScatterInstance[] {
   const rng = createRng(childSeed(def.seed, "clouds"));
   const clouds: ScatterInstance[] = [];
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 18; i++) {
+    const x = range(rng, -46, 46);
+    const z = range(rng, -118, 70);
     clouds.push({
-      position: [range(rng, -55, 58), range(rng, 8, 24), range(rng, -14, 38)],
-      scale: range(rng, 2, 4.6),
+      // Height is measured FROM the ground, not from zero. The land climbs
+      // ~13 units toward the summit, so a fixed altitude buried the far end
+      // of the route in cloud while the near end had clear sky.
+      position: [x, terrainHeight(x, z) + range(rng, 20, 38), z],
+      scale: range(rng, 2.2, 5.2),
       rotationY: range(rng, 0, Math.PI * 2),
       tint: rng(),
     });
@@ -173,7 +209,7 @@ export function generateWorld(def: WorldDefinition): GeneratedWorld {
   for (const region of def.regions) {
     for (const node of region.nodes) {
       const w = toWorld(region, node.position);
-      nodeWorldPositions[node.id] = [w[0], region.position[1] + region.elevation, w[2]];
+      nodeWorldPositions[node.id] = [w[0], terrainHeight(w[0], w[2]), w[2]];
     }
   }
   return {

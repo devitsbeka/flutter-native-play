@@ -11,6 +11,31 @@ import { worldMaterials } from "../components/materials";
 import { lockIcon, resolveCategoryIcon, starIcon } from "../assets/categoryIcons";
 import { useProgressionStore, useSelectionStore } from "../state/worldStore";
 
+export interface FriendOnMap {
+  id: string;
+  name: string;
+  avatarUrl: string;
+}
+
+/**
+ * Friends parked on a node, fanned out beside its disc.
+ *
+ * Capped at three plus a "+N" chip: a popular node otherwise grows a wall of
+ * avatars that hides the level it is attached to.
+ */
+function FriendCluster({ friends }: { friends: FriendOnMap[] }) {
+  const shown = friends.slice(0, 3);
+  const extra = friends.length - shown.length;
+  return (
+    <span className="wm-friends" aria-hidden>
+      {shown.map((f) => (
+        <img key={f.id} className="wm-friend" alt="" src={f.avatarUrl} draggable={false} />
+      ))}
+      {extra > 0 && <span className="wm-friend wm-friend-more">+{extra}</span>}
+    </span>
+  );
+}
+
 function nodeStateOf(node: MapNodeDefinition, overrides: Record<string, NodeState>): NodeState {
   return overrides[node.id] ?? node.state;
 }
@@ -61,6 +86,8 @@ interface NodeMarkersProps {
   currentNodeId?: string | null;
   /** Player avatar for the pin; falls back to a plain marker when absent. */
   avatarUrl?: string | null;
+  /** Friends, keyed by the node each one is currently sitting on. */
+  friendsByNode?: Record<string, FriendOnMap[]>;
   /** Cloud meshes that should hide markers drifting behind them. */
   occluders: React.MutableRefObject<THREE.Object3D | null>[];
 }
@@ -71,7 +98,15 @@ interface NodeMarkersProps {
  * floating above: earned stars, or a lock for gated nodes. All text and
  * controls are DOM: crisp Georgian labels, keyboard, screen readers.
  */
-export function NodeMarkers({ world, animate, onNodeClick, occluders, currentNodeId, avatarUrl }: NodeMarkersProps) {
+export function NodeMarkers({
+  world,
+  animate,
+  onNodeClick,
+  occluders,
+  currentNodeId,
+  avatarUrl,
+  friendsByNode,
+}: NodeMarkersProps) {
   const overrides = useProgressionStore((s) => s.nodeStates);
   const hover = useSelectionStore((s) => s.hover);
   const hoveredNodeId = useSelectionStore((s) => s.hoveredNodeId);
@@ -139,6 +174,9 @@ export function NodeMarkers({ world, animate, onNodeClick, occluders, currentNod
                 >
                   <img alt="" className="wm-cat-icon" src={icon} draggable={false} />
                 </button>
+                {friendsByNode?.[node.id]?.length ? (
+                  <FriendCluster friends={friendsByNode[node.id]} />
+                ) : null}
                 <span className={`wm-marker-label ${hovered || selected ? "wm-marker-label-open" : ""}`}>
                   {node.label}
                 </span>

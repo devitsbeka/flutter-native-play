@@ -1,12 +1,19 @@
 import { WorldDefinition } from "../schemas/worldDefinition";
 
 /**
- * "სამყარო ალფა" as a vertical adventure route.
+ * "სამყარო ალფა" — one continuous vertical route.
  *
- * The original sampleWorld clustered five plateaus around the origin for one
- * fixed cinematic framing. This lays the same idea out as a long ribbon
- * running away from the camera (+Z near the player, -Z far), so the map is
- * travelled by scrolling rather than surveyed in a single shot.
+ * The world is a single unbroken landmass (see procedural/terrain.ts) running
+ * from z +62 at the start to z -112 at the summit, changing biome along its
+ * length: shore, meadow, fields, highland, alpine, snow. It used to be six
+ * floating plateaus with voids between them, which read as disconnected
+ * stages rather than a journey.
+ *
+ * A "region" here is no longer an island — it is an AREA on that landmass. It
+ * carries the nodes, landmarks and scatter density for its stretch of the
+ * route, and its `position` places it on the ground. `elevation` is kept
+ * because the schema requires it, but nothing reads it any more: everything
+ * samples terrainHeight at its own x/z, because the ground undulates.
  *
  * ---------------------------------------------------------------------------
  * Spacing — the rule that matters most here
@@ -17,28 +24,25 @@ import { WorldDefinition } from "../schemas/worldDefinition";
  * unreadable pile — the first pass used ~6 and measured a 26 px centre
  * distance between neighbouring 60 px discs, i.e. literally stacked.
  *
- * Island radius is the other half of it: at radius 18 a single plateau filled
- * the screen and only one chapter was ever visible, which killed the sense of
- * a route. 13 fits about three chapters in view.
- *
  * So:
- * - Main chapters carry three nodes on a diagonal at local x -8 / 0 / +8 and
+ * - Main areas carry three nodes on a diagonal at local x -8 / 0 / +8 and
  *   z +5.5 / 0 / -5.5, which is ~9.7 units (~120 px) apart.
- * - Chapters step 26 units along -Z and alternate x, giving the zig-zag that
+ * - Areas step 26 units along -Z and alternate x, giving the zig-zag that
  *   makes the route read as a path rather than a column.
- * - Side quests get their own small islet offset to one side instead of being
- *   squeezed onto a main plateau. It keeps spacing safe and reads better: a
- *   detour is somewhere you go, not a node you pass.
+ * - Side quests sit in their own clearing offset to one side of the main
+ *   line. They stay within x +/-15: the land's half-width wanders around 21
+ *   and its outer fifth falls away as cliff, so anything beyond that is on
+ *   the slope or off the map.
  *
  * If you add nodes, re-measure. Overlap is the failure mode.
  *
  * Node roles:
  *   trivia     ordinary level on the main line
- *   challenge  optional detour, on its own islet
+ *   challenge  optional detour in a side clearing
  *   story      narrative beat, no quiz
  *   reward     coin pickup / treasure chest
- *   checkpoint chapter gate
- *   boss       chapter finale
+ *   checkpoint area gate
+ *   boss       area finale
  *   portal     jump elsewhere in the app
  */
 export const adventureWorld: WorldDefinition = {
@@ -69,13 +73,13 @@ export const adventureWorld: WorldDefinition = {
     { from: "c5-c", to: "c6-a" },
   ],
   regions: [
-    /* ------------------------------------------------------ chapter 1 */
+    /* --------------------------------------------------------- area 1 */
     {
       id: "chapter-1-shore",
       name: "სანაპირო",
       position: [-8, -2, 44],
       elevation: 3,
-      radius: 13,
+      radius: 21,
       terrainPreset: "atoll",
       biome: "shore",
       density: { trees: 0.5, rocks: 0.9 },
@@ -106,13 +110,13 @@ export const adventureWorld: WorldDefinition = {
       ],
     },
 
-    /* ------------------------------------------------------ chapter 2 */
+    /* --------------------------------------------------------- area 2 */
     {
       id: "chapter-2-meadow",
       name: "მდელო",
       position: [8, -1, 18],
       elevation: 5,
-      radius: 13,
+      radius: 21,
       terrainPreset: "plateau",
       biome: "meadow",
       density: { trees: 1.1, rocks: 0.5 },
@@ -151,13 +155,13 @@ export const adventureWorld: WorldDefinition = {
       ],
     },
 
-    /* --------------------------------------------- side quest islet A */
+    /* ------------------------------------------- side quest clearing A */
     {
       id: "side-arts",
-      name: "ხელოვნების კუნძული",
-      position: [-22, -1, 5],
+      name: "ხელოვნების ჭალა",
+      position: [-15, 0, 5],
       elevation: 4,
-      radius: 6,
+      radius: 11,
       terrainPreset: "atoll",
       biome: "meadow",
       density: { trees: 0.7, rocks: 0.4 },
@@ -175,13 +179,13 @@ export const adventureWorld: WorldDefinition = {
       landmarks: [{ id: "s1-ruin", kind: "ruin", position: [3, 0, 3], scale: 0.8 }],
     },
 
-    /* ------------------------------------------------------ chapter 3 */
+    /* --------------------------------------------------------- area 3 */
     {
       id: "chapter-3-fields",
       name: "ველები",
       position: [-8, 0, -8],
       elevation: 7,
-      radius: 13,
+      radius: 21,
       terrainPreset: "plateau",
       biome: "meadow",
       density: { trees: 0.9, rocks: 0.7 },
@@ -211,13 +215,13 @@ export const adventureWorld: WorldDefinition = {
       ],
     },
 
-    /* --------------------------------------------- side quest islet B */
+    /* ------------------------------------------- side quest clearing B */
     {
       id: "side-arena",
       name: "არენა",
-      position: [22, 0, -20],
+      position: [15, 0, -20],
       elevation: 6,
-      radius: 6,
+      radius: 11,
       terrainPreset: "atoll",
       biome: "meadow",
       density: { trees: 0.4, rocks: 0.9 },
@@ -228,13 +232,13 @@ export const adventureWorld: WorldDefinition = {
       landmarks: [{ id: "s2-tower", kind: "triviaTower", position: [3, 0, 2], scale: 0.8 }],
     },
 
-    /* ------------------------------------------------------ chapter 4 */
+    /* --------------------------------------------------------- area 4 */
     {
       id: "chapter-4-highland",
       name: "მაღალმთიანეთი",
       position: [8, 1, -34],
       elevation: 10,
-      radius: 13,
+      radius: 21,
       terrainPreset: "highland",
       biome: "alpine",
       density: { trees: 0.7, rocks: 1.1 },
@@ -255,13 +259,13 @@ export const adventureWorld: WorldDefinition = {
       mountains: { position: [-2, 0, -10], count: 3, height: 12 },
     },
 
-    /* ------------------------------------------------------ chapter 5 */
+    /* --------------------------------------------------------- area 5 */
     {
       id: "chapter-5-keep",
       name: "ციხე-სიმაგრე",
       position: [-8, 2, -60],
       elevation: 13,
-      radius: 13,
+      radius: 21,
       terrainPreset: "highland",
       biome: "alpine",
       density: { trees: 0.4, rocks: 1.2 },
@@ -296,13 +300,13 @@ export const adventureWorld: WorldDefinition = {
       mountains: { position: [8, 0, -10], count: 2, height: 14 },
     },
 
-    /* ------------------------------------------------------ chapter 6 */
+    /* --------------------------------------------------------- area 6 */
     {
       id: "chapter-6-summit",
       name: "მწვერვალი",
       position: [7, 3, -86],
       elevation: 16,
-      radius: 12,
+      radius: 20,
       terrainPreset: "highland",
       biome: "alpine",
       density: { trees: 0.25, rocks: 1 },

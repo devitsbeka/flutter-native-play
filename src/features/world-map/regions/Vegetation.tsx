@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { GeneratedRegion, ScatterInstance } from "../schemas/worldDefinition";
 import { worldColors, worldMaterials } from "../components/materials";
+import { terrainHeight } from "../procedural/terrain";
 
 const tmpMatrix = new THREE.Matrix4();
 const tmpPos = new THREE.Vector3();
@@ -34,7 +35,6 @@ function useInstances(
   ref: React.RefObject<THREE.InstancedMesh>,
   instances: ScatterInstance[],
   origin: [number, number, number],
-  surfaceY: number,
   baseColor: string,
   tintColor: string,
 ) {
@@ -44,7 +44,11 @@ function useInstances(
     const base = new THREE.Color(baseColor);
     const tint = new THREE.Color(tintColor);
     instances.forEach((inst, i) => {
-      tmpPos.set(origin[0] + inst.position[0], surfaceY, origin[2] + inst.position[2]);
+      // Sampled per instance: the land is continuous and undulating, so one
+      // surface height per region would bury half the trees and float the rest.
+      const wx = origin[0] + inst.position[0];
+      const wz = origin[2] + inst.position[2];
+      tmpPos.set(wx, terrainHeight(wx, wz), wz);
       tmpQuat.setFromAxisAngle(yAxis, inst.rotationY);
       tmpScale.setScalar(inst.scale);
       tmpMatrix.compose(tmpPos, tmpQuat, tmpScale);
@@ -56,7 +60,7 @@ function useInstances(
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     mesh.computeBoundingSphere();
-  }, [ref, instances, origin, surfaceY, baseColor, tintColor]);
+  }, [ref, instances, origin, baseColor, tintColor]);
 }
 
 /** Instanced trees + rocks for one region: three draw calls total. */
@@ -72,9 +76,9 @@ export function Vegetation({ region, density }: { region: GeneratedRegion; densi
   const origin: [number, number, number] = region.def.position;
   const alpine = region.def.biome === "alpine";
 
-  useInstances(foliageRef, trees, origin, region.surfaceY, alpine ? "#9fd9a8" : "#6fc584", "#3f9e63");
-  useInstances(trunkRef, trees, origin, region.surfaceY, worldColors.treeTrunk, "#7a5a40");
-  useInstances(rockRef, region.rocks, origin, region.surfaceY, alpine ? "#ced4e6" : "#c5bcd6", "#9c94b8");
+  useInstances(foliageRef, trees, origin, alpine ? "#9fd9a8" : "#6fc584", "#3f9e63");
+  useInstances(trunkRef, trees, origin, worldColors.treeTrunk, "#7a5a40");
+  useInstances(rockRef, region.rocks, origin, alpine ? "#ced4e6" : "#c5bcd6", "#9c94b8");
 
   return (
     <group>
