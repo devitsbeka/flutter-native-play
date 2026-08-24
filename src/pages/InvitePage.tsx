@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
 import { Check, LogIn, UserPlus, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +12,7 @@ import { toast } from "@/lib/toast";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { cn } from "@/lib/utils";
+import { dateLocaleFor } from "@/utils/dateLocale";
 
 /**
  * The other end of a shared invite link.
@@ -39,6 +41,11 @@ interface InvitePreview {
   category_name: string | null;
   room_status: string | null;
   player_count: number | null;
+  // Only room_preview returns these; a personal link has no room row of its
+  // own to describe, and gets undefined.
+  is_archived?: boolean | null;
+  created_at?: string | null;
+  last_activity_at?: string | null;
 }
 
 interface InvitePlayer {
@@ -66,7 +73,7 @@ interface InvitePlayer {
 export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }) {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user, loading: authLoading } = useAuth();
   const { friends, sendFriendRequest, refreshFriends } = useFriends();
 
@@ -130,7 +137,37 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
   // Only a personal link can be "your own". A host opening their own room
   // link is just rejoining, and should be offered the room like anyone else.
   const isOwnLink = by === "invite" && !!preview && preview.host_user_id === user?.id;
+  /**
+   * There is a room to describe, and whether you can still walk into it.
+   *
+   * These used to be the same question, because room_preview only returned
+   * rooms that were not archived: no row meant no room meant a dead link,
+   * and the screen said "this invitation link no longer works" — the same
+   * words a mistyped code gets. A link that was real when it was sent
+   * deserves better than being told it never existed.
+   *
+   * Now the room comes back whatever state it is in, and the two questions
+   * are separate. A finished room still has a name, a category, the people
+   * who were in it and the day it was made; it just cannot be joined.
+   */
   const hasRoom = !!preview?.room_code;
+  const roomIsOver =
+    hasRoom && (preview?.is_archived === true || preview?.room_status === "finished");
+  const canJoinRoom = hasRoom && !roomIsOver;
+
+  const dateLocale = dateLocaleFor(language);
+
+  /** "3 days ago" — how long ago the link was worth sending. */
+  const roomAge = (() => {
+    const when = preview?.last_activity_at || preview?.created_at;
+    if (!when) return null;
+    const at = new Date(when);
+    if (Number.isNaN(at.getTime())) return null;
+    return t(roomIsOver ? "extra.inviteRoomPlayedAgo" : "extra.inviteRoomOpenedAgo").replace(
+      "{ago}",
+      formatDistanceToNow(at, { addSuffix: true, locale: dateLocale }),
+    );
+  })();
 
   const accept = useCallback(async () => {
     if (!code || !preview) return;
@@ -174,7 +211,7 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
       // Straight into the room if there is one to join; otherwise the
       // friendship IS the outcome, so land them at home where the new friend
       // is already in the strip at the top.
-      if (preview.room_code) {
+      if (canJoinRoom && preview.room_code) {
         navigate(`/team?join=${preview.room_code}`, { replace: true });
       } else {
         toast.success(t("extra.inviteNowFriends").replace("{name}", preview.host_nickname));
@@ -183,7 +220,7 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
     } finally {
       setJoining(false);
     }
-  }, [by, code, preview, user, nickname, navigate, refreshFriends, t]);
+  }, [by, code, preview, canJoinRoom, user, nickname, navigate, refreshFriends, t]);
 
   const addPlayer = useCallback(async (playerId: string) => {
     setRequested(prev => new Set(prev).add(playerId));
@@ -265,11 +302,35 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
             room card for it would promise a game that is not there. */}
         {hasRoom && (
           <div className="w-full p-4 rounded-2xl bg-white/10 border border-white/[0.12] mb-4">
-            <p className="text-white font-bold text-lg truncate">
-              {preview.room_name || t("extra.inviteRoomFallback")}
-            </p>
-            {preview.category_name && (
-              <p className="text-white/70 text-sm mt-0.5 truncate">{preview.category_name}</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-white font-bold text-lg truncate">
+                  {preview.room_name || t("extra.inviteRoomFallback")}
+                </p>
+                {preview.category_name && (
+                  <p className="text-white/70 text-sm mt-0.5 truncate">{preview.category_name}</p>
+                )}
+              </div>
+              {/* Live or finished, and said on the card rather than only in
+                  the button. Someone opening a link days later should be able
+                  to see WHAT it was without pressing anything. */}
+              <span
+                className={cn(
+                  "shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
+                  roomIsOver ? "bg-white/10 text-white/60" : "bg-emerald-400/20 text-emerald-200",
+                )}
+              >
+                <span
+                  className={cn(
+                    "w-1.5 h-1.5 rounded-full",
+                    roomIsOver ? "bg-white/40" : "bg-emerald-300 animate-pulse",
+                  )}
+                />
+                {roomIsOver ? t("extra.inviteRoomFinished") : t("extra.inviteRoomLive")}
+              </span>
+            </div>
+            {roomAge && (
+              <p className="text-white/45 text-xs mt-2">{roomAge}</p>
             )}
           </div>
         )}
@@ -364,6 +425,23 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
               {t("extra.inviteGoHome")}
             </ChunkyButton>
           </div>
+        ) : roomIsOver ? (
+          /* The room is finished, so there is nothing to join and the button
+             must not say there is. What the link WAS is above — the name, the
+             category, who played, when — and every one of those players has a
+             friend button beside them, which is the thing still worth doing
+             with an invitation that arrived late. */
+          <div className="text-center space-y-4">
+            <p className="text-white/75 text-sm">{t("extra.inviteRoomOverBody")}</p>
+            <ChunkyButton
+              variant="white"
+              size="lg"
+              className="w-full"
+              onClick={() => navigate("/", { replace: true })}
+            >
+              {t("extra.inviteGoHome")}
+            </ChunkyButton>
+          </div>
         ) : (
           <ChunkyButton
             variant="white"
@@ -371,11 +449,11 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
             className="w-full"
             onClick={accept}
             disabled={joining || (!user && !nickname.trim())}
-            icon={hasRoom ? <LogIn className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
+            icon={canJoinRoom ? <LogIn className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
           >
             {joining
               ? t("extra.inviteJoining")
-              : hasRoom
+              : canJoinRoom
                 ? t("extra.inviteJoinGame")
                 : alreadyFriends
                   ? t("extra.inviteGoHome")

@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { Capacitor } from "@capacitor/core";
 import { formatDistanceToNow } from "date-fns";
-import { ka } from "date-fns/locale";
+import { dateLocaleFor } from "@/utils/dateLocale";
 import danceFloorIcon from "@/assets/dance-floor.png";
 import crownIcon from "@/assets/crown-icon.png";
 import retroTv3d from "@/assets/retro-tv-3d.png";
@@ -397,7 +397,7 @@ interface RoomCardProps {
 }
 
 function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining = false }: RoomCardProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const localizeCategory = useLocalizedCategoryName();
   const isMobile = useIsMobile();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -688,7 +688,9 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
                 <p className="text-xs text-white/60">
                   {formatDistanceToNow(new Date(room.created_at), { 
                     addSuffix: true, 
-                    locale: ka 
+                    // Was `ka` unconditionally: "3 დღის წინ" under a room card
+                    // whose every other word was in the reader's language.
+                    locale: dateLocaleFor(language) 
                   })}
                 </p>
               </div>
