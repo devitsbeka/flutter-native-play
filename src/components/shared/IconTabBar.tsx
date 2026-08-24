@@ -9,6 +9,8 @@ import funIcon from "@/assets/tabs/fun.png";
 import eduIcon from "@/assets/tabs/edu.png";
 import popularIcon from "@/assets/tabs/puzzle-cube.png";
 import recentlyViewedIcon from "@/assets/tabs/recently-viewed.png";
+import freeIcon from "@/assets/icons/gift-box.png";
+import premiumIcon from "@/assets/icons/icon-vip-crown.webp";
 
 interface IconTab {
   id: string;
@@ -17,6 +19,8 @@ interface IconTab {
 }
 
 const iconMap: Record<string, string> = {
+  free: freeIcon,
+  premium: premiumIcon,
   all: allIcon,
   favorites: favIcon,
   recently_viewed: recentlyViewedIcon,

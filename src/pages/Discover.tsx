@@ -19,6 +19,7 @@ import { HeaderActions } from "@/components/shared/HeaderActions";
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { getResponsiveVideoSrc, videoUrl } from "@/config/videoConfig";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useVipStatus } from "@/hooks/useVipStatus";
 import { matchesQuery } from "@/utils/searchMatch";
 import { orderByPopularity, readRecentlyViewedIds, RECENTLY_VIEWED_KEY } from "@/utils/categoryTabs";
 import { funRowCategories } from "@/utils/discoverRows";
@@ -92,6 +93,10 @@ export default function Discover() {
   const isMobile = useIsMobile();
   const sheetRef = useRef<HTMLDivElement>(null);
 
+  // Nobody who already pays for it should be sold a free trial. They keep
+  // the cover, without the offer on it.
+  const { isVip } = useVipStatus();
+
   const heroSources = useMemo(() => {
     const { webm, mp4 } = getResponsiveVideoSrc(HERO_VIDEO);
     return [
@@ -112,6 +117,11 @@ export default function Discover() {
   }, []);
 
   const tabs = useMemo(() => [
+    // Free and premium lead the strip, as the design has them. They are the
+    // only two tabs that split the catalogue by what a subscription buys
+    // rather than by subject, which is why they sit apart from the rest.
+    { id: "free", label: t("discover.free") },
+    { id: "premium", label: t("discover.premium") },
     { id: "all", label: t("discover.all") },
     { id: "favorites", label: t("discover.favorites") },
     { id: "recently_viewed", label: t("discover.recentlyViewedTab") },
@@ -148,7 +158,14 @@ export default function Discover() {
       );
     }
 
-    if (activeTab !== "all") {
+    // `is_premium` is a column the client can ship without: before the
+    // migration lands it comes back undefined, isPremium is false, and Free
+    // shows the whole catalogue rather than an empty grid.
+    if (activeTab === "free") {
+      result = result.filter((cat) => !cat.isPremium);
+    } else if (activeTab === "premium") {
+      result = result.filter((cat) => cat.isPremium);
+    } else if (activeTab !== "all") {
       result = result.filter((cat) => cat.type === activeTab);
     }
 
@@ -285,9 +302,14 @@ export default function Discover() {
          * the time. Sticky is measured from the scroller itself, so the
          * video holds still while the sheet slides up over it. */}
         <div
-          aria-hidden
           className={`md:hidden pointer-events-none sticky top-0 z-0 w-full ${HERO_HEIGHT}`}
         >
+          {/* The artwork and its scrims, hidden from screen readers as one
+              group. The cover's own copy sits outside this — it is the
+              page's offer, not decoration, and a button inside an
+              aria-hidden subtree is a button nobody using VoiceOver can
+              reach. */}
+          <div aria-hidden className="absolute inset-0">
           {/* Sized to the whole scroller, not to the hero: the sheet is
               translucent, so the video has to keep going behind it or the
               glass turns to flat wash at the hero's bottom edge — a seam
@@ -312,8 +334,46 @@ export default function Discover() {
               behind the title without changing its colour, and four stops
               spread over 14rem land the last of it in the open sky where no
               edge is visible. */}
-          <div className="absolute inset-x-0 top-0 h-56 bg-[linear-gradient(to_bottom,rgba(41,17,84,0.52)_0%,rgba(48,20,96,0.34)_34%,rgba(58,26,112,0.14)_64%,rgba(58,26,112,0)_100%)]" />
+          <div className="absolute inset-x-0 top-0 h-[420px] bg-[linear-gradient(to_bottom,rgba(41,17,84,0.52)_0%,rgba(48,20,96,0.34)_18%,rgba(52,22,104,0.24)_45%,rgba(58,26,112,0.11)_76%,rgba(58,26,112,0)_100%)]" />
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-black/25" />
+
+          {/* The rule the design draws under the header, inset to the same
+              26px the title and the icons are set in by. */}
+          <div className="absolute inset-x-[26px] top-[76px] h-px bg-white/30" />
+          </div>
+
+          {/* The cover's offer, anchored under the header rather than
+              centred in the hero: the hero's height follows the device, and
+              the design fixes this block's distance from the rule, not from
+              the bottom of the screen.
+           *
+           * Type is sized in vw against the 500px-wide frame the design was
+           * drawn at — 40px there is 8vw — and clamped so it neither
+           * outgrows a tablet nor breaks the headline into three lines on a
+           * narrow phone. The pointer-events-auto is on the button alone;
+           * everything else here stays transparent to touch so the sheet
+           * below is still what a drag from the middle of the cover
+           * grabs. */}
+          {!isVip && (
+          <div className="absolute inset-x-0 top-[76px] flex flex-col items-center px-6 text-center">
+            <h2 className="mt-[55px] font-display uppercase text-white text-[clamp(28px,8vw,40px)] leading-[1.15] tracking-[0.5px] [text-shadow:0_2px_10px_rgba(23,10,54,0.35)]">
+              {t("discover.promoTitle")}
+            </h2>
+            <p className="mt-[9px] text-white/90 text-[clamp(14px,3.5vw,17.5px)] leading-[1.35]">
+              {t("discover.promoSubtitle")}
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate("/profile?tab=PRO")}
+              className="pointer-events-auto mt-[38px] h-[52px] min-w-[196px] px-8 rounded-full bg-[#F7F4FC]/95 text-[#3B1E6E] font-display uppercase text-[clamp(14px,3.4vw,17px)] tracking-[0.5px] shadow-[0_10px_28px_rgba(41,17,84,0.28)] active:scale-[0.98] transition-transform"
+            >
+              {t("discover.promoCta")}
+            </button>
+            <p className="mt-[21px] text-white/80 text-[clamp(11px,2.6vw,13px)]">
+              {t("discover.promoNote")}
+            </p>
+          </div>
+          )}
         </div>
 
         {/* The page's own header, in white, riding on the video. Absolute

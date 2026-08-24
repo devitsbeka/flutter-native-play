@@ -128,6 +128,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           is_language_specific: boolean | null
+          is_premium: boolean
           language: string | null
           levels_updated_at: string | null
           name: string
@@ -147,6 +148,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           is_language_specific?: boolean | null
+          is_premium?: boolean
           language?: string | null
           levels_updated_at?: string | null
           name: string
@@ -166,6 +168,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           is_language_specific?: boolean | null
+          is_premium?: boolean
           language?: string | null
           levels_updated_at?: string | null
           name?: string

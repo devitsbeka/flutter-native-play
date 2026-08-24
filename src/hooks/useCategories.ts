@@ -32,6 +32,10 @@ export interface DatabaseCategory {
   image_url: string | null;
   language?: string | null;
   is_language_specific?: boolean | null;
+  // Optional because the column arrives with the free/premium migration and
+  // the client ships ahead of it: until that runs, `select('*')` simply does
+  // not return it and every category reads as free.
+  is_premium?: boolean | null;
 }
 
 export interface TransformedCategory extends Category {
@@ -39,6 +43,8 @@ export interface TransformedCategory extends Category {
   category_id: string; // String slug like "movies"  
   icon_slug?: string | null;
   image_url?: string | null;
+  /** What Explore's უფასო / პრემიუმ filters split on. */
+  isPremium: boolean;
 }
 
 // Transform database category to app Category format
@@ -54,6 +60,7 @@ const transformCategory = (dbCat: DatabaseCategory): TransformedCategory => ({
   totalLevels: dbCat.total_levels,
   type: dbCat.type as 'classic' | 'fun' | 'educational',
   image_url: dbCat.image_url,
+  isPremium: dbCat.is_premium === true,
 });
 
 // Minimum time between category refetches (60 seconds)
