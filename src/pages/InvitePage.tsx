@@ -200,9 +200,23 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
           return;
         }
         signedIn = data.user;
-        // The profile is created by a trigger, so the name has to wait for it.
-        await new Promise(resolve => setTimeout(resolve, 800));
-        await supabase.from("profiles").update({ nickname: chosen }).eq("user_id", data.user.id);
+
+        // The profile comes from a trigger on the new auth user, so the name
+        // has to land after it. This used to sleep a flat 800ms and write
+        // once — 800ms of nothing on every guest join, and a name silently
+        // dropped if the trigger happened to be slower than the guess.
+        //
+        // Measured against production, the row is there on the first read.
+        // So: try immediately, and only wait if it is genuinely not ready.
+        for (let attempt = 0; attempt < 5; attempt++) {
+          const { data: rows } = await supabase
+            .from("profiles")
+            .update({ nickname: chosen })
+            .eq("user_id", data.user.id)
+            .select("user_id");
+          if (rows?.length) break;
+          await new Promise(resolve => setTimeout(resolve, 250));
+        }
       }
 
       // Only the personal link befriends. A room code is not evidence that
