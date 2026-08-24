@@ -270,12 +270,21 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
                 same for both players in a room and does not change under the
                 picture on a re-render.
 
+                Half opacity over the band's light surface, and blurred. At
+                full strength these presets are vivid enough to compete with
+                the photograph they are framing; the stops sit close together
+                (10.5%, 16%, 17.5%) and read as bands rather than as a wash.
+                The blur is what makes it a wash — and it is why the div
+                overflows its box by -inset-12: a blur fades out at the
+                element's own edges, so a gradient blurred within the band
+                would go pale down all four sides. The parent clips it.
+
                 Not for inset (logo) images: a brand mark reads best on plain
                 white. */}
             {!imageInset && !imageFramed && !imageFailed && (
               <div
                 aria-hidden
-                className="absolute inset-0"
+                className="pointer-events-none absolute -inset-12 opacity-50 blur-2xl"
                 style={{ background: bandGradient }}
               />
             )}
