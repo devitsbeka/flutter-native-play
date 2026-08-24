@@ -64,9 +64,13 @@ export default function WorldMapCanvas({
         touchAction: "none",
         // Sky-to-sea backdrop matching the scene horizon, so the world's
         // background always fills the viewport even past the water mesh.
-        // Deeper toward the horizon so the saturated plateaus have something
-        // to sit against; a near-uniform pastel field gave them no separation.
-        background: "linear-gradient(180deg, #f0dcff 0%, #d9bdf6 38%, #b79ae8 72%, #8f7ed4 100%)",
+        // Subtle purple field with soft purple blobs rather than a hard
+        // top-to-bottom ramp. The ramp got heavy enough at the bottom
+        // (#8f7ed4) to compete with the islands for attention; large, very
+        // low-contrast radial blobs give the backdrop depth and movement
+        // while staying quiet behind the route.
+        background:
+          "linear-gradient(180deg, #cec0ee 0%, #ddd0f4 28%, #e9dcf5 56%, #f2e6f3 80%, #f8eff4 100%)",
       }}
       data-testid="world-map-canvas"
     >
