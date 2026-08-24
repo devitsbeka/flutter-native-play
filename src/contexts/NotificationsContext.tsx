@@ -49,6 +49,7 @@ export interface NotificationsContextType {
   isConnected: boolean;
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  markManyAsRead: (ids: string[]) => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
   /** Omit `ids` to clear the whole account; pass them to clear one tab. */
   clearAllNotifications: (ids?: string[]) => Promise<void>;
@@ -205,6 +206,36 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
+  /**
+   * Mark a specific set read in one round trip.
+   *
+   * The notifications screen clears the tab you are leaving rather than
+   * everything you might not have looked at, and looping markAsRead would be
+   * one request per row.
+   */
+  const markManyAsRead = useCallback(async (ids: string[]) => {
+    if (!user || ids.length === 0) return;
+    const readAt = new Date().toISOString();
+
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read_at: readAt })
+        .in('id', ids)
+        .eq('user_id', user.id)
+        .is('read_at', null);
+
+      if (error) throw error;
+
+      const marked = new Set(ids);
+      setNotifications((prev) =>
+        prev.map((n) => (marked.has(n.id) ? { ...n, read_at: n.read_at || readAt } : n))
+      );
+    } catch (error) {
+      console.error('[Notifications] Error marking set as read:', error);
+    }
+  }, [user]);
+
   const markAllAsRead = useCallback(async () => {
     if (!user) return;
 
@@ -282,6 +313,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       isConnected,
       markAsRead,
       markAllAsRead,
+      markManyAsRead,
       deleteNotification,
       clearAllNotifications,
       refresh: fetchNotifications,
@@ -293,6 +325,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       isConnected,
       markAsRead,
       markAllAsRead,
+      markManyAsRead,
       deleteNotification,
       clearAllNotifications,
       fetchNotifications,

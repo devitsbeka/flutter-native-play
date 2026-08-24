@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, BellOff, ChevronDown, Trash2, X, Gamepad2, Users, Sparkles } from 'lucide-react';
@@ -35,10 +35,17 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
+/**
+ * Set while this screen is unmounting and cleared if it mounts straight back
+ * up. Module scope because the two mounts are different component instances —
+ * see the effect that uses it.
+ */
+let pendingLeaveRead: ReturnType<typeof setTimeout> | null = null;
+
 export default function Notifications() {
   const navigate = useNavigate();
   const { language, t } = useLanguage();
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification, clearAllNotifications } = useNotifications();
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, markManyAsRead, deleteNotification, clearAllNotifications } = useNotifications();
   const { generationNotifications, hasActiveGenerations } = useGenerationNotifications();
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
   const { acceptInvitation, declineInvitation } = useGameInvitations();
@@ -63,22 +70,56 @@ export default function Notifications() {
     return notifications.filter(n => typeInTab(n.type, tab) && !n.read_at).length;
   };
 
-  // Opening this screen reads everything, not just the tab you land on.
+  // Reading happens on the way OUT, not half a second after the way in.
   //
-  // The bell's badge counts every unread notification, so clearing one tab
-  // at a time left it lit after the player had opened notifications and
-  // closed them again — they had, as far as they were concerned, looked.
-  // Half the notification types could not be cleared at all from here.
+  // This screen used to mark everything read 500ms after it opened, which
+  // cleared the per-tab counts while the player was still looking at them —
+  // a row would be sitting there unread one moment and plain the next,
+  // without them having touched it.
   //
-  // The short delay is deliberate: the per-tab counts are worth seeing for a
-  // moment before they go.
+  // It still ends up all read, because the bell counts every unread
+  // notification and leaving one tab unclearable would keep the bell lit
+  // after the player had, as far as they are concerned, looked. What changed
+  // is when: the tab you leave clears as you leave it, and anything still
+  // unread clears when you close the screen. Tapping a row clears that row
+  // immediately, as it always did.
+  const latest = useRef({ notifications, markAllAsRead, markManyAsRead });
+  latest.current = { notifications, markAllAsRead, markManyAsRead };
+
+  const leaveTab = useCallback((tab: NotificationTab) => {
+    const ids = latest.current.notifications
+      .filter((n) => typeInTab(n.type, tab) && !n.read_at)
+      .map((n) => n.id);
+    void latest.current.markManyAsRead(ids);
+    // typeInTab is a module import, not state — listing it is an unnecessary
+    // dependency, and everything else is read through the ref.
+  }, []);
+
+  const handleTabChange = useCallback((next: NotificationTab) => {
+    if (next === activeTab) return;
+    leaveTab(activeTab);
+    setActiveTab(next);
+  }, [activeTab, leaveTab]);
+
+  // Closing the screen reads whatever is left, including the tab never opened.
+  //
+  // Deferred by a tick and cancelled on re-mount, because StrictMode runs
+  // every effect mount -> cleanup -> mount in development. A cleanup that
+  // marked everything read immediately would therefore fire a beat after this
+  // screen opened — which is precisely the behaviour being removed, and it
+  // would only misbehave in dev, where it gets tested.
   useEffect(() => {
-    if (loading || unreadCount === 0) return;
-    const timer = setTimeout(() => {
-      void markAllAsRead();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [loading, unreadCount, markAllAsRead]);
+    if (pendingLeaveRead !== null) {
+      clearTimeout(pendingLeaveRead);
+      pendingLeaveRead = null;
+    }
+    return () => {
+      pendingLeaveRead = setTimeout(() => {
+        pendingLeaveRead = null;
+        void latest.current.markAllAsRead();
+      }, 0);
+    };
+  }, []);
 
   const displayedNotifications = filteredNotifications.slice(0, displayLimit);
   const hasMore = filteredNotifications.length > displayLimit;
@@ -343,7 +384,7 @@ export default function Notifications() {
           rest, which read as an empty band between header and content on
           device (and never on web, where --safe-top is 0). */}
       <div className="sticky top-[76px] z-10 bg-background/95 backdrop-blur-md px-4 pt-3 pb-3 max-w-[700px] md:max-w-[600px] mx-auto">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as NotificationTab)} className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as NotificationTab)} className="w-full">
           <TabsList className={`grid ${PUBLIC_SHARING_ENABLED ? "grid-cols-3" : "grid-cols-2"} w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto`}>
             <TabsTrigger value="games" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
               <Gamepad2 className="w-3.5 h-3.5" />
