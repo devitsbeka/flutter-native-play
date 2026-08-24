@@ -32,7 +32,13 @@
 -- The table's own policies are untouched: the row, with its page and its
 -- country, is still readable only by its owner and by an admin.
 
-CREATE OR REPLACE FUNCTION public.presence_for_users(p_user_ids text[])
+-- user_id is uuid; the ids arrive from the client as strings, and one of them
+-- can be a guest key that is not a uuid at all, so the comparison is made in
+-- text. Casting the array to uuid[] instead would throw on the whole call the
+-- first time a guest is in the room.
+DROP FUNCTION IF EXISTS public.presence_for_users(text[]);
+
+CREATE FUNCTION public.presence_for_users(p_user_ids text[])
 RETURNS TABLE (
   user_id text,
   is_online boolean,
@@ -45,7 +51,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
   SELECT
-    p.user_id,
+    p.user_id::text,
     (p.status = 'online' AND p.last_seen >= now() - interval '2 minutes') AS is_online,
     (p.last_seen >= now() - interval '10 minutes') AS recently_active,
     -- Only ever a room. Everything else about where they are is dropped here
@@ -55,7 +61,7 @@ AS $$
       ELSE NULL
     END AS current_room
   FROM public.user_presence p
-  WHERE p.user_id = ANY(p_user_ids)
+  WHERE p.user_id::text = ANY(p_user_ids)
 $$;
 
 -- SECURITY DEFINER functions are granted to PUBLIC by default, which would
