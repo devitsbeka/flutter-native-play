@@ -6,8 +6,10 @@ import { MatchHistoryEntry } from "@/hooks/useRoomMatchHistory";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFriends } from "@/contexts/FriendsContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { shouldOfferFriendRequest } from "@/utils/friendOffer";
+import crownIcon from "@/assets/crown-icon.png";
 import medalGold from "@/assets/icons/medal-gold.png";
 import medalSilver from "@/assets/icons/medal-silver.png";
 import medalBronze from "@/assets/icons/medal-bronze.png";
@@ -102,13 +104,21 @@ function AddFriendButton({ userId }: { userId: string }) {
  * leaving the room and finding them somewhere else.
  *
  * Host only, and never against the host themselves.
+ *
+ * On a phone it is the icon alone. The row already carries a rank, an avatar,
+ * a name, an add-friend button and a score, and a word on top of that pushed
+ * the name into an ellipsis to make room for a label the icon already gives.
+ * The wider screens keep the word, because there they cost nothing.
  */
 function InvitePlayerButton({
   userId,
   onInvite,
+  iconOnly = false,
 }: {
   userId: string;
   onInvite: (userId: string) => void | Promise<void>;
+  /** Phone widths: the paper-plane says it, so the word comes off. */
+  iconOnly?: boolean;
 }) {
   const { t } = useLanguage();
   const [sent, setSent] = useState(false);
@@ -119,6 +129,8 @@ function InvitePlayerButton({
       type="button"
       whileTap={{ scale: 0.95 }}
       disabled={sending || sent}
+      aria-label={t("extra.inviteFriendBtn")}
+      title={t("extra.inviteFriendBtn")}
       onClick={async (e) => {
         // The row can open a profile; inviting is its own action.
         e.stopPropagation();
@@ -133,20 +145,29 @@ function InvitePlayerButton({
           setSending(false);
         }
       }}
-      className={`flex flex-shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+      className={`flex flex-shrink-0 items-center justify-center transition-colors ${
+        // A circle at icon size, a pill when it carries a word. Squeezing a
+        // label into the circle is what made it an oval nothing else matched.
+        iconOnly ? "h-7 w-7 rounded-full" : "gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+      } ${
         sent
           ? "bg-emerald-500/25 text-emerald-300"
           : "bg-white/15 text-white hover:bg-white/25"
       }`}
     >
-      {sent ? <Check className="h-3 w-3" /> : <Send className="h-3 w-3" />}
-      {sent ? t("extra.sentLabel") : t("extra.inviteFriendBtn")}
+      {sent ? (
+        <Check className={iconOnly ? "h-3.5 w-3.5" : "h-3 w-3"} />
+      ) : (
+        <Send className={iconOnly ? "h-3.5 w-3.5" : "h-3 w-3"} />
+      )}
+      {!iconOnly && (sent ? t("extra.sentLabel") : t("extra.inviteFriendBtn"))}
     </motion.button>
   );
 }
 
 export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true, maxPlayers, isHost = false, isRoomActive = true, onInviteFriends, onResendInvitation, onInvitePlayer, onRemoveParticipant }: RoomScoreboardProps) {
   const { t } = useLanguage();
+  const isMobile = useIsMobile();
   // Track sent invites for showing feedback
   const [sentInvites, setSentInvites] = useState<Set<string>>(new Set());
   // Sort by total cumulative score (primary), then by total wins (secondary)
@@ -279,7 +300,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                         <div className="mt-1.5 flex items-center justify-center gap-1.5">
                           <AddFriendButton userId={player.user_id} />
                           {isHost && onInvitePlayer && player.user_id !== currentUserId && (
-                            <InvitePlayerButton userId={player.user_id} onInvite={onInvitePlayer} />
+                            <InvitePlayerButton userId={player.user_id} onInvite={onInvitePlayer} iconOnly={isMobile} />
                           )}
                         </div>
                       </div>
@@ -378,7 +399,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                         <div className="mt-1.5 flex items-center justify-center gap-1.5">
                           <AddFriendButton userId={player.user_id} />
                           {isHost && onInvitePlayer && player.user_id !== currentUserId && (
-                            <InvitePlayerButton userId={player.user_id} onInvite={onInvitePlayer} />
+                            <InvitePlayerButton userId={player.user_id} onInvite={onInvitePlayer} iconOnly={isMobile} />
                           )}
                         </div>
                       </div>
@@ -413,15 +434,27 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                     )}
                   </div>
                   
-                  {/* Avatar */}
-                  <div className={isInvited ? "grayscale" : ""}>
+                  {/* Avatar, and the host's crown on the corner of it.
+                      The crown used to trail the name, where it competed with
+                      the add-friend and invite buttons for the same strip of
+                      row and pushed longer names into an ellipsis. On the
+                      avatar it belongs to the face rather than to the text,
+                      which is also where the room cards have always put it. */}
+                  <div className={`relative flex-shrink-0 ${isInvited ? "grayscale" : ""}`}>
                     <SmartAvatar
                       avatarUrl={p.avatar_url}
                       fallback={p.nickname}
                       size="md"
                     />
+                    {showHostCrown && p.is_host && !isInvited && (
+                      <img
+                        src={crownIcon}
+                        alt=""
+                        className="pointer-events-none absolute -bottom-1 -left-1 w-4 h-4 object-contain drop-shadow"
+                      />
+                    )}
                   </div>
-                  
+
                   {/* Name + Crown - flex grow. The add-friend button belongs
                       to the person, so it sits with their name rather than
                       out in the score column, where it read as part of the
@@ -433,12 +466,13 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                     {isInvited && (
                       <span className="text-xs text-white/40 italic">{t("extra.invitedLabel")}</span>
                     )}
-                    {showHostCrown && p.is_host && !isInvited && (
-                      <Crown className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
-                    )}
                     {!isInvited && <AddFriendButton userId={p.user_id} />}
                     {isHost && !isInvited && onInvitePlayer && p.user_id !== currentUserId && (
-                      <InvitePlayerButton userId={p.user_id} onInvite={onInvitePlayer} />
+                      <InvitePlayerButton
+                        userId={p.user_id}
+                        onInvite={onInvitePlayer}
+                        iconOnly={isMobile}
+                      />
                     )}
                   </div>
 
