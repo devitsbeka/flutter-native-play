@@ -153,8 +153,25 @@ function ScrollArrow({
 }
 
 export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFriends }: FriendsStoriesBarProps) {
-  const { friends, loading } = useFriends();
+  const { friends, loading, refreshFriendsIfStale } = useFriends();
   const { t } = useLanguage();
+
+  /**
+   * Re-read the list when you arrive on the page this reel is on.
+   *
+   * Someone who opens your invite link becomes your friend on THEIR device;
+   * yours finds out through the realtime channel, and nothing else. Play a
+   * game with them in the same session and the whole thing happens without
+   * the app ever re-reading its friends: lobby, game, results, home — and
+   * they are not in the reel, which is what "I played with them and they are
+   * not in my friends" is from the outside.
+   *
+   * Staleness-guarded, so navigating between tabs does not turn every mount
+   * into a query.
+   */
+  useEffect(() => {
+    refreshFriendsIfStale();
+  }, [refreshFriendsIfStale]);
   const { openProfile } = usePlayerProfile();
   const scrollRef = useRef<HTMLDivElement>(null);
   const edges = useScrollEdges(scrollRef);

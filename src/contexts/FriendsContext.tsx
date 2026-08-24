@@ -28,6 +28,16 @@ interface FriendsContextValue {
   declineFriendRequest: (friendshipId: string) => Promise<boolean>;
   removeFriend: (friendshipId: string) => Promise<boolean>;
   refreshFriends: () => Promise<void>;
+  /**
+   * Refetch, but only if the list has not been read for a while.
+   *
+   * For screens that want to be right when you arrive on them without
+   * turning every mount into a query. The friends reel on the home page is
+   * the one that matters: you finish a game with someone who accepted your
+   * invite mid-session and go home expecting to see them, and the app has
+   * had no reason to re-read the list since it started.
+   */
+  refreshFriendsIfStale: (maxAgeMs?: number) => void;
 }
 
 export const FriendsContext = createContext<FriendsContextValue | null>(null);
@@ -41,6 +51,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const previousPendingCount = useRef(0);
   const isInitialLoad = useRef(true);
+  const lastFetchedAt = useRef(0);
 
   const fetchFriends = useCallback(async () => {
     if (!user) {
@@ -121,6 +132,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
 
       previousPendingCount.current = newPendingRequests.length;
       isInitialLoad.current = false;
+      lastFetchedAt.current = Date.now();
 
       setFriends(acceptedFriends);
       setPendingRequests(newPendingRequests);
@@ -421,6 +433,12 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
     }
   }, [user, fetchFriends]);
 
+  const refreshFriendsIfStale = useCallback((maxAgeMs = 15_000) => {
+    if (!user) return;
+    if (Date.now() - lastFetchedAt.current < maxAgeMs) return;
+    void fetchFriends();
+  }, [user, fetchFriends]);
+
   const value = useMemo(
     () => ({
       friends,
@@ -433,6 +451,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       declineFriendRequest,
       removeFriend,
       refreshFriends: fetchFriends,
+      refreshFriendsIfStale,
     }),
     [
       friends,
@@ -445,6 +464,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       declineFriendRequest,
       removeFriend,
       fetchFriends,
+      refreshFriendsIfStale,
     ]
   );
 
