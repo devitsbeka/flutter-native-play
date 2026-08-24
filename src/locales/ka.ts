@@ -2653,7 +2653,7 @@ export const ka = {
     invitePlayers: "მოთამაშეები",
     inviteHostTag: "ჰოსტი",
     inviteYourName: "შენი სახელი",
-    inviteNamePlaceholder: "როგორ დაგიძახოთ?",
+    inviteNamePlaceholder: "შეიყვანე შენი სახელი",
     inviteNeedName: "ჯერ სახელი მითხარი",
     inviteJoinGame: "შემოუერთდი თამაშს",
     inviteAddFriend: "მეგობრად დამატება",

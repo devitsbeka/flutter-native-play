@@ -13,7 +13,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { cn } from "@/lib/utils";
 import { dateLocaleFor } from "@/utils/dateLocale";
-import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 
 /**
@@ -316,15 +316,21 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
                   it the card was two lines of text where the rooms list, the
                   countdown and the results screen all show the category.
 
-                  Rendered only when there is something to draw: given neither
-                  a slug nor an id, QuizCategoryIcon draws nothing at all and
-                  the sized box would sit there as a gap beside the title. */}
+                  CategoryArtwork and not QuizCategoryIcon: the six
+                  picture-guess categories ship their own 3D art, which is what
+                  the library and the Discover cards draw them with, and
+                  QuizCategoryIcon goes straight to the icon library instead —
+                  so "guess the movie" came out as a generic clapperboard
+                  rather than as itself.
+
+                  Rendered only when there is something to resolve, so an
+                  unknown category leaves no gap beside the title. */}
               {(categoryIdentity.iconSlug || categoryIdentity.categoryId) && (
-                <QuizCategoryIcon
-                  iconSlug={categoryIdentity.iconSlug ?? undefined}
-                  categoryId={categoryIdentity.categoryId ?? undefined}
+                <CategoryArtwork
+                  categoryId={categoryIdentity.categoryId}
+                  iconSlug={categoryIdentity.iconSlug}
                   size={40}
-                  className="w-10 h-10 shrink-0 drop-shadow-lg"
+                  className="shrink-0"
                 />
               )}
               <div className="min-w-0 flex-1">

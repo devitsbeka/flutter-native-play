@@ -2278,7 +2278,7 @@ export const pt: KaTranslations = {
     invitePlayers: "Jogadores",
     inviteHostTag: "Anfitrião",
     inviteYourName: "Seu nome",
-    inviteNamePlaceholder: "Como devemos te chamar?",
+    inviteNamePlaceholder: "Escreve o teu nome",
     inviteNeedName: "Diga seu nome primeiro",
     inviteJoinGame: "Entrar no jogo",
     inviteAddFriend: "Adicionar amigo",
