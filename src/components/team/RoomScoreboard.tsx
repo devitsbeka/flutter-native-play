@@ -360,15 +360,22 @@ function VsPlayer({
         >
           <SmartAvatar avatarUrl={player.avatar_url} fallback={player.nickname} size="xl" />
         </motion.div>
-        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
+        {/* The flag, bare and centred under the chin. It used to be a white
+            disc pinned to the right, which at this size is a second badge
+            competing with the crown for the same corner of a 64px circle —
+            and the disc read as chrome rather than as a flag. A drop shadow
+            does what the disc was there for: it holds the emoji apart from
+            whatever the avatar's edge happens to be. */}
+        <span className="pointer-events-none absolute -bottom-2 left-1/2 -translate-x-1/2 text-[16px] leading-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">
           {flag}
-        </div>
+        </span>
       </div>
 
       {/* Name: one line, fixed height, so a two-line name on one side cannot
-          push that side's score below the other's. */}
+          push that side's score below the other's. The top margin clears the
+          flag, which now hangs below the avatar's box. */}
       <p
-        className={`mt-2 h-5 w-full truncate text-sm font-medium leading-5 ${
+        className={`mt-4 h-5 w-full truncate text-sm font-medium leading-5 ${
           isInvited ? "text-white/50" : "text-white"
         }`}
       >

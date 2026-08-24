@@ -281,7 +281,7 @@ describe("the two-player face-off", () => {
     // wrapper stops them moving where the name starts.
     expect(vs, "the avatar needs a fixed slot").toMatch(/relative h-16 w-16/);
     expect(vs, "a two-line name must not push one score below the other")
-      .toMatch(/mt-2 h-5 w-full truncate/);
+      .toMatch(/mt-\d h-5 w-full truncate/);
     expect(vs, "the score needs a fixed slot").toMatch(/mt-2 h-8 text-2xl/);
     expect(vs, "the action row shifted the columns whenever only one side had a button")
       .toMatch(/flex min-h-\[28px\] items-center/);
