@@ -1820,6 +1820,7 @@ export const de: KaTranslations = {
     roomStatusCompleted: "Beendet",
     roomStatusWaiting: "Wartend",
     roomJoinLive: "Beitreten",
+    roomCardStart: "Spielen",
     howItWorksTitle: "Wie funktioniert es?",
     howItWorksFunGuaranteed: "Spaß garantiert! 🎉",
     howItWorksGotIt: "Verstanden!",

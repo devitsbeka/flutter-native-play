@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { matchesQuery } from "@/utils/searchMatch";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "active" | "completed";
 
@@ -55,6 +56,11 @@ export interface MyRoom {
   has_players_in_room: boolean;
   // Has at least one participant (excluding self) active in last 10 minutes
   has_recent_activity: boolean;
+  // Somebody asked this player into this room and they have not been yet.
+  // Derived from unread room_invite notifications rather than fetched: the
+  // notifications context already holds every one of them, and an invite is
+  // "pending" exactly as long as its notification is unread.
+  has_pending_invite: boolean;
 }
 
 // Active TV session statuses that indicate a "LIVE" game - paired means TV is connected and waiting for host
@@ -318,6 +324,8 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
       in_room_participants: inRoomParticipants,
       has_players_in_room: inRoomParticipants.length > 0,
       has_recent_activity: hasRecentActivity,
+      // Filled in by the hook, which is where the notifications live.
+      has_pending_invite: false,
     };
   });
 }
@@ -383,6 +391,26 @@ interface UseMyRoomsOptions {
 export function useMyRooms(options?: UseMyRoomsOptions) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { notifications } = useNotifications();
+
+  /**
+   * The rooms somebody has asked this player into and not been answered yet.
+   *
+   * Read off the notifications already in memory rather than queried: the
+   * context holds every notification this user has, realtime keeps it
+   * current, and "pending" is exactly "its notification is still unread" —
+   * so opening the room, which marks the notification read, retires the
+   * invite without a second source of truth to keep in step.
+   */
+  const invitedRoomIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const n of notifications) {
+      if (n.type !== "room_invite" || n.read_at) continue;
+      const roomId = (n.data as { room_id?: string } | null)?.room_id;
+      if (roomId) ids.add(roomId);
+    }
+    return ids;
+  }, [notifications]);
 
   const {
     filter = "all",
@@ -440,7 +468,11 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
 
   // Client-side filtering and sorting
   const filteredRooms = useMemo(() => {
-    let result = activeRooms;
+    let result: MyRoom[] = invitedRoomIds.size
+      ? activeRooms.map((room) =>
+          invitedRoomIds.has(room.id) ? { ...room, has_pending_invite: true } : room
+        )
+      : activeRooms;
 
     // Apply filter
     switch (filter) {
@@ -487,13 +519,13 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
     // sink during the session it is running.
     result = [...result].sort((a, b) =>
       compareRooms(
-        { ...a, hasLiveTV: isActiveTVSession(a.tv_status) },
-        { ...b, hasLiveTV: isActiveTVSession(b.tv_status) }
+        { ...a, hasLiveTV: isActiveTVSession(a.tv_status), hasPendingInvite: a.has_pending_invite },
+        { ...b, hasLiveTV: isActiveTVSession(b.tv_status), hasPendingInvite: b.has_pending_invite }
       )
     );
 
     return result;
-  }, [activeRooms, filter, friendIds, searchQuery]);
+  }, [activeRooms, filter, friendIds, searchQuery, invitedRoomIds]);
 
   return {
     rooms: filteredRooms.slice(0, limit),

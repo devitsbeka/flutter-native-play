@@ -2143,6 +2143,7 @@ export const ka = {
     roomStatusCompleted: "დასრულდა",
     roomStatusWaiting: "მოლოდინი",
     roomJoinLive: "შესვლა",
+    roomCardStart: "ითამაშე",
     roomStatusOnline: "ონლაინ",
     // How it works
     howItWorksTitle: "როგორ მუშაობს?",

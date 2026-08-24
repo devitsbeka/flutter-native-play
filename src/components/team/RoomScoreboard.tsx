@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Crown, Swords, Users, Send, X, Plus, UserPlus, Check } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
@@ -7,6 +7,7 @@ import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFriends } from "@/contexts/FriendsContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useParticipantPresence } from "@/hooks/useParticipantPresence";
 import { useAuth } from "@/hooks/useAuth";
 import { shouldOfferFriendRequest } from "@/utils/friendOffer";
 import crownIcon from "@/assets/crown-icon.png";
@@ -160,14 +161,87 @@ function InvitePlayerButton({
       ) : (
         <Send className={iconOnly ? "h-3.5 w-3.5" : "h-3 w-3"} />
       )}
-      {!iconOnly && (sent ? t("extra.sentLabel") : t("extra.inviteFriendBtn"))}
+      {/* No "sent" caption. The invite's real outcome is the player turning
+          up, and their avatar says that — a green ring the moment they are in
+          the app. A word here claimed the outcome the instant the row was
+          written, and then sat there unchanged whether they came or not. */}
+      {!iconOnly && !sent && t("extra.inviteFriendBtn")}
     </motion.button>
+  );
+}
+
+/**
+ * The avatar, ringed green while its owner is in the app, and flaring once at
+ * the moment they arrive.
+ *
+ * Two different facts, drawn as one thing on purpose. The ring is a state —
+ * it comes on when they open the app and goes off when their heartbeat dries
+ * up, so at a glance the scoreboard says who could actually play right now.
+ * The flare is an event, and it fires exactly once per arrival: it is what
+ * turns "the list changed while I was looking elsewhere" into something the
+ * host can see happen, which is the whole reason to send an invite and wait.
+ */
+function PresenceAvatar({
+  avatarUrl,
+  nickname,
+  isOnline,
+  justArrived,
+  dimmed,
+  crown,
+}: {
+  avatarUrl: string | null;
+  nickname: string;
+  isOnline: boolean;
+  justArrived: boolean;
+  dimmed: boolean;
+  crown: boolean;
+}) {
+  return (
+    <div className={`relative flex-shrink-0 ${dimmed ? "grayscale" : ""}`}>
+      <motion.div
+        className={`rounded-full ${
+          isOnline ? "ring-2 ring-emerald-400 ring-offset-1 ring-offset-transparent" : ""
+        }`}
+        // Keyed on the arrival so remounting is not needed to replay it; a
+        // glow that cannot repeat would only ever be seen by whoever happened
+        // to be looking the first time.
+        animate={
+          justArrived
+            ? {
+                boxShadow: [
+                  "0 0 0px 0px rgba(52,211,153,0)",
+                  "0 0 18px 6px rgba(52,211,153,0.85)",
+                  "0 0 0px 0px rgba(52,211,153,0)",
+                ],
+              }
+            : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
+        }
+        transition={justArrived ? { duration: 1.6, times: [0, 0.35, 1] } : { duration: 0.2 }}
+      >
+        <SmartAvatar avatarUrl={avatarUrl} fallback={nickname} size="md" />
+      </motion.div>
+      {crown && (
+        <img
+          src={crownIcon}
+          alt=""
+          className="pointer-events-none absolute -bottom-1 -left-1 w-4 h-4 object-contain drop-shadow"
+        />
+      )}
+    </div>
   );
 }
 
 export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true, maxPlayers, isHost = false, isRoomActive = true, onInviteFriends, onResendInvitation, onInvitePlayer, onRemoveParticipant }: RoomScoreboardProps) {
   const { t } = useLanguage();
   const isMobile = useIsMobile();
+
+  // Everyone on the board, so an invited player lighting up is visible here
+  // rather than only on the rooms list.
+  const participantIds = useMemo(
+    () => participants.map((p) => p.user_id).filter(Boolean),
+    [participants]
+  );
+  const { online, arrived } = useParticipantPresence(participantIds);
   // Track sent invites for showing feedback
   const [sentInvites, setSentInvites] = useState<Set<string>>(new Set());
   // Sort by total cumulative score (primary), then by total wins (secondary)
@@ -237,11 +311,33 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       {showHostCrown && player.is_host && !isInvited && (
                         <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
                       )}
-                      <SmartAvatar
-                        avatarUrl={player.avatar_url}
-                        fallback={player.nickname}
-                        size="xl"
-                      />
+                      {/* Same green ring as the list, so a player is not
+                          online on one layout and grey on the other. */}
+                      <motion.div
+                        className={`rounded-full ${
+                          !isInvited && online.has(player.user_id)
+                            ? "ring-2 ring-emerald-400 ring-offset-2 ring-offset-transparent"
+                            : ""
+                        }`}
+                        animate={
+                          !isInvited && arrived.has(player.user_id)
+                            ? {
+                                boxShadow: [
+                                  "0 0 0px 0px rgba(52,211,153,0)",
+                                  "0 0 22px 8px rgba(52,211,153,0.85)",
+                                  "0 0 0px 0px rgba(52,211,153,0)",
+                                ],
+                              }
+                            : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
+                        }
+                        transition={{ duration: 1.6, times: [0, 0.35, 1] }}
+                      >
+                        <SmartAvatar
+                          avatarUrl={player.avatar_url}
+                          fallback={player.nickname}
+                          size="xl"
+                        />
+                      </motion.div>
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
                         {getFlagEmoji(player.country_code || "GE")}
                       </div>
@@ -336,11 +432,33 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       {showHostCrown && player.is_host && !isInvited && (
                         <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
                       )}
-                      <SmartAvatar
-                        avatarUrl={player.avatar_url}
-                        fallback={player.nickname}
-                        size="xl"
-                      />
+                      {/* Same green ring as the list, so a player is not
+                          online on one layout and grey on the other. */}
+                      <motion.div
+                        className={`rounded-full ${
+                          !isInvited && online.has(player.user_id)
+                            ? "ring-2 ring-emerald-400 ring-offset-2 ring-offset-transparent"
+                            : ""
+                        }`}
+                        animate={
+                          !isInvited && arrived.has(player.user_id)
+                            ? {
+                                boxShadow: [
+                                  "0 0 0px 0px rgba(52,211,153,0)",
+                                  "0 0 22px 8px rgba(52,211,153,0.85)",
+                                  "0 0 0px 0px rgba(52,211,153,0)",
+                                ],
+                              }
+                            : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
+                        }
+                        transition={{ duration: 1.6, times: [0, 0.35, 1] }}
+                      >
+                        <SmartAvatar
+                          avatarUrl={player.avatar_url}
+                          fallback={player.nickname}
+                          size="xl"
+                        />
+                      </motion.div>
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
                         {getFlagEmoji(player.country_code || "GE")}
                       </div>
@@ -434,26 +552,22 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                     )}
                   </div>
                   
-                  {/* Avatar, and the host's crown on the corner of it.
+                  {/* Avatar: the host's crown on its corner, and a green ring
+                      while its owner is in the app.
+
                       The crown used to trail the name, where it competed with
                       the add-friend and invite buttons for the same strip of
                       row and pushed longer names into an ellipsis. On the
                       avatar it belongs to the face rather than to the text,
                       which is also where the room cards have always put it. */}
-                  <div className={`relative flex-shrink-0 ${isInvited ? "grayscale" : ""}`}>
-                    <SmartAvatar
-                      avatarUrl={p.avatar_url}
-                      fallback={p.nickname}
-                      size="md"
-                    />
-                    {showHostCrown && p.is_host && !isInvited && (
-                      <img
-                        src={crownIcon}
-                        alt=""
-                        className="pointer-events-none absolute -bottom-1 -left-1 w-4 h-4 object-contain drop-shadow"
-                      />
-                    )}
-                  </div>
+                  <PresenceAvatar
+                    avatarUrl={p.avatar_url}
+                    nickname={p.nickname}
+                    isOnline={!isInvited && online.has(p.user_id)}
+                    justArrived={!isInvited && arrived.has(p.user_id)}
+                    dimmed={isInvited}
+                    crown={showHostCrown && p.is_host && !isInvited}
+                  />
 
                   {/* Name + Crown - flex grow. The add-friend button belongs
                       to the person, so it sits with their name rather than

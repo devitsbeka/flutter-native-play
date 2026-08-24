@@ -1094,7 +1094,13 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                     ) : action === "start" ? (
                       <>
                         <Play className="w-3.5 h-3.5 fill-current" />
-                        {t("extra.rlStartGame")}
+                        {/* "ითამაშე", not the lobby's "თამაშის დაწყება".
+                            The long form is four syllables of Georgian in a
+                            pill that shares its row with a count and up to
+                            two faces, and it pushed the whole group off the
+                            card. The lobby's button keeps the long form —
+                            it has a full screen width to say it in. */}
+                        {t("extra.roomCardStart")}
                       </>
                     ) : (
                       <>

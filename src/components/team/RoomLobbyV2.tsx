@@ -789,8 +789,82 @@ export function RoomLobbyV2() {
               </DropdownMenu>
             </div>
           </div>
+
+          {/* The room's name, and the host's rename and background controls,
+              on their own row inside the header.
+
+              They used to be the first thing in the scrolling area, so the
+              moment a player scrolled far enough to see the scoreboard, the
+              room stopped saying which room it was — and the host's only way
+              back to the pencil and the palette was to scroll up and find
+              them again. A lobby that forgets its own name the instant you
+              look at the players is a lobby you cannot rename without
+              hunting for the control.
+
+              Part of the header rather than `position: sticky`: this box is
+              already outside the scroller and shrink-0, so it holds its
+              place for free. Sticky here would want a negative margin, and
+              iOS WebKit clamps sticky boxes that have one — the same trap
+              documented on the root element above. */}
+          <div className="mt-3 flex items-center justify-center gap-3">
+            {isHost ? (
+              <motion.button
+                onClick={() => setShowIconPicker(true)}
+                className="flex min-w-0 items-center gap-2 hover:opacity-80 transition-opacity"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                title={t("team.editRoom")}
+              >
+                {currentRoom.room_icon && (
+                  <img
+                    src={currentRoom.room_icon}
+                    alt="Room icon"
+                    className="w-8 h-8 shrink-0 object-contain"
+                  />
+                )}
+                <h2 className="max-w-[55vw] truncate text-base font-bold text-white drop-shadow-lg">
+                  {roomName}
+                </h2>
+              </motion.button>
+            ) : (
+              <>
+                {currentRoom.room_icon && (
+                  <img
+                    src={currentRoom.room_icon}
+                    alt="Room icon"
+                    className="w-8 h-8 shrink-0 object-contain"
+                  />
+                )}
+                <h2 className="max-w-[55vw] truncate text-base font-bold text-white drop-shadow-lg">
+                  {roomName}
+                </h2>
+              </>
+            )}
+            {isHost && (
+              <div className="flex shrink-0 items-center gap-1">
+                <motion.button
+                  onClick={() => setShowIconPicker(true)}
+                  className="w-8 h-8 text-white/70 hover:text-white transition-colors flex items-center justify-center"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title={t("team.editRoom")}
+                >
+                  <Edit2 className="w-4 h-4" />
+                </motion.button>
+                <motion.button
+                  onClick={() => setShowGradientPicker(true)}
+                  className="w-8 h-8 text-white/70 hover:text-white transition-colors flex items-center justify-center"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title={t("team.changeBackground")}
+                >
+                  <Palette className="w-4 h-4" />
+                </motion.button>
+              </div>
+            )}
+          </div>
         </div>
-        
+
         {/* Fade-out gradient for smooth transition */}
         <div 
           className="absolute bottom-0 left-0 right-0 h-8 -mb-8 pointer-events-none"
@@ -804,74 +878,6 @@ export function RoomLobbyV2() {
           min-height is its content, so without this the box grows past the
           viewport instead of scrolling — the frozen lobby on device. */}
       <div className="flex-1 min-h-0 overflow-y-auto relative z-10 px-4 sm:px-6 pb-32 sm:max-w-[520px] mx-auto w-full will-change-transform">
-
-        {/* Room name row, below the header: icon + name for everyone; the
-            host also gets the rename (pencil) and background (palette)
-            controls beside it. */}
-        <div className="text-center mb-4 space-y-3">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="flex items-center justify-center gap-3">
-              {isHost ? (
-                <motion.button
-                  onClick={() => setShowIconPicker(true)}
-                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  title={t("team.editRoom")}
-                >
-                  {currentRoom.room_icon && (
-                    <img
-                      src={currentRoom.room_icon}
-                      alt="Room icon"
-                      className="w-8 h-8 object-contain"
-                    />
-                  )}
-                  <h2 className="max-w-[55vw] truncate text-base font-bold text-white drop-shadow-lg">
-                    {roomName}
-                  </h2>
-                </motion.button>
-              ) : (
-                <>
-                  {currentRoom.room_icon && (
-                    <img
-                      src={currentRoom.room_icon}
-                      alt="Room icon"
-                      className="w-8 h-8 object-contain"
-                    />
-                  )}
-                  <h2 className="max-w-[55vw] truncate text-base font-bold text-white drop-shadow-lg">
-                    {roomName}
-                  </h2>
-                </>
-              )}
-              {isHost && (
-                <div className="flex items-center gap-1">
-                  <motion.button
-                    onClick={() => setShowIconPicker(true)}
-                    className="w-8 h-8 text-white/70 hover:text-white transition-colors flex items-center justify-center"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    title={t("team.editRoom")}
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </motion.button>
-                  <motion.button
-                    onClick={() => setShowGradientPicker(true)}
-                    className="w-8 h-8 text-white/70 hover:text-white transition-colors flex items-center justify-center"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    title={t("team.changeBackground")}
-                  >
-                    <Palette className="w-4 h-4" />
-                  </motion.button>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
 
         {/* Category Picker Section */}
         <CategoryPickerSection
