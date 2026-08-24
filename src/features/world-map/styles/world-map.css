@@ -212,7 +212,21 @@
   }
 }
 
-/* Category markers: Thiings icons with star/lock badge pills (Figma spec) */
+/* ---------------------------------------------------------------------------
+   Level markers.
+
+   Chunky pressable discs rather than floating icons: a flat icon on a busy
+   3D map has no silhouette and no affordance, which is why the map read as
+   scenery instead of a route. Each disc is a solid colour puck with a hard
+   bottom edge (`0 Npx 0` shadow) that compresses on press — the depth is what
+   makes it feel like a button rather than a sticker.
+
+   Colour carries state, not decoration:
+     gold   completed / claimed
+     green  available (the next thing to do)
+     blue   checkpoint, purple portal, orange challenge, red boss
+     grey   locked
+--------------------------------------------------------------------------- */
 .wm-marker {
   position: relative;
   display: flex;
@@ -232,24 +246,21 @@
   }
 }
 
-/* Badge pill floating above the icon: 56x44, stars or lock */
+/* Stars / lock chip riding on the disc's top edge. */
 .wm-badge {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1px;
-  min-width: 56px;
-  height: 44px;
-  padding: 0 6px;
-  border: 1.907px solid #e8e0f5;
+  min-width: 38px;
+  height: 24px;
+  padding: 0 8px;
+  border: 2px solid #fff;
   border-radius: 33px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(254, 254, 254, 0.9));
-  box-shadow:
-    0 3.8px 0 #d8d0e8,
-    0 5.7px 15.3px rgba(0, 0, 0, 0.1),
-    inset 0 1.9px 0 #fff;
-  margin-bottom: -10px;
-  z-index: 1;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 3px 8px rgba(60, 30, 90, 0.22);
+  margin-bottom: -8px;
+  z-index: 2;
   pointer-events: none;
   transition: transform 0.25s ease;
 }
@@ -258,88 +269,202 @@
   object-fit: contain;
 }
 
+/* The disc itself. --face/--edge are set per state below. */
 .wm-icon-btn {
   pointer-events: auto;
   position: relative;
-  width: 78px;
-  height: 78px;
-  background: none;
-  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
   padding: 0;
+  border: none;
+  border-radius: 50%;
   cursor: pointer;
-  transition: transform 0.18s ease;
+  --face: #cfc8da;
+  --edge: #a9a1bd;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 62%),
+    var(--face);
+  box-shadow:
+    0 7px 0 var(--edge),
+    0 10px 18px rgba(40, 20, 70, 0.3),
+    inset 0 3px 0 rgba(255, 255, 255, 0.45);
+  transition:
+    transform 0.12s cubic-bezier(0.34, 1.4, 0.64, 1),
+    box-shadow 0.12s ease;
+}
+
+/* Duolingo press: the disc sinks onto its own edge. */
+.wm-icon-btn:active {
+  transform: translateY(6px);
+  box-shadow:
+    0 1px 0 var(--edge),
+    0 2px 6px rgba(40, 20, 70, 0.3),
+    inset 0 3px 0 rgba(255, 255, 255, 0.45);
 }
 
 .wm-icon-btn:hover,
 .wm-icon-btn:focus-visible {
-  transform: translateY(-4px) scale(1.08);
-}
-
-.wm-icon-btn:active {
-  transform: scale(0.95);
+  transform: translateY(-3px);
+  box-shadow:
+    0 10px 0 var(--edge),
+    0 14px 22px rgba(40, 20, 70, 0.34),
+    inset 0 3px 0 rgba(255, 255, 255, 0.45);
 }
 
 .wm-icon-btn:focus-visible {
-  outline: 3px solid #a855f7;
-  outline-offset: 4px;
-  border-radius: 16px;
+  outline: 3px solid #fff;
+  outline-offset: 3px;
 }
 
-.wm-marker:hover .wm-badge {
-  transform: translateY(-3px);
+.wm-icon-btn[data-state="completed"],
+.wm-icon-btn[data-state="claimed"] {
+  --face: #ffc93c;
+  --edge: #d98e12;
+}
+
+.wm-icon-btn[data-state="available"],
+.wm-icon-btn[data-state="active"] {
+  --face: #5fd11f;
+  --edge: #3d9410;
+}
+
+.wm-icon-btn[data-type="challenge"][data-state="available"] {
+  --face: #ff9f2e;
+  --edge: #cf6d05;
+}
+
+.wm-icon-btn[data-type="checkpoint"][data-state="available"],
+.wm-icon-btn[data-type="checkpoint"][data-state="active"] {
+  --face: #35b8f5;
+  --edge: #0f7fb5;
+}
+
+.wm-icon-btn[data-type="portal"][data-state="available"] {
+  --face: #b04dff;
+  --edge: #7a1fc4;
+}
+
+.wm-icon-btn[data-type="boss"][data-state="available"],
+.wm-icon-btn[data-type="boss"][data-state="active"] {
+  --face: #f2513f;
+  --edge: #b31f10;
+}
+
+/* Boss discs read as bigger stakes even while locked. */
+.wm-icon-btn[data-type="boss"] {
+  width: 66px;
+  height: 66px;
 }
 
 .wm-cat-icon {
-  width: 100%;
-  height: 100%;
+  width: 54%;
+  height: 54%;
   object-fit: contain;
-  filter: drop-shadow(7px 4px 9px rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.28));
+  pointer-events: none;
 }
 
 .wm-icon-locked {
   cursor: not-allowed;
+  --face: #cfc8da;
+  --edge: #a9a1bd;
+}
+
+.wm-icon-locked:hover,
+.wm-icon-locked:active {
+  transform: none;
+  box-shadow:
+    0 7px 0 var(--edge),
+    0 10px 18px rgba(40, 20, 70, 0.3),
+    inset 0 3px 0 rgba(255, 255, 255, 0.45);
 }
 
 .wm-icon-locked .wm-cat-icon {
-  filter: grayscale(0.75) opacity(0.6) drop-shadow(4px 3px 6px rgba(0, 0, 0, 0.18));
+  filter: grayscale(1) opacity(0.55);
 }
 
 .wm-icon-selected {
-  transform: translateY(-4px) scale(1.08);
+  transform: translateY(-3px);
 }
 
-/* Soft pulse halo behind the current available challenge */
+/* Expanding ring on the node the player is up to — the eye should land here
+   before anywhere else on the map. */
 .wm-icon-available::before {
   content: "";
   position: absolute;
-  inset: 8px;
+  inset: -10px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, rgba(168, 85, 247, 0) 70%);
-  animation: wm-halo 2.2s ease-in-out infinite;
+  border: 4px solid rgba(255, 255, 255, 0.9);
+  animation: wm-ring 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   pointer-events: none;
 }
 
-@keyframes wm-halo {
-  0%,
-  100% {
-    transform: scale(0.9);
-    opacity: 0.55;
+@keyframes wm-ring {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.9;
   }
-  50% {
-    transform: scale(1.25);
-    opacity: 1;
+  70%,
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
   }
 }
 
-/* Label pill under the icon, revealed on hover/focus/selection */
+/* "You are here" pin, bobbing above the current node. */
+.wm-you {
+  position: absolute;
+  top: -54px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  animation: wm-bob 2.4s ease-in-out infinite;
+}
+
+.wm-you-bubble {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  background: #fff;
+  object-fit: cover;
+  box-shadow: 0 6px 14px rgba(40, 20, 70, 0.35);
+}
+
+.wm-you-tip {
+  width: 0;
+  height: 0;
+  margin-top: -4px;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 12px solid #fff;
+  filter: drop-shadow(0 3px 3px rgba(40, 20, 70, 0.25));
+}
+
+@keyframes wm-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+/* Label pill under the disc, revealed on hover/focus/selection */
 .wm-marker-label {
-  margin-top: 4px;
-  padding: 3px 12px;
+  margin-top: 10px;
+  padding: 4px 12px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.16);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 3px 8px rgba(40, 20, 70, 0.22);
   font-family: "Nunito", sans-serif;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 13px;
   letter-spacing: -0.15px;
   color: #1f2937;
@@ -359,7 +484,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .wm-marker-enter,
-  .wm-icon-available::before {
+  .wm-icon-available::before,
+  .wm-you {
     animation: none;
   }
   .wm-badge,

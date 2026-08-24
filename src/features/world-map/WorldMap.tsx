@@ -7,9 +7,21 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import { sampleWorld } from "./data/sampleWorld";
+import { adventureWorld } from "./data/adventureWorld";
+import { CurrentQuest, selectCurrentQuest } from "./selectors";
+
+/**
+ * Camera target for a quest: the chapter's x so the whole plateau is framed,
+ * the node's z so the player's position sets the scroll offset. Using the
+ * node's x instead pushed edge nodes to the screen border and clipped the
+ * discs beside them.
+ */
+function questFraming(quest: CurrentQuest, pos: [number, number, number]): [number, number, number] {
+  return [quest.region.position[0], pos[1], pos[2] + 6];
+}
 import { NodePanelData } from "./nodes/NodePanel";
 import { MapNodeDefinition, NodeState } from "./schemas/worldDefinition";
 import { generateWorld } from "./procedural/generateWorld";
@@ -32,6 +44,10 @@ interface WorldMapProps extends WorldMapActions {
   fallback: ReactNode;
   /** Extra canvas resolution multiplier for CSS-scaled stages. */
   resolutionBoost?: number;
+  /** Travel the route by vertical drag instead of free pan (phones). */
+  verticalScroll?: boolean;
+  /** Player avatar, drawn as the "you are here" pin on the current node. */
+  avatarUrl?: string | null;
 }
 
 class SceneErrorBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
@@ -68,20 +84,50 @@ function stateLabel(state: NodeState): string {
  * Public entry for the interactive world. Owns WebGL detection, the loading
  * veil, the DOM node-details panel and the static fallback.
  */
-export function WorldMap({ fallback, resolutionBoost, onMissions, onDiscover, onPlay }: WorldMapProps) {
+export function WorldMap({
+  fallback,
+  resolutionBoost,
+  verticalScroll,
+  avatarUrl,
+  onMissions,
+  onDiscover,
+  onPlay,
+}: WorldMapProps) {
   const [supported] = useState(() => webglAvailable());
   const [ready, setReady] = useState(false);
   const [panelNode, setPanelNode] = useState<MapNodeDefinition | null>(null);
   const nodeStates = useProgressionStore((s) => s.nodeStates);
   const select = useSelectionStore((s) => s.select);
 
-  const world = useMemo(() => generateWorld(sampleWorld), []);
+  const world = useMemo(() => generateWorld(adventureWorld), []);
+  const currentQuest = useMemo(() => selectCurrentQuest(adventureWorld, nodeStates), [nodeStates]);
+
+  // Land on the node the player is actually up to, not the middle of the
+  // route — on a long vertical map the default framing can open on scenery
+  // the player finished days ago. Runs once: re-centring on every progression
+  // change would yank the camera while they are looking around.
+  // Waits for `ready`: the canvas is lazy + Suspense, so CameraRig mounts
+  // after this component and its own init effect writes definition.target
+  // into the store. Centring before that gets silently overwritten, which is
+  // what left the camera parked away from the player's node.
+  const centred = useRef(false);
+  useEffect(() => {
+    if (!ready || centred.current) return;
+    const pos = currentQuest && world.nodeWorldPositions[currentQuest.node.id];
+    if (!pos) return;
+    centred.current = true;
+    useCameraStore.getState().resetCamera(questFraming(currentQuest, pos));
+  }, [ready, currentQuest, world]);
 
   const closePanel = useCallback(() => {
     setPanelNode(null);
     select(null);
-    useCameraStore.getState().resetCamera(sampleWorld.camera.target);
-  }, [select]);
+    const quest = selectCurrentQuest(adventureWorld, useProgressionStore.getState().nodeStates);
+    const pos = quest && world.nodeWorldPositions[quest.node.id];
+    useCameraStore
+      .getState()
+      .resetCamera(quest && pos ? questFraming(quest, pos) : adventureWorld.camera.target);
+  }, [select, world]);
 
   const handleNodeClick = useCallback(
     (node: MapNodeDefinition) => {
@@ -109,7 +155,7 @@ export function WorldMap({ fallback, resolutionBoost, onMissions, onDiscover, on
   const panelLocked = panelState === "locked";
   const prerequisiteLabel =
     panelNode?.prerequisiteIds
-      ?.map((id) => sampleWorld.regions.flatMap((r) => r.nodes).find((n) => n.id === id)?.label)
+      ?.map((id) => adventureWorld.regions.flatMap((r) => r.nodes).find((n) => n.id === id)?.label)
       .filter(Boolean)
       .join(", ") ?? "";
 
@@ -147,8 +193,11 @@ export function WorldMap({ fallback, resolutionBoost, onMissions, onDiscover, on
         )}
         <Suspense fallback={null}>
           <WorldMapCanvas
-            definition={sampleWorld}
+            definition={adventureWorld}
             resolutionBoost={resolutionBoost}
+            verticalScroll={verticalScroll}
+            currentNodeId={currentQuest?.node.id ?? null}
+            avatarUrl={avatarUrl}
             onNodeClick={handleNodeClick}
             onReady={() => setReady(true)}
             panel={panel}

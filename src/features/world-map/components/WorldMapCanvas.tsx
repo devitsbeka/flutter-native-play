@@ -16,6 +16,10 @@ interface WorldMapCanvasProps {
   onNodeClick: (node: MapNodeDefinition) => void;
   onReady?: () => void;
   panel: NodePanelData | null;
+  /** Travel the route by vertical drag instead of free pan (phones). */
+  verticalScroll?: boolean;
+  currentNodeId?: string | null;
+  avatarUrl?: string | null;
 }
 
 /**
@@ -28,6 +32,9 @@ export default function WorldMapCanvas({
   onNodeClick,
   onReady,
   panel,
+  verticalScroll,
+  currentNodeId,
+  avatarUrl,
 }: WorldMapCanvasProps) {
   const [ready, setReady] = useState(false);
   const setTier = useQualityStore((s) => s.setTier);
@@ -50,9 +57,16 @@ export default function WorldMapCanvas({
       className="absolute inset-0 transition-opacity duration-700"
       style={{
         opacity: ready ? 1 : 0,
+        // Without this the browser claims a vertical drag for page scrolling
+        // and cancels the pointer stream after the first move, so the route
+        // could be panned with a mouse and a wheel but not with a finger —
+        // i.e. it worked everywhere except the device it is built for.
+        touchAction: "none",
         // Sky-to-sea backdrop matching the scene horizon, so the world's
         // background always fills the viewport even past the water mesh.
-        background: "linear-gradient(180deg, #e6cff5 0%, #ddc9f2 45%, #d3cdef 75%, #c5d8ee 100%)",
+        // Deeper toward the horizon so the saturated plateaus have something
+        // to sit against; a near-uniform pastel field gave them no separation.
+        background: "linear-gradient(180deg, #f0dcff 0%, #d9bdf6 38%, #b79ae8 72%, #8f7ed4 100%)",
       }}
       data-testid="world-map-canvas"
     >
@@ -63,7 +77,7 @@ export default function WorldMapCanvas({
         // (offsetWidth/Height), not the transformed bounding rect, or the
         // canvas under-fills the stage whenever the scale drops below 1.
         resize={{ offsetSize: true }}
-        camera={{ fov: 32, near: 1, far: 400, position: [20, 80, 70] }}
+        camera={{ fov: definition.camera.fov ?? 32, near: 1, far: 700, position: [20, 80, 70] }}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         onCreated={({ gl }) => {
           gl.setClearColor(worldColors.sky, 0);
@@ -74,7 +88,15 @@ export default function WorldMapCanvas({
           });
         }}
       >
-        <WorldScene world={world} reducedMotion={reducedMotion} onNodeClick={onNodeClick} panel={panel} />
+        <WorldScene
+          world={world}
+          reducedMotion={reducedMotion}
+          onNodeClick={onNodeClick}
+          panel={panel}
+          verticalScroll={verticalScroll}
+          currentNodeId={currentNodeId}
+          avatarUrl={avatarUrl}
+        />
         {import.meta.env.DEV && <DevDiagnostics />}
       </Canvas>
     </div>
