@@ -24,9 +24,12 @@ export function loadCategoryIdentities(): Promise<CategoryRowIdentity[]> {
   if (cache) return Promise.resolve(cache);
   if (inFlight) return inFlight;
 
-  inFlight = supabase
-    .from("categories")
-    .select("id, category_id, icon_slug")
+  // Promise.resolve, because a PostgrestBuilder is a PromiseLike: it has
+  // `then` and no `catch` or `finally`, so it does not satisfy Promise and
+  // cannot be handed back as one.
+  inFlight = Promise.resolve(
+    supabase.from("categories").select("id, category_id, icon_slug"),
+  )
     .then(({ data, error }) => {
       inFlight = null;
       if (error) {
