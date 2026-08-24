@@ -22,6 +22,8 @@ interface RoomScoreboardProps {
   isRoomActive?: boolean;
   onInviteFriends?: () => void;
   onResendInvitation?: (userId: string) => void;
+  /** Host only: nudge a player who already has a seat to come and play now. */
+  onInvitePlayer?: (userId: string) => void | Promise<void>;
   onRemoveParticipant?: (participantId: string) => void;
 }
 
@@ -89,7 +91,61 @@ function AddFriendButton({ userId }: { userId: string }) {
   );
 }
 
-export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true, maxPlayers, isHost = false, isRoomActive = true, onInviteFriends, onResendInvitation, onRemoveParticipant }: RoomScoreboardProps) {
+/**
+ * Call a player who already has a seat back to the table.
+ *
+ * The room's roster outlives any one evening: everyone who ever played here is
+ * still on this list, and most of them are not looking at the app. The `+` in
+ * the header invites somebody NEW, and the green Send button belongs to a
+ * placeholder who never arrived — so for the six people who have played here
+ * fifteen times, the host had no way to say "we're playing now" short of
+ * leaving the room and finding them somewhere else.
+ *
+ * Host only, and never against the host themselves.
+ */
+function InvitePlayerButton({
+  userId,
+  onInvite,
+}: {
+  userId: string;
+  onInvite: (userId: string) => void | Promise<void>;
+}) {
+  const { t } = useLanguage();
+  const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  return (
+    <motion.button
+      type="button"
+      whileTap={{ scale: 0.95 }}
+      disabled={sending || sent}
+      onClick={async (e) => {
+        // The row can open a profile; inviting is its own action.
+        e.stopPropagation();
+        setSending(true);
+        try {
+          await onInvite(userId);
+          setSent(true);
+        } catch {
+          // The caller has already said so in a toast. Staying un-green and
+          // pressable again is the whole of this side's response.
+        } finally {
+          setSending(false);
+        }
+      }}
+      className={`flex flex-shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+        sent
+          ? "bg-emerald-500/25 text-emerald-300"
+          : "bg-white/15 text-white hover:bg-white/25"
+      }`}
+    >
+      {sent ? <Check className="h-3 w-3" /> : <Send className="h-3 w-3" />}
+      {sent ? t("extra.sentLabel") : t("extra.inviteFriendBtn")}
+    </motion.button>
+  );
+}
+
+export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true, maxPlayers, isHost = false, isRoomActive = true, onInviteFriends, onResendInvitation, onInvitePlayer, onRemoveParticipant }: RoomScoreboardProps) {
   const { t } = useLanguage();
   // Track sent invites for showing feedback
   const [sentInvites, setSentInvites] = useState<Set<string>>(new Set());
@@ -220,8 +276,11 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                         <p className="text-xs text-white/60">
                           {t("extra.scoreboardRoundStats", { rounds: player.total_rounds_played || 0, wins: player.total_wins || 0 })}
                         </p>
-                        <div className="mt-1.5">
+                        <div className="mt-1.5 flex items-center justify-center gap-1.5">
                           <AddFriendButton userId={player.user_id} />
+                          {isHost && onInvitePlayer && player.user_id !== currentUserId && (
+                            <InvitePlayerButton userId={player.user_id} onInvite={onInvitePlayer} />
+                          )}
                         </div>
                       </div>
                     )}
@@ -316,8 +375,11 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                         <p className="text-xs text-white/60">
                           {t("extra.scoreboardRoundStats", { rounds: player.total_rounds_played || 0, wins: player.total_wins || 0 })}
                         </p>
-                        <div className="mt-1.5">
+                        <div className="mt-1.5 flex items-center justify-center gap-1.5">
                           <AddFriendButton userId={player.user_id} />
+                          {isHost && onInvitePlayer && player.user_id !== currentUserId && (
+                            <InvitePlayerButton userId={player.user_id} onInvite={onInvitePlayer} />
+                          )}
                         </div>
                       </div>
                     )}
@@ -375,6 +437,9 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       <Crown className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
                     )}
                     {!isInvited && <AddFriendButton userId={p.user_id} />}
+                    {isHost && !isInvited && onInvitePlayer && p.user_id !== currentUserId && (
+                      <InvitePlayerButton userId={p.user_id} onInvite={onInvitePlayer} />
+                    )}
                   </div>
 
                   {/* Score + Rounds - fixed width, right aligned */}

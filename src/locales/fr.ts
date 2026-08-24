@@ -1698,7 +1698,7 @@ export const fr: KaTranslations = {
     saveErrorToast: "Erreur lors de l'enregistrement",
     myTriviaPartySaved: "MyTrivia Party enregistrée !",
     noOnePlayedTrivia: "Personne n'a encore joué",
-    pingHostBtn: "Appeler l'hôte",
+    pingHostBtn: "Inviter l'hôte",
     pingHostSent: "L'hôte a été prévenu ! 🔔",
     pingHostNotifTitle: "{name} : On joue !",
     pingHostOpenRoom: "Ouvrir le salon",

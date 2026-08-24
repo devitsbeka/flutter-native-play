@@ -441,31 +441,58 @@ export function RoomLobbyV2() {
     }
   };
 
+  // "Come and play" — one notification, two callers.
+  //
+  // The invited placeholder who never arrived gets it as a nudge to accept;
+  // a player who already has a seat gets it as a call back to the table. Same
+  // row in notifications, same tap target on the other end, so the difference
+  // between them is only which word this side says afterwards.
+  const sendRoomInvite = async (userId: string) => {
+    if (!currentRoom) return;
+    // The notify_room_invite trigger only fires on a new room_participants
+    // row, and both of these people already have one — so the notification is
+    // written here rather than waiting for a trigger that will not run.
+    const { error } = await supabase.from("notifications").insert({
+      user_id: userId,
+      type: "room_invite",
+      title: t("extra.invitedToGame"),
+      message: t("extra.invitedToGameMsg", { name: profile?.nickname || t("extra.friendFallback") }),
+      data: {
+        room_id: currentRoom.id,
+        room_code: currentRoom.room_code,
+        room_name: currentRoom.room_name,
+        category_name: currentRoom.category_name,
+        host_user_id: currentRoom.host_user_id,
+        sender_nickname: profile?.nickname,
+        sender_avatar: profile?.avatar_url
+      },
+    });
+    if (error) throw error;
+  };
+
   // Handler for resending invitation
   const handleResendInvitation = async (userId: string) => {
-    if (!currentRoom) return;
     try {
-      // Re-trigger notification by updating and re-inserting participant
-      // The database trigger will create the notification
-      await supabase.from("notifications").insert({
-        user_id: userId,
-        type: "room_invite",
-        title: t("extra.invitedToGame"),
-        message: t("extra.invitedToGameMsg", { name: profile?.nickname || t("extra.friendFallback") }),
-        data: {
-          room_id: currentRoom.id, 
-          room_code: currentRoom.room_code,
-          room_name: currentRoom.room_name,
-          category_name: currentRoom.category_name,
-          host_user_id: currentRoom.host_user_id,
-          sender_nickname: profile?.nickname,
-          sender_avatar: profile?.avatar_url
-        },
-      });
+      await sendRoomInvite(userId);
       toast.success(t("extra.invitationResent"));
     } catch (error) {
       console.error("Resend invitation error:", error);
       toast.error(t("extra.invitationResendFailed"));
+    }
+  };
+
+  // Host tapping "მოწვევა" beside a player already on the scoreboard. Not a
+  // resend — nothing was pending — so it says "sent", not "sent again".
+  const handleInvitePlayer = async (userId: string) => {
+    try {
+      await sendRoomInvite(userId);
+      toast.success(t("extra.inviteSent"));
+    } catch (error) {
+      console.error("Invite player error:", error);
+      toast.error(t("extra.invitationResendFailed"));
+      // Rethrow: the button turns green on success, and a failed invite that
+      // still went green is the one outcome worse than a failed invite.
+      throw error;
     }
   };
 
@@ -951,6 +978,7 @@ export function RoomLobbyV2() {
             onInviteFriends={() => setShowInviteModal(true)}
             onRemoveParticipant={handleRemoveParticipant}
             onResendInvitation={handleResendInvitation}
+            onInvitePlayer={handleInvitePlayer}
           />
         </div>
 

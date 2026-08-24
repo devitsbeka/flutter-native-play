@@ -2010,7 +2010,7 @@ export const en: KaTranslations = {
     saveErrorToast: "Error while saving",
     myTriviaPartySaved: "MyTrivia Party saved!",
     noOnePlayedTrivia: "No one has played yet",
-    pingHostBtn: "Call the host",
+    pingHostBtn: "Invite the host",
     pingHostSent: "The host has been notified! 🔔",
     pingHostNotifTitle: "{name}: Let's play!",
     pingHostOpenRoom: "Open room",

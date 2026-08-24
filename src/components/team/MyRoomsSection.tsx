@@ -2,8 +2,9 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { AnimatePresence, motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal, MonitorPlay } from "lucide-react";
-import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession, isRoomLive } from "@/hooks/useMyRooms";
+import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal, MonitorPlay, Play } from "lucide-react";
+import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession } from "@/hooks/useMyRooms";
+import { roomCardAction } from "@/utils/roomCardAction";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -791,17 +792,17 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
       }))
     : [...room.participants].sort((a, b) => Number(b.is_host) - Number(a.is_host));
 
-  // A round is running in there right now — not merely someone sitting in the
-  // lobby. Every room on this page is one this user already has a seat in
-  // (the list is built from their own room_participants rows), so the way in
-  // is re-entry, which stays open mid-round.
-  const isLiveNow = isRoomLive(room);
+  // What this room is offering right now, or null when it offers nothing.
+  // See roomCardAction for why an empty room gets no button at all.
+  const action = roomCardAction(room);
+
   // The button is the point of the row while a round is on, so the faces give
   // it room. Two, and no "+N" bubble: the count pill sits right beside them
   // and already says how many there are, so the bubble spends 24px repeating
   // it. Without that trim, a full room on a TV at three-column width put the
-  // button on top of the bubble.
-  const avatarLimit = isLiveNow ? 2 : 4;
+  // button on top of the bubble. "Start"/"enter" are wider words than "join",
+  // so they get the same trim.
+  const avatarLimit = action ? 2 : 4;
 
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
@@ -1037,7 +1038,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                         </div>
                       );
                     })}
-                    {!isLiveNow && displayPlayers.length > avatarLimit && (
+                    {!action && displayPlayers.length > avatarLimit && (
                       <div className="w-8 h-8 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
                         <span className="text-white text-[10px] font-bold">
                           +{displayPlayers.length - avatarLimit}
@@ -1047,18 +1048,29 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                   </div>
                 </div>
 
-                {/* Right: the way in, but only while there is a round to be
-                    late for. A live round is the one state where tapping is
-                    urgent — every second before you are on the question is a
-                    second of scoring you have already lost — and the card's
-                    own tap target says nothing about that. Pulsing for the
-                    same reason: it has to read as a thing happening now.
+                {/* Right: what this room is offering, when it is offering
+                    anything. Three states, and each is a different sentence:
 
-                    RoundStartWatcher does not cover this. It deliberately
-                    treats /team as "already there" and never navigates, so a
-                    player parked on this very list is the one person a
-                    starting round cannot reach. */}
-                {isLiveNow && (
+                      live    a round is running and every second before you
+                              are on the question is scoring already lost, so
+                              it pulses and carries the red dot — it has to
+                              read as a thing happening now.
+                      start   you host this room and there is somebody online
+                              to play with. The lobby's own button says the
+                              same words, so this is the first of two taps
+                              rather than a promise it cannot keep.
+                      enter   somebody is online in a room you are in. Go and
+                              wait for them to start.
+
+                    Nothing at all when no one else is online: most rooms in
+                    this list are old and empty, and a button on every one of
+                    them would say nothing about any of them.
+
+                    RoundStartWatcher does not cover the live case. It
+                    deliberately treats /team as "already there" and never
+                    navigates, so a player parked on this very list is the one
+                    person a starting round cannot reach. */}
+                {action && (
                   <motion.button
                     type="button"
                     onClick={(e) => {
@@ -1066,12 +1078,30 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                       if (!isJoining) onJoin();
                     }}
                     disabled={isJoining}
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                    animate={action === "live" ? { scale: [1, 1.05, 1] } : undefined}
+                    transition={
+                      action === "live"
+                        ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
+                        : undefined
+                    }
                     className="flex items-center gap-1.5 flex-shrink-0 rounded-lg bg-white/70 backdrop-blur-md px-3 py-1.5 text-sm font-extrabold text-[#2E1065] shadow-md disabled:opacity-60"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                    {t("extra.roomJoinLive")}
+                    {action === "live" ? (
+                      <>
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                        {t("extra.roomJoinLive")}
+                      </>
+                    ) : action === "start" ? (
+                      <>
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        {t("extra.rlStartGame")}
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        {t("extra.roomJoinLive")}
+                      </>
+                    )}
                   </motion.button>
                 )}
               </div>
