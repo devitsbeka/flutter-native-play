@@ -55,6 +55,17 @@ interface MyRoomsSectionProps {
 // the list never reflows underneath a card that is still on screen.
 const EXIT_MS = 320;
 
+/**
+ * How many faces a room card shows before it starts counting instead.
+ *
+ * One number for both card layouts, because the two disagreeing is what made
+ * a room look like it had lost players: the same room showed three faces in
+ * one place and two in another, under a count pill that said something else
+ * again. Past five it is a "+N" bubble, and the pill in the corner is still
+ * the total either way.
+ */
+const ROOM_CARD_FACES = 5;
+
 export function MyRoomsSection({ 
   hideTV = false, 
   onCreateRoom, 
@@ -563,7 +574,7 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
               <div className="flex items-start justify-between mb-8">
                 {/* Top left - Avatars (use TV players when active) */}
                 <div className="flex -space-x-2">
-                  {displayPlayers.slice(0, 3).map((p, idx) => {
+                  {displayPlayers.slice(0, ROOM_CARD_FACES).map((p, idx) => {
                     // Check if this participant is online
                     const isOnline = room.online_participants.some(op => op.user_id === p.user_id);
                     
@@ -600,10 +611,10 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
                       </div>
                     );
                   })}
-                  {displayPlayers.length > 3 && (
+                  {displayPlayers.length > ROOM_CARD_FACES && (
                     <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center shadow-md">
                       <span className="text-xs font-bold text-white">
-                        +{displayPlayers.length - 3}
+                        +{displayPlayers.length - ROOM_CARD_FACES}
                       </span>
                     </div>
                   )}
@@ -796,14 +807,13 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
   // See roomCardAction for why an empty room gets no button at all.
   const action = roomCardAction(room);
 
-  // The button is the point of the row while there is one, so the faces give
-  // it room — but not so much room that they contradict the count pill above
-  // them. Two faces under a pill reading "3" is read as a missing player, not
-  // as a crop, and a three-player room is the common case. Three faces, and
-  // the "+N" bubble is back for anything past them: the row is the only thing
-  // in this group allowed to give way (overflow-hidden, above), so a card too
+  // The faces used to be trimmed to two whenever the card carried a button,
+  // with the "+N" bubble suppressed on the reasoning that the count pill above
+  // already said how many there were. It read as a missing player rather than
+  // as a crop. Same five as every other card now: the row is the one thing in
+  // this group allowed to give way (overflow-hidden, above), so a card too
   // narrow for all of it clips a face rather than sliding under the button.
-  const avatarLimit = action ? 3 : 4;
+  const avatarLimit = ROOM_CARD_FACES;
 
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
