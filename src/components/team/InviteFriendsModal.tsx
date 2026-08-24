@@ -20,7 +20,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/lib/toast";
-import { copyToClipboard } from "@/utils/shareLink";
+import { copyToClipboard, shareOrCopy } from "@/utils/shareLink";
 import { useFriends } from "@/hooks/useFriends";
 import { useAuth } from "@/contexts/AuthContext";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
@@ -398,7 +398,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     // click that authorised it and the browser blocks it. So claim the tab
     // synchronously in the one case where the link is not ready yet, and
     // point it at the destination once it is. Native does not need this —
-    // there it is a location assignment or a scheme handoff.
+    // there it is the share sheet.
     const needsAwait = !myInviteLink;
     const pendingTab =
       needsAwait && !Capacitor.isNativePlatform() ? window.open("", "_blank") : null;
@@ -406,9 +406,40 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     const appLink = await resolveAppLink();
     const encodedLink = encodeURIComponent(appLink);
 
+    /**
+     * Messenger on the device goes through the share sheet.
+     *
+     * It used to hand WKWebView `fb-messenger://share?link=…`, and a webview
+     * is entitled to refuse a scheme it does not recognise. It refuses
+     * SILENTLY: no error, no navigation, a button that does nothing when
+     * pressed — which is exactly how it was reported. shareLink.ts already
+     * carries the same lesson about navigator.share and navigator.clipboard
+     * on iOS, and the answer there is the answer here: the Capacitor Share
+     * plugin presents a real UIActivityViewController, which the webview
+     * cannot veto, and Messenger is one of the targets in it.
+     *
+     * Only this one. WhatsApp and X are ordinary https links (wa.me, the X
+     * composer) that a phone opens and deep-links into the app by itself,
+     * and mailto: is a scheme iOS has always handled. Sending those through
+     * the sheet as well would spend a tap to reach the same place.
+     */
+    if (platform === "messenger" && Capacitor.isNativePlatform()) {
+      const outcome = await shareOrCopy({
+        title: t("extra.shareTitle"),
+        text: shareMessage,
+        url: appLink,
+      });
+      if (outcome === "copied") toast.success(t("extra.linkCopiedToast"));
+      if (outcome === "failed") toast.error(t("team.shareFailed"));
+      setTimeout(() => setIsSharing(false), 500);
+      return;
+    }
+
     let url = "";
 
     switch (platform) {
+      // Messenger on the web. The device is handled above, through the share
+      // sheet, because the app scheme this used to use is refused silently.
       case "messenger":
         // Messenger means a conversation — a person or a group you chose.
         // This is an invitation to a room, addressed to someone; it is not an
@@ -420,14 +451,10 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
         // wrong twice over — it is addressed to nobody, and it hands a link
         // that joins a private room to everyone who scrolls past.
         //
-        // fb-messenger:// is an app scheme: the OS opens it on a phone that
-        // has Messenger, and a desktop browser does nothing with it at all.
-        // So on the web without an app id there is no way to open a composer,
-        // and the honest answer is to hand over the link to paste — never a
+        // A browser has no Messenger composer to open without an app id, so
+        // the honest answer is to hand over the link to paste — never a
         // timeline post.
-        if (Capacitor.isNativePlatform()) {
-          url = `fb-messenger://share?link=${encodedLink}`;
-        } else if (FACEBOOK_APP_ID) {
+        if (FACEBOOK_APP_ID) {
           // The Send Dialog: pick a conversation, link attached.
           url = `https://www.facebook.com/dialog/send?app_id=${FACEBOOK_APP_ID}` +
                 `&link=${encodedLink}&redirect_uri=${encodedLink}`;
