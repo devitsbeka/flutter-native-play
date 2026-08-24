@@ -147,3 +147,17 @@ jobs:
         run: |
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/05-invite-links.sql
+
+      # How many levels a category advertises. The count divides by the
+      # THINNEST language, which is right for a shared category and wrong for
+      # one that belongs to a single language: six stray questions filed
+      # against საქართველოს ისტორია in six other languages, two apiece, held
+      # a category with 194 Georgian questions at ONE level. These assert the
+      # Georgian-only case reads its own language, and — just as important —
+      # that a genuinely shared category is still capped by its worst.
+      - name: Assert category level counting
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/06-category-levels.sql
