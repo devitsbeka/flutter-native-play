@@ -366,7 +366,7 @@ function VsPlayer({
             and the disc read as chrome rather than as a flag. A drop shadow
             does what the disc was there for: it holds the emoji apart from
             whatever the avatar's edge happens to be. */}
-        <span className="pointer-events-none absolute -bottom-3 left-1/2 -translate-x-1/2 text-[18px] leading-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">
+        <span className="pointer-events-none absolute -bottom-3 left-1/2 -translate-x-1/2 text-[22px] leading-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">
           {flag}
         </span>
       </div>
