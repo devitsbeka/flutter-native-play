@@ -8,7 +8,12 @@ import {
   WorldDefinition,
 } from "../schemas/worldDefinition";
 import { childSeed, createRng, range, Rng } from "./seededRandom";
-import { terrainHeight } from "./terrain";
+import {
+  TERRAIN_Z_END,
+  TERRAIN_Z_START,
+  terrainHalfWidth,
+  terrainHeight,
+} from "./terrain";
 
 const OUTLINE_SEGMENTS = 22;
 
@@ -118,19 +123,14 @@ function generateRegion(region: RegionDefinition, seed: number): GeneratedRegion
     obstacles.push({ x: region.mountains.position[0], z: region.mountains.position[2], r: region.mountains.height * 0.9 });
   }
 
-  const treeRng = createRng(childSeed(seed, `${region.id}:trees`));
-  const rockRng = createRng(childSeed(seed, `${region.id}:rocks`));
-  // Denser than the island days: an area's scatter now has to cover open
-  // country rather than a small plateau, and sparse dressing leaves obvious
-  // bald patches between areas.
-  const treeCount = Math.round(52 * (region.density?.trees ?? 1));
-  const rockCount = Math.round(18 * (region.density?.rocks ?? 1));
-
+  // Cover is generated across the whole landmass now (generateGroundCover), so
+  // regions carry no scatter of their own. The arrays stay on the type because
+  // the outline and obstacle work above still describes the area.
   return {
     def: region,
     outline,
-    trees: scatter(treeRng, outline, region.radius, treeCount, obstacles, [0.75, 1.35]),
-    rocks: scatter(rockRng, outline, region.radius, rockCount, obstacles, [0.5, 1.2]),
+    trees: [],
+    rocks: [],
     // Kept for callers that want the area's nominal ground level; anything
     // actually placed on the map samples terrainHeight per position instead,
     // because the land is continuous and no longer flat per region.
@@ -201,6 +201,114 @@ function generateClouds(def: WorldDefinition): ScatterInstance[] {
 }
 
 /**
+ * Ground cover across the ENTIRE landmass, in world coordinates.
+ *
+ * Vegetation used to be scattered per area, inside a circle around each area's
+ * centre. On floating islands that was exactly right — the circle was the
+ * island. On one continuous landmass it leaves obvious bald rings between
+ * areas, because nothing owns the ground in between.
+ *
+ * This walks the whole ribbon instead: candidates are drawn across its full
+ * length and width, rejected if they fall on the border slope, on the route,
+ * or on top of something already placed. Density follows the biome, so the
+ * shore is sparse, the meadow and fields are wooded, and the snow line thins
+ * out again.
+ */
+function generateGroundCover(
+  def: WorldDefinition,
+  obstacles: Obstacle[],
+): { trees: ScatterInstance[]; rocks: ScatterInstance[] } {
+  const rng = createRng(childSeed(def.seed, "ground-cover"));
+  const trees: ScatterInstance[] = [];
+  const rocks: ScatterInstance[] = [];
+
+  /** 0..1 tree likelihood by z — thin at the shore, thick mid-route, bare up high. */
+  const treeChance = (z: number): number => {
+    if (z > 46) return 0.3;
+    if (z > -20) return 0.95;
+    if (z > -54) return 0.7;
+    if (z > -84) return 0.32;
+    return 0.08;
+  };
+
+  const attempts = 5200;
+  for (let i = 0; i < attempts; i++) {
+    const z = range(rng, TERRAIN_Z_END + 4, TERRAIN_Z_START - 4);
+    // 0.86 keeps cover off the border fall, where it would hang on the slope.
+    const limit = terrainHalfWidth(z) * 0.86;
+    const x = range(rng, -limit, limit);
+
+    if (obstacles.some((o) => Math.hypot(x - o.x, z - o.z) < o.r)) continue;
+
+    const wantsTree = rng() < treeChance(z);
+    const pool = wantsTree ? trees : rocks;
+    const spacing = wantsTree ? 2.6 : 3.4;
+    if (pool.some((pl) => Math.hypot(x - pl.position[0], z - pl.position[2]) < spacing)) continue;
+    // Trees and rocks should not interpenetrate either.
+    const other = wantsTree ? rocks : trees;
+    if (other.some((pl) => Math.hypot(x - pl.position[0], z - pl.position[2]) < 2.2)) continue;
+
+    pool.push({
+      position: [x, 0, z],
+      scale: wantsTree ? range(rng, 0.7, 1.45) : range(rng, 0.45, 1.15),
+      rotationY: range(rng, 0, Math.PI * 2),
+      tint: rng(),
+    });
+  }
+
+  return { trees, rocks };
+}
+
+/** World-space keep-out circles: nodes, landmarks and the route itself. */
+function worldObstacles(def: WorldDefinition, nodeWorld: Record<string, Vec3>): Obstacle[] {
+  const obstacles: Obstacle[] = [];
+  for (const id of Object.keys(nodeWorld)) {
+    const p = nodeWorld[id];
+    obstacles.push({ x: p[0], z: p[2], r: 5.5 });
+  }
+  for (const region of def.regions) {
+    for (const l of region.landmarks) {
+      obstacles.push({
+        x: region.position[0] + l.position[0],
+        z: region.position[2] + l.position[2],
+        r: 6,
+      });
+    }
+    if (region.mountains) {
+      obstacles.push({
+        x: region.position[0] + region.mountains.position[0],
+        z: region.position[2] + region.mountains.position[2],
+        r: region.mountains.height * 0.9,
+      });
+    }
+    // Sample along each route so the road stays clear end to end.
+    for (const path of region.paths) {
+      const pts = path.through.map((id) => nodeWorld[id]).filter(Boolean);
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i];
+        const b = pts[i + 1];
+        const steps = Math.ceil(Math.hypot(b[0] - a[0], b[2] - a[2]) / 2);
+        for (let st = 0; st <= steps; st++) {
+          const t = st / Math.max(1, steps);
+          obstacles.push({ x: a[0] + (b[0] - a[0]) * t, z: a[2] + (b[2] - a[2]) * t, r: 3.4 });
+        }
+      }
+    }
+  }
+  for (const bridge of def.bridges) {
+    const a = nodeWorld[bridge.from];
+    const b = nodeWorld[bridge.to];
+    if (!a || !b) continue;
+    const steps = Math.ceil(Math.hypot(b[0] - a[0], b[2] - a[2]) / 2);
+    for (let st = 0; st <= steps; st++) {
+      const t = st / Math.max(1, steps);
+      obstacles.push({ x: a[0] + (b[0] - a[0]) * t, z: a[2] + (b[2] - a[2]) * t, r: 3.4 });
+    }
+  }
+  return obstacles;
+}
+
+/**
  * Deterministic world assembly. Same definition + seed => identical output.
  * Produces render-ready data only; rendering components consume it as-is.
  */
@@ -217,6 +325,7 @@ export function generateWorld(def: WorldDefinition): GeneratedWorld {
     regions: def.regions.map((r) => generateRegion(r, def.seed)),
     paths: generatePaths(def, nodeWorldPositions),
     clouds: generateClouds(def),
+    groundCover: generateGroundCover(def, worldObstacles(def, nodeWorldPositions)),
     nodeWorldPositions,
   };
 }

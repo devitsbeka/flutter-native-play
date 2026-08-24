@@ -12,8 +12,8 @@ interface CameraRigProps {
   reducedMotion: boolean;
   /**
    * Vertical-scroll mode. Drag travels the route along Z with flick momentum
-   * and horizontal drift is locked, so the map reads as one long climb rather
-   * than a free-roam plane. Used on phones.
+   * (the flick glides vertically only, so a sideways look-around does not
+   * launch the camera down the route). Used on phones.
    */
   verticalScroll?: boolean;
 }
@@ -83,8 +83,11 @@ export function CameraRig({ definition, reducedMotion, verticalScroll = false }:
         return;
       }
       const scale = worldPerPixel() * 9;
-      // Vertical mode locks x: dragging sideways must not drift off the route.
-      const dx = verticalScroll ? 0 : -(e.clientX - lastX) * scale;
+      // Vertical mode used to lock x entirely, which made the map feel caged:
+      // anything near the screen edge could never be brought into view. x pans
+      // freely now, just at a slightly gentler rate so the route still reads as
+      // the dominant axis; panLimits keeps it on the land.
+      const dx = -(e.clientX - lastX) * scale * (verticalScroll ? 0.85 : 1);
       const dz = -(e.clientY - lastY) * scale * 1.4;
 
       if (verticalScroll) {

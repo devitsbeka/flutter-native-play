@@ -224,7 +224,7 @@ export function LoggedInHomeV2Mobile({
         { id: "giga", name: "Giga", avatarUrl: friendGiga },
       ],
       "c3-a": [{ id: "giorgi", name: "Giorgi K.", avatarUrl: friendGiorgi }],
-      "s1": [{ id: "tiko", name: "თიკო", avatarUrl: friendTiko }],
+      s1: [{ id: "tiko", name: "თიკო", avatarUrl: friendTiko }],
     }),
     []
   );
