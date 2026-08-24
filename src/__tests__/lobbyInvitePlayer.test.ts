@@ -49,7 +49,7 @@ describe("the invite button beside a player", () => {
     // something the paper-plane already says.
     // Two places, not three: the VS layout used to be two hand-copied
     // columns and is now one component drawn twice.
-    const uses = scoreboard.match(/<InvitePlayerButton[\s\S]{0,200}?\/>/g) ?? [];
+    const uses = scoreboard.match(/<InvitePlayerButton[\s\S]{0,400}?\/>/g) ?? [];
     expect(uses.length, "expected the ranked list row and VsPlayer").toBe(2);
     for (const use of uses) {
       expect(use, "every invite button must narrow itself on a phone")
@@ -61,7 +61,7 @@ describe("the invite button beside a player", () => {
 
   it("drops the label rather than squeezing it into the circle", () => {
     const button = inviteButtonSource();
-    expect(button).toMatch(/\{!iconOnly && !sent && t\("extra\.inviteFriendBtn"\)\}/);
+    expect(button).toMatch(/\{!iconOnly && !showSent && t\("extra\.inviteFriendBtn"\)\}/);
     expect(button, "a circle for the icon, a pill for the word")
       .toMatch(/iconOnly \? "h-7 w-7 rounded-full"/);
   });
