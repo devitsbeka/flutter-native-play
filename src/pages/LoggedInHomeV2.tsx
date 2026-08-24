@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock } from "lucide-react";
 import { WorldMap } from "@/features/world-map/WorldMap";
+import { LoggedInHomeV2Mobile } from "./LoggedInHomeV2Mobile";
 
 import worldMap from "@/assets/figma-home/world-map.jpg";
 import avatarPhoto from "@/assets/figma-home/avatar-photo.png";
@@ -59,6 +60,25 @@ function useStage() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
   return stage;
+}
+
+// Matches MOBILE_BREAKPOINT in @/hooks/use-mobile.
+const MOBILE_BREAKPOINT = 768;
+
+// Deliberately not useIsMobile: that hook starts at false and corrects in an
+// effect, so a phone would render the desktop stage for one frame — mounting
+// the WebGL world, tearing it down and mounting it again. This reads the
+// viewport synchronously in the state initializer instead.
+function useIsPhone() {
+  const read = () => typeof window !== "undefined" && window.innerWidth < MOBILE_BREAKPOINT;
+  const [isPhone, setIsPhone] = useState(read);
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const onChange = () => setIsPhone(read());
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+  return isPhone;
 }
 
 function VerticalLine({ left, src }: { left: number; src: string }) {
@@ -174,7 +194,7 @@ function FriendItem({ left, img, name, onClick }: { left: number; img: string; n
   );
 }
 
-interface LoggedInHomeV2Props {
+export interface LoggedInHomeV2Props {
   nickname: string;
   avatarUrl?: string | null;
   coins: number;
@@ -214,8 +234,37 @@ export function LoggedInHomeV2({
   onMenu,
 }: LoggedInHomeV2Props) {
   const navigate = useNavigate();
+  const isPhone = useIsPhone();
   const { scale, stageW } = useStage();
   const mapW = stageW - 458;
+
+  // The stage below is a fixed 1400x946 canvas scaled to fit, which on a
+  // phone lands around 0.28 and renders the whole design at thumbnail size.
+  // Phones get a layout built for them instead: map full-bleed, everything
+  // else in a bottom sheet.
+  if (isPhone) {
+    return (
+      <LoggedInHomeV2Mobile
+        nickname={nickname}
+        avatarUrl={avatarUrl}
+        coins={coins}
+        gems={gems}
+        level={level}
+        xpCurrent={xpCurrent}
+        xpTotal={xpTotal}
+        playsRemaining={playsRemaining}
+        unreadCount={unreadCount}
+        onPlay={onPlay}
+        onMissions={onMissions}
+        onPowers={onPowers}
+        onLevel={onLevel}
+        onShop={onShop}
+        onAvatar={onAvatar}
+        onAddFriend={onAddFriend}
+        onMenu={onMenu}
+      />
+    );
+  }
 
   const navItems = [
     { icon: navHome, top: 291, path: "/", label: "მთავარი" },
