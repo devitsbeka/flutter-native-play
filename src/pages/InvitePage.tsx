@@ -13,6 +13,8 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { cn } from "@/lib/utils";
 import { dateLocaleFor } from "@/utils/dateLocale";
+import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
+import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 
 /**
  * The other end of a shared invite link.
@@ -154,6 +156,13 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
   const roomIsOver =
     hasRoom && (preview?.is_archived === true || preview?.room_status === "finished");
   const canJoinRoom = hasRoom && !roomIsOver;
+
+  // The room card carried a name and a category in words and no picture, so
+  // it read as a list item while every other room in the app is drawn with
+  // its icon. category_id on a room row can be a slug or a uuid depending on
+  // how the room was made; this resolves either to the icon library's name
+  // for the picture.
+  const categoryIdentity = useCategoryIdentity(preview?.category_id);
 
   const dateLocale = dateLocaleFor(language);
 
@@ -303,7 +312,22 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
         {hasRoom && (
           <div className="w-full p-4 rounded-2xl bg-white/10 border border-white/[0.12] mb-4">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
+              {/* The picture the room is drawn with everywhere else. Without
+                  it the card was two lines of text where the rooms list, the
+                  countdown and the results screen all show the category.
+
+                  Rendered only when there is something to draw: given neither
+                  a slug nor an id, QuizCategoryIcon draws nothing at all and
+                  the sized box would sit there as a gap beside the title. */}
+              {(categoryIdentity.iconSlug || categoryIdentity.categoryId) && (
+                <QuizCategoryIcon
+                  iconSlug={categoryIdentity.iconSlug ?? undefined}
+                  categoryId={categoryIdentity.categoryId ?? undefined}
+                  size={40}
+                  className="w-10 h-10 shrink-0 drop-shadow-lg"
+                />
+              )}
+              <div className="min-w-0 flex-1">
                 <p className="text-white font-bold text-lg truncate">
                   {preview.room_name || t("extra.inviteRoomFallback")}
                 </p>

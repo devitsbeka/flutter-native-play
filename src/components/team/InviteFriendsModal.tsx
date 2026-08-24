@@ -407,23 +407,32 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     const encodedLink = encodeURIComponent(appLink);
 
     /**
-     * Messenger on the device goes through the share sheet.
+     * Messenger goes through a share sheet wherever there is one.
      *
-     * It used to hand WKWebView `fb-messenger://share?link=…`, and a webview
-     * is entitled to refuse a scheme it does not recognise. It refuses
-     * SILENTLY: no error, no navigation, a button that does nothing when
-     * pressed — which is exactly how it was reported. shareLink.ts already
-     * carries the same lesson about navigator.share and navigator.clipboard
-     * on iOS, and the answer there is the answer here: the Capacitor Share
-     * plugin presents a real UIActivityViewController, which the webview
-     * cannot veto, and Messenger is one of the targets in it.
+     * There is no URL that opens the Messenger composer with a link
+     * attached. `fb-messenger://share` is an app scheme, and the webview
+     * inside the native app refuses schemes it does not recognise —
+     * SILENTLY, which is why the button did nothing when pressed. The web
+     * Send Dialog needs a Facebook app id, and none is configured here.
+     * Neither leg could deliver, on either platform.
+     *
+     * A share sheet can. shareOrCopy cascades exactly right for this: the
+     * Capacitor plugin's UIActivityViewController inside the app, the
+     * browser's own navigator.share on a phone — both of which list
+     * Messenger and land the link in a conversation — and the clipboard only
+     * on a desktop browser, where no sheet exists and pasting really is all
+     * that is left.
+     *
+     * It is the same link the copy button gives: whatever resolveAppLink
+     * returned, handed to Messenger instead of to the clipboard.
      *
      * Only this one. WhatsApp and X are ordinary https links (wa.me, the X
-     * composer) that a phone opens and deep-links into the app by itself,
-     * and mailto: is a scheme iOS has always handled. Sending those through
-     * the sheet as well would spend a tap to reach the same place.
+     * composer) that open a real composer everywhere, and mailto: is a
+     * scheme every platform handles; sending those through a sheet would
+     * spend a tap to arrive at the same place.
      */
-    if (platform === "messenger" && Capacitor.isNativePlatform()) {
+    if (platform === "messenger" && !FACEBOOK_APP_ID) {
+      pendingTab?.close();
       const outcome = await shareOrCopy({
         title: t("extra.shareTitle"),
         text: shareMessage,
@@ -438,35 +447,14 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     let url = "";
 
     switch (platform) {
-      // Messenger on the web. The device is handled above, through the share
-      // sheet, because the app scheme this used to use is refused silently.
+      // Messenger only reaches here when a Facebook app id is configured;
+      // without one the share sheet above handled it. The Send Dialog is a
+      // conversation picker, NOT facebook.com/sharer, which is the timeline
+      // composer and was what this used to fall back to — a private room
+      // invite offered as a post to your wall.
       case "messenger":
-        // Messenger means a conversation — a person or a group you chose.
-        // This is an invitation to a room, addressed to someone; it is not an
-        // announcement.
-        //
-        // The fallback used to be facebook.com/sharer, which is the TIMELINE
-        // composer: press Messenger with no app id configured and you were
-        // offered a post to your wall. A room invite on a public feed is
-        // wrong twice over — it is addressed to nobody, and it hands a link
-        // that joins a private room to everyone who scrolls past.
-        //
-        // A browser has no Messenger composer to open without an app id, so
-        // the honest answer is to hand over the link to paste — never a
-        // timeline post.
-        if (FACEBOOK_APP_ID) {
-          // The Send Dialog: pick a conversation, link attached.
-          url = `https://www.facebook.com/dialog/send?app_id=${FACEBOOK_APP_ID}` +
-                `&link=${encodedLink}&redirect_uri=${encodedLink}`;
-        } else {
-          pendingTab?.close();
-          const outcome = await copyToClipboard(appLink);
-          toast[outcome === "failed" ? "error" : "success"](
-            outcome === "failed" ? t("team.shareFailed") : t("extra.linkCopiedToast"),
-          );
-          setTimeout(() => setIsSharing(false), 500);
-          return;
-        }
+        url = `https://www.facebook.com/dialog/send?app_id=${FACEBOOK_APP_ID}` +
+              `&link=${encodedLink}&redirect_uri=${encodedLink}`;
         break;
       case "whatsapp":
         url = `https://wa.me/?text=${encodedMessage} ${encodedLink}`;
