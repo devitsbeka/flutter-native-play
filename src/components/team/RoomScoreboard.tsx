@@ -366,7 +366,7 @@ function VsPlayer({
             and the disc read as chrome rather than as a flag. A drop shadow
             does what the disc was there for: it holds the emoji apart from
             whatever the avatar's edge happens to be. */}
-        <span className="pointer-events-none absolute -bottom-2 left-1/2 -translate-x-1/2 text-[16px] leading-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">
+        <span className="pointer-events-none absolute -bottom-3 left-1/2 -translate-x-1/2 text-[16px] leading-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">
           {flag}
         </span>
       </div>
@@ -375,7 +375,7 @@ function VsPlayer({
           push that side's score below the other's. The top margin clears the
           flag, which now hangs below the avatar's box. */}
       <p
-        className={`mt-4 h-5 w-full truncate text-sm font-medium leading-5 ${
+        className={`mt-5 h-5 w-full truncate text-sm font-medium leading-5 ${
           isInvited ? "text-white/50" : "text-white"
         }`}
       >
