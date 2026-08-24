@@ -7,6 +7,8 @@ import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-b
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
+import { useCategories } from "@/hooks/useCategories";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
@@ -54,6 +56,17 @@ export default function ChallengeLanding() {
   const { t } = useLanguage();
   const ANSWER_LABELS = [t("extra.answerLabelA"), t("extra.answerLabelB"), t("extra.answerLabelC"), t("extra.answerLabelD")];
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
+  // challenge_links stores the category's NAME and its icon_slug, not its id —
+  // and the six picture-guess categories carry generic stand-ins in that slug,
+  // so the library answers "guess the city" with a globe. The id is what
+  // CategoryArtwork needs to reach their real art, so it is resolved back from
+  // the name. Until the list arrives the slug still draws something.
+  const { categories } = useCategories();
+  const challengeCategoryId = useMemo(() => {
+    const name = challenge?.category_name;
+    if (!name) return null;
+    return categories.find((c) => c.name === name)?.id ?? null;
+  }, [categories, challenge?.category_name]);
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -297,7 +310,15 @@ export default function ChallengeLanding() {
               ({t("extra.questionsCount", { count: challenge.total_questions })})
             </p>
             {challenge.category_name && (
-              <p className="text-sm text-white/60 mt-2">{challenge.category_name}</p>
+              <div className="mt-2 flex items-center justify-center gap-2">
+                <CategoryArtwork
+                  categoryId={challengeCategoryId}
+                  iconSlug={challenge.category_icon_slug}
+                  size={22}
+                  className="drop-shadow-none"
+                />
+                <p className="text-sm text-white/60">{challenge.category_name}</p>
+              </div>
             )}
           </div>
 
