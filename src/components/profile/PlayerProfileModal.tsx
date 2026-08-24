@@ -4,6 +4,7 @@ import { ChevronLeft, UserPlus, Swords, Gamepad2, Check, Clock, Heart, Play, Sen
 import { useNavigate } from "react-router-dom";
 import iconTrophy from "@/assets/icon-trophy.png";
 import iconTrivia from "@/assets/trivia-buzzer.png";
+import iconInfo from "@/assets/icon-info.png";
 import iconCollections from "@/assets/icon-collections.png";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -542,7 +543,11 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   >
                     {showInfoTab && (
                       <TabsTrigger value="info" className="flex flex-col items-center gap-0.5">
-                        <Swords className="w-9 h-9 p-1.5 text-primary" />
+                        {/* The same 3D art the other two tabs use, rather than
+                            a lucide glyph — crossed swords beside a tab
+                            labelled "info" read as a second Challenge button.
+                            128px like its siblings, which covers w-9 at 3x. */}
+                        <img src={iconInfo} alt="" className="w-9 h-9" />
                         <span className="text-xs">{t("extra.infoTab")}</span>
                       </TabsTrigger>
                     )}
