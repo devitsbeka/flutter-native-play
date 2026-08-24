@@ -30,6 +30,17 @@ interface RoomScoreboardProps {
   onRemoveParticipant?: (participantId: string) => void;
 }
 
+/**
+ * How long an arrival is celebrated for.
+ *
+ * It was 1.6s and rose-and-fell in one motion, which on a phone in a pocket
+ * is over before it is looked at. Three and a half seconds, and shaped to
+ * hold: a fast ramp, a plateau that is actually visible, then a slow fade
+ * into the steady ring underneath. The ring is what remains — the glow says
+ * "they just arrived", the ring says "they are here".
+ */
+const ARRIVAL_GLOW = { duration: 3.5, times: [0, 0.12, 0.55, 1] };
+
 const getRankIcon = (rank: number) => {
   switch (rank) {
     case 1:
@@ -115,21 +126,33 @@ function InvitePlayerButton({
   userId,
   onInvite,
   iconOnly = false,
+  isOnline = false,
 }: {
   userId: string;
   onInvite: (userId: string) => void | Promise<void>;
   /** Phone widths: the paper-plane says it, so the word comes off. */
   iconOnly?: boolean;
+  /** They are in the app. The invite has been answered; stop claiming it. */
+  isOnline?: boolean;
 }) {
   const { t } = useLanguage();
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
 
+  // The tick means "asked, waiting". Once they are here the waiting is over
+  // and the ring on their avatar says so far better, so the tick retires
+  // itself rather than sitting under a player who has plainly arrived.
+  //
+  // Derived, not cleared in an effect: a host who invites somebody already
+  // online never sees a tick at all, which is right — there was nothing to
+  // wait for — and the button stays pressable to ask them again later.
+  const showSent = sent && !isOnline;
+
   return (
     <motion.button
       type="button"
       whileTap={{ scale: 0.95 }}
-      disabled={sending || sent}
+      disabled={sending || showSent}
       aria-label={t("extra.inviteFriendBtn")}
       title={t("extra.inviteFriendBtn")}
       onClick={async (e) => {
@@ -151,12 +174,12 @@ function InvitePlayerButton({
         // label into the circle is what made it an oval nothing else matched.
         iconOnly ? "h-7 w-7 rounded-full" : "gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
       } ${
-        sent
+        showSent
           ? "bg-emerald-500/25 text-emerald-300"
           : "bg-white/15 text-white hover:bg-white/25"
       }`}
     >
-      {sent ? (
+      {showSent ? (
         <Check className={iconOnly ? "h-3.5 w-3.5" : "h-3 w-3"} />
       ) : (
         <Send className={iconOnly ? "h-3.5 w-3.5" : "h-3 w-3"} />
@@ -165,7 +188,7 @@ function InvitePlayerButton({
           up, and their avatar says that — a green ring the moment they are in
           the app. A word here claimed the outcome the instant the row was
           written, and then sat there unchanged whether they came or not. */}
-      {!iconOnly && !sent && t("extra.inviteFriendBtn")}
+      {!iconOnly && !showSent && t("extra.inviteFriendBtn")}
     </motion.button>
   );
 }
@@ -210,13 +233,14 @@ function PresenceAvatar({
             ? {
                 boxShadow: [
                   "0 0 0px 0px rgba(52,211,153,0)",
-                  "0 0 18px 6px rgba(52,211,153,0.85)",
+                  "0 0 20px 7px rgba(52,211,153,0.9)",
+                  "0 0 20px 7px rgba(52,211,153,0.9)",
                   "0 0 0px 0px rgba(52,211,153,0)",
                 ],
               }
             : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
         }
-        transition={justArrived ? { duration: 1.6, times: [0, 0.35, 1] } : { duration: 0.2 }}
+        transition={justArrived ? ARRIVAL_GLOW : { duration: 0.2 }}
       >
         <SmartAvatar avatarUrl={avatarUrl} fallback={nickname} size="md" />
       </motion.div>
@@ -299,13 +323,14 @@ function VsPlayer({
               ? {
                   boxShadow: [
                     "0 0 0px 0px rgba(52,211,153,0)",
-                    "0 0 22px 8px rgba(52,211,153,0.85)",
+                    "0 0 24px 9px rgba(52,211,153,0.9)",
+                    "0 0 24px 9px rgba(52,211,153,0.9)",
                     "0 0 0px 0px rgba(52,211,153,0)",
                   ],
                 }
               : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
           }
-          transition={justArrived ? { duration: 1.6, times: [0, 0.35, 1] } : { duration: 0.2 }}
+          transition={justArrived ? ARRIVAL_GLOW : { duration: 0.2 }}
         >
           <SmartAvatar avatarUrl={player.avatar_url} fallback={player.nickname} size="xl" />
         </motion.div>
@@ -385,6 +410,7 @@ function VsPlayer({
                 userId={player.user_id}
                 onInvite={onInvitePlayer}
                 iconOnly={isMobile}
+                isOnline={isOnline}
               />
             )}
           </div>
@@ -585,6 +611,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                         userId={p.user_id}
                         onInvite={onInvitePlayer}
                         iconOnly={isMobile}
+                        isOnline={online.has(p.user_id)}
                       />
                     )}
                   </div>

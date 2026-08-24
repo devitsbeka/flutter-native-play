@@ -796,12 +796,12 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
   // See roomCardAction for why an empty room gets no button at all.
   const action = roomCardAction(room);
 
-  // The button is the point of the row while a round is on, so the faces give
-  // it room. Two, and no "+N" bubble: the count pill sits right beside them
-  // and already says how many there are, so the bubble spends 24px repeating
-  // it. Without that trim, a full room on a TV at three-column width put the
-  // button on top of the bubble. "Start"/"enter" are wider words than "join",
-  // so they get the same trim.
+  // The button is the point of the row while there is one, so the faces give
+  // it room. Two, and no "+N" bubble: the count pill says how many there are
+  // — it sits at the top of the card now rather than beside the faces, but it
+  // is still on the card, so the bubble would spend 24px repeating it.
+  // Without that trim, a full room on a TV at three-column width put the
+  // button on top of the bubble.
   const avatarLimit = action ? 2 : 4;
 
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
@@ -919,7 +919,19 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                   {createdAgo || t("extra.roomStatusWaiting")}
                 </span>
               </div>
-              
+
+              {/* Right: how many are in the room, then the menu.
+                  Up here rather than down in the glass bar, where it used to
+                  sit between the faces and the left edge and push both of
+                  them along. The bottom row's job is who is in there and the
+                  way in; the count is a fact about the room, and it reads as
+                  one beside the room's age. */}
+              <div className="flex items-center gap-2">
+                <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-sm px-2.5 py-1">
+                  <Users className="w-3.5 h-3.5 text-white" />
+                  <span className="text-white font-bold text-xs">{displayPlayerCount}</span>
+                </div>
+
               {/* 3-dot menu (tablet/desktop only) */}
               {!isMobile && (
                 <DropdownMenu>
@@ -942,6 +954,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
+              </div>
             </div>
             
             {/* Middle: Icon + Title + Category + Time */}
@@ -977,12 +990,6 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                   {playedOnTV && (
                     <img src={retroTv3d} alt="TV" className="w-7 h-7 object-contain drop-shadow select-none flex-shrink-0" draggable={false} />
                   )}
-                  <div className="flex items-center gap-2 bg-white/20 rounded-lg px-2.5 py-1.5 flex-shrink-0">
-                    <Users className="w-4 h-4 text-white" />
-                    <span className="text-white font-bold text-sm">
-                      {displayPlayerCount}
-                    </span>
-                  </div>
 
                   {/* Avatars (use TV players if session is active). These are
                       the only thing here allowed to give way: overflow-hidden

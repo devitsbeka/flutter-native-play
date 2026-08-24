@@ -46,6 +46,30 @@ describe("the green ring", () => {
 });
 
 describe("the arrival flare", () => {
+  it("lasts long enough to be seen", () => {
+    // 1.6s, rising and falling in one motion, is over before a phone in a
+    // pocket is looked at. Three and a half, shaped to hold: fast ramp,
+    // a plateau that is actually visible, slow fade into the steady ring.
+    const m = scoreboard.match(/const ARRIVAL_GLOW = \{ duration: ([\d.]+), times: \[([^\]]+)\] \}/);
+    expect(m, "expected a shared ARRIVAL_GLOW timing").not.toBeNull();
+    const seconds = Number(m![1]);
+    expect(seconds).toBeGreaterThanOrEqual(3);
+    expect(seconds).toBeLessThanOrEqual(4);
+
+    // Four stops, not three: the middle pair is the plateau. Three stops is
+    // a blink however long you make it.
+    const times = m![2].split(",").map((n) => Number(n.trim()));
+    expect(times.length, "a plateau needs two stops at full brightness").toBe(4);
+    expect(times[0]).toBe(0);
+    expect(times[times.length - 1]).toBe(1);
+  });
+
+  it("is one timing shared by both layouts", () => {
+    // Two copies of a duration is two durations waiting to disagree.
+    const uses = scoreboard.match(/ARRIVAL_GLOW/g) ?? [];
+    expect(uses.length, "the constant and one use per layout").toBe(3);
+  });
+
   it("fires on arrival and not on every render", () => {
     expect(scoreboard).toMatch(/justArrived=\{!isInvited && arrived\.has\(p\.user_id\)\}/);
     const avatar = scoreboard.match(/function PresenceAvatar\([\s\S]*?\n\}\n\nexport function RoomScoreboard/)![0];
@@ -53,6 +77,41 @@ describe("the arrival flare", () => {
       .toMatch(/boxShadow: \[/);
     expect(avatar, "it must settle back to nothing")
       .toMatch(/: \{ boxShadow: "0 0 0px 0px rgba\(52,211,153,0\)" \}/);
+  });
+});
+
+/**
+ * The tick under an invited player means "asked, and waiting". Once they are
+ * in the app the waiting is over, and their avatar says so far better than a
+ * tick does — so the tick retires itself rather than sitting under somebody
+ * who has plainly arrived.
+ */
+describe("the sent tick", () => {
+  it("retires when the player arrives", () => {
+    const button = scoreboard.match(/function InvitePlayerButton\([\s\S]*?\n\}\n\n\/\*\*/)![0];
+    expect(button).toMatch(/const showSent = sent && !isOnline;/);
+    expect(button, "the tick, its colour and its disabled state all follow the same fact")
+      .toMatch(/disabled=\{sending \|\| showSent\}/);
+  });
+
+  it("is derived, not cleared by an effect", () => {
+    // An effect clearing `sent` would fire for a host who invites somebody
+    // already online, so the tick would appear and vanish; deriving it means
+    // it simply never appears in that case, which is the truth.
+    const button = scoreboard.match(/function InvitePlayerButton\([\s\S]*?\n\}\n\n\/\*\*/)![0];
+    expect(button, "no useEffect belongs in this button").not.toMatch(/useEffect/);
+  });
+
+  it("leaves the button pressable again afterwards", () => {
+    // They came, they went, the host wants to call them back.
+    const button = scoreboard.match(/function InvitePlayerButton\([\s\S]*?\n\}\n\n\/\*\*/)![0];
+    expect(button).not.toMatch(/disabled=\{sending \|\| sent\}/);
+  });
+
+  it("knows whether the player is online on both layouts", () => {
+    const uses = scoreboard.match(/<InvitePlayerButton[\s\S]{0,400}?\/>/g) ?? [];
+    expect(uses.length).toBe(2);
+    for (const use of uses) expect(use).toMatch(/isOnline=\{/);
   });
 });
 
