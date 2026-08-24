@@ -20,10 +20,10 @@ import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
-import xpIcon from "@/assets/level/xp-spark.png";
 import { toast } from "@/lib/toast";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { CategoryPickerModal } from "./CategoryPickerModal";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { RoomQueueSheet } from "./RoomQueueSheet";
 import { calculateMultiplayerPayout } from "@/utils/multiplayerPayout";
 import { isGuestAccount } from "@/utils/guestAccount";
@@ -518,32 +518,28 @@ export function GameResultsScreenV2() {
           </motion.div>
         )}
 
-        {/* Points + Coins Row - Fixed under stars */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex items-center justify-center gap-4 mt-2"
-        >
-          {/* Coins Badge */}
-          {coinsEarned > 0 && (
-            <div 
+        {/* Coins won, under the stars.
+            No XP badge beside it any more: that number is the player's score,
+            which the card below already shows — "470" there and "+470 XP" here
+            read as two separate rewards for the same round.
+            The row is conditional rather than the badge inside it, so a round
+            that paid no coins leaves no empty gap under the stars. */}
+        {coinsEarned > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center justify-center gap-4 mt-2"
+          >
+            <div
               className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500/90"
               style={{ boxShadow: "0 4px 0 rgba(180,120,0,0.4)" }}
             >
               <img src={coinIcon} alt="Coins" className="w-5 h-5" />
               <span className="text-white font-bold text-lg">+{coinsEarned}</span>
             </div>
-          )}
-
-          {/* XP Badge */}
-          {myScore > 0 && (
-            <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/20 backdrop-blur-sm">
-              <img src={xpIcon} alt="XP" className="w-5 h-5" />
-              <span className="text-white font-bold text-lg">+{myScore} XP</span>
-            </div>
-          )}
-        </motion.div>
+          </motion.div>
+        )}
       </div>
 
       {/* Middle Section: Category + Scorecard (with 40px top spacing) */}
@@ -554,8 +550,12 @@ export function GameResultsScreenV2() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="px-6 py-2.5 rounded-full bg-white/15 backdrop-blur-sm"
+            className="flex items-center gap-2 px-5 py-2 rounded-full bg-white/15 backdrop-blur-sm"
           >
+            {/* CategoryArtwork rather than DynamicIcon: the six picture-guess
+                categories carry generic stand-ins in icon_slug, so the library
+                answers "guess the city" with a globe. */}
+            <CategoryArtwork categoryId={currentRoom.category_id} size={24} className="drop-shadow-none" />
             <span className="text-white font-medium">{localizeCategory(currentRoom.category_name)}</span>
           </motion.div>
         )}
