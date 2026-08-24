@@ -286,8 +286,14 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
 
   // Room invitation handler
   const handleInviteToRoom = async (userId: string) => {
-    if (!roomId) return;
-    
+    // Callers pick the right action for the mode now, so reaching here without
+    // a room is a bug rather than a state. Say so in the log instead of
+    // returning quietly, which is how the dead Invite button stayed invisible.
+    if (!roomId) {
+      console.warn("[InviteFriendsModal] invite to room with no roomId", { userId });
+      return;
+    }
+
     setInvitingUser(userId);
     try {
       // Import supabase
@@ -524,7 +530,26 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                             const handleButtonAction = () => {
                               if (isFriend) {
                                 if (isSent || isLoading) return;
-                                handleInviteToRoom(result.user_id);
+                                // Which of the three modes this screen is in
+                                // decides what "invite" means. The row used to
+                                // call handleInviteToRoom unconditionally, and
+                                // that function opens with `if (!roomId)
+                                // return` — so on the two screens that have no
+                                // room the button was dead on touch, with no
+                                // spinner, no toast and nothing in the log.
+                                // Searching a friend by name from Create Room
+                                // and pressing Invite did nothing at all,
+                                // while tapping the same friend's tile in the
+                                // grid below worked.
+                                if (isPreRoomMode) {
+                                  onFriendSelect?.(result.user_id);
+                                } else if (isRoomInviteMode) {
+                                  handleInviteToRoom(result.user_id);
+                                } else {
+                                  // Browse mode: no room to invite into, so the
+                                  // row does what the grid tile does.
+                                  setProfileUserId(result.user_id);
+                                }
                               } else {
                                 if (isPendingOutgoing) {
                                   toast.info(t("extra.requestAlreadySentWait"));
@@ -553,6 +578,12 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                             };
                             
                             const isDisabled = isSent || isLoading || (!isFriend && isPendingOutgoing);
+                            // Picked for a room that does not exist yet. The
+                            // grid below marks this with a tick; a search row
+                            // that stayed on "Invite" after being pressed read
+                            // as another press that had not worked.
+                            const isPicked =
+                              isFriend && isPreRoomMode && !!selectedFriends?.has(result.user_id);
                             
                             return (
                               <motion.div
@@ -582,7 +613,9 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                   className={`relative z-10 flex items-center gap-2 px-5 py-3 min-h-[48px] rounded-2xl text-sm font-semibold transition-colors border active:scale-95 ${
                                     isSent || (!isFriend && isPendingOutgoing)
                                       ? "bg-white/15 border-white/20 text-white/70"
-                                      : isFriend
+                                      : isPicked
+                                      ? "bg-white/25 border-white text-white"
+                                      : isFriend && !isBrowseMode
                                       ? "bg-gradient-to-r from-emerald-500 to-teal-500 border-emerald-400/30 text-white hover:opacity-90"
                                       : "bg-white/10 border-white/15 text-white/90 hover:bg-white/15"
                                   }`}
@@ -602,6 +635,18 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                     <>
                                       <Check className="w-3 h-3" />
                                       {t("extra.sent")}
+                                    </>
+                                  ) : isPicked ? (
+                                    <>
+                                      <Check className="w-4 h-4" />
+                                      {t("extra.inviteFriendBtn")}
+                                    </>
+                                  ) : isFriend && isBrowseMode ? (
+                                    // Nothing to invite them into from here, so
+                                    // the button says what it really does.
+                                    <>
+                                      <UserPlus className="w-4 h-4" />
+                                      {t("extra.viewProfile")}
                                     </>
                                   ) : isFriend ? (
                                     <>

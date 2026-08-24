@@ -197,6 +197,31 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
     };
   }, [user, fetchFriends]);
 
+  /**
+   * Refetch when the app comes back to the foreground.
+   *
+   * The subscription above is the fast path and it covers the case where the
+   * other person accepts while you are looking at the screen. It is also the
+   * only path, which makes the friends list exactly as reliable as the
+   * realtime channel: miss one event — the publication not carrying the
+   * table, a socket dropped on a train, the app suspended by iOS while a
+   * request was accepted — and the list stays wrong until the app is killed
+   * and relaunched. Which is what "I have to refresh to see my new friend"
+   * is, reported from the outside.
+   *
+   * A phone backgrounds constantly, so this covers the gap without polling:
+   * one query on the way back in, and only when a tab is actually becoming
+   * visible again.
+   */
+  useEffect(() => {
+    if (!user) return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") fetchFriends();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [user, fetchFriends]);
+
   // Presence — single instance
   useEffect(() => {
     if (!user) return;
