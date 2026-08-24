@@ -5,6 +5,7 @@ import { Friend, useFriends } from "@/hooks/useFriends";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Static placeholder component (no shimmer).
@@ -67,6 +68,106 @@ function FriendSlotPlaceholder({ index }: { index: number }) {
 
 /** Add button plus three of these: four circles across an empty strip. */
 const EMPTY_FRIEND_SLOTS = 3;
+
+/**
+ * The ring around a story avatar, and the dot on it.
+ *
+ * Shared by the friends and by the tile for yourself at the head of the reel,
+ * so the two cannot drift apart — your own circle is the reader's landmark for
+ * what an online player looks like, and it only works if it is the same
+ * circle.
+ */
+const ONLINE_RING = "linear-gradient(135deg, #9333EA 0%, #EC4899 50%, #F97316 100%)";
+const OFFLINE_RING = "linear-gradient(135deg, #94A3B8 0%, #CBD5E1 100%)";
+
+function StoryAvatarCircle({
+  avatarUrl,
+  animatedAvatarUrl,
+  fallback,
+  isOnline,
+  onClick,
+}: {
+  avatarUrl?: string | null;
+  animatedAvatarUrl?: string | null;
+  fallback: string;
+  isOnline: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className="relative w-16 h-16 cursor-pointer hover:scale-105 transition-transform active:scale-95"
+      onClick={onClick}
+    >
+      {/* Gradient ring background */}
+      <div
+        className="absolute inset-0 rounded-full p-[3px]"
+        style={{ background: isOnline ? ONLINE_RING : OFFLINE_RING }}
+      >
+        {/* White inner ring */}
+        <div className="w-full h-full rounded-full bg-white p-[2px]">
+          {/* Avatar container - ensures perfect circle crop */}
+          <div className="w-full h-full rounded-full overflow-hidden">
+            <SmartAvatar
+              avatarUrl={avatarUrl}
+              animatedAvatarUrl={animatedAvatarUrl}
+              fallback={fallback}
+              size="lg"
+              className="w-full h-full object-cover"
+              playOnHover={true}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Online indicator dot */}
+      <div
+        className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${
+          isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-slate-400"
+        }`}
+      />
+    </div>
+  );
+}
+
+/**
+ * You, at the head of the reel.
+ *
+ * Always drawn online: you are looking at the app. It opens the same
+ * `PlayerProfileModal` every other avatar in the strip opens — which already
+ * knows it is you, and leaves out the Challenge button and the
+ * played-together record, neither of which means anything against yourself.
+ */
+function SelfStoryAvatar({
+  nickname,
+  avatarUrl,
+  animatedAvatarUrl,
+  label,
+  onOpen,
+}: {
+  nickname: string;
+  avatarUrl?: string | null;
+  animatedAvatarUrl?: string | null;
+  label: string;
+  onOpen: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2 flex-shrink-0">
+      <StoryAvatarCircle
+        avatarUrl={avatarUrl}
+        animatedAvatarUrl={animatedAvatarUrl}
+        fallback={nickname}
+        isOnline
+        onClick={onOpen}
+      />
+      <button
+        onClick={onOpen}
+        className="text-xs font-semibold text-slate-700 truncate max-w-[64px] hover:text-primary transition-colors"
+      >
+        {label}
+      </button>
+    </div>
+  );
+}
 
 interface FriendsStoriesBarProps {
   onAddFriendClick: () => void;
@@ -155,6 +256,7 @@ function ScrollArrow({
 export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFriends }: FriendsStoriesBarProps) {
   const { friends, loading, refreshFriendsIfStale } = useFriends();
   const { t } = useLanguage();
+  const { user, profile } = useAuth();
 
   /**
    * Re-read the list when you arrive on the page this reel is on.
@@ -209,6 +311,17 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
       {edges.right && <ScrollArrow side="right" onClick={() => page(1)} />}
       <div ref={scrollRef} className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
       <div className="flex gap-4 pt-2 pb-3 pr-4">
+        {/* You, first */}
+        {user && (
+          <SelfStoryAvatar
+            nickname={profile?.nickname || t("game.you")}
+            avatarUrl={profile?.avatar_url}
+            animatedAvatarUrl={profile?.animated_avatar_url}
+            label={t("game.you")}
+            onOpen={() => openProfile(user.id)}
+          />
+        )}
+
         {/* Add Friend Button */}
         <button
           type="button"
@@ -282,45 +395,15 @@ function FriendStoryAvatar({ friend, index, onClick, onProfileClick }: FriendSto
       className="flex flex-col items-center gap-2 flex-shrink-0"
     >
       {/* Avatar with gradient ring */}
-      <div 
-        className="relative w-16 h-16 cursor-pointer hover:scale-105 transition-transform active:scale-95"
+      <StoryAvatarCircle
+        avatarUrl={friend.avatarUrl}
+        animatedAvatarUrl={friend.animatedAvatarUrl}
+        fallback={friend.nickname}
+        isOnline={!!friend.isOnline}
         onClick={() => onProfileClick(friend.friendId)}
-      >
-        {/* Gradient ring background */}
-        <div 
-          className="absolute inset-0 rounded-full p-[3px]"
-          style={{
-            background: friend.isOnline 
-              ? "linear-gradient(135deg, #9333EA 0%, #EC4899 50%, #F97316 100%)"
-              : "linear-gradient(135deg, #94A3B8 0%, #CBD5E1 100%)",
-          }}
-        >
-          {/* White inner ring */}
-          <div className="w-full h-full rounded-full bg-white p-[2px]">
-            {/* Avatar container - ensures perfect circle crop */}
-            <div className="w-full h-full rounded-full overflow-hidden">
-              <SmartAvatar
-                avatarUrl={friend.avatarUrl}
-                animatedAvatarUrl={friend.animatedAvatarUrl}
-                fallback={friend.nickname}
-                size="lg"
-                className="w-full h-full object-cover"
-                playOnHover={true}
-              />
-            </div>
-          </div>
-        </div>
-        
-        {/* Online indicator dot */}
-        <div 
-          className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${
-            friend.isOnline 
-              ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" 
-              : "bg-slate-400"
-          }`}
-        />
-      </div>
-      
+      />
+
+
       {/* Name */}
       <button
         onClick={onClick}
