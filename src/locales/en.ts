@@ -2429,6 +2429,7 @@ export const en: KaTranslations = {
     pending: "Pending",
     sent: "Sent",
     inviteFriendBtn: "Invite",
+    inviteToPlayBtn: "Invite",
     addFriendActionBtn: "+ Add",
     orShare: "or share",
     copyLink: "Copy Link",
