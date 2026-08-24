@@ -302,8 +302,17 @@ export default function Discover() {
           )}
           {/* Darkens the top so a white title and the bar's glass read against
               whatever the video is doing under them, and the bottom so the
-              sheet's rounded edge has something to sit on. */}
-          <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/35 to-transparent" />
+              sheet's rounded edge has something to sit on.
+
+              The top one is violet rather than black, and deliberately long:
+              the video's own lilac clouds drift right through where the title
+              sits, so a short black scrim either failed to separate them or
+              read as a grey band laid over the art. A deep-violet wash of the
+              same family as the sheet's shadow (#291154) sinks the video
+              behind the title without changing its colour, and four stops
+              spread over 14rem land the last of it in the open sky where no
+              edge is visible. */}
+          <div className="absolute inset-x-0 top-0 h-56 bg-[linear-gradient(to_bottom,rgba(41,17,84,0.52)_0%,rgba(48,20,96,0.34)_34%,rgba(58,26,112,0.14)_64%,rgba(58,26,112,0)_100%)]" />
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-black/25" />
         </div>
 
