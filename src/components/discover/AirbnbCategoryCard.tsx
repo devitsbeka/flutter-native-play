@@ -2,8 +2,6 @@ import React, { memo, useMemo, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Heart } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
-import { PingPongVideo } from "@/components/shared/PingPongVideo";
-import { CATEGORY_VIDEOS, getResponsiveVideoSrc } from "@/config/videoConfig";
 import { POPULAR_CATEGORY_ICONS, POPULAR_CATEGORY_PALETTES } from "@/config/popularImageCategories";
 
 
@@ -22,11 +20,8 @@ interface AirbnbCategoryCardProps {
   imageUrl?: string;
   isFavorite?: boolean;
   leaderboardRank?: number | null;
-  videoUrl?: string;
   /** Badge this card as a newly added category. */
   isNewCategory?: boolean;
-  /** Controls whether the video should load/play */
-  isVideoActive?: boolean;
   onFavoriteClick?: (e: React.MouseEvent) => void;
   onClick?: () => void;
   variant?: "compact" | "full";
@@ -66,21 +61,6 @@ function preloadCategoryPage() {
   import("@/pages/CategoryPage");
 }
 
-// Prefetch a video URL via <link rel="prefetch"> - browser downloads in idle time
-const prefetchedVideos = new Set<string>();
-function prefetchVideo(videoUrl: string) {
-  if (!videoUrl) return;
-  // Prefetch the same responsive URL playback will request
-  const responsiveUrl = getResponsiveVideoSrc(videoUrl).webm;
-  if (prefetchedVideos.has(responsiveUrl)) return;
-  prefetchedVideos.add(responsiveUrl);
-  const link = document.createElement("link");
-  link.rel = "prefetch";
-  link.as = "video";
-  link.href = responsiveUrl;
-  document.head.appendChild(link);
-}
-
 /**
  * Memoised, because the carousel re-renders on every keystroke of the search
  * box and almost none of these cards actually change. The props are all
@@ -99,9 +79,7 @@ function AirbnbCategoryCardComponent({
   badge,
   isFavorite = false,
   leaderboardRank,
-  videoUrl,
   isNewCategory = false,
-  isVideoActive,
   onFavoriteClick,
   onClick,
   variant = "compact",
@@ -113,13 +91,12 @@ function AirbnbCategoryCardComponent({
   const iconSize = 128;
   const [isPressed, setIsPressed] = React.useState(false);
 
-  // Prefetch the HD video + CategoryPage JS bundle on hover/touch
+  // Prefetch the CategoryPage JS bundle on hover/touch. It used to prefetch
+  // the category's HD video here too — a card the finger merely passed over
+  // pulled down a video, and a scroll through Discover pulled down a dozen.
   const handlePointerEnter = useCallback(() => {
     preloadCategoryPage();
-    if (videoUrl) {
-      prefetchVideo(videoUrl);
-    }
-  }, [videoUrl]);
+  }, []);
 
   const buttonStyle = useMemo(() => ({
     transform: isPressed ? "translateY(5px)" : "translateY(0px)",
@@ -141,11 +118,6 @@ function AirbnbCategoryCardComponent({
   const innerFrameStyle = useMemo(() => ({
     boxShadow: `inset 0 0 0 3px ${pastel.depth}40, inset 0 0 0 4px rgba(255,255,255,0.3)`,
   }), [pastel.depth]);
-
-  const videoGradientStyle = useMemo(() => ({
-    height: isFull ? '50%' : '45%',
-    background: `linear-gradient(180deg, transparent 0%, ${pastel.base}50 30%, ${pastel.base}90 55%, ${pastel.base}cc 75%, ${pastel.base} 100%)`,
-  }), [isFull, pastel.base]);
 
   const progressGradientStyle = useMemo(() => ({
     bottom: 0,
@@ -208,36 +180,35 @@ function AirbnbCategoryCardComponent({
               }}
             />
 
-            {/* Video (ping-pong seamless loop) or Icon */}
-            {videoUrl ? (
-              <>
-                <PingPongVideo src={videoUrl} active={isVideoActive} />
-                {/* Gradient mask overlay on bottom of video */}
-                <div
-                  className="absolute inset-x-0 bottom-0 pointer-events-none z-[1]"
-                  style={videoGradientStyle}
+            {/* The category's icon. This card used to play the category's
+                video when there was one, so a scroll through Discover had a
+                dozen of them decoding at once; the video now lives only on
+                the category's own page, where there is one of it and it is
+                the point of the header.
+
+                The picture-guess six carry their own 3D art. Everything else
+                is its icon_slug out of the library — which is why the slug
+                has to be set: without one DynamicIcon falls back to picking
+                an icon by hash, and a category ends up wearing whatever it
+                drew. */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              {POPULAR_CATEGORY_ICONS[(categoryId ?? id) as keyof typeof POPULAR_CATEGORY_ICONS] ? (
+                <img
+                  src={POPULAR_CATEGORY_ICONS[(categoryId ?? id) as keyof typeof POPULAR_CATEGORY_ICONS]}
+                  alt=""
+                  draggable={false}
+                  className="w-[53%] max-h-[63%] object-contain drop-shadow-lg"
+                  loading="lazy"
                 />
-              </>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                {POPULAR_CATEGORY_ICONS[(categoryId ?? id) as keyof typeof POPULAR_CATEGORY_ICONS] ? (
-                  <img
-                    src={POPULAR_CATEGORY_ICONS[(categoryId ?? id) as keyof typeof POPULAR_CATEGORY_ICONS]}
-                    alt=""
-                    draggable={false}
-                    className="w-[53%] max-h-[63%] object-contain drop-shadow-lg"
-                    loading="lazy"
-                  />
-                ) : (
-                  <DynamicIcon
-                    slug={iconSlug || undefined}
-                    categoryId={categoryId}
-                    size={iconSize}
-                    className="drop-shadow-lg filter brightness-110"
-                  />
-                )}
-              </div>
-            )}
+              ) : (
+                <DynamicIcon
+                  slug={iconSlug || undefined}
+                  categoryId={categoryId}
+                  size={iconSize}
+                  className="drop-shadow-lg filter brightness-110"
+                />
+              )}
+            </div>
             </div>
 
             {/* Overlay layer: heart, rank, badges, progress.

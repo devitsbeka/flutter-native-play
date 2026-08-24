@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from "react";
 import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
-import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 
 interface Category {
   id: string;
@@ -90,9 +89,7 @@ export function CategoryGrid({
                 imageUrl={category.image_url}
                 isFavorite={favorites.has(favoriteId)}
                 leaderboardRank={leaderboardRanks[category.id]}
-                videoUrl={CATEGORY_VIDEOS[category.category_id || category.id]}
                 isNewCategory={newCategories?.has(category.uuid || category.id) ?? false}
-                isVideoActive={isNearViewport}
                 onFavoriteClick={(e) => {
                   e.stopPropagation();
                   onFavoriteToggle(favoriteId);

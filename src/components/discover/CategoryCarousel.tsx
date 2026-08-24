@@ -1,7 +1,6 @@
 import { useRef, useCallback, memo, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
-import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 
 interface Category {
   id: string;
@@ -187,9 +186,7 @@ function CategoryCarouselComponent({
                 imageUrl={category.image_url}
                 isFavorite={favorites.has(favoriteId)}
                 leaderboardRank={leaderboardRanks[category.id]}
-                videoUrl={CATEGORY_VIDEOS[category.category_id || category.id]}
                 isNewCategory={newCategories?.has(category.uuid || category.id) ?? false}
-                isVideoActive={index >= activeCardIndex - 1 && index <= activeCardIndex + 1}
                 onFavoriteClick={(e) => {
                   e.stopPropagation();
                   onFavoriteToggle(favoriteId);

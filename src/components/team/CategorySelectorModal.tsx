@@ -8,8 +8,6 @@ import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { categoryGradient } from "@/utils/categoryGradient";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CATEGORY_VIDEOS } from "@/config/videoConfig";
-import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { GameModal } from "@/components/ui/game-modal";
 import { buildBilingualSearchTerms } from "@/utils/transliteration";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -215,7 +213,6 @@ export function CategorySelectorModal({
               </motion.button>
             )}
             {filteredCategories.map((category) => {
-              const videoUrl = CATEGORY_VIDEOS[category.category_id];
               // Fallback gradient colors
               const fallbackColors = [
                 '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', 
@@ -240,34 +237,27 @@ export function CategorySelectorModal({
                     boxShadow: "0 3px 0 rgba(0,0,0,0.1)",
                   }}
                 >
-                  {/* Background - Video or gradient */}
+                  {/* Background: the category's icon on its gradient.
+                      This used to play the category's video when one existed
+                      and fall back to the icon when it did not, so a grid of
+                      categories was a grid of playing videos — a dozen of
+                      them decoding at once behind a picker you are about to
+                      leave. The video belongs on the category's own page,
+                      where it is one video and the point of the header. */}
                   <div className="absolute inset-0">
-                    {videoUrl ? (
-                      <>
-                        <PingPongVideo
-                          src={videoUrl}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                      </>
-                    ) : (
-                      <>
-                        <div
-                          className="absolute inset-0 flex items-center justify-center"
-                          style={{ background: categoryGradient(bgColor) }}
-                        >
-                          <CategoryArtwork
-                            categoryId={category.category_id}
-                            iconSlug={category.icon_slug}
-                            size={56}
-                          />
-                        </div>
-                        {/* Deeper than the video branch's scrim on purpose:
-                            these gradients include pale yellows the label has
-                            to sit on top of. */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
-                      </>
-                    )}
+                    <div
+                      className="absolute inset-0 flex items-center justify-center"
+                      style={{ background: categoryGradient(bgColor) }}
+                    >
+                      <CategoryArtwork
+                        categoryId={category.category_id}
+                        iconSlug={category.icon_slug}
+                        size={56}
+                      />
+                    </div>
+                    {/* Deep enough for a label to sit on: these gradients
+                        include pale yellows. */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
                   </div>
 
                   {/* Content */}

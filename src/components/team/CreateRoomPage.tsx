@@ -12,8 +12,6 @@ import { readAppLanguage } from "@/utils/appLanguage";
 import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useAuth } from "@/contexts/AuthContext";
-import { CATEGORY_VIDEOS } from "@/config/videoConfig";
-import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { categoryGradient } from "@/utils/categoryGradient";
 import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
@@ -1092,26 +1090,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     exit={{ opacity: 0 }}
                     className="relative w-full aspect-video"
                   >
-                    {/* Video/Gradient Background */}
-                    {CATEGORY_VIDEOS[selectedCategory.category_id] ? (
-                      <>
-                        <PingPongVideo
-                          src={CATEGORY_VIDEOS[selectedCategory.category_id]}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                      </>
-                    ) : (
-                      // Random landed on a category with no video: show which
-                      // one, rather than an anonymous purple panel.
-                      <div className="w-full h-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
-                        <CategoryArtwork
-                          categoryId={selectedCategory.category_id}
-                          iconSlug={selectedCategory.icon_slug}
-                          size={96}
-                        />
-                      </div>
-                    )}
+                    {/* The category's icon on its gradient. This played the
+                        category's video where one existed; the video belongs
+                        on the category's own page, not behind a preview you
+                        look at for two seconds on the way to a room. */}
+                    <div className="w-full h-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+                      <CategoryArtwork
+                        categoryId={selectedCategory.category_id}
+                        iconSlug={selectedCategory.icon_slug}
+                        size={96}
+                      />
+                    </div>
                     
                     {/* Overlaid Info Bar at Bottom */}
                     <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -1241,19 +1230,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           <DynamicIcon slug="mystery-box" size={80} />
                         </div>
                       </div>
-                    ) : CATEGORY_VIDEOS[selectedCategory.category_id] ? (
-                      <>
-                        <PingPongVideo
-                          src={CATEGORY_VIDEOS[selectedCategory.category_id]}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                      </>
                     ) : (
-                      // No video for this category (the picture-guess set has
-                      // none): its own icon on its own gradient, under the same
-                      // scrim the video branch uses — the info bar below is
-                      // white text and white glyphs and has to stay readable.
+                      // Its own icon on its own gradient, under a scrim: the
+                      // info bar below is white text and white glyphs and has
+                      // to stay readable. This used to play the category's
+                      // video instead, which now runs only on the category's
+                      // own page.
                       <>
                         <div
                           className="w-full h-full flex items-center justify-center"

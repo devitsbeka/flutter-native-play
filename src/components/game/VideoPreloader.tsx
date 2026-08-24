@@ -125,9 +125,19 @@ function requestSwCaching(urls: string[]): void {
   }
 }
 
-// Cap SW precache: map videos + first N category videos only.
-// Remaining videos load on demand (and get SW-cached at that point).
-const SW_PRECACHE_CATEGORY_LIMIT = 12;
+// Cap SW precache: map videos only.
+//
+// This used to be 12 category videos as well, from when a category video
+// played on the Discover cards, the room pickers and the VS reveal — twelve
+// of them warmed up front because you were going to meet them within a
+// screen or two. A category video now plays in exactly one place, the header
+// of that category's own page, one at a time and only if you open it. Paying
+// for twelve downloads at launch to maybe serve one is the wrong trade on a
+// phone, and it was the kind of background work that shows up as heat.
+//
+// They still cache on demand: the first play of a category's video puts it in
+// the SW cache, so the second visit is instant.
+const SW_PRECACHE_CATEGORY_LIMIT = 0;
 
 // Start preloading - optimized for instant app readiness
 export async function startVideoPreload(): Promise<void> {

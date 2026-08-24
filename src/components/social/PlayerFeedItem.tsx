@@ -16,8 +16,7 @@ import bookmark3dIcon from "@/assets/icons/bookmark-3d.webp";
 import { formatDistanceToNow } from "date-fns";
 import { ka, enUS } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { PingPongVideo } from "@/components/shared/PingPongVideo";
-import { CATEGORY_VIDEOS, CATEGORY_IMAGES, subjectToCategoryKey } from "@/config/videoConfig";
+import { CATEGORY_IMAGES, subjectToCategoryKey } from "@/config/videoConfig";
 
 // Lazy load EditQuizModal for admin editing
 const EditQuizModal = lazy(() =>
@@ -226,12 +225,17 @@ function PlayerFeedItemComponent({
 
   const gradientProps = getGradientProps(coverGradient || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)");
 
-  // Themed cover video for posts without an uploaded cover image
-  const themedVideo = useMemo(() => {
+  // Themed cover for posts without an uploaded image of their own.
+  //
+  // This was the category's VIDEO, with the still below as its poster. A feed
+  // is a column of these, so scrolling it started a video per card — and the
+  // still it was already loading as a poster looks the same until the first
+  // frame rolls. Category video now runs only on the category's own page.
+  const themedImage = useMemo(() => {
     if (coverImage || !triviaItem) return null;
     const key = subjectToCategoryKey(triviaItem.subject, triviaItem.hashtags);
-    if (!key || !CATEGORY_VIDEOS[key]) return null;
-    return { src: CATEGORY_VIDEOS[key], poster: CATEGORY_IMAGES[key] };
+    if (!key) return null;
+    return CATEGORY_IMAGES[key] || null;
   }, [coverImage, triviaItem]);
 
   return (
@@ -316,12 +320,14 @@ function PlayerFeedItemComponent({
               />
               <div className="absolute inset-0 bg-black/30" />
             </>
-          ) : themedVideo ? (
+          ) : themedImage ? (
             <>
-              <PingPongVideo
-                src={themedVideo.src}
-                posterUrl={themedVideo.poster}
-                rootMargin="50px"
+              <img
+                src={themedImage}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-black/30" />
             </>

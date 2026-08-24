@@ -13,7 +13,6 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { VSMatchHelpModal } from "./VSMatchHelpModal";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useCategories } from "@/hooks/useCategories";
-import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import confetti from "canvas-confetti";
 import { InteractiveBlobVideo } from "./InteractiveBlobVideo";
 import { REWARDS } from "@/config/rewardConfig";
@@ -97,7 +96,7 @@ export function VSScreen() {
   // Category slot state
   const [categoryPool, setCategoryPool] = useState<typeof categories>([]);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState<{id: string; name: string; videoUrl: string} | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<{id: string; name: string} | null>(null);
   const categoryIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const categoryPoolSetForStageRef = useRef(false);
 
@@ -107,9 +106,7 @@ export function VSScreen() {
   const opponentPoints = opponent?.points || 0;
   const opponentLevelInfo = calculateLevel(opponentPoints);
 
-  // Current category video URL
   const currentCategory = categoryPool[currentCategoryIndex];
-  const currentVideoUrl = currentCategory ? (CATEGORY_VIDEOS[currentCategory.id] || "") : "";
 
   // Fetch AI-generated avatar URLs and merge with mascot avatars
   useEffect(() => {
@@ -215,8 +212,7 @@ export function VSScreen() {
         const winnerIndex = Math.floor(Math.random() * categoryPool.length);
         setCurrentCategoryIndex(winnerIndex);
         const winner = categoryPool[winnerIndex];
-        const videoUrl = CATEGORY_VIDEOS[winner.id] || "";
-        setSelectedCategory({ id: winner.id, name: winner.name, videoUrl });
+        setSelectedCategory({ id: winner.id, name: winner.name });
         setStage("category-found");
       }
     };
@@ -521,11 +517,14 @@ export function VSScreen() {
               )}
             </AnimatePresence>
 
-{/* Interactive Blob - Icons during spin, Video on reveal */}
+{/* Icons throughout — during the spin and on the reveal.
+                The reveal used to swap to the category's video, which meant
+                a video downloading and decoding at the moment the round is
+                about to start. The category's own icon says the same thing
+                and costs nothing; the video is on the category's page. */}
             <InteractiveBlobVideo
               iconUrl={selectedCategory?.id === "__mixed__" ? mysteryBoxIcon : undefined}
               iconSlug={selectedCategory?.id !== "__mixed__" ? currentCategory?.icon_slug ?? undefined : undefined}
-              videoSrc={selectedCategory?.videoUrl}
               isLocked={isCategoryLocked}
               shouldAnimate={showCategorySlot && !isCategoryLocked}
             />
