@@ -322,58 +322,73 @@ export default function Discover() {
               className="absolute inset-x-0 top-0 h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-hidden"
             />
           )}
-          {/* Darkens the top so a white title and the bar's glass read against
-              whatever the video is doing under them, and the bottom so the
-              sheet's rounded edge has something to sit on.
+          {/* The cover's overlays, exactly as the frame has them.
+           *
+           * Two of them, and the order matters. First a violet wash over the
+           * whole artwork — linear-gradient(194.854deg, …) — which is what
+           * makes the cover read as one purple surface rather than as a map
+           * with text on it. Then the frame's own top scrim, at the
+           * opacities it carries (0.12 falling to 0 by 64%), sitting ABOVE
+           * the copy the way it does in the file. Both are the frame's
+           * values, not an approximation of them; the earlier hand-rolled
+           * 0.52 scrim was doing the wash's job badly.
+           *
+           * The wash covers the video's own box (the full scroller), not the
+           * hero — same geometry the frame draws it at. */}
+          <div className="absolute inset-x-0 top-0 h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] bg-[linear-gradient(194.854deg,rgba(98,66,212,0.588)_17.325%,rgba(255,255,255,0)_110.89%)]" />
 
-              The top one is violet rather than black, and deliberately long:
-              the video's own lilac clouds drift right through where the title
-              sits, so a short black scrim either failed to separate them or
-              read as a grey band laid over the art. A deep-violet wash of the
-              same family as the sheet's shadow (#291154) sinks the video
-              behind the title without changing its colour, and four stops
-              spread over 14rem land the last of it in the open sky where no
-              edge is visible. */}
-          <div className="absolute inset-x-0 top-0 h-[420px] bg-[linear-gradient(to_bottom,rgba(41,17,84,0.52)_0%,rgba(48,20,96,0.34)_18%,rgba(52,22,104,0.24)_45%,rgba(58,26,112,0.11)_76%,rgba(58,26,112,0)_100%)]" />
+          {/* Kept from before the frame, which does not draw this far down:
+              the sheet's rounded edge needs something to sit on when the
+              video under it is bright. */}
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-black/25" />
-
-          {/* The rule the design draws under the header, inset to the same
-              26px the title and the icons are set in by. */}
-          <div className="absolute inset-x-[26px] top-[76px] h-px bg-white/30" />
           </div>
 
-          {/* The cover's offer, anchored under the header rather than
-              centred in the hero: the hero's height follows the device, and
-              the design fixes this block's distance from the rule, not from
-              the bottom of the screen.
+          {/* The cover's offer.
            *
-           * Type is sized in vw against the 500px-wide frame the design was
-           * drawn at — 40px there is 8vw — and clamped so it neither
-           * outgrows a tablet nor breaks the headline into three lines on a
-           * narrow phone. The pointer-events-auto is on the button alone;
-           * everything else here stays transparent to touch so the sheet
-           * below is still what a drag from the middle of the cover
-           * grabs. */}
+           * Positioned the way the frame positions it — absolute tops of
+           * 133 / 235 / 293 / 363 from the top of the cover, measured
+           * against a 500px-wide frame — because the header above it is a
+           * fixed 76px on every device, so the distances below it are fixed
+           * too. Only the type scales: each size is min(frame px, the same
+           * size as a share of the viewport), so a 390px phone gets the same
+           * composition instead of a headline in three lines.
+           *
+           * pointer-events-auto is on the button alone; everything else here
+           * stays transparent to touch, so a drag from the middle of the
+           * cover still pulls the sheet up. */}
           {!isVip && (
-          <div className="absolute inset-x-0 top-[76px] flex flex-col items-center px-6 text-center">
-            <h2 className="mt-[55px] font-display uppercase text-white text-[clamp(28px,8vw,40px)] leading-[1.15] tracking-[0.5px] [text-shadow:0_2px_10px_rgba(23,10,54,0.35)]">
+          <div className="absolute inset-x-0 top-0 text-center text-white [text-shadow:0px_3px_21px_rgba(0,0,0,0.16)]">
+            {/* The rule under the header: 441 wide at the frame's 500, one
+                pixel, in the lilac the file draws it in. */}
+            <div aria-hidden className="absolute left-1/2 -translate-x-1/2 top-[78px] h-px w-[min(441px,88.2vw)] bg-[#b8a6f5]" />
+
+            <h2 className="absolute left-1/2 -translate-x-1/2 top-[133px] w-[min(393px,86vw)] font-display uppercase text-[min(40px,8vw)] leading-[min(43px,8.6vw)] tracking-[0.5px]">
               {t("discover.promoTitle")}
             </h2>
-            <p className="mt-[9px] text-white/90 text-[clamp(14px,3.5vw,17.5px)] leading-[1.35]">
+
+            <p className="absolute left-1/2 -translate-x-1/2 top-[235px] w-full px-6 text-[min(18px,3.6vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
               {t("discover.promoSubtitle")}
             </p>
+
             <button
               type="button"
               onClick={() => navigate("/profile?tab=PRO")}
-              className="pointer-events-auto mt-[38px] h-[52px] min-w-[196px] px-8 rounded-full bg-[#F7F4FC]/95 text-[#3B1E6E] font-display uppercase text-[clamp(14px,3.4vw,17px)] tracking-[0.5px] shadow-[0_10px_28px_rgba(41,17,84,0.28)] active:scale-[0.98] transition-transform"
+              className="pointer-events-auto absolute left-1/2 -translate-x-1/2 top-[293px] h-[min(53px,10.6vw)] w-[min(192px,38.4vw)] rounded-[min(18.386px,3.68vw)] border-[1.532px] border-solid border-[#e8e0f5] bg-white/80 text-[#5d247f] text-[min(16px,3.2vw)] font-bold uppercase tracking-[-0.16px] [text-shadow:none] shadow-[0px_3.698px_0px_0px_#d8d0e8,0px_5.546px_14.79px_0px_rgba(0,0,0,0.1)] active:translate-y-[2px] active:shadow-[0px_1.5px_0px_0px_#d8d0e8,0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-all"
             >
               {t("discover.promoCta")}
             </button>
-            <p className="mt-[21px] text-white/80 text-[clamp(11px,2.6vw,13px)]">
+
+            <p className="absolute left-1/2 -translate-x-1/2 top-[363px] w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
               {t("discover.promoNote")}
             </p>
           </div>
           )}
+
+          {/* Last, and over the copy, as the frame stacks it. */}
+          <div
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-[224px] bg-[linear-gradient(180deg,rgba(41,17,84,0.12)_0%,rgba(48,20,96,0.096)_34%,rgba(58,26,112,0)_64%,rgba(58,26,112,0)_100%)]"
+          />
         </div>
 
         {/* The page's own header, in white, riding on the video. Absolute
