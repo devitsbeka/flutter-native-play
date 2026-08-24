@@ -20,6 +20,10 @@ interface PageHeaderProps {
       its coin and gem pills here on tablet and desktop, where the row is
       already on screen and half empty. */
   titleAccessory?: React.ReactNode;
+  /** Draws the header on artwork rather than on the page wash: no surface,
+      no rule under it, and a white title with a shadow so it stays legible
+      over whatever is moving behind it. Explore uses it over its video. */
+  overlay?: boolean;
   className?: string;
 }
 
@@ -29,6 +33,7 @@ export function PageHeader({
   showBack = true,
   rightElements,
   titleAccessory,
+  overlay = false,
   className = "",
 }: PageHeaderProps) {
   const navigate = useNavigate();
@@ -77,6 +82,7 @@ export function PageHeader({
        * the two are one surface and both follow the theme.
        */}
       {typeof document !== "undefined" &&
+        !overlay &&
         createPortal(
           <div
             aria-hidden
@@ -87,7 +93,11 @@ export function PageHeader({
         )}
 
       <header
-        className={`sticky top-0 z-20 bg-background backdrop-blur-md border-b border-border/30 ${className}`}
+        className={
+          overlay
+            ? `relative z-20 bg-transparent ${className}`
+            : `sticky top-0 z-20 bg-background backdrop-blur-md border-b border-border/30 ${className}`
+        }
       >
         {/* 76px tall like the home header, so the search/bell icons land at
             the same vertical spot on every page */}
@@ -108,7 +118,11 @@ export function PageHeader({
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.05 }}
-            className="text-xl font-display font-bold text-slate-800 uppercase tracking-wide"
+            className={`text-xl font-display font-bold uppercase tracking-wide ${
+              overlay
+                ? "text-white [text-shadow:0_2px_8px_rgba(23,10,54,0.45)]"
+                : "text-slate-800"
+            }`}
           >
             {title}
           </motion.h1>
