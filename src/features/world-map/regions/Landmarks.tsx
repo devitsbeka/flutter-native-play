@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { GeneratedRegion, LandmarkDefinition } from "../schemas/worldDefinition";
 import { worldMaterials } from "../components/materials";
 import { childSeed, createRng, range } from "../procedural/seededRandom";
+import { terrainHeight } from "../procedural/terrain";
 
 /** Trivia tower: stone drums under two tiered bronze roofs and a thin spire. */
 function TriviaTower() {
@@ -234,24 +235,34 @@ function Mountains({ region }: { region: GeneratedRegion }) {
 
 export function Landmarks({ region }: { region: GeneratedRegion }) {
   const { def } = region;
-  const surfaceLocalY = def.elevation;
+  // Landmarks are positioned in world space and sample the ground themselves.
+  // Under the old floating islands a single per-region elevation was correct;
+  // on continuous, undulating land it sinks or floats every building.
   return (
-    <group position={def.position} rotation={[0, def.rotationY ?? 0, 0]} scale={def.scale ?? 1}>
+    <group>
       {def.landmarks.map((landmark) => {
         const Component = landmarkComponents[landmark.kind];
+        const wx = def.position[0] + landmark.position[0];
+        const wz = def.position[2] + landmark.position[2];
         return (
           <group
             key={landmark.id}
-            position={[landmark.position[0], surfaceLocalY, landmark.position[2]]}
-            rotation={[0, landmark.rotationY ?? 0, 0]}
-            scale={landmark.scale ?? 1}
+            position={[wx, terrainHeight(wx, wz), wz]}
+            rotation={[0, (def.rotationY ?? 0) + (landmark.rotationY ?? 0), 0]}
+            scale={(landmark.scale ?? 1) * (def.scale ?? 1)}
           >
             <Component />
           </group>
         );
       })}
       {def.mountains && (
-        <group position={[0, surfaceLocalY, 0]}>
+        <group
+          position={[
+            def.position[0],
+            terrainHeight(def.position[0], def.position[2]),
+            def.position[2],
+          ]}
+        >
           <Mountains region={region} />
         </group>
       )}

@@ -24,14 +24,12 @@ export interface QualityProfile {
   shardDensity: number;
   lowCloudCount: number;
   mist: boolean;
-  /** Ambient pastel orbs behind the route. */
-  orbCount: number;
 }
 
 export const qualityProfiles: Record<QualityTier, QualityProfile> = {
-  low: { dprCeiling: 1, shadows: false, treeDensity: 0.55, cloudCount: 9, shardDensity: 0.4, lowCloudCount: 0, mist: false, orbCount: 8 },
-  medium: { dprCeiling: 1.5, shadows: true, treeDensity: 0.8, cloudCount: 16, shardDensity: 0.7, lowCloudCount: 6, mist: true, orbCount: 16 },
-  high: { dprCeiling: 2, shadows: true, treeDensity: 1, cloudCount: 22, shardDensity: 1, lowCloudCount: 10, mist: true, orbCount: 24 },
+  low: { dprCeiling: 1, shadows: false, treeDensity: 0.55, cloudCount: 9, shardDensity: 0.4, lowCloudCount: 0, mist: false },
+  medium: { dprCeiling: 1.5, shadows: true, treeDensity: 0.8, cloudCount: 16, shardDensity: 0.7, lowCloudCount: 6, mist: true },
+  high: { dprCeiling: 2, shadows: true, treeDensity: 1, cloudCount: 22, shardDensity: 1, lowCloudCount: 10, mist: true },
 };
 
 export function prefersReducedMotion(): boolean {

@@ -7,6 +7,7 @@ import { adventureWorld } from "@/features/world-map/data/adventureWorld";
 import { selectCurrentQuest, selectRouteProgress } from "@/features/world-map/selectors";
 import { useProgressionStore } from "@/features/world-map/state/worldStore";
 import { resolveCategoryIcon } from "@/features/world-map/assets/categoryIcons";
+import type { FriendOnMap } from "@/features/world-map/nodes/NodeMarkers";
 import { useSound } from "@/contexts/SoundContext";
 
 import worldMap from "@/assets/figma-home/world-map.jpg";
@@ -207,6 +208,26 @@ export function LoggedInHomeV2Mobile({
   ];
 
   const powers = [power1, power2, power3, power4];
+
+  // Where each friend currently is on the route.
+  //
+  // PLACEHOLDER DATA. Friend progress is not modelled anywhere yet — there is
+  // no per-user node state in the database — so these are the same mock
+  // friends the panel lists, pinned to fixed nodes to prove the marker works.
+  // Swap this map for real progress once friend node state exists; the shape
+  // (nodeId -> friends) is what the map consumes.
+  const friendsByNode = useMemo<Record<string, FriendOnMap[]>>(
+    () => ({
+      "c1-c": [{ id: "gloria", name: "Gloria", avatarUrl: friendGloria }],
+      "c2-b": [
+        { id: "trivia", name: "TriviaMaste", avatarUrl: friendTrivia },
+        { id: "giga", name: "Giga", avatarUrl: friendGiga },
+      ],
+      "c3-a": [{ id: "giorgi", name: "Giorgi K.", avatarUrl: friendGiorgi }],
+      "s1": [{ id: "tiko", name: "თიკო", avatarUrl: friendTiko }],
+    }),
+    []
+  );
   const avatar = avatarUrl || avatarPhoto;
   const questIcon = quest ? resolveCategoryIcon(quest.node.label, quest.node.icon) : null;
 
@@ -218,6 +239,7 @@ export function LoggedInHomeV2Mobile({
         <WorldMap
           verticalScroll
           avatarUrl={avatar}
+          friendsByNode={friendsByNode}
           onMissions={onMissions}
           onDiscover={() => navigate("/discover")}
           onPlay={onPlay}

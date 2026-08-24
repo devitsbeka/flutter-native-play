@@ -4,14 +4,12 @@ import { GeneratedWorld, MapNodeDefinition } from "../schemas/worldDefinition";
 import { worldColors } from "./materials";
 import { qualityProfiles } from "../utils/deviceQuality";
 import { useQualityStore } from "../state/worldStore";
-import { Island } from "../regions/Island";
-import { Shards } from "../regions/Shards";
+import { Terrain } from "../regions/Terrain";
 import { Vegetation } from "../regions/Vegetation";
 import { Landmarks } from "../regions/Landmarks";
 import { Clouds } from "../regions/Clouds";
-import { Orbs } from "../regions/Orbs";
 import { Paths } from "../paths/Paths";
-import { NodeMarkers } from "../nodes/NodeMarkers";
+import { FriendOnMap, NodeMarkers } from "../nodes/NodeMarkers";
 import { NodePanel, NodePanelData } from "../nodes/NodePanel";
 import { CameraRig } from "../camera/CameraRig";
 import { worldMaterials } from "./materials";
@@ -27,6 +25,7 @@ interface WorldSceneProps {
   verticalScroll?: boolean;
   currentNodeId?: string | null;
   avatarUrl?: string | null;
+  friendsByNode?: Record<string, FriendOnMap[]>;
 }
 
 export function WorldScene({
@@ -37,9 +36,9 @@ export function WorldScene({
   verticalScroll,
   currentNodeId,
   avatarUrl,
+  friendsByNode,
 }: WorldSceneProps) {
   const highCloudsRef = useRef<THREE.Object3D | null>(null);
-  const lowCloudsRef = useRef<THREE.Object3D | null>(null);
   const tier = useQualityStore((s) => s.tier);
   const profile = qualityProfiles[tier];
 
@@ -48,24 +47,6 @@ export function WorldScene({
   // why the world looked washed out. Pushed well beyond the far islands so it
   // only softens the true horizon.
   const fog = useMemo(() => new THREE.Fog(worldColors.fogPink, 260, 460), []);
-
-  // Route extent, so the orb field spans the whole journey rather than
-  // clustering around the origin.
-  const orbZRange = useMemo<[number, number]>(() => {
-    const zs = world.def.regions.map((r) => r.position[2]);
-    return [Math.max(...zs), Math.min(...zs)];
-  }, [world.def.regions]);
-
-  // Low cloud puffs hugging cliff bases and drifting through the channels.
-  const lowClouds = useMemo<ScatterInstance[]>(() => {
-    const rng = createRng(childSeed(world.def.seed, "low-clouds"));
-    return Array.from({ length: 8 }, () => ({
-      position: [range(rng, -45, 50), range(rng, -7, -2), range(rng, -25, 28)] as [number, number, number],
-      scale: range(rng, 0.9, 1.8),
-      rotationY: range(rng, 0, Math.PI * 2),
-      tint: rng(),
-    }));
-  }, [world.def.seed]);
 
   return (
     <>
@@ -88,41 +69,27 @@ export function WorldScene({
         shadow-bias={-0.0004}
       />
       <CameraRig definition={world.def.camera} reducedMotion={reducedMotion} verticalScroll={verticalScroll} />
-      <Orbs seed={world.def.seed} count={profile.orbCount} zRange={orbZRange} animate={!reducedMotion} />
+      {/* One landmass for the whole route, then per-area dressing on top. */}
+      <Terrain />
       {world.regions.map((region) => (
         <group key={region.def.id}>
-          <Island region={region} />
           <Vegetation region={region} density={profile.treeDensity} />
           <Landmarks region={region} />
         </group>
       ))}
       <Paths paths={world.paths} />
       <Clouds clouds={world.clouds} count={profile.cloudCount} animate={!reducedMotion} occluderRef={highCloudsRef} />
-      {profile.lowCloudCount > 0 && (
-        <Clouds clouds={lowClouds} count={profile.lowCloudCount} animate={!reducedMotion} occluderRef={lowCloudsRef} />
-      )}
-      {profile.shardDensity > 0 &&
-        world.regions.map((region) => <Shards key={`${region.def.id}-shards`} region={region} density={profile.shardDensity} />)}
-      {profile.mist && (
-        <group>
-          {[
-            [-20, -12.5, 10, 90],
-            [25, -13.5, -8, 110],
-            [0, -14.5, 30, 100],
-          ].map(([x, y, z, size], i) => (
-            <mesh key={i} material={worldMaterials.mist} rotation={[-Math.PI / 2, 0, 0]} position={[x, y, z]}>
-              <planeGeometry args={[size, size * 0.7]} />
-            </mesh>
-          ))}
-        </group>
-      )}
+
       <NodeMarkers
         world={world}
         animate={!reducedMotion}
         onNodeClick={onNodeClick}
-        occluders={[highCloudsRef, lowCloudsRef]}
+        // Only the high cloud layer exists now. Passing a ref that never gets
+        // a mesh makes drei's <Html occlude> dereference null every frame.
+        occluders={[highCloudsRef]}
         currentNodeId={currentNodeId}
         avatarUrl={avatarUrl}
+        friendsByNode={friendsByNode}
       />
       {panel && <NodePanel data={panel} position={world.nodeWorldPositions[panel.node.id]} />}
     </>

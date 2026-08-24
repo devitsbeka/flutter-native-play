@@ -23,6 +23,7 @@ function questFraming(quest: CurrentQuest, pos: [number, number, number]): [numb
   return [quest.region.position[0], pos[1], pos[2] + 6];
 }
 import { NodePanelData } from "./nodes/NodePanel";
+import { FriendOnMap } from "./nodes/NodeMarkers";
 import { MapNodeDefinition, NodeState } from "./schemas/worldDefinition";
 import { generateWorld } from "./procedural/generateWorld";
 import { useCameraStore, useProgressionStore, useSelectionStore } from "./state/worldStore";
@@ -48,6 +49,8 @@ interface WorldMapProps extends WorldMapActions {
   verticalScroll?: boolean;
   /** Player avatar, drawn as the "you are here" pin on the current node. */
   avatarUrl?: string | null;
+  /** Friends to show on the map, keyed by the node each one is on. */
+  friendsByNode?: Record<string, FriendOnMap[]>;
 }
 
 class SceneErrorBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
@@ -89,6 +92,7 @@ export function WorldMap({
   resolutionBoost,
   verticalScroll,
   avatarUrl,
+  friendsByNode,
   onMissions,
   onDiscover,
   onPlay,
@@ -198,6 +202,7 @@ export function WorldMap({
             verticalScroll={verticalScroll}
             currentNodeId={currentQuest?.node.id ?? null}
             avatarUrl={avatarUrl}
+            friendsByNode={friendsByNode}
             onNodeClick={handleNodeClick}
             onReady={() => setReady(true)}
             panel={panel}

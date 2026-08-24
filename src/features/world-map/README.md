@@ -4,6 +4,14 @@ Data-driven, procedurally assembled 2.5D world that replaces the static
 homepage map. React Three Fiber renders environment only; all text, labels
 and controls are DOM.
 
+The world is **one continuous landmass**, not a set of floating islands: a
+single ribbon of terrain runs from the start (z +62) to the summit (z -112),
+changing biome along its length. `procedural/terrain.ts` is the one
+definition of where the ground is — every level disc, tree, rock, landmark
+and path ribbon samples `terrainHeight(x, z)` from it, so nothing floats or
+sinks. A "region" is an AREA on that landmass rather than an island; it
+carries the nodes and dressing for its stretch of the route.
+
 ## Architecture
 
 ```
@@ -15,16 +23,19 @@ components/
   materials.ts          shared stylized material + color tokens
 camera/CameraRig.tsx    fixed-axis cinematic camera: damped pan/zoom/focus,
                         pointer parallax, reduced-motion snap; no orbit
-regions/                Island (extruded outline terrain), Vegetation
+regions/                Terrain (the continuous landmass), Vegetation
                         (instanced trees/rocks), Landmarks (tower, castle,
                         shrine, ruin, mountains), Clouds (instanced, drifting)
 paths/Paths.tsx         Catmull-Rom sandstone ribbons + state variants
 nodes/NodeMarkers.tsx   3D pedestals + DOM pill overlays (hover/focus/keyboard)
 nodes/NodePanel.tsx     details card anchored above the clicked node
-procedural/             seeded PRNG + deterministic world assembly
+procedural/             seeded PRNG, terrain height/biome, deterministic
+                        world assembly
 state/worldStore.ts     zustand: progression / selection / camera goals / quality
 schemas/                typed WorldDefinition -> GeneratedWorld contracts
-data/sampleWorld.ts     "სამყარო ალფა" definition
+data/adventureWorld.ts  "სამყარო ალფა" — the live route definition
+data/sampleWorld.ts     older compact definition, kept for the generator tests
+selectors.ts            current quest / route progress derived from a world
 ```
 
 Rendering consumes `generateWorld(definition)` output only. Identical seeds
@@ -48,8 +59,9 @@ produce identical worlds (see `__tests__/generation.test.ts`; run `npm test`).
 ## Replacing placeholder geometry with GLB assets
 
 Each renderer isolates its geometry: swap the primitive builders in
-`Landmarks.tsx` / `Vegetation.tsx` / `Island.tsx` for `useGLTF` loads keyed by
-an asset registry, keeping the same group transforms. Generated placement
+`Landmarks.tsx` / `Vegetation.tsx` for `useGLTF` loads keyed by an asset
+registry, keeping the same group transforms. Anything placed on the ground
+must keep sampling `terrainHeight` for its y. Generated placement
 data (positions/scale/rotation) is asset-agnostic, so no game logic changes.
 
 ### Asset production spec (for 3D artists)
