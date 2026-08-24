@@ -33,10 +33,29 @@ describe("the green ring", () => {
     // player must not be green on one and grey on the other. One ring each:
     // PresenceAvatar for the list, VsPlayer for the face-off, and VsPlayer
     // is now drawn twice rather than written out twice.
-    const rings = scoreboard.match(/ring-2 ring-emerald-400/g) ?? [];
+    const rings = scoreboard.match(/ringShadow\(isOnline\)/g) ?? [];
     expect(rings.length, "expected PresenceAvatar and VsPlayer").toBe(2);
     expect(scoreboard, "VsPlayer must carry it, not one of its two call sites")
-      .toMatch(/function VsPlayer\([\s\S]*?ring-2 ring-emerald-400/);
+      .toMatch(/function VsPlayer\([\s\S]*?ringShadow\(isOnline\)/);
+  });
+
+  it("is a colour, not a presence or absence of stroke", () => {
+    // Both states are a 2px stroke; only the colour changes. A ring that
+    // appears and disappears changes the circle's size as well as its state,
+    // and a row where some avatars carry a stroke and some do not reads as a
+    // rendering fault rather than as two kinds of player.
+    expect(scoreboard).toMatch(/const RING_ONLINE = "0 0 0 2px rgba\(52,211,153/);
+    expect(scoreboard).toMatch(/const RING_OFFLINE = "0 0 0 2px rgba\(148,163,184/);
+  });
+
+  it("is a shadow, because the same element animates its shadow", () => {
+    // Tailwind's ring IS a box-shadow, so framer-motion's inline
+    // style.boxShadow replaces it and the class paints nothing. That is not
+    // a thing you can see in review — the class sits right there in the
+    // markup — so it is asserted instead: no ring-* utility on an element
+    // whose boxShadow is animated.
+    expect(scoreboard, "a ring colour utility here would paint nothing")
+      .not.toMatch(/ring-(emerald|slate|green|white)-\d/);
   });
 
   it("stays off for a placeholder who never arrived", () => {
@@ -74,9 +93,9 @@ describe("the arrival flare", () => {
     expect(scoreboard).toMatch(/justArrived=\{!isInvited && arrived\.has\(p\.user_id\)\}/);
     const avatar = scoreboard.match(/function PresenceAvatar\([\s\S]*?\n\}\n\nexport function RoomScoreboard/)![0];
     expect(avatar, "the flare is a keyframed box-shadow, not a permanent glow")
-      .toMatch(/boxShadow: \[/);
-    expect(avatar, "it must settle back to nothing")
-      .toMatch(/: \{ boxShadow: "0 0 0px 0px rgba\(52,211,153,0\)" \}/);
+      .toMatch(/boxShadow: arrivalShadows\(/);
+    expect(scoreboard, "and it settles onto the steady ring, not onto nothing")
+      .toMatch(/const arrivalShadows[\s\S]*?\$\{RING_ONLINE\}, \$\{GLOW_STEADY\}/);
   });
 });
 
@@ -145,8 +164,10 @@ describe("colour follows presence", () => {
     // The flare is the arrival and fires once; the glow is the standing fact.
     // Falling back to no shadow after the flare made a player who was plainly
     // in the app look identical to one who had gone.
-    const steady = scoreboard.match(/isOnline\s*\n?\s*\? \{ boxShadow: "0 0 1[26]px [34]px rgba\(52,211,153,0\.55\)" \}/g) ?? [];
-    expect(steady.length, "both layouts hold a steady glow while online").toBe(2);
+    const steady = scoreboard.match(/boxShadow: ringShadow\(isOnline\)/g) ?? [];
+    expect(steady.length, "both layouts hold a steady ring while online").toBe(2);
+    expect(scoreboard, "and online means ring plus glow, offline means ring alone")
+      .toMatch(/isOnline \? `\$\{RING_ONLINE\}, \$\{GLOW_STEADY\}` : `\$\{RING_OFFLINE\}, \$\{GLOW_NONE\}`/);
   });
 });
 

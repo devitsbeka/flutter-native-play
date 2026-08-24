@@ -1656,6 +1656,7 @@ export const ka = {
     versusShort: "VS",
     drawsCount: "{count} ფრე",
     theirSpecialty: "მისი ძლიერი მხარე",
+    yourSpecialty: "შენი ძლიერი მხარე",
     percentSuccess: "{percent}% წარმატება",
     topicMarvelMovies: "Marvel ფილმები",
     topicWeirdFacts: "უცნაური ფაქტები",

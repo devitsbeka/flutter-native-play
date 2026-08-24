@@ -10,6 +10,14 @@ interface VersusPanelProps {
   me: { nickname?: string | null; avatarUrl?: string | null };
   /** The player whose profile this is, on the right. */
   them: { nickname?: string | null; avatarUrl?: string | null };
+  /**
+   * Whether the profile being read is the reader's own.
+   *
+   * There is no head-to-head against yourself, so the panel is the three
+   * facts alone — and they are yours, which is a different sentence:
+   * "Their specialty" over your own strongest category reads as a bug.
+   */
+  isSelf?: boolean;
 }
 
 /**
@@ -50,7 +58,7 @@ function StatTile({ value, label }: { value: string; label: string }) {
  * player took it. Draws are counted but only shown when there are any, since
  * for most pairs the line would otherwise always read "0 draws".
  */
-export function VersusPanel({ headToHead, facts, me, them }: VersusPanelProps) {
+export function VersusPanel({ headToHead, facts, me, them, isSelf = false }: VersusPanelProps) {
   const { t } = useLanguage();
 
   if (!hasVersusContent(headToHead, facts)) return null;
@@ -128,7 +136,9 @@ export function VersusPanel({ headToHead, facts, me, them }: VersusPanelProps) {
               <CategoryArtwork categoryId={specialty.slug} iconSlug={specialty.iconSlug} size={26} className="drop-shadow-none" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-muted-foreground">{t("extra.theirSpecialty")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t(isSelf ? "extra.yourSpecialty" : "extra.theirSpecialty")}
+              </p>
               <p className="truncate text-sm font-bold text-foreground">{specialty.name}</p>
             </div>
             <span className="shrink-0 text-sm font-bold text-primary">

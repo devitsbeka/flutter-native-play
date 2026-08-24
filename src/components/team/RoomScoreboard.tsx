@@ -41,6 +41,37 @@ interface RoomScoreboardProps {
  */
 const ARRIVAL_GLOW = { duration: 3.5, times: [0, 0.12, 0.55, 1] };
 
+/**
+ * The presence ring, written as a shadow rather than as `ring-2`.
+ *
+ * It has to be, because the same element animates its `boxShadow`. Tailwind's
+ * ring utilities ARE a box-shadow — `--tw-ring-shadow` composed into the
+ * shadow list — so an inline `style.boxShadow`, which is what framer-motion
+ * writes on every frame, replaces the ring outright. The class was on the
+ * element the whole time and never painted: an online player got the soft
+ * glow alone, which over a dark gradient reads as an uneven smudge under the
+ * avatar rather than as a stroke around it, and an offline player got nothing.
+ *
+ * So the stroke and the glow are one shadow list, and both states carry two
+ * shadows so the two can interpolate into each other.
+ */
+const RING_ONLINE = "0 0 0 2px rgba(52,211,153,0.95)";
+const RING_OFFLINE = "0 0 0 2px rgba(148,163,184,0.75)";
+/** Small enough to read as presence, not as a light source. */
+const GLOW_STEADY = "0 0 8px 2px rgba(52,211,153,0.35)";
+const GLOW_NONE = "0 0 0px 0px rgba(52,211,153,0)";
+
+const ringShadow = (isOnline: boolean) =>
+  isOnline ? `${RING_ONLINE}, ${GLOW_STEADY}` : `${RING_OFFLINE}, ${GLOW_NONE}`;
+
+/** The flare: the ring holds still underneath while the glow swells and fades. */
+const arrivalShadows = (peak: string) => [
+  `${RING_ONLINE}, ${GLOW_NONE}`,
+  `${RING_ONLINE}, ${peak}`,
+  `${RING_ONLINE}, ${peak}`,
+  `${RING_ONLINE}, ${GLOW_STEADY}`,
+];
+
 const getRankIcon = (rank: number) => {
   switch (rank) {
     case 1:
@@ -198,8 +229,12 @@ function InvitePlayerButton({
  * the moment they arrive.
  *
  * Two different facts, drawn as one thing on purpose. The ring is a state —
- * it comes on when they open the app and goes off when their heartbeat dries
- * up, so at a glance the scoreboard says who could actually play right now.
+ * green while they are in the app, grey once their heartbeat dries up, so at
+ * a glance the scoreboard says who could actually play right now. It is drawn
+ * in both states rather than switched off: a ring that disappears changes the
+ * circle's size as well as its colour, and a row of avatars where some carry
+ * a stroke and some do not reads as a rendering fault rather than as two
+ * kinds of player.
  * The flare is an event, and it fires exactly once per arrival: it is what
  * turns "the list changed while I was looking elsewhere" into something the
  * host can see happen, which is the whole reason to send an invite and wait.
@@ -226,9 +261,7 @@ function PresenceAvatar({
     // look at it.
     <div className={`relative flex-shrink-0 ${dimmed || !isOnline ? "grayscale" : ""}`}>
       <motion.div
-        className={`rounded-full ${
-          isOnline ? "ring-2 ring-emerald-400 ring-offset-1 ring-offset-transparent" : ""
-        }`}
+        className="rounded-full"
         // Keyed on the arrival so remounting is not needed to replay it; a
         // glow that cannot repeat would only ever be seen by whoever happened
         // to be looking the first time.
@@ -239,17 +272,8 @@ function PresenceAvatar({
         // was plainly in the app looked identical to one who had gone.
         animate={
           justArrived
-            ? {
-                boxShadow: [
-                  "0 0 0px 0px rgba(52,211,153,0)",
-                  "0 0 20px 7px rgba(52,211,153,0.9)",
-                  "0 0 20px 7px rgba(52,211,153,0.9)",
-                  "0 0 12px 3px rgba(52,211,153,0.55)",
-                ],
-              }
-            : isOnline
-              ? { boxShadow: "0 0 12px 3px rgba(52,211,153,0.55)" }
-              : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
+            ? { boxShadow: arrivalShadows("0 0 16px 5px rgba(52,211,153,0.8)") }
+            : { boxShadow: ringShadow(isOnline) }
         }
         transition={justArrived ? ARRIVAL_GLOW : { duration: 0.2 }}
       >
@@ -323,25 +347,14 @@ function VsPlayer({
         {showHostCrown && player.is_host && !isInvited && (
           <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
         )}
-        {/* The same green ring as the ranked list, so a player is not online
-            on one layout and grey on the other. */}
+        {/* The same ring as the ranked list — green online, grey offline — so
+            a player is not online on one layout and grey on the other. */}
         <motion.div
-          className={`rounded-full ${
-            isOnline ? "ring-2 ring-emerald-400 ring-offset-2 ring-offset-transparent" : ""
-          }`}
+          className="rounded-full"
           animate={
             justArrived
-              ? {
-                  boxShadow: [
-                    "0 0 0px 0px rgba(52,211,153,0)",
-                    "0 0 24px 9px rgba(52,211,153,0.9)",
-                    "0 0 24px 9px rgba(52,211,153,0.9)",
-                    "0 0 16px 4px rgba(52,211,153,0.55)",
-                  ],
-                }
-              : isOnline
-                ? { boxShadow: "0 0 16px 4px rgba(52,211,153,0.55)" }
-                : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
+              ? { boxShadow: arrivalShadows("0 0 20px 6px rgba(52,211,153,0.8)") }
+              : { boxShadow: ringShadow(isOnline) }
           }
           transition={justArrived ? ARRIVAL_GLOW : { duration: 0.2 }}
         >

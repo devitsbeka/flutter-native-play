@@ -1389,6 +1389,7 @@ export const pt: KaTranslations = {
     versusShort: "VS",
     drawsCount: "{count} empatadas",
     theirSpecialty: "A especialidade dele",
+    yourSpecialty: "A tua especialidade",
     percentSuccess: "{percent}% de acerto",
     ...en.extra,
     topicMarvelMovies: "Filmes da Marvel",

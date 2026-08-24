@@ -1381,6 +1381,7 @@ export const de: KaTranslations = {
     versusShort: "VS",
     drawsCount: "{count} unentschieden",
     theirSpecialty: "Stärkstes Thema",
+    yourSpecialty: "Dein stärkstes Thema",
     percentSuccess: "{percent}% richtig",
     ...en.extra,
     topicMarvelMovies: "Marvel-Filme",

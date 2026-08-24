@@ -73,6 +73,26 @@ const ACHIEVEMENT_ICONS: Record<string, string> = {
   trivia_master: "🧠",
 };
 
+/**
+ * The profile's tab buttons.
+ *
+ * `data-[state=...]` rather than a prop: Radix puts the state on the trigger
+ * itself, so the open tab and the closed ones can differ by more than one
+ * shade — a raised white card against flat, dimmed, desaturated ones. The
+ * shadcn default separated them by a hair of background, which is invisible
+ * on a lavender sheet.
+ */
+const TAB_TRIGGER_CLASS = [
+  "group flex flex-col items-center gap-0.5 rounded-xl px-2 py-2 transition-all",
+  "data-[state=active]:bg-background data-[state=active]:text-primary",
+  "data-[state=active]:font-semibold data-[state=active]:shadow-md",
+  "data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-background/40",
+].join(" ");
+
+/** Desaturated and faded while its tab is closed, full colour when open. */
+const TAB_ICON_CLASS =
+  "w-9 h-9 transition-all group-data-[state=inactive]:opacity-60";
+
 export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileModalProps) {
   const { user, profile } = useAuth();
   const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
@@ -94,11 +114,12 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   // Non-friends can only see avatar, name, add friend button, and public content
   const canSeePrivateInfo = data?.isFriend || data?.isCurrentUser;
 
-  // The Info tab exists only when it has something in it: your own profile
-  // has no head-to-head, and a player you have never met has neither that nor
-  // an established specialty.
-  const showInfoTab =
-    !!data && !data.isCurrentUser && hasVersusContent(data.headToHead, data.facts);
+  // The Info tab exists only when it has something in it — which now includes
+  // your own profile. It carries two different things: the record between the
+  // two of you, which only a stranger's profile has, and the three facts —
+  // answered, success rate, strongest category — which every player has,
+  // yourself included. Hiding the tab from you hid your own numbers with it.
+  const showInfoTab = !!data && hasVersusContent(data.headToHead, data.facts);
 
   /**
    * Which tab is open, once the reader has picked one.
@@ -118,7 +139,13 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
     setChosenTab(null);
   }, [userId]);
 
-  const activeTab = chosenTab ?? (showInfoTab ? "info" : "trivias");
+  // A chosen tab only counts while it still exists. Info can go away under
+  // the reader — a refetch that comes back with nothing to put in it — and a
+  // Tabs whose value names no trigger renders an empty panel with nothing
+  // selected, which is what "switching tabs is broken" looks like.
+  const fallbackTab = showInfoTab ? "info" : "trivias";
+  const activeTab =
+    chosenTab && (chosenTab !== "info" || showInfoTab) ? chosenTab : fallbackTab;
 
   // Navigate to trivia/collection lobby pages
   const handlePlayTrivia = (triviaId: string) => {
@@ -535,28 +562,39 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 {/* Info leads when there is something in it — the record
                     between you and what they are best at is what a visitor
                     came for. It is dropped entirely rather than opened onto
-                    an empty panel: on your own profile there is no "against",
-                    and on a stranger's there may be nothing yet. */}
+                    an empty panel: a player who has answered nothing has
+                    nothing to say here yet.
+
+                    The strip is styled here rather than left at the shadcn
+                    default. That default is a white pill on a near-white
+                    track, which on this lavender sheet made the open tab and
+                    the closed one all but the same object — you could not see
+                    which one you were on, or that pressing the other had done
+                    anything. The open one is now a white card with a shadow
+                    and its label in the brand colour; the closed ones sit flat
+                    and dimmed on a tinted track. */}
                 <Tabs value={activeTab} onValueChange={setChosenTab} className="px-4 pb-4">
                   <TabsList
-                    className={`grid w-full mb-4 h-auto py-2 ${showInfoTab ? "grid-cols-3" : "grid-cols-2"}`}
+                    className={`grid w-full mb-4 h-auto gap-1 rounded-2xl bg-primary/[0.07] p-1.5 ${
+                      showInfoTab ? "grid-cols-3" : "grid-cols-2"
+                    }`}
                   >
                     {showInfoTab && (
-                      <TabsTrigger value="info" className="flex flex-col items-center gap-0.5">
+                      <TabsTrigger value="info" className={TAB_TRIGGER_CLASS}>
                         {/* The same 3D art the other two tabs use, rather than
                             a lucide glyph — crossed swords beside a tab
                             labelled "info" read as a second Challenge button.
                             128px like its siblings, which covers w-9 at 3x. */}
-                        <img src={iconInfo} alt="" className="w-9 h-9" />
+                        <img src={iconInfo} alt="" className={TAB_ICON_CLASS} />
                         <span className="text-xs">{t("extra.infoTab")}</span>
                       </TabsTrigger>
                     )}
-                    <TabsTrigger value="trivias" className="flex flex-col items-center gap-0.5">
-                      <img src={iconTrivia} alt="" className="w-9 h-9" />
+                    <TabsTrigger value="trivias" className={TAB_TRIGGER_CLASS}>
+                      <img src={iconTrivia} alt="" className={TAB_ICON_CLASS} />
                       <span className="text-xs">{t("extra.triviasTab")}</span>
                     </TabsTrigger>
-                    <TabsTrigger value="trophies" className="flex flex-col items-center gap-0.5">
-                      <img src={iconTrophy} alt="" className="w-9 h-9" />
+                    <TabsTrigger value="trophies" className={TAB_TRIGGER_CLASS}>
+                      <img src={iconTrophy} alt="" className={TAB_ICON_CLASS} />
                       <span className="text-xs">{t("extra.trophiesTab")}</span>
                     </TabsTrigger>
                   </TabsList>
@@ -566,6 +604,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                       <VersusPanel
                         headToHead={data.headToHead}
                         facts={data.facts}
+                        isSelf={data.isCurrentUser}
                         me={{ nickname: profile?.nickname, avatarUrl: profile?.avatar_url }}
                         them={{
                           nickname: data.profile.nickname,

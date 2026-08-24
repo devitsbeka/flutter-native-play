@@ -580,7 +580,7 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false, isJoining 
                           className={`w-9 h-9 rounded-full overflow-hidden bg-white/20 shadow-md ${
                             isOnline
                               ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent"
-                              : "border-2 border-white/40"
+                              : "ring-2 ring-slate-400/70 ring-offset-1 ring-offset-transparent"
                           }`}
                         >
                           <SafeAvatarImage
@@ -1021,7 +1021,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete, isJoining = false }: Room
                             className={`w-8 h-8 rounded-full overflow-hidden bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md ${
                               isOnline
                                 ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent"
-                                : "border-2 border-white/40"
+                                : "ring-2 ring-slate-400/70 ring-offset-1 ring-offset-transparent"
                             }`}
                             onClick={(e) => {
                               e.stopPropagation();
