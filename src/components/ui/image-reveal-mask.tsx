@@ -37,7 +37,7 @@ const START_VISIBLE = 3;
  */
 const FULLY_OPEN_AT = 0.85;
 
-function hashSeed(value: string): number {
+export function hashSeed(value: string): number {
   // FNV-1a. Small, stable, and identical in every JS engine -- which is the
   // whole requirement here, since two phones must derive the same order.
   let h = 2166136261;

@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { motion } from "framer-motion";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
+import { useIsBreakpointUp } from "@/hooks/use-breakpoint";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import trophyGold from "@/assets/trophy-gold.png";
@@ -24,13 +25,32 @@ interface LiveRaceStripProps {
 }
 
 /**
- * Three on the podium, seven chasing. Past ten the row is scrolling further
- * than anyone will scroll mid-question, and the full field is on the results
- * screen, which is a vertical list and has room for it.
+ * Three on the podium, then whoever fits behind them.
+ *
+ * Seven on a tablet or a desktop, two on a phone. Ten avatars and their
+ * scores need about 390pt of the 390 a phone has, which is the whole width
+ * with nothing to spare -- and it is spent on seven entries a player cannot
+ * read anyway, since at that size each one is a 28px circle and a number.
+ * Five leaves room to draw them properly and to put the names back.
+ *
+ * Past the cut the full field is on the results screen, which is a vertical
+ * list and has room for all of it.
  */
 const PODIUM_SHOWN = 3;
 const PACK_SHOWN = 7;
+const PACK_SHOWN_NARROW = 2;
 export const MAX_SHOWN = PODIUM_SHOWN + PACK_SHOWN;
+
+/**
+ * At five or fewer there is room for a name under each avatar. At six and up
+ * there is not: each entry gets thirty-odd pixels beside its score and a name
+ * renders as "Sal…", which identifies nobody. The avatar does that job
+ * better, and the ring says which one is you.
+ *
+ * This is a count, not a breakpoint, so a four-player room looks the same on
+ * a phone as on a desktop.
+ */
+const ROOMY_UP_TO = 5;
 
 /** Ring and trophy per place. Fourth onward gets neither. */
 const PODIUM = [
@@ -80,10 +100,15 @@ export function rankPlayers<T extends RacePlayer>(players: T[]): T[] {
  */
 export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStripProps) {
   const { t } = useLanguage();
+  const wide = useIsBreakpointUp("md");
 
   if (players.length < 2) return null;
 
-  const ranked = rankPlayers(players).slice(0, MAX_SHOWN);
+  const ranked = rankPlayers(players).slice(
+    0,
+    PODIUM_SHOWN + (wide ? PACK_SHOWN : PACK_SHOWN_NARROW),
+  );
+  const roomy = ranked.length <= ROOMY_UP_TO;
 
   /**
    * Two or three players sit sideways -- avatar, then name over score beside
@@ -103,7 +128,9 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
     <div
       className={cn(
         "flex overflow-x-auto scrollbar-hide px-4 py-0.5 -mx-4",
-        sideways ? "items-center justify-center gap-5" : "items-start gap-[3px]",
+        sideways
+          ? "items-center justify-center gap-5"
+          : "items-start justify-center gap-[3px]",
         className,
       )}
     >
@@ -122,7 +149,11 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
                 remounts the element — the avatar would pop into the bronze
                 ring instead of sliding into it. */}
             {!sideways && index === PODIUM_SHOWN && (
-              <div className="min-w-[10px] flex-1" aria-hidden />
+              // Capped, and the row centres. Uncapped on a 1024px desktop it
+              // pins the podium to the far left and the pack to the far
+              // right with half a screen of nothing between them, which is
+              // not a race, it is two separate widgets.
+              <div className="min-w-[10px] max-w-[140px] flex-1" aria-hidden />
             )}
 
             <motion.div
@@ -136,11 +167,13 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
                   ? "items-center gap-1.5"
                   : cn(
                       "flex-col items-center gap-0.5",
-                      // The podium is drawn bigger than the rest. A full room
-                      // is ten players and they cannot all fit across a phone
-                      // at one size, so the three that matter hold the left
-                      // edge and the chasing pack is compact on the right.
-                      podium ? "w-[46px]" : "w-[30px]",
+                      // With five or fewer there is width to go round, and
+                      // every entry gets enough of it for a name. With six
+                      // and up the three that matter hold the left edge at
+                      // full size and the chasing pack is compact behind
+                      // them, because ten of anything wider does not cross a
+                      // phone.
+                      roomy ? "w-[72px]" : podium ? "w-[46px]" : "w-[30px]",
                     ),
               )}
             >
@@ -153,12 +186,15 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
                 <SmartAvatar
                   avatarUrl={player.avatar_url ?? undefined}
                   fallback={player.nickname}
-                  size={sideways || podium ? "sm" : "xs"}
+                  size={sideways || roomy || podium ? "sm" : "xs"}
                   // 28px for the chasing pack, not the 32 xs gives. Three
-                  // podium entries and seven more have to cross a 390pt
-                  // phone without the tail of the field falling off the
-                  // right edge, and those four pixels are the difference.
-                  className={cn("rounded-full", !sideways && !podium && "h-7 w-7")}
+                  // podium entries and seven more have to cross a tablet
+                  // without the tail of the field falling off the right
+                  // edge, and those four pixels are the difference.
+                  className={cn(
+                    "rounded-full",
+                    !sideways && !roomy && !podium && "h-7 w-7",
+                  )}
                   style={{
                     boxShadow: `0 0 0 2px ${podium?.ring ?? (isMe ? SELF_RING : PACK_RING)}`,
                   }}
@@ -189,13 +225,10 @@ export function LiveRaceStrip({ players, currentUserId, className }: LiveRaceStr
                   sideways ? "flex-col gap-0.5" : "max-w-full items-baseline gap-1",
                 )}
               >
-                {/* Stacked, nobody is named. A ten-player row gives each entry
-                    thirty-odd pixels beside its score, and a name in that
-                    space renders as "Sal…", which identifies nobody — the
-                    avatar does that job better, and the ring above says which
-                    one is you. Two or three players have the room, so they
-                    keep their names. */}
-                {sideways && (
+                {/* Named while there is width for a name to survive — see
+                    ROOMY_UP_TO. Past that the ring above is what says which
+                    one is you. */}
+                {(sideways || roomy) && (
                   <span
                     className={cn(
                       "min-w-0 truncate font-semibold leading-none text-white",

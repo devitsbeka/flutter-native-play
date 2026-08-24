@@ -3,7 +3,8 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { questionImageSrc } from "@/utils/questionImage";
-import { ImageRevealMask } from "./image-reveal-mask";
+import { ImageRevealMask, hashSeed } from "./image-reveal-mask";
+import { ROOM_GRADIENT_PRESETS, roomGradientCss } from "./noisy-gradient-backgrounds";
 import { ImageOff, Snowflake } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AudioPlayer } from "./audio-player";
@@ -200,6 +201,15 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
      */
     const effectiveHideText = hideQuestionText;
 
+    // Stable per picture: the same room shows both players the same backdrop,
+    // and it does not reshuffle underneath the image on a re-render.
+    const bandGradient = React.useMemo(
+      () => roomGradientCss(
+        ROOM_GRADIENT_PRESETS[hashSeed(imageUrl || "") % ROOM_GRADIENT_PRESETS.length].colors,
+      ),
+      [imageUrl],
+    );
+
     return (
       <motion.div
         ref={ref}
@@ -244,25 +254,29 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
               </div>
             )}
 
-            {/* The same picture, blurred, filling the band behind itself.
+            {/* What fills the band either side of the picture.
                 object-contain fits the whole image, which is the point — a
-                photograph must not be cropped when the answer might be in the
-                cropped part — but anything not 2:1 then left flat grey down
-                both sides. scale-110 because a blur samples past its own
-                edges and would otherwise show a soft grey frame.
+                photograph must not be cropped when the answer might be in
+                the cropped part — but anything that is not 2:1 then leaves
+                the band bare down both sides.
+
+                This used to be the picture itself, blurred. On a bright
+                photograph it looked fine; on a night shot it was a black
+                smear, and a night shot is a good half of the city bank. So
+                it is the same gradient the room cards on the online game
+                page use instead — never a dark blur, whatever the picture.
+
+                Chosen from the image URL rather than at random, so it is the
+                same for both players in a room and does not change under the
+                picture on a re-render.
 
                 Not for inset (logo) images: a brand mark reads best on plain
-                white, and its own blur behind it read as a smudge. */}
+                white. */}
             {!imageInset && !imageFramed && !imageFailed && (
-              <img
-                src={imageSrc!}
-                alt=""
+              <div
                 aria-hidden
-                className={cn(
-                  "absolute inset-0 w-full h-full object-cover scale-110 blur-2xl",
-                  imageStatus === "loaded" ? "opacity-95" : "opacity-0"
-                )}
-                decoding="async"
+                className="absolute inset-0"
+                style={{ background: bandGradient }}
               />
             )}
 

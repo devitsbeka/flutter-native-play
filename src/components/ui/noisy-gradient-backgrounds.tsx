@@ -147,6 +147,37 @@ interface GradientBackgroundProps {
   customGradient?: string | null;
 }
 
+const GRADIENT_POSITIONS: Record<string, string> = {
+  'bottom-middle': '50% 101%',
+  'bottom-left': '0% 101%',
+  'bottom-right': '100% 101%',
+  'top-middle': '50% -1%',
+  'top-left': '0% -1%',
+  'top-right': '100% -1%',
+  'left-middle': '-1% 50%',
+  'right-middle': '101% 50%',
+  'center': '50% 50%',
+};
+
+/**
+ * The room-card gradient as a plain CSS value.
+ *
+ * The component below is the right thing for a room card, which wants the
+ * grain. It is the wrong thing behind a question image, because the noise is
+ * a canvas redrawn every frame, and there is one of these on screen for the
+ * length of every round. This returns the same gradient as a string so a
+ * caller can put it on a div and pay nothing for it.
+ */
+export function roomGradientCss(
+  colors: GradientColor[],
+  origin: keyof typeof GRADIENT_POSITIONS = 'bottom-middle',
+  size = '125% 125%',
+): string {
+  const position = GRADIENT_POSITIONS[origin] || GRADIENT_POSITIONS['bottom-middle'];
+  const stops = colors.map(({ color, stop }) => `${color} ${stop}`).join(',');
+  return `radial-gradient(${size} at ${position},${stops})`;
+}
+
 function GradientBackground({
   gradientType = 'radial-gradient',
   gradientSize = '125% 125%',
@@ -175,22 +206,7 @@ function GradientBackground({
   const generateGradient = () => {
     if (customGradient) return customGradient;
     
-    const getGradientPosition = (origin: string) => {
-      const positions: Record<string, string> = {
-        'bottom-middle': '50% 101%',
-        'bottom-left': '0% 101%',
-        'bottom-right': '100% 101%',
-        'top-middle': '50% -1%',
-        'top-left': '0% -1%',
-        'top-right': '100% -1%',
-        'left-middle': '-1% 50%',
-        'right-middle': '101% 50%',
-        'center': '50% 50%'
-      };
-      return positions[origin] || positions['bottom-middle'];
-    };
-    
-    const position = getGradientPosition(gradientOrigin);
+    const position = GRADIENT_POSITIONS[gradientOrigin] || GRADIENT_POSITIONS['bottom-middle'];
     const colorStops = colors.map(({ color, stop }) => `${color} ${stop}`).join(',');
     
     if (gradientType === 'radial-gradient') {
