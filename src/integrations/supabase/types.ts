@@ -1351,6 +1351,24 @@ export type Database = {
         }
         Relationships: []
       }
+      invite_links: {
+        Row: {
+          code: string
+          created_at: string
+          host_user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          host_user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          host_user_id?: string
+        }
+        Relationships: []
+      }
       knowledge_sources: {
         Row: {
           content_summary: string | null
@@ -4091,6 +4109,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invite: { Args: { p_code: string }; Returns: string }
       adjust_power_up: {
         Args: { p_delta: number; p_type: string }
         Returns: number
@@ -4112,6 +4131,18 @@ export type Database = {
       award_tv_observer_bonus: {
         Args: { p_question_index: number; p_session_id: string }
         Returns: Json
+      }
+      best_category_for_user: {
+        Args: { p_min_answers?: number; p_user_id: string }
+        Returns: {
+          accuracy: number
+          category_id: string
+          category_name: string
+          category_slug: string
+          correct_answers: number
+          icon_slug: string
+          total_answers: number
+        }[]
       }
       buy_extra_plays: {
         Args: { p_games: number; p_source: string }
@@ -4170,62 +4201,6 @@ export type Database = {
         }[]
       }
       format_display_name: { Args: { full_name: string }; Returns: string }
-      accept_invite: { Args: { p_code: string }; Returns: string }
-      get_or_create_invite_code: { Args: never; Returns: string }
-      room_preview: {
-        Args: { p_room_code: string }
-        Returns: {
-          host_user_id: string
-          host_nickname: string
-          host_avatar_url: string | null
-          host_animated_avatar_url: string | null
-          host_country_code: string | null
-          room_code: string | null
-          room_name: string | null
-          category_id: string | null
-          category_name: string | null
-          room_status: string | null
-          player_count: number | null
-        }[]
-      }
-      room_players: {
-        Args: { p_room_code: string }
-        Returns: {
-          user_id: string
-          nickname: string | null
-          avatar_url: string | null
-          animated_avatar_url: string | null
-          country_code: string | null
-          is_host: boolean
-        }[]
-      }
-      invite_preview: {
-        Args: { p_code: string }
-        Returns: {
-          host_user_id: string
-          host_nickname: string
-          host_avatar_url: string | null
-          host_animated_avatar_url: string | null
-          host_country_code: string | null
-          room_code: string | null
-          room_name: string | null
-          category_id: string | null
-          category_name: string | null
-          room_status: string | null
-          player_count: number | null
-        }[]
-      }
-      invite_room_players: {
-        Args: { p_code: string }
-        Returns: {
-          user_id: string
-          nickname: string | null
-          avatar_url: string | null
-          animated_avatar_url: string | null
-          country_code: string | null
-          is_host: boolean
-        }[]
-      }
       generate_challenge_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
       generate_room_code: { Args: never; Returns: string }
@@ -4251,6 +4226,7 @@ export type Database = {
         }[]
       }
       get_my_private_profile: { Args: never; Returns: Json }
+      get_or_create_invite_code: { Args: never; Returns: string }
       get_questions_sorted_by_length: {
         Args: {
           p_category_id?: string
@@ -4347,6 +4323,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      head_to_head_record: {
+        Args: { p_other_user_id: string }
+        Returns: {
+          draws: number
+          matches_together: number
+          my_wins: number
+          their_wins: number
+        }[]
+      }
       increment_participant_score: {
         Args: { p_delta: number; p_room_id: string }
         Returns: undefined
@@ -4362,6 +4347,33 @@ export type Database = {
         Returns: Json
       }
       increment_quiz_plays: { Args: { post_id: string }; Returns: undefined }
+      invite_preview: {
+        Args: { p_code: string }
+        Returns: {
+          category_id: string
+          category_name: string
+          host_animated_avatar_url: string
+          host_avatar_url: string
+          host_country_code: string
+          host_nickname: string
+          host_user_id: string
+          player_count: number
+          room_code: string
+          room_name: string
+          room_status: string
+        }[]
+      }
+      invite_room_players: {
+        Args: { p_code: string }
+        Returns: {
+          animated_avatar_url: string
+          avatar_url: string
+          country_code: string
+          is_host: boolean
+          nickname: string
+          user_id: string
+        }[]
+      }
       is_tv_session_participant: {
         Args: { p_player_identifier: string; p_session_id: string }
         Returns: boolean
@@ -4373,6 +4385,20 @@ export type Database = {
           lang: string
           live: number
           total: number
+        }[]
+      }
+      player_profile_facts: {
+        Args: { p_min_answers?: number; p_user_id: string }
+        Returns: {
+          accuracy: number
+          answered: number
+          best_accuracy: number
+          best_answered: number
+          best_category_id: string
+          best_category_name: string
+          best_category_slug: string
+          best_icon_slug: string
+          correct: number
         }[]
       }
       pro_seat_allowance: {
@@ -4398,6 +4424,36 @@ export type Database = {
       reset_tv_session_scores: { Args: { p_session_id: string }; Returns: Json }
       resolve_referral_code: { Args: { p_code: string }; Returns: Json }
       revoke_pro_seat: { Args: { p_holder_id: string }; Returns: Json }
+      room_players: {
+        Args: { p_room_code: string }
+        Returns: {
+          animated_avatar_url: string
+          avatar_url: string
+          country_code: string
+          is_host: boolean
+          nickname: string
+          user_id: string
+        }[]
+      }
+      room_preview: {
+        Args: { p_room_code: string }
+        Returns: {
+          category_id: string
+          category_name: string
+          created_at: string
+          host_animated_avatar_url: string
+          host_avatar_url: string
+          host_country_code: string
+          host_nickname: string
+          host_user_id: string
+          is_archived: boolean
+          last_activity_at: string
+          player_count: number
+          room_code: string
+          room_name: string
+          room_status: string
+        }[]
+      }
       search_questions: {
         Args: {
           p_category_id?: string
