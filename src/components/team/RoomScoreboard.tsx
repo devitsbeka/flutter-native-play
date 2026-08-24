@@ -261,7 +261,14 @@ function PresenceAvatar({
     // look at it.
     <div className={`relative flex-shrink-0 ${dimmed || !isOnline ? "grayscale" : ""}`}>
       <motion.div
-        className="rounded-full"
+        // Sized and flex, not left to its content. The ring is a box-shadow on
+        // THIS element, so its shape is this element's shape — and a plain
+        // block wrapped around an inline-block avatar is a line box, which can
+        // carry the font's descent under the circle. Chromium measures it
+        // square; the device drew an egg, with the extra height showing as a
+        // gap between the avatar and the bottom of the ring. A flex box of a
+        // stated size has no line box and no opinion about baselines.
+        className="flex h-12 w-12 rounded-full"
         // Keyed on the arrival so remounting is not needed to replay it; a
         // glow that cannot repeat would only ever be seen by whoever happened
         // to be looking the first time.
@@ -350,7 +357,8 @@ function VsPlayer({
         {/* The same ring as the ranked list — green online, grey offline — so
             a player is not online on one layout and grey on the other. */}
         <motion.div
-          className="rounded-full"
+          // Square by construction — see PresenceAvatar.
+          className="flex h-16 w-16 rounded-full"
           animate={
             justArrived
               ? { boxShadow: arrivalShadows("0 0 20px 6px rgba(52,211,153,0.8)") }
