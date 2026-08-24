@@ -379,6 +379,61 @@ export function RoomIconPickerModal({
             </div>
           </div>
 
+          {/* The room's name and icon, above the search rather than under
+              it.
+
+              This sheet is opened to rename a room at least as often as to
+              re-skin one, and the name sat below a search box and a row of
+              category chips — so the thing being edited was the third thing
+              on screen, and on a short phone it started below the fold. The
+              search is for the icon grid underneath it; it belongs with what
+              it filters. */}
+          <div className="flex-shrink-0 bg-background/95 backdrop-blur-md border-b border-border/20">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full p-4">
+            {/* Current icon preview with editable name */}
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
+              <div className="w-18 h-18 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden flex-shrink-0">
+                {(selectedIcon || currentIconUrl) ? (
+                  <motion.img
+                    key={selectedIcon || currentIconUrl}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    src={selectedIcon || currentIconUrl || ""}
+                    alt=""
+                    className="w-14 h-14 object-contain"
+                  />
+                ) : (
+                  <img src={triviaBuzzer} alt="" className="w-10 h-10 object-contain" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="relative">
+                  <Input
+                    ref={nameInputRef}
+                    value={editableName}
+                    onChange={(e) => {
+                      setEditableName(e.target.value);
+                      hasManuallyEditedName.current = true;
+                    }}
+                    maxLength={35}
+                    className="text-base font-semibold pr-8 bg-background h-12"
+                    placeholder={t("extra.ripRoomNamePlaceholder")}
+                    disabled={isGeneratingName}
+                  />
+                  {isGeneratingName && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t("extra.ripEditHint")}
+                </p>
+              </div>
+            </div>
+            </div>
+          </div>
+
           {/* Search Section */}
           <div className="flex-shrink-0 bg-background/95 backdrop-blur-md border-b border-border/20">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-3 space-y-3">
@@ -431,48 +486,6 @@ export function RoomIconPickerModal({
           <div className="flex-1 min-h-0 overflow-y-auto">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
               <div className="p-4 space-y-4">
-              {/* Current icon preview with editable name */}
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
-                <div className="w-18 h-18 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {(selectedIcon || currentIconUrl) ? (
-                    <motion.img
-                      key={selectedIcon || currentIconUrl}
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      src={selectedIcon || currentIconUrl || ""}
-                      alt=""
-                      className="w-14 h-14 object-contain"
-                    />
-                  ) : (
-                    <img src={triviaBuzzer} alt="" className="w-10 h-10 object-contain" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 space-y-1">
-                  <div className="relative">
-                    <Input
-                      ref={nameInputRef}
-                      value={editableName}
-                      onChange={(e) => {
-                        setEditableName(e.target.value);
-                        hasManuallyEditedName.current = true;
-                      }}
-                      maxLength={35}
-                      className="text-base font-semibold pr-8 bg-background h-12"
-                      placeholder={t("extra.ripRoomNamePlaceholder")}
-                      disabled={isGeneratingName}
-                    />
-                    {isGeneratingName && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t("extra.ripEditHint")}
-                  </p>
-                </div>
-              </div>
-
               {/* Recent icons section - only show if there are recent icons and not searching */}
               {!searchQuery.trim() && selectedCategory === "all" && recentIcons.length > 0 && (
                 <>
