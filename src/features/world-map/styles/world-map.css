@@ -128,11 +128,102 @@
   transform: translateY(-58%);
 }
 
+.wm-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 10px;
+}
+
+/* Icon disc, coloured by state so it matches the marker the player tapped. */
+.wm-panel-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  --face: #cfc8da;
+  --edge: #a9a1bd;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 62%),
+    var(--face);
+  box-shadow: 0 4px 0 var(--edge), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+}
+
+.wm-panel-icon[data-state="completed"],
+.wm-panel-icon[data-state="claimed"] {
+  --face: #ffc93c;
+  --edge: #d98e12;
+}
+
+.wm-panel-icon[data-state="available"],
+.wm-panel-icon[data-state="active"] {
+  --face: #5fd11f;
+  --edge: #3d9410;
+}
+
+.wm-panel-icon[data-type="challenge"][data-state="available"] {
+  --face: #ff9f2e;
+  --edge: #cf6d05;
+}
+
+.wm-panel-icon[data-type="boss"] {
+  --face: #f2513f;
+  --edge: #b31f10;
+}
+
+.wm-panel-icon > img {
+  width: 56%;
+  height: 56%;
+  object-fit: contain;
+}
+
+.wm-panel-icon .wm-panel-lock {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 22px;
+  height: 22px;
+}
+
+.wm-panel-title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.wm-panel-meta {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #9783a3;
+  letter-spacing: -0.1px;
+}
+
+.wm-panel-stars {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.wm-panel-stars img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.wm-panel-stars .wm-star-empty {
+  filter: grayscale(1);
+  opacity: 0.32;
+}
+
 .wm-panel h3 {
   font-size: 17px;
   font-weight: 800;
   color: #1f2937;
-  margin: 0 0 4px;
+  margin: 0;
 }
 
 .wm-panel p {
@@ -467,17 +558,17 @@
 }
 
 .wm-friend {
-  width: 22px;
-  height: 22px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  border: 2px solid #fff;
+  border: 2.5px solid #fff;
   object-fit: cover;
   background: #efe7fa;
-  box-shadow: 0 2px 5px rgba(40, 20, 70, 0.3);
+  box-shadow: 0 3px 7px rgba(40, 20, 70, 0.34);
 }
 
 .wm-friend + .wm-friend {
-  margin-left: -7px;
+  margin-left: -10px;
 }
 
 .wm-friend-more {
@@ -487,7 +578,7 @@
   background: #6e6986;
   color: #fff;
   font-family: "Nunito", sans-serif;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 }
 

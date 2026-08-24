@@ -60,10 +60,12 @@ export const adventureWorld: WorldDefinition = {
     distance: 215,
     fov: 18,
     zoomRange: [0.8, 1.3],
-    // Route nodes span z 49.5 (chapter 1) to -91 (chapter 6); half that span
-    // is 70, plus a little margin so the end chapters are not jammed against
-    // the screen edge. x stays tight — this is a vertical map.
-    panLimits: { x: 14, z: 72 },
+    // z: route nodes span 49.5 (area 1) to -91 (area 6); half that span is 70,
+    // plus margin so the end areas are not jammed against the screen edge.
+    // x: wide enough to look around the landmass. At 14 the map felt caged —
+    // anything at the screen edge could not be brought into view — but the
+    // land's half-width runs ~32, so this stops short of the border fall.
+    panLimits: { x: 26, z: 72 },
   },
   bridges: [
     { from: "c1-c", to: "c2-a" },
@@ -177,6 +179,79 @@ export const adventureWorld: WorldDefinition = {
       ],
       paths: [],
       landmarks: [{ id: "s1-ruin", kind: "ruin", position: [3, 0, 3], scale: 0.8 }],
+    },
+
+
+    /* ------------------------------------------- daily missions clearing */
+    {
+      id: "side-missions",
+      name: "მისიების ბანაკი",
+      position: [16, 0, 33],
+      elevation: 3,
+      radius: 10,
+      terrainPreset: "atoll",
+      biome: "meadow",
+      density: { trees: 0.6, rocks: 0.5 },
+      nodes: [
+        {
+          id: "s0",
+          type: "challenge",
+          state: "available",
+          position: [0, 0, 0],
+          label: "დღის მისიები",
+          action: { kind: "missions" },
+        },
+      ],
+      paths: [],
+      landmarks: [{ id: "s0-shrine", kind: "rewardShrine", position: [3, 0, 3], scale: 0.8 }],
+    },
+
+    /* ------------------------------------------- side quest clearing C */
+    {
+      id: "side-cuisine",
+      name: "სამზარეულოს ჭალა",
+      position: [-16, 0, -30],
+      elevation: 8,
+      radius: 10,
+      terrainPreset: "atoll",
+      biome: "meadow",
+      density: { trees: 0.8, rocks: 0.5 },
+      nodes: [
+        {
+          id: "s3",
+          type: "challenge",
+          state: "locked",
+          position: [0, 0, 0],
+          label: "სამზარეულო",
+          action: { kind: "discover" },
+        },
+      ],
+      paths: [],
+      landmarks: [{ id: "s3-house", kind: "house", position: [3, 0, 3], scale: 0.85 }],
+    },
+
+    /* ------------------------------------------- side quest clearing D */
+    {
+      id: "side-space",
+      name: "ობსერვატორია",
+      position: [17, 0, -66],
+      elevation: 12,
+      radius: 10,
+      terrainPreset: "atoll",
+      biome: "alpine",
+      density: { trees: 0.3, rocks: 0.8 },
+      nodes: [
+        {
+          id: "s4",
+          type: "challenge",
+          state: "locked",
+          position: [0, 0, 0],
+          label: "ასტრონომია",
+          action: { kind: "discover" },
+        },
+      ],
+      paths: [],
+      landmarks: [{ id: "s4-tower", kind: "triviaTower", position: [3, 0, 3], scale: 0.8 }],
     },
 
     /* --------------------------------------------------------- area 3 */

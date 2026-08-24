@@ -5,7 +5,7 @@ import { worldColors } from "./materials";
 import { qualityProfiles } from "../utils/deviceQuality";
 import { useQualityStore } from "../state/worldStore";
 import { Terrain } from "../regions/Terrain";
-import { Vegetation } from "../regions/Vegetation";
+import { GroundCover } from "../regions/GroundCover";
 import { Landmarks } from "../regions/Landmarks";
 import { Clouds } from "../regions/Clouds";
 import { Paths } from "../paths/Paths";
@@ -69,13 +69,15 @@ export function WorldScene({
         shadow-bias={-0.0004}
       />
       <CameraRig definition={world.def.camera} reducedMotion={reducedMotion} verticalScroll={verticalScroll} />
-      {/* One landmass for the whole route, then per-area dressing on top. */}
+      {/* One landmass, one cover pass across all of it, then area landmarks. */}
       <Terrain />
+      <GroundCover
+        trees={world.groundCover.trees}
+        rocks={world.groundCover.rocks}
+        density={profile.treeDensity}
+      />
       {world.regions.map((region) => (
-        <group key={region.def.id}>
-          <Vegetation region={region} density={profile.treeDensity} />
-          <Landmarks region={region} />
-        </group>
+        <Landmarks key={region.def.id} region={region} />
       ))}
       <Paths paths={world.paths} />
       <Clouds clouds={world.clouds} count={profile.cloudCount} animate={!reducedMotion} occluderRef={highCloudsRef} />

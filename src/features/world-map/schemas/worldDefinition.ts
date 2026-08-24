@@ -144,6 +144,12 @@ export interface GeneratedWorld {
   regions: GeneratedRegion[];
   paths: GeneratedPath[];
   clouds: ScatterInstance[];
+  /**
+   * Trees and rocks covering the whole landmass, in WORLD coordinates.
+   * Per-region scatter left bald rings between areas once the terrain became
+   * continuous, so cover is generated across the entire ribbon instead.
+   */
+  groundCover: { trees: ScatterInstance[]; rocks: ScatterInstance[] };
   /** World-space node positions keyed by node id. */
   nodeWorldPositions: Record<string, Vec3>;
 }

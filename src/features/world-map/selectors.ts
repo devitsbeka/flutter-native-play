@@ -84,3 +84,25 @@ export function selectRouteProgress(
   }
   return { done, total };
 }
+
+/**
+ * Where a node sits in the route, 1-based, and how many nodes there are.
+ * The panel shows this as "level 7 of 19" — nodes have no level number of
+ * their own, their position along the route IS the level.
+ */
+export function selectNodeOrdinal(
+  definition: WorldDefinition,
+  nodeId: string,
+): { index: number; total: number } {
+  let index = 0;
+  let total = 0;
+  let found = 0;
+  for (const region of definition.regions) {
+    for (const node of region.nodes) {
+      total += 1;
+      if (node.id === nodeId) found = total;
+    }
+  }
+  index = found;
+  return { index, total };
+}

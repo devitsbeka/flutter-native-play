@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 import { adventureWorld } from "./data/adventureWorld";
-import { CurrentQuest, selectCurrentQuest } from "./selectors";
+import { CurrentQuest, kindLabelOf, selectCurrentQuest, selectNodeOrdinal } from "./selectors";
 
 /**
  * Camera target for a quest: the chapter's x so the whole plateau is framed,
@@ -182,6 +182,8 @@ export function WorldMap({
             ? ` · ჯილდო: ${panelNode.reward.amount} ${panelNode.reward.kind === "gems" ? "ალმასი" : panelNode.reward.kind === "chest" ? "ზარდახშა" : "ქულა"}`
             : "",
           locked: panelLocked,
+          kindLabel: kindLabelOf(panelNode.type),
+          ordinal: selectNodeOrdinal(adventureWorld, panelNode.id),
           onAction: runAction,
           onClose: closePanel,
         }

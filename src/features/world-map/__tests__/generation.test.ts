@@ -24,9 +24,10 @@ describe("deterministic world generation", () => {
   it("identical seeds generate identical placement data", () => {
     const first = generateWorld(sampleWorld);
     const second = generateWorld(sampleWorld);
-    expect(JSON.stringify(first.regions.map((r) => ({ o: r.outline, t: r.trees, k: r.rocks })))).toBe(
-      JSON.stringify(second.regions.map((r) => ({ o: r.outline, t: r.trees, k: r.rocks }))),
+    expect(JSON.stringify(first.regions.map((r) => r.outline))).toBe(
+      JSON.stringify(second.regions.map((r) => r.outline)),
     );
+    expect(first.groundCover).toEqual(second.groundCover);
     expect(first.clouds).toEqual(second.clouds);
     expect(first.nodeWorldPositions).toEqual(second.nodeWorldPositions);
   });
@@ -34,17 +35,28 @@ describe("deterministic world generation", () => {
   it("a different seed changes scattered placement", () => {
     const other = generateWorld({ ...sampleWorld, seed: sampleWorld.seed + 1 });
     const base = generateWorld(sampleWorld);
-    expect(JSON.stringify(other.regions[1].trees)).not.toBe(JSON.stringify(base.regions[1].trees));
+    // Scatter moved from per-region circles to one pass across the whole
+    // landmass when the world became continuous; groundCover is where it lives.
+    expect(JSON.stringify(other.groundCover.trees)).not.toBe(
+      JSON.stringify(base.groundCover.trees),
+    );
+  });
+
+  it("covers the whole landmass, not just the areas", () => {
+    const world = generateWorld(sampleWorld);
+    expect(world.groundCover.trees.length).toBeGreaterThan(50);
+    const zs = world.groundCover.trees.map((t) => t.position[2]);
+    // Spanning far more than one area's diameter is what distinguishes
+    // terrain-wide cover from the per-area rings it replaced.
+    expect(Math.max(...zs) - Math.min(...zs)).toBeGreaterThan(80);
   });
 
   it("keeps scattered decoration clear of node positions", () => {
     const world = generateWorld(sampleWorld);
-    for (const region of world.regions) {
-      for (const node of region.def.nodes) {
-        for (const tree of region.trees) {
-          const d = Math.hypot(tree.position[0] - node.position[0], tree.position[2] - node.position[2]);
-          expect(d).toBeGreaterThan(2);
-        }
+    for (const [, pos] of Object.entries(world.nodeWorldPositions)) {
+      for (const tree of world.groundCover.trees) {
+        const d = Math.hypot(tree.position[0] - pos[0], tree.position[2] - pos[2]);
+        expect(d).toBeGreaterThan(2);
       }
     }
   });
