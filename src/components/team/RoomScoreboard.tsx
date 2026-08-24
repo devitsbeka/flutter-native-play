@@ -231,6 +231,169 @@ function PresenceAvatar({
   );
 }
 
+/**
+ * One half of the two-player face-off.
+ *
+ * Drawn twice from here rather than written out twice, which is what let the
+ * two halves drift apart: as two copies each column was only as tall as its
+ * own contents, and one extra control on one side — an add-friend button the
+ * other player did not qualify for — slid that entire column relative to its
+ * opponent. Everything below sits in a slot of a fixed height, so the two
+ * sides line up row for row whatever either is carrying.
+ */
+function VsPlayer({
+  player,
+  currentUserId,
+  showHostCrown,
+  isHost,
+  isRoomActive,
+  isMobile,
+  online,
+  arrived,
+  flag,
+  sentInvites,
+  onResendInvitation,
+  onInvitePlayer,
+  onMarkSent,
+}: {
+  player: RoomParticipant & { total_score?: number };
+  currentUserId?: string;
+  showHostCrown: boolean;
+  isHost: boolean;
+  isRoomActive: boolean;
+  isMobile: boolean;
+  online: Set<string>;
+  arrived: Set<string>;
+  flag: string;
+  sentInvites: Set<string>;
+  onResendInvitation?: (userId: string) => void;
+  onInvitePlayer?: (userId: string) => void | Promise<void>;
+  onMarkSent: (userId: string) => void;
+}) {
+  const { t } = useLanguage();
+  const isInvited = (player.status as string) === "invited";
+  const isOnline = !isInvited && online.has(player.user_id);
+  const justArrived = !isInvited && arrived.has(player.user_id);
+
+  return (
+    <div
+      className={`flex w-full max-w-[140px] flex-col items-center text-center ${
+        isInvited ? "opacity-60" : ""
+      }`}
+    >
+      {/* Avatar. h-16 on the wrapper, so the crown and the ring — both of
+          which paint outside the avatar's box — cannot change how far down
+          the name starts. */}
+      <div className={`relative h-16 w-16 ${isInvited ? "grayscale" : ""}`}>
+        {showHostCrown && player.is_host && !isInvited && (
+          <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
+        )}
+        {/* The same green ring as the ranked list, so a player is not online
+            on one layout and grey on the other. */}
+        <motion.div
+          className={`rounded-full ${
+            isOnline ? "ring-2 ring-emerald-400 ring-offset-2 ring-offset-transparent" : ""
+          }`}
+          animate={
+            justArrived
+              ? {
+                  boxShadow: [
+                    "0 0 0px 0px rgba(52,211,153,0)",
+                    "0 0 22px 8px rgba(52,211,153,0.85)",
+                    "0 0 0px 0px rgba(52,211,153,0)",
+                  ],
+                }
+              : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
+          }
+          transition={justArrived ? { duration: 1.6, times: [0, 0.35, 1] } : { duration: 0.2 }}
+        >
+          <SmartAvatar avatarUrl={player.avatar_url} fallback={player.nickname} size="xl" />
+        </motion.div>
+        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
+          {flag}
+        </div>
+      </div>
+
+      {/* Name: one line, fixed height, so a two-line name on one side cannot
+          push that side's score below the other's. */}
+      <p
+        className={`mt-2 h-5 w-full truncate text-sm font-medium leading-5 ${
+          isInvited ? "text-white/50" : "text-white"
+        }`}
+      >
+        {player.user_id === currentUserId ? t("extra.youLabel") : player.nickname}
+      </p>
+
+      {isInvited ? (
+        <div className="mt-2 flex flex-col items-center">
+          {isHost && sentInvites.has(player.user_id) ? (
+            <>
+              <span className="text-xs text-green-400 font-medium">{t("extra.sentLabel")}</span>
+              <motion.p
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="text-xs text-white/50"
+              >
+                {t("extra.waitingLabel")}
+              </motion.p>
+            </>
+          ) : (
+            <>
+              <motion.p
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="text-xs text-white/40 italic"
+              >
+                {t("extra.invitedEllipsis")}
+              </motion.p>
+              {isHost && (
+                <div className="min-h-[36px] flex items-center justify-center mt-1">
+                  <motion.button
+                    onClick={async () => {
+                      await onResendInvitation?.(player.user_id);
+                      onMarkSent(player.user_id);
+                    }}
+                    className="px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-xs shadow-md flex items-center gap-1.5"
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Send className="w-3 h-3" />
+                    {isRoomActive ? t("extra.resendInvite") : t("extra.sendInvite")}
+                  </motion.button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      ) : (
+        <>
+          <span className="mt-2 h-8 text-2xl font-display font-bold leading-8 text-white">
+            {player.total_score || 0}
+          </span>
+          <p className="h-4 text-xs leading-4 text-white/60">
+            {t("extra.scoreboardRoundStats", {
+              rounds: player.total_rounds_played || 0,
+              wins: player.total_wins || 0,
+            })}
+          </p>
+          {/* The action slot keeps its height whether or not it has anything
+              in it — this is the row that used to shift one column against
+              the other whenever only one player could be added as a friend. */}
+          <div className="mt-1.5 flex min-h-[28px] items-center justify-center gap-1.5">
+            <AddFriendButton userId={player.user_id} />
+            {isHost && onInvitePlayer && player.user_id !== currentUserId && (
+              <InvitePlayerButton
+                userId={player.user_id}
+                onInvite={onInvitePlayer}
+                iconOnly={isMobile}
+              />
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true, maxPlayers, isHost = false, isRoomActive = true, onInviteFriends, onResendInvitation, onInvitePlayer, onRemoveParticipant }: RoomScoreboardProps) {
   const { t } = useLanguage();
   const isMobile = useIsMobile();
@@ -297,117 +460,43 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
 
       {/* Scoreboard Content */}
       <div className="p-3">
-        {/* VS Display for 2 players */}
-        {sortedParticipants.length === 2 ? (
-          <div className="flex items-center justify-center gap-4 mb-4">
-            {/* Player 1 */}
-            {(() => {
-              const player = sortedParticipants[0];
-              const isInvited = (player.status as string) === 'invited';
-              return (
-                <div className="flex-1 flex justify-end">
-                  <div className={`text-center max-w-[120px] ${isInvited ? 'opacity-60' : ''}`}>
-                    <div className={`relative inline-block mb-2 ${isInvited ? 'grayscale' : ''}`}>
-                      {showHostCrown && player.is_host && !isInvited && (
-                        <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
-                      )}
-                      {/* Same green ring as the list, so a player is not
-                          online on one layout and grey on the other. */}
-                      <motion.div
-                        className={`rounded-full ${
-                          !isInvited && online.has(player.user_id)
-                            ? "ring-2 ring-emerald-400 ring-offset-2 ring-offset-transparent"
-                            : ""
-                        }`}
-                        animate={
-                          !isInvited && arrived.has(player.user_id)
-                            ? {
-                                boxShadow: [
-                                  "0 0 0px 0px rgba(52,211,153,0)",
-                                  "0 0 22px 8px rgba(52,211,153,0.85)",
-                                  "0 0 0px 0px rgba(52,211,153,0)",
-                                ],
-                              }
-                            : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
-                        }
-                        transition={{ duration: 1.6, times: [0, 0.35, 1] }}
-                      >
-                        <SmartAvatar
-                          avatarUrl={player.avatar_url}
-                          fallback={player.nickname}
-                          size="xl"
-                        />
-                      </motion.div>
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
-                        {getFlagEmoji(player.country_code || "GE")}
-                      </div>
-                    </div>
-                    <p className={`font-medium text-sm truncate ${isInvited ? 'text-white/50' : 'text-white'}`}>
-                      {player.user_id === currentUserId ? t("extra.youLabel") : player.nickname}
-                    </p>
-                    {isInvited ? (
-                      <div className="mt-2 flex flex-col items-center">
-                        {isHost && sentInvites.has(player.user_id) ? (
-                         <>
-                            <span className="text-xs text-green-400 font-medium">{t("extra.sentLabel")}</span>
-                            <motion.p 
-                              animate={{ opacity: [0.5, 1, 0.5] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                              className="text-xs text-white/50"
-                            >
-                              {t("extra.waitingLabel")}
-                            </motion.p>
-                          </>
-                        ) : (
-                          <>
-                            <motion.p 
-                              animate={{ opacity: [0.5, 1, 0.5] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                              className="text-xs text-white/40 italic"
-                             >
-                              {t("extra.invitedEllipsis")}
-                            </motion.p>
-                            {isHost && (
-                              <div className="min-h-[36px] flex items-center justify-center mt-1">
-                                <motion.button
-                                  onClick={async () => {
-                                    await onResendInvitation?.(player.user_id);
-                                    setSentInvites(prev => new Set([...prev, player.user_id]));
-                                  }}
-                                  className="px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-xs shadow-md flex items-center gap-1.5"
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                   <Send className="w-3 h-3" />
-                                   {isRoomActive ? t("extra.resendInvite") : t("extra.sendInvite")}
-                                </motion.button>
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center mt-2">
-                        <span className="text-2xl font-display font-bold text-white">
-                          {(player as any).total_score || 0}
-                        </span>
-                        <p className="text-xs text-white/60">
-                          {t("extra.scoreboardRoundStats", { rounds: player.total_rounds_played || 0, wins: player.total_wins || 0 })}
-                        </p>
-                        <div className="mt-1.5 flex items-center justify-center gap-1.5">
-                          <AddFriendButton userId={player.user_id} />
-                          {isHost && onInvitePlayer && player.user_id !== currentUserId && (
-                            <InvitePlayerButton userId={player.user_id} onInvite={onInvitePlayer} iconOnly={isMobile} />
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
+        {/* VS Display for 2 players.
 
-            {/* VS Icon - centered */}
-            <div className="flex-shrink-0 flex flex-col items-center">
+            One component drawn twice, not two copies of the same ninety
+            lines. The copies were the reason the two halves never lined up:
+            each column was only as tall as its own contents, the row centred
+            them against each other, and a single extra control on one side —
+            an add-friend button the other player did not qualify for — slid
+            that player's whole column up relative to their opponent. Names
+            at different heights, scores at different heights, and a check
+            mark dangling below one of them.
+
+            Now the row aligns to the top and every element sits in a slot of
+            a fixed height, so avatar lines up with avatar, name with name and
+            score with score no matter what either side is carrying. */}
+        {sortedParticipants.length === 2 ? (
+          <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-start justify-items-center gap-2">
+            <VsPlayer
+              player={sortedParticipants[0]}
+              currentUserId={currentUserId}
+              showHostCrown={showHostCrown}
+              isHost={isHost}
+              isRoomActive={isRoomActive}
+              isMobile={isMobile}
+              online={online}
+              arrived={arrived}
+              flag={getFlagEmoji(sortedParticipants[0].country_code || "GE")}
+              sentInvites={sentInvites}
+              onResendInvitation={onResendInvitation}
+              onInvitePlayer={onInvitePlayer}
+              onMarkSent={(id) => setSentInvites((prev) => new Set([...prev, id]))}
+            />
+
+            {/* The swords, centred against the avatars rather than against
+                the columns: mt-2 is half the 64px avatar less half its own
+                48px. Against the columns it drifted with whichever side
+                happened to be taller. */}
+            <div className="mt-2 flex flex-shrink-0 flex-col items-center">
               <motion.div
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
@@ -416,116 +505,26 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
               >
                 <Swords className="w-6 h-6 text-white" />
               </motion.div>
-              <span className="text-xs text-white/60 mt-1">
+              <span className="text-xs text-white/60 mt-1 text-center">
                 {t("extra.scoreboardRoundsLabel", { count: sortedParticipants[0].total_rounds_played || 0 })}
               </span>
             </div>
 
-            {/* Player 2 */}
-            {(() => {
-              const player = sortedParticipants[1];
-              const isInvited = (player.status as string) === 'invited';
-              return (
-                <div className="flex-1 flex justify-start">
-                  <div className={`text-center max-w-[120px] ${isInvited ? 'opacity-60' : ''}`}>
-                    <div className={`relative inline-block mb-2 ${isInvited ? 'grayscale' : ''}`}>
-                      {showHostCrown && player.is_host && !isInvited && (
-                        <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
-                      )}
-                      {/* Same green ring as the list, so a player is not
-                          online on one layout and grey on the other. */}
-                      <motion.div
-                        className={`rounded-full ${
-                          !isInvited && online.has(player.user_id)
-                            ? "ring-2 ring-emerald-400 ring-offset-2 ring-offset-transparent"
-                            : ""
-                        }`}
-                        animate={
-                          !isInvited && arrived.has(player.user_id)
-                            ? {
-                                boxShadow: [
-                                  "0 0 0px 0px rgba(52,211,153,0)",
-                                  "0 0 22px 8px rgba(52,211,153,0.85)",
-                                  "0 0 0px 0px rgba(52,211,153,0)",
-                                ],
-                              }
-                            : { boxShadow: "0 0 0px 0px rgba(52,211,153,0)" }
-                        }
-                        transition={{ duration: 1.6, times: [0, 0.35, 1] }}
-                      >
-                        <SmartAvatar
-                          avatarUrl={player.avatar_url}
-                          fallback={player.nickname}
-                          size="xl"
-                        />
-                      </motion.div>
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
-                        {getFlagEmoji(player.country_code || "GE")}
-                      </div>
-                    </div>
-                    <p className={`font-medium text-sm truncate ${isInvited ? 'text-white/50' : 'text-white'}`}>
-                      {player.user_id === currentUserId ? t("extra.youLabel") : player.nickname}
-                    </p>
-                    {isInvited ? (
-                      <div className="mt-2 flex flex-col items-center">
-                        {isHost && sentInvites.has(player.user_id) ? (
-                         <>
-                            <span className="text-xs text-green-400 font-medium">{t("extra.sentLabel")}</span>
-                            <motion.p 
-                              animate={{ opacity: [0.5, 1, 0.5] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                              className="text-xs text-white/50"
-                            >
-                              {t("extra.waitingLabel")}
-                            </motion.p>
-                          </>
-                        ) : (
-                          <>
-                            <motion.p 
-                              animate={{ opacity: [0.5, 1, 0.5] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                              className="text-xs text-white/40 italic"
-                             >
-                              {t("extra.invitedEllipsis")}
-                            </motion.p>
-                            {isHost && (
-                              <div className="min-h-[36px] flex items-center justify-center mt-1">
-                                <motion.button
-                                  onClick={async () => {
-                                    await onResendInvitation?.(player.user_id);
-                                    setSentInvites(prev => new Set([...prev, player.user_id]));
-                                  }}
-                                  className="px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-xs shadow-md flex items-center gap-1.5"
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                   <Send className="w-3 h-3" />
-                                   {isRoomActive ? t("extra.resendInvite") : t("extra.sendInvite")}
-                                </motion.button>
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center mt-2">
-                        <span className="text-2xl font-display font-bold text-white">
-                          {(player as any).total_score || 0}
-                        </span>
-                        <p className="text-xs text-white/60">
-                          {t("extra.scoreboardRoundStats", { rounds: player.total_rounds_played || 0, wins: player.total_wins || 0 })}
-                        </p>
-                        <div className="mt-1.5 flex items-center justify-center gap-1.5">
-                          <AddFriendButton userId={player.user_id} />
-                          {isHost && onInvitePlayer && player.user_id !== currentUserId && (
-                            <InvitePlayerButton userId={player.user_id} onInvite={onInvitePlayer} iconOnly={isMobile} />
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
+            <VsPlayer
+              player={sortedParticipants[1]}
+              currentUserId={currentUserId}
+              showHostCrown={showHostCrown}
+              isHost={isHost}
+              isRoomActive={isRoomActive}
+              isMobile={isMobile}
+              online={online}
+              arrived={arrived}
+              flag={getFlagEmoji(sortedParticipants[1].country_code || "GE")}
+              sentInvites={sentInvites}
+              onResendInvitation={onResendInvitation}
+              onInvitePlayer={onInvitePlayer}
+              onMarkSent={(id) => setSentInvites((prev) => new Set([...prev, id]))}
+            />
           </div>
         ) : (
           /* Multi-player list */
