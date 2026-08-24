@@ -1,4 +1,4 @@
-import { memo, useState, useMemo, useRef } from 'react';
+import { memo, useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, useMotionValue, useTransform, useAnimationControls, PanInfo } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -74,6 +74,20 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved) && !hasDualActions;
 
   const isLoading = actionLoading === notification.id;
+
+  // Which of THIS card's two buttons was pressed.
+  //
+  // The parent tracks the notification being acted on, not the action, so a
+  // friend request answered with Accept spun both buttons: one isLoading drove
+  // both spinners, and it read as though the app were doing two things at once.
+  // The card is the only place that knows which button was hit, so it holds
+  // that here rather than every caller threading it down.
+  const [pressedAction, setPressedAction] = useState<"accept" | "decline" | null>(null);
+
+  // Clear when the work finishes, so the next press starts from nothing.
+  useEffect(() => {
+    if (!isLoading) setPressedAction(null);
+  }, [isLoading]);
 
   const avatarUrl = (notification.data?.sender_avatar || notification.data?.sender_avatar_url) as string | undefined;
   const senderName = notification.data?.sender_nickname as string || notification.data?.sender_name as string || '';
@@ -177,6 +191,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
     e.preventDefault();
     
     if (isLoading) return;
+    setPressedAction("accept");
     
     console.log("[NotificationCard] handleAccept called", {
       type: notification.type,
@@ -222,6 +237,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
     e.preventDefault();
     
     if (isLoading) return;
+    setPressedAction("decline");
     
     console.log("[NotificationCard] handleDecline called", {
       type: notification.type,
@@ -457,7 +473,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                 className="px-4 py-2 min-h-[40px] rounded-full border border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10 transition-colors text-xs font-semibold disabled:opacity-50 active:scale-95"
                 style={{ touchAction: 'manipulation' }}
               >
-                {isLoading ? (
+                {isLoading && pressedAction === "accept" ? (
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   </span>
@@ -471,7 +487,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                 className="px-4 py-2 min-h-[40px] rounded-full border border-destructive/50 text-destructive hover:bg-destructive/10 transition-colors text-xs font-semibold disabled:opacity-50 active:scale-95"
                 style={{ touchAction: 'manipulation' }}
               >
-                {isLoading ? (
+                {isLoading && pressedAction === "decline" ? (
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   </span>

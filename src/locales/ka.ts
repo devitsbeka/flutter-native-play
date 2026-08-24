@@ -2430,6 +2430,7 @@ export const ka = {
     pending: "მოლოდინში",
     sent: "გაგზავნილი",
     inviteFriendBtn: "მოწვევა",
+    inviteToPlayBtn: "მოიწვიე",
     addFriendActionBtn: "+ დამატება",
     orShare: "ან გააზიარე",
     copyLink: "ლინკის კოპირება",

@@ -4,6 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Capacitor } from "@capacitor/core";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import { 
   UserPlus, 
   Import, 
@@ -110,6 +111,7 @@ function getCountryFlag(countryCode: string): string {
 
 export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCode, onFriendSelect, selectedFriends, onInviteSuccess }: InviteFriendsModalProps) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [isSharing, setIsSharing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -624,9 +626,13 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                 } else if (isRoomInviteMode) {
                                   handleInviteToRoom(result.user_id);
                                 } else {
-                                  // Browse mode: no room to invite into, so the
-                                  // row does what the grid tile does.
-                                  setProfileUserId(result.user_id);
+                                  // Browse mode has no room yet, so inviting
+                                  // means starting one with them in it — the
+                                  // same path the profile's Challenge button
+                                  // takes. The row used to open their profile,
+                                  // which is what the tile below is for.
+                                  onClose();
+                                  navigate(`/team?challenge=${result.user_id}&type=create-room`);
                                 }
                               } else {
                                 if (isPendingOutgoing) {
@@ -720,11 +726,9 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                       {t("extra.inviteFriendBtn")}
                                     </>
                                   ) : isFriend && isBrowseMode ? (
-                                    // Nothing to invite them into from here, so
-                                    // the button says what it really does.
                                     <>
                                       <UserPlus className="w-4 h-4" />
-                                      {t("extra.viewProfile")}
+                                      {t("extra.inviteToPlayBtn")}
                                     </>
                                   ) : isFriend ? (
                                     <>
@@ -1012,13 +1016,20 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
         </motion.div>
       )}
 
-      {/* Tapping a friend from the plain "add friends" entry opens who they
-          are — there is no room to invite them to from here. */}
-      <PlayerProfileModal
-        isOpen={profileUserId !== null}
-        onClose={() => setProfileUserId(null)}
-        userId={profileUserId}
-      />
+      {/* Tapping a friend's tile opens who they are.
+          Wrapped, and the wrapper carries the z-index: this modal's own root
+          is z-[9999] and PlayerProfileModal's is z-[100], and the two are
+          siblings in the same portal — so the profile opened UNDERNEATH and
+          the tap looked like it had done nothing at all. The wrapper makes a
+          stacking context above this modal, and the profile's own z-index
+          then applies inside it. */}
+      <div className="relative z-[10000]">
+        <PlayerProfileModal
+          isOpen={profileUserId !== null}
+          onClose={() => setProfileUserId(null)}
+          userId={profileUserId}
+        />
+      </div>
     </AnimatePresence>
   , document.body);
 }
