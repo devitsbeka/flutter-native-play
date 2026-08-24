@@ -1702,7 +1702,7 @@ export const de: KaTranslations = {
     saveErrorToast: "Fehler beim Speichern",
     myTriviaPartySaved: "MyTrivia Party gespeichert!",
     noOnePlayedTrivia: "Noch hat niemand gespielt",
-    pingHostBtn: "Host rufen",
+    pingHostBtn: "Host einladen",
     pingHostSent: "Der Host wurde benachrichtigt! 🔔",
     pingHostNotifTitle: "{name}: Lass uns spielen!",
     pingHostOpenRoom: "Raum öffnen",
