@@ -442,8 +442,10 @@ export default function Discover() {
            * cover still pulls the sheet up. */}
           <div className="absolute inset-x-0 top-0 text-center text-white [text-shadow:0px_3px_21px_rgba(0,0,0,0.16)]">
             {/* The rule under the header: 441 wide at the frame's 500, one
-                pixel, in the lilac the file draws it in. */}
-            <div aria-hidden className="absolute left-1/2 -translate-x-1/2 top-[78px] h-px w-[min(441px,88.2vw)] bg-[#b8a6f5]" />
+                pixel, in the lilac the file draws it in — at 70%, a third
+                quieter than the frame has it, which is where it stops
+                competing with the title. */}
+            <div aria-hidden className="absolute left-1/2 -translate-x-1/2 top-[78px] h-px w-[min(441px,88.2vw)] bg-[#b8a6f5]/70" />
 
             <h2 className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(55px,11vw))] w-[min(393px,86vw)] font-display uppercase text-[min(40px,8vw)] leading-[min(43px,8.6vw)] tracking-[0.5px]">
               {t("discover.promoTitle")}

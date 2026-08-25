@@ -19,9 +19,10 @@
  * shown when the store itself quotes one, so nothing invented reaches a
  * screen. Create the products, and the rows appear priced by Apple.
  *
- * `trialDays` is likewise empty on purpose. It is what the paywall promises,
- * and a promise the store does not keep is a refund — set it only once the
- * matching introductory offer exists on the product.
+ * `trialDays` is the trial the annual plan is meant to carry: one day, the
+ * same one the cover promotes. It is a promise, and the introductory offer
+ * on the product in App Store Connect is what keeps it — the row is hidden
+ * until that product exists, so the promise cannot be shown before then.
  */
 
 import { IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
@@ -76,6 +77,11 @@ export const PRO_PLANS: ProPlan[] = [
     nameKey: "paywall.planAnnual",
     blurbKey: "paywall.planAnnualBlurb",
     months: 12,
+    // The offer the cover promotes: one free day, then the year. Set here so
+    // the paywall says it the moment the product exists — and it must match
+    // the introductory offer configured on io.mytrivia.pro.annual in App
+    // Store Connect, because this is the promise and that is what keeps it.
+    trialDays: 1,
     featured: true,
   },
   {
