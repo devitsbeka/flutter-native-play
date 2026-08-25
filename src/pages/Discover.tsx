@@ -19,7 +19,6 @@ import { HeaderActions } from "@/components/shared/HeaderActions";
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
 import { getResponsiveVideoSrc, videoUrl } from "@/config/videoConfig";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useVipStatus } from "@/hooks/useVipStatus";
 import { matchesQuery } from "@/utils/searchMatch";
 import { orderByPopularity, readRecentlyViewedIds, RECENTLY_VIEWED_KEY } from "@/utils/categoryTabs";
 import { funRowCategories } from "@/utils/discoverRows";
@@ -93,9 +92,6 @@ export default function Discover() {
   const isMobile = useIsMobile();
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  // Nobody who already pays for it should be sold a free trial. They keep
-  // the cover, without the offer on it.
-  const { isVip } = useVipStatus();
 
   const heroSources = useMemo(() => {
     const { webm, mp4 } = getResponsiveVideoSrc(HERO_VIDEO);
@@ -356,7 +352,6 @@ export default function Discover() {
            * pointer-events-auto is on the button alone; everything else here
            * stays transparent to touch, so a drag from the middle of the
            * cover still pulls the sheet up. */}
-          {!isVip && (
           <div className="absolute inset-x-0 top-0 text-center text-white [text-shadow:0px_3px_21px_rgba(0,0,0,0.16)]">
             {/* The rule under the header: 441 wide at the frame's 500, one
                 pixel, in the lilac the file draws it in. */}
@@ -382,7 +377,6 @@ export default function Discover() {
               {t("discover.promoNote")}
             </p>
           </div>
-          )}
 
           {/* Last, and over the copy, as the frame stacks it. */}
           <div
