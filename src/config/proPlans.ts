@@ -2,27 +2,20 @@
  * The subscription plans the paywall offers, and the App Store products
  * behind them.
  *
- * Every figure here is one the app already charges. What the app actually
- * sells today is two tiers, both monthly:
+ * The offer, as the design (Figma 895:18) sets it out — two rows for the
+ * same PRO tier, differing only in how long it is bought for:
  *
- *   Solo PRO    io.mytrivia.pro.monthly      $3.99   /  9.99 GEL on Stripe
- *   Family PRO  io.mytrivia.proplus.monthly  $7.99   / 19.99 GEL on Stripe
+ *   Annual   io.mytrivia.pro.annual   59.88 GEL / year  (4.99 / month)
+ *   Monthly  io.mytrivia.pro.monthly   9.99 GEL / month  ($3.99 in the App Store)
  *
- * (Native fallbacks from MobileProCarousel, GEL prices from PRO_PRODUCTS in
- * supabase/functions/create-pro-checkout. The two are the same tier priced
- * per store, not two different offers — and neither figure is ever what a
- * buyer on a phone sees, because StoreKit's own localised string wins there.)
+ * Family PRO is not here. It is a different tier with its own banner in the
+ * shop, and the design's paywall sells one thing.
  *
- * There is no annual product, no weekly product, and no introductory offer
- * anywhere in App Store Connect. The annual and weekly rows below therefore
- * carry no price of their own: a plan with no `fallbackUsd` is only ever
- * shown when the store itself quotes one, so nothing invented reaches a
- * screen. Create the products, and the rows appear priced by Apple.
- *
- * `trialDays` is the trial the annual plan is meant to carry: one day, the
- * same one the cover promotes. It is a promise, and the introductory offer
- * on the product in App Store Connect is what keeps it — the row is hidden
- * until that product exists, so the promise cannot be shown before then.
+ * The annual product does not exist in App Store Connect yet, so on a phone
+ * that row is hidden — availablePlans() intersects with the catalogue the
+ * device reported, because a row for a product the store never heard of
+ * opens a payment sheet and fails. On the web it sells through Stripe, which
+ * prices from `webGel` and needs a yearly line in create-pro-checkout.
  */
 
 import { IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
@@ -30,7 +23,7 @@ import type { ProTierId } from "@/hooks/useProPurchase";
 
 export interface ProPlan {
   /** Stable key, used for selection state and the period label. */
-  id: "solo_monthly" | "family_monthly" | "annual" | "weekly";
+  id: "annual" | "monthly";
   /** The App Store / RevenueCat product id. */
   productId: string;
   /** What the plan grants. Stripe prices by tier on the web. */
@@ -77,40 +70,22 @@ export const PRO_PLANS: ProPlan[] = [
     nameKey: "paywall.planAnnual",
     blurbKey: "paywall.planAnnualBlurb",
     months: 12,
-    // The offer the cover promotes: one free day, then the year. Set here so
-    // the paywall says it the moment the product exists — and it must match
-    // the introductory offer configured on io.mytrivia.pro.annual in App
-    // Store Connect, because this is the promise and that is what keeps it.
+    // One free day, then the year. Must match the introductory offer
+    // configured on io.mytrivia.pro.annual in App Store Connect: this is the
+    // promise, that is what keeps it.
     trialDays: 1,
+    webGel: 59.88,
     featured: true,
   },
   {
-    id: "solo_monthly",
+    id: "monthly",
     productId: IAP_PRODUCTS.PRO_MONTHLY,
     tier: "pro",
-    nameKey: "paywall.planSolo",
-    blurbKey: "paywall.planSoloBlurb",
+    nameKey: "paywall.planMonthly",
+    blurbKey: "paywall.planMonthlyBlurb",
     months: 1,
     fallbackUsd: 3.99,
     webGel: 9.99,
-  },
-  {
-    id: "family_monthly",
-    productId: IAP_PRODUCTS.PRO_PLUS_MONTHLY,
-    tier: "pro_plus",
-    nameKey: "paywall.planFamily",
-    blurbKey: "paywall.planFamilyBlurb",
-    months: 1,
-    fallbackUsd: 7.99,
-    webGel: 19.99,
-  },
-  {
-    id: "weekly",
-    productId: IAP_PRODUCTS.PRO_WEEKLY,
-    tier: "pro",
-    nameKey: "paywall.planWeekly",
-    blurbKey: "paywall.planWeeklyBlurb",
-    months: 0.25,
   },
 ];
 
@@ -132,13 +107,13 @@ export function availablePlans(
 ): ProPlan[] {
   const available = isNative
     ? PRO_PLANS.filter((p) => storeProductIds.includes(p.productId))
-    : PRO_PLANS.filter((p) => p.fallbackUsd !== undefined);
+    : PRO_PLANS.filter((p) => p.webGel !== undefined || p.fallbackUsd !== undefined);
 
   // Never return nothing: a paywall with no rows is worse than one showing
   // the tier we know exists and letting the store refuse it.
   return available.length > 0
     ? available
-    : PRO_PLANS.filter((p) => p.id === "solo_monthly");
+    : PRO_PLANS.filter((p) => p.id === "monthly");
 }
 
 /** The row the paywall opens on: the featured plan if it is on sale here. */

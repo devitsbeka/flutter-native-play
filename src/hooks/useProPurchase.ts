@@ -24,14 +24,18 @@ export function useProPurchase() {
    *                 is all the web path has to go on.
    * @param nativeProductId  Which App Store product to ring up, when the
    *                 caller is selling a specific one — the paywall's annual
-   *                 and weekly plans grant the same tier as monthly and
-   *                 differ only in the SKU. Omitted, the tier's default
-   *                 monthly product is used, which is what every existing
-   *                 caller wants.
+   *                 plan grants the same tier as monthly and differs only in
+   *                 the SKU. Omitted, the tier's default monthly product is
+   *                 used, which is what every existing caller wants.
+   * @param period   Which billing interval Stripe should charge on the web.
+   *                 "year" needs a yearly price configured for the tier in
+   *                 create-pro-checkout; without one it bills monthly and
+   *                 says so in the log rather than guessing a yearly figure.
    */
   const initiateProCheckout = async (
     tierId: ProTierId,
     nativeProductId?: string,
+    period?: "month" | "year",
   ): Promise<{ success: boolean; error?: string }> => {
     // Check if we're on native platform - use RevenueCat
     if (Capacitor.isNativePlatform()) {
@@ -45,7 +49,7 @@ export function useProPurchase() {
 
     try {
       const { data, error } = await supabase.functions.invoke("create-pro-checkout", {
-        body: { tierId },
+        body: { tierId, period },
       });
 
       if (error) {

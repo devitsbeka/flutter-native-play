@@ -8,12 +8,8 @@ import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { useStorePrice } from "@/hooks/useStorePrice";
 import { useProPurchase } from "@/hooks/useProPurchase";
 import { ProPlan, annualSaving, availablePlans, defaultPlan } from "@/config/proPlans";
-import {
-  BUY_SHADOW,
-  GLASS_SHEEN,
-  GOLD_BUTTON,
-  SKIN_WHITE,
-} from "@/components/shop/ProBannerCard";
+import { GLASS_SHEEN, SKIN_WHITE } from "@/components/shop/ProBannerCard";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 
 import crownIcon from "@/assets/icons/icon-vip-crown.webp";
 import benefitPlay from "@/assets/pro-banner/banner-gamepad.webp";
@@ -89,7 +85,7 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
   const amountOf = (plan: ProPlan): number | null => {
     const product = products.find((p) => p.productId === plan.productId);
     if (product && product.priceAmountMicros > 0) return product.priceAmountMicros / 1_000_000;
-    return plan.fallbackUsd ?? null;
+    return plan.webGel ?? plan.fallbackUsd ?? null;
   };
 
   const priceLabel = (plan: ProPlan): string =>
@@ -106,7 +102,11 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
    */
   const derivedLabel = (plan: ProPlan, amount: number): string | null => {
     const product = products.find((p) => p.productId === plan.productId);
-    if (!product?.priceCurrencyCode) return null;
+    // Off a device the figure is the GEL one Stripe charges, formatted the
+    // way every other GEL price in the app is.
+    if (!product?.priceCurrencyCode) {
+      return plan.webGel === undefined ? null : `${amount.toFixed(2)} ₾`;
+    }
     try {
       return new Intl.NumberFormat(undefined, {
         style: "currency",
@@ -117,12 +117,19 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
     }
   };
 
-  const perMonthLabel = (plan: ProPlan): string | null => {
-    if (plan.months <= 1) return null;
+  /**
+   * What the row's right-hand column shows: the price per month, on every
+   * row, so the two are comparable at a glance — which is the whole point of
+   * the annual row. The yearly total it actually charges is in the footnote
+   * under the button, where App Review looks for it.
+   */
+  const perMonthLabel = (plan: ProPlan): string => {
+    if (plan.months <= 1) return t("paywall.perMonth").replace("{price}", priceLabel(plan));
     const amount = amountOf(plan);
-    if (amount === null) return null;
-    const label = derivedLabel(plan, amount / plan.months);
-    return label && t("paywall.perMonth").replace("{price}", label);
+    const derived = amount === null ? null : derivedLabel(plan, amount / plan.months);
+    return derived
+      ? t("paywall.perMonth").replace("{price}", derived)
+      : t("paywall.perMonth").replace("{price}", priceLabel(plan));
   };
 
   const handleSubscribe = async () => {
@@ -139,6 +146,7 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
     const result = await initiateProCheckout(
       selected.tier,
       isNative ? selected.productId : undefined,
+      selected.months >= 12 ? "year" : "month",
     );
     if (result.success) onClose();
   };
@@ -158,8 +166,8 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
 
   const benefits = [
     { art: benefitPlay, title: t("paywall.benefitPlayTitle"), blurb: t("paywall.benefitPlayBlurb") },
-    { art: benefitWheel, title: t("paywall.benefitLevelsTitle"), blurb: t("paywall.benefitLevelsBlurb") },
     { art: benefitNoAds, title: t("paywall.benefitNoAdsTitle"), blurb: t("paywall.benefitNoAdsBlurb") },
+    { art: benefitWheel, title: t("paywall.benefitLevelsTitle"), blurb: t("paywall.benefitLevelsBlurb") },
     { art: benefitTimer, title: t("paywall.benefitXpTitle"), blurb: t("paywall.benefitXpBlurb") },
     { art: benefitDiscount, title: t("paywall.benefitShopTitle"), blurb: t("paywall.benefitShopBlurb") },
   ];
@@ -201,8 +209,6 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
           {plans.map((plan) => {
             const isSelected = selected?.id === plan.id;
             const perMonth = perMonthLabel(plan);
-            const planSaving = annualSaving(plan, amountOf);
-            const savingLabel = planSaving === null ? null : derivedLabel(plan, planSaving);
             return (
               <button
                 key={plan.id}
@@ -218,17 +224,6 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
                     : `${GLASS_SHEEN}, 0px 4px 0px 0px rgba(68,36,107,0.06)`,
                 }}
               >
-                {/* The badge belongs to the plan that earns it, not to the
-                    selection: moving it with the tap made it read as a label
-                    for "selected" rather than for "cheapest per month". */}
-                {savingLabel && (
-                  <span
-                    className="absolute -top-3 right-4 rounded-full bg-[#FCD34D] px-3 py-1 text-[11px] font-bold uppercase leading-none tracking-wide"
-                    style={{ color: ink }}
-                  >
-                    {t("paywall.popularSave").replace("{amount}", savingLabel)}
-                  </span>
-                )}
 
                 <span
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors"
@@ -254,22 +249,14 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
                 <span className="min-w-0 flex-1">
                   <span className="block text-[17px] font-bold leading-tight" style={{ color: ink }}>
                     {t(plan.nameKey)}
-                    {plan.trialDays ? ` ${t("paywall.freeTrialSuffix")}` : ""}
                   </span>
                   <span className="block text-[13px]" style={{ color: inkSoft }}>
                     {t(plan.blurbKey)}
                   </span>
                 </span>
 
-                <span className="shrink-0 text-right">
-                  <span className="block text-[17px] font-bold" style={{ color: ink }}>
-                    {priceLabel(plan)}
-                  </span>
-                  {perMonth && (
-                    <span className="block text-[13px]" style={{ color: inkSoft }}>
-                      {perMonth}
-                    </span>
-                  )}
+                <span className="shrink-0 text-[17px] font-bold" style={{ color: ink }}>
+                  {perMonth}
                 </span>
               </button>
             );
@@ -312,35 +299,19 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
         className="shrink-0 border-t border-[rgba(64,38,102,0.08)] bg-[#F8F6FC] px-5 pt-4"
         style={{ paddingBottom: "calc(var(--safe-bottom) + 16px)" }}
       >
-        <button
-          type="button"
+        <ChunkyButton
+          variant="mint"
+          size="lg"
           onClick={handleSubscribe}
           disabled={busy || !selected}
-          className="relative flex h-[62px] w-full items-center justify-center rounded-[24px] border-[3px] border-solid border-[#9fa8a3] p-[3px] transition-all active:translate-y-[3px] disabled:opacity-60"
-          style={{ boxShadow: BUY_SHADOW }}
+          className="w-full"
         >
-          <span
-            aria-hidden
-            className="absolute inset-[3px] rounded-[20px]"
-            style={{ backgroundImage: GOLD_BUTTON }}
-          />
-          <span
-            aria-hidden
-            className="absolute inset-[3px] rounded-[20px] shadow-[inset_0px_3px_0px_0px_rgba(255,255,255,0.35)]"
-          />
-          <span className="relative text-[18px] font-bold tracking-[-0.18px] text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)]">
-            {busy
-              ? t("paywall.working")
-              : selected?.trialDays
-                ? t("paywall.ctaTrial").replace("{days}", String(selected.trialDays))
-                : t("paywall.ctaSubscribe")}
-          </span>
-        </button>
+          {busy ? t("paywall.working") : selected?.trialDays ? t("paywall.ctaTrial") : t("paywall.ctaSubscribe")}
+        </ChunkyButton>
 
         {selected && (
           <p className="mt-3 text-center text-[13px]" style={{ color: inkSoft }}>
-            {(selected.trialDays ? t("paywall.footnoteTrial") : t("paywall.footnote"))
-              .replace("{days}", String(selected.trialDays ?? 0))
+            {t("paywall.footnote")
               .replace("{price}", priceLabel(selected))
               .replace("{period}", t(`paywall.period_${selected.id}`))}
           </p>
