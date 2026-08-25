@@ -2,7 +2,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { factCheckQuestions } from "../_shared/factCheck.ts";
-import { AI_CHAT_URL, AI_API_KEY } from "../_shared/ai.ts";
+import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
 
 // Quality constants - must match frontend
 const QUESTION_MAX_LENGTH = 65;
@@ -446,7 +446,9 @@ ${iconKeywordMappings}
         "Authorization": `Bearer ${AI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: modelToUse,
+        // aiModel(): the id above is the canonical "google/…" form, and
+        // Google's own endpoint wants it bare. Same trap factCheck fell into.
+        model: aiModel(modelToUse),
         messages: [{ role: "user", content: prompt }],
         temperature: hasResearchedFacts ? 0.5 : (coveredTopics.length > 0 ? 0.95 : 0.9),
       }),

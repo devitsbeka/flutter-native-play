@@ -1,5 +1,5 @@
 import { getCorsHeaders } from "./cors.ts";
-import { AI_CHAT_URL, AI_API_KEY } from "./ai.ts";
+import { AI_CHAT_URL, AI_API_KEY, AI_PROVIDER, aiModel } from "./ai.ts";
 
 export type FactCheckItem = {
   question_text: string;
@@ -14,8 +14,29 @@ export type FactCheckResult = {
   reason?: string;
 };
 
-const PRIMARY_MODEL = "google/gemini-2.5-pro";
-const SECONDARY_MODEL = "openai/gpt-5-mini";
+/**
+ * Two checkers, and they have to agree.
+ *
+ * The pair was written for a gateway that fronts every vendor, so one is
+ * Google's and one is OpenAI's — genuinely independent, which is the whole
+ * point of asking twice. Talking to Google directly, that pair cannot work:
+ * generativelanguage.googleapis.com has never heard of gpt-5-mini and does
+ * not accept the "google/" prefix on its own models either. Both calls 404,
+ * every batch fails the check, and run-generation-job does the right thing
+ * with a broken checker — it refuses to save anything. Which is exactly what
+ * it did: "Fact-check failed, will retry later", 503, forever, on a key with
+ * credit on it.
+ *
+ * So the pair depends on who is answering. A vendor-agnostic gateway keeps
+ * the cross-family check. Google direct gets two different Google models —
+ * less independent than two vendors, and still two separate judgements at
+ * temperature 0 rather than one model marking its own homework.
+ */
+const CROSS_VENDOR_MODELS = ["google/gemini-2.5-pro", "openai/gpt-5-mini"] as const;
+const GOOGLE_ONLY_MODELS = ["google/gemini-2.5-pro", "google/gemini-2.5-flash"] as const;
+
+const [PRIMARY_MODEL, SECONDARY_MODEL] =
+  AI_PROVIDER === "google" ? GOOGLE_ONLY_MODELS : CROSS_VENDOR_MODELS;
 
 function safeJsonParse<T>(text: string): T {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
@@ -88,7 +109,12 @@ True/False rule:
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model,
+      // Through aiModel(), because the id written above is the canonical
+      // "google/gemini-2.5-pro" form and Google's own endpoint wants it bare
+      // — and wants the retired ones under their successor's name. Every
+      // other AI call in the codebase goes through this; this file was the
+      // one that did not, and it sent the prefix straight through.
+      model: aiModel(model),
       messages: [
         { role: "system", content: systemPrompt },
         {
@@ -171,7 +197,8 @@ export async function factCheckQuestions(opts: {
       model: SECONDARY_MODEL,
       minConfidence,
       apiKey: AI_API_KEY,
-      // openai/gpt-5-mini only supports default temperature (1)
+      // Left at the provider default: openai/gpt-5-mini accepts nothing else,
+      // and a second Gemini at its own default is still a separate judgement.
     }),
   ]);
 
