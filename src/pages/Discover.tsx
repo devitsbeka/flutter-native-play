@@ -16,15 +16,19 @@ import { CategoryGrid } from "@/components/discover/CategoryGrid";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 import { HeaderActions } from "@/components/shared/HeaderActions";
-import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
-import { getResponsiveVideoSrc, videoUrl } from "@/config/videoConfig";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { matchesQuery } from "@/utils/searchMatch";
 import { orderByPopularity, readRecentlyViewedIds, RECENTLY_VIEWED_KEY } from "@/utils/categoryTabs";
 import { funRowCategories } from "@/utils/discoverRows";
 
-const HERO_VIDEO = "/videos/explore-bg.mp4";
-const HERO_STILL = "/videos/explore-bg-still.jpg";
+/* The cover's artwork, drawn at the 500x946 the design was laid out at.
+   object-cover on a narrower phone crops the sides, which is what the
+   bubbles at the edges are there to absorb.
+
+   This replaced the explore-bg video loop: the design's cover is this
+   still, and the promo copy sits on the calm middle of it. The video and
+   its poster are still in public/videos, unused by this page. */
+const HERO_ART = "/images/bgs.png";
 
 /* The video takes what the phone can actually show — the viewport less the
    safe-area insets the root already pads for, less the bottom nav floating
@@ -88,9 +92,9 @@ export default function Discover() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
-  // Phones open on the video, with the category sheet resting at the bottom
+  // Phones open on the cover, with the category sheet resting at the bottom
   // of it; the sheet is ordinary page content, so pulling it up is just
-  // scrolling. `isMobile` only gates mounting the <video> — the layout
+  // scrolling. `isMobile` gates the header's overlay treatment — the layout
   // itself is CSS, so it is right on the first paint rather than the second.
   const isMobile = useIsMobile();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -129,14 +133,6 @@ export default function Discover() {
     };
   }, []);
 
-
-  const heroSources = useMemo(() => {
-    const { webm, mp4 } = getResponsiveVideoSrc(HERO_VIDEO);
-    return [
-      { src: webm, type: "video/webm" },
-      { src: mp4, type: "video/mp4" },
-    ];
-  }, []);
 
   // Bring the sheet up to the top of the scroller. Tapping the grab handle
   // does it, and so does opening search — a search box that scrolls itself
@@ -372,27 +368,20 @@ export default function Discover() {
               glass turns to flat wash at the hero's bottom edge — a seam
               straight across the middle of the page. In flow the hero is
               still only its own height, which is what sets the peek. */}
-          {isMobile && (
-            <BackgroundVideo
-              sources={heroSources}
-              still={videoUrl(HERO_STILL)}
-              className="absolute inset-x-0 top-0 h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-hidden"
-            />
-          )}
-          {/* The cover's overlays, exactly as the frame has them.
+          <img
+            src={HERO_ART}
+            alt=""
+            className="absolute inset-x-0 top-0 h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] w-full object-cover"
+          />
+          {/* The frame's violet wash is NOT applied here.
            *
-           * Two of them, and the order matters. First a violet wash over the
-           * whole artwork — linear-gradient(194.854deg, …) — which is what
-           * makes the cover read as one purple surface rather than as a map
-           * with text on it. Then the frame's own top scrim, at the
-           * opacities it carries (0.12 falling to 0 by 64%), sitting ABOVE
-           * the copy the way it does in the file. Both are the frame's
-           * values, not an approximation of them; the earlier hand-rolled
-           * 0.52 scrim was doing the wash's job badly.
-           *
-           * The wash covers the video's own box (the full scroller), not the
-           * hero — same geometry the frame draws it at. */}
-          <div className="absolute inset-x-0 top-0 h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] bg-[linear-gradient(194.854deg,rgba(98,66,212,0.588)_17.325%,rgba(255,255,255,0)_110.89%)]" />
+           * linear-gradient(194.854deg, rgba(98,66,212,0.588) …) is what the
+           * file lays over its cover, and it was right while the artwork
+           * underneath was the map video. The artwork is now the file's own
+           * export, which already carries that gradient — painting it twice
+           * flattened the bubbles into a flat lilac. The cover is the art as
+           * given, and the frame's light top scrim below is the only thing
+           * over it. */}
 
           {/* Kept from before the frame, which does not draw this far down:
               the sheet's rounded edge needs something to sit on when the
