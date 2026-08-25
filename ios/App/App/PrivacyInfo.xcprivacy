@@ -77,10 +77,49 @@
 			</array>
 		</dict>
 
-		<!-- Profile photos and generated avatars. -->
+		<!-- Profile photos and generated avatars.
+		     The photograph is uploaded to a third-party AI provider (fal.ai)
+		     to generate the avatar; the privacy policy names it, and the App
+		     Privacy answers must say Photos are collected. -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypePhotosorVideos</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+
+		<!-- Player-authored quizzes, collections and room names — written to
+		     user_quiz_posts, quiz_collections and game_rooms, and visible to
+		     other players. This is user-generated content and was previously
+		     undeclared; the App Privacy answers need the matching
+		     User Content -> Gameplay Content entry. -->
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeGameplayContent</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+
+		<!-- Country, derived once from the IP address via ip-api.com and
+		     stored on the profile as country_code (see AuthContext). Country
+		     resolution is coarser than Apple's "precise" bar, but it is
+		     retained and linked to the account, so it is declared rather than
+		     argued about. -->
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeCoarseLocation</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<true/>
 			<key>NSPrivacyCollectedDataTypeTracking</key>

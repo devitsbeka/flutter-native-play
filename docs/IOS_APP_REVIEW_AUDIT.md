@@ -796,9 +796,9 @@ parse", but **what does this app contain, and what leaves the device**. The
 first two passes audited plumbing. This one audited content and data flow, and
 found one blocker they both missed.
 
-## S-1 · The privacy policy never says the app collects photographs — or where they go
+## S-1 · ✅ FIXED · The privacy policy never said the app collects photographs — or where they go
 
-**Status: BLOCKING · Guideline 5.1.1(i) (and App Privacy consistency) · Confidence: Verified**
+**Status: was BLOCKING · Guideline 5.1.1(i) (and App Privacy consistency) · Confidence: Verified**
 
 The app takes a photograph of the user's face and uploads it to a third-party
 AI provider. The privacy policy does not mention either fact.
@@ -841,9 +841,9 @@ face is going to an undisclosed AI processor.
 4. Consider a one-line notice at the point of capture. Not required; it is the
    difference between disclosed and obvious.
 
-## S-2 · The privacy policy contradicts itself on who receives data
+## S-2 · ✅ FIXED · The privacy policy contradicted itself on who receives data
 
-**Status: NON-BLOCKING (P2) · Confidence: Verified**
+**Status: was NON-BLOCKING (P2) · Confidence: Verified**
 
 `legal.withProviders` says data is shared *"With service providers (Supabase,
 Cloudflare)"* — two names. The third-party section of the same document lists
@@ -851,9 +851,9 @@ seven: Supabase, Firebase, AdMob, RevenueCat, Apple, PostHog, ip-api.com. One
 policy, two different answers to the same question. Fold the first into the
 second.
 
-## S-3 · The policy is dated "Effective: January 2025"
+## S-3 · ✅ FIXED · The policy was dated "Effective: January 2025"
 
-**Status: NON-BLOCKING (P3) · Confidence: Verified**
+**Status: was NON-BLOCKING (P3) · Confidence: Verified**
 
 `legal.effectiveDate`. For a 2026 submission that is a document stamped
 nineteen months before the build. It costs nothing and it is the first line a
@@ -902,6 +902,129 @@ surface hides in `ExtraPlaysOffer`; the lucky spin is ad-earned, not
 purchasable, so no loot-box odds disclosure attaches.
 
 **Build state:** 918 tests pass, both tsconfigs clean.
+
+---
+
+# The privacy work, and the App Privacy answers
+
+## What was changed
+
+**The policy now says what happens to a photograph.** Both surfaces — the
+hardcoded `PrivacyPolicyEN.tsx` and the `legal.*` keys the localized page
+renders — gained three collection rows (Photographs, Content You Create,
+Approximate Location), a `fal.ai` entry in the third-party list, and a
+retention sentence saying a photo lives exactly as long as the avatar it
+produced. In all seven languages.
+
+One deliberate limit: the copy claims only what **we** control — we use the
+photo to make the avatar, we do not show it to other players, we do not sell
+it, deleting the avatar deletes it. An earlier draft also asserted that fal.ai
+does not train on it. That is a claim about somebody else's terms, and it was
+removed. **Confirm fal.ai's DPA and add the stronger sentence if it is true.**
+
+**S-2:** `withProviders` no longer names its own short list; it points at the
+third-party section, so the document answers "who receives your data" once.
+
+**S-3:** effective date is August 2026.
+
+**The manifest was missing two categories.** Chasing S-1 turned up that
+`PrivacyInfo.xcprivacy` declared nine data types and the app collects eleven:
+
+- **Gameplay Content** — player-authored quizzes, collections and room names,
+  written to `user_quiz_posts`, `quiz_collections` and `game_rooms`, visible
+  to other players. Undeclared.
+- **Coarse Location** — `country_code`, derived once from the IP address via
+  ip-api.com and stored on the profile (`AuthContext.tsx:151`). Undeclared.
+
+Both added. Verify the key spellings against Apple's current list via
+Product → Archive → Generate Privacy Report before uploading — an
+unrecognised data-type string is an upload-time validation error, not a
+silent no-op.
+
+**`src/__tests__/privacyDisclosure.test.ts`** pins all of it: photographs and
+the AI processor named on both pages, the copy present in every locale, the
+`withProviders` contradiction not returning, and the manifest declaring the
+four types that matter. It asserts subject matter rather than wording, so the
+copy stays free to improve.
+
+## Per-language policy URLs
+
+App Store Connect takes a privacy policy URL **per App Store localization**,
+and `/privacy-policy` could not serve that: it renders in whatever language
+the visitor has stored, which for a first-time visitor from the German
+storefront is English.
+
+So `/privacy-policy/:lang` and `/terms/:lang` now exist, pinned by path,
+ignoring app state entirely (`src/utils/legalLanguage.ts`). They also set
+`<html lang>` and the document title, because these are public pages someone
+lands on from the App Store rather than in-app screens. An unsupported code
+redirects to the preference-following route rather than 404ing, so a mistyped
+listing link still shows the policy.
+
+| Locale | Privacy policy URL | Terms URL |
+|---|---|---|
+| English | `https://mytrivia.io/privacy-policy/en` | `https://mytrivia.io/terms/en` |
+| Georgian | `https://mytrivia.io/privacy-policy/ka` | `https://mytrivia.io/terms/ka` |
+| German | `https://mytrivia.io/privacy-policy/de` | `https://mytrivia.io/terms/de` |
+| Spanish | `https://mytrivia.io/privacy-policy/es` | `https://mytrivia.io/terms/es` |
+| French | `https://mytrivia.io/privacy-policy/fr` | `https://mytrivia.io/terms/fr` |
+| Italian | `https://mytrivia.io/privacy-policy/it` | `https://mytrivia.io/terms/it` |
+| Portuguese | `https://mytrivia.io/privacy-policy/pt` | `https://mytrivia.io/terms/pt` |
+
+These are live only after the next deploy of the web app. Check one before
+pasting them into the listing.
+
+## The App Privacy answers
+
+Fill these in under **App Store Connect → your app → App Privacy**. They are
+derived from `PrivacyInfo.xcprivacy`, which is the file Xcode's privacy report
+aggregates — the two must agree, and a reviewer can see both.
+
+Start by answering **"Do you or your third-party partners collect data from
+this app?" → Yes**.
+
+Then, for each type below: **Data Type → collected → linked to the user's
+identity? → used for tracking? → purposes**.
+
+| Data type (ASC) | Category | Linked | Tracking | Purpose | Why |
+|---|---|---|---|---|---|
+| **User ID** | Identifiers | Yes | No | App Functionality | Supabase account id |
+| **Email Address** | Contact Info | Yes | No | App Functionality | Sign-up, Sign in with Apple |
+| **Name** | Contact Info | Yes | No | App Functionality | Nickname / display name |
+| **Photos or Videos** | User Content | Yes | No | App Functionality | The avatar selfie, sent to fal.ai |
+| **Gameplay Content** | User Content | Yes | No | App Functionality | Player-made quizzes, collections, room names |
+| **Coarse Location** | Location | Yes | No | App Functionality | Country from IP, stored as `country_code` |
+| **Purchase History** | Purchases | Yes | No | App Functionality | Subscriptions and gem packs via RevenueCat |
+| **Product Interaction** | Usage Data | Yes | No | Analytics, App Functionality | PostHog |
+| **Device ID** | Identifiers | Yes | **YES** | **Third-Party Advertising** | IDFA via AdMob |
+| **Crash Data** | Diagnostics | No | No | App Functionality | PostHog exception capture |
+| **Performance Data** | Diagnostics | No | No | Analytics | PostHog |
+
+### The three answers that are easy to get wrong
+
+1. **Device ID is the only "used for tracking: Yes".** That single answer is
+   what puts *"Data Used to Track You"* on the listing, and it is what makes
+   the ATT prompt mandatory rather than optional. It is correct — AdMob serves
+   personalised ads when the player allows it, and
+   `PrivacyInfo.xcprivacy` sets `NSPrivacyTracking` to true to match. Do not
+   soften it to No to make the label look better; the manifest would then
+   contradict the answers.
+
+2. **Photos are "Linked to You".** They are uploaded against an account and
+   the avatar is stored on the profile. Answering "Not Linked" would be wrong
+   and is exactly the contradiction S-1 was about.
+
+3. **Nothing here is "Data Used to Track You" except Device ID, and nothing is
+   sold.** The policy says data is not sold; keep the CCPA answer consistent.
+
+### Also on that screen
+
+- **Privacy Policy URL** — use the per-language URLs above, one per App Store
+  localization.
+- **Age rating** — 12+ is the floor for a gate that starts at 13 (Apple has no
+  13+ tier). Answer the user-generated-content questions honestly; the app has
+  player-made quizzes, nicknames and avatars, and moderation (report, block,
+  text filter) is what keeps that from forcing 17+.
 
 ---
 
@@ -974,7 +1097,9 @@ So the catalogue is complete. What remains is configuration and attachment.
 ### Listing
 
 - [ ] App Privacy answers match `PrivacyInfo.xcprivacy` line for line — including Device ID / Third-Party Advertising / **used for tracking: yes**
-- [ ] **The privacy policy discloses photographs and the AI processors that receive them** (**S-1**). The label will say Photos; the policy currently does not mention them, and names neither fal.ai nor the model behind it
+- [ ] App Privacy answers filled in from the table above — **Device ID is the only "used for tracking: Yes"** (**S-1**)
+- [ ] Privacy Policy URL set **per App Store localization**, using the `/privacy-policy/:lang` URLs
+- [ ] fal.ai's DPA confirmed, and the stronger "not used for training" sentence added to the policy if their terms support it
 - [ ] **Age rating matches the now-13+ behaviour** (**P1-4**). The age gate offers 13–17 and 18+, the privacy policy says 13+, and the app serves ads — the questionnaire, the gate and the policy all have to tell the same story. A rating of 4+ on an app whose own gate starts at 13 is the contradiction a reviewer notices
 - [ ] Standard Apple EULA selected, or a custom one supplied, and its link matches the in-app `/terms`
 - [ ] Support URL and Privacy Policy URL both resolve

@@ -3,10 +3,29 @@ import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FileText, Mail, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useEffect } from "react";
+import { translatorFor } from "@/utils/legalLanguage";
 
-export default function TermsOfService() {
-  const { t, language } = useLanguage();
+/**
+ * `lang` pins the page to one language regardless of app state, for the
+ * per-locale URLs App Store Connect links (see utils/legalLanguage). Left
+ * unset — the in-app route — it follows the player's own preference.
+ */
+export default function TermsOfService({ lang }: { lang?: string } = {}) {
+  const context = useLanguage();
+  const language = lang ?? context.language;
+  const t = lang ? translatorFor(lang) : context.t;
   const isEnglish = language === 'en';
+
+  // A pinned page is a public web page someone may land on from the App
+  // Store, so tell the browser (and any crawler) which language it is in.
+  useEffect(() => {
+    if (!lang) return;
+    const previous = document.documentElement.lang;
+    document.documentElement.lang = lang;
+    document.title = t("legal.termsOfService");
+    return () => { document.documentElement.lang = previous; };
+  }, [lang, t]);
 
   return (
     <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background">

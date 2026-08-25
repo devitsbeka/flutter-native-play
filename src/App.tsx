@@ -34,7 +34,8 @@ import { RoundStartWatcher } from "@/components/system/RoundStartWatcher";
 import { HiddenWorkGuard } from "@/components/system/HiddenWorkGuard";
 import { FakeFriendRequestAutoAccept } from "@/components/system/FakeFriendRequestAutoAccept";
 import { PageSkeleton } from "@/components/PageSkeleton";
-import { Navigate } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
+import { isLegalLanguage } from "@/utils/legalLanguage";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
 import { Toaster } from "sonner";
 import { useFreshBuildGuard } from "@/hooks/useFreshBuildGuard";
@@ -83,6 +84,26 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const PrivacyPolicyEN = lazy(() => import("./pages/PrivacyPolicyEN"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const TermsOfServiceEN = lazy(() => import("./pages/TermsOfServiceEN"));
+
+/**
+ * The legal pages at a URL that names its language.
+ *
+ * App Store Connect takes a privacy policy URL per App Store localization, and
+ * the page behind each has to render in that language for someone who has
+ * never opened the app. `/privacy-policy` follows stored preference, so it
+ * cannot promise that; `/privacy-policy/de` can.
+ *
+ * An unsupported code redirects to the preference-following route rather than
+ * 404ing — a mistyped listing link should still show the policy.
+ */
+function LegalByLanguage({ page }: { page: "privacy" | "terms" }) {
+  const { lang } = useParams<{ lang: string }>();
+  const base = page === "privacy" ? "/privacy-policy" : "/terms";
+
+  if (!isLegalLanguage(lang)) return <Navigate to={base} replace />;
+
+  return page === "privacy" ? <PrivacyPolicy lang={lang} /> : <TermsOfService lang={lang} />;
+}
 const Support = lazy(() => import("./pages/Support"));
 const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
 
@@ -273,6 +294,9 @@ const App = () => (
                 <Route path="/privacy-policy-en" element={<PrivacyPolicyEN />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/terms-en" element={<TermsOfServiceEN />} />
+                {/* Per-language legal URLs, for the App Store listing. */}
+                <Route path="/privacy-policy/:lang" element={<LegalByLanguage page="privacy" />} />
+                <Route path="/terms/:lang" element={<LegalByLanguage page="terms" />} />
                 <Route path="/support" element={<Support />} />
                 <Route path="/delete-account" element={<DeleteAccount />} />
                 <Route path="/settings" element={<Settings />} />
