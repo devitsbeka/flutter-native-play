@@ -30,14 +30,17 @@ import { funRowCategories } from "@/utils/discoverRows";
    its poster are still in public/videos, unused by this page. */
 const HERO_ART = "/images/bgs.png";
 
-/* The video takes what the phone can actually show — the viewport less the
-   safe-area insets the root already pads for, less the bottom nav floating
-   over the scroller — minus the sheet's peek. Measured against a bare
-   100dvh the peek lands behind the nav, where nobody sees it.
+/* Where the cover stops and the sheet starts: 47% of what the phone can
+   actually show, the viewport less the safe-area insets the root already
+   pads for.
 
-   96px is what the peek needs to be worth peeking at: the grab handle plus
-   enough of the 76px heading row to read the page's name. A proportional
-   tenth left a bare handle above the nav and nothing else. */
+   That is the frame's own line — its sheet opens at 444 of 946 — and it is
+   a share rather than a subtraction because it has to hold on a screen of
+   any height. It used to be everything minus a 96px peek, which left the
+   sheet a handle's worth of itself above the nav.
+
+   The offer above it is laid out against the same 47%, so the two move
+   together: see the tops in the cover's copy below. */
 // Written out in full, never assembled: Tailwind reads these files as text,
 // so a class name built from a template literal is a class that never gets
 // generated — the hero collapsed to nothing the first time this was one.
@@ -45,7 +48,7 @@ const HERO_ART = "/images/bgs.png";
 const HEADER_HEIGHT = 76;
 
 const HERO_HEIGHT =
-  "h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom)_-_var(--bottom-nav-height)_-_96px)]";
+  "h-[calc((100dvh_-_var(--safe-top)_-_var(--safe-bottom))_*_0.47)]";
 
 // ─── Lazy Section: only mounts children when scrolled near viewport ─────
 
@@ -373,15 +376,19 @@ export default function Discover() {
             alt=""
             className="absolute inset-x-0 top-0 h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] w-full object-cover"
           />
-          {/* The frame's violet wash is NOT applied here.
+          {/* The readability fade, under the copy and over the art.
            *
-           * linear-gradient(194.854deg, rgba(98,66,212,0.588) …) is what the
-           * file lays over its cover, and it was right while the artwork
-           * underneath was the map video. The artwork is now the file's own
-           * export, which already carries that gradient — painting it twice
-           * flattened the bubbles into a flat lilac. The cover is the art as
-           * given, and the frame's light top scrim below is the only thing
-           * over it. */}
+           * The artwork is at its brightest exactly where the price note
+           * sits — the pale horizon band — and white on that is a guess
+           * rather than a read. This is a violet of the art's own family
+           * rather than black, so it darkens without greying, strongest
+           * behind the header and gone by the sheet's edge.
+           *
+           * The frame's own wash — linear-gradient(194.854deg,
+           * rgba(98,66,212,0.588) …) — is deliberately not here: this export
+           * already carries that gradient, and painting it twice flattened
+           * the bubbles into a sheet of lilac. */}
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(45,18,92,0.30)_0%,rgba(48,20,96,0.28)_40%,rgba(52,22,104,0.22)_72%,rgba(58,26,112,0.10)_90%,rgba(58,26,112,0)_100%)]" />
 
           {/* Kept from before the frame, which does not draw this far down:
               the sheet's rounded edge needs something to sit on when the
@@ -391,13 +398,17 @@ export default function Discover() {
 
           {/* The cover's offer.
            *
-           * Positioned the way the frame positions it — absolute tops of
-           * 133 / 235 / 293 / 363 from the top of the cover, measured
-           * against a 500px-wide frame — because the header above it is a
-           * fixed 76px on every device, so the distances below it are fixed
-           * too. Only the type scales: each size is min(frame px, the same
-           * size as a share of the viewport), so a 390px phone gets the same
-           * composition instead of a headline in three lines.
+           * Positioned the way the frame positions it: tops of 133 / 235 /
+           * 293 / 363 at the 500px width it was drawn at.
+           *
+           * Written as 78px + a share of the viewport, not as those numbers
+           * flat. 78 is the rule, which hangs off a header that is 76px on
+           * every device; everything under it is min(frame px, the same
+           * distance as a share of the width), so the block shrinks in step
+           * with the cover. Flat, the price note sat at 363 inside a cover
+           * that is 358 tall on a 390x844 phone — under the sheet. Type
+           * scales the same way, which is also what keeps the headline on
+           * two lines instead of three.
            *
            * pointer-events-auto is on the button alone; everything else here
            * stays transparent to touch, so a drag from the middle of the
@@ -407,23 +418,23 @@ export default function Discover() {
                 pixel, in the lilac the file draws it in. */}
             <div aria-hidden className="absolute left-1/2 -translate-x-1/2 top-[78px] h-px w-[min(441px,88.2vw)] bg-[#b8a6f5]" />
 
-            <h2 className="absolute left-1/2 -translate-x-1/2 top-[133px] w-[min(393px,86vw)] font-display uppercase text-[min(40px,8vw)] leading-[min(43px,8.6vw)] tracking-[0.5px]">
+            <h2 className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(55px,11vw))] w-[min(393px,86vw)] font-display uppercase text-[min(40px,8vw)] leading-[min(43px,8.6vw)] tracking-[0.5px]">
               {t("discover.promoTitle")}
             </h2>
 
-            <p className="absolute left-1/2 -translate-x-1/2 top-[235px] w-full px-6 text-[min(18px,3.6vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
+            <p className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(157px,31.4vw))] w-full px-6 text-[min(18px,3.6vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
               {t("discover.promoSubtitle")}
             </p>
 
             <button
               type="button"
               onClick={() => navigate("/profile?tab=PRO")}
-              className="pointer-events-auto absolute left-1/2 -translate-x-1/2 top-[293px] h-[min(53px,10.6vw)] w-[min(192px,38.4vw)] rounded-[min(18.386px,3.68vw)] border-[1.532px] border-solid border-[#e8e0f5] bg-white/80 text-[#5d247f] text-[min(16px,3.2vw)] font-bold uppercase tracking-[-0.16px] [text-shadow:none] shadow-[0px_3.698px_0px_0px_#d8d0e8,0px_5.546px_14.79px_0px_rgba(0,0,0,0.1)] active:translate-y-[2px] active:shadow-[0px_1.5px_0px_0px_#d8d0e8,0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-all"
+              className="pointer-events-auto absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(215px,43vw))] h-[min(53px,10.6vw)] w-[min(192px,38.4vw)] rounded-[min(18.386px,3.68vw)] border-[1.532px] border-solid border-[#e8e0f5] bg-white/80 text-[#5d247f] text-[min(16px,3.2vw)] font-bold uppercase tracking-[-0.16px] [text-shadow:none] shadow-[0px_3.698px_0px_0px_#d8d0e8,0px_5.546px_14.79px_0px_rgba(0,0,0,0.1)] active:translate-y-[2px] active:shadow-[0px_1.5px_0px_0px_#d8d0e8,0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-all"
             >
               {t("discover.promoCta")}
             </button>
 
-            <p className="absolute left-1/2 -translate-x-1/2 top-[363px] w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
+            <p className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(285px,57vw))] w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
               {t("discover.promoNote")}
             </p>
           </div>
