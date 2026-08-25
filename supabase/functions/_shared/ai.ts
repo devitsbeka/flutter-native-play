@@ -50,6 +50,11 @@ function stripVendorPrefix(model: string): string {
  */
 const GOOGLE_MODEL_SUCCESSORS: Record<string, string> = {
   "gemini-2.5-flash": "gemini-3.6-flash",
+  // "This model models/gemini-2.5-pro is no longer available to new users.
+  //  Please update your code to use models/gemini-3.1-pro-preview" — quoted
+  //  from the 404 that blocked every fact-check, and with it every question
+  //  the generator wrote.
+  "gemini-2.5-pro": "gemini-3.1-pro-preview",
 };
 
 function mapGoogleModel(model: string): string {
