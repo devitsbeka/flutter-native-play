@@ -16,6 +16,7 @@ import { dateLocaleFor } from "@/utils/dateLocale";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 import { readInviteIntent, roomIsFreshEnoughToOffer } from "@/utils/inviteLink";
+import logoLight from "@/assets/mytrivia-logo-light.svg";
 
 /**
  * The other end of a shared invite link.
@@ -381,7 +382,22 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
     // scroller for the life of the app, so a page that merely grows is frozen
     // solid on the device. See CLAUDE.md 4b.
     <div className="h-[100dvh] overflow-y-auto safe-bleed bg-[#7B68D9]">
-      <div className="max-w-[520px] mx-auto px-5 pt-[calc(var(--safe-top)+32px)] pb-12">
+      <div className="max-w-[520px] mx-auto px-5 pt-[calc(var(--safe-top)+24px)] pb-12">
+
+        {/* Whose app this is.
+            Most people reach this screen from a link in a chat, and a good
+            share of them have never heard of MyTrivia — the page opened on a
+            purple field with a stranger's face on it and nothing to say where
+            they were. The lockup carries the crown and the wordmark together,
+            so one image answers it. Light variant: the ground is purple. */}
+        <div className="flex justify-center mb-6">
+          <img
+            src={logoLight}
+            alt="MyTrivia"
+            className="h-9 w-auto select-none"
+            draggable={false}
+          />
+        </div>
 
         {/* Who is inviting you. The whole reason this screen exists. */}
         <motion.div
@@ -400,8 +416,17 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
           <div>
             <h1 className="text-white text-2xl font-bold drop-shadow">{preview.host_nickname}</h1>
             <p className="text-white/75 text-sm font-medium">
-              {hasRoom ? t("extra.inviteInvitesYou") : t("extra.inviteWantsToConnect")}
+              {hasRoom ? t("extra.inviteInvitesYou") : t("extra.inviteFriendSubtitle")}
             </p>
+            {/* A friend request has no room card under it to explain what
+                happens next, so the second line does: three words that this
+                is a quiz app and that accepting leads to playing together.
+                With a room on screen it would be saying it twice. */}
+            {!hasRoom && (
+              <p className="mt-1.5 text-white/55 text-[13px] leading-snug">
+                {t("extra.inviteFriendTagline")}
+              </p>
+            )}
           </div>
         </motion.div>
 
@@ -594,7 +619,7 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
                 ? t("extra.inviteJoinGame")
                 : alreadyFriends
                   ? t("extra.inviteGoHome")
-                  : t("extra.inviteAddFriend")}
+                  : t("extra.inviteAcceptFriend")}
           </ChunkyButton>
         )}
 
