@@ -1,5 +1,4 @@
 import { ArrowLeft } from "lucide-react";
-import { glassSurface } from "@/utils/glassSurface";
 import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -107,13 +106,10 @@ export function PageHeader({
           overlay
             ? `relative z-20 transition-colors duration-200 ${
                 docked
-                  ? glassSurface(
-                      "bg-white/95 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]",
-                      "bg-white",
-                    )
+                  ? "bg-white md:bg-white/95 md:backdrop-blur-md md:[-webkit-backdrop-filter:blur(12px)]"
                   : "bg-transparent"
               } ${className}`
-            : `sticky top-0 z-20 ${glassSurface("bg-background backdrop-blur-md", "bg-background")} border-b border-border/30 ${className}`
+            : `sticky top-0 z-20 bg-background md:backdrop-blur-md border-b border-border/30 ${className}`
         }
       >
         {/* 76px tall like the home header, so the search/bell icons land at

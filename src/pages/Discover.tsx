@@ -25,7 +25,6 @@ import { availablePlans, defaultPlan } from "@/config/proPlans";
 import { matchesQuery } from "@/utils/searchMatch";
 import { orderByPopularity, readRecentlyViewedIds, RECENTLY_VIEWED_KEY } from "@/utils/categoryTabs";
 import { funRowCategories } from "@/utils/discoverRows";
-import { glassSurface } from "@/utils/glassSurface";
 
 /* The cover's artwork, drawn at the 500x946 the design was laid out at.
    object-cover on a narrower phone crops the sides, which is what the
@@ -482,7 +481,7 @@ export default function Discover() {
          * empty Favourites) there would otherwise be nothing to pull. */}
         <div
           ref={sheetRef}
-          className={`relative z-10 rounded-t-[28px] border-t border-white/60 ${glassSurface("bg-[rgba(248,246,252,0.84)] backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)]", "bg-[#F6F3FB]")} shadow-[0_-12px_32px_rgba(41,17,84,0.35)] min-h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:rounded-none md:border-0 md:bg-[#F8F6FC] md:backdrop-blur-none md:shadow-none md:min-h-full`}
+          className="relative z-10 rounded-t-[28px] border-t border-white/60 bg-[#F6F3FB] shadow-[0_-12px_32px_rgba(41,17,84,0.35)] min-h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:rounded-none md:border-0 md:bg-[#F8F6FC] md:shadow-none md:min-h-full"
         >
 
         {/* The grab handle, and the whole of what the peek has to say before
@@ -502,7 +501,7 @@ export default function Discover() {
         {/* Search and tabs pin under the header — 76px down on phones, where
             the header is its own sticky element, and at the top from md up,
             where the header is inside this block. */}
-        <div className={`sticky top-[76px] md:top-0 z-20 ${glassSurface("bg-[rgba(248,246,252,0.78)] backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)]", "bg-[#F6F3FB]")} md:bg-[#F8F6FC]/95 md:backdrop-blur-none`}>
+        <div className="sticky top-[76px] md:top-0 z-20 bg-[#F6F3FB] md:bg-[#F8F6FC]/95">
           {!isMobile && <div>{pageHeader}</div>}
 
           {/* Expandable Search Bar */}
