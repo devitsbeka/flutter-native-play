@@ -19,7 +19,11 @@ export function useGemPurchase() {
   const { t } = useLanguage();
   const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
-  const { purchase: nativePurchase, purchasing: nativePurchasing } = useInAppPurchases();
+  const {
+    purchase: nativePurchase,
+    purchasing: nativePurchasing,
+    products,
+  } = useInAppPurchases();
 
   const initiateCheckout = async (product: GemProduct) => {
     if (!user) {
@@ -41,6 +45,15 @@ export function useGemPurchase() {
         // A pack with no store SKU cannot be sold here, and falling through to
         // the web path would be the exact violation. Fail loudly instead.
         console.error(`No store product configured for pack ${product.id}`);
+        toast.error(t("extra.iapItemUnavailable"));
+        return;
+      }
+
+      // Configured is not the same as stocked. StoreKit returns nothing while
+      // the consumables are unapproved or unattached to the version — the
+      // state an App Review device is in — and calling purchase() then opens
+      // a payment sheet that can only fail. Say so instead.
+      if (!products.some((p) => p.productId === productId)) {
         toast.error(t("extra.iapItemUnavailable"));
         return;
       }

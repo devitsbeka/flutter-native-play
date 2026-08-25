@@ -269,13 +269,6 @@ export const COMPONENTS_HOME = [
     usedIn: ["HomeScreen"]
   },
   {
-    name: "AdFreeModal",
-    path: "src/components/home/AdFreeModal.tsx",
-    description: "Ad-free purchase modal with benefits and restore option.",
-    props: ["isOpen", "onClose"],
-    usedIn: ["SettingsPage"]
-  },
-  {
     name: "PowerUpTutorialModal",
     path: "src/components/home/PowerUpTutorialModal.tsx",
     description: "Tutorial explaining specific power-up functionality.",

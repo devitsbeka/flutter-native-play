@@ -40,7 +40,6 @@ import { LoggedInHomeV2 } from "@/pages/LoggedInHomeV2";
 import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
 
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
-import { AdFreeModal } from "@/components/home/AdFreeModal";
 import { GemShopModal } from "@/components/home/GemShopModal";
 import { MyPowersModal } from "@/components/home/MyPowersModal";
 import { ActionButtonWithParticles } from "@/components/home/ActionButtonWithParticles";
@@ -48,7 +47,6 @@ import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { useGameStake } from "@/hooks/useGameStake";
 import { REWARDS } from "@/config/rewardConfig";
 
-import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
@@ -311,7 +309,6 @@ export default function Index() {
     navigate(location.pathname, { replace: true });
   }, [location.search, location.pathname, navigate]);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
-  const [isAdFreeModalOpen, setIsAdFreeModalOpen] = useState(false);
   const [isGemShopOpen, setIsGemShopOpen] = useState(false);
   const [showMissionsModal, setShowMissionsModal] = useState(false);
   // Which day the missions modal opens on. null = today, which is what
@@ -840,10 +837,6 @@ export default function Index() {
         onClose={() => setSelectedPowerUp(null)} 
         type={selectedPowerUp || "fifty-fifty"}
         onAddClick={() => navigate("/power-ups")}
-      />
-      <AdFreeModal
-        isOpen={isAdFreeModalOpen}
-        onClose={() => setIsAdFreeModalOpen(false)}
       />
       <GemShopModal
         isOpen={isGemShopOpen}

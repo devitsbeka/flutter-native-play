@@ -160,7 +160,6 @@ export const fr: KaTranslations = {
     step6Description: "Comparez votre score avec d'autres joueurs",
     ageGateTitle: "Quel âge as-tu ?",
     ageGateSubtitle: "Ça nous aide à te montrer la bonne expérience",
-    ageUnder16: "Moins de 16 ans",
   },
   powerups: {
     ...en.powerups,
@@ -3940,7 +3939,12 @@ export const fr: KaTranslations = {
   paywall: {
     title: "Obtiens un accès illimité",
     planAnnual: "Annuel",
-    planAnnualBlurb: "Essaie 1 jour gratuitement",
+    planAnnualBlurb: "Un an de PRO",
+    planTrialBlurbOne: "Essaie 1 jour gratuitement",
+    planTrialBlurb: "Essaie {days} jours gratuitement",
+    loadingPlans: "Chargement des formules...",
+    storeUnavailable: "Les formules sont indisponibles pour le moment",
+    storeUnavailableHint: "Impossible de joindre l'App Store. Vérifie ta connexion et réessaie dans un instant.",
     planMonthly: "Mensuel",
     planMonthlyBlurb: "Accès complet à MyTrivia",
     perMonth: "{price} / mois",

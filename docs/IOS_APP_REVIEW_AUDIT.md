@@ -71,20 +71,78 @@ The tree is green. Everything below is a gap the tooling does not cover.
 | P4 | 0 | 0 | 5 | 5 |
 | P5 | 0 | 0 | 4 | 4 |
 
-**Four items stand between this build and a submission that is worth making**
-(P0-1 … P0-4). Two more turn blocking depending on which in-app purchase
-products get attached to the build (P1-1, P1-2).
+**Four items stood between this build and a submission that is worth making**
+(P0-1 … P0-4), plus two that turned blocking depending on which in-app
+purchase products got attached (P1-1, P1-2).
 
 The compliance groundwork here is unusually good — privacy manifest, ATT
 pre-prompt ordering, report/block, account deletion, restore, IAP-only payments
-on device, SKAdNetwork, the bundle guard — and most of what follows is the last
-few percent rather than a rebuild.
+on device, SKAdNetwork, the bundle guard — and what follows was the last few
+percent rather than a rebuild.
+
+---
+
+## Resolution log
+
+Everything at P0 and P1 has been worked. Each finding's heading carries its
+state; this is the summary.
+
+| # | State | What changed |
+|---|---|---|
+| **P0-1** | ⚠️ Guarded | Cannot be fixed from this repo — the file is fetched from the Firebase console. `scripts/verify-ios-native.mjs` now runs first in `build:ios` and fails with the console path, so it is caught before Xcode rather than in it. It also rejects a plist for the wrong `BUNDLE_ID` and an `GADApplicationIdentifier` that is not an iOS app id. |
+| **P0-2** | ✅ Fixed | `<SubscriptionTerms />` now renders on `PlayLimitModal` and `ProPaywallModal`. `subscriptionTerms.test.ts` **derives** the surface list by walking `src/` for files importing `useProPurchase`, so surface number six cannot slip through the same hole. |
+| **P0-3** | ✅ Fixed, **wider than reported** | `availablePlans()` returns empty on native with no catalogue instead of falling back to a bundle-priced row; the paywall renders a loading / "store unavailable" state with the buy button disabled. Covered by `src/config/__tests__/proPlans.test.ts`. **The finding under-scoped this** — see below. |
+| **P0-4** | ⚠️ Open | Off-repo by nature — the products have to exist in App Store Connect. The client surface shrank (P1-1) and can no longer display a product the store did not return (P0-3), so the checklist is shorter. Still on the pre-submission list below. |
+| **P1-1** | ✅ Fixed | `IAP_PRODUCTS.AD_FREE` removed and the dead `AdFreeModal` deleted along with its `Index.tsx` render and admin-gallery entry. The **server** keeps the mapping, because the `ad_free` tier is also in the subscriptions table, a migration and `supabase/tests/03-pro-seats.sql`. The catalog invariant now asserts that retirement explicitly, in both directions. |
+| **P1-2** | ✅ Fixed | `trialDays` deleted from the plan config. The trial is read off the store product — `IAPProduct.introFreeDays`, from RevenueCat's `introPrice`, zero-price offers only. No store offer, no trial copy, so the app cannot advertise one App Store Connect does not grant. `src/utils/__tests__/introOffer.test.ts` covers the conversions. |
+| **P1-3** | ✅ Fixed | The QR scanner is gone entirely (product decision), taking `html5-qrcode`, `joinCodeFromQr` and the TeamV2 entry point with it. The avatar selfie now goes through `@capacitor/camera` on native, so **no `getUserMedia` runs in the webview at all** — which resolves the finding without `WKAppBoundDomains` and its ten-domain navigation cap. `NSCameraUsageDescription` no longer mentions QR codes. |
+| **P1-4** | ✅ Fixed | MyTrivia is 13+: the under-16 bucket is gone and the age gate offers 13–17 / 18+. `useAds` sets the age group **before** `AdMob.initialize()`, and `adService` re-applies the treatment if the profile arrives later, so `maxAdContentRating` is no longer inert. `tagForChildDirectedTreatment` is not set at all now — it is COPPA's under-13 flag and there are no under-13s. Legacy `child` rows still resolve to the stricter treatment. |
+| **P1-5** | ✅ Fixed | `main.tsx` arms an 8-second `SplashScreen.hide()` fallback on native, so a webview that never boots shows a blank screen rather than freezing on the launch image forever. |
+
+### P0-3 was on four more surfaces than the finding named
+
+Fixing the paywall exposed the same defect elsewhere. `MobileProCarousel`,
+`ShopRightSidebar`, `ProRequiredModal` and `PlayLimitModal` all price from
+`useStorePrice` and all gated their buy button on `isProcessing` alone — so on
+a device where StoreKit stayed silent they showed the same `$3.99` beside the
+same live button. The gem shop had the matching hole for consumables:
+`useGemPurchase` checked that a pack had a configured SKU, never that the
+store had actually returned it.
+
+That is one defect, so it got one fix rather than five:
+
+- **`useStorePrice`** no longer falls back to the USD figure on native. It
+  returns `"—"` with `fromStore: false`. A placeholder is a loading state; a
+  dollar figure is a quote, and it was the quote a reviewer would see.
+- **`useProPurchase`** exposes `storeReady` (native: StoreKit returned a
+  catalogue; web: always true) **and refuses the purchase itself** if the
+  product is not in the catalogue, so a surface that forgets to gate its
+  button gets a message instead of a payment sheet that fails.
+- All five subscription surfaces disable their buy button on `!storeReady`.
+- **`useGemPurchase`** checks the catalogue as well as the config.
+
+The audit's own P0-3 entry is left as written above — it is the record of what
+was found, and the gap between what it named and what was actually wrong is
+worth keeping visible.
+
+### Verification after the changes
+
+```
+npx vitest run                            → 95 files, 908 tests, all passing
+npm run typecheck                         → clean (both tsconfigs)
+eslint (changed files)                    → no new findings
+VITE_INCLUDE_ADMIN=false VITE_NATIVE_BUILD=true vite build
+  + prune-ios-videos + verify-ios-bundle  → "ok — 98.4 MB, no admin console, no pre-ATT tracking"
+eslint, whole tree, vs a worktree at HEAD  → 650 problems before, 647 after (no new findings)
+node scripts/verify-ios-native.mjs        → correctly fails here (no GoogleService-Info.plist);
+                                            passes against a matching plist, rejects a mismatched one
+```
 
 ---
 
 # P0 — Blocking
 
-## P0-1 · `GoogleService-Info.plist` is not in the repo, and the Xcode project requires it
+## P0-1 · ⚠️ GUARDED · `GoogleService-Info.plist` is not in the repo, and the Xcode project requires it
 
 **Status:** BLOCKING · **Guideline:** 2.1 (app crashes / does not build) · **Confidence:** Read (build-time, deterministic)
 
@@ -112,7 +170,7 @@ comment is only read by someone already looking at `.gitignore`.
 
 ---
 
-## P0-2 · Two subscription surfaces ship without the Guideline 3.1.2 disclosure
+## P0-2 · ✅ FIXED · Two subscription surfaces ship without the Guideline 3.1.2 disclosure
 
 **Status:** BLOCKING · **Guideline:** 3.1.2 (auto-renewable subscriptions) · **Confidence:** Read
 
@@ -162,7 +220,7 @@ The copy for all of this already exists in every locale
 
 ---
 
-## P0-3 · The paywall will offer a purchasable row when StoreKit returned no catalogue
+## P0-3 · ✅ FIXED · The paywall will offer a purchasable row when StoreKit returned no catalogue
 
 **Status:** BLOCKING · **Guideline:** 2.1 / 3.1.2 · **Confidence:** Read
 
@@ -198,7 +256,7 @@ The individual decisions are each defensible; the combination is not.
 
 ---
 
-## P0-4 · Every product the app can offer must exist in App Store Connect and be attached to this version
+## P0-4 · ⚠️ OPEN (off-repo) · Every product the app can offer must exist in App Store Connect and be attached to this version
 
 **Status:** BLOCKING · **Guideline:** 2.1 / 3.1.1 · **Confidence:** Needs ASC
 
@@ -234,7 +292,7 @@ should not sell in 1.0 (see P1-1 for `adfree`, P1-2 for `annual`).
 
 # P1 — High
 
-## P1-1 · `io.mytrivia.adfree` has no entry point in the app
+## P1-1 · ✅ FIXED · `io.mytrivia.adfree` has no entry point in the app
 
 **Status:** BLOCKING (conditional — blocking if the product is attached to the submission) · **Guideline:** 2.1 · **Confidence:** Verified
 
@@ -255,7 +313,7 @@ drop `AD_FREE` from `IAP_PRODUCTS`.
 
 ---
 
-## P1-2 · The paywall promises "Try 1 day free" for an offer that may not exist
+## P1-2 · ✅ FIXED · The paywall promises "Try 1 day free" for an offer that may not exist
 
 **Status:** BLOCKING (conditional — blocking if `io.mytrivia.pro.annual` ships) · **Guideline:** 2.3.1 / 3.1.2 · **Confidence:** Read + needs ASC
 
@@ -280,7 +338,7 @@ ship the annual row without checking which.
 
 ---
 
-## P1-3 · In-webview camera may be dead on device: no `WKAppBoundDomains`
+## P1-3 · ✅ FIXED · In-webview camera may be dead on device: no `WKAppBoundDomains`
 
 **Status:** BLOCKING (conditional — blocking if reproduced on device) · **Guideline:** 2.1 · **Confidence:** Needs device
 
@@ -331,9 +389,23 @@ images and the share flows after enabling it.
 Alternative, and arguably better regardless: move QR scanning to a native
 plugin, which also gets torch and continuous autofocus for free.
 
+> **How this was resolved.** Neither of the above. The QR scanner was dropped
+> from the product entirely, so the question of scanning natively went with it
+> — `QRScannerModal`, `html5-qrcode`, `joinCodeFromQr` and the TeamV2 header
+> button are all gone. That left the avatar selfie as the only `getUserMedia`
+> caller, and it now goes through `@capacitor/camera` on native
+> (`takePhotoWithCamera` in `src/utils/nativePhotoPicker.ts`), alongside the
+> library picker that already worked that way.
+>
+> So there is no in-webview media stream left to gate, and **`WKAppBoundDomains`
+> was not added** — which is the better outcome: declaring it would have capped
+> the app at ten navigable domains for the sake of one screen. The device test
+> above is no longer needed for this finding; the two remaining `getUserMedia`
+> calls are on the browser path only.
+
 ---
 
-## P1-4 · Child-directed ad treatment is configured but never applied
+## P1-4 · ✅ FIXED · Child-directed ad treatment is configured but never applied
 
 **Status:** NON-BLOCKING · **Guideline:** 1.3 / 5.1.4 (COPPA), AdMob policy · **Confidence:** Verified
 
@@ -380,9 +452,31 @@ be consistent with whichever way it is resolved.
    `child` option and gate signup; if yes, the privacy policy and the App Store
    age rating both have to say so.
 
+> **How this was resolved.** Point 3 first, because it settles the others:
+> MyTrivia is a 13+ service, so the under-16 bucket is gone and the gate offers
+> **13–17** and **18+**. `AgeGroup` is now `"teen" | "adult"`.
+>
+> Point 1 is done — `useAds` sets the age group before `initialize()`, and
+> `adService.setAgeGroup` re-applies the treatment when the profile arrives
+> after the SDK is already up, which is the ordinary case for a mid-session
+> sign-in.
+>
+> Point 2 is **moot rather than done**, and deliberately so. The concern was
+> putting the ATT prompt in front of an under-13; there are none. Prompting a
+> 13–17 player is permitted, and they are already held to non-personalised ads
+> by `npa: '1'` on every request regardless of the ATT answer.
+>
+> `tagForChildDirectedTreatment` is no longer set at all. It is COPPA's
+> under-13 flag and this app has no under-13 population to apply it to; a row
+> written before the bucket was removed still lands on the stricter
+> under-age-of-consent treatment via `isUnderAgeOfConsent`.
+>
+> The privacy policy's 13+ statement and the age gate now agree, which is what
+> a reviewer comparing the two will check.
+
 ---
 
-## P1-5 · No safety net if React never mounts — the splash stays up forever
+## P1-5 · ✅ FIXED · No safety net if React never mounts — the splash stays up forever
 
 **Status:** NON-BLOCKING · **Guideline:** 2.1 · **Confidence:** Read
 
@@ -708,20 +802,20 @@ Not answerable from this repository. Confirm each before pressing Submit.
 - [ ] Product → Archive → Generate Privacy Report reviewed — a third-party SDK updated to a version without its own manifest fails the upload even though nothing in ours changed
 
 **App Store Connect**
-- [ ] Every SKU the build can display exists, is priced, and is **attached to this version** (**P0-4**)
-- [ ] `io.mytrivia.pro.annual` has a 1-day free introductory offer, or the trial copy is removed (**P1-2**)
-- [ ] `io.mytrivia.adfree` either has an entry point or is not attached (**P1-1**)
+- [ ] Every SKU the build can display exists, is priced, and is **attached to this version** (**P0-4**). The list is now: `io.mytrivia.pro.monthly`, `io.mytrivia.proplus.monthly`, the gem consumables, and `io.mytrivia.pro.annual` / `io.mytrivia.pro.weekly` if you want those rows to appear
+- [ ] `io.mytrivia.adfree` is **not** attached — the app no longer sells it (**P1-1**)
+- [ ] If `io.mytrivia.pro.annual` ships with a free trial, configure the introductory offer; the app now reads it from the store, so a missing offer simply shows no trial copy rather than lying (**P1-2**)
 - [ ] App Privacy answers match `PrivacyInfo.xcprivacy` line for line — including Device ID / Third-Party Advertising / **used for tracking: yes**
-- [ ] Age rating questionnaire consistent with whatever P1-4 is resolved to
+- [ ] Age rating questionnaire says **12+ / 13+**, matching the age gate and the privacy policy (**P1-4**)
 - [ ] Standard Apple EULA selected, or a custom one supplied, and its link matches the in-app `/terms`
 - [ ] Support URL and Privacy Policy URL both resolve
 - [ ] Review notes: the app is playable as a guest, so no demo account is required — say so, and say where the reviewer should tap to reach the paywall and the restore button
 - [ ] Screenshots are of this build, portrait, iPhone sizes only
 
 **On device, before archiving**
-- [ ] QR scanner shows a camera preview (**P1-3**)
-- [ ] Avatar selfie shows a camera preview (**P1-3**)
-- [ ] Paywall shows StoreKit's localized price, not `$3.99` (**P0-3**)
+- [ ] Avatar selfie opens the **system camera sheet** and returns a photo (**P1-3**)
+- [ ] Paywall shows StoreKit's localized price; with no catalogue it shows the "plans unavailable" card and a disabled button, never a `$3.99` row (**P0-3**)
+- [ ] The auto-renewal disclosure is visible under the buy button on the paywall **and** on the out-of-plays modal (**P0-2**)
 - [ ] A sandbox purchase grants PRO, and Restore on a second install returns it
 - [ ] Push arrives, shows the sender's avatar, and the badge clears on foreground
 - [ ] A shared invite link opens the app rather than Safari

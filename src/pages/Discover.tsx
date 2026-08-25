@@ -134,8 +134,12 @@ export default function Discover() {
     );
     if (!plan) return "";
     const price = resolvePrice(plan.productId, plan.fallbackUsd ?? 0, plan.webGel).display;
-    return (plan.trialDays ? t("discover.promoNoteTrial") : t("discover.promoNote"))
-      .replace("{days}", String(plan.trialDays ?? 0))
+    // The trial is whatever the store product actually carries, not a figure
+    // from the bundle — promising free days App Store Connect does not grant
+    // is the same 2.3.1 problem here as on the paywall itself.
+    const trialDays = products.find((p) => p.productId === plan.productId)?.introFreeDays;
+    return (trialDays ? t("discover.promoNoteTrial") : t("discover.promoNote"))
+      .replace("{days}", String(trialDays ?? 0))
       .replace("{price}", price);
   }, [products, resolvePrice, t]);
 

@@ -12,6 +12,7 @@ import { ExtraPlaysOffer } from "@/components/home/ExtraPlaysOffer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { useProPurchase } from "@/hooks/useProPurchase";
+import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
 
 interface PlayLimitModalProps {
   isOpen: boolean;
@@ -36,7 +37,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
   function PlayLimitModal({ isOpen, onClose, onRegister, isGuest = false, inline, regenPlayAvailable, timeUntilNextPlay, onPlayWithRegen, onPurchased }, ref) {
     const { t } = useLanguage();
     const navigate = useNavigate();
-    const { initiateProCheckout, isProcessing } = useProPurchase();
+    const { initiateProCheckout, isProcessing, storeReady } = useProPurchase();
     const guestProgress = getGuestProgress();
     
     // Calculate stats for guests
@@ -198,7 +199,9 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
 
         <motion.button
           onClick={handleUpgradeToPro}
-          disabled={isProcessing}
+          // Not live while the store has told us nothing — see
+          // useProPurchase.storeReady.
+          disabled={isProcessing || !storeReady}
           whileTap={{ scale: 0.97, y: 2 }}
           className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl font-display text-base font-bold text-white disabled:opacity-60"
           style={{
@@ -210,6 +213,12 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
           <img src={crownIcon} alt="" className="h-6 w-6 object-contain" />
           {t("playLimit.becomePro")}
         </motion.button>
+
+        {/* The button above starts an auto-renewing subscription, so the
+            renewal terms belong beside it — guideline 3.1.2. This card is one
+            of the likeliest places a reviewer reaches the paywall from, and
+            it had no terms on it at all. */}
+        <SubscriptionTerms className="mt-3 text-center" onNavigate={onClose} />
       </div>
     );
 

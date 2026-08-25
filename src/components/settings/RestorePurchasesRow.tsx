@@ -7,10 +7,11 @@ import { useLanguage } from "@/contexts/LanguageContext";
 /**
  * Restore previously bought purchases.
  *
- * `restorePurchases` existed and worked, wired into AdFreeModal — which
- * `Index.tsx` renders but never opens: `setIsAdFreeModalOpen(true)` appears
- * nowhere. So the only route to restore was behind a modal with no way in,
- * and there was no restore button anywhere in the app.
+ * `restorePurchases` existed and worked, wired into an ad-free purchase modal
+ * that `Index.tsx` rendered and never opened. So the only route to restore was
+ * behind a modal with no way in, and there was no restore button anywhere in
+ * the app. (That modal has since been deleted along with the product it sold —
+ * see the note on `IAP_PRODUCTS`.)
  *
  * That is a guideline 3.1.1 rejection on its own. Apple requires a way to
  * restore purchases in any app selling subscriptions or non-consumables, and

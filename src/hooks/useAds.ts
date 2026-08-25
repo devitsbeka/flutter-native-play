@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { adService } from "@/services/adService";
 import { useVipStatus } from "@/hooks/useVipStatus";
+import { useAuth } from "@/hooks/useAuth";
 
 // Ads are strictly opt-in. An ad plays only when the player pressed a button
 // that says so — extra plays after the free games, bonus spins, power-ups.
@@ -9,10 +10,25 @@ import { useVipStatus } from "@/hooks/useVipStatus";
 
 export function useAds() {
   const { isVip, loading: vipLoading } = useVipStatus();
+  const { profile } = useAuth();
+  const ageGroup = (profile as { age_group?: string | null } | null)?.age_group ?? null;
 
+  // Age before initialize, not after.
+  //
+  // `tagForUnderAgeOfConsent` and `maxAdContentRating` are arguments to
+  // AdMob.initialize() and are read once per process. This effect used to be
+  // a bare `adService.initialize()`, so the SDK was always configured with no
+  // age treatment at all and the two ad modals' later `setAgeGroup` calls
+  // could only affect the per-request `npa` flag — an under-18 player was
+  // kept off personalised ads and could still be shown adult-rated ones.
+  //
+  // Setting it first covers the signed-in case; adService re-applies on its
+  // own if the profile arrives after initialization, which is the ordinary
+  // case for a player who signs in mid-session.
   useEffect(() => {
+    adService.setAgeGroup(ageGroup);
     adService.initialize();
-  }, []);
+  }, [ageGroup]);
 
   // Keep the service's VIP bypass in sync with the live VIP status
   useEffect(() => {

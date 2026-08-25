@@ -18,14 +18,19 @@ import { getPriceDisplay } from "@/utils/currency";
  * RevenueCat hands back `priceString` already formatted for the storefront,
  * so the correct thing to display is whatever it says.
  *
- * Falls back to the hardcoded figure when the store has not answered yet —
- * offerings load asynchronously, and a paywall that renders blank while
- * waiting looks broken.
+ * When the store has not answered, native shows a placeholder rather than a
+ * figure — see the note further down. The web keeps its own price, because
+ * Stripe is the thing charging there and the app knows what it will charge.
  */
 export interface StorePrice {
-  /** Ready to render, e.g. "$3.99", "₾10.99", "3,99 €". */
+  /** Ready to render, e.g. "$3.99", "₾10.99", "3,99 €", or "—" when unknown. */
   display: string;
-  /** True once the figure came from the store rather than the fallback. */
+  /**
+   * True once the figure came from the store.
+   *
+   * On native, **false means nothing may be sold at this price** — there is no
+   * price. Buy buttons must be disabled; see `useProPurchase.storeReady`.
+   */
   fromStore: boolean;
 }
 
@@ -74,11 +79,21 @@ export function useStorePrice() {
     // screen that does not match the price in the sheet, which is what
     // guideline 2.3.1 rejects for, and which a reviewer sees by looking.
     //
-    // The USD figure is at least the real configured price of the tier, so it
-    // is what to show while the store has not answered. Callers that can
-    // render a skeleton should prefer `fromStore` over this.
-    const nativeFallback = () => ({
-      display: `$${fallbackUsd.toFixed(2).replace(/\.00$/, "")}`,
+    // And do not fall back to the USD figure either.
+    //
+    // It used to render `$3.99` whenever the store had not answered, on the
+    // reasoning that it is at least the tier's real configured price. It is
+    // the real price in exactly one storefront. StoreKit is silent whenever
+    // the products are unapproved, unattached to the version, or unreachable
+    // — which is the state an App Review device is in — so the fallback was
+    // not a brief flicker on the way to the real price, it was the price a
+    // reviewer would see, in dollars, beside a Subscribe button.
+    //
+    // A placeholder says "not known yet", which is true, and reads as a
+    // loading state rather than as a quote. Callers must also refuse to sell
+    // while `fromStore` is false; see `useProPurchase.storeReady`.
+    const nativeUnknown = () => ({
+      display: "—",
       fromStore: false,
     });
 
@@ -89,6 +104,6 @@ export function useStorePrice() {
 
     return product?.price
       ? { display: product.price, fromStore: true }
-      : nativeFallback();
+      : nativeUnknown();
   };
 }

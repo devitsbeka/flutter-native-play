@@ -16,6 +16,13 @@
  * device reported, because a row for a product the store never heard of
  * opens a payment sheet and fails. On the web it sells through Stripe, which
  * prices from `webGel` and needs a yearly line in create-pro-checkout.
+ *
+ * **Free trials are not declared here.** A `trialDays: 1` used to sit on the
+ * annual plan with a comment saying it had to match the introductory offer in
+ * App Store Connect — a claim about a dashboard that nothing in this repo
+ * could check, so the app was one edit away from advertising a trial the
+ * store would not grant. The offer is read off the store product at render
+ * time instead; see `IAPProduct.introFreeDays`.
  */
 
 import { IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
@@ -34,12 +41,6 @@ export interface ProPlan {
   blurbKey: string;
   /** Billing period in months, for the per-month figure and the saving. */
   months: number;
-  /**
-   * Free days the store grants before the first charge, when an
-   * introductory offer is configured on the product. Drives the default
-   * selection and the button's wording. Nothing has one today.
-   */
-  trialDays?: number;
   /**
    * The tier's configured USD price, shown while StoreKit has not answered
    * and converted to GEL on the web (see useStorePrice). Omitted for a
@@ -70,10 +71,6 @@ export const PRO_PLANS: ProPlan[] = [
     nameKey: "paywall.planAnnual",
     blurbKey: "paywall.planAnnualBlurb",
     months: 12,
-    // One free day, then the year. Must match the introductory offer
-    // configured on io.mytrivia.pro.annual in App Store Connect: this is the
-    // promise, that is what keeps it.
-    trialDays: 1,
     webGel: 59.88,
     featured: true,
   },
@@ -100,20 +97,30 @@ export const PRO_PLANS: ProPlan[] = [
  * Off a device there is no catalogue to intersect with — the web build sells
  * through Stripe — so the test is whether the plan has a price of its own to
  * show.
+ *
+ * **On native, an empty catalogue yields an empty list, and that is correct.**
+ * This used to fall back to the monthly row on the reasoning that a paywall
+ * with no rows is worse than one the store might refuse. It is not. StoreKit
+ * answers with nothing whenever the products are not yet approved, not
+ * attached to the version, or simply unreachable — which is exactly the state
+ * an App Review device is in — and the fallback then rendered a row priced
+ * from `fallbackUsd`, in dollars, with a live Subscribe button behind it.
+ * That is two rejections on one screen: a price that is not the price charged
+ * (2.3.1) and a purchase that cannot complete (2.1).
+ *
+ * The caller renders an explicit "store unavailable" state instead. Saying
+ * "we cannot reach the App Store right now" is a worse paywall and an
+ * honest one.
  */
 export function availablePlans(
   storeProductIds: readonly string[],
   isNative: boolean,
 ): ProPlan[] {
-  const available = isNative
-    ? PRO_PLANS.filter((p) => storeProductIds.includes(p.productId))
-    : PRO_PLANS.filter((p) => p.webGel !== undefined || p.fallbackUsd !== undefined);
+  if (isNative) {
+    return PRO_PLANS.filter((p) => storeProductIds.includes(p.productId));
+  }
 
-  // Never return nothing: a paywall with no rows is worse than one showing
-  // the tier we know exists and letting the store refuse it.
-  return available.length > 0
-    ? available
-    : PRO_PLANS.filter((p) => p.id === "monthly");
+  return PRO_PLANS.filter((p) => p.webGel !== undefined || p.fallbackUsd !== undefined);
 }
 
 /** The row the paywall opens on: the featured plan if it is on sale here. */

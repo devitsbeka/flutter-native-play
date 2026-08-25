@@ -17,7 +17,27 @@ const TIER_TO_NATIVE_PRODUCT: Record<ProTierId, string> = {
 export function useProPurchase() {
   const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
-  const { purchase: nativePurchase, purchasing: nativePurchasing } = useInAppPurchases();
+  const {
+    purchase: nativePurchase,
+    purchasing: nativePurchasing,
+    products,
+  } = useInAppPurchases();
+
+  /**
+   * Whether this device can complete a purchase at all.
+   *
+   * On a phone that means StoreKit answered with a catalogue. It does not
+   * whenever the products are unapproved, unattached to the version, or
+   * unreachable — the state an App Review device is in — and a Subscribe
+   * button that is live in that state opens a payment sheet that fails.
+   *
+   * Every surface with a buy button should disable it on `!storeReady`, and
+   * `useStorePrice` shows a placeholder rather than a price for the same
+   * reason. The check below is the backstop for the one that forgets.
+   *
+   * Always true on the web, where Stripe is the thing charging.
+   */
+  const storeReady = !Capacitor.isNativePlatform() || products.length > 0;
 
   /**
    * @param tierId   What the purchase grants. Stripe prices by tier, so this
@@ -40,6 +60,15 @@ export function useProPurchase() {
     // Check if we're on native platform - use RevenueCat
     if (Capacitor.isNativePlatform()) {
       const productId = nativeProductId ?? TIER_TO_NATIVE_PRODUCT[tierId];
+
+      // Refuse rather than open a sheet that cannot complete. A caller that
+      // disabled its button on `storeReady` never reaches this; one that did
+      // not gets a message instead of a failed payment sheet.
+      if (!products.some((p) => p.productId === productId)) {
+        toast.error(tStandalone("extra.iapItemUnavailable"));
+        return { success: false, error: "PRODUCT_NOT_IN_STORE" };
+      }
+
       const result = await nativePurchase(productId);
       return result;
     }
@@ -83,5 +112,6 @@ export function useProPurchase() {
   return {
     initiateProCheckout,
     isProcessing: isProcessing || nativePurchasing,
+    storeReady,
   };
 }

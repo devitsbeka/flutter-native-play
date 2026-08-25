@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/lib/toast";
 import { t as tStandalone } from "@/contexts/LanguageContext";
+import { introFreeDays } from "@/utils/introOffer";
 
 // Product IDs configured in App Store Connect and mirrored in RevenueCat.
 // Must stay in sync with PRODUCTS in supabase/functions/_shared/iap.ts, which
@@ -28,7 +29,17 @@ export const IAP_PRODUCTS = {
   PRO_ANNUAL: "io.mytrivia.pro.annual",
   PRO_WEEKLY: "io.mytrivia.pro.weekly",
   PRO_PLUS_MONTHLY: "io.mytrivia.proplus.monthly",
-  AD_FREE: "io.mytrivia.adfree",
+  // `io.mytrivia.adfree` is deliberately absent. It was a non-consumable
+  // whose only entry point was AdFreeModal, which Index rendered and never
+  // opened — `setIsAdFreeModalOpen(true)` appeared nowhere in the app. A
+  // product App Review cannot reach is a 2.1 rejection ("we were unable to
+  // locate the in-app purchase") the moment it is attached to a submission,
+  // and PRO already includes ad removal.
+  //
+  // The server still recognises the id (`PRODUCTS.AD_FREE` in
+  // supabase/functions/_shared/iap.ts) so any existing entitlement keeps
+  // resolving on restore. Selling it again means giving it a real entry
+  // point first, not just putting the id back here.
 } as const;
 
 // Gem consumables are defined alongside the packs they sell, in
@@ -108,6 +119,18 @@ export interface IAPProduct {
   price: string;
   priceAmountMicros: number;
   priceCurrencyCode: string;
+  /**
+   * Free days the **store** will actually grant before the first charge, from
+   * the introductory offer configured on the product in App Store Connect —
+   * or undefined when there is no free offer on it.
+   *
+   * This is read rather than declared on purpose. The paywall used to promise
+   * "Try 1 day free" from a `trialDays` constant in the bundle, which is a
+   * claim about App Store Connect that nothing in the app could check. Get
+   * that wrong and the app advertises an offer StoreKit will not honour, on
+   * the screen App Review reads most carefully (2.3.1, 3.1.2).
+   */
+  introFreeDays?: number;
 }
 
 export interface PurchaseResult {
@@ -231,6 +254,7 @@ function toIAPProduct(product: any): IAPProduct {
     price: product.priceString || "",
     priceAmountMicros: Math.round((product.price || 0) * 1000000),
     priceCurrencyCode: product.currencyCode || "USD",
+    introFreeDays: introFreeDays(product.introPrice),
   };
 }
 

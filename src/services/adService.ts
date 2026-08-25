@@ -7,6 +7,7 @@
 import { Capacitor } from '@capacitor/core';
 import { trackingService } from './trackingService';
 import { personalizedAdsAllowed, ensureTrackingConsent } from '@/native/trackingConsent';
+import { isUnderAgeOfConsent } from '@/hooks/useAgeGroup';
 
 /**
  * Ad unit IDs.
@@ -95,11 +96,62 @@ class AdService {
   }
 
   /**
-   * Set age group for child-directed ad treatment (COPPA/GDPR compliance).
-   * Must be called before loading/showing ads.
+   * Set the age group that governs ad treatment.
+   *
+   * **Must be called before `initialize()`.** `tagForUnderAgeOfConsent` and
+   * `maxAdContentRating` are arguments to `AdMob.initialize()` and are read
+   * once, for the life of the process — setting an age group afterwards
+   * changes the per-request `npa` flag and nothing else.
+   *
+   * That is exactly how this went wrong: the only two callers were the ad
+   * modals, which run long after `useAds` has already initialized the SDK
+   * with `{}`. A 13-year-old was correctly excluded from personalised ads
+   * and could still be served ads rated for adults.
+   *
+   * So the age group arriving late re-initializes rather than being ignored.
    */
   setAgeGroup(ageGroup: string | null | undefined) {
-    this.ageGroup = ageGroup ?? null;
+    const next = ageGroup ?? null;
+    if (next === this.ageGroup) return;
+    this.ageGroup = next;
+
+    // Already up and running under different assumptions: apply the new ones.
+    if (this.isInitialized && this.isNative) {
+      void this.applyAgeTreatment();
+    }
+  }
+
+  /**
+   * Push the current age treatment into an already-initialized SDK.
+   *
+   * `initialize()` is idempotent on the plugin side and is the only place
+   * these two settings can be given, so re-running it with the new options is
+   * the way to change them. Failure is not fatal — the per-request `npa`
+   * flag still keeps personalised ads away — so this warns rather than
+   * throws.
+   */
+  private async applyAgeTreatment(): Promise<void> {
+    if (!this.AdMob) return;
+    try {
+      await this.AdMob.initialize(this.initOptions());
+    } catch (error) {
+      console.warn('[ads] Could not re-apply age treatment:', error);
+    }
+  }
+
+  /** The options `AdMob.initialize()` takes, for the current age group. */
+  private initOptions() {
+    const safety = this.getChildSafetyOptions();
+    return {
+      testingDevices: [],
+      initializeForTesting: false,
+      ...(safety.tagForUnderAgeOfConsent !== undefined && {
+        tagForUnderAgeOfConsent: safety.tagForUnderAgeOfConsent,
+      }),
+      ...(safety.maxAdContentRating && {
+        maxAdContentRating: safety.maxAdContentRating,
+      }),
+    };
   }
 
   /**
@@ -107,27 +159,26 @@ class AdService {
    *
    * On iOS the ATT answer decides it: anything short of an explicit yes, and
    * the request must go out without the advertising identifier. The
-   * age-group rules below set it independently for children and teens, and
-   * either reason is sufficient.
+   * age-group rule below sets it independently for under-18s, and either
+   * reason is sufficient.
    */
   private nonPersonalizedFlag(): '1' | undefined {
     if (!personalizedAdsAllowed()) return '1';
-    const childSafety = this.getChildSafetyOptions();
-    return childSafety.npa;
+    return this.getChildSafetyOptions().npa;
   }
 
+  /**
+   * Ad treatment for a player under the age of consent.
+   *
+   * `tagForChildDirectedTreatment` is deliberately not set. It is COPPA's
+   * under-13 flag, and MyTrivia is a 13+ service — the age gate has no bucket
+   * below 13 (see `AgeGateStep`). A legacy `child` row from before that
+   * option was removed lands here too, via `isUnderAgeOfConsent`, which is
+   * the stricter of the two answers available to it.
+   */
   private getChildSafetyOptions() {
-    if (this.ageGroup === 'child') {
+    if (isUnderAgeOfConsent(this.ageGroup)) {
       return {
-        tagForChildDirectedTreatment: true,
-        tagForUnderAgeOfConsent: true,
-        maxAdContentRating: 'G' as const,
-        npa: '1' as const,
-      };
-    }
-    if (this.ageGroup === 'teen') {
-      return {
-        tagForChildDirectedTreatment: false,
         tagForUnderAgeOfConsent: true,
         maxAdContentRating: 'T' as const,
         npa: '1' as const,
@@ -168,20 +219,7 @@ class AdService {
           // which runs a context screen first, immediately before an ad.
           await trackingService.initialize();
 
-          const childSafety = this.getChildSafetyOptions();
-          await this.AdMob.initialize({
-            testingDevices: [],
-            initializeForTesting: false,
-            ...(childSafety.tagForChildDirectedTreatment !== undefined && {
-              tagForChildDirectedTreatment: childSafety.tagForChildDirectedTreatment,
-            }),
-            ...(childSafety.tagForUnderAgeOfConsent !== undefined && {
-              tagForUnderAgeOfConsent: childSafety.tagForUnderAgeOfConsent,
-            }),
-            ...(childSafety.maxAdContentRating && {
-              maxAdContentRating: childSafety.maxAdContentRating,
-            }),
-          });
+          await this.AdMob.initialize(this.initOptions());
           
           console.log('AdMob initialized successfully');
           this.isInitialized = true;
