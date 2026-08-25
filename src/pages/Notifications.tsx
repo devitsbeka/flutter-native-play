@@ -386,20 +386,20 @@ export default function Notifications() {
       <div className="sticky top-[76px] z-10 bg-background/95 backdrop-blur-md px-4 pt-3 pb-3 max-w-[700px] md:max-w-[600px] mx-auto">
         <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as NotificationTab)} className="w-full">
           <TabsList className={`grid ${PUBLIC_SHARING_ENABLED ? "grid-cols-3" : "grid-cols-2"} w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto`}>
-            <TabsTrigger value="games" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
-              <Gamepad2 className="w-3.5 h-3.5" />
+            <TabsTrigger value="games" className="flex items-center gap-1.5 text-[13px] py-3 data-[state=active]:bg-background">
+              <Gamepad2 className="w-[15px] h-[15px]" />
               <span>{t("extra.notifGamesTab")}</span>
               {getUnreadCount('games') > 0 && (
-                <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
+                <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[11px] flex items-center justify-center font-medium">
                   {getUnreadCount('games')}
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="social" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
-              <Users className="w-3.5 h-3.5" />
+            <TabsTrigger value="social" className="flex items-center gap-1.5 text-[13px] py-3 data-[state=active]:bg-background">
+              <Users className="w-[15px] h-[15px]" />
               <span>{t("extra.notifSocialTab")}</span>
               {getUnreadCount('social') > 0 && (
-                <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
+                <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[11px] flex items-center justify-center font-medium">
                   {getUnreadCount('social')}
                 </span>
               )}
@@ -407,11 +407,11 @@ export default function Notifications() {
             {/* Likes/saves/plays on published trivias — nothing can produce
                 these while public sharing is hidden, so the tab goes too. */}
             {PUBLIC_SHARING_ENABLED && (
-            <TabsTrigger value="trivia" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
-              <Sparkles className="w-3.5 h-3.5" />
+            <TabsTrigger value="trivia" className="flex items-center gap-1.5 text-[13px] py-3 data-[state=active]:bg-background">
+              <Sparkles className="w-[15px] h-[15px]" />
               <span>{t("extra.notifTriviaTab")}</span>
               {getUnreadCount('trivia') > 0 && (
-                <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
+                <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[11px] flex items-center justify-center font-medium">
                   {getUnreadCount('trivia')}
                 </span>
               )}
