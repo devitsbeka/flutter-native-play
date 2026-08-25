@@ -64,10 +64,34 @@ export function inviteLinkPath(code: string, intent: InviteIntent): string {
 export function readInviteIntent(search: string | URLSearchParams): InviteIntent {
   const params =
     typeof search === "string" ? new URLSearchParams(search) : search;
-  if (params.get(FRIEND_ONLY_PARAM) === "1") return { kind: "friend" };
-  const roomCode = params.get(ROOM_PARAM)?.trim();
+  if (firstWord(params.get(FRIEND_ONLY_PARAM)) === "1") return { kind: "friend" };
+  const roomCode = firstWord(params.get(ROOM_PARAM));
   if (roomCode) return { kind: "room", roomCode };
   return { kind: "pending" };
+}
+
+/**
+ * The first word of a parameter, because links do not arrive clean.
+ *
+ * A share sheet hands the messaging app a title, a message and a URL as three
+ * separate fields, and what the app does with them is its own business. Pick
+ * "Copy" on the macOS sheet and the clipboard holds the URL and the message
+ * run together; paste that into a browser and every space becomes %20 — so
+ * the link opens as
+ *
+ *   /i/g6krdvgpx4zqm4n3?f=1%20მოგიწვიე%20MyTrivia-ში%20თამაშზე!…
+ *
+ * and `f` is not "1", it is "1 მოგიწვიე MyTrivia-ში თამაშზე!…". An exact
+ * comparison says this link carries no intent, and the friend request quietly
+ * becomes an invitation to whatever room the sender is in — which is the whole
+ * bug this file exists to fix, walking back in through the front door.
+ *
+ * Everything past the first space is somebody else's text. Neither value this
+ * reads can legitimately contain one.
+ */
+function firstWord(value: string | null): string | undefined {
+  const first = value?.trim().split(/\s+/)[0];
+  return first || undefined;
 }
 
 /**
@@ -85,6 +109,29 @@ export function readInviteIntent(search: string | URLSearchParams): InviteIntent
  * screen offers that instead of a stranger's abandoned lobby.
  */
 export const STALE_ROOM_AFTER_MS = 3 * 60 * 60 * 1000;
+
+/**
+ * Whether a room the sender never named is theirs to offer at all.
+ *
+ * invite_preview resolves "a waiting room the sender is a PARTICIPANT of",
+ * and participation is not an invitation to give. Gloria opened a link she
+ * had shared from Create Room — no room named, nothing made yet — and the
+ * screen offered "Celebration Plaza", hosted by TriviaMaste, because Gloria
+ * had joined it an hour earlier. It read "Gloria is inviting you to play"
+ * over somebody else's lobby.
+ *
+ * A pending link is a promise about a room its sender is making, so it can
+ * only be a room its sender hosts. Anyone in a lobby can still bring people
+ * in — they share from the lobby, and that link NAMES the room, which is the
+ * case `?r=` exists for and which this rule does not touch.
+ */
+export function senderCanOfferRoom(
+  roomHostUserId: string | null | undefined,
+  senderUserId: string | null | undefined,
+): boolean {
+  if (!roomHostUserId || !senderUserId) return false;
+  return roomHostUserId === senderUserId;
+}
 
 /**
  * Whether a resolved-at-open-time room is recent enough to offer.

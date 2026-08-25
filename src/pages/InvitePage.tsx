@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { dateLocaleFor } from "@/utils/dateLocale";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
-import { readInviteIntent, roomIsFreshEnoughToOffer } from "@/utils/inviteLink";
+import { readInviteIntent, roomIsFreshEnoughToOffer, senderCanOfferRoom } from "@/utils/inviteLink";
 import logoLight from "@/assets/mytrivia-logo-light.svg";
 
 /**
@@ -190,12 +190,17 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
           });
           if (cancelled) return;
           const room = (roomRows as InvitePreview[] | null)?.[0];
+          // Two questions, and the room has to pass both. Is it the sender's
+          // to offer — invite_preview settles for "they are a participant",
+          // which lands on other people's lobbies — and is it recent enough
+          // that anyone means it.
+          const theirs = senderCanOfferRoom(room?.host_user_id, resolved.host_user_id);
           const fresh = roomIsFreshEnoughToOffer(
             room?.last_activity_at,
             room?.created_at,
             Date.now(),
           );
-          if (!fresh) {
+          if (!theirs || !fresh) {
             resolved = { ...resolved, room_code: null, room_name: null, category_id: null, category_name: null, room_status: null, player_count: null };
             people = [];
           } else if (room) {
