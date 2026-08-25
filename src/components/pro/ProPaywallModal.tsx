@@ -7,6 +7,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { useProPurchase } from "@/hooks/useProPurchase";
 import { ProPlan, annualSaving, availablePlans, defaultPlan } from "@/config/proPlans";
+import {
+  BUY_SHADOW,
+  GLASS_SHEEN,
+  GOLD_BUTTON,
+  SKIN_WHITE,
+} from "@/components/shop/ProBannerCard";
 
 import crownIcon from "@/assets/icons/icon-vip-crown.webp";
 import benefitPlay from "@/assets/pro-banner/banner-gamepad.webp";
@@ -14,6 +20,9 @@ import benefitWheel from "@/assets/pro-banner/banner-wheel.webp";
 import benefitNoAds from "@/assets/pro-banner/banner-no-ads.webp";
 import benefitTimer from "@/assets/pro-banner/banner-timer.webp";
 import benefitDiscount from "@/assets/pro-banner/banner-discount.webp";
+
+/** The cover art the offer was tapped on, carried into the paywall. */
+const COVER_ART = "/images/bgs.png";
 
 interface ProPaywallModalProps {
   isOpen: boolean;
@@ -23,15 +32,18 @@ interface ProPaywallModalProps {
 /**
  * The subscription paywall: pick a plan, see what it buys, subscribe.
  *
- * Rows come from src/config/proPlans.ts intersected with the catalogue the
- * device reported, so this never offers a product the store cannot sell —
- * see availablePlans() for why that matters. Prices are StoreKit's own
- * localised strings wherever the store answered, because a price compiled
- * into the bundle is a price that is wrong in every other storefront.
+ * Dressed as the rest of the app rather than as a paywall from somebody
+ * else's game: the shop's own PRO skin — SKIN_WHITE's white cards, #402666
+ * ink, violet-tinted tiles — and the same gold button the shop already sells
+ * PRO with, imported rather than re-picked. The first version of this screen
+ * was dark, a palette this app does not have on any page.
  *
- * Buying goes through useProPurchase, which is already the one path that
- * knows RevenueCat on a phone and Stripe on the web. Nothing here talks to a
- * store directly.
+ * Rows come from src/config/proPlans.ts intersected with the catalogue the
+ * device reported, so this never offers a product the store cannot sell.
+ * Prices are StoreKit's own localised strings wherever the store answered,
+ * because a price compiled into the bundle is wrong in every other
+ * storefront. Buying goes through useProPurchase, which is already the one
+ * path that knows RevenueCat on a phone and Stripe on the web.
  */
 export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
   const { t } = useLanguage();
@@ -85,8 +97,6 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
     return t("paywall.perMonth").replace("{price}", `$${(amount / plan.months).toFixed(2)}`);
   };
 
-  const saving = selected ? annualSaving(selected, amountOf) : null;
-
   const handleSubscribe = async () => {
     if (!selected) return;
     if (!user) {
@@ -112,6 +122,8 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
   if (!isOpen) return null;
 
   const busy = purchasing || isProcessing || restoring;
+  const ink = SKIN_WHITE.ink;
+  const inkSoft = SKIN_WHITE.inkSoft;
 
   const benefits = [
     { art: benefitPlay, title: t("paywall.benefitPlayTitle"), blurb: t("paywall.benefitPlayBlurb") },
@@ -122,58 +134,79 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-[#1B1030]">
-      {/* Crown over the plan's own violet, in place of the app art a store
-          screenshot would use. Fixed height so the plans are on screen
-          without a scroll on a short phone. */}
-      <div className="relative shrink-0 h-[26vh] min-h-[150px] max-h-[240px] overflow-hidden bg-[linear-gradient(160deg,#6D28D9_0%,#4C1D95_55%,#2E1065_100%)]">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-[#F8F6FC]">
+      {/* The cover the offer was tapped on, with the crown over it, so the
+          paywall reads as this screen going deeper rather than as another app
+          opening. It fades into the page wash at its foot. */}
+      <div className="relative shrink-0 h-[24vh] min-h-[140px] max-h-[210px] overflow-hidden">
+        <img src={COVER_ART} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(248,246,252,0)_0%,rgba(248,246,252,0.85)_65%,#F8F6FC_100%)]" />
         <img
           src={crownIcon}
           alt=""
-          className="absolute left-1/2 top-1/2 h-[62%] -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_12px_28px_rgba(0,0,0,0.45)]"
+          className="absolute left-1/2 top-1/2 h-[62%] -translate-x-1/2 -translate-y-[58%] object-contain drop-shadow-[0_10px_22px_rgba(64,38,102,0.35)]"
         />
         <button
           type="button"
           onClick={onClose}
           aria-label={t("common.close")}
-          className="absolute right-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/25 text-white active:scale-95"
-          style={{ top: "calc(var(--safe-top) + 8px)" }}
+          className="absolute right-4 flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(64,38,102,0.10)] bg-white/85 shadow-[0px_3px_0px_0px_rgba(64,38,102,0.10)] backdrop-blur-sm transition-all active:translate-y-[2px] active:shadow-[0px_1px_0px_0px_rgba(64,38,102,0.10)]"
+          style={{ top: "calc(var(--safe-top) + 8px)", color: ink }}
         >
-          <X className="h-5 w-5" />
+          <X className="h-5 w-5" strokeWidth={2.5} />
         </button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-5">
-        <h2 className="text-center font-display text-[clamp(22px,6.4vw,30px)] leading-[1.2] text-white">
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
+        <h2
+          className="text-center font-display text-[clamp(21px,6vw,28px)] uppercase leading-[1.2]"
+          style={{ color: ink }}
+        >
           {t("paywall.title")}
         </h2>
 
         {/* Plans */}
-        <div className="relative mt-6 rounded-3xl bg-white/[0.07] p-2">
-          {saving !== null && (
-            <div className="absolute -top-3 right-4 rounded-full bg-[#F5B301] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#2E1065]">
-              {t("paywall.popularSave").replace("{amount}", `$${saving.toFixed(2)}`)}
-            </div>
-          )}
-
+        <div className="mt-5 space-y-3">
           {plans.map((plan) => {
             const isSelected = selected?.id === plan.id;
             const perMonth = perMonthLabel(plan);
+            const planSaving = annualSaving(plan, amountOf);
             return (
               <button
                 key={plan.id}
                 type="button"
                 onClick={() => setSelectedId(plan.id)}
                 aria-pressed={isSelected}
-                className="flex w-full items-center gap-4 rounded-2xl px-3 py-4 text-left transition-colors active:bg-white/[0.06]"
+                className="relative flex w-full items-center gap-3 rounded-[24px] border-[3px] border-solid px-4 py-4 text-left transition-all active:translate-y-[2px]"
+                style={{
+                  background: SKIN_WHITE.bg,
+                  borderColor: isSelected ? "#7C3AED" : "rgba(124,58,237,0.16)",
+                  boxShadow: isSelected
+                    ? `${GLASS_SHEEN}, 0px 6px 0px 0px rgba(124,58,237,0.18), 0px 10px 24px 0px rgba(124,58,237,0.18)`
+                    : `${GLASS_SHEEN}, 0px 4px 0px 0px rgba(68,36,107,0.06)`,
+                }}
               >
+                {/* The badge belongs to the plan that earns it, not to the
+                    selection: moving it with the tap made it read as a label
+                    for "selected" rather than for "cheapest per month". */}
+                {planSaving !== null && (
+                  <span
+                    className="absolute -top-3 right-4 rounded-full bg-[#FCD34D] px-3 py-1 text-[11px] font-bold uppercase leading-none tracking-wide"
+                    style={{ color: ink }}
+                  >
+                    {t("paywall.popularSave").replace("{amount}", `$${planSaving.toFixed(2)}`)}
+                  </span>
+                )}
+
                 <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                    isSelected ? "border-[#F5B301] bg-[#F5B301]" : "border-white/25"
-                  }`}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors"
+                  style={{
+                    borderColor: isSelected ? "#7C3AED" : "rgba(64,38,102,0.22)",
+                    background: isSelected ? "#7C3AED" : "transparent",
+                  }}
                 >
                   {isSelected && (
-                    <svg viewBox="0 0 20 20" className="h-4 w-4 text-[#2E1065]" aria-hidden>
+                    <svg viewBox="0 0 20 20" className="h-4 w-4 text-white" aria-hidden>
                       <path
                         d="M4 10.5l4 4 8-8"
                         fill="none"
@@ -187,41 +220,56 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
                 </span>
 
                 <span className="min-w-0 flex-1">
-                  <span className="block font-bold text-white">
+                  <span className="block text-[17px] font-bold leading-tight" style={{ color: ink }}>
                     {t(plan.nameKey)}
                     {plan.trialDays ? ` ${t("paywall.freeTrialSuffix")}` : ""}
                   </span>
-                  <span className="block text-sm text-white/55">{t(plan.blurbKey)}</span>
+                  <span className="block text-[13px]" style={{ color: inkSoft }}>
+                    {t(plan.blurbKey)}
+                  </span>
                 </span>
 
                 <span className="shrink-0 text-right">
-                  <span className={`block font-bold ${isSelected ? "text-white" : "text-white/70"}`}>
+                  <span className="block text-[17px] font-bold" style={{ color: ink }}>
                     {priceLabel(plan)}
                   </span>
-                  {perMonth && <span className="block text-sm text-white/50">{perMonth}</span>}
+                  {perMonth && (
+                    <span className="block text-[13px]" style={{ color: inkSoft }}>
+                      {perMonth}
+                    </span>
+                  )}
                 </span>
               </button>
             );
           })}
         </div>
 
-        <p className="mt-7 text-center text-sm text-white/70">{t("paywall.benefitsLead")}</p>
+        <p className="mt-7 text-center text-[15px] font-bold" style={{ color: ink }}>
+          {t("paywall.benefitsLead")}
+        </p>
 
-        <div className="mt-3 space-y-3">
+        <div className="mt-3 space-y-2.5">
           {benefits.map((benefit) => (
             <div
               key={benefit.title}
-              className="flex items-center gap-4 rounded-2xl bg-white/[0.07] p-3"
+              className="flex items-center gap-3.5 rounded-[24px] border border-solid p-3"
+              style={{
+                background: SKIN_WHITE.tileFill,
+                borderColor: SKIN_WHITE.tileEdge,
+                boxShadow: GLASS_SHEEN,
+              }}
             >
-              <img
-                src={benefit.art}
-                alt=""
-                className="h-16 w-16 shrink-0 rounded-xl bg-black/20 object-contain p-1.5"
-              />
-              <div className="min-w-0">
-                <p className="font-bold text-white">{benefit.title}</p>
-                <p className="text-sm text-white/55">{benefit.blurb}</p>
-              </div>
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-white/80 shadow-[0px_2px_0px_0px_rgba(64,38,102,0.06)]">
+                <img src={benefit.art} alt="" className="h-11 w-11 object-contain" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[15px] font-bold leading-tight" style={{ color: ink }}>
+                  {benefit.title}
+                </span>
+                <span className="block text-[13px]" style={{ color: inkSoft }}>
+                  {benefit.blurb}
+                </span>
+              </span>
             </div>
           ))}
         </div>
@@ -229,24 +277,36 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
 
       {/* The buy row, always on screen. */}
       <div
-        className="shrink-0 border-t border-white/10 bg-[#1B1030] px-5 pt-4"
+        className="shrink-0 border-t border-[rgba(64,38,102,0.08)] bg-[#F8F6FC] px-5 pt-4"
         style={{ paddingBottom: "calc(var(--safe-bottom) + 16px)" }}
       >
         <button
           type="button"
           onClick={handleSubscribe}
           disabled={busy || !selected}
-          className="h-14 w-full rounded-full bg-[linear-gradient(180deg,#FFD066_0%,#F5A623_100%)] font-display text-lg uppercase tracking-wide text-[#2E1065] shadow-[0_6px_0_0_#C97F10] active:translate-y-[3px] active:shadow-[0_3px_0_0_#C97F10] disabled:opacity-60 transition-all"
+          className="relative flex h-[62px] w-full items-center justify-center rounded-[24px] border-[3px] border-solid border-[#9fa8a3] p-[3px] transition-all active:translate-y-[3px] disabled:opacity-60"
+          style={{ boxShadow: BUY_SHADOW }}
         >
-          {busy
-            ? t("paywall.working")
-            : selected?.trialDays
-              ? t("paywall.ctaTrial").replace("{days}", String(selected.trialDays))
-              : t("paywall.ctaSubscribe")}
+          <span
+            aria-hidden
+            className="absolute inset-[3px] rounded-[20px]"
+            style={{ backgroundImage: GOLD_BUTTON }}
+          />
+          <span
+            aria-hidden
+            className="absolute inset-[3px] rounded-[20px] shadow-[inset_0px_3px_0px_0px_rgba(255,255,255,0.35)]"
+          />
+          <span className="relative text-[18px] font-bold tracking-[-0.18px] text-white drop-shadow-[0px_4px_3px_rgba(0,0,0,0.07)]">
+            {busy
+              ? t("paywall.working")
+              : selected?.trialDays
+                ? t("paywall.ctaTrial").replace("{days}", String(selected.trialDays))
+                : t("paywall.ctaSubscribe")}
+          </span>
         </button>
 
         {selected && (
-          <p className="mt-3 text-center text-sm text-white/50">
+          <p className="mt-3 text-center text-[13px]" style={{ color: inkSoft }}>
             {(selected.trialDays ? t("paywall.footnoteTrial") : t("paywall.footnote"))
               .replace("{days}", String(selected.trialDays ?? 0))
               .replace("{price}", priceLabel(selected))
@@ -254,7 +314,10 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
           </p>
         )}
 
-        <div className="mt-3 flex items-center justify-center gap-4 text-[11px] leading-tight text-white/40">
+        <div
+          className="mt-3 flex items-center justify-center gap-4 text-[11px] leading-tight"
+          style={{ color: inkSoft }}
+        >
           <button type="button" onClick={() => { onClose(); navigate("/terms"); }}>
             {t("paywall.terms")}
           </button>
