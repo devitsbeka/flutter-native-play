@@ -24,6 +24,12 @@ interface PageHeaderProps {
       no rule under it, and a white title with a shadow so it stays legible
       over whatever is moving behind it. Explore uses it over its video. */
   overlay?: boolean;
+  /** Overlay headers only. The page has scrolled far enough that there is no
+      longer artwork behind the header — its own content is passing under it —
+      so the header takes a surface of its own: white, with the title and the
+      icons in the accent the tab strip already uses. Explore turns this on
+      when its sheet reaches the top. */
+  docked?: boolean;
   className?: string;
 }
 
@@ -34,6 +40,7 @@ export function PageHeader({
   rightElements,
   titleAccessory,
   overlay = false,
+  docked = false,
   className = "",
 }: PageHeaderProps) {
   const navigate = useNavigate();
@@ -82,11 +89,13 @@ export function PageHeader({
        * the two are one surface and both follow the theme.
        */}
       {typeof document !== "undefined" &&
-        !overlay &&
+        (!overlay || docked) &&
         createPortal(
           <div
             aria-hidden
-            className="fixed top-0 left-0 right-0 z-30 bg-background pointer-events-none"
+            className={`fixed top-0 left-0 right-0 z-30 pointer-events-none ${
+              overlay ? "bg-white" : "bg-background"
+            }`}
             style={{ height: "var(--safe-top)" }}
           />,
           document.body,
@@ -95,7 +104,11 @@ export function PageHeader({
       <header
         className={
           overlay
-            ? `relative z-20 bg-transparent ${className}`
+            ? `relative z-20 transition-colors duration-200 ${
+                docked
+                  ? "bg-white/95 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
+                  : "bg-transparent"
+              } ${className}`
             : `sticky top-0 z-20 bg-background backdrop-blur-md border-b border-border/30 ${className}`
         }
       >
@@ -128,9 +141,11 @@ export function PageHeader({
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.05 }}
-            className={`text-xl font-display font-bold uppercase tracking-wide ${
+            className={`text-xl font-display font-bold uppercase tracking-wide transition-colors duration-200 ${
               overlay
-                ? "text-white [text-shadow:0_2px_8px_rgba(23,10,54,0.45)]"
+                ? docked
+                  ? "text-[#6D28D9]"
+                  : "text-white [text-shadow:0_2px_8px_rgba(23,10,54,0.45)]"
                 : "text-slate-800"
             }`}
           >
