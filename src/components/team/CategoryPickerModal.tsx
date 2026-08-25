@@ -421,16 +421,18 @@ export function CategoryPickerModal({
                 />
               </div>
 
-              {/* Tabs, full bleed: the strip is a scroller, so it runs to the
-                  sheet's edges rather than stopping inside its padding. */}
-              <div className="-mx-4">
-                <IconTabBar
-                  tabs={tabs}
-                  activeTab={activeTab}
-                  onTabChange={(id) => setActiveTab(id as CategoryTabId)}
-                  compact
-                />
-              </div>
+              {/* The strip carries its own bleed — -mx-4 with 16px of scroll
+                  padding — so the first pill lands exactly on this column's
+                  edge, in line with the search field above and the cards
+                  below. A second -mx-4 out here pulled it 16px further left
+                  than everything it is meant to line up with. */}
+              <IconTabBar
+                tabs={tabs}
+                activeTab={activeTab}
+                onTabChange={(id) => setActiveTab(id as CategoryTabId)}
+                compact
+                tone="dark"
+              />
 
               {/* Categories grid */}
               {loadingCategories ? (

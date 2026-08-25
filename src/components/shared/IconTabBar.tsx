@@ -35,9 +35,24 @@ interface IconTabBarProps {
   activeTab: string;
   onTabChange: (tabId: string) => void;
   compact?: boolean;
+  /**
+   * Which surface the strip is sitting on.
+   *
+   * "light" is the default and what every caller had: white pills, slate
+   * labels, a lilac wash for the open one — right on the app's pale sheets
+   * and wrong anywhere else. Dropped onto the room picker's green-to-violet
+   * glass it read as a row of stickers, and the closed labels were mid-grey
+   * on a mid-green: the two hardest colours to tell apart at 12px.
+   *
+   * "dark" borrows the surface the sheet already uses for its own search
+   * field — white at a tenth, a hairline border — so the strip belongs to the
+   * sheet rather than sitting on top of it, and every label is white.
+   */
+  tone?: "light" | "dark";
 }
 
-export function IconTabBar({ tabs, activeTab, onTabChange, compact = false }: IconTabBarProps) {
+export function IconTabBar({ tabs, activeTab, onTabChange, compact = false, tone = "light" }: IconTabBarProps) {
+  const dark = tone === "dark";
   const containerRef = useRef<HTMLDivElement>(null);
   const velocityRef = useRef(0);
   const lastTouchRef = useRef(0);
@@ -184,9 +199,13 @@ export function IconTabBar({ tabs, activeTab, onTabChange, compact = false }: Ic
                 onTabChange(tab.id);
               }}
               className={`relative flex items-center gap-1.5 px-3 py-2 rounded-full flex-shrink-0 transition-all ${
-                isActive 
-                  ? 'bg-purple-100/80' 
-                  : 'bg-white/60 hover:bg-white/80'
+                dark
+                  ? isActive
+                    ? 'bg-white/25 border border-white/50'
+                    : 'bg-white/10 border border-white/20 hover:bg-white/15'
+                  : isActive
+                    ? 'bg-purple-100/80'
+                    : 'bg-white/60 hover:bg-white/80'
               }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -202,7 +221,16 @@ export function IconTabBar({ tabs, activeTab, onTabChange, compact = false }: Ic
                   fontFamily: "'Google Sans', sans-serif",
                   fontSize: compact ? '12px' : '13px',
                   letterSpacing: '0',
-                  color: isActive ? "#6D28D9" : "#64748b",
+                  // On glass both states are white — the open one at full
+                  // strength, the closed ones at 70%. Slate on a dark sheet
+                  // is the unreadable case this replaces.
+                  color: dark
+                    ? isActive
+                      ? "#ffffff"
+                      : "rgba(255,255,255,0.72)"
+                    : isActive
+                      ? "#6D28D9"
+                      : "#64748b",
                 }}
               >
                 {tab.label}
