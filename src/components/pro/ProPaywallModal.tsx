@@ -250,7 +250,14 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
                   <span className="block text-[17px] font-bold leading-tight" style={{ color: ink }}>
                     {t(plan.nameKey)}
                   </span>
-                  <span className="block text-[13px]" style={{ color: inkSoft }}>
+                  {/* The trial line is the offer, so it is the one thing on
+                      the row that is not ink: #CE3A00, as the design has it.
+                      Keyed off the trial rather than off the row, so it
+                      cannot end up on a plan that has nothing free. */}
+                  <span
+                    className="block text-[13px]"
+                    style={{ color: plan.trialDays ? "#CE3A00" : inkSoft }}
+                  >
                     {t(plan.blurbKey)}
                   </span>
                 </span>
