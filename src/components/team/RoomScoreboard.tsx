@@ -548,9 +548,14 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
 
             Now the row aligns to the top and every element sits in a slot of
             a fixed height, so avatar lines up with avatar, name with name and
-            score with score no matter what either side is carrying. */}
+            score with score no matter what either side is carrying.
+
+            mt-3 on top of the panel's own p-3: the host's crown paints 12px
+            above the avatar it sits on, so without it the crown touches the
+            header's divider and the two players look wedged under the
+            title. */}
         {sortedParticipants.length === 2 ? (
-          <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-start justify-items-center gap-2">
+          <div className="mb-4 mt-3 grid grid-cols-[1fr_auto_1fr] items-start justify-items-center gap-2">
             <VsPlayer
               player={sortedParticipants[0]}
               currentUserId={currentUserId}
