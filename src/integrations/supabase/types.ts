@@ -128,7 +128,6 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           is_language_specific: boolean | null
-          is_premium: boolean
           language: string | null
           levels_updated_at: string | null
           name: string
@@ -148,7 +147,6 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           is_language_specific?: boolean | null
-          is_premium?: boolean
           language?: string | null
           levels_updated_at?: string | null
           name: string
@@ -168,7 +166,6 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           is_language_specific?: boolean | null
-          is_premium?: boolean
           language?: string | null
           levels_updated_at?: string | null
           name?: string
@@ -4402,6 +4399,15 @@ export type Database = {
           best_category_slug: string
           best_icon_slug: string
           correct: number
+        }[]
+      }
+      presence_for_users: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          current_room: string
+          is_online: boolean
+          recently_active: boolean
+          user_id: string
         }[]
       }
       pro_seat_allowance: {
