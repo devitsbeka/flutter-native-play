@@ -19,10 +19,23 @@ export function useProPurchase() {
   const { user } = useAuth();
   const { purchase: nativePurchase, purchasing: nativePurchasing } = useInAppPurchases();
 
-  const initiateProCheckout = async (tierId: ProTierId): Promise<{ success: boolean; error?: string }> => {
+  /**
+   * @param tierId   What the purchase grants. Stripe prices by tier, so this
+   *                 is all the web path has to go on.
+   * @param nativeProductId  Which App Store product to ring up, when the
+   *                 caller is selling a specific one — the paywall's annual
+   *                 and weekly plans grant the same tier as monthly and
+   *                 differ only in the SKU. Omitted, the tier's default
+   *                 monthly product is used, which is what every existing
+   *                 caller wants.
+   */
+  const initiateProCheckout = async (
+    tierId: ProTierId,
+    nativeProductId?: string,
+  ): Promise<{ success: boolean; error?: string }> => {
     // Check if we're on native platform - use RevenueCat
     if (Capacitor.isNativePlatform()) {
-      const productId = TIER_TO_NATIVE_PRODUCT[tierId];
+      const productId = nativeProductId ?? TIER_TO_NATIVE_PRODUCT[tierId];
       const result = await nativePurchase(productId);
       return result;
     }

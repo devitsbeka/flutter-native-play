@@ -28,6 +28,10 @@ const REVENUECAT_API = "https://api.revenuecat.com/v1";
  */
 export const PRODUCTS = {
   PRO_MONTHLY: "io.mytrivia.pro.monthly",
+  // Same PRO tier, other billing periods, sold by the paywall. Expiry comes
+  // from the store either way, so the period is not encoded here.
+  PRO_ANNUAL: "io.mytrivia.pro.annual",
+  PRO_WEEKLY: "io.mytrivia.pro.weekly",
   PRO_PLUS_MONTHLY: "io.mytrivia.proplus.monthly",
   AD_FREE: "io.mytrivia.adfree",
   GEMS_100: "io.mytrivia.gems.100",
@@ -56,6 +60,8 @@ type CatalogEntry =
  */
 const CATALOG: Record<string, CatalogEntry> = {
   [PRODUCTS.PRO_MONTHLY]: { kind: "subscription", tier: "pro" },
+  [PRODUCTS.PRO_ANNUAL]: { kind: "subscription", tier: "pro" },
+  [PRODUCTS.PRO_WEEKLY]: { kind: "subscription", tier: "pro" },
   [PRODUCTS.PRO_PLUS_MONTHLY]: { kind: "subscription", tier: "pro_plus" },
   [PRODUCTS.AD_FREE]: { kind: "non_consumable", tier: "ad_free" },
   // These are totals. No pack advertises a bonus any more, so total equals
