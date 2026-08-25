@@ -789,6 +789,122 @@ Recorded so the next pass can skip them.
 
 ---
 
+# Third pass — strict reviewer, on `main` @ `cd2190f2`
+
+Read as an App Review reviewer with a low tolerance: not "does the config
+parse", but **what does this app contain, and what leaves the device**. The
+first two passes audited plumbing. This one audited content and data flow, and
+found one blocker they both missed.
+
+## S-1 · The privacy policy never says the app collects photographs — or where they go
+
+**Status: BLOCKING · Guideline 5.1.1(i) (and App Privacy consistency) · Confidence: Verified**
+
+The app takes a photograph of the user's face and uploads it to a third-party
+AI provider. The privacy policy does not mention either fact.
+
+**What actually happens.** `AvatarModal` and `AvatarGeneratorModal` capture a
+selfie — system camera or photo library — and call
+`supabase.functions.invoke("generate-avatar")`. That function posts to
+**`https://fal.run`** (fal.ai); `src/config/sceneAvatarPrompt.ts:14` records
+that generation runs on *"GPT Image 2 via fal.ai"*. `animate-avatar` posts to
+`https://queue.fal.run`. Two further functions that handle the same images
+server-side reach **`api.lightxeditor.com`** (LightX) and **`api.vyro.ai`**
+(Vyro); neither is called from the client today, but both process user photos.
+
+**What the policy says.** Its "Data We Collect" section lists exactly four
+things — account information, profile data (*"Avatar, country, game
+statistics"*), game data, technical data. **A photograph is not among them.**
+"Avatar" is the generated output, not the face that was uploaded to produce
+it. Grep the whole of `src/` for `fal.ai`, `fal.run`, LightX or Vyro outside a
+code comment: nothing. No user-facing surface names any of them.
+
+**Why this is the reviewer-visible kind.** `PrivacyInfo.xcprivacy` already
+declares `NSPrivacyCollectedDataTypePhotosorVideos` — correctly. So the App
+Privacy label on the listing will say **Photos**, the reviewer taps through to
+the privacy policy the listing links, and the policy does not mention photos.
+That contradiction is on the two documents Apple puts side by side. 5.1.1(i)
+also asks for confirmation that third parties you share data with provide
+equal protection — hard to claim for a processor the policy does not name.
+
+It is sharper still because the app is **13+**: a self-declared teenager's
+face is going to an undisclosed AI processor.
+
+**Fix** (cheap — it is copy, not code):
+1. Add a photograph line to "Data We Collect": what is captured, that it is
+   uploaded to generate an avatar, and how long it is kept.
+2. Name the AI processors in the third-party list beside Supabase, Firebase,
+   AdMob, RevenueCat, Apple, PostHog and ip-api.com.
+3. Both policy surfaces — `src/pages/PrivacyPolicyEN.tsx` (hardcoded English)
+   and the `legal.*` keys the localized `/privacy-policy` renders, in all
+   seven locales.
+4. Consider a one-line notice at the point of capture. Not required; it is the
+   difference between disclosed and obvious.
+
+## S-2 · The privacy policy contradicts itself on who receives data
+
+**Status: NON-BLOCKING (P2) · Confidence: Verified**
+
+`legal.withProviders` says data is shared *"With service providers (Supabase,
+Cloudflare)"* — two names. The third-party section of the same document lists
+seven: Supabase, Firebase, AdMob, RevenueCat, Apple, PostHog, ip-api.com. One
+policy, two different answers to the same question. Fold the first into the
+second.
+
+## S-3 · The policy is dated "Effective: January 2025"
+
+**Status: NON-BLOCKING (P3) · Confidence: Verified**
+
+`legal.effectiveDate`. For a 2026 submission that is a document stamped
+nineteen months before the build. It costs nothing and it is the first line a
+reviewer reads.
+
+---
+
+## What this pass cleared
+
+Recorded because these are the things that sink quiz apps, and they are clean.
+
+**Image rights — clean.** Every picture-guess category (celebrity, movie,
+city, sportsman, logo, flag) draws from Wikimedia. Checked the namespace on
+all of it: **6,643 image references, 949 distinct images, 100% from
+`upload.wikimedia.org/wikipedia/commons/`**. Not one from the
+`/wikipedia/en/` fair-use namespace, which is where non-free movie posters and
+publicity stills live. Commons is free-licensed by policy, so the 5.2 exposure
+that usually kills a picture-quiz app is not present here.
+
+The residual is licence *attribution*: most Commons files are CC BY / CC BY-SA
+and ask for credit, and the app shows none. That is a licence-compliance
+matter rather than a review blocker — a credits screen listing the source
+would close it.
+
+**Image delivery — clean, and better than it looks.** The migrations store
+Wikimedia URLs, but nothing hot-links them. `src/utils/questionImage.ts`
+rewrites every one through the app's own `/img` edge route, which fetches once
+and caches; the file's comment records that direct fetches were already being
+429-throttled by Wikimedia. It also handles the native case explicitly — under
+`capacitor://localhost` a relative `/img` would reach nobody, so it spells out
+`https://mytrivia.io`. Tested live:
+
+```
+GET https://mytrivia.io/img?u=<wikimedia jpeg>
+  → HTTP/2 200 · content-type: image/jpeg
+  → cache-control: public, max-age=31536000, immutable
+```
+
+**No new monetisation defects.** Another agent's pricing refactor
+(`cd2190f2`) rewrote `useStorePrice` and `proPlans` on top of this work.
+Re-checked: the native `"—"` placeholder, `fromStore`, `storeReady` and the
+`PRODUCT_NOT_IN_STORE` guard all survived, and every buy button is still gated.
+
+**Also checked:** extra plays sell for coins/gems/rewarded-ad only, so no IAP
+surface hides in `ExtraPlaysOffer`; the lucky spin is ad-earned, not
+purchasable, so no loot-box odds disclosure attaches.
+
+**Build state:** 918 tests pass, both tsconfigs clean.
+
+---
+
 # Off-repo checklist
 
 Not answerable from this repository. Confirm each before pressing Submit.
@@ -858,6 +974,7 @@ So the catalogue is complete. What remains is configuration and attachment.
 ### Listing
 
 - [ ] App Privacy answers match `PrivacyInfo.xcprivacy` line for line — including Device ID / Third-Party Advertising / **used for tracking: yes**
+- [ ] **The privacy policy discloses photographs and the AI processors that receive them** (**S-1**). The label will say Photos; the policy currently does not mention them, and names neither fal.ai nor the model behind it
 - [ ] **Age rating matches the now-13+ behaviour** (**P1-4**). The age gate offers 13–17 and 18+, the privacy policy says 13+, and the app serves ads — the questionnaire, the gate and the policy all have to tell the same story. A rating of 4+ on an app whose own gate starts at 13 is the contradiction a reviewer notices
 - [ ] Standard Apple EULA selected, or a custom one supplied, and its link matches the in-app `/terms`
 - [ ] Support URL and Privacy Policy URL both resolve
