@@ -48,7 +48,28 @@ export function readRecentlyViewedIds(): string[] {
 
 interface TabCategory {
   id: string;
+  /**
+   * The slug — "guess_logo", "movies" — where the row carries one.
+   *
+   * Two callers, two shapes. useCategories maps `id` to the slug for
+   * backwards compatibility, so Discover's ids ARE slugs; the room's library
+   * queries `categories` directly, where `id` is the uuid and the slug sits
+   * in `category_id`. The curated lists below are written in slugs, so
+   * matching on `id` alone found nothing in the library and its Popular tab
+   * said "no categories" while Discover's showed twelve.
+   */
+  category_id?: string | null;
   type?: string | null;
+}
+
+/** Both keys, so a curated slug finds the row whichever shape it arrives in. */
+function indexByIdAndSlug<T extends TabCategory>(categories: T[]): Map<string, T> {
+  const byKey = new Map<string, T>();
+  for (const category of categories) {
+    byKey.set(category.id, category);
+    if (category.category_id) byKey.set(category.category_id, category);
+  }
+  return byKey;
 }
 
 /**
@@ -64,12 +85,12 @@ const POPULAR_FALLBACK_IDS = [
 ];
 
 export function orderByPopularity<T extends TabCategory>(categories: T[]): T[] {
-  const byId = new Map(categories.map((c) => [c.id, c]));
+  const byKey = indexByIdAndSlug(categories);
   const pictureGuess = POPULAR_IMAGE_CATEGORY_IDS
-    .map((id) => byId.get(id))
+    .map((id) => byKey.get(id))
     .filter((c): c is T => Boolean(c));
   if (pictureGuess.length > 0) return pictureGuess;
-  return POPULAR_FALLBACK_IDS.map((id) => byId.get(id)).filter((c): c is T => Boolean(c));
+  return POPULAR_FALLBACK_IDS.map((id) => byKey.get(id)).filter((c): c is T => Boolean(c));
 }
 
 /**

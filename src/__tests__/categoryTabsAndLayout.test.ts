@@ -60,6 +60,21 @@ describe("sorting a wall of categories", () => {
     expect(filterCategoriesByTab(cats, "fun").map((c) => c.id)).toEqual(["movies"]);
   });
 
+  it("finds the curated categories whether id is the slug or the uuid", () => {
+    // Two callers, two shapes. Discover's ids ARE slugs (useCategories maps
+    // category_id onto id); the library queries `categories` directly, where
+    // id is a uuid and the slug is in category_id. Matching on id alone found
+    // nothing there, so the library's Popular tab read "no categories" while
+    // Discover's showed six.
+    const rows = [
+      { id: "8f1c...", category_id: "guess_logo" },
+      { id: "2b7e...", category_id: "guess_flag" },
+      { id: "0c3a...", category_id: "obscure" },
+    ];
+    expect(orderByPopularity(rows).map((c) => c.category_id))
+      .toEqual(["guess_logo", "guess_flag"]);  // curated order, not input order
+  });
+
   it("falls back to the curated list when the picture-guess set is absent", () => {
     // Those categories arrive with a migration. Until it has run in a given
     // environment they are simply not there, and Popular must not be empty.
@@ -101,6 +116,14 @@ describe("the library modal", () => {
     // answer a question nobody asked.
     expect(modal).toMatch(/const inTab = filterCategoriesByTab\(/);
     expect(modal).toMatch(/return inTab\.filter\(/);
+  });
+
+  it("lets the tab strip run to the sheet's edges", () => {
+    // It is a horizontal scroller: a pill mid-scroll should be cut by the
+    // edge rather than stopping short inside the padding. The wrapper carried
+    // both -mx-5 and mx-auto, and auto won — so the bleed did nothing and
+    // px-5 inset the row a second time.
+    expect(modal).toMatch(/\{\/\* Tabs[\s\S]{0,400}?<div className="-mx-5 mb-2">/);
   });
 
   it("keeps Mixed to the unfiltered view", () => {

@@ -177,8 +177,12 @@ export function CategorySelectorModal({
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="-mx-5 mb-2 max-w-[700px] md:max-w-[800px] lg:max-w-[900px] px-5 mx-auto w-full">
+      {/* Tabs, full bleed. The strip is a scroller: it should run to the
+          sheet's own edges, so a pill mid-scroll is cut by the edge rather
+          than stopping short of it inside the padding. The wrapper had both
+          `-mx-5` and `mx-auto` — the auto won, so the negative margin did
+          nothing and `px-5` then inset the row a second time. */}
+      <div className="-mx-5 mb-2">
         <IconTabBar
           tabs={tabs}
           activeTab={activeTab}
