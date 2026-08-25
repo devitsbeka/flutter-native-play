@@ -160,10 +160,11 @@ export const JobQuestionReview = forwardRef<HTMLDivElement, JobQuestionReviewPro
   const handleImportApproved = async () => {
     setImporting(true);
     try {
-      // Get all approved questions
+      // Get all approved questions, and the language each one's JOB was
+      // generating in — this import used to hardcode 'ka'.
       const { data: approvedQuestions, error: fetchError } = await supabase
         .from('generation_job_questions')
-        .select('*')
+        .select('*, generation_jobs!inner(language)')
         .eq('status', 'approved')
         .eq('is_duplicate', false);
 
@@ -174,7 +175,14 @@ export const JobQuestionReview = forwardRef<HTMLDivElement, JobQuestionReviewPro
         return;
       }
 
-      // Insert into questions table
+      // Insert into questions table.
+      //
+      // The language comes from the job. It was the string 'ka', written when
+      // every job generated Georgian — so an English job's questions landed
+      // labelled Georgian: English text served to Georgian players, and
+      // invisible to the translator, which only reads rows where language =
+      // 'en'. 641 English questions would have gone in as a Georgian bank
+      // nobody could use.
       const questionsToInsert = approvedQuestions.map(q => ({
         question_text: q.question_text,
         correct_answer: q.correct_answer,
@@ -182,8 +190,12 @@ export const JobQuestionReview = forwardRef<HTMLDivElement, JobQuestionReviewPro
         difficulty: q.difficulty,
         category_id: q.category_id,
         icon_slug: q.icon_slug,
-        language: 'ka',
+        language: (q as { generation_jobs?: { language?: string | null } }).generation_jobs?.language || 'ka',
         is_active: true,
+        // Deliberately not in production yet: that flag is the human gate
+        // between "an AI wrote it and two models agreed" and "players see
+        // it". Promoting is one UPDATE — see scripts/question-coverage.sql —
+        // and it is also what makes a question visible to the translator.
         in_production: false,
       }));
 
