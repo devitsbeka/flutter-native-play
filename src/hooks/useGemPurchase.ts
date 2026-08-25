@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { readAppLanguage } from "@/utils/appLanguage";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
@@ -72,6 +73,9 @@ export function useGemPurchase() {
         // pointless to drop before then.
         body: {
           productId: product.id,
+          // Decides the currency charged and the words on Stripe's page. An
+          // old deployed function ignores it and charges USD as before.
+          language: readAppLanguage(),
           gems: product.gems,
           priceGel: product.priceGel,
         },

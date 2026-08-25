@@ -1,6 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { useInAppPurchases, IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
-import { getPriceDisplay } from "@/utils/currency";
+import { readAppLanguage } from "@/utils/appLanguage";
+import { currencyForLanguage, formatMoney, PRICES, type PriceKey } from "@/config/pricing";
 
 /**
  * The price to show on a paywall.
@@ -32,6 +33,27 @@ export interface StorePrice {
 // `solo`/`family` are the shop carousel's names for the same two tiers the
 // profile calls `pro`/`pro_plus` (see MobileProCarousel and ShopRightSidebar),
 // so both spellings map here.
+/**
+ * Which row of the price table a tier or product id is sold from.
+ *
+ * Keyed by every name the app calls these things: the shop says solo/family,
+ * the profile says pro/pro_plus, and gem packs arrive as their store product
+ * id. One table rather than each caller passing a price along with the id.
+ */
+const PRICE_KEY_BY_TIER: Record<string, PriceKey> = {
+  solo: "pro_monthly",
+  pro: "pro_monthly",
+  family: "pro_plus_monthly",
+  pro_plus: "pro_plus_monthly",
+  [IAP_PRODUCTS.PRO_MONTHLY]: "pro_monthly",
+  [IAP_PRODUCTS.PRO_ANNUAL]: "pro_annual",
+  [IAP_PRODUCTS.PRO_PLUS_MONTHLY]: "pro_plus_monthly",
+  "io.mytrivia.gems.100": "gems_100",
+  "io.mytrivia.gems.500": "gems_500",
+  "io.mytrivia.gems.1500": "gems_1500",
+  "io.mytrivia.gems.5000": "gems_5000",
+};
+
 const TIER_TO_PRODUCT: Record<string, string> = {
   solo: IAP_PRODUCTS.PRO_MONTHLY,
   pro: IAP_PRODUCTS.PRO_MONTHLY,
@@ -50,21 +72,22 @@ const TIER_TO_PRODUCT: Record<string, string> = {
 export function useStorePrice() {
   const { getProduct } = useInAppPurchases();
 
-  return (tierOrProductId: string, fallbackUsd: number, webGel?: number): StorePrice => {
-    // Web: Stripe takes the payment in GEL, so show the GEL the checkout
-    // actually charges when the caller knows it — PRO_PRODUCTS in
-    // create-pro-checkout prices Solo at 9.99 and Family at 19.99. The
-    // conversion below is a flat 2.75x on the USD figure, which quoted 10.97
-    // for a 9.99 charge: a price on the screen that is not the price taken.
-    //
-    // Without a GEL figure it stays the conversion, which is all a gem pack
-    // or a shop item has.
+  return (tierOrProductId: string, fallbackUsd: number, priceKey?: PriceKey): StorePrice => {
+    // Web: the price the checkout will charge, in the currency it will charge
+    // it in — both decided by the buyer's language, both from the one table.
+    // Nothing is converted here any more: the old path multiplied a USD
+    // figure by a flat 2.75 and quoted 10.97 lari for a 9.99 lari charge.
     const webFallback = () => {
-      if (webGel !== undefined) {
-        return { display: `${webGel.toFixed(2)} ₾`, fromStore: false };
+      const language = readAppLanguage();
+      const currency = currencyForLanguage(language);
+      const key = priceKey ?? PRICE_KEY_BY_TIER[tierOrProductId];
+      const amount = key ? PRICES[key][currency] : null;
+      if (amount === null || amount === undefined) {
+        // Nothing in the table for this id — a shop item priced somewhere
+        // else. Show the figure the caller has, in its own currency.
+        return { display: formatMoney(fallbackUsd, "USD", language), fromStore: false };
       }
-      const p = getPriceDisplay(fallbackUsd);
-      return { display: `${p.symbol}${p.value}${p.suffix}`, fromStore: false };
+      return { display: formatMoney(amount, currency, language), fromStore: false };
     };
 
     // Native: never convert. Apple charges the App Store Connect tier in the

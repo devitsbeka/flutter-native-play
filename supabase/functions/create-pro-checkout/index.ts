@@ -2,32 +2,31 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { getCorsHeaders, isNativeAppOrigin } from "../_shared/cors.ts";
+import {
+  currencyForLanguage,
+  priceOf,
+  productCopy,
+  toMinorUnits,
+} from "../_shared/pricing.ts";
 
-// PRO tier product configurations
-const PRO_PRODUCTS = {
+/**
+ * What each tier grants, and which row of the price table it is sold from.
+ *
+ * Prices and the buyer-facing name and description are no longer here: they
+ * live in _shared/pricing.ts, in every currency and every language the app
+ * ships in, and the same table is mirrored in src/config/pricing.ts. This
+ * file used to carry one Georgian name, one price, and one currency, so a
+ * German buyer read Georgian and was charged lari.
+ */
+const PRO_TIERS = {
   pro: {
-    name: "სოლო PRO - ყოველთვიური გამოწერა",
-    nameEn: "Solo PRO - Monthly Subscription",
-    description: "ყოველთვიური PRO გამოწერა: 2x XP, რეკლამების გარეშე, VIP ბეჯი, 1 მეგობრის მოწვევა",
-    descriptionEn: "Monthly PRO subscription: 2x XP, No ads, VIP badge, 1 friend invite",
-    priceGel: 9.99,
-    sku: "PRO_SOLO_MONTHLY_GEL",
+    monthly: { priceKey: "pro_monthly" as const, sku: "PRO_SOLO_MONTHLY" },
+    yearly: { priceKey: "pro_annual" as const, sku: "PRO_SOLO_ANNUAL" },
     friendInvites: 1,
-    // Same tier bought for a year, at the price the paywall quotes
-    // (src/config/proPlans.ts). A yearly line, not a twelfth of anything:
-    // Stripe bills the interval it is given.
-    yearly: {
-      priceGel: 59.88,
-      sku: "PRO_SOLO_ANNUAL_GEL",
-    },
   },
   pro_plus: {
-    name: "სამეგობრო PRO - ყოველთვიური გამოწერა",
-    nameEn: "Family PRO - Monthly Subscription", 
-    description: "ყოველთვიური სამეგობრო PRO: 2x XP, რეკლამების გარეშე, VIP ბეჯი + ფრეიმები, ყოველდღიური ჯილდოები, 5 მეგობრის მოწვევა",
-    descriptionEn: "Monthly Family PRO subscription: 2x XP, No ads, VIP badge + frames, daily rewards, 5 friend invites",
-    priceGel: 19.99,
-    sku: "PRO_FAMILY_MONTHLY_GEL",
+    monthly: { priceKey: "pro_plus_monthly" as const, sku: "PRO_FAMILY_MONTHLY" },
+    yearly: null,
     friendInvites: 5,
   },
 };
@@ -97,27 +96,34 @@ serve(async (req) => {
       }
     }
 
-    const { tierId, period } = await req.json();
+    const { tierId, period, language } = await req.json();
 
-    if (!tierId || !PRO_PRODUCTS[tierId as keyof typeof PRO_PRODUCTS]) {
+    if (!tierId || !PRO_TIERS[tierId as keyof typeof PRO_TIERS]) {
       return new Response(
         JSON.stringify({ error: "Invalid tier ID" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const productConfig = PRO_PRODUCTS[tierId as keyof typeof PRO_PRODUCTS];
+    const tier = PRO_TIERS[tierId as keyof typeof PRO_TIERS];
 
     // A yearly plan is the same tier on a longer interval. Only offered where
-    // one is configured; anything else falls back to the monthly line rather
-    // than inventing a price.
-    const yearly = period === "year" ? (productConfig as { yearly?: { priceGel: number; sku: string } }).yearly : undefined;
-    if (period === "year" && !yearly) {
+    // one is configured; anything else bills monthly rather than inventing a
+    // yearly price.
+    const wantsYear = period === "year";
+    if (wantsYear && !tier.yearly) {
       console.warn(`[PRO-CHECKOUT] No yearly price for tier=${tierId}; billing monthly`);
     }
-    const priceGel = yearly?.priceGel ?? productConfig.priceGel;
-    const sku = yearly?.sku ?? productConfig.sku;
-    const interval = yearly ? "year" : "month";
+    const line = (wantsYear && tier.yearly) ? tier.yearly : tier.monthly;
+    const interval = (wantsYear && tier.yearly) ? "year" : "month";
+
+    // The buyer's own language decides the currency and the words. Both come
+    // from the shared table, so the amount taken here is the amount the app
+    // quoted before sending them.
+    const currency = currencyForLanguage(language);
+    const copy = productCopy(line.priceKey, language);
+    const amount = priceOf(line.priceKey, currency);
+    const sku = `${line.sku}_${currency}`;
 
     // Get or create Stripe customer if user is authenticated
     let customerId: string | undefined;
@@ -152,17 +158,17 @@ serve(async (req) => {
       line_items: [
         {
           price_data: {
-            currency: "gel",
+            currency: currency.toLowerCase(),
             product_data: {
-              name: productConfig.name,
-              description: productConfig.description,
+              name: copy.name,
+              description: copy.description,
               metadata: {
                 sku,
                 tier_id: tierId,
-                friend_invites: productConfig.friendInvites.toString(),
+                friend_invites: tier.friendInvites.toString(),
               },
             },
-            unit_amount: Math.round(priceGel * 100), // Convert to tetri
+            unit_amount: toMinorUnits(amount),
             recurring: {
               interval,
               interval_count: 1,
@@ -179,19 +185,19 @@ serve(async (req) => {
         user_id: userId || "guest",
         tier_id: tierId,
         sku,
-        friend_invites: productConfig.friendInvites.toString(),
+        friend_invites: tier.friendInvites.toString(),
       },
       subscription_data: {
         metadata: {
           user_id: userId || "guest",
           tier_id: tierId,
-          friend_invites: productConfig.friendInvites.toString(),
+          friend_invites: tier.friendInvites.toString(),
         },
       },
       allow_promotion_codes: true,
     });
 
-    console.log(`[PRO-CHECKOUT] Created session for tier=${tierId}, user=${userId || "guest"}, session=${session.id}`);
+    console.log(`[PRO-CHECKOUT] Created session for ${amount} ${currency} ${interval}ly, tier=${tierId}, user=${userId || "guest"}, session=${session.id}`);
 
     return new Response(
       JSON.stringify({ url: session.url, sessionId: session.id }),

@@ -7,7 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { useStorePrice } from "@/hooks/useStorePrice";
 import { useProPurchase } from "@/hooks/useProPurchase";
-import { ProPlan, annualSaving, availablePlans, defaultPlan } from "@/config/proPlans";
+import { ProPlan, availablePlans, defaultPlan } from "@/config/proPlans";
+import { PRICES, currencyForLanguage, formatMoney } from "@/config/pricing";
 import { GLASS_SHEEN, SKIN_WHITE } from "@/components/shop/ProBannerCard";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 
@@ -43,7 +44,7 @@ interface ProPaywallModalProps {
  * path that knows RevenueCat on a phone and Stripe on the web.
  */
 export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { products, purchasing, restorePurchases } = useInAppPurchases();
@@ -85,11 +86,11 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
   const amountOf = (plan: ProPlan): number | null => {
     const product = products.find((p) => p.productId === plan.productId);
     if (product && product.priceAmountMicros > 0) return product.priceAmountMicros / 1_000_000;
-    return plan.webGel ?? plan.fallbackUsd ?? null;
+    return PRICES[plan.priceKey][currencyForLanguage(language)] ?? null;
   };
 
   const priceLabel = (plan: ProPlan): string =>
-    resolvePrice(plan.productId, plan.fallbackUsd ?? 0, plan.webGel).display;
+    resolvePrice(plan.productId, PRICES[plan.priceKey].USD, plan.priceKey).display;
 
   /**
    * Formats a figure derived from a plan's own price — the per-month rate,
@@ -102,10 +103,10 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
    */
   const derivedLabel = (plan: ProPlan, amount: number): string | null => {
     const product = products.find((p) => p.productId === plan.productId);
-    // Off a device the figure is the GEL one Stripe charges, formatted the
-    // way every other GEL price in the app is.
+    // Off a device the figure is the one Stripe will charge, in the currency
+    // it will charge it in.
     if (!product?.priceCurrencyCode) {
-      return plan.webGel === undefined ? null : `${amount.toFixed(2)} ₾`;
+      return formatMoney(amount, currencyForLanguage(language), language);
     }
     try {
       return new Intl.NumberFormat(undefined, {

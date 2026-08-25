@@ -1,4 +1,5 @@
 import { BackgroundVideo } from "@/components/shared/BackgroundVideo";
+import { PRICES } from "@/config/pricing";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Users, ChevronRight, Check, Loader2, Crown } from "lucide-react";
 import { useVipStatus } from "@/hooks/useVipStatus";
@@ -54,7 +55,7 @@ export function ShopRightSidebar() {
     {
       id: "solo" as const,
       name: t("extra.soloPro"),
-      price: 3.99,
+      price: PRICES.pro_monthly.USD,
       icon: Crown,
       benefits: [
         t("extra.soloProBenefit1"),
@@ -68,7 +69,7 @@ export function ShopRightSidebar() {
     {
       id: "family" as const,
       name: t("extra.familyPro"),
-      price: 7.99,
+      price: PRICES.pro_plus_monthly.USD,
       icon: Users,
       benefits: [
         t("extra.familyProBenefit1"),

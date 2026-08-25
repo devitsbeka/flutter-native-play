@@ -1,5 +1,19 @@
-// Currency formatting utility
-// All prices are stored in USD. For Georgian users, prices are shown in GEL.
+/**
+ * Legacy currency helpers.
+ *
+ * `formatPrice`, `formatMonthlyPrice` and `usdToGel` convert a USD figure at a
+ * flat 2.75 — which is how a Georgian buyer came to be quoted 10.97 lari for a
+ * subscription Stripe charges 9.99 lari for. Nothing renders an amount through
+ * them any more: prices come from src/config/pricing.ts, which holds a real
+ * figure per currency and is mirrored by the checkout, so the number shown is
+ * the number taken.
+ *
+ * What is still used here is `getPriceDisplay().monthLabel` — the "/თვე" or
+ * "/mo" suffix — and `shouldShowGel`. The converters are kept because the
+ * exchange rate is also what the gem packs' lari prices were derived from, and
+ * deleting them would leave that history nowhere; do not reach for them to
+ * price anything new.
+ */
 
 import { readAppLanguage } from '@/utils/appLanguage';
 

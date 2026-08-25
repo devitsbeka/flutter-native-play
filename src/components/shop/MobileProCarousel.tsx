@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { PRICES } from "@/config/pricing";
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
@@ -120,7 +121,7 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
       type: "pro" as SlideType,
       id: "solo" as const,
       name: t("extra.soloPro"),
-      price: 3.99,
+      price: PRICES.pro_monthly.USD,
       header: HEADER_SOLO(crownIcon),
       skin: SKIN_WHITE,
       benefits: [
@@ -133,7 +134,7 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
       type: "family" as SlideType,
       id: "family" as const,
       name: t("extra.familyPro"),
-      price: 7.99,
+      price: PRICES.pro_plus_monthly.USD,
       header: HEADER_FAMILY(friendsIcon),
       skin: SKIN_WHITE,
       benefits: [
