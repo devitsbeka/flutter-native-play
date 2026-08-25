@@ -10,16 +10,34 @@ import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { IconTabBar } from "@/components/shared/IconTabBar";
+import { useFavorites } from "@/hooks/useFavorites";
+import {
+  CategoryTabId,
+  filterCategoriesByTab,
+  readRecentlyViewedIds,
+} from "@/utils/categoryTabs";
 
 interface Category {
   id: string;
   /** Slug like "guess_flag" — keys the bundled art override. */
   categoryId?: string | null;
+  /**
+   * The same slug again, under the name the tab rules read.
+   *
+   * filterCategoriesByTab matches curated lists written in slugs, and it
+   * looks for `category_id`; this file had renamed it to `categoryId` for
+   * the artwork override. Without both, Popular here would have come back
+   * empty exactly the way the library's did.
+   */
+  category_id?: string | null;
   name: string;
   icon: string;
   color: string;
   icon_slug?: string | null;
   total_levels: number;
+  /** classic / fun / educational — what the type tabs filter on. */
+  type?: string | null;
 }
 
 interface UserTrivia {
@@ -102,6 +120,30 @@ export function CategoryPickerModal({
   const [view, setView] = useState<ViewState>("main");
   const [search, setSearch] = useState("");
   /**
+   * The same four tabs the standalone library has.
+   *
+   * This picker and CategorySelectorModal show the same wall of categories —
+   * one when a host adds a round, one everywhere else — and only the other
+   * one could sort it. Reaching a favourite from inside a room meant typing
+   * its name or scrolling seventy tiles.
+   */
+  const [activeTab, setActiveTab] = useState<CategoryTabId>("all");
+  const { favorites } = useFavorites();
+  // Read once per opening: the list is written by the category page, and a
+  // value that changed mid-scroll would reorder the grid under the thumb.
+  const recentIds = useMemo(() => (isOpen ? readRecentlyViewedIds() : []), [isOpen]);
+
+  const tabs = useMemo(
+    () => [
+      { id: "all", label: t("discover.all") },
+      { id: "favorites", label: t("discover.favorites") },
+      { id: "recently_viewed", label: t("discover.recentlyViewedTab") },
+      { id: "popular", label: t("discover.popularTab") },
+      { id: "classic", label: t("discover.classic") },
+    ],
+    [t],
+  );
+  /**
    * Everything picked so far, in the order it was picked.
    *
    * This used to hold one item, and the footer offered two buttons for it:
@@ -135,11 +177,13 @@ export function CategoryPickerModal({
         filterCategoriesForLanguage(result.data || [], language).map(d => ({
           id: d.id,
           categoryId: d.category_id,
+          category_id: d.category_id,
           name: d.name,
           icon: d.icon,
           color: d.color,
           icon_slug: d.icon_slug,
           total_levels: d.total_levels,
+          type: d.type,
         })),
       );
     },
@@ -166,12 +210,16 @@ export function CategoryPickerModal({
 
   // Filter categories
   const filteredCategories = useMemo(() => {
-    if (!search.trim()) return categories;
+    // Tab first, then the query inside it — you picked Favourites for a
+    // reason, and a search that ignored it would answer a question nobody
+    // asked. Same order as the standalone library.
+    const inTab = filterCategoriesByTab(categories, activeTab, { favorites, recentIds });
+    if (!search.trim()) return inTab;
     const searchLower = search.toLowerCase();
-    return categories.filter((cat) =>
+    return inTab.filter((cat) =>
       cat.name.toLowerCase().includes(searchLower)
     );
-  }, [categories, search]);
+  }, [categories, search, activeTab, favorites, recentIds]);
 
   // Filter trivias - exclude the trivia that was just played
   const filteredTrivias = useMemo(() => {
@@ -370,6 +418,17 @@ export function CategoryPickerModal({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:border-white/40 outline-none backdrop-blur-sm"
+                />
+              </div>
+
+              {/* Tabs, full bleed: the strip is a scroller, so it runs to the
+                  sheet's edges rather than stopping inside its padding. */}
+              <div className="-mx-4">
+                <IconTabBar
+                  tabs={tabs}
+                  activeTab={activeTab}
+                  onTabChange={(id) => setActiveTab(id as CategoryTabId)}
+                  compact
                 />
               </div>
 

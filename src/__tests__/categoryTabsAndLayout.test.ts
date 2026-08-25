@@ -132,6 +132,27 @@ describe("the library modal", () => {
   });
 });
 
+describe("the room's category picker", () => {
+  const picker = read("src/components/team/CategoryPickerModal.tsx");
+
+  it("has the tabs too", () => {
+    // Two screens, the same wall of categories: one when a host adds a round,
+    // one everywhere else. Only the other could sort it, so reaching a
+    // favourite from inside a room meant typing its name or scrolling
+    // seventy tiles.
+    expect(picker).toMatch(/<IconTabBar/);
+    expect(picker).toMatch(/const inTab = filterCategoriesByTab\(/);
+  });
+
+  it("carries the slug under the name the tab rules read", () => {
+    // This file renames category_id to categoryId for the artwork override.
+    // The curated lists are written in slugs and looked up by category_id, so
+    // without both Popular here would be as empty as the library's was.
+    expect(picker).toMatch(/category_id: d\.category_id/);
+    expect(picker, "type tabs filter on it").toMatch(/type: d\.type/);
+  });
+});
+
 describe("Discover and the library share one rule", () => {
   const discover = read("src/pages/Discover.tsx");
 

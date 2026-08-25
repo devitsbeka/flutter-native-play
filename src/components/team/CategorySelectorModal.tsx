@@ -241,9 +241,12 @@ export function CategorySelectorModal({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 </div>
 
-                {/* Icon */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-30">
-                  <DynamicIcon slug="mystery-box" size={60} />
+                {/* Icon, drawn like every other card's — same size, same
+                    place, full strength. At 30% over a magenta gradient the
+                    box simply was not there: the one card in the grid with
+                    nothing on it, and the one card that is not a category. */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <DynamicIcon slug="mystery-box" size={56} />
                 </div>
 
                 {/* Content */}
