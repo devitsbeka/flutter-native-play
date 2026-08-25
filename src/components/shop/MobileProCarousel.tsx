@@ -81,7 +81,12 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
   const { dailyDeal, hourlyDeal, dailyRemaining, hourlyRemaining } = useLiveDeals();
   const [currentIndex, setCurrentIndex] = useState(0);
   const { subscription, isVip } = useVipStatus();
-  const { initiateProCheckout, isProcessing } = useProPurchase();
+  const { initiateProCheckout, isProcessing, storeReady } = useProPurchase();
+  // No catalogue, no sale: on a phone `storeReady` is false whenever
+  // StoreKit has not answered, and the price beside this button is a
+  // placeholder rather than a figure. Selling at a price we do not have is
+  // the 2.3.1/2.1 pair this guards.
+  const busy = isProcessing || !storeReady;
   const navigate = useNavigate();
   const currentTier = isVip ? subscription?.vip_tier : undefined;
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -355,10 +360,10 @@ export function ProBannerReel({ purchasedItems, isPurchasing, onItemClick, slide
                     // leave every other slide with a gap under it.
                     stacked={slides === "pro" && bannerWidth > 0 && bannerWidth < 420}
                     onClick={handleCardClick}
-                    dimmed={isProcessing}
+                    dimmed={busy}
                     actionLabel={isProcessing ? <Loader2 className="size-5 animate-spin" /> : state.text}
-                    actionDisabled={state.isActive || isProcessing}
-                    actionActive={state.isActive && !isProcessing}
+                    actionDisabled={state.isActive || busy}
+                    actionActive={state.isActive && !busy}
                     onAction={() => handleUpgrade(slide.id as SimplifiedTier)}
                   />
                 );

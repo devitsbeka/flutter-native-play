@@ -46,7 +46,10 @@ export function ShopRightSidebar() {
   // StoreKit's localized price on iOS, not the USD figure in PRO_TIERS.
   const storePrice = useStorePrice();
   const { subscription, isVip } = useVipStatus();
-  const { initiateProCheckout, isProcessing } = useProPurchase();
+  const { initiateProCheckout, isProcessing, storeReady } = useProPurchase();
+  // See MobileProCarousel: a buy button is not live while the store has
+  // told us nothing about what it charges.
+  const busy = isProcessing || !storeReady;
   const currentTier = isVip ? subscription?.vip_tier as SimplifiedTier | undefined : undefined;
   const [hoveredTier, setHoveredTier] = useState<string | null>(null);
 
@@ -145,10 +148,10 @@ export function ShopRightSidebar() {
                   style={{
                     background: tier.gradient,
                     boxShadow: `0 6px 0 ${tier.shadow}, 0 10px 20px rgba(0,0,0,0.4)`,
-                    opacity: isProcessing ? 0.7 : 1,
-                    pointerEvents: isProcessing ? 'none' : 'auto',
+                    opacity: busy ? 0.7 : 1,
+                    pointerEvents: busy ? 'none' : 'auto',
                   }}
-                  onClick={() => !isCurrentTier && !isProcessing && handleUpgrade(tier.id)}
+                  onClick={() => !isCurrentTier && !busy && handleUpgrade(tier.id)}
                 >
                   {tier.popular && !isCurrentTier && (
                     <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl shadow-lg flex items-center gap-1 z-10">

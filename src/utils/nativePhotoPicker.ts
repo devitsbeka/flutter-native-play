@@ -1,7 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 
 /**
- * The phone's own photo picker, used when the app runs natively.
+ * The phone's own photo picker and camera, used when the app runs natively.
  *
  * Inside the native app there is no reason to decode HEIC in JavaScript at
  * all: iOS and Android hand back a JPEG from their own image pipeline, at
@@ -10,7 +10,7 @@ import { Capacitor } from "@capacitor/core";
  * file is the one reading it.
  *
  * The browser build never reaches this — `isNativePhotoPickerAvailable()`
- * is false there and the file input handles it, decoders and all.
+ * is false there and the file input (or `getUserMedia`) handles it.
  */
 export function isNativePhotoPickerAvailable(): boolean {
   return Capacitor.isNativePlatform();
@@ -24,17 +24,39 @@ export interface NativePhotoResult {
 
 const CANCELLED = /cancel/i;
 
+type Permission = "photos" | "camera";
+
+async function ensurePermission(
+  Camera: typeof import("@capacitor/camera").Camera,
+  permission: Permission,
+): Promise<void> {
+  const current = await Camera.checkPermissions();
+  if (current[permission] === "granted") return;
+
+  const requested = await Camera.requestPermissions({ permissions: [permission] });
+  if (requested[permission] !== "granted") {
+    throw new Error(`${permission} permission denied`);
+  }
+}
+
+/**
+ * A cancel is a decision, not a failure.
+ *
+ * Both plugins report it by throwing with "cancelled"/"canceled" in the
+ * message, which is indistinguishable from a real error to any caller that
+ * only looks at whether the promise rejected.
+ */
+function asResult(error: unknown): NativePhotoResult {
+  const message = error instanceof Error ? error.message : String(error);
+  if (CANCELLED.test(message)) return { dataUrl: null, cancelled: true };
+  throw error;
+}
+
 export async function pickPhotoFromLibrary(maxEdge = 1024): Promise<NativePhotoResult> {
   const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
 
   try {
-    const permissions = await Camera.checkPermissions();
-    if (permissions.photos !== "granted") {
-      const requested = await Camera.requestPermissions({ permissions: ["photos"] });
-      if (requested.photos !== "granted") {
-        throw new Error("Photo library permission denied");
-      }
-    }
+    await ensurePermission(Camera, "photos");
 
     const photo = await Camera.getPhoto({
       quality: 90,
@@ -51,8 +73,49 @@ export async function pickPhotoFromLibrary(maxEdge = 1024): Promise<NativePhotoR
 
     return { dataUrl: photo.dataUrl ?? null, cancelled: false };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (CANCELLED.test(message)) return { dataUrl: null, cancelled: true };
-    throw error;
+    return asResult(error);
+  }
+}
+
+/**
+ * Take a photo with the system camera.
+ *
+ * The avatar flows used to open the camera *inside the webview*, with
+ * `navigator.mediaDevices.getUserMedia` and a `<video>` element. That works
+ * in every browser and is not reliable inside a WKWebView: `getUserMedia`
+ * there is gated behind app-bound domains (`WKAppBoundDomains` in Info.plist
+ * plus `limitsNavigationsToAppBoundDomains`), which this app does not declare
+ * and should not have to — declaring it would cap the app at ten navigable
+ * domains for the sake of one screen.
+ *
+ * The plugin route has none of that: it is the system camera UI, it asks for
+ * permission with the string already in Info.plist, and it hands back an
+ * upright JPEG. The webview never touches a media stream.
+ *
+ * Front camera by default, because every caller here is taking a selfie for
+ * an avatar. `allowEditing` stays off for the same reason as the library
+ * picker above.
+ */
+export async function takePhotoWithCamera(maxEdge = 1024): Promise<NativePhotoResult> {
+  const { Camera, CameraResultType, CameraSource, CameraDirection } = await import(
+    "@capacitor/camera"
+  );
+
+  try {
+    await ensurePermission(Camera, "camera");
+
+    const photo = await Camera.getPhoto({
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.DataUrl,
+      source: CameraSource.Camera,
+      direction: CameraDirection.Front,
+      width: maxEdge,
+      correctOrientation: true,
+    });
+
+    return { dataUrl: photo.dataUrl ?? null, cancelled: false };
+  } catch (error) {
+    return asResult(error);
   }
 }

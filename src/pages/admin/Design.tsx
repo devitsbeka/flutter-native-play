@@ -81,7 +81,6 @@ const NotEnoughCoinsModal = lazy(() => import("@/components/home/NotEnoughCoinsM
 const GuestMaxPlaysModal = lazy(() => import("@/components/home/GuestMaxPlaysModal").then(m => ({ default: m.GuestMaxPlaysModal })));
 const RegisterPromptModal = lazy(() => import("@/components/home/RegisterPromptModal").then(m => ({ default: m.RegisterPromptModal })));
 const GemShopModal = lazy(() => import("@/components/home/GemShopModal").then(m => ({ default: m.GemShopModal })));
-const AdFreeModal = lazy(() => import("@/components/home/AdFreeModal").then(m => ({ default: m.AdFreeModal })));
 const WatchAdModal = lazy(() => import("@/components/home/WatchAdModal").then(m => ({ default: m.WatchAdModal })));
 const HomeHelpModal = lazy(() => import("@/components/home/HelpModal").then(m => ({ default: m.HelpModal })));
 
@@ -271,7 +270,6 @@ const modalCategories: CategoryDefinition[] = [
       { id: "guest-max-plays-modal", label: "Guest Max Plays", labelGe: "სტუმრის ლიმიტი", Component: GuestMaxPlaysModal, isModal: true, modalProps: {} },
       { id: "register-prompt-modal", label: "Register Prompt", labelGe: "რეგისტრაცია", Component: RegisterPromptModal, isModal: true, modalProps: {} },
       { id: "gem-shop-modal", label: "Gem Shop", labelGe: "ჯემების მაღაზია", Component: GemShopModal, isModal: true, modalProps: {} },
-      { id: "ad-free-modal", label: "Ad Free", labelGe: "რეკლამის გარეშე", Component: AdFreeModal, isModal: true, modalProps: {} },
       { id: "watch-ad-modal", label: "Watch Ad", labelGe: "რეკლამის ნახვა", Component: WatchAdModal, isModal: true, modalProps: { rewardType: "coins", rewardAmount: 50 } },
       { id: "home-help-modal", label: "Help", labelGe: "დახმარება", Component: HomeHelpModal, isModal: true, modalProps: {} },
     ],

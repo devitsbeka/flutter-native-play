@@ -35,7 +35,11 @@ import {
 } from "@/utils/avatarStudio";
 import { useCurrency } from "@/hooks/useCurrency";
 import { preparePhoto } from "@/utils/imageInput";
-import { isNativePhotoPickerAvailable, pickPhotoFromLibrary } from "@/utils/nativePhotoPicker";
+import {
+  isNativePhotoPickerAvailable,
+  pickPhotoFromLibrary,
+  takePhotoWithCamera,
+} from "@/utils/nativePhotoPicker";
 import { photoError, type PhotoError } from "@/utils/photoErrorMessage";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -347,10 +351,30 @@ export function AvatarModal({ isOpen, onClose, onComplete, onGeneratingChange }:
   }, []);
 
   const startCamera = useCallback(async () => {
+    // The selfie tile lives under "create new avatar"
+    setFlowKind("avatar");
+    setFailure(null);
+
+    // In the native app the system camera takes the photo. The in-webview
+    // path below needs `getUserMedia`, which a WKWebView only grants to an
+    // app that declares app-bound domains — so on a phone it opened the
+    // "camera" step and sat there on a black rectangle. There is no camera
+    // step to enter here: the sheet returns a finished photo.
+    if (isNativePhotoPickerAvailable()) {
+      try {
+        const { dataUrl, cancelled } = await takePhotoWithCamera(1024);
+        if (cancelled) return;
+        if (!dataUrl) throw new Error("No photo returned");
+        setUploadedImage(dataUrl);
+        setStep("upload");
+      } catch (error) {
+        console.error("Native camera failed:", error);
+        toast.error(t("errors.cameraPermission"));
+      }
+      return;
+    }
+
     try {
-      // The selfie tile lives under "create new avatar"
-      setFlowKind("avatar");
-      setFailure(null);
       setStep("camera");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 

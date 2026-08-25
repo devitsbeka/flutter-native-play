@@ -148,7 +148,36 @@ describe("repo invariants", () => {
         "A purchase of one succeeds, is charged, and grants nothing.",
     ).toEqual([]);
 
-    const unsold = [...server].filter((id) => !client.has(id));
+    // Retired products: known to the server, deliberately not sold.
+    //
+    // `io.mytrivia.adfree` is the only one. Its sole entry point was a modal
+    // Index rendered and never opened, so it could not be bought from any
+    // shipped build — and a product App Review cannot reach is a 2.1
+    // rejection the moment it is attached to a submission. It was dropped
+    // from IAP_PRODUCTS; PRO already removes ads.
+    //
+    // The server keeps it, because the `ad_free` tier is not the edge
+    // function's alone: it is written into the subscriptions table, the
+    // pro-seats migration and supabase/tests/03-pro-seats.sql. Deleting the
+    // mapping would orphan the tier without removing it.
+    const RETIRED = new Set(["io.mytrivia.adfree"]);
+
+    for (const id of RETIRED) {
+      expect(
+        server.has(id),
+        `${id} is listed here as retired but the server no longer knows it — ` +
+          "drop it from RETIRED, or restore the mapping so an existing " +
+          "entitlement still resolves.",
+      ).toBe(true);
+      expect(
+        client.has(id),
+        `${id} is sold by the app again. That is fine, but it needs a real ` +
+          "entry point a reviewer can reach before the product is attached " +
+          "to a submission — remove it from RETIRED once it has one.",
+      ).toBe(false);
+    }
+
+    const unsold = [...server].filter((id) => !client.has(id) && !RETIRED.has(id));
     expect(
       unsold,
       `These product ids are in the server catalog but nothing in the app ` +

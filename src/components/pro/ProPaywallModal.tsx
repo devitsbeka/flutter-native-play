@@ -10,6 +10,7 @@ import { useProPurchase } from "@/hooks/useProPurchase";
 import { ProPlan, annualSaving, availablePlans, defaultPlan } from "@/config/proPlans";
 import { GLASS_SHEEN, SKIN_WHITE } from "@/components/shop/ProBannerCard";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { SubscriptionTerms } from "@/components/shared/SubscriptionTerms";
 
 import crownIcon from "@/assets/icons/icon-vip-crown.webp";
 import benefitPlay from "@/assets/pro-banner/banner-gamepad.webp";
@@ -46,7 +47,7 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
   const { t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { products, purchasing, restorePurchases } = useInAppPurchases();
+  const { products, loading, purchasing, restorePurchases } = useInAppPurchases();
   // The app's own price resolver: StoreKit's localised string on a phone,
   // the tier's figure converted to GEL on the web. Re-implementing it here
   // is how a Georgian user ends up shown "$3.99" for a charge in ₾.
@@ -60,6 +61,16 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
     () => availablePlans(products.map((p) => p.productId), isNative),
     [products, isNative],
   );
+
+  /**
+   * Nothing to sell here.
+   *
+   * On a phone this covers both the moment before StoreKit answers and the
+   * case where it answers with nothing; the copy distinguishes them by
+   * `loading`. Either way there is no purchasable row, so the buy button must
+   * not be live — see the note on `availablePlans`.
+   */
+  const storeUnavailable = plans.length === 0;
 
   const [selectedId, setSelectedId] = useState<ProPlan["id"] | null>(null);
 
@@ -90,6 +101,27 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
 
   const priceLabel = (plan: ProPlan): string =>
     resolvePrice(plan.productId, plan.fallbackUsd ?? 0, plan.webGel).display;
+
+  /**
+   * The free trial this plan really carries, or undefined.
+   *
+   * Read off the store product rather than declared in the bundle: an offer
+   * the app claims and StoreKit does not honour is a 2.3.1 rejection. On the
+   * web there is no store product and therefore no trial — Stripe checkout
+   * has no introductory offer configured — so the row shows its ordinary
+   * blurb.
+   */
+  const trialDaysFor = (plan: ProPlan): number | undefined =>
+    products.find((p) => p.productId === plan.productId)?.introFreeDays;
+
+  /** The row's second line: the trial when there is one, its blurb otherwise. */
+  const blurbFor = (plan: ProPlan): string => {
+    const days = trialDaysFor(plan);
+    if (!days) return t(plan.blurbKey);
+    return days === 1
+      ? t("paywall.planTrialBlurbOne")
+      : t("paywall.planTrialBlurb").replace("{days}", String(days));
+  };
 
   /**
    * Formats a figure derived from a plan's own price — the per-month rate,
@@ -204,7 +236,28 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
           {t("paywall.title")}
         </h2>
 
-        {/* Plans */}
+        {/* Plans.
+            On a phone `plans` is the intersection with StoreKit's catalogue,
+            so it is empty exactly when the store has nothing to sell — the
+            products are unapproved, unattached to the version, or simply
+            unreachable. Say so. Rendering a row anyway, priced from a
+            constant in the bundle, is what put a live "$3.99 Subscribe"
+            button in front of a store that would refuse it. */}
+        {storeUnavailable ? (
+          <div
+            className="mt-5 rounded-[24px] border-[3px] border-solid px-4 py-6 text-center"
+            style={{ background: SKIN_WHITE.bg, borderColor: "rgba(124,58,237,0.16)" }}
+          >
+            <p className="text-[15px] font-bold" style={{ color: ink }}>
+              {loading ? t("paywall.loadingPlans") : t("paywall.storeUnavailable")}
+            </p>
+            {!loading && (
+              <p className="mt-1.5 text-[13px]" style={{ color: inkSoft }}>
+                {t("paywall.storeUnavailableHint")}
+              </p>
+            )}
+          </div>
+        ) : (
         <div className="mt-5 space-y-3">
           {plans.map((plan) => {
             const isSelected = selected?.id === plan.id;
@@ -252,13 +305,13 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
                   </span>
                   {/* The trial line is the offer, so it is the one thing on
                       the row that is not ink: #CE3A00, as the design has it.
-                      Keyed off the trial rather than off the row, so it
-                      cannot end up on a plan that has nothing free. */}
+                      Keyed off the trial the *store* reports, so it cannot end
+                      up on a plan that has nothing free. */}
                   <span
                     className="block text-[13px]"
-                    style={{ color: plan.trialDays ? "#CE3A00" : inkSoft }}
+                    style={{ color: trialDaysFor(plan) ? "#CE3A00" : inkSoft }}
                   >
-                    {t(plan.blurbKey)}
+                    {blurbFor(plan)}
                   </span>
                 </span>
 
@@ -269,6 +322,7 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
             );
           })}
         </div>
+        )}
 
         <p className="mt-7 text-center text-[15px] font-bold" style={{ color: ink }}>
           {t("paywall.benefitsLead")}
@@ -310,10 +364,14 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
           variant="mint"
           size="lg"
           onClick={handleSubscribe}
-          disabled={busy || !selected}
+          disabled={busy || !selected || storeUnavailable}
           className="w-full"
         >
-          {busy ? t("paywall.working") : selected?.trialDays ? t("paywall.ctaTrial") : t("paywall.ctaSubscribe")}
+          {busy
+            ? t("paywall.working")
+            : selected && trialDaysFor(selected)
+              ? t("paywall.ctaTrial")
+              : t("paywall.ctaSubscribe")}
         </ChunkyButton>
 
         {selected && (
@@ -324,19 +382,39 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
           </p>
         )}
 
+        {/* Guideline 3.1.2, in full.
+            This row used to be the whole disclosure: two links and the price
+            footnote above. That states the price and the period and nothing
+            else — not that the subscription renews by itself, not that Apple
+            charges the Apple ID account, not that it keeps renewing unless
+            it is turned off 24 hours before the period ends. The copy for all
+            three has existed in every locale since the paywalls were built.
+
+            SubscriptionTerms carries the Terms and Privacy links itself and
+            renders on native only, so the bare links stay for the web, where
+            the buy button opens Stripe Checkout instead. */}
+        <SubscriptionTerms className="mt-3 text-center" onNavigate={onClose} />
+
         <div
           className="mt-3 flex items-center justify-center gap-4 text-[11px] leading-tight"
           style={{ color: inkSoft }}
         >
-          <button type="button" onClick={() => { onClose(); navigate("/terms"); }}>
-            {t("paywall.terms")}
-          </button>
+          {!isNative && (
+            <button type="button" onClick={() => { onClose(); navigate("/terms"); }}>
+              {t("paywall.terms")}
+            </button>
+          )}
+          {/* Restore stays on every platform and in every state: a player
+              whose purchase landed against another identity reaches this
+              screen precisely because the app does not think they are PRO. */}
           <button type="button" onClick={handleRestore} disabled={busy}>
             {t("paywall.restore")}
           </button>
-          <button type="button" onClick={() => { onClose(); navigate("/privacy-policy"); }}>
-            {t("paywall.privacy")}
-          </button>
+          {!isNative && (
+            <button type="button" onClick={() => { onClose(); navigate("/privacy-policy"); }}>
+              {t("paywall.privacy")}
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { t } from "@/lib/i18n";
 import { useBackgroundGeneration } from "@/contexts/BackgroundGenerationContext";
 import { preparePhoto } from "@/utils/imageInput";
 import { photoErrorMessage } from "@/utils/photoErrorMessage";
+import { isNativePhotoPickerAvailable, takePhotoWithCamera } from "@/utils/nativePhotoPicker";
 
 interface AvatarGeneratorModalProps {
   isOpen: boolean;
@@ -38,6 +39,23 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
 
   // Start camera
   const startCamera = useCallback(async () => {
+    // Native takes the photo with the system camera. `getUserMedia` below is
+    // the browser path only: inside a WKWebView it is gated behind app-bound
+    // domains, so on a phone this step used to open onto a black rectangle.
+    if (isNativePhotoPickerAvailable()) {
+      try {
+        const { dataUrl, cancelled } = await takePhotoWithCamera(1024);
+        if (cancelled) return;
+        if (!dataUrl) throw new Error("No photo returned");
+        setUploadedImage(dataUrl);
+        setStep("upload");
+      } catch (error) {
+        console.error("Native camera failed:", error);
+        toast.error(t("errors.cameraPermission"));
+      }
+      return;
+    }
+
     try {
       setStep("camera");
       const stream = await navigator.mediaDevices.getUserMedia({

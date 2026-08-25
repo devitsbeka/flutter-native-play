@@ -28,7 +28,7 @@ interface ProRequiredModalProps {
 
 export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRequiredModalProps) {
   const navigate = useNavigate();
-  const { initiateProCheckout, isProcessing } = useProPurchase();
+  const { initiateProCheckout, isProcessing, storeReady } = useProPurchase();
   const { t } = useLanguage();
   // The button below starts a real auto-renewing purchase on iOS, so the
   // price and billing period must be on screen before the tap (3.1.2) —
@@ -125,7 +125,9 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
               size="lg"
               className="w-full"
               onClick={handleUpgrade}
-              disabled={isProcessing}
+              // Not live while the store has no price for this — see
+              // useProPurchase.storeReady.
+              disabled={isProcessing || !storeReady}
               showParticles={true}
               icon={<img src={crownIcon} alt="" className="w-5 h-5 object-contain" />}
             >

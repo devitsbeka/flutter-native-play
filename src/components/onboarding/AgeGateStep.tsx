@@ -1,7 +1,10 @@
 import { motion, Variants } from "framer-motion";
 import { t } from "@/lib/i18n";
 
-export type AgeGroup = "child" | "teen" | "adult";
+// The buckets and the reasoning behind them live with the ad-treatment
+// predicate that reads them, so the two cannot drift apart.
+export type { AgeGroup } from "@/hooks/useAgeGroup";
+import type { AgeGroup } from "@/hooks/useAgeGroup";
 
 interface AgeOption {
   value: AgeGroup;
@@ -10,8 +13,7 @@ interface AgeOption {
 }
 
 const AGE_OPTIONS: AgeOption[] = [
-  { value: "child", labelKey: "onboarding.ageUnder16", emoji: "🧒" },
-  { value: "teen", labelKey: "onboarding.age16to17", emoji: "🧑" },
+  { value: "teen", labelKey: "onboarding.age13to17", emoji: "🧑" },
   { value: "adult", labelKey: "onboarding.age18plus", emoji: "🧑‍💼" },
 ];
 

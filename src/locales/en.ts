@@ -172,8 +172,7 @@ export const en: KaTranslations = {
     step6Description: "Compare your score with other players",
     ageGateTitle: "How old are you?",
     ageGateSubtitle: "This helps us show you the right experience",
-    ageUnder16: "Under 16",
-    age16to17: "16–17",
+    age13to17: "13–17",
     age18plus: "18+",
   },
 
@@ -4601,7 +4600,12 @@ export const en: KaTranslations = {
   paywall: {
     title: "Get unlimited access",
     planAnnual: "Annual",
-    planAnnualBlurb: "Try 1 day free",
+    planAnnualBlurb: "A year of PRO",
+    planTrialBlurbOne: "Try 1 day free",
+    planTrialBlurb: "Try {days} days free",
+    loadingPlans: "Loading plans...",
+    storeUnavailable: "Plans are unavailable right now",
+    storeUnavailableHint: "We could not reach the App Store. Check your connection and try again in a moment.",
     planMonthly: "Monthly",
     planMonthlyBlurb: "Full access to MyTrivia",
     perMonth: "{price} / mo",

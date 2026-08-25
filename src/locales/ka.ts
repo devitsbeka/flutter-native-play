@@ -170,8 +170,7 @@ export const ka = {
     step6Description: "შეადარე შენი შედეგი სხვა მოთამაშეებს",
     ageGateTitle: "რამდენი წლის ხარ?",
     ageGateSubtitle: "ეს გვეხმარება შენთვის შესაფერისი გამოცდილების ჩვენებაში",
-    ageUnder16: "16-ზე ნაკლები",
-    age16to17: "16–17",
+    age13to17: "13–17",
     age18plus: "18+",
   },
 
@@ -4635,7 +4634,12 @@ export const ka = {
   paywall: {
     title: "მიიღე შეუზღუდავი წვდომა",
     planAnnual: "ყოველწლიური",
-    planAnnualBlurb: "გამოსცადე უფასოდ 1 დღე",
+    planAnnualBlurb: "წელიწადი PRO",
+    planTrialBlurbOne: "გამოსცადე უფასოდ 1 დღე",
+    planTrialBlurb: "გამოსცადე უფასოდ {days} დღე",
+    loadingPlans: "გეგმები იტვირთება...",
+    storeUnavailable: "გეგმები ამჟამად მიუწვდომელია",
+    storeUnavailableHint: "App Store-თან დაკავშირება ვერ მოხერხდა. შეამოწმე კავშირი და სცადე ხელახლა.",
     planMonthly: "ყოველთვიური",
     planMonthlyBlurb: "სრული წვდომა MyTrivia-ზე",
     perMonth: "{price} / თვე",

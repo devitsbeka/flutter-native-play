@@ -70,7 +70,7 @@
 	     touched, and App Review rejects for vague wording. -->
 
 	<key>NSCameraUsageDescription</key>
-	<string>MyTrivia uses the camera so you can take a profile photo and scan QR codes to join a game.</string>
+	<string>MyTrivia uses the camera so you can take a profile photo.</string>
 
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>MyTrivia needs access to your photos so you can choose a profile picture.</string>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Plus, Layers, ScanLine } from "lucide-react";
+import { Users, Plus, Layers } from "lucide-react";
 import { MultiplayerProviderV2, useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -65,7 +65,6 @@ import {
   ExploreFilter,
   ExploreSort,
 } from "@/components/team/UnifiedFiltersBar";
-import { QRScannerModal } from "@/components/team/QRScannerModal";
 import { supabase } from "@/integrations/supabase/client";
 import { instantTouchProps } from "@/utils/instantTouch";
 import { toast } from "@/lib/toast";
@@ -237,7 +236,6 @@ function TeamContentV2() {
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showAllGamesModal, setShowAllGamesModal] = useState(false);
-  const [showQRScanner, setShowQRScanner] = useState(false);
 
   // The page header hosts the friends reel, so its height varies by
   // breakpoint/content — measure it so the sticky tab bar and the right
@@ -865,23 +863,12 @@ function TeamContentV2() {
         {/* The same header as every other page: the page's name on the left,
             no back arrow, actions on the right. It replaces a row that led
             with the wordmark on mobile and the title only on lg+, so the
-            title appeared and disappeared depending on the width. The QR
-            scanner keeps its place beside the shared search and bell. */}
+            title appeared and disappeared depending on the width. */}
         <PageHeader
           title={t("extra.navOnlineGame")}
           showBack={false}
           rightElements={
-            <div className="flex items-center gap-1">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setShowQRScanner(true)}
-                className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
-              >
-                <ScanLine className="w-5 h-5 text-gray-600" />
-              </motion.button>
-              <HeaderActions />
-            </div>
+            <HeaderActions />
           }
         />
 
@@ -1447,10 +1434,6 @@ function TeamContentV2() {
         } : null}
         onStartChallenge={(friend, category) => handleStartChallenge(category.id, category.name)}
         isLoading={isStartingChallenge}
-      />
-      <QRScannerModal
-        open={showQRScanner}
-        onClose={() => setShowQRScanner(false)}
       />
       
       {/* Auth Required Modal for guests */}
