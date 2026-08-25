@@ -22,9 +22,18 @@ import { AI_CHAT_URL, AI_API_KEY, aiModel } from "../_shared/ai.ts";
  * and the caller must present TRANSLATE_SECRET in x-cron-secret.
  */
 
-const TARGETS = ["de", "es", "fr", "it", "pt"] as const;
+// ka leads the list. The five European languages have been at parity with the
+// English bank for a while — every source question has a German row — while
+// Georgian, the app's own first language, was never a target at all: it is
+// where the bank was authored, so nobody thought of it as something to
+// translate INTO. The result is a Georgian player meeting a category with a
+// fifth of the questions everyone else gets (video games: 53 against 268,
+// which is five levels against twenty-seven), because the level count is
+// decided by the thinnest language.
+const TARGETS = ["ka", "de", "es", "fr", "it", "pt"] as const;
 
 const LANGUAGE_NAMES: Record<string, string> = {
+  ka: "Georgian (ქართული)",
   de: "German (Deutsch)",
   es: "Spanish (Español)",
   fr: "French (Français)",
@@ -63,6 +72,27 @@ interface TranslatedItem {
   incorrect: string[];
 }
 
+/**
+ * What a language needs said that the general rules do not cover.
+ *
+ * Georgian has a convention the existing bank follows and a generic
+ * "keep proper nouns" rule gets wrong in both directions: brand and title
+ * names stay in Latin script and take their grammatical ending after a
+ * hyphen — Minecraft-ის, PlayStation-ის — while people's names are written
+ * out in Georgian script (Bowser is ბოუზერი, Ken Kutaragi is კენ კუტარაგი).
+ * Translating without this produces either Latin names mid-sentence with no
+ * case ending, which reads as broken Georgian, or transliterated brand names
+ * nobody searches for.
+ */
+const EXTRA_RULES: Record<string, string> = {
+  ka: `
+- Brand, game, film, show and company names stay in Latin script and take
+  their Georgian case ending after a hyphen: "Minecraft-ის", "PlayStation-ზე".
+- People's names and nicknames are written in Georgian script: Bowser is
+  "ბოუზერი", Ken Kutaragi is "კენ კუტარაგი".
+- Georgian has no formal/informal address to choose; write plainly.`,
+};
+
 function buildPrompt(language: string, batch: SourceQuestion[]): string {
   const items = batch.map((q) => ({
     id: q.id,
@@ -78,7 +108,7 @@ Rules:
 - Names of people stay as they are. Numbers, dates and units stay as they are.
 - Be concise: questions under 90 characters, answers under 24 characters where possible.
 - Natural, informal quiz tone (use "du"-style address where the language distinguishes).
-- Translate every item. Keep each item's "id" untouched. Keep the "incorrect" array the same length and order.
+- Translate every item. Keep each item's "id" untouched. Keep the "incorrect" array the same length and order.${EXTRA_RULES[language] ?? ""}
 
 Return ONLY a JSON array, no markdown, shaped exactly like the input:
 [{"id":"...","question":"...","correct":"...","incorrect":["...","...","..."]}]
