@@ -236,7 +236,14 @@ serve(async (req) => {
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.8,
-        max_tokens: 4000,
+        // Gemini 3.x are reasoning models: left alone they spend hidden
+        // "thinking" tokens out of the SAME budget as the answer, and bill
+        // them. At 4000 that thinking ate the array — the response came back
+        // cut off mid-object and the parse threw "Failed to parse AI
+        // response", which reads like a bad model and is really a budget.
+        // translate-questions already learned this; same treatment here.
+        reasoning_effort: 'low',
+        max_tokens: 8000,
       }),
     });
 
@@ -271,8 +278,23 @@ serve(async (req) => {
       if (jsonMatch) {
         questions = JSON.parse(jsonMatch[0]);
       }
+      // An empty answer is its own failure, and a distinct one: the model
+      // returned nothing to parse rather than something malformed. Logged
+      // with its finish_reason, which is what tells the two apart —
+      // "length" is a budget that ran out, "stop" is a model that declined.
+      if (!jsonMatch) {
+        console.error(
+          '[run-generation-job] No JSON array in AI response. finish_reason=',
+          aiData.choices?.[0]?.finish_reason,
+          'content head=', content.slice(0, 200),
+        );
+      }
     } catch (parseError) {
-      console.error('[run-generation-job] JSON parse error:', parseError);
+      console.error(
+        '[run-generation-job] JSON parse error:', parseError,
+        'finish_reason=', aiData.choices?.[0]?.finish_reason,
+        'content tail=', content.slice(-200),
+      );
       const errorLog = [...(job.error_log || []), `${now.toISOString()}: JSON parse error`];
       await supabase
         .from('generation_jobs')
