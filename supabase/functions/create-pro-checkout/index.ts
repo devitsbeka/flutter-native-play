@@ -13,6 +13,13 @@ const PRO_PRODUCTS = {
     priceGel: 9.99,
     sku: "PRO_SOLO_MONTHLY_GEL",
     friendInvites: 1,
+    // Same tier bought for a year, at the price the paywall quotes
+    // (src/config/proPlans.ts). A yearly line, not a twelfth of anything:
+    // Stripe bills the interval it is given.
+    yearly: {
+      priceGel: 59.88,
+      sku: "PRO_SOLO_ANNUAL_GEL",
+    },
   },
   pro_plus: {
     name: "სამეგობრო PRO - ყოველთვიური გამოწერა",
@@ -90,7 +97,7 @@ serve(async (req) => {
       }
     }
 
-    const { tierId } = await req.json();
+    const { tierId, period } = await req.json();
 
     if (!tierId || !PRO_PRODUCTS[tierId as keyof typeof PRO_PRODUCTS]) {
       return new Response(
@@ -100,6 +107,17 @@ serve(async (req) => {
     }
 
     const productConfig = PRO_PRODUCTS[tierId as keyof typeof PRO_PRODUCTS];
+
+    // A yearly plan is the same tier on a longer interval. Only offered where
+    // one is configured; anything else falls back to the monthly line rather
+    // than inventing a price.
+    const yearly = period === "year" ? (productConfig as { yearly?: { priceGel: number; sku: string } }).yearly : undefined;
+    if (period === "year" && !yearly) {
+      console.warn(`[PRO-CHECKOUT] No yearly price for tier=${tierId}; billing monthly`);
+    }
+    const priceGel = yearly?.priceGel ?? productConfig.priceGel;
+    const sku = yearly?.sku ?? productConfig.sku;
+    const interval = yearly ? "year" : "month";
 
     // Get or create Stripe customer if user is authenticated
     let customerId: string | undefined;
@@ -139,14 +157,14 @@ serve(async (req) => {
               name: productConfig.name,
               description: productConfig.description,
               metadata: {
-                sku: productConfig.sku,
+                sku,
                 tier_id: tierId,
                 friend_invites: productConfig.friendInvites.toString(),
               },
             },
-            unit_amount: Math.round(productConfig.priceGel * 100), // Convert to tetri
+            unit_amount: Math.round(priceGel * 100), // Convert to tetri
             recurring: {
-              interval: "month",
+              interval,
               interval_count: 1,
             },
           },
@@ -160,7 +178,7 @@ serve(async (req) => {
       metadata: {
         user_id: userId || "guest",
         tier_id: tierId,
-        sku: productConfig.sku,
+        sku,
         friend_invites: productConfig.friendInvites.toString(),
       },
       subscription_data: {
