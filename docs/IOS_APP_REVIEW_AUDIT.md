@@ -792,31 +792,96 @@ Recorded so the next pass can skip them.
 # Off-repo checklist
 
 Not answerable from this repository. Confirm each before pressing Submit.
+Nothing below is optional — each line is a way the submission fails that no
+test in this repo can see.
 
-**Xcode / archive**
-- [ ] `GoogleService-Info.plist` in `ios/App/App/`, `BUNDLE_ID` = `io.mytrivia.app` (**P0-1**)
+## Xcode / archive
+
+- [ ] `GoogleService-Info.plist` in `ios/App/App/`, `BUNDLE_ID` = `io.mytrivia.app` (**P0-1**). `npm run build:ios` now refuses to start without it
 - [ ] `pod install` run after `cap sync ios`
 - [ ] `MARKETING_VERSION` bumped from `1.0` if this is not the first submission; `CURRENT_PROJECT_VERSION` (30) unique per upload
 - [ ] Capabilities ticked on the App ID: Push, Sign in with Apple, Associated Domains, **Communication Notifications**
-- [ ] `aps-environment` = `production` in the exported `.ipa` (**P3-2**)
+- [ ] **The exported `.ipa` carries production entitlements.** Do not infer this from the entitlements file, which pins `development` on purpose — read the archive:
+      `unzip -o App.ipa && codesign -d --entitlements :- Payload/App.app`
+      Expect `aps-environment` = `production`, `com.apple.developer.applesignin`, both `applinks:` domains, and `com.apple.developer.usernotifications.communication` (**P3-2**)
 - [ ] Product → Archive → Generate Privacy Report reviewed — a third-party SDK updated to a version without its own manifest fails the upload even though nothing in ours changed
 
-**App Store Connect**
-- [ ] Every SKU the build can display exists, is priced, and is **attached to this version** (**P0-4**). The list is now: `io.mytrivia.pro.monthly`, `io.mytrivia.proplus.monthly`, the gem consumables, and `io.mytrivia.pro.annual` / `io.mytrivia.pro.weekly` if you want those rows to appear
+## App Store Connect
+
+### In-app purchases
+
+**Every IAP visible in the submitted binary must exist, be correctly
+configured, and be attached to this version.** On a first submission they are
+reviewed *with* the build; one that is merely "Ready to Submit" and not
+attached comes back as *"we were unable to locate the in-app purchase."*
+
+Confirmed present as of this writing — every product the app can sell exists,
+all of them at "Prepare for Submission".
+
+**Subscriptions**
+
+| Level | Reference name | Product ID | Duration |
+|---|---|---|---|
+| 1 | Friends PRO Monthly | `io.mytrivia.proplus.monthly` | 1 month |
+| 2 | PRO Monthly | `io.mytrivia.pro.monthly` | 1 month |
+| 3 | PRO Annual | `io.mytrivia.pro.annual` | 1 year |
+
+**Consumables** — all four gem packs, ids matching `GEM_PACKS` in
+`src/config/gemPacks.ts` and `PRODUCTS` in `supabase/functions/_shared/iap.ts`
+exactly (checked):
+
+| Reference name | Product ID |
+|---|---|
+| 100 gems | `io.mytrivia.gems.100` |
+| 500 gems | `io.mytrivia.gems.500` |
+| 1500 gems | `io.mytrivia.gems.1500` |
+| 5000 gems | `io.mytrivia.gems.5000` |
+
+So the catalogue is complete. What remains is configuration and attachment.
+
+- [ ] **Subscription levels are wrong — fix before submitting.** PRO Monthly
+      (2) and PRO Annual (3) are the *same tier* bought for different lengths;
+      the app says so on the paywall, which offers them as two rows of one
+      plan. Levels drive upgrade/downgrade: a subscriber on PRO Monthly who
+      picks Annual is doing a **downgrade** as configured, so the switch is
+      deferred to the end of the current period instead of taking effect now.
+      Put PRO Monthly and PRO Annual on the **same level**, with Friends PRO
+      above them. This is not a review blocker — it is a revenue and support
+      one, and it is far cheaper to fix now than after anyone has subscribed
+- [ ] **All seven products are attached to this version**, not merely created. "Prepare for Submission" means the product exists and is *not yet submitted* — on a first submission each one has to be selected in the version's In-App Purchases section, or review cannot see it
+- [ ] Every product has a **price** set in every storefront you ship to, not just the primary one
+- [ ] `io.mytrivia.pro.weekly` is in `IAP_PRODUCTS` but has no product and no paywall row. That is deliberate forward-compat (the comment there says the query asks for it so the row can appear the day it exists), and it costs only a slightly wider StoreKit query — nothing to fix, just do not be surprised by it
 - [ ] `io.mytrivia.adfree` is **not** attached — the app no longer sells it (**P1-1**)
-- [ ] If `io.mytrivia.pro.annual` ships with a free trial, configure the introductory offer; the app now reads it from the store, so a missing offer simply shows no trial copy rather than lying (**P1-2**)
+- [ ] Each IAP has a review screenshot and review notes
+- [ ] **PRO Annual's introductory offer.** The app no longer claims a trial of its own (**P1-2**): it shows trial copy only if StoreKit reports a free introductory offer on the product. So configure a 1-day free trial if you want the "Try 1 day free" line back — and if you do not, nothing in the app lies about it
+
+### Listing
+
 - [ ] App Privacy answers match `PrivacyInfo.xcprivacy` line for line — including Device ID / Third-Party Advertising / **used for tracking: yes**
-- [ ] Age rating questionnaire says **12+ / 13+**, matching the age gate and the privacy policy (**P1-4**)
+- [ ] **Age rating matches the now-13+ behaviour** (**P1-4**). The age gate offers 13–17 and 18+, the privacy policy says 13+, and the app serves ads — the questionnaire, the gate and the policy all have to tell the same story. A rating of 4+ on an app whose own gate starts at 13 is the contradiction a reviewer notices
 - [ ] Standard Apple EULA selected, or a custom one supplied, and its link matches the in-app `/terms`
 - [ ] Support URL and Privacy Policy URL both resolve
-- [ ] Review notes: the app is playable as a guest, so no demo account is required — say so, and say where the reviewer should tap to reach the paywall and the restore button
 - [ ] Screenshots are of this build, portrait, iPhone sizes only
 
-**On device, before archiving**
-- [ ] Avatar selfie opens the **system camera sheet** and returns a photo (**P1-3**)
-- [ ] Paywall shows StoreKit's localized price; with no catalogue it shows the "plans unavailable" card and a disabled button, never a `$3.99` row (**P0-3**)
+### Review notes
+
+Write them so a reviewer never has to guess. Cover, explicitly:
+
+- [ ] **Guest mode** — the app is fully playable without an account, so no demo account is needed. Say this outright; otherwise they may assume a login wall and ask for credentials
+- [ ] **How to reach the paywall** — name the taps (Discover → the PRO card; or play until the free games run out)
+- [ ] **How to reach Restore Purchases** — Settings → Restore Purchases. Reviewers look for this before almost anything else
+- [ ] **How to test multiplayer** — a second device is not available to them, so say what a single reviewer can see: create a room, the invite/share flow, and what the TV/host screens do
+- [ ] Anything about the app that reads oddly without context (the Georgian-first content, the ATT pre-prompt appearing before an ad rather than at launch)
+
+## On device, before archiving
+
+Sandbox behaviour differs from the simulator; do these on real hardware.
+
+- [ ] **A sandbox purchase completes and grants PRO** — payment sheet, then the entitlement actually appears in the app (it is granted server-side by `verify-receipt`, so this tests the whole chain, not just StoreKit)
+- [ ] **Restore works after a reinstall.** Delete the app, reinstall, sign in, Settings → Restore Purchases, and confirm PRO comes back. This is the flow a reviewer runs and the one a real user needs
+- [ ] **Prices are the storefront's, and localized** — StoreKit's own strings, never a `$` figure on a non-US storefront (**P0-3**). With no catalogue the paywall must show the "plans unavailable" card and a disabled button; the shop surfaces must show `—` and refuse to sell
 - [ ] The auto-renewal disclosure is visible under the buy button on the paywall **and** on the out-of-plays modal (**P0-2**)
-- [ ] A sandbox purchase grants PRO, and Restore on a second install returns it
-- [ ] Push arrives, shows the sender's avatar, and the badge clears on foreground
-- [ ] A shared invite link opens the app rather than Safari
+- [ ] **The avatar camera opens the system camera sheet and returns a photo** (**P1-3**). This is the path that changed — it is no longer an in-webview `<video>`
+- [ ] **Push works on a distribution build**, not just a debug one. TestFlight is the honest test: development APNs and production APNs are different endpoints, and a token from the wrong one silently never delivers. Confirm the sender's avatar renders (communication notifications) and the badge clears on foreground
+- [ ] **A universal link opens the app, not Safari.** Send yourself an invite link and tap it from Messages. Fresh installs need a moment for the AASA to be fetched, so test after the app has been launched once
 - [ ] Airplane mode: no screen spins forever
