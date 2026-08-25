@@ -62,7 +62,7 @@ export const SKIN_WHITE: BannerSkin = {
 };
 
 /** Lifts the top edge of a tile so it reads as a pane, not a hole. */
-const GLASS_SHEEN = "inset 0px 1px 0px 0px rgba(255,255,255,0.7)";
+export const GLASS_SHEEN = "inset 0px 1px 0px 0px rgba(255,255,255,0.7)";
 
 // Tile captions reserve two lines of 16px/1.15 whether or not they need
 // both, and centre inside that box. Without it a wrapping caption hangs
@@ -221,7 +221,9 @@ function ButtonFace({ fill, quiet }: { fill: string; quiet?: boolean }) {
   );
 }
 
-const GOLD_BUTTON =
+/** The face the app wears when it is selling PRO. Exported because the
+    paywall sells the same thing and must not invent a second gold. */
+export const GOLD_BUTTON =
   "linear-gradient(180.6543874615296deg, rgb(226,213,32) 13.506%, rgb(187,32,143) 90.414%, rgb(129,225,201) 194.33%)";
 
 /**
@@ -236,7 +238,7 @@ const GOLD_BUTTON =
 const ACTIVE_BUTTON = "linear-gradient(180deg, #F4EEFC 0%, #E6DAF7 100%)";
 const ACTIVE_BORDER = "rgba(64,38,102,0.16)";
 const ACTIVE_SHADOW = "0px 2px 0px 0px rgba(64,38,102,0.10), 0px 6px 16px 0px rgba(64,38,102,0.10)";
-const BUY_SHADOW = "0px 6px 0px 0px #7e2378, 0px 10px 24px 0px rgba(16,185,129,0.5)";
+export const BUY_SHADOW = "0px 6px 0px 0px #7e2378, 0px 10px 24px 0px rgba(16,185,129,0.5)";
 
 export function ProBannerCard({
   skin,
