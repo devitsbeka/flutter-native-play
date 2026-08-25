@@ -2,29 +2,38 @@
  * The subscription plans the paywall offers, and the App Store products
  * behind them.
  *
- * One list, because the paywall's three rows and the SKUs StoreKit is asked
- * for have to be the same three things. A row whose product id is not in the
- * store is a row that opens a payment sheet and fails, which is why
- * `availablePlans` below filters against the catalogue the device actually
- * came back with rather than against this file.
+ * Every figure here is one the app already charges. What the app actually
+ * sells today is two tiers, both monthly:
  *
- * ONLY `io.mytrivia.pro.monthly` exists in App Store Connect today (see
- * IAP_PRODUCTS in src/hooks/useInAppPurchases.ts, and the same three ids in
- * supabase/functions/_shared/iap.ts, which is what the receipt validator and
- * the RevenueCat webhook recognise). The annual and weekly ids are written
- * here in the form the others take, so that creating them — App Store Connect
- * subscription group, then RevenueCat, then the `_shared/iap.ts` catalogue —
- * is all it takes for those rows to appear. Nothing in the client needs to
- * change.
+ *   Solo PRO    io.mytrivia.pro.monthly      $3.99   /  9.99 GEL on Stripe
+ *   Family PRO  io.mytrivia.proplus.monthly  $7.99   / 19.99 GEL on Stripe
+ *
+ * (Native fallbacks from MobileProCarousel, GEL prices from PRO_PRODUCTS in
+ * supabase/functions/create-pro-checkout. The two are the same tier priced
+ * per store, not two different offers — and neither figure is ever what a
+ * buyer on a phone sees, because StoreKit's own localised string wins there.)
+ *
+ * There is no annual product, no weekly product, and no introductory offer
+ * anywhere in App Store Connect. The annual and weekly rows below therefore
+ * carry no price of their own: a plan with no `fallbackUsd` is only ever
+ * shown when the store itself quotes one, so nothing invented reaches a
+ * screen. Create the products, and the rows appear priced by Apple.
+ *
+ * `trialDays` is likewise empty on purpose. It is what the paywall promises,
+ * and a promise the store does not keep is a refund — set it only once the
+ * matching introductory offer exists on the product.
  */
 
 import { IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
+import type { ProTierId } from "@/hooks/useProPurchase";
 
 export interface ProPlan {
-  /** Stable key, used for selection state and analytics. */
-  id: "annual" | "monthly" | "weekly";
+  /** Stable key, used for selection state and the period label. */
+  id: "solo_monthly" | "family_monthly" | "annual" | "weekly";
   /** The App Store / RevenueCat product id. */
   productId: string;
+  /** What the plan grants. Stripe prices by tier on the web. */
+  tier: ProTierId;
   /** Locale key for the row's name. */
   nameKey: string;
   /** Locale key for the line under it. */
@@ -32,23 +41,30 @@ export interface ProPlan {
   /** Billing period in months, for the per-month figure and the saving. */
   months: number;
   /**
-   * Free days the store grants before the first charge. Drives both the
-   * default selection and the button's wording — a plan with a trial says
-   * "try N days free", one without says "continue".
-   *
-   * This must match the introductory offer configured on the product in App
-   * Store Connect. It is not what creates the trial; it is what the paywall
-   * promises, and a promise the store does not keep is a refund.
+   * Free days the store grants before the first charge, when an
+   * introductory offer is configured on the product. Drives the default
+   * selection and the button's wording. Nothing has one today.
    */
   trialDays?: number;
   /**
-   * What the row shows before StoreKit answers — on the web, in the
-   * simulator, or while the catalogue is still loading. The store's own
-   * localised price wins whenever there is one, so this is never what a
-   * buyer on a device is charged.
+   * The tier's configured USD price, shown while StoreKit has not answered
+   * and converted to GEL on the web (see useStorePrice). Omitted for a
+   * product that does not exist yet — such a row is hidden rather than
+   * priced from thin air.
    */
-  fallbackPrice: number;
-  /** Marks the row the paywall opens on, and the one carrying the badge. */
+  fallbackUsd?: number;
+  /**
+   * What the web checkout actually charges, in GEL — the figure in
+   * PRO_PRODUCTS in supabase/functions/create-pro-checkout. Shown as-is on
+   * the web rather than converting `fallbackUsd`, which is a flat 2.75x and
+   * quoted 10.97 ₾ for a 9.99 ₾ charge.
+   */
+  webGel?: number;
+  /**
+   * Marks the row the paywall opens on, when it is available here. Annual
+   * carries it so that creating the product is all it takes for the paywall
+   * to lead with it; until then the first available row is the default.
+   */
   featured?: boolean;
 }
 
@@ -56,49 +72,67 @@ export const PRO_PLANS: ProPlan[] = [
   {
     id: "annual",
     productId: IAP_PRODUCTS.PRO_ANNUAL,
+    tier: "pro",
     nameKey: "paywall.planAnnual",
     blurbKey: "paywall.planAnnualBlurb",
     months: 12,
-    trialDays: 7,
-    fallbackPrice: 39.99,
     featured: true,
   },
   {
-    id: "monthly",
+    id: "solo_monthly",
     productId: IAP_PRODUCTS.PRO_MONTHLY,
-    nameKey: "paywall.planMonthly",
-    blurbKey: "paywall.planMonthlyBlurb",
+    tier: "pro",
+    nameKey: "paywall.planSolo",
+    blurbKey: "paywall.planSoloBlurb",
     months: 1,
-    fallbackPrice: 3.99,
+    fallbackUsd: 3.99,
+    webGel: 9.99,
+  },
+  {
+    id: "family_monthly",
+    productId: IAP_PRODUCTS.PRO_PLUS_MONTHLY,
+    tier: "pro_plus",
+    nameKey: "paywall.planFamily",
+    blurbKey: "paywall.planFamilyBlurb",
+    months: 1,
+    fallbackUsd: 7.99,
+    webGel: 19.99,
   },
   {
     id: "weekly",
     productId: IAP_PRODUCTS.PRO_WEEKLY,
+    tier: "pro",
     nameKey: "paywall.planWeekly",
     blurbKey: "paywall.planWeeklyBlurb",
     months: 0.25,
-    fallbackPrice: 1.99,
   },
 ];
 
 /**
- * The plans this device can actually buy.
+ * The plans this device can actually buy, in the order they are shown.
  *
  * On a phone that is the intersection with StoreKit's catalogue: ask for a
  * product the store has never heard of and the purchase fails after the sheet
  * has already opened, which reads as the app being broken rather than as the
- * product being unreleased. Off a device there is no catalogue to intersect
- * with — the web build sells through Stripe — so the full list stands.
+ * product being unreleased.
+ *
+ * Off a device there is no catalogue to intersect with — the web build sells
+ * through Stripe — so the test is whether the plan has a price of its own to
+ * show.
  */
 export function availablePlans(
   storeProductIds: readonly string[],
   isNative: boolean,
 ): ProPlan[] {
-  if (!isNative) return PRO_PLANS;
-  const available = PRO_PLANS.filter((p) => storeProductIds.includes(p.productId));
+  const available = isNative
+    ? PRO_PLANS.filter((p) => storeProductIds.includes(p.productId))
+    : PRO_PLANS.filter((p) => p.fallbackUsd !== undefined);
+
   // Never return nothing: a paywall with no rows is worse than one showing
-  // the plan we know exists and letting the store refuse it.
-  return available.length > 0 ? available : PRO_PLANS.filter((p) => p.id === "monthly");
+  // the tier we know exists and letting the store refuse it.
+  return available.length > 0
+    ? available
+    : PRO_PLANS.filter((p) => p.id === "solo_monthly");
 }
 
 /** The row the paywall opens on: the featured plan if it is on sale here. */
@@ -107,15 +141,15 @@ export function defaultPlan(plans: ProPlan[]): ProPlan | undefined {
 }
 
 /**
- * What the yearly plan saves against paying monthly, in whole currency units,
- * or null when there is nothing to compare it with.
+ * What a multi-month plan saves against paying monthly for the same tier, in
+ * whole currency units, or null when there is nothing to compare it with.
  */
 export function annualSaving(
   plan: ProPlan,
   priceOf: (plan: ProPlan) => number | null,
 ): number | null {
   if (plan.months <= 1) return null;
-  const monthly = PRO_PLANS.find((p) => p.id === "monthly");
+  const monthly = PRO_PLANS.find((p) => p.months === 1 && p.tier === plan.tier);
   if (!monthly) return null;
   const monthlyPrice = priceOf(monthly);
   const planPrice = priceOf(plan);

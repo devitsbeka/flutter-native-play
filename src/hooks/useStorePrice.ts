@@ -50,10 +50,19 @@ const TIER_TO_PRODUCT: Record<string, string> = {
 export function useStorePrice() {
   const { getProduct } = useInAppPurchases();
 
-  return (tierOrProductId: string, fallbackUsd: number): StorePrice => {
-    // Web: the site takes payment in GEL through Stripe, so a converted GEL
-    // figure is the price actually charged. Unchanged.
+  return (tierOrProductId: string, fallbackUsd: number, webGel?: number): StorePrice => {
+    // Web: Stripe takes the payment in GEL, so show the GEL the checkout
+    // actually charges when the caller knows it — PRO_PRODUCTS in
+    // create-pro-checkout prices Solo at 9.99 and Family at 19.99. The
+    // conversion below is a flat 2.75x on the USD figure, which quoted 10.97
+    // for a 9.99 charge: a price on the screen that is not the price taken.
+    //
+    // Without a GEL figure it stays the conversion, which is all a gem pack
+    // or a shop item has.
     const webFallback = () => {
+      if (webGel !== undefined) {
+        return { display: `${webGel.toFixed(2)} ₾`, fromStore: false };
+      }
       const p = getPriceDisplay(fallbackUsd);
       return { display: `${p.symbol}${p.value}${p.suffix}`, fromStore: false };
     };

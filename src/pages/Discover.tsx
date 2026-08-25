@@ -16,8 +16,12 @@ import { CategoryGrid } from "@/components/discover/CategoryGrid";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 import { HeaderActions } from "@/components/shared/HeaderActions";
+import { Capacitor } from "@capacitor/core";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ProPaywallModal } from "@/components/pro/ProPaywallModal";
+import { useInAppPurchases } from "@/hooks/useInAppPurchases";
+import { useStorePrice } from "@/hooks/useStorePrice";
+import { availablePlans, defaultPlan } from "@/config/proPlans";
 import { matchesQuery } from "@/utils/searchMatch";
 import { orderByPopularity, readRecentlyViewedIds, RECENTLY_VIEWED_KEY } from "@/utils/categoryTabs";
 import { funRowCategories } from "@/utils/discoverRows";
@@ -117,6 +121,23 @@ export default function Discover() {
   // tab: the offer names a trial and a price, and a screen that asks which
   // plan is the screen that can honour it.
   const [paywallOpen, setPaywallOpen] = useState(false);
+
+  // The cover's price line, read off the same plan the paywall would open
+  // on. It used to be a sentence in the locale file naming a trial the store
+  // does not grant and a price nobody is charged — the design's "$10 / თვე"
+  // was the 9.99 GEL web price wearing a dollar sign.
+  const { products } = useInAppPurchases();
+  const resolvePrice = useStorePrice();
+  const offerNote = useMemo(() => {
+    const plan = defaultPlan(
+      availablePlans(products.map((p) => p.productId), Capacitor.isNativePlatform()),
+    );
+    if (!plan) return "";
+    const price = resolvePrice(plan.productId, plan.fallbackUsd ?? 0, plan.webGel).display;
+    return (plan.trialDays ? t("discover.promoNoteTrial") : t("discover.promoNote"))
+      .replace("{days}", String(plan.trialDays ?? 0))
+      .replace("{price}", price);
+  }, [products, resolvePrice, t]);
 
   useEffect(() => {
     const scroller = document.getElementById("main-scroll-container");
@@ -441,7 +462,7 @@ export default function Discover() {
             </button>
 
             <p className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(285px,57vw))] w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
-              {t("discover.promoNote")}
+              {offerNote}
             </p>
           </div>
 

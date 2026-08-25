@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
+import { useStorePrice } from "@/hooks/useStorePrice";
 import { useProPurchase } from "@/hooks/useProPurchase";
 import { ProPlan, annualSaving, availablePlans, defaultPlan } from "@/config/proPlans";
 import {
@@ -50,6 +51,10 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { products, purchasing, restorePurchases } = useInAppPurchases();
+  // The app's own price resolver: StoreKit's localised string on a phone,
+  // the tier's figure converted to GEL on the web. Re-implementing it here
+  // is how a Georgian user ends up shown "$3.99" for a charge in ₾.
+  const resolvePrice = useStorePrice();
   const { initiateProCheckout, isProcessing } = useProPurchase();
   const [restoring, setRestoring] = useState(false);
 
@@ -76,25 +81,48 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
 
   const selected = plans.find((p) => p.id === selectedId) ?? plans[0];
 
-  /** The store's number for a plan, or the configured fallback. */
+  /**
+   * The number behind a plan, for arithmetic only — the saving and the
+   * per-month figure. Never rendered: what is shown is resolvePrice's
+   * string, which is the store's in whichever currency it charges.
+   */
   const amountOf = (plan: ProPlan): number | null => {
     const product = products.find((p) => p.productId === plan.productId);
     if (product && product.priceAmountMicros > 0) return product.priceAmountMicros / 1_000_000;
-    return plan.fallbackPrice ?? null;
+    return plan.fallbackUsd ?? null;
   };
 
-  /** What the row prints: StoreKit's localised string when there is one. */
-  const priceLabel = (plan: ProPlan): string => {
+  const priceLabel = (plan: ProPlan): string =>
+    resolvePrice(plan.productId, plan.fallbackUsd ?? 0, plan.webGel).display;
+
+  /**
+   * Formats a figure derived from a plan's own price — the per-month rate,
+   * the saving — in the currency that plan is quoted in.
+   *
+   * Only a multi-month plan needs one, and the only multi-month plan has no
+   * fallback of its own: it appears when the store prices it, or not at all.
+   * So there is always a currency code to format with, and never a case
+   * where a derived number has to be guessed at in dollars.
+   */
+  const derivedLabel = (plan: ProPlan, amount: number): string | null => {
     const product = products.find((p) => p.productId === plan.productId);
-    if (product?.price) return product.price;
-    return `$${plan.fallbackPrice.toFixed(2)}`;
+    if (!product?.priceCurrencyCode) return null;
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: product.priceCurrencyCode,
+      }).format(amount);
+    } catch {
+      return null;
+    }
   };
 
   const perMonthLabel = (plan: ProPlan): string | null => {
     if (plan.months <= 1) return null;
     const amount = amountOf(plan);
     if (amount === null) return null;
-    return t("paywall.perMonth").replace("{price}", `$${(amount / plan.months).toFixed(2)}`);
+    const label = derivedLabel(plan, amount / plan.months);
+    return label && t("paywall.perMonth").replace("{price}", label);
   };
 
   const handleSubscribe = async () => {
@@ -105,10 +133,13 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
       return;
     }
 
-    // Solo PRO is the tier every plan grants; the plan only decides how long
-    // it is bought for. On the web that tier is all Stripe is told, because
-    // create-pro-checkout prices by tier and has no annual line.
-    const result = await initiateProCheckout("pro", isNative ? selected.productId : undefined);
+    // The tier is what Stripe prices by on the web; the product id is what
+    // StoreKit rings up on a phone, and two plans can grant the same tier
+    // while differing in period.
+    const result = await initiateProCheckout(
+      selected.tier,
+      isNative ? selected.productId : undefined,
+    );
     if (result.success) onClose();
   };
 
@@ -171,6 +202,7 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
             const isSelected = selected?.id === plan.id;
             const perMonth = perMonthLabel(plan);
             const planSaving = annualSaving(plan, amountOf);
+            const savingLabel = planSaving === null ? null : derivedLabel(plan, planSaving);
             return (
               <button
                 key={plan.id}
@@ -189,12 +221,12 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
                 {/* The badge belongs to the plan that earns it, not to the
                     selection: moving it with the tap made it read as a label
                     for "selected" rather than for "cheapest per month". */}
-                {planSaving !== null && (
+                {savingLabel && (
                   <span
                     className="absolute -top-3 right-4 rounded-full bg-[#FCD34D] px-3 py-1 text-[11px] font-bold uppercase leading-none tracking-wide"
                     style={{ color: ink }}
                   >
-                    {t("paywall.popularSave").replace("{amount}", `$${planSaving.toFixed(2)}`)}
+                    {t("paywall.popularSave").replace("{amount}", savingLabel)}
                   </span>
                 )}
 
