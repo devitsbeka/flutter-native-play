@@ -20,6 +20,13 @@ import { t as tStandalone } from "@/contexts/LanguageContext";
 // created, because an App Store product id can never be reused once it exists.
 export const IAP_PRODUCTS = {
   PRO_MONTHLY: "io.mytrivia.pro.monthly",
+  // The paywall's other two billing periods for the same PRO tier. They are
+  // listed here so the StoreKit query asks for them and the paywall can offer
+  // them the day they exist; until they are created in App Store Connect the
+  // store simply does not return them, and src/config/proPlans.ts drops the
+  // rows rather than showing a plan that cannot be bought.
+  PRO_ANNUAL: "io.mytrivia.pro.annual",
+  PRO_WEEKLY: "io.mytrivia.pro.weekly",
   PRO_PLUS_MONTHLY: "io.mytrivia.proplus.monthly",
   AD_FREE: "io.mytrivia.adfree",
 } as const;

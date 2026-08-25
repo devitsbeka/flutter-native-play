@@ -17,6 +17,7 @@ import { CategoryGrid } from "@/components/discover/CategoryGrid";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ProPaywallModal } from "@/components/pro/ProPaywallModal";
 import { matchesQuery } from "@/utils/searchMatch";
 import { orderByPopularity, readRecentlyViewedIds, RECENTLY_VIEWED_KEY } from "@/utils/categoryTabs";
 import { funRowCategories } from "@/utils/discoverRows";
@@ -111,6 +112,11 @@ export default function Discover() {
   // is the sheet's own top less the header's height, which is a number this
   // page already knows, and rAF keeps it to one read per frame.
   const [headerDocked, setHeaderDocked] = useState(false);
+
+  // The cover's offer opens the paywall here rather than routing to the PRO
+  // tab: the offer names a trial and a price, and a screen that asks which
+  // plan is the screen that can honour it.
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   useEffect(() => {
     const scroller = document.getElementById("main-scroll-container");
@@ -428,7 +434,7 @@ export default function Discover() {
 
             <button
               type="button"
-              onClick={() => navigate("/profile?tab=PRO")}
+              onClick={() => setPaywallOpen(true)}
               className="pointer-events-auto absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(215px,43vw))] h-[min(53px,10.6vw)] w-[min(192px,38.4vw)] rounded-[min(18.386px,3.68vw)] border-[1.532px] border-solid border-[#e8e0f5] bg-white/80 text-[#5d247f] text-[min(16px,3.2vw)] font-bold uppercase tracking-[-0.16px] [text-shadow:none] shadow-[0px_3.698px_0px_0px_#d8d0e8,0px_5.546px_14.79px_0px_rgba(0,0,0,0.1)] active:translate-y-[2px] active:shadow-[0px_1.5px_0px_0px_#d8d0e8,0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-all"
             >
               {t("discover.promoCta")}
@@ -734,6 +740,8 @@ export default function Discover() {
         </div>
 
       </div>
+
+      <ProPaywallModal isOpen={paywallOpen} onClose={() => setPaywallOpen(false)} />
     </MainLayout>
   );
 }

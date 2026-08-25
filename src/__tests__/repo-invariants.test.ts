@@ -209,7 +209,7 @@ describe("repo invariants", () => {
     ).toBe(true);
   });
 
-  it("keeps both PRO subscriptions on a monthly identifier", () => {
+  it("keeps the two PRO tier products on a monthly identifier", () => {
     // PRO and Friends PRO differ by friend invites, not billing period, and
     // both render a "/month" label (PRO_TIERS in ProPlansSection.tsx). They
     // were once named vip.monthly/vip.annual after an unrelated shop_items
@@ -217,19 +217,33 @@ describe("repo invariants", () => {
     // would have made the $7.99 tier yearly — undercharging 12x while the
     // screen said "/month", which is a guideline 2.3.1 rejection.
     //
-    // Matched against the id strings only, not the file text — the comment
-    // above IAP_PRODUCTS explains this history and names the old ids.
+    // What this catches is a RENAME: either tier's id turning into an annual
+    // or weekly one while the tier's own screens keep saying /month. The
+    // paywall's other billing periods (pro.annual, pro.weekly) are separate
+    // products with their own label — src/config/proPlans.ts pairs each id
+    // with the period it prints — so they are named here as expected, not
+    // matched by pattern. An id that appears in neither list fails.
     const source = read("src/hooks/useInAppPurchases.ts");
-    const periodic = [...source.matchAll(/"(io\.mytrivia\.[a-z0-9.]+)"/g)]
-      .map((m) => m[1])
-      .filter((id) => /annual|yearly/i.test(id));
+    const TIER_PRODUCTS = ["io.mytrivia.pro.monthly", "io.mytrivia.proplus.monthly"];
+    const PERIOD_PRODUCTS = ["io.mytrivia.pro.annual", "io.mytrivia.pro.weekly"];
 
+    const subscriptions = [...source.matchAll(/"(io\.mytrivia\.(?:pro|proplus)\.[a-z0-9.]+)"/g)]
+      .map((m) => m[1]);
+
+    for (const id of TIER_PRODUCTS) {
+      expect(subscriptions, `${id} is missing from IAP_PRODUCTS`).toContain(id);
+    }
+
+    const unaccounted = subscriptions.filter(
+      (id) => !TIER_PRODUCTS.includes(id) && !PERIOD_PRODUCTS.includes(id),
+    );
     expect(
-      periodic,
-      `These subscription product ids say annual/yearly: ${periodic.join(", ")}. ` +
-        "Both PRO tiers bill monthly — if an annual plan is genuinely being " +
-        "added, give it its own tier and its own /year label rather than " +
-        "renaming an existing monthly product.",
+      unaccounted,
+      `These subscription product ids are neither of the two monthly tiers ` +
+        `nor a known billing period: ${unaccounted.join(", ")}. A tier id must ` +
+        "stay monthly — renaming one to annual is how the $7.99 tier would be " +
+        "created as yearly behind a /month label. A genuinely new period gets " +
+        "its own id, its own row in proPlans.ts, and its own label.",
     ).toEqual([]);
   });
 
