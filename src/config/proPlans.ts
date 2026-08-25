@@ -14,8 +14,8 @@
  * The annual product does not exist in App Store Connect yet, so on a phone
  * that row is hidden — availablePlans() intersects with the catalogue the
  * device reported, because a row for a product the store never heard of
- * opens a payment sheet and fails. On the web it sells through Stripe, which
- * prices from `webGel` and needs a yearly line in create-pro-checkout.
+ * opens a payment sheet and fails. On the web it sells through Stripe at the
+ * price in src/config/pricing.ts, in the buyer's own currency.
  *
  * **Free trials are not declared here.** A `trialDays: 1` used to sit on the
  * annual plan with a comment saying it had to match the introductory offer in
@@ -27,6 +27,7 @@
 
 import { IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
 import type { ProTierId } from "@/hooks/useProPurchase";
+import { PRICES, type PriceKey } from "@/config/pricing";
 
 export interface ProPlan {
   /** Stable key, used for selection state and the period label. */
@@ -42,19 +43,11 @@ export interface ProPlan {
   /** Billing period in months, for the per-month figure and the saving. */
   months: number;
   /**
-   * The tier's configured USD price, shown while StoreKit has not answered
-   * and converted to GEL on the web (see useStorePrice). Omitted for a
-   * product that does not exist yet — such a row is hidden rather than
-   * priced from thin air.
+   * Which row of src/config/pricing.ts prices this plan. That table holds
+   * the figure for every currency the app charges in, and the checkout
+   * charges from its mirror — so what the row shows is what is taken.
    */
-  fallbackUsd?: number;
-  /**
-   * What the web checkout actually charges, in GEL — the figure in
-   * PRO_PRODUCTS in supabase/functions/create-pro-checkout. Shown as-is on
-   * the web rather than converting `fallbackUsd`, which is a flat 2.75x and
-   * quoted 10.97 ₾ for a 9.99 ₾ charge.
-   */
-  webGel?: number;
+  priceKey: PriceKey;
   /**
    * Marks the row the paywall opens on, when it is available here. Annual
    * carries it so that creating the product is all it takes for the paywall
@@ -71,7 +64,7 @@ export const PRO_PLANS: ProPlan[] = [
     nameKey: "paywall.planAnnual",
     blurbKey: "paywall.planAnnualBlurb",
     months: 12,
-    webGel: 59.88,
+    priceKey: "pro_annual",
     featured: true,
   },
   {
@@ -81,8 +74,7 @@ export const PRO_PLANS: ProPlan[] = [
     nameKey: "paywall.planMonthly",
     blurbKey: "paywall.planMonthlyBlurb",
     months: 1,
-    fallbackUsd: 3.99,
-    webGel: 9.99,
+    priceKey: "pro_monthly",
   },
 ];
 
@@ -120,7 +112,7 @@ export function availablePlans(
     return PRO_PLANS.filter((p) => storeProductIds.includes(p.productId));
   }
 
-  return PRO_PLANS.filter((p) => p.webGel !== undefined || p.fallbackUsd !== undefined);
+  return PRO_PLANS.filter((p) => PRICES[p.priceKey] !== undefined);
 }
 
 /** The row the paywall opens on: the featured plan if it is on sale here. */

@@ -238,6 +238,55 @@ describe("repo invariants", () => {
     ).toBe(true);
   });
 
+
+  it("charges the price it displays, in every currency", () => {
+    // Two copies of the price table: src/config/pricing.ts, which every
+    // screen reads, and supabase/functions/_shared/pricing.ts, which both
+    // checkouts charge from. An edge function cannot import from src/, so
+    // they are written twice — and a change to one alone is a screen quoting
+    // one number while Stripe takes another, which is exactly the fault this
+    // table was introduced to end (10.97 lari shown, 9.99 charged).
+    const parse = (source: string) => {
+      const body = read(source).match(/PRICES: Record<PriceKey, Record<Currency, number>> = \{([\s\S]*?)\n\};/);
+      expect(body, `no PRICES table in ${source}`).toBeTruthy();
+      const table: Record<string, string> = {};
+      for (const line of body![1].split("\n")) {
+        const row = line.match(/^\s*(\w+):\s*\{([^}]*)\}/);
+        if (row) table[row[1]] = row[2].replace(/\s+/g, "");
+      }
+      return table;
+    };
+
+    const client = parse("src/config/pricing.ts");
+    const server = parse("supabase/functions/_shared/pricing.ts");
+
+    expect(Object.keys(client).length, "no rows parsed from the client table").toBeGreaterThan(0);
+    expect(
+      Object.keys(server).sort(),
+      "the two price tables sell different things",
+    ).toEqual(Object.keys(client).sort());
+
+    for (const key of Object.keys(client)) {
+      expect(
+        server[key],
+        `${key} is priced differently in the app and in the checkout: ` +
+          `app has ${client[key]}, checkout has ${server[key]}. The app would ` +
+          "quote one number and Stripe would take the other.",
+      ).toBe(client[key]);
+    }
+
+    // Same currencies on both sides, or a language maps to a currency the
+    // checkout cannot price.
+    const languages = (source: string) =>
+      read(source)
+        .match(/CURRENCY_BY_LANGUAGE: Record<string, Currency> = \{([\s\S]*?)\n\};/)![1]
+        .replace(/\s+/g, "");
+    expect(
+      languages("supabase/functions/_shared/pricing.ts"),
+      "the app and the checkout disagree about which currency a language buys in",
+    ).toBe(languages("src/config/pricing.ts"));
+  });
+
   it("keeps the two PRO tier products on a monthly identifier", () => {
     // PRO and Friends PRO differ by friend invites, not billing period, and
     // both render a "/month" label (PRO_TIERS in ProPlansSection.tsx). They

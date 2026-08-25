@@ -22,6 +22,7 @@ import { ProPaywallModal } from "@/components/pro/ProPaywallModal";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { useStorePrice } from "@/hooks/useStorePrice";
 import { availablePlans, defaultPlan } from "@/config/proPlans";
+import { PRICES } from "@/config/pricing";
 import { matchesQuery } from "@/utils/searchMatch";
 import { orderByPopularity, readRecentlyViewedIds, RECENTLY_VIEWED_KEY } from "@/utils/categoryTabs";
 import { funRowCategories } from "@/utils/discoverRows";
@@ -133,7 +134,7 @@ export default function Discover() {
       availablePlans(products.map((p) => p.productId), Capacitor.isNativePlatform()),
     );
     if (!plan) return "";
-    const price = resolvePrice(plan.productId, plan.fallbackUsd ?? 0, plan.webGel).display;
+    const price = resolvePrice(plan.productId, PRICES[plan.priceKey].USD, plan.priceKey).display;
     // The trial is whatever the store product actually carries, not a figure
     // from the bundle — promising free days App Store Connect does not grant
     // is the same 2.3.1 problem here as on the paywall itself.
