@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { Check, LogIn, UserPlus, Users } from "lucide-react";
@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { dateLocaleFor } from "@/utils/dateLocale";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
+import { readInviteIntent, roomIsFreshEnoughToOffer } from "@/utils/inviteLink";
 
 /**
  * The other end of a shared invite link.
@@ -74,6 +75,7 @@ interface InvitePlayer {
  */
 export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }) {
   const { code } = useParams<{ code: string }>();
+  const { search } = useLocation();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const { user, loading: authLoading } = useAuth();
@@ -87,6 +89,14 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
   const [nickname, setNickname] = useState("");
   const [joining, setJoining] = useState(false);
   const [requested, setRequested] = useState<Set<string>>(new Set());
+
+  /**
+   * What the link says it is for. See utils/inviteLink.
+   *
+   * A room code (/room/<code>) is always about its own room and carries no
+   * intent of its own.
+   */
+  const intent = by === "room" ? { kind: "room" as const, roomCode: code ?? "" } : readInviteIntent(search);
 
   useEffect(() => {
     if (!code) {
@@ -104,7 +114,11 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
           : supabase.rpc("invite_preview", { p_code: code }),
         by === "room"
           ? supabase.rpc("room_players", { p_room_code: code })
-          : supabase.rpc("invite_room_players", { p_code: code }),
+          : intent.kind === "friend"
+            // A friend request names nobody else. Asking for the room's
+            // players would draw a lobby the sender never offered.
+            ? Promise.resolve({ data: [] as unknown, error: null })
+            : supabase.rpc("invite_room_players", { p_code: code }),
       ]);
 
       let [{ data: previewRows, error: previewError }, { data: playerRows }] = await load();
@@ -126,14 +140,85 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
         console.error("[invite] preview failed", { code, by, previewError });
         setLoadFailed(true);
       }
-      setPreview((previewRows?.[0] as InvitePreview) ?? null);
-      setPlayers((playerRows as InvitePlayer[]) ?? []);
+
+      let resolved = (previewRows?.[0] as InvitePreview) ?? null;
+      let people = (playerRows as InvitePlayer[]) ?? [];
+
+      if (resolved && by !== "room") {
+        if (intent.kind === "friend") {
+          // The sender pressed "+" on the friends strip. Whatever lobby they
+          // happen to still be sitting in is not what they sent, so it is
+          // dropped here rather than drawn as an invitation.
+          resolved = { ...resolved, room_code: null, room_name: null, category_id: null, category_name: null, room_status: null, player_count: null };
+          people = [];
+        } else if (intent.kind === "room") {
+          // The link names its room. Read that room directly instead of
+          // trusting the far end's guess, which picks the sender's most
+          // recently touched waiting room and can be a different one.
+          const [{ data: roomRows }, { data: roomPlayers }] = await Promise.all([
+            supabase.rpc("room_preview", { p_room_code: intent.roomCode }),
+            supabase.rpc("room_players", { p_room_code: intent.roomCode }),
+          ]);
+          if (cancelled) return;
+          const room = (roomRows as InvitePreview[] | null)?.[0];
+          if (room) {
+            // The host identity stays the invite code's owner — they are who
+            // sent it, and accepting befriends them — while everything about
+            // the room comes from the room itself.
+            resolved = {
+              ...resolved,
+              room_code: room.room_code,
+              room_name: room.room_name,
+              category_id: room.category_id,
+              category_name: room.category_name,
+              room_status: room.room_status,
+              player_count: room.player_count,
+              is_archived: room.is_archived,
+              created_at: room.created_at,
+              last_activity_at: room.last_activity_at,
+            };
+            people = (roomPlayers as InvitePlayer[] | null) ?? [];
+          }
+        } else if (resolved.room_code) {
+          // A "pending" link: no room existed when it was shared, so this one
+          // was resolved just now. Check how old it is before offering it —
+          // a lobby left open on Tuesday is still `waiting` on Friday, and
+          // is not what anybody is being invited to.
+          const { data: roomRows } = await supabase.rpc("room_preview", {
+            p_room_code: resolved.room_code,
+          });
+          if (cancelled) return;
+          const room = (roomRows as InvitePreview[] | null)?.[0];
+          const fresh = roomIsFreshEnoughToOffer(
+            room?.last_activity_at,
+            room?.created_at,
+            Date.now(),
+          );
+          if (!fresh) {
+            resolved = { ...resolved, room_code: null, room_name: null, category_id: null, category_name: null, room_status: null, player_count: null };
+            people = [];
+          } else if (room) {
+            resolved = {
+              ...resolved,
+              is_archived: room.is_archived,
+              created_at: room.created_at,
+              last_activity_at: room.last_activity_at,
+            };
+          }
+        }
+      }
+
+      if (cancelled) return;
+      setPreview(resolved);
+      setPlayers(people);
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [code, by]);
+    // intent is derived from `search`, which is in the list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code, by, search]);
 
   const alreadyFriends = !!preview && friends.some(f => f.friendId === preview.host_user_id);
   // Only a personal link can be "your own". A host opening their own room
@@ -196,7 +281,7 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
           // Anonymous sign-in can be switched off for the project. Send them
           // to sign up with the invite remembered, rather than failing here
           // with nothing to do next.
-          navigate(`/auth?returnTo=${encodeURIComponent(`/i/${code}`)}`);
+          navigate(`/auth?returnTo=${encodeURIComponent(`/i/${code}${search}`)}`);
           return;
         }
         signedIn = data.user;
@@ -403,30 +488,38 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
                       className="w-10 h-10"
                       fallbackClassName="bg-white/20 text-white font-semibold"
                     />
-                    <span className="flex-1 min-w-0 truncate text-white font-medium">
-                      {player.nickname}
-                    </span>
+                    {/* Name and its add button as one group, so the button
+                        reads as belonging to that person rather than sitting
+                        in a column at the far edge. Same shape and the same
+                        place as the lobby's chip — this screen is the lobby
+                        seen from outside, and the two should not look like
+                        different features. */}
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                      <span className="min-w-0 truncate text-white font-medium">
+                        {player.nickname}
+                      </span>
+                      {/* Nothing to offer a signed-out visitor: they cannot
+                          send a friend request yet, and a row of greyed-out
+                          buttons reads as broken rather than as not-yet. */}
+                      {user && !isSelf && (by === "room" || !player.is_host) && (
+                        isFriend || asked ? (
+                          <Check className="h-4 w-4 shrink-0 text-emerald-300" />
+                        ) : (
+                          <button
+                            onClick={() => addPlayer(player.user_id)}
+                            className={cn(
+                              "flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
+                              "bg-white/15 text-white transition-colors hover:bg-white/25 active:scale-95"
+                            )}
+                            aria-label={t("extra.inviteAddFriend")}
+                          >
+                            <UserPlus className="h-3.5 w-3.5" />
+                          </button>
+                        )
+                      )}
+                    </div>
                     {player.is_host && (
                       <span className="text-white/50 text-xs shrink-0">{t("extra.inviteHostTag")}</span>
-                    )}
-                    {/* Nothing to offer a signed-out visitor: they cannot
-                        send a friend request yet, and a row of greyed-out
-                        buttons reads as broken rather than as not-yet. */}
-                    {user && !isSelf && (by === "room" || !player.is_host) && (
-                      isFriend || asked ? (
-                        <Check className="w-5 h-5 text-emerald-300 shrink-0" />
-                      ) : (
-                        <button
-                          onClick={() => addPlayer(player.user_id)}
-                          className={cn(
-                            "shrink-0 w-9 h-9 rounded-xl flex items-center justify-center",
-                            "bg-white/15 border border-white/20 text-white"
-                          )}
-                          aria-label={t("extra.inviteAddFriend")}
-                        >
-                          <UserPlus className="w-4 h-4" />
-                        </button>
-                      )
                     )}
                   </div>
                 );
@@ -507,7 +600,7 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
 
         {!user && (
           <button
-            onClick={() => navigate(`/auth?returnTo=${encodeURIComponent(`/i/${code}`)}`)}
+            onClick={() => navigate(`/auth?returnTo=${encodeURIComponent(`/i/${code}${search}`)}`)}
             className="w-full mt-4 text-white/70 text-sm font-medium underline underline-offset-4"
           >
             {t("extra.inviteHaveAccount")}

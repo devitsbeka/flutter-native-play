@@ -41,6 +41,7 @@ import stickerAlbum from "@/assets/sticker-album.png";
 import { PreRoomQueuePreview } from "@/components/team/PreRoomQueuePreview";
 import { getRandomGradient } from "@/config/roomGradients";
 import { siteUrl } from "@/config/site";
+import { inviteLinkPath } from "@/utils/inviteLink";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Json } from "@/integrations/supabase/types";
 import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
@@ -488,8 +489,15 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // Was a bare /team, which told whoever opened it nothing: not who sent
     // it, not what they were playing. The sender's own invite link says both,
     // and makes them friends when it is accepted.
+    //
+    // Sent as a "pending" link — the one case where the room really does have
+    // to be resolved when the link is OPENED, because it does not exist yet
+    // here. Every other screen now names what it is offering; see
+    // utils/inviteLink.
     const { data: inviteCode } = await supabase.rpc("get_or_create_invite_code");
-    const inviteLink = inviteCode ? siteUrl(`/i/${inviteCode}`) : siteUrl("/team");
+    const inviteLink = inviteCode
+      ? siteUrl(inviteLinkPath(inviteCode, { kind: "pending" }))
+      : siteUrl("/team");
 
     const outcome = await shareOrCopy({
       title: t("extra.joinTriviaShare"),

@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/lib/toast";
 import { copyToClipboard, shareOrCopy } from "@/utils/shareLink";
+import { inviteLinkPath, type InviteIntent } from "@/utils/inviteLink";
 import { useFriends } from "@/hooks/useFriends";
 import { useAuth } from "@/contexts/AuthContext";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
@@ -184,6 +185,19 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   // thing the screen could have told you — who you already have — was the
   // thing it left out.
   const isBrowseMode = !isPreRoomMode && !isRoomInviteMode;
+  /**
+   * What the link this screen sends is FOR — see utils/inviteLink.
+   *
+   * From the friends strip it is a friend request and nothing else. From a
+   * lobby it is that lobby, named here rather than guessed at the far end.
+   * From Create Room the room does not exist yet, so the far end still has to
+   * resolve it when the link is opened.
+   */
+  const intent: InviteIntent = isRoomInviteMode && roomCode
+    ? { kind: "room", roomCode }
+    : isBrowseMode
+    ? { kind: "friend" }
+    : { kind: "pending" };
   const selectedCount = selectedFriends?.size ?? 0;
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
   
@@ -214,11 +228,14 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
    * at all: whoever opened it landed on the games tab as a stranger.
    *
    * Now it is always the sender's own invite link, which names them and is
-   * the same on every screen. Where it leads is decided when it is OPENED,
-   * not when it is sent: in a room it offers that room, out of one it offers
-   * the friendship, and a link pasted into a chat last week still works
-   * today. The room is looked up from what the SENDER is in, so a player
-   * inviting someone to a lobby they do not host still brings them there.
+   * the same on every screen. A link pasted into a chat last week still works
+   * today.
+   *
+   * What it OFFERS is decided here, where we still know why it was sent —
+   * not at the far end by guesswork. It used to be guesswork: the far end
+   * resolved "the most recent waiting room the sender is in", so pressing "+"
+   * on the friends strip mailed out an invitation to whatever lobby the
+   * sender had left open days ago. See utils/inviteLink.
    */
   const [myInviteLink, setMyInviteLink] = useState<string | null>(null);
   useEffect(() => {
@@ -226,10 +243,15 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     let cancelled = false;
     (async () => {
       const { data, error } = await supabase.rpc("get_or_create_invite_code");
-      if (!cancelled && !error && data) setMyInviteLink(siteUrl(`/i/${data}`));
+      if (!cancelled && !error && data) {
+        setMyInviteLink(siteUrl(inviteLinkPath(data, intent)));
+      }
     })();
     return () => { cancelled = true; };
-  }, [isOpen, user]);
+    // intent is derived from the props that decide the mode, and those are in
+    // the dependency list by way of isOpen/roomCode below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, user, intent.kind, roomCode]);
 
   /**
    * The link to send, resolved at the moment of sending.
@@ -256,7 +278,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     if (user) {
       const { data, error } = await supabase.rpc("get_or_create_invite_code");
       if (!error && data) {
-        const link = siteUrl(`/i/${data}`);
+        const link = siteUrl(inviteLinkPath(data, intent));
         setMyInviteLink(link);
         return link;
       }
@@ -264,7 +286,8 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     // Signed out, or the code could not be minted. /team is a worse invite
     // than a personal link and a better one than a room that is gone.
     return inviteLink || siteUrl("/team");
-  }, [myInviteLink, user, inviteLink]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myInviteLink, user, inviteLink, intent.kind, roomCode]);
 
   const shareMessage = t("extra.shareMessage");
   const encodedMessage = encodeURIComponent(shareMessage);
@@ -540,7 +563,12 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
               >
                 <ChevronLeft className="w-6 h-6 text-primary-foreground" />
               </button>
-              <h2 className="text-lg font-bold text-primary-foreground">{t("extra.inviteFriendsTitle")}</h2>
+              {/* Opened from the friends strip there is no room and no game:
+                  the screen adds a friend, and calling it "Invite Friends"
+                  was the first half of the promise the link then broke. */}
+              <h2 className="text-lg font-bold text-primary-foreground">
+                {t(isBrowseMode ? "extra.addFriendTitle" : "extra.inviteFriendsTitle")}
+              </h2>
             </div>
           </div>
 
