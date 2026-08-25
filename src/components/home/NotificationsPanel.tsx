@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { typeInTab, type NotificationTab } from '@/config/notificationTabs';
 import { PUBLIC_SHARING_ENABLED } from '@/config/features';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, BellOff, Gamepad2, Users, Sparkles } from 'lucide-react';
+import { X, Bell, BellOff } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { useGenerationNotifications } from '@/hooks/useGenerationNotifications';
@@ -15,7 +15,7 @@ import { toast } from "@/lib/toast";
 import { CompactNotificationCard } from '@/components/notifications/CompactNotificationCard';
 import { NotificationDetailModal } from '@/components/notifications/NotificationDetailModal';
 import { CompactGenerationCard } from '@/components/notifications/CompactGenerationCard';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { NotificationTabs } from '@/components/notifications/NotificationTabs';
 
 // Language-aware time formatter
 const formatTimeAgo = (date: Date, t: (key: string, params?: Record<string, string | number>) => string) => {
@@ -383,39 +383,16 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
 
             {/* Tabs */}
             <div className="px-4 pt-3 pb-2">
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'games' | 'social' | 'trivia')} className="w-full">
-                <TabsList className={`grid ${PUBLIC_SHARING_ENABLED ? "grid-cols-3" : "grid-cols-2"} w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto`}>
-                  <TabsTrigger value="games" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
-                    <Gamepad2 className="w-3.5 h-3.5" />
-                    <span>{t("notificationsPanel.gamesTab")}</span>
-                    {getUnreadCount('games') > 0 && (
-                      <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
-                        {getUnreadCount('games')}
-                      </span>
-                    )}
-                  </TabsTrigger>
-                  <TabsTrigger value="social" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
-                    <Users className="w-3.5 h-3.5" />
-                    <span>{t("notificationsPanel.socialTab")}</span>
-                    {getUnreadCount('social') > 0 && (
-                      <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
-                        {getUnreadCount('social')}
-                      </span>
-                    )}
-                  </TabsTrigger>
-                  {PUBLIC_SHARING_ENABLED && (
-                  <TabsTrigger value="trivia" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>{t("notificationsPanel.triviaTab")}</span>
-                    {getUnreadCount('trivia') > 0 && (
-                      <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
-                        {getUnreadCount('trivia')}
-                      </span>
-                    )}
-                  </TabsTrigger>
-                  )}
-                </TabsList>
-              </Tabs>
+              <NotificationTabs
+                activeTab={activeTab}
+                onTabChange={(tab) => setActiveTab(tab)}
+                unreadCount={getUnreadCount}
+                labels={{
+                  games: t("notificationsPanel.gamesTab"),
+                  social: t("notificationsPanel.socialTab"),
+                  trivia: t("notificationsPanel.triviaTab"),
+                }}
+              />
             </div>
 
             {/* Content */}

@@ -1,9 +1,9 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, BellOff, ChevronDown, Trash2, X, Gamepad2, Users, Sparkles } from 'lucide-react';
+import { Bell, BellOff, ChevronDown, Trash2, X } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { NotificationTabs } from '@/components/notifications/NotificationTabs';
 import { useGenerationNotifications } from '@/hooks/useGenerationNotifications';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -384,41 +384,16 @@ export default function Notifications() {
           rest, which read as an empty band between header and content on
           device (and never on web, where --safe-top is 0). */}
       <div className="sticky top-[76px] z-10 bg-background/95 backdrop-blur-md px-4 pt-3 pb-3 max-w-[700px] md:max-w-[600px] mx-auto">
-        <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as NotificationTab)} className="w-full">
-          <TabsList className={`grid ${PUBLIC_SHARING_ENABLED ? "grid-cols-3" : "grid-cols-2"} w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto`}>
-            <TabsTrigger value="games" className="flex items-center gap-1.5 text-[13px] py-3 data-[state=active]:bg-background">
-              <Gamepad2 className="w-[15px] h-[15px]" />
-              <span>{t("extra.notifGamesTab")}</span>
-              {getUnreadCount('games') > 0 && (
-                <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[11px] flex items-center justify-center font-medium">
-                  {getUnreadCount('games')}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="social" className="flex items-center gap-1.5 text-[13px] py-3 data-[state=active]:bg-background">
-              <Users className="w-[15px] h-[15px]" />
-              <span>{t("extra.notifSocialTab")}</span>
-              {getUnreadCount('social') > 0 && (
-                <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[11px] flex items-center justify-center font-medium">
-                  {getUnreadCount('social')}
-                </span>
-              )}
-            </TabsTrigger>
-            {/* Likes/saves/plays on published trivias — nothing can produce
-                these while public sharing is hidden, so the tab goes too. */}
-            {PUBLIC_SHARING_ENABLED && (
-            <TabsTrigger value="trivia" className="flex items-center gap-1.5 text-[13px] py-3 data-[state=active]:bg-background">
-              <Sparkles className="w-[15px] h-[15px]" />
-              <span>{t("extra.notifTriviaTab")}</span>
-              {getUnreadCount('trivia') > 0 && (
-                <span className="ml-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[11px] flex items-center justify-center font-medium">
-                  {getUnreadCount('trivia')}
-                </span>
-              )}
-            </TabsTrigger>
-            )}
-          </TabsList>
-        </Tabs>
+        <NotificationTabs
+          activeTab={activeTab}
+          onTabChange={(tab) => handleTabChange(tab)}
+          unreadCount={getUnreadCount}
+          labels={{
+            games: t("extra.notifGamesTab"),
+            social: t("extra.notifSocialTab"),
+            trivia: t("extra.notifTriviaTab"),
+          }}
+        />
       </div>
 
       {/* Content - full width, hidden scroll */}

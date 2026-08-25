@@ -43,8 +43,16 @@ describe("when the notifications screen marks things read", () => {
     // clear the Friends badge the player is switching towards.
     expect(page).toMatch(/const leaveTab\s*=/);
     expect(page).toMatch(/markManyAsRead/);
-    expect(page, "the Tabs control must go through the handler that clears the old tab")
-      .toMatch(/onValueChange=\{\(v\)\s*=>\s*handleTabChange\(/);
+    expect(page, "the tab strip must go through the handler that clears the old tab")
+      .toMatch(/onTabChange=\{\(tab\)\s*=>\s*handleTabChange\(/);
+    // The strip itself is shared with the panel the bell opens, so the
+    // guarantee only holds if it actually calls back on a change.
+    const strip = readFileSync(
+      join(process.cwd(), "src/components/notifications/NotificationTabs.tsx"),
+      "utf8",
+    );
+    expect(strip, "the shared strip must report a change to its caller")
+      .toMatch(/onValueChange=\{\(v\)\s*=>\s*onTabChange\(/);
   });
 
   it("clears whatever is left when the screen closes", () => {
