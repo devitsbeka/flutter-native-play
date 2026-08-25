@@ -1,0 +1,728 @@
+# iOS App Review Audit — MyTrivia
+
+**Audited commit:** `ec78dce` (2026-08-25)
+**Target:** `io.mytrivia.app` · MARKETING_VERSION 1.0 · CURRENT_PROJECT_VERSION 30 · iOS 15.0+ · iPhone only
+**Posture:** written as an App Review reviewer would work — open the binary's
+configuration, then walk the app looking for the things that get apps sent back.
+
+This supersedes the iOS sections of `PRE_LAUNCH_CHECKLIST.md`, which was last
+updated in January 2026 and is now substantially stale (it asks for a minimum
+deployment target, a privacy manifest and `.env` removal — the first two exist,
+and the third is deliberate; see `AGENTS.md` §5).
+
+---
+
+## How to read this
+
+**Priority** is how bad it is.
+
+| | |
+|---|---|
+| **P0** | Rejection or crash is near-certain. |
+| **P1** | High likelihood of rejection, or a visibly broken feature a reviewer will reach. |
+| **P2** | Production quality. Survives review; hurts users or revenue. |
+| **P3** | Low. Worth doing before the second release. |
+| **P4** | Nice to have. |
+| **P5** | Technical debt. |
+
+**Status** is the question you actually asked:
+
+- **BLOCKING** — must be fixed before submission.
+- **BLOCKING (conditional)** — blocking only if a stated condition holds
+  (usually: "if that product is attached to the submission"). The condition is
+  named in the finding.
+- **NON-BLOCKING** — will pass review as-is, but bites later: a bad first
+  session, lost revenue, a compliance exposure, or the next release's rejection.
+
+**Confidence** distinguishes what was executed from what was read.
+
+- **Verified** — a command was run and its output is quoted.
+- **Read** — established by reading the source; deterministic, not executed.
+- **Needs device / needs ASC** — cannot be settled from this repo. Named
+  explicitly rather than asserted.
+
+### What was actually run
+
+```
+npm ci                                    → exit 0
+npx vitest run                            → 94 files, 895 tests, all passing
+tsc --noEmit -p tsconfig.app.json         → exit 0
+tsc --noEmit -p tsconfig.node.json        → exit 0
+VITE_INCLUDE_ADMIN=false VITE_NATIVE_BUILD=true vite build
+  + scripts/prune-ios-videos.mjs
+  + scripts/verify-ios-bundle.mjs         → "ok — 98.7 MB, no admin console, no pre-ATT tracking"
+curl https://mytrivia.io/.well-known/apple-app-site-association   → 200 application/json
+curl https://www.mytrivia.io/.well-known/apple-app-site-association → 200
+POST https://sqwpzezkhpqkdyltvsim.supabase.co/functions/v1/{fn}   → all 401/400, none 404
+```
+
+The tree is green. Everything below is a gap the tooling does not cover.
+
+---
+
+## Verdict
+
+| Priority | Blocking | Conditional | Non-blocking | Total |
+|---|---|---|---|---|
+| P0 | 3 | 1 | 0 | 4 |
+| P1 | 1 | 2 | 2 | 5 |
+| P2 | 0 | 0 | 6 | 6 |
+| P3 | 0 | 0 | 7 | 7 |
+| P4 | 0 | 0 | 5 | 5 |
+| P5 | 0 | 0 | 4 | 4 |
+
+**Four items stand between this build and a submission that is worth making**
+(P0-1 … P0-4). Two more turn blocking depending on which in-app purchase
+products get attached to the build (P1-1, P1-2).
+
+The compliance groundwork here is unusually good — privacy manifest, ATT
+pre-prompt ordering, report/block, account deletion, restore, IAP-only payments
+on device, SKAdNetwork, the bundle guard — and most of what follows is the last
+few percent rather than a rebuild.
+
+---
+
+# P0 — Blocking
+
+## P0-1 · `GoogleService-Info.plist` is not in the repo, and the Xcode project requires it
+
+**Status:** BLOCKING · **Guideline:** 2.1 (app crashes / does not build) · **Confidence:** Read (build-time, deterministic)
+
+`.gitignore:52` excludes it deliberately, with a good reason written next to it.
+But `ios/App/App.xcodeproj/project.pbxproj` references it as a real file in the
+App target's Resources phase:
+
+- `project.pbxproj:19` — `GoogleService-Info.plist in Resources`
+- `project.pbxproj:59` — the `PBXFileReference`
+- `project.pbxproj:245` — inside the App target's `PBXResourcesBuildPhase`
+
+So a fresh clone on a Mac does not build: Xcode stops at *"Build input file
+cannot be found."* If somebody "fixes" that by deleting the reference,
+`@capacitor-firebase/messaging` then calls `FirebaseApp.configure()` at launch
+with no configuration file and raises — a crash on launch, before the app
+paints, which is the single fastest way to fail review.
+
+**Fix.** Fetch it from Firebase console → Project settings → General → Your apps
+→ `GoogleService-Info.plist`, drop it in `ios/App/App/`, before archiving. This
+belongs in a release runbook step, not only in a `.gitignore` comment — the
+comment is only read by someone already looking at `.gitignore`.
+
+**Verify:** `ls ios/App/App/GoogleService-Info.plist` and confirm its
+`BUNDLE_ID` is `io.mytrivia.app` before every archive.
+
+---
+
+## P0-2 · Two subscription surfaces ship without the Guideline 3.1.2 disclosure
+
+**Status:** BLOCKING · **Guideline:** 3.1.2 (auto-renewable subscriptions) · **Confidence:** Read
+
+`SubscriptionTerms` exists, is correct, is native-gated correctly, and is pinned
+by `src/__tests__/subscriptionTerms.test.ts`. The test's own docstring says *"A
+fourth appearing without the disclosure is the regression this catches."* It
+does not catch it — the file list is hardcoded to three paths.
+
+Five components call `useProPurchase`. Three render the disclosure:
+
+| Surface | Disclosure |
+|---|---|
+| `src/components/shared/ProRequiredModal.tsx:150` | ✅ |
+| `src/components/shop/MobileProCarousel.tsx:416` | ✅ |
+| `src/components/shop/ShopRightSidebar.tsx:233` | ✅ |
+| `src/components/home/PlayLimitModal.tsx:56` | ❌ **nothing at all** |
+| `src/components/pro/ProPaywallModal.tsx:146` | ❌ **incomplete** |
+
+**`PlayLimitModal`** starts a PRO subscription (`initiateProCheckout("pro")`)
+with no renewal terms, no billing-account statement, no cancellation
+instructions, and no Terms/Privacy links anywhere on the modal. This is the
+worst of the two: it is the modal a player hits when they run out of free
+games, which makes it one of the likeliest paths a reviewer takes.
+
+**`ProPaywallModal`** (reached from `Discover.tsx:767`) carries Terms, Privacy
+and Restore links and a footnote — but the footnote is
+`"{price} / {period}, cancel anytime"` (`src/locales/en.ts:4622`). 3.1.2 wants
+four things beside the buy button, and that line carries one and a half:
+
+- ✅ price and period
+- ❌ that the subscription **auto-renews**
+- ❌ that payment is charged to the **Apple ID account** at confirmation of purchase
+- ❌ that it renews unless **turned off at least 24 hours before** the period ends,
+  and where to manage it (Account Settings after purchase)
+
+The copy for all of this already exists in every locale
+(`extra.autoRenewalDesc`, `extra.paymentDesc`, `extra.cancellationDesc`).
+
+**Fix.**
+1. Render `<SubscriptionTerms />` in `PlayLimitModal`, under the buy button.
+2. Render `<SubscriptionTerms onNavigate={onClose} />` in `ProPaywallModal`'s
+   footer, replacing or joining the bare footnote. Keep the Restore button.
+3. Rewrite `subscriptionTerms.test.ts` to **derive** the surface list — glob
+   `src/**/*.tsx`, keep every file importing `useProPurchase`, assert each
+   renders `<SubscriptionTerms` — so surface number six cannot slip through the
+   same hole twice.
+
+---
+
+## P0-3 · The paywall will offer a purchasable row when StoreKit returned no catalogue
+
+**Status:** BLOCKING · **Guideline:** 2.1 / 3.1.2 · **Confidence:** Read
+
+`availablePlans()` (`src/config/proPlans.ts:112-116`) deliberately never returns
+an empty list:
+
+```js
+return available.length > 0 ? available : PRO_PLANS.filter((p) => p.id === "monthly");
+```
+
+And when the store has not answered, `useStorePrice`'s `nativeFallback`
+(`src/hooks/useStorePrice.ts:80`) renders the hardcoded **`$3.99`**.
+
+Compose those and the reviewer's actual session looks like this: their sandbox
+account is in some storefront, StoreKit does not return the catalogue (products
+not yet "Ready to Submit", not attached to the version, sandbox hiccup, no
+account signed in) — and the paywall shows a **$3.99 monthly plan with an
+enabled Subscribe button** that opens a sheet and fails. Two rejections in one
+screen: a price that is not the price charged (2.3.1) and a purchase that does
+not work (2.1).
+
+The individual decisions are each defensible; the combination is not.
+
+**Fix.**
+- When `isNative && products.length === 0`, render a loading state, then an
+  explicit "the store is unavailable, try again" state with the buy button
+  **disabled** — never a priced row.
+- Disable the buy button whenever `resolvePrice(...).fromStore === false` on
+  native. `StorePrice` already exposes `fromStore` precisely for this and the
+  comment in `useStorePrice.ts` says callers *"should prefer `fromStore`"* —
+  no caller does.
+- Keep the fallback string for layout measurement only, visually suppressed.
+
+---
+
+## P0-4 · Every product the app can offer must exist in App Store Connect and be attached to this version
+
+**Status:** BLOCKING · **Guideline:** 2.1 / 3.1.1 · **Confidence:** Needs ASC
+
+The app can ask StoreKit for these (`src/hooks/useInAppPurchases.ts:21-31` plus
+`src/config/gemPacks.ts`):
+
+```
+io.mytrivia.pro.monthly      auto-renewable   ← offered by default on every PRO surface
+io.mytrivia.pro.annual       auto-renewable   ← paywall's featured row, "1 day free"
+io.mytrivia.pro.weekly       auto-renewable
+io.mytrivia.proplus.monthly  auto-renewable   ← the "family" tier in the shop carousel and sidebar
+io.mytrivia.adfree           non-consumable   ← see P1-1
+<gem pack SKUs>              consumable
+```
+
+For a **first** submission, in-app purchases are reviewed *with the binary* —
+they must be created, priced, have review screenshots, and be submitted
+alongside the build. Anything the app displays but that is not attached comes
+back as *"we were unable to locate the in-app purchase."*
+
+`proPlans.ts`'s own header records that `io.mytrivia.pro.annual` does not exist
+in App Store Connect yet, and the shop's "family" tier maps to
+`io.mytrivia.proplus.monthly` via `useStorePrice`'s `TIER_TO_PRODUCT` — so at
+minimum `pro.monthly` and `proplus.monthly` must ship, and the gem consumables
+must ship if the gem shop is reachable (it is).
+
+**Fix.** Before submitting: for each SKU above that the build can display,
+confirm it exists, is priced in all storefronts, has a screenshot and review
+notes, and is in the "Submit with version" list. Delete or hide any the app
+should not sell in 1.0 (see P1-1 for `adfree`, P1-2 for `annual`).
+
+---
+
+# P1 — High
+
+## P1-1 · `io.mytrivia.adfree` has no entry point in the app
+
+**Status:** BLOCKING (conditional — blocking if the product is attached to the submission) · **Guideline:** 2.1 · **Confidence:** Verified
+
+`AdFreeModal` is rendered at `src/pages/Index.tsx:844`, but
+`setIsAdFreeModalOpen(true)` appears **nowhere in `src/`** — grep returns only
+the comment in `RestorePurchasesRow.tsx:11` that documents the same fact. The
+only other reference is the admin design gallery, which is excluded from the
+iOS bundle.
+
+So the non-consumable `io.mytrivia.adfree` cannot be bought from inside the
+shipped app. If it is attached to the submission, review cannot find it and
+rejects. If it is not attached, it is dead configuration that will confuse the
+next person.
+
+**Fix.** Either wire an entry point (an "remove ads" row in Settings, or the
+ad-gate modal offering it), or do not attach the product to this version and
+drop `AD_FREE` from `IAP_PRODUCTS`.
+
+---
+
+## P1-2 · The paywall promises "Try 1 day free" for an offer that may not exist
+
+**Status:** BLOCKING (conditional — blocking if `io.mytrivia.pro.annual` ships) · **Guideline:** 2.3.1 / 3.1.2 · **Confidence:** Read + needs ASC
+
+`src/config/proPlans.ts:73` sets `trialDays: 1` on the annual plan, and
+`src/locales/en.ts:4604` renders `planAnnualBlurb: "Try 1 day free"` in the
+offer colour `#CE3A00`. The CTA also changes to `paywall.ctaTrial` ("Try PRO
+for free") whenever the selected plan has `trialDays`.
+
+The config comment is explicit: *"Must match the introductory offer configured
+on io.mytrivia.pro.annual in App Store Connect."* If the annual product is
+created without a 1-day free introductory offer — or with a different one — the
+app states an offer StoreKit will not honour, on the screen review looks at
+hardest.
+
+Also note the row is hidden while the product is absent from the catalogue
+(good), so this only bites the moment the annual product goes live — which is
+exactly when nobody will be re-reading this file.
+
+**Fix.** Configure a 1-day free trial introductory offer on
+`io.mytrivia.pro.annual`, or remove `trialDays` and revert the blurb. Do not
+ship the annual row without checking which.
+
+---
+
+## P1-3 · In-webview camera may be dead on device: no `WKAppBoundDomains`
+
+**Status:** BLOCKING (conditional — blocking if reproduced on device) · **Guideline:** 2.1 · **Confidence:** Needs device
+
+Three features call `navigator.mediaDevices.getUserMedia` directly inside the
+Capacitor WKWebView, with no native fallback:
+
+- `src/components/team/QRScannerModal.tsx:83` — scanning a QR to join a game
+- `src/components/home/AvatarModal.tsx:355` — selfie for the avatar generator
+- `src/components/profile/AvatarGeneratorModal.tsx:43` — same, other entry
+
+WKWebView's `getUserMedia` support is gated behind app-bound domains: the
+webview must be created with `limitsNavigationsToAppBoundDomains = YES`, which
+requires a `WKAppBoundDomains` array in `Info.plist`. Neither exists here —
+`ios/App/App/Info.plist` has no `WKAppBoundDomains`, and `capacitor.config.ts`
+has no `ios.limitsNavigationsToAppBoundDomains`.
+
+`NSCameraUsageDescription` is present and correct, so this is not a permission
+problem; it is a webview capability problem, and its failure mode is the camera
+never starting — QRScannerModal shows its error state, the avatar flow falls
+back to "upload". Both are visible dead ends on the happy path a reviewer takes
+from a shared invite link.
+
+I have **not** confirmed this on a device, and iOS behaviour here has shifted
+across releases. Do not fix it blind.
+
+**Test to run first (10 minutes, device or simulator, iOS 17/18):**
+1. Open the QR scanner from the team/join screen. Does a camera preview appear?
+2. Open Profile → avatar → take a selfie. Same question.
+
+**If it fails,** add to `Info.plist`:
+
+```xml
+<key>WKAppBoundDomains</key>
+<array>
+  <string>mytrivia.io</string>
+  <string>www.mytrivia.io</string>
+  <string>sqwpzezkhpqkdyltvsim.supabase.co</string>
+</array>
+```
+
+and set `ios: { limitsNavigationsToAppBoundDomains: true }` in
+`capacitor.config.ts`. **Caveat worth budgeting for:** app-bound domains cap
+the list at 10 entries and restrict in-webview navigation to those domains.
+OAuth is unaffected (it runs in `SFSafariViewController` via `@capacitor/browser`,
+see `src/integrations/oauth.ts:81`), but re-test deep links, Supabase storage
+images and the share flows after enabling it.
+
+Alternative, and arguably better regardless: move QR scanning to a native
+plugin, which also gets torch and continuous autofocus for free.
+
+---
+
+## P1-4 · Child-directed ad treatment is configured but never applied
+
+**Status:** NON-BLOCKING · **Guideline:** 1.3 / 5.1.4 (COPPA), AdMob policy · **Confidence:** Verified
+
+Signup collects an age group with a **`child`** option
+(`src/components/onboarding/SignupOnboardingModal.tsx:44`, `AgeGroup =
+"child" | "teen" | "adult"`), and `adService.getChildSafetyOptions()` has the
+right AdMob flags for it: `tagForChildDirectedTreatment`,
+`tagForUnderAgeOfConsent`, `maxAdContentRating: 'G'`, `npa: '1'`.
+
+They are applied at `AdMob.initialize()` (`src/services/adService.ts:172-185`),
+which runs from a bare effect in `useAds` — and `useAds` **never calls
+`setAgeGroup`**. Grep for `setAgeGroup` returns exactly two call sites, both in
+ad modals (`WatchAdModal.tsx:30`, `WatchAdForSpinsModal.tsx:40`), and both fire
+long after initialize. So at initialization `this.ageGroup` is `null`,
+`getChildSafetyOptions()` returns `{}`, and the SDK is initialized with no child
+treatment for the life of the process.
+
+Per-request `npa: '1'` **does** get applied once the modals set the age group, so
+self-declared children are not served personalised ads. What they can still be
+served is **non-G-rated ad content**, because `maxAdContentRating` is an
+initialization-time setting.
+
+Two further inconsistencies in the same area:
+
+- **`ensureTrackingConsent()` does not consult age.** `adService.ts:385` and
+  `:477` call it before showing an ad, unconditionally. A self-declared under-13
+  player gets the ATT pre-prompt and then the system tracking dialog.
+- **The privacy policy says the service is 13+** (`en.ts:1204`,
+  `PrivacyPolicyEN.tsx:220`) while the signup age gate offers "child". One of
+  those two is wrong, and a reviewer comparing the age gate to the policy will
+  notice.
+
+Non-blocking because none of it is visible in a review session — but it is a
+COPPA exposure with real teeth, and the age-rating questionnaire answers have to
+be consistent with whichever way it is resolved.
+
+**Fix.**
+1. Call `adService.setAgeGroup(profile.age_group)` in `useAds` **before**
+   `adService.initialize()`, and re-initialize (or defer initialization) when
+   the age group arrives after sign-in.
+2. Make `ensureTrackingConsent()` return `"unavailable"` without prompting when
+   `isUnderAgeOfConsent(ageGroup)`.
+3. Decide whether under-13 accounts are supported at all. If not, remove the
+   `child` option and gate signup; if yes, the privacy policy and the App Store
+   age rating both have to say so.
+
+---
+
+## P1-5 · No safety net if React never mounts — the splash stays up forever
+
+**Status:** NON-BLOCKING · **Guideline:** 2.1 · **Confidence:** Read
+
+`capacitor.config.ts` sets `SplashScreen.launchAutoHide: false`, and the only
+call to `SplashScreen.hide()` is in `NativeBridge`'s effect
+(`src/native/NativeBridge.tsx:33`), behind two `requestAnimationFrame`s. That is
+the right design for the normal case and produces a genuinely good launch.
+
+The failure case has no floor. If the root bundle fails to evaluate — a
+corrupted asset, an exception at module scope in one of the eagerly-imported
+providers (`PostHogProvider` calls `posthog.init` at module level), a WKWebView
+that never loads — nothing ever calls `hide()` and the app sits on the splash
+image indefinitely. `AppErrorBoundary` cannot help; it needs React to be
+running.
+
+"App stuck on the launch screen" is a stock rejection, and it is also
+unrecoverable for a real user.
+
+**Fix.** Arm a fallback timer in `main.tsx` before rendering — `setTimeout(() =>
+SplashScreen.hide(), 8000)`, cleared by the normal path. A blank webview with a
+visible error beats a frozen splash: at least the reviewer can screenshot it and
+the user can force-quit knowing something is wrong.
+
+---
+
+# P2 — Production quality (all NON-BLOCKING)
+
+## P2-1 · `restorePurchases` is a single flat button with no progress semantics
+
+`RestorePurchasesRow` is correctly placed in Settings (`Settings.tsx:262`) and
+`restorePurchases` (`useInAppPurchases.ts:662`) handles the three outcomes with
+distinct toasts, including `iap.noPreviousPurchases` — all present in all seven
+locales (verified). Good.
+
+What it lacks: `plugin.restorePurchases()` is **not** wrapped in `withTimeout`,
+unlike every other store call in the file. The file's own commentary explains at
+length that StoreKit calls can hang forever and that a hung call leaves
+`finally` unrun — except `setPurchasing(false)` here *is* in a `finally`, so the
+spinner does clear on rejection but never on a hang. A hung restore spins
+forever. Wrap it, at a longer bound than 15 s (restore legitimately takes a
+while).
+
+## P2-2 · `verify-receipt` is the only thing standing between a paid user and nothing
+
+The purchase path credits nothing client-side and calls `verify-receipt`
+(`useInAppPurchases.ts:772`) — correct, and the function is deployed (verified:
+HTTP 401, not 404). But `AGENTS.md` §4a documents that edge functions deploy
+through Lovable on a separate schedule from the client. Ship an iOS build whose
+purchase path expects a `verify-receipt` behaviour that is not deployed and
+every purchase silently fails to grant.
+
+**Before the archive:** confirm `verify-receipt`, `revenuecat-webhook` and
+`_shared/iap.ts` on `main` match what is deployed, and that `PRODUCTS` in
+`_shared/iap.ts` lists every SKU in `IAP_PRODUCTS` and `GEM_PACK_PRODUCTS`.
+
+## P2-3 · The bundle is 98.7 MB of web assets, ~60 MB of it video
+
+Verified: `verify-ios-bundle` reports 98.7 MB against a 150 MB ceiling. The
+largest single items:
+
+```
+11.0M  dist/videos/loading.mp4
+ 8.5M  dist/assets/guest-welcome-avatar-*.mp4
+ 8.2M  dist/assets/guest-avatar-animated-*.mp4
+ 6.3M  dist/assets/woman-2-*.mp4
+ 6.2M  dist/assets/m1-*.mp4
+ 5.8M  dist/assets/lost-*.mp4
+ 2.9M  dist/assets/heic-to-*.js
+ 2.6M  dist/data/icon-library-meta.json
+ 1.5M  dist/app-icon-1024.png     ← a web favicon asset, shipped inside the binary
+```
+
+The installed app will be well over 100 MB. Not a review problem, but it is the
+number on the App Store page next to "Size", and it is the difference between
+installing on a train and not. An 11 MB **loading** video is the standout
+irony.
+
+`dist/app-icon-1024.png` in particular has no reason to be in the native bundle
+— the app icon comes from the asset catalog.
+
+## P2-4 · `heic-to` (2.9 MB) ships for a format iOS hands over already converted
+
+`@capacitor/camera` returns JPEG/PNG by default; `heic-to`/`heic2any` exist for
+browser uploads of HEIC files. On the native path they are 2.9 MB of dead
+weight. Worth a lazy import gated on `!Capacitor.isNativePlatform()`.
+
+## P2-5 · PostHog initializes at module scope with `autocapture: true`, before any consent
+
+`src/providers/PostHogProvider.tsx:39` runs `posthog.init` at import time with
+`autocapture: true`, `person_profiles: "always"`, `capture_pageleave: true`. It
+is declared honestly in `PrivacyInfo.xcprivacy` as ProductInteraction /
+Analytics / Linked / **not** Tracking, which is defensible (first-party, not
+combined with third-party data) — so this passes Apple.
+
+It is a GDPR/ePrivacy exposure rather than an Apple one: EU players are
+identified and autocaptured from the first frame with no consent step, in an app
+that already has a consent surface (`TrackingConsentGate`) it could reuse. Also
+note `posthog.init` at module scope is one of the failure modes behind P1-5.
+
+## P2-6 · The Info.plist declares a photo-library **add** permission the app never uses
+
+`NSPhotoLibraryAddUsageDescription` promises *"MyTrivia saves the avatars and
+quiz cards you create to your photo library."* Grep finds no save-to-photos
+path: no `@capacitor/filesystem`, no `Camera.savePhoto`, nothing writing to the
+library.
+
+Harmless in itself — but it describes a feature that does not exist, which is
+the kind of thing that draws a question in review notes, and it is a promise to
+users that the app does not keep.
+
+Either build the save (the share sheet already exists) or drop the key.
+
+---
+
+# P3 — Low (all NON-BLOCKING)
+
+## P3-1 · The notification service extension has no entitlements file
+
+`project.pbxproj` sets `CODE_SIGN_ENTITLEMENTS` for the App target only
+(`:468`, `:490`); the NotificationService target's build configurations
+(`:509-541`) have none.
+`com.apple.developer.usernotifications.communication` is therefore on the app
+and not on the extension that actually calls `content.updating(from: intent)`.
+
+`NotificationService.swift` degrades correctly — `try?` falls through to the
+plain notification — so the cost is styling, never a lost notification, exactly
+as its comments claim. But if communication notifications render plain on
+device, this is the first thing to check.
+
+## P3-2 · `aps-environment` is `development` in the committed entitlements
+
+`App.entitlements` pins `development` with a comment saying Xcode rewrites it to
+`production` on export. That is true for App Store distribution under automatic
+signing — but it depends on Xcode behaviour rather than on anything in the repo,
+and a TestFlight build whose pushes silently never arrive is a very expensive
+afternoon.
+
+**Verify once, after the first archive:** unzip the `.ipa`, run
+`codesign -d --entitlements :- Payload/App.app` and confirm
+`aps-environment = production`.
+
+## P3-3 · `UIBackgroundModes` is absent — silent/data push will not wake the app
+
+No `remote-notification` background mode is declared. Every push the app sends
+today is an alert push (the service extension dresses it), so nothing is broken.
+Worth knowing before anyone adds a data-only push and cannot work out why it
+never arrives.
+
+## P3-4 · Legal pages localize into all seven languages; the SEO metadata does not
+
+`TermsOfService.tsx` and `PrivacyPolicy.tsx` render from `legal.*` keys and all
+seven locales carry them (verified). Good — the paywall's `/terms` link is
+correct for every language.
+
+But `index.html`'s `<meta name="description">` and every `og:*` tag are Georgian
+only, and `public/manifest.json`'s `description` likewise. Inside the native app
+this affects nothing; it affects every shared invite link and the web presence
+the App Store listing points at.
+
+## P3-5 · `NotFound.tsx` is hardcoded English and outside the localization system
+
+`"Oops! Page not found"`, `"Return to Home"`, `"404"` — no `useLanguage`. A
+Georgian player who taps a stale deep link gets an English 404. Small, visible,
+cheap.
+
+## P3-6 · Three shipped pages rely on document scrolling
+
+`AGENTS.md` §4b is emphatic that the document scroller is off for the life of the
+app, and that a page which just grows is frozen on device. Scanning
+`src/pages/*.tsx` for a `min-h-screen` root with no `overflow-y-auto` and no
+`MainLayout` finds five, of which three are in the iOS bundle:
+
+- `NotFound.tsx` — centred, short. Safe today.
+- `RoomRedirect.tsx` — centred, short. Safe today.
+- `TVLobby.tsx:81` — a centred loading state; the real content at `:123` uses
+  `tv-display-container`. Safe today.
+
+None is broken now. All three are one content addition away from being frozen,
+and none of them declares the constraint. Add the standard
+`h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto` box, or
+a repo-invariant test that fails on a `min-h-screen` page root.
+
+## P3-7 · `contentInset: 'automatic'` alongside an overlaying status bar
+
+`capacitor.config.ts` sets `ios.contentInset: 'automatic'` while
+`nativeShell.ts:41` sets `StatusBar.setOverlaysWebView({ overlay: true })` and
+the layout does its own insetting through `--safe-top`. These are two systems
+claiming the same strip. It currently looks right, so this is a note rather than
+a defect — but if a stray gap appears under the notch on some device class, this
+pair is the first place to look. `contentInset: 'never'` is the setting that
+matches the rest of the design.
+
+---
+
+# P4 — Nice to have (all NON-BLOCKING)
+
+## P4-1 · "Import contacts" is a button that says "soon"
+
+`src/components/team/InviteFriendsModal.tsx:492` —
+`toast.info(t("extra.contactsImportSoon"))`. A visible, tappable feature that
+does nothing is the textbook 2.1 "incomplete" finding. It is in a modal a
+reviewer may not open, hence P4 rather than P1, but it costs nothing to hide the
+row until the feature exists.
+
+## P4-2 · `window.open(url, "_blank")` for share links inside the webview
+
+`InviteFriendsModal.tsx:482` falls through to `window.open(url, "_blank")` for
+the https share targets (`wa.me`, the X composer). The same file already knows
+(`:474-478`) that `window.open` is a silent no-op in WKWebView for custom
+schemes and routes those through `window.location.href`. For https URLs
+Capacitor intercepts `_blank`, but which of "same webview" or "system browser"
+you get has varied across Capacitor versions — and "same webview" means the app
+navigates to WhatsApp's website with no way back, which is a genuinely bad
+outcome.
+
+Route these through `@capacitor/browser` or `Share` on native, the way the
+Messenger branch already does.
+
+## P4-3 · Dead locale strings promising features
+
+`extra.comingSoon`, `extra.gemsPurchaseSoon` (*"Gem purchases coming soon!"*),
+`extra.subtitleWait` are defined in every locale and referenced nowhere. Harmless
+today; a hazard the moment someone wires one up by autocomplete. Delete them.
+
+## P4-4 · `HelpModal`'s four buttons open `#faq`, `#support`, `#guide`
+
+`src/components/home/HelpModal.tsx:18-36` — three of four actions are
+`window.open("#faq", "_blank")` and friends, which do nothing. The component is
+only imported by the admin design gallery, which is excluded from the iOS build
+(verified by `verify-ios-bundle`), so it cannot be reached in the shipped app.
+Fix or delete it before someone mounts it.
+
+## P4-5 · The AASA `NOT` rules sit after the allow patterns
+
+`public/.well-known/apple-app-site-association` lists twelve allow patterns and
+then seven `NOT` patterns. iOS evaluates `paths` in order, first match wins — so
+`NOT` entries belong **first**. Nothing overlaps today (no allow pattern matches
+`/terms`, `/admin`, `/reset-password`…), so the file behaves correctly. It is
+one added wildcard away from not doing so.
+
+---
+
+# P5 — Technical debt (all NON-BLOCKING)
+
+## P5-1 · `src/hooks/useInAppPurchases.ts` is ~800 lines and is the highest-risk file in the app
+
+It carries the plugin loader, the timeout wrapper, configure/logIn lifecycle,
+offerings and the direct-product fallback, purchase, restore, entitlement sync,
+and a detached retry loop — with commentary that is genuinely excellent and also
+evidence of how many separate incidents are buried in it. Every line of it is
+money. It has no unit tests of its own.
+
+Extract the plugin lifecycle (load / configure / logIn) into a module with a
+fake plugin behind it, and test the purchase and restore state machines.
+
+## P5-2 · The lucky-spin outcome is chosen on the client
+
+`src/components/game/LuckySpinModal.tsx:80-91` picks the winning segment with
+`Math.random()` and then records it. `credit_gameplay_reward` bounds the amount
+server-side (per `AGENTS.md` §3), so this is not an economy hole — but the
+*outcome* is still the client's to decide, which means the wheel's advertised
+odds are not enforced anywhere.
+
+Not a loot box in Apple's sense: spins are earned by watching a rewarded ad, not
+bought, so §3.1.1's odds-disclosure requirement does not attach. It would the
+moment a spin becomes purchasable with gems.
+
+## P5-3 · `PRE_LAUNCH_CHECKLIST.md` is actively misleading
+
+Its P0 list asks to remove `.env` from git (deliberate — `AGENTS.md` §5), set a
+minimum deployment target (done — 15.0), and add a privacy manifest (done). A
+newcomer following it will undo working decisions. Either update it or mark it
+superseded by this file at the top.
+
+## P5-4 · `README.md` is the unedited Lovable template
+
+`REPLACE_WITH_PROJECT_ID` appears three times. It is not shipped and not
+reviewed, but it is the first file anybody opens.
+
+---
+
+# Verified clean — do not re-audit these
+
+Recorded so the next pass can skip them.
+
+| Area | Finding |
+|---|---|
+| **Payments on device** | Both real-money paths are native-gated. `useProPurchase.ts:41` and `useGemPurchase.ts:34` route to StoreKit on native; Stripe is unreachable from the app. No external purchase links, no steering. §3.1.1 clean. |
+| **Restore** | Present in Settings (`Settings.tsx:262`), and on the paywall. §3.1.1 clean. |
+| **Account deletion** | `/delete-account` routed (`App.tsx:277`) and reachable from Settings → Privacy, calling `delete-user-account`, which is deployed (verified 401, not 404) and removes the auth user rather than just the profile row. §5.1.1(v) clean. |
+| **Sign in with Apple** | Offered first on the auth screen (`Auth.tsx:442`), native `ASAuthorization` sheet on iOS via the Capacitor plugin, `scopes: 'email name'`. §4.8 clean. |
+| **UGC moderation** | Report and block wired to `user_reports`/`user_blocks` through `useContentModeration`, surfaced from the content itself via `PlayerOverflowMenu` on creator cards, the player feed and the profile modal. Text filtered through `contentFilter` at 13 call sites including nicknames and quiz creation. ToS carries a zero-tolerance clause (`legal.zeroTolerance`, rendered at `TermsOfService.tsx:91`). Terms + Privacy linked at the point of account creation (`Auth.tsx:487-495`). §1.2 clean. |
+| **ATT** | Pre-prompt screen precedes the system dialog and only at a moment tracking is relevant (immediately before an ad); "Not now" leaves the system prompt unasked rather than nagging; `GADDelayAppMeasurementInit` holds measurement until consent. `NSUserTrackingUsageDescription` is written from the player's side. §5.1.2 clean — subject to P1-4 on age. |
+| **Privacy manifest** | `PrivacyInfo.xcprivacy` declares tracking, tracking domains, eight collected data types and four required-reason APIs with reason codes. Consistent with the SDKs actually embedded. |
+| **Permission strings** | Camera, photo library (read), photo library (add), tracking — all present and specifically worded. No microphone string needed: every `getUserMedia` call passes `audio: false` (verified at both call sites). |
+| **Login wall** | None. Guest play works throughout (`isGuest={!user}` across `Index.tsx`); auth is prompted at the point a feature needs an account. §5.1.1(v) clean. |
+| **Push permission** | Never asked at launch. Gated on being signed in, once per install, 4 s after the first screen (`PushRegistrar.tsx`). App is fully functional without it. §4.5.4 clean. |
+| **No remote-content shell** | `capacitor.config.ts` has no `server` block; the app runs from the bundled `dist/`. Not a repackaged website. §4.2/4.7 clean. |
+| **Admin console excluded** | `VITE_INCLUDE_ADMIN=false` in `build:ios`, enforced by `verify-ios-bundle.mjs` (verified: "no admin console"). Dev pages (`/styleguide`, `/docs`, showcases) gated on `INCLUDE_DEV_PAGES`, off in production. |
+| **Meta Pixel excluded** | Stripped from `index.html` by the `native:strip` markers under `VITE_NATIVE_BUILD=true`, enforced by the same guard (verified: "no pre-ATT tracking"). `fbpixel.ts` is a no-op when `window.fbq` is absent. |
+| **Universal links** | AASA served 200 `application/json` from both `mytrivia.io` and `www.mytrivia.io`, `appID` `T38XQSM4L3.io.mytrivia.app` matching `DEVELOPMENT_TEAM` and the bundle id, both domains in `App.entitlements`. |
+| **Edge functions deployed** | All seven probed return 401/400, none 404 — including `send-game-invite-push`, which `AGENTS.md` §4a records as having been 404 at one point. |
+| **App icon** | 1024×1024, 8-bit RGB, **no alpha channel** (verified via `file`). Single universal entry, correct for iOS 11+. |
+| **Launch screen** | Storyboard-based, `scaleAspectFill`, matched to the React splash's crop and to `SplashScreen.backgroundColor`. No black flash, no second screen. |
+| **Orientation / device family** | Portrait only in `Info.plist` (the file iOS actually reads), `TARGETED_DEVICE_FAMILY = 1`, `UIRequiredDeviceCapabilities = arm64`. No claimed-but-broken iPad layout. |
+| **AdMob** | `GADApplicationIdentifier` is the **iOS** app id (a wrong-platform id crashes the SDK at launch); real ad unit ids configured in `.env` for both placements, so no demo units in production; 45 SKAdNetwork identifiers declared. Ads are opt-in only — no interstitials, no unsolicited ad gates. |
+| **Export compliance** | `ITSAppUsesNonExemptEncryption = false`. HTTPS-only; no ATS exceptions; no `http://` endpoints in `src/`. |
+| **No secrets in the bundle** | Scanned `dist/` for `service_role`, `sk_live`, `sk_test`, `SUPABASE_SERVICE` — no matches. Only the anon key, the RevenueCat public SDK key and AdMob unit ids, all public by design. |
+| **Build health** | 895 tests pass, both tsconfigs typecheck clean, the iOS build runs end to end through the bundle guard. |
+
+---
+
+# Off-repo checklist
+
+Not answerable from this repository. Confirm each before pressing Submit.
+
+**Xcode / archive**
+- [ ] `GoogleService-Info.plist` in `ios/App/App/`, `BUNDLE_ID` = `io.mytrivia.app` (**P0-1**)
+- [ ] `pod install` run after `cap sync ios`
+- [ ] `MARKETING_VERSION` bumped from `1.0` if this is not the first submission; `CURRENT_PROJECT_VERSION` (30) unique per upload
+- [ ] Capabilities ticked on the App ID: Push, Sign in with Apple, Associated Domains, **Communication Notifications**
+- [ ] `aps-environment` = `production` in the exported `.ipa` (**P3-2**)
+- [ ] Product → Archive → Generate Privacy Report reviewed — a third-party SDK updated to a version without its own manifest fails the upload even though nothing in ours changed
+
+**App Store Connect**
+- [ ] Every SKU the build can display exists, is priced, and is **attached to this version** (**P0-4**)
+- [ ] `io.mytrivia.pro.annual` has a 1-day free introductory offer, or the trial copy is removed (**P1-2**)
+- [ ] `io.mytrivia.adfree` either has an entry point or is not attached (**P1-1**)
+- [ ] App Privacy answers match `PrivacyInfo.xcprivacy` line for line — including Device ID / Third-Party Advertising / **used for tracking: yes**
+- [ ] Age rating questionnaire consistent with whatever P1-4 is resolved to
+- [ ] Standard Apple EULA selected, or a custom one supplied, and its link matches the in-app `/terms`
+- [ ] Support URL and Privacy Policy URL both resolve
+- [ ] Review notes: the app is playable as a guest, so no demo account is required — say so, and say where the reviewer should tap to reach the paywall and the restore button
+- [ ] Screenshots are of this build, portrait, iPhone sizes only
+
+**On device, before archiving**
+- [ ] QR scanner shows a camera preview (**P1-3**)
+- [ ] Avatar selfie shows a camera preview (**P1-3**)
+- [ ] Paywall shows StoreKit's localized price, not `$3.99` (**P0-3**)
+- [ ] A sandbox purchase grants PRO, and Restore on a second install returns it
+- [ ] Push arrives, shows the sender's avatar, and the badge clears on foreground
+- [ ] A shared invite link opens the app rather than Safari
+- [ ] Airplane mode: no screen spins forever
