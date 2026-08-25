@@ -37,6 +37,9 @@ const HERO_STILL = "/videos/explore-bg-still.jpg";
 // Written out in full, never assembled: Tailwind reads these files as text,
 // so a class name built from a template literal is a class that never gets
 // generated — the hero collapsed to nothing the first time this was one.
+/** PageHeader's row, which every page shares. */
+const HEADER_HEIGHT = 76;
+
 const HERO_HEIGHT =
   "h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom)_-_var(--bottom-nav-height)_-_96px)]";
 
@@ -91,6 +94,40 @@ export default function Discover() {
   // itself is CSS, so it is right on the first paint rather than the second.
   const isMobile = useIsMobile();
   const sheetRef = useRef<HTMLDivElement>(null);
+
+  // True once the sheet has risen far enough that the header is over the
+  // categories rather than over the cover. The header then takes a white
+  // surface and the accent colour, because white-on-artwork stops working
+  // the moment the artwork is gone.
+  //
+  // Read off the scroller rather than an IntersectionObserver: the threshold
+  // is the sheet's own top less the header's height, which is a number this
+  // page already knows, and rAF keeps it to one read per frame.
+  const [headerDocked, setHeaderDocked] = useState(false);
+
+  useEffect(() => {
+    const scroller = document.getElementById("main-scroll-container");
+    if (!scroller) return;
+
+    let frame = 0;
+    const read = () => {
+      frame = 0;
+      const sheet = sheetRef.current;
+      if (!sheet) return;
+      setHeaderDocked(scroller.scrollTop >= sheet.offsetTop - HEADER_HEIGHT);
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(read);
+    };
+
+    read();
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      scroller.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
 
 
   const heroSources = useMemo(() => {
@@ -260,7 +297,11 @@ export default function Discover() {
      invert to white — the bell's grey is baked into HeaderActions, hence the
      descendant rule rather than a prop nobody else would use. */
   const headerActions = (
-    <div className={`flex items-center gap-1 ${isMobile ? "[&_svg]:text-white" : ""}`}>
+    <div
+      className={`flex items-center gap-1 ${
+        isMobile ? (headerDocked ? "[&_svg]:text-[#6D28D9]" : "[&_svg]:text-white") : ""
+      }`}
+    >
       <button
         onClick={() => {
           if (!isSearchExpanded) expandSheet();
@@ -268,7 +309,11 @@ export default function Discover() {
         }}
         aria-label={t("discover.searchPlaceholder")}
         className={`relative w-10 h-10 flex items-center justify-center rounded-full transition-colors ${
-          isMobile ? "text-white hover:bg-white/20" : "text-gray-600 hover:bg-white/30"
+          isMobile
+            ? headerDocked
+              ? "text-[#6D28D9] hover:bg-[#6D28D9]/10"
+              : "text-white hover:bg-white/20"
+            : "text-gray-600 hover:bg-white/30"
         }`}
       >
         {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
@@ -282,6 +327,7 @@ export default function Discover() {
       title={t("discover.title")}
       showBack={false}
       overlay={isMobile}
+      docked={headerDocked}
       rightElements={headerActions}
     />
   );
@@ -289,6 +335,21 @@ export default function Discover() {
   return (
     <MainLayout showPlayButton={false}>
       <div className="relative min-h-full bg-[#F8F6FC]">
+
+        {/* The page's own header, first in the flow and sticky, so it stays
+            on screen for the whole page — over the cover at rest, over the
+            categories once the sheet is up — and above both (z-30) rather
+            than sliding under the sheet.
+         *
+         * Two things this cannot be. Absolute, as it was, leaves the cover
+         * the moment the sheet rises. Sticky further down the file pins at
+         * 770px, its own place in the flow, because sticky does not lift an
+         * element to the top — it stops it from leaving. Hence: first, and
+         * h-0 so the box it takes in the flow is nothing and the cover still
+         * starts at the top of the page. */}
+        {isMobile && (
+          <div className="sticky top-0 z-30 h-0">{pageHeader}</div>
+        )}
 
         {/* The video, on phones only.
          *
@@ -385,12 +446,6 @@ export default function Discover() {
           />
         </div>
 
-        {/* The page's own header, in white, riding on the video. Absolute
-            rather than sticky — it belongs to the cover, so it travels up
-            with it and leaves the sheet the whole screen once it is open. */}
-        {isMobile && (
-          <div className="absolute inset-x-0 top-0 z-20">{pageHeader}</div>
-        )}
 
         {/* The sheet: everything the page used to be, on a surface that
          * starts one tenth from the bottom on phones and is the page itself
@@ -416,7 +471,10 @@ export default function Discover() {
 
         {/* Sticky header section. The title and its actions are on the video
             on phones; what pins here is the search box and the tabs. */}
-        <div className="sticky top-0 z-20 bg-[rgba(248,246,252,0.78)] backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)] md:bg-[#F8F6FC]/95 md:backdrop-blur-none">
+        {/* Search and tabs pin under the header — 76px down on phones, where
+            the header is its own sticky element, and at the top from md up,
+            where the header is inside this block. */}
+        <div className="sticky top-[76px] md:top-0 z-20 bg-[rgba(248,246,252,0.78)] backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)] md:bg-[#F8F6FC]/95 md:backdrop-blur-none">
           {!isMobile && <div>{pageHeader}</div>}
 
           {/* Expandable Search Bar */}
