@@ -103,6 +103,7 @@ describe("the privacy manifest matches what the app collects", () => {
     ["NSPrivacyCollectedDataTypeGameplayContent", "player-authored quizzes and rooms"],
     ["NSPrivacyCollectedDataTypeCoarseLocation", "country_code, derived from the IP address"],
     ["NSPrivacyCollectedDataTypeDeviceID", "the advertising identifier"],
+    ["NSPrivacyCollectedDataTypeAdvertisingData", "ad impressions and interactions, via AdMob"],
   ])("declares %s (%s)", (type) => {
     expect(manifest, `${type} is missing from PrivacyInfo.xcprivacy`).toContain(type);
   });
@@ -140,6 +141,46 @@ describe("the per-language legal URLs the listing links", () => {
         `${page} no longer accepts a pinned language, so its per-locale URL ` +
           "would render in whatever language the visitor happens to have stored"
       ).toMatch(/translatorFor/);
+    }
+  });
+});
+
+/**
+ * The manifest and the App Store Connect answers are two renderings of one
+ * fact set, and a reviewer can see both. These pin the handful that are easy
+ * to get wrong — and that were wrong when the listing was first filled in.
+ */
+describe("the manifest's linkage and tracking flags", () => {
+  const manifest = read("ios/App/App/PrivacyInfo.xcprivacy");
+
+  const entry = (type: string) => {
+    const start = manifest.indexOf(`<string>NSPrivacyCollectedDataType${type}</string>`);
+    expect(start, `${type} is not declared`).toBeGreaterThan(-1);
+    return manifest.slice(start, manifest.indexOf("</dict>", start));
+  };
+
+  it("keeps the advertising identifier unlinked but tracking", () => {
+    // The IDFA goes to AdMob and is never joined to the account, so it is not
+    // "linked to the user's identity" — but it is unambiguously tracking, and
+    // that single flag is what puts "Data Used to Track You" on the listing.
+    const deviceId = entry("DeviceID");
+    expect(deviceId).toMatch(/NSPrivacyCollectedDataTypeLinked<\/key>\s*<false\/>/);
+    expect(deviceId).toMatch(/NSPrivacyCollectedDataTypeTracking<\/key>\s*<true\/>/);
+  });
+
+  it("keeps crash reports linked, because PostHog identifies the person", () => {
+    // Exceptions are captured against an identified user (PostHogProvider
+    // calls identify with the account id), so they are linked.
+    expect(entry("CrashData")).toMatch(/NSPrivacyCollectedDataTypeLinked<\/key>\s*<true\/>/);
+  });
+
+  it("declares Analytics on the identity fields PostHog receives", () => {
+    // identify() is called with the user id, $email and $name.
+    for (const type of ["UserID", "EmailAddress", "Name"]) {
+      expect(
+        entry(type),
+        `${type} reaches PostHog, so Analytics belongs in its purposes`
+      ).toContain("NSPrivacyCollectedDataTypePurposeAnalytics");
     }
   });
 });

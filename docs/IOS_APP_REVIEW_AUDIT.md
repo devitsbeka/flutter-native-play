@@ -988,34 +988,43 @@ identity? → used for tracking? → purposes**.
 
 | Data type (ASC) | Category | Linked | Tracking | Purpose | Why |
 |---|---|---|---|---|---|
-| **User ID** | Identifiers | Yes | No | App Functionality | Supabase account id |
-| **Email Address** | Contact Info | Yes | No | App Functionality | Sign-up, Sign in with Apple |
-| **Name** | Contact Info | Yes | No | App Functionality | Nickname / display name |
+| **User ID** | Identifiers | Yes | No | App Functionality, **Analytics** | Supabase account id; PostHog identifies by it |
+| **Email Address** | Contact Info | Yes | No | App Functionality, **Analytics** | Sign-up; PostHog receives `$email` |
+| **Name** | Contact Info | Yes | No | App Functionality, **Analytics** | Nickname; PostHog receives `$name` |
 | **Photos or Videos** | User Content | Yes | No | App Functionality | The avatar selfie, sent to fal.ai |
 | **Gameplay Content** | User Content | Yes | No | App Functionality | Player-made quizzes, collections, room names |
 | **Coarse Location** | Location | Yes | No | App Functionality | Country from IP, stored as `country_code` |
-| **Purchase History** | Purchases | Yes | No | App Functionality | Subscriptions and gem packs via RevenueCat |
-| **Product Interaction** | Usage Data | Yes | No | Analytics, App Functionality | PostHog |
-| **Device ID** | Identifiers | Yes | **YES** | **Third-Party Advertising** | IDFA via AdMob |
-| **Crash Data** | Diagnostics | No | No | App Functionality | PostHog exception capture |
-| **Performance Data** | Diagnostics | No | No | Analytics | PostHog |
+| **Purchase History** | Purchases | Yes | No | App Functionality, **Analytics** | RevenueCat purchase analytics |
+| **Product Interaction** | Usage Data | Yes | No | Analytics, App Functionality | PostHog autocapture |
+| **Advertising Data** | Usage Data | **No** | **YES** | **Third-Party Advertising** | Ad impressions/interactions via AdMob |
+| **Device ID** | Identifiers | **No** | **YES** | **Third-Party Advertising** | IDFA handed to AdMob, never joined to the account |
+| **Crash Data** | Diagnostics | **Yes** | No | App Functionality | PostHog exception capture, against an identified person |
+
+**Performance Data is deliberately absent.** Nothing in `PostHogProvider`
+enables web-vitals or performance capture, so it is not declared. PostHog can
+turn that on as a *project* setting rather than in this code — if it is on,
+add Performance Data (Diagnostics, not linked, Analytics) to **both** the
+manifest and App Store Connect.
 
 ### The three answers that are easy to get wrong
 
-1. **Device ID is the only "used for tracking: Yes".** That single answer is
-   what puts *"Data Used to Track You"* on the listing, and it is what makes
-   the ATT prompt mandatory rather than optional. It is correct — AdMob serves
-   personalised ads when the player allows it, and
-   `PrivacyInfo.xcprivacy` sets `NSPrivacyTracking` to true to match. Do not
-   soften it to No to make the label look better; the manifest would then
-   contradict the answers.
+1. **Device ID and Advertising Data are the "used for tracking: Yes" pair, and
+   both are *not* linked.** That tracking flag is what puts *"Data Used to
+   Track You"* on the listing and what makes the ATT prompt mandatory rather
+   than optional. Not-linked is right for both: the IDFA and the ad
+   interactions go to AdMob and are never joined to the account. Do not soften
+   tracking to No to make the label look better; `NSPrivacyTracking` is true
+   in the manifest and the two would contradict each other.
 
 2. **Photos are "Linked to You".** They are uploaded against an account and
    the avatar is stored on the profile. Answering "Not Linked" would be wrong
    and is exactly the contradiction S-1 was about.
 
-3. **Nothing here is "Data Used to Track You" except Device ID, and nothing is
-   sold.** The policy says data is not sold; keep the CCPA answer consistent.
+3. **Crash Data is "Linked to You".** PostHog captures exceptions against an
+   identified person, so the crash carries the account. Not-linked would be
+   the comfortable answer and the wrong one.
+
+4. **Nothing is sold.** The policy says so; keep the CCPA answer consistent.
 
 ### Also on that screen
 
