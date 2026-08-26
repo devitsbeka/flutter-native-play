@@ -1455,7 +1455,7 @@ export const pt: KaTranslations = {
     landingPlayersCount: "Mais de 100.000 jogadores",
     landingJoinFreeHeading: "Entre\nde graça",
     landingJoinFree: "Entre de graça",
-    landingJoinSubtitle: "Junte-se a milhares de jogadores da 🇬🇪 Geórgia",
+    landingJoinSubtitle: "Junte-se a milhares de jogadores do mundo todo",
     landingGoogleSignIn: "Entrar com o Google",
     landingOrEmail: "ou digite seu email",
     landingOnlyOnMyTrivia: "Só no MyTrivia",

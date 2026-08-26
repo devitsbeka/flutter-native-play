@@ -41,3 +41,44 @@ describe("locale hygiene", () => {
     });
   }
 });
+
+/**
+ * Marketing copy must not name a country the reader is probably not in.
+ *
+ * The guest landing said "Join thousands of players from GE Georgia" — and it
+ * was *translated* into all seven languages, so a German visitor read
+ * "Spiele mit tausenden Spielern aus GE Georgien". Translating the sentence
+ * while leaving the country fixed is worse than not translating it: it reads
+ * as deliberate, and it tells a German player the game is somewhere else.
+ * ("Georgia" in English is ambiguous with the US state on top of that.)
+ *
+ * Georgian keeps it, because there it is the home market and naming it is the
+ * whole point. Every other locale is region-neutral.
+ */
+describe("marketing copy does not hardcode a country", () => {
+  // Two regional-indicator letters is how a flag — and with it a country —
+  // gets smuggled into a string that is otherwise translated.
+  const FLAG = /\p{Regional_Indicator}{2}/u;
+
+  it.each(Object.keys(translations).filter((code) => code !== "ka"))(
+    "%s does not name a country in the landing subtitle",
+    (code) => {
+      const extra = (translations[code] as unknown as Record<string, Record<string, string>>).extra;
+      const subtitle = extra?.landingJoinSubtitle ?? "";
+
+      expect(
+        FLAG.test(subtitle),
+        `${code} landingJoinSubtitle carries a country flag: "${subtitle}". ` +
+          "Only the Georgian locale should name a country here."
+      ).toBe(false);
+    }
+  );
+
+  it("keeps the home-market line in Georgian", () => {
+    const ka = (translations.ka as unknown as Record<string, Record<string, string>>).extra;
+    expect(
+      FLAG.test(ka.landingJoinSubtitle),
+      "the Georgian locale is the one place naming the country is right"
+    ).toBe(true);
+  });
+});
