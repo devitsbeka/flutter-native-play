@@ -9,6 +9,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCategoryRanks } from "@/hooks/useUserCategoryRanks";
 import { useNewCategories } from "@/hooks/useNewCategories";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useVipStatus } from "@/hooks/useVipStatus";
 import { IconTabBar } from "@/components/shared/IconTabBar";
 import { SectionHeader } from "@/components/discover/SectionHeader";
 import { CategoryCarousel } from "@/components/discover/CategoryCarousel";
@@ -55,6 +56,19 @@ const HEADER_HEIGHT = 76;
 
 const HERO_HEIGHT =
   "h-[calc((100dvh_-_var(--safe-top)_-_var(--safe-bottom))_*_0.47)]";
+
+/* And for a subscriber, who is not being sold anything here.
+   47% of the screen is the height the OFFER needs — headline, subtitle,
+   button, price note. Take those away and the same 47% is an empty purple
+   field between the header and the categories. 28% keeps the artwork as a
+   band the header sits on, which is all it is once the copy has gone, and
+   lifts the sheet by a fifth of the screen.
+   Written out in full rather than built from the number: Tailwind reads
+   these files as text, and a class assembled from a template literal is a
+   class that never gets generated — that is how the hero collapsed to
+   nothing the first time this was one. */
+const HERO_HEIGHT_SUBSCRIBED =
+  "h-[calc((100dvh_-_var(--safe-top)_-_var(--safe-bottom))_*_0.28)]";
 
 // ─── Lazy Section: only mounts children when scrolled near viewport ─────
 
@@ -122,6 +136,19 @@ export default function Discover() {
   // tab: the offer names a trial and a price, and a screen that asks which
   // plan is the screen that can honour it.
   const [paywallOpen, setPaywallOpen] = useState(false);
+  /**
+   * A PRO player is not sold PRO.
+   *
+   * Two things on this screen exist only for somebody who has not bought it
+   * yet: the cover's offer, and the Free tab. "Get full access" over the head
+   * of a subscriber reads as the app not knowing who they are, and Free is a
+   * filter that means "the part you can play" — which, for them, is all of it.
+   *
+   * Premium stays, for both. It is the only tab that answers "what does the
+   * subscription actually get me", and that is a fair question whether you are
+   * deciding to buy or have already bought.
+   */
+  const { isVip } = useVipStatus();
 
   // The cover's price line, read off the same plan the paywall would open
   // on. It used to be a sentence in the locale file naming a trial the store
@@ -187,9 +214,10 @@ export default function Discover() {
     //
     // Free and premium follow, still next to each other — they are the only
     // two that split the catalogue by what a subscription buys rather than by
-    // subject, which is why they sit apart from the rest.
+    // subject, which is why they sit apart from the rest. Free is dropped for
+    // a subscriber; see isVip.
     { id: "all", label: t("discover.all") },
-    { id: "free", label: t("discover.free") },
+    ...(isVip ? [] : [{ id: "free", label: t("discover.free") }]),
     { id: "premium", label: t("discover.premium") },
     { id: "favorites", label: t("discover.favorites") },
     { id: "recently_viewed", label: t("discover.recentlyViewedTab") },
@@ -197,7 +225,14 @@ export default function Discover() {
     { id: "classic", label: t("discover.classic") },
     { id: "fun", label: t("discover.fun") },
     { id: "educational", label: t("discover.educational") },
-  ], [t]);
+  ], [t, isVip]);
+
+  // VIP status arrives after the first render, so a player can already be
+  // standing on Free when the tab is taken away. Without this they are left on
+  // a filter with no pill, which looks like the strip has lost its selection.
+  useEffect(() => {
+    if (isVip && activeTab === "free") setActiveTab("all");
+  }, [isVip, activeTab]);
 
   const { categories, loading } = useCategories();
   const { progress } = useCategoryProgress();
@@ -394,7 +429,7 @@ export default function Discover() {
          * the time. Sticky is measured from the scroller itself, so the
          * video holds still while the sheet slides up over it. */}
         <div
-          className={`md:hidden pointer-events-none sticky top-0 z-0 w-full ${HERO_HEIGHT}`}
+          className={`md:hidden pointer-events-none sticky top-0 z-0 w-full ${isVip ? HERO_HEIGHT_SUBSCRIBED : HERO_HEIGHT}`}
         >
           {/* The artwork and its scrims, hidden from screen readers as one
               group. The cover's own copy sits outside this — it is the
@@ -456,6 +491,11 @@ export default function Discover() {
                 competing with the title. */}
             <div aria-hidden className="absolute left-1/2 -translate-x-1/2 top-[78px] h-px w-[min(441px,88.2vw)] bg-[#b8a6f5]/70" />
 
+            {/* The offer itself, and only for somebody who has not bought it.
+                The artwork and the rule stay either way — the cover is the
+                screen's header, not the advert. */}
+            {!isVip && (
+              <>
             <h2 className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(55px,11vw))] w-[min(393px,86vw)] font-display uppercase text-[min(40px,8vw)] leading-[min(43px,8.6vw)] tracking-[0.5px]">
               {t("discover.promoTitle")}
             </h2>
@@ -475,6 +515,8 @@ export default function Discover() {
             <p className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(285px,57vw))] w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
               {offerNote}
             </p>
+              </>
+            )}
           </div>
 
           {/* Last, and over the copy, as the frame stacks it. */}
