@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
-import { useCategoryIconSlugs } from '@/hooks/useCategoryIconSlugs';
+import { useCategoryDisplay } from '@/hooks/useCategoryDisplay';
 import { supabase } from '@/integrations/supabase/client';
 import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
 import { toast } from "@/lib/toast";
@@ -76,7 +76,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
   // reads, so a round in the queue wears the same face as its card. The slug
   // stored on the queue row is only a fallback: it was snapshotted when the
   // round was added and does not follow the category if its icon changes.
-  const { iconSlugFor } = useCategoryIconSlugs();
+  const { iconSlugFor, nameFor } = useCategoryDisplay();
 
   // Load categories when picker opens
   useEffect(() => {
@@ -294,7 +294,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                   ) : (
                     <span className="text-2xl">{category.icon}</span>
                   )}
-                  <span className="flex-1 text-left font-medium text-white">{category.name}</span>
+                  <span className="flex-1 text-left font-medium text-white">{nameFor(category.category_id, category.name)}</span>
                   {isAlreadyInQueue ? (
                     <span className="text-xs text-purple-400">{t("extra.tvAlreadyAdded")}</span>
                   ) : isSelected ? (
@@ -451,7 +451,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white text-sm truncate">{item.category_name}</p>
+                      <p className="font-medium text-white text-sm truncate">{nameFor(item.category_id, item.category_name)}</p>
                       <p className="text-xs text-purple-300">
                         {item.source_type === 'category' ? t("extra.tvCategoryType") : t("extra.tvYourTrivia")}
                       </p>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { categoryIconSlugSync, primeCategoryIconSlugs } from "@/hooks/useCategoryIconSlugs";
+import { categoryIconSlugSync, primeCategoryIconSlugs } from "@/hooks/useCategoryDisplay";
 
 export interface TVQueueItem {
   id: string;

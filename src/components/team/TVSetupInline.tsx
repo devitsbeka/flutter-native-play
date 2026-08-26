@@ -228,7 +228,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
               // The category's own icon_slug, which is what Discover draws
               // from; the hardcoded map is only the net underneath it.
               const { categoryIconSlugSync, primeCategoryIconSlugs } =
-                await import('@/hooks/useCategoryIconSlugs');
+                await import('@/hooks/useCategoryDisplay');
               await primeCategoryIconSlugs();
               const iconSlug = categoryIconSlugSync(roomData.category_id);
               
