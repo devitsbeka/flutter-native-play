@@ -176,3 +176,17 @@ jobs:
         run: |
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/07-level17-backfill.sql
+
+      # Nothing that moves money is reachable by an unauthenticated caller.
+      # claim_daily_reward was: Supabase's bootstrap grants anon EXECUTE on
+      # every new function in `public`, and `REVOKE ... FROM public` revokes
+      # the PUBLIC pseudo-role, not that explicit grant — so the migration
+      # reads as if it closed the door and does not. Nine migrations here
+      # write `FROM PUBLIC, anon` and twenty write `FROM public` alone, which
+      # is why this is a test rather than a fix and a hope.
+      - name: Assert money functions are not reachable by anon
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/08-money-not-anon.sql
