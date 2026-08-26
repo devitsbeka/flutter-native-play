@@ -179,7 +179,16 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
           ]);
           if (cancelled) return;
           const room = (roomRows as InvitePreview[] | null)?.[0];
-          if (room) {
+          if (!room) {
+            // The named room is not there. That is the normal state of a link
+            // shared from Create Room before Create was pressed — the code is
+            // reserved, the room is not made yet — and it is also what a
+            // deleted room looks like. Either way the friendship is what is
+            // left, and invite_preview's own guess at a room must not stand in
+            // for the one that was named.
+            resolved = { ...resolved, room_code: null, room_name: null, category_id: null, category_name: null, room_status: null, player_count: null };
+            people = [];
+          } else {
             // The host identity stays the invite code's owner — they are who
             // sent it, and accepting befriends them — while everything about
             // the room comes from the room itself.

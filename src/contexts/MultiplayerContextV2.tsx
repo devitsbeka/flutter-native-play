@@ -281,7 +281,7 @@ interface MultiplayerContextType extends MultiplayerState {
   currentOpponentAnswers: Record<string, PlayerAnswer>;
   
   // Actions
-  createRoom: (categoryId?: string, categoryName?: string, customQuestions?: any[], roomName?: string | null, roomIcon?: string | null) => Promise<GameRoom | null>;
+  createRoom: (categoryId?: string, categoryName?: string, customQuestions?: any[], roomName?: string | null, roomIcon?: string | null, preferredRoomCode?: string) => Promise<GameRoom | null>;
   enterRoom: (roomCode: string) => Promise<boolean>;
   startGame: (hostShouldObserve?: boolean) => Promise<void>;
   startNewRound: () => Promise<void>; // Any player can start a new round
@@ -1002,7 +1002,15 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     categoryName?: string, 
     customQuestions?: any[],
     providedRoomName?: string | null,
-    providedRoomIcon?: string | null
+    providedRoomIcon?: string | null,
+    /**
+     * The code to use, when the caller has already told somebody what it will
+     * be. Create Room shares an invite link naming the room before the room
+     * exists, and that link only resolves if the room is created with the code
+     * the link carries. A collision falls back to a fresh code on the next
+     * attempt, which costs that one shared link and nothing else.
+     */
+    preferredRoomCode?: string
   ): Promise<GameRoom | null> => {
     if (!user || !profile) {
       toast.error(tStandalone("extra.mpAuthRequired"));
@@ -1024,7 +1032,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       let room: GameRoom | null = null;
       let error: { code?: string; message?: string } | null = null;
       for (let attempt = 0; attempt < 3; attempt++) {
-        const roomCode = generateRoomCode();
+        const roomCode = attempt === 0 && preferredRoomCode ? preferredRoomCode : generateRoomCode();
         const res = await supabase
           .from("game_rooms")
           .insert({

@@ -26,10 +26,11 @@ describe("what an invite link says it is for", () => {
     );
   });
 
-  it("sends a friend request from Create Room, whose room does not exist yet", () => {
-    // This used to be a bare link that resolved a room when it was OPENED,
-    // and what it found was the room the host made two hours ago.
+  it("has only two kinds: a named room, or a friendship", () => {
+    // The third — a bare link that resolved a room when it was OPENED — was
+    // wrong in four distinct ways before it was removed.
     expect(inviteLinkPath("abc123", { kind: "friend" })).toBe("/i/abc123?f=1");
+    expect(inviteLinkPath("abc123", { kind: "room", roomCode: "XY7Q2B" })).toBe("/i/abc123?r=XY7Q2B");
   });
 
   it("reads each of them back", () => {
@@ -114,11 +115,28 @@ describe("every screen that shares a link declares its intent", () => {
     expect(modal).toContain('kind: "room"');
   });
 
-  it("Create Room shares a friend request, because its room is not made yet", () => {
+  /**
+   * Create Room reserves the code its room will be created with, so it can
+   * name the room in a link before the room exists. Sending a friend request
+   * from here was the previous answer and it was useless to anyone who was
+   * already your friend.
+   */
+  it("Create Room names the room it is about to create", () => {
     const create = src("src/components/team/CreateRoomPage.tsx");
     expect(create).toContain('from "@/utils/inviteLink"');
-    expect(create).toContain('{ kind: "friend" }');
+    expect(create).toContain('kind: "room", roomCode: plannedRoomCode');
     expect(create).not.toMatch(/siteUrl\(`\/i\/\$\{/);
+    // The reserved code has to be the one the room is actually created with,
+    // or the link names a room that never appears.
+    expect(create).toContain("const [plannedRoomCode] = useState(generateRoomCode)");
+    expect(create).not.toMatch(/const roomCode = generateRoomCode\(\)/);
+    expect(create).toContain("roomIcon, plannedRoomCode)");
+  });
+
+  it("createRoom uses the reserved code when it is given one", () => {
+    const ctx = src("src/contexts/MultiplayerContextV2.tsx");
+    expect(ctx).toContain("preferredRoomCode");
+    expect(ctx).toContain("attempt === 0 && preferredRoomCode ? preferredRoomCode : generateRoomCode()");
   });
 
   it("the invite page reads the intent instead of trusting the guess", () => {
