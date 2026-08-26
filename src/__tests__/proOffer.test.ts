@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { PRO_PLANS, availablePlans, annualSaving } from "@/config/proPlans";
+import { PRO_PLANS, availablePlans, annualSaving, friendSeats } from "@/config/proPlans";
 import { PRICES } from "@/config/pricing";
+import { translations } from "@/locales";
 
 const src = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
@@ -62,6 +63,69 @@ describe("what each PRO plan costs and how many friends it carries", () => {
     const sql = src("supabase/migrations/20260821130000_pro_seats_block_only_real_pro.sql");
     expect(sql).toContain("WHEN p_tier IN ('pro_plus', 'pro_master') THEN 5");
     expect(sql).toContain("WHEN p_tier IN ('pro', 'standard') THEN 1");
+
+    // And the number the paywall PRINTS comes from friendSeats, so it has to
+    // read the same. This is the pair that would otherwise drift silently:
+    // the SQL is the rule, friendSeats is only a mirror of it.
+    expect(friendSeats("pro_plus")).toBe(5);
+    expect(friendSeats("pro")).toBe(1);
+  });
+
+  /**
+   * The invite benefit is the one line on the list that changes with the row
+   * you have selected, so it is the one that can advertise the wrong number.
+   * Every plan must resolve to a count, and it must be the count its tier
+   * actually carries.
+   */
+  it("names the right number of friends for whichever row is selected", () => {
+    expect(friendSeats(plan("monthly").tier)).toBe(1);
+    expect(friendSeats(plan("friends").tier)).toBe(5);
+    expect(friendSeats(plan("annual").tier)).toBe(5);
+  });
+
+  /**
+   * The footnote under the buy button states the price and the billing period,
+   * and it is the line App Review reads the price off. It used to look up
+   * `paywall.period_${plan.id}`, which worked only for as long as every plan
+   * id happened to be a period: adding the `friends` row printed
+   * "9.99 ₾ / paywall.period_friends" to real users.
+   *
+   * So: every plan must resolve to a period word that exists, in every
+   * language.
+   */
+  it("resolves a real period word for every plan in every language", () => {
+    for (const code of Object.keys(translations)) {
+      const paywall = (translations as Record<string, { paywall: Record<string, string> }>)[code]
+        .paywall;
+
+      for (const p of PRO_PLANS) {
+        const key = p.months >= 12 ? "period_annual" : "period_monthly";
+        const word = paywall[key];
+        expect(word, `${code}.paywall.${key} is missing (plan ${p.id})`).toBeTruthy();
+        expect(word, `${code}.paywall.${key} leaks a key name`).not.toContain("paywall.");
+      }
+    }
+  });
+
+  it("has the invite benefit copy in every language, singular and plural", () => {
+    for (const code of Object.keys(translations)) {
+      const paywall = (translations as Record<string, { paywall: Record<string, string> }>)[code]
+        .paywall;
+
+      expect(paywall.benefitInviteTitle, `${code} has no benefitInviteTitle`).toBeTruthy();
+
+      // One friend gets its own string rather than "{count} friends" with a 1
+      // substituted, which reads wrong in all seven.
+      expect(paywall.benefitInviteBlurbOne, `${code} has no singular blurb`).toBeTruthy();
+      expect(paywall.benefitInviteBlurbOne).not.toContain("{count}");
+
+      // The plural MUST carry the placeholder: without it the paywall renders
+      // a fixed number that ignores the plan.
+      expect(
+        paywall.benefitInviteBlurb,
+        `${code}.paywall.benefitInviteBlurb must contain {count}`,
+      ).toContain("{count}");
+    }
   });
 
   /**

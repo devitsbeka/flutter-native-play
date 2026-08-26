@@ -133,6 +133,23 @@ export function availablePlans(
   return PRO_PLANS.filter((p) => PRICES[p.priceKey] !== undefined);
 }
 
+/**
+ * How many friends a plan can pass PRO to.
+ *
+ * This is a MIRROR, not the rule. `pro_seat_allowance` in the database decides
+ * it — 5 for pro_plus and pro_master, 1 for pro and standard — and that
+ * function is what `grant_pro_seat` enforces against. This exists so the
+ * paywall can name the number before anyone has bought anything, and
+ * src/__tests__/proOffer.test.ts reads the SQL to check the two still agree.
+ *
+ * The database also grades `pro_master` at 5 and `standard` at 1. Neither is
+ * sellable here — ProTierId is the two tiers the paywall offers — so they are
+ * not repeated in this switch, where they would be unreachable.
+ */
+export function friendSeats(tier: ProTierId): number {
+  return tier === "pro_plus" ? 5 : 1;
+}
+
 /** The row the paywall opens on: the featured plan if it is on sale here. */
 export function defaultPlan(plans: ProPlan[]): ProPlan | undefined {
   return plans.find((p) => p.featured) ?? plans[0];

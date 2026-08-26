@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { useStorePrice } from "@/hooks/useStorePrice";
 import { useProPurchase } from "@/hooks/useProPurchase";
-import { ProPlan, availablePlans, defaultPlan } from "@/config/proPlans";
+import { ProPlan, availablePlans, defaultPlan, friendSeats } from "@/config/proPlans";
 import { PRICES, currencyForLanguage, formatMoney } from "@/config/pricing";
 import { GLASS_SHEEN, SKIN_WHITE } from "@/components/shop/ProBannerCard";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -19,9 +19,24 @@ import benefitWheel from "@/assets/pro-banner/banner-wheel.webp";
 import benefitNoAds from "@/assets/pro-banner/banner-no-ads.webp";
 import benefitTimer from "@/assets/pro-banner/banner-timer.webp";
 import benefitDiscount from "@/assets/pro-banner/banner-discount.webp";
+import benefitFriends from "@/assets/icons/group-of-people.png";
 
 /** The cover art the offer was tapped on, carried into the paywall. */
 const COVER_ART = "/images/bgs.png";
+
+/**
+ * The word for the billing period in the price footnote — "month" or "year".
+ *
+ * Keyed off how long the plan is bought for, NOT off its id. It was
+ * `paywall.period_${plan.id}` until the third row arrived: `friends` had no
+ * such key, so the footnote under the button read
+ * "9.99 ₾ / paywall.period_friends" — a raw translation key, on the screen
+ * App Review reads the price off. Deriving it means a fourth row cannot
+ * reintroduce that, because there is no new key to forget.
+ */
+function periodKeyFor(plan: ProPlan): string {
+  return plan.months >= 12 ? "paywall.period_annual" : "paywall.period_monthly";
+}
 
 interface ProPaywallModalProps {
   isOpen: boolean;
@@ -197,8 +212,24 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
   const ink = SKIN_WHITE.ink;
   const inkSoft = SKIN_WHITE.inkSoft;
 
+  /**
+   * The one benefit that differs between the rows above it, so it is read off
+   * the SELECTED plan rather than stated once: the monthly passes PRO to one
+   * friend, the other two to five. Naming a flat number here would advertise
+   * the wrong one on two rows out of three.
+   *
+   * `seats` is 0 only when there is no row to select at all — the store
+   * unavailable case, where the list is not rendered anyway.
+   */
+  const seats = selected ? friendSeats(selected.tier) : 0;
+  const inviteBlurb =
+    seats === 1
+      ? t("paywall.benefitInviteBlurbOne")
+      : t("paywall.benefitInviteBlurb").replace("{count}", String(seats));
+
   const benefits = [
     { art: benefitPlay, title: t("paywall.benefitPlayTitle"), blurb: t("paywall.benefitPlayBlurb") },
+    { art: benefitFriends, title: t("paywall.benefitInviteTitle"), blurb: inviteBlurb },
     { art: benefitNoAds, title: t("paywall.benefitNoAdsTitle"), blurb: t("paywall.benefitNoAdsBlurb") },
     { art: benefitWheel, title: t("paywall.benefitLevelsTitle"), blurb: t("paywall.benefitLevelsBlurb") },
     { art: benefitTimer, title: t("paywall.benefitXpTitle"), blurb: t("paywall.benefitXpBlurb") },
@@ -379,7 +410,7 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
           <p className="mt-3 text-center text-[13px]" style={{ color: inkSoft }}>
             {t("paywall.footnote")
               .replace("{price}", priceLabel(selected))
-              .replace("{period}", t(`paywall.period_${selected.id}`))}
+              .replace("{period}", t(periodKeyFor(selected)))}
           </p>
         )}
 
