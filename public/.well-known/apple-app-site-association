@@ -18,6 +18,8 @@
           "/profile/*",
           "/category/*",
           "/play/*",
+          "/leaderboards",
+          "/leaderboards/*",
           "NOT /admin*",
           "NOT /docs*",
           "NOT /privacy-policy*",
