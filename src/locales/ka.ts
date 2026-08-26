@@ -2656,7 +2656,7 @@ export const ka = {
     inviteInvitesYou: "გიწვევს სათამაშოდ",
     inviteWantsToConnect: "მეგობრობა სურს",
     inviteFriendSubtitle: "MyTrivia-ზე მეგობრობა სურს",
-    inviteFriendTagline: "დაეთანხმე და ერთად ითამაშეთ ვიქტორინები",
+    inviteFriendTagline: "დაეთანხმე და ითამაშეთ ერთად",
     inviteAcceptFriend: "დათანხმება",
     inviteRoomFallback: "ტრივია ოთახი",
     invitePlayers: "მოთამაშეები",

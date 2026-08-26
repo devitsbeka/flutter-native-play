@@ -16,6 +16,7 @@ import { dateLocaleFor } from "@/utils/dateLocale";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 import { cleanInviteCode, readInviteIntent } from "@/utils/inviteLink";
+import { georgianDative } from "@/utils/georgianName";
 import logoLight from "@/assets/mytrivia-logo-light.svg";
 import logoDark from "@/assets/mytrivia-logo.svg";
 
@@ -382,7 +383,11 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
   if (!hasRoom && !isOwnLink) {
     return (
       <FriendInviteScreen
-        nickname={preview.host_nickname}
+        // "მეგობრობა სურს" — wants friendship — governs the dative, so the
+        // name in front of it has to be "TriviaMaste-ს". Only here: the room
+        // screen's sentence is "გიწვევს სათამაშოდ", which takes the plain
+        // name, and every other language inflects nothing.
+        nickname={shoutBody ? georgianDative(preview.host_nickname) : preview.host_nickname}
         avatarUrl={preview.host_avatar_url}
         subtitle={t("extra.inviteFriendSubtitle")}
         tagline={t("extra.inviteFriendTagline")}
@@ -445,7 +450,16 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
         {/* Name first. The other order reads as a sentence with its subject
             at the end -- "is inviting you to play / Beka". */}
         <div>
-          <h1 className="font-display text-[19px] uppercase leading-tight tracking-[-0.16px] text-[#161e46]">
+          <h1
+            className="font-display text-[21px] uppercase leading-tight tracking-[-0.16px] text-[#161e46]"
+            // TASolivare ships a single 700 face, so CSS font matching picks it for
+            // any weight asked for and never synthesises a heavier one — font-black
+            // would change nothing here. Thickening the strokes is what actually
+            // makes the name read as heavier than the sentence under it, which is
+            // the weight relationship the design has (Black over Bold) and the one
+            // weight we ship cannot express.
+            style={{ WebkitTextStroke: "0.4px currentColor" }}
+          >
             {preview.host_nickname}
           </h1>
           <p className={cn("mt-3 font-display text-[19px] leading-tight tracking-[-0.16px] text-[#161e46]", shoutBody && "uppercase")}>
@@ -755,7 +769,16 @@ function FriendInviteScreen({
         <InviteAvatar nickname={nickname} avatarUrl={avatarUrl} />
 
         <div className="w-full">
-          <h1 className="font-display text-[19px] uppercase leading-tight tracking-[-0.16px] text-[#161e46]">
+          <h1
+            className="font-display text-[21px] uppercase leading-tight tracking-[-0.16px] text-[#161e46]"
+            // TASolivare ships a single 700 face, so CSS font matching picks it for
+            // any weight asked for and never synthesises a heavier one — font-black
+            // would change nothing here. Thickening the strokes is what actually
+            // makes the name read as heavier than the sentence under it, which is
+            // the weight relationship the design has (Black over Bold) and the one
+            // weight we ship cannot express.
+            style={{ WebkitTextStroke: "0.4px currentColor" }}
+          >
             {nickname}
           </h1>
           <p className={cn("mt-7 font-display text-[19px] leading-tight tracking-[-0.16px] text-[#161e46]", shoutBody && "uppercase")}>
