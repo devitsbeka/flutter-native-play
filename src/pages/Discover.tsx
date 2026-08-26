@@ -57,18 +57,6 @@ const HEADER_HEIGHT = 76;
 const HERO_HEIGHT =
   "h-[calc((100dvh_-_var(--safe-top)_-_var(--safe-bottom))_*_0.47)]";
 
-/* And for a subscriber, who is not being sold anything here.
-   47% of the screen is the height the OFFER needs — headline, subtitle,
-   button, price note. Take those away and the same 47% is an empty purple
-   field between the header and the categories. 28% keeps the artwork as a
-   band the header sits on, which is all it is once the copy has gone, and
-   lifts the sheet by a fifth of the screen.
-   Written out in full rather than built from the number: Tailwind reads
-   these files as text, and a class assembled from a template literal is a
-   class that never gets generated — that is how the hero collapsed to
-   nothing the first time this was one. */
-const HERO_HEIGHT_SUBSCRIBED =
-  "h-[calc((100dvh_-_var(--safe-top)_-_var(--safe-bottom))_*_0.28)]";
 
 // ─── Lazy Section: only mounts children when scrolled near viewport ─────
 
@@ -193,7 +181,12 @@ export default function Discover() {
       scroller.removeEventListener("scroll", onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, []);
+    // isVip: VIP status arrives after the first paint and takes the cover with
+    // it, which moves the sheet to the top of the page. Read once more when it
+    // does — nothing scrolls, so without this the answer stays the one taken
+    // while the cover was still there, and the header keeps the white type it
+    // wears over artwork on a screen that no longer has any.
+  }, [isVip]);
 
 
   // Bring the sheet up to the top of the scroller. Tapping the grab handle
@@ -428,8 +421,15 @@ export default function Discover() {
          * transform, and framer-motion writes transforms on this page all
          * the time. Sticky is measured from the scroller itself, so the
          * video holds still while the sheet slides up over it. */}
+        {/* Not for a subscriber. The cover IS the advert — take the headline,
+            the button and the price note off it and what is left is a purple
+            field between the header and the categories, which is what a
+            shorter one still was. With no cover at all the sheet starts at
+            the top of the page and headerDocked, which reads the sheet's own
+            offsetTop, hands the header its white surface on the first paint. */}
+        {!isVip && (
         <div
-          className={`md:hidden pointer-events-none sticky top-0 z-0 w-full ${isVip ? HERO_HEIGHT_SUBSCRIBED : HERO_HEIGHT}`}
+          className={`md:hidden pointer-events-none sticky top-0 z-0 w-full ${HERO_HEIGHT}`}
         >
           {/* The artwork and its scrims, hidden from screen readers as one
               group. The cover's own copy sits outside this — it is the
@@ -491,11 +491,6 @@ export default function Discover() {
                 competing with the title. */}
             <div aria-hidden className="absolute left-1/2 -translate-x-1/2 top-[78px] h-px w-[min(441px,88.2vw)] bg-[#b8a6f5]/70" />
 
-            {/* The offer itself, and only for somebody who has not bought it.
-                The artwork and the rule stay either way — the cover is the
-                screen's header, not the advert. */}
-            {!isVip && (
-              <>
             <h2 className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(55px,11vw))] w-[min(393px,86vw)] font-display uppercase text-[min(40px,8vw)] leading-[min(43px,8.6vw)] tracking-[0.5px]">
               {t("discover.promoTitle")}
             </h2>
@@ -515,8 +510,6 @@ export default function Discover() {
             <p className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(285px,57vw))] w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
               {offerNote}
             </p>
-              </>
-            )}
           </div>
 
           {/* Last, and over the copy, as the frame stacks it. */}
@@ -525,6 +518,7 @@ export default function Discover() {
             className="absolute inset-x-0 top-0 h-[224px] bg-[linear-gradient(180deg,rgba(41,17,84,0.12)_0%,rgba(48,20,96,0.096)_34%,rgba(58,26,112,0)_64%,rgba(58,26,112,0)_100%)]"
           />
         </div>
+        )}
 
 
         {/* The sheet: everything the page used to be, on a surface that
@@ -534,7 +528,17 @@ export default function Discover() {
          * empty Favourites) there would otherwise be nothing to pull. */}
         <div
           ref={sheetRef}
-          className="relative z-10 rounded-t-[28px] border-t border-white/60 bg-[#F6F3FB] shadow-[0_-12px_32px_rgba(41,17,84,0.35)] min-h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:rounded-none md:border-0 md:bg-[#F8F6FC] md:shadow-none md:min-h-full"
+          /* The 76px top pad exists only when there is no cover.
+             The page header is `h-0` — it takes no room in the flow and
+             floats over whatever is at the top of the page. The cover used to
+             be what it floated over. Without one the sheet starts at the very
+             top, the header covers its first 76px, and the tab strip (sticky
+             at top-76) pins there while the section header after it stays
+             where the flow put it — so "Popular" rendered underneath the
+             tabs. The pad puts the flow back where the sticky rule assumes it
+             is. Written out in full, never assembled: Tailwind reads these
+             files as text. */
+          className={`relative z-10 rounded-t-[28px] border-t border-white/60 bg-[#F6F3FB] shadow-[0_-12px_32px_rgba(41,17,84,0.35)] min-h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:rounded-none md:border-0 md:bg-[#F8F6FC] md:shadow-none md:min-h-full ${isVip ? "pt-[76px] md:pt-0" : ""}`}
         >
 
         {/* The grab handle, and the whole of what the peek has to say before
