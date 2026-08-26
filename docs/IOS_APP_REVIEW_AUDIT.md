@@ -1092,6 +1092,201 @@ manifest and App Store Connect.
   text filter) is what keeps that from forcing 17+.
 ---
 
+# Final pass — pre-submission audit
+
+**On `main` @ `6d409cc6` · 2026-08-26 · the last audit before Submit for Review.**
+
+Everything below was re-established from scratch on the current tree and the
+current *live* deployment, not carried forward from earlier passes. Where a
+fact could be executed, it was.
+
+## What was run and verified this pass
+
+```
+npx vitest run                    → 113 files, 1199 tests, all passing
+npm run typecheck                 → clean (both tsconfigs)
+iOS bundle pipeline               → verify-ios-bundle: ok — 98.4 MB, no admin console, no pre-ATT tracking
+verify-ios-native                 → still first in build:ios; correctly refuses without GoogleService-Info.plist
+live AASA                         → /leaderboards present (exact + wildcard) — the In-App Events deep link works
+live web bundle                   → landing "weltweit" fix shipped; per-language policy copy shipped; trial badge strings shipped
+live DB (anon key, read-only)     → premium_categories migration APPLIED: exactly the nine, all is_premium
+git diff ec78dce..HEAD -- ios/    → only the two audited changes (camera string, privacy manifest)
+```
+
+**Survived the parallel-agent churn** (each re-checked in code, not assumed):
+every P0-3 guard (`storeUnavailable` + disabled buy on the paywall,
+`storeReady` gating on all four shop surfaces, the `PRODUCT_NOT_IN_STORE`
+backstop), the derived 3.1.2 disclosure test, the splash floor, the age
+gating, and the privacy work.
+
+**Fixed by other agents, verified here:** the `period_friends` footnote bug
+(months-based `periodKeyFor` helper); client/server agreement that the annual
+plan grants `pro_plus` (pinned by `proOffer.test.ts`); the gem checkout made
+drift-safe in both directions (client sends old + new fields, new server
+ignores the old ones).
+
+---
+
+## New findings
+
+### F-1 · P1 · The video host does not honour byte-range requests — streamed video may not play on the device at all
+
+**Status: BLOCKING pending a 5-minute device test · Confidence: Verified against production**
+
+The iOS build ships 5 videos and streams the other **185** (263 MB pruned)
+from `https://mytrivia.io/videos/…` — the fallback `videoConfig.ts` uses when
+`VITE_VIDEO_BASE_URL` is unset, which it is. Probed live, twice:
+
+```
+GET /videos/animals.mp4  with  Range: bytes=0-1023
+→ HTTP 200 · content-length: 7839349 (the whole file) · no Accept-Ranges · no Content-Range
+```
+
+A range-aware server answers `206` with 1,024 bytes. This one ignores the
+header. That matters because WKWebView's media playback is AVFoundation-backed,
+and AVFoundation opens streams with a `bytes=0-1` probe **expecting a 206** —
+the classic failure mode where a video plays in every desktop browser and does
+not start on an iPhone. The category-card backgrounds, map videos and avatar
+clips are all in the streamed set, so the blast radius is most of the app's
+motion.
+
+The probe is trustworthy: the Range header travels inside the TLS tunnel, so
+the sandbox proxy cannot have stripped it. `cf-cache-status: MISS` on every
+request also means these files are not being edge-cached (Cloudflare serves
+ranges on cache HITs), so each play re-downloads the full file even where
+playback tolerates the 200.
+
+**Action, in order:**
+1. **Device test first (5 min):** open a category card with a video background
+   (any category except the three bundled clips) on a real iPhone. If video
+   plays, downgrade this to the caching-only concern; if it never starts,
+   it is confirmed.
+2. Fix candidates, smallest first: add a `Range` handler for `/videos/*` in
+   `worker/index.ts` (read from ASSETS, slice, answer 206 with
+   `Content-Range`/`Accept-Ranges`); or put `cache-control` on video responses
+   so Cloudflare's edge cache takes over range serving on HIT; or move videos
+   to R2/a CDN with native range support.
+
+### F-2 · P0 (operational, live **today**) · `main` promises money terms the deployed backend does not honour
+
+**Status: BLOCKING — and urgent independently of the submission · Confidence: Verified live on the client side**
+
+Four server-side files changed on `main` this session and deploy **only
+through Lovable**, which has not deployed them:
+
+| File | What the deployed (old) version does wrong |
+|---|---|
+| `create-pro-checkout` | **Grants no trial.** The live web paywall already shows the "3 days free" badge and a "გამოსცადე 0 ₾-ად" button (verified in the shipped locales chunk) — a buyer who clicks it today is **charged immediately** against a "free" promise. |
+| `_shared/iap.ts` | Maps `io.mytrivia.pro.annual` → tier `pro` (1 friend seat). The paywall sells the year as **PRO + 5 friends**. An iOS annual buyer gets one seat until this deploys. |
+| `create-gem-checkout` | Charges USD regardless of language (the new one charges the buyer's currency). Drift-safe — the client still sends the old fields — but the prices shown assume the new behaviour. |
+| `_shared/pricing.ts` | New shared price table the two functions above read. |
+
+**Action:** merge is done — **ask Lovable to deploy now** (deploy and nothing
+else, per `AGENTS.md` §4a): `create-pro-checkout`, `create-gem-checkout`, and
+the functions that consume `_shared/iap.ts` (`verify-receipt`,
+`revenuecat-webhook`). Until then the web trial promise is live and false.
+
+### F-3 · P2 · Three migrations on `main` with unverified live state
+
+`premium_categories` is **verified applied** (probed via PostgREST). The other
+three added since the audit base cannot be verified with the anon key. Paste
+into the Lovable SQL editor (read-only):
+
+```sql
+-- 20260915 money_functions_not_anon applied?  expect anon_can_execute = false on every row
+SELECT p.oid::regprocedure AS fn,
+       has_function_privilege('anon', p.oid, 'EXECUTE') AS anon_can_execute
+FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = 'public' AND p.proname IN
+  ('claim_daily_reward','claim_leaderboard_reward','credit_gameplay_reward',
+   'exchange_currency','grant_vip_days','ensure_admin_lifetime_pro','update_user_currency');
+
+-- 20260913 daily_reward_ladder applied?  expect true
+SELECT prosrc LIKE '%double_coins%' AS ladder_version_live
+FROM pg_proc WHERE proname = 'claim_daily_reward';
+```
+
+(`level17_backfill` is data-only and re-runnable; running it again is the
+verification.)
+
+### F-4 · P2 · The trial footnote could state the sequence in one sentence
+
+With the annual plan selected the screen shows: badge "3 days free", button
+"Try for 0 ₾", footnote "59.88 ₾ / year, cancel anytime", and the full 3.1.2
+disclosure below. Every element 3.1.2 wants is present, but the canonical
+phrasing — *"3 days free, then 59.88 ₾/year"* — is assembled by the reader
+rather than stated. A `paywall.footnoteTrial` string ("First {days} days
+free, then {price} / {period}") would close the gap. Polish, not a rejection.
+
+---
+
+## The ledger — everything still open, ready to action
+
+This table **supersedes the per-pass checklists above**. One row per open
+item; nothing merged into `main` is on it. Owner key: **ASC** = App Store
+Connect · **Mac** = Xcode/archive machine · **Device** = real iPhone ·
+**Lovable** = server deploy · **Code** = a change in this repo.
+
+### P0 — do not press Submit without these
+
+| # | Owner | Action |
+|---|---|---|
+| 1 | **Lovable** | **Deploy the edge functions** (F-2). The web trial promise is live and false *today*; iOS annual grants 1 seat instead of 5 until this ships. Deploy `create-pro-checkout`, `create-gem-checkout`, `verify-receipt`, `revenuecat-webhook`. |
+| 2 | **ASC** | Attach **all seven IAPs** to the version: 3 subscriptions + 4 gem consumables. "Prepare for Submission" ≠ attached. |
+| 3 | **Mac** | `GoogleService-Info.plist` in `ios/App/App/` (`build:ios` hard-refuses without it; verify `BUNDLE_ID` = `io.mytrivia.app`). |
+| 4 | **Device** | One sandbox purchase grants PRO end-to-end (sheet → `verify-receipt` → entitlement visible), and **Restore returns it after a full reinstall**. |
+
+### P1 — high; a strict reviewer or the first week of users will find these
+
+| # | Owner | Action |
+|---|---|---|
+| 5 | **Device** | **F-1 video test:** does a streamed category video play on a real iPhone? If not → Code: range support on `/videos/*`. |
+| 6 | **ASC** | **Subscription levels, corrected:** Level 1 = Friends PRO Monthly **and** PRO Annual (both `pro_plus`), Level 2 = PRO Monthly. The earlier advice (monthly+annual together) predates the annual becoming `pro_plus`. |
+| 7 | **ASC** | Create the **3-day free introductory offer** on `io.mytrivia.pro.annual`. Until it exists, iOS shows no badge (correct, but the offer is the pitch). Must be 3 days — the app now advertises exactly what the store reports. |
+| 8 | **ASC** | App Privacy: add **Gameplay Content** (11 types total); set the privacy URL **per localization** to `/privacy-policy/{lang}` (live, verified); age rating **12+** with honest UGC answers. |
+| 9 | **Device** | TestFlight build: push arrives (production APNs) with sender avatar; a shared invite link opens the app; avatar selfie opens the **system camera sheet**; paywall shows the storefront's localized prices and the "unavailable" card when the catalogue is empty. |
+| 10 | **Legal** | Confirm fal.ai's DPA; add the "not used for training" sentence to the policy only if their terms support it. |
+
+### P2 — survives review; costs money, trust, or compliance later
+
+| # | Owner | Action |
+|---|---|---|
+| 11 | Code | `plugin.restorePurchases()` is the one store call not wrapped in `withTimeout` — a hung restore spins forever. |
+| 12 | Code | PostHog identifies and autocaptures from first frame with no consent step (GDPR, not Apple — EU users). |
+| 13 | Code | `NSPhotoLibraryAddUsageDescription` promises a save-to-photos feature that does not exist: build it or drop the key. |
+| 14 | Code | F-4: trial-aware footnote ("First {days} days free, then {price}/{period}"). |
+| 15 | Code | `capture-store-screenshots.mjs` renders 1242×2208 (retired 5.5" slot) — match ASC's current required size before generating screenshots. |
+| 16 | Lovable | F-3: run the two verification queries above; re-run `level17_backfill` (re-runnable). |
+| 17 | Code | Bundle: 98.4 MB, with `heic-to` (2.9 MB) shipped for a format the native path never produces, and `dist/app-icon-1024.png` (1.5 MB) inside the binary. |
+
+### P3 — before the second release
+
+| # | Owner | Action |
+|---|---|---|
+| 18 | Mac | Read the exported IPA's entitlements (`codesign -d --entitlements :- Payload/App.app`): `aps-environment` = `production`, both `applinks:` domains, Sign in with Apple, Communication Notifications. |
+| 19 | Code | The NotificationService target has no entitlements file — communication-notification styling silently degrades to plain pushes. |
+| 20 | Code | `NotFound.tsx` is hardcoded English. |
+| 21 | Code | Three shipped pages still rely on document scrolling (`NotFound`, `RoomRedirect`, `TVLobby` loading state) — one content addition from frozen on device. |
+| 22 | Code | `contentInset: 'automatic'` vs the overlaying status bar — first suspect if a notch gap appears. |
+| 23 | Code | `index.html` meta/og description and `manifest.json` are Georgian-only — affects shared links, not the binary. |
+
+### P4 / P5 — housekeeping
+
+| # | Owner | Action |
+|---|---|---|
+| 24 | Code | `window.open(url, "_blank")` for https share links inside the webview — route through `@capacitor/browser`/`Share` like the Messenger branch. |
+| 25 | Code | Dead strings (`extra.comingSoon`, `gemsPurchaseSoon`, the four orphaned QR keys, `handleImportContacts`) and the unused `HelpModal` with `#faq` anchors. |
+| 26 | Code | AASA `NOT` rules sit after the allow patterns — first-match-wins makes that one wildcard away from wrong. |
+| 27 | Code | `useInAppPurchases.ts` (~800 lines, all money, no unit tests of its own); lucky-spin outcome chosen client-side; `PRE_LAUNCH_CHECKLIST.md` still actively misleading; `README.md` still the Lovable template. |
+
+**Bottom line.** The repo itself is submission-ready: 1199 tests green and
+every code-side blocker from all four passes is merged. What stands between
+this build and the Submit button is **rows 1–4**, plus the two device checks
+most likely to surprise (rows 5 and 9). Row 1 is urgent even if the
+submission slips — it is live now.
+
+---
+
 # Off-repo checklist
 
 Not answerable from this repository. Confirm each before pressing Submit.
@@ -1142,15 +1337,18 @@ exactly (checked):
 
 So the catalogue is complete. What remains is configuration and attachment.
 
-- [ ] **Subscription levels are wrong — fix before submitting.** PRO Monthly
-      (2) and PRO Annual (3) are the *same tier* bought for different lengths;
-      the app says so on the paywall, which offers them as two rows of one
-      plan. Levels drive upgrade/downgrade: a subscriber on PRO Monthly who
-      picks Annual is doing a **downgrade** as configured, so the switch is
-      deferred to the end of the current period instead of taking effect now.
-      Put PRO Monthly and PRO Annual on the **same level**, with Friends PRO
-      above them. This is not a review blocker — it is a revenue and support
-      one, and it is far cheaper to fix now than after anyone has subscribed
+- [ ] **Subscription levels — CORRECTED, the earlier advice here is superseded.**
+      This item originally said to put PRO Monthly and PRO Annual on the same
+      level. That was right when both granted the `pro` tier and is **wrong
+      now**: the pricing rework made the annual plan grant `pro_plus` (five
+      friend seats — see `src/config/proPlans.ts` and `_shared/iap.ts`, which
+      agree and are pinned by `proOffer.test.ts`). Levels order by service
+      level, so the correct arrangement is now:
+      **Level 1: Friends PRO Monthly + PRO Annual** (both `pro_plus`) ·
+      **Level 2: PRO Monthly** (`pro`). As configured in ASC today (annual at
+      level 3, below both monthlies) an annual purchase is a *downgrade* from
+      either monthly and defers to period end — still a revenue bug, now with
+      the opposite fix from the one first written here
 - [ ] **All seven products are attached to this version**, not merely created. "Prepare for Submission" means the product exists and is *not yet submitted* — on a first submission each one has to be selected in the version's In-App Purchases section, or review cannot see it
 - [ ] Every product has a **price** set in every storefront you ship to, not just the primary one
 - [ ] `io.mytrivia.pro.weekly` is in `IAP_PRODUCTS` but has no product and no paywall row. That is deliberate forward-compat (the comment there says the query asks for it so the row can appear the day it exists), and it costs only a slightly wider StoreKit query — nothing to fix, just do not be surprised by it
