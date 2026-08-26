@@ -1387,6 +1387,7 @@ export const pt: KaTranslations = {
     weekly_play_gamesDesc: "Jogue {n} jogos esta semana",
   },
   extra: {
+    ...en.extra,
     questionsAnsweredLabel: "Perguntas respondidas",
     successRateLabel: "Taxa de acerto",
     infoTab: "Info",
@@ -1397,7 +1398,6 @@ export const pt: KaTranslations = {
     theirSpecialty: "A especialidade dele",
     yourSpecialty: "A tua especialidade",
     percentSuccess: "{percent}% de acerto",
-    ...en.extra,
     topicMarvelMovies: "Filmes da Marvel",
     topicWeirdFacts: "Fatos estranhos",
     topicSpaceSecrets: "Segredos do espaço",
