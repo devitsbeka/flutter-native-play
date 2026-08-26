@@ -161,3 +161,18 @@ jobs:
         run: |
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/06-category-levels.sql
+
+      # The level-17 backfill. Eight categories advertised fewer than 17
+      # levels, and in six of them that was a translation gap rather than a
+      # content shortage: translate-questions only ever fans the ENGLISH bank
+      # out, so 936 questions authored in Georgian were invisible to it and
+      # raised nobody's level count, Georgian's included. The migration
+      # translates that tail. This seeds a database with the same shape, runs
+      # the migration TWICE, and asserts every language lands at exactly 170 —
+      # a second run that duplicated its rows would read 340.
+      - name: Assert level-17 backfill
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/07-level17-backfill.sql
