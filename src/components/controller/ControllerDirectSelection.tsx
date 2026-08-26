@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
+import { useCategoryIconSlugs } from '@/hooks/useCategoryIconSlugs';
 import { supabase } from '@/integrations/supabase/client';
 import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
 import { toast } from "@/lib/toast";
@@ -70,6 +71,12 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
 
   // Use the TV session queue hook
   const { queue, addCategoryToQueue, removeFromQueue, hasQueue } = useTVSessionQueue(sessionId, roomId);
+
+  // The icon a category is drawn with comes from the same column Discover
+  // reads, so a round in the queue wears the same face as its card. The slug
+  // stored on the queue row is only a fallback: it was snapshotted when the
+  // round was added and does not follow the category if its icon changes.
+  const { iconSlugFor } = useCategoryIconSlugs();
 
   // Load categories when picker opens
   useEffect(() => {
@@ -277,8 +284,13 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                       : 'bg-white/10 border-white/20 hover:border-purple-400'
                   }`}
                 >
-                  {category.icon_slug ? (
-                    <QuizCategoryIcon iconSlug={category.icon_slug} size={40} className="w-10 h-10" />
+                  {iconSlugFor(category.category_id, category.icon_slug) ? (
+                    <QuizCategoryIcon
+                      iconSlug={iconSlugFor(category.category_id, category.icon_slug) ?? undefined}
+                      categoryId={category.category_id}
+                      size={40}
+                      className="w-10 h-10"
+                    />
                   ) : (
                     <span className="text-2xl">{category.icon}</span>
                   )}
@@ -426,8 +438,13 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                     <div className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs font-bold text-purple-200">
                       {index + 1}
                     </div>
-                  {item.icon_slug ? (
-                    <QuizCategoryIcon iconSlug={item.icon_slug} size={40} className="w-10 h-10" />
+                  {iconSlugFor(item.category_id, item.icon_slug) ? (
+                    <QuizCategoryIcon
+                      iconSlug={iconSlugFor(item.category_id, item.icon_slug) ?? undefined}
+                      categoryId={item.category_id ?? undefined}
+                      size={40}
+                      className="w-10 h-10"
+                    />
                     ) : (
                       <div className="w-10 h-10 rounded-lg bg-purple-500/30 flex items-center justify-center">
                         <Sparkles className="w-5 h-5 text-purple-300" />

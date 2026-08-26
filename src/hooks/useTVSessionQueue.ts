@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { CATEGORY_ID_TO_ICON } from "@/data/categoryIconMap";
+import { categoryIconSlugSync, primeCategoryIconSlugs } from "@/hooks/useCategoryIconSlugs";
 
 export interface TVQueueItem {
   id: string;
@@ -110,8 +110,11 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
       
       // Add initial category as position 0 (if exists)
       if (roomInfo?.category_id && roomInfo?.category_name) {
-        // Resolve icon_slug from CATEGORY_ID_TO_ICON instead of using null
-        const iconSlug = CATEGORY_ID_TO_ICON[roomInfo.category_id] || null;
+        // The column Discover reads, not the hardcoded map — those had drifted
+        // apart on 39 of 70 categories, which is why a round showed one icon
+        // in the queue and another on its card.
+        await primeCategoryIconSlugs();
+        const iconSlug = categoryIconSlugSync(roomInfo.category_id);
         
         fullQueue.push({
           id: `initial-${currentRoomIdFallback}`,
