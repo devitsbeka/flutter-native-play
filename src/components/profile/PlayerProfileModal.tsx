@@ -14,6 +14,7 @@ import { usePlayerProfile as usePlayerProfileData, InteractionLogItem } from "@/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFriends } from "@/contexts/FriendsContext";
 import { toast } from "@/lib/toast";
 import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -97,6 +98,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   const { user, profile } = useAuth();
   const bubbleVideo = useResponsiveVideo("/videos/floating-blob.mp4");
   const { isAdmin } = useAdminRole();
+  const { removeFriend } = useFriends();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { data, loading, refetch } = usePlayerProfileData(userId);
@@ -205,19 +207,20 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
     
     setDeletingFriend(true);
     try {
-      const { error } = await supabase
-        .from("friendships")
-        .delete()
-        .eq("id", data.friendshipId);
+      // Through the context, not straight at the table. Deleting the row here
+      // left FriendsContext holding the friend it had already fetched, so the
+      // home friends row kept them until something else happened to refetch —
+      // "I have to refresh for them to disappear". removeFriend does the same
+      // delete and then refreshes the list everything else reads from.
+      //
+      // The realtime subscription now covers deletes as well, so this is the
+      // second of two paths rather than the only one; it is the one that does
+      // not depend on the socket being up.
+      const ok = await removeFriend(data.friendshipId);
+      if (!ok) return;
 
-      if (error) throw error;
-      
-      toast.success(t("extra.friendRemovedToast"));
       setShowDeleteConfirm(false);
       refetch();
-    } catch (err) {
-      console.error('[handleDeleteFriend] Error:', err);
-      toast.error(t("extra.removeFailedToast"));
     } finally {
       setDeletingFriend(false);
     }

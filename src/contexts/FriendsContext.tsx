@@ -162,7 +162,17 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
           table: "friendships",
         },
         async (payload) => {
-          const row = (payload.new || payload.old) as { user_id?: string; friend_id?: string; status?: string } | null;
+          // A DELETE's columns live in `old`, and `new` is an empty OBJECT
+          // rather than null — so `payload.new || payload.old` picked the
+          // empty one, the ownership check below saw undefined ids and bailed,
+          // and fetchFriends never ran. That is why removing a friend left
+          // them in the friends row until the app was reloaded, and why being
+          // removed BY someone never registered at all.
+          //
+          // friendships has REPLICA IDENTITY FULL (20260823120000), so `old`
+          // carries user_id and friend_id and the check works for deletes too.
+          const row = (payload.eventType === "DELETE" ? payload.old : payload.new) as
+            { user_id?: string; friend_id?: string; status?: string } | null;
 
           if (!row || (row.user_id !== user.id && row.friend_id !== user.id)) {
             return;
