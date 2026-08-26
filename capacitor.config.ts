@@ -9,7 +9,11 @@ const config: CapacitorConfig = {
     // 14.0 here doesn't lower that floor, it just makes `pod install` fail on
     // the mismatch.
     minVersion: '15.0',
-    contentInset: 'automatic',
+    // 'never': the status bar overlays the webview (nativeShell sets
+    // overlay: true) and every screen pads itself with --safe-top, so
+    // 'automatic' was a second inset system claiming the same strip —
+    // the first suspect whenever a stray gap appeared under the notch.
+    contentInset: 'never',
     preferredContentMode: 'mobile',
     // Orientation lock and the permission usage strings live in
     // ios/App/App/Info.plist, not here. An `infoPlist` block at this spot is

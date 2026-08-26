@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Communication Notifications, for the extension itself.
+
+  The App target has carried this entitlement all along (App.entitlements),
+  but the code that actually asks iOS for the communication treatment —
+  `content.updating(from: INSendMessageIntent)` in NotificationService.swift —
+  runs in THIS target, and iOS checks the caller. Without it the rebuild
+  throws, the catch swallows it, and every invite renders as a plain push:
+  degraded silently, never broken loudly, which is why it survived.
+
+  Needs "Communication Notifications" enabled on the extension's own App ID
+  (io.mytrivia.app.NotificationService); under automatic signing Xcode adds
+  it when the capability is ticked on this target. If the first archive after
+  this change fails signing on the extension, that checkbox is the fix.
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.developer.usernotifications.communication</key>
+	<true/>
+</dict>
+</plist>

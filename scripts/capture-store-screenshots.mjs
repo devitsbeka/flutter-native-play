@@ -44,7 +44,12 @@ const BASE = process.env.BASE_URL ?? "http://127.0.0.1:8080";
 // Playwright's bundled Chromium revision may not match this environment's.
 const EXECUTABLE = process.env.CHROMIUM_PATH ?? undefined;
 
-const DEVICE = { width: 414, height: 736, scale: 3 }; // -> 1242x2208
+// iPhone 16 Pro Max logical size -> 1320x2868, the 6.9" slot App Store
+// Connect keys screenshots on now. The old value here was 414x736@3x =
+// 1242x2208, the retired 5.5" slot, which the media manager refuses.
+// Confirm against ASC's media manager before a capture run regardless —
+// the required size moves with the flagship.
+const DEVICE = { width: 440, height: 956, scale: 3 }; // -> 1320x2868
 
 mkdirSync(OUT, { recursive: true });
 

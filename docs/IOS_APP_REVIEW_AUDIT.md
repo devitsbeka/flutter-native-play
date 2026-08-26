@@ -1240,7 +1240,7 @@ Connect · **Mac** = Xcode/archive machine · **Device** = real iPhone ·
 
 | # | Owner | Action |
 |---|---|---|
-| 5 | **Device** | **F-1 video test:** does a streamed category video play on a real iPhone? If not → Code: range support on `/videos/*`. |
+| 5 | **Device** | ✅ **Fix shipped** — `worker/index.ts` now answers `/videos/*` range requests with proper 206s (parser unit-tested). Remaining half: after the next web deploy, confirm `curl -H "Range: bytes=0-1"` returns 206, and play one streamed video on a real iPhone.
 | 6 | **ASC** | **Subscription levels, corrected:** Level 1 = Friends PRO Monthly **and** PRO Annual (both `pro_plus`), Level 2 = PRO Monthly. The earlier advice (monthly+annual together) predates the annual becoming `pro_plus`. |
 | 7 | **ASC** | Create the **3-day free introductory offer** on `io.mytrivia.pro.annual`. Until it exists, iOS shows no badge (correct, but the offer is the pitch). Must be 3 days — the app now advertises exactly what the store reports. |
 | 8 | **ASC** | App Privacy: add **Gameplay Content** (11 types total); set the privacy URL **per localization** to `/privacy-policy/{lang}` (live, verified); age rating **12+** with honest UGC answers. |
@@ -1251,33 +1251,33 @@ Connect · **Mac** = Xcode/archive machine · **Device** = real iPhone ·
 
 | # | Owner | Action |
 |---|---|---|
-| 11 | Code | `plugin.restorePurchases()` is the one store call not wrapped in `withTimeout` — a hung restore spins forever. |
+| 11 | Code | ✅ **DONE** — restore is bounded at 60s like every other store call.
 | 12 | Code | PostHog identifies and autocaptures from first frame with no consent step (GDPR, not Apple — EU users). |
-| 13 | Code | `NSPhotoLibraryAddUsageDescription` promises a save-to-photos feature that does not exist: build it or drop the key. |
-| 14 | Code | F-4: trial-aware footnote ("First {days} days free, then {price}/{period}"). |
-| 15 | Code | `capture-store-screenshots.mjs` renders 1242×2208 (retired 5.5" slot) — match ASC's current required size before generating screenshots. |
+| 13 | Code | ✅ **DONE** — the key is removed; nothing saves to the photo library.
+| 14 | Code | ✅ **DONE** — `paywall.footnoteTrial` ("First {days} days free, then {price}/{period}") in all seven locales, rendered whenever the selected plan carries a trial.
+| 15 | Code | ✅ **DONE** — the script renders 440×956@3x = 1320×2868 (the 6.9" slot); still confirm against ASC's media manager before a capture run.
 | 16 | Lovable | F-3: run the two verification queries above; re-run `level17_backfill` (re-runnable). |
-| 17 | Code | Bundle: 98.4 MB, with `heic-to` (2.9 MB) shipped for a format the native path never produces, and `dist/app-icon-1024.png` (1.5 MB) inside the binary. |
+| 17 | Code | ✅ **DONE** — prune-ios-videos also strips the HEIC decoder chunks and favicon PNGs (web-only, unreachable on native): bundle 98.4 → **92.8 MB**.
 
 ### P3 — before the second release
 
 | # | Owner | Action |
 |---|---|---|
 | 18 | Mac | Read the exported IPA's entitlements (`codesign -d --entitlements :- Payload/App.app`): `aps-environment` = `production`, both `applinks:` domains, Sign in with Apple, Communication Notifications. |
-| 19 | Code | The NotificationService target has no entitlements file — communication-notification styling silently degrades to plain pushes. |
-| 20 | Code | `NotFound.tsx` is hardcoded English. |
-| 21 | Code | Three shipped pages still rely on document scrolling (`NotFound`, `RoomRedirect`, `TVLobby` loading state) — one content addition from frozen on device. |
-| 22 | Code | `contentInset: 'automatic'` vs the overlaying status bar — first suspect if a notch gap appears. |
-| 23 | Code | `index.html` meta/og description and `manifest.json` are Georgian-only — affects shared links, not the binary. |
+| 19 | Code | ✅ **DONE** — `NotificationService.entitlements` created and wired into both extension configs. If the first archive fails signing on the extension, tick Communication Notifications on its App ID.
+| 20 | Code | ✅ **DONE** — localized in all seven languages, and given the standard scroll box.
+| 21 | Code | ✅ **DONE** — `NotFound`, `RoomRedirect` and `TVLobby`'s loading state each own their scrolling now.
+| 22 | Code | ✅ **DONE** — `contentInset: 'never'`; the overlay + `--safe-top` system is the only one insetting. Watch the first device run for layout surprises.
+| 23 | Code | ✅ **DONE** — meta/og and manifest descriptions are English.
 
 ### P4 / P5 — housekeeping
 
 | # | Owner | Action |
 |---|---|---|
-| 24 | Code | `window.open(url, "_blank")` for https share links inside the webview — route through `@capacitor/browser`/`Share` like the Messenger branch. |
-| 25 | Code | Dead strings (`extra.comingSoon`, `gemsPurchaseSoon`, the four orphaned QR keys, `handleImportContacts`) and the unused `HelpModal` with `#faq` anchors. |
-| 26 | Code | AASA `NOT` rules sit after the allow patterns — first-match-wins makes that one wildcard away from wrong. |
-| 27 | Code | `useInAppPurchases.ts` (~800 lines, all money, no unit tests of its own); lucky-spin outcome chosen client-side; `PRE_LAUNCH_CHECKLIST.md` still actively misleading; `README.md` still the Lovable template. |
+| 24 | Code | ✅ **DONE** — https share targets open in the system browser sheet on native (`Browser.open`), which bounces wa.me into WhatsApp.
+| 25 | Code | ✅ **DONE** — eight dead keys deleted from all seven locales, `handleImportContacts` and the home `HelpModal` removed.
+| 26 | Code | ✅ **DONE** — exclusions now precede the allow patterns in the AASA.
+| 27 | Code | **Partly done** — `PRE_LAUNCH_CHECKLIST.md` carries a superseded banner and `README.md` is real now. Still open, deliberately: the `useInAppPurchases` refactor + tests, and the client-side lucky-spin outcome — both too invasive for the submission window.
 
 **Bottom line.** The repo itself is submission-ready: 1199 tests green and
 every code-side blocker from all four passes is merged. What stands between
