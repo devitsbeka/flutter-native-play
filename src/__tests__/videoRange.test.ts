@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { parseRange } from "../../worker/range";
 
 /**
@@ -50,5 +52,28 @@ describe("parseRange", () => {
     // Multi-range: spec-legal, deliberately unsupported — full 200 instead.
     expect(parseRange("bytes=0-1,5-9", SIZE)).toBeNull();
     expect(parseRange("bytes=-0", SIZE)).toBeNull();
+  });
+});
+
+describe("the route that lets any of this run", () => {
+  // Cloudflare answers a request whose path matches a file in ./dist from the
+  // asset server BEFORE the Worker runs. Every /videos/*.mp4 is such a file,
+  // so without run_worker_first the handler above is dead code and production
+  // quietly goes back to 200-with-everything — which is exactly how the first
+  // deploy of it shipped. Nothing else fails when this line is deleted; only
+  // a phone does.
+  it("wrangler.toml routes /videos/* through the worker first", () => {
+    const wrangler = readFileSync(
+      resolve(__dirname, "../../wrangler.toml"),
+      "utf8",
+    );
+    const line = wrangler.match(/^run_worker_first\s*=\s*(.+)$/m);
+    expect(
+      line,
+      "run_worker_first is gone from wrangler.toml — the assets server will " +
+        "answer /videos/* before serveVideo runs, and iOS video playback " +
+        "breaks with nothing red in CI",
+    ).not.toBeNull();
+    expect(line![1]).toContain('"/videos/*"');
   });
 });

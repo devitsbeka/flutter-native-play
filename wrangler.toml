@@ -4,8 +4,9 @@
 # which is why this host was chosen, given the build ships ~280 MB of video.
 #
 # It was assets-only until image questions needed a proxy. worker/index.ts
-# handles exactly one route, /img, and hands everything else to the assets
-# binding, which is what happened implicitly before it had any code.
+# handles a few routes (/img, /videos/* range slicing, room link previews)
+# and hands everything else to the assets binding, which is what happened
+# implicitly before it had any code.
 #
 # Local commands:
 #   npx wrangler dev        # serve ./dist locally through the Workers runtime
@@ -46,6 +47,15 @@ binding = "ASSETS"
 # than a 404, so deep links like /dev/v2, /profile and /challenge/:code load
 # the app instead of an error page.
 not_found_handling = "single-page-application"
+
+# A request whose path matches a file in ./dist is normally answered by the
+# asset server BEFORE the Worker runs — worker/index.ts only ever saw misses.
+# That is fine for /img (no such file exists), but it made serveVideo dead
+# code: every /videos/*.mp4 IS a file, so Range requests got a plain 200 and
+# WKWebView's AVFoundation player, which opens with `Range: bytes=0-1` and
+# requires a 206, refused to play. Route videos through the Worker first so
+# it can slice the asset into range responses.
+run_worker_first = ["/videos/*"]
 
 # ---------------------------------------------------------------------------
 # Read by worker/index.ts to build the link preview for a room invite. Both
