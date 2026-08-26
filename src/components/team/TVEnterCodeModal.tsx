@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Check, ChevronLeft } from 'lucide-react';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
@@ -32,6 +32,28 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+
+  /**
+   * Opening this modal is already the decision; the four digits are all that
+   * is left, so the caret starts in the first box rather than waiting to be
+   * asked twice. Delayed a beat because the modal arrives on an
+   * AnimatePresence entrance, and focus() on something still transitioning
+   * does nothing at all.
+   *
+   * Re-runs on every open — a modal that is closed and reopened would
+   * otherwise be focused only the first time.
+   */
+  const codeInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!open || isConnected) return;
+    const timer = setTimeout(() => codeInputRef.current?.focus(), 100);
+    return () => clearTimeout(timer);
+  }, [open, isConnected]);
+
+  // A reopened modal should not still be holding the last attempt's digits.
+  useEffect(() => {
+    if (!open) setCode('');
+  }, [open]);
 
   const handleConnect = async () => {
     if (code.length !== 4 || !user) return;
@@ -231,9 +253,14 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
 
                   <div className="flex justify-center mb-6">
                     <InputOTP
+                      ref={codeInputRef}
                       maxLength={4}
                       value={code}
                       onChange={setCode}
+                      // The digits are the only thing this box wants, and a
+                      // numeric keypad is a much shorter reach than a keyboard.
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
                     >
                       <InputOTPGroup>
                         <InputOTPSlot index={0} className="w-14 h-16 text-2xl" />
