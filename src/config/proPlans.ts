@@ -24,12 +24,14 @@
  * opens a payment sheet and fails. On the web it sells through Stripe at the
  * price in src/config/pricing.ts, in the buyer's own currency.
  *
- * **Free trials are not declared here.** A `trialDays: 1` used to sit on the
- * annual plan with a comment saying it had to match the introductory offer in
- * App Store Connect — a claim about a dashboard that nothing in this repo
- * could check, so the app was one edit away from advertising a trial the
- * store would not grant. The offer is read off the store product at render
- * time instead; see `IAPProduct.introFreeDays`.
+ * **Free trials are split by platform, on purpose.** `trialDays` below is the
+ * offer the *web* checkout grants, and it has to match `TRIAL_DAYS` in
+ * create-pro-checkout or Stripe will not honour it. On a phone it is ignored
+ * entirely: only App Store Connect can grant a trial there, so the paywall
+ * reads it off the store product (`IAPProduct.introFreeDays`). A number in
+ * this file cannot make StoreKit grant anything, and advertising one it will
+ * not honour is a 2.3.1 rejection — which is why this used to say trials were
+ * never declared here at all.
  */
 
 import { IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
@@ -56,6 +58,21 @@ export interface ProPlan {
    */
   priceKey: PriceKey;
   /**
+   * Free days this plan's **web** checkout grants, or undefined.
+   *
+   * Web only, and deliberately so. On a phone the trial is read off the store
+   * product (`IAPProduct.introFreeDays`) because App Store Connect is the only
+   * thing that can actually grant one there — a number in this file could not
+   * make StoreKit honour it, and claiming one it will not honour is a 2.3.1
+   * rejection. On the web the app controls the offer, so it is declared here.
+   *
+   * **This must match `TRIAL_DAYS` in supabase/functions/create-pro-checkout.**
+   * They deploy through different pipelines (Cloudflare on merge, Supabase via
+   * Lovable), so a change here that has not shipped there yet promises a trial
+   * Stripe will not give. Change both, and deploy the function first.
+   */
+  trialDays?: number;
+  /**
    * Marks the row the paywall opens on, when it is available here. Annual
    * carries it so that creating the product is all it takes for the paywall
    * to lead with it; until then the first available row is the default.
@@ -74,6 +91,10 @@ export const PRO_PLANS: ProPlan[] = [
     blurbKey: "paywall.planAnnualBlurb",
     months: 12,
     priceKey: "pro_annual",
+    // Three free days on the year. On iOS this does nothing on its own — the
+    // matching introductory offer has to exist on io.mytrivia.pro.annual in
+    // App Store Connect, and the paywall reads it from the store.
+    trialDays: 3,
     featured: true,
   },
   {

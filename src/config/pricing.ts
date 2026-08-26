@@ -121,6 +121,12 @@ export function formatMoney(
   amount: number,
   currency: Currency,
   language: string | null | undefined,
+  /**
+   * Digits after the separator. Two by default, because a subscription quoted
+   * as "10 ₾" reads as an estimate — but a *free* trial is better written
+   * "0 ₾" than "0,00 ₾", so the trial CTA asks for none.
+   */
+  fractionDigits = 2,
 ): string {
   const locale = INTL_LOCALE[language ?? ""] ?? "en-US";
   try {
@@ -130,8 +136,8 @@ export function formatMoney(
       currencyDisplay: "narrowSymbol",
       // Prices here are always whole cents/tetri, and a subscription quoted
       // as "10 ₾" reads as an estimate.
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
     }).format(amount);
 
     // Two reasons to write it here instead: an engine with no Georgian
@@ -140,14 +146,14 @@ export function formatMoney(
     if (formatted.includes(currency) || currency === "GEL") {
       const symbol = SYMBOLS[currency];
       const number = new Intl.NumberFormat(locale, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits,
       }).format(amount);
       return SYMBOL_LEADS[currency] ? `${symbol}${number}` : `${number} ${symbol}`;
     }
     return formatted;
   } catch {
-    return `${amount.toFixed(2)} ${SYMBOLS[currency]}`;
+    return `${amount.toFixed(fractionDigits)} ${SYMBOLS[currency]}`;
   }
 }
 
