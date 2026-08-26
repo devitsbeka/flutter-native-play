@@ -72,7 +72,7 @@ export default function CategoryPage() {
   const { categories, loading: categoriesLoading } = useCategories();
   const { getCategoryProgress, getLevelStars, isLevelCompleted, loading, refetch } = useCategoryProgress();
   const { markCategorySeen } = useNewCategories();
-  const { canPlayLevel, isCategoryBlocked, getLevelsPlayedInCategory, maxFreeLevelsPerCategory, isVip } = useCategoryPlayLimit();
+  const { canPlayLevel, levelsAllowedIn } = useCategoryPlayLimit();
   const { toggleFavorite, isFavorite } = useFavorites();
 
   const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
@@ -165,6 +165,14 @@ export default function CategoryPage() {
   const availableLevels = category?.totalLevels ?? 0;
   const hasCompletedAllAvailable = currentLevel > availableLevels;
 
+  /**
+   * How far down this category is playable without PRO. Infinity in a free
+   * category and for a subscriber, one level in an ordinary one, none at all
+   * in a premium one — so a premium category draws every level locked and a
+   * free one draws none, off the same comparison.
+   */
+  const freeAllowance = levelsAllowedIn(categoryId || "");
+
   // Always show 100 levels, with different states based on available questions
   const levels = useMemo(
     () =>
@@ -176,12 +184,14 @@ export default function CategoryPage() {
         const isCurrent = hasEnoughQuestions && level === currentLevel;
         const isComingSoon = !hasEnoughQuestions; // Not enough questions for this level yet
         const stars = getLevelStars(categoryId || "", level);
-        // PRO-locked: level is beyond the free limit and user is not VIP
-        const isProLocked = !isVip && !isComingSoon && hasEnoughQuestions && level > maxFreeLevelsPerCategory && !completed;
+        // Beyond what this category gives away — and not already finished,
+        // because taking back a level somebody has completed reads as the
+        // app confiscating it.
+        const isProLocked = !isComingSoon && hasEnoughQuestions && level > freeAllowance && !completed;
 
         return { level, isCompleted: completed, isUnlocked, isCurrent, isComingSoon, stars, isProLocked };
       }),
-    [TOTAL_DISPLAY_LEVELS, availableLevels, categoryId, currentLevel, isLevelCompleted, getLevelStars, isVip, maxFreeLevelsPerCategory]
+    [TOTAL_DISPLAY_LEVELS, availableLevels, categoryId, currentLevel, isLevelCompleted, getLevelStars, freeAllowance]
   );
 
   if (categoriesLoading) {

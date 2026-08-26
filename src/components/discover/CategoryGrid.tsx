@@ -12,6 +12,8 @@ interface Category {
   description?: string;
   image_url?: string;
   type?: string;
+  /** free / standard / premium — see utils/categoryAccess. */
+  tier?: string;
 }
 
 interface CategoryGridProps {
@@ -20,6 +22,9 @@ interface CategoryGridProps {
   favorites: Set<string>;
   leaderboardRanks?: Record<string, number>;
   newCategories?: Set<string>;
+  /** A subscriber sees no locks. Passed down rather than read from a hook
+   *  here, so seventy memoised cards do not each subscribe to VIP status. */
+  isVip?: boolean;
   onCategoryClick: (categoryId: string) => void;
   onFavoriteToggle: (categoryUuid: string) => void;
   getBadge?: (category: Category, index: number) => string | undefined;
@@ -56,6 +61,7 @@ export function CategoryGrid({
   favorites,
   leaderboardRanks = {},
   newCategories,
+  isVip = false,
   onCategoryClick,
   onFavoriteToggle,
   getBadge,
@@ -90,6 +96,7 @@ export function CategoryGrid({
                 isFavorite={favorites.has(favoriteId)}
                 leaderboardRank={leaderboardRanks[category.id]}
                 isNewCategory={newCategories?.has(category.uuid || category.id) ?? false}
+                isLocked={!isVip && category.tier === "premium"}
                 onFavoriteClick={(e) => {
                   e.stopPropagation();
                   onFavoriteToggle(favoriteId);

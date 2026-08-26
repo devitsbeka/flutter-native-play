@@ -8,6 +8,7 @@ import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCategoryRanks } from "@/hooks/useUserCategoryRanks";
 import { useNewCategories } from "@/hooks/useNewCategories";
+import { useVipStatus } from "@/hooks/useVipStatus";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { IconTabBar } from "@/components/shared/IconTabBar";
 import { SectionHeader } from "@/components/discover/SectionHeader";
@@ -180,22 +181,49 @@ export default function Discover() {
     scroller.scrollTo({ top: sheet.offsetTop, behavior: "smooth" });
   }, []);
 
+  const { isVip } = useVipStatus();
+
+  /**
+   * All first, then the two tabs that split the catalogue by what a
+   * subscription buys, then the rest by subject.
+   *
+   * `free` is dropped for a subscriber. To someone who has PRO every
+   * category is free, so the tab would either repeat `all` or — worse, since
+   * it filters on tier rather than on entitlement — quietly claim that the
+   * nine premium ones are the paid part of something they have already paid
+   * for. `premium` stays for them: it is where their subscription's
+   * categories live, and it is the reason to open it.
+   */
   const tabs = useMemo(() => [
-    // Free and premium lead the strip, as the design has them. They are the
-    // only two tabs that split the catalogue by what a subscription buys
-    // rather than by subject, which is why they sit apart from the rest.
-    { id: "free", label: t("discover.free") },
-    { id: "premium", label: t("discover.premium") },
     { id: "all", label: t("discover.all") },
+    { id: "premium", label: t("discover.premium") },
+    ...(isVip ? [] : [{ id: "free", label: t("discover.free") }]),
     { id: "favorites", label: t("discover.favorites") },
     { id: "recently_viewed", label: t("discover.recentlyViewedTab") },
     { id: "popular", label: t("discover.popularTab") },
     { id: "classic", label: t("discover.classic") },
     { id: "fun", label: t("discover.fun") },
     { id: "educational", label: t("discover.educational") },
-  ], [t]);
+  ], [t, isVip]);
+
+  // Subscribing while standing on the Free tab would otherwise leave the
+  // strip with nothing selected and the grid filtered by a tab that is no
+  // longer on screen.
+  useEffect(() => {
+    if (isVip && activeTab === "free") setActiveTab("all");
+  }, [isVip, activeTab]);
 
   const { categories, loading } = useCategories();
+  /**
+   * The premium slugs as the catalogue actually reports them, so a database
+   * that has had the migration decides and the client's fallback list only
+   * stands in until it has. Built from `categories` rather than imported
+   * flat, or a change made in SQL would not reach this click handler.
+   */
+  const PREMIUM_LOOKUP = useMemo(
+    () => new Set(categories.filter((c) => c.tier === "premium").map((c) => c.id)),
+    [categories]
+  );
   const { progress } = useCategoryProgress();
   const { favorites, toggleFavorite } = useFavorites();
   const { ranks: leaderboardRanks } = useUserCategoryRanks();
@@ -222,13 +250,15 @@ export default function Discover() {
       );
     }
 
-    // `is_premium` is a column the client can ship without: before the
-    // migration lands it comes back undefined, isPremium is false, and Free
-    // shows the whole catalogue rather than an empty grid.
+    // Free is the free TIER — the picture-guess categories, open all the way
+    // down — not merely "everything that isn't premium". Those two readings
+    // differ by the fifty-odd standard categories, which give a level away
+    // and then ask for a subscription; listing them under უფასო would be
+    // the tab making a promise the second level breaks.
     if (activeTab === "free") {
-      result = result.filter((cat) => !cat.isPremium);
+      result = result.filter((cat) => cat.tier === "free");
     } else if (activeTab === "premium") {
-      result = result.filter((cat) => cat.isPremium);
+      result = result.filter((cat) => cat.tier === "premium");
     } else if (activeTab !== "all") {
       result = result.filter((cat) => cat.type === activeTab);
     }
@@ -295,6 +325,15 @@ export default function Discover() {
   // function identity every keystroke would defeat memo() on all forty of
   // them, which is the same as not having it.
   const handleCategoryClick = useCallback((categoryId: string) => {
+    // A premium category without PRO opens the offer instead of the
+    // category. Not a dead tile and not a page that turns out to be locked
+    // once you get there — the card said PRO, and the tap says what PRO
+    // costs. The same paywall the cover's own button raises.
+    if (!isVip && PREMIUM_LOOKUP.has(categoryId)) {
+      setPaywallOpen(true);
+      return;
+    }
+
     const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
     let ids: string[] = [];
     try {
@@ -306,7 +345,7 @@ export default function Discover() {
     localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(ids));
 
     navigate(`/category/${categoryId}`);
-  }, [navigate]);
+  }, [navigate, isVip, PREMIUM_LOOKUP]);
 
   const getBadge = useCallback((_category: any, index: number) => {
     if (index < 2) return t("discover.trending");
@@ -574,6 +613,7 @@ export default function Discover() {
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
                 newCategories={newCategories}
+                isVip={isVip}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />
@@ -596,6 +636,7 @@ export default function Discover() {
                   favorites={favorites}
                   leaderboardRanks={leaderboardRanks}
                   newCategories={newCategories}
+                isVip={isVip}
                   onCategoryClick={handleCategoryClick}
                   onFavoriteToggle={toggleFavorite}
                   getBadge={getBadge}
@@ -612,6 +653,7 @@ export default function Discover() {
                     favorites={favorites}
                     leaderboardRanks={leaderboardRanks}
                     newCategories={newCategories}
+                isVip={isVip}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -628,6 +670,7 @@ export default function Discover() {
                     favorites={favorites}
                     leaderboardRanks={leaderboardRanks}
                     newCategories={newCategories}
+                isVip={isVip}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -644,6 +687,7 @@ export default function Discover() {
                     favorites={favorites}
                     leaderboardRanks={leaderboardRanks}
                     newCategories={newCategories}
+                isVip={isVip}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -661,6 +705,7 @@ export default function Discover() {
                       favorites={favorites}
                       leaderboardRanks={leaderboardRanks}
                       newCategories={newCategories}
+                isVip={isVip}
                       onCategoryClick={handleCategoryClick}
                       onFavoriteToggle={toggleFavorite}
                     />
@@ -679,6 +724,7 @@ export default function Discover() {
                       favorites={favorites}
                       leaderboardRanks={leaderboardRanks}
                       newCategories={newCategories}
+                isVip={isVip}
                       onCategoryClick={handleCategoryClick}
                       onFavoriteToggle={toggleFavorite}
                     />
@@ -695,6 +741,7 @@ export default function Discover() {
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
                 newCategories={newCategories}
+                isVip={isVip}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />
@@ -715,6 +762,7 @@ export default function Discover() {
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
                 newCategories={newCategories}
+                isVip={isVip}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
                 getBadge={getBadge}
@@ -729,6 +777,7 @@ export default function Discover() {
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
                 newCategories={newCategories}
+                isVip={isVip}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />
@@ -751,6 +800,7 @@ export default function Discover() {
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
                 newCategories={newCategories}
+                isVip={isVip}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />
