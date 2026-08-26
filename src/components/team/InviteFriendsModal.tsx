@@ -499,6 +499,14 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
         // which opens the target app when installed and quietly does
         // nothing otherwise.
         window.location.href = url;
+      } else if (Capacitor.isNativePlatform()) {
+        // https targets (wa.me, the X composer): window.open("_blank") in the
+        // webview has changed meaning across Capacitor versions, and the
+        // wrong meaning navigates THIS webview to WhatsApp's site with no way
+        // back. The system browser sheet is unambiguous, and wa.me bounces
+        // straight into the installed app from there.
+        const { Browser } = await import("@capacitor/browser");
+        await Browser.open({ url });
       } else if (pendingTab && !pendingTab.closed) {
         pendingTab.location.href = url;
       } else {
@@ -511,9 +519,6 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     setTimeout(() => setIsSharing(false), 500);
   };
   
-  const handleImportContacts = () => {
-    toast.info(t("extra.contactsImportSoon"));
-  };
 
   if (!isOpen) return null;
 

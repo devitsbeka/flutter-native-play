@@ -1,7 +1,7 @@
 {
   "name": "MyTrivia",
   "short_name": "MyTrivia",
-  "description": "შეამოწმე შენი ცოდნა და გახდი Trivia-ს ჩემპიონი",
+  "description": "Party quiz game — play solo, host friends, or put trivia on the TV.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

@@ -5,6 +5,13 @@
       {
         "appID": "T38XQSM4L3.io.mytrivia.app",
         "paths": [
+          "NOT /admin*",
+          "NOT /docs*",
+          "NOT /privacy-policy*",
+          "NOT /terms*",
+          "NOT /support",
+          "NOT /delete-account",
+          "NOT /reset-password*",
           "/challenge/*",
           "/i/*",
           "/join",
@@ -19,14 +26,7 @@
           "/category/*",
           "/play/*",
           "/leaderboards",
-          "/leaderboards/*",
-          "NOT /admin*",
-          "NOT /docs*",
-          "NOT /privacy-policy*",
-          "NOT /terms*",
-          "NOT /support",
-          "NOT /delete-account",
-          "NOT /reset-password*"
+          "/leaderboards/*"
         ]
       }
     ]

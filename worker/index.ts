@@ -264,6 +264,70 @@ async function proxyImage(request: Request, url: URL, ctx: ExecutionContext): Pr
   return out;
 }
 
+/**
+ * Video delivery, with the byte-range support iOS refuses to play without.
+ *
+ * The static-assets binding answers a `Range: bytes=0-1023` request with a
+ * plain 200 and the whole file — measured against production, twice. Desktop
+ * browsers tolerate that; WKWebView's playback stack is AVFoundation-backed
+ * and opens every stream with a range probe expecting a 206, so the iOS app
+ * (which streams all but three clips from this origin — see
+ * scripts/prune-ios-videos.mjs and src/config/videoConfig.ts) gets video
+ * that never starts.
+ *
+ * So ranges are honoured here: fetch the full asset from ASSETS, slice, and
+ * answer 206 with Content-Range. Files top out around 11 MB, well inside a
+ * worker's memory. Only a single range is served — a multi-range or
+ * malformed header falls back to the spec-permitted full 200, which is
+ * exactly what happened before this handler existed.
+ */
+const VIDEO_PATH = /^\/videos\/[A-Za-z0-9._-]+\.(mp4|webm)$/;
+
+import { parseRange } from "./range";
+
+async function serveVideo(request: Request, env: Env): Promise<Response> {
+  // Ask ASSETS for the whole file: forwarding the original request would
+  // forward its Range header to a binding that mishandles it.
+  const asset = await env.ASSETS.fetch(new Request(request.url, { method: "GET" }));
+  if (!asset.ok) return asset;
+
+  const body = await asset.arrayBuffer();
+  const size = body.byteLength;
+
+  const headers = new Headers();
+  headers.set("content-type", asset.headers.get("content-type") ?? "video/mp4");
+  headers.set("accept-ranges", "bytes");
+  // A day at the edge, an hour in the browser: these filenames are stable
+  // but their contents do get replaced (the convert-videos scripts), so
+  // `immutable` here would pin a swapped file for as long as the cache held.
+  headers.set("cache-control", "public, max-age=3600, s-maxage=86400");
+
+  const rangeHeader = request.headers.get("range");
+  const range = rangeHeader ? parseRange(rangeHeader, size) : null;
+
+  if (rangeHeader && !range && /^bytes=/.test(rangeHeader.trim())) {
+    // A syntactically bytes-range request nothing in the file satisfies.
+    headers.set("content-range", `bytes */${size}`);
+    return new Response(null, { status: 416, headers });
+  }
+
+  if (range) {
+    const [start, end] = range;
+    headers.set("content-range", `bytes ${start}-${end}/${size}`);
+    headers.set("content-length", String(end - start + 1));
+    return new Response(
+      request.method === "HEAD" ? null : body.slice(start, end + 1),
+      { status: 206, headers },
+    );
+  }
+
+  headers.set("content-length", String(size));
+  return new Response(request.method === "HEAD" ? null : body, {
+    status: 200,
+    headers,
+  });
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -273,6 +337,13 @@ export default {
         return new Response("method not allowed", { status: 405 });
       }
       return proxyImage(request, url, ctx);
+    }
+
+    if (VIDEO_PATH.test(url.pathname)) {
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        return new Response("method not allowed", { status: 405 });
+      }
+      return serveVideo(request, env);
     }
 
     const room = ROOM_PATH.exec(url.pathname);

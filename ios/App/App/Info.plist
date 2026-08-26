@@ -75,9 +75,6 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>MyTrivia needs access to your photos so you can choose a profile picture.</string>
 
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>MyTrivia saves the avatars and quiz cards you create to your photo library.</string>
-
 	<!-- App Tracking Transparency. Written from the player's side rather than
 	     the ad network's: "this identifier will be used to deliver personalized
 	     ads to you" describes what we get, not what they get. -->

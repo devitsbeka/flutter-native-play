@@ -82,7 +82,6 @@ const GuestMaxPlaysModal = lazy(() => import("@/components/home/GuestMaxPlaysMod
 const RegisterPromptModal = lazy(() => import("@/components/home/RegisterPromptModal").then(m => ({ default: m.RegisterPromptModal })));
 const GemShopModal = lazy(() => import("@/components/home/GemShopModal").then(m => ({ default: m.GemShopModal })));
 const WatchAdModal = lazy(() => import("@/components/home/WatchAdModal").then(m => ({ default: m.WatchAdModal })));
-const HomeHelpModal = lazy(() => import("@/components/home/HelpModal").then(m => ({ default: m.HelpModal })));
 
 // Shop Modals
 const BuyCurrencyModal = lazy(() => import("@/components/shop/BuyCurrencyModal").then(m => ({ default: m.BuyCurrencyModal })));
@@ -271,7 +270,6 @@ const modalCategories: CategoryDefinition[] = [
       { id: "register-prompt-modal", label: "Register Prompt", labelGe: "რეგისტრაცია", Component: RegisterPromptModal, isModal: true, modalProps: {} },
       { id: "gem-shop-modal", label: "Gem Shop", labelGe: "ჯემების მაღაზია", Component: GemShopModal, isModal: true, modalProps: {} },
       { id: "watch-ad-modal", label: "Watch Ad", labelGe: "რეკლამის ნახვა", Component: WatchAdModal, isModal: true, modalProps: { rewardType: "coins", rewardAmount: 50 } },
-      { id: "home-help-modal", label: "Help", labelGe: "დახმარება", Component: HomeHelpModal, isModal: true, modalProps: {} },
     ],
   },
   {

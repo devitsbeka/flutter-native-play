@@ -485,9 +485,17 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
 
         {selected && (
           <p className="mt-3 text-center text-[13px]" style={{ color: inkSoft }}>
-            {t("paywall.footnote")
-              .replace("{price}", priceLabel(selected))
-              .replace("{period}", t(periodKeyFor(selected)))}
+            {(() => {
+              // With a trial the sequence is stated in one sentence — "first
+              // N days free, then the price" — rather than leaving the reader
+              // to assemble it from the badge, the zero on the button and a
+              // bare price line (3.1.2's canonical phrasing).
+              const days = trialDaysFor(selected);
+              return t(days ? "paywall.footnoteTrial" : "paywall.footnote")
+                .replace("{days}", String(days ?? 0))
+                .replace("{price}", priceLabel(selected))
+                .replace("{period}", t(periodKeyFor(selected)));
+            })()}
           </p>
         )}
 

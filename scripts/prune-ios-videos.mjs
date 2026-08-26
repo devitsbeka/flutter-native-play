@@ -48,6 +48,46 @@ function walk(dir) {
   return out;
 }
 
+// ── Web-only weight the native bundle has no use for ────────────────────────
+//
+// These ride into dist/ because Capacitor copies webDir wholesale, and into
+// the .ipa from there. None is reachable on native:
+//
+//  - app-icon-1024*.png — favicon/touch-icon assets (~1.5 MB); the app's
+//    real icon comes from the Xcode asset catalog.
+//  - assets/heic-to-*.js / assets/heic2any-*.js — HEIC decoders (~4 MB),
+//    dynamic-imported only by the web file-input path. The native photo flow
+//    goes through @capacitor/camera, which hands back JPEG; nothing on a
+//    phone ever imports these chunks.
+//
+// Runs before the videos check on purpose: even a build with no videos left
+// to prune should still shed these. Web builds are untouched — this script
+// only runs in build:ios.
+const DIST = resolve(process.cwd(), "dist");
+const WEB_ONLY = [
+  /^app-icon-1024[^/]*\.png$/,
+  /^assets\/heic-to-[\w-]+\.js$/,
+  /^assets\/heic2any-[\w-]+\.js$/,
+];
+if (existsSync(DIST)) {
+  let webOnlyBytes = 0;
+  let webOnlyCount = 0;
+  for (const file of walk(DIST)) {
+    const rel = relative(DIST, file);
+    if (WEB_ONLY.some((re) => re.test(rel))) {
+      webOnlyBytes += statSync(file).size;
+      rmSync(file);
+      webOnlyCount++;
+    }
+  }
+  if (webOnlyCount > 0) {
+    console.log(
+      `prune-ios-videos: also removed ${webOnlyCount} web-only asset(s) ` +
+      `(${(webOnlyBytes / 1024 / 1024).toFixed(1)} MB): favicon PNGs and HEIC decoder chunks.`,
+    );
+  }
+}
+
 if (!existsSync(DIST_VIDEOS)) {
   console.log("prune-ios-videos: no dist/videos to prune.");
   process.exit(0);
@@ -77,6 +117,7 @@ console.log(
   `prune-ios-videos: kept ${keptCount} file(s) (${mb(keptBytes)} MB), ` +
     `removed ${removedCount} (${mb(removedBytes)} MB).`,
 );
+
 console.log(
   `  Remaining clips stream from VITE_VIDEO_BASE_URL. Verify that host serves ` +
     `${relative(process.cwd(), DIST_VIDEOS)}/ before shipping a build.`,

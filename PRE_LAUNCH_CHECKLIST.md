@@ -1,3 +1,12 @@
+> **SUPERSEDED — do not work from this file.**
+>
+> This checklist is from January 2026 and several of its P0 items now argue
+> for undoing deliberate, working decisions (`.env` is tracked on purpose —
+> `AGENTS.md` §5; the minimum deployment target and the privacy manifest have
+> long existed). The living document is **`docs/IOS_APP_REVIEW_AUDIT.md`** —
+> four audit passes and a consolidated action ledger, kept current through
+> submission. This file stays only as a historical record.
+
 # Mobile App Pre-Launch Checklist
 
 **App Name:** World Quizzes (MyTrivia)

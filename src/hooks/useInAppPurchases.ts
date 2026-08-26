@@ -706,7 +706,15 @@ export function useInAppPurchases() {
       // means. One sync replaces the old per-entitlement loop, which walked
       // the client's own view of the purchases and posted each one back as if
       // it were proof.
-      await plugin.restorePurchases();
+      // Bounded like every other store call — a hung restore otherwise spins
+      // forever. 60s rather than the 15s query bound: a restore legitimately
+      // walks every past transaction, and may show a password prompt.
+      await Promise.race([
+        plugin.restorePurchases(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("restorePurchases did not answer within 60s")), 60_000),
+        ),
+      ]);
 
       const synced = await syncEntitlements();
       if (!synced.success) {

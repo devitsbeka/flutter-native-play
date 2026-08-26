@@ -78,7 +78,7 @@ const TVLobbyContent: React.FC = () => {
 
   if (!code) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 flex items-center justify-center">
+      <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 flex items-center justify-center">
         <Loader2 className="w-16 h-16 animate-spin text-purple-300" />
       </div>
     );
