@@ -673,13 +673,25 @@ matches the rest of the design.
 
 # P4 — Nice to have (all NON-BLOCKING)
 
-## P4-1 · "Import contacts" is a button that says "soon"
+## P4-1 · ✅ NOT A DEFECT — corrected · "Import contacts" is dead code, not a button
 
-`src/components/team/InviteFriendsModal.tsx:492` —
-`toast.info(t("extra.contactsImportSoon"))`. A visible, tappable feature that
-does nothing is the textbook 2.1 "incomplete" finding. It is in a modal a
-reviewer may not open, hence P4 rather than P1, but it costs nothing to hide the
-row until the feature exists.
+**This finding was wrong and is left here corrected rather than deleted.**
+
+The original text called it "a visible, tappable feature that does nothing …
+the textbook 2.1 incomplete finding". It is not visible.
+`handleImportContacts` at `src/components/team/InviteFriendsModal.tsx:491`
+is *defined once and never called* — grep for it returns exactly one hit, the
+definition. No JSX references it, so nothing renders an Import-contacts row
+and no reviewer can tap one.
+
+I graded it P4 on the reasoning that a reviewer might not open the modal, and
+on a second pass nearly promoted it to a pre-submission fix on the reasoning
+that they certainly would (`InviteFriendsModal` is used by `RoomLobbyV2` and
+`CreateRoomPage`, the multiplayer path the review notes point at). Both
+readings were arguing about the wrong thing: the row does not exist.
+
+What is actually there is an unused function and an unused locale string in
+seven languages. That is P5 tidy-up, not a submission item.
 
 ## P4-2 · `window.open(url, "_blank")` for share links inside the webview
 
@@ -789,6 +801,50 @@ Recorded so the next pass can skip them.
 
 ---
 
+# Second pass — 2026-08-25, on `main` @ `7e8ab364`
+
+A fresh look after the P0/P1 work landed, asking only: what is left before
+submitting.
+
+**State.** `main` is green. Deploy run #781 ran `npm ci`, typecheck, unit
+tests, build and the Playwright smokes and then shipped — so the merged code
+is CI-validated, not just locally validated. Re-run here: 917 tests pass,
+both tsconfigs clean, iOS bundle 98.4 MB through `verify-ios-bundle`, and
+`verify-ios-native` correctly refuses (no `GoogleService-Info.plist` in this
+checkout, which is the point of it).
+
+**No new blocking code defects.** The two candidates both dissolved on
+inspection:
+
+- **"Import contacts" is not a button.** See the corrected P4-1 above — dead
+  code, nothing renders it.
+- **Removing the QR *scanner* did not break the QR *display* flows.** The TV
+  lobby still shows a QR (`TVLobbyScreenV2`, `TVIdleScreen`, `TVPollScreen`,
+  `TVHostController`), and it encodes a URL —
+  `${origin}/join/session/${sessionId}`. That is scanned by the phone's own
+  camera app, which opens the link, which the AASA routes into the app
+  (`/join/*` is in the allow list). It never needed an in-app scanner.
+
+**Checked and fine, worth recording so the next pass skips them:**
+
+- Extra plays sell for coins, gems or a rewarded ad — no real-money path, so
+  no IAP surface hiding in `ExtraPlaysOffer`
+- `DEFAULT_LANGUAGE` is `en`, so a reviewer with no stored preference gets
+  English rather than Georgian
+- Offline is handled (`OfflineBanner`, `useNetworkStatus`)
+- `extra.iapItemUnavailable`, which the new purchase guard uses, exists in all
+  seven locales
+
+**Two things this pass added to the checklist below:** the screenshot size
+(the capture script still targets the retired 5.5" slot) and the fact that
+Apple has no 13+ age tier, so 12+ is the floor.
+
+**Still-open non-blockers, unchanged:** P2-1 (`restorePurchases` is the one
+store call not wrapped in `withTimeout`, so a hung restore spins forever),
+P2-6 (`NSPhotoLibraryAddUsageDescription` promises a save-to-photos feature
+that does not exist), P2-5 (PostHog autocaptures before any consent step),
+and the QR locale strings that the scanner removal orphaned
+(`qrScannerTitle`, `invalidQrCode`, `qrNoGameCode`, `qrFooterHint`).
 # Third pass — strict reviewer, on `main` @ `cd2190f2`
 
 Read as an App Review reviewer with a low tolerance: not "does the config
@@ -1034,7 +1090,6 @@ manifest and App Store Connect.
   13+ tier). Answer the user-generated-content questions honestly; the app has
   player-made quizzes, nicknames and avatars, and moderation (report, block,
   text filter) is what keeps that from forcing 17+.
-
 ---
 
 # Off-repo checklist
@@ -1106,13 +1161,25 @@ So the catalogue is complete. What remains is configuration and attachment.
 ### Listing
 
 - [ ] App Privacy answers match `PrivacyInfo.xcprivacy` line for line — including Device ID / Third-Party Advertising / **used for tracking: yes**
-- [ ] App Privacy answers filled in from the table above — **Device ID is the only "used for tracking: Yes"** (**S-1**)
+- [ ] App Privacy answers filled in from the table above — **Device ID and Advertising Data are the "used for tracking: Yes" pair, and both are *not* linked** (**S-1**)
 - [ ] Privacy Policy URL set **per App Store localization**, using the `/privacy-policy/:lang` URLs
 - [ ] fal.ai's DPA confirmed, and the stronger "not used for training" sentence added to the policy if their terms support it
-- [ ] **Age rating matches the now-13+ behaviour** (**P1-4**). The age gate offers 13–17 and 18+, the privacy policy says 13+, and the app serves ads — the questionnaire, the gate and the policy all have to tell the same story. A rating of 4+ on an app whose own gate starts at 13 is the contradiction a reviewer notices
-- [ ] Standard Apple EULA selected, or a custom one supplied, and its link matches the in-app `/terms`
+- [ ] **Age rating matches the now-13+ behaviour** (**P1-4**). Note Apple has
+      no 13+ tier — the ladder is 4+, 9+, 12+, 17+ — so **12+ is the floor**
+      that is consistent with a gate starting at 13. The questionnaire, the
+      age gate and the privacy policy all have to tell the same story; 4+ on
+      an app whose own gate starts at 13 is the contradiction a reviewer
+      notices. Answer the user-generated-content questions honestly (the app
+      has player-made quizzes, nicknames and avatars) — moderation exists
+      (report, block, text filter), which is what keeps that answer from
+      forcing 17+- [ ] Standard Apple EULA selected, or a custom one supplied, and its link matches the in-app `/terms`
 - [ ] Support URL and Privacy Policy URL both resolve
-- [ ] Screenshots are of this build, portrait, iPhone sizes only
+- [ ] **Screenshots at the size App Store Connect currently asks for.**
+      `scripts/capture-store-screenshots.mjs` renders at `414×736 @3x` =
+      **1242×2208**, which is the old 5.5" slot — ASC has since moved the
+      required iPhone size up, so check what its media manager demands before
+      generating and change `DEVICE` in that script to match. Portrait,
+      iPhone only, and of this build
 
 ### Review notes
 
