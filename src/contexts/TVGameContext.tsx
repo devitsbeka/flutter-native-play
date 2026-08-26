@@ -4,6 +4,7 @@ import { t } from '@/utils/standaloneTranslation';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 import { tvLog, tvLogPhase, tvLogPlayer, tvLogError, tvLogPresence, tvLogTimer } from '@/utils/tvDebug';
+import { shouldApplyPhase } from '@/utils/tvPhaseOrder';
 import { 
   calculatePoints, 
   calculateTimeRemaining,
@@ -74,7 +75,8 @@ interface TVGameContextType extends TVGameState {
   // Controller actions
   joinSession: (code: string, nickname: string, avatarUrl?: string | null) => Promise<boolean>;
   // Host actions
-  startGame: (categoryId?: string, userTriviaId?: string) => Promise<void>;
+  /** Resolves true when the session actually moved to countdown. */
+  startGame: (categoryId?: string, userTriviaId?: string) => Promise<boolean>;
   startPlaying: () => Promise<void>; // Trigger playing phase after countdown
   startNextRound: () => Promise<void>;
   startDirectSelection: () => Promise<void>; // NEW: Start direct category selection phase
@@ -2728,6 +2730,28 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               console.log('[New Question] Reset all players to waiting state');
             }
 
+            // Out-of-order payloads must not walk the round backwards.
+            // Realtime does not order rapid updates and the 1s resync poll
+            // refetches alongside it, so a row read before the transition can
+            // arrive after it. Applied blindly, the phase went forward, back,
+            // then forward — which is the previous screen flashing for about a
+            // second on round-intro and game-over.
+            const fresh = shouldApplyPhase(
+              { phase: prev.phase, roundNumber: prev.roundNumber, questionIndex: prev.currentQuestionIndex },
+              {
+                phase: newPhase,
+                roundNumber: newData.round_number ?? prev.roundNumber,
+                questionIndex: newData.current_question_index ?? prev.currentQuestionIndex,
+              },
+            );
+            if (!fresh) {
+              console.log('[Subscription] ⏮️ Ignoring stale payload:', {
+                localPhase: prev.phase, localRound: prev.roundNumber, localIndex: prev.currentQuestionIndex,
+                payloadPhase: newPhase, payloadRound: newData.round_number, payloadIndex: newData.current_question_index,
+              });
+              return prev;
+            }
+
             return {
               ...prev,
               phase: newPhase,
@@ -2993,7 +3017,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   // Start the game (host only) - supports both categories and user trivias
-  const startGame = useCallback(async (categoryId?: string, userTriviaId?: string) => {
+  const startGame = useCallback(async (categoryId?: string, userTriviaId?: string): Promise<boolean> => {
     if (!state.sessionId || !isHost) {
       // This return used to be silent, and it is the other half of "I can't
       // press Start". The button guards on the sessionId in the URL; this
@@ -3005,14 +3029,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Only the host is ever offered the button, so only the host is owed
       // an explanation; a guest reaching here is a no-op by design.
       if (isHost) toast.error(t('extra.tvStartGameFailed'));
-      return;
+      return false;
     }
 
     // Validate that either categoryId or userTriviaId is provided
     if (!categoryId && !userTriviaId) {
       tvLogError('startGame', 'No category ID or user trivia ID provided');
       toast.error(t('extra.tvhSelectCategoryFirst'));
-      return;
+      return false;
     }
     
     // CRITICAL: Reset timing refs to 0 immediately when starting a new game
@@ -3119,7 +3143,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (triviaError || !triviaData?.questions) {
           tvLogError('startGame', 'No questions found for user trivia');
           toast.error(t('extra.noQuestionsInLang'));
-          return;
+          return false;
         }
 
         const triviaQuestions = triviaData.questions as Array<{
@@ -3132,7 +3156,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (triviaQuestions.length === 0) {
           tvLogError('startGame', 'User trivia has no questions');
           toast.error(t('extra.noQuestionsInLang'));
-          return;
+          return false;
         }
 
         categoryName = triviaData.title || 'User Trivia';
@@ -3265,7 +3289,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (formattedQuestions.length === 0) {
         tvLogError('startGame', `No questions available (category=${categoryId ?? 'none'} trivia=${userTriviaId ?? 'none'})`);
         toast.error(t('extra.noQuestionsInLang'));
-        return;
+        return false;
       }
 
       // Clean up stale answers from previous sessions for this room
@@ -3369,7 +3393,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (startError) {
         tvLogError('startGame', `tv_sessions update rejected: ${startError.message}`);
         toast.error(t('extra.tvStartGameFailed'));
-        return;
+        return false;
       }
 
       // Update local state with round tracking
@@ -3385,10 +3409,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       tvLogPhase('lobby', 'countdown', 'startGame');
       tvLog('Round tracking initialized', { roundNumber: 1, totalRounds: totalRoundsCount, lockedPlayerCount: playerCount });
+      return true;
 
     } catch (error) {
       tvLogError('startGame', error);
       console.error('Error starting game:', error);
+      toast.error(t('extra.tvStartGameFailed'));
+      return false;
     }
   }, [state.sessionId, isHost, state.players.length, state.isPaired]);
 

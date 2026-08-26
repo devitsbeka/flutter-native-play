@@ -153,3 +153,70 @@ describe("what the card does with it", () => {
     expect(modal).not.toMatch(/claimed before receipts existed/);
   });
 });
+
+/**
+ * The receipt pill's spacing is optical, and the numbers are measured.
+ *
+ * A uniform `gap-3 px-3` measured DEAD EVEN in the box model and still looked
+ * wrong, because a reader sees ink, not boxes, and every glyph here carries a
+ * different amount of its own padding: the lucide check sits ~3px inside its
+ * 20px, the coin PNG ~4px inside its 18px, the snowflake almost none, and a
+ * digit ends flush. Off a 3x screenshot, uniform 12px gave:
+ *
+ *     left 15.3 | check->coin 17.7 | coin->125 6.0 | 125->power 12.3 | right 13.0
+ *
+ * — the three that should match spread over 4.7px, and rewards separated by
+ * only 2.1x what binds an icon to its own number. After:
+ *
+ *     left 14.3 | check->coin 13.7 | coin->125 6.0 | 125->power 18.3 | right 14.0
+ *
+ * — spread 0.7px, separation 3.1x.
+ */
+describe("the receipt pill's spacing", () => {
+  const modal = readFileSync(
+    join(process.cwd(), "src/components/home/DailyRewardsModal.tsx"),
+    "utf8"
+  );
+  const pill = modal.match(/<div\s+className="flex h-\[50px\][\s\S]*?\n {10}<\/div>/)?.[0] ?? "";
+
+  it("has a pill to measure", () => {
+    expect(pill, "expected the receipt pill").not.toBe("");
+  });
+
+  it("no longer spaces everything the same", () => {
+    // One gap cannot be right in three places at once when the glyphs on
+    // either side of it are differently inset.
+    expect(pill).not.toMatch(/\bgap-3\b/);
+    expect(pill).not.toMatch(/\bpx-3\b/);
+  });
+
+  it("pads the two edges for equal ink, not equal boxes", () => {
+    // 11/13 rather than 12/12: the check's ink starts ~1px further in than
+    // its box does, and "3x" ends flush.
+    expect(pill).toMatch(/pl-\[11px\] pr-\[13px\]/);
+  });
+
+  it("holds the check and the first amount at the same distance as the edges", () => {
+    expect(pill).toMatch(/<ClaimedAmount icon=\{coinIcon\}[^>]*className="ml-2"/);
+  });
+
+  it("separates one reward from the next by clearly more than its own parts", () => {
+    // 18px of box against the 2px inside a ClaimedAmount — measured as 18.3
+    // of ink against 6.0, a bit over 3x. At 12px it was 2.1x and "125" and
+    // the snowflake read as one run.
+    expect(pill).toMatch(/<ClaimedAmount icon=\{gemIcon\}[^>]*className="ml-\[18px\]"/);
+    expect(pill).toMatch(/<span className="ml-\[18px\] flex shrink-0 items-center gap-0\.5/);
+  });
+
+  it("keeps the parts of one reward tight together", () => {
+    // The icon and its number are one thing; that is what makes the wider
+    // gap between rewards read as a separation at all.
+    const amount = modal.match(/function ClaimedAmount[\s\S]*?\n\}/)![0];
+    expect(amount).toMatch(/gap-0\.5/);
+  });
+
+  it("still fits the widest receipt on one line", () => {
+    expect(pill).toMatch(/whitespace-nowrap/);
+    expect(pill).toMatch(/min-w-\[144px\] max-w-full/);
+  });
+});

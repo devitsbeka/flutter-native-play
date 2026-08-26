@@ -107,9 +107,12 @@ type ClaimPhase = "idle" | "opening" | "revealed";
 
 // One compact icon+amount pair for the claimed pill. Everything shrink-0 and
 // nowrap: the pill's contract is a single centered line, whatever the day paid.
-function ClaimedAmount({ icon, value }: { icon: string; value: string }) {
+//
+// `className` carries the spacing to whatever sits on its left, because that
+// spacing is not the same everywhere — see the pill below.
+function ClaimedAmount({ icon, value, className = "" }: { icon: string; value: string; className?: string }) {
   return (
-    <span className="flex shrink-0 items-center gap-0.5 text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
+    <span className={`flex shrink-0 items-center gap-0.5 text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)] ${className}`}>
       <img src={icon} alt="" width={18} height={18} className="shrink-0" />
       {value}
     </span>
@@ -226,22 +229,38 @@ function DayRewardCard({
           // the check says it. Coins are constant; the bonus is at most one
           // more kind — see claim_daily_reward's "never a third pill" rule.
           //
-          // The gap here is what separates one reward from the next, and it
-          // has to beat the gap INSIDE a reward by enough to group them: at
-          // 6px against the icon's own 2px, the coin's amount and the next
-          // reward's icon sat closer than a pair of digits and "125❄" read as
-          // one run. Widened to 12px and the inner gaps left alone, so each
-          // icon still reads as belonging to its own number. There is room —
-          // the card is 272px and the widest receipt is about 100px of it.
+          // The spacing is optical, not nominal, and that is the whole point.
+          // A uniform gap-3 with px-3 measured DEAD EVEN in the box model and
+          // still looked wrong, because what a reader sees is the ink, and
+          // every glyph here carries a different amount of its own padding:
+          // the lucide check sits ~3px inside its 20px box, the coin PNG ~4px
+          // inside its 18px, the snowflake almost none, and a digit ends
+          // flush. Measured off a 3x screenshot, uniform 12px produced:
+          //
+          //     left 15.3 | check->coin 17.0 | coin->125 6.4
+          //               | 125->power 12.7 | right 13.3
+          //
+          // Two faults in that. The three that should match — the two edges
+          // and the gap after the check — ran 15.3 / 17.0 / 13.3. And the
+          // separation BETWEEN rewards (12.7) was only twice the separation
+          // inside one (6.4), so "125" and the snowflake read as a single
+          // run instead of two things.
+          //
+          // So: edges and the check gap are tuned to land on ~14px of ink,
+          // and rewards are held ~20px apart — a clear 3x the 6px that binds
+          // an icon to its own number. Change an icon and these want
+          // re-measuring; they are chosen against the art that is here.
           <div
-            className="flex h-[50px] min-w-[144px] max-w-full items-center justify-center gap-3 whitespace-nowrap rounded-[18px] px-3"
+            className="flex h-[50px] min-w-[144px] max-w-full items-center justify-center whitespace-nowrap rounded-[18px] pl-[11px] pr-[13px]"
             style={{ background: "rgba(255,255,255,0.3)" }}
           >
             <Check className="h-5 w-5 shrink-0 text-white" />
-            <ClaimedAmount icon={coinIcon} value={String(receipt.coins)} />
-            {receipt.gems > 0 && <ClaimedAmount icon={gemIcon} value={String(receipt.gems)} />}
+            <ClaimedAmount icon={coinIcon} value={String(receipt.coins)} className="ml-2" />
+            {receipt.gems > 0 && (
+              <ClaimedAmount icon={gemIcon} value={String(receipt.gems)} className="ml-[18px]" />
+            )}
             {receipt.powerUp && (
-              <span className="flex shrink-0 items-center gap-0.5 text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
+              <span className="ml-[18px] flex shrink-0 items-center gap-0.5 text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
                 {receipt.powerUp === "time-drain" ? (
                   <TimeIcon size={18} />
                 ) : (

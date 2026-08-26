@@ -93,11 +93,22 @@ describe("the TV host lobby", () => {
 
   it("will not offer Start before the context has joined the session", () => {
     expect(host).toMatch(/sessionId: contextSessionId,/);
-    expect(host).toMatch(/disabled=\{players\.length < 1 \|\| queue\.length === 0 \|\| !contextSessionId\}/);
+    expect(host).toMatch(/!contextSessionId \|\| startingGame\}/);
   });
 
   it("says it is waiting rather than looking ready", () => {
-    expect(host).toMatch(/contextSessionId \? <Play [\s\S]{0,80}?Loader2/);
+    expect(host).toMatch(/contextSessionId && !startingGame[\s\S]{0,120}?Loader2/);
+  });
+
+  it("holds the button down for the whole attempt", () => {
+    // startGame is five or six round trips before the phase changes. The
+    // press used to leave the button looking exactly as pressable as it had
+    // a moment earlier — which invites a second press at the worst moment.
+    expect(host).toMatch(/const \[startingGame, setStartingGame\] = useState\(false\);/);
+    expect(host).toMatch(/setStartingGame\(true\);/);
+    // Released in a finally, so a failed start does not wedge the button.
+    expect(host).toMatch(/\} finally \{\s*\n[\s\S]{0,240}?setStartingGame\(false\);/);
+    expect(host).toMatch(/isStarting=\{startingGame\}/);
   });
 });
 
@@ -230,5 +241,40 @@ describe("the early return added to startPlaying", () => {
     expect(fn, "expected startPlaying").not.toBeNull();
     expect(fn![0]).toMatch(/\} finally \{\s*\n\s*startPlayingMutexRef\.current = false;\s*\n\s*\}/);
     expect(fn![0]).toMatch(/if \(playError\)/);
+  });
+});
+
+/**
+ * The Start button on the screen the host actually presses.
+ *
+ * The lobby's button was given a pressed state, but the report was about the
+ * OTHER Start button — ControllerDirectSelection's, on "Choose which
+ * categories you want". Its handler was synchronous and fire-and-forget: the
+ * press returned immediately, the button went straight back to looking
+ * pressable, and the several seconds of work that followed were invisible.
+ */
+describe("the Start button on the category-select screen", () => {
+  const sel = read("src/components/controller/ControllerDirectSelection.tsx");
+
+  it("awaits the start, so it can stay held down", () => {
+    expect(sel).toMatch(/const handleStartGame = async \(\) => \{/);
+    expect(sel).toMatch(/await onStartGame\(\{/);
+  });
+
+  it("accepts a promise from its parent", () => {
+    // Typed `=> void`, the await would resolve instantly and the pressed
+    // state would flash rather than hold.
+    expect(sel).toMatch(/=> void \| Promise<unknown>;/);
+  });
+
+  it("greys out and says what it is doing", () => {
+    // ChunkyButton carries disabled:opacity-50, so `disabled` IS the grey.
+    expect(sel).toMatch(/disabled=\{queue\.length === 0 \|\| isStarting\}/);
+    expect(sel).toMatch(/isStarting\s*\n?\s*\? <Loader2 className="w-5 h-5 mr-2 animate-spin" \/>/);
+    expect(sel).toMatch(/t\("categoryWheel\.gameStarting"\)/);
+  });
+
+  it("ignores a second press while the first is still running", () => {
+    expect(sel).toMatch(/if \(isStarting\) return;/);
   });
 });

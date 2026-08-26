@@ -10,7 +10,8 @@ import {
   Sparkles,
   Crown,
   ArrowLeft,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
@@ -41,7 +42,11 @@ interface ControllerDirectSelectionProps {
   sessionId: string;
   userId: string;
   roomId?: string | null;
-  onStartGame: (firstQueueItem: { categoryId?: string; userTriviaId?: string }) => void;
+  /** Returns a promise so the button can stay pressed until it settles —
+   *  starting a round is five or six round trips, not an instant. */
+  onStartGame: (firstQueueItem: { categoryId?: string; userTriviaId?: string }) => void | Promise<unknown>;
+  /** The host has pressed Start and the session has not moved yet. */
+  isStarting?: boolean;
   onBack?: () => void;
 }
 
@@ -50,6 +55,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
   userId,
   roomId,
   onStartGame,
+  isStarting = false,
   onBack,
 }) => {
   const { t } = useLanguage();
@@ -211,14 +217,19 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
     }
   };
 
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
     if (queue.length === 0) {
       toast.error(t("extra.tvChooseMin1"));
       return;
     }
-    
+    if (isStarting) return;
+
     const firstQueued = queue[0];
-    onStartGame({
+    // Awaited, so the button below can stay held down for the whole attempt.
+    // This used to be fire-and-forget: the press returned immediately, the
+    // button went back to looking exactly as pressable as before, and the
+    // several seconds of work that followed were invisible.
+    await onStartGame({
       categoryId: firstQueued.category_id || undefined,
       userTriviaId: firstQueued.user_trivia_id || undefined,
     });
@@ -476,12 +487,16 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
             variant="primary"
             className="w-full pointer-events-auto"
             onClick={handleStartGame}
-            disabled={queue.length === 0}
+            disabled={queue.length === 0 || isStarting}
           >
-            <Play className="w-5 h-5 mr-2" />
-            {queue.length === 0 
-              ? t("extra.tvChooseMin1Short")
-              : t("extra.tvStartGameNRounds", { n: queue.length })}
+            {isStarting
+              ? <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              : <Play className="w-5 h-5 mr-2" />}
+            {isStarting
+              ? t("categoryWheel.gameStarting")
+              : queue.length === 0
+                ? t("extra.tvChooseMin1Short")
+                : t("extra.tvStartGameNRounds", { n: queue.length })}
           </ChunkyButton>
         </div>
       </div>

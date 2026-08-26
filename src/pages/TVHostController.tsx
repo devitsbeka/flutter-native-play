@@ -488,11 +488,24 @@ const TVHostController: React.FC = () => {
 
   // P1-2: Start game from queue or selected category
   // Now accepts optional firstQueueItem from ControllerDirectSelection to avoid stale state issues
+  /**
+   * True from the tap until the session has actually moved on.
+   *
+   * startGame does five or six round trips before the phase changes —
+   * queue read, queue delete, reorder, question fetch, category fetch,
+   * player count, then the update — so there are several seconds where the
+   * host has pressed Start and nothing on screen has acknowledged it. The
+   * button looked exactly as pressable as it had a moment earlier, which
+   * invites a second press at the one moment a second press is worst.
+   */
+  const [startingGame, setStartingGame] = useState(false);
+
   const handleStartGame = async (firstQueueItem?: { categoryId?: string; userTriviaId?: string }) => {
     if (!sessionId) return;
 
     tvLog('Host starting game', { sessionId, firstQueueItem, selectedCategory, hasQueue, queueLength: queue.length });
 
+    setStartingGame(true);
     try {
       // If called from ControllerDirectSelection with fresh queue item, use it directly
       if (firstQueueItem) {
@@ -555,6 +568,11 @@ const TVHostController: React.FC = () => {
     } catch (error) {
       tvLogError('handleStartGame', error);
       toast.error(t("extra.tvStartGameFailed"));
+    } finally {
+      // Released whichever way it went. On success the phase has already
+      // changed and this screen is gone; on failure the toast has been shown
+      // and the button has to be pressable again.
+      setStartingGame(false);
     }
   };
 
@@ -699,6 +717,7 @@ const TVHostController: React.FC = () => {
         userId={user?.id || ''}
         roomId={roomId}
         onStartGame={handleStartGame}
+        isStarting={startingGame}
         onBack={() => navigate('/team', { replace: true })}
       />
     );
@@ -1165,14 +1184,18 @@ const TVHostController: React.FC = () => {
                the session the context has actually joined, and until that
                lands the press is a no-op. Better a button that says it is
                not ready than one that looks ready and does nothing. */
-            disabled={players.length < 1 || queue.length === 0 || !contextSessionId}
+            disabled={players.length < 1 || queue.length === 0 || !contextSessionId || startingGame}
           >
-            {contextSessionId ? <Play className="w-5 h-5 mr-2" /> : <Loader2 className="w-5 h-5 mr-2 animate-spin" />}
-            {queue.length === 0
-              ? t("extra.tvhAddRoundsToQueue")
-              : players.length < 1
-                ? t("extra.tvhNeedMinPlayer")
-                : t("extra.startRoundsBtn", { count: queue.length })}
+            {contextSessionId && !startingGame
+              ? <Play className="w-5 h-5 mr-2" />
+              : <Loader2 className="w-5 h-5 mr-2 animate-spin" />}
+            {startingGame
+              ? t("categoryWheel.gameStarting")
+              : queue.length === 0
+                ? t("extra.tvhAddRoundsToQueue")
+                : players.length < 1
+                  ? t("extra.tvhNeedMinPlayer")
+                  : t("extra.startRoundsBtn", { count: queue.length })}
           </ChunkyButton>
         </div>
         )}
