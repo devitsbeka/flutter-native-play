@@ -135,21 +135,27 @@ describe("the client list and the migration agree", () => {
   const migration = read("supabase/migrations/20260912100000_premium_categories.sql");
 
   it("names the same nine categories", () => {
-    const block = migration.match(/SET is_premium = true\s*\nWHERE category_id IN \(([\s\S]*?)\);/);
+    // One UPDATE that sets the flag to a boolean per row, rather than
+    // "clear, then set" — so the read is the IN list inside SET.
+    const block = migration.match(/SET is_premium = \(category_id IN \(([\s\S]*?)\)\)/);
     expect(block, "expected the premium UPDATE").not.toBeNull();
     const inSql = [...block![1].matchAll(/'([a-z_]+)'/g)].map((m) => m[1]).sort();
     expect(inSql).toEqual([...PREMIUM_CATEGORY_IDS].sort());
   });
 
-  it("clears the flag before setting it, so the old six do not linger", () => {
-    // The previous migration marked the guess categories premium. Without a
-    // reset this file would ADD nine to those six and the premium tab would
-    // show fifteen — including the ones that must never be locked.
-    expect(migration).toMatch(/SET is_premium = false/);
-    const clearAt = migration.indexOf("SET is_premium = false");
-    const setAt = migration.indexOf("SET is_premium = true");
-    expect(clearAt).toBeGreaterThan(-1);
-    expect(clearAt).toBeLessThan(setAt);
+  it("leaves exactly nine premium however the column started", () => {
+    // The earlier migration marked the six picture-guess categories. A
+    // "set these nine" that did not also clear the others would leave the
+    // table holding fifteen — including ones that must never be locked.
+    // Assigning the boolean per row makes that structurally impossible,
+    // which is stronger than clearing first and is why this replaced it.
+    expect(migration).toMatch(/SET is_premium = \(category_id IN \(/);
+    expect(migration, "a bare `SET is_premium = true` cannot unset the old six")
+      .not.toMatch(/SET is_premium = true\s*\nWHERE/);
+  });
+
+  it("only writes the rows whose flag actually changes", () => {
+    expect(migration).toMatch(/WHERE is_premium IS DISTINCT FROM \(category_id IN \(/);
   });
 
   it("marks no guess category premium", () => {

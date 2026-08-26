@@ -57,6 +57,7 @@ const HEADER_HEIGHT = 76;
 const HERO_HEIGHT =
   "h-[calc((100dvh_-_var(--safe-top)_-_var(--safe-bottom))_*_0.47)]";
 
+
 // ─── Lazy Section: only mounts children when scrolled near viewport ─────
 
 function LazySection({ children, minHeight = 280 }: { children: React.ReactNode; minHeight?: number }) {
@@ -123,6 +124,19 @@ export default function Discover() {
   // tab: the offer names a trial and a price, and a screen that asks which
   // plan is the screen that can honour it.
   const [paywallOpen, setPaywallOpen] = useState(false);
+  /**
+   * A PRO player is not sold PRO.
+   *
+   * Two things on this screen exist only for somebody who has not bought it
+   * yet: the cover's offer, and the Free tab. "Get full access" over the head
+   * of a subscriber reads as the app not knowing who they are, and Free is a
+   * filter that means "the part you can play" — which, for them, is all of it.
+   *
+   * Premium stays, for both. It is the only tab that answers "what does the
+   * subscription actually get me", and that is a fair question whether you are
+   * deciding to buy or have already bought.
+   */
+  const { isVip } = useVipStatus();
 
   // The cover's price line, read off the same plan the paywall would open
   // on. It used to be a sentence in the locale file naming a trial the store
@@ -167,7 +181,12 @@ export default function Discover() {
       scroller.removeEventListener("scroll", onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, []);
+    // isVip: VIP status arrives after the first paint and takes the cover with
+    // it, which moves the sheet to the top of the page. Read once more when it
+    // does — nothing scrolls, so without this the answer stays the one taken
+    // while the cover was still there, and the header keeps the white type it
+    // wears over artwork on a screen that no longer has any.
+  }, [isVip]);
 
 
   // Bring the sheet up to the top of the scroller. Tapping the grab handle
@@ -181,8 +200,6 @@ export default function Discover() {
     scroller.scrollTo({ top: sheet.offsetTop, behavior: "smooth" });
   }, []);
 
-  const { isVip } = useVipStatus();
-
   /**
    * All first, then the two tabs that split the catalogue by what a
    * subscription buys, then the rest by subject.
@@ -195,6 +212,15 @@ export default function Discover() {
    * categories live, and it is the reason to open it.
    */
   const tabs = useMemo(() => [
+    // "All" leads, because it is the tab the screen opens on: activeTab starts
+    // at "all", and a selected pill sitting third in the strip reads as
+    // something the player scrolled to rather than where they are.
+    //
+    // Premium then free, in that order, because that is the order they were
+    // asked for. They are the only two tabs that split the catalogue by what
+    // a subscription buys rather than by subject, which is why they sit
+    // together and apart from the rest. Free is dropped for a subscriber;
+    // see isVip.
     { id: "all", label: t("discover.all") },
     { id: "premium", label: t("discover.premium") },
     ...(isVip ? [] : [{ id: "free", label: t("discover.free") }]),
@@ -206,8 +232,9 @@ export default function Discover() {
     { id: "educational", label: t("discover.educational") },
   ], [t, isVip]);
 
-  // Subscribing while standing on the Free tab would otherwise leave the
-  // strip with nothing selected and the grid filtered by a tab that is no
+  // VIP status arrives after the first render, so a player can already be
+  // standing on Free when the tab is taken away. Without this they are left on
+  // a filter with no pill, and the grid stays filtered by a tab that is no
   // longer on screen.
   useEffect(() => {
     if (isVip && activeTab === "free") setActiveTab("all");
@@ -428,6 +455,13 @@ export default function Discover() {
          * transform, and framer-motion writes transforms on this page all
          * the time. Sticky is measured from the scroller itself, so the
          * video holds still while the sheet slides up over it. */}
+        {/* Not for a subscriber. The cover IS the advert — take the headline,
+            the button and the price note off it and what is left is a purple
+            field between the header and the categories, which is what a
+            shorter one still was. With no cover at all the sheet starts at
+            the top of the page and headerDocked, which reads the sheet's own
+            offsetTop, hands the header its white surface on the first paint. */}
+        {!isVip && (
         <div
           className={`md:hidden pointer-events-none sticky top-0 z-0 w-full ${HERO_HEIGHT}`}
         >
@@ -518,6 +552,7 @@ export default function Discover() {
             className="absolute inset-x-0 top-0 h-[224px] bg-[linear-gradient(180deg,rgba(41,17,84,0.12)_0%,rgba(48,20,96,0.096)_34%,rgba(58,26,112,0)_64%,rgba(58,26,112,0)_100%)]"
           />
         </div>
+        )}
 
 
         {/* The sheet: everything the page used to be, on a surface that
@@ -527,7 +562,17 @@ export default function Discover() {
          * empty Favourites) there would otherwise be nothing to pull. */}
         <div
           ref={sheetRef}
-          className="relative z-10 rounded-t-[28px] border-t border-white/60 bg-[#F6F3FB] shadow-[0_-12px_32px_rgba(41,17,84,0.35)] min-h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:rounded-none md:border-0 md:bg-[#F8F6FC] md:shadow-none md:min-h-full"
+          /* The 76px top pad exists only when there is no cover.
+             The page header is `h-0` — it takes no room in the flow and
+             floats over whatever is at the top of the page. The cover used to
+             be what it floated over. Without one the sheet starts at the very
+             top, the header covers its first 76px, and the tab strip (sticky
+             at top-76) pins there while the section header after it stays
+             where the flow put it — so "Popular" rendered underneath the
+             tabs. The pad puts the flow back where the sticky rule assumes it
+             is. Written out in full, never assembled: Tailwind reads these
+             files as text. */
+          className={`relative z-10 rounded-t-[28px] border-t border-white/60 bg-[#F6F3FB] shadow-[0_-12px_32px_rgba(41,17,84,0.35)] min-h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:rounded-none md:border-0 md:bg-[#F8F6FC] md:shadow-none md:min-h-full ${isVip ? "pt-[76px] md:pt-0" : ""}`}
         >
 
         {/* The grab handle, and the whole of what the peek has to say before

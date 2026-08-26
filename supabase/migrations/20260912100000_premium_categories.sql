@@ -1,54 +1,59 @@
--- The premium set is nine categories, and it is not the guess ones.
+-- The nine premium categories, and only those nine.
 --
--- 20260910100000_free_and_premium_categories.sql added `is_premium` and then
--- marked the six picture-guess categories as the premium set. That is exactly
--- backwards. The guess categories are the front door — the Popular row, the
--- bespoke 3D art, the thing a new player meets first — and putting them
--- behind a subscription paywalls the demo.
+-- 20260910100000_free_and_premium_categories.sql added the is_premium column
+-- and, in the same breath, guessed at who should be premium: it marked the six
+-- picture-guess categories, on the reasoning that they are the ones with
+-- bespoke 3D art. That was never asked for. The nine that were asked for are
+-- these, and the picture-guess set is free:
 --
--- The tiers, as they are now meant to read:
+--   სახალისო ფაქტები      fun_facts
+--   მეცნიერება            science
+--   ხელოვნება             art
+--   პოლიტიკა              politics
+--   კინო                  movies
+--   ვიდეო თამაშები        video_games
+--   ცნობილი ადამიანები    celebrities
+--   კოსმოსი               space
+--   პროგრამირება          programming
 --
---   free      guess_celebrity, guess_city, guess_flag, guess_logo,
---             guess_sportsman. Every level, no subscription, ever.
---   premium   the nine below. Locked outright without PRO.
---   standard  everything else. One level, then PRO.
+-- Written as one UPDATE over every row rather than as "set these nine, clear
+-- those six", so the table cannot be left holding a third state from whatever
+-- was marked before. After this runs, exactly nine rows are premium no matter
+-- what the column held going in — including on a database where the earlier
+-- migration never ran at all.
 --
--- The client carries the same nine in src/utils/categoryAccess.ts, because
--- migrations here reach the database through Lovable rather than through a
--- deploy and a client that could only learn this from the column would ship
--- the feature switched off. src/__tests__/categoryAccess.test.ts reads THIS
--- FILE and fails if the two lists stop agreeing — so change both, or neither.
+-- Matched on category_id, the stable slug, not on the UUID or the Georgian
+-- name: the names are translated per language and the uuids differ between
+-- databases.
 
--- Idempotent, and safe to run before or after the migration that adds the
--- column: if 20260910100000 has not been applied yet, this creates the
--- column itself rather than failing on a missing one.
 ALTER TABLE public.categories
   ADD COLUMN IF NOT EXISTS is_premium boolean NOT NULL DEFAULT false;
 
--- Clear the whole board first, so this file states the complete set rather
--- than adding to whatever a previous run left behind. Without it the six
--- guess categories keep the flag the earlier migration gave them and the
--- premium tab shows fifteen.
 UPDATE public.categories
-SET is_premium = false
-WHERE is_premium IS DISTINCT FROM false;
-
-UPDATE public.categories
-SET is_premium = true
-WHERE category_id IN (
-  'art',
-  'celebrities',
+SET is_premium = (category_id IN (
   'fun_facts',
-  'movies',
-  'politics',
-  'programming',
   'science',
+  'art',
+  'politics',
+  'movies',
+  'video_games',
+  'celebrities',
   'space',
-  'video_games'
-);
+  'programming'
+))
+WHERE is_premium IS DISTINCT FROM (category_id IN (
+  'fun_facts',
+  'science',
+  'art',
+  'politics',
+  'movies',
+  'video_games',
+  'celebrities',
+  'space',
+  'programming'
+));
 
-COMMENT ON COLUMN public.categories.is_premium IS
-  'Locked without PRO: the category is shown with a lock and its levels cannot be opened. The free tier (the guess_* categories) is decided client-side and is never premium; everything else is standard — one free level, then PRO.';
-
--- No policy change. `categories` is read-only to clients, so the column
--- rides the existing SELECT policy and setting it stays a SQL action.
+-- To check: nine rows, and none of them a guess_ category.
+--
+--   SELECT category_id, name FROM public.categories
+--    WHERE is_premium ORDER BY category_id;
