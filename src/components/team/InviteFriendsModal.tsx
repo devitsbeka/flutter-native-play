@@ -188,16 +188,14 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   /**
    * What the link this screen sends is FOR — see utils/inviteLink.
    *
-   * From the friends strip it is a friend request and nothing else. From a
-   * lobby it is that lobby, named here rather than guessed at the far end.
-   * From Create Room the room does not exist yet, so the far end still has to
-   * resolve it when the link is opened.
+   * A lobby names its own room. Everywhere else — the friends strip, and
+   * Create Room, whose room does not exist yet — it is a friend request. There
+   * is no third case any more: the one that resolved a room when the link was
+   * opened kept finding the wrong room.
    */
   const intent: InviteIntent = isRoomInviteMode && roomCode
     ? { kind: "room", roomCode }
-    : isBrowseMode
-    ? { kind: "friend" }
-    : { kind: "pending" };
+    : { kind: "friend" };
   const selectedCount = selectedFriends?.size ?? 0;
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
   

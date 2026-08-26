@@ -1,13 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
-import {
-  inviteLinkPath,
-  readInviteIntent,
-  roomIsFreshEnoughToOffer,
-  senderCanOfferRoom,
-  STALE_ROOM_AFTER_MS,
-} from "@/utils/inviteLink";
+import { cleanInviteCode, inviteLinkPath, readInviteIntent } from "@/utils/inviteLink";
 
 const src = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
@@ -32,21 +26,25 @@ describe("what an invite link says it is for", () => {
     );
   });
 
-  it("leaves a Create Room link bare, because the room does not exist yet", () => {
-    expect(inviteLinkPath("abc123", { kind: "pending" })).toBe("/i/abc123");
+  it("sends a friend request from Create Room, whose room does not exist yet", () => {
+    // This used to be a bare link that resolved a room when it was OPENED,
+    // and what it found was the room the host made two hours ago.
+    expect(inviteLinkPath("abc123", { kind: "friend" })).toBe("/i/abc123?f=1");
   });
 
   it("reads each of them back", () => {
     expect(readInviteIntent("?f=1")).toEqual({ kind: "friend" });
     expect(readInviteIntent("?r=XY7Q2B")).toEqual({ kind: "room", roomCode: "XY7Q2B" });
-    expect(readInviteIntent("")).toEqual({ kind: "pending" });
   });
 
-  it("treats a link sent before this existed as pending, not as broken", () => {
-    // Millions of these are already in people's chat histories.
-    expect(readInviteIntent("?utm_source=whatsapp")).toEqual({ kind: "pending" });
-    expect(readInviteIntent("?f=0")).toEqual({ kind: "pending" });
-    expect(readInviteIntent("?r=")).toEqual({ kind: "pending" });
+  it("falls back to a friend request, never to a guessed room", () => {
+    // Links already sitting in people's chat histories carry no marker, and
+    // a chat app can strip one past recognition. Every one of these can still
+    // honestly deliver a friendship, and none of them can name a room.
+    expect(readInviteIntent("")).toEqual({ kind: "friend" });
+    expect(readInviteIntent("?utm_source=whatsapp")).toEqual({ kind: "friend" });
+    expect(readInviteIntent("?f=0")).toEqual({ kind: "friend" });
+    expect(readInviteIntent("?r=")).toEqual({ kind: "friend" });
   });
 
   /**
@@ -72,6 +70,25 @@ describe("what an invite link says it is for", () => {
     });
   });
 
+  /**
+   * The same mangling, one field to the left. The real link from the report
+   * was
+   *
+   *   /i/g6krdvgpx4zqm4n3%20Trivia%20-%20მოდი%20ითამაშე%20ჩვენთან%20ერთად!
+   *
+   * so the CODE was "g6krdvgpx4zqm4n3 Trivia - მოდი…", which matches no row —
+   * and the person who had just been invited was told their invitation was no
+   * longer valid.
+   */
+  it("recovers the code when the message lands on the path", () => {
+    expect(cleanInviteCode("g6krdvgpx4zqm4n3 Trivia - მოდი ითამაშე")).toBe("g6krdvgpx4zqm4n3");
+    expect(cleanInviteCode("g6krdvgpx4zqm4n3")).toBe("g6krdvgpx4zqm4n3");
+    expect(cleanInviteCode("XY7Q2B!")).toBe("XY7Q2B");
+    expect(cleanInviteCode(undefined)).toBeUndefined();
+    expect(cleanInviteCode("  ")).toBeUndefined();
+    expect(cleanInviteCode("- მოდი")).toBeUndefined();
+  });
+
   it("survives a round trip through the URL", () => {
     // A real room code: six characters of ABCDEFGHJKLMNPQRSTUVWXYZ23456789,
     // which is why stopping at the first space above costs nothing. This
@@ -80,68 +97,6 @@ describe("what an invite link says it is for", () => {
     const link = inviteLinkPath("abc123", { kind: "room", roomCode: "XY7Q2B" });
     const query = link.slice(link.indexOf("?"));
     expect(readInviteIntent(query)).toEqual({ kind: "room", roomCode: "XY7Q2B" });
-  });
-});
-
-/**
- * The freshness rule for the one link that still resolves its room late.
- *
- * `status = 'waiting'` and `is_archived = false` are true of a lobby somebody
- * opened on Tuesday and walked away from. That is a real row and it is not
- * what anyone is being invited to — which is exactly how an "add friend" link
- * came to offer a three-day-old room.
- */
-describe("whether a late-resolved room is still worth offering", () => {
-  const NOW = Date.parse("2026-08-25T12:00:00Z");
-  const ago = (ms: number) => new Date(NOW - ms).toISOString();
-
-  it("offers a room that was touched moments ago", () => {
-    expect(roomIsFreshEnoughToOffer(ago(60_000), null, NOW)).toBe(true);
-  });
-
-  it("does not offer one left open for days", () => {
-    expect(roomIsFreshEnoughToOffer(ago(3 * 24 * 60 * 60 * 1000), null, NOW)).toBe(false);
-  });
-
-  it("falls back to when the room was created", () => {
-    expect(roomIsFreshEnoughToOffer(null, ago(60_000), NOW)).toBe(true);
-    expect(roomIsFreshEnoughToOffer(null, ago(STALE_ROOM_AFTER_MS + 1000), NOW)).toBe(false);
-  });
-
-  it("offers the room when there is no timestamp to judge it by", () => {
-    // invite_preview already held it to waiting and un-archived; hiding a
-    // genuinely open room is the worse of the two mistakes here.
-    expect(roomIsFreshEnoughToOffer(null, null, NOW)).toBe(true);
-    expect(roomIsFreshEnoughToOffer("not a date", null, NOW)).toBe(true);
-  });
-});
-
-/**
- * Whose room a link that names no room is allowed to offer.
- *
- * invite_preview settles for "a waiting room the sender is a PARTICIPANT of",
- * and participation is not an invitation to give. Gloria opened a link she
- * had shared from Create Room — nothing made yet, no room named — and got
- * "Celebration Plaza", hosted by TriviaMaste, because she had joined it an
- * hour earlier. The screen read "Gloria is inviting you to play" over
- * somebody else's lobby.
- */
-describe("whether a late-resolved room is the sender's to offer", () => {
-  const GLORIA = "gloria-id";
-  const TRIVIAMASTE = "triviamaste-id";
-
-  it("offers a room the sender hosts", () => {
-    expect(senderCanOfferRoom(GLORIA, GLORIA)).toBe(true);
-  });
-
-  it("does not offer a room the sender merely joined", () => {
-    expect(senderCanOfferRoom(TRIVIAMASTE, GLORIA)).toBe(false);
-  });
-
-  it("offers nothing when either side is unknown", () => {
-    expect(senderCanOfferRoom(null, GLORIA)).toBe(false);
-    expect(senderCanOfferRoom(GLORIA, undefined)).toBe(false);
-    expect(senderCanOfferRoom(undefined, undefined)).toBe(false);
   });
 });
 
@@ -159,18 +114,18 @@ describe("every screen that shares a link declares its intent", () => {
     expect(modal).toContain('kind: "room"');
   });
 
-  it("Create Room shares a pending link, because its room is not made yet", () => {
+  it("Create Room shares a friend request, because its room is not made yet", () => {
     const create = src("src/components/team/CreateRoomPage.tsx");
     expect(create).toContain('from "@/utils/inviteLink"');
-    expect(create).toContain('{ kind: "pending" }');
+    expect(create).toContain('{ kind: "friend" }');
     expect(create).not.toMatch(/siteUrl\(`\/i\/\$\{/);
   });
 
   it("the invite page reads the intent instead of trusting the guess", () => {
     const page = src("src/pages/InvitePage.tsx");
     expect(page).toContain("readInviteIntent");
-    expect(page).toContain("roomIsFreshEnoughToOffer");
-    expect(page).toContain("senderCanOfferRoom");
+    // The code is scrubbed before anything is looked up with it.
+    expect(page).toContain("cleanInviteCode");
     // Signing up mid-invite must not drop it.
     expect(page).toMatch(/returnTo=\$\{encodeURIComponent\(`\/i\/\$\{code\}\$\{search\}`\)\}/);
   });

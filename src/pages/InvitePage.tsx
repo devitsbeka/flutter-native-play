@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { dateLocaleFor } from "@/utils/dateLocale";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
-import { readInviteIntent, roomIsFreshEnoughToOffer, senderCanOfferRoom } from "@/utils/inviteLink";
+import { cleanInviteCode, readInviteIntent } from "@/utils/inviteLink";
 import logoLight from "@/assets/mytrivia-logo-light.svg";
 import logoDark from "@/assets/mytrivia-logo.svg";
 
@@ -76,7 +76,11 @@ interface InvitePlayer {
  * friend button rather than added automatically.
  */
 export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }) {
-  const { code } = useParams<{ code: string }>();
+  const { code: rawCode } = useParams<{ code: string }>();
+  // A chat app can glue its message onto the path, not just the query — see
+  // cleanInviteCode. Scrubbed here, once, so every lookup and every link built
+  // back out of it uses the code and not the sentence that followed it.
+  const code = cleanInviteCode(rawCode);
   const { search } = useLocation();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
@@ -99,6 +103,17 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
    * intent of its own.
    */
   const intent = by === "room" ? { kind: "room" as const, roomCode: code ?? "" } : readInviteIntent(search);
+
+  /**
+   * Whether the sentence under the name is set in capitals.
+   *
+   * The design is the Georgian screen, where the script has no cases and
+   * uppercase lifts nothing but the Latin inside the line — "MyTrivia-ზე"
+   * becomes "MYTRIVIA-ზე". The same rule in English shouts a whole sentence,
+   * which is not what was drawn. The name keeps its caps everywhere; that one
+   * is a name.
+   */
+  const shoutBody = language === "ka";
 
   useEffect(() => {
     if (!code) {
@@ -180,37 +195,6 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
               last_activity_at: room.last_activity_at,
             };
             people = (roomPlayers as InvitePlayer[] | null) ?? [];
-          }
-        } else if (resolved.room_code) {
-          // A "pending" link: no room existed when it was shared, so this one
-          // was resolved just now. Check how old it is before offering it —
-          // a lobby left open on Tuesday is still `waiting` on Friday, and
-          // is not what anybody is being invited to.
-          const { data: roomRows } = await supabase.rpc("room_preview", {
-            p_room_code: resolved.room_code,
-          });
-          if (cancelled) return;
-          const room = (roomRows as InvitePreview[] | null)?.[0];
-          // Two questions, and the room has to pass both. Is it the sender's
-          // to offer — invite_preview settles for "they are a participant",
-          // which lands on other people's lobbies — and is it recent enough
-          // that anyone means it.
-          const theirs = senderCanOfferRoom(room?.host_user_id, resolved.host_user_id);
-          const fresh = roomIsFreshEnoughToOffer(
-            room?.last_activity_at,
-            room?.created_at,
-            Date.now(),
-          );
-          if (!theirs || !fresh) {
-            resolved = { ...resolved, room_code: null, room_name: null, category_id: null, category_name: null, room_status: null, player_count: null };
-            people = [];
-          } else if (room) {
-            resolved = {
-              ...resolved,
-              is_archived: room.is_archived,
-              created_at: room.created_at,
-              last_activity_at: room.last_activity_at,
-            };
           }
         }
       }
@@ -430,10 +414,7 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
                 placeholder={t("extra.inviteNamePlaceholder")}
                 maxLength={20}
                 autoComplete="nickname"
-                className={cn(
-                  "h-14 w-full rounded-2xl px-4 text-base text-[#161e46] placeholder:text-[#5a6495]/60",
-                  "border border-[#7439cb]/25 bg-white/70 outline-none focus:border-[#7439cb]/60",
-                )}
+                className={GUEST_NAME_INPUT}
               />
             </div>
           )
@@ -453,206 +434,158 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
   }
 
   return (
-    // Its own scroller, not the document's: nativeShell disables the webview
-    // scroller for the life of the app, so a page that merely grows is frozen
-    // solid on the device. See CLAUDE.md 4b.
-    <div className="h-[100dvh] overflow-y-auto safe-bleed bg-[#7B68D9]">
-      <div className="max-w-[520px] mx-auto px-5 pt-[calc(var(--safe-top)+24px)] pb-12">
-
-        {/* Whose app this is.
-            Most people reach this screen from a link in a chat, and a good
-            share of them have never heard of MyTrivia — the page opened on a
-            purple field with a stranger's face on it and nothing to say where
-            they were. The lockup carries the crown and the wordmark together,
-            so one image answers it. Light variant: the ground is purple. */}
-        <div className="flex justify-center mb-6">
-          <img
-            src={logoLight}
-            alt="MyTrivia"
-            className="h-9 w-auto select-none"
-            draggable={false}
-          />
+    <InviteShell>
+      {/* Who is inviting you. The whole reason this screen exists. */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-7 mt-8 flex flex-col items-center gap-4 text-center"
+      >
+        <InviteAvatar nickname={preview.host_nickname} avatarUrl={preview.host_avatar_url} />
+        {/* Name first. The other order reads as a sentence with its subject
+            at the end -- "is inviting you to play / Beka". */}
+        <div>
+          <h1 className="font-display text-[19px] uppercase leading-tight tracking-[-0.16px] text-[#161e46]">
+            {preview.host_nickname}
+          </h1>
+          <p className={cn("mt-3 font-display text-[19px] leading-tight tracking-[-0.16px] text-[#161e46]", shoutBody && "uppercase")}>
+            {t("extra.inviteInvitesYou")}
+          </p>
         </div>
+      </motion.div>
 
-        {/* Who is inviting you. The whole reason this screen exists. */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center text-center gap-3 mb-8"
-        >
-          <SafeAvatar
-            avatarUrl={preview.host_avatar_url}
-            fallback={(preview.host_nickname || "?").charAt(0).toUpperCase()}
-            className="w-24 h-24 border-4 border-white/25 shadow-xl"
-            fallbackClassName="text-3xl font-bold bg-white/20 text-white"
-          />
-          {/* Name first. The other order reads as a sentence with its
-              subject at the end -- "is inviting you to play / Beka". */}
-          <div>
-            <h1 className="text-white text-2xl font-bold drop-shadow">{preview.host_nickname}</h1>
-            <p className="text-white/75 text-sm font-medium">
-              {hasRoom ? t("extra.inviteInvitesYou") : t("extra.inviteFriendSubtitle")}
-            </p>
-            {/* A friend request has no room card under it to explain what
-                happens next, so the second line does: three words that this
-                is a quiz app and that accepting leads to playing together.
-                With a room on screen it would be saying it twice. */}
-            {!hasRoom && (
-              <p className="mt-1.5 text-white/55 text-[13px] leading-snug">
-                {t("extra.inviteFriendTagline")}
-              </p>
+      {/* What you are being invited to. */}
+      {hasRoom && (
+        <div className={cn(LIGHT_CARD, "mb-4 p-4")}>
+          <div className="flex items-start justify-between gap-3">
+            {/* The picture the room is drawn with everywhere else.
+                CategoryArtwork and not QuizCategoryIcon: the six
+                picture-guess categories ship their own 3D art, and the icon
+                library would draw "guess the movie" as a generic
+                clapperboard. Rendered only when there is something to
+                resolve, so an unknown category leaves no gap. */}
+            {(categoryIdentity.iconSlug || categoryIdentity.categoryId) && (
+              <CategoryArtwork
+                categoryId={categoryIdentity.categoryId}
+                iconSlug={categoryIdentity.iconSlug}
+                size={40}
+                className="shrink-0"
+              />
             )}
-          </div>
-        </motion.div>
-
-        {/* What you are being invited to. Absent when the host has no room
-            open — the invite is then simply to be friends, and inventing a
-            room card for it would promise a game that is not there. */}
-        {hasRoom && (
-          <div className="w-full p-4 rounded-2xl bg-white/10 border border-white/[0.12] mb-4">
-            <div className="flex items-start justify-between gap-3">
-              {/* The picture the room is drawn with everywhere else. Without
-                  it the card was two lines of text where the rooms list, the
-                  countdown and the results screen all show the category.
-
-                  CategoryArtwork and not QuizCategoryIcon: the six
-                  picture-guess categories ship their own 3D art, which is what
-                  the library and the Discover cards draw them with, and
-                  QuizCategoryIcon goes straight to the icon library instead —
-                  so "guess the movie" came out as a generic clapperboard
-                  rather than as itself.
-
-                  Rendered only when there is something to resolve, so an
-                  unknown category leaves no gap beside the title. */}
-              {(categoryIdentity.iconSlug || categoryIdentity.categoryId) && (
-                <CategoryArtwork
-                  categoryId={categoryIdentity.categoryId}
-                  iconSlug={categoryIdentity.iconSlug}
-                  size={40}
-                  className="shrink-0"
-                />
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-display text-lg text-[#161e46]">
+                {preview.room_name || t("extra.inviteRoomFallback")}
+              </p>
+              {preview.category_name && (
+                <p className="mt-0.5 truncate text-sm text-[#5a6495]">{preview.category_name}</p>
               )}
-              <div className="min-w-0 flex-1">
-                <p className="text-white font-bold text-lg truncate">
-                  {preview.room_name || t("extra.inviteRoomFallback")}
-                </p>
-                {preview.category_name && (
-                  <p className="text-white/70 text-sm mt-0.5 truncate">{preview.category_name}</p>
-                )}
-              </div>
-              {/* Live or finished, and said on the card rather than only in
-                  the button. Someone opening a link days later should be able
-                  to see WHAT it was without pressing anything. */}
+            </div>
+            {/* Live or finished, said on the card rather than only in the
+                button: someone opening a link days later should be able to
+                see WHAT it was without pressing anything. */}
+            <span
+              className={cn(
+                "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
+                roomIsOver
+                  ? "bg-[#161e46]/10 text-[#5a6495]"
+                  : "bg-emerald-500/15 text-emerald-700",
+              )}
+            >
               <span
                 className={cn(
-                  "shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
-                  roomIsOver ? "bg-white/10 text-white/60" : "bg-emerald-400/20 text-emerald-200",
+                  "h-1.5 w-1.5 rounded-full",
+                  roomIsOver ? "bg-[#5a6495]/60" : "animate-pulse bg-emerald-500",
                 )}
-              >
-                <span
-                  className={cn(
-                    "w-1.5 h-1.5 rounded-full",
-                    roomIsOver ? "bg-white/40" : "bg-emerald-300 animate-pulse",
-                  )}
-                />
-                {roomIsOver ? t("extra.inviteRoomFinished") : t("extra.inviteRoomLive")}
-              </span>
-            </div>
-            {roomAge && (
-              <p className="text-white/45 text-xs mt-2">{roomAge}</p>
-            )}
+              />
+              {roomIsOver ? t("extra.inviteRoomFinished") : t("extra.inviteRoomLive")}
+            </span>
           </div>
-        )}
+          {roomAge && <p className="mt-2 text-xs text-[#5a6495]/80">{roomAge}</p>}
+        </div>
+      )}
 
-        {/* Who else is in, each with a way to add them. Only the host is
-            befriended by accepting; these are ordinary requests, because
-            nobody else in the room agreed to anything. */}
-        {players.length > 0 && (
-          <div className="w-full rounded-2xl bg-white/10 border border-white/[0.12] mb-6 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-white/[0.12]">
-              <Users className="w-4 h-4 text-white/70" />
-              <span className="text-white/70 text-sm font-medium">
-                {t("extra.invitePlayers")} ({players.length})
-              </span>
-            </div>
-            <div className="divide-y divide-white/[0.08]">
-              {players.map(player => {
-                const isFriend = friends.some(f => f.friendId === player.user_id);
-                const isSelf = player.user_id === user?.id;
-                const asked = requested.has(player.user_id);
-                return (
-                  <div key={player.user_id} className="flex items-center gap-3 px-4 py-3">
-                    <SafeAvatar
-                      avatarUrl={player.avatar_url}
-                      fallback={(player.nickname || "?").charAt(0).toUpperCase()}
-                      className="w-10 h-10"
-                      fallbackClassName="bg-white/20 text-white font-semibold"
-                    />
-                    {/* Name and its add button as one group, so the button
-                        reads as belonging to that person rather than sitting
-                        in a column at the far edge. Same shape and the same
-                        place as the lobby's chip — this screen is the lobby
-                        seen from outside, and the two should not look like
-                        different features. */}
-                    <div className="flex-1 min-w-0 flex items-center gap-2">
-                      <span className="min-w-0 truncate text-white font-medium">
-                        {player.nickname}
-                      </span>
-                      {/* Nothing to offer a signed-out visitor: they cannot
-                          send a friend request yet, and a row of greyed-out
-                          buttons reads as broken rather than as not-yet. */}
-                      {user && !isSelf && (by === "room" || !player.is_host) && (
-                        isFriend || asked ? (
-                          <Check className="h-4 w-4 shrink-0 text-emerald-300" />
-                        ) : (
-                          <button
-                            onClick={() => addPlayer(player.user_id)}
-                            className={cn(
-                              "flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
-                              "bg-white/15 text-white transition-colors hover:bg-white/25 active:scale-95"
-                            )}
-                            aria-label={t("extra.inviteAddFriend")}
-                          >
-                            <UserPlus className="h-3.5 w-3.5" />
-                          </button>
-                        )
-                      )}
-                    </div>
-                    {player.is_host && (
-                      <span className="text-white/50 text-xs shrink-0">{t("extra.inviteHostTag")}</span>
+      {/* Who else is in, each with a way to add them. Only the host is
+          befriended by accepting; these are ordinary requests, because
+          nobody else in the room agreed to anything. */}
+      {players.length > 0 && (
+        <div className={cn(LIGHT_CARD, "mb-6 overflow-hidden")}>
+          <div className="flex items-center gap-2 border-b border-[#161e46]/10 px-4 py-3">
+            <Users className="h-4 w-4 text-[#5a6495]" />
+            <span className="text-sm font-medium text-[#5a6495]">
+              {t("extra.invitePlayers")} ({players.length})
+            </span>
+          </div>
+          <div className="divide-y divide-[#161e46]/[0.08]">
+            {players.map(player => {
+              const isFriend = friends.some(f => f.friendId === player.user_id);
+              const isSelf = player.user_id === user?.id;
+              const asked = requested.has(player.user_id);
+              return (
+                <div key={player.user_id} className="flex items-center gap-3 px-4 py-3">
+                  <SafeAvatar
+                    avatarUrl={player.avatar_url}
+                    fallback={(player.nickname || "?").charAt(0).toUpperCase()}
+                    className="h-10 w-10"
+                    fallbackClassName="bg-[#7439cb]/15 text-[#161e46] font-semibold"
+                  />
+                  {/* Name and its add button as one group, so the button
+                      reads as belonging to that person rather than sitting
+                      in a column at the far edge. Same shape and the same
+                      place as the lobby's chip — this screen is the lobby
+                      seen from outside. */}
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <span className="min-w-0 truncate font-medium text-[#161e46]">
+                      {player.nickname}
+                    </span>
+                    {/* Nothing to offer a signed-out visitor: they cannot
+                        send a friend request yet, and a row of greyed-out
+                        buttons reads as broken rather than as not-yet. */}
+                    {user && !isSelf && (by === "room" || !player.is_host) && (
+                      isFriend || asked ? (
+                        <Check className="h-4 w-4 shrink-0 text-emerald-600" />
+                      ) : (
+                        <button
+                          onClick={() => addPlayer(player.user_id)}
+                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#7439cb]/15 text-[#7439cb] transition-colors hover:bg-[#7439cb]/25 active:scale-95"
+                          aria-label={t("extra.inviteAddFriend")}
+                        >
+                          <UserPlus className="h-3.5 w-3.5" />
+                        </button>
+                      )
                     )}
                   </div>
-                );
-              })}
-            </div>
+                  {player.is_host && (
+                    <span className="shrink-0 text-xs text-[#5a6495]">{t("extra.inviteHostTag")}</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* A guest needs a name before anything else. Without one they used
-            to arrive in the room as "Trivia King", which is nobody. */}
-        {!user && (
-          <div className="mb-4">
-            <label className="block text-white/75 text-sm font-medium mb-2">
-              {t("extra.inviteYourName")}
-            </label>
-            <input
-              value={nickname}
-              onChange={e => setNickname(e.target.value.slice(0, 20))}
-              placeholder={t("extra.inviteNamePlaceholder")}
-              maxLength={20}
-              autoComplete="nickname"
-              className={cn(
-                "w-full h-14 px-4 rounded-2xl text-white placeholder:text-white/40",
-                "bg-white/10 border border-white/20 outline-none",
-                "focus:border-white/50 text-base"
-              )}
-            />
-          </div>
-        )}
+      {/* A guest needs a name before anything else. Without one they used to
+          arrive in the room as "Trivia King", which is nobody. */}
+      {!user && (
+        <div className="mb-4">
+          <label className="mb-2 block text-sm font-medium text-[#5a6495]">
+            {t("extra.inviteYourName")}
+          </label>
+          <input
+            value={nickname}
+            onChange={e => setNickname(e.target.value.slice(0, 20))}
+            placeholder={t("extra.inviteNamePlaceholder")}
+            maxLength={20}
+            autoComplete="nickname"
+            className={GUEST_NAME_INPUT}
+          />
+        </div>
+      )}
 
+      <div className="mt-auto pt-2">
         {isOwnLink ? (
-          <div className="text-center space-y-4">
-            <p className="text-white/75">{t("extra.inviteThisIsYours")}</p>
+          <div className="space-y-4 text-center">
+            <p className="text-[#5a6495]">{t("extra.inviteThisIsYours")}</p>
             <ChunkyButton
               variant="white"
               size="lg"
@@ -668,8 +601,8 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
              category, who played, when — and every one of those players has a
              friend button beside them, which is the thing still worth doing
              with an invitation that arrived late. */
-          <div className="text-center space-y-4">
-            <p className="text-white/75 text-sm">{t("extra.inviteRoomOverBody")}</p>
+          <div className="space-y-4 text-center">
+            <p className="text-sm text-[#5a6495]">{t("extra.inviteRoomOverBody")}</p>
             <ChunkyButton
               variant="white"
               size="lg"
@@ -686,7 +619,7 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
             className="w-full"
             onClick={accept}
             disabled={joining || (!user && !nickname.trim())}
-            icon={canJoinRoom ? <LogIn className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
+            icon={canJoinRoom ? <LogIn className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />}
           >
             {joining
               ? t("extra.inviteJoining")
@@ -701,12 +634,77 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
         {!user && (
           <button
             onClick={() => navigate(`/auth?returnTo=${encodeURIComponent(`/i/${code}${search}`)}`)}
-            className="w-full mt-4 text-white/70 text-sm font-medium underline underline-offset-4"
+            className="mt-4 w-full text-sm font-medium text-[#5a6495] underline underline-offset-4"
           >
             {t("extra.inviteHaveAccount")}
           </button>
         )}
       </div>
+    </InviteShell>
+  );
+}
+
+/** The card language of the light ground: the same recipe Create Room uses. */
+const LIGHT_CARD = "rounded-2xl border border-white/70 bg-white/55 backdrop-blur-[2px]";
+
+/** One field, on both screens, so a guest's name box cannot drift between them. */
+const GUEST_NAME_INPUT =
+  "h-14 w-full rounded-2xl border border-[#7439cb]/25 bg-white/70 px-4 text-base text-[#161e46] outline-none placeholder:text-[#5a6495]/60 focus:border-[#7439cb]/60";
+
+/**
+ * The ground both invite screens stand on — Figma 900:6931.
+ *
+ *   #cab7e6, with two blurred washes over it: a cold blue at the upper left
+ *   and a warm cream at the upper right. They are what stop a flat fill from
+ *   reading as an error page.
+ *
+ * The room invite used to be a purple wall with white-on-translucent cards on
+ * it, which made the two halves of the same feature look like two apps.
+ */
+function InviteShell({ children }: { children: React.ReactNode }) {
+  return (
+    // A fixed-height box that scrolls itself. The document does not scroll on
+    // the device -- see CLAUDE.md 4b -- and this screen can carry a room card,
+    // a roster and a keyboard.
+    <div className="h-[100dvh] overflow-y-auto safe-bleed bg-[#cab7e6]">
+      {/* Fixed rather than absolute so the washes stay put behind the content
+          when it scrolls or a keyboard pushes the page up. */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-[7%] top-[26%] h-[24%] w-[30%] bg-[#9ec7f0] blur-[60px]" />
+        <div className="absolute left-[73%] top-[30%] h-[24%] w-[30%] bg-[#fffcef] blur-[60px]" />
+      </div>
+
+      <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[520px] flex-col px-5 pb-[calc(env(safe-area-inset-bottom)+20px)] pt-[calc(var(--safe-top)+24px)]">
+        {/* Whose app this is. Most people reach these screens from a link in a
+            chat and a good share of them have never heard of MyTrivia, so one
+            image answers it before anything else is read. */}
+        <div className="flex shrink-0 justify-center">
+          <img src={logoDark} alt="MyTrivia" className="h-11 w-auto select-none" draggable={false} />
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The face at the top of both screens.
+ *
+ * 138px in the design's 501px frame -> 27.5% of the width, ringed in #7439cb
+ * at 12px -> 2.4%, over a soft yellow bloom.
+ */
+function InviteAvatar({ nickname, avatarUrl }: { nickname: string; avatarUrl: string | null }) {
+  return (
+    <div
+      className="flex h-[108px] w-[108px] shrink-0 items-center justify-center rounded-full border-[9px] border-[#7439cb] bg-[#cab7e6]"
+      style={{ boxShadow: "0px 4px 4px 13px rgba(253,206,46,0.19)" }}
+    >
+      <SafeAvatar
+        avatarUrl={avatarUrl}
+        fallback={(nickname || "?").charAt(0).toUpperCase()}
+        className="h-full w-full"
+        fallbackClassName="text-2xl font-bold bg-white/70 text-[#161e46]"
+      />
     </div>
   );
 }
@@ -714,21 +712,12 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
 /**
  * The friend-request screen — Figma 900:6931.
  *
- * Geometry comes from the design's 501x946 frame, expressed as percentages of
- * it rather than as the pixels themselves, so the layout holds from a small
- * phone to a tablet instead of only at the width it was drawn.
+ * One face, one sentence and one button, on the shell above. The room invite
+ * is the same shell with a room card and a roster in the middle of it.
  *
- *   ground      #cab7e6, with two blurred washes over it: a cold blue at the
- *               upper left and a warm cream at the upper right. They are what
- *               stop a flat fill from reading as an error page.
- *   avatar      138px in a 501px frame -> 27.5% of the width, ringed in
- *               #7439cb at 12px -> 2.4%, over a soft yellow bloom.
- *   type        TASolivare for the name and the sentence, Google Sans for the
- *               line under them; both already the project's display and body
- *               families, which is why no font work was needed.
- *   uppercase   Georgian has no cases, so this only lifts the Latin inside
- *               the line -- "MyTrivia" becomes "MYTRIVIA", the nickname
- *               becomes TRIVIAMASTE -- which is what the design shows.
+ * uppercase: Georgian has no cases, so it only lifts the Latin inside the
+ * line -- "MyTrivia" becomes "MYTRIVIA", the nickname becomes TRIVIAMASTE --
+ * which is what the design shows. See shoutBody.
  */
 function FriendInviteScreen({
   nickname,
@@ -754,75 +743,47 @@ function FriendInviteScreen({
   signInLink: React.ReactNode;
 }) {
   return (
-    // A fixed-height box that scrolls itself. The document does not scroll on
-    // the device -- see CLAUDE.md 4b -- and a guest gets a name field and a
-    // keyboard on top of this, which is when the overflow is needed.
-    <div className="h-[100dvh] overflow-y-auto safe-bleed bg-[#cab7e6]">
-      {/* The two washes. Fixed rather than absolute so they stay put behind
-          the content when a keyboard pushes the page up. */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute left-[7%] top-[26%] h-[24%] w-[30%] bg-[#9ec7f0] blur-[60px]" />
-        <div className="absolute left-[73%] top-[30%] h-[24%] w-[30%] bg-[#fffcef] blur-[60px]" />
-      </div>
+    <InviteShell>
+      {/* Sat a little above the true middle, as drawn: the design puts this
+          block's centre at 41% of the frame, and centring it between the logo
+          and the button would land it at 48%. */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-1 flex-col items-center justify-center gap-6 pb-[22%] text-center"
+      >
+        <InviteAvatar nickname={nickname} avatarUrl={avatarUrl} />
 
-      <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[520px] flex-col px-5 pb-[calc(env(safe-area-inset-bottom)+20px)] pt-[calc(var(--safe-top)+24px)]">
-        {/* The dark lockup: the ground is light here, where the room invite's
-            is purple. Same asset the home screen opens with. */}
-        <div className="flex justify-center">
-          <img src={logoDark} alt="MyTrivia" className="h-11 w-auto select-none" draggable={false} />
+        <div className="w-full">
+          <h1 className="font-display text-[19px] uppercase leading-tight tracking-[-0.16px] text-[#161e46]">
+            {nickname}
+          </h1>
+          <p className={cn("mt-7 font-display text-[19px] leading-tight tracking-[-0.16px] text-[#161e46]", shoutBody && "uppercase")}>
+            {subtitle}
+          </p>
+          <p className={cn("mt-2 text-[14px] font-medium leading-snug tracking-[-0.16px] text-[#5a6495]", shoutBody && "uppercase")}>
+            {tagline}
+          </p>
         </div>
 
-        {/* Sat a little above the true middle, as drawn: the design puts this
-            block's centre at 41% of the frame, and centring it between the
-            logo and the button would land it at 48%. */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-1 flex-col items-center justify-center gap-6 pb-[22%] text-center"
+        {guestNameField}
+      </motion.div>
+
+      {/* On the bottom edge, which is where a screen with one decision on it
+          puts its button. */}
+      <div className="shrink-0 space-y-3">
+        <ChunkyButton
+          variant="white"
+          size="xl"
+          className="w-full"
+          onClick={onAccept}
+          disabled={disabled}
+          icon={<UserPlus className="h-5 w-5" />}
         >
-          <div
-            className="flex h-[108px] w-[108px] shrink-0 items-center justify-center rounded-full border-[9px] border-[#7439cb] bg-[#cab7e6]"
-            style={{ boxShadow: "0px 4px 4px 13px rgba(253,206,46,0.19)" }}
-          >
-            <SafeAvatar
-              avatarUrl={avatarUrl}
-              fallback={(nickname || "?").charAt(0).toUpperCase()}
-              className="h-full w-full"
-              fallbackClassName="text-2xl font-bold bg-white/70 text-[#161e46]"
-            />
-          </div>
-
-          <div className="w-full">
-            <h1 className="font-display text-[19px] uppercase leading-tight tracking-[-0.16px] text-[#161e46]">
-              {nickname}
-            </h1>
-            <p className={cn("mt-7 font-display text-[19px] leading-tight tracking-[-0.16px] text-[#161e46]", shoutBody && "uppercase")}>
-              {subtitle}
-            </p>
-            <p className={cn("mt-2 text-[14px] font-medium leading-snug tracking-[-0.16px] text-[#5a6495]", shoutBody && "uppercase")}>
-              {tagline}
-            </p>
-          </div>
-
-          {guestNameField}
-        </motion.div>
-
-        {/* On the bottom edge, which is where a screen with one decision on it
-            puts its button. */}
-        <div className="shrink-0 space-y-3">
-          <ChunkyButton
-            variant="white"
-            size="xl"
-            className="w-full"
-            onClick={onAccept}
-            disabled={disabled}
-            icon={<UserPlus className="h-5 w-5" />}
-          >
-            {cta}
-          </ChunkyButton>
-          {signInLink}
-        </div>
+          {cta}
+        </ChunkyButton>
+        {signInLink}
       </div>
-    </div>
+    </InviteShell>
   );
 }

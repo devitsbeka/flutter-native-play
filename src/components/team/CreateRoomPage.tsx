@@ -490,13 +490,19 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // it, not what they were playing. The sender's own invite link says both,
     // and makes them friends when it is accepted.
     //
-    // Sent as a "pending" link — the one case where the room really does have
-    // to be resolved when the link is OPENED, because it does not exist yet
-    // here. Every other screen now names what it is offering; see
-    // utils/inviteLink.
+    // A friend request, because there is no room yet to point at. This used to
+    // send a link that resolved a room when it was OPENED, and what it found
+    // was the room this host made two hours ago — the friend arrived in the
+    // wrong lobby, or in one that had since been archived and was told their
+    // invitation was no longer valid.
+    //
+    // Nothing is lost: the friends picked on this screen are added to the room
+    // as invited participants the moment it is created, which is the path that
+    // has always worked. This link is for the people who are not on that list
+    // yet, and becoming friends is the thing it can honestly deliver.
     const { data: inviteCode } = await supabase.rpc("get_or_create_invite_code");
     const inviteLink = inviteCode
-      ? siteUrl(inviteLinkPath(inviteCode, { kind: "pending" }))
+      ? siteUrl(inviteLinkPath(inviteCode, { kind: "friend" }))
       : siteUrl("/team");
 
     const outcome = await shareOrCopy({
