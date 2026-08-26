@@ -61,50 +61,45 @@ const celebrateClaim = () => {
   });
 };
 
-// A date as its LOCAL yyyy-mm-dd. toISOString would shift through UTC, and a
-// claim made on Tuesday evening must not render on Wednesday's card.
-export const localISO = (d: Date) => {
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
-};
+/**
+ * A reward day as yyyy-mm-dd, in UTC — the calendar the rewards actually run
+ * on.
+ *
+ * Not a style choice. `claim_daily_reward` writes `reward_date := CURRENT_DATE`
+ * on a Postgres server set to UTC, useRewardTimers looks the row up by
+ * `new Date().toISOString()`, and dailyResetCountdown counts to UTC midnight.
+ * Three things agreeing; this screen was the fourth, keyed to the DEVICE's
+ * local date, and it disagreed with all of them.
+ *
+ * What that looked like: in any timezone east of UTC, between local midnight
+ * and the offset, the local date is already tomorrow while the row holding
+ * today's claim is still stamped yesterday. The card this screen called
+ * "today" therefore found no claim and drew a closed gift with a Claim
+ * button, while the timer — reading the right row — knew the day was spent
+ * and disabled it. A Claim you cannot press, over a running countdown.
+ * At UTC+4 that is every night between 00:00 and 04:00.
+ *
+ * The database owns the boundary and cannot be told otherwise from here, so
+ * the client matches the database. The visible consequence is that the day
+ * turns over at UTC midnight — 04:00 in Tbilisi — which is exactly when the
+ * next reward becomes claimable. Rewards on the player's own local day would
+ * mean storing their timezone and changing the function; a different job.
+ */
+export const rewardISO = (d: Date) => d.toISOString().split("T")[0];
 
-/** Monday..Sunday of the week containing `today`. */
+/** The UTC weekday, Monday = 0, to match the row of cards. */
+const utcWeekIndex = (d: Date) => (d.getUTCDay() + 6) % 7;
+
+/** Monday..Sunday of the UTC week containing `today`. */
 export const weekOf = (today: Date): Date[] => {
   const monday = new Date(today);
-  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  monday.setUTCDate(today.getUTCDate() - utcWeekIndex(today));
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
+    d.setUTCDate(monday.getUTCDate() + i);
     return d;
   });
 };
-
-// Bright frosted reward pill (coin/gem icon + amount) — needs to shine
-// against every card gradient
-function RewardPill({ icon, value }: { icon: string; value: number }) {
-  return (
-    <div
-      className="flex h-[46px] items-center gap-2 rounded-[16px] px-5"
-      style={{
-        background: "linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.25) 100%)",
-        boxShadow: "0 3px 10px rgba(0,0,0,0.15), inset 0 1.5px 0 rgba(255,255,255,0.6)",
-        backdropFilter: "blur(4px)",
-      }}
-    >
-      <img
-        src={icon}
-        alt=""
-        className="shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
-        width={30}
-        height={30}
-      />
-      <span className="font-display text-lg font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
-        {value}
-      </span>
-    </div>
-  );
-}
 
 type DayState = "claimed" | "missed" | "today" | "future";
 type ClaimPhase = "idle" | "opening" | "revealed";
@@ -136,6 +131,7 @@ function DayRewardCard({
   awarded,
   claimedReward,
   canClaim,
+  timeLeft,
   onClaim,
   language,
   t,
@@ -149,6 +145,8 @@ function DayRewardCard({
   /** The receipt for an already-claimed day; null for pre-receipt claims. */
   claimedReward: ClaimedReward | null;
   canClaim: boolean;
+  /** How long until the next reward, for the not-yet-claimable state. */
+  timeLeft: string;
   onClaim: () => void;
   language: string;
   t: (key: string, params?: Record<string, string | number>) => string;
@@ -180,58 +178,38 @@ function DayRewardCard({
           server's decision, so nothing is promised here — the surprise IS
           the feature. */}
       <div className="relative flex h-[96px] items-center justify-center">
-        {phase === "revealed" && awarded ? (
-          // The prize: slides in, wiggles, and the whole modal closes shortly
-          // after — the disappearance the reveal ends on.
-          <motion.div
-            initial={{ opacity: 0, scale: 0.6, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0, x: [0, -7, 7, -5, 5, 0] }}
-            transition={{ duration: 0.9, times: [0, 0.2, 0.4, 0.6, 0.8, 1] }}
-            className="flex items-center gap-2"
-          >
-            <RewardPill icon={coinIcon} value={awarded.coins} />
-            {awarded.gems > 0 && <RewardPill icon={gemIcon} value={awarded.gems} />}
-            {awarded.powerUp && (
-              <div
-                className="flex h-[46px] items-center gap-2 rounded-[16px] px-4"
-                style={{
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.25) 100%)",
-                  boxShadow: "0 3px 10px rgba(0,0,0,0.15), inset 0 1.5px 0 rgba(255,255,255,0.6)",
-                  backdropFilter: "blur(4px)",
-                }}
-              >
-                {awarded.powerUp === "time-drain" ? (
-                  <TimeIcon size={28} />
-                ) : (
-                  <img src={POWER_ICONS[awarded.powerUp] || power5050} alt="" width={28} height={28} className="shrink-0" />
-                )}
-                <span className="font-display text-lg font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
-                  {awarded.powerUpCount}x
-                </span>
-              </div>
-            )}
-          </motion.div>
-        ) : (
-          <motion.img
-            key={showOpenGift ? "open" : "closed"}
-            src={showOpenGift ? giftOpenIcon : giftClosedIcon}
-            alt=""
-            className="h-[88px] w-[88px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.2)]"
-            style={{ opacity: isMissed ? 0.55 : 1 }}
-            animate={
-              phase === "opening"
-                ? { rotate: [0, -10, 10, -8, 8, -5, 5, 0], scale: [1, 1.08, 1.08, 1.12, 1.12, 1.15, 1.15, 1.2] }
+        {/* Always the gift — closed, then open. What was inside is shown once,
+            on the button, where the day's receipt already lives.
+
+            It used to be shown twice: the prize replaced the gift here AND
+            the receipt appeared below it, so the moment of opening had the
+            answer in two places and the opened box — the thing that says
+            "you opened it" — was never seen at all. */}
+        <motion.img
+          key={showOpenGift ? "open" : "closed"}
+          src={showOpenGift ? giftOpenIcon : giftClosedIcon}
+          alt=""
+          className="h-[88px] w-[88px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.2)]"
+          style={{ opacity: isMissed ? 0.55 : 1 }}
+          animate={
+            phase === "opening"
+              ? { rotate: [0, -10, 10, -8, 8, -5, 5, 0], scale: [1, 1.08, 1.08, 1.12, 1.12, 1.15, 1.15, 1.2] }
+              : phase === "revealed"
+                // Lands: the lid comes off and it settles, rather than
+                // carrying on bobbing as though still waiting to be opened.
+                ? { scale: [1.2, 0.95, 1], rotate: 0 }
                 : state === "today" && canClaim
                   ? { y: [0, -5, 0] }
                   : undefined
-            }
-            transition={
-              phase === "opening"
-                ? { duration: 0.85 }
+          }
+          transition={
+            phase === "opening"
+              ? { duration: 0.85 }
+              : phase === "revealed"
+                ? { duration: 0.45 }
                 : { repeat: Infinity, duration: 1.8, ease: "easeInOut" }
-            }
-          />
-        )}
+          }
+        />
       </div>
 
       {/* State row */}
@@ -292,6 +270,22 @@ function DayRewardCard({
           <Lock className="h-5 w-5 text-white/80" />
         </div>
       ) : (
+        !canClaim && phase === "idle" ? (
+          // Today, but not yet. The word "Claim" on a button that cannot be
+          // pressed is the screen arguing with itself — and with the very
+          // countdown underneath it. Say the wait instead.
+          //
+          // This is belt and braces: with the calendars aligned, a spent day
+          // renders as "claimed" above and never reaches here. It still
+          // covers the gap while this week's claims are being fetched, when
+          // the timer already knows the day is gone and the card does not.
+          <div
+            className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
+            style={{ background: "rgba(255,255,255,0.25)" }}
+          >
+            <span className="font-mono text-base font-bold text-white/90">{timeLeft}</span>
+          </div>
+        ) : (
         <motion.button
           onClick={canClaim && phase === "idle" ? onClaim : undefined}
           disabled={!canClaim || phase !== "idle"}
@@ -305,6 +299,7 @@ function DayRewardCard({
         >
           {phase === "opening" ? "…" : t("dailyRewards.claim")}
         </motion.button>
+        )
       )}
     </motion.div>
   );
@@ -333,8 +328,8 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const week = weekOf(new Date());
-  const todayISO = localISO(new Date());
-  const todayIndex = (new Date().getDay() + 6) % 7;
+  const todayISO = rewardISO(new Date());
+  const todayIndex = utcWeekIndex(new Date());
 
   // This week's claims, so the row can say which days were taken and which
   // slipped past. RLS scopes the select to the signed-in player's own rows.
@@ -346,8 +341,8 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
       // The receipt columns postdate the generated types — the cast keeps
       // the client from narrowing the row to the stale shape.
       .select("reward_date, daily_claimed, coins_awarded, gems_awarded, power_up, power_up_count" as "*")
-      .gte("reward_date", localISO(week[0]))
-      .lte("reward_date", localISO(week[6]))
+      .gte("reward_date", rewardISO(week[0]))
+      .lte("reward_date", rewardISO(week[6]))
       .then(({ data }) => {
         if (cancelled || !data) return;
         const rows = (data as unknown) as {
@@ -510,7 +505,7 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
   // claimed (and no receipt). Today with the cooldown still running renders
   // as "today" with the claim button disabled and the countdown below.
   const stateOf = (date: Date, index: number): DayState => {
-    const iso = localISO(date);
+    const iso = rewardISO(date);
     if (claimedDates.has(iso))
       return index === todayIndex && phase !== "idle" ? "today" : "claimed";
     if (index === todayIndex) return "today";
@@ -571,14 +566,15 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
               >
                 {week.map((date, index) => (
                   <DayRewardCard
-                    key={localISO(date)}
+                    key={rewardISO(date)}
                     date={date}
                     index={index}
                     state={stateOf(date, index)}
                     phase={index === todayIndex ? phase : "idle"}
                     awarded={index === todayIndex ? awarded : null}
-                    claimedReward={claimedRewards[localISO(date)] ?? null}
+                    claimedReward={claimedRewards[rewardISO(date)] ?? null}
                     canClaim={canClaimDaily && !claimedToday}
+                    timeLeft={dailyTimeLeft}
                     onClaim={handleClaim}
                     language={language}
                     t={t}
