@@ -1240,7 +1240,7 @@ Connect · **Mac** = Xcode/archive machine · **Device** = real iPhone ·
 
 | # | Owner | Action |
 |---|---|---|
-| 5 | **Device** | ✅ **Fix shipped** — `worker/index.ts` now answers `/videos/*` range requests with proper 206s (parser unit-tested). Remaining half: after the next web deploy, confirm `curl -H "Range: bytes=0-1"` returns 206, and play one streamed video on a real iPhone.
+| 5 | **Device** | ✅ **Fix live and verified** — the handler alone wasn't enough: Cloudflare served the static file before the Worker ran, so the first deploy still answered 200. `run_worker_first = ["/videos/*"]` in `wrangler.toml` (PR #455, pinned by `videoRange.test.ts`) routes videos through the Worker, and production now answers `Range: bytes=0-1` → **206** `content-range: bytes 0-1/7839349`, suffix ranges → 206, past-end → 416, no header → full 200 (all probed live 2026-08-26). Remaining half: play one streamed video on a real iPhone. |
 | 6 | **ASC** | **Subscription levels, corrected:** Level 1 = Friends PRO Monthly **and** PRO Annual (both `pro_plus`), Level 2 = PRO Monthly. The earlier advice (monthly+annual together) predates the annual becoming `pro_plus`. |
 | 7 | **ASC** | Create the **3-day free introductory offer** on `io.mytrivia.pro.annual`. Until it exists, iOS shows no badge (correct, but the offer is the pitch). Must be 3 days — the app now advertises exactly what the store reports. |
 | 8 | **ASC** | App Privacy: add **Gameplay Content** (11 types total); set the privacy URL **per localization** to `/privacy-policy/{lang}` (live, verified); age rating **12+** with honest UGC answers. |
