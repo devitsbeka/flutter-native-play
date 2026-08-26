@@ -155,3 +155,80 @@ describe("starting the game", () => {
     expect(ctx).toMatch(/if \(!state\.sessionId \|\| !isHost\) \{/);
   });
 });
+
+/**
+ * The rest of "Start does nothing" in TV mode.
+ *
+ * startGame is one long try block with six early `return`s in it, and none of
+ * them said anything. handleStartGame wraps the call in try/catch and toasts
+ * on failure — but a `return` is not a throw, so that catch never fired for
+ * any of them. The host pressed Start and the lobby sat there.
+ *
+ * Worse, the write that actually starts the game ignored its own result.
+ * supabase-js hands back `{ error }` rather than throwing, so a rejected
+ * update — a status the CHECK constraint does not allow, an RLS policy that
+ * does not match, a drifted column — did nothing at all while the log
+ * cheerfully recorded "lobby -> countdown". The phase every screen renders
+ * comes from that row through realtime, not from the local setState, so
+ * nothing moved and nothing explained why.
+ */
+describe("startGame reports instead of returning in silence", () => {
+  const ctx = read("src/contexts/TVGameContext.tsx");
+
+  it("checks the write that starts the game", () => {
+    expect(ctx).toMatch(/const \{ error: startError \} = await supabase\s*\n\s*\.from\('tv_sessions'\)/);
+    expect(ctx).toMatch(/if \(startError\) \{[\s\S]{0,220}?toast\.error\(t\('extra\.tvStartGameFailed'\)\);/);
+  });
+
+  it("checks the write that starts the questions", () => {
+    // A silent failure here leaves the 3-2-1 on the TV and nothing after it.
+    expect(ctx).toMatch(/const \{ error: playError \} = await supabase/);
+    expect(ctx).toMatch(/if \(playError\) \{[\s\S]{0,220}?toast\.error\(t\('extra\.tvStartGameFailed'\)\);/);
+  });
+
+  it("tells the player when the category has no questions for them", () => {
+    // questionService returns nothing on purpose when the player's language
+    // has no questions for the category — "the UI will show a modal instead".
+    // On TV there was no modal and no toast.
+    expect(ctx).toMatch(/if \(formattedQuestions\.length === 0\) \{[\s\S]{0,320}?toast\.error\(t\('extra\.noQuestionsInLang'\)\);/);
+  });
+
+  it("names what could not be started, so the log identifies the round", () => {
+    expect(ctx).toMatch(/No questions available \(category=\$\{categoryId \?\? 'none'\} trivia=\$\{userTriviaId \?\? 'none'\}\)/);
+  });
+
+  it("reports an unresolvable category", () => {
+    expect(ctx).toMatch(/Failed to resolve category UUID from "\$\{categoryId\}"/);
+    expect(ctx).toMatch(/toast\.error\(t\('extra\.tvhCategoriesNotFound'\)\);/);
+  });
+
+  it("reports an empty user trivia", () => {
+    // Anchored on startGame: startNextRoundFromQueueIfAny has the same line
+    // and still returns silently — that is the round-2 freeze, a different
+    // symptom from the one reported, and not touched here.
+    const trivia = ctx.match(/tvLogError\('startGame', 'User trivia has no questions'\);[\s\S]{0,140}/);
+    expect(trivia).not.toBeNull();
+    expect(trivia![0]).toMatch(/toast\.error\(t\('extra\.noQuestionsInLang'\)\)/);
+  });
+
+  it("has no bare `return` left in the empty-pool branches", () => {
+    // Each of the three routes into an empty pool now funnels through the one
+    // reported check, rather than returning where it stood.
+    expect(codeOf(ctx)).not.toMatch(/tvLogError\('startGame', 'No questions available'\);\s*\n\s*return;/);
+  });
+});
+
+describe("the early return added to startPlaying", () => {
+  const ctx = read("src/contexts/TVGameContext.tsx");
+
+  it("cannot strand the mutex", () => {
+    // startPlaying holds startPlayingMutexRef for its whole body and blocks
+    // re-entry on it. Returning early without releasing would wedge the round
+    // permanently — worse than the bug being fixed. It is released in a
+    // finally, so the return is safe; this pins that.
+    const fn = ctx.match(/const startPlaying = useCallback\(async \(\) => \{[\s\S]*?\n {2}\}, \[state\.sessionId, prepareForPlaying\]\);/);
+    expect(fn, "expected startPlaying").not.toBeNull();
+    expect(fn![0]).toMatch(/\} finally \{\s*\n\s*startPlayingMutexRef\.current = false;\s*\n\s*\}/);
+    expect(fn![0]).toMatch(/if \(playError\)/);
+  });
+});

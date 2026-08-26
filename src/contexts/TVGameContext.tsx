@@ -3118,6 +3118,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (triviaError || !triviaData?.questions) {
           tvLogError('startGame', 'No questions found for user trivia');
+          toast.error(t('extra.noQuestionsInLang'));
           return;
         }
 
@@ -3130,6 +3131,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (triviaQuestions.length === 0) {
           tvLogError('startGame', 'User trivia has no questions');
+          toast.error(t('extra.noQuestionsInLang'));
           return;
         }
 
@@ -3173,12 +3175,6 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             // No categoryUuid = fetch from all categories
           });
 
-          if (result.questions.length === 0) {
-            tvLogError('startGame', 'No questions available');
-            return;
-          }
-
-          // Log exhaustion info
           if (result.exhaustionInfo) {
             tvLog('Mixed category exhaustion info', {
               totalAvailable: result.exhaustionInfo.totalAvailable,
@@ -3209,7 +3205,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           // Standard category - resolve UUID
           const categoryUUID = await resolveCategoryUuid(categoryId);
           if (!categoryUUID) {
-            tvLogError('startGame', 'Failed to resolve category UUID');
+            tvLogError('startGame', `Failed to resolve category UUID from "${categoryId}"`);
+            toast.error(t('extra.tvhCategoriesNotFound'));
             return;
           }
 
@@ -3222,12 +3219,6 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             count: 10,
           });
 
-          if (result.questions.length === 0) {
-            tvLogError('startGame', 'No questions available');
-            return;
-          }
-
-          // Log exhaustion info
           if (result.exhaustionInfo) {
             tvLog('Question exhaustion info', {
               totalAvailable: result.exhaustionInfo.totalAvailable,
@@ -3265,8 +3256,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
 
+      // The one place an empty pool is reported, so every route into it —
+      // library category, mixed, user trivia — says the same thing instead of
+      // three of them returning in silence. questionService deliberately
+      // returns nothing when the player's language has no questions for the
+      // category ("the UI will show a modal instead"); on TV there was no
+      // modal and no toast, so Start simply did nothing.
       if (formattedQuestions.length === 0) {
-        tvLogError('startGame', 'No questions available');
+        tvLogError('startGame', `No questions available (category=${categoryId ?? 'none'} trivia=${userTriviaId ?? 'none'})`);
+        toast.error(t('extra.noQuestionsInLang'));
         return;
       }
 
@@ -3335,7 +3333,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Start countdown with questions, category info, persist totalRounds, AND lock player count
       // CRITICAL: Clear suggester fields to prevent stale IDs from blocking host on library categories
-      await supabase
+      // The write that actually starts the game, and the result is CHECKED.
+      //
+      // supabase-js does not throw on a rejected write — it hands back
+      // { error }. This call used to discard it, so a status the CHECK
+      // constraint does not allow, an RLS policy that does not match, or a
+      // column that has drifted all produced the same thing: the update
+      // silently did nothing, the local setState below ran anyway, the log
+      // cheerfully said "lobby -> countdown", and the session in the database
+      // stayed in `lobby`.
+      //
+      // The phase this screen renders comes from the database through the
+      // realtime subscription, not from that setState — so the host pressed
+      // Start and the lobby simply sat there. No toast, no error, no way to
+      // tell it apart from a button that was never wired up. That is the
+      // whole of "I couldn't start the game in TV mode".
+      const { error: startError } = await supabase
         .from('tv_sessions')
         .update({
           status: 'countdown',
@@ -3352,6 +3365,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         current_round_suggester_avatar_url: firstRoundSuggesterAvatarUrl,
       })
         .eq('id', state.sessionId);
+
+      if (startError) {
+        tvLogError('startGame', `tv_sessions update rejected: ${startError.message}`);
+        toast.error(t('extra.tvStartGameFailed'));
+        return;
+      }
 
       // Update local state with round tracking
       // CRITICAL: Sync suggester state locally to prevent stale isSuggester checks
@@ -3421,14 +3440,23 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.log('[startPlaying] ✅ UNIFIED preparation complete, expectedCount:', expectedCount);
       tvLog('startPlaying: Locked player count', { expectedCount });
       
-      // Transition to playing
-      await supabase
+      // Transition to playing — checked, for the same reason startGame's is.
+      // Every screen in the session reads its phase from this row, so a
+      // rejected write here leaves the 3-2-1 on the TV and nothing after it,
+      // while the log below claims the transition happened.
+      const { error: playError } = await supabase
         .from('tv_sessions')
         .update({
           status: 'playing',
           question_start_time: new Date().toISOString(),
         })
         .eq('id', state.sessionId);
+
+      if (playError) {
+        tvLogError('startPlaying', `tv_sessions update rejected: ${playError.message}`);
+        toast.error(t('extra.tvStartGameFailed'));
+        return;
+      }
 
       tvLogPhase('countdown', 'playing', 'startPlaying');
       
