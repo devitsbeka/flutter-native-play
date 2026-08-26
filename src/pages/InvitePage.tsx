@@ -345,7 +345,7 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
 
   if (loading || authLoading) {
     return (
-      <div className="h-[100dvh] flex items-center justify-center bg-[#7B68D9]">
+      <div className="h-[calc(100dvh-var(--safe-top)-var(--safe-bottom))] flex items-center justify-center bg-[#7B68D9]">
         <div className="w-8 h-8 border-4 border-white/80 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -360,7 +360,7 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
   // they will not tap it twice.
   if (!preview) {
     return (
-      <div className="h-[100dvh] flex flex-col items-center justify-center gap-6 px-8 bg-[#7B68D9] text-center">
+      <div className="h-[calc(100dvh-var(--safe-top)-var(--safe-bottom))] flex flex-col items-center justify-center gap-6 px-8 bg-[#7B68D9] text-center">
         <p className="text-white text-lg font-semibold">
           {t(loadFailed ? "extra.inviteLoadFailed" : "extra.inviteNotFound")}
         </p>
@@ -453,7 +453,7 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-7 mt-8 flex flex-col items-center gap-4 text-center"
+        className="mb-4 mt-4 flex flex-col items-center gap-4 text-center"
       >
         <InviteAvatar nickname={preview.host_nickname} avatarUrl={preview.host_avatar_url} />
         {/* Name first. The other order reads as a sentence with its subject
@@ -531,7 +531,7 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
           befriended by accepting; these are ordinary requests, because
           nobody else in the room agreed to anything. */}
       {players.length > 0 && (
-        <div className={cn(LIGHT_CARD, "mb-6 overflow-hidden")}>
+        <div className={cn(LIGHT_CARD, "mb-4 overflow-hidden")}>
           <div className="flex items-center gap-2 border-b border-[#161e46]/10 px-4 py-3">
             <Users className="h-4 w-4 text-[#5a6495]" />
             <span className="text-sm font-medium text-[#5a6495]">
@@ -697,7 +697,22 @@ function InviteShell({ children }: { children: React.ReactNode }) {
         <div className="absolute left-[73%] top-[30%] h-[24%] w-[30%] bg-[#fffcef] blur-[60px]" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[520px] flex-col px-5 pb-[calc(env(safe-area-inset-bottom)+20px)] pt-[calc(var(--safe-top)+24px)]">
+      {/* min-h-FULL, not min-h-[100dvh], and no safe insets of its own.
+          Both were wrong together and the second hid the first.
+
+          The safe area is already paid for twice above this line: #root pads
+          every screen by --safe-top/--safe-bottom, and safe-bleed on the
+          scroller cancels that and re-adds it so the wash still reaches the
+          true edge. The scrollport is therefore 100dvh MINUS both insets, and
+          a child asking for min-h-[100dvh] inside it overran by exactly their
+          sum — 93px on an iPhone 15 Pro — while its own pt/pb pushed the
+          content down a third time. On the device the CTA came out half cut
+          and "I already have an account" was off-screen entirely; it scrolled,
+          but nothing about a screen this short tells you to try.
+
+          min-h-full fills the scrollport instead of exceeding it, and the
+          padding here is now only the design's own 24/20. */}
+      <div className="relative mx-auto flex min-h-full w-full max-w-[520px] flex-col px-5 pb-5 pt-6">
         {/* Whose app this is. Most people reach these screens from a link in a
             chat and a good share of them have never heard of MyTrivia, so one
             image answers it before anything else is read. */}
