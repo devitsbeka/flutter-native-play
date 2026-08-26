@@ -22,6 +22,7 @@ than harvesting 3,000 rows and discarding most of them locally.
 """
 import argparse
 import hashlib
+import importlib.util
 import json
 import pathlib
 import sys
@@ -113,6 +114,18 @@ def commons_thumb(image_url, width=1280):
 
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
 
+# The builder's own licence rule, imported rather than restated. Commons hands
+# back terms the bank does not accept — "Copyrighted free use", "FAL" — and a
+# subject carrying one is a subject build-expansion.py will refuse at the end
+# of a long run. Dropping it here costs nothing and keeps ONE definition of
+# what may ship; widening the allowlist is a licensing decision and does not
+# belong in a harvest script.
+_bm_spec = importlib.util.spec_from_file_location(
+    "bm_lic", pathlib.Path(__file__).parent / "build-migration.py")
+_bm = importlib.util.module_from_spec(_bm_spec)
+_bm_spec.loader.exec_module(_bm)
+LICENSE_OK = _bm.LICENSE_OK
+
 
 def fetch_licences(file_titles):
     """LicenseShortName from Commons, 50 titles a call.
@@ -174,6 +187,11 @@ def finish(out, out_path):
     out = [e for e in out if e.get("license")]
     if before != len(out):
         print(f"dropped {before - len(out)} with no licence on Commons")
+
+    before = len(out)
+    out = [e for e in out if LICENSE_OK.match(e["license"].strip())]
+    if before != len(out):
+        print(f"dropped {before - len(out)} on terms the bank does not accept")
 
     with open(out_path, "w", encoding="utf8") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)
