@@ -46,6 +46,39 @@ export interface GrantRow {
   gems: number | null;
   /** When the grant was written. Its UTC date is the reward day. */
   created_at: string;
+  /**
+   * What claim_daily_reward wrote alongside the amounts: "day 3 double_coins",
+   * "day 3 gems", or — since 20260913100000 — "day 3 power freeze x2".
+   *
+   * Older rows carry the short form and simply have no power-up to recover.
+   */
+  reference?: string | null;
+}
+
+/**
+ * The power-up out of a ledger reference, when it names one.
+ *
+ * This is the ledger's one blind spot being closed. A grant row records coins
+ * and gems, and a day rebuilt from it could never show the power-up it also
+ * granted — so a week recovered from the ledger looked like coins every day,
+ * which is not what the player was given.
+ *
+ * Parsed rather than joined because there is nothing to join to: power-ups go
+ * straight into user_power_ups as a running total, with no per-day record
+ * anywhere. The reference string is the only place the day and the power-up
+ * appear together.
+ */
+export function powerUpFromReference(
+  reference: string | null | undefined,
+): { powerUp: string; powerUpCount: number } | null {
+  if (!reference) return null;
+  // "day 3 power freeze x2" — the trailing count is what the older short
+  // form lacks, so requiring it is what keeps this from half-matching.
+  const m = /\bpower\s+([a-z0-9-]+)\s+x(\d+)\b/i.exec(reference);
+  if (!m) return null;
+  const count = Number(m[2]);
+  if (!Number.isFinite(count) || count <= 0) return null;
+  return { powerUp: m[1], powerUpCount: count };
 }
 
 /** The UTC calendar day — the one `reward_date` is stamped on. */
@@ -73,11 +106,12 @@ export function mergeDailyReceipts(
   for (const g of grantRows) {
     const day = utcDay(g.created_at);
     if (!claimed.has(day)) continue;
+    const power = powerUpFromReference(g.reference);
     receipts[day] = {
       coins: g.coins ?? 0,
       gems: g.gems ?? 0,
-      powerUp: null,
-      powerUpCount: 0,
+      powerUp: power?.powerUp ?? null,
+      powerUpCount: power?.powerUpCount ?? 0,
     };
   }
 

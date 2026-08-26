@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { mergeDailyReceipts } from "@/utils/dailyRewardReceipts";
+import { mergeDailyReceipts, powerUpFromReference } from "@/utils/dailyRewardReceipts";
 
 /**
  * Every claimed day says what it paid.
@@ -218,5 +218,141 @@ describe("the receipt pill's spacing", () => {
   it("still fits the widest receipt on one line", () => {
     expect(pill).toMatch(/whitespace-nowrap/);
     expect(pill).toMatch(/min-w-\[144px\] max-w-full/);
+  });
+});
+
+/**
+ * The ledger's blind spot, closed.
+ *
+ * A grant row records coins and gems. Power-ups go straight into
+ * user_power_ups as a running total, with no per-day record anywhere — so a
+ * day rebuilt from the ledger could show coins and gems but never the
+ * power-up, and a week recovered that way looked like coins every day.
+ *
+ * That is what "we gave the user coins all 3 days, no power-ups at all" was:
+ * under the old flat odds a day reads as coins-only 35% of the time when the
+ * receipt columns are intact, but 70% when it is rebuilt from the ledger,
+ * because a `power` day loses its pill. Three in a row: 4.3% against 34.3%.
+ *
+ * claim_daily_reward now writes "day 3 power freeze x2" into the grant's
+ * reference instead of "day 3 power", which is enough to draw the whole
+ * receipt from the ledger alone.
+ */
+describe("recovering a power-up from the ledger reference", () => {
+  it("reads the power-up and its count", () => {
+    expect(powerUpFromReference("day 3 power freeze x2")).toEqual({
+      powerUp: "freeze",
+      powerUpCount: 2,
+    });
+  });
+
+  it("handles a hyphenated power-up name", () => {
+    expect(powerUpFromReference("day 7 power time-drain x3")).toEqual({
+      powerUp: "time-drain",
+      powerUpCount: 3,
+    });
+  });
+
+  it("handles the numeric one", () => {
+    expect(powerUpFromReference("day 1 power 5050 x1")).toEqual({
+      powerUp: "5050",
+      powerUpCount: 1,
+    });
+  });
+
+  it("recovers nothing from the old short form", () => {
+    // Rows written before 20260913100000 name the bonus but not the prize.
+    // Half-matching those would invent a power-up nobody was given.
+    expect(powerUpFromReference("day 3 power")).toBeNull();
+  });
+
+  it("recovers nothing from a day that won something else", () => {
+    expect(powerUpFromReference("day 3 gems")).toBeNull();
+    expect(powerUpFromReference("day 3 double_coins")).toBeNull();
+  });
+
+  it("survives a missing reference", () => {
+    expect(powerUpFromReference(null)).toBeNull();
+    expect(powerUpFromReference(undefined)).toBeNull();
+    expect(powerUpFromReference("")).toBeNull();
+  });
+
+  it("puts the recovered power-up on the day's receipt", () => {
+    const out = mergeDailyReceipts(
+      [day("2026-08-25", true, null)],
+      [{ coins: 100, gems: 0, created_at: "2026-08-25T09:00:00.000Z", reference: "day 3 power freeze x2" }]
+    );
+    expect(out["2026-08-25"]).toEqual({
+      coins: 100,
+      gems: 0,
+      powerUp: "freeze",
+      powerUpCount: 2,
+    });
+  });
+
+  it("still lets the receipt columns win where they exist", () => {
+    // They are the fuller record; the reference is a reconstruction.
+    const out = mergeDailyReceipts(
+      [day("2026-08-25", true, 100, { power_up: "replace", power_up_count: 1 })],
+      [{ coins: 100, gems: 0, created_at: "2026-08-25T09:00:00.000Z", reference: "day 3 power freeze x2" }]
+    );
+    expect(out["2026-08-25"].powerUp).toBe("replace");
+  });
+});
+
+/**
+ * The reward ladder itself. The coin base always climbed across the streak;
+ * the surprise on top of it did not, so day seven was day one with a bigger
+ * number. 20260913100000 makes the surprise climb too.
+ */
+describe("the reward ladder", () => {
+  const ladder = readFileSync(
+    join(process.cwd(), "supabase/migrations/20260913100000_daily_reward_ladder.sql"),
+    "utf8"
+  );
+
+  it("keeps the coin base that already escalated", () => {
+    for (const [d, c] of [[1, 50], [2, 75], [3, 100], [4, 125], [5, 150], [6, 200], [7, 300]]) {
+      expect(ladder).toMatch(new RegExp(`\\(${d},\\s*${c}\\)`));
+    }
+  });
+
+  it("makes the power-up more likely as the streak goes on", () => {
+    // 20% on day one, 50% on day seven.
+    expect(ladder).toMatch(/v_power_pct := 0\.20 \+ 0\.05 \* \(v_day - 1\)/);
+  });
+
+  it("holds gems at a flat thirty per cent, so one option stays steady", () => {
+    expect(ladder).toMatch(/v_roll < v_power_pct \+ 0\.30/);
+  });
+
+  it("grows the size of the prize too, not just its odds", () => {
+    expect(ladder).toMatch(/v_gems := \(1 \+ v_day \/ 3\) \+ floor\(random\(\) \* 3\)::integer/);
+    expect(ladder).toMatch(/v_power_n := \(1 \+ v_day \/ 5\) \+ floor\(random\(\) \* 2\)::integer/);
+  });
+
+  it("still awards exactly one bonus, so the receipt never needs a third pill", () => {
+    // `:=` exactly — `:?=` also matched the `IF bonus = 'power'` comparison
+    // further down and counted it as a fourth branch.
+    const branches = ladder.match(/bonus\s+:=\s+'(power|gems|double_coins)'/g) ?? [];
+    expect(branches.map((b) => b.match(/'(\w+)'/)![1]).sort())
+      .toEqual(["double_coins", "gems", "power"]);
+    expect(ladder).toMatch(/IF v_roll < v_power_pct THEN[\s\S]*?ELSIF[\s\S]*?ELSE[\s\S]*?END IF;/);
+  });
+
+  it("records the power-up in the ledger reference", () => {
+    expect(ladder).toMatch(/v_reference := v_reference \|\| ' ' \|\| v_power \|\| ' x' \|\| v_power_n::text;/);
+  });
+
+  it("keeps the PRO Plus multiplier and the receipt write", () => {
+    expect(ladder).toMatch(/v_coins := floor\(v_coins \* 1\.5\)/);
+    expect(ladder).toMatch(/coins_awarded = v_coins/);
+  });
+
+  it("revokes from PUBLIC before granting, as every definer function must", () => {
+    const revokeAt = ladder.indexOf("REVOKE ALL ON FUNCTION public.claim_daily_reward() FROM public;");
+    const grantAt = ladder.indexOf("GRANT EXECUTE ON FUNCTION public.claim_daily_reward() TO authenticated;");
+    expect(revokeAt).toBeGreaterThan(-1);
+    expect(grantAt).toBeGreaterThan(revokeAt);
   });
 });
