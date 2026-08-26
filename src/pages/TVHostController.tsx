@@ -14,7 +14,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Avatar } from '@/components/shared/Avatar';
 import { TVGameOverScreen } from '@/components/tv/TVGameOverScreen';
 import { useTVGame } from '@/contexts/TVGameContext';
-import { useIdleTimeout } from '@/hooks/useIdleTimeout';
+import { useIdleTimeout, tvPhaseCanStall } from '@/hooks/useIdleTimeout';
 import { tvLog, tvLogError } from '@/utils/tvDebug';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
@@ -59,6 +59,7 @@ const TVHostController: React.FC = () => {
     myScore,
     myAnswer,
     code: gameCode,
+    sessionId: contextSessionId,
     categoryName,
     categoryIcon,
     roundNumber,
@@ -102,12 +103,21 @@ const TVHostController: React.FC = () => {
     isSuggester,
   });
 
-  // Auto-redirect to team page when game is idle for 60s
-  useIdleTimeout(contextPhase, () => {
-    tvLog('Host idle timeout — returning to team page');
-    leaveSession();
-    navigate('/team', { replace: true });
-  });
+  // Leave a session that has genuinely stalled — but only from a phase that
+  // was supposed to advance on its own. The host spends the lobby holding a
+  // QR code up to the room and building a round queue, which takes minutes
+  // and never changes the phase; this used to eject them mid-setup, one
+  // minute in, and take the Start button with it.
+  useIdleTimeout(
+    contextPhase,
+    () => {
+      tvLog('Host idle timeout — returning to team page', { phase: contextPhase });
+      leaveSession();
+      navigate('/team', { replace: true });
+    },
+    60_000,
+    { enabled: tvPhaseCanStall(contextPhase) },
+  );
 
   // Room ID for queue fallback
   const [roomId, setRoomId] = useState<string | null>(null);
@@ -1151,9 +1161,13 @@ const TVHostController: React.FC = () => {
             variant="primary"
             className="w-full"
             onClick={() => handleStartGame()}
-            disabled={players.length < 1 || queue.length === 0}
+            /* contextSessionId, not the one from the URL: startGame checks
+               the session the context has actually joined, and until that
+               lands the press is a no-op. Better a button that says it is
+               not ready than one that looks ready and does nothing. */
+            disabled={players.length < 1 || queue.length === 0 || !contextSessionId}
           >
-            <Play className="w-5 h-5 mr-2" />
+            {contextSessionId ? <Play className="w-5 h-5 mr-2" /> : <Loader2 className="w-5 h-5 mr-2 animate-spin" />}
             {queue.length === 0
               ? t("extra.tvhAddRoundsToQueue")
               : players.length < 1

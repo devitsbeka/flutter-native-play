@@ -799,6 +799,23 @@ function TeamContentV2() {
     );
   }
 
+  // Auth has not answered yet. `user` is null until it does, and null is the
+  // same shape as signed-out, so without this the wall renders over a session
+  // that is about to arrive.
+  //
+  // That is what a host thrown here from a TV session saw: they are signed
+  // in, they land on a fresh mount of this page, and for as long as the
+  // session takes to restore they are told to sign in. authLoading was
+  // already read for the effects below; the render was the one place that
+  // ignored it.
+  if (!user && authLoading) {
+    return (
+      <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   // An invite is being opened by a signed-out visitor: the anonymous guest is
   // still being created, so hold the screen rather than flashing the "sign in
   // to play" wall over an invite that is about to open itself.

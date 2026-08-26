@@ -2994,7 +2994,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Start the game (host only) - supports both categories and user trivias
   const startGame = useCallback(async (categoryId?: string, userTriviaId?: string) => {
-    if (!state.sessionId || !isHost) return;
+    if (!state.sessionId || !isHost) {
+      // This return used to be silent, and it is the other half of "I can't
+      // press Start". The button guards on the sessionId in the URL; this
+      // guards on the one the context sets once the host has actually joined
+      // the session, and between mount and that join the two disagree. A tap
+      // in that window did nothing at all — no toast, no log, no state
+      // change — which is indistinguishable from a broken button.
+      tvLogError('startGame', `blocked: contextSessionId=${state.sessionId ?? 'null'} isHost=${isHost}`);
+      // Only the host is ever offered the button, so only the host is owed
+      // an explanation; a guest reaching here is a no-op by design.
+      if (isHost) toast.error(t('extra.tvStartGameFailed'));
+      return;
+    }
 
     // Validate that either categoryId or userTriviaId is provided
     if (!categoryId && !userTriviaId) {
