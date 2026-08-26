@@ -17,6 +17,7 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { useIdleTimeout, tvPhaseCanStall } from '@/hooks/useIdleTimeout';
 import { tvLog, tvLogError } from '@/utils/tvDebug';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
+import { useDurableRoster } from '@/hooks/useDurableRoster';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { ControllerPollScreen } from '@/components/controller/ControllerPollScreen';
 import { ControllerPollResults } from '@/components/controller/ControllerPollResults';
@@ -118,6 +119,11 @@ const TVHostController: React.FC = () => {
     60_000,
     { enabled: tvPhaseCanStall(contextPhase) },
   );
+
+  // Called here, at the top level, NOT inside the phase branch that renders
+  // the game-over screen: hooks must run in the same order on every render or
+  // React throws #310, which this file has been bitten by before.
+  const durableRoster = useDurableRoster(contextSessionId, players);
 
   // Room ID for queue fallback
   const [roomId, setRoomId] = useState<string | null>(null);
@@ -890,10 +896,15 @@ const TVHostController: React.FC = () => {
   if (localPhase === 'completed') {
     // Use players from context directly - they already have correct data
     // The host is already in the players list via presence tracking
-    const allPlayers = players.map(p => ({
+    // Presence, backed by tv_players — the same merge the TV's own results
+    // screen uses. Mapping raw presence here is what drew a leaderboard with
+    // one player on zero points while the TV three feet away showed two
+    // players and their real scores: presence had gone stale by the time the
+    // round ended, and nothing stood behind it.
+    const allPlayers = durableRoster.map(p => ({
       id: p.id,
       nickname: p.nickname,
-      avatar_url: p.avatar_url,
+      avatar_url: p.avatar_url ?? undefined,
       score: p.score,
       isHost: p.isHost,
     }));
