@@ -17,6 +17,7 @@ import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useCategoryIdentity } from "@/hooks/useCategoryIdentity";
 import { readInviteIntent, roomIsFreshEnoughToOffer, senderCanOfferRoom } from "@/utils/inviteLink";
 import logoLight from "@/assets/mytrivia-logo-light.svg";
+import logoDark from "@/assets/mytrivia-logo.svg";
 
 /**
  * The other end of a shared invite link.
@@ -382,6 +383,75 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
     );
   }
 
+  /**
+   * A friend request is its own screen, drawn to Figma 900:6931.
+   *
+   * It has no room card, no player list and nothing to scroll — one face, one
+   * sentence and one button — and the purple wall it shared with the room
+   * invite left it looking like a page whose content had failed to load. The
+   * design gives it the app's own lavender ground, the dark logo, and the
+   * button on the bottom edge where a single-decision screen puts it.
+   *
+   * The room invite keeps the purple field: its card and roster are drawn in
+   * white-on-translucent and there is no design for them on a light ground.
+   */
+  if (!hasRoom && !isOwnLink) {
+    return (
+      <FriendInviteScreen
+        nickname={preview.host_nickname}
+        avatarUrl={preview.host_avatar_url}
+        subtitle={t("extra.inviteFriendSubtitle")}
+        tagline={t("extra.inviteFriendTagline")}
+        // The design is the Georgian screen, where uppercase has nothing to
+        // work on but the Latin inside the line: "MyTrivia-ზე" becomes
+        // "MYTRIVIA-ზე" and the Georgian is untouched, because the script has
+        // no cases. Applied to English the same rule shouts a whole sentence
+        // — WANTS TO BE FRIENDS ON MYTRIVIA — which is not what was drawn.
+        // The name keeps its caps in every language; that one is a name.
+        shoutBody={language === "ka"}
+        cta={
+          joining
+            ? t("extra.inviteJoining")
+            : alreadyFriends
+              ? t("extra.inviteGoHome")
+              : t("extra.inviteAcceptFriend")
+        }
+        onAccept={accept}
+        disabled={joining || (!user && !nickname.trim())}
+        guestNameField={
+          !user && (
+            <div className="w-full">
+              <label className="mb-2 block text-sm font-medium text-[#5a6495]">
+                {t("extra.inviteYourName")}
+              </label>
+              <input
+                value={nickname}
+                onChange={e => setNickname(e.target.value.slice(0, 20))}
+                placeholder={t("extra.inviteNamePlaceholder")}
+                maxLength={20}
+                autoComplete="nickname"
+                className={cn(
+                  "h-14 w-full rounded-2xl px-4 text-base text-[#161e46] placeholder:text-[#5a6495]/60",
+                  "border border-[#7439cb]/25 bg-white/70 outline-none focus:border-[#7439cb]/60",
+                )}
+              />
+            </div>
+          )
+        }
+        signInLink={
+          !user && (
+            <button
+              onClick={() => navigate(`/auth?returnTo=${encodeURIComponent(`/i/${code}${search}`)}`)}
+              className="w-full text-sm font-medium text-[#5a6495] underline underline-offset-4"
+            >
+              {t("extra.inviteHaveAccount")}
+            </button>
+          )
+        }
+      />
+    );
+  }
+
   return (
     // Its own scroller, not the document's: nativeShell disables the webview
     // scroller for the life of the app, so a page that merely grows is frozen
@@ -636,6 +706,122 @@ export default function InvitePage({ by = "invite" }: { by?: "invite" | "room" }
             {t("extra.inviteHaveAccount")}
           </button>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The friend-request screen — Figma 900:6931.
+ *
+ * Geometry comes from the design's 501x946 frame, expressed as percentages of
+ * it rather than as the pixels themselves, so the layout holds from a small
+ * phone to a tablet instead of only at the width it was drawn.
+ *
+ *   ground      #cab7e6, with two blurred washes over it: a cold blue at the
+ *               upper left and a warm cream at the upper right. They are what
+ *               stop a flat fill from reading as an error page.
+ *   avatar      138px in a 501px frame -> 27.5% of the width, ringed in
+ *               #7439cb at 12px -> 2.4%, over a soft yellow bloom.
+ *   type        TASolivare for the name and the sentence, Google Sans for the
+ *               line under them; both already the project's display and body
+ *               families, which is why no font work was needed.
+ *   uppercase   Georgian has no cases, so this only lifts the Latin inside
+ *               the line -- "MyTrivia" becomes "MYTRIVIA", the nickname
+ *               becomes TRIVIAMASTE -- which is what the design shows.
+ */
+function FriendInviteScreen({
+  nickname,
+  avatarUrl,
+  subtitle,
+  tagline,
+  cta,
+  onAccept,
+  disabled,
+  guestNameField,
+  signInLink,
+  shoutBody,
+}: {
+  nickname: string;
+  avatarUrl: string | null;
+  subtitle: string;
+  tagline: string;
+  cta: string;
+  shoutBody: boolean;
+  onAccept: () => void;
+  disabled: boolean;
+  guestNameField: React.ReactNode;
+  signInLink: React.ReactNode;
+}) {
+  return (
+    // A fixed-height box that scrolls itself. The document does not scroll on
+    // the device -- see CLAUDE.md 4b -- and a guest gets a name field and a
+    // keyboard on top of this, which is when the overflow is needed.
+    <div className="h-[100dvh] overflow-y-auto safe-bleed bg-[#cab7e6]">
+      {/* The two washes. Fixed rather than absolute so they stay put behind
+          the content when a keyboard pushes the page up. */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-[7%] top-[26%] h-[24%] w-[30%] bg-[#9ec7f0] blur-[60px]" />
+        <div className="absolute left-[73%] top-[30%] h-[24%] w-[30%] bg-[#fffcef] blur-[60px]" />
+      </div>
+
+      <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[520px] flex-col px-5 pb-[calc(env(safe-area-inset-bottom)+20px)] pt-[calc(var(--safe-top)+24px)]">
+        {/* The dark lockup: the ground is light here, where the room invite's
+            is purple. Same asset the home screen opens with. */}
+        <div className="flex justify-center">
+          <img src={logoDark} alt="MyTrivia" className="h-11 w-auto select-none" draggable={false} />
+        </div>
+
+        {/* Sat a little above the true middle, as drawn: the design puts this
+            block's centre at 41% of the frame, and centring it between the
+            logo and the button would land it at 48%. */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-1 flex-col items-center justify-center gap-6 pb-[22%] text-center"
+        >
+          <div
+            className="flex h-[108px] w-[108px] shrink-0 items-center justify-center rounded-full border-[9px] border-[#7439cb] bg-[#cab7e6]"
+            style={{ boxShadow: "0px 4px 4px 13px rgba(253,206,46,0.19)" }}
+          >
+            <SafeAvatar
+              avatarUrl={avatarUrl}
+              fallback={(nickname || "?").charAt(0).toUpperCase()}
+              className="h-full w-full"
+              fallbackClassName="text-2xl font-bold bg-white/70 text-[#161e46]"
+            />
+          </div>
+
+          <div className="w-full">
+            <h1 className="font-display text-[19px] uppercase leading-tight tracking-[-0.16px] text-[#161e46]">
+              {nickname}
+            </h1>
+            <p className={cn("mt-7 font-display text-[19px] leading-tight tracking-[-0.16px] text-[#161e46]", shoutBody && "uppercase")}>
+              {subtitle}
+            </p>
+            <p className={cn("mt-2 text-[14px] font-medium leading-snug tracking-[-0.16px] text-[#5a6495]", shoutBody && "uppercase")}>
+              {tagline}
+            </p>
+          </div>
+
+          {guestNameField}
+        </motion.div>
+
+        {/* On the bottom edge, which is where a screen with one decision on it
+            puts its button. */}
+        <div className="shrink-0 space-y-3">
+          <ChunkyButton
+            variant="white"
+            size="xl"
+            className="w-full"
+            onClick={onAccept}
+            disabled={disabled}
+            icon={<UserPlus className="h-5 w-5" />}
+          >
+            {cta}
+          </ChunkyButton>
+          {signInLink}
+        </div>
       </div>
     </div>
   );
