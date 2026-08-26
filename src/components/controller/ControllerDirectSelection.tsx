@@ -10,10 +10,12 @@ import {
   Sparkles,
   Crown,
   ArrowLeft,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
+import { useCategoryDisplay } from '@/hooks/useCategoryDisplay';
 import { supabase } from '@/integrations/supabase/client';
 import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
 import { toast } from "@/lib/toast";
@@ -41,7 +43,11 @@ interface ControllerDirectSelectionProps {
   sessionId: string;
   userId: string;
   roomId?: string | null;
-  onStartGame: (firstQueueItem: { categoryId?: string; userTriviaId?: string }) => void;
+  /** Returns a promise so the button can stay pressed until it settles —
+   *  starting a round is five or six round trips, not an instant. */
+  onStartGame: (firstQueueItem: { categoryId?: string; userTriviaId?: string }) => void | Promise<unknown>;
+  /** The host has pressed Start and the session has not moved yet. */
+  isStarting?: boolean;
   onBack?: () => void;
 }
 
@@ -50,6 +56,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
   userId,
   roomId,
   onStartGame,
+  isStarting = false,
   onBack,
 }) => {
   const { t } = useLanguage();
@@ -64,6 +71,12 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
 
   // Use the TV session queue hook
   const { queue, addCategoryToQueue, removeFromQueue, hasQueue } = useTVSessionQueue(sessionId, roomId);
+
+  // The icon a category is drawn with comes from the same column Discover
+  // reads, so a round in the queue wears the same face as its card. The slug
+  // stored on the queue row is only a fallback: it was snapshotted when the
+  // round was added and does not follow the category if its icon changes.
+  const { iconSlugFor, nameFor } = useCategoryDisplay();
 
   // Load categories when picker opens
   useEffect(() => {
@@ -211,14 +224,19 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
     }
   };
 
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
     if (queue.length === 0) {
       toast.error(t("extra.tvChooseMin1"));
       return;
     }
-    
+    if (isStarting) return;
+
     const firstQueued = queue[0];
-    onStartGame({
+    // Awaited, so the button below can stay held down for the whole attempt.
+    // This used to be fire-and-forget: the press returned immediately, the
+    // button went back to looking exactly as pressable as before, and the
+    // several seconds of work that followed were invisible.
+    await onStartGame({
       categoryId: firstQueued.category_id || undefined,
       userTriviaId: firstQueued.user_trivia_id || undefined,
     });
@@ -266,12 +284,17 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                       : 'bg-white/10 border-white/20 hover:border-purple-400'
                   }`}
                 >
-                  {category.icon_slug ? (
-                    <QuizCategoryIcon iconSlug={category.icon_slug} size={40} className="w-10 h-10" />
+                  {iconSlugFor(category.category_id, category.icon_slug) ? (
+                    <QuizCategoryIcon
+                      iconSlug={iconSlugFor(category.category_id, category.icon_slug) ?? undefined}
+                      categoryId={category.category_id}
+                      size={40}
+                      className="w-10 h-10"
+                    />
                   ) : (
                     <span className="text-2xl">{category.icon}</span>
                   )}
-                  <span className="flex-1 text-left font-medium text-white">{category.name}</span>
+                  <span className="flex-1 text-left font-medium text-white">{nameFor(category.category_id, category.name)}</span>
                   {isAlreadyInQueue ? (
                     <span className="text-xs text-purple-400">{t("extra.tvAlreadyAdded")}</span>
                   ) : isSelected ? (
@@ -415,15 +438,20 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                     <div className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs font-bold text-purple-200">
                       {index + 1}
                     </div>
-                  {item.icon_slug ? (
-                    <QuizCategoryIcon iconSlug={item.icon_slug} size={40} className="w-10 h-10" />
+                  {iconSlugFor(item.category_id, item.icon_slug) ? (
+                    <QuizCategoryIcon
+                      iconSlug={iconSlugFor(item.category_id, item.icon_slug) ?? undefined}
+                      categoryId={item.category_id ?? undefined}
+                      size={40}
+                      className="w-10 h-10"
+                    />
                     ) : (
                       <div className="w-10 h-10 rounded-lg bg-purple-500/30 flex items-center justify-center">
                         <Sparkles className="w-5 h-5 text-purple-300" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white text-sm truncate">{item.category_name}</p>
+                      <p className="font-medium text-white text-sm truncate">{nameFor(item.category_id, item.category_name)}</p>
                       <p className="text-xs text-purple-300">
                         {item.source_type === 'category' ? t("extra.tvCategoryType") : t("extra.tvYourTrivia")}
                       </p>
@@ -476,12 +504,16 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
             variant="primary"
             className="w-full pointer-events-auto"
             onClick={handleStartGame}
-            disabled={queue.length === 0}
+            disabled={queue.length === 0 || isStarting}
           >
-            <Play className="w-5 h-5 mr-2" />
-            {queue.length === 0 
-              ? t("extra.tvChooseMin1Short")
-              : t("extra.tvStartGameNRounds", { n: queue.length })}
+            {isStarting
+              ? <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              : <Play className="w-5 h-5 mr-2" />}
+            {isStarting
+              ? t("categoryWheel.gameStarting")
+              : queue.length === 0
+                ? t("extra.tvChooseMin1Short")
+                : t("extra.tvStartGameNRounds", { n: queue.length })}
           </ChunkyButton>
         </div>
       </div>

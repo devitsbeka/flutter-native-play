@@ -225,9 +225,12 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
           // Only prepend initial category/trivia if NOT already in queue and NOT a collection
           else if (!initialAlreadyInQueue) {
             if (roomData.category_id) {
-              // Use CATEGORY_ID_TO_ICON to get proper icon slug instead of emoji
-              const { CATEGORY_ID_TO_ICON } = await import('@/data/categoryIconMap');
-              const iconSlug = CATEGORY_ID_TO_ICON[roomData.category_id] || null;
+              // The category's own icon_slug, which is what Discover draws
+              // from; the hardcoded map is only the net underneath it.
+              const { categoryIconSlugSync, primeCategoryIconSlugs } =
+                await import('@/hooks/useCategoryDisplay');
+              await primeCategoryIconSlugs();
+              const iconSlug = categoryIconSlugSync(roomData.category_id);
               
               rowsToInsert.push({
                 session_id: session.id,

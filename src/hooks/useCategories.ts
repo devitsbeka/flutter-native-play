@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Category } from '@/data/categories';
 import { readAppLanguage } from '@/utils/appLanguage';
 import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
+import { categoryTier, type CategoryTier } from '@/utils/categoryAccess';
 
 const DEFAULT_LANGUAGE = 'en';
 
@@ -34,7 +35,8 @@ export interface DatabaseCategory {
   is_language_specific?: boolean | null;
   // Optional because the column arrives with the free/premium migration and
   // the client ships ahead of it: until that runs, `select('*')` simply does
-  // not return it and every category reads as free.
+  // not return it. `categoryTier` falls back to its own list in that case,
+  // so the nine premium categories are locked either way.
   is_premium?: boolean | null;
 }
 
@@ -43,25 +45,39 @@ export interface TransformedCategory extends Category {
   category_id: string; // String slug like "movies"  
   icon_slug?: string | null;
   image_url?: string | null;
-  /** What Explore's უფასო / პრემიუმ filters split on. */
+  /** What Explore's უფასო / პრემიუმ filters split on, and what the lock on
+   *  a card is drawn from. See `categoryTier` for how the two combine. */
   isPremium: boolean;
+  /** free / standard / premium — the whole of what a category costs. */
+  tier: CategoryTier;
 }
 
 // Transform database category to app Category format
-const transformCategory = (dbCat: DatabaseCategory): TransformedCategory => ({
-  id: dbCat.category_id, // Keep using category_id as id for backwards compatibility
-  uuid: dbCat.id, // Add the actual UUID
-  category_id: dbCat.category_id,
-  name: dbCat.name,
-  icon: dbCat.icon,
-  icon_slug: dbCat.icon_slug,
-  color: dbCat.color,
-  description: dbCat.description || '',
-  totalLevels: dbCat.total_levels,
-  type: dbCat.type as 'classic' | 'fun' | 'educational',
-  image_url: dbCat.image_url,
-  isPremium: dbCat.is_premium === true,
-});
+const transformCategory = (dbCat: DatabaseCategory): TransformedCategory => {
+  // The tier is worked out ONCE, here, from the row as it actually arrived —
+  // column present or not. Every consumer takes `tier` rather than
+  // re-deriving it, so a card and the level grid behind it cannot disagree
+  // about whether a category is locked.
+  const tier = categoryTier({
+    category_id: dbCat.category_id,
+    isPremium: dbCat.is_premium,
+  });
+  return {
+    id: dbCat.category_id, // Keep using category_id as id for backwards compatibility
+    uuid: dbCat.id, // Add the actual UUID
+    category_id: dbCat.category_id,
+    name: dbCat.name,
+    icon: dbCat.icon,
+    icon_slug: dbCat.icon_slug,
+    color: dbCat.color,
+    description: dbCat.description || '',
+    totalLevels: dbCat.total_levels,
+    type: dbCat.type as 'classic' | 'fun' | 'educational',
+    image_url: dbCat.image_url,
+    isPremium: tier === 'premium',
+    tier,
+  };
+};
 
 // Minimum time between category refetches (60 seconds)
 const CATEGORIES_STALE_TIME = 60 * 1000;

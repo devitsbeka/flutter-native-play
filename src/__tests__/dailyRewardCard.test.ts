@@ -50,7 +50,9 @@ describe("what the middle of the card shows", () => {
 
   it("still itemises the claim on the button", () => {
     // The receipt is the one place the amounts appear now, so it has to stay.
-    expect(modal).toMatch(/<ClaimedAmount icon=\{coinIcon\} value=\{String\(claimedReward\.coins\)\}/);
+    // It reads `receipt` — the day's own claim, whichever source supplied it
+    // — rather than only the refetched row; see dailyRewardReceipts.test.ts.
+    expect(modal).toMatch(/<ClaimedAmount icon=\{coinIcon\} value=\{String\(receipt\.coins\)\}/);
   });
 });
 
