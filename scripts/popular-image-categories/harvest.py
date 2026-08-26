@@ -23,6 +23,7 @@ than harvesting 3,000 rows and discarding most of them locally.
 import argparse
 import hashlib
 import json
+import pathlib
 import sys
 import time
 import urllib.parse
@@ -124,28 +125,59 @@ def fetch_licences(file_titles):
     """
     out = {}
     titles = list(file_titles)
-    for i in range(0, len(titles), 50):
-        batch = titles[i:i + 50]
+    # Twenty-five, not fifty: a batch that times out costs the whole batch,
+    # and extmetadata on fifty titles is where this API starts to crawl.
+    for i in range(0, len(titles), 25):
+        batch = titles[i:i + 25]
         params = {
             "action": "query", "format": "json", "prop": "imageinfo",
             "iiprop": "extmetadata", "iiextmetadatafilter": "LicenseShortName",
             "titles": "|".join(batch),
         }
         url = COMMONS_API + "?" + urllib.parse.urlencode(params)
-        req = urllib.request.Request(url, headers={"User-Agent": UA})
-        try:
-            with urllib.request.urlopen(req, timeout=90) as r:
-                pages = json.loads(r.read()).get("query", {}).get("pages", {})
-        except Exception as exc:  # noqa: BLE001
-            print(f"  licence batch {i // 50} failed: {exc}", file=sys.stderr)
+        # Commons 429s a run of this size, and a batch abandoned on the first
+        # refusal is 25 subjects thrown away for a reason that clears in a
+        # second. One pass without retries dropped 250 of 532 — subjects
+        # scattered through the fame ranking, so the survivors reach deeper
+        # into it than they should and the difficulty curve pays for it.
+        pages = None
+        for attempt in range(4):
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
+            try:
+                with urllib.request.urlopen(req, timeout=40) as r:
+                    pages = json.loads(r.read()).get("query", {}).get("pages", {})
+                break
+            except Exception as exc:  # noqa: BLE001
+                if attempt == 3:
+                    print(f"  licence batch {i // 25} failed: {exc}", file=sys.stderr)
+                else:
+                    time.sleep(3 * (attempt + 1))
+        if pages is None:
             continue
         for page in pages.values():
             info = (page.get("imageinfo") or [{}])[0]
             short = (info.get("extmetadata") or {}).get("LicenseShortName", {}).get("value")
             if short:
                 out[page.get("title", "")] = short
-        time.sleep(0.4)  # courtesy: this is a public API
+        time.sleep(1.0)  # courtesy, and it keeps the 429s away
     return out
+
+
+def finish(out, out_path):
+    """Attach licences and write. A subject with no recorded licence is
+    dropped rather than guessed at: the picture is somebody else's work."""
+    licences = fetch_licences({e["file"] for e in out if not e.get("license")})
+    before = len(out)
+    for e in out:
+        if not e.get("license"):
+            e["license"] = licences.get(e["file"], "")
+    out = [e for e in out if e.get("license")]
+    if before != len(out):
+        print(f"dropped {before - len(out)} with no licence on Commons")
+
+    with open(out_path, "w", encoding="utf8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=1)
+    print(f"{len(out)} subjects -> {out_path}")
 
 
 def main():
@@ -154,7 +186,18 @@ def main():
     ap.add_argument("out")
     ap.add_argument("--min-sitelinks", type=int, default=60)
     ap.add_argument("--limit", type=int, default=1200)
+    ap.add_argument(
+        "--from", dest="resume", metavar="FILE",
+        help="skip the SPARQL query and fill licences on an existing harvest; "
+             "the public endpoint 504s often and a good harvest should not be "
+             "thrown away with it")
     args = ap.parse_args()
+
+    if args.resume:
+        out = json.loads(pathlib.Path(args.resume).read_text())
+        print(f"resuming from {len(out)} harvested subjects")
+        finish(out, args.out)
+        return
 
     data = run_query(build_query(args.slug, args.min_sitelinks, args.limit))
     rows = data["results"]["bindings"]
@@ -176,18 +219,7 @@ def main():
             "sitelinks": int(row["sitelinks"]["value"]),
         })
 
-    # A subject with no recorded licence is dropped rather than guessed at.
-    licences = fetch_licences({e["file"] for e in out})
-    before = len(out)
-    for e in out:
-        e["license"] = licences.get(e["file"], "")
-    out = [e for e in out if e["license"]]
-    if before != len(out):
-        print(f"dropped {before - len(out)} with no licence on Commons")
-
-    with open(args.out, "w", encoding="utf8") as f:
-        json.dump(out, f, ensure_ascii=False, indent=1)
-    print(f"{len(out)} subjects -> {args.out}")
+    finish(out, args.out)
 
 
 if __name__ == "__main__":
