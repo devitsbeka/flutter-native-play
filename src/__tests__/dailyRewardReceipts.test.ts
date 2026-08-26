@@ -209,7 +209,39 @@ describe("the receipt pill's spacing", () => {
     // of ink against 6.0, a bit over 3x. At 12px it was 2.1x and "125" and
     // the snowflake read as one run.
     expect(pill).toMatch(/<ClaimedAmount icon=\{gemIcon\}[^>]*className="ml-\[18px\]"/);
-    expect(pill).toMatch(/<span className="ml-\[18px\] flex shrink-0 items-center gap-0\.5/);
+    expect(pill).toMatch(/<span className="ml-\[18px\] flex shrink-0 items-center gap-\[5px\]/);
+  });
+
+  /**
+   * A power-up badge is sized and spaced differently from the coin and gem
+   * ON PURPOSE, and this is the test that stops someone "fixing" it back.
+   *
+   * The currency icons fill about two thirds of their own square — 11.4 and
+   * 12.0px of ink in an 18px box, with ~3.2px clear on the right. Every power
+   * badge fills its file edge to edge: 17.9px of ink in that box, 0.1px
+   * clear. Given identical numbers, the snowflake therefore drew half again
+   * as large and sat twice as close to its digit as the gem did.
+   *
+   * Measured off a 4x render, the numbers below give ink widths of
+   * coin 11.5 / gem 12.0 / freeze 12.0 / 5050 10.75 / replace 12.0 /
+   * time-drain 11.75, and icon-to-digit gaps of 5.0 to 5.75 across all of
+   * them. Before: freeze 17.9 wide with a 2.5px gap.
+   */
+  it("draws a power-up badge at the same ink size as the currencies", () => {
+    expect(modal).toMatch(/const POWER_ICON_PX = 12;/);
+
+    // Both power renderers take the constant — the <img> and TimeIcon.
+    expect(pill).toMatch(/<TimeIcon size=\{POWER_ICON_PX\} \/>/);
+    expect(pill).toMatch(/width=\{POWER_ICON_PX\}\s*\n\s*height=\{POWER_ICON_PX\}/);
+
+    // freeze is 356x393 and replace 379x405; a square box without
+    // object-contain stretches both ~10% wide.
+    expect(pill).toMatch(/className="shrink-0 object-contain"/);
+
+    // And no hand-written 18 left in the power branch, which is what made
+    // the badge oversized to begin with.
+    const powerBranch = pill.slice(pill.indexOf("receipt.powerUp &&"));
+    expect(powerBranch).not.toMatch(/(width|height|size)=\{18\}/);
   });
 
   it("keeps the parts of one reward tight together", () => {

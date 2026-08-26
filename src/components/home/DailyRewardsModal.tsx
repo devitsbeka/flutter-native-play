@@ -40,6 +40,20 @@ import { mergeDailyReceipts, type ClaimedReward } from "@/utils/dailyRewardRecei
 const PILL_W = "w-[184px]";
 const PILL_W_MIN = "min-w-[184px]";
 
+/**
+ * The box a power-up badge is drawn in on the receipt pill, in px.
+ *
+ * Smaller than the 18px the coin and gem use, and deliberately: those two
+ * fill about two thirds of their own square, while every power badge fills
+ * its file edge to edge. 12 is what puts a badge's ink at roughly the 12px
+ * the currency ink measures, so the row reads as one size. See the note at
+ * the render site for the measurements.
+ *
+ * A number rather than a class because TimeIcon takes a `size` prop, and one
+ * source for both is the point.
+ */
+const POWER_ICON_PX = 12;
+
 const POWER_ICONS: Record<string, string | null> = {
   "5050": power5050,
   freeze: powerFreeze,
@@ -285,12 +299,41 @@ function DayRewardCard({
             {receipt.gems > 0 && (
               <ClaimedAmount icon={gemIcon} value={String(receipt.gems)} className="ml-[18px]" />
             )}
+            {/* The power-up badge is NOT sized or spaced like the currency
+                icons beside it, because matching those numbers is what made
+                it look wrong. Both were 18px boxes with gap-0.5, and on
+                screen the snowflake was half again as big as the gem and sat
+                twice as close to its number.
+
+                The art is why. Measured off the alpha channel, the coin and
+                gem fill about two thirds of their square — 11.4 and 12.0px of
+                ink in an 18px box, with 3.4 and 3.1px of clear space on the
+                right. Every power badge fills its file edge to edge: 17.9px
+                of ink in that same box, and 0.1px on the right. So the same
+                18 drew a bigger icon and the same gap-0.5 drew a tighter gap.
+
+                POWER_ICON_PX is the box that puts a badge's INK at ~12px
+                tall, matching the coin's 12.1 and the gem's 10.4 — it comes
+                out at 12.0/12.4/12.2/12.1 for freeze, 5050, replace and
+                time-drain, so one number serves all four. gap-[5px] then puts
+                ~5.5px of clear space before the digit against the currencies'
+                5.1-5.4.
+
+                object-contain is not decoration either: freeze is 356x393 and
+                replace 379x405, so the old square box without it stretched
+                both about 10% wide. */}
             {receipt.powerUp && (
-              <span className="ml-[18px] flex shrink-0 items-center gap-0.5 text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
+              <span className="ml-[18px] flex shrink-0 items-center gap-[5px] text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
                 {receipt.powerUp === "time-drain" ? (
-                  <TimeIcon size={18} />
+                  <TimeIcon size={POWER_ICON_PX} />
                 ) : (
-                  <img src={POWER_ICONS[receipt.powerUp] || power5050} alt="" width={18} height={18} className="shrink-0" />
+                  <img
+                    src={POWER_ICONS[receipt.powerUp] || power5050}
+                    alt=""
+                    width={POWER_ICON_PX}
+                    height={POWER_ICON_PX}
+                    className="shrink-0 object-contain"
+                  />
                 )}
                 {receipt.powerUpCount}
               </span>
