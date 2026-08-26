@@ -62,9 +62,10 @@ export type PriceKey =
  * USD is the App Store tier the product is configured at, so it is the anchor
  * — those are the figures a phone charges outside Georgia.
  *
- * GEL is what Stripe takes here. For PRO it is what the checkout has always
- * charged (9.99 / 19.99) and what the design quotes (59.88 a year, half the
- * monthly rate per month). For gems it is the figure Georgian buyers have
+ * GEL is the home market and is priced for it, which is why lari is the only
+ * column that moves when the offer changes: PRO is 4.99 a month, PRO with
+ * friends 9.99, and a year 59.88. Everywhere else keeps the App Store tiers.
+ * For gems it is the figure Georgian buyers have
  * been shown all along — the USD price at the 2.75 rate the old converter
  * used — so that making the charge match the display changes nobody's price.
  *
@@ -73,12 +74,16 @@ export type PriceKey =
  * none of them is derived at runtime.
  */
 export const PRICES: Record<PriceKey, Record<Currency, number>> = {
-  pro_monthly: { GEL: 9.99, USD: 3.99, EUR: 3.99 },
-  // A year at half the monthly rate, and a whole number of months in it:
-  // 4.99 x 12 in lari, 1.99 x 12 in dollars and euro, so the per-month
+  pro_monthly: { GEL: 4.99, USD: 3.99, EUR: 3.99 },
+  // 4.99 x 12 in lari and 1.99 x 12 in dollars and euro, so the per-month
   // figure the paywall prints is a price rather than a rounding.
+  //
+  // In lari that is the SAME per month as the monthly plan: what the year
+  // buys here is the five friend seats, not a discount. In dollars and euro
+  // it is still half the monthly rate. Both are deliberate — see the note
+  // above about lari being priced for its own market.
   pro_annual: { GEL: 59.88, USD: 23.88, EUR: 23.88 },
-  pro_plus_monthly: { GEL: 19.99, USD: 7.99, EUR: 7.99 },
+  pro_plus_monthly: { GEL: 9.99, USD: 7.99, EUR: 7.99 },
   gems_100: { GEL: 2.72, USD: 0.99, EUR: 0.99 },
   gems_500: { GEL: 10.97, USD: 3.99, EUR: 3.99 },
   gems_1500: { GEL: 35.72, USD: 12.99, EUR: 12.99 },

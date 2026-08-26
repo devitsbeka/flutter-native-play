@@ -2,14 +2,21 @@
  * The subscription plans the paywall offers, and the App Store products
  * behind them.
  *
- * The offer, as the design (Figma 895:18) sets it out — two rows for the
- * same PRO tier, differing only in how long it is bought for:
+ * Three rows, and what separates them is how many friends they carry as much
+ * as how long they are bought for:
  *
- *   Annual   io.mytrivia.pro.annual   59.88 GEL / year  (4.99 / month)
- *   Monthly  io.mytrivia.pro.monthly   9.99 GEL / month  ($3.99 in the App Store)
+ *   Monthly       io.mytrivia.pro.monthly     4.99 GEL / month   PRO + 1 friend
+ *   PRO + friends io.mytrivia.proplus.monthly 9.99 GEL / month   PRO + 5 friends
+ *   Annual        io.mytrivia.pro.annual     59.88 GEL / year    PRO + 5 friends
  *
- * Family PRO is not here. It is a different tier with its own banner in the
- * shop, and the design's paywall sells one thing.
+ * The seats are not configured here. `pro_seat_allowance` in the database
+ * grants 1 to the `pro` tier and 5 to `pro_plus`, so the row's `tier` is what
+ * decides it — which is why the annual row is pro_plus. Getting that wrong
+ * would sell five seats and hand over one.
+ *
+ * In lari the year costs the same per month as the monthly plan; what it buys
+ * is the four extra seats. In dollars and euro it is still half the monthly
+ * rate. See src/config/pricing.ts.
  *
  * The annual product does not exist in App Store Connect yet, so on a phone
  * that row is hidden — availablePlans() intersects with the catalogue the
@@ -31,7 +38,7 @@ import { PRICES, type PriceKey } from "@/config/pricing";
 
 export interface ProPlan {
   /** Stable key, used for selection state and the period label. */
-  id: "annual" | "monthly";
+  id: "annual" | "monthly" | "friends";
   /** The App Store / RevenueCat product id. */
   productId: string;
   /** What the plan grants. Stripe prices by tier on the web. */
@@ -60,7 +67,9 @@ export const PRO_PLANS: ProPlan[] = [
   {
     id: "annual",
     productId: IAP_PRODUCTS.PRO_ANNUAL,
-    tier: "pro",
+    // pro_plus, not pro: the year carries five friend seats. The tier is the
+    // only thing that decides that — see the note at the top of this file.
+    tier: "pro_plus",
     nameKey: "paywall.planAnnual",
     blurbKey: "paywall.planAnnualBlurb",
     months: 12,
@@ -75,6 +84,15 @@ export const PRO_PLANS: ProPlan[] = [
     blurbKey: "paywall.planMonthlyBlurb",
     months: 1,
     priceKey: "pro_monthly",
+  },
+  {
+    id: "friends",
+    productId: IAP_PRODUCTS.PRO_PLUS_MONTHLY,
+    tier: "pro_plus",
+    nameKey: "paywall.planFriends",
+    blurbKey: "paywall.planFriendsBlurb",
+    months: 1,
+    priceKey: "pro_plus_monthly",
   },
 ];
 

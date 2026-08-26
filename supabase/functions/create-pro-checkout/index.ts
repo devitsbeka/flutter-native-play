@@ -17,16 +17,24 @@ import {
  * ships in, and the same table is mirrored in src/config/pricing.ts. This
  * file used to carry one Georgian name, one price, and one currency, so a
  * German buyer read Georgian and was charged lari.
+ *
+ * The year is sold as pro_plus, because it carries five friend seats — see
+ * src/config/proPlans.ts. A tier with no `yearly` row bills monthly instead
+ * (below), so leaving pro_plus.yearly null would have taken 9.99 a month from
+ * someone who chose the 59.88 year.
  */
 const PRO_TIERS = {
   pro: {
     monthly: { priceKey: "pro_monthly" as const, sku: "PRO_SOLO_MONTHLY" },
+    // Kept for app builds shipped before the year gained its extra seats:
+    // those send tier=pro with period=year and should still be charged the
+    // annual price they were shown, at the one seat they were sold.
     yearly: { priceKey: "pro_annual" as const, sku: "PRO_SOLO_ANNUAL" },
     friendInvites: 1,
   },
   pro_plus: {
     monthly: { priceKey: "pro_plus_monthly" as const, sku: "PRO_FAMILY_MONTHLY" },
-    yearly: null,
+    yearly: { priceKey: "pro_annual" as const, sku: "PRO_FAMILY_ANNUAL" },
     friendInvites: 5,
   },
 };

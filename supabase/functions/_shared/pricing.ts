@@ -41,9 +41,9 @@ export type PriceKey =
   | "gems_5000";
 
 export const PRICES: Record<PriceKey, Record<Currency, number>> = {
-  pro_monthly: { GEL: 9.99, USD: 3.99, EUR: 3.99 },
+  pro_monthly: { GEL: 4.99, USD: 3.99, EUR: 3.99 },
   pro_annual: { GEL: 59.88, USD: 23.88, EUR: 23.88 },
-  pro_plus_monthly: { GEL: 19.99, USD: 7.99, EUR: 7.99 },
+  pro_plus_monthly: { GEL: 9.99, USD: 7.99, EUR: 7.99 },
   gems_100: { GEL: 2.72, USD: 0.99, EUR: 0.99 },
   gems_500: { GEL: 10.97, USD: 3.99, EUR: 3.99 },
   gems_1500: { GEL: 35.72, USD: 12.99, EUR: 12.99 },
@@ -107,31 +107,31 @@ const PRODUCT_COPY: Record<CopyKey, Record<string, ProductCopy>> = {
   pro_annual: {
     ka: {
       name: "MyTrivia PRO — ყოველწლიური",
-      description: "იგივე PRO, წელიწადში — თვეში ორჯერ იაფად. ულიმიტო თამაში, ყველა დონე, რეკლამის გარეშე, ორმაგი XP.",
+      description: "PRO შენთვის და 5 მეგობრისთვის, წელიწადში: ულიმიტო თამაში, ყველა დონე, რეკლამის გარეშე, ორმაგი XP.",
     },
     en: {
       name: "MyTrivia PRO — Annual",
-      description: "The same PRO, billed yearly at half the monthly rate. Unlimited play, every level, no ads, double XP.",
+      description: "PRO for you and up to 5 friends, billed yearly: unlimited play, every level, no ads, double XP.",
     },
     de: {
       name: "MyTrivia PRO — Jährlich",
-      description: "Dasselbe PRO, jährlich zum halben Monatspreis. Unbegrenztes Spielen, alle Level, keine Werbung, doppelte XP.",
+      description: "PRO für dich und bis zu 5 Freunde, jährlich abgerechnet: unbegrenztes Spielen, alle Level, keine Werbung, doppelte XP.",
     },
     es: {
       name: "MyTrivia PRO — Anual",
-      description: "El mismo PRO, facturado al año a mitad de precio mensual. Juego ilimitado, todos los niveles, sin anuncios, XP doble.",
+      description: "PRO para ti y hasta 5 amigos, facturado al año: juego ilimitado, todos los niveles, sin anuncios, XP doble.",
     },
     fr: {
       name: "MyTrivia PRO — Annuel",
-      description: "Le même PRO, facturé à l'année à moitié prix par mois. Jeu illimité, tous les niveaux, sans publicité, XP double.",
+      description: "PRO pour vous et jusqu'à 5 amis, facturé à l'année : jeu illimité, tous les niveaux, sans publicité, XP double.",
     },
     it: {
       name: "MyTrivia PRO — Annuale",
-      description: "Lo stesso PRO, fatturato ogni anno a metà del prezzo mensile. Gioco illimitato, tutti i livelli, senza pubblicità, XP doppi.",
+      description: "PRO per te e fino a 5 amici, fatturato ogni anno: gioco illimitato, tutti i livelli, senza pubblicità, XP doppi.",
     },
     pt: {
       name: "MyTrivia PRO — Anual",
-      description: "O mesmo PRO, cobrado por ano pela metade do preço mensal. Jogo ilimitado, todos os níveis, sem anúncios, XP em dobro.",
+      description: "PRO para si e até 5 amigos, cobrado por ano: jogo ilimitado, todos os níveis, sem anúncios, XP em dobro.",
     },
   },
   pro_plus_monthly: {
