@@ -177,7 +177,9 @@ describe("the receipt pill's spacing", () => {
     join(process.cwd(), "src/components/home/DailyRewardsModal.tsx"),
     "utf8"
   );
-  const pill = modal.match(/<div\s+className="flex h-\[50px\][\s\S]*?\n {10}<\/div>/)?.[0] ?? "";
+  // The receipt pill is the one whose width is a MINIMUM — every other state
+  // of the slot takes PILL_W exactly.
+  const pill = modal.match(/<div\s+className=\{`flex h-\[50px\] \$\{PILL_W_MIN\}[\s\S]*?\n {10}<\/div>/)?.[0] ?? "";
 
   it("has a pill to measure", () => {
     expect(pill, "expected the receipt pill").not.toBe("");
@@ -191,9 +193,11 @@ describe("the receipt pill's spacing", () => {
   });
 
   it("pads the two edges for equal ink, not equal boxes", () => {
-    // 11/13 rather than 12/12: the check's ink starts ~1px further in than
-    // its box does, and "3x" ends flush.
-    expect(pill).toMatch(/pl-\[11px\] pr-\[13px\]/);
+    // Asymmetric by 2px, not 11/13 vs 12/12 any more but 19/21: the check's
+    // ink starts ~1px further in than its box does, and the trailing digit
+    // ends flush. The pair grew together when the pill was widened, so the
+    // asymmetry survives; only the floor moved.
+    expect(pill).toMatch(/pl-\[19px\] pr-\[21px\]/);
   });
 
   it("holds the check and the first amount at the same distance as the edges", () => {
@@ -217,7 +221,33 @@ describe("the receipt pill's spacing", () => {
 
   it("still fits the widest receipt on one line", () => {
     expect(pill).toMatch(/whitespace-nowrap/);
-    expect(pill).toMatch(/min-w-\[144px\] max-w-full/);
+    expect(pill).toMatch(/\$\{PILL_W_MIN\} max-w-full/);
+  });
+
+  /**
+   * Every state of the slot — Claim, receipt, lock, countdown, the plain
+   * check — is the same size, so the card does not resize as the day is
+   * claimed. They were five hand-written copies of the same width; now one
+   * constant feeds them, and this is what stops a sixth from being written
+   * out by hand next to it.
+   */
+  it("gives every state of the slot the same footprint", () => {
+    expect(modal).toMatch(/const PILL_W = "w-\[184px\]"/);
+    expect(modal).toMatch(/const PILL_W_MIN = "min-w-\[184px\]"/);
+
+    // No literal width left anywhere in the slot.
+    expect(modal).not.toMatch(/h-\[50px\] w-\[\d+px\]/);
+
+    // And all five siblings really do read the constant.
+    const uses = modal.match(/h-\[50px\] \$\{PILL_W\}/g) ?? [];
+    expect(uses.length, "expected the five non-receipt states").toBe(5);
+  });
+
+  it("shows a power-up count as a bare number", () => {
+    // "3x" read as a multiplier on the reward rather than a quantity of
+    // power-ups; the coin and gem amounts next to it carry no suffix either.
+    expect(pill).toMatch(/\{receipt\.powerUpCount\}\s*\n/);
+    expect(pill).not.toMatch(/\{receipt\.powerUpCount\}x/);
   });
 });
 

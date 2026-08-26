@@ -21,6 +21,25 @@ import powerReplace from "@/assets/powers/replace.png";
 import { TimeIcon } from "@/components/shared/TimeIcon";
 import { mergeDailyReceipts, type ClaimedReward } from "@/utils/dailyRewardReceipts";
 
+/**
+ * The footprint every state of a day card's bottom slot shares: the Claim
+ * button, the receipt, the lock, the countdown.
+ *
+ * One constant because they occupy the same place in turn, and a card that
+ * changed size as it went from Claim to claimed would jump. They were five
+ * separate copies of `w-[144px]`, which is a set of numbers that agree only
+ * until someone edits one of them.
+ *
+ * 184 inside a 272px card with px-3 leaves 32px of gradient each side. The
+ * receipt takes the same width as a minimum and grows past it only for a
+ * receipt wider than that, which is why it alone is min-w.
+ *
+ * Written out in full rather than built from a number: these are read as text
+ * by Tailwind's scanner, so `w-[${n}px]` produces no class at all.
+ */
+const PILL_W = "w-[184px]";
+const PILL_W_MIN = "min-w-[184px]";
+
 const POWER_ICONS: Record<string, string | null> = {
   "5050": power5050,
   freeze: powerFreeze,
@@ -246,12 +265,19 @@ function DayRewardCard({
           // inside one (6.4), so "125" and the snowflake read as a single
           // run instead of two things.
           //
-          // So: edges and the check gap are tuned to land on ~14px of ink,
-          // and rewards are held ~20px apart — a clear 3x the 6px that binds
-          // an icon to its own number. Change an icon and these want
+          // So: rewards are held ~20px apart — a clear 3x the 6px that binds
+          // an icon to its own number — and the edges keep 2px of asymmetry,
+          // because the check's ink starts ~1px further inside its box than
+          // the trailing digit's does. Change an icon and these want
           // re-measuring; they are chosen against the art that is here.
+          //
+          // The edges are 19/21 rather than the 11/13 that first balanced
+          // them: the pill was asked to sit wider. PILL_W is what actually
+          // decides the width in every ordinary case — the content is
+          // narrower than that and centres inside it — so the padding is the
+          // floor for the widest receipt rather than the everyday spacing.
           <div
-            className="flex h-[50px] min-w-[144px] max-w-full items-center justify-center whitespace-nowrap rounded-[18px] pl-[11px] pr-[13px]"
+            className={`flex h-[50px] ${PILL_W_MIN} max-w-full items-center justify-center whitespace-nowrap rounded-[18px] pl-[19px] pr-[21px]`}
             style={{ background: "rgba(255,255,255,0.3)" }}
           >
             <Check className="h-5 w-5 shrink-0 text-white" />
@@ -266,7 +292,7 @@ function DayRewardCard({
                 ) : (
                   <img src={POWER_ICONS[receipt.powerUp] || power5050} alt="" width={18} height={18} className="shrink-0" />
                 )}
-                {receipt.powerUpCount}x
+                {receipt.powerUpCount}
               </span>
             )}
           </div>
@@ -277,7 +303,7 @@ function DayRewardCard({
           // screen lying about the player's own ledger, which is worse than
           // a day that says only "taken".
           <div
-            className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
+            className={`flex h-[50px] ${PILL_W} items-center justify-center rounded-[18px]`}
             style={{ background: "rgba(255,255,255,0.3)" }}
           >
             <Check className="h-6 w-6 text-white" />
@@ -285,14 +311,14 @@ function DayRewardCard({
         )
       ) : isMissed ? (
         <div
-          className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
+          className={`flex h-[50px] ${PILL_W} items-center justify-center rounded-[18px]`}
           style={{ background: "rgba(255,255,255,0.22)" }}
         >
           <span className="text-base font-bold text-white/85">{t("dailyRewards.missed")}</span>
         </div>
       ) : state === "future" ? (
         <div
-          className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
+          className={`flex h-[50px] ${PILL_W} items-center justify-center rounded-[18px]`}
           style={{ background: "rgba(255,255,255,0.25)" }}
         >
           <Lock className="h-5 w-5 text-white/80" />
@@ -308,7 +334,7 @@ function DayRewardCard({
           // covers the gap while this week's claims are being fetched, when
           // the timer already knows the day is gone and the card does not.
           <div
-            className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
+            className={`flex h-[50px] ${PILL_W} items-center justify-center rounded-[18px]`}
             style={{ background: "rgba(255,255,255,0.25)" }}
           >
             <span className="font-mono text-base font-bold text-white/90">{timeLeft}</span>
@@ -320,7 +346,7 @@ function DayRewardCard({
           whileTap={canClaim ? { scale: 0.95 } : undefined}
           animate={canClaim && phase === "idle" ? { scale: [1, 1.04, 1] } : undefined}
           transition={canClaim && phase === "idle" ? { repeat: Infinity, duration: 1.6 } : undefined}
-          className="h-[50px] w-[144px] rounded-[18px] text-lg font-bold text-black disabled:opacity-60"
+          className={`h-[50px] ${PILL_W} rounded-[18px] text-lg font-bold text-black disabled:opacity-60`}
           style={{
             background: "linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(254,254,254,0.6) 100%)",
           }}
