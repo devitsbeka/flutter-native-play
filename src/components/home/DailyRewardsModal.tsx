@@ -398,7 +398,7 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
         .lte("reward_date", weekEnd),
       supabase
         .from("currency_grants")
-        .select("coins, gems, created_at")
+        .select("coins, gems, created_at, reference")
         .eq("kind", "daily_reward")
         .gte("created_at", `${weekStart}T00:00:00.000Z`)
         .lt("created_at", `${rewardISO(dayAfterWeek)}T00:00:00.000Z`),
