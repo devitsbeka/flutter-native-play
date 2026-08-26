@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { PRICES } from "@/config/pricing";
 import { availablePlans, defaultPlan, PRO_PLANS } from "../proPlans";
 
@@ -67,17 +69,66 @@ describe("defaultPlan", () => {
 });
 
 /**
- * Free trials are the store's to declare. A plan carrying its own trial field
- * is the regression that put "Try 1 day free" on a product whose introductory
- * offer nobody had created.
+ * Free trials, and who is allowed to promise one.
+ *
+ * This used to assert that no plan declared a trial at all, because the
+ * paywall once advertised "Try 1 day free" from a constant while App Store
+ * Connect had no introductory offer configured — a claim only Apple could
+ * honour, made by a file Apple never reads.
+ *
+ * The rule is now split by platform rather than absolute:
+ *
+ *   native → the trial is whatever `IAPProduct.introFreeDays` reports, so a
+ *            number here cannot make StoreKit grant anything
+ *   web    → the app owns the offer, and `create-pro-checkout` grants it
+ *
+ * Which moves the risk rather than removing it: the client and the edge
+ * function deploy through different pipelines, so the two numbers can drift
+ * and the paywall would advertise days Stripe does not give. That is what
+ * this pins.
  */
-describe("the plan config", () => {
-  it("does not declare free trials of its own", () => {
-    for (const plan of PRO_PLANS) {
+describe("the web trial", () => {
+  const checkout = readFileSync(
+    join(process.cwd(), "supabase/functions/create-pro-checkout/index.ts"),
+    "utf8",
+  );
+
+  it("matches what create-pro-checkout actually grants", () => {
+    const declared = PRO_PLANS.find((p) => p.months >= 12)?.trialDays;
+    // Guard against the test passing because both sides are absent.
+    expect(declared, "the annual plan no longer advertises a trial").toBe(3);
+    const granted = Number(
+      checkout.match(/const TRIAL_DAYS_YEARLY = (\d+);/)?.[1] ?? NaN,
+    );
+
+    expect(
+      granted,
+      "TRIAL_DAYS_YEARLY is gone from create-pro-checkout — the paywall's " +
+        "trial badge would be advertising an offer nothing grants"
+    ).not.toBeNaN();
+
+    expect(
+      declared ?? 0,
+      `the annual plan advertises ${declared ?? 0} free days and Stripe grants ` +
+        `${granted}. Change both, and deploy the function first.`
+    ).toBe(granted);
+  });
+
+  it("is only ever on a yearly plan", () => {
+    // The offer is on the year. A monthly plan carrying one would be granted
+    // by the interval check in create-pro-checkout, not by this field.
+    for (const plan of PRO_PLANS.filter((p) => p.months < 12)) {
       expect(
-        (plan as unknown as Record<string, unknown>).trialDays,
-        `${plan.id} declares a trial — read it from IAPProduct.introFreeDays instead`
+        plan.trialDays,
+        `${plan.id} declares a trial, but create-pro-checkout only grants one ` +
+          "on a yearly interval — the badge would never be honoured"
       ).toBeUndefined();
     }
+  });
+
+  it("is applied to the subscription rather than the line item", () => {
+    // trial_period_days on subscription_data is what makes Stripe defer the
+    // first charge; anywhere else it is silently ignored.
+    expect(checkout).toMatch(/subscription_data:[\s\S]{0,400}trial_period_days/);
   });
 });

@@ -23,6 +23,19 @@ import {
  * (below), so leaving pro_plus.yearly null would have taken 9.99 a month from
  * someone who chose the 59.88 year.
  */
+/**
+ * Free days granted on a yearly subscription, by Stripe.
+ *
+ * **This must match `trialDays` on the annual plan in
+ * src/config/proPlans.ts**, which is what the paywall advertises. The two
+ * deploy through different pipelines — the client with a merge to main, this
+ * function through Lovable — so the client can be showing a trial this file
+ * has not started granting yet. When changing it, deploy this side first.
+ *
+ * Monthly plans have none: the offer is on the year.
+ */
+const TRIAL_DAYS_YEARLY = 3;
+
 const PRO_TIERS = {
   pro: {
     monthly: { priceKey: "pro_monthly" as const, sku: "PRO_SOLO_MONTHLY" },
@@ -196,6 +209,12 @@ serve(async (req) => {
         friend_invites: tier.friendInvites.toString(),
       },
       subscription_data: {
+        // The free days the paywall advertises on the annual row. Stripe bills
+        // nothing until they are up, and the webhook grants the entitlement
+        // from the subscription's status either way.
+        ...(interval === "year" && TRIAL_DAYS_YEARLY > 0
+          ? { trial_period_days: TRIAL_DAYS_YEARLY }
+          : {}),
         metadata: {
           user_id: userId || "guest",
           tier_id: tierId,
@@ -205,7 +224,7 @@ serve(async (req) => {
       allow_promotion_codes: true,
     });
 
-    console.log(`[PRO-CHECKOUT] Created session for ${amount} ${currency} ${interval}ly, tier=${tierId}, user=${userId || "guest"}, session=${session.id}`);
+    console.log(`[PRO-CHECKOUT] Created session for ${amount} ${currency} ${interval}ly, tier=${tierId}, trial=${interval === "year" ? TRIAL_DAYS_YEARLY : 0}d, user=${userId || "guest"}, session=${session.id}`);
 
     return new Response(
       JSON.stringify({ url: session.url, sessionId: session.id }),

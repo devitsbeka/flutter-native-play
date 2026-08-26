@@ -21,6 +21,16 @@ import benefitTimer from "@/assets/pro-banner/banner-timer.webp";
 import benefitDiscount from "@/assets/pro-banner/banner-discount.webp";
 import benefitFriends from "@/assets/icons/group-of-people.png";
 
+/**
+ * The plan rows' second line.
+ *
+ * A solid colour, not `SKIN_WHITE.inkSoft` — that is the ink at 45% alpha,
+ * which reads on a mock and disappears on a phone in daylight. This is the
+ * same hue at full opacity, light enough to stay secondary to the plan name
+ * above it and dark enough to actually be read.
+ */
+const SUBTITLE_INK = "#6B5A85";
+
 /** The cover art the offer was tapped on, carried into the paywall. */
 const COVER_ART = "/images/bgs.png";
 
@@ -127,8 +137,49 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
    * has no introductory offer configured — so the row shows its ordinary
    * blurb.
    */
-  const trialDaysFor = (plan: ProPlan): number | undefined =>
-    products.find((p) => p.productId === plan.productId)?.introFreeDays;
+  const trialDaysFor = (plan: ProPlan): number | undefined => {
+    // On a phone only App Store Connect can grant a trial, so only App Store
+    // Connect gets to claim one: a number in the bundle cannot make StoreKit
+    // honour anything, and advertising one it will not honour is 2.3.1.
+    if (isNative) {
+      return products.find((p) => p.productId === plan.productId)?.introFreeDays;
+    }
+    // On the web the app owns the offer, and create-pro-checkout grants it.
+    return plan.trialDays;
+  };
+
+  /**
+   * "Nothing", in the currency this plan will actually be charged in.
+   *
+   * On a phone that is the storefront's, which is not the language's — a
+   * German speaker on the US store is charged dollars, and telling them the
+   * trial costs "0 €" quotes a currency Apple will never bill. The store
+   * product carries its own currency code, so use it and fall back to the
+   * language's only when the store has not answered.
+   *
+   * No decimals: the offer is "0 ₾", not "0,00 ₾".
+   */
+  const zeroInChargedCurrency = (plan: ProPlan): string => {
+    const storeCurrency = products.find(
+      (p) => p.productId === plan.productId,
+    )?.priceCurrencyCode;
+
+    if (isNative && storeCurrency) {
+      try {
+        return new Intl.NumberFormat(undefined, {
+          style: "currency",
+          currency: storeCurrency,
+          currencyDisplay: "narrowSymbol",
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(0);
+      } catch {
+        // An unknown code: fall through to the language's currency rather
+        // than rendering "GEL 0".
+      }
+    }
+    return formatMoney(0, currencyForLanguage(language), language, 0);
+  };
 
   /** The row's second line: the trial when there is one, its blurb otherwise. */
   const blurbFor = (plan: ProPlan): string => {
@@ -209,6 +260,26 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
   if (!isOpen) return null;
 
   const busy = purchasing || isProcessing || restoring;
+
+  /**
+   * What the button says.
+   *
+   * A plan with a trial leads with the nothing it costs today, written in the
+   * buyer's own currency — "გამოსცადე 0 ₾-ად", "Try it for $0" — because zero
+   * is the offer and a bare "Try free" hides which currency the charge lands
+   * in later. Everything else leads with the real price, so the button and
+   * the row it belongs to say the same number.
+   */
+  const ctaLabel = (() => {
+    if (busy) return t("paywall.working");
+    if (!selected) return t("paywall.ctaSubscribe");
+
+    if (trialDaysFor(selected)) {
+      return t("paywall.ctaTrialPrice").replace("{price}", zeroInChargedCurrency(selected));
+    }
+
+    return t("paywall.ctaPrice").replace("{price}", priceLabel(selected));
+  })();
   const ink = SKIN_WHITE.ink;
   const inkSoft = SKIN_WHITE.inkSoft;
 
@@ -294,6 +365,7 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
           {plans.map((plan) => {
             const isSelected = selected?.id === plan.id;
             const perMonth = perMonthLabel(plan);
+            const trialDays = trialDaysFor(plan);
             return (
               <button
                 key={plan.id}
@@ -332,18 +404,27 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
                 </span>
 
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[17px] font-bold leading-tight" style={{ color: ink }}>
-                    {t(plan.nameKey)}
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="text-[17px] font-bold leading-tight" style={{ color: ink }}>
+                      {t(plan.nameKey)}
+                    </span>
+                    {/* The offer, as a badge rather than a line of prose —
+                        it is the reason this row is the featured one. Keyed
+                        off the trial that will actually be granted, so it
+                        cannot appear on a plan with nothing free. */}
+                    {trialDays !== undefined && trialDays > 0 && (
+                      <span
+                        className="rounded-full px-2 py-[3px] text-[11px] font-bold leading-none"
+                        style={{ background: "#CE3A00", color: "#FFFFFF" }}
+                      >
+                        {t("paywall.trialBadge").replace("{days}", String(trialDays))}
+                      </span>
+                    )}
                   </span>
-                  {/* The trial line is the offer, so it is the one thing on
-                      the row that is not ink: #CE3A00, as the design has it.
-                      Keyed off the trial the *store* reports, so it cannot end
-                      up on a plan that has nothing free. */}
-                  <span
-                    className="block text-[13px]"
-                    style={{ color: trialDaysFor(plan) ? "#CE3A00" : inkSoft }}
-                  >
-                    {blurbFor(plan)}
+                  {/* Fully opaque. This was inkSoft — 45% of the ink — which
+                      is legible on a mock and not on a phone in daylight. */}
+                  <span className="mt-0.5 block text-[13px]" style={{ color: SUBTITLE_INK }}>
+                    {t(plan.blurbKey)}
                   </span>
                 </span>
 
@@ -399,11 +480,7 @@ export function ProPaywallModal({ isOpen, onClose }: ProPaywallModalProps) {
           disabled={busy || !selected || storeUnavailable}
           className="w-full"
         >
-          {busy
-            ? t("paywall.working")
-            : selected && trialDaysFor(selected)
-              ? t("paywall.ctaTrial")
-              : t("paywall.ctaSubscribe")}
+          {ctaLabel}
         </ChunkyButton>
 
         {selected && (
