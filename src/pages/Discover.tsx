@@ -181,12 +181,16 @@ export default function Discover() {
   }, []);
 
   const tabs = useMemo(() => [
-    // Free and premium lead the strip, as the design has them. They are the
-    // only two tabs that split the catalogue by what a subscription buys
-    // rather than by subject, which is why they sit apart from the rest.
+    // "All" leads, because it is the tab the screen opens on: activeTab starts
+    // at "all", and a selected pill sitting third in the strip reads as
+    // something the player scrolled to rather than where they are.
+    //
+    // Free and premium follow, still next to each other — they are the only
+    // two that split the catalogue by what a subscription buys rather than by
+    // subject, which is why they sit apart from the rest.
+    { id: "all", label: t("discover.all") },
     { id: "free", label: t("discover.free") },
     { id: "premium", label: t("discover.premium") },
-    { id: "all", label: t("discover.all") },
     { id: "favorites", label: t("discover.favorites") },
     { id: "recently_viewed", label: t("discover.recentlyViewedTab") },
     { id: "popular", label: t("discover.popularTab") },
