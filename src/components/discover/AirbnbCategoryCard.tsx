@@ -1,6 +1,6 @@
 import React, { memo, useMemo, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Heart } from "lucide-react";
+import { Heart, Lock } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { POPULAR_CATEGORY_ICONS, POPULAR_CATEGORY_PALETTES } from "@/config/popularImageCategories";
 
@@ -22,6 +22,12 @@ interface AirbnbCategoryCardProps {
   leaderboardRank?: number | null;
   /** Badge this card as a newly added category. */
   isNewCategory?: boolean;
+  /**
+   * A premium category, and no subscription. The card still opens — the tap
+   * raises the paywall rather than doing nothing, which is the difference
+   * between an offer and a dead tile — but it says so before the tap.
+   */
+  isLocked?: boolean;
   onFavoriteClick?: (e: React.MouseEvent) => void;
   onClick?: () => void;
   variant?: "compact" | "full";
@@ -80,13 +86,14 @@ function AirbnbCategoryCardComponent({
   isFavorite = false,
   leaderboardRank,
   isNewCategory = false,
+  isLocked = false,
   onFavoriteClick,
   onClick,
   variant = "compact",
 }: AirbnbCategoryCardProps) {
   const { t } = useLanguage();
   const pastel = useMemo(() => getPastelColors(id), [id]);
-  const isCompleted = progress >= totalLevels;
+  const isCompleted = !isLocked && progress >= totalLevels;
   const isFull = variant === "full";
   const iconSize = 128;
   const [isPressed, setIsPressed] = React.useState(false);
@@ -125,7 +132,11 @@ function AirbnbCategoryCardComponent({
     background: `linear-gradient(180deg, transparent 0%, ${pastel.base}40 20%, ${pastel.base}aa 45%, ${pastel.base}dd 65%, ${pastel.base} 85%)`,
   }), [isFull, pastel.base]);
 
-  const progressPercent = (progress / totalLevels) * 100;
+  // A locked category shows an empty track. Whatever progress a player made
+  // before it became premium is still theirs and still in the database —
+  // drawing a half-full bar under a lock would just invite the question of
+  // why they cannot get at it.
+  const progressPercent = isLocked ? 0 : (progress / totalLevels) * 100;
 
   return (
     <div
@@ -191,7 +202,13 @@ function AirbnbCategoryCardComponent({
                 has to be set: without one DynamicIcon falls back to picking
                 an icon by hash, and a category ends up wearing whatever it
                 drew. */}
-            <div className="absolute inset-0 flex items-center justify-center">
+            {/* Desaturated and dimmed when locked, so the card reads as shut
+                from across the grid rather than only once the eye reaches
+                the lock chip. Art only — the name below stays legible. */}
+            <div
+              className="absolute inset-0 flex items-center justify-center"
+              style={isLocked ? { filter: "grayscale(0.85)", opacity: 0.55 } : undefined}
+            >
               {POPULAR_CATEGORY_ICONS[(categoryId ?? id) as keyof typeof POPULAR_CATEGORY_ICONS] ? (
                 <img
                   src={POPULAR_CATEGORY_ICONS[(categoryId ?? id) as keyof typeof POPULAR_CATEGORY_ICONS]}
@@ -265,6 +282,25 @@ function AirbnbCategoryCardComponent({
                 flicker. They sit side by side now and nothing displaces
                 anything else. */}
             <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5">
+              {/* The lock leads the cluster. A locked category has nothing to
+                  rank and no progress to be proud of, so it is the one marker
+                  that matters and it must not be pushed off the row by a
+                  medal that arrived from a different query. */}
+              {isLocked && (
+                <div
+                  className="h-10 px-3 rounded-full flex items-center gap-1.5 border-2 border-purple-300"
+                  style={{
+                    background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
+                    boxShadow: '0 4px 0 0 rgba(139,92,246,0.3), inset 0 2px 0 rgba(255,255,255,0.3)',
+                  }}
+                >
+                  <Lock className="w-4 h-4 text-white" strokeWidth={3} />
+                  <span className="text-xs font-bold text-white leading-none tracking-wide">
+                    PRO
+                  </span>
+                </div>
+              )}
+
               {leaderboardRank && leaderboardRank > 0 && leaderboardRank <= 3 && (
                 <div
                   className="h-10 px-3 rounded-full flex items-center gap-1.5 bg-white border-2 border-white/80"
@@ -375,16 +411,22 @@ function AirbnbCategoryCardComponent({
                     </div>
                   )}
 
-                  {/* Progress count inside the bar */}
-                  <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                  {/* Progress count inside the bar — or, locked, how many
+                      levels are waiting behind the subscription. "0/16" on a
+                      category nobody can start reads as a bug; the level
+                      count is the interesting number there. */}
+                  <div className="absolute inset-0 flex items-center justify-center gap-1 z-20 pointer-events-none">
+                    {isLocked && <Lock className="w-3 h-3 text-[#6b5b95]" strokeWidth={3} />}
                     <span
                       className={`font-bold tracking-wide ${isFull ? 'text-sm' : 'text-xs'}`}
                       style={{
-                        color: '#5a4a20',
+                        color: isLocked ? '#6b5b95' : '#5a4a20',
                         textShadow: '0 1px 0 rgba(255,255,255,0.8)',
                       }}
                     >
-                      {`${Math.min(progress, totalLevels)}/${totalLevels}`}
+                      {isLocked
+                        ? `${totalLevels}`
+                        : `${Math.min(progress, totalLevels)}/${totalLevels}`}
                     </span>
                   </div>
                 </div>

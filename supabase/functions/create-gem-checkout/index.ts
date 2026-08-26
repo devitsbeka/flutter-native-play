@@ -3,6 +3,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { getCorsHeaders, isNativeAppOrigin } from "../_shared/cors.ts";
 import { lookupGemPack } from "../_shared/gems.ts";
+import {
+  currencyForLanguage,
+  gemPackCopy,
+  priceOf,
+  toMinorUnits,
+  type PriceKey,
+} from "../_shared/pricing.ts";
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -64,7 +71,7 @@ serve(async (req) => {
       );
     }
 
-    const { productId } = await req.json();
+    const { productId, language } = await req.json();
 
     // The only thing taken from the request is *which* pack. Quantity and
     // price come from the server catalog.
@@ -86,7 +93,15 @@ serve(async (req) => {
       );
     }
 
-    const sku = `GEMS_${pack.gems}_USD`;
+    // The buyer's language picks the currency, and the pack's row in the
+    // shared table gives the amount in it. This was USD for everyone while
+    // the shop displayed a converted GEL figure — display and charge in two
+    // different currencies, neither matching the other.
+    const currency = currencyForLanguage(language);
+    const priceKey = `gems_${pack.gems}` as PriceKey;
+    const amount = priceOf(priceKey, currency);
+    const copy = gemPackCopy(pack.gems, language);
+    const sku = `GEMS_${pack.gems}_${currency}`;
 
     // Get or create Stripe customer
     const { data: profile } = await supabase
@@ -121,7 +136,9 @@ serve(async (req) => {
         user_id: userData.user.id,
         product_id: pack.id,
         gems_received: pack.gems,
-        amount_gel: pack.priceUsd,
+        // The column is named for lari but holds whatever was charged; the
+        // currency is on the Stripe session.
+        amount_gel: amount,
         status: "pending",
       })
       .select()
@@ -142,22 +159,17 @@ serve(async (req) => {
       line_items: [
         {
           price_data: {
-            // USD, because that is the currency the catalog prices are in —
-            // and what App Store Connect charges for the same packs. This was
-            // `currency: "gel"` with the USD figure passed straight through,
-            // so a $0.99 pack took ₾0.99, about a third of its price, while
-            // the UI displayed the converted ₾2.72.
-            currency: "usd",
+            currency: currency.toLowerCase(),
             product_data: {
-              name: pack.name,
-              description: pack.description,
+              name: copy.name,
+              description: copy.description,
               metadata: {
                 sku,
                 gems: pack.gems.toString(),
                 product_id: pack.id,
               },
             },
-            unit_amount: Math.round(pack.priceUsd * 100), // cents
+            unit_amount: toMinorUnits(amount),
           },
           quantity: 1,
         },

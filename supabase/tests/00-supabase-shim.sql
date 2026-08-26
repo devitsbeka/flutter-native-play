@@ -14,6 +14,22 @@ GRANT authenticated TO postgres;
 GRANT service_role  TO postgres;
 GRANT anon          TO postgres;
 
+-- Supabase's project bootstrap, and the reason a `REVOKE ... FROM public` can
+-- read as correct and do nothing.
+--
+-- Every new function in schema public is granted to anon EXPLICITLY, so
+-- revoking the PUBLIC pseudo-role's grant leaves anon's in place. That is how
+-- claim_daily_reward ended up callable by anon through five rewrites of a
+-- migration that revokes on every one of them.
+--
+-- Without this line the harness cannot see that class of bug at all: it
+-- creates functions with no anon grant to begin with, so "anon cannot call
+-- this" passes on every function in the schema and proves nothing. Verified
+-- both ways -- with it, the harness reproduces production exactly (of the
+-- seven money functions, claim_daily_reward true and the other six false).
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT ALL ON FUNCTIONS TO anon, authenticated, service_role;
+
 CREATE SCHEMA IF NOT EXISTS auth;
 
 -- raw_user_meta_data is not optional: handle_new_user() reads it to build the

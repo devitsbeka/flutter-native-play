@@ -8,6 +8,7 @@ import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCategoryRanks } from "@/hooks/useUserCategoryRanks";
 import { useNewCategories } from "@/hooks/useNewCategories";
+import { useVipStatus } from "@/hooks/useVipStatus";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { IconTabBar } from "@/components/shared/IconTabBar";
 import { SectionHeader } from "@/components/discover/SectionHeader";
@@ -22,6 +23,7 @@ import { ProPaywallModal } from "@/components/pro/ProPaywallModal";
 import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { useStorePrice } from "@/hooks/useStorePrice";
 import { availablePlans, defaultPlan } from "@/config/proPlans";
+import { PRICES } from "@/config/pricing";
 import { matchesQuery } from "@/utils/searchMatch";
 import { orderByPopularity, readRecentlyViewedIds, RECENTLY_VIEWED_KEY } from "@/utils/categoryTabs";
 import { funRowCategories } from "@/utils/discoverRows";
@@ -54,6 +56,7 @@ const HEADER_HEIGHT = 76;
 
 const HERO_HEIGHT =
   "h-[calc((100dvh_-_var(--safe-top)_-_var(--safe-bottom))_*_0.47)]";
+
 
 // ─── Lazy Section: only mounts children when scrolled near viewport ─────
 
@@ -121,6 +124,19 @@ export default function Discover() {
   // tab: the offer names a trial and a price, and a screen that asks which
   // plan is the screen that can honour it.
   const [paywallOpen, setPaywallOpen] = useState(false);
+  /**
+   * A PRO player is not sold PRO.
+   *
+   * Two things on this screen exist only for somebody who has not bought it
+   * yet: the cover's offer, and the Free tab. "Get full access" over the head
+   * of a subscriber reads as the app not knowing who they are, and Free is a
+   * filter that means "the part you can play" — which, for them, is all of it.
+   *
+   * Premium stays, for both. It is the only tab that answers "what does the
+   * subscription actually get me", and that is a fair question whether you are
+   * deciding to buy or have already bought.
+   */
+  const { isVip } = useVipStatus();
 
   // The cover's price line, read off the same plan the paywall would open
   // on. It used to be a sentence in the locale file naming a trial the store
@@ -133,7 +149,7 @@ export default function Discover() {
       availablePlans(products.map((p) => p.productId), Capacitor.isNativePlatform()),
     );
     if (!plan) return "";
-    const price = resolvePrice(plan.productId, plan.fallbackUsd ?? 0, plan.webGel).display;
+    const price = resolvePrice(plan.productId, PRICES[plan.priceKey].USD, plan.priceKey).display;
     // The trial is whatever the store product actually carries, not a figure
     // from the bundle — promising free days App Store Connect does not grant
     // is the same 2.3.1 problem here as on the paywall itself.
@@ -165,7 +181,12 @@ export default function Discover() {
       scroller.removeEventListener("scroll", onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, []);
+    // isVip: VIP status arrives after the first paint and takes the cover with
+    // it, which moves the sheet to the top of the page. Read once more when it
+    // does — nothing scrolls, so without this the answer stays the one taken
+    // while the cover was still there, and the header keeps the white type it
+    // wears over artwork on a screen that no longer has any.
+  }, [isVip]);
 
 
   // Bring the sheet up to the top of the scroller. Tapping the grab handle
@@ -179,22 +200,57 @@ export default function Discover() {
     scroller.scrollTo({ top: sheet.offsetTop, behavior: "smooth" });
   }, []);
 
+  /**
+   * All first, then the two tabs that split the catalogue by what a
+   * subscription buys, then the rest by subject.
+   *
+   * `free` is dropped for a subscriber. To someone who has PRO every
+   * category is free, so the tab would either repeat `all` or — worse, since
+   * it filters on tier rather than on entitlement — quietly claim that the
+   * nine premium ones are the paid part of something they have already paid
+   * for. `premium` stays for them: it is where their subscription's
+   * categories live, and it is the reason to open it.
+   */
   const tabs = useMemo(() => [
-    // Free and premium lead the strip, as the design has them. They are the
-    // only two tabs that split the catalogue by what a subscription buys
-    // rather than by subject, which is why they sit apart from the rest.
-    { id: "free", label: t("discover.free") },
-    { id: "premium", label: t("discover.premium") },
+    // "All" leads, because it is the tab the screen opens on: activeTab starts
+    // at "all", and a selected pill sitting third in the strip reads as
+    // something the player scrolled to rather than where they are.
+    //
+    // Premium then free, in that order, because that is the order they were
+    // asked for. They are the only two tabs that split the catalogue by what
+    // a subscription buys rather than by subject, which is why they sit
+    // together and apart from the rest. Free is dropped for a subscriber;
+    // see isVip.
     { id: "all", label: t("discover.all") },
+    { id: "premium", label: t("discover.premium") },
+    ...(isVip ? [] : [{ id: "free", label: t("discover.free") }]),
     { id: "favorites", label: t("discover.favorites") },
     { id: "recently_viewed", label: t("discover.recentlyViewedTab") },
     { id: "popular", label: t("discover.popularTab") },
     { id: "classic", label: t("discover.classic") },
     { id: "fun", label: t("discover.fun") },
     { id: "educational", label: t("discover.educational") },
-  ], [t]);
+  ], [t, isVip]);
+
+  // VIP status arrives after the first render, so a player can already be
+  // standing on Free when the tab is taken away. Without this they are left on
+  // a filter with no pill, and the grid stays filtered by a tab that is no
+  // longer on screen.
+  useEffect(() => {
+    if (isVip && activeTab === "free") setActiveTab("all");
+  }, [isVip, activeTab]);
 
   const { categories, loading } = useCategories();
+  /**
+   * The premium slugs as the catalogue actually reports them, so a database
+   * that has had the migration decides and the client's fallback list only
+   * stands in until it has. Built from `categories` rather than imported
+   * flat, or a change made in SQL would not reach this click handler.
+   */
+  const PREMIUM_LOOKUP = useMemo(
+    () => new Set(categories.filter((c) => c.tier === "premium").map((c) => c.id)),
+    [categories]
+  );
   const { progress } = useCategoryProgress();
   const { favorites, toggleFavorite } = useFavorites();
   const { ranks: leaderboardRanks } = useUserCategoryRanks();
@@ -221,13 +277,15 @@ export default function Discover() {
       );
     }
 
-    // `is_premium` is a column the client can ship without: before the
-    // migration lands it comes back undefined, isPremium is false, and Free
-    // shows the whole catalogue rather than an empty grid.
+    // Free is the free TIER — the picture-guess categories, open all the way
+    // down — not merely "everything that isn't premium". Those two readings
+    // differ by the fifty-odd standard categories, which give a level away
+    // and then ask for a subscription; listing them under უფასო would be
+    // the tab making a promise the second level breaks.
     if (activeTab === "free") {
-      result = result.filter((cat) => !cat.isPremium);
+      result = result.filter((cat) => cat.tier === "free");
     } else if (activeTab === "premium") {
-      result = result.filter((cat) => cat.isPremium);
+      result = result.filter((cat) => cat.tier === "premium");
     } else if (activeTab !== "all") {
       result = result.filter((cat) => cat.type === activeTab);
     }
@@ -294,6 +352,15 @@ export default function Discover() {
   // function identity every keystroke would defeat memo() on all forty of
   // them, which is the same as not having it.
   const handleCategoryClick = useCallback((categoryId: string) => {
+    // A premium category without PRO opens the offer instead of the
+    // category. Not a dead tile and not a page that turns out to be locked
+    // once you get there — the card said PRO, and the tap says what PRO
+    // costs. The same paywall the cover's own button raises.
+    if (!isVip && PREMIUM_LOOKUP.has(categoryId)) {
+      setPaywallOpen(true);
+      return;
+    }
+
     const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
     let ids: string[] = [];
     try {
@@ -305,7 +372,7 @@ export default function Discover() {
     localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(ids));
 
     navigate(`/category/${categoryId}`);
-  }, [navigate]);
+  }, [navigate, isVip, PREMIUM_LOOKUP]);
 
   const getBadge = useCallback((_category: any, index: number) => {
     if (index < 2) return t("discover.trending");
@@ -388,6 +455,13 @@ export default function Discover() {
          * transform, and framer-motion writes transforms on this page all
          * the time. Sticky is measured from the scroller itself, so the
          * video holds still while the sheet slides up over it. */}
+        {/* Not for a subscriber. The cover IS the advert — take the headline,
+            the button and the price note off it and what is left is a purple
+            field between the header and the categories, which is what a
+            shorter one still was. With no cover at all the sheet starts at
+            the top of the page and headerDocked, which reads the sheet's own
+            offsetTop, hands the header its white surface on the first paint. */}
+        {!isVip && (
         <div
           className={`md:hidden pointer-events-none sticky top-0 z-0 w-full ${HERO_HEIGHT}`}
         >
@@ -444,7 +518,7 @@ export default function Discover() {
            * pointer-events-auto is on the button alone; everything else here
            * stays transparent to touch, so a drag from the middle of the
            * cover still pulls the sheet up. */}
-          <div className="absolute inset-x-0 top-0 text-center text-white [text-shadow:0px_3px_21px_rgba(0,0,0,0.16)]">
+          <div className="absolute inset-0 text-center text-white [text-shadow:0px_3px_21px_rgba(0,0,0,0.16)]">
             {/* The rule under the header: 441 wide at the frame's 500, one
                 pixel, in the lilac the file draws it in — at 70%, a third
                 quieter than the frame has it, which is where it stops
@@ -467,7 +541,15 @@ export default function Discover() {
               {t("discover.promoCta")}
             </button>
 
-            <p className="absolute left-1/2 -translate-x-1/2 top-[calc(78px_+_min(285px,57vw))] w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
+            {/* Pinned to the BOTTOM of the cover, not measured down from the
+                top of it. At a fixed 78px + min(285px, 57vw) the note sat at
+                300px on a 390-wide phone while the cover is 47% of the
+                viewport — 310px on a 660px-tall screen — so on a short phone
+                the sheet covered it and the price disappeared. Everything
+                above it still hangs off the header, which is what keeps the
+                offer's own spacing; only this last line answers to where the
+                cover ends. */}
+            <p className="absolute bottom-2 left-1/2 -translate-x-1/2 w-full px-6 text-[min(14px,2.8vw)] leading-[min(20.7px,4.14vw)] tracking-[-0.16px]">
               {offerNote}
             </p>
           </div>
@@ -478,6 +560,7 @@ export default function Discover() {
             className="absolute inset-x-0 top-0 h-[224px] bg-[linear-gradient(180deg,rgba(41,17,84,0.12)_0%,rgba(48,20,96,0.096)_34%,rgba(58,26,112,0)_64%,rgba(58,26,112,0)_100%)]"
           />
         </div>
+        )}
 
 
         {/* The sheet: everything the page used to be, on a surface that
@@ -487,7 +570,17 @@ export default function Discover() {
          * empty Favourites) there would otherwise be nothing to pull. */}
         <div
           ref={sheetRef}
-          className="relative z-10 rounded-t-[28px] border-t border-white/60 bg-[#F6F3FB] shadow-[0_-12px_32px_rgba(41,17,84,0.35)] min-h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:rounded-none md:border-0 md:bg-[#F8F6FC] md:shadow-none md:min-h-full"
+          /* The 76px top pad exists only when there is no cover.
+             The page header is `h-0` — it takes no room in the flow and
+             floats over whatever is at the top of the page. The cover used to
+             be what it floated over. Without one the sheet starts at the very
+             top, the header covers its first 76px, and the tab strip (sticky
+             at top-76) pins there while the section header after it stays
+             where the flow put it — so "Popular" rendered underneath the
+             tabs. The pad puts the flow back where the sticky rule assumes it
+             is. Written out in full, never assembled: Tailwind reads these
+             files as text. */
+          className={`relative z-10 rounded-t-[28px] border-t border-white/60 bg-[#F6F3FB] shadow-[0_-12px_32px_rgba(41,17,84,0.35)] min-h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] pb-[calc(var(--bottom-nav-height)_+_var(--safe-bottom)_+_1rem)] md:rounded-none md:border-0 md:bg-[#F8F6FC] md:shadow-none md:min-h-full ${isVip ? "pt-[76px] md:pt-0" : ""}`}
         >
 
         {/* The grab handle, and the whole of what the peek has to say before
@@ -573,6 +666,7 @@ export default function Discover() {
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
                 newCategories={newCategories}
+                isVip={isVip}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />
@@ -595,6 +689,7 @@ export default function Discover() {
                   favorites={favorites}
                   leaderboardRanks={leaderboardRanks}
                   newCategories={newCategories}
+                isVip={isVip}
                   onCategoryClick={handleCategoryClick}
                   onFavoriteToggle={toggleFavorite}
                   getBadge={getBadge}
@@ -611,6 +706,7 @@ export default function Discover() {
                     favorites={favorites}
                     leaderboardRanks={leaderboardRanks}
                     newCategories={newCategories}
+                isVip={isVip}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -627,6 +723,7 @@ export default function Discover() {
                     favorites={favorites}
                     leaderboardRanks={leaderboardRanks}
                     newCategories={newCategories}
+                isVip={isVip}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -643,6 +740,7 @@ export default function Discover() {
                     favorites={favorites}
                     leaderboardRanks={leaderboardRanks}
                     newCategories={newCategories}
+                isVip={isVip}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -660,6 +758,7 @@ export default function Discover() {
                       favorites={favorites}
                       leaderboardRanks={leaderboardRanks}
                       newCategories={newCategories}
+                isVip={isVip}
                       onCategoryClick={handleCategoryClick}
                       onFavoriteToggle={toggleFavorite}
                     />
@@ -678,6 +777,7 @@ export default function Discover() {
                       favorites={favorites}
                       leaderboardRanks={leaderboardRanks}
                       newCategories={newCategories}
+                isVip={isVip}
                       onCategoryClick={handleCategoryClick}
                       onFavoriteToggle={toggleFavorite}
                     />
@@ -694,6 +794,7 @@ export default function Discover() {
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
                 newCategories={newCategories}
+                isVip={isVip}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />
@@ -714,6 +815,7 @@ export default function Discover() {
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
                 newCategories={newCategories}
+                isVip={isVip}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
                 getBadge={getBadge}
@@ -728,6 +830,7 @@ export default function Discover() {
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
                 newCategories={newCategories}
+                isVip={isVip}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />
@@ -750,6 +853,7 @@ export default function Discover() {
                 favorites={favorites}
                 leaderboardRanks={leaderboardRanks}
                 newCategories={newCategories}
+                isVip={isVip}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />

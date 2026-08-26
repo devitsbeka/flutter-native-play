@@ -60,7 +60,11 @@ type CatalogEntry =
  */
 const CATALOG: Record<string, CatalogEntry> = {
   [PRODUCTS.PRO_MONTHLY]: { kind: "subscription", tier: "pro" },
-  [PRODUCTS.PRO_ANNUAL]: { kind: "subscription", tier: "pro" },
+  // pro_plus, not pro: the year is sold as PRO for you and five friends, and
+  // the tier is the only thing that decides the seat count —
+  // `pro_seat_allowance` grants 5 to pro_plus and 1 to pro. Granting `pro`
+  // here would sell five seats on the paywall and hand over one.
+  [PRODUCTS.PRO_ANNUAL]: { kind: "subscription", tier: "pro_plus" },
   [PRODUCTS.PRO_WEEKLY]: { kind: "subscription", tier: "pro" },
   [PRODUCTS.PRO_PLUS_MONTHLY]: { kind: "subscription", tier: "pro_plus" },
   [PRODUCTS.AD_FREE]: { kind: "non_consumable", tier: "ad_free" },

@@ -41,6 +41,22 @@ import stickerAlbum from "@/assets/sticker-album.png";
 import { PreRoomQueuePreview } from "@/components/team/PreRoomQueuePreview";
 import { getRandomGradient } from "@/config/roomGradients";
 import { siteUrl } from "@/config/site";
+import { inviteLinkPath } from "@/utils/inviteLink";
+
+/**
+ * A room code, six characters of an alphabet with no O/0/I/1 in it.
+ *
+ * Hoisted out of the component because the code is now decided BEFORE the
+ * room is created — see plannedRoomCode.
+ */
+function generateRoomCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let result = "";
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
 import { useQueryClient } from "@tanstack/react-query";
 import type { Json } from "@/integrations/supabase/types";
 import { resolveAvatarUrl, fallbackAvatarFor } from "@/utils/avatarUtils";
@@ -120,6 +136,25 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { createRoom, loading } = useMultiplayerV2();
+
+  /**
+   * The code the room WILL have, decided before the room exists.
+   *
+   * Sharing from this screen used to be impossible to get right. There was no
+   * room to point at, so the link pointed at nothing and the far end guessed a
+   * room from what the host was in — which found the lobby they opened two
+   * hours ago. Removing the guess fixed that and broke this: the link became a
+   * friend request, and sending one to somebody who is already your friend
+   * offers them nothing at all.
+   *
+   * A room code is six random characters generated on this device, so it can
+   * be decided now and used when the room is actually created. The link names
+   * it, like every other room invite, and resolves the moment the room exists.
+   * If the host never presses Create, the link finds no room and falls back to
+   * the friendship — which is the correct answer for a room that was never
+   * made, and the only case where a link from here is a friend request.
+   */
+  const [plannedRoomCode] = useState(generateRoomCode);
   const { friends } = useFriends();
   const { sendInvitation, addInvitedParticipant } = useGameInvitations();
   const { getIconForCategory } = useIconLibrary();
@@ -488,8 +523,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     // Was a bare /team, which told whoever opened it nothing: not who sent
     // it, not what they were playing. The sender's own invite link says both,
     // and makes them friends when it is accepted.
+    // Names the room this screen is about to create — see plannedRoomCode.
     const { data: inviteCode } = await supabase.rpc("get_or_create_invite_code");
-    const inviteLink = inviteCode ? siteUrl(`/i/${inviteCode}`) : siteUrl("/team");
+    const inviteLink = inviteCode
+      ? siteUrl(inviteLinkPath(inviteCode, { kind: "room", roomCode: plannedRoomCode }))
+      : siteUrl("/team");
 
     const outcome = await shareOrCopy({
       title: t("extra.joinTriviaShare"),
@@ -644,7 +682,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
         // Local code generation - the uniqueness RPC cost a round-trip for a
         // collision chance of ~1 in a billion
-        const roomCode = generateRoomCode();
+        const roomCode = plannedRoomCode;
 
         const { data: createdRoom, error } = await supabase
           .from("game_rooms")
@@ -695,7 +733,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             .eq("user_id", user.id)
             .single();
 
-          const roomCode = generateRoomCode();
+          const roomCode = plannedRoomCode;
 
           const { data: createdRoom, error } = await supabase
             .from("game_rooms")
@@ -738,7 +776,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             customTriviaTitle || "Custom Trivia",
             customTriviaQuestions,
             effectiveRoomName,
-            roomIcon
+            roomIcon,
+            plannedRoomCode
           );
 
           if (room?.id) {
@@ -747,7 +786,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         }
       } else if (selectedCategory) {
         // Create the room with selected category
-        room = await createRoom(selectedCategory.category_id, selectedCategory.name, undefined, effectiveRoomName, roomIcon);
+        room = await createRoom(selectedCategory.category_id, selectedCategory.name, undefined, effectiveRoomName, roomIcon, plannedRoomCode);
 
         if (room?.id) {
           await persistQueuedRounds(room.id);
@@ -832,14 +871,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     }
   };
 
-  const generateRoomCode = () => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let result = "";
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
 
 
   return (
@@ -1550,6 +1581,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             ...Array.from(selectedFriends).filter(id => !prev.includes(id)),
           ]);
         }}
+        roomCode={plannedRoomCode}
         onFriendSelect={(friendId: string) => {
           const newSelected = new Set(selectedFriends);
           if (newSelected.has(friendId)) {

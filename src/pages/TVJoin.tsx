@@ -12,7 +12,7 @@ import { ControllerPollScreen } from '@/components/controller/ControllerPollScre
 import { ControllerPollResultsGuest } from '@/components/controller/ControllerPollResultsGuest';
 import { Loader2 } from 'lucide-react';
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useIdleTimeout } from '@/hooks/useIdleTimeout';
+import { useIdleTimeout, tvPhaseCanStall } from '@/hooks/useIdleTimeout';
 
 const TVJoinContent: React.FC = () => {
   const { code: urlCode, sessionId: urlSessionId } = useParams<{ code?: string; sessionId?: string }>();
@@ -28,14 +28,22 @@ const TVJoinContent: React.FC = () => {
   const [isJoined, setIsJoined] = useState(false);
   const { t } = useLanguage();
 
-  // Auto-redirect to home when game is idle for 120s
-  // Use composite value (phase + question index) so every new question resets the timer
-  // This prevents false idle detection during long question rounds
-  useIdleTimeout(`${phase}-${currentQuestionIndex}`, () => {
-    console.log('[TVJoin] Idle timeout — leaving session');
-    leaveSession();
-    navigate('/', { replace: true });
-  }, 120_000);
+  // Leave a session that has genuinely stalled. The composite value means a
+  // new question resets the timer, so a long round is not mistaken for a
+  // stuck one — and the phase gate means the wait BEFORE the game starts is
+  // not either. A player who scans the QR while the host is still adding
+  // rounds sits in the lobby for as long as the host takes; that is the
+  // screen working, not failing.
+  useIdleTimeout(
+    `${phase}-${currentQuestionIndex}`,
+    () => {
+      console.log('[TVJoin] Idle timeout — leaving session', { phase });
+      leaveSession();
+      navigate('/', { replace: true });
+    },
+    120_000,
+    { enabled: tvPhaseCanStall(phase) },
+  );
 
   // Find current player from players array
   const myPlayer = players.find(p => p.id === myPlayerId);

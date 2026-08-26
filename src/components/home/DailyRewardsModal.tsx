@@ -19,6 +19,40 @@ import power5050 from "@/assets/powers/5050.png";
 import powerFreeze from "@/assets/powers/freeze.png";
 import powerReplace from "@/assets/powers/replace.png";
 import { TimeIcon } from "@/components/shared/TimeIcon";
+import { mergeDailyReceipts, type ClaimedReward } from "@/utils/dailyRewardReceipts";
+
+/**
+ * The footprint every state of a day card's bottom slot shares: the Claim
+ * button, the receipt, the lock, the countdown.
+ *
+ * One constant because they occupy the same place in turn, and a card that
+ * changed size as it went from Claim to claimed would jump. They were five
+ * separate copies of `w-[144px]`, which is a set of numbers that agree only
+ * until someone edits one of them.
+ *
+ * 184 inside a 272px card with px-3 leaves 32px of gradient each side. The
+ * receipt takes the same width as a minimum and grows past it only for a
+ * receipt wider than that, which is why it alone is min-w.
+ *
+ * Written out in full rather than built from a number: these are read as text
+ * by Tailwind's scanner, so `w-[${n}px]` produces no class at all.
+ */
+const PILL_W = "w-[184px]";
+const PILL_W_MIN = "min-w-[184px]";
+
+/**
+ * The box a power-up badge is drawn in on the receipt pill, in px.
+ *
+ * Smaller than the 18px the coin and gem use, and deliberately: those two
+ * fill about two thirds of their own square, while every power badge fills
+ * its file edge to edge. 12 is what puts a badge's ink at roughly the 12px
+ * the currency ink measures, so the row reads as one size. See the note at
+ * the render site for the measurements.
+ *
+ * A number rather than a class because TimeIcon takes a `size` prop, and one
+ * source for both is the point.
+ */
+const POWER_ICON_PX = 12;
 
 const POWER_ICONS: Record<string, string | null> = {
   "5050": power5050,
@@ -61,67 +95,57 @@ const celebrateClaim = () => {
   });
 };
 
-// A date as its LOCAL yyyy-mm-dd. toISOString would shift through UTC, and a
-// claim made on Tuesday evening must not render on Wednesday's card.
-export const localISO = (d: Date) => {
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
-};
+/**
+ * A reward day as yyyy-mm-dd, in UTC — the calendar the rewards actually run
+ * on.
+ *
+ * Not a style choice. `claim_daily_reward` writes `reward_date := CURRENT_DATE`
+ * on a Postgres server set to UTC, useRewardTimers looks the row up by
+ * `new Date().toISOString()`, and dailyResetCountdown counts to UTC midnight.
+ * Three things agreeing; this screen was the fourth, keyed to the DEVICE's
+ * local date, and it disagreed with all of them.
+ *
+ * What that looked like: in any timezone east of UTC, between local midnight
+ * and the offset, the local date is already tomorrow while the row holding
+ * today's claim is still stamped yesterday. The card this screen called
+ * "today" therefore found no claim and drew a closed gift with a Claim
+ * button, while the timer — reading the right row — knew the day was spent
+ * and disabled it. A Claim you cannot press, over a running countdown.
+ * At UTC+4 that is every night between 00:00 and 04:00.
+ *
+ * The database owns the boundary and cannot be told otherwise from here, so
+ * the client matches the database. The visible consequence is that the day
+ * turns over at UTC midnight — 04:00 in Tbilisi — which is exactly when the
+ * next reward becomes claimable. Rewards on the player's own local day would
+ * mean storing their timezone and changing the function; a different job.
+ */
+export const rewardISO = (d: Date) => d.toISOString().split("T")[0];
 
-/** Monday..Sunday of the week containing `today`. */
+/** The UTC weekday, Monday = 0, to match the row of cards. */
+const utcWeekIndex = (d: Date) => (d.getUTCDay() + 6) % 7;
+
+/** Monday..Sunday of the UTC week containing `today`. */
 export const weekOf = (today: Date): Date[] => {
   const monday = new Date(today);
-  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  monday.setUTCDate(today.getUTCDate() - utcWeekIndex(today));
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
+    d.setUTCDate(monday.getUTCDate() + i);
     return d;
   });
 };
 
-// Bright frosted reward pill (coin/gem icon + amount) — needs to shine
-// against every card gradient
-function RewardPill({ icon, value }: { icon: string; value: number }) {
-  return (
-    <div
-      className="flex h-[46px] items-center gap-2 rounded-[16px] px-5"
-      style={{
-        background: "linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.25) 100%)",
-        boxShadow: "0 3px 10px rgba(0,0,0,0.15), inset 0 1.5px 0 rgba(255,255,255,0.6)",
-        backdropFilter: "blur(4px)",
-      }}
-    >
-      <img
-        src={icon}
-        alt=""
-        className="shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
-        width={30}
-        height={30}
-      />
-      <span className="font-display text-lg font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
-        {value}
-      </span>
-    </div>
-  );
-}
-
 type DayState = "claimed" | "missed" | "today" | "future";
 type ClaimPhase = "idle" | "opening" | "revealed";
 
-/** What a claim paid — the receipt the claimed pill shows. */
-interface ClaimedReward {
-  coins: number;
-  gems: number;
-  powerUp: string | null;
-  powerUpCount: number;
-}
-
 // One compact icon+amount pair for the claimed pill. Everything shrink-0 and
 // nowrap: the pill's contract is a single centered line, whatever the day paid.
-function ClaimedAmount({ icon, value }: { icon: string; value: string }) {
+//
+// `className` carries the spacing to whatever sits on its left, because that
+// spacing is not the same everywhere — see the pill below.
+function ClaimedAmount({ icon, value, className = "" }: { icon: string; value: string; className?: string }) {
   return (
-    <span className="flex shrink-0 items-center gap-0.5 text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
+    <span className={`flex shrink-0 items-center gap-0.5 text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)] ${className}`}>
       <img src={icon} alt="" width={18} height={18} className="shrink-0" />
       {value}
     </span>
@@ -136,6 +160,7 @@ function DayRewardCard({
   awarded,
   claimedReward,
   canClaim,
+  timeLeft,
   onClaim,
   language,
   t,
@@ -149,12 +174,27 @@ function DayRewardCard({
   /** The receipt for an already-claimed day; null for pre-receipt claims. */
   claimedReward: ClaimedReward | null;
   canClaim: boolean;
+  /** How long until the next reward, for the not-yet-claimable state. */
+  timeLeft: string;
   onClaim: () => void;
   language: string;
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const isMissed = state === "missed";
   const showOpenGift = state === "claimed" || phase === "revealed";
+
+  /**
+   * What this day paid. `awarded` is what the server just handed back and is
+   * only ever set on today's card; `claimedReward` is what the tables
+   * remember. Preferring the live one matters because it needs no round
+   * trip: the receipt appears with the confetti rather than after a refetch
+   * that may not have happened yet.
+   *
+   * This prop was being passed and never read — the reveal leaned entirely
+   * on handleClaim writing into claimedRewards, and any day the tables had
+   * nothing for fell through to a bare check.
+   */
+  const receipt = awarded ?? claimedReward;
 
   return (
     <motion.div
@@ -180,98 +220,133 @@ function DayRewardCard({
           server's decision, so nothing is promised here — the surprise IS
           the feature. */}
       <div className="relative flex h-[96px] items-center justify-center">
-        {phase === "revealed" && awarded ? (
-          // The prize: slides in, wiggles, and the whole modal closes shortly
-          // after — the disappearance the reveal ends on.
-          <motion.div
-            initial={{ opacity: 0, scale: 0.6, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0, x: [0, -7, 7, -5, 5, 0] }}
-            transition={{ duration: 0.9, times: [0, 0.2, 0.4, 0.6, 0.8, 1] }}
-            className="flex items-center gap-2"
-          >
-            <RewardPill icon={coinIcon} value={awarded.coins} />
-            {awarded.gems > 0 && <RewardPill icon={gemIcon} value={awarded.gems} />}
-            {awarded.powerUp && (
-              <div
-                className="flex h-[46px] items-center gap-2 rounded-[16px] px-4"
-                style={{
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.25) 100%)",
-                  boxShadow: "0 3px 10px rgba(0,0,0,0.15), inset 0 1.5px 0 rgba(255,255,255,0.6)",
-                  backdropFilter: "blur(4px)",
-                }}
-              >
-                {awarded.powerUp === "time-drain" ? (
-                  <TimeIcon size={28} />
-                ) : (
-                  <img src={POWER_ICONS[awarded.powerUp] || power5050} alt="" width={28} height={28} className="shrink-0" />
-                )}
-                <span className="font-display text-lg font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
-                  {awarded.powerUpCount}x
-                </span>
-              </div>
-            )}
-          </motion.div>
-        ) : (
-          <motion.img
-            key={showOpenGift ? "open" : "closed"}
-            src={showOpenGift ? giftOpenIcon : giftClosedIcon}
-            alt=""
-            className="h-[88px] w-[88px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.2)]"
-            style={{ opacity: isMissed ? 0.55 : 1 }}
-            animate={
-              phase === "opening"
-                ? { rotate: [0, -10, 10, -8, 8, -5, 5, 0], scale: [1, 1.08, 1.08, 1.12, 1.12, 1.15, 1.15, 1.2] }
+        {/* Always the gift — closed, then open. What was inside is shown once,
+            on the button, where the day's receipt already lives.
+
+            It used to be shown twice: the prize replaced the gift here AND
+            the receipt appeared below it, so the moment of opening had the
+            answer in two places and the opened box — the thing that says
+            "you opened it" — was never seen at all. */}
+        <motion.img
+          key={showOpenGift ? "open" : "closed"}
+          src={showOpenGift ? giftOpenIcon : giftClosedIcon}
+          alt=""
+          className="h-[88px] w-[88px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.2)]"
+          style={{ opacity: isMissed ? 0.55 : 1 }}
+          animate={
+            phase === "opening"
+              ? { rotate: [0, -10, 10, -8, 8, -5, 5, 0], scale: [1, 1.08, 1.08, 1.12, 1.12, 1.15, 1.15, 1.2] }
+              : phase === "revealed"
+                // Lands: the lid comes off and it settles, rather than
+                // carrying on bobbing as though still waiting to be opened.
+                ? { scale: [1.2, 0.95, 1], rotate: 0 }
                 : state === "today" && canClaim
                   ? { y: [0, -5, 0] }
                   : undefined
-            }
-            transition={
-              phase === "opening"
-                ? { duration: 0.85 }
+          }
+          transition={
+            phase === "opening"
+              ? { duration: 0.85 }
+              : phase === "revealed"
+                ? { duration: 0.45 }
                 : { repeat: Infinity, duration: 1.8, ease: "easeInOut" }
-            }
-          />
-        )}
+          }
+        />
       </div>
 
       {/* State row */}
       {state === "claimed" || (state === "today" && phase === "revealed") ? (
-        claimedReward ? (
+        receipt ? (
           // The receipt: check + what the day actually paid, one centered
           // line always (nowrap, everything shrink-0) — no "Claimed" label,
           // the check says it. Coins are constant; the bonus is at most one
           // more kind — see claim_daily_reward's "never a third pill" rule.
           //
-          // The gap here is what separates one reward from the next, and it
-          // has to beat the gap INSIDE a reward by enough to group them: at
-          // 6px against the icon's own 2px, the coin's amount and the next
-          // reward's icon sat closer than a pair of digits and "125❄" read as
-          // one run. Widened to 12px and the inner gaps left alone, so each
-          // icon still reads as belonging to its own number. There is room —
-          // the card is 272px and the widest receipt is about 100px of it.
+          // The spacing is optical, not nominal, and that is the whole point.
+          // A uniform gap-3 with px-3 measured DEAD EVEN in the box model and
+          // still looked wrong, because what a reader sees is the ink, and
+          // every glyph here carries a different amount of its own padding:
+          // the lucide check sits ~3px inside its 20px box, the coin PNG ~4px
+          // inside its 18px, the snowflake almost none, and a digit ends
+          // flush. Measured off a 3x screenshot, uniform 12px produced:
+          //
+          //     left 15.3 | check->coin 17.0 | coin->125 6.4
+          //               | 125->power 12.7 | right 13.3
+          //
+          // Two faults in that. The three that should match — the two edges
+          // and the gap after the check — ran 15.3 / 17.0 / 13.3. And the
+          // separation BETWEEN rewards (12.7) was only twice the separation
+          // inside one (6.4), so "125" and the snowflake read as a single
+          // run instead of two things.
+          //
+          // So: rewards are held ~20px apart — a clear 3x the 6px that binds
+          // an icon to its own number — and the edges keep 2px of asymmetry,
+          // because the check's ink starts ~1px further inside its box than
+          // the trailing digit's does. Change an icon and these want
+          // re-measuring; they are chosen against the art that is here.
+          //
+          // The edges are 19/21 rather than the 11/13 that first balanced
+          // them: the pill was asked to sit wider. PILL_W is what actually
+          // decides the width in every ordinary case — the content is
+          // narrower than that and centres inside it — so the padding is the
+          // floor for the widest receipt rather than the everyday spacing.
           <div
-            className="flex h-[50px] min-w-[144px] max-w-full items-center justify-center gap-3 whitespace-nowrap rounded-[18px] px-3"
+            className={`flex h-[50px] ${PILL_W_MIN} max-w-full items-center justify-center whitespace-nowrap rounded-[18px] pl-[19px] pr-[21px]`}
             style={{ background: "rgba(255,255,255,0.3)" }}
           >
             <Check className="h-5 w-5 shrink-0 text-white" />
-            <ClaimedAmount icon={coinIcon} value={String(claimedReward.coins)} />
-            {claimedReward.gems > 0 && <ClaimedAmount icon={gemIcon} value={String(claimedReward.gems)} />}
-            {claimedReward.powerUp && (
-              <span className="flex shrink-0 items-center gap-0.5 text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
-                {claimedReward.powerUp === "time-drain" ? (
-                  <TimeIcon size={18} />
+            <ClaimedAmount icon={coinIcon} value={String(receipt.coins)} className="ml-2" />
+            {receipt.gems > 0 && (
+              <ClaimedAmount icon={gemIcon} value={String(receipt.gems)} className="ml-[18px]" />
+            )}
+            {/* The power-up badge is NOT sized or spaced like the currency
+                icons beside it, because matching those numbers is what made
+                it look wrong. Both were 18px boxes with gap-0.5, and on
+                screen the snowflake was half again as big as the gem and sat
+                twice as close to its number.
+
+                The art is why. Measured off the alpha channel, the coin and
+                gem fill about two thirds of their square — 11.4 and 12.0px of
+                ink in an 18px box, with 3.4 and 3.1px of clear space on the
+                right. Every power badge fills its file edge to edge: 17.9px
+                of ink in that same box, and 0.1px on the right. So the same
+                18 drew a bigger icon and the same gap-0.5 drew a tighter gap.
+
+                POWER_ICON_PX is the box that puts a badge's INK at ~12px
+                tall, matching the coin's 12.1 and the gem's 10.4 — it comes
+                out at 12.0/12.4/12.2/12.1 for freeze, 5050, replace and
+                time-drain, so one number serves all four. gap-[5px] then puts
+                ~5.5px of clear space before the digit against the currencies'
+                5.1-5.4.
+
+                object-contain is not decoration either: freeze is 356x393 and
+                replace 379x405, so the old square box without it stretched
+                both about 10% wide. */}
+            {receipt.powerUp && (
+              <span className="ml-[18px] flex shrink-0 items-center gap-[5px] text-sm font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
+                {receipt.powerUp === "time-drain" ? (
+                  <TimeIcon size={POWER_ICON_PX} />
                 ) : (
-                  <img src={POWER_ICONS[claimedReward.powerUp] || power5050} alt="" width={18} height={18} className="shrink-0" />
+                  <img
+                    src={POWER_ICONS[receipt.powerUp] || power5050}
+                    alt=""
+                    width={POWER_ICON_PX}
+                    height={POWER_ICON_PX}
+                    className="shrink-0 object-contain"
+                  />
                 )}
-                {claimedReward.powerUpCount}x
+                {receipt.powerUpCount}
               </span>
             )}
           </div>
         ) : (
-          // Claimed before receipts existed — nothing to itemize, the check
-          // alone marks the day taken.
+          // Neither the receipt columns nor the ledger has anything for this
+          // day, so there is no honest amount to show and the check alone
+          // marks it taken. Inventing a plausible figure here would be the
+          // screen lying about the player's own ledger, which is worse than
+          // a day that says only "taken".
           <div
-            className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
+            className={`flex h-[50px] ${PILL_W} items-center justify-center rounded-[18px]`}
             style={{ background: "rgba(255,255,255,0.3)" }}
           >
             <Check className="h-6 w-6 text-white" />
@@ -279,32 +354,49 @@ function DayRewardCard({
         )
       ) : isMissed ? (
         <div
-          className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
+          className={`flex h-[50px] ${PILL_W} items-center justify-center rounded-[18px]`}
           style={{ background: "rgba(255,255,255,0.22)" }}
         >
           <span className="text-base font-bold text-white/85">{t("dailyRewards.missed")}</span>
         </div>
       ) : state === "future" ? (
         <div
-          className="flex h-[50px] w-[144px] items-center justify-center rounded-[18px]"
+          className={`flex h-[50px] ${PILL_W} items-center justify-center rounded-[18px]`}
           style={{ background: "rgba(255,255,255,0.25)" }}
         >
           <Lock className="h-5 w-5 text-white/80" />
         </div>
       ) : (
+        !canClaim && phase === "idle" ? (
+          // Today, but not yet. The word "Claim" on a button that cannot be
+          // pressed is the screen arguing with itself — and with the very
+          // countdown underneath it. Say the wait instead.
+          //
+          // This is belt and braces: with the calendars aligned, a spent day
+          // renders as "claimed" above and never reaches here. It still
+          // covers the gap while this week's claims are being fetched, when
+          // the timer already knows the day is gone and the card does not.
+          <div
+            className={`flex h-[50px] ${PILL_W} items-center justify-center rounded-[18px]`}
+            style={{ background: "rgba(255,255,255,0.25)" }}
+          >
+            <span className="font-mono text-base font-bold text-white/90">{timeLeft}</span>
+          </div>
+        ) : (
         <motion.button
           onClick={canClaim && phase === "idle" ? onClaim : undefined}
           disabled={!canClaim || phase !== "idle"}
           whileTap={canClaim ? { scale: 0.95 } : undefined}
           animate={canClaim && phase === "idle" ? { scale: [1, 1.04, 1] } : undefined}
           transition={canClaim && phase === "idle" ? { repeat: Infinity, duration: 1.6 } : undefined}
-          className="h-[50px] w-[144px] rounded-[18px] text-lg font-bold text-black disabled:opacity-60"
+          className={`h-[50px] ${PILL_W} rounded-[18px] text-lg font-bold text-black disabled:opacity-60`}
           style={{
             background: "linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(254,254,254,0.6) 100%)",
           }}
         >
           {phase === "opening" ? "…" : t("dailyRewards.claim")}
         </motion.button>
+        )
       )}
     </motion.div>
   );
@@ -333,45 +425,59 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const week = weekOf(new Date());
-  const todayISO = localISO(new Date());
-  const todayIndex = (new Date().getDay() + 6) % 7;
+  const todayISO = rewardISO(new Date());
+  const todayIndex = utcWeekIndex(new Date());
 
   // This week's claims, so the row can say which days were taken and which
-  // slipped past. RLS scopes the select to the signed-in player's own rows.
+  // slipped past — and what each of them paid.
+  //
+  // Two sources, because one is not enough. user_daily_rewards carries the
+  // receipt columns, which is the complete answer: coins, gems AND the
+  // power-up. But they are only filled in for days claimed since the
+  // migration that added them, so an older claim leaves them NULL and the
+  // card fell back to a bare check — which is why one day in the week showed
+  // "100" and the rest showed nothing but a tick.
+  //
+  // currency_grants is the second source and it is not a guess: the same
+  // claim_daily_reward call that writes the receipt also writes a ledger row
+  // through apply_currency_grant, with the coins and gems it actually paid.
+  // It goes back further than the receipt columns do. It cannot recover the
+  // power-up — nothing records that per day — so it fills in underneath the
+  // receipt rather than replacing it.
+  //
+  // RLS scopes both selects to the signed-in player's own rows.
   useEffect(() => {
     if (!isOpen || !user) return;
     let cancelled = false;
-    void supabase
-      .from("user_daily_rewards")
-      // The receipt columns postdate the generated types — the cast keeps
-      // the client from narrowing the row to the stale shape.
-      .select("reward_date, daily_claimed, coins_awarded, gems_awarded, power_up, power_up_count" as "*")
-      .gte("reward_date", localISO(week[0]))
-      .lte("reward_date", localISO(week[6]))
-      .then(({ data }) => {
-        if (cancelled || !data) return;
-        const rows = (data as unknown) as {
-          reward_date: string;
-          daily_claimed: boolean | null;
-          coins_awarded?: number | null;
-          gems_awarded?: number | null;
-          power_up?: string | null;
-          power_up_count?: number | null;
-        }[];
-        const claimed = rows.filter((r) => r.daily_claimed);
-        setClaimedDates(new Set(claimed.map((r) => String(r.reward_date))));
-        const receipts: Record<string, ClaimedReward> = {};
-        for (const r of claimed) {
-          if (r.coins_awarded == null) continue; // claimed before receipts existed
-          receipts[String(r.reward_date)] = {
-            coins: r.coins_awarded,
-            gems: r.gems_awarded ?? 0,
-            powerUp: r.power_up ?? null,
-            powerUpCount: r.power_up_count ?? 0,
-          };
-        }
-        setClaimedRewards(receipts);
-      });
+
+    const weekStart = rewardISO(week[0]);
+    const weekEnd = rewardISO(week[6]);
+    // Exclusive upper bound: the instant Sunday ends, in UTC — the calendar
+    // reward_date is stamped on.
+    const dayAfterWeek = new Date(week[6]);
+    dayAfterWeek.setUTCDate(dayAfterWeek.getUTCDate() + 1);
+
+    void Promise.all([
+      supabase
+        .from("user_daily_rewards")
+        // The receipt columns postdate the generated types — the cast keeps
+        // the client from narrowing the row to the stale shape.
+        .select("reward_date, daily_claimed, coins_awarded, gems_awarded, power_up, power_up_count" as "*")
+        .gte("reward_date", weekStart)
+        .lte("reward_date", weekEnd),
+      supabase
+        .from("currency_grants")
+        .select("coins, gems, created_at, reference")
+        .eq("kind", "daily_reward")
+        .gte("created_at", `${weekStart}T00:00:00.000Z`)
+        .lt("created_at", `${rewardISO(dayAfterWeek)}T00:00:00.000Z`),
+    ]).then(([daily, grants]) => {
+      if (cancelled || !daily.data) return;
+      const rows = (daily.data as unknown) as Parameters<typeof mergeDailyReceipts>[0];
+      setClaimedDates(new Set(rows.filter((r) => r.daily_claimed).map((r) => String(r.reward_date))));
+      const receipts = mergeDailyReceipts(rows, (grants.data ?? []) as Parameters<typeof mergeDailyReceipts>[1]);
+      setClaimedRewards(receipts);
+    });
     return () => {
       cancelled = true;
     };
@@ -510,7 +616,7 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
   // claimed (and no receipt). Today with the cooldown still running renders
   // as "today" with the claim button disabled and the countdown below.
   const stateOf = (date: Date, index: number): DayState => {
-    const iso = localISO(date);
+    const iso = rewardISO(date);
     if (claimedDates.has(iso))
       return index === todayIndex && phase !== "idle" ? "today" : "claimed";
     if (index === todayIndex) return "today";
@@ -571,14 +677,15 @@ export function DailyRewardsModal({ isOpen, onClose, onClaim }: DailyRewardsModa
               >
                 {week.map((date, index) => (
                   <DayRewardCard
-                    key={localISO(date)}
+                    key={rewardISO(date)}
                     date={date}
                     index={index}
                     state={stateOf(date, index)}
                     phase={index === todayIndex ? phase : "idle"}
                     awarded={index === todayIndex ? awarded : null}
-                    claimedReward={claimedRewards[localISO(date)] ?? null}
+                    claimedReward={claimedRewards[rewardISO(date)] ?? null}
                     canClaim={canClaimDaily && !claimedToday}
+                    timeLeft={dailyTimeLeft}
                     onClaim={handleClaim}
                     language={language}
                     t={t}

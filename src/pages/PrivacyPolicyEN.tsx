@@ -20,7 +20,7 @@ export default function PrivacyPolicyEN() {
             </div>
             <div>
               <h1 className="text-xl font-display font-bold text-foreground">Privacy Policy</h1>
-              <p className="text-sm text-muted-foreground">Effective: January 2025</p>
+              <p className="text-sm text-muted-foreground">Effective: August 2026</p>
             </div>
           </div>
 
@@ -41,6 +41,9 @@ export default function PrivacyPolicyEN() {
               <BulletList items={[
                 { bold: "Account Information:", text: "Email address, username, password (encrypted)" },
                 { bold: "Profile Data:", text: "Avatar, country, game statistics" },
+                { bold: "Photographs:", text: "If you choose to create an avatar from a photo, the photo you take or select is uploaded to our servers and sent to an AI image provider to generate the avatar (see Third-Party Services). We use the photo only to produce your avatar. We do not show it to other players and we do not sell it. You can delete a generated avatar at any time, and deleting your account removes both the avatar and the source photo." },
+                { bold: "Content You Create:", text: "Quizzes, collections, room names and other content you make in the app, which other players can see" },
+                { bold: "Approximate Location:", text: "Your country, determined once from your IP address, to set your default language and region. We do not collect precise location." },
                 { bold: "Game Data:", text: "Scores, achievements, game history" },
                 { bold: "Device Information:", text: "Device type, operating system, IP address" },
                 { bold: "Payment Information:", text: "Processed by Apple/Google (we do not store payment details)" },
@@ -73,6 +76,7 @@ export default function PrivacyPolicyEN() {
                 { bold: "Apple:", text: "In-app purchases and Sign in with Apple" },
                 { bold: "PostHog:", text: "Product analytics and crash diagnostics" },
                 { bold: "ip-api.com:", text: "Country detection from your IP address (coarse location), used once to set your default region" },
+                { bold: "fal.ai:", text: "AI image generation. When you create an avatar from a photo, that photo is sent to fal.ai, which runs the image model that produces your avatar. fal.ai processes the photo as our service provider, under its own terms and privacy policy." },
               ]} />
             </section>
 
@@ -109,8 +113,10 @@ export default function PrivacyPolicyEN() {
             <section>
               <h2 className="text-lg font-semibold mb-2">7. Data Retention</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Your data is retained while your account is active. Upon account deletion request, 
-                all personal data is permanently removed within 30 days.
+                Your data is retained while your account is active. Photos uploaded for avatar
+                generation are kept only as long as the avatar they produced; deleting an avatar
+                deletes its source photo. Upon account deletion request, all personal data —
+                including photos and avatars — is permanently removed within 30 days.
               </p>
             </section>
 

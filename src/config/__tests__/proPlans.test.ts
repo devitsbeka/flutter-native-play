@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { PRICES } from "@/config/pricing";
 import { availablePlans, defaultPlan, PRO_PLANS } from "../proPlans";
 
 /**
@@ -37,10 +38,15 @@ describe("availablePlans on the web", () => {
     const plans = availablePlans([], false);
     expect(plans.length).toBeGreaterThan(0);
     for (const plan of plans) {
-      expect(
-        plan.webGel ?? plan.fallbackUsd,
-        `${plan.id} would render with no price to show`
-      ).toBeDefined();
+      // Every row has a real figure in every currency the web charges in.
+      // Rows used to carry their own `webGel`/`fallbackUsd`; the price now
+      // comes from src/config/pricing.ts, which the checkout charges from.
+      for (const currency of ["GEL", "USD", "EUR"] as const) {
+        expect(
+          PRICES[plan.priceKey]?.[currency],
+          `${plan.id} would render with no price to show in ${currency}`
+        ).toBeGreaterThan(0);
+      }
     }
   });
 });

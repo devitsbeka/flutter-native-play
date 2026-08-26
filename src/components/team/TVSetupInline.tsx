@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tv, Loader2, Check, Globe } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
@@ -26,6 +26,23 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
   const [code, setCode] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+
+  /**
+   * The caret is already in the first box when this panel opens.
+   *
+   * Turning TV mode on is a statement of intent — the only thing left to do
+   * is type four digits — and asking for a second tap on the boxes to say so
+   * again is a tap for nothing. The panel arrives on an AnimatePresence
+   * entrance, so the focus waits a beat for it to be laid out and hittable;
+   * calling focus() on an element still at opacity 0 mid-transition is how
+   * this silently does nothing. Same 100ms the room-name field uses.
+   */
+  const codeInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (isConnected) return;
+    const timer = setTimeout(() => codeInputRef.current?.focus(), 100);
+    return () => clearTimeout(timer);
+  }, [isConnected]);
 
   const handleConnect = async () => {
     if (code.length !== 4 || !user) return;
@@ -225,9 +242,12 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
           // Only prepend initial category/trivia if NOT already in queue and NOT a collection
           else if (!initialAlreadyInQueue) {
             if (roomData.category_id) {
-              // Use CATEGORY_ID_TO_ICON to get proper icon slug instead of emoji
-              const { CATEGORY_ID_TO_ICON } = await import('@/data/categoryIconMap');
-              const iconSlug = CATEGORY_ID_TO_ICON[roomData.category_id] || null;
+              // The category's own icon_slug, which is what Discover draws
+              // from; the hardcoded map is only the net underneath it.
+              const { categoryIconSlugSync, primeCategoryIconSlugs } =
+                await import('@/hooks/useCategoryDisplay');
+              await primeCategoryIconSlugs();
+              const iconSlug = categoryIconSlugSync(roomData.category_id);
               
               rowsToInsert.push({
                 session_id: session.id,
@@ -371,9 +391,14 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
                 <p className="text-white/70 text-sm mb-2 text-center">{t('extra.tvEnterCode')}</p>
                 <div className="flex justify-center">
                   <InputOTP
+                    ref={codeInputRef}
                     maxLength={4}
                     value={code}
                     onChange={setCode}
+                    // The digits are the only thing this box wants, and a
+                    // numeric keypad is a much shorter reach than a keyboard.
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
                   >
                     <InputOTPGroup>
                       <InputOTPSlot index={0} className="w-12 h-14 text-xl bg-white/10 border-white/30 text-white" />

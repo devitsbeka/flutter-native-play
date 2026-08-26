@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
-import { supabase } from '@/integrations/supabase/client';
 import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 import { Crown, Sparkles } from 'lucide-react';
@@ -12,79 +11,22 @@ import bronzeMedal from '@/assets/trophy-bronze.png';
 
 
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useDurableRoster } from '@/hooks/useDurableRoster';
 
 export const TVResultsScreen: React.FC = () => {
   const { t } = useLanguage();
   const { players, code, sessionId } = useTVGame();
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // Presence is volatile - if the TV's socket went stale during the game the
-  // presence list is empty/frozen and the podium rendered blank. The durable
-  // tv_players roster (scores persisted on every answer) is the fallback.
-  type DbResultRow = { player_id: string; nickname: string; avatar_url: string | null; is_host: boolean; current_round_score: number | null };
-  const [dbRoster, setDbRoster] = useState<DbResultRow[]>([]);
-  useEffect(() => {
-    if (!sessionId || sessionId === 'mock-session-id') return;
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .from('tv_players')
-        .select('player_id, nickname, avatar_url, is_host, current_round_score')
-        .eq('tv_session_id', sessionId);
-      if (!cancelled && data) {
-        const systemIds = ['TV_DISPLAY', 'TV_MIRROR'];
-        setDbRoster((data as DbResultRow[]).filter(
-          p => !systemIds.includes(p.player_id) && !systemIds.includes(p.nickname || '')
-        ));
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [sessionId]);
+  // Presence is volatile; tv_players is the durable record behind it. The
+  // whole merge now lives in useDurableRoster, because the controller's
+  // game-over screen needed exactly the same thing and did not have it.
+  const sortedPlayers = useDurableRoster(sessionId, players);
 
-  // ONE PODIUM SPOT PER PERSON: identity = normalized nickname. Re-bound
-  // devices leave duplicate rows/entries for the same human; take the best
-  // score across all of a person's entries (presence + every DB row).
-  const norm = (s: string | null | undefined) => (s || '').trim().toLowerCase();
-  const bestDbScoreByNickname = new Map<string, DbResultRow>();
-  dbRoster.forEach(p => {
-    const key = norm(p.nickname);
-    const existing = bestDbScoreByNickname.get(key);
-    if (!existing || (p.current_round_score || 0) > (existing.current_round_score || 0)) {
-      bestDbScoreByNickname.set(key, p);
-    }
-  });
+  // An infinite drift is exactly the kind of motion somebody may have asked
+  // their device to stop. The trophies simply hold still for them.
+  const swaying = !useReducedMotion();
 
-  const seenNicknames = new Set<string>();
-  const mergedPlayers = players
-    .filter(p => {
-      const key = norm(p.nickname);
-      if (seenNicknames.has(key)) return false;
-      seenNicknames.add(key);
-      return true;
-    })
-    .map(p => {
-      const dbScore = bestDbScoreByNickname.get(norm(p.nickname))?.current_round_score || 0;
-      return dbScore > p.score ? { ...p, score: dbScore } : p;
-    });
-
-  const dbOnlyPlayers = [...bestDbScoreByNickname.values()]
-    .filter(p => !seenNicknames.has(norm(p.nickname)))
-    .map(p => ({
-      id: p.player_id,
-      nickname: p.nickname,
-      avatar_url: p.avatar_url,
-      score: p.current_round_score || 0,
-      hasAnswered: false,
-      lastAnswerCorrect: null,
-      lastAnswer: null,
-      isHost: p.is_host,
-    }));
-  const allPlayers = [...mergedPlayers, ...dbOnlyPlayers];
-
-  // Sort players by score
-  const sortedPlayers = [...allPlayers].sort((a, b) => b.score - a.score);
   const podiumPlayers = sortedPlayers.slice(0, 3);
   const otherPlayers = sortedPlayers.slice(3);
 
@@ -192,14 +134,15 @@ export const TVResultsScreen: React.FC = () => {
                 transition={{ delay: displayIndex * 0.2 }}
                 className="flex flex-col items-center"
               >
-                {/* Avatar with its trophy pinned to the bottom edge. Sitting the
-                    trophy ON the avatar costs no layout height at all - it is
-                    absolutely positioned - which is what keeps room for the
-                    places below the podium. mb-5 is the trophy's overhang plus
-                    a little air, so it never touches the name. */}
+                {/* Avatar with its trophy floating ABOVE it, clear of the ring.
+                    It used to sit on the avatar's bottom edge, overlapping the
+                    face and the ring both — a medal worn rather than awarded.
+                    Still absolutely positioned, so it costs no layout height
+                    and the places below the podium keep their room; mt-16 is
+                    what buys the space it floats into. */}
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="relative mb-5"
+                  className="relative mt-16 mb-3"
                 >
                   <SafeAvatar
                     avatarUrl={player.avatar_url}
@@ -216,17 +159,38 @@ export const TVResultsScreen: React.FC = () => {
                       which silently overwrites Tailwind's -translate-x-1/2 - so
                       the trophy's LEFT EDGE ended up on the avatar's centre
                       instead of its middle. Separating the two keeps the
-                      centring immune to whatever the animation does. */}
-                  <div className="absolute left-1/2 -translate-x-1/2 -bottom-4 z-10">
-                    <motion.img
-                      initial={{ scale: 0, rotate: -20 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ delay: 0.6 + displayIndex * 0.2, type: 'spring' }}
-                      src={actualRank === 0 ? goldMedal : actualRank === 1 ? silverMedal : bronzeMedal}
-                      alt={actualRank === 0 ? 'Gold' : actualRank === 1 ? 'Silver' : 'Bronze'}
-                      className={`${actualRank === 0 ? 'w-11 h-11' : 'w-9 h-9'} object-contain
-                        drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]`}
-                    />
+                      centring immune to whatever the animation does.
+
+                      `bottom-full mb-3` puts the trophy's foot on the avatar's
+                      crown and then lifts it 12px clear, so nothing touches the
+                      ring at any size. */}
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 z-10">
+                    {/* The sway is its own layer, between the centring wrapper
+                        and the image, because all three want the transform
+                        property and only one element can have it. Outer:
+                        centring. This: the drift. Inner: the arrival pop. */}
+                    <motion.div
+                      animate={swaying ? { x: [0, -7, 0, 7, 0] } : undefined}
+                      transition={{
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        // Staggered by place, so three trophies drift with the
+                        // room rather than marching in step. Starts after the
+                        // arrival pop below has landed.
+                        delay: 1.2 + displayIndex * 0.6,
+                      }}
+                    >
+                      <motion.img
+                        initial={{ scale: 0, rotate: -20 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ delay: 0.6 + displayIndex * 0.2, type: 'spring' }}
+                        src={actualRank === 0 ? goldMedal : actualRank === 1 ? silverMedal : bronzeMedal}
+                        alt={actualRank === 0 ? 'Gold' : actualRank === 1 ? 'Silver' : 'Bronze'}
+                        className={`${actualRank === 0 ? 'w-11 h-11' : 'w-9 h-9'} object-contain
+                          drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]`}
+                      />
+                    </motion.div>
                   </div>
                 </motion.div>
 

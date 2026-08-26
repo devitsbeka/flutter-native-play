@@ -5,6 +5,7 @@ import { t as tStandalone } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
 import { useInAppPurchases, IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
+import { readAppLanguage } from "@/utils/appLanguage";
 
 export type ProTierId = "pro" | "pro_plus";
 
@@ -78,7 +79,11 @@ export function useProPurchase() {
 
     try {
       const { data, error } = await supabase.functions.invoke("create-pro-checkout", {
-        body: { tierId, period },
+        // The language decides the currency and the words on Stripe's page.
+        // Sent rather than inferred server-side: the buyer's app language is
+        // what every price in the app was quoted in, and an Accept-Language
+        // header is the browser's, which is often a different answer.
+        body: { tierId, period, language: readAppLanguage() },
       });
 
       if (error) {

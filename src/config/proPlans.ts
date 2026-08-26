@@ -2,20 +2,27 @@
  * The subscription plans the paywall offers, and the App Store products
  * behind them.
  *
- * The offer, as the design (Figma 895:18) sets it out — two rows for the
- * same PRO tier, differing only in how long it is bought for:
+ * Three rows, and what separates them is how many friends they carry as much
+ * as how long they are bought for:
  *
- *   Annual   io.mytrivia.pro.annual   59.88 GEL / year  (4.99 / month)
- *   Monthly  io.mytrivia.pro.monthly   9.99 GEL / month  ($3.99 in the App Store)
+ *   Monthly       io.mytrivia.pro.monthly     4.99 GEL / month   PRO + 1 friend
+ *   PRO + friends io.mytrivia.proplus.monthly 9.99 GEL / month   PRO + 5 friends
+ *   Annual        io.mytrivia.pro.annual     59.88 GEL / year    PRO + 5 friends
  *
- * Family PRO is not here. It is a different tier with its own banner in the
- * shop, and the design's paywall sells one thing.
+ * The seats are not configured here. `pro_seat_allowance` in the database
+ * grants 1 to the `pro` tier and 5 to `pro_plus`, so the row's `tier` is what
+ * decides it — which is why the annual row is pro_plus. Getting that wrong
+ * would sell five seats and hand over one.
+ *
+ * In lari the year costs the same per month as the monthly plan; what it buys
+ * is the four extra seats. In dollars and euro it is still half the monthly
+ * rate. See src/config/pricing.ts.
  *
  * The annual product does not exist in App Store Connect yet, so on a phone
  * that row is hidden — availablePlans() intersects with the catalogue the
  * device reported, because a row for a product the store never heard of
- * opens a payment sheet and fails. On the web it sells through Stripe, which
- * prices from `webGel` and needs a yearly line in create-pro-checkout.
+ * opens a payment sheet and fails. On the web it sells through Stripe at the
+ * price in src/config/pricing.ts, in the buyer's own currency.
  *
  * **Free trials are not declared here.** A `trialDays: 1` used to sit on the
  * annual plan with a comment saying it had to match the introductory offer in
@@ -27,10 +34,11 @@
 
 import { IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
 import type { ProTierId } from "@/hooks/useProPurchase";
+import { PRICES, type PriceKey } from "@/config/pricing";
 
 export interface ProPlan {
   /** Stable key, used for selection state and the period label. */
-  id: "annual" | "monthly";
+  id: "annual" | "monthly" | "friends";
   /** The App Store / RevenueCat product id. */
   productId: string;
   /** What the plan grants. Stripe prices by tier on the web. */
@@ -42,19 +50,11 @@ export interface ProPlan {
   /** Billing period in months, for the per-month figure and the saving. */
   months: number;
   /**
-   * The tier's configured USD price, shown while StoreKit has not answered
-   * and converted to GEL on the web (see useStorePrice). Omitted for a
-   * product that does not exist yet — such a row is hidden rather than
-   * priced from thin air.
+   * Which row of src/config/pricing.ts prices this plan. That table holds
+   * the figure for every currency the app charges in, and the checkout
+   * charges from its mirror — so what the row shows is what is taken.
    */
-  fallbackUsd?: number;
-  /**
-   * What the web checkout actually charges, in GEL — the figure in
-   * PRO_PRODUCTS in supabase/functions/create-pro-checkout. Shown as-is on
-   * the web rather than converting `fallbackUsd`, which is a flat 2.75x and
-   * quoted 10.97 ₾ for a 9.99 ₾ charge.
-   */
-  webGel?: number;
+  priceKey: PriceKey;
   /**
    * Marks the row the paywall opens on, when it is available here. Annual
    * carries it so that creating the product is all it takes for the paywall
@@ -67,11 +67,13 @@ export const PRO_PLANS: ProPlan[] = [
   {
     id: "annual",
     productId: IAP_PRODUCTS.PRO_ANNUAL,
-    tier: "pro",
+    // pro_plus, not pro: the year carries five friend seats. The tier is the
+    // only thing that decides that — see the note at the top of this file.
+    tier: "pro_plus",
     nameKey: "paywall.planAnnual",
     blurbKey: "paywall.planAnnualBlurb",
     months: 12,
-    webGel: 59.88,
+    priceKey: "pro_annual",
     featured: true,
   },
   {
@@ -81,8 +83,16 @@ export const PRO_PLANS: ProPlan[] = [
     nameKey: "paywall.planMonthly",
     blurbKey: "paywall.planMonthlyBlurb",
     months: 1,
-    fallbackUsd: 3.99,
-    webGel: 9.99,
+    priceKey: "pro_monthly",
+  },
+  {
+    id: "friends",
+    productId: IAP_PRODUCTS.PRO_PLUS_MONTHLY,
+    tier: "pro_plus",
+    nameKey: "paywall.planFriends",
+    blurbKey: "paywall.planFriendsBlurb",
+    months: 1,
+    priceKey: "pro_plus_monthly",
   },
 ];
 
@@ -120,7 +130,24 @@ export function availablePlans(
     return PRO_PLANS.filter((p) => storeProductIds.includes(p.productId));
   }
 
-  return PRO_PLANS.filter((p) => p.webGel !== undefined || p.fallbackUsd !== undefined);
+  return PRO_PLANS.filter((p) => PRICES[p.priceKey] !== undefined);
+}
+
+/**
+ * How many friends a plan can pass PRO to.
+ *
+ * This is a MIRROR, not the rule. `pro_seat_allowance` in the database decides
+ * it — 5 for pro_plus and pro_master, 1 for pro and standard — and that
+ * function is what `grant_pro_seat` enforces against. This exists so the
+ * paywall can name the number before anyone has bought anything, and
+ * src/__tests__/proOffer.test.ts reads the SQL to check the two still agree.
+ *
+ * The database also grades `pro_master` at 5 and `standard` at 1. Neither is
+ * sellable here — ProTierId is the two tiers the paywall offers — so they are
+ * not repeated in this switch, where they would be unreachable.
+ */
+export function friendSeats(tier: ProTierId): number {
+  return tier === "pro_plus" ? 5 : 1;
 }
 
 /** The row the paywall opens on: the featured plan if it is on sale here. */

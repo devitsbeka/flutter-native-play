@@ -18,6 +18,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { siteUrl } from "@/config/site";
+import { inviteLinkPath } from "@/utils/inviteLink";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { Input } from "@/components/ui/input";
@@ -251,8 +252,13 @@ export function RoomLobbyV2() {
     if (!currentRoom) return;
 
     // The sender's own invite link, so opening it makes the two of them
-    // friends. It resolves to whatever room the sender is in when it is
-    // OPENED, which is this one.
+    // friends — and it names THIS room, the one on screen.
+    //
+    // It used to name no room at all and let the far end work one out, as
+    // "the most recently touched waiting room the sender is in". That is this
+    // room most of the time and quietly the wrong one the rest of it: any
+    // other lobby the sender is still a participant of wins the moment it is
+    // touched. See utils/inviteLink.
     //
     // The room link is the fallback and nothing more. A room is archived once
     // it is finished with, and both room_preview and room_players skip
@@ -261,7 +267,9 @@ export function RoomLobbyV2() {
     // pointing at a room that existed when it was sent. The personal link
     // has no expiry: no room, and the friendship is still the outcome.
     const { data: inviteCode } = await supabase.rpc("get_or_create_invite_code");
-    const link = inviteCode ? siteUrl(`/i/${inviteCode}`) : getShareLink(currentRoom.room_code);
+    const link = inviteCode
+      ? siteUrl(inviteLinkPath(inviteCode, { kind: "room", roomCode: currentRoom.room_code }))
+      : getShareLink(currentRoom.room_code);
     const shareData = {
       title: t("extra.shareTitle"),
       text: t("extra.shareText"),
