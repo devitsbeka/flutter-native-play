@@ -129,6 +129,7 @@ const TVModeGameDocs = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/TVModeGa
 const AdminReports = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Reports")) : null;
 const AdminFlow = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Flow")) : null;
 const AdminDesign = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Design")) : null;
+const SocialFrames = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/SocialFrames")) : null;
 const AdminEconomy = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Economy")) : null;
 const AdminSettings = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Settings")) : null;
 const AdminGuestShowcase = INCLUDE_ADMIN ? lazy(() => import("./pages/AdminGuestShowcase")) : null;
@@ -324,6 +325,7 @@ const App = () => (
                     <Route path="push" element={PushNotifications && <PushNotifications />} />
                     <Route path="reports" element={AdminReports && <AdminReports />} />
                     <Route path="design" element={AdminDesign && <AdminDesign />} />
+                    <Route path="social" element={SocialFrames && <SocialFrames />} />
                     <Route path="guest" element={AdminGuestShowcase && <AdminGuestShowcase />} />
                     <Route path="economy" element={AdminEconomy && <AdminEconomy />} />
                     <Route path="settings" element={AdminSettings && <AdminSettings />} />

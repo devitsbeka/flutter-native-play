@@ -21,6 +21,7 @@ import {
   FileArchive,
   Flag,
   Palette,
+  Share2,
   Coins,
   Settings,
   Smartphone,
@@ -82,10 +83,15 @@ const mainNavItems: NavItem[] = [
     icon: Flag, 
     label: 'რეპორტები' 
   },
-  { 
-    to: '/admin/design', 
-    icon: Palette, 
-    label: 'დიზაინი' 
+  {
+    to: '/admin/design',
+    icon: Palette,
+    label: 'დიზაინი'
+  },
+  {
+    to: '/admin/social',
+    icon: Share2,
+    label: 'Social Frames'
   },
   { 
     to: '/admin/guest', 
