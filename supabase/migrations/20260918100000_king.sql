@@ -211,6 +211,13 @@ BEGIN
     RAISE EXCEPTION 'Not authenticated';
   END IF;
 
+  -- The dark launch holds against hand-crafted calls, exactly as it does in
+  -- mm_enqueue: a mode hidden from the chooser deals no questions and pays
+  -- no coins until the registry flips it live.
+  IF NOT EXISTS (SELECT 1 FROM public.game_types WHERE key = 'king' AND is_live) THEN
+    RAISE EXCEPTION 'This game type is not live yet';
+  END IF;
+
   SELECT * INTO v_match FROM public.king_matches
    WHERE user_id = v_user AND status = 'playing'
    ORDER BY started_at DESC LIMIT 1
@@ -338,6 +345,15 @@ BEGIN
    WHERE id = p_match_id AND user_id = v_user FOR UPDATE;
   IF v_match.id IS NULL OR v_match.current_question_id IS NULL THEN
     RAISE EXCEPTION 'No live question';
+  END IF;
+
+  -- The think phase is a server deadline too: 60 seconds from the draw plus
+  -- the same grace the never-shown path gets. A client that sat on the
+  -- question longer (researching it with the clock stopped) does not get a
+  -- commit window at all — the question closes against the player.
+  IF v_match.options_at IS NULL
+     AND now() > v_match.drawn_at + interval '75 seconds' THEN
+    RETURN public.king_finish_question(v_match, false);
   END IF;
 
   IF v_match.options_at IS NULL THEN

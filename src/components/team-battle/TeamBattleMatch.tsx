@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useServerDeadline } from "@/hooks/useServerDeadline";
 import {
   superQuestions,
   tileQuestions,
@@ -16,39 +17,6 @@ const GESTURES: { key: TBGesture; emoji: string }[] = [
   { key: "paper", emoji: "✋" },
   { key: "scissors", emoji: "✌️" },
 ];
-
-/**
- * Seconds until a server deadline, ticking 4×/s. When it crosses zero the
- * page calls tb_advance — every device does, the server takes the first.
- */
-function useDeadline(deadline: string | null | undefined, onExpire: () => void) {
-  const [left, setLeft] = useState(0);
-  const firedRef = useRef<string | null>(null);
-  const onExpireRef = useRef(onExpire);
-  onExpireRef.current = onExpire;
-
-  useEffect(() => {
-    if (!deadline) {
-      setLeft(0);
-      return;
-    }
-    const compute = () => Math.max(0, (new Date(deadline).getTime() - Date.now()) / 1000);
-    setLeft(compute());
-    const id = setInterval(() => {
-      const remaining = compute();
-      setLeft(remaining);
-      if (remaining <= 0 && firedRef.current !== deadline) {
-        firedRef.current = deadline;
-        // Spread the advance calls out a little so one device usually wins
-        // cleanly; the RPC is idempotent either way.
-        setTimeout(() => onExpireRef.current(), Math.random() * 400);
-      }
-    }, 250);
-    return () => clearInterval(id);
-  }, [deadline]);
-
-  return Math.ceil(left);
-}
 
 const teamLabel = (t: (k: string) => string, team: TBTeam | null | undefined) =>
   team === "a" ? t("teamBattle.teamA") : t("teamBattle.teamB");
@@ -75,7 +43,7 @@ function ScoreBar() {
   );
 }
 
-export function TeamBattleMatch() {
+export function TeamBattleMatch({ onResultDismiss }: { onResultDismiss?: () => void }) {
   const { state } = useTeamBattle();
   if (!state) return null;
   switch (state.phase) {
@@ -89,7 +57,7 @@ export function TeamBattleMatch() {
     case "super_round":
       return <PhaseSuperRound />;
     case "done":
-      return <PhaseDone />;
+      return <PhaseDone onDismiss={onResultDismiss} />;
     default:
       return null;
   }
@@ -100,7 +68,7 @@ function PhaseRps() {
   const { user } = useAuth();
   const { state, submitRps, advance } = useTeamBattle();
   const [thrown, setThrown] = useState<TBGesture | null>(null);
-  const secondsLeft = useDeadline(state?.deadline, advance);
+  const secondsLeft = useServerDeadline(state?.deadline, advance);
 
   const throws = ((state?.rps as Record<string, unknown>)?.throws ?? {}) as Record<string, string>;
   const mine = (user && (throws[user.id] as TBGesture)) || thrown;
@@ -145,7 +113,7 @@ function PhaseBoardAndTurn() {
 function Board() {
   const { t } = useLanguage();
   const { state, tiles, participants, isSpotlight, pickTile, advance } = useTeamBattle();
-  const secondsLeft = useDeadline(state?.deadline, advance);
+  const secondsLeft = useServerDeadline(state?.deadline, advance);
   const picker = participants.find((p) => p.user_id === state?.active_player);
 
   return (
@@ -193,7 +161,7 @@ function Board() {
 function RapidFire() {
   const { t } = useLanguage();
   const { state, tiles, participants, isSpotlight, submitAnswer, advance } = useTeamBattle();
-  const secondsLeft = useDeadline(state?.deadline, advance);
+  const secondsLeft = useServerDeadline(state?.deadline, advance);
   const [lastResult, setLastResult] = useState<"correct" | "wrong" | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -289,7 +257,7 @@ function PhaseSuperVote() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { state, participants, myTeam, voteSuper, advance } = useTeamBattle();
-  const secondsLeft = useDeadline(state?.deadline, advance);
+  const secondsLeft = useServerDeadline(state?.deadline, advance);
   const votes = ((state?.super as Record<string, unknown>)?.votes ?? {}) as Record<string, string>;
   const myVote = user ? votes[user.id] : undefined;
   const teammates = participants.filter((p) => p.team === myTeam);
@@ -337,7 +305,7 @@ function PhaseSuperRound() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { state, participants, submitSuper, advance } = useTeamBattle();
-  const secondsLeft = useDeadline(state?.deadline, advance);
+  const secondsLeft = useServerDeadline(state?.deadline, advance);
   const [submitting, setSubmitting] = useState(false);
 
   const sup = (state?.super ?? {}) as Record<string, unknown>;
@@ -403,12 +371,14 @@ function PhaseSuperRound() {
   );
 }
 
-function PhaseDone() {
+function PhaseDone({ onDismiss }: { onDismiss?: () => void }) {
   const { t } = useLanguage();
   const { state, myTeam, settle } = useTeamBattle();
 
-  // Idempotent server claim: pays out once, resets the room to waiting, and
-  // the room UPDATE flips everyone back into the lobby.
+  // Idempotent server claim: pays out once and resets the room to waiting.
+  // The page keeps rendering this screen after the room UPDATE lands (see
+  // TeamBattlePage's resultSeen) — the win must be readable, not a flash on
+  // the way back to the lobby.
   useEffect(() => {
     void settle();
   }, [settle]);
@@ -429,6 +399,12 @@ function PhaseDone() {
           b: state?.team_b_score ?? 0,
         })}
       </p>
+      <button
+        onClick={onDismiss}
+        className="mt-4 rounded-[20px] px-8 py-4 bg-[#7C3AED] text-white font-bold"
+      >
+        {t("common.continue")}
+      </button>
     </div>
   );
 }

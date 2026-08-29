@@ -1421,6 +1421,7 @@ export const de: KaTranslations = {
     joinFailed: "Beitritt fehlgeschlagen",
     roomFull: "Dieser Raum ist voll",
     roomNotFound: "Kein Raum mit diesem Code",
+    matchInProgress: "Ein Match läuft bereits — steig beim nächsten ein",
     notEnoughQuestions: "Noch nicht genug Fragen in deiner Sprache",
     rpsTitle: "Stein · Papier · Schere",
     rpsSubtitle: "Das Gewinnerteam wählt zuerst",

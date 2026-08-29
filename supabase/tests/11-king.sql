@@ -134,6 +134,13 @@ BEGIN
   PERFORM pg_temp.must_fail('SELECT public.king_start_match(''en'')',
     'anonymous caller cannot start a match');
 
+  -- The dark launch holds at the start RPC, not just in the chooser.
+  PERFORM pg_temp.as_user(v_player);
+  PERFORM pg_temp.must_fail('SELECT public.king_start_match(''en'')',
+    'a non-live mode starts no matches');
+  PERFORM pg_temp.as_user(NULL);
+  UPDATE public.game_types SET is_live = true WHERE key = 'king';
+
   PERFORM pg_temp.as_user(v_player);
   v_state := public.king_start_match('en');
   v_match := (v_state ->> 'match_id')::uuid;
@@ -199,6 +206,18 @@ BEGIN
   v_state := public.king_expire_question(v_match);
   PERFORM pg_temp.must_equal((v_state ->> 'king_score')::int, 2, 'a timeout scores for the King');
 
+  -- The think phase is a server deadline too: a client that sat on the
+  -- question past the window gets no commit phase — the King takes it.
+  v_state := public.king_draw_question(v_match);
+  PERFORM pg_temp.as_user(NULL);
+  UPDATE public.king_matches SET drawn_at = now() - interval '80 seconds' WHERE id = v_match;
+  PERFORM pg_temp.as_user(v_player);
+  v_state := public.king_show_options(v_match);
+  PERFORM pg_temp.must_equal((v_state ->> 'king_score')::int, 3,
+    'an overstayed think phase closes against the player');
+  PERFORM pg_temp.must_equal(v_state ? 'options', false,
+    'no commit window opens after the think deadline');
+
   -- Crack six in a row (the fixture reads the answers as superuser; a client
   -- has no such channel) and the match is won and paid exactly once.
   FOR i IN 1..6 LOOP
@@ -256,8 +275,9 @@ BEGIN
     format('SELECT public.king_abandon_match(%L)', v_match),
     'a finished match cannot be abandoned again');
 
-  -- Cleanup so reruns start clean.
+  -- Cleanup so reruns start clean — the mode goes back to dark.
   PERFORM pg_temp.as_user(NULL);
+  UPDATE public.game_types SET is_live = false WHERE key = 'king';
   DELETE FROM public.king_matches WHERE user_id IN (v_player, v_out);
   DELETE FROM public.currency_grants WHERE user_id IN (v_player, v_out);
 END $$;

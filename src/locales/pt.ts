@@ -1429,6 +1429,7 @@ export const pt: KaTranslations = {
     joinFailed: "Não foi possível entrar na sala",
     roomFull: "Esta sala está cheia",
     roomNotFound: "Nenhuma sala com esse código",
+    matchInProgress: "Já há uma partida em andamento — entre na próxima",
     notEnoughQuestions: "Ainda não há perguntas suficientes no seu idioma",
     rpsTitle: "Pedra · Papel · Tesoura",
     rpsSubtitle: "A equipe vencedora escolhe primeiro",

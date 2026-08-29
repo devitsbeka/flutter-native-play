@@ -255,6 +255,13 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         .eq("user_id", user.id)
         .maybeSingle();
       if (!existing) {
+        // A running match takes no new players — the server-side rotation
+        // and vote counts ignore mid-match joiners anyway, so don't let
+        // someone sit in a room they cannot play in.
+        if (row.status === "playing") {
+          toast.error(tStandalone("teamBattle.matchInProgress"));
+          return false;
+        }
         const { count } = await supabase
           .from("room_participants")
           .select("id", { count: "exact", head: true })
@@ -359,38 +366,50 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
         }
 
         const pool = shuffleArray(categories);
-        const tiles: Json[] = [];
         let poolIdx = 0;
-        for (const difficulty of difficulties) {
-          let questions: TBQuestion[] = [];
-          // A category can come back short in the player's language; walk the
-          // pool (cycling) until one can fill the tile.
-          for (let tries = 0; tries < pool.length && questions.length < 5; tries++) {
-            const cat = pool[poolIdx % pool.length];
-            poolIdx++;
-            const res = await getQuestions({ mode: "vs", categoryUuid: cat.uuid, categoryName: cat.name, count: 12 });
-            if (res.questions.length >= 5) {
-              questions = asQuestions(res.questions);
-              tiles.push({
-                category_id: cat.uuid,
-                category_name: cat.name,
-                difficulty,
-                questions: questions as unknown as Json,
-              } as unknown as Json);
-            }
+        const nextCat = () => pool[poolIdx++ % pool.length];
+        const fetchFor = async (cat: { uuid: string; name: string }) => ({
+          cat,
+          res: await getQuestions({ mode: "vs", categoryUuid: cat.uuid, categoryName: cat.name, count: 12 }),
+        });
+
+        // One fetch per tile plus the super round, all in flight at once —
+        // a 10-tile board serialized was a 10-30s "Preparing…" stall on
+        // mobile. Only tiles whose category came back short in the player's
+        // language fall back to walking the pool sequentially.
+        const fetched = await Promise.all(
+          Array.from({ length: difficulties.length + 1 }, () => fetchFor(nextCat())),
+        );
+
+        const fill = async (initial: (typeof fetched)[number]) => {
+          let current = initial;
+          for (let tries = 0; tries < pool.length && current.res.questions.length < 5; tries++) {
+            current = await fetchFor(nextCat());
           }
-          if (questions.length < 5) {
+          return current.res.questions.length >= 5 ? current : null;
+        };
+
+        const tiles: Json[] = [];
+        for (let i = 0; i < difficulties.length; i++) {
+          const filled = await fill(fetched[i]);
+          if (!filled) {
             toast.error(tStandalone("teamBattle.notEnoughQuestions"));
             return false;
           }
+          tiles.push({
+            category_id: filled.cat.uuid,
+            category_name: filled.cat.name,
+            difficulty: difficulties[i],
+            questions: asQuestions(filled.res.questions) as unknown as Json,
+          } as unknown as Json);
         }
 
-        const superCat = pool[poolIdx % pool.length];
-        const superRes = await getQuestions({ mode: "vs", categoryUuid: superCat.uuid, categoryName: superCat.name, count: 10 });
-        if (superRes.questions.length < 5) {
+        const superFilled = await fill(fetched[difficulties.length]);
+        if (!superFilled) {
           toast.error(tStandalone("teamBattle.notEnoughQuestions"));
           return false;
         }
+        const superRes = superFilled.res;
 
         const { error } = await supabase.rpc("tb_start_match", {
           p_room_id: roomId,
@@ -438,7 +457,19 @@ export function TeamBattleProvider({ children }: { children: React.ReactNode }) 
       console.error("[TB] answer failed", error);
       return null;
     }
-    return { correct: !!(data as { correct?: boolean } | null)?.correct };
+    const result = data as { correct?: boolean; answered?: number } | null;
+    // The RPC result is authoritative about where the turn stands — advance
+    // the local counter from it directly, so the spotlight player's next
+    // question never waits on (or is lost to) a realtime round-trip.
+    if (typeof result?.answered === "number") {
+      const answered = result.answered;
+      setState((prev) =>
+        prev && prev.phase === "rapid_fire" && answered > prev.turn_answers
+          ? { ...prev, turn_answers: answered }
+          : prev,
+      );
+    }
+    return { correct: !!result?.correct };
   }, []);
 
   const voteSuper = useCallback(async (candidate: string) => {

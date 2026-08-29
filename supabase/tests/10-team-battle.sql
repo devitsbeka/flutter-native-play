@@ -192,8 +192,30 @@ BEGIN
            jsonb_build_object('tiles', v_board -> 'tiles')::text),
     'a board without super questions is refused');
 
+  -- The dark launch holds at the start RPC, not just in the chooser.
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.tb_start_match(%L, %L::jsonb)', v_room, v_board::text),
+    'a non-live mode starts no matches');
+  PERFORM pg_temp.as_user(NULL);
+  UPDATE public.game_types SET is_live = true WHERE key = 'team_battle';
+  PERFORM pg_temp.as_user(v_alice);
+
   -- Start for real.
   v_game := public.tb_start_match(v_room, v_board);
+
+  -- Someone who walks in mid-match is a spectator: their throws are refused
+  -- and (asserted implicitly by every rotation check below) they never
+  -- become the spotlight player.
+  PERFORM pg_temp.as_user(NULL);
+  INSERT INTO auth.users (id, email) VALUES (v_out, 'out@tb.test') ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.room_participants (room_id, user_id, nickname, is_host, status, team)
+  VALUES (v_room, v_out, 'interloper', false, 'joined', 'a');
+  PERFORM pg_temp.as_user(v_out);
+  PERFORM pg_temp.must_fail(
+    format('SELECT public.tb_submit_rps(%L, %L)', v_room, 'rock'),
+    'a mid-match joiner cannot throw');
+  PERFORM pg_temp.as_user(NULL);
+  DELETE FROM public.room_participants WHERE room_id = v_room AND user_id = v_out;
 
   SELECT * INTO v_state FROM public.team_battle_state WHERE room_id = v_room;
   PERFORM pg_temp.must_equal(v_state.phase, 'rps', 'match opens with rock-paper-scissors');
@@ -442,8 +464,9 @@ BEGIN
   PERFORM pg_temp.must_equal((v_settle ->> 'applied')::boolean, true,
     'a rematch settles under its own game id');
 
-  -- Cleanup so reruns start clean.
+  -- Cleanup so reruns start clean — the mode goes back to dark.
   PERFORM pg_temp.as_user(NULL);
+  UPDATE public.game_types SET is_live = false WHERE key = 'team_battle';
   DELETE FROM public.room_match_history WHERE room_id = v_room;
   DELETE FROM public.game_rooms WHERE id = v_room;
   DELETE FROM public.currency_grants WHERE user_id IN (v_alice, v_bob, v_out);

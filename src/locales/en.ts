@@ -1697,6 +1697,7 @@ export const en: KaTranslations = {
     joinFailed: "Couldn't join the room",
     roomFull: "This room is full",
     roomNotFound: "No room with that code",
+    matchInProgress: "A match is already running — join the next one",
     notEnoughQuestions: "Not enough questions in your language yet",
     rpsTitle: "Rock · Paper · Scissors",
     rpsSubtitle: "The winning team picks first",

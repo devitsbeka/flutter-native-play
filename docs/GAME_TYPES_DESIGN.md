@@ -1,8 +1,43 @@
 # New Game Types — Design
 
-Status: **approved direction, pre-implementation** · Owner: product + whichever agent picks this up
+Status: **P1–P4 implemented and merged** · Owner: product + whichever agent picks this up
 Decisions in this doc were made with the product owner on 2026-08-29. Where a
 choice is marked *(decided)* it is settled — don't re-litigate it in a PR, ask first.
+
+## Implementation status (2026-08-29)
+
+| Phase | State | Where |
+|---|---|---|
+| P1 entry + registry | ✅ shipped | `/play`, `game_types` migration `20260916*`, `src/game-types/` |
+| P2 Team Battle | ✅ built, dark | migration `20260917*`, `TeamBattleContext`, `/team-battle`, suite `10-*` |
+| P3 MyTrivia King | ✅ built, dark | migrations `20260918*` (schema + 24-question seed), `/king`, suite `11-*` |
+| P4 global matchmaking | ✅ built | migration `20260919*`, `useMatchmaking`, `/play/queue`, suite `12-*` |
+| P5 polish | partially | adversarial review pass applied; TV surface / rating bands / King ladder remain post-launch |
+
+Deviations from the spec worth knowing: the Team Battle super round draws its
+questions from the same trivia pipeline as the board (not a dedicated pool);
+matchmade Team Battle queues as 2v2 only in v1; the King seed pool is 24
+questions against the ~120 launch bar (§3.3) and is the quality reference for
+the rest. The dark launch is enforced server-side in `tb_start_match`,
+`king_start_match` and `mm_enqueue` — a mode that is not `is_live` refuses
+hand-crafted calls, not just chooser taps.
+
+## Launch runbook
+
+1. Merge to `main`; the web deploy is automatic, the database is not.
+2. Ask Lovable to deploy — or paste each migration's raw-file link from
+   `main` into the Lovable SQL editor, in order: `20260916100000` (registry),
+   `20260917100000` (team battle), `20260918100000` + `20260918110000`
+   (king + seed), `20260919100000` (matchmaking).
+3. Verify: `select key, is_live, supports_matchmaking from game_types order by sort_order;`
+   (4 rows; classic has matchmaking) and
+   `select count(*) from king_questions where is_active;` (24).
+4. Review the seed questions (`20260918110000_king_seed_en.sql`) and grow the
+   pool toward ~120.
+5. Flip modes live, one at a time, each a one-line SQL statement:
+   `update game_types set is_live = true where key = 'team_battle';` /
+   `... where key = 'king';` Classic matchmaking is live the moment the
+   matchmaking migration lands (classic is already `is_live`).
 
 This document specifies:
 

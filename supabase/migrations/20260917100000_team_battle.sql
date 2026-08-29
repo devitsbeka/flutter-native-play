@@ -174,7 +174,10 @@ AS $$
         FROM public.team_battle_board b
        WHERE b.game_id = p_game_id AND b.played_by = rp.user_id
     ) plays ON true
-   WHERE rp.room_id = p_room_id AND rp.team = p_team
+   -- status = 'playing' scopes the rotation to the roster tb_start_match
+   -- validated; someone who joined the room mid-match is a spectator until
+   -- the next game, never the spotlight player.
+   WHERE rp.room_id = p_room_id AND rp.team = p_team AND rp.status = 'playing'
    ORDER BY plays.played ASC, rp.turn_order ASC NULLS LAST
    LIMIT 1;
 $$;
@@ -195,7 +198,7 @@ AS $$
              (ARRAY['rock', 'paper', 'scissors'])[1 + floor(random() * 3)::int]
            ) AS gesture
       FROM public.room_participants rp
-     WHERE rp.room_id = p_room_id AND rp.team = p_team
+     WHERE rp.room_id = p_room_id AND rp.team = p_team AND rp.status = 'playing'
   ) g
   GROUP BY gesture
   ORDER BY count(*) DESC, random()
@@ -331,7 +334,7 @@ BEGIN
         FROM jsonb_each_text(COALESCE(p_state.super -> 'votes', '{}'::jsonb)) v
        WHERE v.value = rp.user_id::text
     ) tally ON true
-   WHERE rp.room_id = p_state.room_id AND rp.team = 'a'
+   WHERE rp.room_id = p_state.room_id AND rp.team = 'a' AND rp.status = 'playing'
    ORDER BY tally.votes DESC, rp.turn_order ASC NULLS LAST
    LIMIT 1;
 
@@ -342,7 +345,7 @@ BEGIN
         FROM jsonb_each_text(COALESCE(p_state.super -> 'votes', '{}'::jsonb)) v
        WHERE v.value = rp.user_id::text
     ) tally ON true
-   WHERE rp.room_id = p_state.room_id AND rp.team = 'b'
+   WHERE rp.room_id = p_state.room_id AND rp.team = 'b' AND rp.status = 'playing'
    ORDER BY tally.votes DESC, rp.turn_order ASC NULLS LAST
    LIMIT 1;
 
@@ -443,6 +446,10 @@ BEGIN
   END IF;
   IF v_room.game_type_key IS DISTINCT FROM 'team_battle' THEN
     RAISE EXCEPTION 'Not a team battle room';
+  END IF;
+  -- The dark launch holds against hand-crafted calls, as in mm_enqueue.
+  IF NOT EXISTS (SELECT 1 FROM public.game_types WHERE key = 'team_battle' AND is_live) THEN
+    RAISE EXCEPTION 'This game type is not live yet';
   END IF;
   IF v_room.status = 'playing' THEN
     RAISE EXCEPTION 'Match already running';
@@ -598,7 +605,8 @@ BEGIN
   END IF;
   IF NOT EXISTS (
     SELECT 1 FROM public.room_participants
-     WHERE room_id = p_room_id AND user_id = v_caller AND team IS NOT NULL
+     WHERE room_id = p_room_id AND user_id = v_caller
+       AND team IS NOT NULL AND status = 'playing'
   ) THEN
     RAISE EXCEPTION 'Not a player in this match';
   END IF;
@@ -785,13 +793,14 @@ BEGIN
   END IF;
 
   SELECT team INTO v_team FROM public.room_participants
-   WHERE room_id = p_room_id AND user_id = v_caller;
+   WHERE room_id = p_room_id AND user_id = v_caller AND status = 'playing';
   IF v_team IS NULL THEN
     RAISE EXCEPTION 'Not a player in this match';
   END IF;
   IF NOT EXISTS (
     SELECT 1 FROM public.room_participants
-     WHERE room_id = p_room_id AND user_id = p_candidate AND team = v_team
+     WHERE room_id = p_room_id AND user_id = p_candidate
+       AND team = v_team AND status = 'playing'
   ) THEN
     RAISE EXCEPTION 'Champion must be on your own team';
   END IF;

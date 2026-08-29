@@ -34,6 +34,14 @@ function TeamBattleInner() {
   const { room, state } = useTeamBattle();
   const [params] = useSearchParams();
   const { joinRoom } = useTeamBattle();
+  // Settling flips the room back to "waiting" within a round-trip; the
+  // result screen stays up until the player dismisses it, or it would be an
+  // unreadable flash on the way back to the lobby.
+  const [resultSeen, setResultSeen] = useState(false);
+
+  useEffect(() => {
+    if (state?.phase !== "done") setResultSeen(false);
+  }, [state?.phase, state?.game_id]);
 
   // /team-battle?code=ABC123 joins straight into the lobby (shared links).
   useEffect(() => {
@@ -41,7 +49,11 @@ function TeamBattleInner() {
     if (code && !room && user) void joinRoom(code);
   }, [params, room, user, joinRoom]);
 
-  const inMatch = room && state && !state.settled && room.status === "playing";
+  const inMatch =
+    room &&
+    state &&
+    ((room.status === "playing" && !state.settled) ||
+      (state.phase === "done" && !resultSeen));
 
   return (
     <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background">
@@ -62,7 +74,13 @@ function TeamBattleInner() {
           </div>
         )}
 
-        {!room ? <TBEntry /> : inMatch ? <TeamBattleMatch /> : <TBLobby />}
+        {!room ? (
+          <TBEntry />
+        ) : inMatch ? (
+          <TeamBattleMatch onResultDismiss={() => setResultSeen(true)} />
+        ) : (
+          <TBLobby />
+        )}
       </div>
     </div>
   );

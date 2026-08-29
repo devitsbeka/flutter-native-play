@@ -70,6 +70,17 @@ export default function PlaySelect() {
                     gt.launch?.(navigate);
                   }
                 }}
+                onKeyDown={(e) => {
+                  // A div with role=button doesn't synthesize click from the
+                  // keyboard the way a real <button> did.
+                  if (comingSoon || (e.key !== "Enter" && e.key !== " ")) return;
+                  e.preventDefault();
+                  if (gt.supportsMatchmaking) {
+                    setExpanded(expanded === gt.key ? null : gt.key);
+                  } else {
+                    gt.launch?.(navigate);
+                  }
+                }}
                 role="button"
                 tabIndex={comingSoon ? -1 : 0}
                 aria-disabled={comingSoon}

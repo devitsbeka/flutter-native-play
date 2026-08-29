@@ -5,6 +5,7 @@ import { ChevronLeft, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useServerDeadline } from "@/hooks/useServerDeadline";
 import { readAppLanguage } from "@/utils/appLanguage";
 import { toast } from "@/lib/toast";
 
@@ -26,33 +27,6 @@ interface KingState {
 }
 
 type Stage = "intro" | "thinking" | "commit" | "reveal" | "result";
-
-function useCountdown(deadline: string | undefined, onExpire: () => void) {
-  const [left, setLeft] = useState(0);
-  const firedRef = useRef<string | null>(null);
-  const onExpireRef = useRef(onExpire);
-  onExpireRef.current = onExpire;
-
-  useEffect(() => {
-    if (!deadline) {
-      setLeft(0);
-      return;
-    }
-    const compute = () => Math.max(0, (new Date(deadline).getTime() - Date.now()) / 1000);
-    setLeft(compute());
-    const id = setInterval(() => {
-      const remaining = compute();
-      setLeft(remaining);
-      if (remaining <= 0 && firedRef.current !== deadline) {
-        firedRef.current = deadline;
-        onExpireRef.current();
-      }
-    }, 250);
-    return () => clearInterval(id);
-  }, [deadline]);
-
-  return Math.ceil(left);
-}
 
 /**
  * /king — MyTrivia King (docs/GAME_TYPES_DESIGN.md §3). Solo and entirely
@@ -146,24 +120,22 @@ export default function KingPage() {
   const stageRef = useRef<Stage>("intro");
   stageRef.current = stage;
 
-  // The server grants 2s of wire grace past the visible deadline before it
-  // accepts an expiry claim, so wait the grace out — and if a submit landed
-  // in the meantime the claim fails with "no live question", which is not an
-  // error worth showing.
-  const expire = useCallback(() => {
-    setTimeout(async () => {
-      const matchId = matchIdRef.current;
-      if (!matchId || stageRef.current !== "commit") return;
-      const { data, error } = await supabase.rpc("king_expire_question", { p_match_id: matchId });
-      if (error || stageRef.current !== "commit") {
-        if (error) console.warn("[King] expire skipped:", error.message);
-        return;
-      }
-      const s = data as unknown as KingState;
-      setState(s);
-      setReveal(s);
-      setStage("reveal");
-    }, 2600);
+  // The expiry claim is retried by useServerDeadline until the SERVER clock
+  // agrees (it refuses inside the 2s wire grace, and a fast device clock
+  // just means a couple of refused early tries). A claim that fails because
+  // a submit landed meanwhile is not an error worth showing.
+  const expire = useCallback(async () => {
+    const matchId = matchIdRef.current;
+    if (!matchId || stageRef.current !== "commit") return;
+    const { data, error } = await supabase.rpc("king_expire_question", { p_match_id: matchId });
+    if (error || stageRef.current !== "commit") {
+      if (error) console.warn("[King] expire not accepted yet:", error.message);
+      return;
+    }
+    const s = data as unknown as KingState;
+    setState(s);
+    setReveal(s);
+    setStage("reveal");
   }, []);
 
   const abandon = useCallback(async () => {
@@ -179,13 +151,13 @@ export default function KingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const thinkSeconds = useCountdown(
+  const thinkSeconds = useServerDeadline(
     stage === "thinking" ? state?.question?.think_deadline : undefined,
     showOptions,
   );
-  const commitSeconds = useCountdown(
+  const commitSeconds = useServerDeadline(
     stage === "commit" ? state?.commit_deadline : undefined,
-    expire,
+    () => void expire(),
   );
 
   return (

@@ -1418,6 +1418,7 @@ export const fr: KaTranslations = {
     joinFailed: "Impossible de rejoindre le salon",
     roomFull: "Ce salon est complet",
     roomNotFound: "Aucun salon avec ce code",
+    matchInProgress: "Un match est déjà en cours — rejoins le prochain",
     notEnoughQuestions: "Pas encore assez de questions dans ta langue",
     rpsTitle: "Pierre · Feuille · Ciseaux",
     rpsSubtitle: "L'équipe gagnante choisit en premier",
