@@ -1,0 +1,8 @@
+/* Fonts the Step07 Figma frame specifies: Manrope SemiBold for the question,
+   Nunito Sans Bold for answers. Imported by StarQuestionFrame's page chunk
+   only, so the app bundle doesn't pay for them. */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,700;0,6..12,800&display=swap");
+/* Neither face has Georgian glyphs; the frame's stacks fall back to the same
+   Georgian face the app uses, so a ka post doesn't depend on the viewer's OS. */
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@600;700&display=swap");

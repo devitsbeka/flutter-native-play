@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Shuffle, Eye, EyeOff } from "lucide-react";
-import { QotdFrame, seededShuffle, type Question } from "@/components/social/QotdFrame";
+import { seededShuffle, type Question } from "@/components/social/QotdFrame";
+import { StarQuestionFrame } from "@/components/social/StarQuestionFrame";
+import "@/components/social/star-frame.css";
 
 /**
  * Social Frames — post templates at each network's exact pixel size, filled
@@ -21,20 +23,57 @@ import { QotdFrame, seededShuffle, type Question } from "@/components/social/Qot
 
 const LANGUAGES = ["ka", "en", "de", "es", "fr", "it", "pt"] as const;
 
-const FORMATS = [
-  { key: "story", label: "Story / Reel / TikTok / Short", w: 1080, h: 1920 },
-  { key: "portrait", label: "IG · FB Feed", w: 1080, h: 1350 },
-  { key: "square", label: "Square", w: 1080, h: 1080 },
-  { key: "link", label: "FB Link / Open Graph", w: 1200, h: 630 },
-  { key: "x", label: "X Post", w: 1600, h: 900 },
-  { key: "yt", label: "YouTube Thumbnail", w: 1280, h: 720 },
-] as const;
+/**
+ * One entry per surface the pipeline posts to, at the size that network
+ * renders best, with the platform chrome's keep-clear zones (safeInsets, in
+ * canvas px) so nothing important sits under UI:
+ *  - IG Stories/Reels: ~250px of UI at the top, ~310px at the bottom
+ *  - TikTok: ~140px right rail (like/comment/share), ~500px caption zone at
+ *    the bottom, ~130px top
+ *  - YouTube Shorts: title/controls, ~120px top / ~360px bottom
+ * Feed and thumbnail canvases have no overlaid chrome.
+ */
+const FORMATS: {
+  key: string;
+  label: string;
+  w: number;
+  h: number;
+  safeInsets?: { top?: number; bottom?: number; left?: number; right?: number };
+}[] = [
+  { key: "ig-feed", label: "Instagram · FB Feed (4:5)", w: 1080, h: 1350 },
+  {
+    key: "ig-story",
+    label: "IG Story / Reel",
+    w: 1080,
+    h: 1920,
+    safeInsets: { top: 250, bottom: 310 },
+  },
+  {
+    key: "tiktok",
+    label: "TikTok",
+    w: 1080,
+    h: 1920,
+    safeInsets: { top: 130, bottom: 500, right: 140 },
+  },
+  {
+    key: "yt-short",
+    label: "YouTube Short",
+    w: 1080,
+    h: 1920,
+    safeInsets: { top: 120, bottom: 360 },
+  },
+  { key: "square", label: "IG · FB Square", w: 1080, h: 1080 },
+  { key: "fb-land", label: "Facebook Landscape / Link", w: 1200, h: 630 },
+  { key: "yt-thumb", label: "YouTube Thumbnail", w: 1280, h: 720 },
+  { key: "appstore", label: "App Store 6.5″", w: 1242, h: 2688 },
+];
 
 export default function SocialFrames() {
   const [lang, setLang] = useState<string>("ka");
   const [pool, setPool] = useState<Question[]>([]);
   const [index, setIndex] = useState(0);
   const [reveal, setReveal] = useState(false);
+  const [showSafeZones, setShowSafeZones] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,16 +114,6 @@ export default function SocialFrames() {
     return seededShuffle([question.correct_answer, ...incorrect.slice(0, 3)], question.id);
   }, [question]);
 
-  const dateLabel = useMemo(
-    () =>
-      new Date().toLocaleDateString(lang === "ka" ? "ka-GE" : lang, {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }),
-    [lang],
-  );
-
   const shuffle = () => {
     if (pool.length > 1) {
       let next = index;
@@ -98,9 +127,9 @@ export default function SocialFrames() {
       <div>
         <h1 className="text-2xl font-bold">Social Frames</h1>
         <p className="text-muted-foreground text-sm mt-1 max-w-2xl">
-          Question of the Day on every network&apos;s canvas, at its exact pixel size. Screenshot
-          the frame you need — the 9:16 one covers TikTok, Reels, Shorts and Stories from a single
-          render.
+          The Step07 post design on every canvas the pipeline posts to, at exact pixel size and
+          with each platform&apos;s keep-clear zones respected. Scroll sideways through the
+          carousel; screenshot the frame you need.
         </p>
       </div>
 
@@ -126,6 +155,9 @@ export default function SocialFrames() {
           {reveal ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
           {reveal ? "Hide answer" : "Reveal answer"}
         </Button>
+        <Button variant="outline" size="sm" onClick={() => setShowSafeZones((z) => !z)}>
+          {showSafeZones ? "Hide safe zones" : "Show safe zones"}
+        </Button>
         {question && (
           <span className="text-xs text-muted-foreground">
             {pool.length} in pool · difficulty {question.difficulty}
@@ -142,13 +174,16 @@ export default function SocialFrames() {
       )}
 
       {question && (
-        <div className="flex flex-wrap gap-8 items-start">
+        /* One horizontal carousel: every canvas at the same preview height,
+           side by side, scrolled through sideways. The inner frame is still
+           real pixels scaled down, so a screenshot of the unscaled frame is
+           already post-ready. */
+        <div className="flex gap-8 items-start overflow-x-auto snap-x snap-mandatory pb-4 -mx-6 px-6">
           {FORMATS.map((f) => {
-            // Preview width caps the on-screen size; the inner frame is real pixels.
-            const previewW = f.w >= f.h ? 480 : 300;
-            const scale = previewW / f.w;
+            const previewH = 560;
+            const scale = previewH / f.h;
             return (
-              <figure key={f.key} className="m-0">
+              <figure key={f.key} className="m-0 shrink-0 snap-center">
                 <figcaption className="mb-2 text-sm font-medium">
                   {f.label}{" "}
                   <span className="text-muted-foreground font-normal">
@@ -156,20 +191,50 @@ export default function SocialFrames() {
                   </span>
                 </figcaption>
                 <div
-                  className="rounded-lg overflow-hidden ring-1 ring-border shadow-sm"
+                  className="relative rounded-lg overflow-hidden ring-1 ring-border shadow-sm"
                   style={{ width: f.w * scale, height: f.h * scale }}
                 >
                   <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-                    <QotdFrame
+                    <StarQuestionFrame
                       w={f.w}
                       h={f.h}
                       question={question}
                       answers={answers}
                       reveal={reveal}
                       lang={lang}
-                      dateLabel={dateLabel}
+                      safeInsets={f.safeInsets}
                     />
                   </div>
+                  {/* Preview-only guides for the platform chrome; never part
+                      of the frame itself, so screenshots stay clean. */}
+                  {showSafeZones && f.safeInsets && (
+                    <div className="absolute inset-0 pointer-events-none">
+                      {f.safeInsets.top && (
+                        <div
+                          className="absolute top-0 left-0 right-0 bg-red-500/25 border-b border-red-400"
+                          style={{ height: f.safeInsets.top * scale }}
+                        />
+                      )}
+                      {f.safeInsets.bottom && (
+                        <div
+                          className="absolute bottom-0 left-0 right-0 bg-red-500/25 border-t border-red-400"
+                          style={{ height: f.safeInsets.bottom * scale }}
+                        />
+                      )}
+                      {f.safeInsets.right && (
+                        <div
+                          className="absolute top-0 bottom-0 right-0 bg-red-500/25 border-l border-red-400"
+                          style={{ width: f.safeInsets.right * scale }}
+                        />
+                      )}
+                      {f.safeInsets.left && (
+                        <div
+                          className="absolute top-0 bottom-0 left-0 bg-red-500/25 border-r border-red-400"
+                          style={{ width: f.safeInsets.left * scale }}
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
               </figure>
             );
