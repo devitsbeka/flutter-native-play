@@ -28,6 +28,8 @@ export interface GameTypeDescriptor {
   status: GameTypeStatus;
   badge: "new" | "beta" | null;
   sortOrder: number;
+  /** Has a global queue (docs/GAME_TYPES_DESIGN.md §5); DB row overrides. */
+  supportsMatchmaking: boolean;
   launch?: (navigate: NavigateFunction) => void;
 }
 
@@ -45,6 +47,7 @@ export const GAME_TYPES: GameTypeDescriptor[] = [
     status: "live",
     badge: null,
     sortOrder: 10,
+    supportsMatchmaking: true,
     launch: (navigate) => navigate("/team", { state: { openCreateRoom: true } }),
   },
   {
@@ -60,6 +63,7 @@ export const GAME_TYPES: GameTypeDescriptor[] = [
     status: "live",
     badge: null,
     sortOrder: 20,
+    supportsMatchmaking: false,
     launch: (navigate) => navigate("/tv"),
   },
   {
@@ -78,6 +82,7 @@ export const GAME_TYPES: GameTypeDescriptor[] = [
     status: "coming_soon",
     badge: "beta",
     sortOrder: 30,
+    supportsMatchmaking: true,
     launch: (navigate) => navigate("/team-battle"),
   },
   {
@@ -95,6 +100,7 @@ export const GAME_TYPES: GameTypeDescriptor[] = [
     status: "coming_soon",
     badge: "beta",
     sortOrder: 40,
+    supportsMatchmaking: false,
     launch: (navigate) => navigate("/king"),
   },
 ];

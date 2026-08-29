@@ -1751,6 +1751,21 @@ export const ka = {
     noQuestions: "შენს ენაზე კითხვები ჯერ არ არის",
   },
 
+  // Global matchmaking (docs/GAME_TYPES_DESIGN.md §5)
+  matchmaking: {
+    title: "გლობალური თამაში",
+    friendsOption: "მეგობრებთან",
+    globalOption: "გლობალური",
+    searching: "ვეძებთ მოთამაშეებს…",
+    searchingHint: "გწყვილებთ მოთამაშეებთან შენს ენაზე",
+    matched: "მოწინააღმდეგე ნაპოვნია!",
+    expiredTitle: "ახლა მოთამაშეები ვერ მოიძებნა",
+    expiredHint: "სცადე ისევ ან ითამაშე მეგობრებთან",
+    retry: "კიდევ ძებნა",
+    playFriendsInstead: "მეგობრებთან თამაში",
+    errorTitle: "რაღაც შეცდომაა — სცადე მოგვიანებით",
+  },
+
   extra: {
     questionsAnsweredLabel: "გაცემული პასუხი",
     successRateLabel: "წარმატება",

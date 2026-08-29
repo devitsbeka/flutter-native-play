@@ -1747,6 +1747,20 @@ export const en: KaTranslations = {
     playAgain: "Play again",
     noQuestions: "No questions in your language yet",
   },
+  // Global matchmaking (docs/GAME_TYPES_DESIGN.md §5)
+  matchmaking: {
+    title: "Global match",
+    friendsOption: "With friends",
+    globalOption: "Global",
+    searching: "Looking for players…",
+    searchingHint: "Matching you with players in your language",
+    matched: "Match found!",
+    expiredTitle: "No players found right now",
+    expiredHint: "Try again, or play with friends instead",
+    retry: "Keep searching",
+    playFriendsInstead: "Play with friends",
+    errorTitle: "Something went wrong — try again later",
+  },
   extra: {
     questionsAnsweredLabel: "Questions answered",
     successRateLabel: "Success rate",

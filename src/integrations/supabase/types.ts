@@ -4665,6 +4665,12 @@ export type Database = {
         Args: { p_answer: string; p_match_id: string }
         Returns: Json
       }
+      mm_cancel: { Args: never; Returns: Json }
+      mm_enqueue: {
+        Args: { p_game_type_key: string; p_language: string; p_team_size?: number }
+        Returns: Json
+      }
+      mm_status: { Args: never; Returns: Json }
       national_question_progress: {
         Args: never
         Returns: {

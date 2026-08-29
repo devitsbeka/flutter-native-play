@@ -60,6 +60,7 @@ const TeamV2 = lazy(() => import("./pages/TeamV2"));
 const PlaySelect = lazy(() => import("./pages/PlaySelect"));
 const TeamBattlePage = lazy(() => import("./pages/TeamBattlePage"));
 const KingPage = lazy(() => import("./pages/KingPage"));
+const QueuePage = lazy(() => import("./pages/QueuePage"));
 const Discover = lazy(() => import("./pages/Discover"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const CategoryQuizPage = lazy(() => import("./pages/CategoryQuizPage"));
@@ -276,6 +277,7 @@ const App = () => (
                 {/* Game type chooser behind "Play with friends" — coexists
                     with /play/:categoryId/:levelId (exact match wins). */}
                 <Route path="/play" element={<PlaySelect />} />
+                <Route path="/play/queue" element={<QueuePage />} />
                 <Route path="/team-battle" element={<TeamBattlePage />} />
                 <Route path="/king" element={<KingPage />} />
                 <Route path="/team" element={<TeamV2 />} />

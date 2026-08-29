@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronLeft, Crown, Swords, Tv, Users, type LucideIcon } from "lucide-react";
+import { ChevronLeft, Crown, Globe, Swords, Tv, Users, type LucideIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGameTypes } from "@/hooks/useGameTypes";
 import type { GameTypeDescriptor } from "@/game-types/registry";
@@ -24,6 +25,9 @@ export default function PlaySelect() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const gameTypes = useGameTypes();
+  // A matchmade type expands into the private/global choice instead of
+  // launching outright (docs/GAME_TYPES_DESIGN.md §1).
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
     <div className="h-[calc(100dvh_-_var(--safe-top)_-_var(--safe-bottom))] overflow-y-auto bg-background">
@@ -52,17 +56,24 @@ export default function PlaySelect() {
                 ? t("gameTypes.playersSolo")
                 : t("gameTypes.players", { min: gt.minPlayers, max: gt.maxPlayers });
             return (
-              <motion.button
+              <motion.div
                 key={gt.key}
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 360, damping: 24, delay: 0.05 + i * 0.06 }}
                 whileTap={comingSoon ? undefined : { scale: 0.97 }}
                 onClick={() => {
-                  if (!comingSoon) gt.launch?.(navigate);
+                  if (comingSoon) return;
+                  if (gt.supportsMatchmaking) {
+                    setExpanded(expanded === gt.key ? null : gt.key);
+                  } else {
+                    gt.launch?.(navigate);
+                  }
                 }}
+                role="button"
+                tabIndex={comingSoon ? -1 : 0}
                 aria-disabled={comingSoon}
-                className="rounded-[24px] p-5 text-left relative"
+                className="rounded-[24px] p-5 text-left relative cursor-pointer"
                 style={{ background: "rgba(252,247,255,0.92)", boxShadow: CARD_SHADOW }}
               >
                 <div className="flex items-start gap-4">
@@ -100,7 +111,31 @@ export default function PlaySelect() {
                     </div>
                   </div>
                 </div>
-              </motion.button>
+                {expanded === gt.key && !comingSoon && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="grid grid-cols-2 gap-2 mt-4">
+                      <button
+                        onClick={() => gt.launch?.(navigate)}
+                        className="rounded-xl px-3 py-3 bg-[#7C3AED] text-white text-sm font-bold flex items-center justify-center gap-1.5"
+                      >
+                        <Users className="w-4 h-4" /> {t("matchmaking.friendsOption")}
+                      </button>
+                      <button
+                        onClick={() => navigate(`/play/queue?type=${gt.key}`)}
+                        className="rounded-xl px-3 py-3 bg-white/80 text-[#402666] text-sm font-bold flex items-center justify-center gap-1.5"
+                        style={{ boxShadow: "0 1px 4px rgba(102,51,153,0.12)" }}
+                      >
+                        <Globe className="w-4 h-4" /> {t("matchmaking.globalOption")}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
             );
           })}
         </div>

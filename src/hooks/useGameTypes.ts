@@ -10,6 +10,7 @@ type GameTypeRow = {
   is_live: boolean;
   badge: string | null;
   sort_order: number;
+  supports_matchmaking: boolean;
 };
 
 // Renders the /play chooser from the static registry, letting the database's
@@ -27,7 +28,7 @@ export function useGameTypes(): GameTypeDescriptor[] {
     let cancelled = false;
     supabase
       .from("game_types")
-      .select("key, is_live, badge, sort_order")
+      .select("key, is_live, badge, sort_order, supports_matchmaking")
       .then(({ data, error }) => {
         if (!cancelled && !error && data && data.length > 0) setRows(data);
       });
@@ -46,6 +47,7 @@ export function useGameTypes(): GameTypeDescriptor[] {
         status: row.is_live ? "live" : row.badge ? "coming_soon" : "hidden",
         badge: row.badge === "new" || row.badge === "beta" ? row.badge : null,
         sortOrder: row.sort_order,
+        supportsMatchmaking: row.supports_matchmaking,
       } satisfies GameTypeDescriptor;
     })
       .filter((gt) => gt.status !== "hidden")
