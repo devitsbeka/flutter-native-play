@@ -7,6 +7,7 @@ import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { Category } from "@/data/categories";
 import { useCategories } from "@/hooks/useCategories";
+import { excludePartyCategories } from "@/config/partyCategories";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface QuickPlayModalProps {
@@ -33,7 +34,9 @@ export function QuickPlayModal({
 
   if (!friend) return null;
 
-  const filteredCategories = categories.filter(c => c.type === categoryType);
+  // Friend challenges replay fixed questions solo - a party vote category
+  // has no fixed answers to challenge anyone with.
+  const filteredCategories = excludePartyCategories(categories).filter(c => c.type === categoryType);
 
   const handleStartChallenge = () => {
     if (!selectedCategory) return;

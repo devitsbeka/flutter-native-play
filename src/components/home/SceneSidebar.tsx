@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useCategories } from "@/hooks/useCategories";
+import { excludePartyCategories } from "@/config/partyCategories";
 import { useLanguage } from "@/contexts/LanguageContext";
 import swordLine from "@/assets/figma-home/sword-line.svg";
 import arrowRight from "@/assets/figma-home/arrow-right-s.svg";
@@ -33,7 +34,9 @@ export function SceneSidebar({ onQuickPlay }: SceneSidebarProps) {
   const navigate = useNavigate();
   const { pendingInvitations, acceptInvitation, declineInvitation } = useGameInvitations();
   const { progress } = useCategoryProgress();
-  const { categories } = useCategories();
+  // "Continue playing" is solo level progress; party categories have none.
+  const { categories: allCategories } = useCategories();
+  const categories = useMemo(() => excludePartyCategories(allCategories), [allCategories]);
   const [inviteBusy, setInviteBusy] = useState(false);
 
   const invitation = pendingInvitations[0];

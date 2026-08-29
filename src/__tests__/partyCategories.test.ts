@@ -9,6 +9,7 @@ import {
   excludePartyCategories,
   isPartyCategory,
   mostLikelyAnswerOptions,
+  pinPartyCategoriesFirst,
 } from "@/config/partyCategories";
 import { MAX_QUESTION_POINTS } from "@/utils/scoring";
 
@@ -65,6 +66,26 @@ describe("party categories stay out of solo lists", () => {
     expect(isPartyCategory(MOST_LIKELY_CATEGORY_ID)).toBe(true);
     expect(isPartyCategory("movies")).toBe(false);
     expect(isPartyCategory(null)).toBe(false);
+  });
+});
+
+describe("party categories lead the room pickers", () => {
+  it("moves them to the front, keeping everything else in arriving order", () => {
+    const rows = [
+      { id: "u1", category_id: "movies" },
+      { id: "u2", category_id: MOST_LIKELY_CATEGORY_ID },
+      { id: "u3", category_id: "science" },
+    ];
+    expect(pinPartyCategoriesFirst(rows).map((r) => r.category_id)).toEqual([
+      MOST_LIKELY_CATEGORY_ID,
+      "movies",
+      "science",
+    ]);
+  });
+
+  it("is a no-op when none are present", () => {
+    const rows = [{ id: "movies" }, { id: "science" }];
+    expect(pinPartyCategoriesFirst(rows)).toBe(rows);
   });
 });
 
