@@ -2,12 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Shuffle, Eye, EyeOff, BookmarkPlus } from "lucide-react";
+import { toast } from "@/lib/toast";
+import { Shuffle, Eye, EyeOff, BookmarkPlus, ListTodo } from "lucide-react";
 import { seededShuffle, type Question } from "@/components/social/QotdFrame";
 import { StarQuestionFrame } from "@/components/social/StarQuestionFrame";
 import { FORMATS } from "@/components/social/frameFormats";
 import { frameDrafts, defaultCaption } from "@/components/social/frameDrafts";
-import { SavedFrames } from "@/components/social/SavedFrames";
+import { SavedFramesSheet } from "@/components/social/SavedFrames";
 import "@/components/social/star-frame.css";
 
 /**
@@ -35,7 +36,7 @@ export default function SocialFrames() {
   const [lang, setLang] = useState<string>("ka");
   const [pool, setPool] = useState<PoolQuestion[]>([]);
   const [savedRefresh, setSavedRefresh] = useState(0);
-  const [saveNotice, setSaveNotice] = useState<string | null>(null);
+  const [queueOpen, setQueueOpen] = useState(false);
   // categories.id (uuid) → categories.category_id (ascii key the icon
   // library understands), for the icon fallback chain.
   const [categoryKeys, setCategoryKeys] = useState<Record<string, string>>({});
@@ -49,6 +50,10 @@ export default function SocialFrames() {
     setLoading(true);
     setError(null);
     try {
+      // Text questions only. Media questions carry a generic stem ("What is
+      // it?", "რა არის ეს?") because the picture IS the question — and this
+      // frame doesn't render the picture, so they read as one hardcoded
+      // title on every shuffle.
       const { data, error: err } = await supabase
         .from("questions")
         .select(
@@ -57,6 +62,9 @@ export default function SocialFrames() {
         .eq("language", lang)
         .eq("is_active", true)
         .eq("in_production", true)
+        .is("image_url", null)
+        .is("video_url", null)
+        .is("audio_url", null)
         .limit(60);
       if (err) throw err;
       const rows = (data ?? []) as PoolQuestion[];
@@ -107,7 +115,6 @@ export default function SocialFrames() {
   const saveFrame = async (formatKey: string) => {
     const f = FORMATS.find((x) => x.key === formatKey);
     if (!question || !f) return;
-    setSaveNotice(null);
     try {
       await frameDrafts.insert({
         language: lang,
@@ -129,9 +136,10 @@ export default function SocialFrames() {
         created_by: user?.id ?? null,
       });
       setSavedRefresh((n) => n + 1);
-      setSaveNotice(`Saved ${f.label}`);
+      setQueueOpen(true);
+      toast.success(`Saved ${f.label} to the queue`);
     } catch (e) {
-      setSaveNotice(e instanceof Error ? e.message : "Save failed");
+      toast.error(e instanceof Error ? e.message : "Save failed");
     }
   };
 
@@ -170,6 +178,10 @@ export default function SocialFrames() {
         </Button>
         <Button variant="outline" size="sm" onClick={() => setShowSafeZones((z) => !z)}>
           {showSafeZones ? "Hide safe zones" : "Show safe zones"}
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setQueueOpen(true)}>
+          <ListTodo className="w-4 h-4 mr-2" />
+          Queue
         </Button>
         {question && (
           <span className="text-xs text-muted-foreground">
@@ -267,13 +279,7 @@ export default function SocialFrames() {
         </div>
       )}
 
-      <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold">Saved frames</h2>
-          {saveNotice && <span className="text-sm text-muted-foreground">{saveNotice}</span>}
-        </div>
-        <SavedFrames refreshToken={savedRefresh} />
-      </div>
+      <SavedFramesSheet open={queueOpen} onOpenChange={setQueueOpen} refreshToken={savedRefresh} />
     </div>
   );
 }
