@@ -1157,3 +1157,54 @@ export function resetCategoryTracking(categoryUuid: string, mode: 'category' | '
   const trackerKey = getTrackerKey(categoryUuid, mode);
   clearCategoryAskedQuestions(trackerKey);
 }
+
+// ============================================================================
+// MOST LIKELY TO (party vote prompts)
+// ============================================================================
+
+/** A vote prompt: no answers of its own — the room's player names are the
+ *  answers, substituted by the multiplayer vote path. */
+export interface MostLikelyPrompt {
+  id: string;
+  question: string;
+  iconSlug?: string | null;
+}
+
+/**
+ * Fetch vote prompts for a "Most Likely To" round.
+ *
+ * Deliberately NOT part of getQuestions: vote prompts carry the '__vote__'
+ * sentinel and no incorrect answers, a shape every generic pipeline rejects
+ * (isValidQuestionLength wants 3+ incorrect answers) — which is exactly what
+ * keeps them out of solo levels, TV rounds and mixed pools. This is the one
+ * path that serves them, in the caller's language, excluding the room's
+ * already-used ids (the round-start code records served ids in
+ * game_rooms.used_question_ids like any other round). When exclusions leave
+ * too few, the exclusions are dropped rather than the round shrinking.
+ */
+export async function getMostLikelyPrompts(
+  categorySlugOrUuid: string,
+  count: number,
+  excludeIds: string[] = [],
+): Promise<MostLikelyPrompt[]> {
+  const language = getPreferredLanguage();
+  const categoryUuid = await resolveCategoryUuid(categorySlugOrUuid);
+  if (!categoryUuid) return [];
+
+  const { data } = await supabase
+    .from('questions')
+    .select('id, question_text, icon_slug')
+    .eq('is_active', true)
+    .eq('in_production', true)
+    .eq('language', language)
+    .eq('category_id', categoryUuid);
+
+  const pool = data || [];
+  const excludeSet = new Set(excludeIds);
+  let fresh = pool.filter(q => !excludeSet.has(q.id));
+  if (fresh.length < count) fresh = pool; // bank exhausted — allow repeats
+
+  return shuffleArray(fresh)
+    .slice(0, count)
+    .map(q => ({ id: q.id, question: q.question_text, iconSlug: q.icon_slug }));
+}

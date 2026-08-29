@@ -18,6 +18,7 @@ import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { useCategoryDisplay } from '@/hooks/useCategoryDisplay';
 import { supabase } from '@/integrations/supabase/client';
 import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
+import { excludePartyCategories } from '@/config/partyCategories';
 import { toast } from "@/lib/toast";
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 
@@ -87,7 +88,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
         .eq('is_active', true)
         .order('sort_order')
         .then(({ data }) => {
-          if (data) setCategories(filterCategoriesForLanguage(data));
+          if (data) setCategories(excludePartyCategories(filterCategoriesForLanguage(data)));
         });
     }
   }, [showCategoryPicker, categories.length]);

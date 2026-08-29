@@ -37,8 +37,12 @@ describe("answer reveal", () => {
 
   it("reveals from the local answer rather than from the network", () => {
     // The point of the instant reveal: the correct answer is already on the
-    // device, so nothing has to be waited for to colour the buttons.
-    expect(SCREEN).toMatch(/setAnswerRevealed\(true\);\s*\n\s*if \(answer === currentQuestion\?\.correctAnswer\)/);
+    // device, so nothing has to be waited for to colour the buttons. Vote
+    // rounds ("Most Likely To") branch first — they have no local verdict to
+    // sound out — but the reveal itself stays instant for both.
+    expect(SCREEN).toMatch(
+      /setAnswerRevealed\(true\);\s*\n\s*if \(isMostLikelyRound\) \{[\s\S]{0,200}?\} else if \(answer === currentQuestion\?\.correctAnswer\)/,
+    );
   });
 
   it("clears the reveal when the question changes", () => {

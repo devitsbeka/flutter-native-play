@@ -50,7 +50,13 @@ export function MultiplayerGameScreenV2() {
     hostIsObserver,
     isHost,
     applyMissedTime,
+    isMostLikelyRound,
+    voteResults,
   } = useMultiplayerV2();
+
+  // "Most Likely To": the settled outcome of the question on screen, if the
+  // votes are already tallied. undefined while voting is still open.
+  const voteResult = isMostLikelyRound ? voteResults[currentQuestionIndex] : undefined;
 
   // The room's category decides how its pictures are drawn, and category_id
   // holds either the slug or a uuid depending on which path made the room —
@@ -202,7 +208,10 @@ export function MultiplayerGameScreenV2() {
     // compared against it. The writes still decide the score — this only stops
     // the player waiting on them to find out what they already picked.
     setAnswerRevealed(true);
-    if (answer === currentQuestion?.correctAnswer) {
+    if (isMostLikelyRound) {
+      // A vote is neither right nor wrong yet — stay neutral until the tally
+      // lands (the effect below plays the verdict sound when it does).
+    } else if (answer === currentQuestion?.correctAnswer) {
       playSound("correct-answer");
       vibrate(50);
     } else {
@@ -211,7 +220,24 @@ export function MultiplayerGameScreenV2() {
     }
 
     submitAnswer(answer, timeRemaining);
-  }, [answerRevealed, selectedAnswer, submitAnswer, timeRemaining, playSound, vibrate, currentQuestion]);
+  }, [answerRevealed, selectedAnswer, submitAnswer, timeRemaining, playSound, vibrate, currentQuestion, isMostLikelyRound]);
+
+  // Vote verdict sound: plays once when the tally for the question on screen
+  // arrives after this player voted. Skipped votes (timer ran out, answer "")
+  // stay silent — there is nothing to win.
+  const verdictPlayedForRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!isMostLikelyRound || !voteResult || !selectedAnswer) return;
+    if (verdictPlayedForRef.current === currentQuestionIndex) return;
+    verdictPlayedForRef.current = currentQuestionIndex;
+    if (voteResult.winners.includes(selectedAnswer)) {
+      playSound("correct-answer");
+      vibrate(50);
+    } else {
+      playSound("wrong-answer");
+      vibrate([50, 50, 50]);
+    }
+  }, [isMostLikelyRound, voteResult, selectedAnswer, currentQuestionIndex, playSound, vibrate]);
 
   // One advance per question, however many times the button is tapped.
   //
@@ -266,6 +292,18 @@ export function MultiplayerGameScreenV2() {
         return "default";
       }
 
+      // Vote rounds: nobody is right until the tally lands. Until then the
+      // own pick just reads "selected"; once settled, the majority name(s)
+      // go green and a losing own pick goes red.
+      if (isMostLikelyRound) {
+        if (voteResult) {
+          if (voteResult.winners.includes(answer)) return "correct";
+          if (answer === selectedAnswer) return "wrong";
+          return "default";
+        }
+        return answer === selectedAnswer ? "selected" : "default";
+      }
+
       const isCorrect = answer === currentQuestion?.correctAnswer;
       const isSelected = answer === selectedAnswer;
 
@@ -273,7 +311,7 @@ export function MultiplayerGameScreenV2() {
       if (isSelected && !isCorrect) return "wrong";
       return "default";
     },
-    [answerRevealed, currentQuestion, selectedAnswer]
+    [answerRevealed, currentQuestion, selectedAnswer, isMostLikelyRound, voteResult]
   );
 
   // Everyone who picked this answer, for the avatar badge on the answer row.
@@ -290,16 +328,22 @@ export function MultiplayerGameScreenV2() {
           id: participant.id || userId,
           nickname: participant.nickname,
           avatarUrl: participant.avatar_url,
-          isCorrect: submitted.is_correct,
+          // Vote rounds: a vote has no verdict until the tally lands (the
+          // insert's is_correct is a placeholder false) — neutral until
+          // then, then judged against the settled winners.
+          isCorrect: isMostLikelyRound
+            ? (voteResult ? voteResult.winners.includes(answer) : null)
+            : submitted.is_correct,
         });
       }
       return out;
     },
-    [answerRevealed, currentOpponentAnswers, participants]
+    [answerRevealed, currentOpponentAnswers, participants, isMostLikelyRound, voteResult]
   );
 
   // Check if this is a True/False question
   const isTrueFalseQuestion = useMemo(() => {
+    if (isMostLikelyRound) return false; // player names, even if two of them
     if (!currentQuestion?.allAnswers) return false;
     if (currentQuestion.allAnswers.length !== 2) return false;
     
@@ -308,7 +352,7 @@ export function MultiplayerGameScreenV2() {
       (answers.includes("მართალია") && answers.includes("მცდარია")) ||
       (answers.includes("true") && answers.includes("false"))
     );
-  }, [currentQuestion?.allAnswers]);
+  }, [currentQuestion?.allAnswers, isMostLikelyRound]);
 
 
   // Show loading while questions are being fetched
@@ -491,7 +535,9 @@ export function MultiplayerGameScreenV2() {
                     state={getAnswerState(answer) as QuizAnswerState}
                     onClick={() => handleAnswer(answer)}
                     disabled={answerRevealed}
-                    showLabel={true}
+                    // A vote round can hold more names than there are labels,
+                    // and A/B/C/D letters on people read wrong anyway
+                    showLabel={!isMostLikelyRound}
                   />
 
                   <AnswerChoiceAvatars choosers={choosersFor(answer)} />
@@ -504,6 +550,17 @@ export function MultiplayerGameScreenV2() {
 
       {/* Bottom Area - Next Button */}
       <div className="px-4 pb-4 pt-4 mt-auto flex-shrink-0">
+        {/* Vote rounds: what the reveal is waiting on, or how it came out.
+            Trivia rounds get their verdict from the buttons themselves. */}
+        {isMostLikelyRound && answerRevealed && (
+          <p className="text-center text-white/80 text-sm mb-2">
+            {voteResult
+              ? voteResult.winners.length > 0
+                ? t("extra.mltMostVoted", { names: voteResult.winners.join(", ") })
+                : t("extra.mltNoVotes")
+              : t("extra.mltWaitingVotes")}
+          </p>
+        )}
         <div className="pb-[env(safe-area-inset-bottom)]">
           <AnimatePresence mode="wait">
             {answerRevealed && (

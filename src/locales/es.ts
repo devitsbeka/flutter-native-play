@@ -3881,6 +3881,10 @@ export const es: KaTranslations = {
     mpGameStartFailed: "Error al iniciar el juego. Inténtalo de nuevo.",
     mpQuestionsNotFound: "Preguntas no encontradas",
     mpGameStartError: "No se pudo iniciar el juego",
+    // "Most Likely To" vote rounds
+    mltWaitingVotes: "Esperando los votos de todos…",
+    mltMostVoted: "Más votado: {names}",
+    mltNoVotes: "Sin votos en esta pregunta",
     mpSomeonePlayedTrivia: "{name} jugó tu trivia",
     mpSomeonePlayedTriviaFallback: "Alguien jugó tu trivia",
     chatStartConversation: "¡Inicia una conversación!",

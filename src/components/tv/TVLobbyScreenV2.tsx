@@ -7,6 +7,7 @@ import { Crown, Users, Play, Shuffle, Check, X, UserPlus } from 'lucide-react';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { supabase } from '@/integrations/supabase/client';
 import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
+import { excludePartyCategories } from '@/config/partyCategories';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
@@ -110,7 +111,7 @@ export const TVLobbyScreenV2: React.FC = () => {
         .order('sort_order');
 
       if (data) {
-        const visible = filterCategoriesForLanguage(data);
+        const visible = excludePartyCategories(filterCategoriesForLanguage(data));
         setCategories(visible);
         // Set initial category if exists
         if (categoryName) {

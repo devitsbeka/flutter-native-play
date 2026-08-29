@@ -168,6 +168,10 @@
     "icon_slug": "sword"
   },
   {
+    "category_id": "most_likely_to",
+    "icon_slug": "group-of-people"
+  },
+  {
     "category_id": "movies",
     "icon_slug": "movie-clapperboard"
   },

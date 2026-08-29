@@ -4445,6 +4445,10 @@ export const en: KaTranslations = {
     mpGameStartFailed: "Game start failed. Try again.",
     mpQuestionsNotFound: "Questions not found",
     mpGameStartError: "Could not start game",
+    // "Most Likely To" vote rounds
+    mltWaitingVotes: "Waiting for everyone’s votes…",
+    mltMostVoted: "Most voted: {names}",
+    mltNoVotes: "No votes this round",
     mpSomeonePlayedTrivia: "{name} played your trivia",
     mpSomeonePlayedTriviaFallback: "Someone played your trivia",
     // FriendChatSheet
