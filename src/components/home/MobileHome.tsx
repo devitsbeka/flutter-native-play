@@ -42,9 +42,19 @@ const NAV_H = "calc(var(--bottom-nav-height) + var(--safe-bottom))";
 // Dissolves the scene artwork's top edge into the page wash. Both spellings
 // ship: iOS below 15.4 only understands the -webkit- one, and there the
 // unprefixed property alone would leave the edge as a hard line.
+//
+// The ramp is deliberately front-loaded. A straight transparent→black over
+// 60% left the artwork translucent across most of its height, so the
+// animated blob wash showed through the character like fog on a real phone.
+// Instead the scene reaches 92% opacity within the top 16% — everything a
+// viewer looks at is effectively solid — and only the last 8% of alpha
+// tapers out slowly, which is still enough spread to keep the sky-vs-wash
+// tone seam from reading as a line.
 const SCENE_TOP_FADE: React.CSSProperties = {
-  maskImage: "linear-gradient(to bottom, transparent 0, black 60%)",
-  WebkitMaskImage: "linear-gradient(to bottom, transparent 0, black 60%)",
+  maskImage:
+    "linear-gradient(to bottom, transparent 0, rgba(0,0,0,0.92) 16%, black 55%)",
+  WebkitMaskImage:
+    "linear-gradient(to bottom, transparent 0, rgba(0,0,0,0.92) 16%, black 55%)",
 };
 
 /* ------------------------------------------------------------------ *
@@ -93,8 +103,12 @@ export function MobileSceneBackground({
     // loop, so a flat cut would read as a hard line straight across the
     // page. 140px was not enough: the artwork's own sky is a deeper
     // lavender than the wash, so the fade finished while the two tones
-    // still differed and the seam showed anyway. Fading over most of the
-    // artwork's height spreads that difference out until it disappears.
+    // still differed and the seam showed anyway. But fading linearly over
+    // 60% of the artwork went too far the other way — the scene stayed
+    // translucent over the character and the wash showed through like fog.
+    // SCENE_TOP_FADE now front-loads the ramp: near-solid within the top
+    // 16%, with only the final sliver of alpha spread far enough down to
+    // keep the tone seam invisible.
     const box = "absolute left-[-22.06vw] w-[154.94vw] max-w-none";
     // Inline rather than a Tailwind arbitrary property: that ships
     // `mask-image` alone, which iOS below 15.4 ignores outright — and an

@@ -3908,6 +3908,10 @@ export const fr: KaTranslations = {
     mpGameStartFailed: "Échec du lancement. Réessaie.",
     mpQuestionsNotFound: "Questions introuvables",
     mpGameStartError: "Impossible de lancer la partie",
+    // "Most Likely To" vote rounds
+    mltWaitingVotes: "En attente des votes de tous…",
+    mltMostVoted: "Le plus voté : {names}",
+    mltNoVotes: "Aucun vote pour cette question",
     mpSomeonePlayedTrivia: "{name} a joué ton trivia",
     mpSomeonePlayedTriviaFallback: "Quelqu'un a joué ton trivia",
     chatStartConversation: "Démarrez une conversation !",

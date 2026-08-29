@@ -5,7 +5,10 @@
 export const CATEGORY_ID_TO_ICON: Record<string, string> = {
   // General
   'general': 'lightbulb',
-  
+
+  // Party (multiplayer-only vote categories)
+  'most_likely_to': 'group-of-people',
+
   // Classic (15)
   'archaeology': 'fossil',
   'architecture': 'building',
@@ -62,7 +65,10 @@ export const CATEGORY_ID_TO_ICON: Record<string, string> = {
 export const CATEGORY_ICON_SLUGS: Record<string, string> = {
   // General
   'general': 'lightbulb',
-  
+
+  // Party
+  'most_likely_to': 'group-of-people',
+
   // Classic/Educational
   'geography': 'globe',
   'world_history': 'scroll',

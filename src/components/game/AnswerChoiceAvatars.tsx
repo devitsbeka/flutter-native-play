@@ -73,7 +73,13 @@ export function AnswerChoiceAvatars({
           key={chooser.id}
           className={cn(
             "w-7 h-7 [@media(max-height:600px)]:w-6 [@media(max-height:600px)]:h-6 border-2 shadow-sm",
-            chooser.isCorrect ? "border-green-500" : "border-red-500"
+            // null/undefined = no verdict yet (a vote round before its tally):
+            // neutral, neither the green of right nor the red of wrong
+            chooser.isCorrect == null
+              ? "border-white/80"
+              : chooser.isCorrect
+                ? "border-green-500"
+                : "border-red-500"
           )}
         >
           <ResolvedAvatarImage src={chooser.avatarUrl || undefined} alt={chooser.nickname || ""} />

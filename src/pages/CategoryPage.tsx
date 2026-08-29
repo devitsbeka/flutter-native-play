@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Star, Lock, Play, LogIn, Clock, Heart } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
+import { isPartyCategory } from "@/config/partyCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -84,11 +85,21 @@ export default function CategoryPage() {
   const isGuest = !user;
 
   // Find category from database
-  const category = useMemo(() => 
+  const category = useMemo(() =>
     categories.find(c => c.id === categoryId),
     [categories, categoryId]
   );
-  
+
+  // A party category ("Most Likely To") has no solo levels — its questions
+  // are votes about the players in a room. Any route that lands here with one
+  // (search, a shared link, an old bookmark) goes to the multiplayer flow,
+  // where the category is actually playable.
+  useEffect(() => {
+    if (categoryId && isPartyCategory(categoryId)) {
+      navigate("/team", { replace: true });
+    }
+  }, [categoryId, navigate]);
+
   // The discover cards favourite by UUID and so must this, or the same
   // category would be favourited twice under two different ids.
   const favoriteId = category?.uuid || category?.id || "";

@@ -23,6 +23,7 @@ import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { supabase } from '@/integrations/supabase/client';
 import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
+import { excludePartyCategories } from '@/config/partyCategories';
 import { toast } from "@/lib/toast";
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -223,7 +224,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
         .eq('is_active', true)
         .order('sort_order')
         .then(({ data }) => {
-          if (data) setCategories(filterCategoriesForLanguage(data));
+          if (data) setCategories(excludePartyCategories(filterCategoriesForLanguage(data)));
         });
     }
   }, [showCategoryPicker, categories.length]);

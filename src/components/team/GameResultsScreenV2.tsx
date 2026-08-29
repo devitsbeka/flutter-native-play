@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
+import { useMultiplayerV2, settleMostLikelyVotes } from "@/contexts/MultiplayerContextV2";
+import { activeRoundPlayers } from "@/utils/roundPlayers";
 import { useMissions } from "@/hooks/useMissions";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -67,9 +68,9 @@ export function GameResultsScreenV2() {
     const timer = setTimeout(() => setShowGuestSignUp(true), 3000);
     return () => clearTimeout(timer);
   }, [user]);
-  const { 
-    myScore: localMyScore, 
-    participants, 
+  const {
+    myScore: localMyScore,
+    participants,
     resetMultiplayer,
     currentRoom,
     exitRoom,
@@ -78,7 +79,32 @@ export function GameResultsScreenV2() {
     startNextFromQueue,
     isHost,
     startGame,
+    isMostLikelyRound,
+    hostIsObserver,
   } = useMultiplayerV2();
+
+  // "Most Likely To" rounds settle server-side, and the totals snapshot
+  // (complete_room_round) must not be claimed before the votes are in. Wait
+  // until every active player finished; a player who quits without a trace
+  // would hold that forever, so a timer eventually lets the round settle
+  // with whatever votes exist.
+  const [mltWaitExpired, setMltWaitExpired] = useState(false);
+  useEffect(() => {
+    if (!isMostLikelyRound) return;
+    const timer = setTimeout(() => setMltWaitExpired(true), 60_000);
+    return () => clearTimeout(timer);
+  }, [isMostLikelyRound]);
+  const mltAllVotersDone =
+    !isMostLikelyRound ||
+    mltWaitExpired ||
+    activeRoundPlayers(participants, {
+      hostIsObserver,
+      hostUserId: currentRoom?.host_user_id,
+    }).every(
+      p =>
+        p.status === "finished" ||
+        (p.current_question ?? 0) >= (currentRoom?.total_questions ?? Infinity)
+    );
 
   const { queue, addToQueue } = useRoomCategoryQueue(currentRoom?.id || null);
   // The category this game was played in, resolved to its own slug and
@@ -189,11 +215,23 @@ export function GameResultsScreenV2() {
     // without a game id (legacy/RLS-blocked inserts) keep the per-mount guard
     // only - keying those by room id would block every later round's stats.
     const statsKey = currentRoom?.current_game_id || null;
+    // Vote rounds hold the whole settlement chain until every voter finished
+    // (or the wait expired): claiming complete_room_round earlier would
+    // snapshot cumulative totals before the majority points exist.
+    if (!mltAllVotersDone) return;
     if (user && profile && currentRoom && !hasUpdatedStats.current && !(statsKey && processedResultsGames.has(statsKey))) {
       hasUpdatedStats.current = true;
       if (statsKey) processedResultsGames.add(statsKey);
 
       const updateStats = async () => {
+        // Vote rounds: settle anything still open — normally a no-op (each
+        // question settled live as its last vote landed), but a player who
+        // left mid-round leaves questions no device ever saw completed.
+        // Idempotent, so every device calling it is fine.
+        if (isMostLikelyRound && currentRoom.current_game_id) {
+          await settleMostLikelyVotes(currentRoom.id, currentRoom.current_game_id, null);
+        }
+
         // Round completion — the room-wide write-set (room_games completion
         // snapshot, match history row, and every participant's cumulative
         // total_score / total_rounds_played / total_wins) — happens in ONE
@@ -278,7 +316,7 @@ export function GameResultsScreenV2() {
         if (statsKey) processedResultsGames.delete(statsKey);
       });
     }
-  }, [user, profile, myScore, myRank, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, participants]);
+  }, [user, profile, myScore, myRank, isWin, isHost, currentRoom, setProfileLocal, rankedParticipants, addCoins, participants, mltAllVotersDone, isMostLikelyRound]);
 
   // Prefetch the questions a challenge link carries, so sharing is one tap
   // and not a wait.
@@ -720,7 +758,10 @@ export function GameResultsScreenV2() {
                 what to do next, and this is a way to pass the game on. It
                 used to open a dialog that showed the score and category the
                 screen behind it was already showing, and then offered this
-                same share — so the share happens here directly. */}
+                same share — so the share happens here directly.
+                Not for vote rounds: their "questions" have no correct answer
+                to challenge anyone with. */}
+            {!isMostLikelyRound && (
             <button
               type="button"
               onClick={() =>
@@ -743,6 +784,7 @@ export function GameResultsScreenV2() {
               )}
               {t("extra.challengeFriend")}
             </button>
+            )}
 
           </>
         ) : (

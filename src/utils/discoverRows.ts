@@ -1,4 +1,5 @@
 import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
+import { PARTY_CATEGORY_IDS } from "@/config/partyCategories";
 
 /**
  * Which categories belong in each Discover row.
@@ -19,7 +20,13 @@ export interface RowCategory {
 
 /** True for a category the Popular row already features. */
 export function isPopularRowCategory(id: string): boolean {
-  return (POPULAR_IMAGE_CATEGORY_IDS as readonly string[]).includes(id);
+  return (
+    (POPULAR_IMAGE_CATEGORY_IDS as readonly string[]).includes(id) ||
+    // The party categories lead Popular and are type "fun" in the database —
+    // without this they would render in both rows, the exact double-card
+    // glitch this module exists to prevent.
+    PARTY_CATEGORY_IDS.includes(id)
+  );
 }
 
 /**

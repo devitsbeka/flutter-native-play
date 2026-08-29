@@ -169,7 +169,12 @@ export const useCategories = () => {
       if (error) throw error;
       if (activeLangRef.current !== lang) return; // stale response — see ref
 
-      // Filter categories based on language rules
+      // Filter categories based on language rules. Party categories (the
+      // multiplayer-only vote ones, e.g. "Most Likely To") stay IN this list —
+      // Discover features them in Popular — but surfaces that actually start
+      // solo play (VS-bot pools, leaderboard play, friend challenges) apply
+      // excludePartyCategories themselves, and CategoryPage routes a party
+      // category to the multiplayer flow instead of a level grid.
       const filtered = filterCategoriesForLanguage(data || [], lang);
 
       const transformed = filtered.map(transformCategory);

@@ -27,6 +27,7 @@ import { PRICES } from "@/config/pricing";
 import { matchesQuery } from "@/utils/searchMatch";
 import { orderByPopularity, readRecentlyViewedIds, RECENTLY_VIEWED_KEY } from "@/utils/categoryTabs";
 import { funRowCategories } from "@/utils/discoverRows";
+import { isPartyCategory } from "@/config/partyCategories";
 
 /* The cover's artwork, drawn at the 500x946 the design was laid out at.
    object-cover on a narrower phone crops the sides, which is what the
@@ -358,6 +359,14 @@ export default function Discover() {
     // costs. The same paywall the cover's own button raises.
     if (!isVip && PREMIUM_LOOKUP.has(categoryId)) {
       setPaywallOpen(true);
+      return;
+    }
+
+    // A party category ("Most Likely To") is played in a room, not a level
+    // grid — the tap goes straight to the multiplayer flow. Not recorded as
+    // recently viewed: that list feeds solo surfaces.
+    if (isPartyCategory(categoryId)) {
+      navigate("/team");
       return;
     }
 
