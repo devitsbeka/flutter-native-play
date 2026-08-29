@@ -50,12 +50,21 @@ not_found_handling = "single-page-application"
 
 # A request whose path matches a file in ./dist is normally answered by the
 # asset server BEFORE the Worker runs — worker/index.ts only ever saw misses.
-# That is fine for /img (no such file exists), but it made serveVideo dead
-# code: every /videos/*.mp4 IS a file, so Range requests got a plain 200 and
-# WKWebView's AVFoundation player, which opens with `Range: bytes=0-1` and
-# requires a 206, refused to play. Route videos through the Worker first so
-# it can slice the asset into range responses.
-run_worker_first = ["/videos/*"]
+# That made serveVideo dead code: every /videos/*.mp4 IS a file, so Range
+# requests got a plain 200 and WKWebView's AVFoundation player, which opens
+# with `Range: bytes=0-1` and requires a 206, refused to play. Route videos
+# through the Worker first so it can slice the asset into range responses.
+#
+# /img and /room/* have to be here too, and for a less obvious reason: with
+# not_found_handling = "single-page-application" the asset server answers
+# EVERY GET, matching file or not — a miss gets index.html — so the Worker
+# never ran for them either (measured: GET /img?u=... returned index.html
+# while POST /img reached the Worker's 405). The client preload-validates
+# each image question against /img and drops the question when the load
+# fails; index.html is not an image, so every Wikimedia-backed question was
+# dropped, picture-guess levels shrank to one or two questions, and players
+# saw the "you answered everything" screen with hundreds of questions left.
+run_worker_first = ["/videos/*", "/img", "/room/*"]
 
 # ---------------------------------------------------------------------------
 # Read by worker/index.ts to build the link preview for a room invite. Both
