@@ -20,6 +20,7 @@ const question = {
   id: get("id", "manual"),
   question_text: get("question", "რომელი ცხოველი დებს ყველაზე დიდ კვერცხს?"),
   correct_answer: get("correct", "სირაქლემა"),
+  icon_slug: params.get("iconSlug"),
 };
 
 const [st, sb, sl, sr] = get("safe", "0,0,0,0").split(",").map(Number);
@@ -33,5 +34,6 @@ createRoot(document.getElementById("root")!).render(
     reveal={get("reveal", "1") === "1"}
     lang={get("lang", "ka")}
     safeInsets={{ top: st, bottom: sb, left: sl, right: sr }}
+    categoryKey={params.get("categoryKey") ?? undefined}
   />,
 );

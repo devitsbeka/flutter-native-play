@@ -20,10 +20,14 @@
  * purpose: posts must not follow the admin theme.
  */
 
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
+
 export interface StarFrameQuestion {
   id: string;
   question_text: string;
   correct_answer: string;
+  /** The question's assigned icon (questions.icon_slug) — same source the game uses. */
+  icon_slug?: string | null;
 }
 
 /** Keep-clear insets in canvas px — the platform UI covers these areas. */
@@ -174,8 +178,46 @@ function Background() {
   );
 }
 
-/** Avatar with the sparkle line running behind it, as in the node. */
-function AvatarCluster({ width, avatarH }: { width: number; avatarH: number }) {
+/**
+ * The design's top-center image slot with the sparkle line running behind
+ * it. The Figma node shows an example character; in production the slot is
+ * the question's own icon, resolved exactly like the game screen does —
+ * questions.icon_slug first, then the category's icon, then a per-question
+ * seeded pick from the category's set.
+ */
+function QuestionIcon({
+  question,
+  categoryKey,
+  size,
+}: {
+  question: StarFrameQuestion;
+  categoryKey?: string;
+  size: number;
+}) {
+  return (
+    <DynamicIcon
+      slug={question.icon_slug || undefined}
+      categoryId={categoryKey}
+      questionId={question.id}
+      seedText={question.question_text}
+      size={size}
+      fallbackEmoji="🧠"
+      className="drop-shadow-lg"
+    />
+  );
+}
+
+function AvatarCluster({
+  width,
+  avatarH,
+  question,
+  categoryKey,
+}: {
+  width: number;
+  avatarH: number;
+  question: StarFrameQuestion;
+  categoryKey?: string;
+}) {
   return (
     <div style={{ position: "relative", width, flexShrink: 0 }}>
       <img
@@ -189,18 +231,9 @@ function AvatarCluster({ width, avatarH }: { width: number; avatarH: number }) {
           height: avatarH * 0.28,
         }}
       />
-      <img
-        src={`${ASSETS}/avatar-winter.png`}
-        alt=""
-        style={{
-          display: "block",
-          margin: "0 auto",
-          width: avatarH * 0.95,
-          height: avatarH,
-          objectFit: "contain",
-          position: "relative",
-        }}
-      />
+      <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
+        <QuestionIcon question={question} categoryKey={categoryKey} size={avatarH} />
+      </div>
     </div>
   );
 }
@@ -217,6 +250,7 @@ export function StarQuestionFrame({
   reveal,
   lang,
   safeInsets,
+  categoryKey,
 }: {
   w: number;
   h: number;
@@ -225,6 +259,8 @@ export function StarQuestionFrame({
   reveal: boolean;
   lang: string;
   safeInsets?: SafeInsets;
+  /** ASCII category key (categories.category_id) for the icon fallback chain. */
+  categoryKey?: string;
 }) {
   const letters = LETTERS[lang] ?? LETTERS.en;
   const ratio = h / w;
@@ -285,18 +321,20 @@ export function StarQuestionFrame({
         >
           <img src={`${ASSETS}/sparkle-line.svg`} alt="" style={{ width: "100%", height: "100%" }} />
         </div>
-        <img
-          src={`${ASSETS}/avatar-winter.png`}
-          alt=""
+        <div
           style={{
             position: "absolute",
             left: 431 * s,
             top: 79 * ky,
             width: 380 * s,
             height: 400 * s,
-            objectFit: "contain",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
-        />
+        >
+          <QuestionIcon question={question} categoryKey={categoryKey} size={380 * s} />
+        </div>
         <p
           style={{
             ...questionStyle(120 * s, -4.8 * s),
@@ -365,7 +403,7 @@ export function StarQuestionFrame({
             justifyContent: "space-between",
           }}
         >
-          <AvatarCluster width={boxW} avatarH={240 * c} />
+          <AvatarCluster width={boxW} avatarH={240 * c} question={question} categoryKey={categoryKey} />
           <p style={{ ...questionStyle(88 * c, -3.5 * c), width: Math.min(880 * c, boxW) }}>
             {question.question_text}
           </p>
@@ -401,7 +439,7 @@ export function StarQuestionFrame({
             padding: `${(square ? 48 : 74) * c}px ${100 * c}px ${(square ? 60 : 144) * c}px`,
           }}
         >
-          <AvatarCluster width={700 * c} avatarH={(square ? 100 : 133) * c} />
+          <AvatarCluster width={700 * c} avatarH={(square ? 100 : 133) * c} question={question} categoryKey={categoryKey} />
           <p style={{ ...questionStyle((square ? 46 : 50) * c, -2 * c), width: 780 * c }}>
             {question.question_text}
           </p>
