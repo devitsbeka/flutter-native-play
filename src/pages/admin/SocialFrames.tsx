@@ -65,9 +65,22 @@ export default function SocialFrames() {
         .is("image_url", null)
         .is("video_url", null)
         .is("audio_url", null)
-        .limit(60);
+        .limit(300);
       if (err) throw err;
-      const rows = (data ?? []) as PoolQuestion[];
+      // Keep only questions that fit the frames: answers render at one fixed
+      // size and ellipsize past ~22 chars, and a title over ~90 chars would
+      // need shrinking below what reads well on the narrow 9:16 canvases.
+      // Filtered here because PostgREST can't filter on text length.
+      const fitsFrame = (q: PoolQuestion) => {
+        if (q.question_text.length > 90) return false;
+        const incorrect = Array.isArray(q.incorrect_answers)
+          ? (q.incorrect_answers as string[])
+          : [];
+        return [q.correct_answer, ...incorrect].every(
+          (a) => typeof a === "string" && a.length <= 22,
+        );
+      };
+      const rows = ((data ?? []) as PoolQuestion[]).filter(fitsFrame).slice(0, 60);
       setPool(rows);
       setIndex(rows.length ? Math.floor(Math.random() * rows.length) : 0);
     } catch (e) {

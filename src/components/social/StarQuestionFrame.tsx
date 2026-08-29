@@ -63,7 +63,9 @@ function AnswerRow({
   s: number;
   width: number;
 }) {
-  const fontSize = 59.177 * s * (text.length > 24 ? 0.62 : text.length > 16 ? 0.8 : 1);
+  // One size for every answer, every time — the pool is filtered to answers
+  // that fit a row at this size, so nothing here needs to adapt.
+  const fontSize = 59.177 * s;
   return (
     <div
       style={{
@@ -238,17 +240,7 @@ function AvatarCluster({
   );
 }
 
-/**
- * Continuous size ramp: full size up to 45 chars, then easing down ~0.45%
- * per character, floored at 52% — so a 60-char question is only slightly
- * smaller while a 140-char one drops to about half. Continuous beats
- * breakpoints here: one character over a threshold used to change the size
- * by a fifth.
- */
-function questionFontSize(text: string, base: number) {
-  const factor = Math.min(1, Math.max(0.52, 1 - (text.length - 45) * 0.0045));
-  return base * factor;
-}
+import { fitQuestionFont } from "@/components/social/questionFit";
 
 export function StarQuestionFrame({
   w,
@@ -287,10 +279,15 @@ export function StarQuestionFrame({
     background: "#080e12",
   };
 
+  /**
+   * size comes pre-fitted per variant (fitQuestionFont with that layout's
+   * column width and height budget), so the block can never outgrow its
+   * slot and collide with the answers.
+   */
   const questionStyle = (size: number, tracking: number): React.CSSProperties => ({
     fontFamily: "'Manrope', 'Nunito Sans', 'Noto Sans Georgian', sans-serif",
     fontWeight: 600,
-    fontSize: questionFontSize(question.question_text, size),
+    fontSize: size,
     lineHeight: 1.2,
     letterSpacing: `${tracking}px`,
     color: "#FEFEFE",
@@ -345,7 +342,10 @@ export function StarQuestionFrame({
         </div>
         <p
           style={{
-            ...questionStyle(120 * s, -4.8 * s),
+            ...questionStyle(
+              fitQuestionFont(question.question_text, 120 * s, 936 * s, 1288 * ky - 535 * ky - 40 * s),
+              -4.8 * s,
+            ),
             position: "absolute",
             left: "50%",
             transform: "translateX(-50%)",
@@ -412,7 +412,20 @@ export function StarQuestionFrame({
           }}
         >
           <AvatarCluster width={boxW} avatarH={240 * c} question={question} categoryKey={categoryKey} />
-          <p style={{ ...questionStyle(88 * c, -3.5 * c), width: Math.min(880 * c, boxW) }}>
+          <p
+            style={{
+              ...questionStyle(
+                fitQuestionFont(
+                  question.question_text,
+                  88 * c,
+                  boxW,
+                  h - boxTop - boxBottom - 240 * c - (4 * 161.093 * rowS + 3 * 28 * c) - 48 * c,
+                ),
+                -3.5 * c,
+              ),
+              width: boxW,
+            }}
+          >
             {question.question_text}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 28 * c }}>
@@ -461,7 +474,25 @@ export function StarQuestionFrame({
           }}
         >
           <AvatarCluster width={700 * c} avatarH={(square ? 100 : 133) * c} question={question} categoryKey={categoryKey} />
-          <p style={{ ...questionStyle((square ? 46 : 50) * c, -2 * c), width: 780 * c }}>
+          <p
+            style={{
+              ...questionStyle(
+                fitQuestionFont(
+                  question.question_text,
+                  (square ? 46 : 50) * c,
+                  780 * c,
+                  h -
+                    ((square ? 48 : 74) + (square ? 60 : 144)) * c -
+                    (square ? 100 : 133) * c -
+                    479 * c -
+                    153 * c -
+                    72 * c,
+                ),
+                -2 * c,
+              ),
+              width: 780 * c,
+            }}
+          >
             {question.question_text}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 21 * c }}>
@@ -497,7 +528,15 @@ export function StarQuestionFrame({
           padding: `${60 * c}px ${70 * c}px`,
         }}
       >
-        <p style={{ ...questionStyle(48 * c, -1.9 * c), width: 800 * c }}>
+        <p
+          style={{
+            ...questionStyle(
+              fitQuestionFont(question.question_text, 48 * c, 800 * c, h - 551 * c),
+              -1.9 * c,
+            ),
+            width: 800 * c,
+          }}
+        >
           {question.question_text}
         </p>
         <div
