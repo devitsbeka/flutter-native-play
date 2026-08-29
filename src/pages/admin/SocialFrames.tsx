@@ -68,9 +68,15 @@ const FORMATS: {
   { key: "appstore", label: "App Store 6.5″", w: 1242, h: 2688 },
 ];
 
+/** Pool rows carry the question's icon assignment on top of QotdFrame's shape. */
+type PoolQuestion = Question & { icon_slug?: string | null };
+
 export default function SocialFrames() {
   const [lang, setLang] = useState<string>("ka");
-  const [pool, setPool] = useState<Question[]>([]);
+  const [pool, setPool] = useState<PoolQuestion[]>([]);
+  // categories.id (uuid) → categories.category_id (ascii key the icon
+  // library understands), for the icon fallback chain.
+  const [categoryKeys, setCategoryKeys] = useState<Record<string, string>>({});
   const [index, setIndex] = useState(0);
   const [reveal, setReveal] = useState(false);
   const [showSafeZones, setShowSafeZones] = useState(false);
@@ -83,13 +89,15 @@ export default function SocialFrames() {
     try {
       const { data, error: err } = await supabase
         .from("questions")
-        .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
+        .select(
+          "id, question_text, correct_answer, incorrect_answers, difficulty, category_id, icon_slug",
+        )
         .eq("language", lang)
         .eq("is_active", true)
         .eq("in_production", true)
         .limit(60);
       if (err) throw err;
-      const rows = (data ?? []) as Question[];
+      const rows = (data ?? []) as PoolQuestion[];
       setPool(rows);
       setIndex(rows.length ? Math.floor(Math.random() * rows.length) : 0);
     } catch (e) {
@@ -103,6 +111,17 @@ export default function SocialFrames() {
   useEffect(() => {
     fetchPool();
   }, [fetchPool]);
+
+  useEffect(() => {
+    supabase
+      .from("categories")
+      .select("id, category_id")
+      .then(({ data }) => {
+        const map: Record<string, string> = {};
+        for (const row of data ?? []) map[row.id] = row.category_id;
+        setCategoryKeys(map);
+      });
+  }, []);
 
   const question = pool[index];
 
@@ -203,6 +222,7 @@ export default function SocialFrames() {
                       reveal={reveal}
                       lang={lang}
                       safeInsets={f.safeInsets}
+                      categoryKey={categoryKeys[question.category_id]}
                     />
                   </div>
                   {/* Preview-only guides for the platform chrome; never part
