@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Shuffle, Eye, EyeOff } from "lucide-react";
+import { Shuffle, Eye, EyeOff, BookmarkPlus } from "lucide-react";
 import { seededShuffle, type Question } from "@/components/social/QotdFrame";
 import { StarQuestionFrame } from "@/components/social/StarQuestionFrame";
+import { FORMATS } from "@/components/social/frameFormats";
+import { frameDrafts, defaultCaption } from "@/components/social/frameDrafts";
+import { SavedFrames } from "@/components/social/SavedFrames";
 import "@/components/social/star-frame.css";
 
 /**
@@ -23,57 +27,15 @@ import "@/components/social/star-frame.css";
 
 const LANGUAGES = ["ka", "en", "de", "es", "fr", "it", "pt"] as const;
 
-/**
- * One entry per surface the pipeline posts to, at the size that network
- * renders best, with the platform chrome's keep-clear zones (safeInsets, in
- * canvas px) so nothing important sits under UI:
- *  - IG Stories/Reels: ~250px of UI at the top, ~310px at the bottom
- *  - TikTok: ~140px right rail (like/comment/share), ~500px caption zone at
- *    the bottom, ~130px top
- *  - YouTube Shorts: title/controls, ~120px top / ~360px bottom
- * Feed and thumbnail canvases have no overlaid chrome.
- */
-const FORMATS: {
-  key: string;
-  label: string;
-  w: number;
-  h: number;
-  safeInsets?: { top?: number; bottom?: number; left?: number; right?: number };
-}[] = [
-  { key: "ig-feed", label: "Instagram · FB Feed (4:5)", w: 1080, h: 1350 },
-  {
-    key: "ig-story",
-    label: "IG Story / Reel",
-    w: 1080,
-    h: 1920,
-    safeInsets: { top: 250, bottom: 310 },
-  },
-  {
-    key: "tiktok",
-    label: "TikTok",
-    w: 1080,
-    h: 1920,
-    safeInsets: { top: 130, bottom: 500, right: 140 },
-  },
-  {
-    key: "yt-short",
-    label: "YouTube Short",
-    w: 1080,
-    h: 1920,
-    safeInsets: { top: 120, bottom: 360 },
-  },
-  { key: "square", label: "IG · FB Square", w: 1080, h: 1080 },
-  { key: "fb-land", label: "Facebook Landscape / Link", w: 1200, h: 630 },
-  { key: "yt-thumb", label: "YouTube Thumbnail", w: 1280, h: 720 },
-  { key: "appstore", label: "App Store 6.5″", w: 1242, h: 2688 },
-];
-
 /** Pool rows carry the question's icon assignment on top of QotdFrame's shape. */
 type PoolQuestion = Question & { icon_slug?: string | null };
 
 export default function SocialFrames() {
+  const { user } = useAuth();
   const [lang, setLang] = useState<string>("ka");
   const [pool, setPool] = useState<PoolQuestion[]>([]);
+  const [savedRefresh, setSavedRefresh] = useState(0);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
   // categories.id (uuid) → categories.category_id (ascii key the icon
   // library understands), for the icon fallback chain.
   const [categoryKeys, setCategoryKeys] = useState<Record<string, string>>({});
@@ -141,6 +103,38 @@ export default function SocialFrames() {
     }
   };
 
+  /** Persist the current question + this canvas as a saved frame. */
+  const saveFrame = async (formatKey: string) => {
+    const f = FORMATS.find((x) => x.key === formatKey);
+    if (!question || !f) return;
+    setSaveNotice(null);
+    try {
+      await frameDrafts.insert({
+        language: lang,
+        format_key: f.key,
+        w: f.w,
+        h: f.h,
+        reveal,
+        question_id: question.id,
+        payload: {
+          id: question.id,
+          question_text: question.question_text,
+          correct_answer: question.correct_answer,
+          icon_slug: question.icon_slug,
+          answers,
+          category_key: categoryKeys[question.category_id],
+        },
+        caption: defaultCaption(question.question_text),
+        platforms: ["instagram"],
+        created_by: user?.id ?? null,
+      });
+      setSavedRefresh((n) => n + 1);
+      setSaveNotice(`Saved ${f.label}`);
+    } catch (e) {
+      setSaveNotice(e instanceof Error ? e.message : "Save failed");
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -203,11 +197,22 @@ export default function SocialFrames() {
             const scale = previewH / f.h;
             return (
               <figure key={f.key} className="m-0 shrink-0 snap-center">
-                <figcaption className="mb-2 text-sm font-medium">
-                  {f.label}{" "}
-                  <span className="text-muted-foreground font-normal">
-                    {f.w}×{f.h}
+                <figcaption className="mb-2 text-sm font-medium flex items-center gap-2">
+                  <span>
+                    {f.label}{" "}
+                    <span className="text-muted-foreground font-normal">
+                      {f.w}×{f.h}
+                    </span>
                   </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-auto h-7 px-2"
+                    onClick={() => saveFrame(f.key)}
+                  >
+                    <BookmarkPlus className="w-4 h-4 mr-1" />
+                    Save frame
+                  </Button>
                 </figcaption>
                 <div
                   className="relative rounded-lg overflow-hidden ring-1 ring-border shadow-sm"
@@ -261,6 +266,14 @@ export default function SocialFrames() {
           })}
         </div>
       )}
+
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold">Saved frames</h2>
+          {saveNotice && <span className="text-sm text-muted-foreground">{saveNotice}</span>}
+        </div>
+        <SavedFrames refreshToken={savedRefresh} />
+      </div>
     </div>
   );
 }
