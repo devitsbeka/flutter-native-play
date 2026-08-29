@@ -41,4 +41,16 @@ describe("pages a starting round may interrupt", () => {
     expect(isInterruptible("/playlist")).toBe(true);
     expect(isInterruptible("/games-archive")).toBe(true);
   });
+
+  it("does not interrupt a Team Battle", () => {
+    // The launch-day bug: /team-battle is NOT under /team segment-wise, so
+    // the "already there" rule never covered it — a starting Team Battle's
+    // own room update yanked its players into the classic hub mid-match.
+    expect(isInterruptible("/team-battle")).toBe(false);
+  });
+
+  it("does not interrupt a match against the King", () => {
+    // A think-phase timer is exactly the clock this list protects.
+    expect(isInterruptible("/king")).toBe(false);
+  });
 });

@@ -44,6 +44,8 @@ type RoomRow = {
   started_at?: string | null;
   category_id?: string | null;
   category_name?: string | null;
+  game_type_key?: string | null;
+  room_code?: string | null;
 };
 
 export function RoundStartWatcher() {
@@ -85,6 +87,16 @@ export function RoundStartWatcher() {
       handledGameRef.current = key;
       if (!isInterruptible(pathRef.current)) return;
 
+      // A Team Battle starting is this room's business, not the classic
+      // flow's: pull the player into ITS page, with no classic 3-2-1 (the
+      // match opens with its own rock-paper-scissors phase). Navigating to
+      // /team here is what used to yank a Team Battle player out of their
+      // own starting match and strand them in the classic hub.
+      if (room.game_type_key === "team_battle") {
+        if (room.room_code) navigate(`/team-battle?code=${room.room_code}`);
+        return;
+      }
+
       setStartedRound({
         startedAt: room.started_at ?? null,
         categoryId: room.category_id ?? null,
@@ -110,7 +122,7 @@ export function RoundStartWatcher() {
       // the count itself — see the note above.
       const { data: rooms } = await supabase
         .from("game_rooms")
-        .select("id, status, current_game_id, started_at, category_id, category_name, last_activity_at")
+        .select("id, status, current_game_id, started_at, category_id, category_name, game_type_key, room_code, last_activity_at")
         .in("id", roomIds)
         .in("status", ["waiting", "ready", "playing"])
         .order("last_activity_at", { ascending: false })
