@@ -57,6 +57,7 @@ const Leaderboards = lazy(() => import("./pages/Leaderboards"));
 const Profile = lazy(() => import("./pages/Profile"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const TeamV2 = lazy(() => import("./pages/TeamV2"));
+const PlaySelect = lazy(() => import("./pages/PlaySelect"));
 const Discover = lazy(() => import("./pages/Discover"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const CategoryQuizPage = lazy(() => import("./pages/CategoryQuizPage"));
@@ -270,6 +271,9 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/:userId" element={<PublicProfile />} />
                 <Route path="/game" element={<Game />} />
+                {/* Game type chooser behind "Play with friends" — coexists
+                    with /play/:categoryId/:levelId (exact match wins). */}
+                <Route path="/play" element={<PlaySelect />} />
                 <Route path="/team" element={<TeamV2 />} />
                 <Route path="/trivia/:triviaId" element={<TriviaLobby />} />
                 <Route path="/collection/:collectionId" element={<CollectionLobby />} />

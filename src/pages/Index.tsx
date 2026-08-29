@@ -528,7 +528,9 @@ export default function Index() {
 
   const handlePlayWithFriends = useCallback(() => {
     setShowPlayOptions(false);
-    navigate("/team", { state: { openCreateRoom: true } });
+    // The game type chooser (docs/GAME_TYPES_DESIGN.md §1). Classic trivia
+    // launches the same create-room flow this used to navigate to directly.
+    navigate("/play");
   }, [navigate]);
 
   // Guest welcome panel handlers

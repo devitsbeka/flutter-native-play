@@ -190,3 +190,14 @@ jobs:
         run: |
           psql -h localhost -p 5432 -U postgres \
             -v ON_ERROR_STOP=1 -f supabase/tests/08-money-not-anon.sql
+
+      # The game type registry drives the /play chooser and dark-launches
+      # modes off is_live. A write policy added "for convenience" would let a
+      # signed-in user flip a mode live (or retitle one) for every player at
+      # once, so: readable by all, writable by no client role.
+      - name: Assert game type registry is client-immutable
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 5432 -U postgres \
+            -v ON_ERROR_STOP=1 -f supabase/tests/09-game-types.sql

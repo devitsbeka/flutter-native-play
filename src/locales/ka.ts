@@ -1657,6 +1657,26 @@ export const ka = {
   },
 
 
+  // The /play game type chooser (docs/GAME_TYPES_DESIGN.md §1)
+  gameTypes: {
+    title: "აირჩიე თამაში",
+    subtitle: "როგორ გინდა თამაში?",
+    comingSoon: "მალე",
+    players: "{min}–{max} მოთამაშე",
+    playersSolo: "სოლო",
+    minutes: "~{min} წთ",
+    badgeNew: "ახალი",
+    badgeBeta: "ბეტა",
+    classicTitle: "კლასიკური ტრივია",
+    classicDesc: "შექმენი ოთახი და შეეჯიბრე მეგობრებს",
+    tvTitle: "TV წვეულება",
+    tvDesc: "ერთი დიდი ეკრანი, ტელეფონები — პულტები",
+    teamBattleTitle: "გუნდური ბრძოლა",
+    teamBattleDesc: "ორი გუნდი ერკინება კატეგორიების დაფაზე",
+    kingTitle: "MyTrivia King",
+    kingDesc: "რთული ლოგიკური კითხვები. ერთი წუთი ფიქრისთვის. იგებს, ვინც პირველი მიაღწევს 6 ქულას.",
+  },
+
   extra: {
     questionsAnsweredLabel: "გაცემული პასუხი",
     successRateLabel: "წარმატება",

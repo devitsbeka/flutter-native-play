@@ -783,6 +783,7 @@ export type Database = {
           current_game_id: string | null
           game_mode: string | null
           game_type: Database["public"]["Enums"]["game_type"]
+          game_type_key: string | null
           has_unread_activity: boolean | null
           host_is_observer: boolean | null
           host_user_id: string
@@ -815,6 +816,7 @@ export type Database = {
           current_game_id?: string | null
           game_mode?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
+          game_type_key?: string | null
           has_unread_activity?: boolean | null
           host_is_observer?: boolean | null
           host_user_id: string
@@ -847,6 +849,7 @@ export type Database = {
           current_game_id?: string | null
           game_mode?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
+          game_type_key?: string | null
           has_unread_activity?: boolean | null
           host_is_observer?: boolean | null
           host_user_id?: string
@@ -867,6 +870,13 @@ export type Database = {
           user_trivia_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "game_rooms_game_type_key_fkey"
+            columns: ["game_type_key"]
+            isOneToOne: false
+            referencedRelation: "game_types"
+            referencedColumns: ["key"]
+          },
           {
             foreignKeyName: "game_rooms_current_game_id_fkey"
             columns: ["current_game_id"]
@@ -929,6 +939,48 @@ export type Database = {
           total_questions?: number | null
           user_id?: string | null
           user_score?: number | null
+        }
+        Relationships: []
+      }
+      game_types: {
+        Row: {
+          badge: string | null
+          created_at: string
+          is_live: boolean
+          key: string
+          max_players: number
+          min_players: number
+          sort_order: number
+          supports_matchmaking: boolean
+          supports_private: boolean
+          tagline: string
+          title: string
+        }
+        Insert: {
+          badge?: string | null
+          created_at?: string
+          is_live?: boolean
+          key: string
+          max_players: number
+          min_players: number
+          sort_order?: number
+          supports_matchmaking?: boolean
+          supports_private?: boolean
+          tagline: string
+          title: string
+        }
+        Update: {
+          badge?: string | null
+          created_at?: string
+          is_live?: boolean
+          key?: string
+          max_players?: number
+          min_players?: number
+          sort_order?: number
+          supports_matchmaking?: boolean
+          supports_private?: boolean
+          tagline?: string
+          title?: string
         }
         Relationships: []
       }

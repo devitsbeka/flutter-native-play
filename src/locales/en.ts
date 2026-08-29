@@ -1656,6 +1656,25 @@ export const en: KaTranslations = {
   },
 
 
+  // The /play game type chooser (docs/GAME_TYPES_DESIGN.md §1)
+  gameTypes: {
+    title: "Choose your game",
+    subtitle: "How do you want to play?",
+    comingSoon: "Coming soon",
+    players: "{min}–{max} players",
+    playersSolo: "Solo",
+    minutes: "~{min} min",
+    badgeNew: "New",
+    badgeBeta: "Beta",
+    classicTitle: "Classic Trivia",
+    classicDesc: "Create a room and battle your friends",
+    tvTitle: "TV Party",
+    tvDesc: "One big screen, phones as controllers",
+    teamBattleTitle: "Team Battle",
+    teamBattleDesc: "Two teams face off over a board of priced categories",
+    kingTitle: "MyTrivia King",
+    kingDesc: "Hard logic questions. One minute to think. First to 6 wins.",
+  },
   extra: {
     questionsAnsweredLabel: "Questions answered",
     successRateLabel: "Success rate",
