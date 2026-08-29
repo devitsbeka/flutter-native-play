@@ -47,6 +47,9 @@ export default function SocialFrames() {
   const [promoPlacement, setPromoPlacement] = useState<"bookends" | "start" | "middle" | "end">(
     "bookends",
   );
+  // Which features this carousel advertises; the closing CTA is its own switch.
+  const [selectedPromos, setSelectedPromos] = useState<string[]>(["outsmart", "party"]);
+  const [ctaEnabled, setCtaEnabled] = useState(true);
   // categories.id (uuid) → categories.category_id (ascii key the icon
   // library understands), for the icon fallback chain.
   const [categoryKeys, setCategoryKeys] = useState<Record<string, string>>({});
@@ -182,16 +185,22 @@ export default function SocialFrames() {
   };
 
   /**
-   * Save a 5-slide carousel: questions from the pool (current one first)
-   * with promo slides at the chosen spots. Promos rotate through the set so
-   * consecutive carousels don't repeat the same ad.
+   * Save a ≥5-slide carousel: questions from the pool (current one first),
+   * the selected feature promos at the chosen spots, and optionally the
+   * closing CTA. Promos rotate their starting point so consecutive
+   * carousels don't lead with the same ad.
    */
   const saveCarousel = async () => {
     if (!question) return;
     const f = FORMATS.find((x) => x.key === "ig-feed")!;
     try {
-      const promoCount = promoPlacement === "bookends" ? 2 : 1;
-      const questionCount = 5 - promoCount;
+      const placementCount =
+        selectedPromos.length === 0
+          ? 0
+          : promoPlacement === "bookends"
+            ? Math.min(2, selectedPromos.length)
+            : 1;
+      const questionCount = Math.max(3, 5 - placementCount - (ctaEnabled ? 1 : 0));
       const others = pool.filter((q) => q.id !== question.id);
       // Deterministic-enough variety: random picks from the filtered pool.
       const picked: PoolQuestion[] = [question];
@@ -204,10 +213,10 @@ export default function SocialFrames() {
         return;
       }
 
-      const promoOffset = Math.floor(Math.random() * PROMO_SLIDES.length);
+      const promoOffset = Math.floor(Math.random() * Math.max(1, selectedPromos.length));
       const promoAt = (i: number): CarouselSlide => ({
         type: "promo",
-        promo: PROMO_SLIDES[(promoOffset + i) % PROMO_SLIDES.length].key,
+        promo: selectedPromos[(promoOffset + i) % selectedPromos.length],
       });
       const qSlides: CarouselSlide[] = picked.map((q) => ({
         type: "question",
@@ -215,10 +224,14 @@ export default function SocialFrames() {
       }));
 
       let slides: CarouselSlide[];
-      if (promoPlacement === "bookends") slides = [promoAt(0), ...qSlides, promoAt(1)];
-      else if (promoPlacement === "start") slides = [promoAt(0), ...qSlides];
+      if (placementCount === 0) slides = [...qSlides];
+      else if (promoPlacement === "bookends" && placementCount === 2)
+        slides = [promoAt(0), ...qSlides, promoAt(1)];
       else if (promoPlacement === "end") slides = [...qSlides, promoAt(0)];
-      else slides = [...qSlides.slice(0, 2), promoAt(0), ...qSlides.slice(2)];
+      else if (promoPlacement === "middle")
+        slides = [...qSlides.slice(0, 2), promoAt(0), ...qSlides.slice(2)];
+      else slides = [promoAt(0), ...qSlides];
+      if (ctaEnabled) slides = [...slides, { type: "promo", promo: "cta" }];
 
       const first = snapshot(question);
       await frameDrafts.insert({
@@ -281,16 +294,47 @@ export default function SocialFrames() {
           <ListTodo className="w-4 h-4 mr-2" />
           Queue
         </Button>
-        <div className="flex items-center gap-2 pl-2 border-l">
+        <div className="flex flex-wrap items-center gap-2 pl-2 border-l">
+          {/* Which features this carousel advertises. */}
+          {PROMO_SLIDES.filter((p) => p.key !== "cta").map((p) => {
+            const on = selectedPromos.includes(p.key);
+            return (
+              <button
+                key={p.key}
+                onClick={() =>
+                  setSelectedPromos((sel) =>
+                    on ? sel.filter((k) => k !== p.key) : [...sel, p.key],
+                  )
+                }
+                className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  on
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "hover:bg-muted text-muted-foreground"
+                }`}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setCtaEnabled((v) => !v)}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+              ctaEnabled
+                ? "bg-emerald-600 text-white border-emerald-600"
+                : "hover:bg-muted text-muted-foreground"
+            }`}
+          >
+            + Closing CTA
+          </button>
           <select
             value={promoPlacement}
             onChange={(e) => setPromoPlacement(e.target.value as typeof promoPlacement)}
             className="border rounded-md px-2 py-1.5 text-sm bg-background"
           >
-            <option value="bookends">Promo: start + end · 3 questions</option>
-            <option value="start">Promo: start · 4 questions</option>
-            <option value="middle">Promo: middle · 4 questions</option>
-            <option value="end">Promo: end · 4 questions</option>
+            <option value="bookends">Promos: start + end</option>
+            <option value="start">Promo: start</option>
+            <option value="middle">Promo: middle</option>
+            <option value="end">Promo: end</option>
           </select>
           <Button size="sm" onClick={saveCarousel} disabled={!question}>
             <BookmarkPlus className="w-4 h-4 mr-2" />

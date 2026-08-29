@@ -64,7 +64,13 @@ function DraftPreview({ draft }: { draft: FrameDraft }) {
               <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                 {slide.type === "promo" ? (
                   spec ? (
-                    <PromoSlide w={w} h={h} spec={spec} safeInsets={fmt?.safeInsets} />
+                    <PromoSlide
+                      w={w}
+                      h={h}
+                      spec={spec}
+                      lang={draft.language}
+                      safeInsets={fmt?.safeInsets}
+                    />
                   ) : (
                     <div style={{ width: w, height: h }} />
                   )

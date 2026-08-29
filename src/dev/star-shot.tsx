@@ -35,6 +35,7 @@ createRoot(document.getElementById("root")!).render(
       w={w}
       h={h}
       spec={promoSpec}
+      lang={get("lang", "ka")}
       safeInsets={{ top: st, bottom: sb, left: sl, right: sr }}
     />
   ) : (
