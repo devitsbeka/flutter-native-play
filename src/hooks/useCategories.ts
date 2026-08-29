@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Category } from '@/data/categories';
 import { readAppLanguage } from '@/utils/appLanguage';
 import { filterCategoriesForLanguage } from '@/utils/languageCategoryFilter';
-import { excludePartyCategories } from '@/config/partyCategories';
 import { categoryTier, type CategoryTier } from '@/utils/categoryAccess';
 
 const DEFAULT_LANGUAGE = 'en';
@@ -171,11 +170,12 @@ export const useCategories = () => {
       if (activeLangRef.current !== lang) return; // stale response — see ref
 
       // Filter categories based on language rules. Party categories (the
-      // multiplayer-only vote ones, e.g. "Most Likely To") are dropped here:
-      // this hook feeds the solo surfaces (Discover, levels, VS-bot pools),
-      // where a category with no correct answers cannot be played. The room
-      // pickers query `categories` directly and DO offer them.
-      const filtered = excludePartyCategories(filterCategoriesForLanguage(data || [], lang));
+      // multiplayer-only vote ones, e.g. "Most Likely To") stay IN this list —
+      // Discover features them in Popular — but surfaces that actually start
+      // solo play (VS-bot pools, leaderboard play, friend challenges) apply
+      // excludePartyCategories themselves, and CategoryPage routes a party
+      // category to the multiplayer flow instead of a level grid.
+      const filtered = filterCategoriesForLanguage(data || [], lang);
 
       const transformed = filtered.map(transformCategory);
       setCategories(transformed);

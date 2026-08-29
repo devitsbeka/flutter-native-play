@@ -1,4 +1,5 @@
 import { POPULAR_IMAGE_CATEGORY_IDS } from "@/config/popularImageCategories";
+import { PARTY_CATEGORY_IDS } from "@/config/partyCategories";
 
 /**
  * The tabs that sort a wall of categories into something findable, and the
@@ -75,9 +76,10 @@ function indexByIdAndSlug<T extends TabCategory>(categories: T[]): Map<string, T
 /**
  * Popular is a curated order, not a measured one.
  *
- * The six picture-guess categories front it. Until their migration has run in
- * a given environment they are simply not in `categories`, so the curated
- * fallback stands in rather than the row rendering empty.
+ * The party categories ("Most Likely To") lead it, then the six picture-guess
+ * categories. Until their migrations have run in a given environment they are
+ * simply not in `categories`, so the curated fallback stands in rather than
+ * the row rendering empty.
  */
 const POPULAR_FALLBACK_IDS = [
   "movies", "tv_series", "music", "sports", "world_history", "geography",
@@ -86,11 +88,15 @@ const POPULAR_FALLBACK_IDS = [
 
 export function orderByPopularity<T extends TabCategory>(categories: T[]): T[] {
   const byKey = indexByIdAndSlug(categories);
+  const party = PARTY_CATEGORY_IDS
+    .map((id) => byKey.get(id))
+    .filter((c): c is T => Boolean(c));
   const pictureGuess = POPULAR_IMAGE_CATEGORY_IDS
     .map((id) => byKey.get(id))
     .filter((c): c is T => Boolean(c));
-  if (pictureGuess.length > 0) return pictureGuess;
-  return POPULAR_FALLBACK_IDS.map((id) => byKey.get(id)).filter((c): c is T => Boolean(c));
+  if (pictureGuess.length > 0) return [...party, ...pictureGuess];
+  const fallback = POPULAR_FALLBACK_IDS.map((id) => byKey.get(id)).filter((c): c is T => Boolean(c));
+  return [...party, ...fallback];
 }
 
 /**

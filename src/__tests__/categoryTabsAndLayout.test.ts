@@ -75,6 +75,21 @@ describe("sorting a wall of categories", () => {
       .toEqual(["guess_logo", "guess_flag"]);  // curated order, not input order
   });
 
+  it("puts the party categories first when they are present", () => {
+    // "Most Likely To" is the room game the Popular row leads with — first
+    // card in Discover's Popular and in the pickers' Popular tab alike.
+    const rows = [
+      { id: "8f1c...", category_id: "guess_logo" },
+      { id: "9a2d...", category_id: "most_likely_to" },
+      { id: "2b7e...", category_id: "guess_flag" },
+    ];
+    expect(orderByPopularity(rows).map((c) => c.category_id))
+      .toEqual(["most_likely_to", "guess_logo", "guess_flag"]);
+    // And ahead of the fallback list too, in a pre-migration environment.
+    expect(orderByPopularity([{ id: "movies" }, { id: "most_likely_to" }]).map((c) => c.id))
+      .toEqual(["most_likely_to", "movies"]);
+  });
+
   it("falls back to the curated list when the picture-guess set is absent", () => {
     // Those categories arrive with a migration. Until it has run in a given
     // environment they are simply not there, and Popular must not be empty.

@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { localizeCategoryNames } from "@/utils/localizeCategories";
 import { popularCategoryIcon } from "@/config/popularImageCategories";
 import { filterCategoriesForLanguage } from "@/utils/languageCategoryFilter";
+import { pinPartyCategoriesFirst } from "@/config/partyCategories";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -172,8 +173,10 @@ export function CategoryPickerModal({
         .order("sort_order", { ascending: true });
 
       if (result.error) throw result.error;
-      // categories.name is Georgian; overlay the reader's language.
-      return localizeCategoryNames(
+      // categories.name is Georgian; overlay the reader's language. Party
+      // categories ("Most Likely To") lead the wall — they are what a room
+      // full of people is here to play together.
+      return pinPartyCategoriesFirst(await localizeCategoryNames(
         filterCategoriesForLanguage(result.data || [], language).map(d => ({
           id: d.id,
           categoryId: d.category_id,
@@ -185,7 +188,7 @@ export function CategoryPickerModal({
           total_levels: d.total_levels,
           type: d.type,
         })),
-      );
+      ));
     },
     enabled: isOpen && view === "library",
   });

@@ -54,6 +54,21 @@ export function excludePartyCategories<T extends { category_id?: string | null; 
 }
 
 /**
+ * Move party categories to the front of a category list, keeping the rest in
+ * their arriving order. This is how the room pickers put "Most Likely To" at
+ * the top: it is the categories every room can actually play together, so it
+ * leads the wall rather than sitting at sort_order's mercy. Handles both row
+ * shapes (Discover's slug-as-id, the pickers' uuid-plus-category_id).
+ */
+export function pinPartyCategoriesFirst<T extends { category_id?: string | null; id?: string | null }>(
+  rows: T[],
+): T[] {
+  const party = rows.filter((r) => isPartyCategory(r.category_id || r.id));
+  if (party.length === 0) return rows;
+  return [...party, ...rows.filter((r) => !isPartyCategory(r.category_id || r.id))];
+}
+
+/**
  * The answer options of a vote round: the players' display names, one per
  * participant, in join order. The round initiator builds this once and it
  * rides in room_questions.shuffled_answers, so every device shows the same

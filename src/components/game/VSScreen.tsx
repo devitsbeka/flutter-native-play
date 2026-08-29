@@ -13,6 +13,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { VSMatchHelpModal } from "./VSMatchHelpModal";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useCategories } from "@/hooks/useCategories";
+import { excludePartyCategories } from "@/config/partyCategories";
 import confetti from "canvas-confetti";
 import { InteractiveBlobVideo } from "./InteractiveBlobVideo";
 import { REWARDS } from "@/config/rewardConfig";
@@ -70,7 +71,10 @@ export function VSScreen() {
   const { profile } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { categories } = useCategories();
+  // VS-bot has a fixed correct answer per question; a party vote category
+  // cannot be played against a bot.
+  const { categories: allCategories } = useCategories();
+  const categories = useMemo(() => excludePartyCategories(allCategories), [allCategories]);
   const { startMatchmaking } = useGame();
   
   // Game stage state

@@ -1,9 +1,10 @@
 import { ICON_URLS } from "@/lib/toast-icons";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCategories, TransformedCategory } from "@/hooks/useCategories";
+import { excludePartyCategories } from "@/config/partyCategories";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -24,7 +25,9 @@ export function PlayCategoryModal({
   onOpenChange, 
   onSelectCategory 
 }: PlayCategoryModalProps) {
-  const { categories, loading: categoriesLoading } = useCategories();
+  // Solo leaderboard play — party vote categories need a room, not a bot.
+  const { categories: allCategories, loading: categoriesLoading } = useCategories();
+  const categories = useMemo(() => excludePartyCategories(allCategories), [allCategories]);
   const { t } = useLanguage();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [isMatchmaking, setIsMatchmaking] = useState(false);
